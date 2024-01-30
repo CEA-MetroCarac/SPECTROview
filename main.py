@@ -303,7 +303,34 @@ class MainWindow:
 # if __name__ == "__main__":
 #     launcher()
 
-def launcher2(file_paths=None, fname_json=None):
+# def launcher2(file_paths=None, fname_json=None):
+#     app = QApplication()
+#     app.setWindowIcon(QIcon(ICON_APPLI))
+#     window = MainWindow()
+#     app.setStyle("Fusion")
+#     if file_paths is not None:
+#         window.callbacks_spectre.open_csv(file_paths=file_paths)
+#
+#     if fname_json is not None:
+#         window.callbacks_spectre.open_model(fname_json=fname_json)
+#
+#         # window.saveloadws.save_workspace(fname_json='toto.json')
+#     # window.saveloadws.load_workspace(fname_json='toto.json')
+#     window.ui.show()
+#     sys.exit(app.exec())
+#
+#
+# if __name__ == "__main__":
+#     dirname = r"C:\Users\VL251876\PycharmProjects\workspace\projects\Raman" \
+#               r"\P_23_10_DaProViz\data_test\RAW spectrum"
+#     fname1 = os.path.join(dirname, 'D23S2204.2_05.csv')
+#     fname2 = os.path.join(dirname, 'D23S2204.2_10.csv')
+#     fname3 = os.path.join(dirname, 'D23S2204.2_19.csv')
+#     fname4 = os.path.join(dirname, 'D23S2204.2_07.csv')
+#     fname_json = os.path.join(dirname, 'MoS2_5peaks_Test.json')
+#     launcher2([fname1, fname2, fname4, fname3], fname_json)
+
+def launcher3(file_paths=None, fname_json=None):
     app = QApplication()
     app.setWindowIcon(QIcon(ICON_APPLI))
     window = MainWindow()
@@ -321,11 +348,10 @@ def launcher2(file_paths=None, fname_json=None):
 
 
 if __name__ == "__main__":
-    dirname = r"C:\Users\VL251876\PycharmProjects\workspace\projects\Raman" \
-              r"\P_23_10_DaProViz\data_test\RAW spectrum"
+    dirname = r"/Users/HoanLe/Library/CloudStorage/OneDrive-Personal/Works/miror_python/P_23_10_DaProViz/SPECTROview/data_test/RAW spectrum"
     fname1 = os.path.join(dirname, 'D23S2204.2_05.csv')
     fname2 = os.path.join(dirname, 'D23S2204.2_10.csv')
     fname3 = os.path.join(dirname, 'D23S2204.2_19.csv')
     fname4 = os.path.join(dirname, 'D23S2204.2_07.csv')
     fname_json = os.path.join(dirname, 'MoS2_5peaks_Test.json')
-    launcher2([fname1, fname2, fname4, fname3], fname_json)
+    launcher3([fname1, fname2, fname4, fname3], fname_json)

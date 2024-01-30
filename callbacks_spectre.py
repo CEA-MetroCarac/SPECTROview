@@ -1,7 +1,7 @@
 # callbacks_spectre.py module
 import os
 import copy
-import win32clipboard
+#import win32clipboard
 from io import BytesIO
 import numpy as np
 import pandas as pd

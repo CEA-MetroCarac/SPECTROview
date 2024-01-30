@@ -1,0 +1,47 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>iconpack/add.png</file>
+    <file>iconpack/close.png</file>
+    <file>iconpack/copy.png</file>
+    <file>iconpack/copy_label.png.png</file>
+    <file>iconpack/cut.png</file>
+    <file>iconpack/done.png</file>
+    <file>iconpack/edit.png</file>
+    <file>iconpack/filter.png</file>
+    <file>iconpack/horizontal-line.png</file>
+    <file>iconpack/icon.ico</file>
+    <file>iconpack/icon.png</file>
+    <file>iconpack/icons8-copy-96.png</file>
+    <file>iconpack/icons8-documents-folder-96.png</file>
+    <file>iconpack/icons8-download-96.png</file>
+    <file>iconpack/icons8-folder-96.png</file>
+    <file>iconpack/icons8-graph-96.png</file>
+    <file>iconpack/icons8-open-document-96.png</file>
+    <file>iconpack/icons8-open-end-wrench-96.png</file>
+    <file>iconpack/icons8-remove-100.png</file>
+    <file>iconpack/icons8-save-all-48.png</file>
+    <file>iconpack/icons8-save-all-64.png</file>
+    <file>iconpack/icons8-trash-128.png</file>
+    <file>iconpack/icons8-update-96.png</file>
+    <file>iconpack/icons8-update-100.png</file>
+    <file>iconpack/paste.png</file>
+    <file>iconpack/redo.png</file>
+    <file>iconpack/remove.png</file>
+    <file>iconpack/save.png</file>
+    <file>iconpack/save-94.png</file>
+    <file>iconpack/save-96.png</file>
+    <file>iconpack/save-100.png</file>
+    <file>iconpack/save-all.png</file>
+    <file>iconpack/save-as.png</file>
+    <file>iconpack/select-all.png</file>
+    <file>iconpack/support.png</file>
+    <file>iconpack/trash2.png</file>
+    <file>iconpack/undo.png</file>
+    <file>iconpack/update.png</file>
+    <file>iconpack/vertical-line.png</file>
+    <file>iconpack/view.png</file>
+    <file>iconpack/view-details.png</file>
+    <file>iconpack/wafer_map.png</file>
+    <file>logo.png</file>
+  </qresource>
+</RCC>

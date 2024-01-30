@@ -1,0 +1,65 @@
+# Matplotlib style for Jupyter notebooks
+
+# Set default figure size
+#figure.figsize : 8, 6
+
+# Set color cycle: red, blue, green, violet, gray, yellow,  
+#axes.prop_cycle : cycler('color', ['0C5DA5', 'FF2C00', '00B945', '845B97', '474747', '9e9e9e', 'FF9500'])
+
+
+xtick.major.size : 5
+xtick.major.width : 1
+xtick.minor.size : 3
+xtick.minor.width : 0.8
+
+xtick.direction: out
+xtick.minor.visible : True
+xtick.top : True
+
+# Set y axis
+ytick.major.size : 5
+ytick.major.width : 1
+ytick.minor.size : 3
+ytick.minor.width : 0.8
+
+ytick.direction: out
+ytick.minor.visible : True
+ytick.right : True
+
+# Set line widths
+axes.linewidth : 1.
+lines.linewidth : 2.
+
+# Grid option
+axes.grid           : False   # display grid or not
+axes.grid.which     : major
+axes.grid.axis      : both
+grid.linestyle: --
+grid.linewidth : 1
+
+### Legend
+legend.frameon       : True
+legend.numpoints     : 1      # the number of points in the legend line
+legend.fontsize : 10
+legend.borderpad     : 0.4    # border whitespace in fontsize units
+legend.markerscale   : 0.7    # the relative size of legend markers vs. original
+legend.title_fontsize : 12
+
+
+# Fontsizes
+xtick.labelsize : 12
+ytick.labelsize : 12
+axes.titlesize : 12
+axes.labelsize : 12
+
+figure.dpi       : 80      # figure dots per inch
+
+# Use sans-serif fonts
+font.family : sans-serif
+mathtext.fontset : dejavusans
+
+# Use LaTeX for math formatting
+text.usetex : False
+
+# errorbar props
+errorbar.capsize: 0.05

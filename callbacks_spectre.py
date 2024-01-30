@@ -128,8 +128,7 @@ class CallbacksSpectre:
                 x_values = pd.to_numeric(x_values, errors='coerce').tolist()
                 y_values = row[2:].tolist()
 
-                spectrum = {
-                    'raw': {'wavenumber': x_values, 'intensity': y_values}}
+                spectrum = {'wavenumber': x_values, 'intensity': y_values}
                 # Add or update all spectrum into the dict of given wafer
                 wafer_spectra[coords] = spectrum
 
@@ -148,6 +147,7 @@ class CallbacksSpectre:
                 spectrum_fs.y = np.asarray(y_values)
                 spectrum_fs.y0 = np.asarray(y_values)
                 spectrum_fs.fname = f"{wafer_name}_{coords}"
+
                 self.spectra_fs.append(spectrum_fs)
 
     def open_model(self, fname_json=None):
@@ -169,7 +169,23 @@ class CallbacksSpectre:
         self.model_fs = self.spectra_fs.load_model(fname_json, ind=0)
         display_name = QFileInfo(fname_json).baseName()
         self.ui.display_loaded_model.setText(display_name)
+    def spectre_id(self):
+        """Get selected spectre id(s)"""
+        wafer_name = self.ui.wafers_listbox.currentItem().text()
+        selected_spectra = self.ui.spectra_listbox.selectedItems()
+        coords = []
+        if selected_spectra:
+            for selected_item in selected_spectra:
+                text = selected_item.text()
+                coords.append(text)
+        return wafer_name, coords
 
+    def spectre_id_fs(self, spectrum_fs=None):
+        """Get selected spectre id(s) of FITSPY object"""
+        fname_parts = spectrum_fs.fname.split("_")
+        wafer_name_fs = fname_parts[0] + "_" + fname_parts[1]
+        coord_fs = fname_parts[-1].split('(')[1].split(')')[0]
+        return wafer_name_fs, coord_fs
     def fitting_all_wafer(self):
         """ Apply loaded fit model to all selected spectra"""
         if self.model_fs is None:
@@ -180,8 +196,7 @@ class CallbacksSpectre:
             current_spectrum_fs = copy.deepcopy(spectrum_fs)
             self.selected_spectra_fs.append(current_spectrum_fs)
 
-        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4,
-                                             fit_only=False)
+        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4,fit_only=False)
         self.fitted_spectra_fs = copy.deepcopy(self.selected_spectra_fs)
 
         self.update_wafer_data()
@@ -193,87 +208,22 @@ class CallbacksSpectre:
         if self.model_fs is None:
             self.show_alert("Please load a fit model before fitting.")
             return
-        selected_wafer_name = self.ui.wafers_listbox.currentItem().text()
-        selected_coords = self.selected_coords()
+        wafer_name, coords = self.spectre_id()
 
         self.selected_spectra_fs = Spectra()
-
         for spectrum_fs in self.spectra_fs:
-            fname_parts = spectrum_fs.fname.split("_")
-            wafer_name_fs = fname_parts[0] + "_" + fname_parts[1]
-            coord_values_str = fname_parts[-1].split('(')[1].split(')')[
-                0].split(',')
-            x_coord_fs = float(coord_values_str[0])
-            y_coord_fs = float(coord_values_str[1])
-
-            # Fit only the selected spectrum
-            if wafer_name_fs == selected_wafer_name and (
-                    x_coord_fs, y_coord_fs) in selected_coords:
-                # Create a new instance for each selected spectrum
+            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+            # Fit the selected spectrum
+            if wafer_name_fs == wafer_name and coord_fs == coords:
                 current_spectrum_fs = copy.deepcopy(spectrum_fs)
                 self.selected_spectra_fs.append(current_spectrum_fs)
 
-        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4,
-                                             fit_only=True)
+        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4,fit_only=True)
         self.fitted_spectra_fs = copy.deepcopy(self.selected_spectra_fs)
 
         self.update_wafer_data()
         self.plot_sel_spectre()
         print("Selected spectrum is fitted")
-
-    def update_wafer_data(self):
-        """Update wafer data (self.spectra) with fitted results"""
-        for fitted_spectrum_fs in self.fitted_spectra_fs:
-            fname_parts = fitted_spectrum_fs.fname.split("_")
-            wafer_name_fs = fname_parts[0] + "_" + fname_parts[1]
-            coord_values_str = fname_parts[-1].split('(')[1].split(')')[
-                0].split(',')
-            x_coord_fs = float(coord_values_str[0])
-            y_coord_fs = float(coord_values_str[1])
-
-            # Extracting fitted results
-            x = fitted_spectrum_fs.x.tolist()
-            y = fitted_spectrum_fs.y.tolist()
-            best_fit = fitted_spectrum_fs.result_fit.best_fit.tolist()
-            residual = fitted_spectrum_fs.result_fit.residual.tolist()
-
-            # Update the self.spectra dataframe with the fitted results
-            coords = (x_coord_fs, y_coord_fs)
-            wafer_data = self.spectra[wafer_name_fs]
-            # Initialize the keys before updating
-            wafer_data[coords]['bestfit'] = {'wavenumber': [], 'intensity': []}
-            wafer_data[coords]['residual'] = {'wavenumber': [], 'intensity': []}
-            wafer_data[coords]['raw_bl'] = {'wavenumber': [], 'intensity': []}
-
-            # Update the 'bestfit' spectrum with fitted results
-            wafer_data[coords]['bestfit'] = {'wavenumber': x,
-                                             'intensity': best_fit}
-            wafer_data[coords]['residual'] = {'wavenumber': x,
-                                              'intensity': residual}
-            wafer_data[coords]['raw_bl'] = {'wavenumber': x, 'intensity': y}
-
-            for model in fitted_spectrum_fs.result_fit.components:
-                params = model.make_params()
-                prefix = model.prefix
-                y_model = (model.eval(params, x=x)).tolist()
-                if f'{prefix}' not in wafer_data[coords]:
-                    wafer_data[coords][f'{prefix}'] = {}
-                    wafer_data[coords][f'{prefix}']['wavenumber'] = x
-                    wafer_data[coords][f'{prefix}']['intensity'] = y_model
-
-    def selected_coords(self):
-        """Get the selected items in the measurement_sites list"""
-        selected_items = self.ui.spectra_listbox.selectedItems()
-        selected_coords = []
-        if selected_items:
-            for selected_item in selected_items:
-                selected_text = selected_item.text()
-                # Extract XY coordinates from the selected spectra
-                parts = selected_text.split(", ")
-                x_coord = float(parts[0].split(":")[1])
-                y_coord = float(parts[1].split(":")[1])
-                selected_coords.append((x_coord, y_coord))
-        return selected_coords
 
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
@@ -294,23 +244,17 @@ class CallbacksSpectre:
         self.ui.spectra_listbox.clear()
         self.clear_wafer_plot()
         # Get the selected_wafer_name
-        selected_item = self.ui.wafers_listbox.currentItem()
-        if selected_item:
-            selected_wafer_name = selected_item.text()
-            if selected_wafer_name in self.spectra:
-                wafer_spectra = self.spectra[selected_wafer_name]
-
-                if wafer_spectra:
-                    for coord_values, spectrum in wafer_spectra.items():
-                        coord_str = f"X: {coord_values[0]}, Y: " \
-                                    f"{coord_values[1]}"
-
-                        item = QListWidgetItem(coord_str)
-                        self.ui.spectra_listbox.addItem(item)
+        wafer_name = self.ui.wafers_listbox.currentItem().text()
+        if wafer_name in self.spectra:
+            wafer_spectra = self.spectra[wafer_name]
+            if wafer_spectra:
+                for coord_values, spectrum in wafer_spectra.items():
+                    coord_str = f"({coord_values[0]},{coord_values[1]})"
+                    item = QListWidgetItem(coord_str)
+                    self.ui.spectra_listbox.addItem(item)
         # Update the item count label
         item_count = self.ui.spectra_listbox.count()
         self.ui.item_count_label.setText(f"Number of points: {item_count}")
-
         # Select the first item by default
         if self.ui.spectra_listbox.count() > 0:
             self.ui.spectra_listbox.setCurrentRow(0)
@@ -377,15 +321,49 @@ class CallbacksSpectre:
         self.ax.autoscale()
         self.canvas.draw()
         self.toolbar.home()
+    def update_wafer_data(self):
+        """Update wafer data (self.spectra) with fitted results"""
+        for fitted_spectrum_fs in self.fitted_spectra_fs:
+            fname_parts = fitted_spectrum_fs.fname.split("_")
+            wafer_name_fs = fname_parts[0] + "_" + fname_parts[1]
+            coord_values_str = fname_parts[-1].split('(')[1].split(')')[0].split(',')
+            x_coord_fs = float(coord_values_str[0])
+            y_coord_fs = float(coord_values_str[1])
 
+            # Extracting fitted results
+            x = fitted_spectrum_fs.x.tolist()
+            y = fitted_spectrum_fs.y.tolist()
+            best_fit = fitted_spectrum_fs.result_fit.best_fit.tolist()
+            residual = fitted_spectrum_fs.result_fit.residual.tolist()
+
+            # Update the self.spectra dataframe with the fitted results
+            coords = (x_coord_fs, y_coord_fs)
+            wafer_data = self.spectra[wafer_name_fs]
+            # Initialize the keys before updating
+            wafer_data[coords]['bestfit'] = {'wavenumber': [], 'intensity': []}
+            wafer_data[coords]['residual'] = {'wavenumber': [], 'intensity': []}
+            wafer_data[coords]['raw_bl'] = {'wavenumber': [], 'intensity': []}
+
+            # Update the 'bestfit' spectrum with fitted results
+            wafer_data[coords]['bestfit'] = {'wavenumber': x, 'intensity': best_fit}
+            wafer_data[coords]['residual'] = {'wavenumber': x,
+                                              'intensity': residual}
+            wafer_data[coords]['raw_bl'] = {'wavenumber': x, 'intensity': y}
+
+            for model in fitted_spectrum_fs.result_fit.components:
+                params = model.make_params()
+                prefix = model.prefix
+                y_model = (model.eval(params, x=x)).tolist()
+                if f'{prefix}' not in wafer_data[coords]:
+                    wafer_data[coords][f'{prefix}'] = {}
+                    wafer_data[coords][f'{prefix}']['wavenumber'] = x
+                    wafer_data[coords][f'{prefix}']['intensity'] = y_model
     def plot_spectre(self, x=None, y=None, coord=None):
-        """To plot and show (fitted) spectre(s)"""
+        """To plot raw spectra"""
 
         self.clear_spectre_view()
-
         if x is not None and y is not None:
             plt.close('all')
-
             # Create a figure with initial size
             fig = plt.figure()
             self.ax = fig.add_subplot(111)
@@ -393,19 +371,9 @@ class CallbacksSpectre:
             if isinstance(x, (list, np.ndarray)) and isinstance(y, (
                     list, np.ndarray)) and isinstance(coord,
                                                       (list, np.ndarray)):
-                for wavenumbers, intensities, (x_coord, y_coord, key) in zip(x,
-                                                                             y,
-                                                                             coord):
-                    if key in self.get_selected_keys_to_plot():
-                        self.ax.plot(wavenumbers, intensities,
-                                     label=f"({x_coord};{y_coord})_{key}")
+                for wavenumbers, intensities, coords in zip(x,y,coord):
 
-                    # Check if the checkbox_components is checked and if key
-                    # starts with 'm'
-                    if self.ui.cb_components.isChecked() and key.startswith(
-                            'm'):
-                        self.ax.plot(wavenumbers, intensities, '--',
-                                     label=f"({x_coord};{y_coord})_{key}")
+                    self.ax.plot(wavenumbers, intensities, label=f"{coord}_raw")
 
             self.ax.set_xlabel("Raman shift (cm-1)")
             self.ax.set_ylabel("Intensity (a.u)")
@@ -439,54 +407,36 @@ class CallbacksSpectre:
 
     def plot_sel_spectre_delayed(self):
         """" Plot all selected spectra"""
-        # Get the selected wafer name
-        selected_wafer_item = self.ui.wafers_listbox.currentItem()
+        #Get selectede spectre(s) ids
+        wafer_name, coords = self.spectre_id()
 
-        if selected_wafer_item:
-            selected_wafer_name = selected_wafer_item.text()
+        if wafer_name is not None and coords is not None:
+            wafer_data = self.spectra[wafer_name]
+            print(wafer_data)
+            if coords is not None :
+                all_wavenumbers = []
+                all_intensities = []
+                all_coords = []
+                for coord in coords:
+                    print(coord)
+                    sel_spectrum = wafer_data[coord]
+                    for key, spectrum_data in sel_spectrum.items():
+                        wavenumbers = spectrum_data['wavenumber']
+                        intensities = spectrum_data['intensity']
 
-            # Check if selected wafer name exists in sites dict
-            if selected_wafer_name in self.spectra:
-                wafer_spectra = self.spectra[selected_wafer_name]
-
-                # Get the selected items in the spectrum list
-                selected_items = \
-                    self.ui.spectra_listbox.selectedItems()
-
-                if selected_items:
-                    # lists to store spectra and coordinate of selected sites
-                    all_wavenumbers = []
-                    all_intensities = []
-                    all_coords = []
-
-                    for selected_item in selected_items:
-                        selected_text = selected_item.text()
-
-                        # Extract XY coordinates from the selected spectra
-                        parts = selected_text.split(", ")
-                        x_coord = float(parts[0].split(":")[1])
-                        y_coord = float(parts[1].split(":")[1])
-
-                        if (x_coord, y_coord) in wafer_spectra:
-                            selected_spectre = wafer_spectra[(x_coord, y_coord)]
-
-                            for key, spectrum_data in selected_spectre.items():
-                                wavenumbers = spectrum_data['wavenumber']
-                                intensities = spectrum_data['intensity']
-
-                                all_wavenumbers.append(wavenumbers)
-                                all_intensities.append(intensities)
-                                all_coords.append((x_coord, y_coord, key))
+                        all_wavenumbers.append(wavenumbers)
+                        all_intensities.append(intensities)
+                        all_coords.append(coord)
 
                     # Call plot_spectre to plot the selected spectra
                     self.plot_spectre(all_wavenumbers, all_intensities,
                                       all_coords)
                     # Wafer plot
-                    selected_coords = self.selected_coords()
-                    self.plot_wafer(selected_wafer_name, selected_coords)
+                    wafer_name, coords = self.spectre_id()
+                    self.plot_wafer(wafer_name, coords)
 
                 else:
-                    # If no measurement site is selected, clear plot view
+                    # If no spectrum is selected, clear plot view
                     self.clear_spectre_view()
             else:
                 # If the selected wafer name does not exist, clear plot view

@@ -271,9 +271,9 @@ class MainWindow:
 
     def show_about_dialog(self):
         about_text = """
-        <h3>DaProViz</h3>
-        <p>Tool for Data Processing and Visualization</p>
-        <p>Version: 0.10 / Build 240129 </p>
+        <h3>SPECTROview</h3>
+        <p>Spectroscopic Data Processing and Visualization</p>
+        <p>Version: 0.50 / Build 240130 </p>
         <p>Contact: Van-Hoan Le (van-hoan.le@cea.fr)</p>
         """
         about_dialog = QDialog(self.ui)

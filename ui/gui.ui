@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>1350</width>
-    <height>951</height>
+    <height>956</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>DaProViz (Data Processing and Visualization)</string>
+   <string>SPECTROview (Spectroscopic Data Processing and Visualization)</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="baseSize">
@@ -789,8 +789,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>449</width>
-                             <height>308</height>
+                             <width>216</width>
+                             <height>287</height>
                             </rect>
                            </property>
                           </widget>
@@ -1655,8 +1655,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1087</width>
-               <height>852</height>
+               <width>756</width>
+               <height>835</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
@@ -1775,7 +1775,6 @@
                  <property name="font">
                   <font>
                    <pointsize>8</pointsize>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -1804,7 +1803,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -1833,7 +1831,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -1862,7 +1859,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2092,7 +2088,6 @@
                     <widget class="QPushButton" name="btn_add_a_plot">
                      <property name="font">
                       <font>
-                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -2190,7 +2185,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2868,7 +2862,7 @@
      <x>0</x>
      <y>0</y>
      <width>1350</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpen">

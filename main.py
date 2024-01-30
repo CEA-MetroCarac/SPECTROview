@@ -28,7 +28,7 @@ class MainWindow:
         ui_file.open(QFile.ReadOnly)
         self.ui = loader.load(ui_file)
         ui_file.close()
-        # commit and push from macbook
+
         # Create an instance of CallbacksDf and pass the self.ui object
         self.callbacks_df = CallbacksDf(self.ui)
         self.callbacks_spectre = CallbacksSpectre(self.ui)

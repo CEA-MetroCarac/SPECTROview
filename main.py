@@ -11,7 +11,7 @@ from ui import resources_new
 
 from callbacks_df import CallbacksDf
 from callbacks_plot import CallbacksPlot
-from callbacks_spectre import CallbacksSpectre
+from wafer import Wafer
 from workspace import SaveLoadWorkspace
 
 DIRNAME = os.path.dirname(__file__)
@@ -31,7 +31,7 @@ class MainWindow:
 
         # Create an instance of CallbacksDf and pass the self.ui object
         self.callbacks_df = CallbacksDf(self.ui)
-        self.callbacks_spectre = CallbacksSpectre(self.ui)
+        self.wafer = Wafer(self.ui)
         self.callbacks_plot = CallbacksPlot(self.ui, self.callbacks_df)
         self.workspace = SaveLoadWorkspace(self.ui, self.callbacks_df,
                                            self.callbacks_plot)
@@ -158,26 +158,26 @@ class MainWindow:
         ########################################################
 
         self.ui.btn_open_wafers.clicked.connect(
-            self.callbacks_spectre.open_csv)
+            self.wafer.open_csv)
         self.ui.btn_remove_wafer.clicked.connect(
-            self.callbacks_spectre.remove_wafer)
+            self.wafer.remove_wafer)
 
         self.ui.btn_copy_fig.clicked.connect(
-            self.callbacks_spectre.copy_fig)
+            self.wafer.copy_fig)
 
         self.ui.btn_sel_all.clicked.connect(
-            self.callbacks_spectre.select_all_spectra)
+            self.wafer.select_all_spectra)
         self.ui.btn_sel_vertical.clicked.connect(
-            self.callbacks_spectre.select_spectra_vertical)
+            self.wafer.select_spectra_vertical)
         self.ui.btn_sel_horizontal.clicked.connect(
-            self.callbacks_spectre.select_spectra_horizontal)
+            self.wafer.select_spectra_horizontal)
 
         self.ui.btn_load_model.clicked.connect(
-            self.callbacks_spectre.open_model)
+            self.wafer.open_model)
         self.ui.btn_fit.clicked.connect(
-            self.callbacks_spectre.fitting_sel_spectrum)
+            self.wafer.fitting_sel_spectrum)
         self.ui.btn_fit_all_wafers.clicked.connect(
-            self.callbacks_spectre.fitting_all_wafer)
+            self.wafer.fitting_all_wafer)
 
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)
@@ -309,10 +309,10 @@ class MainWindow:
 #     window = MainWindow()
 #     app.setStyle("Fusion")
 #     if file_paths is not None:
-#         window.callbacks_spectre.open_csv(file_paths=file_paths)
+#         window.wafer.open_csv(file_paths=file_paths)
 #
 #     if fname_json is not None:
-#         window.callbacks_spectre.open_model(fname_json=fname_json)
+#         window.wafer.open_model(fname_json=fname_json)
 #
 #         # window.saveloadws.save_workspace(fname_json='toto.json')
 #     # window.saveloadws.load_workspace(fname_json='toto.json')
@@ -336,10 +336,10 @@ def launcher3(file_paths=None, fname_json=None):
     window = MainWindow()
     app.setStyle("Fusion")
     if file_paths is not None:
-        window.callbacks_spectre.open_csv(file_paths=file_paths)
+        window.wafer.open_csv(file_paths=file_paths)
 
     if fname_json is not None:
-        window.callbacks_spectre.open_model(fname_json=fname_json)
+        window.wafer.open_model(fname_json=fname_json)
 
         # window.saveloadws.save_workspace(fname_json='toto.json')
     # window.saveloadws.load_workspace(fname_json='toto.json')

@@ -1,4 +1,4 @@
-# callbacks_spectre.py module
+# wafer.py module
 import os
 import copy
 import win32clipboard

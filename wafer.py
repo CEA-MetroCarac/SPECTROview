@@ -1,4 +1,4 @@
-# callbacks_spectre.py module
+# wafer.py module
 import os
 import copy
 # import win32clipboard
@@ -32,7 +32,7 @@ DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 
 
-class CallbacksSpectre:
+class Wafer:
     def __init__(self, ui):
         self.ui = ui
         QSettings.setDefaultFormat(QSettings.IniFormat)

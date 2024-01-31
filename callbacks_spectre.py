@@ -149,6 +149,7 @@ class CallbacksSpectre:
                 spectrum_fs.fname = f"{wafer_name}_{coords}"
 
                 self.spectra_fs.append(spectrum_fs)
+            print(self.spectra_fs)
 
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
@@ -182,91 +183,19 @@ class CallbacksSpectre:
                 x, y = map(float, text.strip('()').split(','))
                 coord = (x, y)
                 coords.append(coord)
+
         return wafer_name, coords
 
     def spectre_id_fs(self, spectrum_fs=None):
         """Get selected spectre id(s) of FITSPY object"""
         fname_parts = spectrum_fs.fname.split("_")
-        wafer_name_fs = fname_parts[0] + "_" + fname_parts[1]
-        coord_fs = fname_parts[-1].split('(')[1].split(')')[0]
-        print(wafer_name_fs)
-        print(coord_fs)
+        wafer_name_fs = "_".join(fname_parts[:2])
+
+        coord_str = fname_parts[-1].split('(')[1].split(')')[0]
+        # Convert the coordinates to a tuple of floats
+        coord_fs = tuple(map(float, coord_str.split(',')))
+
         return wafer_name_fs, coord_fs
-
-    def upd_wafers_list(self):
-        """ To update the wafer listbox"""
-        self.ui.wafers_listbox.clear()
-        wafer_names = list(self.wafers.keys())
-        for wafer_name in wafer_names:
-            item = QListWidgetItem(wafer_name)
-            self.ui.wafers_listbox.addItem(item)
-            self.clear_wafer_plot()  # Clear the wafer_plot
-
-        # Select the first item by default
-        if self.ui.wafers_listbox.count() > 0:
-            self.ui.wafers_listbox.setCurrentRow(0)
-            QTimer.singleShot(100, self.upd_spectra_list)
-
-    def upd_spectra_list(self):
-        """to update the spectra list"""
-        self.ui.spectra_listbox.clear()
-        self.clear_wafer_plot()
-        # Get the selected_wafer_name
-        wafer_name = self.ui.wafers_listbox.currentItem().text()
-        if wafer_name in self.spectra:
-            wafer_spectra = self.spectra[wafer_name]
-            if wafer_spectra:
-                for coord_values, spectrum in wafer_spectra.items():
-                    coord_str = f"({coord_values[0]},{coord_values[1]})"
-                    item = QListWidgetItem(coord_str)
-                    self.ui.spectra_listbox.addItem(item)
-        # Update the item count label
-        item_count = self.ui.spectra_listbox.count()
-        self.ui.item_count_label.setText(f"Number of points: {item_count}")
-        # Select the first item by default
-        if self.ui.spectra_listbox.count() > 0:
-            self.ui.spectra_listbox.setCurrentRow(0)
-            QTimer.singleShot(100, self.plot_sel_spectre)
-
-    def remove_wafer(self):
-        """To remove a wafer from wafer_listbox"""
-        selected_item = self.ui.wafers_listbox.currentItem()
-        if selected_item:
-            selected_wafer_name = selected_item.text()
-            if selected_wafer_name in self.wafers:
-                del self.spectra[selected_wafer_name]
-                del self.wafers[selected_wafer_name]
-                # Remove spectra from self.spectra_fs
-                self.spectra_fs = [spectrum_fs for spectrum_fs in
-                                   self.spectra_fs if
-                                   not spectrum_fs.fname.startswith(
-                                       selected_wafer_name)]
-
-                self.upd_wafers_list()
-        # Clear spectra_listbox and spectre_view
-        self.ui.spectra_listbox.clear()
-        self.clear_spectre_view()
-        self.clear_wafer_plot()
-
-    def clear_layout(self, layout):
-        """Clear everything within a given Qlayout"""
-        if layout is not None:
-            for i in reversed(range(layout.count())):
-                item = layout.itemAt(i)
-                if isinstance(item.widget(),
-                              (FigureCanvas, NavigationToolbar2QT)):
-                    widget = item.widget()
-                    layout.removeWidget(widget)
-                    widget.close()
-
-    def clear_spectre_view(self):
-        """ Clear plot and toolbar within the spectre_view"""
-        self.clear_layout(self.ui.spectre_view_frame.layout())
-        self.clear_layout(self.ui.toolbar_frame.layout())
-
-    def clear_wafer_plot(self):
-        """ To clear wafer plot"""
-        self.clear_layout(self.ui.wafer_plot.layout())
 
     def plot_spectre(self, x=None, y=None, coord=None):
         """To plot raw spectra"""
@@ -408,6 +337,7 @@ class CallbacksSpectre:
         wafer_name, coords = self.spectre_id()
 
         self.selected_spectra_fs = Spectra()
+
         for spectrum_fs in self.spectra_fs:
             wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
             # Fit the selected spectrum
@@ -476,19 +406,80 @@ class CallbacksSpectre:
             selected_keys.append('residual')
         return selected_keys
 
-    def selected_coords(self):
-        """Get the selected items in the measurement_sites list"""
-        selected_items = self.ui.spectra_listbox.selectedItems()
-        selected_coords = []
-        if selected_items:
-            for selected_item in selected_items:
-                selected_text = selected_item.text()
-                # Extract XY coordinates from the selected spectra
-                parts = selected_text.split(", ")
-                x_coord = float(parts[0].split(":")[1])
-                y_coord = float(parts[1].split(":")[1])
-                selected_coords.append((x_coord, y_coord))
-        return selected_coords
+    def upd_wafers_list(self):
+        """ To update the wafer listbox"""
+        self.ui.wafers_listbox.clear()
+        wafer_names = list(self.wafers.keys())
+        for wafer_name in wafer_names:
+            item = QListWidgetItem(wafer_name)
+            self.ui.wafers_listbox.addItem(item)
+            self.clear_wafer_plot()  # Clear the wafer_plot
+
+        # Select the first item by default
+        if self.ui.wafers_listbox.count() > 0:
+            self.ui.wafers_listbox.setCurrentRow(0)
+            QTimer.singleShot(100, self.upd_spectra_list)
+
+    def upd_spectra_list(self):
+        """to update the spectra list"""
+        self.ui.spectra_listbox.clear()
+        self.clear_wafer_plot()
+        # Get the selected_wafer_name
+        wafer_name = self.ui.wafers_listbox.currentItem().text()
+        if wafer_name in self.spectra:
+            wafer_spectra = self.spectra[wafer_name]
+            if wafer_spectra:
+                for coord_values, spectrum in wafer_spectra.items():
+                    coord_str = f"({coord_values[0]},{coord_values[1]})"
+                    item = QListWidgetItem(coord_str)
+                    self.ui.spectra_listbox.addItem(item)
+        # Update the item count label
+        item_count = self.ui.spectra_listbox.count()
+        self.ui.item_count_label.setText(f"Number of points: {item_count}")
+        # Select the first item by default
+        if self.ui.spectra_listbox.count() > 0:
+            self.ui.spectra_listbox.setCurrentRow(0)
+            QTimer.singleShot(100, self.plot_sel_spectre)
+
+    def remove_wafer(self):
+        """To remove a wafer from wafer_listbox"""
+        selected_item = self.ui.wafers_listbox.currentItem()
+        if selected_item:
+            selected_wafer_name = selected_item.text()
+            if selected_wafer_name in self.wafers:
+                del self.spectra[selected_wafer_name]
+                del self.wafers[selected_wafer_name]
+                # Remove spectra from self.spectra_fs
+                self.spectra_fs = [spectrum_fs for spectrum_fs in
+                                   self.spectra_fs if
+                                   not spectrum_fs.fname.startswith(
+                                       selected_wafer_name)]
+
+                self.upd_wafers_list()
+        # Clear spectra_listbox and spectre_view
+        self.ui.spectra_listbox.clear()
+        self.clear_spectre_view()
+        self.clear_wafer_plot()
+
+    def clear_layout(self, layout):
+        """Clear everything within a given Qlayout"""
+        if layout is not None:
+            for i in reversed(range(layout.count())):
+                item = layout.itemAt(i)
+                if isinstance(item.widget(),
+                              (FigureCanvas, NavigationToolbar2QT)):
+                    widget = item.widget()
+                    layout.removeWidget(widget)
+                    widget.close()
+
+    def clear_spectre_view(self):
+        """ Clear plot and toolbar within the spectre_view"""
+        self.clear_layout(self.ui.spectre_view_frame.layout())
+        self.clear_layout(self.ui.toolbar_frame.layout())
+
+    def clear_wafer_plot(self):
+        """ To clear wafer plot"""
+        self.clear_layout(self.ui.wafer_plot.layout())
 
     def copy_fig(self, canvas):
         self.save_dpi = float(self.ui.ent_plot_save_dpi.text())

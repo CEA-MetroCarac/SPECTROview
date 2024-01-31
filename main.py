@@ -321,14 +321,14 @@ def launcher2(file_paths=None, fname_json=None):
 
 
 if __name__ == "__main__":
-    dirname = r"C:\Users\VL251876\PycharmProjects\workspace\projects\Raman" \
-              r"\P_23_10_DaProViz\data_test\RAW spectrum"
+    dirname = r"C:\Users\VL251876\Documents\8. " \
+              r"Python\SPECTROview\data_test\RAW spectrum"
     fname1 = os.path.join(dirname, 'D23S2204.2_05.csv')
     fname2 = os.path.join(dirname, 'D23S2204.2_10.csv')
     fname3 = os.path.join(dirname, 'D23S2204.2_19.csv')
     fname4 = os.path.join(dirname, 'D23S2204.2_07.csv')
-    fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
-    launcher2([fname1, fname2, fname3], fname_json)
+    fname_json = os.path.join(dirname, 'SIMPLE_MODEL.json')
+    launcher2([fname1], fname_json)
 
 # def launcher3(file_paths=None, fname_json=None):
 #     app = QApplication()

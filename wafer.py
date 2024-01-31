@@ -105,6 +105,7 @@ class Wafer:
                         print("wafer is already opened")
                     else:
                         self.wafers[wafer_name] = wafer_df
+
         self.upd_wafers_list()
         self.extract_spectra()  # extract spectra of all wafers df
 
@@ -418,22 +419,23 @@ class Wafer:
         """to update the spectra list"""
         self.ui.spectra_listbox.clear()
         self.clear_wafer_plot()
-        # Get the selected_wafer_name
-        wafer_name = self.ui.wafers_listbox.currentItem().text()
-        if wafer_name in self.spectra:
-            wafer_spectra = self.spectra[wafer_name]
-            if wafer_spectra:
-                for coord_values, spectrum in wafer_spectra.items():
-                    coord_str = f"({coord_values[0]},{coord_values[1]})"
-                    item = QListWidgetItem(coord_str)
-                    self.ui.spectra_listbox.addItem(item)
+        current_item = self.ui.wafers_listbox.currentItem()
+        if current_item is not None:
+            wafer_name = current_item.text()
+            if wafer_name in self.spectra:
+                wafer_spectra = self.spectra[wafer_name]
+                if wafer_spectra:
+                    for coord_values, spectrum in wafer_spectra.items():
+                        coord_str = f"({coord_values[0]},{coord_values[1]})"
+                        item = QListWidgetItem(coord_str)
+                        self.ui.spectra_listbox.addItem(item)
         # Update the item count label
         item_count = self.ui.spectra_listbox.count()
         self.ui.item_count_label.setText(f"Number of points: {item_count}")
         # Select the first item by default
         if self.ui.spectra_listbox.count() > 0:
             self.ui.spectra_listbox.setCurrentRow(0)
-            QTimer.singleShot(100, self.plot_sel_spectre)
+            QTimer.singleShot(50, self.plot_sel_spectre)
 
     def remove_wafer(self):
         """To remove a wafer from wafer_listbox"""
@@ -505,9 +507,7 @@ class Wafer:
         for i in range(item_count):
             item = self.ui.spectra_listbox.item(i)
             coord_str = item.text()
-            # Extract X and Y coordinates from the item's text
-            parts = coord_str.split(", ")
-            x_coord = float(parts[0].split(":")[1])
+            x_coord, y_coord = map(float, coord_str.strip('()').split(','))
             if x_coord == 0:
                 item.setSelected(True)
 
@@ -518,10 +518,7 @@ class Wafer:
         for i in range(item_count):
             item = self.ui.spectra_listbox.item(i)
             coord_str = item.text()
-            # Extract X and Y coordinates from the item's text
-            parts = coord_str.split(", ")
-            y_coord = float(parts[1].split(":")[1])
-
+            x_coord, y_coord = map(float, coord_str.strip('()').split(','))
             if y_coord == 0:
                 item.setSelected(True)
 

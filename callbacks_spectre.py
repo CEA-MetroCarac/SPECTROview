@@ -149,7 +149,6 @@ class CallbacksSpectre:
                 spectrum_fs.fname = f"{wafer_name}_{coords}"
 
                 self.spectra_fs.append(spectrum_fs)
-            print(self.spectra_fs)
 
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
@@ -183,7 +182,6 @@ class CallbacksSpectre:
                 x, y = map(float, text.strip('()').split(','))
                 coord = (x, y)
                 coords.append(coord)
-
         return wafer_name, coords
 
     def spectre_id_fs(self, spectrum_fs=None):
@@ -192,11 +190,50 @@ class CallbacksSpectre:
         wafer_name_fs = "_".join(fname_parts[:2])
 
         coord_str = fname_parts[-1].split('(')[1].split(')')[0]
-        # Convert the coordinates to a tuple of floats
         coord_fs = tuple(map(float, coord_str.split(',')))
-
         return wafer_name_fs, coord_fs
+    def fitting_sel_spectrum(self):
+        """Fit only selected spectrum(s)"""
+        if self.model_fs is None:
+            self.show_alert("Please load a fit model before fitting.")
+            return
+        wafer_name, coords = self.spectre_id()
+        self.selected_spectra_fs = Spectra()
 
+        for spectrum_fs in self.spectra_fs:
+            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+            # Fit the selected spectrum
+            if wafer_name_fs == wafer_name and coord_fs in coords:
+                current_spectrum_fs = copy.deepcopy(spectrum_fs)
+                self.selected_spectra_fs.append(current_spectrum_fs)
+                print("spectrum is selected")
+            else:
+                print('spectrum is not selected')
+
+        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4, fit_only=True)
+        self.fitted_spectra_fs = copy.deepcopy(self.selected_spectra_fs)
+
+        # self.update_wafer_data()
+        self.plot_sel_spectre()
+
+    def fitting_all_wafer(self):
+        """ Apply loaded fit model to all selected spectra"""
+        if self.model_fs is None:
+            self.show_alert("Please load a fit model before fitting.")
+            return
+
+        self.selected_spectra_fs = Spectra()
+        for spectrum_fs in self.spectra_fs:
+            current_spectrum_fs = copy.deepcopy(spectrum_fs)
+            self.selected_spectra_fs.append(current_spectrum_fs)
+
+        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4,
+                                             fit_only=False)
+        self.fitted_spectra_fs = copy.deepcopy(self.selected_spectra_fs)
+
+        # self.update_wafer_data()
+        self.plot_sel_spectre()
+        print("All spectra are fitted")
     def plot_spectre(self, x=None, y=None, coord=None):
         """To plot raw spectra"""
 
@@ -309,49 +346,6 @@ class CallbacksSpectre:
         self.ax.autoscale()
         self.canvas.draw()
         self.toolbar.home()
-
-    def fitting_all_wafer(self):
-        """ Apply loaded fit model to all selected spectra"""
-        if self.model_fs is None:
-            self.show_alert("Please load a fit model before fitting.")
-            return
-
-        self.selected_spectra_fs = Spectra()
-        for spectrum_fs in self.spectra_fs:
-            current_spectrum_fs = copy.deepcopy(spectrum_fs)
-            self.selected_spectra_fs.append(current_spectrum_fs)
-
-        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4,
-                                             fit_only=False)
-        self.fitted_spectra_fs = copy.deepcopy(self.selected_spectra_fs)
-
-        self.update_wafer_data()
-        self.plot_sel_spectre()
-        print("All spectra are fitted")
-
-    def fitting_sel_spectrum(self):
-        """Fit only selected spectrum(s)"""
-        if self.model_fs is None:
-            self.show_alert("Please load a fit model before fitting.")
-            return
-        wafer_name, coords = self.spectre_id()
-
-        self.selected_spectra_fs = Spectra()
-
-        for spectrum_fs in self.spectra_fs:
-            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
-            # Fit the selected spectrum
-            if wafer_name_fs == wafer_name and coord_fs == coords:
-                current_spectrum_fs = copy.deepcopy(spectrum_fs)
-                self.selected_spectra_fs.append(current_spectrum_fs)
-
-        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4,
-                                             fit_only=True)
-        self.fitted_spectra_fs = copy.deepcopy(self.selected_spectra_fs)
-
-        self.update_wafer_data()
-        self.plot_sel_spectre()
-        print("Selected spectrum is fitted")
 
     def update_wafer_data(self):
         """Update wafer data (self.spectra) with fitted results"""

@@ -1,7 +1,7 @@
 # callbacks_spectre.py module
 import os
 import copy
-#import win32clipboard
+# import win32clipboard
 from io import BytesIO
 import numpy as np
 import pandas as pd
@@ -167,6 +167,7 @@ class CallbacksSpectre:
                 return
             fname_json = selected_file
         self.model_fs = self.spectra_fs.load_model(fname_json, ind=0)
+
         display_name = QFileInfo(fname_json).baseName()
         self.ui.display_loaded_model.setText(display_name)
 
@@ -280,7 +281,7 @@ class CallbacksSpectre:
             if isinstance(x, (list, np.ndarray)) and isinstance(y, (
                     list, np.ndarray)) and isinstance(coord,
                                                       (list, np.ndarray)):
-                for wavenumbers, intensities, coords in zip(x,y,coord):
+                for wavenumbers, intensities, coords in zip(x, y, coord):
                     self.ax.plot(wavenumbers, intensities, label=f"{coord}_raw")
 
             self.ax.set_xlabel("Raman shift (cm-1)")
@@ -316,14 +317,15 @@ class CallbacksSpectre:
                 all_coords = []
 
                 for coord in coords:
-                    sel_spectrum = wafer_data.get(coord)  # Use get to handle missing keys
+                    sel_spectrum = wafer_data.get(
+                        coord)  # Use get to handle missing keys
                     wavenumbers = sel_spectrum.get('wavenumber', [])
                     intensities = sel_spectrum.get('intensity', [])
                     all_wavenumbers.append(wavenumbers)
                     all_intensities.append(intensities)
                     all_coords.append(coord)
                 self.plot_spectre(all_wavenumbers, all_intensities, all_coords)
-                self.plot_wafer(wafer_name, coords) # Wafer plot
+                self.plot_wafer(wafer_name, coords)  # Wafer plot
             else:
                 self.clear_spectre_view()
         else:
@@ -344,7 +346,8 @@ class CallbacksSpectre:
             plt.close('all')
 
             fig, ax = plt.subplots()
-            ax.scatter(all_x_coords, all_y_coords, marker='x', color='gray', s=10)
+            ax.scatter(all_x_coords, all_y_coords, marker='x', color='gray',
+                       s=10)
 
             # Highlight selected spectra in red
             if selected_coords:
@@ -383,12 +386,14 @@ class CallbacksSpectre:
         if self.model_fs is None:
             self.show_alert("Please load a fit model before fitting.")
             return
+
         self.selected_spectra_fs = Spectra()
         for spectrum_fs in self.spectra_fs:
             current_spectrum_fs = copy.deepcopy(spectrum_fs)
             self.selected_spectra_fs.append(current_spectrum_fs)
 
-        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4, fit_only=False)
+        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4,
+                                             fit_only=False)
         self.fitted_spectra_fs = copy.deepcopy(self.selected_spectra_fs)
 
         self.update_wafer_data()
@@ -410,7 +415,8 @@ class CallbacksSpectre:
                 current_spectrum_fs = copy.deepcopy(spectrum_fs)
                 self.selected_spectra_fs.append(current_spectrum_fs)
 
-        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4, fit_only=True)
+        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4,
+                                             fit_only=True)
         self.fitted_spectra_fs = copy.deepcopy(self.selected_spectra_fs)
 
         self.update_wafer_data()
@@ -422,7 +428,8 @@ class CallbacksSpectre:
         for fitted_spectrum_fs in self.fitted_spectra_fs:
             fname_parts = fitted_spectrum_fs.fname.split("_")
             wafer_name_fs = fname_parts[0] + "_" + fname_parts[1]
-            coord_values_str = fname_parts[-1].split('(')[1].split(')')[0].split(',')
+            coord_values_str = fname_parts[-1].split('(')[1].split(')')[
+                0].split(',')
             x_coord_fs = float(coord_values_str[0])
             y_coord_fs = float(coord_values_str[1])
 
@@ -441,7 +448,8 @@ class CallbacksSpectre:
             wafer_data[coords]['raw_bl'] = {'wavenumber': [], 'intensity': []}
 
             # Update the 'bestfit' spectrum with fitted results
-            wafer_data[coords]['bestfit'] = {'wavenumber': x, 'intensity': best_fit}
+            wafer_data[coords]['bestfit'] = {'wavenumber': x,
+                                             'intensity': best_fit}
             wafer_data[coords]['residual'] = {'wavenumber': x,
                                               'intensity': residual}
             wafer_data[coords]['raw_bl'] = {'wavenumber': x, 'intensity': y}
@@ -455,7 +463,6 @@ class CallbacksSpectre:
                     wafer_data[coords][f'{prefix}']['wavenumber'] = x
                     wafer_data[coords][f'{prefix}']['intensity'] = y_model
 
-
     def get_selected_keys_to_plot(self):
         """Get the selected keys to plot based on checkbox states."""
         selected_keys = []
@@ -468,8 +475,6 @@ class CallbacksSpectre:
         if self.ui.cb_residual.isChecked():
             selected_keys.append('residual')
         return selected_keys
-
-
 
     def selected_coords(self):
         """Get the selected items in the measurement_sites list"""

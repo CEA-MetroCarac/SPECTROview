@@ -206,34 +206,14 @@
                      <string>raw</string>
                     </property>
                     <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="cb_raw_bl">
-                    <property name="text">
-                     <string>raw bl</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QCheckBox" name="cb_bestfit">
                     <property name="text">
-                     <string>Best-fit</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="cb_components">
-                    <property name="text">
-                     <string>Peaks</string>
+                     <string>best-fit</string>
                     </property>
                     <property name="checked">
                      <bool>true</bool>
@@ -243,10 +223,30 @@
                   <item>
                    <widget class="QCheckBox" name="cb_residual">
                     <property name="text">
-                     <string>Residual</string>
+                     <string>residual</string>
                     </property>
                     <property name="checked">
                      <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="cb_colors">
+                    <property name="text">
+                     <string>colors</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="cb_filled">
+                    <property name="text">
+                     <string>filled</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -807,8 +807,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>590</width>
-                             <height>342</height>
+                             <width>357</width>
+                             <height>310</height>
                             </rect>
                            </property>
                           </widget>
@@ -1673,8 +1673,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1035</width>
-               <height>926</height>
+               <width>897</width>
+               <height>904</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
@@ -1793,7 +1793,6 @@
                  <property name="font">
                   <font>
                    <pointsize>8</pointsize>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -1822,7 +1821,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -1851,7 +1849,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -1880,7 +1877,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2110,7 +2106,6 @@
                     <widget class="QPushButton" name="btn_add_a_plot">
                      <property name="font">
                       <font>
-                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -2208,7 +2203,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2902,7 +2896,7 @@
      <x>0</x>
      <y>0</y>
      <width>1491</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpen">

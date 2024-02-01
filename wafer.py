@@ -60,9 +60,9 @@ class Wafer:
 
         self.ui.cb_raw.stateChanged.connect(self.plot_sel_spectre)
         self.ui.cb_bestfit.stateChanged.connect(self.plot_sel_spectre)
-        self.ui.cb_components.stateChanged.connect(self.plot_sel_spectre)
+        self.ui.cb_colors.stateChanged.connect(self.plot_sel_spectre)
         self.ui.cb_residual.stateChanged.connect(self.plot_sel_spectre)
-        self.ui.cb_raw_bl.stateChanged.connect(self.plot_sel_spectre)
+        self.ui.cb_filled.stateChanged.connect(self.plot_sel_spectre)
 
         # Set a 200ms delay for the function plot_sel_spectra
         self.delay_timer = QTimer()
@@ -190,9 +190,6 @@ class Wafer:
             return
         self.spectra_fs.apply_model(self.model_fs)
         self.plot_sel_spectre()
-    def plot_spectre(self, spectrum_fs=None):
-        """To plot and show (fitted) spectre(s)"""
-        pass
 
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
@@ -211,24 +208,34 @@ class Wafer:
         self.ax = fig.add_subplot(111)
 
         for spectrum_fs in selected_spectra_fs:
-            #function to plot
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
-            self.ax.plot(x_values, y_values, label ='baselined raw')
+            self.ax.plot(x_values, y_values)
 
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
                 y0_values = spectrum_fs.y0
                 self.ax.plot(x0_values, y0_values, label ='raw')
 
-            if hasattr(spectrum_fs.result_fit, 'success') and spectrum_fs.result_fit.success and self.ui.cb_bestfit.isChecked() :
+            if hasattr(spectrum_fs.result_fit,  'components') and hasattr(spectrum_fs.result_fit, 'components') and spectrum_fs.result_fit.success and self.ui.cb_bestfit.isChecked() :
                 bestfit = spectrum_fs.result_fit.best_fit
                 self.ax.plot(x_values, bestfit, label ='bestfit')
 
-            if hasattr(spectrum_fs.result_fit, 'residual') and self.ui.cb_residual.isChecked() :
+                for peak_model in spectrum_fs.result_fit.components:
+                    prefix =str(peak_model.prefix)
+                    params = peak_model.make_params()
+                    y_peak = peak_model.eval(params, x=x_values)
+                    if self.ui.cb_filled.isChecked():
+                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.6, label=f"{prefix} filled")
+                    else:
+                        self.ax.plot(x_values, y_peak, '--', label=f"{prefix}")
+
+            if hasattr(spectrum_fs.result_fit, 'residual') and self.ui.cb_residual.isChecked():
                 residual = spectrum_fs.result_fit.residual
                 self.ax.plot(x_values, residual, label='residual')
 
+            if self.ui.cb_colors.isChecked() is False:
+                self.ax.set_prop_cycle(None)
             # self.ax.plot(x_values, residual)
             #spectrum_fs.plot(self.ax, show_attractors=False,show_negative_values=False,show_baseline=False, show_background=False)
 
@@ -237,15 +244,14 @@ class Wafer:
         if self.ui.cb_legend.isChecked():
             self.ax.legend(loc='upper right')
         fig.tight_layout()
-        # Create a FigureCanvas & NavigationToolbar2QT
         self.canvas = FigureCanvas(fig)
         self.toolbar = NavigationToolbar2QT(self.canvas, self.ui)
         self.ui.spectre_view_frame.addWidget(self.canvas)
         self.ui.toolbar_frame.addWidget(self.toolbar)
 
-        self.plot_wafer(wafer_name, coords)
+        self.plot_wafer()
 
-    def plot_wafer(self, wafer_name, selected_coords=None):
+    def plot_wafer(self):
         """Plot wafer maps of measurement sites"""
         self.clear_wafer_plot()
         wafer_name, coords = self.spectre_id()

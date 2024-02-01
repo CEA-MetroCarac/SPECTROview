@@ -48,7 +48,7 @@ class Wafer:
 
         self.spectra_fs = None  # FITSPY
         self.model_fs = None  # FITSPY
-        self.spectra_fs = None  # FITSPY
+
         self.selected_spectra_fs = None
 
         # Update spectra_listbox when selecting wafer via WAFER LIST
@@ -108,21 +108,15 @@ class Wafer:
                     else:
                         self.wafers[wafer_name] = wafer_df
 
-        self.upd_wafers_list()
         self.extract_spectra()  # extract spectra of all wafers df
 
-    def extract_spectra(self, spectra=None):
+    def extract_spectra(self):
         """Extract all spectra of each wafer dataframe"""
         self.spectra_fs = Spectra()  # Create an Fitspy object
 
-        if self.spectra is None:
-            self.spectra = {}
-        if spectra:
-            self.spectra = spectra
-
         for wafer_name, wafer_df in self.wafers.items():
             coord_columns = wafer_df.columns[:2]  # Extract XY coordination
-            wafer_spectra = {}  # Dict to store all spectrum of a given wafer
+            # wafer_spectra = {}  # Dict to store all spectrum of a given wafer
 
             for _, row in wafer_df.iterrows():
                 # Extract XY coordinate, wavenumber and intensity values
@@ -130,18 +124,6 @@ class Wafer:
                 x_values = wafer_df.columns[2:].tolist()
                 x_values = pd.to_numeric(x_values, errors='coerce').tolist()
                 y_values = row[2:].tolist()
-
-                spectrum = {'wavenumber': x_values, 'intensity': y_values}
-                # Add or update all spectrum into the dict of given wafer
-                wafer_spectra[coords] = spectrum
-
-                if wafer_name in self.spectra:
-                    if coords in self.spectra[wafer_name]:
-                        self.spectra[wafer_name][coords].update(spectrum)
-                    else:
-                        self.spectra[wafer_name][coords] = spectrum
-                else:
-                    self.spectra[wafer_name] = wafer_spectra
 
                 # FITSPY
                 spectrum_fs = Spectrum()
@@ -152,6 +134,7 @@ class Wafer:
                 spectrum_fs.fname = f"{wafer_name}_{coords}"
 
                 self.spectra_fs.append(spectrum_fs)
+        self.upd_wafers_list()
 
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
@@ -241,7 +224,6 @@ class Wafer:
 
     def plot_spectre(self, x=None, y=None, coord=None):
         """To plot raw spectra"""
-
         self.clear_spectre_view()
         if x is not None and y is not None:
             plt.close('all')
@@ -262,9 +244,7 @@ class Wafer:
             self.ax.set_ylabel("Intensity (a.u)")
             if self.ui.cb_legend.isChecked():
                 self.ax.legend(loc='upper right')
-
         fig.tight_layout()
-
         # Create a FigureCanvas & NavigationToolbar2QT
         self.canvas = FigureCanvas(fig)
         self.toolbar = NavigationToolbar2QT(self.canvas, self.ui)
@@ -430,13 +410,20 @@ class Wafer:
         current_item = self.ui.wafers_listbox.currentItem()
         if current_item is not None:
             wafer_name = current_item.text()
-            if wafer_name in self.spectra:
-                wafer_spectra = self.spectra[wafer_name]
-                if wafer_spectra:
-                    for coord_values, spectrum in wafer_spectra.items():
-                        coord_str = f"({coord_values[0]},{coord_values[1]})"
-                        item = QListWidgetItem(coord_str)
-                        self.ui.spectra_listbox.addItem(item)
+            for spectrum_fs in self.spectra_fs:
+                wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+
+                if wafer_name == wafer_name_fs:
+                    item = QListWidgetItem(str(coord_fs))
+                    self.ui.spectra_listbox.addItem(item)
+
+                # wafer_spectra = self.spectra[wafer_name]
+                # if wafer_spectra:
+                #     for coord_values, spectrum in wafer_spectra.items():
+                #         coord_str = f"({coord_values[0]},{coord_values[1]})"
+                #         item = QListWidgetItem(coord_str)
+                #         self.ui.spectra_listbox.addItem(item)
+
         # Update the item count label
         item_count = self.ui.spectra_listbox.count()
         self.ui.item_count_label.setText(f"Number of points: {item_count}")

@@ -41,6 +41,7 @@ class Wafer:
         self.file_paths = []  # Store file_paths of all raw data wafers
         self.wafers = {}  # list of opened wafers
         self.spectra = {}  # list of all spectra within all wafer
+
         self.current_scale = None
         self.ax = None
         self.canvas = None
@@ -48,6 +49,7 @@ class Wafer:
         self.spectra_fs = None  # FITSPY
         self.model_fs = None  # FITSPY
         self.spectra_fs = None  # FITSPY
+        self.selected_spectra_fs = None
 
         # Update spectra_listbox when selecting wafer via WAFER LIST
         self.ui.wafers_listbox.itemSelectionChanged.connect(
@@ -143,10 +145,10 @@ class Wafer:
 
                 # FITSPY
                 spectrum_fs = Spectrum()
-                spectrum_fs.x = np.asarray(x_values)
-                spectrum_fs.x0 = np.asarray(x_values)
-                spectrum_fs.y = np.asarray(y_values)
-                spectrum_fs.y0 = np.asarray(y_values)
+                spectrum_fs.x = np.asarray(x_values)[:-1]
+                spectrum_fs.x0 = np.asarray(x_values)[:-1]
+                spectrum_fs.y = np.asarray(y_values)[:-1]
+                spectrum_fs.y0 = np.asarray(y_values)[:-1]
                 spectrum_fs.fname = f"{wafer_name}_{coords}"
 
                 self.spectra_fs.append(spectrum_fs)
@@ -193,6 +195,7 @@ class Wafer:
         coord_str = fname_parts[-1].split('(')[1].split(')')[0]
         coord_fs = tuple(map(float, coord_str.split(',')))
         return wafer_name_fs, coord_fs
+
     def fitting_sel_spectrum(self):
         """Fit only selected spectrum(s)"""
         if self.model_fs is None:
@@ -211,7 +214,8 @@ class Wafer:
             else:
                 print('spectrum is not selected')
 
-        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4, fit_only=True)
+        self.selected_spectra_fs.apply_model(self.model_fs)
+
         self.fitted_spectra_fs = copy.deepcopy(self.selected_spectra_fs)
 
         # self.update_wafer_data()
@@ -228,13 +232,13 @@ class Wafer:
             current_spectrum_fs = copy.deepcopy(spectrum_fs)
             self.selected_spectra_fs.append(current_spectrum_fs)
 
-        self.selected_spectra_fs.apply_model(self.model_fs, ncpu=4,
-                                             fit_only=False)
+        self.selected_spectra_fs.apply_model(self.model_fs)
         self.fitted_spectra_fs = copy.deepcopy(self.selected_spectra_fs)
 
         # self.update_wafer_data()
         self.plot_sel_spectre()
         print("All spectra are fitted")
+
     def plot_spectre(self, x=None, y=None, coord=None):
         """To plot raw spectra"""
 
@@ -244,17 +248,21 @@ class Wafer:
             # Create a figure with initial size
             fig = plt.figure()
             self.ax = fig.add_subplot(111)
-
-            if isinstance(x, (list, np.ndarray)) and isinstance(y, (
-                    list, np.ndarray)) and isinstance(coord,
-                                                      (list, np.ndarray)):
-                for wavenumbers, intensities, coords in zip(x, y, coord):
-                    self.ax.plot(wavenumbers, intensities, label=f"{coord}_raw")
+            if self.selected_spectra_fs is not None:
+                for spectrum_fs in self.selected_spectra_fs:
+                    spectrum_fs.plot(self.ax)
+            # if isinstance(x, (list, np.ndarray)) and isinstance(y, (
+            #         list, np.ndarray)) and isinstance(coord,
+            #                                           (list, np.ndarray)):
+            #     for wavenumbers, intensities, coords in zip(x, y, coord):
+            #         self.ax.plot(wavenumbers, intensities, label=f"{
+            #         coord}_raw")
 
             self.ax.set_xlabel("Raman shift (cm-1)")
             self.ax.set_ylabel("Intensity (a.u)")
             if self.ui.cb_legend.isChecked():
                 self.ax.legend(loc='upper right')
+
         fig.tight_layout()
 
         # Create a FigureCanvas & NavigationToolbar2QT

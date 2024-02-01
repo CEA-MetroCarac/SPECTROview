@@ -242,7 +242,6 @@ class Wafer:
     def plot_wafer(self, wafer_name, selected_coords=None):
         """Plot wafer maps of measurement sites"""
         self.clear_wafer_plot()
-
         wafer_name, coords = self.spectre_id()
         all_x = []
         all_y = []
@@ -252,11 +251,9 @@ class Wafer:
                 x, y = coord_fs
                 all_x.append(x)
                 all_y.append(y)
-
         fig, ax = plt.subplots()
         ax.scatter(all_x, all_y, marker='x', color='black',
                    s=10)
-
         # Highlight selected spectra in red
         if coords:
             selected_x, selected_y = zip(*coords)
@@ -379,19 +376,16 @@ class Wafer:
 
     def remove_wafer(self):
         """To remove a wafer from wafer_listbox"""
-        selected_item = self.ui.wafers_listbox.currentItem()
-        if selected_item:
-            selected_wafer_name = selected_item.text()
-            if selected_wafer_name in self.wafers:
-                del self.spectra[selected_wafer_name]
-                del self.wafers[selected_wafer_name]
-                # Remove spectra from self.spectra_fs
-                self.spectra_fs = [spectrum_fs for spectrum_fs in
-                                   self.spectra_fs if
-                                   not spectrum_fs.fname.startswith(
-                                       selected_wafer_name)]
+        wafer_name, coords = self.spectre_id()
 
-                self.upd_wafers_list()
+        if wafer_name in self.wafers:
+            del self.wafers[wafer_name]
+            self.spectra_fs = [spectrum_fs for spectrum_fs in
+                               self.spectra_fs if
+                               not spectrum_fs.fname.startswith(
+                                   wafer_name)]
+
+            self.upd_wafers_list()
         # Clear spectra_listbox and spectre_view
         self.ui.spectra_listbox.clear()
         self.clear_spectre_view()

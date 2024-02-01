@@ -299,6 +299,7 @@ class Wafer:
         current_item = self.ui.wafers_listbox.currentItem()
         if current_item is not None:
             wafer_name = current_item.text()
+
             for spectrum_fs in self.spectra_fs:
                 wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
                 if wafer_name == wafer_name_fs:
@@ -319,10 +320,11 @@ class Wafer:
 
         if wafer_name in self.wafers:
             del self.wafers[wafer_name]
-            self.spectra_fs = [spectrum_fs for spectrum_fs in
-                               self.spectra_fs if
-                               not spectrum_fs.fname.startswith(
-                                   wafer_name)]
+
+            # Filter out spectra with fname starting with wafer_name
+            self.spectra_fs = Spectra(
+                spectrum_fs for spectrum_fs in self.spectra_fs if
+                not spectrum_fs.fname.startswith(wafer_name))
 
             self.upd_wafers_list()
         # Clear spectra_listbox and spectre_view

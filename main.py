@@ -330,7 +330,7 @@ if __name__ == "__main__":
     fname3 = os.path.join(dirname, 'D23S2204.2_19.csv')
     fname4 = os.path.join(dirname, 'D23S2204.2_07.csv')
     fname_json = os.path.join(dirname, 'SIMPLE_MODEL.json')
-    launcher2([fname1], fname_json)
+    launcher2([fname1, fname2, fname3, fname4], fname_json)
 
 # def launcher3(file_paths=None, fname_json=None):
 #     app = QApplication()

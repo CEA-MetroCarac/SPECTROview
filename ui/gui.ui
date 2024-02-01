@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1350</width>
-    <height>956</height>
+    <width>1491</width>
+    <height>1025</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -446,6 +446,13 @@
                    </property>
                   </spacer>
                  </item>
+                 <item>
+                  <widget class="QPushButton" name="pushButton_7">
+                   <property name="text">
+                    <string>Reinitialize spectrum</string>
+                   </property>
+                  </widget>
+                 </item>
                 </layout>
                </widget>
               </item>
@@ -800,8 +807,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>449</width>
-                             <height>310</height>
+                             <width>590</width>
+                             <height>342</height>
                             </rect>
                            </property>
                           </widget>
@@ -1666,8 +1673,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>894</width>
-               <height>857</height>
+               <width>1035</width>
+               <height>926</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
@@ -2894,7 +2901,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1350</width>
+     <width>1491</width>
      <height>21</height>
     </rect>
    </property>

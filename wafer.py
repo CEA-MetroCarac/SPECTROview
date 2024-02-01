@@ -264,68 +264,6 @@ class Wafer:
         if layout:
             layout.addWidget(canvas)
 
-    ###########################################
-    def set_scale(self, x_limits=None, y_limits=None):
-        """Set the zoom level of the plot."""
-        ax = self.ax
-        if x_limits is not None:
-            ax.set_xlim(x_limits)
-        if y_limits is not None:
-            ax.set_ylim(y_limits)
-        self.canvas.draw()
-
-    def get_current_scale(self, ax):
-        """Update the current scale with the last zoom state."""
-        self.current_scale = ax._get_view()
-        # print('current scale is collected')
-        # print(self.current_scale)
-
-    def rescale(self):
-        """Rescale the figure."""
-        self.ax.autoscale()
-        self.canvas.draw()
-        self.toolbar.home()
-
-    def update_wafer_data(self):
-        """Update wafer data (self.spectra) with fitted results"""
-        for fitted_spectrum_fs in self.fitted_spectra_fs:
-            fname_parts = fitted_spectrum_fs.fname.split("_")
-            wafer_name_fs = fname_parts[0] + "_" + fname_parts[1]
-            coord_values_str = fname_parts[-1].split('(')[1].split(')')[
-                0].split(',')
-            x_coord_fs = float(coord_values_str[0])
-            y_coord_fs = float(coord_values_str[1])
-
-            # Extracting fitted results
-            x = fitted_spectrum_fs.x.tolist()
-            y = fitted_spectrum_fs.y.tolist()
-            best_fit = fitted_spectrum_fs.result_fit.best_fit.tolist()
-            residual = fitted_spectrum_fs.result_fit.residual.tolist()
-
-            # Update the self.spectra dataframe with the fitted results
-            coords = (x_coord_fs, y_coord_fs)
-            wafer_data = self.spectra[wafer_name_fs]
-            # Initialize the keys before updating
-            wafer_data[coords]['bestfit'] = {'wavenumber': [], 'intensity': []}
-            wafer_data[coords]['residual'] = {'wavenumber': [], 'intensity': []}
-            wafer_data[coords]['raw_bl'] = {'wavenumber': [], 'intensity': []}
-
-            # Update the 'bestfit' spectrum with fitted results
-            wafer_data[coords]['bestfit'] = {'wavenumber': x,
-                                             'intensity': best_fit}
-            wafer_data[coords]['residual'] = {'wavenumber': x,
-                                              'intensity': residual}
-            wafer_data[coords]['raw_bl'] = {'wavenumber': x, 'intensity': y}
-
-            for model in fitted_spectrum_fs.result_fit.components:
-                params = model.make_params()
-                prefix = model.prefix
-                y_model = (model.eval(params, x=x)).tolist()
-                if f'{prefix}' not in wafer_data[coords]:
-                    wafer_data[coords][f'{prefix}'] = {}
-                    wafer_data[coords][f'{prefix}']['wavenumber'] = x
-                    wafer_data[coords][f'{prefix}']['intensity'] = y_model
-
     def get_selected_keys_to_plot(self):
         """Get the selected keys to plot based on checkbox states."""
         selected_keys = []

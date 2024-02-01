@@ -1,0 +1,153 @@
+{
+   "0": {
+      "fname": "C:/Users/VL251876/Documents/0. SPECTROSCOPIE RAMAN/FITSPY/Testing_data_MoS2/MoS2-2L-zone1_532Cp01-100x-10sx5_1.txt",
+      "range_min": 330.0,
+      "range_max": 490.0,
+      "norm_mode": null,
+      "norm_position_ref": null,
+      "attractors": [
+         48,
+         76,
+         27,
+         97,
+         3
+      ],
+      "attractors_params": {
+         "distance": 20,
+         "prominence": 0,
+         "width": 0,
+         "height": 0,
+         "threshold": 0
+      },
+      "peak_labels": [
+         "1",
+         "2",
+         "3",
+         "4"
+      ],
+      "fit_method": "Leastsq",
+      "fit_negative": false,
+      "max_ite": 200,
+      "baseline": {
+         "points": [
+            [
+               330.4491333365905,
+               483.0411850760537
+            ],
+            [
+               124.96076361229971,
+               103.42212628609651
+            ]
+         ],
+         "mode": "Linear",
+         "order_max": 1,
+         "distance": 100,
+         "sigma": 0,
+         "attached": true,
+         "is_subtracted": true
+      },
+      "peak_models": {
+         "0": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 815.3302100338882,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 3.6059915334657133,
+                  "min": 0,
+                  "max": 200,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 383.96663115083567,
+                  "min": 363.882813,
+                  "max": 403.882813,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "1": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 1570.225051476716,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 5.050596926789308,
+                  "min": 0,
+                  "max": 200,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 406.61422970144093,
+                  "min": 387.820313,
+                  "max": 427.820313,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "2": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 151.89811591590745,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 11.530159565589127,
+                  "min": 0,
+                  "max": 200,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 377.0086714854184,
+                  "min": 360.685547,
+                  "max": 400.685547,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "3": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 131.09407336585,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 28.156026522988686,
+                  "min": 0,
+                  "max": 200,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 452.43595446136055,
+                  "min": 435.482422,
+                  "max": 475.482422,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         }
+      },
+      "result_fit_success": true
+   }
+}

@@ -47,10 +47,10 @@ class Wafer:
         self.canvas = None
 
         self.model_fs = None  # FITSPY
-        self.spectra_fs = None  # FITSPY
+        # self.spectra_fs = None  # FITSPY
         self.selected_spectra_fs = None
         self.fitted_spectra_fs = None
-
+        self.spectra_fs = Spectra()
         # Update spectra_listbox when selecting wafer via WAFER LIST
         self.ui.wafers_listbox.itemSelectionChanged.connect(
             self.upd_spectra_list)
@@ -111,25 +111,26 @@ class Wafer:
 
     def extract_spectra(self):
         """Extract all spectra of each wafer dataframe"""
-        self.spectra_fs = Spectra()
         for wafer_name, wafer_df in self.wafers.items():
             coord_columns = wafer_df.columns[:2]  # Extract XY coordination
             for _, row in wafer_df.iterrows():
-                # Extract XY coordinate, wavenumber and intensity values
+                # Extract XY coordinate, wavenumber, and intensity values
                 coord = tuple(row[coord_columns])
                 x_values = wafer_df.columns[2:].tolist()
                 x_values = pd.to_numeric(x_values, errors='coerce').tolist()
                 y_values = row[2:].tolist()
+                fname = f"{wafer_name}_{coord}"
 
-                # FITSPY
-                spectrum_fs = Spectrum()
-                spectrum_fs.x = np.asarray(x_values)[:-1]
-                spectrum_fs.x0 = np.asarray(x_values)[:-1]
-                spectrum_fs.y = np.asarray(y_values)[:-1]
-                spectrum_fs.y0 = np.asarray(y_values)[:-1]
-                spectrum_fs.fname = f"{wafer_name}_{coord}"
-
-                self.spectra_fs.append(spectrum_fs)
+                if not any(spectrum_fs.fname == fname for spectrum_fs in
+                           self.spectra_fs):
+                    # FITSPY
+                    spectrum_fs = Spectrum()
+                    spectrum_fs.fname = fname
+                    spectrum_fs.x = np.asarray(x_values)[:-1]
+                    spectrum_fs.x0 = np.asarray(x_values)[:-1]
+                    spectrum_fs.y = np.asarray(y_values)[:-1]
+                    spectrum_fs.y0 = np.asarray(y_values)[:-1]
+                    self.spectra_fs.append(spectrum_fs)
 
         self.upd_wafers_list()
 

@@ -274,10 +274,12 @@ class MainWindow:
         <h3>SPECTROview</h3>
         <p>Spectroscopic Data Processing and Visualization</p>
         <p>Version: 0.50 / Build 240130 </p>
-        <p>Contact: Van-Hoan Le (van-hoan.le@cea.fr)</p>
+        <p>For any feedback contact: </p>
+        <p>Van-Hoan Le (van-hoan.le@cea.fr)</p>
         """
         about_dialog = QDialog(self.ui)
         about_dialog.setWindowTitle("About")
+        about_dialog.resize(350, 200)
 
         text_browser = QTextBrowser(about_dialog)
         text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
@@ -287,7 +289,6 @@ class MainWindow:
 
         layout = QVBoxLayout(about_dialog)
         layout.addWidget(text_browser)
-
         about_dialog.exec()
 
 

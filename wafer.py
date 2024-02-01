@@ -45,12 +45,9 @@ class Wafer:
         self.current_scale = None
         self.ax = None
         self.canvas = None
-
         self.model_fs = None  # FITSPY
-        # self.spectra_fs = None  # FITSPY
-        self.selected_spectra_fs = None
-        self.fitted_spectra_fs = None
-        self.spectra_fs = Spectra()
+        self.spectra_fs = Spectra()  # FITSPY
+
         # Update spectra_listbox when selecting wafer via WAFER LIST
         self.ui.wafers_listbox.itemSelectionChanged.connect(
             self.upd_spectra_list)
@@ -112,9 +109,9 @@ class Wafer:
     def extract_spectra(self):
         """Extract all spectra of each wafer dataframe"""
         for wafer_name, wafer_df in self.wafers.items():
-            coord_columns = wafer_df.columns[:2]  # Extract XY coordination
+            coord_columns = wafer_df.columns[:2]
             for _, row in wafer_df.iterrows():
-                # Extract XY coordinate, wavenumber, and intensity values
+                # Extract XY coords, wavenumber, and intensity values
                 coord = tuple(row[coord_columns])
                 x_values = wafer_df.columns[2:].tolist()
                 x_values = pd.to_numeric(x_values, errors='coerce').tolist()
@@ -123,7 +120,7 @@ class Wafer:
 
                 if not any(spectrum_fs.fname == fname for spectrum_fs in
                            self.spectra_fs):
-                    # FITSPY
+                    # create FITSPY object
                     spectrum_fs = Spectrum()
                     spectrum_fs.fname = fname
                     spectrum_fs.x = np.asarray(x_values)[:-1]
@@ -131,7 +128,6 @@ class Wafer:
                     spectrum_fs.y = np.asarray(y_values)[:-1]
                     spectrum_fs.y0 = np.asarray(y_values)[:-1]
                     self.spectra_fs.append(spectrum_fs)
-
         self.upd_wafers_list()
 
     def open_model(self, fname_json=None):
@@ -151,7 +147,6 @@ class Wafer:
                 return
             fname_json = selected_file
         self.model_fs = self.spectra_fs.load_model(fname_json, ind=0)
-
         display_name = QFileInfo(fname_json).baseName()
         self.ui.display_loaded_model.setText(display_name)
 
@@ -172,7 +167,6 @@ class Wafer:
         """Get selected spectre id(s) of FITSPY object"""
         fname_parts = spectrum_fs.fname.split("_")
         wafer_name_fs = "_".join(fname_parts[:2])
-
         coord_str = fname_parts[-1].split('(')[1].split(')')[0]
         coord_fs = tuple(map(float, coord_str.split(',')))
         return wafer_name_fs, coord_fs
@@ -187,14 +181,13 @@ class Wafer:
         for coord in coords:
             fname = f"{wafer_name}_{coord}"
             fnames.append(fname)
-
         self.spectra_fs.apply_model(self.model_fs, fnames=fnames)
         self.plot_sel_spectre()
 
     def fitting_all_wafer(self):
         """ Apply loaded fit model to all selected spectra"""
         if self.model_fs is None:
-            self.show_alert("Please load a fit model before fitting.")
+            self.show_alert("Load a fit model first!")
             return
         self.spectra_fs.apply_model(self.model_fs)
         self.plot_sel_spectre()
@@ -205,13 +198,11 @@ class Wafer:
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
 
         selected_spectra_fs = []
-
         for spectrum_fs in self.spectra_fs:
             wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
             # Fit the selected spectrum
             if wafer_name_fs == wafer_name and coord_fs in coords:
                 selected_spectra_fs.append(spectrum_fs)
-
         if len(selected_spectra_fs) == 0:
             return
 
@@ -234,7 +225,6 @@ class Wafer:
         # Create a FigureCanvas & NavigationToolbar2QT
         self.canvas = FigureCanvas(fig)
         self.toolbar = NavigationToolbar2QT(self.canvas, self.ui)
-        # Add fig canvas and toolbar into frame
         self.ui.spectre_view_frame.addWidget(self.canvas)
         self.ui.toolbar_frame.addWidget(self.toolbar)
 
@@ -253,30 +243,15 @@ class Wafer:
                 all_x.append(x)
                 all_y.append(y)
         fig, ax = plt.subplots()
-        ax.scatter(all_x, all_y, marker='x', color='black',
-                   s=10)
+        ax.scatter(all_x, all_y, marker='x', color='black', s=10)
         # Highlight selected spectra in red
         if coords:
             selected_x, selected_y = zip(*coords)
             ax.scatter(selected_x, selected_y, marker='o', color='red')
-
         canvas = FigureCanvas(fig)
         layout = self.ui.wafer_plot.layout()
         if layout:
             layout.addWidget(canvas)
-
-    def get_selected_keys_to_plot(self):
-        """Get the selected keys to plot based on checkbox states."""
-        selected_keys = []
-        if self.ui.cb_raw.isChecked():
-            selected_keys.append('raw')
-        if self.ui.cb_raw_bl.isChecked():
-            selected_keys.append('raw_bl')
-        if self.ui.cb_bestfit.isChecked():
-            selected_keys.append('bestfit')
-        if self.ui.cb_residual.isChecked():
-            selected_keys.append('residual')
-        return selected_keys
 
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
@@ -315,19 +290,14 @@ class Wafer:
             QTimer.singleShot(50, self.plot_sel_spectre)
 
     def remove_wafer(self):
-        """To remove a wafer from wafer_listbox"""
+        """To remove a wafer"""
         wafer_name, coords = self.spectre_id()
-
         if wafer_name in self.wafers:
             del self.wafers[wafer_name]
-
-            # Filter out spectra with fname starting with wafer_name
             self.spectra_fs = Spectra(
                 spectrum_fs for spectrum_fs in self.spectra_fs if
                 not spectrum_fs.fname.startswith(wafer_name))
-
             self.upd_wafers_list()
-        # Clear spectra_listbox and spectre_view
         self.ui.spectra_listbox.clear()
         self.clear_spectre_view()
         self.clear_wafer_plot()

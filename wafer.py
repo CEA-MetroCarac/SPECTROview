@@ -40,7 +40,6 @@ class Wafer:
 
         self.file_paths = []  # Store file_paths of all raw data wafers
         self.wafers = {}  # list of opened wafers
-        self.spectra = {}  # list of all spectra within all wafer
 
         self.current_scale = None
         self.ax = None
@@ -191,37 +190,53 @@ class Wafer:
             return
         self.spectra_fs.apply_model(self.model_fs)
         self.plot_sel_spectre()
+    def plot_spectre(self, spectrum_fs=None):
+        """To plot and show (fitted) spectre(s)"""
+        pass
 
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
-        self.clear_spectre_view()
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
-
         selected_spectra_fs = []
         for spectrum_fs in self.spectra_fs:
             wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
-            # Fit the selected spectrum
             if wafer_name_fs == wafer_name and coord_fs in coords:
                 selected_spectra_fs.append(spectrum_fs)
         if len(selected_spectra_fs) == 0:
             return
 
+        self.clear_spectre_view()
         plt.close('all')
         fig = plt.figure()
         self.ax = fig.add_subplot(111)
 
         for spectrum_fs in selected_spectra_fs:
-            spectrum_fs.plot(self.ax, show_attractors=False,
-                             show_negative_values=False,
-                             show_baseline=False, show_background=False)
+            #function to plot
+            x_values = spectrum_fs.x
+            y_values = spectrum_fs.y
+            self.ax.plot(x_values, y_values, label ='baselined raw')
+
+            if self.ui.cb_raw.isChecked():
+                x0_values = spectrum_fs.x0
+                y0_values = spectrum_fs.y0
+                self.ax.plot(x0_values, y0_values, label ='raw')
+
+            if hasattr(spectrum_fs.result_fit, 'success') and spectrum_fs.result_fit.success and self.ui.cb_bestfit.isChecked() :
+                bestfit = spectrum_fs.result_fit.best_fit
+                self.ax.plot(x_values, bestfit, label ='bestfit')
+
+            if hasattr(spectrum_fs.result_fit, 'residual') and self.ui.cb_residual.isChecked() :
+                residual = spectrum_fs.result_fit.residual
+                self.ax.plot(x_values, residual, label='residual')
+
+            # self.ax.plot(x_values, residual)
+            #spectrum_fs.plot(self.ax, show_attractors=False,show_negative_values=False,show_baseline=False, show_background=False)
 
         self.ax.set_xlabel("Raman shift (cm-1)")
         self.ax.set_ylabel("Intensity (a.u)")
         if self.ui.cb_legend.isChecked():
             self.ax.legend(loc='upper right')
-
         fig.tight_layout()
-
         # Create a FigureCanvas & NavigationToolbar2QT
         self.canvas = FigureCanvas(fig)
         self.toolbar = NavigationToolbar2QT(self.canvas, self.ui)

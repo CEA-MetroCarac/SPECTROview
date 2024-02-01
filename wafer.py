@@ -191,6 +191,31 @@ class Wafer:
         self.spectra_fs.apply_model(self.model_fs)
         self.plot_sel_spectre()
 
+    # def reinit(self, fnames=None):
+    #     """ Reinitialize the spectrum """
+    #     if fnames is None:
+    #         fselector = self.fileselector
+    #         fnames = fselector.filenames[0]
+    #         fnames = [fnames[i] for i in fselector.lbox[0].curselection()]
+    #
+    #     for fname in fnames:
+    #         spectrum, _ = self.spectra.get_objects(fname)
+    #         spectrum.range_min = None
+    #         spectrum.range_max = None
+    #         spectrum.x = spectrum.x0.copy()
+    #         spectrum.y = spectrum.y0.copy()
+    #         spectrum.norm_mode = None
+    #         spectrum.result_fit = lambda: None
+    #         spectrum.remove_models()
+    #         spectrum.baseline.points = [[], []]
+    #         spectrum.baseline.is_subtracted = False
+    #
+    #     self.colorize_from_fit_status(fnames=fnames)
+    #     self.tabview.delete()
+    #     self.set_range()
+    #     self.ax.clear()
+    #     self.plot()
+
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
@@ -232,7 +257,7 @@ class Wafer:
 
             if hasattr(spectrum_fs.result_fit, 'residual') and self.ui.cb_residual.isChecked():
                 residual = spectrum_fs.result_fit.residual
-                self.ax.plot(x_values, residual, label='residual')
+                self.ax.plot(x_values,  residual,'ko-', ms=3, label='residual')
 
             if self.ui.cb_colors.isChecked() is False:
                 self.ax.set_prop_cycle(None)

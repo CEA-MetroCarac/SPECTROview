@@ -353,4 +353,4 @@ if __name__ == "__main__":
     fname3 = os.path.join(dirname, 'D23S2204.2_19.csv')
     fname4 = os.path.join(dirname, 'D23S2204.2_07.csv')
     fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
-    launcher3([fname1], fname_json)
+    launcher3([fname2, fname3, fname4], fname_json)

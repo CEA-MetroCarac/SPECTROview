@@ -20,6 +20,7 @@ from matplotlib.figure import Figure
 from matplotlib.collections import PathCollection
 
 from wafer_plot import WaferPlot
+from wafer_view import WaferView
 
 from PySide6.QtWidgets import (
     QFileDialog, QVBoxLayout, QMessageBox, QFrame, QPushButton,
@@ -221,21 +222,78 @@ class Wafer:
         self.df_fit_results = self.df_fit_results[columns_order]
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
-        # print(self.df_fit_results)
 
-    def view_param(self):
-        pass
-    
+    def view_param_1(self):
+        """ Plot WaferDataFrame"""
+        self.clear_layout(self.ui.frame_wafer_11.layout())
+
+        dfr = self.df_fit_results
+        wafer_name = self.ui.cbb_wafer_1.currentText()
+        wafer_size = float(self.ui.wafer_size.text())
+        if wafer_name is not None:
+            selected_df = dfr.query('Wafer == @wafer_name')
+        sel_param = self.ui.cbb_param_1.currentText()
+        x = selected_df['X']
+        y = selected_df['Y']
+        param = selected_df[sel_param]
+
+        plt.close('all')
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        wdf = WaferView()
+        wdf.plot(ax, x=x, y=y, z=param, cmap="jet", stats=False,
+                 radius=(wafer_size / 2))
+
+        text = self.ui.plot_title.text()
+        title = (f"{wafer_name}_{sel_param}") if not text else text
+        ax.set_title(f"{title}")
+
+        fig.tight_layout()
+        canvas = FigureCanvas(fig)
+        self.ui.frame_wafer_11.addWidget(canvas)
+
+    def view_param_2(self):
+        """ Plot WaferDataFrame"""
+        self.clear_layout(self.ui.frame_wafer_22.layout())
+
+        dfr = self.df_fit_results
+        selected_wafer = self.ui.cbb_wafer_2.currentText()
+        wafer_size = float(self.ui.wafer_size.text())
+        if selected_wafer is not None:
+            selected_df = dfr.query('Wafer == @selected_wafer')
+        selected_param = self.ui.cbb_param_2.currentText()
+        x = selected_df['X']
+        y = selected_df['Y']
+        param = selected_df[selected_param]
+
+        plt.close('all')
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        wdf = WaferView()
+        wdf.plot(ax, x=x, y=y, z=param, cmap="jet", stats=False,
+                 radius=(wafer_size / 2))
+
+        text_title = self.ui.plot_title.text()
+        print(text_title)
+        title = (
+            f"{selected_wafer}_{selected_param}") if not text_title else \
+            text_title
+        ax.set_title(f"{title}")
+
+        fig.tight_layout()
+        canvas = FigureCanvas(fig)
+        self.ui.frame_wafer_22.addWidget(canvas)
+
     def apprend_cbb_wafer(self, wafer_names=None):
         """to append all values of df_fit_results to comoboxses"""
         self.ui.cbb_wafer_1.clear()
         self.ui.cbb_wafer_2.clear()
-        self.ui.cbb_wafer_3.clear()
         wafer_names = list(self.wafers.keys())
         for wafer_name in wafer_names:
             self.ui.cbb_wafer_1.addItem(wafer_name)
             self.ui.cbb_wafer_2.addItem(wafer_name)
-            self.ui.cbb_wafer_3.addItem(wafer_name)
 
     def apprend_cbb_param(self, df_fit_results=None):
         """to append all values of df_fit_results to comoboxses"""
@@ -244,11 +302,9 @@ class Wafer:
         if df_fit_results is not None:
             self.ui.cbb_param_1.clear()
             self.ui.cbb_param_2.clear()
-            self.ui.cbb_param_3.clear()
             for column in columns:
                 self.ui.cbb_param_1.addItem(column)
                 self.ui.cbb_param_2.addItem(column)
-                self.ui.cbb_param_3.addItem(column)
 
     def reinit_spectrum(self, spectrum):
         """Reinitialize the given spectrum"""

@@ -173,6 +173,9 @@ class MainWindow:
         self.ui.btn_init_all.clicked.connect(self.wafer.reinit_all)
         self.ui.btn_collect_results.clicked.connect(self.wafer.collect_results)
 
+        self.ui.btn_plot_wafer_1.clicked.connect(self.wafer.view_param_1)
+        self.ui.btn_plot_wafer_2.clicked.connect(self.wafer.view_param_2)
+
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)
         self.ui.combo_hue.setCurrentIndex(
@@ -320,7 +323,7 @@ if __name__ == "__main__":
     fname2 = os.path.join(dirname, 'D23S2204.2_10.csv')
     fname3 = os.path.join(dirname, 'D23S2204.2_19.csv')
     fname4 = os.path.join(dirname, 'D23S2204.2_07.csv')
-    fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
+    fname_json = os.path.join(dirname, 'SIMPLE_MODEL.json')
     launcher2([fname1, fname2], fname_json)
 
 # def launcher3(file_paths=None, fname_json=None):
@@ -340,12 +343,12 @@ if __name__ == "__main__":
 #     sys.exit(app.exec())
 
 
-if __name__ == "__main__":
-    dirname = r"/Users/HoanLe/Documents/Python " \
-              r"projects/SPECTROview/data_test/RAW spectrum"
-    fname1 = os.path.join(dirname, 'D23S2204.2_05.csv')
-    fname2 = os.path.join(dirname, 'D23S2204.2_10.csv')
-    fname3 = os.path.join(dirname, 'D23S2204.2_19.csv')
-    fname4 = os.path.join(dirname, 'D23S2204.2_07.csv')
-    fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
-    launcher3([fname2, fname3, fname4], fname_json)
+# if __name__ == "__main__":
+#     dirname = r"/Users/HoanLe/Documents/Python " \
+#               r"projects/SPECTROview/data_test/RAW spectrum"
+#     fname1 = os.path.join(dirname, 'D23S2204.2_05.csv')
+#     fname2 = os.path.join(dirname, 'D23S2204.2_10.csv')
+#     fname3 = os.path.join(dirname, 'D23S2204.2_19.csv')
+#     fname4 = os.path.join(dirname, 'D23S2204.2_07.csv')
+#     fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
+#     launcher3([fname2, fname3, fname4], fname_json)

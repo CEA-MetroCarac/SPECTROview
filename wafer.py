@@ -9,6 +9,9 @@ from pathlib import Path
 from lmfit import Model
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
+from threading import Thread
+from multiprocessing import Queue
+from PySide6.QtCore import Qt, QThread, Signal
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -248,7 +251,7 @@ class Wafer:
             fname, coord = self.spectre_id_fs(spectrum_fs)
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
-            self.ax.plot(x_values, y_values)
+            self.ax.plot(x_values, y_values, label=f"{fname}-{coord}")
 
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
@@ -259,9 +262,7 @@ class Wafer:
                     spectrum_fs.result_fit, 'components') and \
                     self.ui.cb_bestfit.isChecked():
                 bestfit = spectrum_fs.result_fit.best_fit
-                self.ax.plot(x_values, bestfit,
-                             label=f"bestfit")
-                # label=f"bestfit_{fname}-{coord}"
+                self.ax.plot(x_values, bestfit, label=f"bestfit")
 
                 for peak_model in spectrum_fs.result_fit.components:
                     prefix = str(peak_model.prefix)

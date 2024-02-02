@@ -219,7 +219,36 @@ class Wafer:
                                                self.df_fit_results.columns if
                                                col not in ["Wafer", "X", "Y"]]
         self.df_fit_results = self.df_fit_results[columns_order]
+        self.apprend_cbb_param()
+        self.apprend_cbb_wafer()
         # print(self.df_fit_results)
+
+    def view_param(self):
+        pass
+    
+    def apprend_cbb_wafer(self, wafer_names=None):
+        """to append all values of df_fit_results to comoboxses"""
+        self.ui.cbb_wafer_1.clear()
+        self.ui.cbb_wafer_2.clear()
+        self.ui.cbb_wafer_3.clear()
+        wafer_names = list(self.wafers.keys())
+        for wafer_name in wafer_names:
+            self.ui.cbb_wafer_1.addItem(wafer_name)
+            self.ui.cbb_wafer_2.addItem(wafer_name)
+            self.ui.cbb_wafer_3.addItem(wafer_name)
+
+    def apprend_cbb_param(self, df_fit_results=None):
+        """to append all values of df_fit_results to comoboxses"""
+        df_fit_results = self.df_fit_results
+        columns = df_fit_results.columns.tolist()
+        if df_fit_results is not None:
+            self.ui.cbb_param_1.clear()
+            self.ui.cbb_param_2.clear()
+            self.ui.cbb_param_3.clear()
+            for column in columns:
+                self.ui.cbb_param_1.addItem(column)
+                self.ui.cbb_param_2.addItem(column)
+                self.ui.cbb_param_3.addItem(column)
 
     def reinit_spectrum(self, spectrum):
         """Reinitialize the given spectrum"""

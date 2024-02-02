@@ -503,7 +503,7 @@
             <item>
              <widget class="QTabWidget" name="tabWidget_2">
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="wafer_mapping_view">
                <attribute name="title">
@@ -538,7 +538,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QComboBox" name="comboBox_4"/>
+                          <widget class="QComboBox" name="cbb_wafer_1"/>
                          </item>
                          <item>
                           <widget class="QPushButton" name="pushButton_2">
@@ -569,7 +569,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QComboBox" name="comboBox_5"/>
+                          <widget class="QComboBox" name="cbb_param_1"/>
                          </item>
                         </layout>
                        </item>
@@ -621,7 +621,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QComboBox" name="comboBox_6"/>
+                          <widget class="QComboBox" name="cbb_wafer_2"/>
                          </item>
                          <item>
                           <widget class="QPushButton" name="pushButton_4">
@@ -652,7 +652,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QComboBox" name="comboBox_7"/>
+                          <widget class="QComboBox" name="cbb_param_2"/>
                          </item>
                         </layout>
                        </item>
@@ -704,10 +704,10 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QComboBox" name="comboBox_8"/>
+                          <widget class="QComboBox" name="cbb_wafer_3"/>
                          </item>
                          <item>
-                          <widget class="QPushButton" name="pushButton_5">
+                          <widget class="QPushButton" name="btn_222">
                            <property name="text">
                             <string/>
                            </property>
@@ -735,7 +735,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QComboBox" name="comboBox_9"/>
+                          <widget class="QComboBox" name="cbb_param_3"/>
                          </item>
                         </layout>
                        </item>

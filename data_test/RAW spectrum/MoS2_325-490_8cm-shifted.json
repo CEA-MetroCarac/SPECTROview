@@ -29,7 +29,7 @@
       ],
       "fit_method": "Leastsq",
       "fit_negative": false,
-      "max_ite": 200,
+      "max_ite": 100,
       "baseline": {
          "points": [
             [

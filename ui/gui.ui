@@ -449,7 +449,14 @@
                  <item>
                   <widget class="QPushButton" name="pushButton_7">
                    <property name="text">
-                    <string>Reinitialize spectrum</string>
+                    <string>Reinitialize Spectrum</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pushButton_8">
+                   <property name="text">
+                    <string>Reinitialize All Spectra</string>
                    </property>
                   </widget>
                  </item>
@@ -503,7 +510,50 @@
                      </property>
                      <item>
                       <widget class="QWidget" name="widget_5" native="true">
-                       <layout class="QVBoxLayout" name="verticalLayout_29" stretch="25,5,30,5,15,10">
+                       <layout class="QVBoxLayout" name="verticalLayout_29" stretch="0,25,0,30,5,15,10">
+                        <item>
+                         <layout class="QHBoxLayout" name="horizontalLayout_50">
+                          <item>
+                           <widget class="QLabel" name="label_41">
+                            <property name="text">
+                             <string>Spectral range :</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QLineEdit" name="lineEdit_27">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>20</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QLineEdit" name="lineEdit_30">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>20</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
                         <item>
                          <layout class="QHBoxLayout" name="horizontalLayout_57">
                           <item>
@@ -548,16 +598,30 @@
                          </layout>
                         </item>
                         <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_50">
+                         <layout class="QHBoxLayout" name="horizontalLayout_36">
                           <item>
-                           <widget class="QLabel" name="label_41">
+                           <widget class="QLabel" name="label_33">
                             <property name="text">
-                             <string>Spectral range :</string>
+                             <string>Normalization :</string>
                             </property>
                            </widget>
                           </item>
                           <item>
-                           <widget class="QLineEdit" name="lineEdit_27">
+                           <widget class="QRadioButton" name="radioButton">
+                            <property name="text">
+                             <string>Max int</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QRadioButton" name="radioButton_4">
+                            <property name="text">
+                             <string>Attractor</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QLineEdit" name="lineEdit_3">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -570,20 +634,10 @@
                               <height>0</height>
                              </size>
                             </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="lineEdit_30">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
+                            <property name="maximumSize">
                              <size>
-                              <width>20</width>
-                              <height>0</height>
+                              <width>80</width>
+                              <height>16777215</height>
                              </size>
                             </property>
                            </widget>
@@ -807,7 +861,7 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>357</width>
+                             <width>590</width>
                              <height>310</height>
                             </rect>
                            </property>
@@ -1673,8 +1727,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>897</width>
-               <height>904</height>
+               <width>1035</width>
+               <height>926</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
@@ -1793,6 +1847,7 @@
                  <property name="font">
                   <font>
                    <pointsize>8</pointsize>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -1821,6 +1876,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -1849,6 +1905,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -1877,6 +1934,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2106,6 +2164,7 @@
                     <widget class="QPushButton" name="btn_add_a_plot">
                      <property name="font">
                       <font>
+                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -2203,6 +2262,7 @@
                          </property>
                          <property name="font">
                           <font>
+                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2896,7 +2956,7 @@
      <x>0</x>
      <y>0</y>
      <width>1491</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpen">

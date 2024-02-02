@@ -181,6 +181,7 @@ class Wafer:
             fname = f"{wafer_name}_{coord}"
             fnames.append(fname)
         self.spectra_fs.apply_model(self.model_fs, fnames=fnames)
+
         self.plot_sel_spectre()
 
     def fitting_all_wafer(self):
@@ -220,6 +221,7 @@ class Wafer:
         """Plot all selected spectra"""
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
+
         for spectrum_fs in self.spectra_fs:
             wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
             if wafer_name_fs == wafer_name and coord_fs in coords:
@@ -240,29 +242,31 @@ class Wafer:
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
                 y0_values = spectrum_fs.y0
-                self.ax.plot(x0_values, y0_values, label ='raw')
+                self.ax.plot(x0_values, y0_values, label='raw')
 
-            if hasattr(spectrum_fs.result_fit,  'components') and hasattr(spectrum_fs.result_fit, 'components') and spectrum_fs.result_fit.success and self.ui.cb_bestfit.isChecked() :
+            if hasattr(spectrum_fs.result_fit, 'components') and hasattr(
+                    spectrum_fs.result_fit, 'components') and \
+                    self.ui.cb_bestfit.isChecked():
                 bestfit = spectrum_fs.result_fit.best_fit
-                self.ax.plot(x_values, bestfit, label ='bestfit')
+                self.ax.plot(x_values, bestfit, label='bestfit')
 
                 for peak_model in spectrum_fs.result_fit.components:
-                    prefix =str(peak_model.prefix)
+                    prefix = str(peak_model.prefix)
                     params = peak_model.make_params()
                     y_peak = peak_model.eval(params, x=x_values)
                     if self.ui.cb_filled.isChecked():
-                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.6, label=f"{prefix} filled")
+                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
+                                             label=f"{prefix} filled")
                     else:
                         self.ax.plot(x_values, y_peak, '--', label=f"{prefix}")
 
-            if hasattr(spectrum_fs.result_fit, 'residual') and self.ui.cb_residual.isChecked():
+            if hasattr(spectrum_fs.result_fit,
+                       'residual') and self.ui.cb_residual.isChecked():
                 residual = spectrum_fs.result_fit.residual
-                self.ax.plot(x_values,  residual,'ko-', ms=3, label='residual')
+                self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
 
             if self.ui.cb_colors.isChecked() is False:
                 self.ax.set_prop_cycle(None)
-            # self.ax.plot(x_values, residual)
-            #spectrum_fs.plot(self.ax, show_attractors=False,show_negative_values=False,show_baseline=False, show_background=False)
 
         self.ax.set_xlabel("Raman shift (cm-1)")
         self.ax.set_ylabel("Intensity (a.u)")
@@ -368,13 +372,12 @@ class Wafer:
         """ To clear wafer plot"""
         self.clear_layout(self.ui.wafer_plot.layout())
 
-    def copy_fig(self, canvas):
+    def copy_fig(self):
         self.save_dpi = float(self.ui.ent_plot_save_dpi.text())
-        # canvas = self.ui.spectre_view_frame.layout().itemAt(0).widget()
-        if canvas:
-            figure = canvas.figure
+        if self.canvas:
+            figure = self.canvas.figure
             with BytesIO() as buf:
-                figure.savefig(buf, format='png', dpi=self.save_dpi)
+                figure.savefig(buf, format='png', dpi=400)
                 data = buf.getvalue()
             format_id = win32clipboard.RegisterClipboardFormat('PNG')
             win32clipboard.OpenClipboard()

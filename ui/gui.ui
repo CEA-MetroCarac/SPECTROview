@@ -449,7 +449,7 @@
                  <item>
                   <widget class="QPushButton" name="btn_init_sel">
                    <property name="text">
-                    <string>Reinitialize Spectrum</string>
+                    <string>Reinitialize Selected Spectrum</string>
                    </property>
                   </widget>
                  </item>
@@ -1736,7 +1736,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1035</width>
+               <width>1020</width>
                <height>926</height>
               </rect>
              </property>

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1491</width>
+    <width>1476</width>
     <height>1025</height>
    </rect>
   </property>
@@ -393,7 +393,7 @@
                     <number>9</number>
                    </property>
                    <item>
-                    <widget class="QPushButton" name="btn_fit">
+                    <widget class="QPushButton" name="btn_fit_sel">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -419,7 +419,7 @@
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="btn_fit_all_wafers">
+                    <widget class="QPushButton" name="btn_fit_all">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -447,14 +447,14 @@
                   </spacer>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_7">
+                  <widget class="QPushButton" name="btn_init_sel">
                    <property name="text">
                     <string>Reinitialize Spectrum</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_8">
+                  <widget class="QPushButton" name="btn_init_all">
                    <property name="text">
                     <string>Reinitialize All Spectra</string>
                    </property>
@@ -510,7 +510,7 @@
                      </property>
                      <item>
                       <widget class="QWidget" name="widget_5" native="true">
-                       <layout class="QVBoxLayout" name="verticalLayout_29" stretch="0,25,0,30,5,15,10">
+                       <layout class="QVBoxLayout" name="verticalLayout_29" stretch="0,25,0,30,5,15">
                         <item>
                          <layout class="QHBoxLayout" name="horizontalLayout_50">
                           <item>
@@ -611,6 +611,9 @@
                             <property name="text">
                              <string>Max int</string>
                             </property>
+                            <property name="checked">
+                             <bool>true</bool>
+                            </property>
                            </widget>
                           </item>
                           <item>
@@ -706,7 +709,7 @@
                                <item>
                                 <widget class="QLabel" name="label_44">
                                  <property name="text">
-                                  <string>Peak position shift (cm-1) :</string>
+                                  <string>Peak  shift (cm-1) :</string>
                                  </property>
                                 </widget>
                                </item>
@@ -723,6 +726,9 @@
                                    <width>20</width>
                                    <height>0</height>
                                   </size>
+                                 </property>
+                                 <property name="toolTip">
+                                  <string>Type the different between experimental and theoretical values</string>
                                  </property>
                                 </widget>
                                </item>
@@ -782,6 +788,9 @@
                                  <height>0</height>
                                 </size>
                                </property>
+                               <property name="toolTip">
+                                <string>Type the theoretical values</string>
+                               </property>
                               </widget>
                              </item>
                             </layout>
@@ -802,46 +811,6 @@
                           </property>
                          </spacer>
                         </item>
-                        <item>
-                         <widget class="QProgressBar" name="progressBar">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>5</height>
-                           </size>
-                          </property>
-                          <property name="maximumSize">
-                           <size>
-                            <width>16777215</width>
-                            <height>10</height>
-                           </size>
-                          </property>
-                          <property name="minimum">
-                           <number>0</number>
-                          </property>
-                          <property name="maximum">
-                           <number>100</number>
-                          </property>
-                          <property name="value">
-                           <number>88</number>
-                          </property>
-                          <property name="textVisible">
-                           <bool>true</bool>
-                          </property>
-                          <property name="invertedAppearance">
-                           <bool>false</bool>
-                          </property>
-                          <property name="format">
-                           <string>%p%</string>
-                          </property>
-                         </widget>
-                        </item>
                        </layout>
                       </widget>
                      </item>
@@ -861,7 +830,7 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>590</width>
+                             <width>575</width>
                              <height>310</height>
                             </rect>
                            </property>
@@ -1601,7 +1570,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_sel_vertical">
+                 <widget class="QPushButton" name="btn_sel_verti">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1627,7 +1596,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_sel_horizontal">
+                 <widget class="QPushButton" name="btn_sel_horiz">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1693,6 +1662,46 @@
                <widget class="QLabel" name="item_count_label">
                 <property name="text">
                  <string>Number of points ()</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QProgressBar" name="progressBar">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>15</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>15</height>
+                 </size>
+                </property>
+                <property name="minimum">
+                 <number>0</number>
+                </property>
+                <property name="maximum">
+                 <number>100</number>
+                </property>
+                <property name="value">
+                 <number>88</number>
+                </property>
+                <property name="textVisible">
+                 <bool>true</bool>
+                </property>
+                <property name="invertedAppearance">
+                 <bool>false</bool>
+                </property>
+                <property name="format">
+                 <string>%p%</string>
                 </property>
                </widget>
               </item>
@@ -2955,7 +2964,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1491</width>
+     <width>1476</width>
      <height>21</height>
     </rect>
    </property>

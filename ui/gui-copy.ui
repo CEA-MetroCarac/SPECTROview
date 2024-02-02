@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1543</width>
-    <height>951</height>
+    <width>1491</width>
+    <height>1025</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>DaProViz (Data Processing and Visualization)</string>
+   <string>SPECTROview (Spectroscopic Data Processing and Visualization)</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="baseSize">
@@ -206,34 +206,14 @@
                      <string>raw</string>
                     </property>
                     <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="cb_raw_bl">
-                    <property name="text">
-                     <string>raw bl</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QCheckBox" name="cb_bestfit">
                     <property name="text">
-                     <string>Best-fit</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="cb_components">
-                    <property name="text">
-                     <string>Peaks</string>
+                     <string>best-fit</string>
                     </property>
                     <property name="checked">
                      <bool>true</bool>
@@ -243,10 +223,30 @@
                   <item>
                    <widget class="QCheckBox" name="cb_residual">
                     <property name="text">
-                     <string>Residual</string>
+                     <string>residual</string>
                     </property>
                     <property name="checked">
                      <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="cb_colors">
+                    <property name="text">
+                     <string>colors</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="cb_filled">
+                    <property name="text">
+                     <string>filled</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -393,7 +393,7 @@
                     <number>9</number>
                    </property>
                    <item>
-                    <widget class="QPushButton" name="btn_fit">
+                    <widget class="QPushButton" name="btn_fit_sel">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -419,7 +419,7 @@
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="btn_fit_all_wafers">
+                    <widget class="QPushButton" name="btn_fit_all">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -446,6 +446,20 @@
                    </property>
                   </spacer>
                  </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_init_sel">
+                   <property name="text">
+                    <string>Reinitialize Spectrum</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_init_all">
+                   <property name="text">
+                    <string>Reinitialize All Spectra</string>
+                   </property>
+                  </widget>
+                 </item>
                 </layout>
                </widget>
               </item>
@@ -470,7 +484,7 @@
             <item>
              <widget class="QTabWidget" name="tabWidget_2">
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="fit_model_editor">
                <attribute name="title">
@@ -496,7 +510,50 @@
                      </property>
                      <item>
                       <widget class="QWidget" name="widget_5" native="true">
-                       <layout class="QVBoxLayout" name="verticalLayout_29" stretch="25,5,30,5,15,10,10">
+                       <layout class="QVBoxLayout" name="verticalLayout_29" stretch="0,25,0,30,5,15">
+                        <item>
+                         <layout class="QHBoxLayout" name="horizontalLayout_50">
+                          <item>
+                           <widget class="QLabel" name="label_41">
+                            <property name="text">
+                             <string>Spectral range :</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QLineEdit" name="lineEdit_27">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>20</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QLineEdit" name="lineEdit_30">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>20</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
                         <item>
                          <layout class="QHBoxLayout" name="horizontalLayout_57">
                           <item>
@@ -541,16 +598,33 @@
                          </layout>
                         </item>
                         <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_50">
+                         <layout class="QHBoxLayout" name="horizontalLayout_36">
                           <item>
-                           <widget class="QLabel" name="label_41">
+                           <widget class="QLabel" name="label_33">
                             <property name="text">
-                             <string>Spectral range :</string>
+                             <string>Normalization :</string>
                             </property>
                            </widget>
                           </item>
                           <item>
-                           <widget class="QLineEdit" name="lineEdit_27">
+                           <widget class="QRadioButton" name="radioButton">
+                            <property name="text">
+                             <string>Max int</string>
+                            </property>
+                            <property name="checked">
+                             <bool>true</bool>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QRadioButton" name="radioButton_4">
+                            <property name="text">
+                             <string>Attractor</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QLineEdit" name="lineEdit_3">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -563,20 +637,10 @@
                               <height>0</height>
                              </size>
                             </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="lineEdit_30">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
+                            <property name="maximumSize">
                              <size>
-                              <width>20</width>
-                              <height>0</height>
+                              <width>80</width>
+                              <height>16777215</height>
                              </size>
                             </property>
                            </widget>
@@ -645,7 +709,7 @@
                                <item>
                                 <widget class="QLabel" name="label_44">
                                  <property name="text">
-                                  <string>Peak position shift (cm-1) :</string>
+                                  <string>Peak  shift (cm-1) :</string>
                                  </property>
                                 </widget>
                                </item>
@@ -662,6 +726,9 @@
                                    <width>20</width>
                                    <height>0</height>
                                   </size>
+                                 </property>
+                                 <property name="toolTip">
+                                  <string>Type the different between experimental and theoretical values</string>
                                  </property>
                                 </widget>
                                </item>
@@ -721,6 +788,9 @@
                                  <height>0</height>
                                 </size>
                                </property>
+                               <property name="toolTip">
+                                <string>Type the theoretical values</string>
+                               </property>
                               </widget>
                              </item>
                             </layout>
@@ -741,35 +811,6 @@
                           </property>
                          </spacer>
                         </item>
-                        <item>
-                         <widget class="QLabel" name="label_36">
-                          <property name="text">
-                           <string>Fitting in progress :</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QProgressBar" name="progressBar">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>2</height>
-                           </size>
-                          </property>
-                          <property name="value">
-                           <number>100</number>
-                          </property>
-                          <property name="textVisible">
-                           <bool>false</bool>
-                          </property>
-                         </widget>
-                        </item>
                        </layout>
                       </widget>
                      </item>
@@ -789,8 +830,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>642</width>
-                             <height>347</height>
+                             <width>590</width>
+                             <height>310</height>
                             </rect>
                            </property>
                           </widget>
@@ -1529,7 +1570,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_sel_vertical">
+                 <widget class="QPushButton" name="btn_sel_verti">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1555,7 +1596,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_sel_horizontal">
+                 <widget class="QPushButton" name="btn_sel_horiz">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1618,9 +1659,49 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_33">
+               <widget class="QLabel" name="item_count_label">
                 <property name="text">
                  <string>Number of points ()</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QProgressBar" name="progressBar">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>15</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>15</height>
+                 </size>
+                </property>
+                <property name="minimum">
+                 <number>0</number>
+                </property>
+                <property name="maximum">
+                 <number>100</number>
+                </property>
+                <property name="value">
+                 <number>88</number>
+                </property>
+                <property name="textVisible">
+                 <bool>true</bool>
+                </property>
+                <property name="invertedAppearance">
+                 <bool>false</bool>
+                </property>
+                <property name="format">
+                 <string>%p%</string>
                 </property>
                </widget>
               </item>
@@ -1655,8 +1736,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1087</width>
-               <height>852</height>
+               <width>1035</width>
+               <height>926</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
@@ -2162,7 +2243,7 @@
                        <item>
                         <widget class="QLabel" name="label_8">
                          <property name="text">
-                          <string>Hue</string>
+                          <string>Z axis</string>
                          </property>
                         </widget>
                        </item>
@@ -2266,6 +2347,22 @@
                   </layout>
                  </item>
                  <item>
+                  <spacer name="verticalSpacer_8">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeType">
+                    <enum>QSizePolicy::Fixed</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_22" stretch="16,84">
                    <item>
                     <widget class="QLabel" name="label_15">
@@ -2300,7 +2397,7 @@
                    <item>
                     <widget class="QLabel" name="label_10">
                      <property name="text">
-                      <string>X axis title:</string>
+                      <string>X axis label:</string>
                      </property>
                     </widget>
                    </item>
@@ -2330,7 +2427,7 @@
                    <item>
                     <widget class="QLabel" name="label_11">
                      <property name="text">
-                      <string>Y axis title:</string>
+                      <string>Y axis label:</string>
                      </property>
                     </widget>
                    </item>
@@ -2360,7 +2457,7 @@
                    <item>
                     <widget class="QLabel" name="label_12">
                      <property name="text">
-                      <string>Hue title:</string>
+                      <string>Z axis label</string>
                      </property>
                     </widget>
                    </item>
@@ -2867,7 +2964,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1543</width>
+     <width>1491</width>
      <height>21</height>
     </rect>
    </property>

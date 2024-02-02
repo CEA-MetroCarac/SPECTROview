@@ -170,7 +170,7 @@ class Wafer:
         coord_fs = tuple(map(float, coord_str.split(',')))
         return wafer_name_fs, coord_fs
 
-    def fitting_sel_spectrum(self):
+    def fit_selected(self):
         """Fit only selected spectrum(s)"""
         if self.model_fs is None:
             self.show_alert("Please load a fit model before fitting.")
@@ -184,7 +184,7 @@ class Wafer:
 
         self.plot_sel_spectre()
 
-    def fitting_all_wafer(self):
+    def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
         if self.model_fs is None:
             self.show_alert("Load a fit model first!")
@@ -192,30 +192,30 @@ class Wafer:
         self.spectra_fs.apply_model(self.model_fs)
         self.plot_sel_spectre()
 
-    # def reinit(self, fnames=None):
-    #     """ Reinitialize the spectrum """
-    #     if fnames is None:
-    #         fselector = self.fileselector
-    #         fnames = fselector.filenames[0]
-    #         fnames = [fnames[i] for i in fselector.lbox[0].curselection()]
-    #
-    #     for fname in fnames:
-    #         spectrum, _ = self.spectra.get_objects(fname)
-    #         spectrum.range_min = None
-    #         spectrum.range_max = None
-    #         spectrum.x = spectrum.x0.copy()
-    #         spectrum.y = spectrum.y0.copy()
-    #         spectrum.norm_mode = None
-    #         spectrum.result_fit = lambda: None
-    #         spectrum.remove_models()
-    #         spectrum.baseline.points = [[], []]
-    #         spectrum.baseline.is_subtracted = False
-    #
-    #     self.colorize_from_fit_status(fnames=fnames)
-    #     self.tabview.delete()
-    #     self.set_range()
-    #     self.ax.clear()
-    #     self.plot()
+    def reinit(self, fnames=None):
+        """ Reinitialize the spectrum """
+        if fnames is None:
+            fselector = self.fileselector
+            fnames = fselector.filenames[0]
+            fnames = [fnames[i] for i in fselector.lbox[0].curselection()]
+
+        for fname in fnames:
+            spectrum, _ = self.spectra.get_objects(fname)
+            spectrum.range_min = None
+            spectrum.range_max = None
+            spectrum.x = spectrum.x0.copy()
+            spectrum.y = spectrum.y0.copy()
+            spectrum.norm_mode = None
+            spectrum.result_fit = lambda: None
+            spectrum.remove_models()
+            spectrum.baseline.points = [[], []]
+            spectrum.baseline.is_subtracted = False
+
+        self.colorize_from_fit_status(fnames=fnames)
+        self.tabview.delete()
+        self.set_range()
+        self.ax.clear()
+        self.plot()
 
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
@@ -391,14 +391,14 @@ class Wafer:
             QMessageBox.critical(None, "Error", "No plot to copy.")
 
     def select_all_spectra(self):
-        """ To quickly select all spectra within the listbox"""
+        """ To quickly select all spectra within the spectra listbox"""
         item_count = self.ui.spectra_listbox.count()
         for i in range(item_count):
             item = self.ui.spectra_listbox.item(i)
             item.setSelected(True)
 
-    def select_spectra_vertical(self):
-        """ To select all spectra vertically within the listbox"""
+    def select_verti(self):
+        """ To select all spectra vertically within the spectra listbox"""
         self.ui.spectra_listbox.clearSelection()  # Clear all selection
         item_count = self.ui.spectra_listbox.count()
         for i in range(item_count):
@@ -408,8 +408,8 @@ class Wafer:
             if x_coord == 0:
                 item.setSelected(True)
 
-    def select_spectra_horizontal(self):
-        """ To quickly select all spectra vertically within the listbox"""
+    def select_horiz(self):
+        """ To quickly select all spectra vertically the spectra listbox"""
         self.ui.spectra_listbox.clearSelection()  # Clear all selection
         item_count = self.ui.spectra_listbox.count()
         for i in range(item_count):

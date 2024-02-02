@@ -154,30 +154,22 @@ class MainWindow:
         self.ui.setPalette(dark_palette)
 
         ########################################################
-        ############## GUI for Data Processing tab #############
+        ############## GUI for Wafer Processing tab #############
         ########################################################
 
-        self.ui.btn_open_wafers.clicked.connect(
-            self.wafer.open_csv)
-        self.ui.btn_remove_wafer.clicked.connect(
-            self.wafer.remove_wafer)
+        self.ui.btn_open_wafers.clicked.connect(self.wafer.open_csv)
+        self.ui.btn_remove_wafer.clicked.connect(self.wafer.remove_wafer)
 
-        self.ui.btn_copy_fig.clicked.connect(
-            self.wafer.copy_fig)
+        self.ui.btn_copy_fig.clicked.connect(self.wafer.copy_fig)
 
-        self.ui.btn_sel_all.clicked.connect(
-            self.wafer.select_all_spectra)
-        self.ui.btn_sel_vertical.clicked.connect(
-            self.wafer.select_spectra_vertical)
-        self.ui.btn_sel_horizontal.clicked.connect(
-            self.wafer.select_spectra_horizontal)
+        self.ui.btn_sel_all.clicked.connect(self.wafer.select_all_spectra)
+        self.ui.btn_sel_verti.clicked.connect(self.wafer.select_verti)
+        self.ui.btn_sel_horiz.clicked.connect(self.wafer.select_horiz)
 
-        self.ui.btn_load_model.clicked.connect(
-            self.wafer.open_model)
-        self.ui.btn_fit.clicked.connect(
-            self.wafer.fitting_sel_spectrum)
-        self.ui.btn_fit_all_wafers.clicked.connect(
-            self.wafer.fitting_all_wafer)
+        self.ui.btn_load_model.clicked.connect(self.wafer.open_model)
+        self.ui.btn_fit_sel.clicked.connect(self.wafer.fit_selected)
+        self.ui.btn_fit_all.clicked.connect(self.wafer.fit_all)
+        self.ui.btn_init_sel.clicked.connect(self.wafer.reinit)
 
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)

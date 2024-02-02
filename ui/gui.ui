@@ -448,6 +448,12 @@
                  </item>
                  <item>
                   <widget class="QPushButton" name="btn_init_sel">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                    <property name="text">
                     <string>Reinitialize Selected Spectrum</string>
                    </property>
@@ -455,6 +461,12 @@
                  </item>
                  <item>
                   <widget class="QPushButton" name="btn_init_all">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                    <property name="text">
                     <string>Reinitialize All Spectra</string>
                    </property>
@@ -512,7 +524,7 @@
                       <widget class="QWidget" name="widget_5" native="true">
                        <layout class="QVBoxLayout" name="verticalLayout_29" stretch="0,25,0,30,5,15">
                         <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_50">
+                         <layout class="QHBoxLayout" name="horizontalLayout_50" stretch="30,25,25,20">
                           <item>
                            <widget class="QLabel" name="label_41">
                             <property name="text">
@@ -552,10 +564,17 @@
                             </property>
                            </widget>
                           </item>
+                          <item>
+                           <widget class="QPushButton" name="pushButton_7">
+                            <property name="text">
+                             <string>Apply</string>
+                            </property>
+                           </widget>
+                          </item>
                          </layout>
                         </item>
                         <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_57">
+                         <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="30,25,25,20">
                           <item>
                            <widget class="QLabel" name="label_37">
                             <property name="text">
@@ -595,57 +614,91 @@
                             </property>
                            </widget>
                           </item>
-                         </layout>
-                        </item>
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_36">
                           <item>
-                           <widget class="QLabel" name="label_33">
+                           <widget class="QPushButton" name="pushButton_8">
                             <property name="text">
-                             <string>Normalization :</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QRadioButton" name="radioButton">
-                            <property name="text">
-                             <string>Max int</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QRadioButton" name="radioButton_4">
-                            <property name="text">
-                             <string>Attractor</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="lineEdit_3">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>20</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>80</width>
-                              <height>16777215</height>
-                             </size>
+                             <string>Apply</string>
                             </property>
                            </widget>
                           </item>
                          </layout>
+                        </item>
+                        <item>
+                         <widget class="QGroupBox" name="gb_intensity_norm">
+                          <property name="title">
+                           <string>Intensity normalization</string>
+                          </property>
+                          <layout class="QVBoxLayout" name="verticalLayout_6">
+                           <property name="leftMargin">
+                            <number>2</number>
+                           </property>
+                           <property name="topMargin">
+                            <number>2</number>
+                           </property>
+                           <property name="rightMargin">
+                            <number>2</number>
+                           </property>
+                           <property name="bottomMargin">
+                            <number>2</number>
+                           </property>
+                           <item>
+                            <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="30,30,20,20">
+                             <item>
+                              <widget class="QRadioButton" name="rbtn_max_int">
+                               <property name="text">
+                                <string>Max int</string>
+                               </property>
+                               <property name="checked">
+                                <bool>true</bool>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRadioButton" name="rbtn_attractor">
+                               <property name="text">
+                                <string>Attractor</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLineEdit" name="text_attractor">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="minimumSize">
+                                <size>
+                                 <width>20</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                               <property name="maximumSize">
+                                <size>
+                                 <width>80</width>
+                                 <height>16777215</height>
+                                </size>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="btn_normalize">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="text">
+                                <string>Apply</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </item>
+                          </layout>
+                         </widget>
                         </item>
                         <item>
                          <spacer name="verticalSpacer">
@@ -830,7 +883,7 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>575</width>
+                             <width>494</width>
                              <height>310</height>
                             </rect>
                            </property>

@@ -154,16 +154,19 @@ class Wafer:
 
     def spectre_id(self):
         """Get selected spectre id(s)"""
-        wafer_name = self.ui.wafers_listbox.currentItem().text()
-        selected_spectra = self.ui.spectra_listbox.selectedItems()
-        coords = []
-        if selected_spectra:
-            for selected_item in selected_spectra:
-                text = selected_item.text()
-                x, y = map(float, text.strip('()').split(','))
-                coord = (x, y)
-                coords.append(coord)
-        return wafer_name, coords
+        wafer_item = self.ui.wafers_listbox.currentItem()
+        if wafer_item is not None:
+            wafer_name = wafer_item.text()
+            selected_spectra = self.ui.spectra_listbox.selectedItems()
+            coords = []
+            if selected_spectra:
+                for selected_item in selected_spectra:
+                    text = selected_item.text()
+                    x, y = map(float, text.strip('()').split(','))
+                    coord = (x, y)
+                    coords.append(coord)
+            return wafer_name, coords
+        return None, None
 
     def spectre_id_fs(self, spectrum_fs=None):
         """Get selected spectre id(s) of FITSPY object"""
@@ -229,6 +232,12 @@ class Wafer:
             spectrum, _ = self.spectra_fs.get_objects(fname)
             self.reinit_spectrum(spectrum)
         self.plot_sel_spectre()
+
+    def norm(self):
+        for spectrum_fs in self.spectra_fs:
+            spectrum_fs.normalize
+        self.plot_sel_spectre()
+        print('normalized')
 
     def plot_sel_spectra(self):
         """Plot all selected spectra"""

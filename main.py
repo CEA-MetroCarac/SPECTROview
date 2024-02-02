@@ -171,6 +171,7 @@ class MainWindow:
         self.ui.btn_fit_all.clicked.connect(self.wafer.fit_all)
         self.ui.btn_init_sel.clicked.connect(self.wafer.reinit_sel)
         self.ui.btn_init_all.clicked.connect(self.wafer.reinit_all)
+        self.ui.btn_normalize.clicked.connect(self.wafer.norm)
 
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)

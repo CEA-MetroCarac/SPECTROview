@@ -235,6 +235,7 @@ class Wafer:
         self.ax = fig.add_subplot(111)
 
         for spectrum_fs in selected_spectra_fs:
+            fname, coord = self.spectre_id_fs(spectrum_fs)
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
             self.ax.plot(x_values, y_values)
@@ -248,7 +249,9 @@ class Wafer:
                     spectrum_fs.result_fit, 'components') and \
                     self.ui.cb_bestfit.isChecked():
                 bestfit = spectrum_fs.result_fit.best_fit
-                self.ax.plot(x_values, bestfit, label='bestfit')
+                self.ax.plot(x_values, bestfit,
+                             label=f"bestfit")
+                # label=f"bestfit_{fname}-{coord}"
 
                 for peak_model in spectrum_fs.result_fit.components:
                     prefix = str(peak_model.prefix)
@@ -256,7 +259,7 @@ class Wafer:
                     y_peak = peak_model.eval(params, x=x_values)
                     if self.ui.cb_filled.isChecked():
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
-                                             label=f"{prefix} filled")
+                                             label=f"{prefix}")
                     else:
                         self.ax.plot(x_values, y_peak, '--', label=f"{prefix}")
 

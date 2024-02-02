@@ -49,6 +49,7 @@ class Wafer:
         self.canvas = None
         self.model_fs = None  # FITSPY
         self.spectra_fs = Spectra()  # FITSPY
+        # self.df_fit_results = None
 
         # Update spectra_listbox when selecting wafer via WAFER LIST
         self.ui.wafers_listbox.itemSelectionChanged.connect(
@@ -187,7 +188,6 @@ class Wafer:
             fname = f"{wafer_name}_{coord}"
             fnames.append(fname)
         self.spectra_fs.apply_model(self.model_fs, fnames=fnames)
-
         self.plot_sel_spectre()
 
     def fit_all(self):
@@ -197,6 +197,29 @@ class Wafer:
             return
         self.spectra_fs.apply_model(self.model_fs)
         self.plot_sel_spectre()
+
+    def collect_results(self):
+        """Function to collect best-fit results and append in a dataframe"""
+        # Add all dict into a list, then convert to a dataframe.
+        fit_results_list = []
+        for spectrum_fs in self.spectra_fs:
+            if hasattr(spectrum_fs.result_fit, 'best_values'):
+                wafer_name, coord = self.spectre_id_fs(spectrum_fs)
+                x, y = coord
+                best_values = spectrum_fs.result_fit.best_values
+                # Add additional information to the best_values dictionary
+                best_values["Wafer"] = wafer_name
+                best_values["X"] = x
+                best_values["Y"] = y
+                fit_results_list.append(best_values)
+
+        self.df_fit_results = pd.DataFrame(fit_results_list)
+        # Reorder columns to have "Wafer", "X", and "Y" at the beginning
+        columns_order = ["Wafer", "X", "Y"] + [col for col in
+                                               self.df_fit_results.columns if
+                                               col not in ["Wafer", "X", "Y"]]
+        self.df_fit_results = self.df_fit_results[columns_order]
+        # print(self.df_fit_results)
 
     def reinit_spectrum(self, spectrum):
         """Reinitialize the given spectrum"""
@@ -232,12 +255,6 @@ class Wafer:
             spectrum, _ = self.spectra_fs.get_objects(fname)
             self.reinit_spectrum(spectrum)
         self.plot_sel_spectre()
-
-    def norm(self):
-        for spectrum_fs in self.spectra_fs:
-            spectrum_fs.normalize
-        self.plot_sel_spectre()
-        print('normalized')
 
     def plot_sel_spectra(self):
         """Plot all selected spectra"""

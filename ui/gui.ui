@@ -460,19 +460,6 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="btn_init_all">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Reinitialize All Spectra</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_36">
                    <item>
                     <spacer name="horizontalSpacer_13">
@@ -501,6 +488,19 @@
                     </widget>
                    </item>
                   </layout>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_init_all">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="text">
+                    <string>Reinitialize All Spectra</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </widget>
@@ -551,212 +551,190 @@
                 <item>
                  <widget class="QWidget" name="widget" native="true">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>150</width>
+                    <width>0</width>
                     <height>0</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>150</width>
+                    <width>16777215</width>
                     <height>16777215</height>
                    </size>
                   </property>
-                  <widget class="QLineEdit" name="plot_title">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>190</y>
-                     <width>139</width>
-                     <height>20</height>
-                    </rect>
+                  <layout class="QVBoxLayout" name="verticalLayout_23">
+                   <property name="spacing">
+                    <number>6</number>
                    </property>
-                   <property name="placeholderText">
-                    <string>Type Plot Title here</string>
+                   <property name="leftMargin">
+                    <number>6</number>
                    </property>
-                  </widget>
-                  <widget class="QRadioButton" name="radioButton">
-                   <property name="geometry">
-                    <rect>
-                     <x>10</x>
-                     <y>240</y>
-                     <width>131</width>
-                     <height>17</height>
-                    </rect>
+                   <property name="topMargin">
+                    <number>6</number>
                    </property>
-                   <property name="text">
-                    <string>Include stats</string>
+                   <property name="rightMargin">
+                    <number>6</number>
                    </property>
-                  </widget>
-                  <widget class="QWidget" name="">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>20</y>
-                     <width>126</width>
-                     <height>22</height>
-                    </rect>
+                   <property name="bottomMargin">
+                    <number>6</number>
                    </property>
-                   <layout class="QHBoxLayout" name="horizontalLayout_32">
-                    <item>
-                     <widget class="QLabel" name="label_32">
-                      <property name="text">
-                       <string>Wafer size (mm)</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLineEdit" name="wafer_size">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>40</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>40</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="text">
-                       <string>200</string>
-                      </property>
-                      <property name="placeholderText">
-                       <string>Wafer size</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                  <widget class="QWidget" name="">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>70</y>
-                     <width>130</width>
-                     <height>22</height>
-                    </rect>
-                   </property>
-                   <layout class="QHBoxLayout" name="horizontalLayout_33">
-                    <item>
-                     <widget class="QLabel" name="label_33">
-                      <property name="text">
-                       <string>Color range min :</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLineEdit" name="wafer_size_2">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>40</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>40</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="placeholderText">
-                       <string>min</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                  <widget class="QWidget" name="">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>100</y>
-                     <width>130</width>
-                     <height>22</height>
-                    </rect>
-                   </property>
-                   <layout class="QHBoxLayout" name="horizontalLayout_38">
-                    <item>
-                     <widget class="QLabel" name="label_34">
-                      <property name="text">
-                       <string>Color range min :</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLineEdit" name="wafer_size_3">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>40</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>40</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="placeholderText">
-                       <string>max</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                  <widget class="QWidget" name="">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>140</y>
-                     <width>146</width>
-                     <height>22</height>
-                    </rect>
-                   </property>
-                   <layout class="QHBoxLayout" name="horizontalLayout_39">
-                    <item>
-                     <widget class="QLabel" name="label_35">
-                      <property name="text">
-                       <string>Color palette :</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QComboBox" name="comboBox_4"/>
-                    </item>
-                   </layout>
-                  </widget>
+                   <item>
+                    <widget class="QLineEdit" name="plot_title">
+                     <property name="placeholderText">
+                      <string>Type Plot Title here</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_32">
+                     <property name="spacing">
+                      <number>0</number>
+                     </property>
+                     <item>
+                      <widget class="QLabel" name="label_32">
+                       <property name="text">
+                        <string>Wafer size (mm)</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="wafer_size">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>40</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>40</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string>200</string>
+                       </property>
+                       <property name="placeholderText">
+                        <string>Wafer size</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_33">
+                     <item>
+                      <widget class="QLabel" name="label_33">
+                       <property name="text">
+                        <string>Color range :</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="int_vmin">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>40</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>40</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="placeholderText">
+                        <string>min</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="int_vmax">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>40</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>40</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="placeholderText">
+                        <string>max</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_39">
+                     <item>
+                      <widget class="QLabel" name="label_35">
+                       <property name="text">
+                        <string>Color palette :</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QComboBox" name="cbb_color_pallete"/>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="cb_stats">
+                     <property name="text">
+                      <string>Include stats</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="verticalSpacer_10">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
                  </widget>
                 </item>
                 <item>
@@ -816,8 +794,11 @@
                    </property>
                    <item>
                     <layout class="QVBoxLayout" name="verticalLayout_18">
+                     <property name="spacing">
+                      <number>6</number>
+                     </property>
                      <item>
-                      <widget class="QFrame" name="frame_wafer_1">
+                      <widget class="QFrame" name="frame_wafer_111">
                        <property name="frameShape">
                         <enum>QFrame::StyledPanel</enum>
                        </property>
@@ -841,7 +822,7 @@
                          <number>0</number>
                         </property>
                         <item>
-                         <layout class="QVBoxLayout" name="frame_wafer_11">
+                         <layout class="QVBoxLayout" name="frame_wafer_1">
                           <property name="spacing">
                            <number>2</number>
                           </property>
@@ -869,6 +850,9 @@
                        </property>
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="20,80,0">
+                         <property name="spacing">
+                          <number>0</number>
+                         </property>
                          <item>
                           <widget class="QLabel" name="label_28">
                            <property name="text">
@@ -900,6 +884,9 @@
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_28" stretch="20,80,0">
+                         <property name="spacing">
+                          <number>0</number>
+                         </property>
                          <item>
                           <widget class="QLabel" name="label_29">
                            <property name="text">
@@ -993,7 +980,7 @@
                       <number>6</number>
                      </property>
                      <item>
-                      <widget class="QFrame" name="frame_wafer_2">
+                      <widget class="QFrame" name="frame_wafer_222">
                        <property name="frameShape">
                         <enum>QFrame::StyledPanel</enum>
                        </property>
@@ -1017,7 +1004,7 @@
                          <number>0</number>
                         </property>
                         <item row="0" column="0">
-                         <layout class="QVBoxLayout" name="frame_wafer_22">
+                         <layout class="QVBoxLayout" name="frame_wafer_2">
                           <property name="spacing">
                            <number>2</number>
                           </property>
@@ -1040,8 +1027,14 @@
                      </item>
                      <item>
                       <layout class="QVBoxLayout" name="verticalLayout_20">
+                       <property name="spacing">
+                        <number>0</number>
+                       </property>
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="20,80,0">
+                         <property name="spacing">
+                          <number>0</number>
+                         </property>
                          <item>
                           <widget class="QLabel" name="label_30">
                            <property name="text">
@@ -1073,6 +1066,9 @@
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="20,80,0">
+                         <property name="spacing">
+                          <number>0</number>
+                         </property>
                          <item>
                           <widget class="QLabel" name="label_31">
                            <property name="text">
@@ -1492,8 +1488,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>465</width>
-                             <height>310</height>
+                             <width>306</width>
+                             <height>295</height>
                             </rect>
                            </property>
                           </widget>
@@ -2168,8 +2164,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1020</width>
-               <height>926</height>
+               <width>882</width>
+               <height>904</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
@@ -2288,7 +2284,6 @@
                  <property name="font">
                   <font>
                    <pointsize>8</pointsize>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2317,7 +2312,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2346,7 +2340,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2375,7 +2368,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2605,7 +2597,6 @@
                     <widget class="QPushButton" name="btn_add_a_plot">
                      <property name="font">
                       <font>
-                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -2703,7 +2694,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -3397,7 +3387,7 @@
      <x>0</x>
      <y>0</y>
      <width>1476</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpen">

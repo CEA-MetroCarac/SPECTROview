@@ -190,7 +190,7 @@ class Wafer:
             fnames.append(fname)
         self.spectra_fs.apply_model(self.model_fs, fnames=fnames)
         self.plot_sel_spectre()
-
+        self.collect_results()
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
         if self.model_fs is None:
@@ -198,11 +198,13 @@ class Wafer:
             return
         self.spectra_fs.apply_model(self.model_fs)
         self.plot_sel_spectre()
+        self.collect_results()
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.
         fit_results_list = []
+        self.df_fit_results = None
         for spectrum_fs in self.spectra_fs:
             if hasattr(spectrum_fs.result_fit, 'best_values'):
                 wafer_name, coord = self.spectre_id_fs(spectrum_fs)
@@ -225,10 +227,11 @@ class Wafer:
 
     def view_param_1(self):
         """ Plot WaferDataFrame"""
-        self.clear_layout(self.ui.frame_wafer_11.layout())
+        self.clear_layout(self.ui.frame_wafer_1.layout())
 
         dfr = self.df_fit_results
         wafer_name = self.ui.cbb_wafer_1.currentText()
+        color=self.ui.cbb_color_pallete.currentText()
         wafer_size = float(self.ui.wafer_size.text())
         if wafer_name is not None:
             selected_df = dfr.query('Wafer == @wafer_name')
@@ -237,13 +240,16 @@ class Wafer:
         y = selected_df['Y']
         param = selected_df[sel_param]
 
+        vmin = float(self.ui.int_vmin.text()) if self.ui.int_vmin.text() else None
+        vmax = float(self.ui.int_vmax.text()) if self.ui.int_vmax.text() else None
+        stats = self.ui.cb_stats.isChecked()
         plt.close('all')
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
         wdf = WaferView()
-        wdf.plot(ax, x=x, y=y, z=param, cmap="jet", stats=False,
-                 radius=(wafer_size / 2))
+        wdf.plot(ax, x=x, y=y, z=param, cmap=color, vmin=vmin, vmax=vmax, stats=stats,
+                 r=(wafer_size / 2))
 
         text = self.ui.plot_title.text()
         title = (f"{wafer_name}_{sel_param}") if not text else text
@@ -251,40 +257,41 @@ class Wafer:
 
         fig.tight_layout()
         canvas = FigureCanvas(fig)
-        self.ui.frame_wafer_11.addWidget(canvas)
+        self.ui.frame_wafer_1.addWidget(canvas)
 
     def view_param_2(self):
         """ Plot WaferDataFrame"""
-        self.clear_layout(self.ui.frame_wafer_22.layout())
+        self.clear_layout(self.ui.frame_wafer_2.layout())
 
         dfr = self.df_fit_results
-        selected_wafer = self.ui.cbb_wafer_2.currentText()
+        wafer_name = self.ui.cbb_wafer_2.currentText()
+        color=self.ui.cbb_color_pallete.currentText()
         wafer_size = float(self.ui.wafer_size.text())
-        if selected_wafer is not None:
-            selected_df = dfr.query('Wafer == @selected_wafer')
-        selected_param = self.ui.cbb_param_2.currentText()
+        if wafer_name is not None:
+            selected_df = dfr.query('Wafer == @wafer_name')
+        sel_param = self.ui.cbb_param_2.currentText()
         x = selected_df['X']
         y = selected_df['Y']
-        param = selected_df[selected_param]
+        param = selected_df[sel_param]
 
+        vmin = float(self.ui.int_vmin.text()) if self.ui.int_vmin.text() else None
+        vmax = float(self.ui.int_vmax.text()) if self.ui.int_vmax.text() else None
+        stats = self.ui.cb_stats.isChecked()
         plt.close('all')
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
         wdf = WaferView()
-        wdf.plot(ax, x=x, y=y, z=param, cmap="jet", stats=False,
-                 radius=(wafer_size / 2))
+        wdf.plot(ax, x=x, y=y, z=param, cmap=color, vmin=vmin, vmax=vmax, stats=stats,
+                 r=(wafer_size / 2))
 
-        text_title = self.ui.plot_title.text()
-        print(text_title)
-        title = (
-            f"{selected_wafer}_{selected_param}") if not text_title else \
-            text_title
+        text = self.ui.plot_title.text()
+        title = (f"{wafer_name}_{sel_param}") if not text else text
         ax.set_title(f"{title}")
 
         fig.tight_layout()
         canvas = FigureCanvas(fig)
-        self.ui.frame_wafer_22.addWidget(canvas)
+        self.ui.frame_wafer_2.addWidget(canvas)
 
     def apprend_cbb_wafer(self, wafer_names=None):
         """to append all values of df_fit_results to comoboxses"""
@@ -383,7 +390,7 @@ class Wafer:
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
                                              label=f"{prefix}")
                     else:
-                        self.ax.plot(x_values, y_peak, '--', label=f"{prefix}")
+                        self.ax.plot(x_values, y_peak, label=f"{prefix}")
 
             if hasattr(spectrum_fs.result_fit,
                        'residual') and self.ui.cb_residual.isChecked():

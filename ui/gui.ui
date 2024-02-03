@@ -331,17 +331,20 @@
                  </item>
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_52">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
                    <property name="leftMargin">
-                    <number>6</number>
+                    <number>5</number>
                    </property>
                    <property name="topMargin">
-                    <number>6</number>
+                    <number>5</number>
                    </property>
                    <property name="rightMargin">
-                    <number>6</number>
+                    <number>5</number>
                    </property>
                    <property name="bottomMargin">
-                    <number>6</number>
+                    <number>5</number>
                    </property>
                    <item>
                     <widget class="QPushButton" name="btn_load_model">
@@ -363,19 +366,6 @@
                      </property>
                     </spacer>
                    </item>
-                   <item>
-                    <widget class="QPushButton" name="btn_save_model">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>Save fit model</string>
-                     </property>
-                    </widget>
-                   </item>
                   </layout>
                  </item>
                  <item>
@@ -384,19 +374,46 @@
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout">
                    <property name="leftMargin">
-                    <number>9</number>
+                    <number>5</number>
                    </property>
                    <property name="topMargin">
-                    <number>9</number>
+                    <number>5</number>
                    </property>
                    <property name="rightMargin">
-                    <number>9</number>
+                    <number>5</number>
                    </property>
                    <property name="bottomMargin">
-                    <number>9</number>
+                    <number>5</number>
                    </property>
                    <item>
+                    <widget class="QLabel" name="label_34">
+                     <property name="text">
+                      <string>Fit score :</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
                     <spacer name="horizontalSpacer_12">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_36">
+                     <property name="text">
+                      <string>Itiration:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_13">
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
                      </property>
@@ -424,34 +441,161 @@
                   </spacer>
                  </item>
                  <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_36">
-                   <item>
-                    <spacer name="horizontalSpacer_13">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="btn_collect_results">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>Collected fit results</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
+                  <widget class="QGroupBox" name="groupBox_3">
+                   <property name="title">
+                    <string/>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_36">
+                    <property name="spacing">
+                     <number>9</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>3</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>3</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>3</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>3</number>
+                    </property>
+                    <item>
+                     <widget class="QLabel" name="label_38">
+                      <property name="maximumSize">
+                       <size>
+                        <width>60</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>Fit results:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_14">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="btn_collect_results">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>60</width>
+                        <height>22</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>60</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>Collect</string>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>16</width>
+                        <height>22</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="pushButton_5">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>30</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>30</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="toolTip">
+                       <string>View collected fit results</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="resources_new.qrc">
+                        <normaloff>:/icon/iconpack/view.png</normaloff>:/icon/iconpack/view.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>22</width>
+                        <height>22</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="pushButton_9">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>30</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>30</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="toolTip">
+                       <string>Save all fit results in a Excel file</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="resources_new.qrc">
+                        <normaloff>:/icon/iconpack/save.png</normaloff>:/icon/iconpack/save.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>22</width>
+                        <height>22</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
                  </item>
                 </layout>
                </widget>
@@ -477,7 +621,7 @@
             <item>
              <widget class="QTabWidget" name="tabWidget_2">
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="wafer_plot_view">
                <attribute name="title">
@@ -1487,8 +1631,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>98</width>
-                             <height>28</height>
+                             <width>454</width>
+                             <height>299</height>
                             </rect>
                            </property>
                           </widget>
@@ -1501,6 +1645,13 @@
                             <widget class="QPushButton" name="pushButton_25">
                              <property name="text">
                               <string>Add peak</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QPushButton" name="pushButton_10">
+                             <property name="text">
+                              <string>Save fit model</string>
                              </property>
                             </widget>
                            </item>
@@ -1812,6 +1963,12 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="maximumSize">
+                <size>
+                 <width>50</width>
+                 <height>16777215</height>
+                </size>
+               </property>
                <property name="toolTip">
                 <string>Open spectra</string>
                </property>
@@ -1831,28 +1988,27 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="btn_save_">
+              <widget class="QRadioButton" name="radio_darkmode">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
-               <property name="toolTip">
-                <string>Save spectra</string>
+               <property name="minimumSize">
+                <size>
+                 <width>60</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>60</width>
+                 <height>16777215</height>
+                </size>
                </property>
                <property name="text">
-                <string/>
-               </property>
-               <property name="icon">
-                <iconset resource="resources_new.qrc">
-                 <normaloff>:/icon/iconpack/save-94.png</normaloff>:/icon/iconpack/save-94.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>26</width>
-                 <height>26</height>
-                </size>
+                <string> Light </string>
                </property>
               </widget>
              </item>
@@ -1896,6 +2052,12 @@
                <layout class="QHBoxLayout" name="horizontalLayout_29">
                 <item>
                  <widget class="QPushButton" name="btn_remove_wafer">
+                  <property name="maximumSize">
+                   <size>
+                    <width>90</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
                   <property name="text">
                    <string>Remove</string>
                   </property>
@@ -1913,6 +2075,12 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="pushButton_6">
+                  <property name="maximumSize">
+                   <size>
+                    <width>70</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
                   <property name="text">
                    <string>Show</string>
                   </property>
@@ -1930,6 +2098,12 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="pushButton_3">
+                  <property name="maximumSize">
+                   <size>
+                    <width>70</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
                   <property name="text">
                    <string>Save</string>
                   </property>
@@ -1978,6 +2152,12 @@
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>30</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
                   <property name="toolTip">
                    <string>Select all spectre</string>
                   </property>
@@ -2004,6 +2184,18 @@
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>30</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>30</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
                   <property name="toolTip">
                    <string>Select vertical</string>
                   </property>
@@ -2029,6 +2221,18 @@
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>30</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>30</width>
+                    <height>16777215</height>
+                   </size>
                   </property>
                   <property name="toolTip">
                    <string>Select horizontal</string>
@@ -2071,7 +2275,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>30</width>
+                    <width>40</width>
                     <height>16777215</height>
                    </size>
                   </property>
@@ -2210,8 +2414,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>98</width>
-               <height>28</height>
+               <width>998</width>
+               <height>899</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
@@ -2247,7 +2451,7 @@
               <number>5</number>
              </property>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="33,30,0">
+              <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="33,30">
                <item>
                 <widget class="QLabel" name="label_17">
                  <property name="sizePolicy">
@@ -2282,25 +2486,6 @@
                   </size>
                  </property>
                 </spacer>
-               </item>
-               <item>
-                <widget class="QRadioButton" name="radio_darkmode">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>120</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string> Light mode</string>
-                 </property>
-                </widget>
                </item>
               </layout>
              </item>

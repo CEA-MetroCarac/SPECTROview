@@ -45,12 +45,10 @@ class Wafer:
         self.file_paths = []  # Store file_paths of all raw data wafers
         self.wafers = {}  # list of opened wafers
 
-        self.current_scale = None
         self.ax = None
         self.canvas = None
         self.model_fs = None  # FITSPY
         self.spectra_fs = Spectra()  # FITSPY
-        # self.df_fit_results = None
 
         # Update spectra_listbox when selecting wafer via WAFER LIST
         self.ui.wafers_listbox.itemSelectionChanged.connect(
@@ -366,14 +364,12 @@ class Wafer:
         """Plot all selected spectra"""
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
-
         for spectrum_fs in self.spectra_fs:
             wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
             if wafer_name_fs == wafer_name and coord_fs in coords:
                 selected_spectra_fs.append(spectrum_fs)
         if len(selected_spectra_fs) == 0:
             return
-
         self.clear_spectre_view()
         plt.close('all')
         fig = plt.figure()
@@ -404,7 +400,7 @@ class Wafer:
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
                                              label=f"{prefix}")
                     else:
-                        self.ax.plot(x_values, y_peak, label=f"{prefix}")
+                        self.ax.plot(x_values, y_peak, '--', label=f"{prefix}")
 
             if hasattr(spectrum_fs.result_fit,
                        'residual') and self.ui.cb_residual.isChecked():

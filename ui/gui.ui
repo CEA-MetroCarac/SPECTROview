@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1476</width>
-    <height>1025</height>
+    <width>1590</width>
+    <height>1019</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,17 +21,20 @@
     </size>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_35">
+    <property name="spacing">
+     <number>4</number>
+    </property>
     <property name="leftMargin">
-     <number>5</number>
+     <number>4</number>
     </property>
     <property name="topMargin">
-     <number>5</number>
+     <number>4</number>
     </property>
     <property name="rightMargin">
-     <number>5</number>
+     <number>4</number>
     </property>
     <property name="bottomMargin">
-     <number>5</number>
+     <number>4</number>
     </property>
     <item>
      <widget class="QTabWidget" name="tabWidget">
@@ -40,7 +43,7 @@
       </property>
       <property name="minimumSize">
        <size>
-        <width>1000</width>
+        <width>1200</width>
         <height>900</height>
        </size>
       </property>
@@ -393,19 +396,6 @@
                     <number>9</number>
                    </property>
                    <item>
-                    <widget class="QPushButton" name="btn_fit_sel">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>Fit selected spectrum</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
                     <spacer name="horizontalSpacer_12">
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
@@ -417,19 +407,6 @@
                       </size>
                      </property>
                     </spacer>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="btn_fit_all">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>Fit all wafer</string>
-                     </property>
-                    </widget>
                    </item>
                   </layout>
                  </item>
@@ -445,32 +422,6 @@
                     </size>
                    </property>
                   </spacer>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="btn_init_sel">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Reinitialize Selected Spectrum</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="btn_init_all">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Reinitialize All Spectra</string>
-                   </property>
-                  </widget>
                  </item>
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_36">
@@ -558,13 +509,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>470</width>
+                    <width>450</width>
                     <height>0</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>470</width>
+                    <width>450</width>
                     <height>16777215</height>
                    </size>
                   </property>
@@ -649,7 +600,19 @@
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="20,80,0">
                          <property name="spacing">
-                          <number>0</number>
+                          <number>5</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>5</number>
                          </property>
                          <item>
                           <widget class="QLabel" name="label_28">
@@ -683,7 +646,19 @@
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_28" stretch="20,80,0">
                          <property name="spacing">
-                          <number>0</number>
+                          <number>5</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>5</number>
                          </property>
                          <item>
                           <widget class="QLabel" name="label_29">
@@ -740,13 +715,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>470</width>
+                    <width>450</width>
                     <height>0</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>470</width>
+                    <width>450</width>
                     <height>16777215</height>
                    </size>
                   </property>
@@ -831,7 +806,19 @@
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="20,80,0">
                          <property name="spacing">
-                          <number>0</number>
+                          <number>5</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>5</number>
                          </property>
                          <item>
                           <widget class="QLabel" name="label_30">
@@ -865,7 +852,19 @@
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="20,80,0">
                          <property name="spacing">
-                          <number>0</number>
+                          <number>5</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>5</number>
                          </property>
                          <item>
                           <widget class="QLabel" name="label_31">
@@ -1488,8 +1487,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>306</width>
-                             <height>295</height>
+                             <width>98</width>
+                             <height>28</height>
                             </rect>
                            </property>
                           </widget>
@@ -2062,6 +2061,53 @@
                   </property>
                  </spacer>
                 </item>
+                <item>
+                 <widget class="QPushButton" name="btn_fit">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>30</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string>Hold &quot;Ctrl&quot; and click to Fit all wafer</string>
+                  </property>
+                  <property name="text">
+                   <string>Fit</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_init">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>50</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>40</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Reinit</string>
+                  </property>
+                 </widget>
+                </item>
                </layout>
               </item>
               <item>
@@ -2164,8 +2210,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>882</width>
-               <height>904</height>
+               <width>98</width>
+               <height>28</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
@@ -3386,7 +3432,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1476</width>
+     <width>1590</width>
      <height>24</height>
     </rect>
    </property>

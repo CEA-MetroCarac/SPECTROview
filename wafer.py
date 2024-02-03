@@ -190,7 +190,7 @@ class Wafer:
             fnames.append(fname)
         self.spectra_fs.apply_model(self.model_fs, fnames=fnames)
         self.plot_sel_spectre()
-        self.collect_results()
+
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
         if self.model_fs is None:
@@ -198,7 +198,14 @@ class Wafer:
             return
         self.spectra_fs.apply_model(self.model_fs)
         self.plot_sel_spectre()
-        self.collect_results()
+
+    def fit_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.fit_all()
+        else:
+            self.fit_selected()
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
@@ -348,6 +355,13 @@ class Wafer:
             self.reinit_spectrum(spectrum)
         self.plot_sel_spectre()
 
+    def reinit_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.reinit_all()
+        else:
+            self.reinit_sel()
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
         wafer_name, coords = self.spectre_id()  # current selected spectra ID

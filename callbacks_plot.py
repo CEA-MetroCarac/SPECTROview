@@ -120,12 +120,12 @@ class CallbacksPlot:
         multiples figures for each wafer"""
 
         df = self.callbacks_df.selected_df
-        wafer_names = df['wafer'].unique()
+        wafer_names = df['Wafer'].unique()
 
         # Retrieve dataframe of each wafer and store in a dict{}
         wafer_dfs = {}
         for wafer_name in wafer_names:
-            wafer_df = df[df['wafer'] == wafer_name]
+            wafer_df = df[df['Wafer'] == wafer_name]
             wafer_dfs[wafer_name] = wafer_df
 
         # Create plot for each wafer

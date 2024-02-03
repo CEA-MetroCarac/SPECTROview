@@ -39,9 +39,10 @@ class CallbacksDf:
         if self.original_dfs is None:
             self.original_dfs = {}
 
-        if original_dfs:
+        if original_dfs is not None:
             # Load "original_dfs" from a saved workspace
             self.original_dfs = original_dfs
+
         else:
             if file_paths is None:
                 # Initialize the last used directory from QSettings

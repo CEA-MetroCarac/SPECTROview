@@ -31,10 +31,10 @@ class MainWindow:
 
         # Create an instance of CallbacksDf and pass the self.ui object
         self.callbacks_df = CallbacksDf(self.ui)
-        self.wafer = Wafer(self.ui)
         self.callbacks_plot = CallbacksPlot(self.ui, self.callbacks_df)
         self.workspace = SaveLoadWorkspace(self.ui, self.callbacks_df,
                                            self.callbacks_plot)
+        self.wafer = Wafer(self.ui, self.callbacks_df)
 
         # DATAFRAME
         self.ui.btn_open_df.clicked.connect(
@@ -175,6 +175,7 @@ class MainWindow:
         self.ui.btn_plot_wafer_1.clicked.connect(self.wafer.view_param_1)
         self.ui.btn_plot_wafer_2.clicked.connect(self.wafer.view_param_2)
         self.ui.cbb_color_pallete.addItems(self.callbacks_plot.palette_colors)
+        self.ui.btn_send_df_to_vis.clicked.connect(self.wafer.send_df_to_vis)
 
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)

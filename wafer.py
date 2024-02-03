@@ -19,7 +19,6 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
 from matplotlib.collections import PathCollection
 
-from wafer_plot import WaferPlot
 from wafer_view import WaferView
 
 from PySide6.QtWidgets import (
@@ -37,10 +36,12 @@ PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 
 
 class Wafer:
-    def __init__(self, ui):
+    def __init__(self, ui, callbacks_df):
         self.ui = ui
+        self.callbacks_df = callbacks_df
         QSettings.setDefaultFormat(QSettings.IniFormat)
         self.settings = QSettings("CEA-Leti", "DaProViz")
+
 
         self.file_paths = []  # Store file_paths of all raw data wafers
         self.wafers = {}  # list of opened wafers
@@ -616,3 +617,9 @@ class Wafer:
             self.fit_all()
         else:
             self.fit_selected()
+
+    def send_df_to_vis(self):
+        dfs = {}
+        dfs["fitted_results"]= self.df_fit_results
+        self.callbacks_df.action_open_df(file_paths=None,
+                                         original_dfs=dfs)

@@ -1248,6 +1248,13 @@
                      </property>
                     </spacer>
                    </item>
+                   <item>
+                    <widget class="QPushButton" name="btn_send_df_to_vis">
+                     <property name="text">
+                      <string>Send data to &quot;Vizu&quot; tab</string>
+                     </property>
+                    </widget>
+                   </item>
                   </layout>
                  </widget>
                 </item>

@@ -199,6 +199,7 @@ class Wafer:
         self.plot_sel_spectre()
 
 
+
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.
@@ -215,9 +216,13 @@ class Wafer:
                 best_values["X"] = x
                 best_values["Y"] = y
                 fit_results_list.append(best_values)
+
         self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
         # Reordering columns and rename headers
         self.df_fit_results = self.df_reorder_rename(self.df_fit_results)
+
+        # Add "Quadrant" columns
+        self.df_fit_results['Quadrant'] = self.df_fit_results.apply(self.determine_quadrant, axis=1)
 
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
@@ -623,3 +628,14 @@ class Wafer:
         dfs["fitted_results"]= self.df_fit_results
         self.callbacks_df.action_open_df(file_paths=None,
                                          original_dfs=dfs)
+    def determine_quadrant(self, row):
+        if row['X'] < 0 and row['Y'] < 0:
+            return 'Q1'
+        elif row['X'] < 0 and row['Y'] > 0:
+            return 'Q2'
+        elif row['X'] > 0 and row['Y'] > 0:
+            return 'Q3'
+        elif row['X'] > 0 and row['Y'] < 0:
+            return 'Q4'
+        else:
+            return np.nan

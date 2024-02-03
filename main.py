@@ -271,7 +271,7 @@ class MainWindow:
         about_text = """
         <h3>SPECTROview</h3>
         <p>Spectroscopic Data Processing and Visualization</p>
-        <p>Version: 0.50 / Build 240130 </p>
+        <p>Version: 2024.02a </p>
         <p>For any feedback contact: </p>
         <p>Van-Hoan Le (van-hoan.le@cea.fr)</p>
         """

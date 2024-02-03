@@ -170,6 +170,7 @@ class MainWindow:
         self.ui.btn_fit.clicked.connect(self.wafer.fit_fnc_handler)
         self.ui.btn_init.clicked.connect(self.wafer.reinit_fnc_handler)
         self.ui.btn_collect_results.clicked.connect(self.wafer.collect_results)
+        self.ui.btn_view_df_2.clicked.connect(self.wafer.view_fit_results_df)
 
         self.ui.btn_plot_wafer_1.clicked.connect(self.wafer.view_param_1)
         self.ui.btn_plot_wafer_2.clicked.connect(self.wafer.view_param_2)
@@ -350,4 +351,4 @@ if __name__ == "__main__":
     fname3 = os.path.join(dirname, 'D23S2204.2_19.csv')
     fname4 = os.path.join(dirname, 'D23S2204.2_07.csv')
     fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
-    launcher3([fname2, fname4], fname_json)
+    launcher3([fname1, fname2], fname_json)

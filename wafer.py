@@ -23,8 +23,8 @@ from wafer_plot import WaferPlot
 from wafer_view import WaferView
 
 from PySide6.QtWidgets import (
-    QFileDialog, QVBoxLayout, QMessageBox, QFrame, QPushButton,
-    QHBoxLayout, QApplication, QSpacerItem, QSizePolicy, QListWidgetItem
+    QFileDialog, QVBoxLayout, QMessageBox, QFrame, QPushButton, QTableWidget,QTableWidgetItem,
+    QHBoxLayout, QApplication, QSpacerItem, QSizePolicy,QDialog, QListWidgetItem
 )
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 
@@ -197,38 +197,50 @@ class Wafer:
         self.spectra_fs.apply_model(self.model_fs)
         self.plot_sel_spectre()
 
-    def fit_fnc_handler(self):
-        """Switch between 2 save fit fnc with the Ctrl key"""
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.fit_all()
-        else:
-            self.fit_selected()
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.
         fit_results_list = []
         self.df_fit_results = None
+
         for spectrum_fs in self.spectra_fs:
             if hasattr(spectrum_fs.result_fit, 'best_values'):
                 wafer_name, coord = self.spectre_id_fs(spectrum_fs)
                 x, y = coord
                 best_values = spectrum_fs.result_fit.best_values
-                # Add additional information to the best_values dictionary
+
                 best_values["Wafer"] = wafer_name
                 best_values["X"] = x
                 best_values["Y"] = y
                 fit_results_list.append(best_values)
+        self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
+        # Reordering columns and rename headers
+        self.df_fit_results = self.df_reorder_rename(self.df_fit_results)
 
-        self.df_fit_results = pd.DataFrame(fit_results_list)
-        # Reorder columns to have "Wafer", "X", and "Y" at the beginning
-        columns_order = ["Wafer", "X", "Y"] + [col for col in
-                                               self.df_fit_results.columns if
-                                               col not in ["Wafer", "X", "Y"]]
-        self.df_fit_results = self.df_fit_results[columns_order]
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
+
+    def df_reorder_rename(self, df):
+        """To reorder (x0, fwhm, ampli) and rename headers of dataframe"""
+        # Reorder columns
+        reordered_columns = []
+        for param in ["x0", "fwhm", "ampli"]:
+            for peak_label in sorted(set(col.split("_")[0] for col in df.columns[:-3])):
+                col_name = f"{peak_label}_{param}"
+                reordered_columns.append(col_name)
+        df = df[["Wafer", "X", "Y"] + reordered_columns]
+
+        # Rename columns headers
+        param_unit_mapping = {"ampli": "Intensity","fwhm": "FWHM","x0": "Position"}
+        for column in df.columns:
+            if "_" in column:
+                peak_label, param = column.split("_", 1)
+                if param in param_unit_mapping:
+                    unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
+                    new_column_name = f"{param_unit_mapping[param]} of peak {peak_label} {unit}"
+                    df.rename(columns={column: new_column_name}, inplace=True)
+        return df
 
     def view_param_1(self):
         """ Plot WaferDataFrame"""
@@ -255,6 +267,7 @@ class Wafer:
         sel_param = self.ui.cbb_param_2.currentText()
         canvas = self.view_param_helper(selected_df, sel_param, wafer_size, color)
         self.ui.frame_wafer_2.addWidget(canvas)
+
     def view_param_helper(self, selected_df, sel_param, wafer_size, color):
         x = selected_df['X']
         y = selected_df['Y']
@@ -359,7 +372,7 @@ class Wafer:
             fname, coord = self.spectre_id_fs(spectrum_fs)
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
-            self.ax.plot(x_values, y_values, label=f"{fname}-{coord}")
+            self.ax.plot(x_values, y_values) # label=f"{fname}-{coord}"
 
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
@@ -548,3 +561,58 @@ class Wafer:
         msg_box.setWindowTitle("Alert")
         msg_box.setText(message)
         msg_box.exec_()
+
+    def view_df(self, df):
+        """To view selected dataframe"""
+        # Create a QDialog to contain the table
+        df_viewer = QDialog(self.ui.tabWidget)
+        df_viewer.setWindowTitle("DataFrame Viewer")
+        # Create a QTableWidget and populate it with data from the DataFrame
+        table_widget = QTableWidget(df_viewer)
+        table_widget.setColumnCount(df.shape[1])
+        table_widget.setRowCount(df.shape[0])
+        table_widget.setHorizontalHeaderLabels(df.columns)
+        for row in range(df.shape[0]):
+            for col in range(df.shape[1]):
+                item = QTableWidgetItem(str(df.iat[row, col]))
+                table_widget.setItem(row, col, item)
+        # Set the resizing mode for the QTableWidget to make it resizable
+        table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
+        # Use a QVBoxLayout to arrange the table within a scroll area
+        layout = QVBoxLayout(df_viewer)
+        layout.addWidget(table_widget)
+        df_viewer.exec_()
+
+    def view_df(self, df):
+        """To view selected dataframe"""
+        # Create a QDialog to contain the table
+        df_viewer = QDialog(self.ui.tabWidget)
+        df_viewer.setWindowTitle("DataFrame Viewer")
+        # Create a QTableWidget and populate it with data from the DataFrame
+        table_widget = QTableWidget(df_viewer)
+        table_widget.setColumnCount(df.shape[1])
+        table_widget.setRowCount(df.shape[0])
+        table_widget.setHorizontalHeaderLabels(df.columns)
+        for row in range(df.shape[0]):
+            for col in range(df.shape[1]):
+                item = QTableWidgetItem(str(df.iat[row, col]))
+                table_widget.setItem(row, col, item)
+        # Set the resizing mode for the QTableWidget to make it resizable
+        table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
+        # Use a QVBoxLayout to arrange the table within a scroll area
+        layout = QVBoxLayout(df_viewer)
+        layout.addWidget(table_widget)
+        df_viewer.exec_()
+
+    def view_fit_results_df(self, df):
+        """To view selected dataframe"""
+        self.view_df(self.df_fit_results)
+
+
+    def fit_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.fit_all()
+        else:
+            self.fit_selected()

@@ -150,8 +150,8 @@ class Wafer:
             fname_json = selected_file
         self.model_fs = self.spectra_fs.load_model(fname_json, ind=0)
         display_name = QFileInfo(fname_json).baseName()
-        self.ui.display_loaded_model.setText(display_name)
-
+        self.ui.lb_loaded_model.setText(f"'{display_name}' is loaded !")
+        self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
     def spectre_id(self):
         """Get selected spectre id(s)"""
         wafer_item = self.ui.wafers_listbox.currentItem()
@@ -233,7 +233,6 @@ class Wafer:
     def view_param_1(self):
         """ Plot WaferDataFrame"""
         self.clear_layout(self.ui.frame_wafer_1.layout())
-
         dfr = self.df_fit_results
         wafer_name = self.ui.cbb_wafer_1.currentText()
         color=self.ui.cbb_color_pallete.currentText()
@@ -241,33 +240,12 @@ class Wafer:
         if wafer_name is not None:
             selected_df = dfr.query('Wafer == @wafer_name')
         sel_param = self.ui.cbb_param_1.currentText()
-        x = selected_df['X']
-        y = selected_df['Y']
-        param = selected_df[sel_param]
-
-        vmin = float(self.ui.int_vmin.text()) if self.ui.int_vmin.text() else None
-        vmax = float(self.ui.int_vmax.text()) if self.ui.int_vmax.text() else None
-        stats = self.ui.cb_stats.isChecked()
-        plt.close('all')
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-
-        wdf = WaferView()
-        wdf.plot(ax, x=x, y=y, z=param, cmap=color, vmin=vmin, vmax=vmax, stats=stats,
-                 r=(wafer_size / 2))
-
-        text = self.ui.plot_title.text()
-        title = (f"{wafer_name}_{sel_param}") if not text else text
-        ax.set_title(f"{title}")
-
-        fig.tight_layout()
-        canvas = FigureCanvas(fig)
+        canvas = self.view_param_helper(selected_df, sel_param, wafer_size, color)
         self.ui.frame_wafer_1.addWidget(canvas)
 
     def view_param_2(self):
         """ Plot WaferDataFrame"""
         self.clear_layout(self.ui.frame_wafer_2.layout())
-
         dfr = self.df_fit_results
         wafer_name = self.ui.cbb_wafer_2.currentText()
         color=self.ui.cbb_color_pallete.currentText()
@@ -275,6 +253,9 @@ class Wafer:
         if wafer_name is not None:
             selected_df = dfr.query('Wafer == @wafer_name')
         sel_param = self.ui.cbb_param_2.currentText()
+        canvas = self.view_param_helper(selected_df, sel_param, wafer_size, color)
+        self.ui.frame_wafer_2.addWidget(canvas)
+    def view_param_helper(self, selected_df, sel_param, wafer_size, color):
         x = selected_df['X']
         y = selected_df['Y']
         param = selected_df[sel_param]
@@ -291,13 +272,12 @@ class Wafer:
                  r=(wafer_size / 2))
 
         text = self.ui.plot_title.text()
-        title = (f"{wafer_name}_{sel_param}") if not text else text
+        title = (f"{sel_param}") if not text else text
         ax.set_title(f"{title}")
 
         fig.tight_layout()
         canvas = FigureCanvas(fig)
-        self.ui.frame_wafer_2.addWidget(canvas)
-
+        return canvas
     def apprend_cbb_wafer(self, wafer_names=None):
         """to append all values of df_fit_results to comoboxses"""
         self.ui.cbb_wafer_1.clear()

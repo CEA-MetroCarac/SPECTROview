@@ -1231,7 +1231,7 @@
                    <item>
                     <widget class="QCheckBox" name="cb_stats">
                      <property name="text">
-                      <string>Include stats</string>
+                      <string>Include statistiques on wafer plot</string>
                      </property>
                     </widget>
                    </item>
@@ -1645,8 +1645,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>613</width>
-                             <height>309</height>
+                             <width>98</width>
+                             <height>28</height>
                             </rect>
                            </property>
                           </widget>
@@ -2448,7 +2448,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1045</width>
+               <width>1133</width>
                <height>921</height>
               </rect>
              </property>
@@ -2462,6 +2462,24 @@
           </item>
           <item>
            <widget class="QFrame" name="sidebar_frame">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>430</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>430</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="frameShape">
              <enum>QFrame::StyledPanel</enum>
             </property>

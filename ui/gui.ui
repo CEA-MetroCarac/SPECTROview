@@ -171,6 +171,9 @@
                   </item>
                   <item>
                    <widget class="QPushButton" name="btn_copy_fig">
+                    <property name="toolTip">
+                     <string>Copy Figure to clipboard</string>
+                    </property>
                     <property name="text">
                      <string/>
                     </property>
@@ -360,6 +363,9 @@
                    </property>
                    <item>
                     <widget class="QPushButton" name="btn_load_model">
+                     <property name="toolTip">
+                      <string>Load a fit model to perform spectra fitting</string>
+                     </property>
                      <property name="text">
                       <string>Load fit model</string>
                      </property>
@@ -397,7 +403,7 @@
                   </widget>
                  </item>
                  <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout">
+                  <layout class="QVBoxLayout" name="verticalLayout_21">
                    <property name="leftMargin">
                     <number>5</number>
                    </property>
@@ -411,44 +417,18 @@
                     <number>5</number>
                    </property>
                    <item>
+                    <widget class="QLabel" name="label_36">
+                     <property name="text">
+                      <string>Itiration :</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
                     <widget class="QLabel" name="label_34">
                      <property name="text">
                       <string>Fit score :</string>
                      </property>
                     </widget>
-                   </item>
-                   <item>
-                    <spacer name="horizontalSpacer_12">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="QLabel" name="label_36">
-                     <property name="text">
-                      <string>Itiration:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="horizontalSpacer_13">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
                    </item>
                   </layout>
                  </item>
@@ -494,23 +474,16 @@
                         <height>16777215</height>
                        </size>
                       </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>14</pointsize>
+                        <bold>true</bold>
+                       </font>
+                      </property>
                       <property name="text">
                        <string>Fit results:</string>
                       </property>
                      </widget>
-                    </item>
-                    <item>
-                     <spacer name="horizontalSpacer_14">
-                      <property name="orientation">
-                       <enum>Qt::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
                     </item>
                     <item>
                      <widget class="QPushButton" name="btn_collect_results">
@@ -531,6 +504,9 @@
                         <width>60</width>
                         <height>40</height>
                        </size>
+                      </property>
+                      <property name="toolTip">
+                       <string>To gather all the best-fit results for visualization</string>
                       </property>
                       <property name="text">
                        <string>Collect</string>
@@ -602,7 +578,7 @@
                        </size>
                       </property>
                       <property name="toolTip">
-                       <string>Save all fit results in a Excel file</string>
+                       <string>Save all fit results in an Excel file</string>
                       </property>
                       <property name="text">
                        <string/>
@@ -795,6 +771,9 @@
                          </item>
                          <item>
                           <widget class="QPushButton" name="pushButton_2">
+                           <property name="toolTip">
+                            <string>Copy Figure to clipboard</string>
+                           </property>
                            <property name="text">
                             <string/>
                            </property>
@@ -1001,6 +980,9 @@
                          </item>
                          <item>
                           <widget class="QPushButton" name="pushButton_4">
+                           <property name="toolTip">
+                            <string>Copy Figure to clipboard</string>
+                           </property>
                            <property name="text">
                             <string/>
                            </property>
@@ -1657,7 +1639,7 @@
                              <x>0</x>
                              <y>0</y>
                              <width>613</width>
-                             <height>329</height>
+                             <height>309</height>
                             </rect>
                            </property>
                           </widget>
@@ -2337,6 +2319,9 @@
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="toolTip">
+                   <string>Reinitialize to RAW spectrum (Hold Ctrl to reinit all spectra)</string>
+                  </property>
                   <property name="text">
                    <string>Reinit</string>
                   </property>
@@ -2400,7 +2385,7 @@
                  <number>100</number>
                 </property>
                 <property name="value">
-                 <number>88</number>
+                 <number>0</number>
                 </property>
                 <property name="textVisible">
                  <bool>true</bool>

@@ -172,7 +172,8 @@ class MainWindow:
         self.ui.btn_collect_results.clicked.connect(self.wafer.collect_results)
         self.ui.btn_view_df_2.clicked.connect(self.wafer.view_fit_results_df)
         self.ui.btn_show_stats.clicked.connect(self.wafer.show_stats)
-
+        self.ui.btn_save_fit_results.clicked.connect(self.wafer.save_fit_results)
+        self.ui.btn_view_wafer.clicked.connect(self.wafer.view_wafer_data)
 
         self.ui.btn_plot_wafer_1.clicked.connect(self.wafer.view_param_1)
         self.ui.btn_plot_wafer_2.clicked.connect(self.wafer.view_param_2)

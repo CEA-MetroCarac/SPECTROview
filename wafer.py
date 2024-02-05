@@ -257,6 +257,25 @@ class Wafer:
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
 
+    def save_fit_results(self):
+        last_dir = self.settings.value("last_directory", "/")
+        save_path, _ = QFileDialog.getSaveFileName(
+            self.ui.tabWidget, "Save DF fit results", last_dir, "Excel Files (*.xlsx)")
+        if save_path:
+            try:
+                if not self.df_fit_results.empty:
+                    self.df_fit_results.to_excel(save_path, index=False)
+                    QMessageBox.information(
+                        self.ui.tabWidget, "Success",
+                        "DataFrame saved successfully.")
+                else:
+                    QMessageBox.warning(
+                        self.ui.tabWidget, "Warning",
+                        "DataFrame is empty. Nothing to save.")
+            except Exception as e:
+                QMessageBox.critical(
+                    self.ui.tabWidget, "Error",
+                    f"Error saving DataFrame: {str(e)}")
     def df_reorder_rename(self, df):
         """To reorder (x0, fwhm, ampli) and rename headers of dataframe"""
         # Reorder columns
@@ -620,9 +639,14 @@ class Wafer:
         layout.addWidget(table_widget)
         df_viewer.exec_()
 
-    def view_fit_results_df(self, df):
+    def view_fit_results_df(self):
         """To view selected dataframe"""
         self.view_df(self.df_fit_results)
+
+    def view_wafer_data(self):
+        """To view data of selected wafer """
+        wafer_name, coords =self.spectre_id()
+        self.view_df(self.wafers[wafer_name])
 
 
     def fit_fnc_handler(self):

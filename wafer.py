@@ -23,9 +23,9 @@ from wafer_view import WaferView
 
 from PySide6.QtWidgets import (
     QFileDialog, QVBoxLayout, QMessageBox, QFrame, QPushButton, QTableWidget,QTableWidgetItem,
-    QHBoxLayout, QApplication, QSpacerItem, QSizePolicy,QDialog, QListWidgetItem
+    QHBoxLayout, QApplication, QSpacerItem, QSizePolicy,QDialog, QListWidgetItem, QCheckBox
 )
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QColor
 
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, QSize, QCoreApplication, QSettings, QFileInfo, \
@@ -189,6 +189,35 @@ class Wafer:
             fnames.append(fname)
         self.spectra_fs.apply_model(self.model_fs, fnames=fnames)
         self.plot_sel_spectre()
+        self.upd_spectra_list()
+
+    def upd_spectra_list(self):
+        """to update the spectra list"""
+        self.ui.spectra_listbox.clear()
+        self.clear_wafer_plot()
+        current_item = self.ui.wafers_listbox.currentItem()
+        if current_item is not None:
+            wafer_name = current_item.text()
+
+            for spectrum_fs in self.spectra_fs:
+                wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+                if wafer_name == wafer_name_fs:
+                    item = QListWidgetItem(str(coord_fs))
+                    if hasattr(spectrum_fs.result_fit, 'success') and spectrum_fs.result_fit.success:
+                        item.setBackground(QColor("green"))
+                    elif hasattr(spectrum_fs.result_fit, 'success') and not spectrum_fs.result_fit.success:
+                        item.setBackground(QColor("orange"))
+                    else:
+                        item.setBackground(QColor(0, 0, 0, 0))
+                    self.ui.spectra_listbox.addItem(item)
+
+        # Update the item count label
+        item_count = self.ui.spectra_listbox.count()
+        self.ui.item_count_label.setText(f"Number of points: {item_count}")
+        # Select the first item by default
+        if self.ui.spectra_listbox.count() > 0:
+            self.ui.spectra_listbox.setCurrentRow(0)
+            QTimer.singleShot(50, self.plot_sel_spectre)
 
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
@@ -197,7 +226,7 @@ class Wafer:
             return
         self.spectra_fs.apply_model(self.model_fs)
         self.plot_sel_spectre()
-
+        self.upd_spectra_list()
 
 
     def collect_results(self):
@@ -340,7 +369,7 @@ class Wafer:
             spectrum, _ = self.spectra_fs.get_objects(fname)
             self.reinit_spectrum(spectrum)
         self.plot_sel_spectre()
-
+        self.upd_spectra_list()
     def reinit_all(self):
         """Reinitialize all spectra"""
         fnames = [
@@ -351,7 +380,7 @@ class Wafer:
             spectrum, _ = self.spectra_fs.get_objects(fname)
             self.reinit_spectrum(spectrum)
         self.plot_sel_spectre()
-
+        self.upd_spectra_list()
     def reinit_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""
         modifiers = QApplication.keyboardModifiers()
@@ -458,27 +487,7 @@ class Wafer:
             self.ui.wafers_listbox.setCurrentRow(0)
             QTimer.singleShot(100, self.upd_spectra_list)
 
-    def upd_spectra_list(self):
-        """to update the spectra list"""
-        self.ui.spectra_listbox.clear()
-        self.clear_wafer_plot()
-        current_item = self.ui.wafers_listbox.currentItem()
-        if current_item is not None:
-            wafer_name = current_item.text()
 
-            for spectrum_fs in self.spectra_fs:
-                wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
-                if wafer_name == wafer_name_fs:
-                    item = QListWidgetItem(str(coord_fs))
-                    self.ui.spectra_listbox.addItem(item)
-
-        # Update the item count label
-        item_count = self.ui.spectra_listbox.count()
-        self.ui.item_count_label.setText(f"Number of points: {item_count}")
-        # Select the first item by default
-        if self.ui.spectra_listbox.count() > 0:
-            self.ui.spectra_listbox.setCurrentRow(0)
-            QTimer.singleShot(50, self.plot_sel_spectre)
 
     def remove_wafer(self):
         """To remove a wafer"""

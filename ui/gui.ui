@@ -446,6 +446,13 @@
                   </spacer>
                  </item>
                  <item>
+                  <widget class="QPushButton" name="pushButton_5">
+                   <property name="text">
+                    <string>View fit score</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QGroupBox" name="groupBox_3">
                    <property name="title">
                     <string/>
@@ -1645,8 +1652,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>98</width>
-                             <height>28</height>
+                             <width>613</width>
+                             <height>295</height>
                             </rect>
                            </property>
                           </widget>
@@ -2448,7 +2455,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1133</width>
+               <width>1139</width>
                <height>921</height>
               </rect>
              </property>

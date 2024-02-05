@@ -171,11 +171,14 @@ class MainWindow:
         self.ui.btn_init.clicked.connect(self.wafer.reinit_fnc_handler)
         self.ui.btn_collect_results.clicked.connect(self.wafer.collect_results)
         self.ui.btn_view_df_2.clicked.connect(self.wafer.view_fit_results_df)
+        self.ui.btn_show_stats.clicked.connect(self.wafer.show_stats)
+
 
         self.ui.btn_plot_wafer_1.clicked.connect(self.wafer.view_param_1)
         self.ui.btn_plot_wafer_2.clicked.connect(self.wafer.view_param_2)
         self.ui.cbb_color_pallete.addItems(self.callbacks_plot.palette_colors)
         self.ui.btn_send_df_to_vis.clicked.connect(self.wafer.send_df_to_vis)
+
 
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)

@@ -446,13 +446,6 @@
                   </spacer>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_5">
-                   <property name="text">
-                    <string>View fit score</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
                   <widget class="QGroupBox" name="groupBox_3">
                    <property name="title">
                     <string/>
@@ -1653,7 +1646,7 @@
                              <x>0</x>
                              <y>0</y>
                              <width>613</width>
-                             <height>295</height>
+                             <height>309</height>
                             </rect>
                            </property>
                           </widget>
@@ -2279,19 +2272,6 @@
                  </widget>
                 </item>
                 <item>
-                 <spacer name="horizontalSpacer_6">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
                  <widget class="QPushButton" name="btn_fit">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -2338,6 +2318,28 @@
                   </property>
                   <property name="text">
                    <string>Reinit</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_show_stats">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>40</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string>Show fitting statistique results</string>
+                  </property>
+                  <property name="text">
+                   <string>Stats</string>
                   </property>
                  </widget>
                 </item>

@@ -23,11 +23,11 @@ from wafer_view import WaferView
 
 from PySide6.QtWidgets import (
     QFileDialog, QVBoxLayout, QMessageBox, QFrame, QPushButton, QTableWidget,QTableWidgetItem,
-    QHBoxLayout, QApplication, QSpacerItem, QSizePolicy,QDialog, QListWidgetItem, QCheckBox
+    QHBoxLayout, QApplication, QSpacerItem, QSizePolicy,QDialog, QListWidgetItem, QCheckBox, QTextBrowser
 )
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QColor
 
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QTextCursor
 from PySide6.QtCore import Qt, QSize, QCoreApplication, QSettings, QFileInfo, \
     QTimer
 
@@ -190,6 +190,7 @@ class Wafer:
         self.spectra_fs.apply_model(self.model_fs, fnames=fnames)
         self.plot_sel_spectre()
         self.upd_spectra_list()
+
 
     def upd_spectra_list(self):
         """to update the spectra list"""
@@ -648,3 +649,38 @@ class Wafer:
             return 'Q4'
         else:
             return np.nan
+
+    def show_stats(self):
+        """Show the statistique fitting results of the selected spectrum"""
+        wafer_name, coords = self.spectre_id()
+        selected_spectra_fs = []
+        for spectrum_fs in self.spectra_fs:
+            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+            if wafer_name_fs == wafer_name and coord_fs in coords:
+                selected_spectra_fs.append(spectrum_fs)
+        if len(selected_spectra_fs) == 0:
+            return
+
+        # Assuming you want to show the 'report' of the first selected spectrum
+        spectrum_fs = selected_spectra_fs[0]
+        if hasattr(spectrum_fs.result_fit, 'report'):
+            report = spectrum_fs.result_fit.report
+
+            # Create a QDialog to display the report content
+            report_viewer = QDialog(self.ui.tabWidget)
+            report_viewer.setWindowTitle("Report Viewer")
+            report_viewer.setGeometry(100, 100, 800, 600)
+
+            # Create a QTextBrowser to display the report content
+            text_browser = QTextBrowser(report_viewer)
+            text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+            text_browser.setOpenExternalLinks(True)
+
+            # Display the report text in QTextBrowser
+            text_browser.setPlainText(report)
+
+            text_browser.moveCursor(QTextCursor.Start)  # Scroll to top of document
+
+            layout = QVBoxLayout(report_viewer)
+            layout.addWidget(text_browser)
+            report_viewer.exec()  # Show the Report viewer dialog

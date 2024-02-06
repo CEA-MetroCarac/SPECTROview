@@ -50,7 +50,7 @@
          "mode": "Linear",
          "order_max": 1,
          "distance": 100,
-         "sigma": 0,
+         "sigma": 10,
          "attached": true,
          "is_subtracted": true
       },

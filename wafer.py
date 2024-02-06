@@ -343,6 +343,8 @@ class Wafer:
         title = (f"{sel_param}") if not text else text
         ax.set_title(f"{title}")
 
+        # Color scale
+
         fig.tight_layout()
         canvas = FigureCanvas(fig)
         return canvas

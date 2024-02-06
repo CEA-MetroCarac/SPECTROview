@@ -384,6 +384,7 @@
                    <property name="font">
                     <font>
                      <family>Arial</family>
+                     <weight>75</weight>
                      <italic>false</italic>
                      <bold>true</bold>
                     </font>
@@ -440,13 +441,14 @@
                      <widget class="QLabel" name="label_38">
                       <property name="maximumSize">
                        <size>
-                        <width>60</width>
+                        <width>100</width>
                         <height>16777215</height>
                        </size>
                       </property>
                       <property name="font">
                        <font>
-                        <pointsize>14</pointsize>
+                        <pointsize>12</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1615,8 +1617,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>613</width>
-                             <height>331</height>
+                             <width>690</width>
+                             <height>351</height>
                             </rect>
                            </property>
                           </widget>
@@ -2427,7 +2429,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1139</width>
+               <width>1143</width>
                <height>921</height>
               </rect>
              </property>
@@ -2546,6 +2548,7 @@
                  <property name="font">
                   <font>
                    <pointsize>8</pointsize>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2574,6 +2577,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2602,6 +2606,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2630,6 +2635,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2859,6 +2865,7 @@
                     <widget class="QPushButton" name="btn_add_a_plot">
                      <property name="font">
                       <font>
+                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -2956,6 +2963,7 @@
                          </property>
                          <property name="font">
                           <font>
+                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -3649,7 +3657,7 @@
      <x>0</x>
      <y>0</y>
      <width>1619</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpen">

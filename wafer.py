@@ -6,7 +6,7 @@ from io import BytesIO
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from lmfit import Model
+from lmfit import Model, fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
 from threading import Thread
@@ -453,7 +453,7 @@ class Wafer:
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
                 y0_values = spectrum_fs.y0
-                self.ax.plot(x0_values, y0_values, label='raw')
+                self.ax.plot(x0_values, y0_values, 'o-', label='raw')
 
             if hasattr(spectrum_fs.result_fit, 'components') and hasattr(
                     spectrum_fs.result_fit, 'components') and \
@@ -479,7 +479,7 @@ class Wafer:
             if self.ui.cb_colors.isChecked() is False:
                 self.ax.set_prop_cycle(None)
 
-        self.ax.set_xlabel("Raman shift (cm-1)")
+        self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
         self.ax.set_ylabel("Intensity (a.u)")
         if self.ui.cb_legend.isChecked():
             self.ax.legend(loc='upper right')
@@ -638,27 +638,6 @@ class Wafer:
         layout.addWidget(table_widget)
         df_viewer.exec_()
 
-    def view_df(self, df):
-        """To view selected dataframe"""
-        # Create a QDialog to contain the table
-        df_viewer = QDialog(self.ui.tabWidget)
-        df_viewer.setWindowTitle("DataFrame Viewer")
-        # Create a QTableWidget and populate it with data from the DataFrame
-        table_widget = QTableWidget(df_viewer)
-        table_widget.setColumnCount(df.shape[1])
-        table_widget.setRowCount(df.shape[0])
-        table_widget.setHorizontalHeaderLabels(df.columns)
-        for row in range(df.shape[0]):
-            for col in range(df.shape[1]):
-                item = QTableWidgetItem(str(df.iat[row, col]))
-                table_widget.setItem(row, col, item)
-        # Set the resizing mode for the QTableWidget to make it resizable
-        table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
-        # Use a QVBoxLayout to arrange the table within a scroll area
-        layout = QVBoxLayout(df_viewer)
-        layout.addWidget(table_widget)
-        df_viewer.exec_()
-
     def view_fit_results_df(self):
         """To view selected dataframe"""
         self.view_df(self.df_fit_results)
@@ -694,7 +673,7 @@ class Wafer:
         else:
             return np.nan
 
-    def show_stats(self):
+    def view_stats(self):
         """Show the statistique fitting results of the selected spectrum"""
         wafer_name, coords = self.spectre_id()
         selected_spectra_fs = []
@@ -705,11 +684,10 @@ class Wafer:
         if len(selected_spectra_fs) == 0:
             return
 
-        # Assuming you want to show the 'report' of the first selected spectrum
+        # Show the 'report' of the first selected spectrum
         spectrum_fs = selected_spectra_fs[0]
-        if hasattr(spectrum_fs.result_fit, 'report'):
-            report = spectrum_fs.result_fit.report
-
+        if spectrum_fs.result_fit:
+            report = fit_report(spectrum_fs.result_fit)
             # Create a QDialog to display the report content
             report_viewer = QDialog(self.ui.tabWidget)
             report_viewer.setWindowTitle("Report Viewer")

@@ -690,7 +690,7 @@ class Wafer:
             report = fit_report(spectrum_fs.result_fit)
             # Create a QDialog to display the report content
             report_viewer = QDialog(self.ui.tabWidget)
-            report_viewer.setWindowTitle("Report Viewer")
+            report_viewer.setWindowTitle("Fitting Report")
             report_viewer.setGeometry(100, 100, 800, 600)
 
             # Create a QTextBrowser to display the report content

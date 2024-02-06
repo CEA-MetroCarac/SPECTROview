@@ -324,10 +324,10 @@ def launcher2(file_paths=None, fname_json=None):
 if __name__ == "__main__":
     dirname = r"C:\Users\VL251876\Documents\8. " \
               r"Python\SPECTROview\data_test\RAW spectrum"
-    fname1 = os.path.join(dirname, 'D23S2204.2_05.csv')
-    fname2 = os.path.join(dirname, 'D23S2204.2_10.csv')
-    fname3 = os.path.join(dirname, 'D23S2204.2_19.csv')
-    fname4 = os.path.join(dirname, 'D23S2204.2_07.csv')
+    fname1 = os.path.join(dirname, 'D23S2204.2_03.csv')
+    fname2 = os.path.join(dirname, 'D23S2204.2_05.csv')
+    fname3 = os.path.join(dirname, 'D23S2204.2_07.csv')
+    fname4 = os.path.join(dirname, 'D23S2204.2_09.csv')
     fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
     launcher2([fname1, fname2], fname_json)
 
@@ -351,9 +351,9 @@ if __name__ == "__main__":
 # if __name__ == "__main__":
 #     dirname = r"/Users/HoanLe/Documents/Python " \
 #               r"projects/SPECTROview/data_test/RAW spectrum"
-#     fname1 = os.path.join(dirname, 'D23S2204.2_05.csv')
-#     fname2 = os.path.join(dirname, 'D23S2204.2_10.csv')
-#     fname3 = os.path.join(dirname, 'D23S2204.2_19.csv')
-#     fname4 = os.path.join(dirname, 'D23S2204.2_07.csv')
+#     fname1 = os.path.join(dirname, 'D23S2204.2_03.csv')
+#     fname2 = os.path.join(dirname, 'D23S2204.2_05.csv')
+#     fname3 = os.path.join(dirname, 'D23S2204.2_07.csv')
+#     fname4 = os.path.join(dirname, 'D23S2204.2_09.csv')
 #     fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
 #     launcher3([fname1, fname2], fname_json)

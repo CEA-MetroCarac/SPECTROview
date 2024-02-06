@@ -22,8 +22,10 @@ from matplotlib.collections import PathCollection
 from wafer_view import WaferView
 
 from PySide6.QtWidgets import (
-    QFileDialog, QVBoxLayout, QMessageBox, QFrame, QPushButton, QTableWidget,QTableWidgetItem,
-    QHBoxLayout, QApplication, QSpacerItem, QSizePolicy,QDialog, QListWidgetItem, QCheckBox, QTextBrowser
+    QFileDialog, QVBoxLayout, QMessageBox, QFrame, QPushButton, QTableWidget,
+    QTableWidgetItem,
+    QHBoxLayout, QApplication, QSpacerItem, QSizePolicy, QDialog,
+    QListWidgetItem, QCheckBox, QTextBrowser
 )
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QColor
 
@@ -41,7 +43,6 @@ class Wafer:
         self.callbacks_df = callbacks_df
         QSettings.setDefaultFormat(QSettings.IniFormat)
         self.settings = QSettings("CEA-Leti", "DaProViz")
-
 
         self.file_paths = []  # Store file_paths of all raw data wafers
         self.wafers = {}  # list of opened wafers
@@ -153,6 +154,7 @@ class Wafer:
         display_name = QFileInfo(fname_json).baseName()
         self.ui.lb_loaded_model.setText(f"'{display_name}' is loaded !")
         self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
+
     def spectre_id(self):
         """Get selected spectre id(s)"""
         wafer_item = self.ui.wafers_listbox.currentItem()
@@ -191,7 +193,6 @@ class Wafer:
         self.plot_sel_spectre()
         self.upd_spectra_list()
 
-
     def upd_spectra_list(self):
         """to update the spectra list"""
         self.ui.spectra_listbox.clear()
@@ -204,9 +205,12 @@ class Wafer:
                 wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
                 if wafer_name == wafer_name_fs:
                     item = QListWidgetItem(str(coord_fs))
-                    if hasattr(spectrum_fs.result_fit, 'success') and spectrum_fs.result_fit.success:
+                    if hasattr(spectrum_fs.result_fit,
+                               'success') and spectrum_fs.result_fit.success:
                         item.setBackground(QColor("green"))
-                    elif hasattr(spectrum_fs.result_fit, 'success') and not spectrum_fs.result_fit.success:
+                    elif hasattr(spectrum_fs.result_fit,
+                                 'success') and not \
+                            spectrum_fs.result_fit.success:
                         item.setBackground(QColor("orange"))
                     else:
                         item.setBackground(QColor(0, 0, 0, 0))
@@ -228,7 +232,6 @@ class Wafer:
         self.spectra_fs.apply_model(self.model_fs)
         self.plot_sel_spectre()
         self.upd_spectra_list()
-
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
@@ -252,7 +255,8 @@ class Wafer:
         self.df_fit_results = self.df_reorder_rename(self.df_fit_results)
 
         # Add "Quadrant" columns
-        self.df_fit_results['Quadrant'] = self.df_fit_results.apply(self.determine_quadrant, axis=1)
+        self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
+            self.determine_quadrant, axis=1)
 
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
@@ -260,7 +264,8 @@ class Wafer:
     def save_fit_results(self):
         last_dir = self.settings.value("last_directory", "/")
         save_path, _ = QFileDialog.getSaveFileName(
-            self.ui.tabWidget, "Save DF fit results", last_dir, "Excel Files (*.xlsx)")
+            self.ui.tabWidget, "Save DF fit results", last_dir,
+            "Excel Files (*.xlsx)")
         if save_path:
             try:
                 if not self.df_fit_results.empty:
@@ -276,24 +281,28 @@ class Wafer:
                 QMessageBox.critical(
                     self.ui.tabWidget, "Error",
                     f"Error saving DataFrame: {str(e)}")
+
     def df_reorder_rename(self, df):
         """To reorder (x0, fwhm, ampli) and rename headers of dataframe"""
         # Reorder columns
         reordered_columns = []
         for param in ["x0", "fwhm", "ampli"]:
-            for peak_label in sorted(set(col.split("_")[0] for col in df.columns[:-3])):
+            for peak_label in sorted(
+                    set(col.split("_")[0] for col in df.columns[:-3])):
                 col_name = f"{peak_label}_{param}"
                 reordered_columns.append(col_name)
         df = df[["Wafer", "X", "Y"] + reordered_columns]
 
         # Rename columns headers
-        param_unit_mapping = {"ampli": "Intensity","fwhm": "FWHM","x0": "Position"}
+        param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
+                              "x0": "Position"}
         for column in df.columns:
             if "_" in column:
                 peak_label, param = column.split("_", 1)
                 if param in param_unit_mapping:
                     unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
-                    new_column_name = f"{param_unit_mapping[param]} of peak {peak_label} {unit}"
+                    new_column_name = f"{param_unit_mapping[param]} of peak " \
+                                      f"{peak_label} {unit}"
                     df.rename(columns={column: new_column_name}, inplace=True)
         return df
 
@@ -302,12 +311,13 @@ class Wafer:
         self.clear_layout(self.ui.frame_wafer_1.layout())
         dfr = self.df_fit_results
         wafer_name = self.ui.cbb_wafer_1.currentText()
-        color=self.ui.cbb_color_pallete.currentText()
+        color = self.ui.cbb_color_pallete.currentText()
         wafer_size = float(self.ui.wafer_size.text())
         if wafer_name is not None:
             selected_df = dfr.query('Wafer == @wafer_name')
         sel_param = self.ui.cbb_param_1.currentText()
-        canvas = self.view_param_helper(selected_df, sel_param, wafer_size, color)
+        canvas = self.view_param_helper(selected_df, sel_param, wafer_size,
+                                        color)
         self.ui.frame_wafer_1.addWidget(canvas)
 
     def view_param_2(self):
@@ -315,12 +325,13 @@ class Wafer:
         self.clear_layout(self.ui.frame_wafer_2.layout())
         dfr = self.df_fit_results
         wafer_name = self.ui.cbb_wafer_2.currentText()
-        color=self.ui.cbb_color_pallete.currentText()
+        color = self.ui.cbb_color_pallete.currentText()
         wafer_size = float(self.ui.wafer_size.text())
         if wafer_name is not None:
             selected_df = dfr.query('Wafer == @wafer_name')
         sel_param = self.ui.cbb_param_2.currentText()
-        canvas = self.view_param_helper(selected_df, sel_param, wafer_size, color)
+        canvas = self.view_param_helper(selected_df, sel_param, wafer_size,
+                                        color)
         self.ui.frame_wafer_2.addWidget(canvas)
 
     def view_param_helper(self, selected_df, sel_param, wafer_size, color):
@@ -328,15 +339,18 @@ class Wafer:
         y = selected_df['Y']
         param = selected_df[sel_param]
 
-        vmin = float(self.ui.int_vmin.text()) if self.ui.int_vmin.text() else None
-        vmax = float(self.ui.int_vmax.text()) if self.ui.int_vmax.text() else None
+        vmin = float(
+            self.ui.int_vmin.text()) if self.ui.int_vmin.text() else None
+        vmax = float(
+            self.ui.int_vmax.text()) if self.ui.int_vmax.text() else None
         stats = self.ui.cb_stats.isChecked()
         plt.close('all')
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
         wdf = WaferView()
-        wdf.plot(ax, x=x, y=y, z=param, cmap=color, vmin=vmin, vmax=vmax, stats=stats,
+        wdf.plot(ax, x=x, y=y, z=param, cmap=color, vmin=vmin, vmax=vmax,
+                 stats=stats,
                  r=(wafer_size / 2))
 
         text = self.ui.plot_title.text()
@@ -348,6 +362,7 @@ class Wafer:
         fig.tight_layout()
         canvas = FigureCanvas(fig)
         return canvas
+
     def apprend_cbb_wafer(self, wafer_names=None):
         """to append all values of df_fit_results to comoboxses"""
         self.ui.cbb_wafer_1.clear()
@@ -392,6 +407,7 @@ class Wafer:
             self.reinit_spectrum(spectrum)
         self.plot_sel_spectre()
         self.upd_spectra_list()
+
     def reinit_all(self):
         """Reinitialize all spectra"""
         fnames = [
@@ -403,6 +419,7 @@ class Wafer:
             self.reinit_spectrum(spectrum)
         self.plot_sel_spectre()
         self.upd_spectra_list()
+
     def reinit_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""
         modifiers = QApplication.keyboardModifiers()
@@ -410,8 +427,10 @@ class Wafer:
             self.reinit_all()
         else:
             self.reinit_sel()
+
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
+        plt.style.use(PLOT_POLICY)
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
         for spectrum_fs in self.spectra_fs:
@@ -429,7 +448,7 @@ class Wafer:
             fname, coord = self.spectre_id_fs(spectrum_fs)
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
-            self.ax.plot(x_values, y_values) # label=f"{fname}-{coord}"
+            self.ax.plot(x_values, y_values)  # label=f"{fname}-{coord}"
 
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
@@ -474,6 +493,7 @@ class Wafer:
 
     def plot_wafer(self):
         """Plot wafer maps of measurement sites"""
+        plt.style.use(PLOT_POLICY)
         self.clear_wafer_plot()
         wafer_name, coords = self.spectre_id()
         all_x = []
@@ -508,8 +528,6 @@ class Wafer:
         if self.ui.wafers_listbox.count() > 0:
             self.ui.wafers_listbox.setCurrentRow(0)
             QTimer.singleShot(100, self.upd_spectra_list)
-
-
 
     def remove_wafer(self):
         """To remove a wafer"""
@@ -647,9 +665,8 @@ class Wafer:
 
     def view_wafer_data(self):
         """To view data of selected wafer """
-        wafer_name, coords =self.spectre_id()
+        wafer_name, coords = self.spectre_id()
         self.view_df(self.wafers[wafer_name])
-
 
     def fit_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""
@@ -661,9 +678,10 @@ class Wafer:
 
     def send_df_to_vis(self):
         dfs = {}
-        dfs["fitted_results"]= self.df_fit_results
+        dfs["fitted_results"] = self.df_fit_results
         self.callbacks_df.action_open_df(file_paths=None,
                                          original_dfs=dfs)
+
     def determine_quadrant(self, row):
         if row['X'] < 0 and row['Y'] < 0:
             return 'Q1'
@@ -705,7 +723,8 @@ class Wafer:
             # Display the report text in QTextBrowser
             text_browser.setPlainText(report)
 
-            text_browser.moveCursor(QTextCursor.Start)  # Scroll to top of document
+            text_browser.moveCursor(
+                QTextCursor.Start)  # Scroll to top of document
 
             layout = QVBoxLayout(report_viewer)
             layout.addWidget(text_browser)

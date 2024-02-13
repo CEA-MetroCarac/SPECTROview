@@ -180,7 +180,8 @@ class MainWindow:
         self.ui.btn_plot_wafer_2.clicked.connect(self.wafer.view_param_2)
         self.ui.cbb_color_pallete.addItems(self.callbacks_plot.palette_colors)
         self.ui.btn_send_df_to_vis.clicked.connect(self.wafer.send_df_to_vis)
-
+        self.ui.btn_open_fitspy.clicked.connect(self.wafer.fitspy_launcher)
+        
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)
         self.ui.combo_hue.setCurrentIndex(
@@ -328,7 +329,7 @@ if __name__ == "__main__":
     fname2 = os.path.join(dirname, 'D23S2204.2_19.csv')
     fname3 = os.path.join(dirname, 'D23S2204.2_25.csv')
     fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
-    launcher2([fname2, fname3], fname_json)
+    launcher2([fname2, fname3, fname1], fname_json)
 
 # def launcher3(file_paths=None, fname_json=None):
 #     app = QApplication()

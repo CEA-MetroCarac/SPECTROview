@@ -9,6 +9,7 @@ from pathlib import Path
 from lmfit import Model, fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
+from fitspy.app.gui import Appli
 from threading import Thread
 from multiprocessing import Queue
 from PySide6.QtCore import Qt, QThread, Signal
@@ -18,6 +19,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
 from matplotlib.collections import PathCollection
+from tkinter import Tk, END
 
 from wafer_view import WaferView
 
@@ -430,7 +432,7 @@ class Wafer:
 
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
-        plt.style.use(PLOT_POLICY)
+        # plt.style.use(PLOT_POLICY)
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
         for spectrum_fs in self.spectra_fs:
@@ -494,7 +496,8 @@ class Wafer:
 
     def plot_wafer(self):
         """Plot wafer maps of measurement sites"""
-        plt.style.use(PLOT_POLICY)
+        # plt.style.use(PLOT_POLICY)
+
         self.clear_wafer_plot()
         wafer_name, coords = self.spectre_id()
         all_x = []
@@ -609,7 +612,7 @@ class Wafer:
 
     def plot_sel_spectre(self):
         """Trigger the fnc to plot spectre"""
-        self.delay_timer.start(200)
+        self.delay_timer.start(50)
 
     def show_alert(self, message):
         msg_box = QMessageBox()
@@ -708,3 +711,17 @@ class Wafer:
             layout = QVBoxLayout(report_viewer)
             layout.addWidget(text_browser)
             report_viewer.exec()  # Show the Report viewer dialog
+
+    def fitspy_launcher(self):
+        """To Open FITSPY with selected spectra"""
+        root = Tk()
+        appli = Appli(root)
+        appli.spectra = self.spectra_fs
+        for spectrum in appli.spectra:
+            fname = spectrum.fname
+            appli.fileselector.filenames.append(fname)
+            appli.fileselector.lbox.insert(END, os.path.basename(fname))
+        appli.fileselector.select_item(0)
+        appli.update()
+
+        root.mainloop()

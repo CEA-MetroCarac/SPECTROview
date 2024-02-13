@@ -322,8 +322,8 @@ def launcher2(file_paths=None, fname_json=None):
 
 
 if __name__ == "__main__":
-    dirname = r"C:\Users\VL251876\Documents\8. " \
-              r"Python\SPECTROview\data_test\RAW spectrum"
+    dirname = r"C:\Users\VL251876\Documents\Python\SPECTROview\data_test\RAW " \
+              r"spectrum"
     fname1 = os.path.join(dirname, 'D23S2204.2_17.csv')
     fname2 = os.path.join(dirname, 'D23S2204.2_19.csv')
     fname3 = os.path.join(dirname, 'D23S2204.2_25.csv')

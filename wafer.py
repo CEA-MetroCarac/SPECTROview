@@ -37,8 +37,6 @@ DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 
 
-###TEST
-
 class Wafer:
     def __init__(self, ui, callbacks_df):
         self.ui = ui
@@ -455,7 +453,8 @@ class Wafer:
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
                 y0_values = spectrum_fs.y0
-                self.ax.plot(x0_values, y0_values, 'o-', label='raw')
+                self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
+                             lw=1)
 
             if hasattr(spectrum_fs.result_fit, 'components') and hasattr(
                     spectrum_fs.result_fit, 'components') and \

@@ -665,6 +665,9 @@ class Wafer:
         self.callbacks_df.action_open_df(file_paths=None,
                                          original_dfs=dfs)
 
+    def cosmis_ray_detection(self):
+        self.spectra_fs.outliers_limit_calculation()
+        
     def determine_quadrant(self, row):
         if row['X'] < 0 and row['Y'] < 0:
             return 'Q1'

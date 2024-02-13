@@ -181,7 +181,8 @@ class MainWindow:
         self.ui.cbb_color_pallete.addItems(self.callbacks_plot.palette_colors)
         self.ui.btn_send_df_to_vis.clicked.connect(self.wafer.send_df_to_vis)
         self.ui.btn_open_fitspy.clicked.connect(self.wafer.fitspy_launcher)
-        
+        self.ui.btn_cosmis_ray.clicked.connect(self.wafer.cosmis_ray_detection)
+
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)
         self.ui.combo_hue.setCurrentIndex(

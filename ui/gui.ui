@@ -371,6 +371,26 @@
                      </property>
                     </widget>
                    </item>
+                   <item>
+                    <spacer name="horizontalSpacer_6">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="btn_open_fitspy">
+                     <property name="text">
+                      <string>Open FITSPY</string>
+                     </property>
+                    </widget>
+                   </item>
                   </layout>
                  </item>
                  <item>
@@ -404,9 +424,9 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="btn_open_fitspy">
+                  <widget class="QPushButton" name="btn_cosmis_ray">
                    <property name="text">
-                    <string>Open FITSPY</string>
+                    <string>Cosmic ray detection</string>
                    </property>
                   </widget>
                  </item>
@@ -600,6 +620,9 @@
             </property>
             <item>
              <widget class="QTabWidget" name="tabWidget_2">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="currentIndex">
                <number>0</number>
               </property>
@@ -1240,6 +1263,9 @@
                </layout>
               </widget>
               <widget class="QWidget" name="fit_model_editor">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <attribute name="title">
                 <string>FITSPY_ Model Editor</string>
                </attribute>
@@ -1624,8 +1650,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>98</width>
-                             <height>28</height>
+                             <width>690</width>
+                             <height>337</height>
                             </rect>
                            </property>
                           </widget>
@@ -1728,6 +1754,9 @@
                </layout>
               </widget>
               <widget class="QWidget" name="fit_settings">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <attribute name="title">
                 <string>Fit Settings</string>
                </attribute>
@@ -2436,8 +2465,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>98</width>
-               <height>28</height>
+               <width>1143</width>
+               <height>921</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">

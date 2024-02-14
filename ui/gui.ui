@@ -2441,7 +2441,7 @@
                  <number>100</number>
                 </property>
                 <property name="value">
-                 <number>0</number>
+                 <number>100</number>
                 </property>
                 <property name="textVisible">
                  <bool>true</bool>

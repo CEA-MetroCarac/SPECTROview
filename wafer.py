@@ -33,7 +33,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QColor
 
 from PySide6.QtGui import QIcon, QTextCursor
 from PySide6.QtCore import Qt, QSize, QCoreApplication, QSettings, QFileInfo, \
-    QTimer
+    QTimer, QObject, Signal
 
 DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
@@ -75,6 +75,9 @@ class Wafer:
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot_sel_spectra)
+
+        # Initialize progress tracker
+        self.progress_tracker = FittingProgressTracker()
 
     def open_csv(self, file_paths=None, wafers=None):
         """Open CSV files contaning RAW spectra of each wafer"""
@@ -181,19 +184,40 @@ class Wafer:
         coord_fs = tuple(map(float, coord_str.split(',')))
         return wafer_name_fs, coord_fs
 
-    def fit_selected(self):
+    def fit(self, fnames=None):
         """Fit only selected spectrum(s)"""
         if self.model_fs is None:
             self.show_alert("Please load a fit model before fitting.")
             return
-        wafer_name, coords = self.spectre_id()  # Get current selected coords
-        fnames = []
-        for coord in coords:
-            fname = f"{wafer_name}_{coord}"
-            fnames.append(fname)
+
+        if fnames is None:
+            wafer_name, coords = self.spectre_id()
+            fnames = []
+            for coord in coords:
+                fname = f"{wafer_name}_{coord}"
+                fnames.append(fname)
+
+        ntot = len(fnames)
+        thread = Thread(target=self.progressbar_update, args=(ntot,))
+        thread.start()
+
         self.spectra_fs.apply_model(self.model_fs, fnames=fnames)
+
+        thread.join()
+
         self.plot_sel_spectre()
         self.upd_spectra_list()
+
+    def fit_all(self):
+        """ Apply loaded fit model to all selected spectra"""
+        fnames = self.spectra_fs.fnames
+        self.fit(fnames=fnames)
+
+    def progressbar_update(self, ntot):
+        while self.spectra_fs.pbar_index < ntot:
+            percent = (self.spectra_fs.pbar_index / ntot) * 100
+            self.ui.progressBar.setValue(percent)
+        self.ui.progressBar.setValue(100)
 
     def upd_spectra_list(self):
         """to update the spectra list"""
@@ -231,15 +255,6 @@ class Wafer:
             if self.ui.spectra_listbox.count() > 0:
                 self.ui.spectra_listbox.setCurrentRow(0)
         QTimer.singleShot(50, self.plot_sel_spectre)
-
-    def fit_all(self):
-        """ Apply loaded fit model to all selected spectra"""
-        if self.model_fs is None:
-            self.show_alert("Load a fit model first!")
-            return
-        self.spectra_fs.apply_model(self.model_fs)
-        self.plot_sel_spectre()
-        self.upd_spectra_list()
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
@@ -715,7 +730,7 @@ class Wafer:
         if modifiers == Qt.ControlModifier:
             self.fit_all()
         else:
-            self.fit_selected()
+            self.fit()
 
     def send_df_to_vis(self):
         dfs = {}
@@ -785,3 +800,15 @@ class Wafer:
         appli.update()
 
         root.mainloop()
+
+
+class FittingProgressTracker(QObject):
+    # Define signals for progress tracking
+    progress_changed = Signal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def track_progress(self, progress):
+        # Emit progress signal
+        self.progress_changed.emit(progress)

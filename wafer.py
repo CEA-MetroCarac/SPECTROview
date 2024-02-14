@@ -197,12 +197,14 @@ class Wafer:
 
     def upd_spectra_list(self):
         """to update the spectra list"""
+        current_row = self.ui.spectra_listbox.currentRow()
+
         self.ui.spectra_listbox.clear()
         self.clear_wafer_plot()
         current_item = self.ui.wafers_listbox.currentItem()
+
         if current_item is not None:
             wafer_name = current_item.text()
-
             for spectrum_fs in self.spectra_fs:
                 wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
                 if wafer_name == wafer_name_fs:
@@ -221,10 +223,14 @@ class Wafer:
         # Update the item count label
         item_count = self.ui.spectra_listbox.count()
         self.ui.item_count_label.setText(f"Number of points: {item_count}")
-        # Select the first item by default
-        if self.ui.spectra_listbox.count() > 0:
-            self.ui.spectra_listbox.setCurrentRow(0)
-            QTimer.singleShot(50, self.plot_sel_spectre)
+
+        # Reselect the previously selected item
+        if current_row >= 0 and current_row < item_count:
+            self.ui.spectra_listbox.setCurrentRow(current_row)
+        else:
+            if self.ui.spectra_listbox.count() > 0:
+                self.ui.spectra_listbox.setCurrentRow(0)
+        QTimer.singleShot(50, self.plot_sel_spectre)
 
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
@@ -531,6 +537,8 @@ class Wafer:
 
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
+        current_row = self.ui.wafers_listbox.currentRow()
+
         self.ui.wafers_listbox.clear()
         wafer_names = list(self.wafers.keys())
         for wafer_name in wafer_names:
@@ -538,10 +546,17 @@ class Wafer:
             self.ui.wafers_listbox.addItem(item)
             self.clear_wafer_plot()  # Clear the wafer_plot
 
-        # Select the first item by default
-        if self.ui.wafers_listbox.count() > 0:
-            self.ui.wafers_listbox.setCurrentRow(0)
-            QTimer.singleShot(100, self.upd_spectra_list)
+        item_count = self.ui.wafers_listbox.count()
+
+        # management of selecting item of listbox
+        if current_row >= item_count:
+            current_row = item_count - 1
+        if current_row >= 0:
+            self.ui.wafers_listbox.setCurrentRow(current_row)
+        else:
+            if item_count > 0:
+                self.ui.wafers_listbox.setCurrentRow(0)
+        QTimer.singleShot(100, self.upd_spectra_list)
 
     def remove_wafer(self):
         """To remove a wafer"""

@@ -519,6 +519,38 @@
                      </widget>
                     </item>
                     <item>
+                     <widget class="QPushButton" name="btn_open_fit_results">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>30</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="toolTip">
+                       <string>Open fit results (format Excel)</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="resources_new.qrc">
+                        <normaloff>:/icon/iconpack/icons8-documents-folder-96.png</normaloff>:/icon/iconpack/icons8-documents-folder-96.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>22</width>
+                        <height>22</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
                      <widget class="QPushButton" name="btn_view_df_2">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -539,7 +571,7 @@
                        </size>
                       </property>
                       <property name="toolTip">
-                       <string>View collected fit results</string>
+                       <string>View collected / current fit results</string>
                       </property>
                       <property name="text">
                        <string/>

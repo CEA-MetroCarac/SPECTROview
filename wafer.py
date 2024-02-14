@@ -448,7 +448,7 @@ class Wafer:
 
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
-        # plt.style.use(PLOT_POLICY)
+        plt.style.use(PLOT_POLICY)
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
         for spectrum_fs in self.spectra_fs:
@@ -512,7 +512,7 @@ class Wafer:
 
     def plot_wafer(self):
         """Plot wafer maps of measurement sites"""
-        # plt.style.use(PLOT_POLICY)
+        plt.style.use(PLOT_POLICY)
 
         self.clear_wafer_plot()
         wafer_name, coords = self.spectre_id()
@@ -742,8 +742,9 @@ class Wafer:
 
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""
+        plt.style.use('default')
         root = Tk()
-        appli = Appli(root)
+        appli = Appli(root, force_terminal_exit=False)
         appli.spectra = self.spectra_fs
         for spectrum in appli.spectra:
             fname = spectrum.fname

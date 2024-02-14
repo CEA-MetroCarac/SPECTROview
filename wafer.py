@@ -245,15 +245,32 @@ class Wafer:
             if hasattr(spectrum_fs.result_fit, 'best_values'):
                 wafer_name, coord = self.spectre_id_fs(spectrum_fs)
                 x, y = coord
+                success = spectrum_fs.result_fit.success
                 best_values = spectrum_fs.result_fit.best_values
 
                 best_values["Wafer"] = wafer_name
                 best_values["X"] = x
                 best_values["Y"] = y
+                best_values["success"] = success
                 fit_results_list.append(best_values)
 
         self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
-        # Reordering columns and rename headers
+
+        # reindex columns according to the parameters names
+        self.df_fit_results = self.df_fit_results.reindex(
+            sorted(self.df_fit_results.columns),
+            axis=1)
+        names = []
+        for name in self.df_fit_results.columns:
+            if name in ["Wafer", "X", 'Y', "success"]:
+                name = '0' + name  # to be in the 3 first columns
+            elif '_' in name:
+                name = 'z' + name[4:]  # model peak parameters to be at the end
+            names.append(name)
+        self.df_fit_results = self.df_fit_results.iloc[:,
+                              list(np.argsort(names, kind='stable'))]
+
+        # rename headers
         self.df_fit_results = self.df_reorder_rename(self.df_fit_results)
 
         # Add "Quadrant" columns
@@ -262,6 +279,24 @@ class Wafer:
 
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
+
+    def df_reorder_rename(self, df):
+        """To reorder (x0, fwhm, ampli) and rename headers of dataframe"""
+
+        # Rename columns headers
+        param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
+                              "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
+                              "alpha": "alpha",
+                              "x0": "Position"}
+        for column in df.columns:
+            if "_" in column:
+                peak_label, param = column.split("_", 1)
+                if param in param_unit_mapping:
+                    unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
+                    new_column_name = f"{param_unit_mapping[param]} of peak " \
+                                      f"{peak_label} {unit}"
+                    df.rename(columns={column: new_column_name}, inplace=True)
+        return df
 
     def save_fit_results(self):
         last_dir = self.settings.value("last_directory", "/")
@@ -283,30 +318,6 @@ class Wafer:
                 QMessageBox.critical(
                     self.ui.tabWidget, "Error",
                     f"Error saving DataFrame: {str(e)}")
-
-    def df_reorder_rename(self, df):
-        """To reorder (x0, fwhm, ampli) and rename headers of dataframe"""
-        # Reorder columns
-        reordered_columns = []
-        for param in ["x0", "fwhm", "ampli"]:
-            for peak_label in sorted(
-                    set(col.split("_")[0] for col in df.columns[:-3])):
-                col_name = f"{peak_label}_{param}"
-                reordered_columns.append(col_name)
-        df = df[["Wafer", "X", "Y"] + reordered_columns]
-
-        # Rename columns headers
-        param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
-                              "x0": "Position"}
-        for column in df.columns:
-            if "_" in column:
-                peak_label, param = column.split("_", 1)
-                if param in param_unit_mapping:
-                    unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
-                    new_column_name = f"{param_unit_mapping[param]} of peak " \
-                                      f"{peak_label} {unit}"
-                    df.rename(columns={column: new_column_name}, inplace=True)
-        return df
 
     def view_param_1(self):
         """ Plot WaferDataFrame"""
@@ -667,7 +678,7 @@ class Wafer:
 
     def cosmis_ray_detection(self):
         self.spectra_fs.outliers_limit_calculation()
-        
+
     def determine_quadrant(self, row):
         if row['X'] < 0 and row['Y'] < 0:
             return 'Q1'

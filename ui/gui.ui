@@ -1264,7 +1264,7 @@
               </widget>
               <widget class="QWidget" name="fit_model_editor">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <attribute name="title">
                 <string>FITSPY_ Model Editor</string>
@@ -1755,7 +1755,7 @@
               </widget>
               <widget class="QWidget" name="fit_settings">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <attribute name="title">
                 <string>Fit Settings</string>

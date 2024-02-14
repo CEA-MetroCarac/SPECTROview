@@ -69,7 +69,6 @@ class Wafer(QObject):
 
         # Connect the stateChanged signal of the legend CHECKBOX
         self.ui.cb_legend.stateChanged.connect(self.plot_sel_spectre)
-
         self.ui.cb_raw.stateChanged.connect(self.plot_sel_spectre)
         self.ui.cb_bestfit.stateChanged.connect(self.plot_sel_spectre)
         self.ui.cb_colors.stateChanged.connect(self.plot_sel_spectre)
@@ -785,7 +784,7 @@ class Wafer(QObject):
             # Display the report text in QTextBrowser
             text_browser.setPlainText(report)
             # Scroll to top of document
-            text_browser.moveCursor(QTextCursor.Start)
+            #text_browser.moveCursor(QTextCursor.Start)
             # Show the Report viewer dialog
             layout = QVBoxLayout(report_viewer)
             layout.addWidget(text_browser)

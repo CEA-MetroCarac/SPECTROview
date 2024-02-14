@@ -302,6 +302,7 @@ class Wafer:
         return param
 
     def save_fit_results(self):
+        """Functon to save fitted results in an excel file"""
         last_dir = self.settings.value("last_directory", "/")
         save_path, _ = QFileDialog.getSaveFileName(
             self.ui.tabWidget, "Save DF fit results", last_dir,
@@ -321,6 +322,38 @@ class Wafer:
                 QMessageBox.critical(
                     self.ui.tabWidget, "Error",
                     f"Error saving DataFrame: {str(e)}")
+
+    def load_fit_results(self, file_paths=None):
+        """Functon to load fitted results to view"""
+        self.df_fit_results = None
+
+        # Initialize the last used directory from QSettings
+        last_dir = self.settings.value("last_directory", "/")
+
+        # Open the QFileDialog with the last used directory
+        options = QFileDialog.Options()
+        options |= QFileDialog.ReadOnly
+        file_paths, _ = QFileDialog.getOpenFileNames(
+            self.ui.tabWidget, "Open File(s)", last_dir,
+            "Excel Files (*.xlsx *.xls)", options=options)
+        # Load dataframes from Excel files
+        if file_paths:
+            # Update the last used directory in QSettings
+            last_dir = QFileInfo(file_paths[0]).absolutePath()
+            self.settings.setValue("last_directory", last_dir)
+
+            # Load DataFrame from the first selected Excel file
+            excel_file_path = file_paths[0]
+            try:
+                dfr = pd.read_excel(excel_file_path)
+                self.df_fit_results = dfr
+            except Exception as e:
+                # Handle any potential errors during DataFrame loading
+                print("Error loading DataFrame:", e)
+
+        self.apprend_cbb_param()
+        self.apprend_cbb_wafer()
+        self.send_df_to_vis()
 
     def view_param_1(self):
         """Plot WaferDataFrame for view 1"""
@@ -687,8 +720,7 @@ class Wafer:
     def send_df_to_vis(self):
         dfs = {}
         dfs["fitted_results"] = self.df_fit_results
-        self.callbacks_df.action_open_df(file_paths=None,
-                                         original_dfs=dfs)
+        self.callbacks_df.action_open_df(file_paths=None, original_dfs=dfs)
 
     def cosmis_ray_detection(self):
         self.spectra_fs.outliers_limit_calculation()
@@ -732,13 +764,12 @@ class Wafer:
 
             # Display the report text in QTextBrowser
             text_browser.setPlainText(report)
-
-            text_browser.moveCursor(
-                QTextCursor.Start)  # Scroll to top of document
-
+            # Scroll to top of document
+            text_browser.moveCursor(QTextCursor.Start)
+            # Show the Report viewer dialog
             layout = QVBoxLayout(report_viewer)
             layout.addWidget(text_browser)
-            report_viewer.exec()  # Show the Report viewer dialog
+            report_viewer.exec()
 
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""

@@ -182,6 +182,8 @@ class MainWindow:
         self.ui.btn_send_df_to_vis.clicked.connect(self.wafer.send_df_to_vis)
         self.ui.btn_open_fitspy.clicked.connect(self.wafer.fitspy_launcher)
         self.ui.btn_cosmis_ray.clicked.connect(self.wafer.cosmis_ray_detection)
+        self.ui.btn_open_fit_results.clicked.connect(
+            self.wafer.load_fit_results)
 
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)

@@ -260,6 +260,7 @@ class Wafer:
         self.df_fit_results = self.df_fit_results.reindex(
             sorted(self.df_fit_results.columns),
             axis=1)
+
         names = []
         for name in self.df_fit_results.columns:
             if name in ["Wafer", "X", 'Y', "success"]:
@@ -270,9 +271,6 @@ class Wafer:
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
 
-        # rename headers
-        self.df_fit_results = self.df_reorder_rename(self.df_fit_results)
-
         # Add "Quadrant" columns
         self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
             self.determine_quadrant, axis=1)
@@ -280,23 +278,22 @@ class Wafer:
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
 
-    def df_reorder_rename(self, df):
-        """To reorder (x0, fwhm, ampli) and rename headers of dataframe"""
-
-        # Rename columns headers
+    def translate_param(self, param):
+        """Translate parameter names to plot title"""
         param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
                               "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
-                              "alpha": "alpha",
+                              "alpha": "L/G ratio",
                               "x0": "Position"}
-        for column in df.columns:
-            if "_" in column:
-                peak_label, param = column.split("_", 1)
-                if param in param_unit_mapping:
+        if "_" in param:
+            peak_label, param = param.split("_", 1)
+            if param in param_unit_mapping:
+                if param == "alpha":
+                    unit = ""  # Set unit to empty string for "alpha"
+                else:
                     unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
-                    new_column_name = f"{param_unit_mapping[param]} of peak " \
-                                      f"{peak_label} {unit}"
-                    df.rename(columns={column: new_column_name}, inplace=True)
-        return df
+                return f"{param_unit_mapping[param]} of peak {peak_label} " \
+                       f"{unit}"
+        return param
 
     def save_fit_results(self):
         last_dir = self.settings.value("last_directory", "/")
@@ -320,12 +317,13 @@ class Wafer:
                     f"Error saving DataFrame: {str(e)}")
 
     def view_param_1(self):
-        """ Plot WaferDataFrame"""
+        """Plot WaferDataFrame for view 1"""
         self.clear_layout(self.ui.frame_wafer_1.layout())
         dfr = self.df_fit_results
         wafer_name = self.ui.cbb_wafer_1.currentText()
         color = self.ui.cbb_color_pallete.currentText()
         wafer_size = float(self.ui.wafer_size.text())
+
         if wafer_name is not None:
             selected_df = dfr.query('Wafer == @wafer_name')
         sel_param = self.ui.cbb_param_1.currentText()
@@ -334,7 +332,7 @@ class Wafer:
         self.ui.frame_wafer_1.addWidget(canvas)
 
     def view_param_2(self):
-        """ Plot WaferDataFrame"""
+        """Plot WaferDataFrame for view 2"""
         self.clear_layout(self.ui.frame_wafer_2.layout())
         dfr = self.df_fit_results
         wafer_name = self.ui.cbb_wafer_2.currentText()
@@ -367,7 +365,8 @@ class Wafer:
                  r=(wafer_size / 2))
 
         text = self.ui.plot_title.text()
-        title = (f"{sel_param}") if not text else text
+
+        title = self.translate_param(sel_param) if not text else text
         ax.set_title(f"{title}")
 
         # Color scale

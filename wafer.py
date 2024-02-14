@@ -33,14 +33,19 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QColor
 
 from PySide6.QtGui import QIcon, QTextCursor
 from PySide6.QtCore import Qt, QSize, QCoreApplication, QSettings, QFileInfo, \
-    QTimer, QObject, Signal
+    QTimer
+from PySide6.QtCore import QObject, Signal
 
 DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 
 
-class Wafer:
+class Wafer(QObject):
+    # Define a signal for progress updates
+    fitting_progress_changed = Signal(int)
+
     def __init__(self, ui, callbacks_df):
+        super().__init__()
         self.ui = ui
         self.callbacks_df = callbacks_df
         QSettings.setDefaultFormat(QSettings.IniFormat)
@@ -76,8 +81,8 @@ class Wafer:
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot_sel_spectra)
 
-        # Initialize progress tracker
-        self.progress_tracker = FittingProgressTracker()
+        # Connect the progress signal to update_progress_bar slot
+        self.fitting_progress_changed.connect(self.update_progress_bar)
 
     def open_csv(self, file_paths=None, wafers=None):
         """Open CSV files contaning RAW spectra of each wafer"""
@@ -197,13 +202,22 @@ class Wafer:
                 fname = f"{wafer_name}_{coord}"
                 fnames.append(fname)
 
-        ntot = len(fnames)
-        thread = Thread(target=self.progressbar_update, args=(ntot,))
-        thread.start()
+        self.spectra_fs.pbar_index = 0  # Reset progress index
+        self.spectra_fs.total_fits = len(fnames)  # Store total fits
 
-        self.spectra_fs.apply_model(self.model_fs, fnames=fnames)
+        # Emit signal to indicate fitting process started
+        self.fitting_progress_changed.emit(0)
 
-        thread.join()
+        for index, fname in enumerate(fnames):
+            # Calculate progress based on the current index and total fits
+            progress = int((index + 1) / len(fnames) * 100)
+            # Emit progress signal for each fit
+            self.fitting_progress_changed.emit(progress)
+            # Perform fitting for the current spectrum
+            self.spectra_fs.apply_model(self.model_fs, fnames=[fname])
+
+        # Emit signal to indicate fitting process completed
+        self.fitting_progress_changed.emit(100)
 
         self.plot_sel_spectre()
         self.upd_spectra_list()
@@ -213,11 +227,13 @@ class Wafer:
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
 
-    def progressbar_update(self, ntot):
-        while self.spectra_fs.pbar_index < ntot:
-            percent = (self.spectra_fs.pbar_index / ntot) * 100
-            self.ui.progressBar.setValue(percent)
-        self.ui.progressBar.setValue(100)
+    def update_progress_bar(self, progress):
+        self.ui.progressBar.setValue(progress)
+
+    def progress_callback(self, progress):
+        # Callback function to track progress during fitting process
+        # Emit signal to update progress bar
+        self.fitting_progress_changed.emit(progress)
 
     def upd_spectra_list(self):
         """to update the spectra list"""
@@ -800,15 +816,3 @@ class Wafer:
         appli.update()
 
         root.mainloop()
-
-
-class FittingProgressTracker(QObject):
-    # Define signals for progress tracking
-    progress_changed = Signal(int)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def track_progress(self, progress):
-        # Emit progress signal
-        self.progress_changed.emit(progress)

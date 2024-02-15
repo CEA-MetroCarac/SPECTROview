@@ -1,6 +1,7 @@
 # wafer.py module
 import os
 import copy
+import time
 # import win32clipboard
 from io import BytesIO
 import numpy as np
@@ -39,28 +40,9 @@ DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 
 
-class FitThread(QThread):
-    fitting_progress_changed = Signal(int)
-    fitting_completed = Signal()
-
-    def __init__(self, spectra_fs, model_fs, fnames):
-        super().__init__()
-        self.spectra_fs = spectra_fs
-        self.model_fs = model_fs
-        self.fnames = fnames
-
-    def run(self):
-        for index, fname in enumerate(self.fnames):
-            progress = int((index + 1) / len(self.fnames) * 100)
-            self.fitting_progress_changed.emit(progress)
-            self.spectra_fs.apply_model(self.model_fs, fnames=[fname])
-        self.fitting_progress_changed.emit(100)
-        self.fitting_completed.emit()
-
-
 class Wafer(QObject):
     # Define a signal for progress updates
-    fitting_progress_changed = Signal(int)
+    fit_progress_changed = Signal(int)
 
     def __init__(self, ui, callbacks_df):
         super().__init__()
@@ -100,7 +82,7 @@ class Wafer(QObject):
         self.delay_timer.timeout.connect(self.plot_sel_spectra)
 
         # Connect the progress signal to update_progress_bar slot
-        self.fitting_progress_changed.connect(self.update_pbar)
+        self.fit_progress_changed.connect(self.update_pbar)
 
     def init_ui(self):
         # Connect UI signals to slots
@@ -196,15 +178,19 @@ class Wafer(QObject):
             return
 
         if fnames is None:
-            # Get selected spectra
             wafer_name, coords = self.spectre_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
 
         # Start fitting process in a separate thread
-        self.fitting_thread = FitThread(self.spectra_fs, self.model_fs, fnames)
-        self.fitting_thread.fitting_progress_changed.connect(self.update_pbar)
-        self.fitting_thread.fitting_completed.connect(self.fit_completed)
-        self.fitting_thread.start()
+        self.fit_thread = FitThread(self.spectra_fs, self.model_fs, fnames)
+        self.fit_thread.fit_progress_changed.connect(self.update_pbar)
+        self.fit_thread.fit_completed.connect(self.fit_completed)
+
+        self.fit_thread.fit_progress.connect(
+            lambda num_fitted, elapsed_time: self.fit_progress(num_fitted,
+                                                               elapsed_time,
+                                                               fnames))
+        self.fit_thread.start()
 
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
@@ -238,7 +224,7 @@ class Wafer(QObject):
 
         # Update the item count label
         item_count = self.ui.spectra_listbox.count()
-        self.ui.item_count_label.setText(f"Number of points: {item_count}")
+        self.ui.item_count_label.setText(f"Nb of points: {item_count}")
 
         # Reselect the previously selected item
         if current_row >= 0 and current_row < item_count:
@@ -803,11 +789,6 @@ class Wafer(QObject):
             layout.addWidget(text_browser)
             report_viewer.exec()
 
-    def fit_completed(self):
-        """Called when fitting process is completed"""
-        self.plot_sel_spectre()
-        self.upd_spectra_list()
-
     def update_pbar(self, progress):
         self.ui.progressBar.setValue(progress)
 
@@ -825,3 +806,45 @@ class Wafer(QObject):
         appli.update()
 
         root.mainloop()
+
+    def fit_progress(self, num_fitted, elapsed_time, fnames):
+        """Called when fitting process is completed"""
+        self.ui.progress.setText(
+            f"{num_fitted}/{len(fnames)} fitted ({elapsed_time:.2f}s)")
+
+    def fit_completed(self):
+        """Called when fitting process is completed"""
+        self.plot_sel_spectre()
+        self.upd_spectra_list()
+
+    def update_pbar(self, progress):
+        self.ui.progressBar.setValue(progress)
+
+
+class FitThread(QThread):
+    fit_progress_changed = Signal(int)
+    fit_progress = Signal(int, float)  # spectres and elapsed time
+    fit_completed = Signal()
+
+    def __init__(self, spectra_fs, model_fs, fnames):
+        super().__init__()
+        self.spectra_fs = spectra_fs
+        self.model_fs = model_fs
+        self.fnames = fnames
+
+    def run(self):
+        start_time = time.time()  # Record start time
+        num_fitted = 0
+
+        for index, fname in enumerate(self.fnames):
+            progress = int((index + 1) / len(self.fnames) * 100)
+
+            self.fit_progress_changed.emit(progress)
+            self.spectra_fs.apply_model(self.model_fs, fnames=[fname])
+
+            num_fitted += 1
+            elapsed_time = time.time() - start_time
+            self.fit_progress.emit(num_fitted, elapsed_time)
+
+        self.fit_progress_changed.emit(100)
+        self.fit_completed.emit()

@@ -10,7 +10,6 @@ from lmfit import Model, fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
 from fitspy.app.gui import Appli
-from threading import Thread
 from multiprocessing import Queue
 from PySide6.QtCore import Qt, QThread, Signal
 
@@ -38,6 +37,25 @@ from PySide6.QtCore import QObject, Signal
 
 DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
+
+
+class FitThread(QThread):
+    fitting_progress_changed = Signal(int)
+    fitting_completed = Signal()
+
+    def __init__(self, spectra_fs, model_fs, fnames):
+        super().__init__()
+        self.spectra_fs = spectra_fs
+        self.model_fs = model_fs
+        self.fnames = fnames
+
+    def run(self):
+        for index, fname in enumerate(self.fnames):
+            progress = int((index + 1) / len(self.fnames) * 100)
+            self.fitting_progress_changed.emit(progress)
+            self.spectra_fs.apply_model(self.model_fs, fnames=[fname])
+        self.fitting_progress_changed.emit(100)
+        self.fitting_completed.emit()
 
 
 class Wafer(QObject):
@@ -69,6 +87,7 @@ class Wafer(QObject):
 
         # Connect the stateChanged signal of the legend CHECKBOX
         self.ui.cb_legend.stateChanged.connect(self.plot_sel_spectre)
+
         self.ui.cb_raw.stateChanged.connect(self.plot_sel_spectre)
         self.ui.cb_bestfit.stateChanged.connect(self.plot_sel_spectre)
         self.ui.cb_colors.stateChanged.connect(self.plot_sel_spectre)
@@ -81,7 +100,13 @@ class Wafer(QObject):
         self.delay_timer.timeout.connect(self.plot_sel_spectra)
 
         # Connect the progress signal to update_progress_bar slot
-        self.fitting_progress_changed.connect(self.update_progress_bar)
+        self.fitting_progress_changed.connect(self.update_pbar)
+
+    def init_ui(self):
+        # Connect UI signals to slots
+        self.ui.btn_open_csv.clicked.connect(self.open_csv)
+        self.ui.btn_open_model.clicked.connect(self.open_model)
+        self.ui.btn_fit.clicked.connect(self.fit_all)
 
     def open_csv(self, file_paths=None, wafers=None):
         """Open CSV files contaning RAW spectra of each wafer"""
@@ -164,64 +189,64 @@ class Wafer(QObject):
         self.ui.lb_loaded_model.setText(f"'{display_name}' is loaded !")
         self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
 
-    def spectre_id(self):
-        """Get selected spectre id(s)"""
-        wafer_item = self.ui.wafers_listbox.currentItem()
-        if wafer_item is not None:
-            wafer_name = wafer_item.text()
-            selected_spectra = self.ui.spectra_listbox.selectedItems()
-            coords = []
-            if selected_spectra:
-                for selected_item in selected_spectra:
-                    text = selected_item.text()
-                    x, y = map(float, text.strip('()').split(','))
-                    coord = (x, y)
-                    coords.append(coord)
-            return wafer_name, coords
-        return None, None
-
-    def spectre_id_fs(self, spectrum_fs=None):
-        """Get selected spectre id(s) of FITSPY object"""
-        fname_parts = spectrum_fs.fname.split("_")
-        wafer_name_fs = "_".join(fname_parts[:2])
-        coord_str = fname_parts[-1].split('(')[1].split(')')[0]
-        coord_fs = tuple(map(float, coord_str.split(',')))
-        return wafer_name_fs, coord_fs
-
     def fit(self, fnames=None):
-        """Fit only selected spectrum(s)"""
+        """Fit selected spectrum(s)"""
         if self.model_fs is None:
             self.show_alert("Please load a fit model before fitting.")
             return
 
         if fnames is None:
+            # Get selected spectra
             wafer_name, coords = self.spectre_id()
-            fnames = []
-            for coord in coords:
-                fname = f"{wafer_name}_{coord}"
-                fnames.append(fname)
+            fnames = [f"{wafer_name}_{coord}" for coord in coords]
 
-        # Emit signal to indicate fitting process started
-        self.fitting_progress_changed.emit(0)
-
-        for index, fname in enumerate(fnames):
-            progress = int((index + 1) / len(fnames) * 100)
-            self.fitting_progress_changed.emit(progress)
-            self.spectra_fs.apply_model(self.model_fs, fnames=[fname])
-
-        # Emit signal to indicate fitting process completed
-        self.fitting_progress_changed.emit(100)
-
-        self.plot_sel_spectre()
-        self.upd_spectra_list()
+        # Start fitting process in a separate thread
+        self.fitting_thread = FitThread(self.spectra_fs, self.model_fs, fnames)
+        self.fitting_thread.fitting_progress_changed.connect(self.update_pbar)
+        self.fitting_thread.fitting_completed.connect(self.fit_completed)
+        self.fitting_thread.start()
 
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
 
-    def update_progress_bar(self, progress):
-        self.ui.progressBar.setValue(progress)
+    def upd_spectra_list(self):
+        """to update the spectra list"""
+        current_row = self.ui.spectra_listbox.currentRow()
+
+        self.ui.spectra_listbox.clear()
+        self.clear_wafer_plot()
+        current_item = self.ui.wafers_listbox.currentItem()
+
+        if current_item is not None:
+            wafer_name = current_item.text()
+            for spectrum_fs in self.spectra_fs:
+                wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+                if wafer_name == wafer_name_fs:
+                    item = QListWidgetItem(str(coord_fs))
+                    if hasattr(spectrum_fs.result_fit,
+                               'success') and spectrum_fs.result_fit.success:
+                        item.setBackground(QColor("green"))
+                    elif hasattr(spectrum_fs.result_fit,
+                                 'success') and not \
+                            spectrum_fs.result_fit.success:
+                        item.setBackground(QColor("orange"))
+                    else:
+                        item.setBackground(QColor(0, 0, 0, 0))
+                    self.ui.spectra_listbox.addItem(item)
+
+        # Update the item count label
+        item_count = self.ui.spectra_listbox.count()
+        self.ui.item_count_label.setText(f"Number of points: {item_count}")
+
+        # Reselect the previously selected item
+        if current_row >= 0 and current_row < item_count:
+            self.ui.spectra_listbox.setCurrentRow(current_row)
+        else:
+            if self.ui.spectra_listbox.count() > 0:
+                self.ui.spectra_listbox.setCurrentRow(0)
+        QTimer.singleShot(50, self.plot_sel_spectre)
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
@@ -265,6 +290,7 @@ class Wafer(QObject):
 
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
+        self.send_df_to_vis()
 
     def translate_param(self, param):
         """Translate parameter names to plot title"""
@@ -389,6 +415,9 @@ class Wafer(QObject):
 
         title = self.translate_param(sel_param) if not text else text
         ax.set_title(f"{title}")
+
+        # Color scale
+
         fig.tight_layout()
         canvas = FigureCanvas(fig)
         return canvas
@@ -569,46 +598,6 @@ class Wafer(QObject):
             if item_count > 0:
                 self.ui.wafers_listbox.setCurrentRow(0)
         QTimer.singleShot(100, self.upd_spectra_list)
-    def upd_spectra_list(self):
-        """to update the spectra list"""
-        current_row = self.ui.spectra_listbox.currentRow()
-
-        self.ui.spectra_listbox.clear()
-        self.clear_wafer_plot()
-        current_item = self.ui.wafers_listbox.currentItem()
-
-        if current_item is not None:
-            wafer_name = current_item.text()
-            for spectrum_fs in self.spectra_fs:
-                wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
-                if wafer_name == wafer_name_fs:
-                    item = QListWidgetItem(str(coord_fs))
-                    if hasattr(spectrum_fs.result_fit,
-                               'success') and spectrum_fs.result_fit.success:
-                        item.setBackground(QColor("green"))
-                    elif hasattr(spectrum_fs.result_fit,
-                                 'success') and not \
-                            spectrum_fs.result_fit.success:
-                        item.setBackground(QColor("orange"))
-                    else:
-                        item.setBackground(QColor(0, 0, 0, 0))
-                    self.ui.spectra_listbox.addItem(item)
-
-        # Update the item count label
-        item_count = self.ui.spectra_listbox.count()
-        self.ui.item_count_label.setText(f"Number of points: {item_count}")
-
-        # Reselect the previously selected item
-        # management of selecting item of listbox
-        if current_row >= item_count:
-            current_row = item_count - 1
-        if current_row >= 0:
-            self.ui.spectra_listbox.setCurrentRow(current_row)
-        else:
-            if item_count > 0:
-                self.ui.spectra_listbox.setCurrentRow(0)
-
-        QTimer.singleShot(50, self.plot_sel_spectre)
 
     def remove_wafer(self):
         """To remove a wafer"""
@@ -686,6 +675,30 @@ class Wafer(QObject):
             x_coord, y_coord = map(float, coord_str.strip('()').split(','))
             if y_coord == 0:
                 item.setSelected(True)
+
+    def spectre_id(self):
+        """Get selected spectre id(s)"""
+        wafer_item = self.ui.wafers_listbox.currentItem()
+        if wafer_item is not None:
+            wafer_name = wafer_item.text()
+            selected_spectra = self.ui.spectra_listbox.selectedItems()
+            coords = []
+            if selected_spectra:
+                for selected_item in selected_spectra:
+                    text = selected_item.text()
+                    x, y = map(float, text.strip('()').split(','))
+                    coord = (x, y)
+                    coords.append(coord)
+            return wafer_name, coords
+        return None, None
+
+    def spectre_id_fs(self, spectrum_fs=None):
+        """Get selected spectre id(s) of FITSPY object"""
+        fname_parts = spectrum_fs.fname.split("_")
+        wafer_name_fs = "_".join(fname_parts[:2])
+        coord_str = fname_parts[-1].split('(')[1].split(')')[0]
+        coord_fs = tuple(map(float, coord_str.split(',')))
+        return wafer_name_fs, coord_fs
 
     def plot_sel_spectre(self):
         """Trigger the fnc to plot spectre"""
@@ -784,14 +797,22 @@ class Wafer(QObject):
             # Display the report text in QTextBrowser
             text_browser.setPlainText(report)
             # Scroll to top of document
-            #text_browser.moveCursor(QTextCursor.Start)
+            text_browser.moveCursor(QTextCursor.Start)
             # Show the Report viewer dialog
             layout = QVBoxLayout(report_viewer)
             layout.addWidget(text_browser)
             report_viewer.exec()
 
+    def fit_completed(self):
+        """Called when fitting process is completed"""
+        self.plot_sel_spectre()
+        self.upd_spectra_list()
+
+    def update_pbar(self, progress):
+        self.ui.progressBar.setValue(progress)
+
     def fitspy_launcher(self):
-        """To Open FITSPY appli """
+        """To Open FITSPY with selected spectra"""
         plt.style.use('default')
         root = Tk()
         appli = Appli(root, force_terminal_exit=False)

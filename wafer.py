@@ -84,12 +84,6 @@ class Wafer(QObject):
         # Connect the progress signal to update_progress_bar slot
         self.fit_progress_changed.connect(self.update_pbar)
 
-    def init_ui(self):
-        # Connect UI signals to slots
-        self.ui.btn_open_csv.clicked.connect(self.open_csv)
-        self.ui.btn_open_model.clicked.connect(self.open_model)
-        self.ui.btn_fit.clicked.connect(self.fit_all)
-
     def open_csv(self, file_paths=None, wafers=None):
         """Open CSV files contaning RAW spectra of each wafer"""
         # Initialize the last used directory from QSettings
@@ -184,12 +178,9 @@ class Wafer(QObject):
         # Start fitting process in a separate thread
         self.fit_thread = FitThread(self.spectra_fs, self.model_fs, fnames)
         self.fit_thread.fit_progress_changed.connect(self.update_pbar)
-        self.fit_thread.fit_completed.connect(self.fit_completed)
-
         self.fit_thread.fit_progress.connect(
-            lambda num_fitted, elapsed_time: self.fit_progress(num_fitted,
-                                                               elapsed_time,
-                                                               fnames))
+            lambda num, elapsed_time: self.fit_progress(num,elapsed_time,fnames))
+        self.fit_thread.fit_completed.connect(self.fit_completed)
         self.fit_thread.start()
 
     def fit_all(self):
@@ -493,7 +484,7 @@ class Wafer(QObject):
             fname, coord = self.spectre_id_fs(spectrum_fs)
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
-            self.ax.plot(x_values, y_values)  # label=f"{fname}-{coord}"
+            self.ax.plot(x_values, y_values,  label=f"{coord}", ms=3, lw=2)
 
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
@@ -807,10 +798,10 @@ class Wafer(QObject):
 
         root.mainloop()
 
-    def fit_progress(self, num_fitted, elapsed_time, fnames):
+    def fit_progress(self, num, elapsed_time, fnames):
         """Called when fitting process is completed"""
         self.ui.progress.setText(
-            f"{num_fitted}/{len(fnames)} fitted ({elapsed_time:.2f}s)")
+            f"{num}/{len(fnames)} fitted ({elapsed_time:.2f}s)")
 
     def fit_completed(self):
         """Called when fitting process is completed"""
@@ -823,7 +814,7 @@ class Wafer(QObject):
 
 class FitThread(QThread):
     fit_progress_changed = Signal(int)
-    fit_progress = Signal(int, float)  # spectres and elapsed time
+    fit_progress = Signal(int, float)  # number and elapsed time
     fit_completed = Signal()
 
     def __init__(self, spectra_fs, model_fs, fnames):
@@ -834,7 +825,7 @@ class FitThread(QThread):
 
     def run(self):
         start_time = time.time()  # Record start time
-        num_fitted = 0
+        num = 0
 
         for index, fname in enumerate(self.fnames):
             progress = int((index + 1) / len(self.fnames) * 100)
@@ -842,9 +833,9 @@ class FitThread(QThread):
             self.fit_progress_changed.emit(progress)
             self.spectra_fs.apply_model(self.model_fs, fnames=[fname])
 
-            num_fitted += 1
+            num += 1
             elapsed_time = time.time() - start_time
-            self.fit_progress.emit(num_fitted, elapsed_time)
+            self.fit_progress.emit(num, elapsed_time)
 
         self.fit_progress_changed.emit(100)
         self.fit_completed.emit()

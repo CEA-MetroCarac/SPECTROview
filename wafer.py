@@ -405,6 +405,11 @@ class Wafer(QObject):
         x_text = self.ui.ent_xaxis_lbl.text()
         y_text = self.ui.ent_yaxis_lbl.text()
 
+        text = self.ui.ent_x_rot.text()
+        xlabel_rot = 0  # Default rotation angle
+        if text:
+            xlabel_rot = float(text)
+
         plt.close('all')
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -434,6 +439,8 @@ class Wafer(QObject):
         if title:
             ax.set_title(title)
 
+        plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
+                 rotation_mode="anchor")
         fig.tight_layout()
         canvas = FigureCanvas(fig)
         self.ui.frame_graph.addWidget(canvas)

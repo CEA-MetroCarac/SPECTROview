@@ -274,22 +274,7 @@ class Wafer(QObject):
         self.apprend_cbb_wafer()
         self.send_df_to_vis()
 
-    def translate_param(self, param):
-        """Translate parameter names to plot title"""
-        param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
-                              "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
-                              "alpha": "L/G ratio",
-                              "x0": "Position"}
-        if "_" in param:
-            peak_label, param = param.split("_", 1)
-            if param in param_unit_mapping:
-                if param == "alpha":
-                    unit = ""  # Set unit to empty string for "alpha"
-                else:
-                    unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
-                return f"{param_unit_mapping[param]} of peak {peak_label} " \
-                       f"{unit}"
-        return param
+
 
     def save_fit_results(self):
         """Functon to save fitted results in an excel file"""
@@ -386,6 +371,28 @@ class Wafer(QObject):
         fig.tight_layout()
         canvas = FigureCanvas(fig)
         return canvas
+    def translate_param(self, param):
+        """Translate parameter names to plot title"""
+        peak_labels = self.model_fs["peak_labels"]
+        param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
+                              "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
+                              "alpha": "L/G ratio",
+                              "x0": "Position"}
+
+        if "_" in param:
+            prefix, param = param.split("_", 1)
+            if param in param_unit_mapping:
+                if param == "alpha":
+                    unit = ""  # Set unit to empty string for "alpha"
+                else:
+                    unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
+                label = param_unit_mapping[param]
+                # Convert prefix to peak_label
+                peak_index = int(prefix[1:]) - 1
+                if 0 <= peak_index < len(peak_labels):
+                    peak_label = peak_labels[peak_index]
+                    return f"{label} of peak {peak_label} {unit}"
+        return param
 
     def plot_graph(self):
         """Plot graph """
@@ -438,21 +445,21 @@ class Wafer(QObject):
             ax.set_ylabel(ylabel)
         if title:
             ax.set_title(title)
-
+        ax.legend(loc='upper right')
         plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
                  rotation_mode="anchor")
         fig.tight_layout()
         canvas = FigureCanvas(fig)
         self.ui.frame_graph.addWidget(canvas)
 
-    def apprend_cbb_wafer(self, wafer_names=None):
+    def apprend_cbb_wafer(self):
         """to append all values of df_fit_results to comoboxses"""
         self.ui.cbb_wafer_1.clear()
         wafer_names = list(self.wafers.keys())
         for wafer_name in wafer_names:
             self.ui.cbb_wafer_1.addItem(wafer_name)
 
-    def apprend_cbb_param(self, df_fit_results=None):
+    def apprend_cbb_param(self):
         """to append all values of df_fit_results to comoboxses"""
         df_fit_results = self.df_fit_results
         columns = df_fit_results.columns.tolist()
@@ -530,6 +537,7 @@ class Wafer(QObject):
 
         for spectrum_fs in selected_spectra_fs:
             fname, coord = self.spectre_id_fs(spectrum_fs)
+
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
             self.ax.plot(x_values, y_values, label=f"{coord}", ms=3, lw=2)
@@ -547,14 +555,21 @@ class Wafer(QObject):
                 self.ax.plot(x_values, bestfit, label=f"bestfit")
 
                 for peak_model in spectrum_fs.result_fit.components:
+                    # Convert prefix to peak_labels
+                    peak_labels = spectrum_fs.peak_labels
                     prefix = str(peak_model.prefix)
+                    peak_index = int(prefix[1:-1]) - 1
+                    if 0 <= peak_index < len(peak_labels):
+                        peak_label = peak_labels[peak_index]
+
+
                     params = peak_model.make_params()
                     y_peak = peak_model.eval(params, x=x_values)
                     if self.ui.cb_filled.isChecked():
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
-                                             label=f"{prefix}")
+                                             label=f"{peak_label}")
                     else:
-                        self.ax.plot(x_values, y_peak, '--', label=f"{prefix}")
+                        self.ax.plot(x_values, y_peak, '--', label=f"{peak_label}")
 
             if hasattr(spectrum_fs.result_fit,
                        'residual') and self.ui.cb_residual.isChecked():

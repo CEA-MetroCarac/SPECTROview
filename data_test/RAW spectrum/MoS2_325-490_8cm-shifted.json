@@ -13,7 +13,7 @@
          "height": 0,
          "threshold": 0
       },
-      "peak_labels": ["A1g", "E2g", "LOM", "ZOM", "LAM", "2LAM"],
+      "peak_labels": ["A$_{1g}$", "E$^1_{2g}$", "LO(M)", "ZO(M)", "LA(M)", "2LA(M)"],
       "fit_params": {
          "method": "Leastsq",
          "fit_negative": false,

@@ -96,6 +96,7 @@ class MainWindow:
 
         # PLOT STYLING
         self.ui.combo_plot_style.addItems(self.callbacks_plot.plot_styles)
+
         self.ui.combo_plot_style.currentIndexChanged.connect(
             self.callbacks_plot.set_selected_plot_style)
 
@@ -176,14 +177,15 @@ class MainWindow:
             self.wafer.save_fit_results)
         self.ui.btn_view_wafer.clicked.connect(self.wafer.view_wafer_data)
 
-        self.ui.btn_plot_wafer_1.clicked.connect(self.wafer.view_param_1)
-        self.ui.btn_plot_wafer_2.clicked.connect(self.wafer.view_param_2)
+        self.ui.btn_plot_wafer.clicked.connect(self.wafer.plot_wafer)
+        self.ui.btn_plot_graph.clicked.connect(self.wafer.plot_graph)
         self.ui.cbb_color_pallete.addItems(self.callbacks_plot.palette_colors)
-        self.ui.btn_send_df_to_vis.clicked.connect(self.wafer.send_df_to_vis)
         self.ui.btn_open_fitspy.clicked.connect(self.wafer.fitspy_launcher)
         self.ui.btn_cosmis_ray.clicked.connect(self.wafer.cosmis_ray_detection)
         self.ui.btn_open_fit_results.clicked.connect(
             self.wafer.load_fit_results)
+
+        self.ui.cbb_plot_style.addItems(self.wafer.plot_styles)
 
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)
@@ -208,7 +210,7 @@ class MainWindow:
     def dark_palette(self):
         # Get the dark color palette of the application
         dark_palette = QPalette()
-        dark_palette.setColor(QPalette.Window, QColor(45, 45, 45))
+        dark_palette.setColor(QPalette.Window, QColor(75, 75, 75))
         dark_palette.setColor(QPalette.WindowText, Qt.white)
         dark_palette.setColor(QPalette.Base, QColor(65, 65, 65))
         dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))

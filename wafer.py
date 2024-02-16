@@ -15,6 +15,7 @@ from multiprocessing import Queue
 from PySide6.QtCore import Qt, QThread, Signal
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
@@ -83,6 +84,9 @@ class Wafer(QObject):
 
         # Connect the progress signal to update_progress_bar slot
         self.fit_progress_changed.connect(self.update_pbar)
+
+        self.plot_styles = ["box plot", "scatter plot", "point plot",
+                            "bar plot"]
 
     def open_csv(self, file_paths=None, wafers=None):
         """Open CSV files contaning RAW spectra of each wafer"""
@@ -341,9 +345,9 @@ class Wafer(QObject):
         self.apprend_cbb_wafer()
         self.send_df_to_vis()
 
-    def view_param_1(self):
+    def plot_wafer(self):
         """Plot WaferDataFrame for view 1"""
-        self.clear_layout(self.ui.frame_wafer_1.layout())
+        self.clear_layout(self.ui.frame_wafer.layout())
         dfr = self.df_fit_results
         wafer_name = self.ui.cbb_wafer_1.currentText()
         color = self.ui.cbb_color_pallete.currentText()
@@ -352,25 +356,11 @@ class Wafer(QObject):
         if wafer_name is not None:
             selected_df = dfr.query('Wafer == @wafer_name')
         sel_param = self.ui.cbb_param_1.currentText()
-        canvas = self.view_param_helper(selected_df, sel_param, wafer_size,
+        canvas = self.plot_wafer_helper(selected_df, sel_param, wafer_size,
                                         color)
-        self.ui.frame_wafer_1.addWidget(canvas)
+        self.ui.frame_wafer.addWidget(canvas)
 
-    def view_param_2(self):
-        """Plot WaferDataFrame for view 2"""
-        self.clear_layout(self.ui.frame_wafer_2.layout())
-        dfr = self.df_fit_results
-        wafer_name = self.ui.cbb_wafer_2.currentText()
-        color = self.ui.cbb_color_pallete.currentText()
-        wafer_size = float(self.ui.wafer_size.text())
-        if wafer_name is not None:
-            selected_df = dfr.query('Wafer == @wafer_name')
-        sel_param = self.ui.cbb_param_2.currentText()
-        canvas = self.view_param_helper(selected_df, sel_param, wafer_size,
-                                        color)
-        self.ui.frame_wafer_2.addWidget(canvas)
-
-    def view_param_helper(self, selected_df, sel_param, wafer_size, color):
+    def plot_wafer_helper(self, selected_df, sel_param, wafer_size, color):
         x = selected_df['X']
         y = selected_df['Y']
         param = selected_df[sel_param]
@@ -390,24 +380,70 @@ class Wafer(QObject):
                  r=(wafer_size / 2))
 
         text = self.ui.plot_title.text()
-
         title = self.translate_param(sel_param) if not text else text
         ax.set_title(f"{title}")
-
-        # Color scale
 
         fig.tight_layout()
         canvas = FigureCanvas(fig)
         return canvas
 
+    def plot_graph(self):
+        """Plot graph """
+        self.clear_layout(self.ui.frame_graph.layout())
+
+        dfr = self.df_fit_results
+        x = self.ui.cbb_x.currentText()
+        y = self.ui.cbb_y.currentText()
+        z = self.ui.cbb_z.currentText()
+        style = self.ui.cbb_plot_style.currentText()
+        xmin = self.ui.xmin.text()
+        ymin = self.ui.ymin.text()
+        xmax = self.ui.xmax.text()
+        ymax = self.ui.ymax.text()
+
+        title = self.ui.ent_plot_title_2.text()
+        x_text = self.ui.ent_xaxis_lbl.text()
+        y_text = self.ui.ent_yaxis_lbl.text()
+
+        plt.close('all')
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        if style == "box plot":
+            sns.boxplot(data=dfr, x=x, y=y, hue=z, dodge=True, ax=ax)
+
+        elif style == "point plot":
+            sns.pointplot(data=dfr, x=x, y=y, hue=z, linestyle='none',
+                          dodge=True, capsize=0.00, ax=ax)
+        elif style == "scatter plot":
+            sns.scatterplot(data=dfr, x=x, y=y, hue=z, s=100, ax=ax)
+        elif style == "bar plot":
+            sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar=None, ax=ax)
+
+        if xmin and xmax:
+            ax.set_xlim(float(xmin), float(xmax))
+        if ymin and ymax:
+            ax.set_ylim(float(ymin), float(ymax))
+
+        xlabel = self.translate_param(x) if not x_text else x_text
+        ylabel = self.translate_param(y) if not y_text else y_text
+        if xlabel:
+            ax.set_xlabel(xlabel)
+        if ylabel:
+            ax.set_ylabel(ylabel)
+        if title:
+            ax.set_title(title)
+
+        fig.tight_layout()
+        canvas = FigureCanvas(fig)
+        self.ui.frame_graph.addWidget(canvas)
+
     def apprend_cbb_wafer(self, wafer_names=None):
         """to append all values of df_fit_results to comoboxses"""
         self.ui.cbb_wafer_1.clear()
-        self.ui.cbb_wafer_2.clear()
         wafer_names = list(self.wafers.keys())
         for wafer_name in wafer_names:
             self.ui.cbb_wafer_1.addItem(wafer_name)
-            self.ui.cbb_wafer_2.addItem(wafer_name)
 
     def apprend_cbb_param(self, df_fit_results=None):
         """to append all values of df_fit_results to comoboxses"""
@@ -415,10 +451,14 @@ class Wafer(QObject):
         columns = df_fit_results.columns.tolist()
         if df_fit_results is not None:
             self.ui.cbb_param_1.clear()
-            self.ui.cbb_param_2.clear()
+            self.ui.cbb_x.clear()
+            self.ui.cbb_y.clear()
+            self.ui.cbb_z.clear()
             for column in columns:
                 self.ui.cbb_param_1.addItem(column)
-                self.ui.cbb_param_2.addItem(column)
+                self.ui.cbb_x.addItem(column)
+                self.ui.cbb_y.addItem(column)
+                self.ui.cbb_z.addItem(column)
 
     def reinit_spectrum(self, spectrum):
         """Reinitialize the given spectrum"""
@@ -527,9 +567,9 @@ class Wafer(QObject):
         self.ui.spectre_view_frame.addWidget(self.canvas)
         self.ui.toolbar_frame.addWidget(self.toolbar)
 
-        self.plot_wafer()
+        self.show_measurement_sites()
 
-    def plot_wafer(self):
+    def show_measurement_sites(self):
         """Plot wafer maps of measurement sites"""
         plt.style.use(PLOT_POLICY)
 

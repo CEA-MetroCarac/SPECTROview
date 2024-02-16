@@ -657,9 +657,9 @@
               </property>
               <widget class="QWidget" name="wafer_plot_view">
                <attribute name="title">
-                <string>Wafer Plot View</string>
+                <string>Plotting</string>
                </attribute>
-               <layout class="QHBoxLayout" name="horizontalLayout_34" stretch="30,5,30,5,30">
+               <layout class="QHBoxLayout" name="horizontalLayout_34" stretch="30,1,35,2,33">
                 <property name="spacing">
                  <number>6</number>
                 </property>
@@ -747,7 +747,7 @@
                          <number>0</number>
                         </property>
                         <item>
-                         <layout class="QVBoxLayout" name="frame_wafer_1">
+                         <layout class="QVBoxLayout" name="frame_wafer">
                           <property name="spacing">
                            <number>2</number>
                           </property>
@@ -801,7 +801,7 @@
                           <widget class="QComboBox" name="cbb_wafer_1"/>
                          </item>
                          <item>
-                          <widget class="QPushButton" name="pushButton_2">
+                          <widget class="QPushButton" name="btn_copy1">
                            <property name="toolTip">
                             <string>Copy Figure to clipboard</string>
                            </property>
@@ -850,7 +850,7 @@
                           <widget class="QComboBox" name="cbb_param_1"/>
                          </item>
                          <item>
-                          <widget class="QPushButton" name="btn_plot_wafer_1">
+                          <widget class="QPushButton" name="btn_plot_wafer">
                            <property name="sizePolicy">
                             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                              <horstretch>0</horstretch>
@@ -894,13 +894,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>450</width>
+                    <width>520</width>
                     <height>0</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>450</width>
+                    <width>600</width>
                     <height>16777215</height>
                    </size>
                   </property>
@@ -956,7 +956,7 @@
                          <number>0</number>
                         </property>
                         <item row="0" column="0">
-                         <layout class="QVBoxLayout" name="frame_wafer_2">
+                         <layout class="QVBoxLayout" name="frame_graph">
                           <property name="spacing">
                            <number>2</number>
                           </property>
@@ -983,7 +983,7 @@
                         <number>0</number>
                        </property>
                        <item>
-                        <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="20,80,0">
+                        <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="0,0,0,0,0,0">
                          <property name="spacing">
                           <number>5</number>
                          </property>
@@ -1001,38 +1001,56 @@
                          </property>
                          <item>
                           <widget class="QLabel" name="label_30">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
                            <property name="text">
-                            <string>Select wafer</string>
+                            <string>X:</string>
                            </property>
                           </widget>
                          </item>
                          <item>
-                          <widget class="QComboBox" name="cbb_wafer_2"/>
+                          <widget class="QComboBox" name="cbb_x"/>
                          </item>
                          <item>
-                          <widget class="QPushButton" name="pushButton_4">
-                           <property name="toolTip">
-                            <string>Copy Figure to clipboard</string>
+                          <widget class="QLabel" name="label_34">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
                            </property>
                            <property name="text">
-                            <string/>
-                           </property>
-                           <property name="icon">
-                            <iconset resource="resources_new.qrc">
-                             <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
-                           </property>
-                           <property name="iconSize">
-                            <size>
-                             <width>20</width>
-                             <height>20</height>
-                            </size>
+                            <string>Y:</string>
                            </property>
                           </widget>
+                         </item>
+                         <item>
+                          <widget class="QComboBox" name="cbb_y"/>
+                         </item>
+                         <item>
+                          <widget class="QLabel" name="label_31">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>Z:</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QComboBox" name="cbb_z"/>
                          </item>
                         </layout>
                        </item>
                        <item>
-                        <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="20,80,0">
+                        <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="0,0,0,0,0">
                          <property name="spacing">
                           <number>5</number>
                          </property>
@@ -1049,17 +1067,49 @@
                           <number>5</number>
                          </property>
                          <item>
-                          <widget class="QLabel" name="label_31">
+                          <widget class="QLabel" name="label_36">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
                            <property name="text">
-                            <string>Select parameters</string>
+                            <string>Plot style:</string>
                            </property>
                           </widget>
                          </item>
                          <item>
-                          <widget class="QComboBox" name="cbb_param_2"/>
+                          <widget class="QComboBox" name="cbb_plot_style">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="minimumSize">
+                            <size>
+                             <width>200</width>
+                             <height>0</height>
+                            </size>
+                           </property>
+                          </widget>
                          </item>
                          <item>
-                          <widget class="QPushButton" name="btn_plot_wafer_2">
+                          <spacer name="horizontalSpacer_12">
+                           <property name="orientation">
+                            <enum>Qt::Horizontal</enum>
+                           </property>
+                           <property name="sizeHint" stdset="0">
+                            <size>
+                             <width>40</width>
+                             <height>20</height>
+                            </size>
+                           </property>
+                          </spacer>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_plot_graph">
                            <property name="sizePolicy">
                             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                              <horstretch>0</horstretch>
@@ -1068,6 +1118,26 @@
                            </property>
                            <property name="text">
                             <string>plot</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_copy2">
+                           <property name="toolTip">
+                            <string>Copy Figure to clipboard</string>
+                           </property>
+                           <property name="text">
+                            <string/>
+                           </property>
+                           <property name="icon">
+                            <iconset resource="resources_new.qrc">
+                             <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
+                           </property>
+                           <property name="iconSize">
+                            <size>
+                             <width>20</width>
+                             <height>20</height>
+                            </size>
                            </property>
                           </widget>
                          </item>
@@ -1094,199 +1164,326 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QWidget" name="widget" native="true">
+                 <widget class="QScrollArea" name="scrollArea_2">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>0</width>
+                    <width>250</width>
                     <height>0</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>16777215</width>
+                    <width>350</width>
                     <height>16777215</height>
                    </size>
                   </property>
-                  <layout class="QVBoxLayout" name="verticalLayout_23">
-                   <property name="spacing">
-                    <number>6</number>
+                  <property name="widgetResizable">
+                   <bool>true</bool>
+                  </property>
+                  <widget class="QWidget" name="scrollAreaWidgetContents_2">
+                   <property name="geometry">
+                    <rect>
+                     <x>0</x>
+                     <y>0</y>
+                     <width>248</width>
+                     <height>380</height>
+                    </rect>
                    </property>
-                   <property name="leftMargin">
-                    <number>6</number>
-                   </property>
-                   <property name="topMargin">
-                    <number>6</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>6</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>6</number>
-                   </property>
-                   <item>
-                    <widget class="QLineEdit" name="plot_title">
-                     <property name="placeholderText">
-                      <string>Type Plot Title here</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_32">
-                     <property name="spacing">
-                      <number>0</number>
-                     </property>
-                     <item>
-                      <widget class="QLabel" name="label_32">
-                       <property name="text">
-                        <string>Wafer size (mm)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLineEdit" name="wafer_size">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
-                       </property>
-                       <property name="minimumSize">
-                        <size>
-                         <width>40</width>
-                         <height>0</height>
-                        </size>
-                       </property>
-                       <property name="maximumSize">
-                        <size>
-                         <width>40</width>
-                         <height>16777215</height>
-                        </size>
-                       </property>
-                       <property name="text">
-                        <string>200</string>
-                       </property>
-                       <property name="placeholderText">
-                        <string>Wafer size</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_33">
-                     <item>
-                      <widget class="QLabel" name="label_33">
-                       <property name="text">
-                        <string>Color range :</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLineEdit" name="int_vmin">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
-                       </property>
-                       <property name="minimumSize">
-                        <size>
-                         <width>40</width>
-                         <height>0</height>
-                        </size>
-                       </property>
-                       <property name="maximumSize">
-                        <size>
-                         <width>40</width>
-                         <height>16777215</height>
-                        </size>
-                       </property>
-                       <property name="text">
-                        <string/>
-                       </property>
-                       <property name="placeholderText">
-                        <string>min</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLineEdit" name="int_vmax">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
-                       </property>
-                       <property name="minimumSize">
-                        <size>
-                         <width>40</width>
-                         <height>0</height>
-                        </size>
-                       </property>
-                       <property name="maximumSize">
-                        <size>
-                         <width>40</width>
-                         <height>16777215</height>
-                        </size>
-                       </property>
-                       <property name="text">
-                        <string/>
-                       </property>
-                       <property name="placeholderText">
-                        <string>max</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_39">
-                     <item>
-                      <widget class="QLabel" name="label_35">
-                       <property name="text">
-                        <string>Color palette :</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QComboBox" name="cbb_color_pallete"/>
-                     </item>
-                    </layout>
-                   </item>
-                   <item>
-                    <widget class="QCheckBox" name="cb_stats">
-                     <property name="text">
-                      <string>Include statistiques on wafer plot</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="verticalSpacer_10">
-                     <property name="orientation">
-                      <enum>Qt::Vertical</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>20</width>
-                       <height>40</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="btn_send_df_to_vis">
-                     <property name="text">
-                      <string>Send data to &quot;Vizu&quot; tab</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
+                   <layout class="QVBoxLayout" name="verticalLayout_21">
+                    <item>
+                     <widget class="QLabel" name="label_39">
+                      <property name="font">
+                       <font>
+                        <pointsize>12</pointsize>
+                        <weight>75</weight>
+                        <bold>true</bold>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>Wafer plot:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="plot_title">
+                      <property name="placeholderText">
+                       <string>Wafer plot title here</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_32">
+                      <property name="spacing">
+                       <number>0</number>
+                      </property>
+                      <item>
+                       <widget class="QLabel" name="label_32">
+                        <property name="text">
+                         <string>Wafer size (mm)</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="wafer_size">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>40</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>40</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string>200</string>
+                        </property>
+                        <property name="placeholderText">
+                         <string>Wafer size</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_33">
+                      <item>
+                       <widget class="QLabel" name="label_33">
+                        <property name="text">
+                         <string>Color range:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="int_vmin">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>40</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>40</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string/>
+                        </property>
+                        <property name="placeholderText">
+                         <string>min</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="int_vmax">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>40</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>40</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string/>
+                        </property>
+                        <property name="placeholderText">
+                         <string>max</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_39">
+                      <item>
+                       <widget class="QLabel" name="label_35">
+                        <property name="text">
+                         <string>Color palette:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QComboBox" name="cbb_color_pallete"/>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="cb_stats">
+                      <property name="text">
+                       <string>Include statistiques on wafer plot</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="verticalSpacer_9">
+                      <property name="orientation">
+                       <enum>Qt::Vertical</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>20</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_40">
+                      <property name="font">
+                       <font>
+                        <pointsize>12</pointsize>
+                        <weight>75</weight>
+                        <bold>true</bold>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>Graph:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_35">
+                      <item>
+                       <widget class="QLabel" name="label_42">
+                        <property name="text">
+                         <string>X range:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="xmin">
+                        <property name="placeholderText">
+                         <string>x min</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="xmax">
+                        <property name="text">
+                         <string/>
+                        </property>
+                        <property name="placeholderText">
+                         <string>x max</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_38">
+                      <item>
+                       <widget class="QLabel" name="label_43">
+                        <property name="text">
+                         <string>Y range:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="ymin">
+                        <property name="placeholderText">
+                         <string>y min</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="ymax">
+                        <property name="placeholderText">
+                         <string>y max</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_40">
+                      <item>
+                       <widget class="QLabel" name="label_46">
+                        <property name="text">
+                         <string>Plot title:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="ent_plot_title_2"/>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_41">
+                      <item>
+                       <widget class="QLabel" name="label_48">
+                        <property name="text">
+                         <string>X axis label:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="ent_xaxis_lbl"/>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_42">
+                      <item>
+                       <widget class="QLabel" name="label_49">
+                        <property name="text">
+                         <string>Y axis label:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="ent_yaxis_lbl"/>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <spacer name="verticalSpacer_10">
+                      <property name="orientation">
+                       <enum>Qt::Vertical</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>20</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </widget>
                  </widget>
                 </item>
                </layout>
@@ -1680,7 +1877,7 @@
                              <x>0</x>
                              <y>0</y>
                              <width>690</width>
-                             <height>327</height>
+                             <height>337</height>
                             </rect>
                            </property>
                           </widget>
@@ -1787,7 +1984,7 @@
                 <bool>true</bool>
                </property>
                <attribute name="title">
-                <string>Fit Settings</string>
+                <string>Fit settings</string>
                </attribute>
                <widget class="QLabel" name="label_23">
                 <property name="geometry">
@@ -2519,7 +2716,7 @@
                <x>0</x>
                <y>0</y>
                <width>1143</width>
-               <height>900</height>
+               <height>921</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
@@ -3840,6 +4037,7 @@
  <resources>
   <include location="resources_new.qrc"/>
   <include location="resources_new.qrc"/>
+  <include location="../../../../.designer/backup/resources_new.qrc"/>
  </resources>
  <connections/>
 </ui>

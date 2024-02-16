@@ -1,7 +1,6 @@
 # Matplotlib style for Jupyter notebooks
 
 # Set default figure size
-figure.figsize : 8, 6
 
 # Set color cycle: red, blue, green, violet, gray, yellow,  
 #axes.prop_cycle : cycler('color', ['e60049', '0bb4ff', '50e991', 'e6d800', '9b19f5', 'ffa300', 'dc0ab4', 'b3d4ff', '00bfa0'])

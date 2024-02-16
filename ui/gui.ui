@@ -20,10 +20,7 @@
      <height>0</height>
     </size>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_35">
-    <property name="spacing">
-     <number>6</number>
-    </property>
+   <layout class="QGridLayout" name="gridLayout_2">
     <property name="leftMargin">
      <number>10</number>
     </property>
@@ -36,7 +33,7 @@
     <property name="bottomMargin">
      <number>10</number>
     </property>
-    <item>
+    <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="enabled">
        <bool>true</bool>
@@ -1683,7 +1680,7 @@
                              <x>0</x>
                              <y>0</y>
                              <width>690</width>
-                             <height>337</height>
+                             <height>327</height>
                             </rect>
                            </property>
                           </widget>
@@ -2412,7 +2409,7 @@
                 <item>
                  <widget class="QLabel" name="item_count_label">
                   <property name="text">
-                   <string>Nb of points ()</string>
+                   <string>0 points</string>
                   </property>
                  </widget>
                 </item>
@@ -2449,13 +2446,13 @@
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
-                  <height>15</height>
+                  <height>10</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>15</height>
+                  <height>10</height>
                  </size>
                 </property>
                 <property name="minimum">
@@ -2522,7 +2519,7 @@
                <x>0</x>
                <y>0</y>
                <width>1143</width>
-               <height>921</height>
+               <height>900</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">

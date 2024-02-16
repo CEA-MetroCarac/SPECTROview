@@ -179,7 +179,8 @@ class Wafer(QObject):
         self.fit_thread = FitThread(self.spectra_fs, self.model_fs, fnames)
         self.fit_thread.fit_progress_changed.connect(self.update_pbar)
         self.fit_thread.fit_progress.connect(
-            lambda num, elapsed_time: self.fit_progress(num,elapsed_time,fnames))
+            lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
+                                                        fnames))
         self.fit_thread.fit_completed.connect(self.fit_completed)
         self.fit_thread.start()
 
@@ -215,7 +216,7 @@ class Wafer(QObject):
 
         # Update the item count label
         item_count = self.ui.spectra_listbox.count()
-        self.ui.item_count_label.setText(f"Nb of points: {item_count}")
+        self.ui.item_count_label.setText(f"{item_count} points")
 
         # Reselect the previously selected item
         if current_row >= 0 and current_row < item_count:
@@ -484,7 +485,7 @@ class Wafer(QObject):
             fname, coord = self.spectre_id_fs(spectrum_fs)
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
-            self.ax.plot(x_values, y_values,  label=f"{coord}", ms=3, lw=2)
+            self.ax.plot(x_values, y_values, label=f"{coord}", ms=3, lw=2)
 
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0

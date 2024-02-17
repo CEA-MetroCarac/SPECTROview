@@ -7,7 +7,7 @@ from io import BytesIO
 import numpy as np
 import pandas as pd
 from pathlib import Path
-import pickle
+import dill
 import re
 from lmfit import Model, fit_report
 from fitspy.spectra import Spectra
@@ -150,27 +150,7 @@ class Wafer(QObject):
                     self.spectra_fs.append(spectrum_fs)
         self.upd_wafers_list()
 
-    def save_work(self):
-        """Save the current work/results."""
-        try:
-            file_path, _ = QFileDialog.getSaveFileName(None, "Save Work", "", "Pickle Files (*.pickle)")
-            if file_path:
-                with open(file_path, 'wb') as f:
-                    pickle.dump(self.spectra_fs, f)
-                print("Work saved successfully.")
-        except Exception as e:
-            print(f"Error saving work: {e}")
 
-    def load_work(self):
-        """Load previously saved work/results."""
-        try:
-            file_path, _ = QFileDialog.getOpenFileName(None, "Load Work", "", "Pickle Files (*.pickle)")
-            if file_path:
-                with open(file_path, 'rb') as f:
-                    self.spectra_fs = pickle.load(f)
-                print("Work loaded successfully.")
-        except Exception as e:
-            print(f"Error loading work: {e}")
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
         if not fname_json:
@@ -897,6 +877,86 @@ class Wafer(QObject):
     def update_pbar(self, progress):
         self.ui.progressBar.setValue(progress)
 
+    def save_work(self):
+        """Save the current work/results."""
+        try:
+            file_path, _ = QFileDialog.getSaveFileName(None, "Save Work", "", "Dill Files (*.dill)")
+            if file_path:
+                data_to_save = {
+                    'spectra_fs': self.spectra_fs,
+                    'wafers': self.wafers,
+                    'model_fs': self.model_fs,
+                    'cbb_x': self.ui.cbb_x.currentIndex(),
+                    'cbb_y': self.ui.cbb_y.currentIndex(),
+                    'cbb_z': self.ui.cbb_z.currentIndex(),
+                    "cbb_param_1": self.ui.cbb_param_1.currentIndex(),
+                    "cbb_wafer_1": self.ui.cbb_wafer_1.currentIndex(),
+                    "color_pal": self.ui.cbb_color_pallete.currentIndex(),
+                    'plot_title': self.ui.plot_title.text(),
+                    'wafer_size': self.ui.wafer_size.text(),
+                    'int_vmin': self.ui.int_vmin.text(),
+                    'int_vmax': self.ui.int_vmax.text(),
+                    'xmin': self.ui.xmin.text(),
+                    'xmax': self.ui.xmax.text(),
+                    'ymax': self.ui.ymax.text(),
+                    'ymin': self.ui.ymin.text(),
+                    'ent_plot_title_2': self.ui.ent_plot_title_2.text(),
+                    'ent_xaxis_lbl': self.ui.ent_xaxis_lbl.text(),
+                    'ent_yaxis_lbl': self.ui.ent_yaxis_lbl.text(),
+                    'ent_x_rot': self.ui.ent_x_rot.text(),
+
+                }
+                with open(file_path, 'wb') as f:
+                    dill.dump(data_to_save, f)
+                print("Work saved successfully.")
+        except Exception as e:
+            print(f"Error saving work: {e}")
+
+    def load_work(self):
+        """Load a previously saved work."""
+        try:
+            file_path, _ = QFileDialog.getOpenFileName(None, "Load Work", "", "Dill Files (*.dill)")
+            if file_path:
+                with open(file_path, 'rb') as f:
+                    loaded_data = dill.load(f)
+                    self.spectra_fs = loaded_data['spectra_fs']
+                    self.wafers = loaded_data['wafers']
+                    self.model_fs = loaded_data['model_fs']
+
+                    # Update any other necessary components of your application after loading the work
+                    self.upd_wafers_list()
+                    self.collect_results()
+
+                    # Set the current index of comboboxes
+                    self.ui.cbb_x.setCurrentIndex(loaded_data['cbb_x'])
+                    self.ui.cbb_y.setCurrentIndex(loaded_data['cbb_y'])
+                    self.ui.cbb_z.setCurrentIndex(loaded_data['cbb_z'])
+                    self.ui.cbb_param_1.setCurrentIndex(loaded_data['cbb_param_1'])
+                    self.ui.cbb_wafer_1.setCurrentIndex(loaded_data['cbb_wafer_1'])
+                    self.ui.cbb_color_pallete.setCurrentIndex(loaded_data['color_pal'])
+
+                    # Set the text value of the entry box
+                    self.ui.plot_title.setText(loaded_data['plot_title'])
+                    self.ui.wafer_size.setText(loaded_data['wafer_size'])
+                    self.ui.int_vmin.setText(loaded_data['int_vmin'])
+                    self.ui.int_vmax.setText(loaded_data['int_vmax'])
+                    self.ui.xmin.setText(loaded_data['xmin'])
+                    self.ui.xmax.setText(loaded_data['xmax'])
+                    self.ui.ymax.setText(loaded_data['ymax'])
+                    self.ui.ymin.setText(loaded_data['ymin'])
+                    self.ui.ent_plot_title_2.setText(loaded_data['ent_plot_title_2'])
+                    self.ui.ent_xaxis_lbl.setText(loaded_data['ent_xaxis_lbl'])
+                    self.ui.ent_yaxis_lbl.setText(loaded_data['ent_yaxis_lbl'])
+                    self.ui.ent_x_rot.setText(loaded_data['ent_x_rot'])
+
+                    # Plot the graph and wafer after loading the work
+                    self.plot_graph()
+                    self.plot_wafer()
+
+                print("Work loaded successfully.")
+        except Exception as e:
+            print(f"Error loading work: {e}")
+
 
 class FitThread(QThread):
     fit_progress_changed = Signal(int)
@@ -926,6 +986,3 @@ class FitThread(QThread):
         self.fit_progress_changed.emit(100)
         self.fit_completed.emit()
 
-class CompositeModel:
-    def __init__(self):
-        pass

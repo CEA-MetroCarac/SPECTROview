@@ -401,7 +401,6 @@
                    <property name="font">
                     <font>
                      <family>Arial</family>
-                     <weight>75</weight>
                      <italic>false</italic>
                      <bold>true</bold>
                     </font>
@@ -472,7 +471,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1192,7 +1190,7 @@
                      <x>0</x>
                      <y>0</y>
                      <width>248</width>
-                     <height>380</height>
+                     <height>440</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1201,7 +1199,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1365,7 +1362,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1909,8 +1905,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>690</width>
-                             <height>337</height>
+                             <width>583</width>
+                             <height>329</height>
                             </rect>
                            </property>
                           </widget>
@@ -2229,19 +2225,6 @@
               </widget>
              </item>
              <item>
-              <spacer name="horizontalSpacer_9">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
               <widget class="QPushButton" name="btn_open_wafers">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -2270,6 +2253,32 @@
                  <width>26</width>
                  <height>26</height>
                 </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_sw">
+               <property name="maximumSize">
+                <size>
+                 <width>30</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>SW</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_lw">
+               <property name="maximumSize">
+                <size>
+                 <width>30</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>LW</string>
                </property>
               </widget>
              </item>
@@ -2748,7 +2757,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1143</width>
+               <width>1139</width>
                <height>921</height>
               </rect>
              </property>
@@ -2867,7 +2876,6 @@
                  <property name="font">
                   <font>
                    <pointsize>8</pointsize>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2896,7 +2904,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2925,7 +2932,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -2954,7 +2960,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -3184,7 +3189,6 @@
                     <widget class="QPushButton" name="btn_add_a_plot">
                      <property name="font">
                       <font>
-                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -3282,7 +3286,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -3976,7 +3979,7 @@
      <x>0</x>
      <y>0</y>
      <width>1619</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpen">

@@ -186,6 +186,8 @@ class MainWindow:
             self.wafer.load_fit_results)
 
         self.ui.cbb_plot_style.addItems(self.wafer.plot_styles)
+        self.ui.btn_sw.clicked.connect(self.wafer.save_work)
+        self.ui.btn_lw.clicked.connect(self.wafer.load_work)
 
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)

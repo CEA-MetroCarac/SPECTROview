@@ -7,6 +7,8 @@ from io import BytesIO
 import numpy as np
 import pandas as pd
 from pathlib import Path
+import pickle
+import re
 from lmfit import Model, fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -148,6 +150,27 @@ class Wafer(QObject):
                     self.spectra_fs.append(spectrum_fs)
         self.upd_wafers_list()
 
+    def save_work(self):
+        """Save the current work/results."""
+        try:
+            file_path, _ = QFileDialog.getSaveFileName(None, "Save Work", "", "Pickle Files (*.pickle)")
+            if file_path:
+                with open(file_path, 'wb') as f:
+                    pickle.dump(self.spectra_fs, f)
+                print("Work saved successfully.")
+        except Exception as e:
+            print(f"Error saving work: {e}")
+
+    def load_work(self):
+        """Load previously saved work/results."""
+        try:
+            file_path, _ = QFileDialog.getOpenFileName(None, "Load Work", "", "Pickle Files (*.pickle)")
+            if file_path:
+                with open(file_path, 'rb') as f:
+                    self.spectra_fs = pickle.load(f)
+                print("Work loaded successfully.")
+        except Exception as e:
+            print(f"Error loading work: {e}")
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
         if not fname_json:
@@ -242,20 +265,17 @@ class Wafer(QObject):
                 x, y = coord
                 success = spectrum_fs.result_fit.success
                 best_values = spectrum_fs.result_fit.best_values
-
                 best_values["Wafer"] = wafer_name
                 best_values["X"] = x
                 best_values["Y"] = y
                 best_values["success"] = success
                 fit_results_list.append(best_values)
-
         self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
 
         # reindex columns according to the parameters names
         self.df_fit_results = self.df_fit_results.reindex(
             sorted(self.df_fit_results.columns),
             axis=1)
-
         names = []
         for name in self.df_fit_results.columns:
             if name in ["Wafer", "X", 'Y', "success"]:
@@ -266,6 +286,10 @@ class Wafer(QObject):
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
 
+
+        columns = [self.translate_param(column) for column in self.df_fit_results.columns]
+        self.df_fit_results.columns = columns
+
         # Add "Quadrant" columns
         self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
             self.determine_quadrant, axis=1)
@@ -273,8 +297,6 @@ class Wafer(QObject):
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
         self.send_df_to_vis()
-
-
 
     def save_fit_results(self):
         """Functon to save fitted results in an excel file"""
@@ -365,7 +387,7 @@ class Wafer(QObject):
                  r=(wafer_size / 2))
 
         text = self.ui.plot_title.text()
-        title = self.translate_param(sel_param) if not text else text
+        title = sel_param if not text else text
         ax.set_title(f"{title}")
 
         fig.tight_layout()
@@ -437,8 +459,8 @@ class Wafer(QObject):
         if ymin and ymax:
             ax.set_ylim(float(ymin), float(ymax))
 
-        xlabel = self.translate_param(x) if not x_text else x_text
-        ylabel = self.translate_param(y) if not y_text else y_text
+        xlabel = x if not x_text else x_text
+        ylabel = y if not y_text else y_text
         if xlabel:
             ax.set_xlabel(xlabel)
         if ylabel:
@@ -469,6 +491,7 @@ class Wafer(QObject):
             self.ui.cbb_y.clear()
             self.ui.cbb_z.clear()
             for column in columns:
+                #remove_special_chars = re.sub(r'\$[^$]+\$', '', column)
                 self.ui.cbb_param_1.addItem(column)
                 self.ui.cbb_x.addItem(column)
                 self.ui.cbb_y.addItem(column)
@@ -902,3 +925,7 @@ class FitThread(QThread):
 
         self.fit_progress_changed.emit(100)
         self.fit_completed.emit()
+
+class CompositeModel:
+    def __init__(self):
+        pass

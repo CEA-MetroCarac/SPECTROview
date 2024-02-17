@@ -745,7 +745,7 @@ class Wafer(QObject):
 
     def plot_sel_spectre(self):
         """Trigger the fnc to plot spectre"""
-        self.delay_timer.start(50)
+        self.delay_timer.start(100)
 
     def show_alert(self, message):
         msg_box = QMessageBox()

@@ -2,7 +2,7 @@
 import sys
 import os
 from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
-    QTextBrowser, QVBoxLayout, QSplitter
+    QTextBrowser, QVBoxLayout
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt, QFile
 from PySide6.QtGui import QDoubleValidator, QTextCursor, QIcon, QPalette, QColor

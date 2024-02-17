@@ -14,31 +14,16 @@ from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
 from fitspy.app.gui import Appli
 from multiprocessing import Queue
-from PySide6.QtCore import Qt, QThread, Signal
-
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-from matplotlib.figure import Figure
-from matplotlib.collections import PathCollection
-from tkinter import Tk, END
-
 from wafer_view import WaferView
-
-from PySide6.QtWidgets import (
-    QFileDialog, QVBoxLayout, QMessageBox, QFrame, QPushButton, QTableWidget,
-    QTableWidgetItem,
-    QHBoxLayout, QApplication, QSpacerItem, QSizePolicy, QDialog,
-    QListWidgetItem, QCheckBox, QTextBrowser
-)
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QColor
-
-from PySide6.QtGui import QIcon, QTextCursor
-from PySide6.QtCore import Qt, QSize, QCoreApplication, QSettings, QFileInfo, \
-    QTimer
-from PySide6.QtCore import QObject, Signal
-
+from PySide6.QtWidgets import (QFileDialog, QVBoxLayout, QMessageBox,  QTableWidget, QTableWidgetItem, QApplication,  QDialog,
+    QListWidgetItem,  QTextBrowser)
+from PySide6.QtGui import QTextCursor,QColor
+from PySide6.QtCore import Qt,  QSettings, QFileInfo,  QTimer, QObject, Signal, QThread
+from tkinter import Tk, END
 DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 

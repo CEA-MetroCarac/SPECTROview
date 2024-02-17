@@ -565,7 +565,6 @@ class Wafer(QObject):
                     if 0 <= peak_index < len(peak_labels):
                         peak_label = peak_labels[peak_index]
 
-
                     params = peak_model.make_params()
                     y_peak = peak_model.eval(params, x=x_values)
                     if self.ui.cb_filled.isChecked():
@@ -880,7 +879,7 @@ class Wafer(QObject):
     def save_work(self):
         """Save the current work/results."""
         try:
-            file_path, _ = QFileDialog.getSaveFileName(None, "Save Work", "", "Dill Files (*.dill)")
+            file_path, _ = QFileDialog.getSaveFileName(None, "Save fitted wafer data", "", "SPECTROview Files (*.svwafer)")
             if file_path:
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
@@ -915,7 +914,7 @@ class Wafer(QObject):
     def load_work(self):
         """Load a previously saved work."""
         try:
-            file_path, _ = QFileDialog.getOpenFileName(None, "Load Work", "", "Dill Files (*.dill)")
+            file_path, _ = QFileDialog.getOpenFileName(None, "Save fitted wafer data", "", "SPECTROview Files (*.svwafer)")
             if file_path:
                 with open(file_path, 'rb') as f:
                     loaded_data = dill.load(f)

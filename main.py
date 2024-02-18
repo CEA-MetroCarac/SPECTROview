@@ -5,8 +5,9 @@ from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
     QTextBrowser, QVBoxLayout
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt, QFile
-from PySide6.QtGui import QDoubleValidator, QTextCursor, QIcon, QPalette, QColor
+from PySide6.QtGui import QDoubleValidator, QIcon
 
+from utils import dark_palette, light_palette,view_md_doc
 from ui import resources_new
 
 from callbacks_df import CallbacksDf
@@ -72,7 +73,7 @@ class MainWindow:
         self.ui.combo_hue.currentIndexChanged.connect(self.update_combo_hue_2)
         self.ui.combo_hue_2.currentIndexChanged.connect(self.update_combo_hue)
 
-        ### REMOVE, SAVE DataFrames   qsd ###
+        ### REMOVE, SAVE DataFrames ###
         self.ui.btn_view_df.clicked.connect(self.callbacks_df.view_df)
         self.ui.btn_remove_df.clicked.connect(self.callbacks_df.remove_df)
         # self.ui.btn_save_df.clicked.connect(self.callbacks_df.save_df)
@@ -142,17 +143,12 @@ class MainWindow:
         self.ui.spinBox_plot_per_row.setValue(3)
 
         # Help : document about pandas_df_query
-        self.ui.actionHelps.triggered.connect(self.open_documentation)
+        self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
 
         # About dialog
         self.ui.actionabout.triggered.connect(self.show_about_dialog)
-
         # Toggle to switch Dark/light mode
         self.ui.radio_darkmode.clicked.connect(self.change_style)
-
-        self.darkmode = True
-        dark_palette = self.dark_palette()
-        self.ui.setPalette(dark_palette)
 
         ########################################################
         ############## GUI for Wafer Processing tab #############
@@ -189,6 +185,16 @@ class MainWindow:
         self.ui.btn_sw.clicked.connect(self.wafer.save_work)
         self.ui.btn_lw.clicked.connect(self.wafer.load_work)
 
+        self.darkmode = True
+        self.ui.setPalette(dark_palette())
+
+    def change_style(self):
+        if not self.darkmode:
+            self.darkmode = True
+            self.ui.setPalette(dark_palette())
+        else:
+            self.darkmode = False
+            self.ui.setPalette(light_palette())
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)
         self.ui.combo_hue.setCurrentIndex(
@@ -199,88 +205,14 @@ class MainWindow:
         self.ui.combo_hue_2.setCurrentIndex(
             self.ui.combo_hue_2.findText(selected_text))
 
-    def change_style(self):
-        if not self.darkmode:
-            self.darkmode = True
-            dark_palette = self.dark_palette()
-            self.ui.setPalette(dark_palette)
-        else:
-            self.darkmode = False
-            light_palette = self.light_palette()
-            self.ui.setPalette(light_palette)
-
-    def dark_palette(self):
-        # Get the dark color palette of the application
-        dark_palette = QPalette()
-        dark_palette.setColor(QPalette.Window, QColor(75, 75, 75))
-        dark_palette.setColor(QPalette.WindowText, Qt.white)
-        dark_palette.setColor(QPalette.Base, QColor(65, 65, 65))
-        dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
-        dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
-        dark_palette.setColor(QPalette.ToolTipText, Qt.white)
-        dark_palette.setColor(QPalette.Text, Qt.white)
-        dark_palette.setColor(QPalette.Button, QColor(64, 64, 64))
-        dark_palette.setColor(QPalette.ButtonText, Qt.white)
-        dark_palette.setColor(QPalette.BrightText, Qt.red)
-        dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-        dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-        dark_palette.setColor(QPalette.HighlightedText, Qt.white)
-        # Placeholder text color
-        dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
-        return dark_palette
-
-    def light_palette(self):
-        # Get the light color palette of the application
-        light_palette = QPalette()
-        # Light gray background
-        light_palette.setColor(QPalette.Window, QColor(235, 235, 235))
-        light_palette.setColor(QPalette.WindowText, Qt.black)
-        # White background
-        light_palette.setColor(QPalette.Base, QColor(239, 239, 239))
-        # Light gray alternate background
-        light_palette.setColor(QPalette.AlternateBase, QColor(240, 240, 240))
-        light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
-        light_palette.setColor(QPalette.ToolTipText, Qt.black)
-        light_palette.setColor(QPalette.Text, Qt.black)
-        # Light gray button color
-        light_palette.setColor(QPalette.Button, QColor(251, 251, 251))
-        light_palette.setColor(QPalette.ButtonText, Qt.black)
-        light_palette.setColor(QPalette.BrightText, Qt.red)
-        light_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-        light_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-        light_palette.setColor(QPalette.HighlightedText, Qt.black)
-
-        light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
-        # Light gray placeholder text color
-        return light_palette
-
-    def open_documentation(self):
+    def open_doc_df_query(self):
+        """Open doc detail about query function of pandas dataframe"""
         markdown_file_path = HELP_DFQUERY
-
-        # Create a QDialog to display the Markdown content
-        markdown_viewer = QDialog(self.ui.tabWidget)
-        markdown_viewer.setWindowTitle("Markdown Viewer")
-        markdown_viewer.setGeometry(100, 100, 800, 600)
-
-        # Create a QTextBrowser to display the Markdown content
-        text_browser = QTextBrowser(markdown_viewer)
-        text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        text_browser.setOpenExternalLinks(
-            True)  # Allow opening links in a web browser
-
-        # Load and display the Markdown file
-        with open(markdown_file_path, 'r', encoding='utf-8') as markdown_file:
-            markdown_content = markdown_file.read()
-            text_browser.setMarkdown(markdown_content)
-
-        text_browser.moveCursor(QTextCursor.Start)  # Scroll to top of document
-
-        layout = QVBoxLayout(markdown_viewer)
-        layout.addWidget(text_browser)
-        markdown_viewer.exec()  # Show the Markdown viewer dialog
+        ui =self.ui.tabWidget
+        view_md_doc(ui, markdown_file_path)
 
     def show_about_dialog(self):
-        about_text = """
+        text = """
         <h3>SPECTROview</h3>
         <p>Spectroscopic Data Processing and Visualization</p>
         <p>Version: 2024.02a </p>
@@ -293,9 +225,8 @@ class MainWindow:
 
         text_browser = QTextBrowser(about_dialog)
         text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        text_browser.setOpenExternalLinks(
-            True)  # Allow opening links in a web browser
-        text_browser.setHtml(about_text)
+        text_browser.setOpenExternalLinks(True)
+        text_browser.setHtml(text)
 
         layout = QVBoxLayout(about_dialog)
         layout.addWidget(text_browser)
@@ -362,4 +293,4 @@ if __name__ == "__main__":
     fname3 = os.path.join(dirname, 'D23S2204.2_25.csv')
     fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
     launcher3([fname2, fname3, fname1], fname_json)
-    #  launcher3()
+    #launcher3()

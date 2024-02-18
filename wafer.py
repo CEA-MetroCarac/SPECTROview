@@ -9,6 +9,9 @@ import pandas as pd
 from pathlib import Path
 import dill
 import re
+
+from utils import view_df, show_alert, detect_quadrant, view_text
+
 from lmfit import Model, fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -21,12 +24,11 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from wafer_view import WaferView
 from PySide6.QtWidgets import (QFileDialog, QVBoxLayout, QMessageBox,  QTableWidget, QTableWidgetItem, QApplication,  QDialog,
     QListWidgetItem,  QTextBrowser)
-from PySide6.QtGui import QTextCursor,QColor
+from PySide6.QtGui import QTextCursor, QColor
 from PySide6.QtCore import Qt,  QSettings, QFileInfo,  QTimer, QObject, Signal, QThread
 from tkinter import Tk, END
 DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
-
 
 class Wafer(QObject):
     # Define a signal for progress updates
@@ -77,13 +79,14 @@ class Wafer(QObject):
 
     def open_csv(self, file_paths=None, wafers=None):
         """Open CSV files contaning RAW spectra of each wafer"""
-        # Initialize the last used directory from QSettings
+
         if self.wafers is None:
             self.wafers = {}
         if wafers:
             self.wafers = wafers
         else:
             if file_paths is None:
+                # Initialize the last used directory from QSettings
                 last_dir = self.settings.value("last_directory", "/")
                 options = QFileDialog.Options()
                 options |= QFileDialog.ReadOnly
@@ -92,10 +95,8 @@ class Wafer(QObject):
                     "All Files (*)", options=options)
             # Load RAW spectra data from CSV files
             if file_paths:
-                # Update the last used directory in QSettings
                 last_dir = QFileInfo(file_paths[0]).absolutePath()
                 self.settings.setValue("last_directory", last_dir)
-
                 self.file_paths += file_paths
                 for file_path in file_paths:
                     file_path = Path(file_path)
@@ -103,8 +104,6 @@ class Wafer(QObject):
 
                     wafer_df = pd.read_csv(file_path, skiprows=1, delimiter=";")
                     wafer_name = fname
-                    # Append or update the existing data in the self.wafers
-                    # dictionary
                     if wafer_name in self.wafers:
                         print("wafer is already opened")
                     else:
@@ -135,7 +134,6 @@ class Wafer(QObject):
                     self.spectra_fs.append(spectrum_fs)
         self.upd_wafers_list()
 
-
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
         if not fname_json:
@@ -160,7 +158,7 @@ class Wafer(QObject):
     def fit(self, fnames=None):
         """Fit selected spectrum(s)"""
         if self.model_fs is None:
-            self.show_alert("Please load a fit model before fitting.")
+            show_alert("Please load a fit model before fitting.")
             return
 
         if fnames is None:
@@ -246,18 +244,16 @@ class Wafer(QObject):
             if name in ["Wafer", "X", 'Y', "success"]:
                 name = '0' + name  # to be in the 3 first columns
             elif '_' in name:
-                name = 'z' + name[4:]  # model peak parameters to be at the end
+                name = 'z' + name[4:] # model peak parameters to be at the end
             names.append(name)
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
-
 
         columns = [self.translate_param(column) for column in self.df_fit_results.columns]
         self.df_fit_results.columns = columns
 
         # Add "Quadrant" columns
-        self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
-            self.determine_quadrant, axis=1)
+        self.df_fit_results['Quadrant'] = self.df_fit_results.apply(detect_quadrant, axis=1)
 
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
@@ -291,8 +287,6 @@ class Wafer(QObject):
 
         # Initialize the last used directory from QSettings
         last_dir = self.settings.value("last_directory", "/")
-
-        # Open the QFileDialog with the last used directory
         options = QFileDialog.Options()
         options |= QFileDialog.ReadOnly
         file_paths, _ = QFileDialog.getOpenFileNames(
@@ -300,7 +294,6 @@ class Wafer(QObject):
             "Excel Files (*.xlsx *.xls)", options=options)
         # Load dataframes from Excel files
         if file_paths:
-            # Update the last used directory in QSettings
             last_dir = QFileInfo(file_paths[0]).absolutePath()
             self.settings.setValue("last_directory", last_dir)
 
@@ -310,7 +303,6 @@ class Wafer(QObject):
                 dfr = pd.read_excel(excel_file_path)
                 self.df_fit_results = dfr
             except Exception as e:
-                # Handle any potential errors during DataFrame loading
                 print("Error loading DataFrame:", e)
 
         self.apprend_cbb_param()
@@ -410,7 +402,6 @@ class Wafer(QObject):
 
         if style == "box plot":
             sns.boxplot(data=dfr, x=x, y=y, hue=z, dodge=True, ax=ax)
-
         elif style == "point plot":
             sns.pointplot(data=dfr, x=x, y=y, hue=z, linestyle='none',
                           dodge=True, capsize=0.00, ax=ax)
@@ -462,48 +453,36 @@ class Wafer(QObject):
                 self.ui.cbb_y.addItem(column)
                 self.ui.cbb_z.addItem(column)
 
-    def reinit_spectrum(self, spectrum):
-        """Reinitialize the given spectrum"""
-        spectrum.range_min = None
-        spectrum.range_max = None
-        spectrum.x = spectrum.x0.copy()
-        spectrum.y = spectrum.y0.copy()
-        spectrum.norm_mode = None
-        spectrum.result_fit = lambda: None
-        spectrum.remove_models()
-        spectrum.baseline.points = [[], []]
-        spectrum.baseline.is_subtracted = False
-
-    def reinit_sel(self, fnames=None):
+    def reinit(self, fnames=None):
         """Reinitialize the selected spectrum(s)"""
-        wafer_name, coords = self.spectre_id()  # Get current selected coords
-        fnames = []
-        for coord in coords:
-            fname = f"{wafer_name}_{coord}"
-            fnames.append(fname)
+        if fnames is None:
+            wafer_name, coords = self.spectre_id()
+            fnames = [f"{wafer_name}_{coord}" for coord in coords]
+
         for fname in fnames:
             spectrum, _ = self.spectra_fs.get_objects(fname)
-            self.reinit_spectrum(spectrum)
+            spectrum.range_min = None
+            spectrum.range_max = None
+            spectrum.x = spectrum.x0.copy()
+            spectrum.y = spectrum.y0.copy()
+            spectrum.norm_mode = None
+            spectrum.result_fit = lambda: None
+            spectrum.remove_models()
+            spectrum.baseline.points = [[], []]
+            spectrum.baseline.is_subtracted = False
         self.plot_sel_spectre()
         self.upd_spectra_list()
 
     def reinit_all(self):
         """Reinitialize all spectra"""
-        fnames = [
-            f"{self.spectre_id_fs(spectrum_fs)[0]}_" \
-            f"{self.spectre_id_fs(spectrum_fs)[1]}"
-            for spectrum_fs in self.spectra_fs]
-        for fname in fnames:
-            spectrum, _ = self.spectra_fs.get_objects(fname)
-            self.reinit_spectrum(spectrum)
-        self.plot_sel_spectre()
-        self.upd_spectra_list()
+        fnames = self.spectra_fs.fnames
+        self.reinit_sel(fnames)
 
     def reinit_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:
-            self.reinit_all()
+            self.reinit()
         else:
             self.reinit_sel()
 
@@ -731,42 +710,14 @@ class Wafer(QObject):
         """Trigger the fnc to plot spectre"""
         self.delay_timer.start(100)
 
-    def show_alert(self, message):
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle("Alert")
-        msg_box.setText(message)
-        msg_box.exec_()
-
-    def view_df(self, df):
-        """To view selected dataframe"""
-        # Create a QDialog to contain the table
-        df_viewer = QDialog(self.ui.tabWidget)
-        df_viewer.setWindowTitle("DataFrame Viewer")
-        # Create a QTableWidget and populate it with data from the DataFrame
-        table_widget = QTableWidget(df_viewer)
-        table_widget.setColumnCount(df.shape[1])
-        table_widget.setRowCount(df.shape[0])
-        table_widget.setHorizontalHeaderLabels(df.columns)
-        for row in range(df.shape[0]):
-            for col in range(df.shape[1]):
-                item = QTableWidgetItem(str(df.iat[row, col]))
-                table_widget.setItem(row, col, item)
-        # Set the resizing mode for the QTableWidget to make it resizable
-        table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
-        # Use a QVBoxLayout to arrange the table within a scroll area
-        layout = QVBoxLayout(df_viewer)
-        layout.addWidget(table_widget)
-        df_viewer.exec_()
-
     def view_fit_results_df(self):
         """To view selected dataframe"""
-        self.view_df(self.df_fit_results)
+        view_df(self.ui.tabWidget,self.df_fit_results)
 
     def view_wafer_data(self):
         """To view data of selected wafer """
         wafer_name, coords = self.spectre_id()
-        self.view_df(self.wafers[wafer_name])
+        view_df(self.ui.tabWidget, self.wafers[wafer_name])
 
     def fit_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""
@@ -784,18 +735,6 @@ class Wafer(QObject):
     def cosmis_ray_detection(self):
         self.spectra_fs.outliers_limit_calculation()
 
-    def determine_quadrant(self, row):
-        if row['X'] < 0 and row['Y'] < 0:
-            return 'Q1'
-        elif row['X'] < 0 and row['Y'] > 0:
-            return 'Q2'
-        elif row['X'] > 0 and row['Y'] > 0:
-            return 'Q3'
-        elif row['X'] > 0 and row['Y'] < 0:
-            return 'Q4'
-        else:
-            return np.nan
-
     def view_stats(self):
         """Show the statistique fitting results of the selected spectrum"""
         wafer_name, coords = self.spectre_id()
@@ -807,28 +746,13 @@ class Wafer(QObject):
         if len(selected_spectra_fs) == 0:
             return
 
+        ui = self.ui.tabWidget
+        title = "Fitting Report"
         # Show the 'report' of the first selected spectrum
         spectrum_fs = selected_spectra_fs[0]
         if spectrum_fs.result_fit:
-            report = fit_report(spectrum_fs.result_fit)
-            # Create a QDialog to display the report content
-            report_viewer = QDialog(self.ui.tabWidget)
-            report_viewer.setWindowTitle("Fitting Report")
-            report_viewer.setGeometry(100, 100, 800, 600)
-
-            # Create a QTextBrowser to display the report content
-            text_browser = QTextBrowser(report_viewer)
-            text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-            text_browser.setOpenExternalLinks(True)
-
-            # Display the report text in QTextBrowser
-            text_browser.setPlainText(report)
-            # Scroll to top of document
-            text_browser.moveCursor(QTextCursor.Start)
-            # Show the Report viewer dialog
-            layout = QVBoxLayout(report_viewer)
-            layout.addWidget(text_browser)
-            report_viewer.exec()
+            text = fit_report(spectrum_fs.result_fit)
+            view_text(ui, title, text)
 
     def update_pbar(self, progress):
         self.ui.progressBar.setValue(progress)

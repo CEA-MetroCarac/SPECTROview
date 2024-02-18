@@ -61,7 +61,7 @@ class Wafer(QObject):
         self.ui.cb_residual.stateChanged.connect(self.plot_sel_spectre)
         self.ui.cb_filled.stateChanged.connect(self.plot_sel_spectre)
 
-        # Set a 200ms delay for the function plot_sel_spectra
+        # Set a delay for the function plot_sel_spectra
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot_sel_spectra)
@@ -162,7 +162,7 @@ class Wafer(QObject):
     def fit(self, fnames=None):
         """Fit selected spectrum(s)"""
         if self.model_fs is None:
-            show_alert("Please load a fit model before fitting.")
+            show_alert("Load a fit model before fitting.")
             return
 
         if fnames is None:
@@ -366,6 +366,7 @@ class Wafer(QObject):
                 selected_spectra_fs.append(spectrum_fs)
         if len(selected_spectra_fs) == 0:
             return
+
         self.clear_spectre_view()
         plt.close('all')
         fig = plt.figure()
@@ -419,6 +420,7 @@ class Wafer(QObject):
         if self.ui.cb_legend.isChecked():
             self.ax.legend(loc='upper right')
         fig.tight_layout()
+
         self.canvas = FigureCanvas(fig)
         self.toolbar = NavigationToolbar2QT(self.canvas, self.ui)
         self.ui.spectre_view_frame.addWidget(self.canvas)

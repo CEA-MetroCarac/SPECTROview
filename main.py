@@ -13,6 +13,7 @@ from ui import resources_new
 from callbacks_df import CallbacksDf
 from callbacks_plot import CallbacksPlot
 from wafer import Wafer
+from spectrums import Spectrums
 from workspace import SaveLoadWorkspace
 
 DIRNAME = os.path.dirname(__file__)
@@ -36,7 +37,7 @@ class MainWindow:
         self.workspace = SaveLoadWorkspace(self.ui, self.callbacks_df,
                                            self.callbacks_plot)
         self.wafer = Wafer(self.ui, self.callbacks_df)
-
+        self.spectrums = Spectrums(self.ui, self.callbacks_df)
         # DATAFRAME
         self.ui.btn_open_df.clicked.connect(
             lambda event: self.callbacks_df.action_open_df())
@@ -185,6 +186,13 @@ class MainWindow:
         self.ui.btn_sw.clicked.connect(self.wafer.save_work)
         self.ui.btn_lw.clicked.connect(self.wafer.load_work)
 
+        ########################################################
+        ############## GUI for Spectrums Processing tab #############
+        ########################################################
+        self.ui.btn_open_spectrums.clicked.connect(self.spectrums.open_data)
+        self.ui.btn_load_model_3.clicked.connect(self.spectrums.open_model)
+        self.ui.btn_fit_3.clicked.connect(self.spectrums.fit_fnc_handler)
+
         self.darkmode = True
         self.ui.setPalette(dark_palette())
 
@@ -274,25 +282,30 @@ def launcher3(file_paths=None, fname_json=None):
     app.setWindowIcon(QIcon(ICON_APPLI))
     window = MainWindow()
     app.setStyle("Fusion")
+    # if file_paths is not None:
+    #     window.wafer.open_data(file_paths=file_paths)
+    # if fname_json is not None:
+    #     window.wafer.open_model(fname_json=fname_json)
     if file_paths is not None:
-        window.wafer.open_data(file_paths=file_paths)
-
+        window.spectrums.open_data(file_paths=file_paths)
     if fname_json is not None:
-        window.wafer.open_model(fname_json=fname_json)
+        window.spectrums.open_model(fname_json=fname_json)
 
-        # window.saveloadws.save_workspace(fname_json='toto.json')
-    # window.saveloadws.load_workspace(fname_json='toto.json')
     window.ui.show()
     sys.exit(app.exec())
 
-
 if __name__ == "__main__":
-    dirname = r"/Users/HoanLe/Documents/Python/data_test/RAW spectrum"
+    dirname = r"/Users/HoanLe/Documents/Python/data_test/RAW_spectra"
     fname1 = os.path.join(dirname, 'D23S2204.2_17.csv')
     fname2 = os.path.join(dirname, 'D23S2204.2_19.csv')
     fname3 = os.path.join(dirname, 'D23S2204.2_25.csv')
     fname4 = os.path.join(dirname, 'Maps2D_2.txt')
 
-    fname_json = os.path.join(dirname, 'Model_maps2D.json')
-    launcher3([fname4], fname_json)
+    fname11 = os.path.join(dirname, '2ML.txt')
+    fname12 = os.path.join(dirname, '3ML.txt')
+    fname13 = os.path.join(dirname, '4ML.txt')
+
+
+    fname_json = os.path.join(dirname, 'MoS2_325-490_.json')
+    launcher3([fname11, fname12, fname13], fname_json)
     #launcher3()

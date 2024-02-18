@@ -51,7 +51,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_2Dmaps">
        <attribute name="title">
@@ -4726,7 +4726,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="btn_open_wafers_3">
+              <widget class="QPushButton" name="btn_open_spectrums">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -4935,7 +4935,7 @@
                </layout>
               </item>
               <item>
-               <widget class="QListWidget" name="spectra_listbox_3">
+               <widget class="QListWidget" name="spectrums_listbox">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                   <horstretch>0</horstretch>

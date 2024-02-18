@@ -801,7 +801,10 @@ class Wafer(QObject):
                     self.spectra_fs = loaded_data['spectra_fs']
                     self.wafers = loaded_data['wafers']
                     self.model_fs = loaded_data['model_fs']
-                    self.df_fit_results = loaded_data['df_fit_results'],
+                    self.df_fit_results = loaded_data['df_fit_results']
+                    self.apprend_cbb_param()
+                    self.apprend_cbb_wafer()
+                    self.send_df_to_vis()
                     self.upd_wafers_list()
 
                     self.ui.cbb_x.setCurrentIndex(loaded_data['cbb_x'])

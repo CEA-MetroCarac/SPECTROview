@@ -546,6 +546,7 @@ class Wafer(QObject):
         if coords:
             selected_x, selected_y = zip(*coords)
             ax.scatter(selected_x, selected_y, marker='o', color='red', s=40)
+
         canvas = FigureCanvas(fig)
         layout = self.ui.wafer_plot.layout()
         if layout:
@@ -769,7 +770,7 @@ class Wafer(QObject):
         """Save the current work/results."""
         try:
             file_path, _ = QFileDialog.getSaveFileName(None, "Save fitted wafer data", "",
-                                                       "SPECTROview Files (*.svwafer)")
+                                                       "SPECTROview Files (*.sv2dmap)")
             if file_path:
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
@@ -804,7 +805,7 @@ class Wafer(QObject):
     def load_work(self):
         """Load a previously saved work."""
         try:
-            file_path, _ = QFileDialog.getOpenFileName(None, "Save fitted wafer data", "", "SPECTROview Files (*.svwafer)")
+            file_path, _ = QFileDialog.getOpenFileName(None, "Save fitted wafer data", "", "SPECTROview Files (*.sv2dmap)")
             if file_path:
                 with open(file_path, 'rb') as f:
                     loaded_data = dill.load(f)

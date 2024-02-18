@@ -71,8 +71,8 @@ class Wafer(QObject):
 
         self.plot_styles = ["box plot", "point plot", "bar plot"]
 
-    def open_csv(self, file_paths=None, wafers=None):
-        """Open CSV files contaning RAW spectra of each wafer"""
+    def open_data(self, file_paths=None, wafers=None):
+        """Open CSV files containing RAW spectra of each wafer"""
 
         if self.wafers is None:
             self.wafers = {}
@@ -86,20 +86,30 @@ class Wafer(QObject):
                 options |= QFileDialog.ReadOnly
                 file_paths, _ = QFileDialog.getOpenFileNames(
                     self.ui.tabWidget, "Open RAW spectra CSV File(s)", last_dir,
-                    "All Files (*)", options=options)
+                    "CSV Files (*.csv);;Text Files (*.txt)", options=options)
             # Load RAW spectra data from CSV files
             if file_paths:
                 last_dir = QFileInfo(file_paths[0]).absolutePath()
                 self.settings.setValue("last_directory", last_dir)
                 self.file_paths += file_paths
+
                 for file_path in file_paths:
                     file_path = Path(file_path)
-                    fname = file_path.stem
+                    fname = file_path.stem  # get fname w/o extension
+                    extension = file_path.suffix.lower()  # get file extension
 
-                    wafer_df = pd.read_csv(file_path, skiprows=1, delimiter=";")
+                    if extension == '.csv':
+                        wafer_df = pd.read_csv(file_path, skiprows=1, delimiter=";")
+                    elif extension == '.txt':
+                        wafer_df = pd.read_csv(file_path, delimiter="\t")
+                        wafer_df.columns = ['Y','X'] + list(wafer_df.columns[2:])
+                        wafer_df = wafer_df[['X','Y'] + [col for col in wafer_df.columns if col not in ['X', 'Y']]]
+                    else:
+                        print(f"Unsupported file format: {extension}")
+                        continue
                     wafer_name = fname
                     if wafer_name in self.wafers:
-                        print("wafer is already opened")
+                        print("Wafer is already opened")
                     else:
                         self.wafers[wafer_name] = wafer_df
         self.extract_spectra()

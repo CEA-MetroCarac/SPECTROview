@@ -154,7 +154,7 @@ class MainWindow:
         ############## GUI for Wafer Processing tab #############
         ########################################################
 
-        self.ui.btn_open_wafers.clicked.connect(self.wafer.open_csv)
+        self.ui.btn_open_wafers.clicked.connect(self.wafer.open_data)
         self.ui.btn_remove_wafer.clicked.connect(self.wafer.remove_wafer)
 
         self.ui.btn_copy_fig.clicked.connect(self.wafer.copy_fig)
@@ -250,7 +250,7 @@ class MainWindow:
 #     window = MainWindow()
 #     app.setStyle("Fusion")
 #     if file_paths is not None:
-#         window.wafer.open_csv(file_paths=file_paths)
+#         window.wafer.open_data(file_paths=file_paths)
 #     if fname_json is not None:
 #         window.wafer.open_model(fname_json=fname_json)
 #
@@ -275,7 +275,7 @@ def launcher3(file_paths=None, fname_json=None):
     window = MainWindow()
     app.setStyle("Fusion")
     if file_paths is not None:
-        window.wafer.open_csv(file_paths=file_paths)
+        window.wafer.open_data(file_paths=file_paths)
 
     if fname_json is not None:
         window.wafer.open_model(fname_json=fname_json)
@@ -291,6 +291,8 @@ if __name__ == "__main__":
     fname1 = os.path.join(dirname, 'D23S2204.2_17.csv')
     fname2 = os.path.join(dirname, 'D23S2204.2_19.csv')
     fname3 = os.path.join(dirname, 'D23S2204.2_25.csv')
-    fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
-    launcher3([fname2, fname3, fname1], fname_json)
+    fname4 = os.path.join(dirname, 'Maps2D_2.txt')
+
+    fname_json = os.path.join(dirname, 'Model_maps2D.json')
+    launcher3([fname4], fname_json)
     #launcher3()

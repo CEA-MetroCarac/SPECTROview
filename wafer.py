@@ -1,18 +1,14 @@
 # wafer.py module
 import os
-import copy
 import time
-# import win32clipboard
-from io import BytesIO
 import numpy as np
 import pandas as pd
 from pathlib import Path
 import dill
-import re
 
-from utils import view_df, show_alert, quadrant, view_text
+from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb
 
-from lmfit import Model, fit_report
+from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
 from fitspy.app.gui import Appli
@@ -22,9 +18,8 @@ import seaborn as sns
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from wafer_view import WaferView
-from PySide6.QtWidgets import (QFileDialog, QVBoxLayout, QMessageBox,  QTableWidget, QTableWidgetItem, QApplication,  QDialog,
-    QListWidgetItem,  QTextBrowser)
-from PySide6.QtGui import QTextCursor, QColor
+from PySide6.QtWidgets import (QFileDialog,QMessageBox, QApplication, QListWidgetItem)
+from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt,  QSettings, QFileInfo,  QTimer, QObject, Signal, QThread
 from tkinter import Tk, END
 DIRNAME = os.path.dirname(__file__)
@@ -74,8 +69,7 @@ class Wafer(QObject):
         # Connect the progress signal to update_progress_bar slot
         self.fit_progress_changed.connect(self.update_pbar)
 
-        self.plot_styles = ["box plot", "scatter plot", "point plot",
-                            "bar plot"]
+        self.plot_styles = ["box plot", "point plot", "bar plot"]
 
     def open_csv(self, file_paths=None, wafers=None):
         """Open CSV files contaning RAW spectra of each wafer"""
@@ -179,42 +173,7 @@ class Wafer(QObject):
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
 
-    def upd_spectra_list(self):
-        """to update the spectra list"""
-        current_row = self.ui.spectra_listbox.currentRow()
 
-        self.ui.spectra_listbox.clear()
-        self.clear_wafer_plot()
-        current_item = self.ui.wafers_listbox.currentItem()
-
-        if current_item is not None:
-            wafer_name = current_item.text()
-            for spectrum_fs in self.spectra_fs:
-                wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
-                if wafer_name == wafer_name_fs:
-                    item = QListWidgetItem(str(coord_fs))
-                    if hasattr(spectrum_fs.result_fit,
-                               'success') and spectrum_fs.result_fit.success:
-                        item.setBackground(QColor("green"))
-                    elif hasattr(spectrum_fs.result_fit,
-                                 'success') and not \
-                            spectrum_fs.result_fit.success:
-                        item.setBackground(QColor("orange"))
-                    else:
-                        item.setBackground(QColor(0, 0, 0, 0))
-                    self.ui.spectra_listbox.addItem(item)
-
-        # Update the item count label
-        item_count = self.ui.spectra_listbox.count()
-        self.ui.item_count_label.setText(f"{item_count} points")
-
-        # Reselect the previously selected item
-        if current_row >= 0 and current_row < item_count:
-            self.ui.spectra_listbox.setCurrentRow(current_row)
-        else:
-            if self.ui.spectra_listbox.count() > 0:
-                self.ui.spectra_listbox.setCurrentRow(0)
-        QTimer.singleShot(50, self.plot_sel_spectre)
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
@@ -309,47 +268,6 @@ class Wafer(QObject):
         self.apprend_cbb_wafer()
         self.send_df_to_vis()
 
-    def plot_wafer(self):
-        """Plot WaferDataFrame for view 1"""
-        self.clear_layout(self.ui.frame_wafer.layout())
-        dfr = self.df_fit_results
-        wafer_name = self.ui.cbb_wafer_1.currentText()
-        color = self.ui.cbb_color_pallete.currentText()
-        wafer_size = float(self.ui.wafer_size.text())
-
-        if wafer_name is not None:
-            selected_df = dfr.query('Wafer == @wafer_name')
-        sel_param = self.ui.cbb_param_1.currentText()
-        canvas = self.plot_wafer_helper(selected_df, sel_param, wafer_size,
-                                        color)
-        self.ui.frame_wafer.addWidget(canvas)
-
-    def plot_wafer_helper(self, selected_df, sel_param, wafer_size, color):
-        x = selected_df['X']
-        y = selected_df['Y']
-        param = selected_df[sel_param]
-
-        vmin = float(
-            self.ui.int_vmin.text()) if self.ui.int_vmin.text() else None
-        vmax = float(
-            self.ui.int_vmax.text()) if self.ui.int_vmax.text() else None
-        stats = self.ui.cb_stats.isChecked()
-        plt.close('all')
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-
-        wdf = WaferView()
-        wdf.plot(ax, x=x, y=y, z=param, cmap=color, vmin=vmin, vmax=vmax,
-                 stats=stats,
-                 r=(wafer_size / 2))
-
-        text = self.ui.plot_title.text()
-        title = sel_param if not text else text
-        ax.set_title(f"{title}")
-
-        fig.tight_layout()
-        canvas = FigureCanvas(fig)
-        return canvas
     def translate_param(self, param):
         """Translate parameter names to plot title"""
         peak_labels = self.model_fs["peak_labels"]
@@ -357,7 +275,6 @@ class Wafer(QObject):
                               "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
                               "alpha": "L/G ratio",
                               "x0": "Position"}
-
         if "_" in param:
             prefix, param = param.split("_", 1)
             if param in param_unit_mapping:
@@ -373,75 +290,17 @@ class Wafer(QObject):
                     return f"{label} of peak {peak_label} {unit}"
         return param
 
-    def plot_graph(self):
-        """Plot graph """
-        self.clear_layout(self.ui.frame_graph.layout())
-
-        dfr = self.df_fit_results
-        x = self.ui.cbb_x.currentText()
-        y = self.ui.cbb_y.currentText()
-        z = self.ui.cbb_z.currentText()
-        style = self.ui.cbb_plot_style.currentText()
-        xmin = self.ui.xmin.text()
-        ymin = self.ui.ymin.text()
-        xmax = self.ui.xmax.text()
-        ymax = self.ui.ymax.text()
-
-        title = self.ui.ent_plot_title_2.text()
-        x_text = self.ui.ent_xaxis_lbl.text()
-        y_text = self.ui.ent_yaxis_lbl.text()
-
-        text = self.ui.ent_x_rot.text()
-        xlabel_rot = 0  # Default rotation angle
-        if text:
-            xlabel_rot = float(text)
-
-        plt.close('all')
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-
-        if style == "box plot":
-            sns.boxplot(data=dfr, x=x, y=y, hue=z, dodge=True, ax=ax)
-        elif style == "point plot":
-            sns.pointplot(data=dfr, x=x, y=y, hue=z, linestyle='none',
-                          dodge=True, capsize=0.00, ax=ax)
-        elif style == "scatter plot":
-            sns.scatterplot(data=dfr, x=x, y=y, hue=z, s=100, ax=ax)
-        elif style == "bar plot":
-            sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar=None, ax=ax)
-
-        if xmin and xmax:
-            ax.set_xlim(float(xmin), float(xmax))
-        if ymin and ymax:
-            ax.set_ylim(float(ymin), float(ymax))
-
-        xlabel = x if not x_text else x_text
-        ylabel = y if not y_text else y_text
-        if xlabel:
-            ax.set_xlabel(xlabel)
-        if ylabel:
-            ax.set_ylabel(ylabel)
-        if title:
-            ax.set_title(title)
-        ax.legend(loc='upper right')
-        plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
-                 rotation_mode="anchor")
-        fig.tight_layout()
-        canvas = FigureCanvas(fig)
-        self.ui.frame_graph.addWidget(canvas)
-
     def apprend_cbb_wafer(self):
         """to append all values of df_fit_results to comoboxses"""
         self.ui.cbb_wafer_1.clear()
-        wafer_names = list(self.wafers.keys())
+        wafer_names = self.df_fit_results['Wafer'].unique()
         for wafer_name in wafer_names:
             self.ui.cbb_wafer_1.addItem(wafer_name)
 
     def apprend_cbb_param(self):
         """to append all values of df_fit_results to comoboxses"""
-        df_fit_results = self.df_fit_results
-        columns = df_fit_results.columns.tolist()
-        if df_fit_results is not None:
+        if self.df_fit_results is not None:
+            columns = self.df_fit_results.columns.tolist()
             self.ui.cbb_param_1.clear()
             self.ui.cbb_x.clear()
             self.ui.cbb_y.clear()
@@ -555,9 +414,108 @@ class Wafer(QObject):
         self.ui.spectre_view_frame.addWidget(self.canvas)
         self.ui.toolbar_frame.addWidget(self.toolbar)
 
-        self.show_measurement_sites()
+        self.plot_measurement_sites()
 
-    def show_measurement_sites(self):
+    def plot_wafer(self):
+        """Plot WaferDataFrame for view 1"""
+        self.clear_layout(self.ui.frame_wafer.layout())
+        dfr = self.df_fit_results
+        wafer_name = self.ui.cbb_wafer_1.currentText()
+        color = self.ui.cbb_color_pallete.currentText()
+        wafer_size = float(self.ui.wafer_size.text())
+
+        if wafer_name is not None:
+            selected_df = dfr.query('Wafer == @wafer_name')
+        sel_param = self.ui.cbb_param_1.currentText()
+        canvas = self.plot_wafer_helper(selected_df, sel_param, wafer_size,
+                                        color)
+        self.ui.frame_wafer.addWidget(canvas)
+
+    def plot_wafer_helper(self, selected_df, sel_param, wafer_size, color):
+        x = selected_df['X']
+        y = selected_df['Y']
+        param = selected_df[sel_param]
+
+        vmin = float(
+            self.ui.int_vmin.text()) if self.ui.int_vmin.text() else None
+        vmax = float(
+            self.ui.int_vmax.text()) if self.ui.int_vmax.text() else None
+        stats = self.ui.cb_stats.isChecked()
+        plt.close('all')
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        wdf = WaferView()
+        wdf.plot(ax, x=x, y=y, z=param, cmap=color, vmin=vmin, vmax=vmax,
+                 stats=stats,
+                 r=(wafer_size / 2))
+
+        text = self.ui.plot_title.text()
+        title = sel_param if not text else text
+        ax.set_title(f"{title}")
+
+        fig.tight_layout()
+        canvas = FigureCanvas(fig)
+        return canvas
+
+    def plot_graph(self):
+        """Plot graph """
+        self.clear_layout(self.ui.frame_graph.layout())
+
+        dfr = self.df_fit_results
+        x = self.ui.cbb_x.currentText()
+        y = self.ui.cbb_y.currentText()
+        z = self.ui.cbb_z.currentText()
+        style = self.ui.cbb_plot_style.currentText()
+        xmin = self.ui.xmin.text()
+        ymin = self.ui.ymin.text()
+        xmax = self.ui.xmax.text()
+        ymax = self.ui.ymax.text()
+
+        title = self.ui.ent_plot_title_2.text()
+        x_text = self.ui.ent_xaxis_lbl.text()
+        y_text = self.ui.ent_yaxis_lbl.text()
+
+        text = self.ui.ent_x_rot.text()
+        xlabel_rot = 0  # Default rotation angle
+        if text:
+            xlabel_rot = float(text)
+
+        plt.close('all')
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        if style == "box plot":
+            sns.boxplot(data=dfr, x=x, y=y, hue=z, dodge=True, ax=ax)
+        elif style == "point plot":
+            sns.pointplot(data=dfr, x=x, y=y, hue=z, linestyle='none',
+                          dodge=True, capsize=0.00, ax=ax)
+        elif style == "scatter plot":
+            sns.scatterplot(data=dfr, x=x, y=y, hue=z, s=100, ax=ax)
+        elif style == "bar plot":
+            sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar=None, ax=ax)
+
+        if xmin and xmax:
+            ax.set_xlim(float(xmin), float(xmax))
+        if ymin and ymax:
+            ax.set_ylim(float(ymin), float(ymax))
+
+        xlabel = x if not x_text else x_text
+        ylabel = y if not y_text else y_text
+        if xlabel:
+            ax.set_xlabel(xlabel)
+        if ylabel:
+            ax.set_ylabel(ylabel)
+        if title:
+            ax.set_title(title)
+        ax.legend(loc='upper right')
+        plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
+                 rotation_mode="anchor")
+        fig.tight_layout()
+        canvas = FigureCanvas(fig)
+        self.ui.frame_graph.addWidget(canvas)
+
+    def plot_measurement_sites(self):
         """Plot wafer maps of measurement sites"""
         plt.style.use(PLOT_POLICY)
 
@@ -572,16 +530,16 @@ class Wafer(QObject):
                 all_x.append(x)
                 all_y.append(y)
         fig, ax = plt.subplots()
-        ax.scatter(all_x, all_y, marker='x', color='black', s=10)
+        ax.scatter(all_x, all_y, marker='x', color='gray', s=10)
+
         # Highlight selected spectra in red
         if coords:
             selected_x, selected_y = zip(*coords)
-            ax.scatter(selected_x, selected_y, marker='o', color='red')
+            ax.scatter(selected_x, selected_y, marker='o', color='red', s=40)
         canvas = FigureCanvas(fig)
         layout = self.ui.wafer_plot.layout()
         if layout:
             layout.addWidget(canvas)
-
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
         current_row = self.ui.wafers_listbox.currentRow()
@@ -595,7 +553,7 @@ class Wafer(QObject):
 
         item_count = self.ui.wafers_listbox.count()
 
-        # management of selecting item of listbox
+        # Management of selecting item of listbox
         if current_row >= item_count:
             current_row = item_count - 1
         if current_row >= 0:
@@ -605,8 +563,44 @@ class Wafer(QObject):
                 self.ui.wafers_listbox.setCurrentRow(0)
         QTimer.singleShot(100, self.upd_spectra_list)
 
+    def upd_spectra_list(self):
+        """to update the spectra list"""
+        current_row = self.ui.spectra_listbox.currentRow()
+
+        self.ui.spectra_listbox.clear()
+        self.clear_wafer_plot()
+        current_item = self.ui.wafers_listbox.currentItem()
+
+        if current_item is not None:
+            wafer_name = current_item.text()
+            for spectrum_fs in self.spectra_fs:
+                wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+                if wafer_name == wafer_name_fs:
+                    item = QListWidgetItem(str(coord_fs))
+                    if hasattr(spectrum_fs.result_fit,
+                               'success') and spectrum_fs.result_fit.success:
+                        item.setBackground(QColor("green"))
+                    elif hasattr(spectrum_fs.result_fit,
+                                 'success') and not \
+                            spectrum_fs.result_fit.success:
+                        item.setBackground(QColor("orange"))
+                    else:
+                        item.setBackground(QColor(0, 0, 0, 0))
+                    self.ui.spectra_listbox.addItem(item)
+
+        # Update the item count label
+        item_count = self.ui.spectra_listbox.count()
+        self.ui.item_count_label.setText(f"{item_count} points")
+
+        # Reselect the previously selected item
+        if current_row >= 0 and current_row < item_count:
+            self.ui.spectra_listbox.setCurrentRow(current_row)
+        else:
+            if self.ui.spectra_listbox.count() > 0:
+                self.ui.spectra_listbox.setCurrentRow(0)
+        QTimer.singleShot(50, self.plot_sel_spectre)
     def remove_wafer(self):
-        """To remove a wafer"""
+        """To remove a wafer from the listbox and wafers df"""
         wafer_name, coords = self.spectre_id()
         if wafer_name in self.wafers:
             del self.wafers[wafer_name]
@@ -639,20 +633,14 @@ class Wafer(QObject):
         self.clear_layout(self.ui.wafer_plot.layout())
 
     def copy_fig(self):
-        self.save_dpi = float(self.ui.ent_plot_save_dpi.text())
-        if self.canvas:
-            figure = self.canvas.figure
-            with BytesIO() as buf:
-                figure.savefig(buf, format='png', dpi=400)
-                data = buf.getvalue()
-            format_id = win32clipboard.RegisterClipboardFormat('PNG')
-            win32clipboard.OpenClipboard()
-            win32clipboard.EmptyClipboard()
-            win32clipboard.SetClipboardData(format_id, data)
-            win32clipboard.CloseClipboard()
-        else:
-            QMessageBox.critical(None, "Error", "No plot to copy.")
-
+        """To copy figure canvas to clipboard"""
+        copy_fig_to_clb(canvas =self.canvas)
+    def copy_fig_wafer(self):
+        """To copy figure canvas to clipboard"""
+        copy_fig_to_clb(canvas =self.canvas)
+    def copy_fig_graph(self):
+        """To copy figure canvas to clipboard"""
+        copy_fig_to_clb(canvas =self.canvas)
     def select_all_spectra(self):
         """ To quickly select all spectra within the spectra listbox"""
         item_count = self.ui.spectra_listbox.count()
@@ -728,6 +716,7 @@ class Wafer(QObject):
             self.fit()
 
     def send_df_to_vis(self):
+        """Send the collected spectral data dataframe to visu tab"""
         dfs = {}
         dfs["fitted_results"] = self.df_fit_results
         self.callbacks_df.action_open_df(file_paths=None, original_dfs=dfs)
@@ -745,7 +734,6 @@ class Wafer(QObject):
                 selected_spectra_fs.append(spectrum_fs)
         if len(selected_spectra_fs) == 0:
             return
-
         ui = self.ui.tabWidget
         title = "Fitting Report"
         # Show the 'report' of the first selected spectrum
@@ -753,24 +741,6 @@ class Wafer(QObject):
         if spectrum_fs.result_fit:
             text = fit_report(spectrum_fs.result_fit)
             view_text(ui, title, text)
-
-    def update_pbar(self, progress):
-        self.ui.progressBar.setValue(progress)
-
-    def fitspy_launcher(self):
-        """To Open FITSPY with selected spectra"""
-        plt.style.use('default')
-        root = Tk()
-        appli = Appli(root, force_terminal_exit=False)
-        appli.spectra = self.spectra_fs
-        for spectrum in appli.spectra:
-            fname = spectrum.fname
-            appli.fileselector.filenames.append(fname)
-            appli.fileselector.lbox.insert(END, os.path.basename(fname))
-        appli.fileselector.select_item(0)
-        appli.update()
-
-        root.mainloop()
 
     def fit_progress(self, num, elapsed_time, fnames):
         """Called when fitting process is completed"""
@@ -788,12 +758,14 @@ class Wafer(QObject):
     def save_work(self):
         """Save the current work/results."""
         try:
-            file_path, _ = QFileDialog.getSaveFileName(None, "Save fitted wafer data", "", "SPECTROview Files (*.svwafer)")
+            file_path, _ = QFileDialog.getSaveFileName(None, "Save fitted wafer data", "",
+                                                       "SPECTROview Files (*.svwafer)")
             if file_path:
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
                     'wafers': self.wafers,
                     'model_fs': self.model_fs,
+                    'df_fit_results': self.df_fit_results,
                     'cbb_x': self.ui.cbb_x.currentIndex(),
                     'cbb_y': self.ui.cbb_y.currentIndex(),
                     'cbb_z': self.ui.cbb_z.currentIndex(),
@@ -812,7 +784,6 @@ class Wafer(QObject):
                     'ent_xaxis_lbl': self.ui.ent_xaxis_lbl.text(),
                     'ent_yaxis_lbl': self.ui.ent_yaxis_lbl.text(),
                     'ent_x_rot': self.ui.ent_x_rot.text(),
-
                 }
                 with open(file_path, 'wb') as f:
                     dill.dump(data_to_save, f)
@@ -830,20 +801,15 @@ class Wafer(QObject):
                     self.spectra_fs = loaded_data['spectra_fs']
                     self.wafers = loaded_data['wafers']
                     self.model_fs = loaded_data['model_fs']
-
-                    # Update any other necessary components of your application after loading the work
+                    self.df_fit_results = loaded_data['df_fit_results'],
                     self.upd_wafers_list()
-                    self.collect_results()
 
-                    # Set the current index of comboboxes
                     self.ui.cbb_x.setCurrentIndex(loaded_data['cbb_x'])
                     self.ui.cbb_y.setCurrentIndex(loaded_data['cbb_y'])
                     self.ui.cbb_z.setCurrentIndex(loaded_data['cbb_z'])
                     self.ui.cbb_param_1.setCurrentIndex(loaded_data['cbb_param_1'])
                     self.ui.cbb_wafer_1.setCurrentIndex(loaded_data['cbb_wafer_1'])
                     self.ui.cbb_color_pallete.setCurrentIndex(loaded_data['color_pal'])
-
-                    # Set the text value of the entry box
                     self.ui.plot_title.setText(loaded_data['plot_title'])
                     self.ui.wafer_size.setText(loaded_data['wafer_size'])
                     self.ui.int_vmin.setText(loaded_data['int_vmin'])
@@ -864,7 +830,19 @@ class Wafer(QObject):
                 print("Work loaded successfully.")
         except Exception as e:
             print(f"Error loading work: {e}")
-
+    def fitspy_launcher(self):
+        """To Open FITSPY with selected spectra"""
+        plt.style.use('default')
+        root = Tk()
+        appli = Appli(root, force_terminal_exit=False)
+        appli.spectra = self.spectra_fs
+        for spectrum in appli.spectra:
+            fname = spectrum.fname
+            appli.fileselector.filenames.append(fname)
+            appli.fileselector.lbox.insert(END, os.path.basename(fname))
+        appli.fileselector.select_item(0)
+        appli.update()
+        root.mainloop()
 
 class FitThread(QThread):
     fit_progress_changed = Signal(int)

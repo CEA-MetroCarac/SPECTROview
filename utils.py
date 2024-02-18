@@ -24,9 +24,20 @@ def quadrant(row):
         return 'Q4'
     else:
         return np.nan
-def copy_fig_to_clb():
+def copy_fig_to_clb(canvas):
     """fnc to copy canvas figure to clipboard"""
-    pass
+    if canvas:
+        figure = canvas.figure
+        with BytesIO() as buf:
+            figure.savefig(buf, format='png', dpi=400)
+            data = buf.getvalue()
+        format_id = win32clipboard.RegisterClipboardFormat('PNG')
+        win32clipboard.OpenClipboard()
+        win32clipboard.EmptyClipboard()
+        win32clipboard.SetClipboardData(format_id, data)
+        win32clipboard.CloseClipboard()
+    else:
+        QMessageBox.critical(None, "Error", "No plot to copy.")
 
 def read_raw_semilab():
     """read raw spectra data of semilab equiments"""

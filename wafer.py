@@ -10,7 +10,7 @@ from pathlib import Path
 import dill
 import re
 
-from utils import view_df, show_alert, detect_quadrant, view_text
+from utils import view_df, show_alert, quadrant, view_text
 
 from lmfit import Model, fit_report
 from fitspy.spectra import Spectra
@@ -253,7 +253,7 @@ class Wafer(QObject):
         self.df_fit_results.columns = columns
 
         # Add "Quadrant" columns
-        self.df_fit_results['Quadrant'] = self.df_fit_results.apply(detect_quadrant, axis=1)
+        self.df_fit_results['Quadrant'] = self.df_fit_results.apply(quadrant, axis=1)
 
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()

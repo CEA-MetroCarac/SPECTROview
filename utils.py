@@ -1,4 +1,6 @@
-# utils.py module
+"""
+Module contains all utilities functions
+"""
 import os
 import copy
 #import win32clipboard
@@ -11,7 +13,7 @@ from PySide6.QtCore import Qt, QFile
 from PySide6.QtGui import  QPalette, QColor, QTextCursor
 
 
-def detect_quadrant(row):
+def quadrant(row):
     if row['X'] < 0 and row['Y'] < 0:
         return 'Q1'
     elif row['X'] < 0 and row['Y'] > 0:

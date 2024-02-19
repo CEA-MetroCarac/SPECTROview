@@ -192,6 +192,29 @@ class MainWindow:
         self.ui.btn_open_spectrums.clicked.connect(self.spectrums.open_data)
         self.ui.btn_load_model_3.clicked.connect(self.spectrums.open_model)
         self.ui.btn_fit_3.clicked.connect(self.spectrums.fit_fnc_handler)
+        self.ui.btn_open_fitspy_3.clicked.connect(
+            self.spectrums.fitspy_launcher)
+        self.ui.btn_cosmis_ray_3.clicked.connect(
+            self.spectrums.cosmis_ray_detection)
+        self.ui.btn_init_3.clicked.connect(self.spectrums.reinit_fnc_handler)
+        self.ui.btn_show_stats_3.clicked.connect(self.spectrums.view_stats)
+        self.ui.btn_sel_all_3.clicked.connect(self.spectrums.select_all_spectra)
+        self.ui.btn_remove_spectrum.clicked.connect(
+            self.spectrums.remove_spectrum)
+        self.ui.btn_collect_results_3.clicked.connect(
+            self.spectrums.collect_results)
+        self.ui.btn_view_df_5.clicked.connect(
+            self.spectrums.view_fit_results_df)
+        self.ui.btn_save_fit_results_3.clicked.connect(
+            self.spectrums.save_fit_results)
+        self.ui.btn_open_fit_results_3.clicked.connect(
+            self.spectrums.load_fit_results)
+
+        self.ui.btn_sw_3.clicked.connect(self.spectrums.save_work)
+        self.ui.btn_lw_3.clicked.connect(self.spectrums.load_work)
+        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
+        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
+        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
 
         self.darkmode = True
         self.ui.setPalette(dark_palette())
@@ -258,14 +281,14 @@ def launcher2(file_paths=None, fname_json=None):
     app.setWindowIcon(QIcon(ICON_APPLI))
     window = MainWindow()
     app.setStyle("Fusion")
-    if file_paths is not None:
-        window.wafer.open_data(file_paths=file_paths)
-    if fname_json is not None:
-        window.wafer.open_model(fname_json=fname_json)
     # if file_paths is not None:
-    #     window.spectrums.open_data(file_paths=file_paths)
+    #     window.wafer.open_data(file_paths=file_paths)
     # if fname_json is not None:
-    #     window.spectrums.open_model(fname_json=fname_json)
+    #     window.wafer.open_model(fname_json=fname_json)
+    if file_paths is not None:
+        window.spectrums.open_data(file_paths=file_paths)
+    if fname_json is not None:
+        window.spectrums.open_model(fname_json=fname_json)
     window.ui.show()
     sys.exit(app.exec())
 
@@ -277,8 +300,7 @@ if __name__ == "__main__":
                r"\RAW_spectra"
 
     fname1 = os.path.join(dirname1, 'D23S2204.2_17.csv')
-    fname2 = os.path.join(dirname1, 'ordered_map.txt')
-    # fname2 = os.path.join(dirname1, 'D23S2204.2_19.csv')
+    fname2 = os.path.join(dirname1, 'D23S2204.2_19.csv')
     fname3 = os.path.join(dirname1, 'D23S2204.2_25.csv')
     fname_json1 = os.path.join(dirname1, 'MoS2_325-490_8cm-shifted.json')
 
@@ -287,8 +309,8 @@ if __name__ == "__main__":
     fname13 = os.path.join(dirname2, 'P14_4ML.txt')
     fname_json2 = os.path.join(dirname2, 'MoS2_325-490_.json')
 
-    launcher2([fname2], fname_json1)
-    # launcher2([fname11, fname12, fname13], fname_json2)
+    # launcher2([fname1, fname2, fname3], fname_json1)
+    launcher2([fname11, fname12, fname13], fname_json2)
 
 # def launcher3(file_paths=None, fname_json=None):
 #     app = QApplication()

@@ -51,7 +51,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_2Dmaps">
        <attribute name="title">
@@ -1206,7 +1206,7 @@
                        </font>
                       </property>
                       <property name="text">
-                       <string>Wafer plot:</string>
+                       <string>Maps plot:</string>
                       </property>
                      </widget>
                     </item>
@@ -2438,7 +2438,7 @@
               </size>
              </property>
              <property name="title">
-              <string>Spectre(s):</string>
+              <string>Spectrum(s):</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_10">
               <item>
@@ -2726,9 +2726,9 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_spectra">
+      <widget class="QWidget" name="tab_spectrum">
        <attribute name="title">
-        <string>Spectra processing</string>
+        <string>Spectrum processing</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_131">
         <property name="leftMargin">
@@ -4807,7 +4807,7 @@
               </size>
              </property>
              <property name="title">
-              <string>Spectre(s):</string>
+              <string>Spectrum(s):</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_61">
               <item>
@@ -4845,10 +4845,22 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_remove_wafer_3">
+                 <widget class="QPushButton" name="btn_remove_spectrum">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>30</width>
+                    <height>0</height>
+                   </size>
+                  </property>
                   <property name="maximumSize">
                    <size>
-                    <width>90</width>
+                    <width>30</width>
                     <height>16777215</height>
                    </size>
                   </property>

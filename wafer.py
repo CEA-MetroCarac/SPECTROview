@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import dill
-
+import multiprocessing
 from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb
 
 from lmfit import fit_report
@@ -109,6 +109,7 @@ class Wafer(QObject):
                         wafer_df = pd.read_csv(file_path, delimiter="\t")
                         wafer_df.columns = ['Y', 'X'] + list(
                             wafer_df.columns[2:])
+                        # Reorder df as increasing wavenumber
                         sorted_columns = sorted(wafer_df.columns[2:], key=float)
                         wafer_df = wafer_df[['X', 'Y'] + sorted_columns]
                     else:
@@ -358,15 +359,15 @@ class Wafer(QObject):
     def reinit_all(self):
         """Reinitialize all spectra"""
         fnames = self.spectra_fs.fnames
-        self.reinit_sel(fnames)
+        self.reinit(fnames)
 
     def reinit_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:
-            self.reinit()
+            self.reinit_all()
         else:
-            self.reinit_sel()
+            self.reinit()
 
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
@@ -774,19 +775,6 @@ class Wafer(QObject):
             text = fit_report(spectrum_fs.result_fit)
             view_text(ui, title, text)
 
-    def fit_progress(self, num, elapsed_time, fnames):
-        """Called when fitting process is completed"""
-        self.ui.progress.setText(
-            f"{num}/{len(fnames)} fitted ({elapsed_time:.2f}s)")
-
-    def fit_completed(self):
-        """Called when fitting process is completed"""
-        self.plot_sel_spectre()
-        self.upd_spectra_list()
-
-    def update_pbar(self, progress):
-        self.ui.progressBar.setValue(progress)
-
     def save_work(self):
         """Save the current work/results."""
         try:
@@ -890,6 +878,39 @@ class Wafer(QObject):
         appli.fileselector.select_item(0)
         appli.update()
         root.mainloop()
+
+    def fit_progress(self, num, elapsed_time, fnames):
+        """Called when fitting process is completed"""
+        self.ui.progress.setText(
+            f"{num}/{len(fnames)} fitted ({elapsed_time:.2f}s)")
+
+    def fit_completed(self):
+        """Called when fitting process is completed"""
+        self.plot_sel_spectre()
+        self.upd_spectra_list()
+
+    def update_pbar(self, progress):
+        self.ui.progressBar.setValue(progress)
+
+    def fit(self, fnames=None):
+        """Fit selected spectrum(s)"""
+        if self.model_fs is None:
+            show_alert("Load a fit model before fitting.")
+            return
+
+        if fnames is None:
+            wafer_name, coords = self.spectre_id()
+            fnames = [f"{wafer_name}_{coord}" for coord in coords]
+
+        # Start fitting process in a separate thread
+        self.fit_thread = FitThread(self.spectra_fs, self.model_fs, fnames)
+
+        self.fit_thread.fit_progress_changed.connect(self.update_pbar)
+        self.fit_thread.fit_progress.connect(
+            lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
+                                                        fnames))
+        self.fit_thread.fit_completed.connect(self.fit_completed)
+        self.fit_thread.start()
 
 
 class FitThread(QThread):

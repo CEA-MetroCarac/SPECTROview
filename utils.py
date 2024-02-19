@@ -1,18 +1,66 @@
 """
-Module contains all utilities functions
+Module contains all utilities functions and common functions
 """
 import os
 import copy
+import time
+
 #import win32clipboard
 from io import BytesIO
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, QTableWidgetItem, QVBoxLayout,QTextBrowser
-from PySide6.QtCore import Qt, QFile
+from PySide6.QtCore import Qt, QFile, QObject, Signal, QThread
 from PySide6.QtGui import  QPalette, QColor, QTextCursor
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 
+def reinit_spectrum(fnames, spectra_fs):
+    for fname in fnames:
+        spectrum, _ = spectra_fs.get_objects(fname)
+        spectrum.range_min = None
+        spectrum.range_max = None
+        spectrum.x = spectrum.x0.copy()
+        spectrum.y = spectrum.y0.copy()
+        spectrum.norm_mode = None
+        spectrum.result_fit = lambda: None
+        spectrum.remove_models()
+        spectrum.baseline.points = [[], []]
+        spectrum.baseline.is_subtracted = False
+def clear_layout(layout):
+    """Clear everything within a given Qlayout"""
+    if layout is not None:
+        for i in reversed(range(layout.count())):
+            item = layout.itemAt(i)
+            if isinstance(item.widget(),
+                          (FigureCanvas, NavigationToolbar2QT)):
+                widget = item.widget()
+                layout.removeWidget(widget)
+                widget.close()
+
+def translate_param(model_fs, param):
+    """Translate parameter names to plot title"""
+    peak_labels = model_fs["peak_labels"]
+    param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
+                          "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
+                          "alpha": "L/G ratio",
+                          "x0": "Position"}
+    if "_" in param:
+        prefix, param = param.split("_", 1)
+        if param in param_unit_mapping:
+            if param == "alpha":
+                unit = ""  # Set unit to empty string for "alpha"
+            else:
+                unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
+            label = param_unit_mapping[param]
+            # Convert prefix to peak_label
+            peak_index = int(prefix[1:]) - 1
+            if 0 <= peak_index < len(peak_labels):
+                peak_label = peak_labels[peak_index]
+                return f"{label} of peak {peak_label} {unit}"
+    return param
 def quadrant(row):
     if row['X'] < 0 and row['Y'] < 0:
         return 'Q1'
@@ -158,3 +206,27 @@ def light_palette():
     light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
     # Light gray placeholder text color
     return light_palette
+
+class FitThread(QThread):
+    fit_progress_changed = Signal(int)
+    fit_progress = Signal(int, float)  # number and elapsed time
+    fit_completed = Signal()
+
+    def __init__(self, spectra_fs, model_fs, fnames):
+        super().__init__()
+        self.spectra_fs = spectra_fs
+        self.model_fs = model_fs
+        self.fnames = fnames
+
+    def run(self):
+        start_time = time.time()  # Record start time
+        num = 0
+        for index, fname in enumerate(self.fnames):
+            progress = int((index + 1) / len(self.fnames) * 100)
+            self.fit_progress_changed.emit(progress)
+            self.spectra_fs.apply_model(self.model_fs, fnames=[fname])
+            num += 1
+            elapsed_time = time.time() - start_time
+            self.fit_progress.emit(num, elapsed_time)
+        self.fit_progress_changed.emit(100)
+        self.fit_completed.emit()

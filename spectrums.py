@@ -6,8 +6,8 @@ import pandas as pd
 from pathlib import Path
 import dill
 
-from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb
-
+from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb, translate_param, clear_layout, reinit_spectrum
+from utils import FitThread
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -40,9 +40,6 @@ class Spectrums(QObject):
         QSettings.setDefaultFormat(QSettings.IniFormat)
         self.settings = QSettings("CEA-Leti", "DaProViz")
 
-        self.file_paths = []  # Store file_paths of all raw data wafers
-        self.wafers = {}  # list of opened wafers
-
         self.ax = None
         self.canvas = None
         self.model_fs = None  # FITSPY
@@ -50,16 +47,16 @@ class Spectrums(QObject):
 
         # Connect and plot_spectre of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
-            self.plot_sel_spectre)
+            self.delay_plot)
 
         # Connect the stateChanged signal of the legend CHECKBOX
-        self.ui.cb_legend_3.stateChanged.connect(self.plot_sel_spectre)
+        self.ui.cb_legend_3.stateChanged.connect(self.delay_plot)
 
-        self.ui.cb_raw_3.stateChanged.connect(self.plot_sel_spectre)
-        self.ui.cb_bestfit_3.stateChanged.connect(self.plot_sel_spectre)
-        self.ui.cb_colors_3.stateChanged.connect(self.plot_sel_spectre)
-        self.ui.cb_residual_3.stateChanged.connect(self.plot_sel_spectre)
-        self.ui.cb_filled_3.stateChanged.connect(self.plot_sel_spectre)
+        self.ui.cb_raw_3.stateChanged.connect(self.delay_plot)
+        self.ui.cb_bestfit_3.stateChanged.connect(self.delay_plot)
+        self.ui.cb_colors_3.stateChanged.connect(self.delay_plot)
+        self.ui.cb_residual_3.stateChanged.connect(self.delay_plot)
+        self.ui.cb_filled_3.stateChanged.connect(self.delay_plot)
 
         # Set a delay for the function plot_sel_spectra
         self.delay_timer = QTimer()
@@ -113,12 +110,10 @@ class Spectrums(QObject):
                     spectrum_fs.y = np.asarray(y_values)
                     spectrum_fs.y0 = np.asarray(y_values)
                     self.spectra_fs.append(spectrum_fs)
-
         QTimer.singleShot(100, self.upd_spectrums_list)
 
     def upd_spectrums_list(self):
         current_row = self.ui.spectrums_listbox.currentRow()
-
         self.ui.spectrums_listbox.clear()
         for spectrum_fs in self.spectra_fs:
             fname = spectrum_fs.fname
@@ -136,7 +131,6 @@ class Spectrums(QObject):
 
         item_count = self.ui.spectrums_listbox.count()
         self.ui.item_count_label_3.setText(f"{item_count} points")
-
         # Management of selecting item of listbox
         if current_row >= item_count:
             current_row = item_count - 1
@@ -145,9 +139,9 @@ class Spectrums(QObject):
         else:
             if item_count > 0:
                 self.ui.spectrums_listbox.setCurrentRow(0)
-        QTimer.singleShot(50, self.plot_sel_spectre)
+        QTimer.singleShot(50, self.delay_plot)
 
-    def plot_sel_spectre(self):
+    def delay_plot(self):
         """Trigger the fnc to plot spectre"""
         self.delay_timer.start(100)
 
@@ -233,19 +227,8 @@ class Spectrums(QObject):
 
     def clear_spectre_view(self):
         """ Clear plot and toolbar within the spectre_view"""
-        self.clear_layout(self.ui.spectre_view_frame_4.layout())
-        self.clear_layout(self.ui.toolbar_frame_3.layout())
-
-    def clear_layout(self, layout):
-        """Clear everything within a given Qlayout"""
-        if layout is not None:
-            for i in reversed(range(layout.count())):
-                item = layout.itemAt(i)
-                if isinstance(item.widget(),
-                              (FigureCanvas, NavigationToolbar2QT)):
-                    widget = item.widget()
-                    layout.removeWidget(widget)
-                    widget.close()
+        clear_layout(self.ui.spectre_view_frame_4.layout())
+        clear_layout(self.ui.toolbar_frame_3.layout())
 
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
@@ -275,7 +258,6 @@ class Spectrums(QObject):
             return
         if fnames is None:
             fnames = self.get_selected_spectra()
-
         # Start fitting process in a separate thread
         self.fit_thread = FitThread(self.spectra_fs, self.model_fs, fnames)
         self.fit_thread.fit_progress_changed.connect(self.update_pbar)
@@ -333,35 +315,13 @@ class Spectrums(QObject):
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
 
-        columns = [self.translate_param(column) for column in
+        columns = [translate_param(self.model_fs, column) for column in
                    self.df_fit_results.columns]
         self.df_fit_results.columns = columns
-        print(self.df_fit_results)
+
         # self.apprend_cbb_param()
         # self.apprend_cbb_wafer()
-        # self.send_df_to_vis()
-
-    def translate_param(self, param):
-        """Translate parameter names to plot title"""
-        peak_labels = self.model_fs["peak_labels"]
-        param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
-                              "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
-                              "alpha": "L/G ratio",
-                              "x0": "Position"}
-        if "_" in param:
-            prefix, param = param.split("_", 1)
-            if param in param_unit_mapping:
-                if param == "alpha":
-                    unit = ""  # Set unit to empty string for "alpha"
-                else:
-                    unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
-                label = param_unit_mapping[param]
-                # Convert prefix to peak_label
-                peak_index = int(prefix[1:]) - 1
-                if 0 <= peak_index < len(peak_labels):
-                    peak_label = peak_labels[peak_index]
-                    return f"{label} of peak {peak_label} {unit}"
-        return param
+        self.send_df_to_vis()
 
     def fit_progress(self, num, elapsed_time, fnames):
         """Called when fitting process is completed"""
@@ -370,7 +330,7 @@ class Spectrums(QObject):
 
     def fit_completed(self):
         """Called when fitting process is completed"""
-        self.plot_sel_spectre()
+        self.delay_plot()
         self.upd_spectrums_list()
 
     def update_pbar(self, progress):
@@ -397,18 +357,8 @@ class Spectrums(QObject):
         """Reinitialize the selected spectrum(s)"""
         if fnames is None:
             fnames = self.get_selected_spectra()
-        for fname in fnames:
-            spectrum, _ = self.spectra_fs.get_objects(fname)
-            spectrum.range_min = None
-            spectrum.range_max = None
-            spectrum.x = spectrum.x0.copy()
-            spectrum.y = spectrum.y0.copy()
-            spectrum.norm_mode = None
-            spectrum.result_fit = lambda: None
-            spectrum.remove_models()
-            spectrum.baseline.points = [[], []]
-            spectrum.baseline.is_subtracted = False
-        self.plot_sel_spectre()
+        reinit_spectrum(fnames, self.spectra_fs)
+        self.delay_plot()
         self.upd_spectrums_list()
 
     def reinit_all(self):
@@ -453,7 +403,6 @@ class Spectrums(QObject):
     def load_fit_results(self, file_paths=None):
         """Functon to load fitted results to view"""
         self.df_fit_results = None
-
         # Initialize the last used directory from QSettings
         last_dir = self.settings.value("last_directory", "/")
         options = QFileDialog.Options()
@@ -507,10 +456,7 @@ class Spectrums(QObject):
         self.spectra_fs = Spectra(
             spectrum_fs for spectrum_fs in self.spectra_fs if
             spectrum_fs.fname not in sel_fnames)
-        # Clear the listbox and re-populate it with remaining spectra
-        self.ui.spectrums_listbox.clear()
         self.upd_spectrums_list()
-        # Clear the plot view
         self.clear_spectre_view()
 
     def save_work(self):
@@ -583,27 +529,3 @@ class Spectrums(QObject):
         except Exception as e:
             print(f"Error loading work: {e}")
 
-
-class FitThread(QThread):
-    fit_progress_changed = Signal(int)
-    fit_progress = Signal(int, float)  # number and elapsed time
-    fit_completed = Signal()
-
-    def __init__(self, spectra_fs, model_fs, fnames):
-        super().__init__()
-        self.spectra_fs = spectra_fs
-        self.model_fs = model_fs
-        self.fnames = fnames
-
-    def run(self):
-        start_time = time.time()  # Record start time
-        num = 0
-        for index, fname in enumerate(self.fnames):
-            progress = int((index + 1) / len(self.fnames) * 100)
-            self.fit_progress_changed.emit(progress)
-            self.spectra_fs.apply_model(self.model_fs, fnames=[fname])
-            num += 1
-            elapsed_time = time.time() - start_time
-            self.fit_progress.emit(num, elapsed_time)
-        self.fit_progress_changed.emit(100)
-        self.fit_completed.emit()

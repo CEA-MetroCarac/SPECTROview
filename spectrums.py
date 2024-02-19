@@ -99,6 +99,7 @@ class Spectrums(QObject):
                             f"Skipping...")
                         continue
 
+<<<<<<< HEAD
                     # spectrum_fs.load_profile(file_path)
                     # create FITSPY object
                     spectrum_fs = Spectrum()
@@ -108,6 +109,24 @@ class Spectrums(QObject):
                     spectrum_fs.x0 = np.asarray(x_values)
                     spectrum_fs.y = np.asarray(y_values)
                     spectrum_fs.y0 = np.asarray(y_values)
+=======
+                    dfr = pd.read_csv(file_path, header=None, skiprows=1,
+                                      delimiter="\t")
+                    arr = dfr.to_numpy()
+
+                    x_values = arr[:, 0]  # Extract first column as x_values
+                    y_values = arr[:, 1]  # Extract second column as y_values
+
+                    # create FITSPY object
+                    spectrum_fs = Spectrum()
+                    spectrum_fs.fname = fname
+                    spectrum_fs.x = x_values
+                    print(x_values)
+                    print(spectrum_fs.x)
+                    spectrum_fs.x0 = x_values
+                    spectrum_fs.y = y_values
+                    spectrum_fs.y0 = y_values
+>>>>>>> github/main
                     self.spectra_fs.append(spectrum_fs)
 
         QTimer.singleShot(100, self.upd_spectrums_list)

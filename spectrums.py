@@ -6,7 +6,7 @@ import pandas as pd
 from pathlib import Path
 import dill
 
-from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb, translate_param, clear_layout, reinit_spectrum
+from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb, translate_param, clear_layout, reinit_spectrum, plot_graph
 from utils import FitThread
 from lmfit import fit_report
 from fitspy.spectra import Spectra
@@ -66,7 +66,7 @@ class Spectrums(QObject):
         # Connect the progress signal to update_progress_bar slot
         self.fit_progress_changed.connect(self.update_pbar)
 
-        self.plot_styles = ["box plot", "point plot", "bar plot"]
+        self.plot_styles = ["point plot", "scatter plot", "box plot", "bar plot"]
 
     def open_data(self, file_paths=None, spectra=None):
         if self.spectra_fs is None:
@@ -315,14 +315,55 @@ class Spectrums(QObject):
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
 
-        columns = [translate_param(self.model_fs, column) for column in
-                   self.df_fit_results.columns]
-        self.df_fit_results.columns = columns
+        # columns = [translate_param(self.model_fs, column) for column in
+        #            self.df_fit_results.columns]
+        #self.df_fit_results.columns = columns
 
-        # self.apprend_cbb_param()
-        # self.apprend_cbb_wafer()
+        self.apprend_cbb_param()
         self.send_df_to_vis()
+    def apprend_cbb_param(self):
+        """to append all values of df_fit_results to comoboxses"""
+        if self.df_fit_results is not None:
+            columns = self.df_fit_results.columns.tolist()
+            self.ui.cbb_x_3.clear()
+            self.ui.cbb_y_3.clear()
+            self.ui.cbb_z_3.clear()
+            for column in columns:
+                self.ui.cbb_x_3.addItem(column)
+                self.ui.cbb_y_3.addItem(column)
+                self.ui.cbb_z_3.addItem(column)
 
+    def send_df_to_vis(self):
+        """Send the collected spectral data dataframe to visu tab"""
+        dfs = {}
+        dfs["fitted_results"] = self.df_fit_results
+        self.callbacks_df.action_open_df(file_paths=None, original_dfs=dfs)
+    def plot_graph(self):
+        """Plot graph """
+        clear_layout(self.ui.frame_graph_3.layout())
+
+        dfr = self.df_fit_results
+        x = self.ui.cbb_x_3.currentText()
+        y = self.ui.cbb_y_3.currentText()
+        z = self.ui.cbb_z_3.currentText()
+        style = self.ui.cbb_plot_style_3.currentText()
+        xmin = self.ui.xmin_3.text()
+        ymin = self.ui.ymin_3.text()
+        xmax = self.ui.xmax_3.text()
+        ymax = self.ui.ymax_3.text()
+
+        title = self.ui.ent_plot_title_5.text()
+        x_text = self.ui.ent_xaxis_lbl_3.text()
+        y_text = self.ui.ent_yaxis_lbl_3.text()
+
+        text = self.ui.ent_x_rot_3.text()
+        xlabel_rot = 0  # Default rotation angle
+        if text:
+            xlabel_rot = float(text)
+
+        canvas = plot_graph(dfr, x,y,z, style, xmin, xmax, ymin, ymax, title, x_text,y_text, xlabel_rot )
+
+        self.ui.frame_graph_3.addWidget(canvas)
     def fit_progress(self, num, elapsed_time, fnames):
         """Called when fitting process is completed"""
         self.ui.progress_3.setText(

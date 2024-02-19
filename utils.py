@@ -10,6 +10,8 @@ from io import BytesIO
 import numpy as np
 import pandas as pd
 from pathlib import Path
+import matplotlib.pyplot as plt
+import seaborn as sns
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, QTableWidgetItem, QVBoxLayout,QTextBrowser
 from PySide6.QtCore import Qt, QFile, QObject, Signal, QThread
 from PySide6.QtGui import  QPalette, QColor, QTextCursor
@@ -17,6 +19,42 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 
+def plot_graph(dfr, x,y,z, style, xmin, xmax, ymin, ymax, title, x_text,y_text, xlabel_rot):
+    """Plot graph """
+    plt.close('all')
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    if style == "box plot":
+        sns.boxplot(data=dfr, x=x, y=y, hue=z, dodge=True, ax=ax)
+    elif style == "point plot":
+        sns.pointplot(data=dfr, x=x, y=y, hue=z, linestyle='none',
+                      dodge=True, capsize=0.00, ax=ax)
+    elif style == "scatter plot":
+        sns.scatterplot(data=dfr, x=x, y=y, hue=z, s=100, ax=ax)
+    elif style == "bar plot":
+        sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar=None, ax=ax)
+
+    if xmin and xmax:
+        ax.set_xlim(float(xmin), float(xmax))
+    if ymin and ymax:
+        ax.set_ylim(float(ymin), float(ymax))
+
+    xlabel = x if not x_text else x_text
+    ylabel = y if not y_text else y_text
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    if ylabel:
+        ax.set_ylabel(ylabel)
+    if title:
+        ax.set_title(title)
+    ax.legend(loc='upper right')
+    plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
+             rotation_mode="anchor")
+    fig.tight_layout()
+    canvas = FigureCanvas(fig)
+
+    return canvas
 def reinit_spectrum(fnames, spectra_fs):
     for fname in fnames:
         spectrum, _ = spectra_fs.get_objects(fname)

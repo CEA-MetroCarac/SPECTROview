@@ -212,9 +212,16 @@ class MainWindow:
 
         self.ui.btn_sw_3.clicked.connect(self.spectrums.save_work)
         self.ui.btn_lw_3.clicked.connect(self.spectrums.load_work)
+        self.ui.cbb_plot_style_3.addItems(self.spectrums.plot_styles)
+        self.ui.btn_plot_graph_3.clicked.connect(self.spectrums.plot_graph)
+
         self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
         self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
         self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
+        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
+        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
+        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
+
 
         self.darkmode = True
         self.ui.setPalette(dark_palette())

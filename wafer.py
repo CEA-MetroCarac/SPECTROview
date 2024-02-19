@@ -6,7 +6,7 @@ import pandas as pd
 from pathlib import Path
 import dill
 import multiprocessing
-from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb, translate_param, clear_layout, reinit_spectrum
+from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb, translate_param, clear_layout, reinit_spectrum, plot_graph
 from utils import FitThread
 from lmfit import fit_report
 from fitspy.spectra import Spectra
@@ -471,38 +471,8 @@ class Wafer(QObject):
         if text:
             xlabel_rot = float(text)
 
-        plt.close('all')
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        canvas = plot_graph(dfr, x,y,z, style, xmin, xmax, ymin, ymax, title, x_text,y_text, xlabel_rot )
 
-        if style == "box plot":
-            sns.boxplot(data=dfr, x=x, y=y, hue=z, dodge=True, ax=ax)
-        elif style == "point plot":
-            sns.pointplot(data=dfr, x=x, y=y, hue=z, linestyle='none',
-                          dodge=True, capsize=0.00, ax=ax)
-        elif style == "scatter plot":
-            sns.scatterplot(data=dfr, x=x, y=y, hue=z, s=100, ax=ax)
-        elif style == "bar plot":
-            sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar=None, ax=ax)
-
-        if xmin and xmax:
-            ax.set_xlim(float(xmin), float(xmax))
-        if ymin and ymax:
-            ax.set_ylim(float(ymin), float(ymax))
-
-        xlabel = x if not x_text else x_text
-        ylabel = y if not y_text else y_text
-        if xlabel:
-            ax.set_xlabel(xlabel)
-        if ylabel:
-            ax.set_ylabel(ylabel)
-        if title:
-            ax.set_title(title)
-        ax.legend(loc='upper right')
-        plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
-                 rotation_mode="anchor")
-        fig.tight_layout()
-        canvas = FigureCanvas(fig)
         self.ui.frame_graph.addWidget(canvas)
 
     def plot_measurement_sites(self):

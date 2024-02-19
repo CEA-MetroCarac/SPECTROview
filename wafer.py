@@ -18,12 +18,16 @@ import seaborn as sns
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from wafer_view import WaferView
-from PySide6.QtWidgets import (QFileDialog,QMessageBox, QApplication, QListWidgetItem)
+from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
+                               QListWidgetItem)
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt,  QSettings, QFileInfo,  QTimer, QObject, Signal, QThread
+from PySide6.QtCore import Qt, QSettings, QFileInfo, QTimer, QObject, Signal, \
+    QThread
 from tkinter import Tk, END
+
 DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
+
 
 class Wafer(QObject):
     # Define a signal for progress updates
@@ -99,14 +103,21 @@ class Wafer(QObject):
                     extension = file_path.suffix.lower()  # get file extension
 
                     if extension == '.csv':
-                        wafer_df = pd.read_csv(file_path, skiprows=1, delimiter=";")
+                        wafer_df = pd.read_csv(file_path, skiprows=1,
+                                               delimiter=";")
+
                     elif extension == '.txt':
                         wafer_df = pd.read_csv(file_path, delimiter="\t")
-                        wafer_df.columns = ['Y','X'] + list(wafer_df.columns[2:])
-                        wafer_df = wafer_df[['X','Y'] + [col for col in wafer_df.columns if col not in ['X', 'Y']]]
+                        wafer_df.columns = ['Y', 'X'] + list(
+                            wafer_df.columns[2:])
+                        wafer_df = wafer_df[
+                            ['X', 'Y'] + [col for col in wafer_df.columns if
+                                          col not in ['X', 'Y']]]
+
                     else:
                         print(f"Unsupported file format: {extension}")
                         continue
+
                     wafer_name = fname
                     if wafer_name in self.wafers:
                         print("Wafer is already opened")
@@ -121,8 +132,10 @@ class Wafer(QObject):
             for _, row in wafer_df.iterrows():
                 # Extract XY coords, wavenumber, and intensity values
                 coord = tuple(row[coord_columns])
+
                 x_values = wafer_df.columns[2:].tolist()
                 x_values = pd.to_numeric(x_values, errors='coerce').tolist()
+
                 y_values = row[2:].tolist()
                 fname = f"{wafer_name}_{coord}"
 
@@ -136,6 +149,7 @@ class Wafer(QObject):
                     spectrum_fs.y = np.asarray(y_values)[:-1]
                     spectrum_fs.y0 = np.asarray(y_values)[:-1]
                     self.spectra_fs.append(spectrum_fs)
+
         self.upd_wafers_list()
 
     def open_model(self, fname_json=None):
@@ -183,8 +197,6 @@ class Wafer(QObject):
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
 
-
-
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.
@@ -213,16 +225,18 @@ class Wafer(QObject):
             if name in ["Wafer", "X", 'Y', "success"]:
                 name = '0' + name  # to be in the 3 first columns
             elif '_' in name:
-                name = 'z' + name[4:] # model peak parameters to be at the end
+                name = 'z' + name[4:]  # model peak parameters to be at the end
             names.append(name)
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
 
-        columns = [self.translate_param(column) for column in self.df_fit_results.columns]
+        columns = [self.translate_param(column) for column in
+                   self.df_fit_results.columns]
         self.df_fit_results.columns = columns
 
         # Add "Quadrant" columns
-        self.df_fit_results['Quadrant'] = self.df_fit_results.apply(quadrant, axis=1)
+        self.df_fit_results['Quadrant'] = self.df_fit_results.apply(quadrant,
+                                                                    axis=1)
 
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
@@ -316,7 +330,7 @@ class Wafer(QObject):
             self.ui.cbb_y.clear()
             self.ui.cbb_z.clear()
             for column in columns:
-                #remove_special_chars = re.sub(r'\$[^$]+\$', '', column)
+                # remove_special_chars = re.sub(r'\$[^$]+\$', '', column)
                 self.ui.cbb_param_1.addItem(column)
                 self.ui.cbb_x.addItem(column)
                 self.ui.cbb_y.addItem(column)
@@ -405,7 +419,8 @@ class Wafer(QObject):
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
                                              label=f"{peak_label}")
                     else:
-                        self.ax.plot(x_values, y_peak, '--', label=f"{peak_label}")
+                        self.ax.plot(x_values, y_peak, '--',
+                                     label=f"{peak_label}")
 
             if hasattr(spectrum_fs.result_fit,
                        'residual') and self.ui.cb_residual.isChecked():
@@ -553,6 +568,7 @@ class Wafer(QObject):
         layout = self.ui.wafer_plot.layout()
         if layout:
             layout.addWidget(canvas)
+
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
         current_row = self.ui.wafers_listbox.currentRow()
@@ -612,6 +628,7 @@ class Wafer(QObject):
             if self.ui.spectra_listbox.count() > 0:
                 self.ui.spectra_listbox.setCurrentRow(0)
         QTimer.singleShot(50, self.plot_sel_spectre)
+
     def remove_wafer(self):
         """To remove a wafer from the listbox and wafers df"""
         wafer_name, coords = self.spectre_id()
@@ -647,13 +664,16 @@ class Wafer(QObject):
 
     def copy_fig(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas =self.canvas)
+        copy_fig_to_clb(canvas=self.canvas)
+
     def copy_fig_wafer(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas =self.canvas)
+        copy_fig_to_clb(canvas=self.canvas)
+
     def copy_fig_graph(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas =self.canvas)
+        copy_fig_to_clb(canvas=self.canvas)
+
     def select_all_spectra(self):
         """ To quickly select all spectra within the spectra listbox"""
         item_count = self.ui.spectra_listbox.count()
@@ -713,7 +733,7 @@ class Wafer(QObject):
 
     def view_fit_results_df(self):
         """To view selected dataframe"""
-        view_df(self.ui.tabWidget,self.df_fit_results)
+        view_df(self.ui.tabWidget, self.df_fit_results)
 
     def view_wafer_data(self):
         """To view data of selected wafer """
@@ -771,8 +791,11 @@ class Wafer(QObject):
     def save_work(self):
         """Save the current work/results."""
         try:
-            file_path, _ = QFileDialog.getSaveFileName(None, "Save fitted wafer data", "",
-                                                       "SPECTROview Files (*.sv2dmap)")
+            file_path, _ = QFileDialog.getSaveFileName(None,
+                                                       "Save fitted wafer data",
+                                                       "",
+                                                       "SPECTROview Files ("
+                                                       "*.sv2dmap)")
             if file_path:
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
@@ -807,7 +830,11 @@ class Wafer(QObject):
     def load_work(self):
         """Load a previously saved work."""
         try:
-            file_path, _ = QFileDialog.getOpenFileName(None, "Save fitted wafer data", "", "SPECTROview Files (*.sv2dmap)")
+            file_path, _ = QFileDialog.getOpenFileName(None,
+                                                       "Save fitted wafer data",
+                                                       "",
+                                                       "SPECTROview Files ("
+                                                       "*.sv2dmap)")
             if file_path:
                 with open(file_path, 'rb') as f:
                     loaded_data = dill.load(f)
@@ -823,9 +850,12 @@ class Wafer(QObject):
                     self.ui.cbb_x.setCurrentIndex(loaded_data['cbb_x'])
                     self.ui.cbb_y.setCurrentIndex(loaded_data['cbb_y'])
                     self.ui.cbb_z.setCurrentIndex(loaded_data['cbb_z'])
-                    self.ui.cbb_param_1.setCurrentIndex(loaded_data['cbb_param_1'])
-                    self.ui.cbb_wafer_1.setCurrentIndex(loaded_data['cbb_wafer_1'])
-                    self.ui.cbb_color_pallete.setCurrentIndex(loaded_data['color_pal'])
+                    self.ui.cbb_param_1.setCurrentIndex(
+                        loaded_data['cbb_param_1'])
+                    self.ui.cbb_wafer_1.setCurrentIndex(
+                        loaded_data['cbb_wafer_1'])
+                    self.ui.cbb_color_pallete.setCurrentIndex(
+                        loaded_data['color_pal'])
                     self.ui.plot_title.setText(loaded_data['plot_title'])
                     self.ui.wafer_size.setText(loaded_data['wafer_size'])
                     self.ui.int_vmin.setText(loaded_data['int_vmin'])
@@ -834,7 +864,8 @@ class Wafer(QObject):
                     self.ui.xmax.setText(loaded_data['xmax'])
                     self.ui.ymax.setText(loaded_data['ymax'])
                     self.ui.ymin.setText(loaded_data['ymin'])
-                    self.ui.ent_plot_title_2.setText(loaded_data['ent_plot_title_2'])
+                    self.ui.ent_plot_title_2.setText(
+                        loaded_data['ent_plot_title_2'])
                     self.ui.ent_xaxis_lbl.setText(loaded_data['ent_xaxis_lbl'])
                     self.ui.ent_yaxis_lbl.setText(loaded_data['ent_yaxis_lbl'])
                     self.ui.ent_x_rot.setText(loaded_data['ent_x_rot'])
@@ -846,6 +877,7 @@ class Wafer(QObject):
                 print("Work loaded successfully.")
         except Exception as e:
             print(f"Error loading work: {e}")
+
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""
         plt.style.use('default')
@@ -859,6 +891,7 @@ class Wafer(QObject):
         appli.fileselector.select_item(0)
         appli.update()
         root.mainloop()
+
 
 class FitThread(QThread):
     fit_progress_changed = Signal(int)
@@ -887,4 +920,3 @@ class FitThread(QThread):
 
         self.fit_progress_changed.emit(100)
         self.fit_completed.emit()
-

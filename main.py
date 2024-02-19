@@ -7,7 +7,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt, QFile
 from PySide6.QtGui import QDoubleValidator, QIcon
 
-from utils import dark_palette, light_palette,view_md_doc
+from utils import dark_palette, light_palette, view_md_doc
 from ui import resources_new
 
 from callbacks_df import CallbacksDf
@@ -203,6 +203,7 @@ class MainWindow:
         else:
             self.darkmode = False
             self.ui.setPalette(light_palette())
+
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)
         self.ui.combo_hue.setCurrentIndex(
@@ -216,7 +217,7 @@ class MainWindow:
     def open_doc_df_query(self):
         """Open doc detail about query function of pandas dataframe"""
         markdown_file_path = HELP_DFQUERY
-        ui =self.ui.tabWidget
+        ui = self.ui.tabWidget
         view_md_doc(ui, markdown_file_path)
 
     def show_about_dialog(self):
@@ -252,60 +253,72 @@ class MainWindow:
 # if __name__ == "__main__":
 #     launcher()
 
-# def launcher2(file_paths=None, fname_json=None):
+def launcher2(file_paths=None, fname_json=None):
+    app = QApplication()
+    app.setWindowIcon(QIcon(ICON_APPLI))
+    window = MainWindow()
+    app.setStyle("Fusion")
+    if file_paths is not None:
+        window.wafer.open_data(file_paths=file_paths)
+    if fname_json is not None:
+        window.wafer.open_model(fname_json=fname_json)
+    # if file_paths is not None:
+    #     window.spectrums.open_data(file_paths=file_paths)
+    # if fname_json is not None:
+    #     window.spectrums.open_model(fname_json=fname_json)
+    window.ui.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    dirname1 = r"C:\Users\VL251876\Documents\Python\SPECTROview\data_test" \
+               r"\RAW 2Dmaps"
+    dirname2 = r"C:\Users\VL251876\Documents\Python\SPECTROview\data_test" \
+               r"\RAW_spectra"
+
+    fname1 = os.path.join(dirname1, 'D23S2204.2_17.csv')
+    fname2 = os.path.join(dirname1, 'ordered_map.txt')
+    # fname2 = os.path.join(dirname1, 'D23S2204.2_19.csv')
+    fname3 = os.path.join(dirname1, 'D23S2204.2_25.csv')
+    fname_json1 = os.path.join(dirname1, 'MoS2_325-490_8cm-shifted.json')
+
+    fname11 = os.path.join(dirname2, 'P10_3ML.txt')
+    fname12 = os.path.join(dirname2, 'P6_2ML.txt')
+    fname13 = os.path.join(dirname2, 'P14_4ML.txt')
+    fname_json2 = os.path.join(dirname2, 'MoS2_325-490_.json')
+
+    launcher2([fname2], fname_json1)
+    # launcher2([fname11, fname12, fname13], fname_json2)
+
+# def launcher3(file_paths=None, fname_json=None):
 #     app = QApplication()
 #     app.setWindowIcon(QIcon(ICON_APPLI))
 #     window = MainWindow()
 #     app.setStyle("Fusion")
+#     # if file_paths is not None:
+#     #     window.wafer.open_data(file_paths=file_paths)
+#     # if fname_json is not None:
+#     #     window.wafer.open_model(fname_json=fname_json)
 #     if file_paths is not None:
-#         window.wafer.open_data(file_paths=file_paths)
+#         window.spectrums.open_data(file_paths=file_paths)
 #     if fname_json is not None:
-#         window.wafer.open_model(fname_json=fname_json)
+#         window.spectrums.open_model(fname_json=fname_json)
 #
-#         # window.saveloadws.save_workspace(fname_json='toto.json')
-#     # window.saveloadws.load_workspace(fname_json='toto.json')
 #     window.ui.show()
 #     sys.exit(app.exec())
 #
 #
 # if __name__ == "__main__":
-#     dirname = r"C:\Users\VL251876\Documents\Python\SPECTROview\data_test\RAW " \
-#               r"spectrum"
+#     dirname = r"/Users/HoanLe/Documents/Python/data_test/RAW_spectra"
 #     fname1 = os.path.join(dirname, 'D23S2204.2_17.csv')
 #     fname2 = os.path.join(dirname, 'D23S2204.2_19.csv')
 #     fname3 = os.path.join(dirname, 'D23S2204.2_25.csv')
-#     fname_json = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
-#     launcher2([fname2, fname3, fname1], fname_json)
-
-def launcher3(file_paths=None, fname_json=None):
-    app = QApplication()
-    app.setWindowIcon(QIcon(ICON_APPLI))
-    window = MainWindow()
-    app.setStyle("Fusion")
-    # if file_paths is not None:
-    #     window.wafer.open_data(file_paths=file_paths)
-    # if fname_json is not None:
-    #     window.wafer.open_model(fname_json=fname_json)
-    if file_paths is not None:
-        window.spectrums.open_data(file_paths=file_paths)
-    if fname_json is not None:
-        window.spectrums.open_model(fname_json=fname_json)
-
-    window.ui.show()
-    sys.exit(app.exec())
-
-if __name__ == "__main__":
-    dirname = r"/Users/HoanLe/Documents/Python/data_test/RAW_spectra"
-    fname1 = os.path.join(dirname, 'D23S2204.2_17.csv')
-    fname2 = os.path.join(dirname, 'D23S2204.2_19.csv')
-    fname3 = os.path.join(dirname, 'D23S2204.2_25.csv')
-    fname4 = os.path.join(dirname, 'Maps2D_2.txt')
-
-    fname11 = os.path.join(dirname, '2ML.txt')
-    fname12 = os.path.join(dirname, '3ML.txt')
-    fname13 = os.path.join(dirname, '4ML.txt')
-
-
-    fname_json = os.path.join(dirname, 'MoS2_325-490_.json')
-    launcher3([fname11, fname12, fname13], fname_json)
-    #launcher3()
+#     fname4 = os.path.join(dirname, 'Maps2D_2.txt')
+#
+#     fname11 = os.path.join(dirname, '2ML.txt')
+#     fname12 = os.path.join(dirname, '3ML.txt')
+#     fname13 = os.path.join(dirname, '4ML.txt')
+#
+#     fname_json = os.path.join(dirname, 'MoS2_325-490_.json')
+#     launcher3([fname11, fname12, fname13], fname_json)
+#     # launcher3()

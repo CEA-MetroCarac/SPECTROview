@@ -18,12 +18,16 @@ import seaborn as sns
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from wafer_view import WaferView
-from PySide6.QtWidgets import (QFileDialog,QMessageBox, QApplication, QListWidgetItem)
+from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
+                               QListWidgetItem)
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt,  QSettings, QFileInfo,  QTimer, QObject, Signal, QThread
+from PySide6.QtCore import Qt, QSettings, QFileInfo, QTimer, QObject, Signal, \
+    QThread
 from tkinter import Tk, END
+
 DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
+
 
 class Spectrums(QObject):
     # Define a signal for progress updates
@@ -88,26 +92,32 @@ class Spectrums(QObject):
                     fname = file_path.stem
 
                     # Check if fname is already opened
-                    if any(spectrum.fname == fname for spectrum in self.spectra_fs):
-                        print(f"Spectrum '{fname}' is already opened. Skipping...")
+                    if any(spectrum.fname == fname for spectrum in
+                           self.spectra_fs):
+                        print(
+                            f"Spectrum '{fname}' is already opened. "
+                            f"Skipping...")
                         continue
 
-                    dfr = pd.read_csv(file_path,header=None, skiprows=1, delimiter="\t")
-                    x_values = pd.to_numeric(dfr.iloc[:, 0])
-                    y_values = pd.to_numeric(dfr.iloc[:, 1])
+                    dfr = pd.read_csv(file_path, header=None, skiprows=1,
+                                      delimiter="\t")
+                    arr = dfr.to_numpy()
+
+                    x_values = arr[:, 0]  # Extract first column as x_values
+                    y_values = arr[:, 1]  # Extract second column as y_values
 
                     # create FITSPY object
                     spectrum_fs = Spectrum()
                     spectrum_fs.fname = fname
-                    spectrum_fs.x = np.asarray(x_values)
-                    spectrum_fs.x0 = np.asarray(x_values)
-                    spectrum_fs.y = np.asarray(y_values)
-                    spectrum_fs.y0 = np.asarray(y_values)
+                    spectrum_fs.x = x_values
+                    print(x_values)
+                    print(spectrum_fs.x)
+                    spectrum_fs.x0 = x_values
+                    spectrum_fs.y = y_values
+                    spectrum_fs.y0 = y_values
                     self.spectra_fs.append(spectrum_fs)
 
         QTimer.singleShot(100, self.upd_spectrums_list)
-        print(self.spectra_fs)
-        print(self.spectra_fs.fnames)
 
     def upd_spectrums_list(self):
         current_row = self.ui.spectrums_listbox.currentRow()
@@ -142,6 +152,7 @@ class Spectrums(QObject):
     def plot_sel_spectre(self):
         """Trigger the fnc to plot spectre"""
         self.delay_timer.start(100)
+
     def get_selected_spectra(self):
         items = self.ui.spectrums_listbox.selectedItems()
         fnames = []
@@ -149,14 +160,15 @@ class Spectrums(QObject):
             text = item.text()
             fnames.append(text)
         return fnames
+
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
         plt.style.use(PLOT_POLICY)
-        fnames= self.get_selected_spectra()
+        fnames = self.get_selected_spectra()
         selected_spectra_fs = []
 
         for spectrum_fs in self.spectra_fs:
-            fname =spectrum_fs.fname
+            fname = spectrum_fs.fname
             if fname in fnames:
                 selected_spectra_fs.append(spectrum_fs)
         if len(selected_spectra_fs) == 0:
@@ -168,7 +180,7 @@ class Spectrums(QObject):
         self.ax = fig.add_subplot(111)
 
         for spectrum_fs in selected_spectra_fs:
-            fname= spectrum_fs.fname
+            fname = spectrum_fs.fname
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
             self.ax.plot(x_values, y_values, label=f"{fname}", ms=3, lw=2)
@@ -199,7 +211,8 @@ class Spectrums(QObject):
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
                                              label=f"{peak_label}")
                     else:
-                        self.ax.plot(x_values, y_peak, '--', label=f"{peak_label}")
+                        self.ax.plot(x_values, y_peak, '--',
+                                     label=f"{peak_label}")
 
             if hasattr(spectrum_fs.result_fit,
                        'residual') and self.ui.cb_residual_3.isChecked():
@@ -219,10 +232,12 @@ class Spectrums(QObject):
         self.toolbar = NavigationToolbar2QT(self.canvas, self.ui)
         self.ui.spectre_view_frame_4.addWidget(self.canvas)
         self.ui.toolbar_frame_3.addWidget(self.toolbar)
+
     def clear_spectre_view(self):
         """ Clear plot and toolbar within the spectre_view"""
         self.clear_layout(self.ui.spectre_view_frame_4.layout())
         self.clear_layout(self.ui.toolbar_frame_3.layout())
+
     def clear_layout(self, layout):
         """Clear everything within a given Qlayout"""
         if layout is not None:
@@ -271,6 +286,7 @@ class Spectrums(QObject):
         #                                                 fnames))
         # self.fit_thread.fit_completed.connect(self.fit_completed)
         # self.fit_thread.start()
+
     def fit_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""
         modifiers = QApplication.keyboardModifiers()
@@ -278,15 +294,16 @@ class Spectrums(QObject):
             self.fit_all()
         else:
             self.fit()
+
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
+
     def fit_progress(self, num, elapsed_time, fnames):
         """Called when fitting process is completed"""
         self.ui.progress_3.setText(
             f"{num}/{len(fnames)} fitted ({elapsed_time:.2f}s)")
-
 
     def fit_completed(self):
         """Called when fitting process is completed"""
@@ -295,6 +312,7 @@ class Spectrums(QObject):
 
     def update_pbar(self, progress):
         self.ui.progressBar_3.setValue(progress)
+
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""
         plt.style.use('default')
@@ -308,6 +326,8 @@ class Spectrums(QObject):
         appli.fileselector.select_item(0)
         appli.update()
         root.mainloop()
+
+
 class FitThread(QThread):
     fit_progress_changed = Signal(int)
     fit_progress = Signal(int, float)  # number and elapsed time

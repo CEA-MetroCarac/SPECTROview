@@ -6,7 +6,8 @@ import pandas as pd
 from pathlib import Path
 import dill
 
-from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb, translate_param, clear_layout, reinit_spectrum, plot_graph
+from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb, \
+    translate_param, clear_layout, reinit_spectrum, plot_graph
 from utils import FitThread
 from lmfit import fit_report
 from fitspy.spectra import Spectra
@@ -47,16 +48,16 @@ class Spectrums(QObject):
 
         # Connect and plot_spectre of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
-            self.delay_plot)
+            self.plot_delay)
 
         # Connect the stateChanged signal of the legend CHECKBOX
-        self.ui.cb_legend_3.stateChanged.connect(self.delay_plot)
+        self.ui.cb_legend_3.stateChanged.connect(self.plot_delay)
 
-        self.ui.cb_raw_3.stateChanged.connect(self.delay_plot)
-        self.ui.cb_bestfit_3.stateChanged.connect(self.delay_plot)
-        self.ui.cb_colors_3.stateChanged.connect(self.delay_plot)
-        self.ui.cb_residual_3.stateChanged.connect(self.delay_plot)
-        self.ui.cb_filled_3.stateChanged.connect(self.delay_plot)
+        self.ui.cb_raw_3.stateChanged.connect(self.plot_delay)
+        self.ui.cb_bestfit_3.stateChanged.connect(self.plot_delay)
+        self.ui.cb_colors_3.stateChanged.connect(self.plot_delay)
+        self.ui.cb_residual_3.stateChanged.connect(self.plot_delay)
+        self.ui.cb_filled_3.stateChanged.connect(self.plot_delay)
 
         # Set a delay for the function plot_sel_spectra
         self.delay_timer = QTimer()
@@ -66,7 +67,8 @@ class Spectrums(QObject):
         # Connect the progress signal to update_progress_bar slot
         self.fit_progress_changed.connect(self.update_pbar)
 
-        self.plot_styles = ["point plot", "scatter plot", "box plot", "bar plot"]
+        self.plot_styles = ["point plot", "scatter plot", "box plot",
+                            "bar plot"]
 
     def open_data(self, file_paths=None, spectra=None):
         if self.spectra_fs is None:
@@ -98,7 +100,7 @@ class Spectrums(QObject):
 
                     dfr = pd.read_csv(file_path, header=None, skiprows=1,
                                       delimiter="\t")
-                    dfr_sorted = dfr.sort_values(by=0)
+                    dfr_sorted = dfr.sort_values(by=0)  # increasing order
                     x_values = dfr_sorted.iloc[:, 0].tolist()
                     y_values = dfr_sorted.iloc[:, 1].tolist()
 
@@ -139,11 +141,7 @@ class Spectrums(QObject):
         else:
             if item_count > 0:
                 self.ui.spectrums_listbox.setCurrentRow(0)
-        QTimer.singleShot(50, self.delay_plot)
-
-    def delay_plot(self):
-        """Trigger the fnc to plot spectre"""
-        self.delay_timer.start(100)
+        QTimer.singleShot(50, self.plot_delay)
 
     def get_selected_spectra(self):
         items = self.ui.spectrums_listbox.selectedItems()
@@ -277,10 +275,8 @@ class Spectrums(QObject):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:
             self.fit_all()
-            print('ctril hold)')
         else:
             self.fit()
-            print('no hold')
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
@@ -315,12 +311,13 @@ class Spectrums(QObject):
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
 
-        # columns = [translate_param(self.model_fs, column) for column in
-        #            self.df_fit_results.columns]
-        #self.df_fit_results.columns = columns
+        columns = [translate_param(self.model_fs, column) for column in
+                   self.df_fit_results.columns]
+        self.df_fit_results.columns = columns
 
         self.apprend_cbb_param()
         self.send_df_to_vis()
+
     def apprend_cbb_param(self):
         """to append all values of df_fit_results to comoboxses"""
         if self.df_fit_results is not None:
@@ -328,17 +325,24 @@ class Spectrums(QObject):
             self.ui.cbb_x_3.clear()
             self.ui.cbb_y_3.clear()
             self.ui.cbb_z_3.clear()
+            self.ui.cbb_x_7.clear()
+            self.ui.cbb_y_7.clear()
+            self.ui.cbb_z_7.clear()
             for column in columns:
                 self.ui.cbb_x_3.addItem(column)
                 self.ui.cbb_y_3.addItem(column)
                 self.ui.cbb_z_3.addItem(column)
+                self.ui.cbb_x_7.addItem(column)
+                self.ui.cbb_y_7.addItem(column)
+                self.ui.cbb_z_7.addItem(column)
 
     def send_df_to_vis(self):
         """Send the collected spectral data dataframe to visu tab"""
         dfs = {}
         dfs["fitted_results"] = self.df_fit_results
         self.callbacks_df.action_open_df(file_paths=None, original_dfs=dfs)
-    def plot_graph(self):
+
+    def plot_graph(self, view=None):
         """Plot graph """
         clear_layout(self.ui.frame_graph_3.layout())
 
@@ -361,9 +365,42 @@ class Spectrums(QObject):
         if text:
             xlabel_rot = float(text)
 
-        canvas = plot_graph(dfr, x,y,z, style, xmin, xmax, ymin, ymax, title, x_text,y_text, xlabel_rot )
+        canvas = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
+                            x_text, y_text, xlabel_rot)
 
         self.ui.frame_graph_3.addWidget(canvas)
+
+    def plot_graph2(self, view=None):
+        clear_layout(self.ui.frame_graph_7.layout())
+
+        dfr = self.df_fit_results
+        x = self.ui.cbb_x_7.currentText()
+        y = self.ui.cbb_y_7.currentText()
+        z = self.ui.cbb_z_7.currentText()
+        style = self.ui.cbb_plot_style_7.currentText()
+        xmin = self.ui.xmin_3.text()
+        ymin = self.ui.ymin_3.text()
+        xmax = self.ui.xmax_3.text()
+        ymax = self.ui.ymax_3.text()
+
+        title = self.ui.ent_plot_title_5.text()
+        x_text = self.ui.ent_xaxis_lbl_3.text()
+        y_text = self.ui.ent_yaxis_lbl_3.text()
+
+        text = self.ui.ent_x_rot_3.text()
+        xlabel_rot = 0  # Default rotation angle
+        if text:
+            xlabel_rot = float(text)
+
+        canvas = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
+                            x_text, y_text, xlabel_rot)
+
+        self.ui.frame_graph_7.addWidget(canvas)
+
+    def plot_delay(self):
+        """Trigger the fnc to plot spectre"""
+        self.delay_timer.start(100)
+
     def fit_progress(self, num, elapsed_time, fnames):
         """Called when fitting process is completed"""
         self.ui.progress_3.setText(
@@ -371,7 +408,7 @@ class Spectrums(QObject):
 
     def fit_completed(self):
         """Called when fitting process is completed"""
-        self.delay_plot()
+        self.plot_delay()
         self.upd_spectrums_list()
 
     def update_pbar(self, progress):
@@ -399,7 +436,7 @@ class Spectrums(QObject):
         if fnames is None:
             fnames = self.get_selected_spectra()
         reinit_spectrum(fnames, self.spectra_fs)
-        self.delay_plot()
+        self.plot_delay()
         self.upd_spectrums_list()
 
     def reinit_all(self):
@@ -463,9 +500,8 @@ class Spectrums(QObject):
             except Exception as e:
                 print("Error loading DataFrame:", e)
 
-        # self.apprend_cbb_param()
-        # self.apprend_cbb_wafer()
-        # self.send_df_to_vis()
+        self.apprend_cbb_param()
+        self.send_df_to_vis()
 
     def view_stats(self):
         """Show the statistique fitting results of the selected spectrum"""
@@ -512,14 +548,8 @@ class Spectrums(QObject):
             if file_path:
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
-
                     'model_fs': self.model_fs,
                     'df_fit_results': self.df_fit_results,
-                    'cbb_x': self.ui.cbb_x.currentIndex(),
-                    'cbb_y': self.ui.cbb_y.currentIndex(),
-                    'cbb_z': self.ui.cbb_z.currentIndex(),
-                    "cbb_param_1": self.ui.cbb_param_1.currentIndex(),
-                    "cbb_wafer_1": self.ui.cbb_wafer_1.currentIndex(),
 
                     'plot_title': self.ui.ent_plot_title_5.text(),
                     'xmin': self.ui.xmin_3.text(),
@@ -529,6 +559,16 @@ class Spectrums(QObject):
                     'ent_xaxis_lbl': self.ui.ent_xaxis_lbl_3.text(),
                     'ent_yaxis_lbl': self.ui.ent_yaxis_lbl_3.text(),
                     'ent_x_rot': self.ui.ent_x_rot_3.text(),
+                    "plot_style_1": self.ui.cbb_plot_style_3.currentIndex(),
+                    "plot_style_2": self.ui.cbb_plot_style_7.currentIndex(),
+
+                    'cbb_x_1': self.ui.cbb_x_3.currentIndex(),
+                    'cbb_y_1': self.ui.cbb_y_3.currentIndex(),
+                    'cbb_z_1': self.ui.cbb_z_3.currentIndex(),
+                    'cbb_x_2': self.ui.cbb_x_7.currentIndex(),
+                    'cbb_y_2': self.ui.cbb_y_7.currentIndex(),
+                    'cbb_z_2': self.ui.cbb_z_7.currentIndex(),
+
                 }
                 with open(file_path, 'wb') as f:
                     dill.dump(data_to_save, f)
@@ -551,7 +591,8 @@ class Spectrums(QObject):
                     self.spectra_fs = loaded_data['spectra_fs']
                     self.model_fs = loaded_data['model_fs']
                     self.df_fit_results = loaded_data['df_fit_results']
-                    self.upd_spectrums_list()
+                    self.apprend_cbb_param()
+
                     self.ui.ent_plot_title_5.setText(loaded_data['plot_title'])
                     self.ui.xmin_3.setText(loaded_data['xmin'])
                     self.ui.xmax_3.setText(loaded_data['xmax'])
@@ -563,10 +604,23 @@ class Spectrums(QObject):
                         loaded_data['ent_yaxis_lbl'])
                     self.ui.ent_x_rot_3.setText(loaded_data['ent_x_rot'])
 
+                    self.ui.cbb_plot_style_3.setCurrentIndex(
+                        loaded_data['plot_style_1'])
+                    self.ui.cbb_plot_style_7.setCurrentIndex(
+                        loaded_data['plot_style_2'])
+                    self.ui.cbb_x_3.setCurrentIndex(loaded_data['cbb_x_1'])
+                    self.ui.cbb_y_3.setCurrentIndex(loaded_data['cbb_y_1'])
+                    self.ui.cbb_z_3.setCurrentIndex(loaded_data['cbb_z_1'])
+                    self.ui.cbb_x_7.setCurrentIndex(loaded_data['cbb_x_2'])
+                    self.ui.cbb_y_7.setCurrentIndex(loaded_data['cbb_y_2'])
+                    self.ui.cbb_z_7.setCurrentIndex(loaded_data['cbb_z_2'])
+
+                    self.send_df_to_vis()
+                    self.upd_spectrums_list()
                     # Plot the graph and wafer after loading the work
-                    # self.plot_graph()
+                    self.plot_graph()
+                    self.plot_graph2()
 
                 print("Work loaded successfully.")
         except Exception as e:
             print(f"Error loading work: {e}")
-

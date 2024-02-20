@@ -217,7 +217,7 @@ class MainWindow:
         self.ui.btn_plot_graph_3.clicked.connect(self.spectrums.plot_graph)
         self.ui.btn_plot_graph_7.clicked.connect(self.spectrums.plot_graph2)
 
-        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
+        self.ui.btn_add_col.clicked.connect(self.spectrums.add_column)
         self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
         self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
         self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
@@ -313,7 +313,7 @@ if __name__ == "__main__":
     fname_json1 = os.path.join(dirname1, 'MoS2_325-490_8cm-shifted.json')
 
     fname11 = os.path.join(dirname2, 'P10_3ML.txt')
-    fname12 = os.path.join(dirname2, 'P6_2ML.txt')
+    fname12 = os.path.join(dirname2, 'P6_2ML_532.txt')
     fname13 = os.path.join(dirname2, 'P14_4ML.txt')
     fname_json2 = os.path.join(dirname2, 'MoS2_325-490_.json')
 

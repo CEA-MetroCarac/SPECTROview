@@ -6,7 +6,8 @@ import pandas as pd
 from pathlib import Path
 import dill
 import multiprocessing
-from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb, translate_param, clear_layout, reinit_spectrum, plot_graph
+from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb, \
+    translate_param, clear_layout, reinit_spectrum, plot_graph
 from utils import FitThread
 from lmfit import fit_report
 from fitspy.spectra import Spectra
@@ -223,10 +224,13 @@ class Wafer(QObject):
             elif '_' in name:
                 name = 'z' + name[4:]  # model peak parameters to be at the end
             names.append(name)
+            print(names)
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
 
-        columns = [translate_param(self.model_fs,column) for column in
+        print('self.df_fit_results', self.df_fit_results.columns)
+        
+        columns = [translate_param(self.model_fs, column) for column in
                    self.df_fit_results.columns]
         self.df_fit_results.columns = columns
 
@@ -471,7 +475,8 @@ class Wafer(QObject):
         if text:
             xlabel_rot = float(text)
 
-        canvas = plot_graph(dfr, x,y,z, style, xmin, xmax, ymin, ymax, title, x_text,y_text, xlabel_rot )
+        canvas = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
+                            x_text, y_text, xlabel_rot)
 
         self.ui.frame_graph.addWidget(canvas)
 
@@ -574,7 +579,6 @@ class Wafer(QObject):
         self.ui.spectra_listbox.clear()
         self.clear_spectre_view()
         self.clear_wafer_plot()
-
 
     def clear_spectre_view(self):
         """ Clear plot and toolbar within the spectre_view"""
@@ -834,6 +838,3 @@ class Wafer(QObject):
                                                         fnames))
         self.fit_thread.fit_completed.connect(self.fit_completed)
         self.fit_thread.start()
-
-
-

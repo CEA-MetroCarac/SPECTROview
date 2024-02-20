@@ -286,13 +286,9 @@ class Spectrums(QObject):
 
         for spectrum_fs in self.spectra_fs:
             if hasattr(spectrum_fs.result_fit, 'best_values'):
-                # wafer_name, coord = self.spectre_id_fs(spectrum_fs)
-                # x, y = coord
                 success = spectrum_fs.result_fit.success
                 best_values = spectrum_fs.result_fit.best_values
                 best_values["Sample"] = spectrum_fs.fname
-                # best_values["X"] = x
-                # best_values["Y"] = y
                 best_values["success"] = success
                 fit_results_list.append(best_values)
         self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
@@ -306,19 +302,55 @@ class Spectrums(QObject):
             if name in ["Sample", "success"]:
                 name = '0' + name  # to be in the 2 first columns
             elif '_' in name:
-                name = 'z' + name[2:]  # model peak parameters to be at the end
+                name = 'z' + name[4:]  # model peak parameters to be at the end
             names.append(name)
+            print(names)
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
+        print('self.df_fit_results', self.df_fit_results.columns)
 
         columns = [translate_param(self.model_fs, column) for column in
                    self.df_fit_results.columns]
         self.df_fit_results.columns = columns
 
-        self.apprend_cbb_param()
+        self.split_fname()
+        self.upd_cbb_param()
         self.send_df_to_vis()
 
-    def apprend_cbb_param(self):
+    def split_fname(self):
+        """Split fname and populate the combobox"""
+        dfr = self.df_fit_results
+        fname_parts = dfr.loc[0, 'Sample'].split('_')
+        self.ui.cbb_split_fname.clear()  # Clear existing items in combobox
+        for part in fname_parts:
+            self.ui.cbb_split_fname.addItem(part)
+
+    def add_column(self):
+        dfr = self.df_fit_results
+        col_name = self.ui.ent_col_name.text()
+        selected_part_index = self.ui.cbb_split_fname.currentIndex()  # Get
+        # the index of the selected item
+
+        if selected_part_index < 0 or not col_name:
+            print("Please select a part and enter a column name.")
+            return
+
+        # Check if column with the same name already exists
+        if col_name in dfr.columns:
+            print(
+                f"Column '{col_name}' already exists. Please choose a "
+                f"different name.")
+            return
+
+        parts = dfr['Sample'].str.split('_')
+        dfr[col_name] = [part[selected_part_index] if len(
+            part) > selected_part_index else None for part in parts]
+        print("Column added successfully:", col_name)
+
+        self.df_fit_results = dfr
+        self.upd_cbb_param()
+
+    def upd_cbb_param(self):
         """to append all values of df_fit_results to comoboxses"""
         if self.df_fit_results is not None:
             columns = self.df_fit_results.columns.tolist()
@@ -500,7 +532,7 @@ class Spectrums(QObject):
             except Exception as e:
                 print("Error loading DataFrame:", e)
 
-        self.apprend_cbb_param()
+        self.upd_cbb_param()
         self.send_df_to_vis()
 
     def view_stats(self):
@@ -591,7 +623,7 @@ class Spectrums(QObject):
                     self.spectra_fs = loaded_data['spectra_fs']
                     self.model_fs = loaded_data['model_fs']
                     self.df_fit_results = loaded_data['df_fit_results']
-                    self.apprend_cbb_param()
+                    self.upd_cbb_param()
 
                     self.ui.ent_plot_title_5.setText(loaded_data['plot_title'])
                     self.ui.xmin_3.setText(loaded_data['xmin'])

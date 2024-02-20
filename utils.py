@@ -5,21 +5,23 @@ import os
 import copy
 import time
 
-#import win32clipboard
+import win32clipboard
 from io import BytesIO
 import numpy as np
 import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
-from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, QTableWidgetItem, QVBoxLayout,QTextBrowser
+from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
+    QTableWidgetItem, QVBoxLayout, QTextBrowser
 from PySide6.QtCore import Qt, QFile, QObject, Signal, QThread
-from PySide6.QtGui import  QPalette, QColor, QTextCursor
+from PySide6.QtGui import QPalette, QColor, QTextCursor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 
-def plot_graph(dfr, x,y,z, style, xmin, xmax, ymin, ymax, title, x_text,y_text, xlabel_rot):
+def plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
+               y_text, xlabel_rot):
     """Plot graph """
     plt.close('all')
     fig = plt.figure()
@@ -55,6 +57,8 @@ def plot_graph(dfr, x,y,z, style, xmin, xmax, ymin, ymax, title, x_text,y_text, 
     canvas = FigureCanvas(fig)
 
     return canvas
+
+
 def reinit_spectrum(fnames, spectra_fs):
     for fname in fnames:
         spectrum, _ = spectra_fs.get_objects(fname)
@@ -67,6 +71,8 @@ def reinit_spectrum(fnames, spectra_fs):
         spectrum.remove_models()
         spectrum.baseline.points = [[], []]
         spectrum.baseline.is_subtracted = False
+
+
 def clear_layout(layout):
     """Clear everything within a given Qlayout"""
     if layout is not None:
@@ -77,6 +83,7 @@ def clear_layout(layout):
                 widget = item.widget()
                 layout.removeWidget(widget)
                 widget.close()
+
 
 def translate_param(model_fs, param):
     """Translate parameter names to plot title"""
@@ -99,6 +106,8 @@ def translate_param(model_fs, param):
                 peak_label = peak_labels[peak_index]
                 return f"{label} of peak {peak_label} {unit}"
     return param
+
+
 def quadrant(row):
     if row['X'] < 0 and row['Y'] < 0:
         return 'Q1'
@@ -110,12 +119,14 @@ def quadrant(row):
         return 'Q4'
     else:
         return np.nan
+
+
 def copy_fig_to_clb(canvas):
     """fnc to copy canvas figure to clipboard"""
     if canvas:
         figure = canvas.figure
         with BytesIO() as buf:
-            figure.savefig(buf, format='png', dpi=400)
+            figure.savefig(buf, format='png', dpi=100)
             data = buf.getvalue()
         format_id = win32clipboard.RegisterClipboardFormat('PNG')
         win32clipboard.OpenClipboard()
@@ -125,13 +136,16 @@ def copy_fig_to_clb(canvas):
     else:
         QMessageBox.critical(None, "Error", "No plot to copy.")
 
+
 def read_raw_semilab():
     """read raw spectra data of semilab equiments"""
     pass
 
+
 def read_2Dmaps_ls():
     """Read 2d maps labspec6"""
     pass
+
 
 def show_alert(message):
     msg_box = QMessageBox()
@@ -139,6 +153,7 @@ def show_alert(message):
     msg_box.setWindowTitle("Alert")
     msg_box.setText(message)
     msg_box.exec_()
+
 
 def view_df(tabWidget, df):
     """To view selected dataframe"""
@@ -160,6 +175,8 @@ def view_df(tabWidget, df):
     layout = QVBoxLayout(df_viewer)
     layout.addWidget(table_widget)
     df_viewer.exec_()
+
+
 def view_text(ui, title, text):
     report_viewer = QDialog(ui)
     report_viewer.setWindowTitle(title)
@@ -178,6 +195,8 @@ def view_text(ui, title, text):
     layout = QVBoxLayout(report_viewer)
     layout.addWidget(text_browser)
     report_viewer.exec()
+
+
 def view_md_doc(ui, fname):
     # Create a QDialog to display the Markdown content
     markdown_viewer = QDialog(ui)
@@ -200,6 +219,7 @@ def view_md_doc(ui, fname):
     layout.addWidget(text_browser)
     markdown_viewer.exec()  # Show the Markdown viewer dialog
 
+
 def dark_palette():
     # Get the dark color palette of the application
     dark_palette = QPalette()
@@ -219,6 +239,7 @@ def dark_palette():
     # Placeholder text color
     dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
     return dark_palette
+
 
 def light_palette():
     # Get the light color palette of the application
@@ -244,6 +265,7 @@ def light_palette():
     light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
     # Light gray placeholder text color
     return light_palette
+
 
 class FitThread(QThread):
     fit_progress_changed = Signal(int)

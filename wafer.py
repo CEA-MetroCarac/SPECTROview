@@ -43,7 +43,9 @@ class Wafer(QObject):
 
         self.wafers = {}  # list of opened wafers
         self.ax = None
-        self.canvas = None
+        self.canvas1 = None
+        self.canvas2 = None
+        self.canvas2 = None
         self.model_fs = None  # FITSPY
         self.spectra_fs = Spectra()  # FITSPY
 
@@ -63,6 +65,7 @@ class Wafer(QObject):
         self.ui.cb_colors.stateChanged.connect(self.delay_plot)
         self.ui.cb_residual.stateChanged.connect(self.delay_plot)
         self.ui.cb_filled.stateChanged.connect(self.delay_plot)
+        self.ui.cb_peaks.stateChanged.connect(self.delay_plot)
 
         # Set a delay for the function plot_sel_spectra
         self.delay_timer = QTimer()
@@ -224,12 +227,8 @@ class Wafer(QObject):
             elif '_' in name:
                 name = 'z' + name[4:]  # model peak parameters to be at the end
             names.append(name)
-            print(names)
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
-
-        print('self.df_fit_results', self.df_fit_results.columns)
-        
         columns = [translate_param(self.model_fs, column) for column in
                    self.df_fit_results.columns]
         self.df_fit_results.columns = columns
@@ -237,7 +236,6 @@ class Wafer(QObject):
         # Add "Quadrant" columns
         self.df_fit_results['Quadrant'] = self.df_fit_results.apply(quadrant,
                                                                     axis=1)
-
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
         self.send_df_to_vis()
@@ -385,6 +383,15 @@ class Wafer(QObject):
                     if self.ui.cb_filled.isChecked():
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
                                              label=f"{peak_label}")
+                        if self.ui.cb_peaks.isChecked():
+                            position = peak_model.param_hints['x0']['value']
+                            intensity = peak_model.param_hints['ampli']['value']
+                            position = round(position, 2)
+                            text = f"{peak_label} ({position})"
+                            self.ax.text(position, intensity, text,
+                                         ha='center', va='bottom',
+                                         color='black',
+                                         fontsize=12)
                     else:
                         self.ax.plot(x_values, y_peak, '--',
                                      label=f"{peak_label}")
@@ -403,9 +410,9 @@ class Wafer(QObject):
             self.ax.legend(loc='upper right')
         fig.tight_layout()
 
-        self.canvas = FigureCanvas(fig)
-        self.toolbar = NavigationToolbar2QT(self.canvas, self.ui)
-        self.ui.spectre_view_frame.addWidget(self.canvas)
+        self.canvas1 = FigureCanvas(fig)
+        self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
+        self.ui.spectre_view_frame.addWidget(self.canvas1)
         self.ui.toolbar_frame.addWidget(self.toolbar)
 
         self.plot_measurement_sites()
@@ -421,9 +428,10 @@ class Wafer(QObject):
         if wafer_name is not None:
             selected_df = dfr.query('Wafer == @wafer_name')
         sel_param = self.ui.cbb_param_1.currentText()
-        canvas = self.plot_wafer_helper(selected_df, sel_param, wafer_size,
-                                        color)
-        self.ui.frame_wafer.addWidget(canvas)
+        self.canvas2 = self.plot_wafer_helper(selected_df, sel_param,
+                                              wafer_size,
+                                              color)
+        self.ui.frame_wafer.addWidget(self.canvas2)
 
     def plot_wafer_helper(self, selected_df, sel_param, wafer_size, color):
         x = selected_df['X']
@@ -475,10 +483,11 @@ class Wafer(QObject):
         if text:
             xlabel_rot = float(text)
 
-        canvas = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
-                            x_text, y_text, xlabel_rot)
+        self.canvas3 = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax,
+                                  title,
+                                  x_text, y_text, xlabel_rot)
 
-        self.ui.frame_graph.addWidget(canvas)
+        self.ui.frame_graph.addWidget(self.canvas3)
 
     def plot_measurement_sites(self):
         """Plot wafer maps of measurement sites"""
@@ -591,15 +600,15 @@ class Wafer(QObject):
 
     def copy_fig(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas)
+        copy_fig_to_clb(canvas=self.canvas1)
 
     def copy_fig_wafer(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas)
+        copy_fig_to_clb(canvas=self.canvas2)
 
     def copy_fig_graph(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas)
+        copy_fig_to_clb(canvas=self.canvas3)
 
     def select_all_spectra(self):
         """ To quickly select all spectra within the spectra listbox"""
@@ -794,17 +803,22 @@ class Wafer(QObject):
 
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""
-        plt.style.use('default')
-        root = Tk()
-        appli = Appli(root, force_terminal_exit=False)
-        appli.spectra = self.spectra_fs
-        for spectrum in appli.spectra:
-            fname = spectrum.fname
-            appli.fileselector.filenames.append(fname)
-            appli.fileselector.lbox.insert(END, os.path.basename(fname))
-        appli.fileselector.select_item(0)
-        appli.update()
-        root.mainloop()
+        if self.spectra_fs:
+            plt.style.use('default')
+            root = Tk()
+            appli = Appli(root, force_terminal_exit=False)
+
+            appli.spectra = self.spectra_fs
+            for spectrum in appli.spectra:
+                fname = spectrum.fname
+                appli.fileselector.filenames.append(fname)
+                appli.fileselector.lbox.insert(END, os.path.basename(fname))
+            appli.fileselector.select_item(0)
+            appli.update()
+            root.mainloop()
+        else:
+            show_alert("No spectrum is loaded; FITSPY cannot open")
+            return
 
     def fit_progress(self, num, elapsed_time, fnames):
         """Called when fitting process is completed"""

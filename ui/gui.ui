@@ -51,7 +51,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_2Dmaps">
        <attribute name="title">
@@ -137,7 +137,7 @@
                  </widget>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="bottom_frame" stretch="50,25,0,2,0,0,0,0,0,0">
+                 <layout class="QHBoxLayout" name="bottom_frame" stretch="50,25,0,2,0,0,0,0,0,0,0">
                   <property name="sizeConstraint">
                    <enum>QLayout::SetMaximumSize</enum>
                   </property>
@@ -259,6 +259,16 @@
                    <widget class="QCheckBox" name="cb_filled">
                     <property name="text">
                      <string>filled</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="cb_peaks">
+                    <property name="text">
+                     <string>peaks</string>
                     </property>
                     <property name="checked">
                      <bool>true</bool>
@@ -801,7 +811,7 @@
                           <widget class="QComboBox" name="cbb_wafer_1"/>
                          </item>
                          <item>
-                          <widget class="QPushButton" name="btn_copy1">
+                          <widget class="QPushButton" name="btn_copy_fig_wafaer">
                            <property name="toolTip">
                             <string>Copy Figure to clipboard</string>
                            </property>
@@ -1122,7 +1132,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QPushButton" name="btn_copy2">
+                          <widget class="QPushButton" name="btn_copy_fig_graph">
                            <property name="toolTip">
                             <string>Copy Figure to clipboard</string>
                            </property>
@@ -1922,7 +1932,7 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>674</width>
+                             <width>690</width>
                              <height>337</height>
                             </rect>
                            </property>
@@ -2296,31 +2306,6 @@
                </property>
                <property name="text">
                 <string>LW</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QRadioButton" name="radio_darkmode">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>60</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>60</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string> Light </string>
                </property>
               </widget>
              </item>
@@ -2823,7 +2808,7 @@
                  </widget>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="bottom_frame_3" stretch="50,25,0,2,0,0,0,0,0,0">
+                 <layout class="QHBoxLayout" name="bottom_frame_3" stretch="50,25,0,2,0,0,0,0,0,0,0">
                   <property name="sizeConstraint">
                    <enum>QLayout::SetMaximumSize</enum>
                   </property>
@@ -2945,6 +2930,16 @@
                    <widget class="QCheckBox" name="cb_filled_3">
                     <property name="text">
                      <string>filled</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="cb_peaks_3">
+                    <property name="text">
+                     <string>peaks</string>
                     </property>
                     <property name="checked">
                      <bool>true</bool>
@@ -5307,7 +5302,7 @@
               <number>5</number>
              </property>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="33,30">
+              <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="33,30,0">
                <item>
                 <widget class="QLabel" name="label_17">
                  <property name="sizePolicy">
@@ -5342,6 +5337,31 @@
                   </size>
                  </property>
                 </spacer>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="radio_darkmode">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>60</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>60</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string> Light </string>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
@@ -5665,7 +5685,7 @@
              <item>
               <widget class="QTabWidget" name="Plot_styling">
                <property name="currentIndex">
-                <number>0</number>
+                <number>2</number>
                </property>
                <widget class="QWidget" name="tab_styling_plot">
                 <attribute name="title">
@@ -6572,7 +6592,6 @@
   </action>
  </widget>
  <resources>
-  <include location="resources_new.qrc"/>
   <include location="resources_new.qrc"/>
  </resources>
  <connections/>

@@ -20,12 +20,12 @@
          "threshold": 0
       },
       "peak_labels": [
-         "1",
-         "2",
-         "3",
-         "4",
-         "5",
-         "6"
+         "A$_{1g}$",
+         "E$^1_{2g}$",
+         "LO(M)",
+         "ZO(M)",
+         "LA(M)",
+         "2LA(M)"
       ],
       "fit_method": "Leastsq",
       "fit_negative": false,

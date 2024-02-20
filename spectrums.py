@@ -42,7 +42,9 @@ class Spectrums(QObject):
         self.settings = QSettings("CEA-Leti", "DaProViz")
 
         self.ax = None
-        self.canvas = None
+        self.canvas1 = None
+        self.canvas2 = None
+        self.canvas3 = None
         self.model_fs = None  # FITSPY
         self.spectra_fs = Spectra()  # FITSPY
 
@@ -52,12 +54,12 @@ class Spectrums(QObject):
 
         # Connect the stateChanged signal of the legend CHECKBOX
         self.ui.cb_legend_3.stateChanged.connect(self.plot_delay)
-
         self.ui.cb_raw_3.stateChanged.connect(self.plot_delay)
         self.ui.cb_bestfit_3.stateChanged.connect(self.plot_delay)
         self.ui.cb_colors_3.stateChanged.connect(self.plot_delay)
         self.ui.cb_residual_3.stateChanged.connect(self.plot_delay)
         self.ui.cb_filled_3.stateChanged.connect(self.plot_delay)
+        self.ui.cb_peaks_3.stateChanged.connect(self.plot_delay)
 
         # Set a delay for the function plot_sel_spectra
         self.delay_timer = QTimer()
@@ -200,6 +202,15 @@ class Spectrums(QObject):
                     if self.ui.cb_filled_3.isChecked():
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
                                              label=f"{peak_label}")
+                        if self.ui.cb_peaks_3.isChecked():
+                            position = peak_model.param_hints['x0']['value']
+                            intensity = peak_model.param_hints['ampli']['value']
+                            position = round(position, 2)
+                            text = f"{peak_label} ({position})"
+                            self.ax.text(position, intensity, text,
+                                         ha='center', va='bottom',
+                                         color='black',
+                                         fontsize=12)
                     else:
                         self.ax.plot(x_values, y_peak, '--',
                                      label=f"{peak_label}")
@@ -218,9 +229,9 @@ class Spectrums(QObject):
             self.ax.legend(loc='upper right')
         fig.tight_layout()
 
-        self.canvas = FigureCanvas(fig)
-        self.toolbar = NavigationToolbar2QT(self.canvas, self.ui)
-        self.ui.spectre_view_frame_4.addWidget(self.canvas)
+        self.canvas1 = FigureCanvas(fig)
+        self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
+        self.ui.spectre_view_frame_4.addWidget(self.canvas1)
         self.ui.toolbar_frame_3.addWidget(self.toolbar)
 
     def clear_spectre_view(self):
@@ -304,11 +315,8 @@ class Spectrums(QObject):
             elif '_' in name:
                 name = 'z' + name[4:]  # model peak parameters to be at the end
             names.append(name)
-            print(names)
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
-        print('self.df_fit_results', self.df_fit_results.columns)
-
         columns = [translate_param(self.model_fs, column) for column in
                    self.df_fit_results.columns]
         self.df_fit_results.columns = columns
@@ -397,10 +405,11 @@ class Spectrums(QObject):
         if text:
             xlabel_rot = float(text)
 
-        canvas = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
-                            x_text, y_text, xlabel_rot)
+        self.canvas2 = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax,
+                                  title,
+                                  x_text, y_text, xlabel_rot)
 
-        self.ui.frame_graph_3.addWidget(canvas)
+        self.ui.frame_graph_3.addWidget(self.canvas2)
 
     def plot_graph2(self, view=None):
         clear_layout(self.ui.frame_graph_7.layout())
@@ -424,10 +433,11 @@ class Spectrums(QObject):
         if text:
             xlabel_rot = float(text)
 
-        canvas = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
-                            x_text, y_text, xlabel_rot)
+        self.canvas3 = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax,
+                                  title,
+                                  x_text, y_text, xlabel_rot)
 
-        self.ui.frame_graph_7.addWidget(canvas)
+        self.ui.frame_graph_7.addWidget(self.canvas3)
 
     def plot_delay(self):
         """Trigger the fnc to plot spectre"""
@@ -448,17 +458,22 @@ class Spectrums(QObject):
 
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""
-        plt.style.use('default')
-        root = Tk()
-        appli = Appli(root, force_terminal_exit=False)
-        appli.spectra = self.spectra_fs
-        for spectrum in appli.spectra:
-            fname = spectrum.fname
-            appli.fileselector.filenames.append(fname)
-            appli.fileselector.lbox.insert(END, os.path.basename(fname))
-        appli.fileselector.select_item(0)
-        appli.update()
-        root.mainloop()
+        if self.spectra_fs:
+            plt.style.use('default')
+            root = Tk()
+            appli = Appli(root, force_terminal_exit=False)
+
+            appli.spectra = self.spectra_fs
+            for spectrum in appli.spectra:
+                fname = spectrum.fname
+                appli.fileselector.filenames.append(fname)
+                appli.fileselector.lbox.insert(END, os.path.basename(fname))
+            appli.fileselector.select_item(0)
+            appli.update()
+            root.mainloop()
+        else:
+            show_alert("No spectrum is loaded; FITSPY cannot open")
+            return
 
     def cosmis_ray_detection(self):
         self.spectra_fs.outliers_limit_calculation()
@@ -567,6 +582,18 @@ class Spectrums(QObject):
             spectrum_fs.fname not in sel_fnames)
         self.upd_spectrums_list()
         self.clear_spectre_view()
+
+    def copy_fig(self):
+        """To copy figure canvas to clipboard"""
+        copy_fig_to_clb(canvas=self.canvas1)
+
+    def copy_fig_graph1(self):
+        """To copy figure canvas to clipboard"""
+        copy_fig_to_clb(canvas=self.canvas2)
+
+    def copy_fig_graph2(self):
+        """To copy figure canvas to clipboard"""
+        copy_fig_to_clb(canvas=self.canvas3)
 
     def save_work(self):
         """Save the current work/results."""

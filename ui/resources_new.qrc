@@ -1,6 +1,8 @@
 <RCC>
   <qresource prefix="icon">
+    <file>iconpack/icon3.ico</file>
     <file>iconpack/add.png</file>
+    <file>iconpack/icon3.png</file>
     <file>iconpack/close.png</file>
     <file>iconpack/copy.png</file>
     <file>iconpack/copy_label.png.png</file>
@@ -9,7 +11,6 @@
     <file>iconpack/edit.png</file>
     <file>iconpack/filter.png</file>
     <file>iconpack/horizontal-line.png</file>
-    <file>iconpack/icon.ico</file>
     <file>iconpack/icon.png</file>
     <file>iconpack/icons8-copy-96.png</file>
     <file>iconpack/icons8-documents-folder-96.png</file>

@@ -571,7 +571,7 @@ class Vizualisation:
                                              plot_widget_frame, plot_id))
         btn_copy_labels.clicked.connect(
             lambda: self.copy_plot_label(plot_id))
-        btn_copy_plot.clicked.connect(partial(self.copy_plot, plot_id))
+        btn_copy_plot.clicked.connect(partial(self.copy_to_clb, plot_id))
 
         # Create a QHBoxLayout to hold the buttons
         button_layout = QHBoxLayout()
@@ -607,7 +607,7 @@ class Vizualisation:
                     canvas.savefig(filename, dpi=self.save_dpi)
                     plt.close(canvas)
 
-    def copy_plot(self, plot_id):
+    def copy_to_clb(self, plot_id):
         self.save_dpi = float(self.ui.ent_plot_save_dpi.text())
         canvas_widget = self.figure_list.get(plot_id)
         if canvas_widget:

@@ -266,20 +266,16 @@ class MainWindow:
         <p>For any feedback contact <a 
         href="mailto:van-hoan.le@cea.fr">van-hoan.le@cea.fr</a></p>
         """
-
         about_dialog = QDialog(self.ui)
         about_dialog.setWindowTitle("About")
         about_dialog.resize(350, 200)
-
         text_browser = QTextBrowser(about_dialog)
         text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         text_browser.setOpenExternalLinks(True)
         text_browser.setHtml(text)
-
         layout = QVBoxLayout(about_dialog)
         layout.addWidget(text_browser)
         about_dialog.exec()
-
 
 def launcher():
     app = QApplication()
@@ -288,8 +284,6 @@ def launcher():
     app.setStyle("Fusion")
     window.ui.show()
     sys.exit(app.exec())
-
-
 if __name__ == "__main__":
     launcher()
 

@@ -60,6 +60,7 @@ def plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
 
 
 def reinit_spectrum(fnames, spectra_fs):
+    """Reinitilize a FITSPY spectrum object"""
     for fname in fnames:
         spectrum, _ = spectra_fs.get_objects(fname)
         spectrum.range_min = None
@@ -109,6 +110,7 @@ def translate_param(model_fs, param):
 
 
 def quadrant(row):
+    """Define 4 quadrant of a wafer"""
     if row['X'] < 0 and row['Y'] < 0:
         return 'Q1'
     elif row['X'] < 0 and row['Y'] > 0:
@@ -122,11 +124,11 @@ def quadrant(row):
 
 
 def copy_fig_to_clb(canvas):
-    """fnc to copy canvas figure to clipboard"""
+    """Function to copy canvas figure to clipboard"""
     if canvas:
         figure = canvas.figure
         with BytesIO() as buf:
-            figure.savefig(buf, format='png', dpi=100)
+            figure.savefig(buf, format='png', dpi=400)
             data = buf.getvalue()
         format_id = win32clipboard.RegisterClipboardFormat('PNG')
         win32clipboard.OpenClipboard()
@@ -148,6 +150,7 @@ def read_2Dmaps_ls():
 
 
 def show_alert(message):
+    """Show alert"""
     msg_box = QMessageBox()
     msg_box.setIcon(QMessageBox.Warning)
     msg_box.setWindowTitle("Alert")
@@ -156,7 +159,7 @@ def show_alert(message):
 
 
 def view_df(tabWidget, df):
-    """To view selected dataframe"""
+    """View selected dataframe"""
     # Create a QDialog to contain the table
     df_viewer = QDialog(tabWidget)
     df_viewer.setWindowTitle("DataFrame Viewer")
@@ -178,6 +181,7 @@ def view_df(tabWidget, df):
 
 
 def view_text(ui, title, text):
+    """ Create a QTextBrowser to display a text content"""
     report_viewer = QDialog(ui)
     report_viewer.setWindowTitle(title)
     report_viewer.setGeometry(100, 100, 800, 600)
@@ -198,7 +202,7 @@ def view_text(ui, title, text):
 
 
 def view_md_doc(ui, fname):
-    # Create a QDialog to display the Markdown content
+    """ Create a QDialog to display a markdown file"""
     markdown_viewer = QDialog(ui)
     markdown_viewer.setWindowTitle("Markdown Viewer")
     markdown_viewer.setGeometry(100, 100, 800, 600)

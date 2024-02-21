@@ -45,7 +45,7 @@ class Spectrums(QObject):
         self.canvas1 = None
         self.canvas2 = None
         self.canvas3 = None
-        self.model_fs = None  # FITSPY
+        self.model_fs = None
         self.spectra_fs = Spectra()  # FITSPY
 
         # Connect and plot_spectre of selected SPECTRUM LIST
@@ -206,11 +206,10 @@ class Spectrums(QObject):
                             position = peak_model.param_hints['x0']['value']
                             intensity = peak_model.param_hints['ampli']['value']
                             position = round(position, 2)
-                            text = f"{peak_label} ({position})"
+                            text = f"{peak_label}\n({position})"
                             self.ax.text(position, intensity, text,
                                          ha='center', va='bottom',
-                                         color='black',
-                                         fontsize=12)
+                                         color='black', fontsize=12)
                     else:
                         self.ax.plot(x_values, y_peak, '--',
                                      label=f"{peak_label}")
@@ -356,6 +355,7 @@ class Spectrums(QObject):
         print("Column added successfully:", col_name)
 
         self.df_fit_results = dfr
+        self.send_df_to_vis()
         self.upd_cbb_param()
 
     def upd_cbb_param(self):
@@ -378,8 +378,8 @@ class Spectrums(QObject):
 
     def send_df_to_vis(self):
         """Send the collected spectral data dataframe to visu tab"""
-        dfs = {}
-        dfs["fitted_results"] = self.df_fit_results
+        dfs = self.callbacks_df.original_dfs
+        dfs["fit_results"] = self.df_fit_results
         self.callbacks_df.action_open_df(file_paths=None, original_dfs=dfs)
 
     def plot_graph(self, view=None):
@@ -608,6 +608,7 @@ class Spectrums(QObject):
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
                     'model_fs': self.model_fs,
+                    'model_name': self.ui.lb_loaded_model_3.text(),
                     'df_fit_results': self.df_fit_results,
 
                     'plot_title': self.ui.ent_plot_title_5.text(),
@@ -647,32 +648,45 @@ class Spectrums(QObject):
             if file_path:
                 with open(file_path, 'rb') as f:
                     loaded_data = dill.load(f)
-                    self.spectra_fs = loaded_data['spectra_fs']
-                    self.model_fs = loaded_data['model_fs']
-                    self.df_fit_results = loaded_data['df_fit_results']
+                    self.spectra_fs = loaded_data.get('spectra_fs')
+                    self.model_fs = loaded_data.get('model_fs')
+                    model_name = loaded_data.get('model_name', '')
+                    self.ui.lb_loaded_model_3.setText(
+                        f"'{model_name}' is loaded !")
+                    self.ui.lb_loaded_model_3.setStyleSheet("color: yellow;")
+
+                    self.df_fit_results = loaded_data.get('df_fit_results')
                     self.upd_cbb_param()
 
-                    self.ui.ent_plot_title_5.setText(loaded_data['plot_title'])
-                    self.ui.xmin_3.setText(loaded_data['xmin'])
-                    self.ui.xmax_3.setText(loaded_data['xmax'])
-                    self.ui.ymax_3.setText(loaded_data['ymax'])
-                    self.ui.ymin_3.setText(loaded_data['ymin'])
+                    self.ui.ent_plot_title_5.setText(
+                        loaded_data.get('plot_title', ''))
+                    self.ui.xmin_3.setText(loaded_data.get('xmin', ''))
+                    self.ui.xmax_3.setText(loaded_data.get('xmax', ''))
+                    self.ui.ymax_3.setText(loaded_data.get('ymax', ''))
+                    self.ui.ymin_3.setText(loaded_data.get('ymin', ''))
                     self.ui.ent_xaxis_lbl_3.setText(
-                        loaded_data['ent_xaxis_lbl'])
+                        loaded_data.get('ent_xaxis_lbl', ''))
                     self.ui.ent_yaxis_lbl_3.setText(
-                        loaded_data['ent_yaxis_lbl'])
-                    self.ui.ent_x_rot_3.setText(loaded_data['ent_x_rot'])
+                        loaded_data.get('ent_yaxis_lbl', ''))
+                    self.ui.ent_x_rot_3.setText(
+                        loaded_data.get('ent_x_rot', ''))
 
                     self.ui.cbb_plot_style_3.setCurrentIndex(
-                        loaded_data['plot_style_1'])
+                        loaded_data.get('plot_style_1', -1))
                     self.ui.cbb_plot_style_7.setCurrentIndex(
-                        loaded_data['plot_style_2'])
-                    self.ui.cbb_x_3.setCurrentIndex(loaded_data['cbb_x_1'])
-                    self.ui.cbb_y_3.setCurrentIndex(loaded_data['cbb_y_1'])
-                    self.ui.cbb_z_3.setCurrentIndex(loaded_data['cbb_z_1'])
-                    self.ui.cbb_x_7.setCurrentIndex(loaded_data['cbb_x_2'])
-                    self.ui.cbb_y_7.setCurrentIndex(loaded_data['cbb_y_2'])
-                    self.ui.cbb_z_7.setCurrentIndex(loaded_data['cbb_z_2'])
+                        loaded_data.get('plot_style_2', -1))
+                    self.ui.cbb_x_3.setCurrentIndex(
+                        loaded_data.get('cbb_x_1', -1))
+                    self.ui.cbb_y_3.setCurrentIndex(
+                        loaded_data.get('cbb_y_1', -1))
+                    self.ui.cbb_z_3.setCurrentIndex(
+                        loaded_data.get('cbb_z_1', -1))
+                    self.ui.cbb_x_7.setCurrentIndex(
+                        loaded_data.get('cbb_x_2', -1))
+                    self.ui.cbb_y_7.setCurrentIndex(
+                        loaded_data.get('cbb_y_2', -1))
+                    self.ui.cbb_z_7.setCurrentIndex(
+                        loaded_data.get('cbb_z_2', -1))
 
                     self.send_df_to_vis()
                     self.upd_spectrums_list()

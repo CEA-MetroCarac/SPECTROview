@@ -271,7 +271,7 @@
                      <string>peaks</string>
                     </property>
                     <property name="checked">
-                     <bool>true</bool>
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -2291,6 +2291,9 @@
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="toolTip">
+                <string>To save the current works</string>
+               </property>
                <property name="text">
                 <string>SW</string>
                </property>
@@ -2303,6 +2306,9 @@
                  <width>30</width>
                  <height>16777215</height>
                 </size>
+               </property>
+               <property name="toolTip">
+                <string>To reload the saved works</string>
                </property>
                <property name="text">
                 <string>LW</string>
@@ -2942,7 +2948,7 @@
                      <string>peaks</string>
                     </property>
                     <property name="checked">
-                     <bool>true</bool>
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -3194,6 +3200,9 @@
                        </item>
                        <item>
                         <widget class="QComboBox" name="cbb_split_fname">
+                         <property name="toolTip">
+                          <string>Select the value to split</string>
+                         </property>
                          <property name="placeholderText">
                           <string/>
                          </property>
@@ -3212,6 +3221,9 @@
                            <width>60</width>
                            <height>16777215</height>
                           </size>
+                         </property>
+                         <property name="toolTip">
+                          <string>To add a new column with the selected value</string>
                          </property>
                          <property name="text">
                           <string>Add</string>
@@ -4477,8 +4489,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>690</width>
-                             <height>413</height>
+                             <width>98</width>
+                             <height>28</height>
                             </rect>
                            </property>
                           </widget>
@@ -4831,6 +4843,9 @@
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="toolTip">
+                <string>To save the current works</string>
+               </property>
                <property name="text">
                 <string>SW</string>
                </property>
@@ -4843,6 +4858,9 @@
                  <width>30</width>
                  <height>16777215</height>
                 </size>
+               </property>
+               <property name="toolTip">
+                <string>To reload the saved works</string>
                </property>
                <property name="text">
                 <string>LW</string>
@@ -5685,7 +5703,7 @@
              <item>
               <widget class="QTabWidget" name="Plot_styling">
                <property name="currentIndex">
-                <number>2</number>
+                <number>0</number>
                </property>
                <widget class="QWidget" name="tab_styling_plot">
                 <attribute name="title">

@@ -387,11 +387,10 @@ class Wafer(QObject):
                             position = peak_model.param_hints['x0']['value']
                             intensity = peak_model.param_hints['ampli']['value']
                             position = round(position, 2)
-                            text = f"{peak_label} ({position})"
+                            text = f"{peak_label}\n({position})"
                             self.ax.text(position, intensity, text,
                                          ha='center', va='bottom',
-                                         color='black',
-                                         fontsize=12)
+                                         color='black', fontsize=12)
                     else:
                         self.ax.plot(x_values, y_peak, '--',
                                      label=f"{peak_label}")
@@ -686,8 +685,8 @@ class Wafer(QObject):
 
     def send_df_to_vis(self):
         """Send the collected spectral data dataframe to visu tab"""
-        dfs = {}
-        dfs["fitted_results"] = self.df_fit_results
+        dfs = self.callbacks_df.original_dfs
+        dfs["2Dmaps_fit_results"] = self.df_fit_results
         self.callbacks_df.action_open_df(file_paths=None, original_dfs=dfs)
 
     def cosmis_ray_detection(self):
@@ -724,6 +723,7 @@ class Wafer(QObject):
                     'spectra_fs': self.spectra_fs,
                     'wafers': self.wafers,
                     'model_fs': self.model_fs,
+                    'model_name': self.ui.lb_loaded_model.text(),
                     'df_fit_results': self.df_fit_results,
                     'cbb_x': self.ui.cbb_x.currentIndex(),
                     'cbb_y': self.ui.cbb_y.currentIndex(),
@@ -761,37 +761,48 @@ class Wafer(QObject):
             if file_path:
                 with open(file_path, 'rb') as f:
                     loaded_data = dill.load(f)
-                    self.spectra_fs = loaded_data['spectra_fs']
-                    self.wafers = loaded_data['wafers']
-                    self.model_fs = loaded_data['model_fs']
-                    self.df_fit_results = loaded_data['df_fit_results']
+
+                    # Handle missing keys with default values or None
+                    self.spectra_fs = loaded_data.get('spectra_fs')
+                    self.wafers = loaded_data.get('wafers')
+                    self.model_fs = loaded_data.get('model_fs')
+                    model_name = loaded_data.get('model_name', '')
+                    self.ui.lb_loaded_model.setText(
+                        f"'{model_name}' is loaded !")
+                    self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
+                    self.df_fit_results = loaded_data.get('df_fit_results')
                     self.apprend_cbb_param()
                     self.apprend_cbb_wafer()
                     self.send_df_to_vis()
                     self.upd_wafers_list()
 
-                    self.ui.cbb_x.setCurrentIndex(loaded_data['cbb_x'])
-                    self.ui.cbb_y.setCurrentIndex(loaded_data['cbb_y'])
-                    self.ui.cbb_z.setCurrentIndex(loaded_data['cbb_z'])
+                    # Set default values or None for missing keys
+                    self.ui.cbb_x.setCurrentIndex(loaded_data.get('cbb_x', -1))
+                    self.ui.cbb_y.setCurrentIndex(loaded_data.get('cbb_y', -1))
+                    self.ui.cbb_z.setCurrentIndex(loaded_data.get('cbb_z', -1))
                     self.ui.cbb_param_1.setCurrentIndex(
-                        loaded_data['cbb_param_1'])
+                        loaded_data.get('cbb_param_1', -1))
                     self.ui.cbb_wafer_1.setCurrentIndex(
-                        loaded_data['cbb_wafer_1'])
+                        loaded_data.get('cbb_wafer_1', -1))
                     self.ui.cbb_color_pallete.setCurrentIndex(
-                        loaded_data['color_pal'])
-                    self.ui.plot_title.setText(loaded_data['plot_title'])
-                    self.ui.wafer_size.setText(loaded_data['wafer_size'])
-                    self.ui.int_vmin.setText(loaded_data['int_vmin'])
-                    self.ui.int_vmax.setText(loaded_data['int_vmax'])
-                    self.ui.xmin.setText(loaded_data['xmin'])
-                    self.ui.xmax.setText(loaded_data['xmax'])
-                    self.ui.ymax.setText(loaded_data['ymax'])
-                    self.ui.ymin.setText(loaded_data['ymin'])
+                        loaded_data.get('color_pal', -1))
+                    self.ui.plot_title.setText(
+                        loaded_data.get('plot_title', ''))
+                    self.ui.wafer_size.setText(
+                        loaded_data.get('wafer_size', ''))
+                    self.ui.int_vmin.setText(loaded_data.get('int_vmin', ''))
+                    self.ui.int_vmax.setText(loaded_data.get('int_vmax', ''))
+                    self.ui.xmin.setText(loaded_data.get('xmin', ''))
+                    self.ui.xmax.setText(loaded_data.get('xmax', ''))
+                    self.ui.ymax.setText(loaded_data.get('ymax', ''))
+                    self.ui.ymin.setText(loaded_data.get('ymin', ''))
                     self.ui.ent_plot_title_2.setText(
-                        loaded_data['ent_plot_title_2'])
-                    self.ui.ent_xaxis_lbl.setText(loaded_data['ent_xaxis_lbl'])
-                    self.ui.ent_yaxis_lbl.setText(loaded_data['ent_yaxis_lbl'])
-                    self.ui.ent_x_rot.setText(loaded_data['ent_x_rot'])
+                        loaded_data.get('ent_plot_title_2', ''))
+                    self.ui.ent_xaxis_lbl.setText(
+                        loaded_data.get('ent_xaxis_lbl', ''))
+                    self.ui.ent_yaxis_lbl.setText(
+                        loaded_data.get('ent_yaxis_lbl', ''))
+                    self.ui.ent_x_rot.setText(loaded_data.get('ent_x_rot', ''))
 
                     # Plot the graph and wafer after loading the work
                     self.plot_graph()

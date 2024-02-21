@@ -4,7 +4,7 @@ import traceback
 import numpy as np
 from functools import partial
 from io import BytesIO
-import win32clipboard
+# import win32clipboard
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -26,7 +26,7 @@ PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy.mplstyle")
 ICON_DIR = os.path.join(DIRNAME, "ui", "iconpack")
 
 
-class CallbacksPlot:
+class Vizualisation:
     def __init__(self, ui, callbacks_df):
         self.ui = ui
         self.callbacks_df = callbacks_df  # connect with callbacks_df

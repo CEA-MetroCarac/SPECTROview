@@ -10,9 +10,9 @@ from PySide6.QtGui import QDoubleValidator, QIcon
 from utils import dark_palette, light_palette, view_md_doc
 from ui import resources_new
 
-from callbacks_df import CallbacksDf
-from callbacks_plot import CallbacksPlot
-from wafer import Wafer
+from dataframe import Dataframe
+from visualization import Vizualisation
+from maps import Maps
 from spectrums import Spectrums
 from workspace import SaveLoadWorkspace
 
@@ -32,19 +32,19 @@ class MainWindow:
         ui_file.close()
 
         # Create an instance of CallbacksDf and pass the self.ui object
-        self.callbacks_df = CallbacksDf(self.ui)
-        self.callbacks_plot = CallbacksPlot(self.ui, self.callbacks_df)
-        self.workspace = SaveLoadWorkspace(self.ui, self.callbacks_df,
-                                           self.callbacks_plot)
-        self.wafer = Wafer(self.ui, self.callbacks_df)
-        self.spectrums = Spectrums(self.ui, self.callbacks_df)
+        self.dataframe = Dataframe(self.ui)
+        self.visualization = Vizualisation(self.ui, self.dataframe)
+        self.workspace = SaveLoadWorkspace(self.ui, self.dataframe,
+                                           self.visualization)
+        self.maps = Maps(self.ui, self.dataframe)
+        self.spectrums = Spectrums(self.ui, self.dataframe)
         # DATAFRAME
         self.ui.btn_open_df.clicked.connect(
-            lambda event: self.callbacks_df.action_open_df())
+            lambda event: self.dataframe.action_open_df())
 
         self.listbox_dfs = self.ui.findChild(QListWidget, 'listbox_dfs')
         # Connect the itemClicked signal to select_dataframe
-        self.listbox_dfs.itemClicked.connect(self.callbacks_df.select_df)
+        self.listbox_dfs.itemClicked.connect(self.dataframe.select_df)
 
         self.combo_xaxis = self.ui.findChild(QComboBox, 'combo_xaxis')
         self.combo_yaxis = self.ui.findChild(QComboBox, 'combo_yaxis')
@@ -53,7 +53,7 @@ class MainWindow:
 
         # Save/load workspace
         self.ui.btn_clearworkspace.clicked.connect(
-            self.callbacks_plot.clear_workspace)
+            self.visualization.clear_workspace)
         self.ui.btn_save_work.clicked.connect(
             lambda event: self.workspace.save_workspace())
         self.ui.btn_open_work.clicked.connect(
@@ -63,52 +63,52 @@ class MainWindow:
 
         # Populate df columns to comboboxes
         self.combo_xaxis.activated.connect(
-            self.callbacks_df.set_selected_x_column)
+            self.dataframe.set_selected_x_column)
         self.combo_yaxis.activated.connect(
-            self.callbacks_df.set_selected_y_column)
+            self.dataframe.set_selected_y_column)
         self.combo_hue.activated.connect(
-            self.callbacks_df.set_selected_hue_column)
+            self.dataframe.set_selected_hue_column)
         self.combo_hue_2.activated.connect(
-            self.callbacks_df.set_selected_hue_column)
+            self.dataframe.set_selected_hue_column)
         # Bidirectional synchronization between two comboboax
         self.ui.combo_hue.currentIndexChanged.connect(self.update_combo_hue_2)
         self.ui.combo_hue_2.currentIndexChanged.connect(self.update_combo_hue)
 
         ### REMOVE, SAVE DataFrames ###
-        self.ui.btn_view_df.clicked.connect(self.callbacks_df.view_df)
-        self.ui.btn_remove_df.clicked.connect(self.callbacks_df.remove_df)
+        self.ui.btn_view_df.clicked.connect(self.dataframe.view_df)
+        self.ui.btn_remove_df.clicked.connect(self.dataframe.remove_df)
         # self.ui.btn_save_df.clicked.connect(self.callbacks_df.save_df)
         self.ui.btn_save_all_df.clicked.connect(
-            self.callbacks_df.save_all_df_handler)
+            self.dataframe.save_all_df_handler)
 
         # Concantenate dataframes in listbox to a global dataframe
-        self.ui.merge_dfs.clicked.connect(self.callbacks_df.concat_dfs)
+        self.ui.merge_dfs.clicked.connect(self.dataframe.concat_dfs)
 
         # df FILTERS:
         self.ui.ent_filter_query.returnPressed.connect(
-            self.callbacks_df.add_filter)
+            self.dataframe.add_filter)
         # ADD filter
-        self.ui.btn_add_filter.clicked.connect(self.callbacks_df.add_filter)
+        self.ui.btn_add_filter.clicked.connect(self.dataframe.add_filter)
         # REMOVE filter
         self.ui.btn_remove_filters.clicked.connect(
-            self.callbacks_df.remove_selected_filters)
+            self.dataframe.remove_selected_filters)
         # APPLY filter
         self.ui.btn_apply_filters.clicked.connect(
-            self.callbacks_df.apply_selected_filters)
+            self.dataframe.apply_selected_filters)
 
         # PLOT STYLING
-        self.ui.combo_plot_style.addItems(self.callbacks_plot.plot_styles)
+        self.ui.combo_plot_style.addItems(self.visualization.plot_styles)
 
         self.ui.combo_plot_style.currentIndexChanged.connect(
-            self.callbacks_plot.set_selected_plot_style)
+            self.visualization.set_selected_plot_style)
 
-        self.ui.combo_palette_color.addItems(self.callbacks_plot.palette_colors)
+        self.ui.combo_palette_color.addItems(self.visualization.palette_colors)
         self.ui.combo_palette_color.currentIndexChanged.connect(
-            self.callbacks_plot.set_selected_palette_colors)
+            self.visualization.set_selected_palette_colors)
 
-        self.ui.btn_add_a_plot.clicked.connect(self.callbacks_plot.add_a_plot)
+        self.ui.btn_add_a_plot.clicked.connect(self.visualization.add_a_plot)
         self.ui.btn_add_wafer_plot.clicked.connect(
-            self.callbacks_plot.add_wafer_plots)
+            self.visualization.add_wafer_plots)
 
         # Set default values for plot width & height
         self.ui.ent_plotwidth.setText("470")
@@ -123,11 +123,11 @@ class MainWindow:
         self.ui.checkBox_3.setChecked(False)  # Grid
 
         self.ui.btn_clear_all_entry.clicked.connect(
-            self.callbacks_plot.clear_entries)
+            self.visualization.clear_entries)
 
         # Save fig function:
         self.ui.btn_save_all_figs.clicked.connect(
-            self.callbacks_plot.save_all_figs)
+            self.visualization.save_all_figs)
 
         # Define limits of axis, accept only floats numbers (not text)
         validator = QDoubleValidator()
@@ -155,38 +155,38 @@ class MainWindow:
         ############## GUI for Wafer Processing tab #############
         ########################################################
 
-        self.ui.btn_open_wafers.clicked.connect(self.wafer.open_data)
-        self.ui.btn_remove_wafer.clicked.connect(self.wafer.remove_wafer)
+        self.ui.btn_open_wafers.clicked.connect(self.maps.open_data)
+        self.ui.btn_remove_wafer.clicked.connect(self.maps.remove_wafer)
 
-        self.ui.btn_copy_fig.clicked.connect(self.wafer.copy_fig)
-        self.ui.btn_copy_fig_wafaer.clicked.connect(self.wafer.copy_fig_wafer)
-        self.ui.btn_copy_fig_graph.clicked.connect(self.wafer.copy_fig_graph)
+        self.ui.btn_copy_fig.clicked.connect(self.maps.copy_fig)
+        self.ui.btn_copy_fig_wafaer.clicked.connect(self.maps.copy_fig_wafer)
+        self.ui.btn_copy_fig_graph.clicked.connect(self.maps.copy_fig_graph)
 
-        self.ui.btn_sel_all.clicked.connect(self.wafer.select_all_spectra)
-        self.ui.btn_sel_verti.clicked.connect(self.wafer.select_verti)
-        self.ui.btn_sel_horiz.clicked.connect(self.wafer.select_horiz)
+        self.ui.btn_sel_all.clicked.connect(self.maps.select_all_spectra)
+        self.ui.btn_sel_verti.clicked.connect(self.maps.select_verti)
+        self.ui.btn_sel_horiz.clicked.connect(self.maps.select_horiz)
 
-        self.ui.btn_load_model.clicked.connect(self.wafer.open_model)
-        self.ui.btn_fit.clicked.connect(self.wafer.fit_fnc_handler)
-        self.ui.btn_init.clicked.connect(self.wafer.reinit_fnc_handler)
-        self.ui.btn_collect_results.clicked.connect(self.wafer.collect_results)
-        self.ui.btn_view_df_2.clicked.connect(self.wafer.view_fit_results_df)
-        self.ui.btn_show_stats.clicked.connect(self.wafer.view_stats)
+        self.ui.btn_load_model.clicked.connect(self.maps.open_model)
+        self.ui.btn_fit.clicked.connect(self.maps.fit_fnc_handler)
+        self.ui.btn_init.clicked.connect(self.maps.reinit_fnc_handler)
+        self.ui.btn_collect_results.clicked.connect(self.maps.collect_results)
+        self.ui.btn_view_df_2.clicked.connect(self.maps.view_fit_results_df)
+        self.ui.btn_show_stats.clicked.connect(self.maps.view_stats)
         self.ui.btn_save_fit_results.clicked.connect(
-            self.wafer.save_fit_results)
-        self.ui.btn_view_wafer.clicked.connect(self.wafer.view_wafer_data)
+            self.maps.save_fit_results)
+        self.ui.btn_view_wafer.clicked.connect(self.maps.view_wafer_data)
 
-        self.ui.btn_plot_wafer.clicked.connect(self.wafer.plot_wafer)
-        self.ui.btn_plot_graph.clicked.connect(self.wafer.plot_graph)
-        self.ui.cbb_color_pallete.addItems(self.callbacks_plot.palette_colors)
-        self.ui.btn_open_fitspy.clicked.connect(self.wafer.fitspy_launcher)
-        self.ui.btn_cosmis_ray.clicked.connect(self.wafer.cosmis_ray_detection)
+        self.ui.btn_plot_wafer.clicked.connect(self.maps.plot_wafer)
+        self.ui.btn_plot_graph.clicked.connect(self.maps.plot_graph)
+        self.ui.cbb_color_pallete.addItems(self.visualization.palette_colors)
+        self.ui.btn_open_fitspy.clicked.connect(self.maps.fitspy_launcher)
+        self.ui.btn_cosmis_ray.clicked.connect(self.maps.cosmis_ray_detection)
         self.ui.btn_open_fit_results.clicked.connect(
-            self.wafer.load_fit_results)
+            self.maps.load_fit_results)
 
-        self.ui.cbb_plot_style.addItems(self.wafer.plot_styles)
-        self.ui.btn_sw.clicked.connect(self.wafer.save_work)
-        self.ui.btn_lw.clicked.connect(self.wafer.load_work)
+        self.ui.cbb_plot_style.addItems(self.maps.plot_styles)
+        self.ui.btn_sw.clicked.connect(self.maps.save_work)
+        self.ui.btn_lw.clicked.connect(self.maps.load_work)
 
         ########################################################
         ############## GUI for Spectrums Processing tab #############

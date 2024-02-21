@@ -1,4 +1,4 @@
-# wafer.py module
+# maps.py module
 import os
 import time
 import numpy as np
@@ -322,7 +322,7 @@ class Spectrums(QObject):
 
         self.split_fname()
         self.upd_cbb_param()
-        self.send_df_to_vis()
+        self.send_df_to_viz()
 
     def split_fname(self):
         """Split fname and populate the combobox"""
@@ -355,7 +355,7 @@ class Spectrums(QObject):
         print("Column added successfully:", col_name)
 
         self.df_fit_results = dfr
-        self.send_df_to_vis()
+        self.send_df_to_viz()
         self.upd_cbb_param()
 
     def upd_cbb_param(self):
@@ -376,7 +376,7 @@ class Spectrums(QObject):
                 self.ui.cbb_y_7.addItem(column)
                 self.ui.cbb_z_7.addItem(column)
 
-    def send_df_to_vis(self):
+    def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
         dfs = self.callbacks_df.original_dfs
         dfs["fit_results"] = self.df_fit_results
@@ -456,24 +456,7 @@ class Spectrums(QObject):
     def update_pbar(self, progress):
         self.ui.progressBar_3.setValue(progress)
 
-    def fitspy_launcher(self):
-        """To Open FITSPY with selected spectra"""
-        if self.spectra_fs:
-            plt.style.use('default')
-            root = Tk()
-            appli = Appli(root, force_terminal_exit=False)
 
-            appli.spectra = self.spectra_fs
-            for spectrum in appli.spectra:
-                fname = spectrum.fname
-                appli.fileselector.filenames.append(fname)
-                appli.fileselector.lbox.insert(END, os.path.basename(fname))
-            appli.fileselector.select_item(0)
-            appli.update()
-            root.mainloop()
-        else:
-            show_alert("No spectrum is loaded; FITSPY cannot open")
-            return
 
     def cosmis_ray_detection(self):
         self.spectra_fs.outliers_limit_calculation()
@@ -548,7 +531,7 @@ class Spectrums(QObject):
                 print("Error loading DataFrame:", e)
 
         self.upd_cbb_param()
-        self.send_df_to_vis()
+        self.send_df_to_viz()
 
     def view_stats(self):
         """Show the statistique fitting results of the selected spectrum"""
@@ -611,17 +594,6 @@ class Spectrums(QObject):
                     'model_name': self.ui.lb_loaded_model_3.text(),
                     'df_fit_results': self.df_fit_results,
 
-                    'plot_title': self.ui.ent_plot_title_5.text(),
-                    'xmin': self.ui.xmin_3.text(),
-                    'xmax': self.ui.xmax_3.text(),
-                    'ymax': self.ui.ymax_3.text(),
-                    'ymin': self.ui.ymin_3.text(),
-                    'ent_xaxis_lbl': self.ui.ent_xaxis_lbl_3.text(),
-                    'ent_yaxis_lbl': self.ui.ent_yaxis_lbl_3.text(),
-                    'ent_x_rot': self.ui.ent_x_rot_3.text(),
-                    "plot_style_1": self.ui.cbb_plot_style_3.currentIndex(),
-                    "plot_style_2": self.ui.cbb_plot_style_7.currentIndex(),
-
                     'cbb_x_1': self.ui.cbb_x_3.currentIndex(),
                     'cbb_y_1': self.ui.cbb_y_3.currentIndex(),
                     'cbb_z_1': self.ui.cbb_z_3.currentIndex(),
@@ -629,6 +601,8 @@ class Spectrums(QObject):
                     'cbb_y_2': self.ui.cbb_y_7.currentIndex(),
                     'cbb_z_2': self.ui.cbb_z_7.currentIndex(),
 
+                    "plot_style_1": self.ui.cbb_plot_style_3.currentIndex(),
+                    "plot_style_2": self.ui.cbb_plot_style_7.currentIndex(),
                 }
                 with open(file_path, 'wb') as f:
                     dill.dump(data_to_save, f)
@@ -647,53 +621,50 @@ class Spectrums(QObject):
                                                        "*.svs)")
             if file_path:
                 with open(file_path, 'rb') as f:
-                    loaded_data = dill.load(f)
-                    self.spectra_fs = loaded_data.get('spectra_fs')
-                    self.model_fs = loaded_data.get('model_fs')
-                    model_name = loaded_data.get('model_name', '')
-                    self.ui.lb_loaded_model_3.setText(
-                        f"'{model_name}' is loaded !")
+                    load = dill.load(f)
+                    self.spectra_fs = load.get('spectra_fs')
+                    self.model_fs = load.get('model_fs')
+                    model_name = load.get('model_name', '')
+                    self.ui.lb_loaded_model_3.setText(model_name)
                     self.ui.lb_loaded_model_3.setStyleSheet("color: yellow;")
 
-                    self.df_fit_results = loaded_data.get('df_fit_results')
+                    self.df_fit_results = load.get('df_fit_results')
                     self.upd_cbb_param()
-
-                    self.ui.ent_plot_title_5.setText(
-                        loaded_data.get('plot_title', ''))
-                    self.ui.xmin_3.setText(loaded_data.get('xmin', ''))
-                    self.ui.xmax_3.setText(loaded_data.get('xmax', ''))
-                    self.ui.ymax_3.setText(loaded_data.get('ymax', ''))
-                    self.ui.ymin_3.setText(loaded_data.get('ymin', ''))
-                    self.ui.ent_xaxis_lbl_3.setText(
-                        loaded_data.get('ent_xaxis_lbl', ''))
-                    self.ui.ent_yaxis_lbl_3.setText(
-                        loaded_data.get('ent_yaxis_lbl', ''))
-                    self.ui.ent_x_rot_3.setText(
-                        loaded_data.get('ent_x_rot', ''))
-
-                    self.ui.cbb_plot_style_3.setCurrentIndex(
-                        loaded_data.get('plot_style_1', -1))
-                    self.ui.cbb_plot_style_7.setCurrentIndex(
-                        loaded_data.get('plot_style_2', -1))
-                    self.ui.cbb_x_3.setCurrentIndex(
-                        loaded_data.get('cbb_x_1', -1))
-                    self.ui.cbb_y_3.setCurrentIndex(
-                        loaded_data.get('cbb_y_1', -1))
-                    self.ui.cbb_z_3.setCurrentIndex(
-                        loaded_data.get('cbb_z_1', -1))
-                    self.ui.cbb_x_7.setCurrentIndex(
-                        loaded_data.get('cbb_x_2', -1))
-                    self.ui.cbb_y_7.setCurrentIndex(
-                        loaded_data.get('cbb_y_2', -1))
-                    self.ui.cbb_z_7.setCurrentIndex(
-                        loaded_data.get('cbb_z_2', -1))
-
-                    self.send_df_to_vis()
+                    self.send_df_to_viz()
                     self.upd_spectrums_list()
-                    # Plot the graph and wafer after loading the work
+
+                    self.ui.cbb_x_3.setCurrentIndex(load.get('cbb_x_1', -1))
+                    self.ui.cbb_y_3.setCurrentIndex(load.get('cbb_y_1', -1))
+                    self.ui.cbb_z_3.setCurrentIndex(load.get('cbb_z_1', -1))
+                    self.ui.cbb_x_7.setCurrentIndex(load.get('cbb_x_2', -1))
+                    self.ui.cbb_y_7.setCurrentIndex(load.get('cbb_y_2', -1))
+                    self.ui.cbb_z_7.setCurrentIndex(load.get('cbb_z_2', -1))
+
+                    self.ui.cbb_plot_style_3.setCurrentIndex(load.get('plot_style_1', -1))
+                    self.ui.cbb_plot_style_7.setCurrentIndex(load.get('plot_style_2', -1))
+
                     self.plot_graph()
                     self.plot_graph2()
 
                 print("Work loaded successfully.")
         except Exception as e:
             print(f"Error loading work: {e}")
+
+    def fitspy_launcher(self):
+        """To Open FITSPY with selected spectra"""
+        if self.spectra_fs:
+            plt.style.use('default')
+            root = Tk()
+            appli = Appli(root, force_terminal_exit=False)
+
+            appli.spectra = self.spectra_fs
+            for spectrum in appli.spectra:
+                fname = spectrum.fname
+                appli.fileselector.filenames.append(fname)
+                appli.fileselector.lbox.insert(END, os.path.basename(fname))
+            appli.fileselector.select_item(0)
+            appli.update()
+            root.mainloop()
+        else:
+            show_alert("No spectrum is loaded; FITSPY cannot open")
+            return

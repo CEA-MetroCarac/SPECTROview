@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QFileDialog, QDialog, QTableWidget, \
 from PySide6.QtCore import Qt, QSettings, QFileInfo
 
 
-class CallbacksDf:
+class Dataframe:
     def __init__(self, ui):
         self.ui = ui  # connect to main.py
 

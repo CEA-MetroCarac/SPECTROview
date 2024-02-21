@@ -1,4 +1,4 @@
-# wafer.py module
+# maps.py module
 import os
 import time
 import numpy as np
@@ -30,7 +30,7 @@ DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 
 
-class Wafer(QObject):
+class Maps(QObject):
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
 
@@ -238,7 +238,7 @@ class Wafer(QObject):
                                                                     axis=1)
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
-        self.send_df_to_vis()
+        self.send_df_to_viz()
 
     def save_fit_results(self):
         """Functon to save fitted results in an excel file"""
@@ -288,7 +288,7 @@ class Wafer(QObject):
 
         self.apprend_cbb_param()
         self.apprend_cbb_wafer()
-        self.send_df_to_vis()
+        self.send_df_to_viz()
 
     def apprend_cbb_wafer(self):
         """to append all values of df_fit_results to comoboxses"""
@@ -683,7 +683,7 @@ class Wafer(QObject):
         else:
             self.fit()
 
-    def send_df_to_vis(self):
+    def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
         dfs = self.callbacks_df.original_dfs
         dfs["2Dmaps_fit_results"] = self.df_fit_results
@@ -725,24 +725,28 @@ class Wafer(QObject):
                     'model_fs': self.model_fs,
                     'model_name': self.ui.lb_loaded_model.text(),
                     'df_fit_results': self.df_fit_results,
+
                     'cbb_x': self.ui.cbb_x.currentIndex(),
                     'cbb_y': self.ui.cbb_y.currentIndex(),
                     'cbb_z': self.ui.cbb_z.currentIndex(),
                     "cbb_param_1": self.ui.cbb_param_1.currentIndex(),
                     "cbb_wafer_1": self.ui.cbb_wafer_1.currentIndex(),
-                    "color_pal": self.ui.cbb_color_pallete.currentIndex(),
+
                     'plot_title': self.ui.plot_title.text(),
-                    'wafer_size': self.ui.wafer_size.text(),
-                    'int_vmin': self.ui.int_vmin.text(),
-                    'int_vmax': self.ui.int_vmax.text(),
+                    'plot_title2': self.ui.ent_plot_title_2.text(),
                     'xmin': self.ui.xmin.text(),
                     'xmax': self.ui.xmax.text(),
                     'ymax': self.ui.ymax.text(),
                     'ymin': self.ui.ymin.text(),
-                    'ent_plot_title_2': self.ui.ent_plot_title_2.text(),
-                    'ent_xaxis_lbl': self.ui.ent_xaxis_lbl.text(),
-                    'ent_yaxis_lbl': self.ui.ent_yaxis_lbl.text(),
-                    'ent_x_rot': self.ui.ent_x_rot.text(),
+                    'xaxis_lbl': self.ui.ent_xaxis_lbl.text(),
+                    'yaxis_lbl': self.ui.ent_yaxis_lbl.text(),
+                    'x_rot': self.ui.ent_x_rot.text(),
+                    "plot_style": self.ui.cbb_plot_style.currentIndex(),
+                    'vmin': self.ui.int_vmin.text(),
+                    'vmax': self.ui.int_vmax.text(),
+
+                    'wafer_size': self.ui.wafer_size.text(),
+                    "color_pal": self.ui.cbb_color_pallete.currentIndex(),
                 }
                 with open(file_path, 'wb') as f:
                     dill.dump(data_to_save, f)
@@ -760,54 +764,43 @@ class Wafer(QObject):
                                                        "*.sv2dmap)")
             if file_path:
                 with open(file_path, 'rb') as f:
-                    loaded_data = dill.load(f)
-
-                    # Handle missing keys with default values or None
-                    self.spectra_fs = loaded_data.get('spectra_fs')
-                    self.wafers = loaded_data.get('wafers')
-                    self.model_fs = loaded_data.get('model_fs')
-                    model_name = loaded_data.get('model_name', '')
-                    self.ui.lb_loaded_model.setText(
-                        f"'{model_name}' is loaded !")
+                    load = dill.load(f)
+                    self.spectra_fs = load.get('spectra_fs')
+                    self.wafers = load.get('wafers')
+                    self.model_fs = load.get('model_fs')
+                    model_name = load.get('model_name', '')
+                    self.ui.lb_loaded_model.setText(model_name)
                     self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
-                    self.df_fit_results = loaded_data.get('df_fit_results')
+
+                    self.df_fit_results = load.get('df_fit_results')
                     self.apprend_cbb_param()
                     self.apprend_cbb_wafer()
-                    self.send_df_to_vis()
+                    self.send_df_to_viz()
                     self.upd_wafers_list()
 
                     # Set default values or None for missing keys
-                    self.ui.cbb_x.setCurrentIndex(loaded_data.get('cbb_x', -1))
-                    self.ui.cbb_y.setCurrentIndex(loaded_data.get('cbb_y', -1))
-                    self.ui.cbb_z.setCurrentIndex(loaded_data.get('cbb_z', -1))
-                    self.ui.cbb_param_1.setCurrentIndex(
-                        loaded_data.get('cbb_param_1', -1))
-                    self.ui.cbb_wafer_1.setCurrentIndex(
-                        loaded_data.get('cbb_wafer_1', -1))
-                    self.ui.cbb_color_pallete.setCurrentIndex(
-                        loaded_data.get('color_pal', -1))
-                    self.ui.plot_title.setText(
-                        loaded_data.get('plot_title', ''))
-                    self.ui.wafer_size.setText(
-                        loaded_data.get('wafer_size', ''))
-                    self.ui.int_vmin.setText(loaded_data.get('int_vmin', ''))
-                    self.ui.int_vmax.setText(loaded_data.get('int_vmax', ''))
-                    self.ui.xmin.setText(loaded_data.get('xmin', ''))
-                    self.ui.xmax.setText(loaded_data.get('xmax', ''))
-                    self.ui.ymax.setText(loaded_data.get('ymax', ''))
-                    self.ui.ymin.setText(loaded_data.get('ymin', ''))
-                    self.ui.ent_plot_title_2.setText(
-                        loaded_data.get('ent_plot_title_2', ''))
-                    self.ui.ent_xaxis_lbl.setText(
-                        loaded_data.get('ent_xaxis_lbl', ''))
-                    self.ui.ent_yaxis_lbl.setText(
-                        loaded_data.get('ent_yaxis_lbl', ''))
-                    self.ui.ent_x_rot.setText(loaded_data.get('ent_x_rot', ''))
+                    self.ui.cbb_x.setCurrentIndex(load.get('cbb_x', -1))
+                    self.ui.cbb_y.setCurrentIndex(load.get('cbb_y', -1))
+                    self.ui.cbb_z.setCurrentIndex(load.get('cbb_z', -1))
+                    self.ui.cbb_param_1.setCurrentIndex(load.get('cbb_param_1', -1))
+                    self.ui.cbb_wafer_1.setCurrentIndex(load.get('cbb_wafer_1', -1))
+                    self.ui.plot_title.setText(load.get('plot_title', ''))
+                    self.ui.ent_plot_title_2.setText(load.get('plot_title2', ''))
+                    self.ui.xmin.setText(load.get('xmin', ''))
+                    self.ui.xmax.setText(load.get('xmax', ''))
+                    self.ui.ymax.setText(load.get('ymax', ''))
+                    self.ui.ymin.setText(load.get('ymin', ''))
+                    self.ui.ent_xaxis_lbl.setText(load.get('xaxis_lbl', ''))
+                    self.ui.ent_yaxis_lbl.setText(load.get('yaxis_lbl', ''))
+                    self.ui.ent_x_rot.setText(load.get('x_rot', ''))
 
-                    # Plot the graph and wafer after loading the work
+                    self.ui.cbb_color_pallete.setCurrentIndex(load.get('color_pal', -1))
+                    self.ui.wafer_size.setText(load.get('wafer_size', ''))
+                    self.ui.int_vmin.setText(load.get('vmin', ''))
+                    self.ui.int_vmax.setText(load.get('vmax', ''))
+
                     self.plot_graph()
                     self.plot_wafer()
-
                 print("Work loaded successfully.")
         except Exception as e:
             print(f"Error loading work: {e}")

@@ -320,7 +320,6 @@ class Spectrums(QObject):
                    self.df_fit_results.columns]
         self.df_fit_results.columns = columns
 
-        self.split_fname()
         self.upd_cbb_param()
         self.send_df_to_viz()
 
@@ -455,8 +454,6 @@ class Spectrums(QObject):
 
     def update_pbar(self, progress):
         self.ui.progressBar_3.setValue(progress)
-
-
 
     def cosmis_ray_detection(self):
         self.spectra_fs.outliers_limit_calculation()
@@ -640,8 +637,10 @@ class Spectrums(QObject):
                     self.ui.cbb_y_7.setCurrentIndex(load.get('cbb_y_2', -1))
                     self.ui.cbb_z_7.setCurrentIndex(load.get('cbb_z_2', -1))
 
-                    self.ui.cbb_plot_style_3.setCurrentIndex(load.get('plot_style_1', -1))
-                    self.ui.cbb_plot_style_7.setCurrentIndex(load.get('plot_style_2', -1))
+                    self.ui.cbb_plot_style_3.setCurrentIndex(
+                        load.get('plot_style_1', -1))
+                    self.ui.cbb_plot_style_7.setCurrentIndex(
+                        load.get('plot_style_2', -1))
 
                     self.plot_graph()
                     self.plot_graph2()

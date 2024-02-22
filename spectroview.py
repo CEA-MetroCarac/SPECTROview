@@ -2,10 +2,10 @@
 import sys
 import os
 from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
-    QTextBrowser, QVBoxLayout
+    QTextBrowser, QVBoxLayout, QLabel
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt, QFile
-from PySide6.QtGui import QDoubleValidator, QIcon
+from PySide6.QtGui import QDoubleValidator, QIcon, QPixmap
 
 from utils import dark_palette, light_palette, view_md_doc
 from ui import resources_new
@@ -228,8 +228,9 @@ class MainWindow:
 
         self.ui.btn_copy_fig_3.clicked.connect(self.spectrums.copy_fig)
         self.ui.btn_copy2_3.clicked.connect(self.spectrums.copy_fig_graph1)
-        self.ui.btn_copy2_7.clicked.connect(
-            self.spectrums.copy_fig_graph2)
+        self.ui.btn_copy2_7.clicked.connect(self.spectrums.copy_fig_graph2)
+        self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
+
         self.darkmode = True
         self.ui.setPalette(dark_palette())
 
@@ -268,14 +269,26 @@ class MainWindow:
         """
         about_dialog = QDialog(self.ui)
         about_dialog.setWindowTitle("About")
-        about_dialog.resize(350, 200)
+        about_dialog.resize(350, 300)
+
+        # Create QLabel for the logo
+        logo_label = QLabel()
+        pixmap = QPixmap(ICON_APPLI)
+        scaled_pixmap = pixmap.scaled(100, 100, Qt.KeepAspectRatio)
+        logo_label.setPixmap(scaled_pixmap)
+        logo_label.setAlignment(Qt.AlignCenter)
+
         text_browser = QTextBrowser(about_dialog)
         text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         text_browser.setOpenExternalLinks(True)
         text_browser.setHtml(text)
+
         layout = QVBoxLayout(about_dialog)
+        layout.addWidget(logo_label)
         layout.addWidget(text_browser)
+        about_dialog.setLayout(layout)
         about_dialog.exec()
+
 
 def launcher():
     app = QApplication()
@@ -284,6 +297,8 @@ def launcher():
     app.setStyle("Fusion")
     window.ui.show()
     sys.exit(app.exec())
+
+
 if __name__ == "__main__":
     launcher()
 

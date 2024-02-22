@@ -1,5 +1,13 @@
 <RCC>
   <qresource prefix="icon">
+    <file>iconpack/paste10.png</file>
+    <file>iconpack/copy10.png</file>
+    <file>iconpack/opened-folder.png</file>
+    <file>iconpack/magnify.png</file>
+    <file>iconpack/view11.png</file>
+    <file>iconpack/save12.png</file>
+    <file>iconpack/save11.png</file>
+    <file>iconpack/collect.png</file>
     <file>iconpack/icon3.ico</file>
     <file>iconpack/add.png</file>
     <file>iconpack/icon3.png</file>

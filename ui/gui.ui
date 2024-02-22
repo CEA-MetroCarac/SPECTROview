@@ -396,6 +396,7 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -430,41 +431,13 @@
                       <property name="text">
                        <string>Collect</string>
                       </property>
+                      <property name="icon">
+                       <iconset resource="resources_new.qrc">
+                        <normaloff>:/icon/iconpack/collect.png</normaloff>:/icon/iconpack/collect.png</iconset>
+                      </property>
                       <property name="iconSize">
                        <size>
                         <width>16</width>
-                        <height>22</height>
-                       </size>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="btn_open_fit_results">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>30</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="toolTip">
-                       <string>Open fit results (format Excel)</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="icon">
-                       <iconset resource="resources_new.qrc">
-                        <normaloff>:/icon/iconpack/icons8-documents-folder-96.png</normaloff>:/icon/iconpack/icons8-documents-folder-96.png</iconset>
-                      </property>
-                      <property name="iconSize">
-                       <size>
-                        <width>22</width>
                         <height>22</height>
                        </size>
                       </property>
@@ -498,7 +471,39 @@
                       </property>
                       <property name="icon">
                        <iconset resource="resources_new.qrc">
-                        <normaloff>:/icon/iconpack/view.png</normaloff>:/icon/iconpack/view.png</iconset>
+                        <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>22</width>
+                        <height>22</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="btn_open_fit_results">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>30</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="toolTip">
+                       <string>Open fit results (format Excel)</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="resources_new.qrc">
+                        <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
                       </property>
                       <property name="iconSize">
                        <size>
@@ -536,7 +541,7 @@
                       </property>
                       <property name="icon">
                        <iconset resource="resources_new.qrc">
-                        <normaloff>:/icon/iconpack/save.png</normaloff>:/icon/iconpack/save.png</iconset>
+                        <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
                       </property>
                       <property name="iconSize">
                        <size>
@@ -1114,8 +1119,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>236</width>
-                     <height>440</height>
+                     <width>248</width>
+                     <height>427</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1124,6 +1129,7 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1287,6 +1293,7 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1843,8 +1850,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>617</width>
-                             <height>354</height>
+                             <width>690</width>
+                             <height>384</height>
                             </rect>
                            </property>
                           </widget>
@@ -2170,14 +2177,20 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>40</height>
+                </size>
+               </property>
                <property name="maximumSize">
                 <size>
-                 <width>50</width>
-                 <height>16777215</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="toolTip">
-                <string>Open spectra</string>
+                <string>Open spectra (Wafer or 2D maps)</string>
                </property>
                <property name="text">
                 <string/>
@@ -2196,33 +2209,77 @@
              </item>
              <item>
               <widget class="QPushButton" name="btn_sw">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>40</height>
+                </size>
+               </property>
                <property name="maximumSize">
                 <size>
-                 <width>30</width>
-                 <height>16777215</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="toolTip">
-                <string>To save the current works</string>
+                <string>Save current works</string>
                </property>
                <property name="text">
-                <string>SW</string>
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources_new.qrc">
+                 <normaloff>:/icon/iconpack/save.png</normaloff>:/icon/iconpack/save.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>30</width>
+                 <height>30</height>
+                </size>
                </property>
               </widget>
              </item>
              <item>
               <widget class="QPushButton" name="btn_lw">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>40</height>
+                </size>
+               </property>
                <property name="maximumSize">
                 <size>
-                 <width>30</width>
-                 <height>16777215</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="toolTip">
-                <string>To reload the saved works</string>
+                <string>Reload the saved works</string>
                </property>
                <property name="text">
-                <string>LW</string>
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources_new.qrc">
+                 <normaloff>:/icon/iconpack/icons8-documents-folder-96.png</normaloff>:/icon/iconpack/icons8-documents-folder-96.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>30</width>
+                 <height>30</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -2270,6 +2327,24 @@
              </item>
              <item>
               <widget class="QPushButton" name="btn_open_fitspy">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>30</height>
+                </size>
+               </property>
                <property name="text">
                 <string>Open FITSPY</string>
                </property>
@@ -2288,6 +2363,7 @@
              <property name="font">
               <font>
                <family>Arial</family>
+               <weight>75</weight>
                <italic>false</italic>
                <bold>true</bold>
               </font>
@@ -2308,6 +2384,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="btn_cosmis_ray">
+             <property name="toolTip">
+              <string>Detect cosmis ray based on the loaded spectra</string>
+             </property>
              <property name="text">
               <string>Cosmic ray detection</string>
              </property>
@@ -2362,7 +2441,7 @@
                   </property>
                   <property name="icon">
                    <iconset resource="resources_new.qrc">
-                    <normaloff>:/icon/iconpack/icons8-remove-100.png</normaloff>:/icon/iconpack/icons8-remove-100.png</iconset>
+                    <normaloff>:/icon/iconpack/icons8-trash-128.png</normaloff>:/icon/iconpack/icons8-trash-128.png</iconset>
                   </property>
                   <property name="iconSize">
                    <size>
@@ -2385,7 +2464,7 @@
                   </property>
                   <property name="icon">
                    <iconset resource="resources_new.qrc">
-                    <normaloff>:/icon/iconpack/view.png</normaloff>:/icon/iconpack/view.png</iconset>
+                    <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
                   </property>
                   <property name="iconSize">
                    <size>
@@ -2408,7 +2487,7 @@
                   </property>
                   <property name="icon">
                    <iconset resource="resources_new.qrc">
-                    <normaloff>:/icon/iconpack/icons8-save-all-48.png</normaloff>:/icon/iconpack/icons8-save-all-48.png</iconset>
+                    <normaloff>:/icon/iconpack/save11.png</normaloff>:/icon/iconpack/save11.png</iconset>
                   </property>
                   <property name="iconSize">
                    <size>
@@ -2990,7 +3069,7 @@
                    <property name="minimumSize">
                     <size>
                      <width>250</width>
-                     <height>350</height>
+                     <height>400</height>
                     </size>
                    </property>
                    <property name="maximumSize">
@@ -3006,12 +3085,12 @@
                     <property name="geometry">
                      <rect>
                       <x>0</x>
-                      <y>-205</y>
-                      <width>345</width>
-                      <height>571</height>
+                      <y>0</y>
+                      <width>322</width>
+                      <height>511</height>
                      </rect>
                     </property>
-                    <layout class="QVBoxLayout" name="verticalLayout_74">
+                    <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,20,0,0,0,0,0,0,0,0">
                      <item>
                       <layout class="QHBoxLayout" name="horizontalLayout_48">
                        <item>
@@ -3025,6 +3104,7 @@
                          <property name="font">
                           <font>
                            <pointsize>12</pointsize>
+                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -3058,6 +3138,10 @@
                          </property>
                          <property name="text">
                           <string>Collect</string>
+                         </property>
+                         <property name="icon">
+                          <iconset resource="resources_new.qrc">
+                           <normaloff>:/icon/iconpack/collect.png</normaloff>:/icon/iconpack/collect.png</iconset>
                          </property>
                          <property name="iconSize">
                           <size>
@@ -3095,7 +3179,7 @@
                          </property>
                          <property name="icon">
                           <iconset resource="resources_new.qrc">
-                           <normaloff>:/icon/iconpack/view.png</normaloff>:/icon/iconpack/view.png</iconset>
+                           <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
                          </property>
                          <property name="iconSize">
                           <size>
@@ -3127,7 +3211,7 @@
                          </property>
                          <property name="icon">
                           <iconset resource="resources_new.qrc">
-                           <normaloff>:/icon/iconpack/icons8-documents-folder-96.png</normaloff>:/icon/iconpack/icons8-documents-folder-96.png</iconset>
+                           <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
                          </property>
                          <property name="iconSize">
                           <size>
@@ -3165,7 +3249,7 @@
                          </property>
                          <property name="icon">
                           <iconset resource="resources_new.qrc">
-                           <normaloff>:/icon/iconpack/save.png</normaloff>:/icon/iconpack/save.png</iconset>
+                           <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
                          </property>
                          <property name="iconSize">
                           <size>
@@ -3178,6 +3262,32 @@
                       </layout>
                      </item>
                      <item>
+                      <spacer name="verticalSpacer_12">
+                       <property name="orientation">
+                        <enum>Qt::Vertical</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>20</width>
+                         <height>40</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <spacer name="verticalSpacer_13">
+                       <property name="orientation">
+                        <enum>Qt::Vertical</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>20</width>
+                         <height>40</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
                       <widget class="QLabel" name="label_51">
                        <property name="text">
                         <string>Split sample's name and add a columns:</string>
@@ -3185,7 +3295,32 @@
                       </widget>
                      </item>
                      <item>
-                      <layout class="QHBoxLayout" name="horizontalLayout_47" stretch="40,40,20">
+                      <layout class="QHBoxLayout" name="horizontalLayout_47" stretch="0,40,40,20">
+                       <item>
+                        <widget class="QPushButton" name="btn_split_fname">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="minimumSize">
+                          <size>
+                           <width>40</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>40</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="text">
+                          <string>Split</string>
+                         </property>
+                        </widget>
+                       </item>
                        <item>
                         <widget class="QLineEdit" name="ent_col_name">
                          <property name="placeholderText">
@@ -3195,6 +3330,12 @@
                        </item>
                        <item>
                         <widget class="QComboBox" name="cbb_split_fname">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
                          <property name="toolTip">
                           <string>Select the value to split</string>
                          </property>
@@ -3226,19 +3367,6 @@
                         </widget>
                        </item>
                       </layout>
-                     </item>
-                     <item>
-                      <spacer name="verticalSpacer_12">
-                       <property name="orientation">
-                        <enum>Qt::Vertical</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>20</width>
-                         <height>40</height>
-                        </size>
-                       </property>
-                      </spacer>
                      </item>
                      <item>
                       <widget class="QGroupBox" name="groupBox_df_manip_2">
@@ -3333,6 +3461,7 @@
                        <property name="font">
                         <font>
                          <pointsize>12</pointsize>
+                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -4805,14 +4934,20 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>40</height>
+                </size>
+               </property>
                <property name="maximumSize">
                 <size>
-                 <width>50</width>
-                 <height>16777215</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="toolTip">
-                <string>Open spectra</string>
+                <string>Open spectra data (single spectrum)</string>
                </property>
                <property name="text">
                 <string/>
@@ -4831,33 +4966,65 @@
              </item>
              <item>
               <widget class="QPushButton" name="btn_sw_3">
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>40</height>
+                </size>
+               </property>
                <property name="maximumSize">
                 <size>
-                 <width>30</width>
-                 <height>16777215</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="toolTip">
-                <string>To save the current works</string>
+                <string>Save current works</string>
                </property>
                <property name="text">
-                <string>SW</string>
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources_new.qrc">
+                 <normaloff>:/icon/iconpack/save.png</normaloff>:/icon/iconpack/save.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>30</width>
+                 <height>30</height>
+                </size>
                </property>
               </widget>
              </item>
              <item>
               <widget class="QPushButton" name="btn_lw_3">
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>40</height>
+                </size>
+               </property>
                <property name="maximumSize">
                 <size>
-                 <width>30</width>
-                 <height>16777215</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="toolTip">
-                <string>To reload the saved works</string>
+                <string>Reload saved works</string>
                </property>
                <property name="text">
-                <string>LW</string>
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources_new.qrc">
+                 <normaloff>:/icon/iconpack/icons8-documents-folder-96.png</normaloff>:/icon/iconpack/icons8-documents-folder-96.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>30</width>
+                 <height>30</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -4905,6 +5072,21 @@
              </item>
              <item>
               <widget class="QPushButton" name="btn_open_fitspy_3">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="toolTip">
+                <string>Open FITSPY application</string>
+               </property>
                <property name="text">
                 <string>Open FITSPY</string>
                </property>
@@ -4923,6 +5105,7 @@
              <property name="font">
               <font>
                <family>Arial</family>
+               <weight>75</weight>
                <italic>false</italic>
                <bold>true</bold>
               </font>
@@ -4943,6 +5126,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="btn_cosmis_ray_3">
+             <property name="toolTip">
+              <string>Detect cosmis ray based on the loaded spectra</string>
+             </property>
              <property name="text">
               <string>Cosmic ray detection</string>
              </property>
@@ -5038,7 +5224,7 @@
                   </property>
                   <property name="icon">
                    <iconset resource="resources_new.qrc">
-                    <normaloff>:/icon/iconpack/icons8-remove-100.png</normaloff>:/icon/iconpack/icons8-remove-100.png</iconset>
+                    <normaloff>:/icon/iconpack/icons8-trash-128.png</normaloff>:/icon/iconpack/icons8-trash-128.png</iconset>
                   </property>
                   <property name="iconSize">
                    <size>
@@ -5258,7 +5444,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1139</width>
+               <width>1143</width>
                <height>921</height>
               </rect>
              </property>
@@ -5402,6 +5588,7 @@
                  <property name="font">
                   <font>
                    <pointsize>8</pointsize>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5430,6 +5617,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5458,6 +5646,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5486,6 +5675,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5715,6 +5905,7 @@
                     <widget class="QPushButton" name="btn_add_a_plot">
                      <property name="font">
                       <font>
+                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -5812,6 +6003,7 @@
                          </property>
                          <property name="font">
                           <font>
+                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -6495,6 +6687,11 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Tools</string>
+       </attribute>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -6505,7 +6702,7 @@
      <x>0</x>
      <y>0</y>
      <width>1619</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpen">
@@ -6527,7 +6724,7 @@
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>About/Help</string>
     </property>
     <addaction name="actionabout"/>
     <addaction name="actionHelps"/>

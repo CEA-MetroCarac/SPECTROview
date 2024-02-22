@@ -192,11 +192,12 @@ class Maps(QObject):
                                                         fnames))
         self.fit_thread.fit_completed.connect(self.fit_completed)
         self.fit_thread.start()
+
+
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
-
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.
@@ -347,6 +348,7 @@ class Maps(QObject):
         reinit_spectrum(fnames, self.spectra_fs)
         self.delay_plot()
         self.upd_spectra_list()
+        QTimer.singleShot(200, self.rescale)
 
     def reinit_all(self):
         """Reinitialize all spectra"""
@@ -377,6 +379,10 @@ class Maps(QObject):
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
 
+        # Connect Home button to rescale function
+        home_action = next(a for a in self.toolbar.actions() if a.text() == 'Home')
+        home_action.triggered.connect(self.rescale)
+
         fig2 = plt.figure()
         self.ax2 = fig2.add_subplot(111)
         self.canvas2 = FigureCanvas(fig2)
@@ -384,6 +390,10 @@ class Maps(QObject):
         layout.addWidget(self.canvas2)
         self.canvas2.draw()
 
+    def rescale(self):
+        """Rescale the figure."""
+        self.ax.autoscale()
+        self.canvas1.draw()
     def plot_measurement_sites(self):
         """Plot wafer maps of measurement sites"""
         wafer_name, coords = self.spectre_id()
@@ -413,8 +423,12 @@ class Maps(QObject):
                 selected_spectra_fs.append(spectrum_fs)
         if len(selected_spectra_fs) == 0:
             return
-
+        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
         self.ax.clear()
+        # reassign previous axis limits (related to zoom)
+        if not xlim == ylim == (0.0, 1.0):
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
 
         for spectrum_fs in selected_spectra_fs:
             fname, coord = self.spectre_id_fs(spectrum_fs)
@@ -856,26 +870,8 @@ class Maps(QObject):
         """Called when fitting process is completed"""
         self.delay_plot()
         self.upd_spectra_list()
+        QTimer.singleShot(200, self.rescale)
 
     def update_pbar(self, progress):
         self.ui.progressBar.setValue(progress)
 
-    def fit(self, fnames=None):
-        """Fit selected spectrum(s)"""
-        if self.model_fs is None:
-            show_alert("Load a fit model before fitting.")
-            return
-
-        if fnames is None:
-            wafer_name, coords = self.spectre_id()
-            fnames = [f"{wafer_name}_{coord}" for coord in coords]
-
-        # Start fitting process in a separate thread
-        self.fit_thread = FitThread(self.spectra_fs, self.model_fs, fnames)
-
-        self.fit_thread.fit_progress_changed.connect(self.update_pbar)
-        self.fit_thread.fit_progress.connect(
-            lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
-                                                        fnames))
-        self.fit_thread.fit_completed.connect(self.fit_completed)
-        self.fit_thread.start()

@@ -4,7 +4,10 @@ import traceback
 import numpy as np
 from functools import partial
 from io import BytesIO
-#import win32clipboard
+try:
+    import win32clipboard
+except:
+    pass
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt

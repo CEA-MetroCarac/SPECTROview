@@ -163,11 +163,17 @@ class Spectrums(QObject):
             self.ax.legend(loc='upper right')
         self.canvas1 = FigureCanvas(fig1)
         self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
+        # Connect Home button to rescale function
+        home_action = next(a for a in self.toolbar.actions() if a.text() == 'Home')
+        home_action.triggered.connect(self.rescale)
         self.ui.spectre_view_frame_4.addWidget(self.canvas1)
         self.ui.toolbar_frame_3.addWidget(self.toolbar)
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
-
+    def rescale(self):
+        """Rescale the figure."""
+        self.ax.autoscale()
+        self.canvas1.draw()
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
         fnames = self.get_selected_spectra()
@@ -179,7 +185,12 @@ class Spectrums(QObject):
                 selected_spectra_fs.append(spectrum_fs)
         if len(selected_spectra_fs) == 0:
             return
+        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
         self.ax.clear()
+        # reassign previous axis limits (related to zoom)
+        if not xlim == ylim == (0.0, 1.0):
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
 
         for spectrum_fs in selected_spectra_fs:
             fname = spectrum_fs.fname
@@ -445,6 +456,7 @@ class Spectrums(QObject):
         """Called when fitting process is completed"""
         self.plot_delay()
         self.upd_spectrums_list()
+        QTimer.singleShot(200, self.rescale)
 
     def update_pbar(self, progress):
         self.ui.progressBar_3.setValue(progress)
@@ -459,7 +471,7 @@ class Spectrums(QObject):
         reinit_spectrum(fnames, self.spectra_fs)
         self.plot_delay()
         self.upd_spectrums_list()
-
+        QTimer.singleShot(200, self.rescale)
     def reinit_all(self):
         """Reinitialize all spectra"""
         fnames = self.spectra_fs.fnames

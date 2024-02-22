@@ -4,8 +4,10 @@ Module contains all utilities functions and common functions
 import os
 import copy
 import time
-
-#import win32clipboard
+try:
+    import win32clipboard
+except:
+    pass
 from io import BytesIO
 import numpy as np
 import pandas as pd

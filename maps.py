@@ -42,10 +42,12 @@ class Maps(QObject):
         self.settings = QSettings("CEA-Leti", "DaProViz")
 
         self.wafers = {}  # list of opened wafers
-        self.ax = None
+        self.ax = None  # Spectrum plot
+        self.ax2 = None  # Wafer measuerment sites
         self.canvas1 = None
         self.canvas2 = None
         self.canvas2 = None
+        self.canvas4 = None  # Wafer measuerment sites
         self.model_fs = None  # FITSPY
         self.spectra_fs = Spectra()  # FITSPY
 
@@ -76,6 +78,7 @@ class Maps(QObject):
         self.fit_progress_changed.connect(self.update_pbar)
 
         self.plot_styles = ["box plot", "point plot", "bar plot"]
+        self.create_plot_widget()
 
     def open_data(self, file_paths=None, wafers=None):
         """Open CSV files containing RAW spectra of each wafer"""
@@ -334,9 +337,50 @@ class Maps(QObject):
         else:
             self.reinit()
 
+    def create_plot_widget(self):
+        """Create canvas and toolbar for plotting in the GUI"""
+        plt.style.use(PLOT_POLICY)
+        fig1 = plt.figure()
+        self.ax = fig1.add_subplot(111)
+        self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
+        self.ax.set_ylabel("Intensity (a.u)")
+        if self.ui.cb_legend.isChecked():
+            self.ax.legend(loc='upper right')
+        self.canvas1 = FigureCanvas(fig1)
+        self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
+        self.ui.QVBoxlayout.addWidget(self.canvas1)
+        self.ui.toolbar_frame.addWidget(self.toolbar)
+        self.canvas1.figure.tight_layout()
+        self.canvas1.draw()
+
+        fig2 = plt.figure()
+        self.ax2 = fig2.add_subplot(111)
+        self.canvas4 = FigureCanvas(fig2)
+        layout = self.ui.wafer_plot.layout()
+        layout.addWidget(self.canvas4)
+        self.canvas4.draw()
+
+    def plot_measurement_sites(self):
+        """Plot wafer maps of measurement sites"""
+        wafer_name, coords = self.spectre_id()
+        all_x = []
+        all_y = []
+        for spectrum_fs in self.spectra_fs:
+            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+            if wafer_name == wafer_name_fs:
+                x, y = coord_fs
+                all_x.append(x)
+                all_y.append(y)
+        self.ax2.clear()
+        self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
+        if coords:
+            x, y = zip(*coords)
+            self.ax2.scatter(x, y, marker='o', color='red', s=40)
+        self.ax2.get_figure().tight_layout()
+        self.canvas4.draw()
+
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
-        plt.style.use(PLOT_POLICY)
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
         for spectrum_fs in self.spectra_fs:
@@ -346,14 +390,10 @@ class Maps(QObject):
         if len(selected_spectra_fs) == 0:
             return
 
-        self.clear_spectre_view()
-        plt.close('all')
-        fig = plt.figure()
-        self.ax = fig.add_subplot(111)
+        self.ax.clear()
 
         for spectrum_fs in selected_spectra_fs:
             fname, coord = self.spectre_id_fs(spectrum_fs)
-
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
             self.ax.plot(x_values, y_values, label=f"{coord}", ms=3, lw=2)
@@ -399,7 +439,6 @@ class Maps(QObject):
                        'residual') and self.ui.cb_residual.isChecked():
                 residual = spectrum_fs.result_fit.residual
                 self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
-
             if self.ui.cb_colors.isChecked() is False:
                 self.ax.set_prop_cycle(None)
 
@@ -407,13 +446,8 @@ class Maps(QObject):
         self.ax.set_ylabel("Intensity (a.u)")
         if self.ui.cb_legend.isChecked():
             self.ax.legend(loc='upper right')
-        fig.tight_layout()
-
-        self.canvas1 = FigureCanvas(fig)
-        self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
-        self.ui.spectre_view_frame.addWidget(self.canvas1)
-        self.ui.toolbar_frame.addWidget(self.toolbar)
-
+        self.ax.get_figure().tight_layout()
+        self.canvas1.draw()
         self.plot_measurement_sites()
 
     def plot_wafer(self):
@@ -488,33 +522,6 @@ class Maps(QObject):
 
         self.ui.frame_graph.addWidget(self.canvas3)
 
-    def plot_measurement_sites(self):
-        """Plot wafer maps of measurement sites"""
-        plt.style.use(PLOT_POLICY)
-
-        self.clear_wafer_plot()
-        wafer_name, coords = self.spectre_id()
-        all_x = []
-        all_y = []
-        for spectrum_fs in self.spectra_fs:
-            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
-            if wafer_name == wafer_name_fs:
-                x, y = coord_fs
-                all_x.append(x)
-                all_y.append(y)
-        fig, ax = plt.subplots()
-        ax.scatter(all_x, all_y, marker='x', color='gray', s=10)
-
-        # Highlight selected spectra in red
-        if coords:
-            selected_x, selected_y = zip(*coords)
-            ax.scatter(selected_x, selected_y, marker='o', color='red', s=40)
-
-        canvas = FigureCanvas(fig)
-        layout = self.ui.wafer_plot.layout()
-        if layout:
-            layout.addWidget(canvas)
-
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
         current_row = self.ui.wafers_listbox.currentRow()
@@ -524,7 +531,6 @@ class Maps(QObject):
         for wafer_name in wafer_names:
             item = QListWidgetItem(wafer_name)
             self.ui.wafers_listbox.addItem(item)
-            self.clear_wafer_plot()  # Clear the wafer_plot
         item_count = self.ui.wafers_listbox.count()
 
         # Management of selecting item of listbox
@@ -542,7 +548,6 @@ class Maps(QObject):
         current_row = self.ui.spectra_listbox.currentRow()
 
         self.ui.spectra_listbox.clear()
-        self.clear_wafer_plot()
         current_item = self.ui.wafers_listbox.currentItem()
 
         if current_item is not None:
@@ -585,17 +590,10 @@ class Maps(QObject):
                 not spectrum_fs.fname.startswith(wafer_name))
             self.upd_wafers_list()
         self.ui.spectra_listbox.clear()
-        self.clear_spectre_view()
-        self.clear_wafer_plot()
-
-    def clear_spectre_view(self):
-        """ Clear plot and toolbar within the spectre_view"""
-        clear_layout(self.ui.spectre_view_frame.layout())
-        clear_layout(self.ui.toolbar_frame.layout())
-
-    def clear_wafer_plot(self):
-        """ To clear wafer plot"""
-        clear_layout(self.ui.wafer_plot.layout())
+        self.ax.clear()
+        self.ax2.clear()
+        self.canvas1.draw()
+        self.canvas4.draw()
 
     def copy_fig(self):
         """To copy figure canvas to clipboard"""
@@ -782,10 +780,13 @@ class Maps(QObject):
                     self.ui.cbb_x.setCurrentIndex(load.get('cbb_x', -1))
                     self.ui.cbb_y.setCurrentIndex(load.get('cbb_y', -1))
                     self.ui.cbb_z.setCurrentIndex(load.get('cbb_z', -1))
-                    self.ui.cbb_param_1.setCurrentIndex(load.get('cbb_param_1', -1))
-                    self.ui.cbb_wafer_1.setCurrentIndex(load.get('cbb_wafer_1', -1))
+                    self.ui.cbb_param_1.setCurrentIndex(
+                        load.get('cbb_param_1', -1))
+                    self.ui.cbb_wafer_1.setCurrentIndex(
+                        load.get('cbb_wafer_1', -1))
                     self.ui.plot_title.setText(load.get('plot_title', ''))
-                    self.ui.ent_plot_title_2.setText(load.get('plot_title2', ''))
+                    self.ui.ent_plot_title_2.setText(
+                        load.get('plot_title2', ''))
                     self.ui.xmin.setText(load.get('xmin', ''))
                     self.ui.xmax.setText(load.get('xmax', ''))
                     self.ui.ymax.setText(load.get('ymax', ''))
@@ -794,7 +795,8 @@ class Maps(QObject):
                     self.ui.ent_yaxis_lbl.setText(load.get('yaxis_lbl', ''))
                     self.ui.ent_x_rot.setText(load.get('x_rot', ''))
 
-                    self.ui.cbb_color_pallete.setCurrentIndex(load.get('color_pal', -1))
+                    self.ui.cbb_color_pallete.setCurrentIndex(
+                        load.get('color_pal', -1))
                     self.ui.wafer_size.setText(load.get('wafer_size', ''))
                     self.ui.int_vmin.setText(load.get('vmin', ''))
                     self.ui.int_vmax.setText(load.get('vmax', ''))

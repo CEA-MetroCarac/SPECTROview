@@ -71,6 +71,7 @@ class Spectrums(QObject):
 
         self.plot_styles = ["point plot", "scatter plot", "box plot",
                             "bar plot"]
+        self.create_plot_widget()
 
     def open_data(self, file_paths=None, spectra=None):
         if self.spectra_fs is None:
@@ -153,9 +154,24 @@ class Spectrums(QObject):
             fnames.append(text)
         return fnames
 
+    def create_plot_widget(self):
+        """Create canvas and toolbar for plotting in the GUI"""
+        plt.style.use(PLOT_POLICY)
+        fig1 = plt.figure()
+        self.ax = fig1.add_subplot(111)
+        self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
+        self.ax.set_ylabel("Intensity (a.u)")
+        if self.ui.cb_legend.isChecked():
+            self.ax.legend(loc='upper right')
+        self.canvas1 = FigureCanvas(fig1)
+        self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
+        self.ui.spectre_view_frame_4.addWidget(self.canvas1)
+        self.ui.toolbar_frame_3.addWidget(self.toolbar)
+        self.canvas1.figure.tight_layout()
+        self.canvas1.draw()
+
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
-        plt.style.use(PLOT_POLICY)
         fnames = self.get_selected_spectra()
         selected_spectra_fs = []
 
@@ -165,11 +181,7 @@ class Spectrums(QObject):
                 selected_spectra_fs.append(spectrum_fs)
         if len(selected_spectra_fs) == 0:
             return
-
-        self.clear_spectre_view()
-        plt.close('all')
-        fig = plt.figure()
-        self.ax = fig.add_subplot(111)
+        self.ax.clear()
 
         for spectrum_fs in selected_spectra_fs:
             fname = spectrum_fs.fname
@@ -218,25 +230,15 @@ class Spectrums(QObject):
                        'residual') and self.ui.cb_residual_3.isChecked():
                 residual = spectrum_fs.result_fit.residual
                 self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
-
             if self.ui.cb_colors_3.isChecked() is False:
                 self.ax.set_prop_cycle(None)
 
         self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
         self.ax.set_ylabel("Intensity (a.u)")
-        if self.ui.cb_legend_3.isChecked():
+        if self.ui.cb_legend.isChecked():
             self.ax.legend(loc='upper right')
-        fig.tight_layout()
-
-        self.canvas1 = FigureCanvas(fig)
-        self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
-        self.ui.spectre_view_frame_4.addWidget(self.canvas1)
-        self.ui.toolbar_frame_3.addWidget(self.toolbar)
-
-    def clear_spectre_view(self):
-        """ Clear plot and toolbar within the spectre_view"""
-        clear_layout(self.ui.spectre_view_frame_4.layout())
-        clear_layout(self.ui.toolbar_frame_3.layout())
+        self.ax.get_figure().tight_layout()
+        self.canvas1.draw()
 
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
@@ -561,7 +563,8 @@ class Spectrums(QObject):
             spectrum_fs for spectrum_fs in self.spectra_fs if
             spectrum_fs.fname not in sel_fnames)
         self.upd_spectrums_list()
-        self.clear_spectre_view()
+        self.ax.clear()
+        self.canvas1.draw()
 
     def copy_fig(self):
         """To copy figure canvas to clipboard"""

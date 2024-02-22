@@ -396,7 +396,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -553,6 +552,87 @@
                     </item>
                    </layout>
                   </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_52">
+                   <property name="text">
+                    <string>Split fname name and add a columns:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_49" stretch="0,0,40,20">
+                   <item>
+                    <widget class="QPushButton" name="btn_split_fname_2">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>40</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>40</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="text">
+                      <string>Split</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="cbb_split_fname_2">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="toolTip">
+                      <string>Select the value to split</string>
+                     </property>
+                     <property name="placeholderText">
+                      <string/>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="ent_col_name_2">
+                     <property name="placeholderText">
+                      <string>type column name</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="btn_add_col_2">
+                     <property name="minimumSize">
+                      <size>
+                       <width>60</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>60</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="toolTip">
+                      <string>To add a new column with the selected value</string>
+                     </property>
+                     <property name="text">
+                      <string>Add</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </item>
                 </layout>
                </widget>
@@ -1120,7 +1200,7 @@
                      <x>0</x>
                      <y>0</y>
                      <width>248</width>
-                     <height>427</height>
+                     <height>440</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1129,7 +1209,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1293,7 +1372,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1850,8 +1928,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>690</width>
-                             <height>384</height>
+                             <width>617</width>
+                             <height>358</height>
                             </rect>
                            </property>
                           </widget>
@@ -2363,7 +2441,6 @@
              <property name="font">
               <font>
                <family>Arial</family>
-               <weight>75</weight>
                <italic>false</italic>
                <bold>true</bold>
               </font>
@@ -3086,11 +3163,11 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>323</width>
-                      <height>511</height>
+                      <width>348</width>
+                      <height>613</height>
                      </rect>
                     </property>
-                    <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,20,0,0,0,0,0,0,0,0">
+                    <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,20,0,0,0,0,0,0,0,0,0">
                      <item>
                       <layout class="QHBoxLayout" name="horizontalLayout_48">
                        <item>
@@ -3104,7 +3181,6 @@
                          <property name="font">
                           <font>
                            <pointsize>12</pointsize>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -3290,12 +3366,12 @@
                      <item>
                       <widget class="QLabel" name="label_51">
                        <property name="text">
-                        <string>Split sample's name and add a columns:</string>
+                        <string>Split fname name and add a columns:</string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <layout class="QHBoxLayout" name="horizontalLayout_47" stretch="0,40,40,20">
+                      <layout class="QHBoxLayout" name="horizontalLayout_47" stretch="0,0,40,20">
                        <item>
                         <widget class="QPushButton" name="btn_split_fname">
                          <property name="sizePolicy">
@@ -3322,13 +3398,6 @@
                         </widget>
                        </item>
                        <item>
-                        <widget class="QLineEdit" name="ent_col_name">
-                         <property name="placeholderText">
-                          <string>type column name</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
                         <widget class="QComboBox" name="cbb_split_fname">
                          <property name="sizePolicy">
                           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -3341,6 +3410,13 @@
                          </property>
                          <property name="placeholderText">
                           <string/>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QLineEdit" name="ent_col_name">
+                         <property name="placeholderText">
+                          <string>type column name</string>
                          </property>
                         </widget>
                        </item>
@@ -3367,6 +3443,13 @@
                         </widget>
                        </item>
                       </layout>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pushButton_2">
+                       <property name="text">
+                        <string/>
+                       </property>
+                      </widget>
                      </item>
                      <item>
                       <widget class="QGroupBox" name="groupBox_df_manip_2">
@@ -3461,7 +3544,6 @@
                        <property name="font">
                         <font>
                          <pointsize>12</pointsize>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -4612,8 +4694,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>98</width>
-                             <height>28</height>
+                             <width>16</width>
+                             <height>16</height>
                             </rect>
                            </property>
                           </widget>
@@ -5105,7 +5187,6 @@
              <property name="font">
               <font>
                <family>Arial</family>
-               <weight>75</weight>
                <italic>false</italic>
                <bold>true</bold>
               </font>
@@ -5444,7 +5525,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1143</width>
+               <width>1139</width>
                <height>921</height>
               </rect>
              </property>
@@ -5588,7 +5669,6 @@
                  <property name="font">
                   <font>
                    <pointsize>8</pointsize>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5617,7 +5697,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5646,7 +5725,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5675,7 +5753,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5905,7 +5982,6 @@
                     <widget class="QPushButton" name="btn_add_a_plot">
                      <property name="font">
                       <font>
-                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -6003,7 +6079,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -6702,7 +6777,7 @@
      <x>0</x>
      <y>0</y>
      <width>1619</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpen">

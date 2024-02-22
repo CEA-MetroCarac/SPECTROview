@@ -96,9 +96,7 @@ class Spectrums(QObject):
                     # Check if fname is already opened
                     if any(spectrum.fname == fname for spectrum in
                            self.spectra_fs):
-                        print(
-                            f"Spectrum '{fname}' is already opened. "
-                            f"Skipping...")
+                        print(f"Spectrum '{fname}' is already opened.")
                         continue
 
                     dfr = pd.read_csv(file_path, header=None, skiprows=1,
@@ -336,25 +334,19 @@ class Spectrums(QObject):
     def add_column(self):
         dfr = self.df_fit_results
         col_name = self.ui.ent_col_name.text()
-        selected_part_index = self.ui.cbb_split_fname.currentIndex()  # Get
-        # the index of the selected item
-
+        selected_part_index = self.ui.cbb_split_fname.currentIndex()
         if selected_part_index < 0 or not col_name:
-            print("Please select a part and enter a column name.")
+            show_alert("Select a part and enter a column name.")
             return
-
         # Check if column with the same name already exists
         if col_name in dfr.columns:
-            print(
-                f"Column '{col_name}' already exists. Please choose a "
-                f"different name.")
+            text = (f"Column '{col_name}' already exists. Please choose a different name")
+            show_alert(text)
             return
-
         parts = dfr['Sample'].str.split('_')
         dfr[col_name] = [part[selected_part_index] if len(
             part) > selected_part_index else None for part in parts]
-        print("Column added successfully:", col_name)
-
+        show_alert(f"Column added successfully:'{col_name}'")
         self.df_fit_results = dfr
         self.send_df_to_viz()
         self.upd_cbb_param()
@@ -527,7 +519,7 @@ class Spectrums(QObject):
                 dfr = pd.read_excel(excel_file_path)
                 self.df_fit_results = dfr
             except Exception as e:
-                print("Error loading DataFrame:", e)
+                show_alert("Error loading DataFrame:", e)
 
         self.upd_cbb_param()
         self.send_df_to_viz()
@@ -606,9 +598,9 @@ class Spectrums(QObject):
                 }
                 with open(file_path, 'wb') as f:
                     dill.dump(data_to_save, f)
-                print("Work saved successfully.")
+                show_alert("Work saved successfully.")
         except Exception as e:
-            print(f"Error saving work: {e}")
+            show_alert(f"Error saving work: {e}")
 
     def load_work(self):
         """Load a previously saved work."""
@@ -647,10 +639,8 @@ class Spectrums(QObject):
 
                     self.plot_graph()
                     self.plot_graph2()
-
-                print("Work loaded successfully.")
         except Exception as e:
-            print(f"Error loading work: {e}")
+            show_alert(f"Error loading work: {e}")
 
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""
@@ -668,5 +658,5 @@ class Spectrums(QObject):
             appli.update()
             root.mainloop()
         else:
-            show_alert("No spectrum is loaded; FITSPY cannot open")
+            show_alert("No spectrum is loaded, FITSPY cannot open")
             return

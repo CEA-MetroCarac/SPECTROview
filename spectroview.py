@@ -187,6 +187,8 @@ class MainWindow:
         self.ui.cbb_plot_style.addItems(self.maps.plot_styles)
         self.ui.btn_sw.clicked.connect(self.maps.save_work)
         self.ui.btn_lw.clicked.connect(self.maps.load_work)
+        self.ui.btn_split_fname_2.clicked.connect(self.maps.split_fname)
+        self.ui.btn_add_col_2.clicked.connect(self.maps.add_column)
 
         ########################################################
         ############## GUI for Spectrums Processing tab #############
@@ -219,6 +221,7 @@ class MainWindow:
         self.ui.btn_plot_graph_3.clicked.connect(self.spectrums.plot_graph)
         self.ui.btn_plot_graph_7.clicked.connect(self.spectrums.plot_graph2)
 
+        self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
         self.ui.btn_add_col.clicked.connect(self.spectrums.add_column)
         self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
         self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
@@ -229,7 +232,6 @@ class MainWindow:
         self.ui.btn_copy_fig_3.clicked.connect(self.spectrums.copy_fig)
         self.ui.btn_copy2_3.clicked.connect(self.spectrums.copy_fig_graph1)
         self.ui.btn_copy2_7.clicked.connect(self.spectrums.copy_fig_graph2)
-        self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
 
         self.darkmode = True
         self.ui.setPalette(dark_palette())

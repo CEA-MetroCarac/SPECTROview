@@ -44,10 +44,6 @@ class Maps(QObject):
         self.wafers = {}  # list of opened wafers
         self.ax = None  # Spectrum plot
         self.ax2 = None  # Wafer measuerment sites
-        self.canvas1 = None
-        self.canvas2 = None
-        self.canvas2 = None
-        self.canvas4 = None  # Wafer measuerment sites
         self.model_fs = None  # FITSPY
         self.spectra_fs = Spectra()  # FITSPY
 
@@ -117,15 +113,17 @@ class Maps(QObject):
                         sorted_columns = sorted(wafer_df.columns[2:], key=float)
                         wafer_df = wafer_df[['X', 'Y'] + sorted_columns]
                     else:
-                        print(f"Unsupported file format: {extension}")
+                        show_alert(f"Unsupported file format: {extension}")
                         continue
 
                     wafer_name = fname
                     if wafer_name in self.wafers:
-                        print("Wafer is already opened")
+                        print(f"Wafer '{wafer_name}' is already opened")
                     else:
                         self.wafers[wafer_name] = wafer_df
         self.extract_spectra()
+
+
 
     def extract_spectra(self):
         """Extract all spectra of each wafer dataframe"""
@@ -194,7 +192,6 @@ class Maps(QObject):
                                                         fnames))
         self.fit_thread.fit_completed.connect(self.fit_completed)
         self.fit_thread.start()
-
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
         fnames = self.spectra_fs.fnames
@@ -239,8 +236,8 @@ class Maps(QObject):
         # Add "Quadrant" columns
         self.df_fit_results['Quadrant'] = self.df_fit_results.apply(quadrant,
                                                                     axis=1)
-        self.apprend_cbb_param()
-        self.apprend_cbb_wafer()
+        self.upd_cbb_param()
+        self.upd_cbb_wafer()
         self.send_df_to_viz()
 
     def save_fit_results(self):
@@ -287,20 +284,20 @@ class Maps(QObject):
                 dfr = pd.read_excel(excel_file_path)
                 self.df_fit_results = dfr
             except Exception as e:
-                print("Error loading DataFrame:", e)
+                show_alert("Error loading DataFrame:", e)
 
-        self.apprend_cbb_param()
-        self.apprend_cbb_wafer()
+        self.upd_cbb_param()
+        self.upd_cbb_wafer()
         self.send_df_to_viz()
 
-    def apprend_cbb_wafer(self):
+    def upd_cbb_wafer(self):
         """to append all values of df_fit_results to comoboxses"""
         self.ui.cbb_wafer_1.clear()
         wafer_names = self.df_fit_results['Wafer'].unique()
         for wafer_name in wafer_names:
             self.ui.cbb_wafer_1.addItem(wafer_name)
 
-    def apprend_cbb_param(self):
+    def upd_cbb_param(self):
         """to append all values of df_fit_results to comoboxses"""
         if self.df_fit_results is not None:
             columns = self.df_fit_results.columns.tolist()
@@ -314,7 +311,34 @@ class Maps(QObject):
                 self.ui.cbb_x.addItem(column)
                 self.ui.cbb_y.addItem(column)
                 self.ui.cbb_z.addItem(column)
+    def split_fname(self):
+        """Split fname and populate the combobox"""
+        dfr = self.df_fit_results
+        fname_parts = dfr.loc[0, 'Wafer'].split('_')
+        self.ui.cbb_split_fname_2.clear()  # Clear existing items in combobox
+        for part in fname_parts:
+            self.ui.cbb_split_fname_2.addItem(part)
 
+    def add_column(self):
+        dfr = self.df_fit_results
+        col_name = self.ui.ent_col_name_2.text()
+        selected_part_index = self.ui.cbb_split_fname_2.currentIndex()
+        if selected_part_index < 0 or not col_name:
+            show_alert("Select a part and enter a column name.")
+            return
+        # Check if column with the same name already exists
+        if col_name in dfr.columns:
+            text = (f"Column '{col_name}' already exists. Please choose a different name")
+            show_alert(text)
+            return
+        parts = dfr['Wafer'].str.split('_')
+        dfr[col_name] = [part[selected_part_index] if len(
+            part) > selected_part_index else None for part in parts]
+        show_alert(f"Column added successfully:'{col_name}'")
+        self.df_fit_results = dfr
+        self.send_df_to_viz()
+        self.upd_cbb_param()
+        self.upd_cbb_wafer()
     def reinit(self, fnames=None):
         """Reinitialize the selected spectrum(s)"""
         if fnames is None:
@@ -355,10 +379,10 @@ class Maps(QObject):
 
         fig2 = plt.figure()
         self.ax2 = fig2.add_subplot(111)
-        self.canvas4 = FigureCanvas(fig2)
+        self.canvas2 = FigureCanvas(fig2)
         layout = self.ui.wafer_plot.layout()
-        layout.addWidget(self.canvas4)
-        self.canvas4.draw()
+        layout.addWidget(self.canvas2)
+        self.canvas2.draw()
 
     def plot_measurement_sites(self):
         """Plot wafer maps of measurement sites"""
@@ -377,7 +401,7 @@ class Maps(QObject):
             x, y = zip(*coords)
             self.ax2.scatter(x, y, marker='o', color='red', s=40)
         self.ax2.get_figure().tight_layout()
-        self.canvas4.draw()
+        self.canvas2.draw()
 
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
@@ -461,12 +485,10 @@ class Maps(QObject):
         if wafer_name is not None:
             selected_df = dfr.query('Wafer == @wafer_name')
         sel_param = self.ui.cbb_param_1.currentText()
-        self.canvas2 = self.plot_wafer_helper(selected_df, sel_param,
-                                              wafer_size,
-                                              color)
-        self.ui.frame_wafer.addWidget(self.canvas2)
+        self.canvas3 = self.action_plot(selected_df, sel_param,wafer_size,color)
+        self.ui.frame_wafer.addWidget(self.canvas3)
 
-    def plot_wafer_helper(self, selected_df, sel_param, wafer_size, color):
+    def action_plot(self, selected_df, sel_param, wafer_size, color):
         x = selected_df['X']
         y = selected_df['Y']
         param = selected_df[sel_param]
@@ -516,11 +538,11 @@ class Maps(QObject):
         if text:
             xlabel_rot = float(text)
 
-        self.canvas3 = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax,
+        self.canvas4 = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax,
                                   title,
                                   x_text, y_text, xlabel_rot)
 
-        self.ui.frame_graph.addWidget(self.canvas3)
+        self.ui.frame_graph.addWidget(self.canvas4)
 
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
@@ -593,7 +615,7 @@ class Maps(QObject):
         self.ax.clear()
         self.ax2.clear()
         self.canvas1.draw()
-        self.canvas4.draw()
+        self.canvas2.draw()
 
     def copy_fig(self):
         """To copy figure canvas to clipboard"""
@@ -601,11 +623,11 @@ class Maps(QObject):
 
     def copy_fig_wafer(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas2)
+        copy_fig_to_clb(canvas=self.canvas3)
 
     def copy_fig_graph(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas3)
+        copy_fig_to_clb(canvas=self.canvas4)
 
     def select_all_spectra(self):
         """ To quickly select all spectra within the spectra listbox"""
@@ -748,9 +770,9 @@ class Maps(QObject):
                 }
                 with open(file_path, 'wb') as f:
                     dill.dump(data_to_save, f)
-                print("Work saved successfully.")
+                show_alert("Work saved successfully.")
         except Exception as e:
-            print(f"Error saving work: {e}")
+            show_alert(f"Error saving work: {e}")
 
     def load_work(self):
         """Load a previously saved work."""
@@ -771,8 +793,8 @@ class Maps(QObject):
                     self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
 
                     self.df_fit_results = load.get('df_fit_results')
-                    self.apprend_cbb_param()
-                    self.apprend_cbb_wafer()
+                    self.upd_cbb_param()
+                    self.upd_cbb_wafer()
                     self.send_df_to_viz()
                     self.upd_wafers_list()
 
@@ -803,9 +825,8 @@ class Maps(QObject):
 
                     self.plot_graph()
                     self.plot_wafer()
-                print("Work loaded successfully.")
         except Exception as e:
-            print(f"Error loading work: {e}")
+            show_alert(f"Error loading work: {e}")
 
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""

@@ -5,7 +5,7 @@ import os
 import copy
 import time
 
-import win32clipboard
+#import win32clipboard
 from io import BytesIO
 import numpy as np
 import pandas as pd

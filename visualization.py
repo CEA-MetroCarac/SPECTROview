@@ -4,6 +4,7 @@ import traceback
 import numpy as np
 from functools import partial
 from io import BytesIO
+
 try:
     import win32clipboard
 except:
@@ -467,6 +468,59 @@ class Vizualisation:
         updated_spec["plot_width"] = existing_spec["plot_width"]
         updated_spec["plot_height"] = existing_spec["plot_height"]
 
+        updated_spec["x_min"] = existing_spec["x_min"]
+        updated_spec["x_max"] = existing_spec["x_max"]
+        updated_spec["y_min"] = existing_spec["y_min"]
+        updated_spec["y_max"] = existing_spec["y_max"]
+
+        # Check if "wafer_name" key exists in existing_spec before updating
+        if "wafer_name" in existing_spec:
+            updated_spec["wafer_name"] = existing_spec["wafer_name"]
+        else:
+            pass
+
+        # Apply the updated specifications to the plot
+        self.plot_specs[plot_id] = updated_spec
+
+        # Clear the existing widgets inside the plot_frame_layout
+        for i in reversed(range(widget_layout.count())):
+            widget = widget_layout.itemAt(i).widget()
+            if widget is not None:
+                widget.deleteLater()
+
+        for i in reversed(range(button_layout.count())):
+            widget = button_layout.itemAt(i).widget()
+            if widget is not None:
+                widget.deleteLater()
+
+        self.plot_action(widget_layout, plot_widget_frame, plot_id)
+
+    def update_ax_limits(self, widget_layout, button_layout, plot_widget_frame,
+                         plot_id):
+        # Retrieve the current specifications of plot(plot_id)
+        existing_spec = self.plot_specs.get(plot_id)
+        if existing_spec is None:
+            return  # No existing specifications found, return without updating
+
+        # Retrieve the updated plot specifications for the given plot_id
+        updated_spec = self.collect_plot_spec()
+
+        # Keep the existing X and Y values unchanged
+        updated_spec["associated_df"] = existing_spec["associated_df"]
+        updated_spec["selected_x_column"] = existing_spec["selected_x_column"]
+        updated_spec["selected_y_column"] = existing_spec["selected_y_column"]
+        updated_spec["selected_hue_column"] = existing_spec[
+            "selected_hue_column"]
+        updated_spec["selected_plot_style"] = existing_spec[
+            "selected_plot_style"]
+        updated_spec["display_dpi"] = existing_spec["display_dpi"]
+        updated_spec["plot_width"] = existing_spec["plot_width"]
+        updated_spec["plot_height"] = existing_spec["plot_height"]
+
+        updated_spec["plot_title"] = existing_spec["plot_title"]
+        updated_spec["Xaxis_title"] = existing_spec["Xaxis_title"]
+        updated_spec["hueaxis_title"] = existing_spec["hueaxis_title"]
+
         # Check if "wafer_name" key exists in existing_spec before updating
         if "wafer_name" in existing_spec:
             updated_spec["wafer_name"] = existing_spec["wafer_name"]
@@ -544,9 +598,9 @@ class Vizualisation:
         self.ui.ent_yaxis_title.setText(ylabel)
         self.ui.ent_plot_title.setText(title),
 
-    def creat_btn(self, icon_file, tooltip):
+    def creat_btn(self, icon_file, text, tooltip):
         """ To create buttons associated with each plot"""
-        btn_name = QPushButton("")
+        btn_name = QPushButton(text)
         icon = QIcon()
         icon.addFile(os.path.join(ICON_DIR, icon_file))
         btn_name.setIcon(icon)
@@ -557,21 +611,30 @@ class Vizualisation:
 
     def create_plot_buttons(self, widget_layout, plot_widget_frame, plot_id):
         """ To create function buttons associated with each plot"""
-        btn_copy_labels = self.creat_btn("copy_label.png",
-                                         u"Copy axis labels to another plot")
-        btn_remove_plot = self.creat_btn("remove.png", u"Remove plot")
-        btn_update_plot = self.creat_btn("update.png",
-                                         u"Update plot styles (title, "
-                                         u"axis limits, ...)\n(Hold Ctrl "
-                                         u"key if u want to update axis "
-                                         u"values)")
-        btn_copy_plot = self.creat_btn("copy.png", u"Copy figure to clipboard")
+        btn_copy_labels = self.creat_btn(icon_file="copy_label.png", text="",
+                                         tooltip="Copy axis labels to another "
+                                                 "plot")
+        btn_remove_plot = self.creat_btn(icon_file="remove.png", text="",
+                                         tooltip="Remove plot")
+        btn_update_plot = self.creat_btn(icon_file="update.png",
+                                         text="ax labels", tooltip=
+                                         u"Update plot title & label"
+                                         u"\n(Hold Ctrl key if u want to "
+                                         u"update axis values)")
+        btn_update_axlimits = self.creat_btn(icon_file="update.png",
+                                             text="ax limits",
+                                             tooltip="Update axis limits")
+        btn_copy_plot = self.creat_btn("copy.png", "",
+                                       u"Copy figure to clipboard")
 
         btn_remove_plot.clicked.connect(
             partial(self.remove_plot_widget, plot_widget_frame, plot_id))
         btn_update_plot.clicked.connect(
             lambda: self.update_plot_handler(widget_layout, button_layout,
                                              plot_widget_frame, plot_id))
+        btn_update_axlimits.clicked.connect(
+            lambda: self.update_ax_limits(widget_layout, button_layout,
+                                          plot_widget_frame, plot_id))
         btn_copy_labels.clicked.connect(
             lambda: self.copy_plot_label(plot_id))
         btn_copy_plot.clicked.connect(partial(self.copy_to_clb, plot_id))
@@ -583,6 +646,7 @@ class Vizualisation:
 
         button_layout.addWidget(btn_remove_plot)
         button_layout.addWidget(btn_update_plot)
+        button_layout.addWidget(btn_update_axlimits)
         button_layout.addWidget(btn_copy_labels)
         button_layout.addWidget(btn_copy_plot)
 

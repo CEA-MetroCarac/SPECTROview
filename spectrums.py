@@ -102,6 +102,10 @@ class Spectrums(QObject):
                     dfr = pd.read_csv(file_path, header=None, skiprows=1,
                                       delimiter="\t")
                     dfr_sorted = dfr.sort_values(by=0)  # increasing order
+                    # Convert values to float
+                    dfr_sorted.iloc[:, 0] = dfr_sorted.iloc[:, 0].astype(float)
+                    dfr_sorted.iloc[:, 1] = dfr_sorted.iloc[:, 1].astype(float)
+
                     x_values = dfr_sorted.iloc[:, 0].tolist()
                     y_values = dfr_sorted.iloc[:, 1].tolist()
 
@@ -164,16 +168,19 @@ class Spectrums(QObject):
         self.canvas1 = FigureCanvas(fig1)
         self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
         # Connect Home button to rescale function
-        home_action = next(a for a in self.toolbar.actions() if a.text() == 'Home')
+        home_action = next(
+            a for a in self.toolbar.actions() if a.text() == 'Home')
         home_action.triggered.connect(self.rescale)
         self.ui.spectre_view_frame_4.addWidget(self.canvas1)
         self.ui.toolbar_frame_3.addWidget(self.toolbar)
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
+
     def rescale(self):
         """Rescale the figure."""
         self.ax.autoscale()
         self.canvas1.draw()
+
     def plot_sel_spectra(self):
         """Plot all selected spectra"""
         fnames = self.get_selected_spectra()
@@ -351,7 +358,9 @@ class Spectrums(QObject):
             return
         # Check if column with the same name already exists
         if col_name in dfr.columns:
-            text = (f"Column '{col_name}' already exists. Please choose a different name")
+            text = (
+                f"Column '{col_name}' already exists. Please choose a "
+                f"different name")
             show_alert(text)
             return
         parts = dfr['Sample'].str.split('_')
@@ -472,6 +481,7 @@ class Spectrums(QObject):
         self.plot_delay()
         self.upd_spectrums_list()
         QTimer.singleShot(200, self.rescale)
+
     def reinit_all(self):
         """Reinitialize all spectra"""
         fnames = self.spectra_fs.fnames

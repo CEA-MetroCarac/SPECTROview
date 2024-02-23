@@ -123,8 +123,6 @@ class Maps(QObject):
                         self.wafers[wafer_name] = wafer_df
         self.extract_spectra()
 
-
-
     def extract_spectra(self):
         """Extract all spectra of each wafer dataframe"""
         for wafer_name, wafer_df in self.wafers.items():
@@ -193,11 +191,11 @@ class Maps(QObject):
         self.fit_thread.fit_completed.connect(self.fit_completed)
         self.fit_thread.start()
 
-
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
+
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.
@@ -312,6 +310,7 @@ class Maps(QObject):
                 self.ui.cbb_x.addItem(column)
                 self.ui.cbb_y.addItem(column)
                 self.ui.cbb_z.addItem(column)
+
     def split_fname(self):
         """Split fname and populate the combobox"""
         dfr = self.df_fit_results
@@ -329,7 +328,9 @@ class Maps(QObject):
             return
         # Check if column with the same name already exists
         if col_name in dfr.columns:
-            text = (f"Column '{col_name}' already exists. Please choose a different name")
+            text = (
+                f"Column '{col_name}' already exists. Please choose a "
+                f"different name")
             show_alert(text)
             return
         parts = dfr['Wafer'].str.split('_')
@@ -340,6 +341,7 @@ class Maps(QObject):
         self.send_df_to_viz()
         self.upd_cbb_param()
         self.upd_cbb_wafer()
+
     def reinit(self, fnames=None):
         """Reinitialize the selected spectrum(s)"""
         if fnames is None:
@@ -380,7 +382,8 @@ class Maps(QObject):
         self.canvas1.draw()
 
         # Connect Home button to rescale function
-        home_action = next(a for a in self.toolbar.actions() if a.text() == 'Home')
+        home_action = next(
+            a for a in self.toolbar.actions() if a.text() == 'Home')
         home_action.triggered.connect(self.rescale)
 
         fig2 = plt.figure()
@@ -394,6 +397,7 @@ class Maps(QObject):
         """Rescale the figure."""
         self.ax.autoscale()
         self.canvas1.draw()
+
     def plot_measurement_sites(self):
         """Plot wafer maps of measurement sites"""
         wafer_name, coords = self.spectre_id()
@@ -499,7 +503,8 @@ class Maps(QObject):
         if wafer_name is not None:
             selected_df = dfr.query('Wafer == @wafer_name')
         sel_param = self.ui.cbb_param_1.currentText()
-        self.canvas3 = self.action_plot(selected_df, sel_param,wafer_size,color)
+        self.canvas3 = self.action_plot(selected_df, sel_param, wafer_size,
+                                        color)
         self.ui.frame_wafer.addWidget(self.canvas3)
 
     def action_plot(self, selected_df, sel_param, wafer_size, color):
@@ -874,4 +879,3 @@ class Maps(QObject):
 
     def update_pbar(self, progress):
         self.ui.progressBar.setValue(progress)
-

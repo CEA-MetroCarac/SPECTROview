@@ -4,6 +4,7 @@ Module contains all utilities functions and common functions
 import os
 import copy
 import time
+
 try:
     import win32clipboard
 except:
@@ -290,7 +291,8 @@ class FitThread(QThread):
         for index, fname in enumerate(self.fnames):
             progress = int((index + 1) / len(self.fnames) * 100)
             self.fit_progress_changed.emit(progress)
-            self.spectra_fs.apply_model(self.model_fs, fnames=[fname])
+            self.spectra_fs.apply_model(self.model_fs, fnames=[fname],
+                                        show_progressbar=None)
             num += 1
             elapsed_time = time.time() - start_time
             self.fit_progress.emit(num, elapsed_time)

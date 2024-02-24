@@ -139,12 +139,12 @@ class Dataframe:
                 del self.working_dfs[selected_df_name]
                 self.update_listbox_dfs()
 
-    def add_filter(self, ):
+    def add_filter(self):
         """ add filter expression and apprend it to the filter dictionary """
         filter_expression = self.ui.ent_filter_query.text().strip()
         if filter_expression:
-            filter_data = {"expression": filter_expression, "state": False}
-            self.df_filters.append(filter_data)
+            filter = {"expression": filter_expression, "state": False}
+            self.df_filters.append(filter)
 
         # Add the filter expression to QListWidget as a checkbox item
         item = QListWidgetItem()
@@ -152,28 +152,25 @@ class Dataframe:
         item.setSizeHint(checkbox.sizeHint())
         self.ui.filter_list.addItem(item)
         self.ui.filter_list.setItemWidget(item, checkbox)
-        self.ui.ent_filter_query.clear()
-        print(self.df_filters)
 
-    def collect_selected_filters(self):
+    def filters_ischecked(self):
         """Collect selected filters from the UI"""
-        selected_filters = []
+        checked_filters = []
         for i in range(self.ui.filter_list.count()):
             item = self.ui.filter_list.item(i)
             checkbox = self.ui.filter_list.itemWidget(item)
-            filter_expression = checkbox.text()
+            expression = checkbox.text()
             state = checkbox.isChecked()
-            selected_filters.append(
-                {"expression": filter_expression, "state": state})
-        return selected_filters
+            checked_filters.append({"expression": expression, "state": state})
+        return checked_filters
 
-    def apply_selected_filters(self, filters=None):
+    def apply_filters(self, filters=None):
         if self.selected_df is not None:
             self.selected_df = self.original_dfs[self.selected_df_name]
             if filters:
                 self.df_filters = filters
             else:
-                selected_filters = self.collect_selected_filters()
+                selected_filters = self.filters_ischecked()
                 self.df_filters = selected_filters
 
             for filter_data in self.df_filters:

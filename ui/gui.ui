@@ -51,7 +51,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_2Dmaps">
        <attribute name="title">
@@ -407,7 +407,6 @@
                       </property>
                       <property name="font">
                        <font>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -543,7 +542,7 @@
                  <item>
                   <widget class="QLabel" name="label_52">
                    <property name="text">
-                    <string>Split fname name and add a columns:</string>
+                    <string>Split fname and add a columns:</string>
                    </property>
                   </widget>
                  </item>
@@ -568,6 +567,9 @@
                        <width>40</width>
                        <height>16777215</height>
                       </size>
+                     </property>
+                     <property name="toolTip">
+                      <string>Split the file name of spectrum</string>
                      </property>
                      <property name="text">
                       <string>Split</string>
@@ -1187,7 +1189,7 @@
                      <x>0</x>
                      <y>0</y>
                      <width>248</width>
-                     <height>399</height>
+                     <height>440</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1196,7 +1198,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1360,7 +1361,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1917,8 +1917,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>98</width>
-                             <height>28</height>
+                             <width>617</width>
+                             <height>358</height>
                             </rect>
                            </property>
                           </widget>
@@ -2430,7 +2430,6 @@
              <property name="font">
               <font>
                <family>Arial</family>
-               <weight>75</weight>
                <italic>false</italic>
                <bold>true</bold>
               </font>
@@ -2946,7 +2945,7 @@
                     <number>0</number>
                    </property>
                    <item>
-                    <layout class="QVBoxLayout" name="spectre_view_frame_4">
+                    <layout class="QVBoxLayout" name="QVBoxlayout_2">
                      <property name="spacing">
                       <number>6</number>
                      </property>
@@ -3153,8 +3152,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>323</width>
-                      <height>540</height>
+                      <width>348</width>
+                      <height>613</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,20,0,0,0,0,0,0,0,0,0">
@@ -3182,7 +3181,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -3343,7 +3341,7 @@
                      <item>
                       <widget class="QLabel" name="label_51">
                        <property name="text">
-                        <string>Split fname name and add a columns:</string>
+                        <string>Split fname and add a columns:</string>
                        </property>
                       </widget>
                      </item>
@@ -3368,6 +3366,9 @@
                            <width>40</width>
                            <height>16777215</height>
                           </size>
+                         </property>
+                         <property name="toolTip">
+                          <string>Split the file name of spectrum</string>
                          </property>
                          <property name="text">
                           <string>Split</string>
@@ -3466,7 +3467,7 @@
                          </layout>
                         </item>
                         <item>
-                         <widget class="QListWidget" name="filter_list_2"/>
+                         <widget class="QListWidget" name="filter_listbox"/>
                         </item>
                         <item>
                          <layout class="QHBoxLayout" name="horizontalLayout_46">
@@ -3521,7 +3522,6 @@
                        <property name="font">
                         <font>
                          <pointsize>12</pointsize>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5165,7 +5165,6 @@
              <property name="font">
               <font>
                <family>Arial</family>
-               <weight>75</weight>
                <italic>false</italic>
                <bold>true</bold>
               </font>
@@ -5504,7 +5503,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1143</width>
+               <width>1139</width>
                <height>921</height>
               </rect>
              </property>
@@ -5648,7 +5647,6 @@
                  <property name="font">
                   <font>
                    <pointsize>8</pointsize>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5677,7 +5675,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5706,7 +5703,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5735,7 +5731,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5965,7 +5960,6 @@
                     <widget class="QPushButton" name="btn_add_a_plot">
                      <property name="font">
                       <font>
-                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -6063,7 +6057,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -6762,7 +6755,7 @@
      <x>0</x>
      <y>0</y>
      <width>1619</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpen">

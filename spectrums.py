@@ -20,7 +20,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from wafer_view import WaferView
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
-                               QListWidgetItem)
+                               QListWidgetItem,QCheckBox)
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QSettings, QFileInfo, QTimer, QObject, Signal, \
     QThread
@@ -46,12 +46,14 @@ class Spectrums(QObject):
         self.canvas2 = None
         self.canvas3 = None
         self.model_fs = None
-        self.spectra_fs = Spectra()  # FITSPY
+        self.spectra_fs = Spectra()
+        self.df_fit_results = None
+        self.filters = []
+        self.filtered_df =None # FITSPY
 
         # Connect and plot_spectre of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
             self.plot_delay)
-
         # Connect the stateChanged signal of the legend CHECKBOX
         self.ui.cb_legend_3.stateChanged.connect(self.plot_delay)
         self.ui.cb_raw_3.stateChanged.connect(self.plot_delay)
@@ -65,13 +67,13 @@ class Spectrums(QObject):
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot_sel_spectra)
-
         # Connect the progress signal to update_progress_bar slot
         self.fit_progress_changed.connect(self.update_pbar)
 
         self.plot_styles = ["point plot", "scatter plot", "box plot",
                             "bar plot"]
         self.create_plot_widget()
+
 
     def open_data(self, file_paths=None, spectra=None):
         if self.spectra_fs is None:
@@ -163,15 +165,12 @@ class Spectrums(QObject):
         self.ax = fig1.add_subplot(111)
         self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
         self.ax.set_ylabel("Intensity (a.u)")
-        if self.ui.cb_legend.isChecked():
-            self.ax.legend(loc='upper right')
         self.canvas1 = FigureCanvas(fig1)
         self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
-        # Connect Home button to rescale function
-        home_action = next(
+        rescale = next(
             a for a in self.toolbar.actions() if a.text() == 'Home')
-        home_action.triggered.connect(self.rescale)
-        self.ui.spectre_view_frame_4.addWidget(self.canvas1)
+        rescale.triggered.connect(self.rescale)
+        self.ui.QVBoxlayout_2.addWidget(self.canvas1)
         self.ui.toolbar_frame_3.addWidget(self.toolbar)
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
@@ -337,7 +336,7 @@ class Spectrums(QObject):
         columns = [translate_param(self.model_fs, column) for column in
                    self.df_fit_results.columns]
         self.df_fit_results.columns = columns
-
+        self.filtered_df = self.df_fit_results
         self.upd_cbb_param()
         self.send_df_to_viz()
 
@@ -371,6 +370,75 @@ class Spectrums(QObject):
         self.send_df_to_viz()
         self.upd_cbb_param()
 
+    def add_filter(self):
+        filter_expression = self.ui.ent_filter_query_2.text().strip()
+        if filter_expression:
+            filter = {"expression": filter_expression, "state": False}
+            self.filters.append(filter)
+        # Add the filter expression to QListWidget as a checkbox item
+        item = QListWidgetItem()
+        checkbox = QCheckBox(filter_expression)
+        item.setSizeHint(checkbox.sizeHint())
+        self.ui.filter_listbox.addItem(item)
+        self.ui.filter_listbox.setItemWidget(item, checkbox)
+    def filters_ischecked(self):
+        """Collect selected filters from the UI"""
+        checked_filters = []
+        for i in range(self.ui.filter_listbox.count()):
+            item = self.ui.filter_listbox.item(i)
+            checkbox = self.ui.filter_listbox.itemWidget(item)
+            expression = checkbox.text()
+            state = checkbox.isChecked()
+            checked_filters.append({"expression": expression, "state": state})
+        return checked_filters
+
+    def apply_filters(self, filters=None):
+        if filters:
+            self.filters = filters
+        else:
+            checked_filters = self.filters_ischecked()
+            self.filters = checked_filters
+
+        # Apply all filters at once
+        self.filtered_df = self.df_fit_results  # Initialize with original DataFrame
+
+        for filter_data in self.filters:
+            filter_expr = filter_data["expression"]
+            is_checked = filter_data["state"]
+
+            if is_checked:
+                try:
+                    filter_expr = filter_expr.encode('ascii', 'ignore').decode('ascii')
+                    self.filtered_df = self.filtered_df.query(filter_expr)
+                except Exception as e:
+                    QMessageBox.critical(self.ui, "Error", f"Filter error: {str(e)}")
+
+        print(f"filters", self.filters)
+        print(f"filtered_df", self.filtered_df)
+        print(f"df_fit_results", self.df_fit_results)
+
+    def upd_filter_listbox(self):
+        """To update filter listbox"""
+        self.ui.filter_listbox.clear()
+        for filter_data in self.filters:
+            filter_expression = filter_data["expression"]
+            item = QListWidgetItem()
+            checkbox = QCheckBox(filter_expression)
+            item.setSizeHint(checkbox.sizeHint())
+            self.ui.filter_listbox.addItem(item)
+            self.ui.filter_listbox.setItemWidget(item, checkbox)
+            checkbox.setChecked(filter_data["state"])
+
+    def remove_filter(self):
+        """To remove a filter from listbox"""
+        selected_items = [item for item in self.ui.filter_listbox.selectedItems()]
+        for item in selected_items:
+            checkbox = self.ui.filter_listbox.itemWidget(item)
+            filter_expression = checkbox.text()
+            for filter in self.filters[:]:
+                if filter.get("expression") == filter_expression:
+                    self.filters.remove(filter)
+            self.ui.filter_listbox.takeItem(self.ui.filter_listbox.row(item))
     def upd_cbb_param(self):
         """to append all values of df_fit_results to comoboxses"""
         if self.df_fit_results is not None:
@@ -395,11 +463,14 @@ class Spectrums(QObject):
         dfs["fit_results"] = self.df_fit_results
         self.callbacks_df.action_open_df(file_paths=None, original_dfs=dfs)
 
-    def plot_graph(self, view=None):
+    def plot_graph(self):
         """Plot graph """
         clear_layout(self.ui.frame_graph_3.layout())
 
-        dfr = self.df_fit_results
+        if self.filtered_df is not None:
+            dfr =self.filtered_df
+        else:
+            dfr = self.df_fit_results
         x = self.ui.cbb_x_3.currentText()
         y = self.ui.cbb_y_3.currentText()
         z = self.ui.cbb_z_3.currentText()
@@ -424,10 +495,12 @@ class Spectrums(QObject):
 
         self.ui.frame_graph_3.addWidget(self.canvas2)
 
-    def plot_graph2(self, view=None):
+    def plot_graph2(self):
         clear_layout(self.ui.frame_graph_7.layout())
-
-        dfr = self.df_fit_results
+        if self.filtered_df is not None:
+            dfr = self.filtered_df
+        else:
+            dfr = self.df_fit_results
         x = self.ui.cbb_x_7.currentText()
         y = self.ui.cbb_y_7.currentText()
         z = self.ui.cbb_z_7.currentText()
@@ -497,7 +570,11 @@ class Spectrums(QObject):
 
     def view_fit_results_df(self):
         """To view selected dataframe"""
-        view_df(self.ui.tabWidget, self.df_fit_results)
+        if self.filtered_df is None:
+            df = self.df_fit_results
+        else:
+            df = self.filtered_df
+        view_df(self.ui.tabWidget,df)
 
     def save_fit_results(self):
         """Functon to save fitted results in an excel file"""
@@ -607,6 +684,7 @@ class Spectrums(QObject):
                     'model_fs': self.model_fs,
                     'model_name': self.ui.lb_loaded_model_3.text(),
                     'df_fit_results': self.df_fit_results,
+                    'filters': self.filters,
 
                     'cbb_x_1': self.ui.cbb_x_3.currentIndex(),
                     'cbb_y_1': self.ui.cbb_y_3.currentIndex(),
@@ -646,6 +724,9 @@ class Spectrums(QObject):
                     self.upd_cbb_param()
                     self.send_df_to_viz()
                     self.upd_spectrums_list()
+
+                    self.filters = load.get('filters')
+                    self.upd_filter_listbox()
 
                     self.ui.cbb_x_3.setCurrentIndex(load.get('cbb_x_1', -1))
                     self.ui.cbb_y_3.setCurrentIndex(load.get('cbb_y_1', -1))

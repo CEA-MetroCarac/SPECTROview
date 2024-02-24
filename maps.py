@@ -44,6 +44,8 @@ class Maps(QObject):
         self.wafers = {}  # list of opened wafers
         self.ax = None  # Spectrum plot
         self.ax2 = None  # Wafer measuerment sites
+        self.canvas1 = None
+        self.toolbar=None
         self.model_fs = None  # FITSPY
         self.spectra_fs = Spectra()  # FITSPY
 
@@ -372,20 +374,16 @@ class Maps(QObject):
         self.ax = fig1.add_subplot(111)
         self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
         self.ax.set_ylabel("Intensity (a.u)")
-        if self.ui.cb_legend.isChecked():
-            self.ax.legend(loc='upper right')
         self.canvas1 = FigureCanvas(fig1)
-        self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
+        self.toolbar = NavigationToolbar2QT(self.canvas1)
+        rescale = next(
+            a for a in self.toolbar.actions() if a.text() == 'Home')
+        rescale.triggered.connect(self.rescale)
         self.ui.QVBoxlayout.addWidget(self.canvas1)
         self.ui.toolbar_frame.addWidget(self.toolbar)
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
-
-        # Connect Home button to rescale function
-        home_action = next(
-            a for a in self.toolbar.actions() if a.text() == 'Home')
-        home_action.triggered.connect(self.rescale)
-
+        #Measurement sites view:
         fig2 = plt.figure()
         self.ax2 = fig2.add_subplot(111)
         self.canvas2 = FigureCanvas(fig2)

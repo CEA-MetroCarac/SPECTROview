@@ -94,7 +94,7 @@ class MainWindow:
             self.dataframe.remove_selected_filters)
         # APPLY filter
         self.ui.btn_apply_filters.clicked.connect(
-            self.dataframe.apply_selected_filters)
+            self.dataframe.apply_filters)
 
         # PLOT STYLING
         self.ui.combo_plot_style.addItems(self.visualization.plot_styles)
@@ -223,15 +223,18 @@ class MainWindow:
 
         self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
         self.ui.btn_add_col.clicked.connect(self.spectrums.add_column)
-        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
-        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
-        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
-        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
-        self.ui.btn_init.clicked.connect(self.spectrums.reinit_fnc_handler)
+
+        self.ui.btn_add_filter_2.clicked.connect(self.spectrums.add_filter)
+        self.ui.ent_filter_query_2.returnPressed.connect(
+            self.spectrums.add_filter)
+        self.ui.btn_apply_filters_2.clicked.connect(self.spectrums.apply_filters)
+        self.ui.btn_remove_filters_2.clicked.connect(self.spectrums.remove_filter)
+
 
         self.ui.btn_copy_fig_3.clicked.connect(self.spectrums.copy_fig)
         self.ui.btn_copy2_3.clicked.connect(self.spectrums.copy_fig_graph1)
         self.ui.btn_copy2_7.clicked.connect(self.spectrums.copy_fig_graph2)
+
 
         self.darkmode = True
         self.ui.setPalette(dark_palette())

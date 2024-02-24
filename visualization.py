@@ -178,7 +178,7 @@ class Vizualisation:
         self.display_dpi = float(spec["display_dpi"])
         # Apply filters
         self.callbacks_df.df_filters = spec["df_filters"]
-        self.callbacks_df.apply_selected_filters(self.callbacks_df.df_filters)
+        self.callbacks_df.apply_filters(self.callbacks_df.df_filters)
         selected_df_name = self.callbacks_df.selected_df_name
 
         selected_df = self.callbacks_df.selected_df

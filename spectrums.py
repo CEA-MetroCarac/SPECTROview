@@ -400,7 +400,7 @@ class Spectrums(QObject):
             self.filters = checked_filters
 
         # Apply all filters at once
-        self.filtered_df = self.df_fit_results  # Initialize with original DataFrame
+        self.filtered_df = self.df_fit_results.copy()  # Initialize with a copy of the original DataFrame
 
         for filter_data in self.filters:
             filter_expr = filter_data["expression"]
@@ -408,10 +408,16 @@ class Spectrums(QObject):
 
             if is_checked:
                 try:
-                    filter_expr = filter_expr.encode('ascii', 'ignore').decode('ascii')
+                    # Ensure filter_expr is a string
+                    filter_expr = str(filter_expr)
+                    print(f"Applying filter expression: {filter_expr}")
+
+                    # Apply the filter
                     self.filtered_df = self.filtered_df.query(filter_expr)
                 except Exception as e:
                     QMessageBox.critical(self.ui, "Error", f"Filter error: {str(e)}")
+                    print(f"Error applying filter: {str(e)}")
+                    print(f"Filter expression causing the error: {filter_expr}")
 
         print(f"filters", self.filters)
         print(f"filtered_df", self.filtered_df)

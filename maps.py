@@ -45,7 +45,7 @@ class Maps(QObject):
         self.ax = None  # Spectrum plot
         self.ax2 = None  # Wafer measuerment sites
         self.canvas1 = None
-        self.toolbar=None
+        self.toolbar = None
         self.model_fs = None  # FITSPY
         self.spectra_fs = Spectra()  # FITSPY
 
@@ -383,7 +383,7 @@ class Maps(QObject):
         self.ui.toolbar_frame.addWidget(self.toolbar)
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
-        #Measurement sites view:
+        # Measurement sites view:
         fig2 = plt.figure()
         self.ax2 = fig2.add_subplot(111)
         self.canvas2 = FigureCanvas(fig2)
@@ -751,7 +751,7 @@ class Maps(QObject):
         """Save the current work/results."""
         try:
             file_path, _ = QFileDialog.getSaveFileName(None,
-                                                       "Save fitted wafer data",
+                                                       "Save work",
                                                        "",
                                                        "SPECTROview Files ("
                                                        "*.sv2dmap)")
@@ -795,7 +795,7 @@ class Maps(QObject):
         """Load a previously saved work."""
         try:
             file_path, _ = QFileDialog.getOpenFileName(None,
-                                                       "Save fitted wafer data",
+                                                       "Load work",
                                                        "",
                                                        "SPECTROview Files ("
                                                        "*.sv2dmap)")

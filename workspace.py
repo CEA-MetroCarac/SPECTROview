@@ -44,7 +44,7 @@ class SaveLoadWorkspace:
 
             workspace = {
                 "df_filepaths": self.callbacks_df.file_paths,
-                "df_filters": self.callbacks_df.filters,
+                "df_filters": self.callbacks_df.df_filters,
                 "original_dfs": dataframes_json,
                 "plot_specs": plot_specs_json,
             }
@@ -83,7 +83,7 @@ class SaveLoadWorkspace:
             self.callbacks_df.action_open_df(file_paths=None,
                                              original_dfs=original_dfs)
 
-            self.callbacks_df.filters = wsp["df_filters"]
+            self.callbacks_df.df_filters = wsp["df_filters"]
             self.callbacks_df.update_filter_list()
 
             # Convert plot_specs back from dictionaries
@@ -123,7 +123,7 @@ class SaveLoadWorkspace:
             with open(fname, "r") as file:
                 wsp = json.load(file)
 
-            self.callbacks_df.filters = wsp["df_filters"]
+            self.callbacks_df.df_filters = wsp["df_filters"]
             self.callbacks_df.update_filter_list()
 
             # Convert plot_specs back from dictionaries

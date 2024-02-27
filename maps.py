@@ -762,7 +762,7 @@ class Maps(QObject):
                                                        "Save work",
                                                        "",
                                                        "SPECTROview Files ("
-                                                       "*.sv2dmap)")
+                                                       "*.svmap)")
             if file_path:
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
@@ -806,7 +806,7 @@ class Maps(QObject):
                                                        "Load work",
                                                        "",
                                                        "SPECTROview Files ("
-                                                       "*.sv2dmap)")
+                                                       "*.svmap)")
             if file_path:
                 with open(file_path, 'rb') as f:
                     load = dill.load(f)

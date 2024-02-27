@@ -694,7 +694,7 @@ class Spectrums(QObject):
                                                        "Save work",
                                                        "",
                                                        "SPECTROview Files ("
-                                                       "*.svs)")
+                                                       "*.svspectra)")
             if file_path:
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
@@ -726,7 +726,7 @@ class Spectrums(QObject):
                                                        "Load work",
                                                        "",
                                                        "SPECTROview Files ("
-                                                       "*.svs)")
+                                                       "*.svspectra)")
             if file_path:
                 with open(file_path, 'rb') as f:
                     load = dill.load(f)
@@ -756,8 +756,8 @@ class Spectrums(QObject):
                     self.ui.cbb_plot_style_7.setCurrentIndex(
                         load.get('plot_style_2', -1))
 
-                    # self.plot_graph()
-                    # self.plot_graph2()
+                    self.plot_graph()
+                    self.plot_graph2()
         except Exception as e:
             show_alert(f"Error loading work: {e}")
 

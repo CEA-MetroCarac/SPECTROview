@@ -3,6 +3,7 @@ import os
 import time
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 from pathlib import Path
 import dill
 
@@ -223,8 +224,15 @@ class Spectrums(QObject):
                     if 0 <= peak_index < len(peak_labels):
                         peak_label = peak_labels[peak_index]
 
+                    # remove temporarily 'expr'
+                    param_hints_orig = deepcopy(peak_model.param_hints)
+                    for key, _ in peak_model.param_hints.items():
+                        peak_model.param_hints[key]['expr'] = ''
                     params = peak_model.make_params()
+                    # rassign 'expr'
+                    peak_model.param_hints = param_hints_orig
                     y_peak = peak_model.eval(params, x=x_values)
+
                     if self.ui.cb_filled_3.isChecked():
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
                                              label=f"{peak_label}")

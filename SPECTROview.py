@@ -265,19 +265,17 @@ class MainWindow:
 
     def show_about_dialog(self):
         text = """
-        <h3>SPECTROview</h3>
-        <p>Spectroscopic Data Processing and Visualization</p>
-        <p>SPECTROview version: 2024.04 </p>
-        <p>Fitting functions in SPECTROview are powered by FITSPY package. 
-        The version 2024.04 of FITSPY has been implemented in this release of 
-        SPECTROView.</p>
-        <p>For any feedback  contact <a 
+        <h3>SPECTROview (version 2024.4)</h3>
+        <h3>Spectroscopic Data Processing and Visualization</h3>
+        <p>Fitting features in this release are powered by FITSPY package (v 
+        2024.04)</p>
+        <p>For any feedback, contact: <a 
         href="mailto:van-hoan.le@cea.fr">van-hoan.le@cea.fr</a> or <a 
         href="mailto:patrick.quemere@cea.fr">patrick.quemere@cea.fr</a></p>
         """
         about_dialog = QDialog(self.ui)
         about_dialog.setWindowTitle("About")
-        about_dialog.resize(400, 330)
+        about_dialog.resize(450, 300)
 
         # Create QLabel for the logo
         logo_label = QLabel()

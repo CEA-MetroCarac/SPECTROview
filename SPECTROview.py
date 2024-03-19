@@ -227,14 +227,14 @@ class MainWindow:
         self.ui.btn_add_filter_2.clicked.connect(self.spectrums.add_filter)
         self.ui.ent_filter_query_2.returnPressed.connect(
             self.spectrums.add_filter)
-        self.ui.btn_apply_filters_2.clicked.connect(self.spectrums.apply_filters)
-        self.ui.btn_remove_filters_2.clicked.connect(self.spectrums.remove_filter)
-
+        self.ui.btn_apply_filters_2.clicked.connect(
+            self.spectrums.apply_filters)
+        self.ui.btn_remove_filters_2.clicked.connect(
+            self.spectrums.remove_filter)
 
         self.ui.btn_copy_fig_3.clicked.connect(self.spectrums.copy_fig)
         self.ui.btn_copy2_3.clicked.connect(self.spectrums.copy_fig_graph1)
         self.ui.btn_copy2_7.clicked.connect(self.spectrums.copy_fig_graph2)
-
 
         self.darkmode = True
         self.ui.setPalette(dark_palette())
@@ -265,16 +265,17 @@ class MainWindow:
 
     def show_about_dialog(self):
         text = """
-        <h3>SPECTROview</h3>
-        <p>Spectroscopic Data Processing and Visualization</p>
-        <p>Version SPECTROview: 2024.03 </p>
-        <p>Version FITSPY: 2024.02c </p>
-        <p>For any feedback contact <a 
-        href="mailto:van-hoan.le@cea.fr">van-hoan.le@cea.fr</a></p>
+        <h3>SPECTROview (version 2024.4)</h3>
+        <h3>Spectroscopic Data Processing and Visualization</h3>
+        <p>Fitting features in this release are powered by FITSPY package (v 
+        2024.04)</p>
+        <p>For any feedback, contact: <a 
+        href="mailto:van-hoan.le@cea.fr">van-hoan.le@cea.fr</a> or <a 
+        href="mailto:patrick.quemere@cea.fr">patrick.quemere@cea.fr</a></p>
         """
         about_dialog = QDialog(self.ui)
         about_dialog.setWindowTitle("About")
-        about_dialog.resize(350, 300)
+        about_dialog.resize(450, 300)
 
         # Create QLabel for the logo
         logo_label = QLabel()

@@ -3,6 +3,7 @@ import os
 import time
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 from pathlib import Path
 import dill
 import multiprocessing
@@ -45,7 +46,7 @@ class Maps(QObject):
         self.ax = None  # Spectrum plot
         self.ax2 = None  # Wafer measuerment sites
         self.canvas1 = None
-        self.toolbar=None
+        self.toolbar = None
         self.model_fs = None  # FITSPY
         self.spectra_fs = Spectra()  # FITSPY
 
@@ -387,7 +388,7 @@ class Maps(QObject):
         self.ui.toolbar_frame.addWidget(self.toolbar)
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
-        #Measurement sites view:
+        # Measurement sites view:
         fig2 = plt.figure()
         self.ax2 = fig2.add_subplot(111)
         self.canvas2 = FigureCanvas(fig2)
@@ -462,8 +463,15 @@ class Maps(QObject):
                     if 0 <= peak_index < len(peak_labels):
                         peak_label = peak_labels[peak_index]
 
+                    # remove temporarily 'expr'
+                    param_hints_orig = deepcopy(peak_model.param_hints)
+                    for key, _ in peak_model.param_hints.items():
+                        peak_model.param_hints[key]['expr'] = ''
                     params = peak_model.make_params()
+                    # rassign 'expr'
+                    peak_model.param_hints = param_hints_orig
                     y_peak = peak_model.eval(params, x=x_values)
+
                     if self.ui.cb_filled.isChecked():
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
                                              label=f"{peak_label}")
@@ -755,10 +763,10 @@ class Maps(QObject):
         """Save the current work/results."""
         try:
             file_path, _ = QFileDialog.getSaveFileName(None,
-                                                       "Save fitted wafer data",
+                                                       "Save work",
                                                        "",
                                                        "SPECTROview Files ("
-                                                       "*.sv2dmap)")
+                                                       "*.svmap)")
             if file_path:
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
@@ -799,10 +807,10 @@ class Maps(QObject):
         """Load a previously saved work."""
         try:
             file_path, _ = QFileDialog.getOpenFileName(None,
-                                                       "Save fitted wafer data",
+                                                       "Load work",
                                                        "",
                                                        "SPECTROview Files ("
-                                                       "*.sv2dmap)")
+                                                       "*.svmap)")
             if file_path:
                 with open(file_path, 'rb') as f:
                     load = dill.load(f)

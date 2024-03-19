@@ -407,6 +407,7 @@
                       </property>
                       <property name="font">
                        <font>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1189,7 +1190,7 @@
                      <x>0</x>
                      <y>0</y>
                      <width>248</width>
-                     <height>440</height>
+                     <height>399</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1198,6 +1199,7 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1361,6 +1363,7 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1917,8 +1920,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>617</width>
-                             <height>358</height>
+                             <width>98</width>
+                             <height>28</height>
                             </rect>
                            </property>
                           </widget>
@@ -2430,6 +2433,7 @@
              <property name="font">
               <font>
                <family>Arial</family>
+               <weight>75</weight>
                <italic>false</italic>
                <bold>true</bold>
               </font>
@@ -3152,8 +3156,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>348</width>
-                      <height>613</height>
+                      <width>323</width>
+                      <height>540</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,20,0,0,0,0,0,0,0,0,0">
@@ -3181,6 +3185,7 @@
                          </property>
                          <property name="font">
                           <font>
+                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -3467,7 +3472,20 @@
                          </layout>
                         </item>
                         <item>
-                         <widget class="QListWidget" name="filter_listbox"/>
+                         <widget class="QListWidget" name="filter_listbox">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>100</height>
+                           </size>
+                          </property>
+                         </widget>
                         </item>
                         <item>
                          <layout class="QHBoxLayout" name="horizontalLayout_46">
@@ -3522,6 +3540,7 @@
                        <property name="font">
                         <font>
                          <pointsize>12</pointsize>
+                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5165,6 +5184,7 @@
              <property name="font">
               <font>
                <family>Arial</family>
+               <weight>75</weight>
                <italic>false</italic>
                <bold>true</bold>
               </font>
@@ -5503,7 +5523,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1139</width>
+               <width>1143</width>
                <height>921</height>
               </rect>
              </property>
@@ -5647,6 +5667,7 @@
                  <property name="font">
                   <font>
                    <pointsize>8</pointsize>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5675,6 +5696,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5703,6 +5725,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5731,6 +5754,7 @@
                  </property>
                  <property name="font">
                   <font>
+                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5960,6 +5984,7 @@
                     <widget class="QPushButton" name="btn_add_a_plot">
                      <property name="font">
                       <font>
+                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -6057,6 +6082,7 @@
                          </property>
                          <property name="font">
                           <font>
+                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -6755,7 +6781,7 @@
      <x>0</x>
      <y>0</y>
      <width>1619</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpen">

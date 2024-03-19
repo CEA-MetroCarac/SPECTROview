@@ -3,6 +3,7 @@ import os
 import time
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 from pathlib import Path
 import dill
 
@@ -20,7 +21,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from wafer_view import WaferView
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
-                               QListWidgetItem,QCheckBox)
+                               QListWidgetItem, QCheckBox)
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QSettings, QFileInfo, QTimer, QObject, Signal, \
     QThread
@@ -49,7 +50,7 @@ class Spectrums(QObject):
         self.spectra_fs = Spectra()
         self.df_fit_results = None
         self.filters = []
-        self.filtered_df =None # FITSPY
+        self.filtered_df = None  # FITSPY
 
         # Connect and plot_spectre of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
@@ -73,7 +74,6 @@ class Spectrums(QObject):
         self.plot_styles = ["point plot", "scatter plot", "box plot",
                             "bar plot"]
         self.create_plot_widget()
-
 
     def open_data(self, file_paths=None, spectra=None):
         if self.spectra_fs is None:
@@ -224,8 +224,15 @@ class Spectrums(QObject):
                     if 0 <= peak_index < len(peak_labels):
                         peak_label = peak_labels[peak_index]
 
+                    # remove temporarily 'expr'
+                    param_hints_orig = deepcopy(peak_model.param_hints)
+                    for key, _ in peak_model.param_hints.items():
+                        peak_model.param_hints[key]['expr'] = ''
                     params = peak_model.make_params()
+                    # rassign 'expr'
+                    peak_model.param_hints = param_hints_orig
                     y_peak = peak_model.eval(params, x=x_values)
+
                     if self.ui.cb_filled_3.isChecked():
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
                                              label=f"{peak_label}")
@@ -250,7 +257,7 @@ class Spectrums(QObject):
 
         self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
         self.ax.set_ylabel("Intensity (a.u)")
-        if self.ui.cb_legend.isChecked():
+        if self.ui.cb_legend_3.isChecked():
             self.ax.legend(loc='upper right')
         self.ax.get_figure().tight_layout()
         self.canvas1.draw()
@@ -365,7 +372,10 @@ class Spectrums(QObject):
         parts = dfr['Sample'].str.split('_')
         dfr[col_name] = [part[selected_part_index] if len(
             part) > selected_part_index else None for part in parts]
-        show_alert(f"Column added successfully:'{col_name}'")
+
+        QMessageBox.information(
+            self.ui.tabWidget, "Success",
+            f"Column '{col_name}' is added successfully.")
         self.df_fit_results = dfr
         self.send_df_to_viz()
         self.upd_cbb_param()
@@ -381,6 +391,7 @@ class Spectrums(QObject):
         item.setSizeHint(checkbox.sizeHint())
         self.ui.filter_listbox.addItem(item)
         self.ui.filter_listbox.setItemWidget(item, checkbox)
+
     def filters_ischecked(self):
         """Collect selected filters from the UI"""
         checked_filters = []
@@ -400,7 +411,8 @@ class Spectrums(QObject):
             self.filters = checked_filters
 
         # Apply all filters at once
-        self.filtered_df = self.df_fit_results.copy()  # Initialize with a copy of the original DataFrame
+        self.filtered_df = self.df_fit_results.copy()  # Initialize with a
+        # copy of the original DataFrame
 
         for filter_data in self.filters:
             filter_expr = filter_data["expression"]
@@ -415,13 +427,10 @@ class Spectrums(QObject):
                     # Apply the filter
                     self.filtered_df = self.filtered_df.query(filter_expr)
                 except Exception as e:
-                    QMessageBox.critical(self.ui, "Error", f"Filter error: {str(e)}")
+                    QMessageBox.critical(self.ui, "Error",
+                                         f"Filter error: {str(e)}")
                     print(f"Error applying filter: {str(e)}")
                     print(f"Filter expression causing the error: {filter_expr}")
-
-        print(f"filters", self.filters)
-        print(f"filtered_df", self.filtered_df)
-        print(f"df_fit_results", self.df_fit_results)
 
     def upd_filter_listbox(self):
         """To update filter listbox"""
@@ -437,7 +446,8 @@ class Spectrums(QObject):
 
     def remove_filter(self):
         """To remove a filter from listbox"""
-        selected_items = [item for item in self.ui.filter_listbox.selectedItems()]
+        selected_items = [item for item in
+                          self.ui.filter_listbox.selectedItems()]
         for item in selected_items:
             checkbox = self.ui.filter_listbox.itemWidget(item)
             filter_expression = checkbox.text()
@@ -445,6 +455,7 @@ class Spectrums(QObject):
                 if filter.get("expression") == filter_expression:
                     self.filters.remove(filter)
             self.ui.filter_listbox.takeItem(self.ui.filter_listbox.row(item))
+
     def upd_cbb_param(self):
         """to append all values of df_fit_results to comoboxses"""
         if self.df_fit_results is not None:
@@ -474,7 +485,7 @@ class Spectrums(QObject):
         clear_layout(self.ui.frame_graph_3.layout())
 
         if self.filtered_df is not None:
-            dfr =self.filtered_df
+            dfr = self.filtered_df
         else:
             dfr = self.df_fit_results
         x = self.ui.cbb_x_3.currentText()
@@ -580,7 +591,7 @@ class Spectrums(QObject):
             df = self.df_fit_results
         else:
             df = self.filtered_df
-        view_df(self.ui.tabWidget,df)
+        view_df(self.ui.tabWidget, df)
 
     def save_fit_results(self):
         """Functon to save fitted results in an excel file"""
@@ -623,6 +634,7 @@ class Spectrums(QObject):
             try:
                 dfr = pd.read_excel(excel_file_path)
                 self.df_fit_results = dfr
+                self.filtered_df = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
 
@@ -679,11 +691,10 @@ class Spectrums(QObject):
         """Save the current work/results."""
         try:
             file_path, _ = QFileDialog.getSaveFileName(None,
-                                                       "Save fitted spectrum "
-                                                       "data",
+                                                       "Save work",
                                                        "",
                                                        "SPECTROview Files ("
-                                                       "*.svs)")
+                                                       "*.svspectra)")
             if file_path:
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
@@ -712,11 +723,10 @@ class Spectrums(QObject):
         """Load a previously saved work."""
         try:
             file_path, _ = QFileDialog.getOpenFileName(None,
-                                                       "Save fitted spectrum "
-                                                       "data",
+                                                       "Load work",
                                                        "",
                                                        "SPECTROview Files ("
-                                                       "*.svs)")
+                                                       "*.svspectra)")
             if file_path:
                 with open(file_path, 'rb') as f:
                     load = dill.load(f)

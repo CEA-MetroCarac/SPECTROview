@@ -125,6 +125,23 @@ def quadrant(row):
     else:
         return np.nan
 
+def zone(row, diameter):
+    """Define 3 zones (Center, Mid-Rayon, Edge) based on X and Y coordinates."""
+    radius = diameter / 2
+    x = row['X']
+    y = row['Y']
+    distance_to_center = np.sqrt(x**2 + y**2)
+
+    if distance_to_center <= radius * 0.35:
+        return 'Center'
+    elif distance_to_center > radius *  0.35 and distance_to_center < radius * 0.8:
+        return 'Mid-Rayon'
+    elif distance_to_center >= 0.8 *radius:
+        return 'Edge'
+    else:
+        return np.nan
+
+
 
 def copy_fig_to_clb(canvas):
     """Function to copy canvas figure to clipboard"""

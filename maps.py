@@ -6,7 +6,7 @@ import pandas as pd
 from pathlib import Path
 import dill
 import multiprocessing
-from utils import view_df, show_alert, quadrant, view_text, copy_fig_to_clb, \
+from utils import view_df, show_alert, quadrant, zone,view_text, copy_fig_to_clb, \
     translate_param, clear_layout, reinit_spectrum, plot_graph
 from utils import FitThread
 from lmfit import fit_report
@@ -237,6 +237,10 @@ class Maps(QObject):
         # Add "Quadrant" columns
         self.df_fit_results['Quadrant'] = self.df_fit_results.apply(quadrant,
                                                                     axis=1)
+        diameter = float(self.ui.wafer_size.text())
+        # Use a lambda function to pass the row argument to the zone function
+        self.df_fit_results['Zone'] = self.df_fit_results.apply(lambda row: zone(row, diameter), axis=1)
+
         self.upd_cbb_param()
         self.upd_cbb_wafer()
         self.send_df_to_viz()

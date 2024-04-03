@@ -7,7 +7,8 @@ from copy import deepcopy
 from pathlib import Path
 import dill
 import multiprocessing
-from utils import view_df, show_alert, quadrant, zone,view_text, copy_fig_to_clb, \
+from utils import view_df, show_alert, quadrant, zone, view_text, \
+    copy_fig_to_clb, \
     translate_param, clear_layout, reinit_spectrum, plot_graph
 from utils import FitThread
 from lmfit import fit_report
@@ -120,10 +121,12 @@ class Maps(QObject):
                         continue
 
                     wafer_name = fname
+
                     if wafer_name in self.wafers:
                         print(f"Wafer '{wafer_name}' is already opened")
                     else:
                         self.wafers[wafer_name] = wafer_df
+
         self.extract_spectra()
 
     def extract_spectra(self):
@@ -131,9 +134,10 @@ class Maps(QObject):
         for wafer_name, wafer_df in self.wafers.items():
             coord_columns = wafer_df.columns[:2]
             for _, row in wafer_df.iterrows():
+
                 # Extract XY coords, wavenumber, and intensity values
                 coord = tuple(row[coord_columns])
-
+                print(coord)
                 x_values = wafer_df.columns[2:].tolist()
                 x_values = pd.to_numeric(x_values, errors='coerce').tolist()
 
@@ -240,7 +244,8 @@ class Maps(QObject):
                                                                     axis=1)
         diameter = float(self.ui.wafer_size.text())
         # Use a lambda function to pass the row argument to the zone function
-        self.df_fit_results['Zone'] = self.df_fit_results.apply(lambda row: zone(row, diameter), axis=1)
+        self.df_fit_results['Zone'] = self.df_fit_results.apply(
+            lambda row: zone(row, diameter), axis=1)
 
         self.upd_cbb_param()
         self.upd_cbb_wafer()
@@ -603,7 +608,7 @@ class Maps(QObject):
 
         if current_item is not None:
             wafer_name = current_item.text()
-
+            print(wafer_name)
             for spectrum_fs in self.spectra_fs:
                 wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
                 if wafer_name == wafer_name_fs:
@@ -705,10 +710,12 @@ class Maps(QObject):
 
     def spectre_id_fs(self, spectrum_fs=None):
         """Get selected spectre id(s) of FITSPY object"""
+
         fname_parts = spectrum_fs.fname.split("_")
-        wafer_name_fs = "_".join(fname_parts[:2])
-        coord_str = fname_parts[-1].split('(')[1].split(')')[0]
-        coord_fs = tuple(map(float, coord_str.split(',')))
+        wafer_name_fs = "_".join(fname_parts[:-1])
+        coord_str = fname_parts[-1]  # Last part contains the coordinates
+        coord_fs = tuple(
+            map(float, coord_str.split('(')[1].split(')')[0].split(',')))
         return wafer_name_fs, coord_fs
 
     def delay_plot(self):

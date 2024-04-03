@@ -270,7 +270,7 @@ class MainWindow:
         <p>Fitting features in this release are powered by FITSPY package (v 
         2024.04)</p>
         <p>For any feedback, contact: <a 
-        href="mailto:van-hoan.le@cea.fr">van-hoan.le@cea.fr</a> or <a 
+        href="mailto:van-hoan.le@cea.fr">van-hoan.le@cea.fr</a> & <a 
         href="mailto:patrick.quemere@cea.fr">patrick.quemere@cea.fr</a></p>
         """
         about_dialog = QDialog(self.ui)

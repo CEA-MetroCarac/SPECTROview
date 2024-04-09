@@ -260,8 +260,7 @@ class Vizualisation:
             sns.boxplot(data=data, x=x, y=y, hue=hue, dodge=True, ax=ax)
 
         elif spec["selected_plot_style"] == "bar plot":
-            sns.barplot(data=data, x=x, y=y, hue=hue, errorbar=None,
-                        ax=ax)
+            sns.barplot(data=data, x=x, y=y, hue=hue, errorbar='sd', ax=ax)
         elif spec[
             "selected_plot_style"] == "point plot: 2 Yaxis (pos(Si) & stress)":
             sns.pointplot(data=data, x=x, y=y, hue=hue, linestyle='none',

@@ -321,9 +321,11 @@ class Spectrums(QObject):
         for spectrum_fs in self.spectra_fs:
             if hasattr(spectrum_fs.result_fit, 'best_values'):
                 success = spectrum_fs.result_fit.success
+                rsquared = spectrum_fs.result_fit.rsquared
                 best_values = spectrum_fs.result_fit.best_values
                 best_values["Sample"] = spectrum_fs.fname
                 best_values["success"] = success
+                best_values["Rsquared"] = rsquared
                 fit_results_list.append(best_values)
         self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
 
@@ -336,7 +338,7 @@ class Spectrums(QObject):
             if name in ["Sample", "success"]:
                 name = '0' + name  # to be in the 2 first columns
             elif '_' in name:
-                name = 'z' + name[4:]  # model peak parameters to be at the end
+                name = 'z' + name[5:]  # model peak parameters to be at the end
             names.append(name)
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]

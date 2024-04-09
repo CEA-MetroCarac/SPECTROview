@@ -211,24 +211,26 @@ class Maps(QObject):
                 wafer_name, coord = self.spectre_id_fs(spectrum_fs)
                 x, y = coord
                 success = spectrum_fs.result_fit.success
+                rsquared = spectrum_fs.result_fit.rsquared
                 best_values = spectrum_fs.result_fit.best_values
                 best_values["Wafer"] = wafer_name
                 best_values["X"] = x
                 best_values["Y"] = y
                 best_values["success"] = success
+                best_values["Rsquared"] = rsquared
+
                 fit_results_list.append(best_values)
         self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
 
         # reindex columns according to the parameters names
         self.df_fit_results = self.df_fit_results.reindex(
-            sorted(self.df_fit_results.columns),
-            axis=1)
+            sorted(self.df_fit_results.columns), axis=1)
         names = []
         for name in self.df_fit_results.columns:
             if name in ["Wafer", "X", 'Y', "success"]:
                 name = '0' + name  # to be in the 3 first columns
             elif '_' in name:
-                name = 'z' + name[4:]  # model peak parameters to be at the end
+                name = 'z' + name[5:]  # model peak parameters to be at the end
             names.append(name)
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]

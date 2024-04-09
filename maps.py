@@ -498,6 +498,12 @@ class Maps(QObject):
             if self.ui.cb_colors.isChecked() is False:
                 self.ax.set_prop_cycle(None)
 
+            if hasattr(spectrum_fs.result_fit, 'rsquared'):
+                rsquared = round(spectrum_fs.result_fit.rsquared, 4)
+                self.ui.rsquared_1.setText(f"R2={rsquared}")
+            else:
+                self.ui.rsquared_1.setText("R2=0")
+
         self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
         self.ax.set_ylabel("Intensity (a.u)")
         if self.ui.cb_legend.isChecked():

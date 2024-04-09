@@ -119,9 +119,7 @@ class Maps(QObject):
                     else:
                         show_alert(f"Unsupported file format: {extension}")
                         continue
-
                     wafer_name = fname
-
                     if wafer_name in self.wafers:
                         print(f"Wafer '{wafer_name}' is already opened")
                     else:
@@ -137,7 +135,6 @@ class Maps(QObject):
 
                 # Extract XY coords, wavenumber, and intensity values
                 coord = tuple(row[coord_columns])
-                print(coord)
                 x_values = wafer_df.columns[2:].tolist()
                 x_values = pd.to_numeric(x_values, errors='coerce').tolist()
 
@@ -608,7 +605,6 @@ class Maps(QObject):
 
         if current_item is not None:
             wafer_name = current_item.text()
-            print(wafer_name)
             for spectrum_fs in self.spectra_fs:
                 wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
                 if wafer_name == wafer_name_fs:

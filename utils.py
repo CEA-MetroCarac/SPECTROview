@@ -38,7 +38,7 @@ def plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
     elif style == "scatter plot":
         sns.scatterplot(data=dfr, x=x, y=y, hue=z, s=100, ax=ax)
     elif style == "bar plot":
-        sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar=None, ax=ax)
+        sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar=sd, ax=ax)
 
     if xmin and xmax:
         ax.set_xlim(float(xmin), float(xmax))
@@ -125,22 +125,23 @@ def quadrant(row):
     else:
         return np.nan
 
+
 def zone(row, diameter):
     """Define 3 zones (Center, Mid-Rayon, Edge) based on X and Y coordinates."""
     radius = diameter / 2
     x = row['X']
     y = row['Y']
-    distance_to_center = np.sqrt(x**2 + y**2)
+    distance_to_center = np.sqrt(x ** 2 + y ** 2)
 
     if distance_to_center <= radius * 0.35:
         return 'Center'
-    elif distance_to_center > radius *  0.35 and distance_to_center < radius * 0.8:
+    elif distance_to_center > radius * 0.35 and distance_to_center < radius *\
+            0.8:
         return 'Mid-Rayon'
-    elif distance_to_center >= 0.8 *radius:
+    elif distance_to_center >= 0.8 * radius:
         return 'Edge'
     else:
         return np.nan
-
 
 
 def copy_fig_to_clb(canvas):

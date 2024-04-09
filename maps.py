@@ -537,8 +537,9 @@ class Maps(QObject):
         vmax = float(
             self.ui.int_vmax.text()) if self.ui.int_vmax.text() else None
         stats = self.ui.cb_stats.isChecked()
+
         plt.close('all')
-        fig = plt.figure()
+        fig = plt.figure(dpi=80)
         ax = fig.add_subplot(111)
 
         wdf = WaferView()

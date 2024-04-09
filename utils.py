@@ -27,7 +27,7 @@ def plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
                y_text, xlabel_rot):
     """Plot graph """
     plt.close('all')
-    fig = plt.figure()
+    fig = plt.figure(dpi=80)
     ax = fig.add_subplot(111)
 
     if style == "box plot":
@@ -135,7 +135,7 @@ def zone(row, diameter):
 
     if distance_to_center <= radius * 0.35:
         return 'Center'
-    elif distance_to_center > radius * 0.35 and distance_to_center < radius *\
+    elif distance_to_center > radius * 0.35 and distance_to_center < radius * \
             0.8:
         return 'Mid-Rayon'
     elif distance_to_center >= 0.8 * radius:

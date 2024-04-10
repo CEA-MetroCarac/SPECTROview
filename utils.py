@@ -216,10 +216,10 @@ def view_text(ui, title, text):
     text_browser.setPlainText(text)
     # Scroll to top of document
     text_browser.moveCursor(QTextCursor.Start)
-    # Show the Report viewer dialog
+    # Show the Report viewer dialog without blocking
     layout = QVBoxLayout(report_viewer)
     layout.addWidget(text_browser)
-    report_viewer.exec()
+    report_viewer.show()
 
 
 def view_md_doc(ui, fname):

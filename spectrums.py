@@ -659,7 +659,7 @@ class Spectrums(QObject):
         if len(selected_spectra_fs) == 0:
             return
         ui = self.ui.tabWidget
-        title = "Fitting Report"
+        title = f"Fitting Report - {fnames}"
         # Show the 'report' of the first selected spectrum
         spectrum_fs = selected_spectra_fs[0]
         if spectrum_fs.result_fit:

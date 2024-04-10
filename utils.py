@@ -23,13 +23,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 
-def plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
+def plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
                y_text, xlabel_rot):
     """Plot graph """
-    plt.close('all')
-    fig = plt.figure(dpi=80)
-    ax = fig.add_subplot(111)
 
+    ax.clear()
     if style == "box plot":
         sns.boxplot(data=dfr, x=x, y=y, hue=z, dodge=True, ax=ax)
     elif style == "point plot":
@@ -56,10 +54,7 @@ def plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
     ax.legend(loc='upper right')
     plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
              rotation_mode="anchor")
-    fig.tight_layout()
-    canvas = FigureCanvas(fig)
-
-    return canvas
+    return ax
 
 
 def reinit_spectrum(fnames, spectra_fs):

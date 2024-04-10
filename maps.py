@@ -44,9 +44,9 @@ class Maps(QObject):
         self.settings = QSettings("CEA-Leti", "DaProViz")
 
         self.wafers = {}  # list of opened wafers
-        self.ax = None  # Spectrum plot
-        self.ax2 = None  # Wafer measuerment sites
-        self.canvas1 = None
+        # self.ax = None  # Spectrum plot
+        # self.ax2 = None  # Wafer measuerment sites
+        # self.canvas1 = None
         self.toolbar = None
         self.model_fs = None  # FITSPY
         self.spectra_fs = Spectra()  # FITSPY
@@ -69,10 +69,10 @@ class Maps(QObject):
         self.ui.cb_filled.stateChanged.connect(self.delay_plot)
         self.ui.cb_peaks.stateChanged.connect(self.delay_plot)
 
-        # Set a delay for the function plot_sel_spectra
+        # Set a delay for the function "plot1"
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
-        self.delay_timer.timeout.connect(self.plot_sel_spectra)
+        self.delay_timer.timeout.connect(self.plot1)
 
         # Connect the progress signal to update_progress_bar slot
         self.fit_progress_changed.connect(self.update_pbar)
@@ -376,6 +376,11 @@ class Maps(QObject):
         else:
             self.reinit()
 
+    def rescale(self):
+        """Rescale the figure."""
+        self.ax.autoscale()
+        self.canvas1.draw()
+
     def create_plot_widget(self):
         """Create canvas and toolbar for plotting in the GUI"""
         plt.style.use(PLOT_POLICY)
@@ -388,11 +393,13 @@ class Maps(QObject):
         rescale = next(
             a for a in self.toolbar.actions() if a.text() == 'Home')
         rescale.triggered.connect(self.rescale)
+
         self.ui.QVBoxlayout.addWidget(self.canvas1)
         self.ui.toolbar_frame.addWidget(self.toolbar)
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
-        # Measurement sites view:
+
+        # plot 2: Measurement sites view
         fig2 = plt.figure()
         self.ax2 = fig2.add_subplot(111)
         self.canvas2 = FigureCanvas(fig2)
@@ -400,31 +407,14 @@ class Maps(QObject):
         layout.addWidget(self.canvas2)
         self.canvas2.draw()
 
-    def rescale(self):
-        """Rescale the figure."""
-        self.ax.autoscale()
-        self.canvas1.draw()
+        # Plot4: graph
+        fig4 = plt.figure()
+        self.ax4 = fig4.add_subplot(111)
+        self.canvas4 = FigureCanvas(fig4)
+        self.ui.frame_graph.addWidget(self.canvas4)
+        self.canvas4.draw()
 
-    def plot_measurement_sites(self):
-        """Plot wafer maps of measurement sites"""
-        wafer_name, coords = self.spectre_id()
-        all_x = []
-        all_y = []
-        for spectrum_fs in self.spectra_fs:
-            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
-            if wafer_name == wafer_name_fs:
-                x, y = coord_fs
-                all_x.append(x)
-                all_y.append(y)
-        self.ax2.clear()
-        self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
-        if coords:
-            x, y = zip(*coords)
-            self.ax2.scatter(x, y, marker='o', color='red', s=40)
-        self.ax2.get_figure().tight_layout()
-        self.canvas2.draw()
-
-    def plot_sel_spectra(self):
+    def plot1(self):
         """Plot all selected spectra"""
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
@@ -508,12 +498,33 @@ class Maps(QObject):
         self.ax.set_ylabel("Intensity (a.u)")
         if self.ui.cb_legend.isChecked():
             self.ax.legend(loc='upper right')
+
         self.ax.get_figure().tight_layout()
         self.canvas1.draw()
-        self.plot_measurement_sites()
+        self.plot2()
 
-    def plot_wafer(self):
-        """Plot WaferDataFrame for view 1"""
+    def plot2(self):
+        """Plot wafer maps of measurement sites"""
+        wafer_name, coords = self.spectre_id()
+        all_x = []
+        all_y = []
+        for spectrum_fs in self.spectra_fs:
+            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+            if wafer_name == wafer_name_fs:
+                x, y = coord_fs
+                all_x.append(x)
+                all_y.append(y)
+
+        self.ax2.clear()
+        self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
+        if coords:
+            x, y = zip(*coords)
+            self.ax2.scatter(x, y, marker='o', color='red', s=40)
+        self.ax2.get_figure().tight_layout()
+        self.canvas2.draw()
+
+    def plot3(self):
+        """Plot WaferDataFrame"""
         clear_layout(self.ui.frame_wafer.layout())
         dfr = self.df_fit_results
         wafer_name = self.ui.cbb_wafer_1.currentText()
@@ -523,11 +534,12 @@ class Maps(QObject):
         if wafer_name is not None:
             selected_df = dfr.query('Wafer == @wafer_name')
         sel_param = self.ui.cbb_param_1.currentText()
-        self.canvas3 = self.action_plot(selected_df, sel_param, wafer_size,
-                                        color)
+        self.canvas3 = self.plot3_action(selected_df, sel_param, wafer_size,
+                                         color)
         self.ui.frame_wafer.addWidget(self.canvas3)
 
-    def action_plot(self, selected_df, sel_param, wafer_size, color):
+    def plot3_action(self, selected_df, sel_param, wafer_size, color):
+        """PLot wafer map of a selected parameters"""
         x = selected_df['X']
         y = selected_df['Y']
         param = selected_df[sel_param]
@@ -555,10 +567,8 @@ class Maps(QObject):
         canvas = FigureCanvas(fig)
         return canvas
 
-    def plot_graph(self):
+    def plot4(self):
         """Plot graph """
-        clear_layout(self.ui.frame_graph.layout())
-
         dfr = self.df_fit_results
         x = self.ui.cbb_x.currentText()
         y = self.ui.cbb_y.currentText()
@@ -578,11 +588,12 @@ class Maps(QObject):
         if text:
             xlabel_rot = float(text)
 
-        self.canvas4 = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax,
-                                  title,
-                                  x_text, y_text, xlabel_rot)
+        ax = self.ax4
+        plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
+                   x_text, y_text, xlabel_rot)
 
-        self.ui.frame_graph.addWidget(self.canvas4)
+        self.ax4.get_figure().tight_layout()
+        self.canvas4.draw()
 
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
@@ -864,8 +875,8 @@ class Maps(QObject):
                     self.ui.int_vmin.setText(load.get('vmin', ''))
                     self.ui.int_vmax.setText(load.get('vmax', ''))
 
-                    self.plot_graph()
-                    self.plot_wafer()
+                    self.plot4()
+                    self.plot3()
         except Exception as e:
             show_alert(f"Error loading work: {e}")
 

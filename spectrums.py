@@ -41,11 +41,12 @@ class Spectrums(QObject):
         self.callbacks_df = callbacks_df
         QSettings.setDefaultFormat(QSettings.IniFormat)
         self.settings = QSettings("CEA-Leti", "DaProViz")
+        #
+        # self.ax = None
+        # self.canvas1 = None
+        # self.canvas2 = None
+        # self.canvas3 = None
 
-        self.ax = None
-        self.canvas1 = None
-        self.canvas2 = None
-        self.canvas3 = None
         self.model_fs = None
         self.spectra_fs = Spectra()
         self.df_fit_results = None
@@ -64,10 +65,10 @@ class Spectrums(QObject):
         self.ui.cb_filled_3.stateChanged.connect(self.plot_delay)
         self.ui.cb_peaks_3.stateChanged.connect(self.plot_delay)
 
-        # Set a delay for the function plot_sel_spectra
+        # Set a delay for the function plot1
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
-        self.delay_timer.timeout.connect(self.plot_sel_spectra)
+        self.delay_timer.timeout.connect(self.plot1)
         # Connect the progress signal to update_progress_bar slot
         self.fit_progress_changed.connect(self.update_pbar)
 
@@ -175,12 +176,26 @@ class Spectrums(QObject):
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
 
+        # Plot2: graph1
+        fig2 = plt.figure()
+        self.ax2 = fig2.add_subplot(111)
+        self.canvas2 = FigureCanvas(fig2)
+        self.ui.frame_graph_3.addWidget(self.canvas2)
+        self.canvas2.draw()
+
+        # Plot3: graph2
+        fig3 = plt.figure()
+        self.ax3 = fig3.add_subplot(111)
+        self.canvas3 = FigureCanvas(fig3)
+        self.ui.frame_graph_7.addWidget(self.canvas3)
+        self.canvas3.draw()
+
     def rescale(self):
         """Rescale the figure."""
         self.ax.autoscale()
         self.canvas1.draw()
 
-    def plot_sel_spectra(self):
+    def plot1(self):
         """Plot all selected spectra"""
         fnames = self.get_selected_spectra()
         selected_spectra_fs = []
@@ -488,10 +503,8 @@ class Spectrums(QObject):
         dfs["fit_results"] = self.df_fit_results
         self.callbacks_df.action_open_df(file_paths=None, original_dfs=dfs)
 
-    def plot_graph(self):
+    def plot2(self):
         """Plot graph """
-        clear_layout(self.ui.frame_graph_3.layout())
-
         if self.filtered_df is not None:
             dfr = self.filtered_df
         else:
@@ -514,14 +527,14 @@ class Spectrums(QObject):
         if text:
             xlabel_rot = float(text)
 
-        self.canvas2 = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax,
-                                  title,
-                                  x_text, y_text, xlabel_rot)
+        ax = self.ax2
+        plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax,
+                   title,
+                   x_text, y_text, xlabel_rot)
+        self.ax2.get_figure().tight_layout()
+        self.canvas2.draw()
 
-        self.ui.frame_graph_3.addWidget(self.canvas2)
-
-    def plot_graph2(self):
-        clear_layout(self.ui.frame_graph_7.layout())
+    def plot3(self):
         if self.filtered_df is not None:
             dfr = self.filtered_df
         else:
@@ -544,11 +557,12 @@ class Spectrums(QObject):
         if text:
             xlabel_rot = float(text)
 
-        self.canvas3 = plot_graph(dfr, x, y, z, style, xmin, xmax, ymin, ymax,
-                                  title,
-                                  x_text, y_text, xlabel_rot)
+        ax = self.ax3
+        plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
+                   x_text, y_text, xlabel_rot)
 
-        self.ui.frame_graph_7.addWidget(self.canvas3)
+        self.ax3.get_figure().tight_layout()
+        self.canvas3.draw()
 
     def plot_delay(self):
         """Trigger the fnc to plot spectre"""
@@ -764,8 +778,8 @@ class Spectrums(QObject):
                     self.ui.cbb_plot_style_7.setCurrentIndex(
                         load.get('plot_style_2', -1))
 
-                    self.plot_graph()
-                    self.plot_graph2()
+                    self.plot2()
+                    self.plot3()
         except Exception as e:
             show_alert(f"Error loading work: {e}")
 

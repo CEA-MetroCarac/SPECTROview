@@ -10,7 +10,8 @@ class WaferView:
     def __init__(self, inter_method='linear'):
         self.inter_method = inter_method  # Interpolation method
 
-    def plot(self, ax, x, y, z, cmap="jet", r=100, vmax=None, vmin=None, stats=True):
+    def plot(self, ax, x, y, z, cmap="jet", r=100, vmax=None, vmin=None,
+             stats=True):
         # Generate a meshgrid for the wafer
         xi, yi = np.meshgrid(np.linspace(-r, r, 100), np.linspace(-r, r, 100))
 

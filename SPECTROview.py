@@ -176,8 +176,8 @@ class MainWindow:
             self.maps.save_fit_results)
         self.ui.btn_view_wafer.clicked.connect(self.maps.view_wafer_data)
 
-        self.ui.btn_plot_wafer.clicked.connect(self.maps.plot_wafer)
-        self.ui.btn_plot_graph.clicked.connect(self.maps.plot_graph)
+        self.ui.btn_plot_wafer.clicked.connect(self.maps.plot3)
+        self.ui.btn_plot_graph.clicked.connect(self.maps.plot4)
         self.ui.cbb_color_pallete.addItems(self.visualization.palette_colors)
         self.ui.btn_open_fitspy.clicked.connect(self.maps.fitspy_launcher)
         self.ui.btn_cosmis_ray.clicked.connect(self.maps.cosmis_ray_detection)
@@ -218,8 +218,8 @@ class MainWindow:
         self.ui.btn_lw_3.clicked.connect(self.spectrums.load_work)
         self.ui.cbb_plot_style_3.addItems(self.spectrums.plot_styles)
         self.ui.cbb_plot_style_7.addItems(self.spectrums.plot_styles)
-        self.ui.btn_plot_graph_3.clicked.connect(self.spectrums.plot_graph)
-        self.ui.btn_plot_graph_7.clicked.connect(self.spectrums.plot_graph2)
+        self.ui.btn_plot_graph_3.clicked.connect(self.spectrums.plot2)
+        self.ui.btn_plot_graph_7.clicked.connect(self.spectrums.plot3)
 
         self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
         self.ui.btn_add_col.clicked.connect(self.spectrums.add_column)

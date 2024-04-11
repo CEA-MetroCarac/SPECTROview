@@ -1,12 +1,10 @@
 # maps.py module
 import os
-import time
 import numpy as np
 import pandas as pd
 from copy import deepcopy
 from pathlib import Path
 import dill
-import multiprocessing
 from utils import view_df, show_alert, quadrant, zone, view_text, \
     copy_fig_to_clb, \
     translate_param, clear_layout, reinit_spectrum, plot_graph
@@ -15,17 +13,14 @@ from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
 from fitspy.app.gui import Appli
-from multiprocessing import Queue
 import matplotlib.pyplot as plt
-import seaborn as sns
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from wafer_view import WaferView
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
                                QListWidgetItem)
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal, \
-    QThread
+from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
 
 DIRNAME = os.path.dirname(__file__)

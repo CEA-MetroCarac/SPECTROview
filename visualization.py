@@ -1,9 +1,9 @@
 # visualization.py module
 import os
-import traceback
 import numpy as np
 from functools import partial
 from io import BytesIO
+from wafer_plot import WaferPlot
 
 try:
     import win32clipboard
@@ -13,17 +13,13 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-
-from wafer_plot import WaferPlot
-
 from PySide6.QtWidgets import (
     QFileDialog, QVBoxLayout, QMessageBox, QFrame, QPushButton,
     QHBoxLayout, QApplication, QSpacerItem, QSizePolicy
 )
 
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, QSize, QCoreApplication, QSettings, QFileInfo
+from PySide6.QtCore import Qt, QSize, QCoreApplication
 
 DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy.mplstyle")

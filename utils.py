@@ -1,8 +1,6 @@
 """
 Module contains all utilities functions and common functions
 """
-import os
-import copy
 import time
 import markdown
 
@@ -12,15 +10,12 @@ except:
     pass
 from io import BytesIO
 import numpy as np
-import pandas as pd
-from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
     QTableWidgetItem, QVBoxLayout, QTextBrowser
-from PySide6.QtCore import Qt, QFile, QObject, Signal, QThread
+from PySide6.QtCore import Signal, QThread
 from PySide6.QtGui import QPalette, QColor, QTextCursor
-from PySide6.QtWebEngineWidgets import QWebEngineView
 
 from PySide6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas

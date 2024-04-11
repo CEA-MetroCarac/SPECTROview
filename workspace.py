@@ -2,8 +2,8 @@
 import os
 import json
 import pandas as pd
-from PySide6.QtWidgets import QFileDialog, QMessageBox
-from PySide6.QtCore import QSettings, QFileInfo
+from PySide6.QtWidgets import QFileDialog
+from PySide6.QtCore import QFileInfo
 
 
 class SaveLoadWorkspace:

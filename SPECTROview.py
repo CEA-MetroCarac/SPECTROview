@@ -3,11 +3,10 @@ import sys
 import os
 import datetime
 
-from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
-    QTextBrowser, QVBoxLayout, QLabel, QMessageBox
+from PySide6.QtWidgets import QApplication, QListWidget, QComboBox
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import Qt, QFile, QSettings
-from PySide6.QtGui import QDoubleValidator, QIcon, QPixmap
+from PySide6.QtCore import QFile, QSettings
+from PySide6.QtGui import QDoubleValidator, QIcon
 
 from utils import dark_palette, light_palette, view_markdown
 
@@ -281,8 +280,6 @@ class Main:
 
 
 expiration_date = datetime.datetime(2024, 7, 1)
-
-
 def launcher():
     # Check if the current date is past the expiration date
     if datetime.datetime.now() > expiration_date:

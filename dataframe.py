@@ -4,10 +4,8 @@ from pathlib import Path
 import copy
 import io
 from utils import view_df
-from PySide6.QtWidgets import QFileDialog, QDialog, QTableWidget, \
-    QTableWidgetItem, QVBoxLayout, QMessageBox, QListWidgetItem, \
-    QApplication, QCheckBox
-from PySide6.QtCore import Qt, QSettings, QFileInfo
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QListWidgetItem,  QApplication, QCheckBox
+from PySide6.QtCore import Qt, QFileInfo
 
 
 class Dataframe:

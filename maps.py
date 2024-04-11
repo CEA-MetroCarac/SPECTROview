@@ -178,10 +178,12 @@ class Maps(QObject):
 
     def fit(self, fnames=None):
         """Fit selected spectrum(s)"""
+        # Disable the button to prevent multiple clicks leading to a crash
+        self.ui.btn_fit.setEnabled(False)
         if self.model_fs is None:
             show_alert("Load a fit model before fitting.")
+            self.ui.btn_fit.setEnabled(True)
             return
-
         if fnames is None:
             wafer_name, coords = self.spectre_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
@@ -193,12 +195,17 @@ class Maps(QObject):
             lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
                                                         fnames))
         self.fit_thread.fit_completed.connect(self.fit_completed)
+        self.fit_thread.finished.connect(
+            lambda: self.ui.btn_fit.setEnabled(True))
         self.fit_thread.start()
 
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
+        self.ui.btn_fit.setEnabled(False)
+
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
+        self.ui.btn_fit.setEnabled(True)
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""

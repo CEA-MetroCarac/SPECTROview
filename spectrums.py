@@ -306,8 +306,10 @@ class Spectrums(QObject):
 
     def fit(self, fnames=None):
         """Fit selected spectrum(s)"""
+        self.ui.btn_fit_3.setEnabled(False)
         if self.model_fs is None:
             show_alert("Load a fit model before fitting.")
+            self.ui.btn_fit_3.setEnabled(False)
             return
         if fnames is None:
             fnames = self.get_selected_spectra()
@@ -318,12 +320,16 @@ class Spectrums(QObject):
             lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
                                                         fnames))
         self.fit_thread.fit_completed.connect(self.fit_completed)
+        self.fit_thread.finished.connect(
+            lambda: self.ui.btn_fit_3.setEnabled(True))
         self.fit_thread.start()
 
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
+        self.ui.btn_fit_3.setEnabled(False)
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
+        self.ui.btn_fit_3.setEnabled(True)
 
     def fit_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""

@@ -8,8 +8,8 @@ from PySide6.QtCore import Qt, QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon, QPixmap
 
 from utils import dark_palette, light_palette, view_md_doc
-from ui import resources_new
 
+from ui import resources_new
 from dataframe import Dataframe
 from visualization import Vizualisation
 from maps import Maps
@@ -22,7 +22,7 @@ ICON_APPLI = os.path.join(DIRNAME, "ui", "iconpack", "icon3.png")
 HELP_DFQUERY = os.path.join(DIRNAME, "resources", "pandas_df_query.md")
 
 
-class MainWindow:
+class Main:
     def __init__(self):
         # Load the UI file
         loader = QUiLoader()
@@ -34,6 +34,7 @@ class MainWindow:
         # Initialize QSettings
         QSettings.setDefaultFormat(QSettings.IniFormat)
         self.settings = QSettings("CEA-Leti", "SPECTROview")
+
         if self.settings.value("mode") == "dark":
             self.toggle_dark_mode()
         else:
@@ -41,13 +42,16 @@ class MainWindow:
         self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
 
-        # Create an instance of CallbacksDf and pass the self.ui object
-        self.dataframe = Dataframe(self.ui)
-        self.visualization = Vizualisation(self.ui, self.dataframe)
-        self.workspace = SaveLoadWorkspace(self.ui, self.dataframe,
+        # Create an instance of Dataframe and pass the self.ui object
+        self.dataframe = Dataframe(self.settings, self.ui)
+        self.visualization = Vizualisation(self.settings, self.ui,
+                                           self.dataframe)
+        self.workspace = SaveLoadWorkspace(self.settings, self.ui,
+                                           self.dataframe,
                                            self.visualization)
-        self.maps = Maps(self.ui, self.dataframe)
-        self.spectrums = Spectrums(self.ui, self.dataframe)
+        self.maps = Maps(self.settings, self.ui, self.dataframe)
+        self.spectrums = Spectrums(self.settings, self.ui, self.dataframe)
+
         # DATAFRAME
         self.ui.btn_open_df.clicked.connect(
             lambda event: self.dataframe.action_open_df())
@@ -87,7 +91,6 @@ class MainWindow:
         ### REMOVE, SAVE DataFrames ###
         self.ui.btn_view_df.clicked.connect(self.dataframe.view_df)
         self.ui.btn_remove_df.clicked.connect(self.dataframe.remove_df)
-        # self.ui.btn_save_df.clicked.connect(self.callbacks_df.save_df)
         self.ui.btn_save_all_df.clicked.connect(
             self.dataframe.save_all_df_handler)
 
@@ -248,13 +251,11 @@ class MainWindow:
 
     def toggle_dark_mode(self):
         self.ui.setPalette(dark_palette())
-        # Save mode to settings
-        self.settings.setValue("mode", "dark")
+        self.settings.setValue("mode", "dark")  # Save to settings
 
     def toggle_light_mode(self):
         self.ui.setPalette(light_palette())
-        # Save mode to settings
-        self.settings.setValue("mode", "light")
+        self.settings.setValue("mode", "light")  # Save to settings
 
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)
@@ -308,7 +309,7 @@ class MainWindow:
 def launcher():
     app = QApplication()
     app.setWindowIcon(QIcon(ICON_APPLI))
-    window = MainWindow()
+    window = Main()
     app.setStyle("Fusion")
     window.ui.show()
     sys.exit(app.exec())
@@ -320,7 +321,7 @@ if __name__ == "__main__":
 # def launcher2(file_paths=None, fname_json=None):
 #     app = QApplication()
 #     app.setWindowIcon(QIcon(ICON_APPLI))
-#     window = MainWindow()
+#     window = Main()
 #     app.setStyle("Fusion")
 #     # if file_paths is not None:
 #     #     window.wafer.open_data(file_paths=file_paths)
@@ -356,7 +357,7 @@ if __name__ == "__main__":
 # def launcher3(file_paths=None, fname_json=None):
 #     app = QApplication()
 #     app.setWindowIcon(QIcon(ICON_APPLI))
-#     window = MainWindow()
+#     window = Main()
 #     app.setStyle("Fusion")
 #     # if file_paths is not None:
 #     #     window.wafer.open_data(file_paths=file_paths)

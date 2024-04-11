@@ -1,4 +1,3 @@
-# callbacks_dataframe.py module.
 import pandas as pd
 import os
 from pathlib import Path
@@ -11,11 +10,9 @@ from PySide6.QtCore import Qt, QSettings, QFileInfo
 
 
 class Dataframe:
-    def __init__(self, ui):
+    def __init__(self, settings, ui):
+        self.settings = settings
         self.ui = ui  # connect to main.py
-
-        QSettings.setDefaultFormat(QSettings.IniFormat)
-        self.settings = QSettings("CEA-Leti", "SPECTROview")
 
         self.original_dfs = {}  # store all loaded df in a dict
         self.working_dfs = {}

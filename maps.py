@@ -24,7 +24,7 @@ from wafer_view import WaferView
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
                                QListWidgetItem)
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, QSettings, QFileInfo, QTimer, QObject, Signal, \
+from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal, \
     QThread
 from tkinter import Tk, END
 
@@ -36,17 +36,13 @@ class Maps(QObject):
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
 
-    def __init__(self, ui, callbacks_df):
+    def __init__(self, settings, ui, dataframe):
         super().__init__()
+        self.settings = settings
         self.ui = ui
-        self.callbacks_df = callbacks_df
-        QSettings.setDefaultFormat(QSettings.IniFormat)
-        self.settings = QSettings("CEA-Leti", "DaProViz")
+        self.dataframe = dataframe
 
         self.wafers = {}  # list of opened wafers
-        # self.ax = None  # Spectrum plot
-        # self.ax2 = None  # Wafer measuerment sites
-        # self.canvas1 = None
         self.toolbar = None
         self.model_fs = None  # FITSPY
         self.spectra_fs = Spectra()  # FITSPY
@@ -56,8 +52,7 @@ class Maps(QObject):
             self.upd_spectra_list)
 
         # Connect and plot_spectre of selected SPECTRUM LIST
-        self.ui.spectra_listbox.itemSelectionChanged.connect(
-            self.delay_plot)
+        self.ui.spectra_listbox.itemSelectionChanged.connect(self.delay_plot)
 
         # Connect the stateChanged signal of the legend CHECKBOX
         self.ui.cb_legend.stateChanged.connect(self.delay_plot)
@@ -202,7 +197,6 @@ class Maps(QObject):
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
         self.ui.btn_fit.setEnabled(False)
-
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
         self.ui.btn_fit.setEnabled(True)
@@ -764,9 +758,9 @@ class Maps(QObject):
 
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
-        dfs = self.callbacks_df.original_dfs
-        dfs["2Dmaps_fit_results"] = self.df_fit_results
-        self.callbacks_df.action_open_df(file_paths=None, original_dfs=dfs)
+        dfs = self.dataframe.original_dfs
+        dfs["2Dmaps_bestfit_results"] = self.df_fit_results
+        self.dataframe.action_open_df(file_paths=None, original_dfs=dfs)
 
     def cosmis_ray_detection(self):
         self.spectra_fs.outliers_limit_calculation()

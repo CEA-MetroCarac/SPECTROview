@@ -1,4 +1,4 @@
-# maps.py module
+# spectrum.py module
 import os
 import time
 import numpy as np
@@ -23,7 +23,7 @@ from wafer_view import WaferView
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
                                QListWidgetItem, QCheckBox)
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, QSettings, QFileInfo, QTimer, QObject, Signal, \
+from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal, \
     QThread
 from tkinter import Tk, END
 
@@ -35,17 +35,12 @@ class Spectrums(QObject):
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
 
-    def __init__(self, ui, callbacks_df):
+    def __init__(self, settings, ui, dataframe):
         super().__init__()
+        self.settings = settings
         self.ui = ui
-        self.callbacks_df = callbacks_df
-        QSettings.setDefaultFormat(QSettings.IniFormat)
-        self.settings = QSettings("CEA-Leti", "SPECTROview")
-        #
-        # self.ax = None
-        # self.canvas1 = None
-        # self.canvas2 = None
-        # self.canvas3 = None
+
+        self.dataframe = dataframe
 
         self.model_fs = None
         self.spectra_fs = Spectra()
@@ -92,6 +87,9 @@ class Spectrums(QObject):
                     "Text Files (*.txt)", options=options)
 
             if file_paths:
+                last_dir = QFileInfo(file_paths[0]).absolutePath()
+                self.settings.setValue("last_directory", last_dir)
+
                 for file_path in file_paths:
                     file_path = Path(file_path)
                     fname = file_path.stem
@@ -505,9 +503,9 @@ class Spectrums(QObject):
 
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
-        dfs = self.callbacks_df.original_dfs
+        dfs = self.dataframe.original_dfs
         dfs["fit_results"] = self.df_fit_results
-        self.callbacks_df.action_open_df(file_paths=None, original_dfs=dfs)
+        self.dataframe.action_open_df(file_paths=None, original_dfs=dfs)
 
     def plot2(self):
         """Plot graph """

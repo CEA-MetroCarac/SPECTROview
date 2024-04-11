@@ -7,15 +7,16 @@ from PySide6.QtCore import QSettings, QFileInfo
 
 
 class SaveLoadWorkspace:
-    def __init__(self, ui, callbacks_df, callbacks_plot):
+    def __init__(self, settings, ui, dataframe, visualization):
+        self.settings = settings
         self.ui = ui
-        self.callbacks_df = callbacks_df
-        self.callbacks_plot = callbacks_plot
+        self.dataframe = dataframe
+        self.visualization = visualization
 
     def save_workspace(self, fname=None):
         if fname is None:
             # Initialize the last used directory from QSettings
-            last_dir = self.callbacks_df.settings.value("last_directory", "/")
+            last_dir = self.settings.value("last_directory", "/")
 
             default_filename = "ICAR_number.json"
             options = QFileDialog.Options()
@@ -30,12 +31,12 @@ class SaveLoadWorkspace:
                                                    options=options)
         if fname:
             dataframes_json = {key: df.to_json(orient='split') for key, df in
-                               self.callbacks_df.original_dfs.items()}
+                               self.dataframe.original_dfs.items()}
 
             # Create a dictionary to store workspace data
             # Convert plot_specs to JSON-compatible dictionary
             plot_specs_json = {}
-            for plot_id, spec in self.callbacks_plot.plot_specs.items():
+            for plot_id, spec in self.visualization.plot_specs.items():
                 spec_copy = spec.copy()  # Create a copy to avoid modifying
                 # the original
                 spec_copy['associated_df'] = spec_copy['associated_df'].to_dict(
@@ -43,8 +44,8 @@ class SaveLoadWorkspace:
                 plot_specs_json[str(plot_id)] = spec_copy
 
             workspace = {
-                "df_filepaths": self.callbacks_df.file_paths,
-                "df_filters": self.callbacks_df.df_filters,
+                "df_filepaths": self.dataframe.file_paths,
+                "df_filters": self.dataframe.df_filters,
                 "original_dfs": dataframes_json,
                 "plot_specs": plot_specs_json,
             }
@@ -55,7 +56,7 @@ class SaveLoadWorkspace:
     def load_workspace(self, fname=None):
         if fname is None:
             # Initialize the last used directory from QSettings
-            last_dir = self.callbacks_df.settings.value("last_directory", "/")
+            last_dir = self.settings.value("last_directory", "/")
 
             options = QFileDialog.Options()
             options |= QFileDialog.ReadOnly
@@ -66,25 +67,25 @@ class SaveLoadWorkspace:
                                                    options=options)
             if not fname:
                 return
-        self.callbacks_plot.clear_workspace()  # CLEAR WORKSPACES
+        self.visualization.clear_workspace()  # CLEAR WORKSPACES
 
         if fname:
             # Update the last used directory in QSettings
             last_dir = QFileInfo(fname).absolutePath()
-            self.callbacks_df.settings.setValue("last_directory", last_dir)
+            self.settings.setValue("last_directory", last_dir)
 
             with open(fname, "r") as file:
                 wsp = json.load(file)
 
-            # self.callbacks_df.action_open_df(file_paths=wsp["df_filepaths"],
+            # self.dataframe.action_open_df(file_paths=wsp["df_filepaths"],
             #                                  original_dfs=None)
             original_dfs = {key: pd.read_json(value, orient='split') for
                             key, value in wsp["original_dfs"].items()}
-            self.callbacks_df.action_open_df(file_paths=None,
-                                             original_dfs=original_dfs)
+            self.dataframe.action_open_df(file_paths=None,
+                                          original_dfs=original_dfs)
 
-            self.callbacks_df.df_filters = wsp["df_filters"]
-            self.callbacks_df.update_filter_list()
+            self.dataframe.df_filters = wsp["df_filters"]
+            self.dataframe.update_filter_list()
 
             # Convert plot_specs back from dictionaries
             plot_specs_json = wsp["plot_specs"]
@@ -97,13 +98,13 @@ class SaveLoadWorkspace:
                     columns=spec_copy['associated_df']['columns'])
                 plot_specs[int(plot_id)] = spec_copy
 
-            self.callbacks_plot.plot_specs = self.reset_plot_ids(plot_specs)
-            self.callbacks_plot.reload_workspace()
+            self.visualization.plot_specs = self.reset_plot_ids(plot_specs)
+            self.visualization.reload_workspace()
 
     def load_recipe(self, fname=None):
         if fname is None:
             # Initialize the last used directory from QSettings
-            last_dir = self.callbacks_df.settings.value("last_directory", "/")
+            last_dir = self.settings.value("last_directory", "/")
 
             options = QFileDialog.Options()
             options |= QFileDialog.ReadOnly
@@ -118,13 +119,13 @@ class SaveLoadWorkspace:
         if fname:
             # Update the last used directory in QSettings
             last_dir = QFileInfo(fname).absolutePath()
-            self.callbacks_df.settings.setValue("last_directory", last_dir)
+            self.settings.setValue("last_directory", last_dir)
 
             with open(fname, "r") as file:
                 wsp = json.load(file)
 
-            self.callbacks_df.df_filters = wsp["df_filters"]
-            self.callbacks_df.update_filter_list()
+            self.dataframe.df_filters = wsp["df_filters"]
+            self.dataframe.update_filter_list()
 
             # Convert plot_specs back from dictionaries
             plot_specs_json = wsp["plot_specs"]
@@ -137,14 +138,14 @@ class SaveLoadWorkspace:
                     columns=spec_copy['associated_df']['columns'])
                 plot_specs[int(plot_id)] = spec_copy
 
-            self.callbacks_plot.plot_specs = self.reset_plot_ids(plot_specs)
-            self.callbacks_plot.reload_plot_recipe()
+            self.visualization.plot_specs = self.reset_plot_ids(plot_specs)
+            self.visualization.reload_plot_recipe()
 
     def reset_plot_ids(self, original_plot_specs):
         """ use when remove a plot """
         # Create a new dictionary to store the updated plot_specs
         updated_plot_specs = {}
-        new_plot_id = self.callbacks_plot.plot_counter + 1
+        new_plot_id = self.visualization.plot_counter + 1
 
         # Iterate through the original plot_specs
         for plot_id, spec in original_plot_specs.items():

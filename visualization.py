@@ -1,4 +1,4 @@
-# callbacks_plotting.py module
+# visualization.py module
 import os
 import traceback
 import numpy as np
@@ -31,9 +31,10 @@ ICON_DIR = os.path.join(DIRNAME, "ui", "iconpack")
 
 
 class Vizualisation:
-    def __init__(self, ui, callbacks_df):
+    def __init__(self, settings, ui, dataframe):
+        self.settings = settings
         self.ui = ui
-        self.callbacks_df = callbacks_df  # connect with callbacks_df
+        self.dataframe = dataframe  # connect with 'dataframe'
 
         # List to store elements of created plot widgets (plot + buttons),
         self.plot_widgets = []
@@ -123,7 +124,7 @@ class Vizualisation:
         """ Similar to "add_a_plot" function, this function is used to plot
         multiples figures for each wafer"""
 
-        df = self.callbacks_df.selected_df
+        df = self.dataframe.selected_df
         wafer_names = df['Wafer'].unique()
 
         # Retrieve dataframe of each wafer and store in a dict{}
@@ -177,11 +178,11 @@ class Vizualisation:
         spec = self.plot_specs[plot_id]
         self.display_dpi = float(spec["display_dpi"])
         # Apply filters
-        self.callbacks_df.df_filters = spec["df_filters"]
-        self.callbacks_df.apply_filters(self.callbacks_df.df_filters)
-        selected_df_name = self.callbacks_df.selected_df_name
+        self.dataframe.df_filters = spec["df_filters"]
+        self.dataframe.apply_filters(self.dataframe.df_filters)
+        selected_df_name = self.dataframe.selected_df_name
 
-        selected_df = self.callbacks_df.selected_df
+        selected_df = self.dataframe.selected_df
         spec["associated_df"] = selected_df
         spec["selected_df_name"] = selected_df_name
 
@@ -660,7 +661,7 @@ class Vizualisation:
     def save_all_figs(self, plot_id):
         self.save_dpi = float(self.ui.ent_plot_save_dpi.text())
         # Initialize the last used directory from QSettings
-        last_dir = self.callbacks_df.settings.value("last_directory", "/")
+        last_dir = self.settings.value("last_directory", "/")
         save_dir = QFileDialog.getExistingDirectory(
             self.ui.tabWidget, "Select Folder to Save all figures", last_dir)
         if save_dir:
@@ -709,18 +710,18 @@ class Vizualisation:
         self.plot_specs.clear()
         self.active_plot_ids.clear()
         self.figure_list.clear()
-        self.callbacks_df.df_filters.clear()
-        # self.callbacks_df.filter_cb_state.clear()
+        self.dataframe.df_filters.clear()
+        # self.dataframe.filter_cb_state.clear()
         # Clear the plot_specs dictionary
 
-        self.callbacks_df.original_dfs = {}
-        self.callbacks_df.working_dfs = {}
-        self.callbacks_df.selected_df = pd.DataFrame()
-        self.callbacks_df.selected_x_column = ""
-        self.callbacks_df.selected_y_column = ""
-        self.callbacks_df.selected_hue_column = ""
+        self.dataframe.original_dfs = {}
+        self.dataframe.working_dfs = {}
+        self.dataframe.selected_df = pd.DataFrame()
+        self.dataframe.selected_x_column = ""
+        self.dataframe.selected_y_column = ""
+        self.dataframe.selected_hue_column = ""
         self.plot_counter = 0
-        self.callbacks_df.update_listbox_dfs()
+        self.dataframe.update_listbox_dfs()
         self.ui.filter_list.clear()
         self.clear_entries()
 
@@ -746,15 +747,15 @@ class Vizualisation:
         # Collect and return the plot specifications as a dictionary
         spec = {
             # dataframe
-            "selected_df_name": self.callbacks_df.selected_df_name,
-            "associated_df": self.callbacks_df.selected_df,
-            "df_filters": self.callbacks_df.df_filters,
+            "selected_df_name": self.dataframe.selected_df_name,
+            "associated_df": self.dataframe.selected_df,
+            "df_filters": self.dataframe.df_filters,
 
             "selected_plot_style": self.selected_plot_style,
 
-            "selected_x_column": self.callbacks_df.selected_x_column,
-            "selected_y_column": self.callbacks_df.selected_y_column,
-            "selected_hue_column": self.callbacks_df.selected_hue_column,
+            "selected_x_column": self.dataframe.selected_x_column,
+            "selected_y_column": self.dataframe.selected_y_column,
+            "selected_hue_column": self.dataframe.selected_hue_column,
 
             "plot_width": self.ui.ent_plotwidth.text(),
             "plot_height": self.ui.ent_plotheight.text(),

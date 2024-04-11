@@ -1,63 +1,32 @@
-The `pandas.DataFrame.query()` method allows you to filter rows from a
+The **pandas.DataFrame.query()** method allows you to filter rows from a
 DataFrame based on a boolean expression. It's a powerful and flexible way to
 subset your DataFrame to include only the rows that meet specific conditions.
 
-Here's how you can use the `query()` method:
+In SPECTROview, `query()` method is integated and can be used via GUI by
+typing as following: (column_name) (operator) (value):
 
-1. **Basic Syntax**:
-   ```
-   df.query('expression')
-   ```
-    - `df`: The DataFrame you want to filter.
-    - `'expression'`: A string containing the filtering expression.
+1. **(column_name)**: is the exacte header of the column containing the
+   data/values to be filtered. When the column name contain 'space' you
+   need to enclose them in single or double quotes (see example below).
 
-2. **Filtering Expression**:
-    - The expression is a string that contains a condition or a combination of
-      conditions.
-    - You can use column names directly in the expression.
-    - You can use comparison operators (e.g., `==`, `<`, `>`, `<=`, `>=`, `!=`)
-      and logical operators (e.g., `and`, `or`, `not`) to build complex
-      conditions.
 
-3. **Example**:
-   ```python
-   filtered_df = df.query('Age >= 25 and Gender == "Male"')
-   ```
-   In this example, `filtered_df` will contain only the rows where the "Age"
-   column is greater than or equal to 25 and the "Gender" column is "Male."
+2. **(operator)**: it could be comparison operators (
+   e.g., `==`, `<`, `>`, `<=`, `>=`, `!=`)
+   and logical operators (e.g., `and`, `or`, `not`) to build complex and
+   multiples
+   conditions.
 
-4. **Variables in the Expression**:
-    - You can use variables in the expression by prefixing them with the `@`
-      symbol.
-    - For example, if you have a variable `age_threshold`, you can use it like
-      this:
-      ```python
-      age_threshold = 25
-      filtered_df = df.query('Age >= @age_threshold')
-      ```
 
-5. **String Quoting**:
-    - When dealing with string values in the expression, you need to enclose
-      them in single or double quotes.
-    - For example:
-      ```python
-      filtered_df = df.query('Name == "John"')
-      ```
+3. **(value)**: it could be numeric or string values. String value must be
+   enclosed in double quotes (cf. example below)
 
-6. **Escaping Quotes**:
-    - If your string contains quotes, you can escape them with a backslash:
-      ```python
-      filtered_df = df.query('Name == "John\'s Pizza"')
-      ```
+### Here is an example:
 
-7. **Multiple Conditions**:
-    - You can use parentheses to group conditions and create complex
-      expressions:
-      ```python
-      filtered_df = df.query('(Age >= 25 and Gender == "Male") or (Age < 25 and Gender == "Female")')
-      ```
+<div style="text-align: center;">
+    <img src="resources/dfr_filter.png">
+</div>
 
-8. **Return Type**:
-    - The `query()` method returns a new DataFrame containing the filtered
-      rows. The original DataFrame remains unchanged.
-
+- Confocal != "high"
+- `Laser Power <=5
+- Thickness == "1ML" or Thickness == "3ML"
+- a3_LOM >=1000

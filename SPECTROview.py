@@ -1,13 +1,15 @@
 # main.py module
 import sys
 import os
+import datetime
+
 from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
-    QTextBrowser, QVBoxLayout, QLabel
+    QTextBrowser, QVBoxLayout, QLabel, QMessageBox
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt, QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon, QPixmap
 
-from utils import dark_palette, light_palette, view_md_doc
+from utils import dark_palette, light_palette, view_markdown
 
 from ui import resources_new
 from dataframe import Dataframe
@@ -20,6 +22,7 @@ DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")
 ICON_APPLI = os.path.join(DIRNAME, "ui", "iconpack", "icon3.png")
 HELP_DFQUERY = os.path.join(DIRNAME, "resources", "pandas_df_query.md")
+ABOUT = os.path.join(DIRNAME, "resources", "about.md")
 
 
 class Main:
@@ -88,7 +91,7 @@ class Main:
         self.ui.combo_hue.currentIndexChanged.connect(self.update_combo_hue_2)
         self.ui.combo_hue_2.currentIndexChanged.connect(self.update_combo_hue)
 
-        ### REMOVE, SAVE DataFrames ###
+        # REMOVE, SAVE DataFrames ###
         self.ui.btn_view_df.clicked.connect(self.dataframe.view_df)
         self.ui.btn_remove_df.clicked.connect(self.dataframe.remove_df)
         self.ui.btn_save_all_df.clicked.connect(
@@ -160,7 +163,7 @@ class Main:
         self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
 
         # About dialog
-        self.ui.actionabout.triggered.connect(self.show_about_dialog)
+        self.ui.actionabout.triggered.connect(self.show_about)
         # Toggle to switch Dark/light mode
         # self.ui.radio_darkmode.clicked.connect(self.change_style)
 
@@ -269,45 +272,27 @@ class Main:
 
     def open_doc_df_query(self):
         """Open doc detail about query function of pandas dataframe"""
-        markdown_file_path = HELP_DFQUERY
-        ui = self.ui.tabWidget
-        view_md_doc(ui, markdown_file_path)
+        title = "Data filtering"
+        view_markdown(self.ui, title, HELP_DFQUERY, 550, 650)
 
-    def show_about_dialog(self):
-        text = """
-        <h3>SPECTROview (version 2024.4)</h3>
-        <h3>Spectroscopic Data Processing and Visualization</h3>
-        <p>Fitting features in this release are powered by FITSPY package (v 
-        2024.04)</p>
-        <p>For any feedback, contact: <a 
-        href="mailto:van-hoan.le@cea.fr">van-hoan.le@cea.fr</a> & <a 
-        href="mailto:patrick.quemere@cea.fr">patrick.quemere@cea.fr</a></p>
-        """
-        about_dialog = QDialog(self.ui)
-        about_dialog.setWindowTitle("About")
-        about_dialog.resize(450, 300)
+    def show_about(self):
+        """Show about dialog """
+        view_markdown(self.ui, "About", ABOUT, 450, 300)
 
-        # Create QLabel for the logo
-        logo_label = QLabel()
-        pixmap = QPixmap(ICON_APPLI)
-        scaled_pixmap = pixmap.scaled(100, 100, Qt.KeepAspectRatio)
-        logo_label.setPixmap(scaled_pixmap)
-        logo_label.setAlignment(Qt.AlignCenter)
 
-        text_browser = QTextBrowser(about_dialog)
-        text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        text_browser.setOpenExternalLinks(True)
-        text_browser.setHtml(text)
-
-        layout = QVBoxLayout(about_dialog)
-        layout.addWidget(logo_label)
-        layout.addWidget(text_browser)
-        about_dialog.setLayout(layout)
-        about_dialog.exec()
+expiration_date = datetime.datetime(2024, 7, 1)
 
 
 def launcher():
-    app = QApplication()
+    # Check if the current date is past the expiration date
+    if datetime.datetime.now() > expiration_date:
+        print(
+            f"This version of the application has expired on "
+            f"{expiration_date}. Contact developper "
+            "for newer version")
+        return
+    # If not expired, continue launching the application
+    app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(ICON_APPLI))
     window = Main()
     app.setStyle("Fusion")

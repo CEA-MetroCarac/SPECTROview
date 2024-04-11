@@ -4,6 +4,7 @@ Module contains all utilities functions and common functions
 import os
 import copy
 import time
+import markdown
 
 try:
     import win32clipboard
@@ -19,6 +20,9 @@ from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
     QTableWidgetItem, QVBoxLayout, QTextBrowser
 from PySide6.QtCore import Qt, QFile, QObject, Signal, QThread
 from PySide6.QtGui import QPalette, QColor, QTextCursor
+from PySide6.QtWebEngineWidgets import QWebEngineView
+
+from PySide6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
@@ -36,7 +40,7 @@ def plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
     elif style == "scatter plot":
         sns.scatterplot(data=dfr, x=x, y=y, hue=z, s=100, ax=ax)
     elif style == "bar plot":
-        sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar=sd, ax=ax)
+        sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar='sd', ax=ax)
 
     if xmin and xmax:
         ax.set_xlim(float(xmin), float(xmax))
@@ -155,16 +159,6 @@ def copy_fig_to_clb(canvas):
         QMessageBox.critical(None, "Error", "No plot to copy.")
 
 
-def read_raw_semilab():
-    """read raw spectra data of semilab equiments"""
-    pass
-
-
-def read_2Dmaps_ls():
-    """Read 2d maps labspec6"""
-    pass
-
-
 def show_alert(message):
     """Show alert"""
     msg_box = QMessageBox()
@@ -177,8 +171,10 @@ def show_alert(message):
 def view_df(tabWidget, df):
     """View selected dataframe"""
     # Create a QDialog to contain the table
-    df_viewer = QDialog(tabWidget)
+    df_viewer = QDialog(tabWidget.parent())
     df_viewer.setWindowTitle("DataFrame Viewer")
+    # Set the window flags
+    df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
     # Create a QTableWidget and populate it with data from the DataFrame
     table_widget = QTableWidget(df_viewer)
     table_widget.setColumnCount(df.shape[1])
@@ -193,7 +189,7 @@ def view_df(tabWidget, df):
     # Use a QVBoxLayout to arrange the table within a scroll area
     layout = QVBoxLayout(df_viewer)
     layout.addWidget(table_widget)
-    df_viewer.exec_()
+    df_viewer.show()
 
 
 def view_text(ui, title, text):
@@ -217,26 +213,24 @@ def view_text(ui, title, text):
     report_viewer.show()
 
 
-def view_md_doc(ui, fname):
-    """ Create a QDialog to display a markdown file"""
-    markdown_viewer = QDialog(ui)
-    markdown_viewer.setWindowTitle("Markdown Viewer")
-    markdown_viewer.setGeometry(100, 100, 800, 600)
+def view_markdown(ui, title, fname, x, y):
+    with open(fname, 'r', encoding='utf-8') as f:
+        markdown_content = f.read()
+    html_content = markdown.markdown(markdown_content)
 
-    # Create a QTextBrowser to display the Markdown content
-    text_browser = QTextBrowser(markdown_viewer)
+    about_dialog = QDialog(ui)
+    about_dialog.setWindowTitle(title)
+    about_dialog.resize(x, y)
+
+    text_browser = QTextBrowser(about_dialog)
     text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-    text_browser.setOpenExternalLinks(
-        True)  # Allow opening links in a web browser
+    text_browser.setOpenExternalLinks(True)
+    text_browser.setHtml(html_content)
 
-    # Load and display the Markdown file
-    with open(fname, 'r', encoding='utf-8') as markdown_file:
-        markdown_content = markdown_file.read()
-        text_browser.setMarkdown(markdown_content)
-    text_browser.moveCursor(QTextCursor.Start)  # Scroll to top of document
-    layout = QVBoxLayout(markdown_viewer)
+    layout = QVBoxLayout(about_dialog)
     layout.addWidget(text_browser)
-    markdown_viewer.exec()  # Show the Markdown viewer dialog
+    about_dialog.setLayout(layout)
+    about_dialog.show()
 
 
 def dark_palette():

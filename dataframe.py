@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import copy
 import io
+from utils import view_df
 from PySide6.QtWidgets import QFileDialog, QDialog, QTableWidget, \
     QTableWidgetItem, QVBoxLayout, QMessageBox, QListWidgetItem, \
     QApplication, QCheckBox
@@ -335,22 +336,4 @@ class Dataframe:
                     f"Error saving DataFrames: {str(e)}")
 
     def view_df(self):
-        view_df = self.selected_df
-        # Create a QDialog to contain the table
-        df_viewer = QDialog(self.ui.tabWidget)
-        df_viewer.setWindowTitle("DataFrame Viewer")
-        # Create a QTableWidget and populate it with data from the DataFrame
-        table_widget = QTableWidget(df_viewer)
-        table_widget.setColumnCount(view_df.shape[1])
-        table_widget.setRowCount(view_df.shape[0])
-        table_widget.setHorizontalHeaderLabels(view_df.columns)
-        for row in range(view_df.shape[0]):
-            for col in range(view_df.shape[1]):
-                item = QTableWidgetItem(str(view_df.iat[row, col]))
-                table_widget.setItem(row, col, item)
-        # Set the resizing mode for the QTableWidget to make it resizable
-        table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
-        # Use a QVBoxLayout to arrange the table within a scroll area
-        layout = QVBoxLayout(df_viewer)
-        layout.addWidget(table_widget)
-        df_viewer.exec_()
+        view_df(self.ui.tabWidget, self.selected_df)

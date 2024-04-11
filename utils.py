@@ -234,7 +234,6 @@ def view_md_doc(ui, fname):
         markdown_content = markdown_file.read()
         text_browser.setMarkdown(markdown_content)
     text_browser.moveCursor(QTextCursor.Start)  # Scroll to top of document
-
     layout = QVBoxLayout(markdown_viewer)
     layout.addWidget(text_browser)
     markdown_viewer.exec()  # Show the Markdown viewer dialog
@@ -265,7 +264,7 @@ def light_palette():
     # Get the light color palette of the application
     light_palette = QPalette()
     # Light gray background
-    light_palette.setColor(QPalette.Window, QColor(235, 235, 235))
+    light_palette.setColor(QPalette.Window, QColor(255, 255, 255))
     light_palette.setColor(QPalette.WindowText, Qt.black)
     # White background
     light_palette.setColor(QPalette.Base, QColor(239, 239, 239))

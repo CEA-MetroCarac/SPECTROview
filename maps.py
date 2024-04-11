@@ -174,7 +174,7 @@ class Maps(QObject):
         self.model_fs = self.spectra_fs.load_model(fname_json, ind=0)
         display_name = QFileInfo(fname_json).baseName()
         self.ui.lb_loaded_model.setText(f"'{display_name}' is loaded !")
-        self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
+        # self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
 
     def fit(self, fnames=None):
         """Fit selected spectrum(s)"""

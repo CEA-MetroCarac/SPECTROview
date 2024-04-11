@@ -40,7 +40,7 @@ class Spectrums(QObject):
         self.ui = ui
         self.callbacks_df = callbacks_df
         QSettings.setDefaultFormat(QSettings.IniFormat)
-        self.settings = QSettings("CEA-Leti", "DaProViz")
+        self.settings = QSettings("CEA-Leti", "SPECTROview")
         #
         # self.ax = None
         # self.canvas1 = None

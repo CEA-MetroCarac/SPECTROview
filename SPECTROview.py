@@ -4,7 +4,7 @@ import os
 from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
     QTextBrowser, QVBoxLayout, QLabel
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import Qt, QFile
+from PySide6.QtCore import Qt, QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon, QPixmap
 
 from utils import dark_palette, light_palette, view_md_doc
@@ -30,6 +30,16 @@ class MainWindow:
         ui_file.open(QFile.ReadOnly)
         self.ui = loader.load(ui_file)
         ui_file.close()
+
+        # Initialize QSettings
+        QSettings.setDefaultFormat(QSettings.IniFormat)
+        self.settings = QSettings("CEA-Leti", "SPECTROview")
+        if self.settings.value("mode") == "dark":
+            self.toggle_dark_mode()
+        else:
+            self.toggle_light_mode()
+        self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
+        self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
 
         # Create an instance of CallbacksDf and pass the self.ui object
         self.dataframe = Dataframe(self.ui)
@@ -149,7 +159,7 @@ class MainWindow:
         # About dialog
         self.ui.actionabout.triggered.connect(self.show_about_dialog)
         # Toggle to switch Dark/light mode
-        self.ui.radio_darkmode.clicked.connect(self.change_style)
+        # self.ui.radio_darkmode.clicked.connect(self.change_style)
 
         ########################################################
         ############## GUI for Wafer Processing tab #############
@@ -236,16 +246,15 @@ class MainWindow:
         self.ui.btn_copy2_3.clicked.connect(self.spectrums.copy_fig_graph1)
         self.ui.btn_copy2_7.clicked.connect(self.spectrums.copy_fig_graph2)
 
-        self.darkmode = True
+    def toggle_dark_mode(self):
         self.ui.setPalette(dark_palette())
+        # Save mode to settings
+        self.settings.setValue("mode", "dark")
 
-    def change_style(self):
-        if not self.darkmode:
-            self.darkmode = True
-            self.ui.setPalette(dark_palette())
-        else:
-            self.darkmode = False
-            self.ui.setPalette(light_palette())
+    def toggle_light_mode(self):
+        self.ui.setPalette(light_palette())
+        # Save mode to settings
+        self.settings.setValue("mode", "light")
 
     def update_combo_hue(self, index):
         selected_text = self.ui.combo_hue_2.itemText(index)

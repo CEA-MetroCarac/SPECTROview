@@ -15,7 +15,7 @@ class Dataframe:
         self.ui = ui  # connect to main.py
 
         QSettings.setDefaultFormat(QSettings.IniFormat)
-        self.settings = QSettings("CEA-Leti", "DaProViz")
+        self.settings = QSettings("CEA-Leti", "SPECTROview")
 
         self.original_dfs = {}  # store all loaded df in a dict
         self.working_dfs = {}

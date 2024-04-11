@@ -5618,7 +5618,7 @@
               <number>5</number>
              </property>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="33,30,0">
+              <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="33,30">
                <item>
                 <widget class="QLabel" name="label_17">
                  <property name="sizePolicy">
@@ -5653,31 +5653,6 @@
                   </size>
                  </property>
                 </spacer>
-               </item>
-               <item>
-                <widget class="QRadioButton" name="radio_darkmode">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>60</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>60</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string> Light </string>
-                 </property>
-                </widget>
                </item>
               </layout>
              </item>
@@ -6828,18 +6803,21 @@
     <property name="title">
      <string>Open</string>
     </property>
-    <addaction name="actionOpen_dataframe_Excel"/>
-    <addaction name="actionOpen_dataframe_CSV"/>
     <addaction name="separator"/>
-    <addaction name="actionOpen_saved_work_s"/>
-    <addaction name="actionOpen_a_recipie"/>
    </widget>
    <widget class="QMenu" name="menuSave">
     <property name="title">
-     <string>Save</string>
+     <string>Settings</string>
     </property>
-    <addaction name="actionSave_all_graph_PNG"/>
-    <addaction name="actionSave_all_graphs_to_pptx"/>
+    <widget class="QMenu" name="menuDark_Light_mode">
+     <property name="title">
+      <string>Dark/Light mode</string>
+     </property>
+     <addaction name="separator"/>
+     <addaction name="actionDarkMode"/>
+     <addaction name="actionLightMode"/>
+    </widget>
+    <addaction name="menuDark_Light_mode"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -6909,6 +6887,16 @@
   <action name="actionHelps">
    <property name="text">
     <string>Pandas query expression ?</string>
+   </property>
+  </action>
+  <action name="actionDarkMode">
+   <property name="text">
+    <string>Dark Mode</string>
+   </property>
+  </action>
+  <action name="actionLightMode">
+   <property name="text">
+    <string>Light Mode</string>
    </property>
   </action>
  </widget>

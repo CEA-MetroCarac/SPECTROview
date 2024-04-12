@@ -180,10 +180,13 @@ class Maps(QObject):
 
         # Start fitting process in a separate thread
         self.fit_thread = FitThread(self.spectra_fs, self.model_fs, fnames)
+        # To update progress bar
         self.fit_thread.fit_progress_changed.connect(self.update_pbar)
+        # To display progress in GUI
         self.fit_thread.fit_progress.connect(
             lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
                                                         fnames))
+        # To update spectra list + plot fitted specturm once fitting finished
         self.fit_thread.fit_completed.connect(self.fit_completed)
         self.fit_thread.finished.connect(
             lambda: self.ui.btn_fit.setEnabled(True))

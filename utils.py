@@ -283,8 +283,9 @@ def light_palette():
 
 
 class FitThread(QThread):
-    fit_progress_changed = Signal(int)
-    fit_progress = Signal(int, float)  # number and elapsed time
+    """ Class to perform fitting in a seperate Thread"""
+    fit_progress_changed = Signal(int)  # To update progress bar
+    fit_progress = Signal(int, float)  # TO display number and elapsed time
     fit_completed = Signal()
 
     def __init__(self, spectra_fs, model_fs, fnames):

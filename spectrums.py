@@ -307,13 +307,18 @@ class Spectrums(QObject):
             return
         if fnames is None:
             fnames = self.get_selected_spectra()
+
         # Start fitting process in a separate thread
         self.fit_thread = FitThread(self.spectra_fs, self.model_fs, fnames)
+        # To update progress bar
         self.fit_thread.fit_progress_changed.connect(self.update_pbar)
+        # To display progress in GUI
         self.fit_thread.fit_progress.connect(
             lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
                                                         fnames))
+        # To update spectra list + plot fitted specturm once fitting finished
         self.fit_thread.fit_completed.connect(self.fit_completed)
+
         self.fit_thread.finished.connect(
             lambda: self.ui.btn_fit_3.setEnabled(True))
         self.fit_thread.start()
@@ -574,12 +579,13 @@ class Spectrums(QObject):
             f"{num}/{len(fnames)} fitted ({elapsed_time:.2f}s)")
 
     def fit_completed(self):
-        """Called when fitting process is completed"""
+        """ Called when fitting process is completed"""
         self.plot_delay()
         self.upd_spectrums_list()
         QTimer.singleShot(200, self.rescale)
 
     def update_pbar(self, progress):
+        """ Called when a spectrum is fitted to update progress bar"""
         self.ui.progressBar_3.setValue(progress)
 
     def cosmis_ray_detection(self):

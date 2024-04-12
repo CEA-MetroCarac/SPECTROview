@@ -7,7 +7,7 @@
 *Version 2024.5*
 
 Fitting features are powered
-by [FITSPY open source package](https://github.com/CEA-MetroCarac/fitspy)
+by the [FITSPY open-source package](https://github.com/CEA-MetroCarac/fitspy)
 (v2024.04)
 
 For any feedback,

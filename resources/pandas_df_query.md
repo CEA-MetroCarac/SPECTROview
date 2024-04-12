@@ -2,8 +2,8 @@ The **pandas.DataFrame.query()** method allows you to filter rows from a
 DataFrame based on a boolean expression. It's a powerful and flexible way to
 subset your DataFrame to include only the rows that meet specific conditions.
 
-In SPECTROview, `query()` method is integrated and can be used via GUI by
-typing as following: **(column_name) (operator) (value)***:
+In **SPECTROview**, `query()` method is integrated and can be used via GUI by
+typing as following: **(column_name) (operator) (value)**:
 
 1. **(column_name)**: is the exact header of the column containing the
    data/values to be filtered. When the column name contain 'space', you

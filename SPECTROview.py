@@ -276,7 +276,7 @@ class Main:
 
     def show_about(self):
         """Show about dialog """
-        view_markdown(self.ui, "About", ABOUT, 450, 300)
+        view_markdown(self.ui, "About", ABOUT, 500, 300)
 
 
 expiration_date = datetime.datetime(2024, 10, 1)

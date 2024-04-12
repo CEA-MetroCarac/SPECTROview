@@ -2,7 +2,8 @@
 Module contains all utilities functions and common functions
 """
 import time
-import markdown
+import markdown2
+import os
 
 try:
     import win32clipboard
@@ -20,6 +21,9 @@ from PySide6.QtGui import QPalette, QColor, QTextCursor
 from PySide6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+
+DIRNAME = os.path.dirname(__file__)
+RELPATH = os.path.join(DIRNAME, "resources")
 
 
 def plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
@@ -211,17 +215,20 @@ def view_text(ui, title, text):
 def view_markdown(ui, title, fname, x, y):
     with open(fname, 'r', encoding='utf-8') as f:
         markdown_content = f.read()
-    html_content = markdown.markdown(markdown_content)
-
+    # Convert Markdown to HTML using markdown2
+    html_content = markdown2.markdown(markdown_content)
+    DIRNAME = os.path.dirname(__file__)
+    # Replace relative image paths with absolute paths
+    html_content = html_content.replace('src="resources/',
+                                        f'src="'
+                                        f'{os.path.join(DIRNAME, "resources/")}')
     about_dialog = QDialog(ui)
     about_dialog.setWindowTitle(title)
     about_dialog.resize(x, y)
-
     text_browser = QTextBrowser(about_dialog)
     text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
     text_browser.setOpenExternalLinks(True)
     text_browser.setHtml(html_content)
-
     layout = QVBoxLayout(about_dialog)
     layout.addWidget(text_browser)
     about_dialog.setLayout(layout)

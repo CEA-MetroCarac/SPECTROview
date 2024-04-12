@@ -27,6 +27,6 @@ typing as following: (column_name) (operator) (value):
 </div>
 
 - Confocal != "high"
-- `Laser Power <=5
+- `Laser Power <= 5
 - Thickness == "1ML" or Thickness == "3ML"
-- a3_LOM >=1000
+- a3_LOM >= 1000

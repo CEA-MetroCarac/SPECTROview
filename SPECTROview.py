@@ -279,7 +279,7 @@ class Main:
         view_markdown(self.ui, "About", ABOUT, 450, 300)
 
 
-expiration_date = datetime.datetime(2024, 3, 1)
+expiration_date = datetime.datetime(2024, 10, 1)
 
 
 def launcher():
@@ -294,7 +294,6 @@ def launcher():
         app = QApplication(sys.argv)
         app.setWindowIcon(QIcon(ICON_APPLI))
         window = Main()
-
         window.ui.centralwidget.setEnabled(False)  # Disable the central widget
         app.setStyle("Fusion")
         window.ui.show()

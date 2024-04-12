@@ -2,11 +2,11 @@ The **pandas.DataFrame.query()** method allows you to filter rows from a
 DataFrame based on a boolean expression. It's a powerful and flexible way to
 subset your DataFrame to include only the rows that meet specific conditions.
 
-In SPECTROview, `query()` method is integated and can be used via GUI by
-typing as following: (column_name) (operator) (value):
+In SPECTROview, `query()` method is integrated and can be used via GUI by
+typing as following: **(column_name) (operator) (value)***:
 
-1. **(column_name)**: is the exacte header of the column containing the
-   data/values to be filtered. When the column name contain 'space' you
+1. **(column_name)**: is the exact header of the column containing the
+   data/values to be filtered. When the column name contain 'space', you
    need to enclose them in single or double quotes (see example below).
 
 
@@ -16,15 +16,15 @@ typing as following: (column_name) (operator) (value):
    multiples
    conditions.
 
-
 3. **(value)**: it could be numeric or string values. String value must be
    enclosed in double quotes (cf. example below)
 
 ### Here is an example:
 
 <div style="text-align: center;">
-    <img src="resources/dfr_filter.png">
+    <img src="dfr_filter.png">
 </div>
+Four different filters are used: 
 
 - Confocal != "high"
 - `Laser Power <= 5

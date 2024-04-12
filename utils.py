@@ -2,7 +2,7 @@
 Module contains all utilities functions and common functions
 """
 import time
-import markdown2
+import markdown
 import os
 
 try:
@@ -215,11 +215,11 @@ def view_text(ui, title, text):
 def view_markdown(ui, title, fname, x, y):
     with open(fname, 'r', encoding='utf-8') as f:
         markdown_content = f.read()
-    # Convert Markdown to HTML using markdown2
-    html_content = markdown2.markdown(markdown_content)
-    DIRNAME = os.path.dirname(__file__)
+    # Convert Markdown to HTML using markdown
+    html_content = markdown.markdown(markdown_content)
     # Replace relative image paths with absolute paths
-    html_content = html_content.replace('src="resources/',
+    DIRNAME = os.path.dirname(__file__)
+    html_content = html_content.replace('src="',
                                         f'src="'
                                         f'{os.path.join(DIRNAME, "resources/")}')
     about_dialog = QDialog(ui)

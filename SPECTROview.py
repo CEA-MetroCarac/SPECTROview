@@ -3,12 +3,12 @@ import sys
 import os
 import datetime
 
-from PySide6.QtWidgets import QApplication, QListWidget, QComboBox
+from PySide6.QtWidgets import QApplication, QListWidget, QComboBox, QMessageBox
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon
 
-from utils import dark_palette, light_palette, view_markdown
+from utils import dark_palette, light_palette, view_markdown, show_alert
 
 from ui import resources_new
 from dataframe import Dataframe
@@ -162,7 +162,7 @@ class Main:
         self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
 
         # About dialog
-        self.ui.actionabout.triggered.connect(self.show_about)
+        self.ui.actionAbout.triggered.connect(self.show_about)
         # Toggle to switch Dark/light mode
         # self.ui.radio_darkmode.clicked.connect(self.change_style)
 
@@ -279,19 +279,33 @@ class Main:
         view_markdown(self.ui, "About", ABOUT, 450, 300)
 
 
-expiration_date = datetime.datetime(2024, 7, 1)
+expiration_date = datetime.datetime(2024, 3, 1)
+
+
 def launcher():
     # Check if the current date is past the expiration date
     if datetime.datetime.now() > expiration_date:
-        print(
-            f"This version of the application has expired on "
-            f"{expiration_date}. Contact developper "
-            "for newer version")
-        return
-    # If not expired, continue launching the application
+        text = f"This version of the application has expired on " \
+               f"{expiration_date}, so can not be used anymore. Please " \
+               f"contact the developer for an " \
+               f"updated version"
+        print(text)
+        # If expired, disable the central widget
+        app = QApplication(sys.argv)
+        app.setWindowIcon(QIcon(ICON_APPLI))
+        window = Main()
+
+        window.ui.centralwidget.setEnabled(False)  # Disable the central widget
+        app.setStyle("Fusion")
+        window.ui.show()
+        show_alert(text)
+        sys.exit(app.exec())
+
+    # If not expired, continue launching the application as usual
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(ICON_APPLI))
     window = Main()
+    window.ui.centralwidget.setEnabled(True)
     app.setStyle("Fusion")
     window.ui.show()
     sys.exit(app.exec())

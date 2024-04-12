@@ -14,6 +14,9 @@
    <string>SPECTROview (Spectroscopic Data Processing and Visualization)</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="baseSize">
     <size>
      <width>0</width>
@@ -6829,13 +6832,19 @@
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>About/Help</string>
+     <string>Help</string>
     </property>
-    <addaction name="actionabout"/>
     <addaction name="actionHelps"/>
+   </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>About</string>
+    </property>
+    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuSave"/>
    <addaction name="menuHelp"/>
+   <addaction name="menuAbout"/>
   </widget>
   <action name="actionabout">
    <property name="text">
@@ -6890,6 +6899,11 @@
   <action name="actionLightMode">
    <property name="text">
     <string>Light Mode</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>

@@ -6824,6 +6824,10 @@
      <property name="title">
       <string>Dark/Light mode</string>
      </property>
+     <property name="icon">
+      <iconset resource="resources_new.qrc">
+       <normaloff>:/icon/iconpack/dark-light.jpeg</normaloff>:/icon/iconpack/dark-light.jpeg</iconset>
+     </property>
      <addaction name="separator"/>
      <addaction name="actionDarkMode"/>
      <addaction name="actionLightMode"/>
@@ -6887,21 +6891,37 @@
    </property>
   </action>
   <action name="actionHelps">
+   <property name="icon">
+    <iconset resource="resources_new.qrc">
+     <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
+   </property>
    <property name="text">
     <string>Data Filtering feature</string>
    </property>
   </action>
   <action name="actionDarkMode">
+   <property name="icon">
+    <iconset resource="resources_new.qrc">
+     <normaloff>:/icon/iconpack/dark.jpg</normaloff>:/icon/iconpack/dark.jpg</iconset>
+   </property>
    <property name="text">
     <string>Dark Mode</string>
    </property>
   </action>
   <action name="actionLightMode">
+   <property name="icon">
+    <iconset resource="resources_new.qrc">
+     <normaloff>:/icon/iconpack/light.png</normaloff>:/icon/iconpack/light.png</iconset>
+   </property>
    <property name="text">
     <string>Light Mode</string>
    </property>
   </action>
   <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="resources_new.qrc">
+     <normaloff>:/icon/iconpack/about.png</normaloff>:/icon/iconpack/about.png</iconset>
+   </property>
    <property name="text">
     <string>About</string>
    </property>

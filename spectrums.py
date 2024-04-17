@@ -325,10 +325,8 @@ class Spectrums(QObject):
 
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
-        self.ui.btn_fit_3.setEnabled(False)
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
-        self.ui.btn_fit_3.setEnabled(True)
 
     def fit_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""

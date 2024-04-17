@@ -79,7 +79,6 @@ class Maps(QObject):
             self.wafers = wafers
         else:
             if file_paths is None:
-                print("clicked2")
                 # Initialize the last used directory from QSettings
                 last_dir = self.settings.value("last_directory", "/")
                 options = QFileDialog.Options()
@@ -87,7 +86,6 @@ class Maps(QObject):
                 file_paths, _ = QFileDialog.getOpenFileNames(
                     self.ui.tabWidget, "Open RAW spectra CSV File(s)", last_dir,
                     "CSV Files (*.csv);;Text Files (*.txt)", options=options)
-                print("clicked 3")
             # Load RAW spectra data from CSV files
             if file_paths:
                 last_dir = QFileInfo(file_paths[0]).absolutePath()
@@ -196,10 +194,10 @@ class Maps(QObject):
 
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
-        self.ui.btn_fit.setEnabled(False)
+
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
-        self.ui.btn_fit.setEnabled(True)
+
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""

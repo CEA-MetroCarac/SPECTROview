@@ -29,7 +29,7 @@ class Dataframe:
 
         self.last_dir = None
 
-    def action_open_df(self, file_paths=None, original_dfs=None):
+    def action_open_df(self, original_dfs=None, file_paths=None):
         """ Load dataframe(s) to work with """
         # Initialize self.original_dfs if it's None
         if self.original_dfs is None:

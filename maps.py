@@ -70,15 +70,13 @@ class Maps(QObject):
         self.plot_styles = ["box plot", "point plot", "bar plot"]
         self.create_plot_widget()
 
-    def open_data(self, file_paths=None, wafers=None):
+    def open_data(self, wafers=None, file_paths=None):
         """Open CSV files containing RAW spectra of each wafer"""
-        print("clicked")
+
         if self.wafers is None:
             self.wafers = {}
-            print("clicked0")
         if wafers:
             self.wafers = wafers
-            print("clicked1")
         else:
             if file_paths is None:
                 print("clicked2")

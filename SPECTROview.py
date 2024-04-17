@@ -171,6 +171,7 @@ class Main:
         ########################################################
 
         self.ui.btn_open_wafers.clicked.connect(self.maps.open_data)
+
         self.ui.btn_remove_wafer.clicked.connect(self.maps.remove_wafer)
 
         self.ui.btn_copy_fig.clicked.connect(self.maps.copy_fig)
@@ -209,6 +210,7 @@ class Main:
         ############## GUI for Spectrums Processing tab #############
         ########################################################
         self.ui.btn_open_spectrums.clicked.connect(self.spectrums.open_data)
+
         self.ui.btn_load_model_3.clicked.connect(self.spectrums.open_model)
         self.ui.btn_fit_3.clicked.connect(self.spectrums.fit_fnc_handler)
         self.ui.btn_open_fitspy_3.clicked.connect(

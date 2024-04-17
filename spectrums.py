@@ -67,7 +67,7 @@ class Spectrums(QObject):
                             "bar plot"]
         self.create_plot_widget()
 
-    def open_data(self, file_paths=None, spectra=None):
+    def open_data(self,  spectra=None, file_paths=None,):
         if self.spectra_fs is None:
             self.spectra_fs = Spectra()
         if spectra:

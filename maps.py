@@ -72,13 +72,16 @@ class Maps(QObject):
 
     def open_data(self, file_paths=None, wafers=None):
         """Open CSV files containing RAW spectra of each wafer"""
-
+        print("clicked")
         if self.wafers is None:
             self.wafers = {}
+            print("clicked0")
         if wafers:
             self.wafers = wafers
+            print("clicked1")
         else:
             if file_paths is None:
+                print("clicked2")
                 # Initialize the last used directory from QSettings
                 last_dir = self.settings.value("last_directory", "/")
                 options = QFileDialog.Options()
@@ -86,6 +89,7 @@ class Maps(QObject):
                 file_paths, _ = QFileDialog.getOpenFileNames(
                     self.ui.tabWidget, "Open RAW spectra CSV File(s)", last_dir,
                     "CSV Files (*.csv);;Text Files (*.txt)", options=options)
+                print("clicked 3")
             # Load RAW spectra data from CSV files
             if file_paths:
                 last_dir = QFileInfo(file_paths[0]).absolutePath()

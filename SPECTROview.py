@@ -37,10 +37,10 @@ class Main:
         QSettings.setDefaultFormat(QSettings.IniFormat)
         self.settings = QSettings("CEA-Leti", "SPECTROview")
 
-        if self.settings.value("mode") == "dark":
-            self.toggle_dark_mode()
-        else:
+        if self.settings.value("mode") == "light":
             self.toggle_light_mode()
+        else:
+            self.toggle_dark_mode()  # Toggle to dark mode by default
         self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
 

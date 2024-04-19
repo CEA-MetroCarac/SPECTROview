@@ -1567,7 +1567,7 @@
                  <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="0">
                   <item>
                    <widget class="QWidget" name="widget_17" native="true">
-                    <layout class="QHBoxLayout" name="horizontalLayout_44" stretch="30,70">
+                    <layout class="QHBoxLayout" name="horizontalLayout_44" stretch="30,10,60">
                      <property name="leftMargin">
                       <number>0</number>
                      </property>
@@ -1582,7 +1582,7 @@
                      </property>
                      <item>
                       <widget class="QWidget" name="widget_5" native="true">
-                       <layout class="QVBoxLayout" name="verticalLayout_29" stretch="0,25,0,30,5,15">
+                       <layout class="QVBoxLayout" name="verticalLayout_29" stretch="0,0,0,30,5,15">
                         <item>
                          <layout class="QHBoxLayout" name="horizontalLayout_50" stretch="30,25,25,20">
                           <item>
@@ -1627,66 +1627,29 @@
                           <item>
                            <widget class="QPushButton" name="range_apply">
                             <property name="text">
-                             <string>Apply</string>
+                             <string>Extract</string>
                             </property>
                            </widget>
                           </item>
                          </layout>
                         </item>
                         <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="30,25,25,20">
-                          <item>
-                           <widget class="QLabel" name="label_37">
-                            <property name="text">
-                             <string>Baseline :</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="bl_point1">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>10</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="bl_point2">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>20</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QPushButton" name="pushButton_8">
-                            <property name="text">
-                             <string>Apply</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
+                         <spacer name="verticalSpacer_14">
+                          <property name="orientation">
+                           <enum>Qt::Vertical</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>20</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                         </spacer>
                         </item>
                         <item>
                          <widget class="QGroupBox" name="gb_intensity_norm">
                           <property name="title">
-                           <string>Intensity normalization</string>
+                           <string>Baseline :</string>
                           </property>
                           <layout class="QVBoxLayout" name="verticalLayout_6">
                            <property name="leftMargin">
@@ -1702,26 +1665,44 @@
                             <number>2</number>
                            </property>
                            <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="30,30,20,20">
+                            <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="25,25,25,25">
                              <item>
-                              <widget class="QRadioButton" name="rbtn_max_int">
+                              <widget class="QCheckBox" name="cb_attached">
                                <property name="text">
-                                <string>Max int</string>
-                               </property>
-                               <property name="checked">
-                                <bool>true</bool>
+                                <string>Attached</string>
                                </property>
                               </widget>
                              </item>
                              <item>
-                              <widget class="QRadioButton" name="rbtn_attractor">
+                              <widget class="QRadioButton" name="rbtn_linear">
                                <property name="text">
-                                <string>Attractor</string>
+                                <string>Linear</string>
                                </property>
                               </widget>
                              </item>
                              <item>
-                              <widget class="QLineEdit" name="text_attractor">
+                              <widget class="QRadioButton" name="rbtn_polynomial">
+                               <property name="text">
+                                <string>Polynomial</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QSpinBox" name="degre"/>
+                             </item>
+                            </layout>
+                           </item>
+                           <item>
+                            <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0">
+                             <item>
+                              <widget class="QLabel" name="label_37">
+                               <property name="text">
+                                <string>Noise range:</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLineEdit" name="noise">
                                <property name="sizePolicy">
                                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                                  <horstretch>0</horstretch>
@@ -1734,24 +1715,12 @@
                                  <height>0</height>
                                 </size>
                                </property>
-                               <property name="maximumSize">
-                                <size>
-                                 <width>80</width>
-                                 <height>16777215</height>
-                                </size>
-                               </property>
                               </widget>
                              </item>
                              <item>
-                              <widget class="QPushButton" name="btn_normalize">
-                               <property name="sizePolicy">
-                                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                 <horstretch>0</horstretch>
-                                 <verstretch>0</verstretch>
-                                </sizepolicy>
-                               </property>
+                              <widget class="QPushButton" name="sub_baseline">
                                <property name="text">
-                                <string>Apply</string>
+                                <string>Substract</string>
                                </property>
                               </widget>
                              </item>
@@ -1928,124 +1897,183 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QGroupBox" name="groupBox_5">
-                       <property name="title">
-                        <string>Peak table: </string>
-                       </property>
-                       <layout class="QHBoxLayout" name="horizontalLayout_26">
+                      <widget class="QWidget" name="widget_15" native="true">
+                       <layout class="QVBoxLayout" name="verticalLayout_22">
                         <item>
-                         <widget class="QScrollArea" name="scrollArea_5">
-                          <property name="widgetResizable">
-                           <bool>true</bool>
+                         <widget class="QPushButton" name="pushButton_25">
+                          <property name="text">
+                           <string>Add peak</string>
                           </property>
-                          <widget class="QWidget" name="scrollAreaWidgetContents_5">
-                           <property name="geometry">
-                            <rect>
-                             <x>0</x>
-                             <y>0</y>
-                             <width>690</width>
-                             <height>356</height>
-                            </rect>
-                           </property>
-                           <layout class="QVBoxLayout" name="verticalLayout_32">
-                            <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_51"/>
-                            </item>
-                            <item>
-                             <layout class="QVBoxLayout" name="verticalLayout_31"/>
-                            </item>
-                           </layout>
-                          </widget>
                          </widget>
                         </item>
                         <item>
-                         <widget class="QWidget" name="widget_15" native="true">
-                          <layout class="QVBoxLayout" name="verticalLayout_22">
-                           <item>
-                            <widget class="QPushButton" name="pushButton_25">
-                             <property name="text">
-                              <string>Add peak</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QPushButton" name="pushButton_10">
-                             <property name="text">
-                              <string>Save fit model</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <spacer name="verticalSpacer_6">
-                             <property name="orientation">
-                              <enum>Qt::Vertical</enum>
-                             </property>
-                             <property name="sizeHint" stdset="0">
-                              <size>
-                               <width>20</width>
-                               <height>40</height>
-                              </size>
-                             </property>
-                            </spacer>
-                           </item>
-                           <item>
-                            <spacer name="verticalSpacer_7">
-                             <property name="orientation">
-                              <enum>Qt::Vertical</enum>
-                             </property>
-                             <property name="sizeHint" stdset="0">
-                              <size>
-                               <width>20</width>
-                               <height>40</height>
-                              </size>
-                             </property>
-                            </spacer>
-                           </item>
-                           <item>
-                            <widget class="QPushButton" name="btn_fit_sel_wafers">
-                             <property name="text">
-                              <string>-----</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QLineEdit" name="lineEdit_3">
-                             <property name="sizePolicy">
-                              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                               <horstretch>0</horstretch>
-                               <verstretch>0</verstretch>
-                              </sizepolicy>
-                             </property>
-                             <property name="placeholderText">
-                              <string>Assign name for dataframe</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QPushButton" name="pushButton_32">
-                             <property name="sizePolicy">
-                              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                               <horstretch>0</horstretch>
-                               <verstretch>0</verstretch>
-                              </sizepolicy>
-                             </property>
-                             <property name="text">
-                              <string>Send to Vizulazation</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QPushButton" name="pushButton_34">
-                             <property name="text">
-                              <string>Save to excel</string>
-                             </property>
-                            </widget>
-                           </item>
-                          </layout>
+                         <widget class="QPushButton" name="pushButton_10">
+                          <property name="text">
+                           <string>Save fit model</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <spacer name="verticalSpacer_6">
+                          <property name="orientation">
+                           <enum>Qt::Vertical</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>20</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                        <item>
+                         <spacer name="verticalSpacer_7">
+                          <property name="orientation">
+                           <enum>Qt::Vertical</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>20</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="btn_fit_sel_wafers">
+                          <property name="text">
+                           <string>-----</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="lineEdit_3">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="placeholderText">
+                           <string>Assign name for dataframe</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="pushButton_32">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="text">
+                           <string>Send to Vizulazation</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="pushButton_34">
+                          <property name="text">
+                           <string>Save to excel</string>
+                          </property>
                          </widget>
                         </item>
                        </layout>
                       </widget>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_33">
+                       <item>
+                        <widget class="QGroupBox" name="peak_table">
+                         <property name="title">
+                          <string>Peak table: </string>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_26">
+                          <item>
+                           <widget class="QScrollArea" name="scrollArea_5">
+                            <property name="widgetResizable">
+                             <bool>true</bool>
+                            </property>
+                            <widget class="QWidget" name="scrollAreaWidgetContents_5">
+                             <property name="geometry">
+                              <rect>
+                               <x>0</x>
+                               <y>0</y>
+                               <width>717</width>
+                               <height>354</height>
+                              </rect>
+                             </property>
+                             <layout class="QVBoxLayout" name="verticalLayout_32">
+                              <item>
+                               <layout class="QVBoxLayout" name="verticalLayout_31"/>
+                              </item>
+                              <item>
+                               <spacer name="verticalSpacer_15">
+                                <property name="orientation">
+                                 <enum>Qt::Vertical</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>20</width>
+                                  <height>40</height>
+                                 </size>
+                                </property>
+                               </spacer>
+                              </item>
+                              <item>
+                               <layout class="QHBoxLayout" name="horizontalLayout_51">
+                                <item>
+                                 <widget class="QCheckBox" name="limits">
+                                  <property name="text">
+                                   <string>Limits</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="QCheckBox" name="expr">
+                                  <property name="text">
+                                   <string>Expression</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="QCheckBox" name="checkBox_4">
+                                  <property name="text">
+                                   <string>CheckBox</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="QCheckBox" name="checkBox_7">
+                                  <property name="text">
+                                   <string>CheckBox</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <spacer name="horizontalSpacer_17">
+                                  <property name="orientation">
+                                   <enum>Qt::Horizontal</enum>
+                                  </property>
+                                  <property name="sizeHint" stdset="0">
+                                   <size>
+                                    <width>40</width>
+                                    <height>20</height>
+                                   </size>
+                                  </property>
+                                 </spacer>
+                                </item>
+                               </layout>
+                              </item>
+                             </layout>
+                            </widget>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                      </layout>
                      </item>
                     </layout>
                    </widget>

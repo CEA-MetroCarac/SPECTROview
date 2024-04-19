@@ -21,6 +21,8 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from wafer_view import WaferView
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
                                QListWidgetItem)
+from PySide6.QtWidgets import QLabel, QComboBox, QLineEdit, QCheckBox, \
+    QHBoxLayout, QSpacerItem, QSizePolicy
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
@@ -149,8 +151,11 @@ class Maps(QObject):
     def read_spectrum_model(self):
         """To read fitted params and peak_models of selected spectrum"""
         sel_spectrum = self.get_spectrum_objet()
+        # Read spectral range
         self.ui.range_min.setText(str(sel_spectrum.x[0]))
         self.ui.range_max.setText(str(sel_spectrum.x[-1]))
+
+        # Read peak_models
 
     def set_x_range(self):
         """Update sel_spectrum's range from QLineEdit"""
@@ -160,15 +165,77 @@ class Maps(QObject):
         reinit_spectrum(fnames, self.spectra_fs)
         new_x_min = float(self.ui.range_min.text())
         new_x_max = float(self.ui.range_max.text())
-
+        # Set x range for selected spectrum
         ind_min = closest_index(sel_spectrum.x0, new_x_min)
         ind_max = closest_index(sel_spectrum.x0, new_x_max)
-
         sel_spectrum.x = sel_spectrum.x0[ind_min:ind_max + 1].copy()
         sel_spectrum.y = sel_spectrum.y0[ind_min:ind_max + 1].copy()
         sel_spectrum.range_max = float(self.ui.range_max.text())
         self.delay_plot()
         QTimer.singleShot(100, self.upd_spectra_list)
+
+    def clear_layout(self, layout):
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+                else:
+                    self.clear_layout(item.layout())
+
+    def show_peak_table(self):
+        sel_spectrum = self.get_spectrum_objet()
+        self.clear_layout(self.ui.verticalLayout_31)
+
+        for peak_model in sel_spectrum.peak_models:
+            # Create widgets for displaying peak model attributes
+            prefix = QLabel(peak_model.prefix)
+            model = QComboBox()
+            model.addItems(peak_model.name2)
+            model.setFixedWidth(120)  # Set fixed width for the combobox
+
+            param_hints = peak_model.param_hints  # Get the param_hints
+
+            layout = QHBoxLayout()
+            layout.addWidget(prefix)
+            layout.addWidget(model)
+
+            for param_hint in param_hints.values():
+                value_val = round(param_hint.get('value', 0.0), 2)
+                value = QLineEdit(str(value_val))
+                value.setFixedWidth(50)
+                vary = QCheckBox()
+                vary.setChecked(param_hint.get('vary', False))
+
+                layout.addWidget(value)
+                layout.addWidget(vary)
+
+                if self.ui.limits.isChecked():
+                    max_val = round(param_hint.get('max', 0.0), 2)
+                    max_lineedit = QLineEdit(str(max_val))
+                    max_lineedit.setFixedWidth(50)
+                    min_val = round(param_hint.get('min', 0.0), 2)
+                    min_lineedit = QLineEdit(str(min_val))
+                    min_lineedit.setFixedWidth(50)
+                    layout.addWidget(min_lineedit)
+                    layout.addWidget(max_lineedit)
+
+                if self.ui.expr.isChecked():
+                    expr_val = str(param_hint.get('expr', ''))
+                    expr = QLineEdit(expr_val)
+                    expr.setFixedWidth(50)
+                    layout.addWidget(expr)
+            # Add horizontal spacer
+            spacer_item1 = QSpacerItem(40, 20, QSizePolicy.Expanding,
+                                       QSizePolicy.Minimum)
+            layout.addItem(spacer_item1)
+            # Add layout to main GUI layout
+            self.ui.verticalLayout_31.addLayout(layout)
+
+        spacer_item2 = QSpacerItem(20, 40, QSizePolicy.Minimum,
+                                   QSizePolicy.Expanding)
+        self.ui.verticalLayout_31.addItem(spacer_item2)
 
     def apply_fit_model(self):
         """To apply all parameters of a fit model"""
@@ -530,6 +597,7 @@ class Maps(QObject):
         self.canvas1.draw()
         self.plot2()
         self.read_spectrum_model()
+        self.show_peak_table()
 
     def plot2(self):
         """Plot wafer maps of measurement sites"""

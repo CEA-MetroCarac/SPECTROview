@@ -282,75 +282,65 @@ class Main:
         view_markdown(self.ui, "About", ABOUT, 500, 300)
 
 
-expiration_date = datetime.datetime(2024, 10, 1)
-
-
-def launcher():
-    # Check if the current date is past the expiration date
-    if datetime.datetime.now() > expiration_date:
-        text = f"This version of the application has expired on " \
-               f"{expiration_date}, so can not be used anymore. Please " \
-               f"contact the developer for an " \
-               f"updated version"
-        print(text)
-        # If expired, disable the central widget
-        app = QApplication(sys.argv)
-        app.setWindowIcon(QIcon(ICON_APPLI))
-        window = Main()
-        window.ui.centralwidget.setEnabled(False)  # Disable the central widget
-        app.setStyle("Fusion")
-        window.ui.show()
-        show_alert(text)
-        sys.exit(app.exec())
-
-    # If not expired, continue launching the application as usual
-    app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon(ICON_APPLI))
-    window = Main()
-    window.ui.centralwidget.setEnabled(True)
-    app.setStyle("Fusion")
-    window.ui.show()
-    sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    launcher()
-
-# def launcher2(file_paths=None, fname_json=None):
-#     app = QApplication()
+# expiration_date = datetime.datetime(2024, 10, 1)
+#
+#
+# def launcher():
+#     # Check if the current date is past the expiration date
+#     if datetime.datetime.now() > expiration_date:
+#         text = f"This version of the application has expired on " \
+#                f"{expiration_date}, so can not be used anymore. Please " \
+#                f"contact the developer for an " \
+#                f"updated version"
+#         print(text)
+#         # If expired, disable the central widget
+#         app = QApplication(sys.argv)
+#         app.setWindowIcon(QIcon(ICON_APPLI))
+#         window = Main()
+#         window.ui.centralwidget.setEnabled(False)  # Disable the central
+#         widget
+#         app.setStyle("Fusion")
+#         window.ui.show()
+#         show_alert(text)
+#         sys.exit(app.exec())
+#
+#     # If not expired, continue launching the application as usual
+#     app = QApplication(sys.argv)
 #     app.setWindowIcon(QIcon(ICON_APPLI))
 #     window = Main()
+#     window.ui.centralwidget.setEnabled(True)
 #     app.setStyle("Fusion")
-#     # if file_paths is not None:
-#     #     window.wafer.open_data(file_paths=file_paths)
-#     # if fname_json is not None:
-#     #     window.wafer.open_model(fname_json=fname_json)
-#     if file_paths is not None:
-#         window.spectrums.open_data(file_paths=file_paths)
-#     if fname_json is not None:
-#         window.spectrums.open_model(fname_json=fname_json)
 #     window.ui.show()
 #     sys.exit(app.exec())
 #
 #
 # if __name__ == "__main__":
-#     dirname1 = r"C:\Users\VL251876\Documents\Python\SPECTROview\data_test" \
-#                r"\RAW 2Dmaps"
-#     dirname2 = r"C:\Users\VL251876\Documents\Python\SPECTROview\data_test" \
-#                r"\RAW_spectra"
-#
-#     fname1 = os.path.join(dirname1, 'D23S2204.2_17.csv')
-#     fname2 = os.path.join(dirname1, 'D23S2204.2_19.csv')
-#     fname3 = os.path.join(dirname1, 'D23S2204.2_25.csv')
-#     fname_json1 = os.path.join(dirname1, 'MoS2_325-490_8cm-shifted.json')
-#
-#     fname11 = os.path.join(dirname2, 'P10_3ML.txt')
-#     fname12 = os.path.join(dirname2, 'P6_2ML_532.txt')
-#     fname13 = os.path.join(dirname2, 'P14_4ML.txt')
-#     fname_json2 = os.path.join(dirname2, 'MoS2_325-490_.json')
-#
-#     # launcher2([fname1, fname2, fname3], fname_json1)
-#     launcher2([fname11, fname12, fname13], fname_json2)
+#     launcher()
+
+def launcher2(file_paths=None, fname_json=None):
+    app = QApplication()
+    app.setWindowIcon(QIcon(ICON_APPLI))
+    window = Main()
+    app.setStyle("Fusion")
+    if file_paths is not None:
+        window.maps.open_data(file_paths=file_paths)
+    if fname_json is not None:
+        window.maps.open_model(fname_json=fname_json)
+
+    window.ui.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    dirname1 = r"C:\Users\VL251876\Documents\Python\SPECTROview\data_test" \
+               r"\RAW 2Dmaps"
+
+    fname1 = os.path.join(dirname1, 'D23S2204.2_17.csv')
+    fname2 = os.path.join(dirname1, 'D23S2204.2_19.csv')
+    fname3 = os.path.join(dirname1, 'D23S2204.2_25.csv')
+    fname_json1 = os.path.join(dirname1, 'MoS2_325-490_8cm-shifted.json')
+
+    launcher2([fname1, fname2, fname3], fname_json1)
 
 # def launcher3(file_paths=None, fname_json=None):
 #     app = QApplication()

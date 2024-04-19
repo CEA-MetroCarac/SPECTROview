@@ -198,7 +198,6 @@ class Maps(QObject):
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
 
-
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.

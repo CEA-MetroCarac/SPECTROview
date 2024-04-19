@@ -1,10 +1,10 @@
 <RCC>
   <qresource prefix="icon">
-    <file>iconpack/about.png</file>
-    <file>iconpack/dark.jpg</file>
+    <file>iconpack/dark.png</file>
+    <file>iconpack/dark-light.png</file>
     <file>iconpack/light.png</file>
-    <file>iconpack/dark-light.jpeg</file>
     <file>iconpack/paste10.png</file>
+    <file>iconpack/about.png</file>
     <file>iconpack/copy10.png</file>
     <file>iconpack/opened-folder.png</file>
     <file>iconpack/magnify.png</file>

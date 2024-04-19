@@ -1930,7 +1930,7 @@
                      <item>
                       <widget class="QGroupBox" name="groupBox_5">
                        <property name="title">
-                        <string>Peaks: </string>
+                        <string>Peak table: </string>
                        </property>
                        <layout class="QHBoxLayout" name="horizontalLayout_26">
                         <item>
@@ -1943,10 +1943,18 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>690</width>
-                             <height>356</height>
+                             <width>20</width>
+                             <height>28</height>
                             </rect>
                            </property>
+                           <layout class="QVBoxLayout" name="verticalLayout_32">
+                            <item>
+                             <layout class="QHBoxLayout" name="horizontalLayout_51"/>
+                            </item>
+                            <item>
+                             <layout class="QVBoxLayout" name="verticalLayout_31"/>
+                            </item>
+                           </layout>
                           </widget>
                          </widget>
                         </item>
@@ -2247,22 +2255,6 @@
               <number>2</number>
              </property>
              <item>
-              <widget class="QLabel" name="logo_">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="pixmap">
-                <pixmap resource="resources_new.qrc">:/icon/logo.png</pixmap>
-               </property>
-              </widget>
-             </item>
-             <item>
               <widget class="QPushButton" name="btn_open_wafers">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -2373,6 +2365,22 @@
                  <width>30</width>
                  <height>30</height>
                 </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="logo_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="pixmap">
+                <pixmap resource="resources_new.qrc">:/icon/logo.png</pixmap>
                </property>
               </widget>
              </item>
@@ -2580,7 +2588,7 @@
                   </property>
                   <property name="icon">
                    <iconset resource="resources_new.qrc">
-                    <normaloff>:/icon/iconpack/save11.png</normaloff>:/icon/iconpack/save11.png</iconset>
+                    <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
                   </property>
                   <property name="iconSize">
                    <size>
@@ -4734,8 +4742,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>98</width>
-                             <height>28</height>
+                             <width>16</width>
+                             <height>16</height>
                             </rect>
                            </property>
                           </widget>
@@ -5033,22 +5041,6 @@
               <number>2</number>
              </property>
              <item>
-              <widget class="QLabel" name="logo_2">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="pixmap">
-                <pixmap resource="resources_new.qrc">:/icon/logo.png</pixmap>
-               </property>
-              </widget>
-             </item>
-             <item>
               <widget class="QPushButton" name="btn_open_spectrums">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -5147,6 +5139,22 @@
                  <width>30</width>
                  <height>30</height>
                 </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="logo_2">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="pixmap">
+                <pixmap resource="resources_new.qrc">:/icon/logo.png</pixmap>
                </property>
               </widget>
              </item>
@@ -5621,7 +5629,20 @@
               <number>5</number>
              </property>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="33,30">
+              <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="0,33">
+               <item>
+                <spacer name="horizontalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
                <item>
                 <widget class="QLabel" name="label_17">
                  <property name="sizePolicy">
@@ -5643,19 +5664,6 @@
                   <pixmap resource="resources_new.qrc">:/icon/logo.png</pixmap>
                  </property>
                 </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
                </item>
               </layout>
              </item>
@@ -6826,7 +6834,7 @@
      </property>
      <property name="icon">
       <iconset resource="resources_new.qrc">
-       <normaloff>:/icon/iconpack/dark-light.jpeg</normaloff>:/icon/iconpack/dark-light.jpeg</iconset>
+       <normaloff>:/icon/iconpack/dark-light.png</normaloff>:/icon/iconpack/dark-light.png</iconset>
      </property>
      <addaction name="separator"/>
      <addaction name="actionDarkMode"/>
@@ -6902,7 +6910,7 @@
   <action name="actionDarkMode">
    <property name="icon">
     <iconset resource="resources_new.qrc">
-     <normaloff>:/icon/iconpack/dark.jpg</normaloff>:/icon/iconpack/dark.jpg</iconset>
+     <normaloff>:/icon/iconpack/dark.png</normaloff>:/icon/iconpack/dark.png</iconset>
    </property>
    <property name="text">
     <string>Dark Mode</string>

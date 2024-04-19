@@ -198,7 +198,7 @@
                      <string/>
                     </property>
                     <property name="icon">
-                     <iconset resource="resources_new.qrc">
+                     <iconset>
                       <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                     </property>
                     <property name="iconSize">
@@ -430,7 +430,6 @@
                       </property>
                       <property name="font">
                        <font>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -441,7 +440,7 @@
                        <string> Collect fit results</string>
                       </property>
                       <property name="icon">
-                       <iconset resource="resources_new.qrc">
+                       <iconset>
                         <normaloff>:/icon/iconpack/collect.png</normaloff>:/icon/iconpack/collect.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -479,7 +478,7 @@
                        <string/>
                       </property>
                       <property name="icon">
-                       <iconset resource="resources_new.qrc">
+                       <iconset>
                         <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -517,7 +516,7 @@
                        <string/>
                       </property>
                       <property name="icon">
-                       <iconset resource="resources_new.qrc">
+                       <iconset>
                         <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -549,7 +548,7 @@
                        <string/>
                       </property>
                       <property name="icon">
-                       <iconset resource="resources_new.qrc">
+                       <iconset>
                         <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -674,8 +673,491 @@
                <bool>true</bool>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
+              <widget class="QWidget" name="fit_model_editor">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <attribute name="title">
+                <string>Fit Model Editor</string>
+               </attribute>
+               <layout class="QVBoxLayout" name="verticalLayout_14" stretch="0">
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="0">
+                  <item>
+                   <widget class="QWidget" name="widget_17" native="true">
+                    <layout class="QHBoxLayout" name="horizontalLayout_44" stretch="30,60">
+                     <property name="leftMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                     <item>
+                      <widget class="QWidget" name="widget_5" native="true">
+                       <layout class="QVBoxLayout" name="verticalLayout_29" stretch="0,0,0,30,5,15,0,0">
+                        <item>
+                         <layout class="QHBoxLayout" name="horizontalLayout_50" stretch="30,25,25,20">
+                          <item>
+                           <widget class="QLabel" name="label_41">
+                            <property name="text">
+                             <string>Spectral range :</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QLineEdit" name="range_min">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>20</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QLineEdit" name="range_max">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>20</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QPushButton" name="range_apply">
+                            <property name="text">
+                             <string>Extract</string>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                        <item>
+                         <spacer name="verticalSpacer_14">
+                          <property name="orientation">
+                           <enum>Qt::Vertical</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>20</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                        <item>
+                         <widget class="QGroupBox" name="gb_intensity_norm">
+                          <property name="title">
+                           <string>Baseline :</string>
+                          </property>
+                          <layout class="QVBoxLayout" name="verticalLayout_6">
+                           <property name="leftMargin">
+                            <number>2</number>
+                           </property>
+                           <property name="topMargin">
+                            <number>2</number>
+                           </property>
+                           <property name="rightMargin">
+                            <number>2</number>
+                           </property>
+                           <property name="bottomMargin">
+                            <number>2</number>
+                           </property>
+                           <item>
+                            <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="25,25,25,25">
+                             <item>
+                              <widget class="QCheckBox" name="cb_attached">
+                               <property name="text">
+                                <string>Attached</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRadioButton" name="rbtn_linear">
+                               <property name="text">
+                                <string>Linear</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRadioButton" name="rbtn_polynomial">
+                               <property name="text">
+                                <string>Polynomial</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QSpinBox" name="degre"/>
+                             </item>
+                            </layout>
+                           </item>
+                           <item>
+                            <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0">
+                             <item>
+                              <widget class="QLabel" name="label_37">
+                               <property name="text">
+                                <string>Noise range:</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLineEdit" name="noise">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="minimumSize">
+                                <size>
+                                 <width>20</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="sub_baseline">
+                               <property name="text">
+                                <string>Substract</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </item>
+                          </layout>
+                         </widget>
+                        </item>
+                        <item>
+                         <spacer name="verticalSpacer">
+                          <property name="orientation">
+                           <enum>Qt::Vertical</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>20</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                        <item>
+                         <widget class="QGroupBox" name="groupBox_8">
+                          <property name="title">
+                           <string>Peak position correction :</string>
+                          </property>
+                          <layout class="QVBoxLayout" name="verticalLayout_28">
+                           <item>
+                            <layout class="QHBoxLayout" name="horizontalLayout_61" stretch="0,0,0">
+                             <item>
+                              <widget class="QRadioButton" name="radioButton_3">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="text">
+                                <string/>
+                               </property>
+                               <property name="checked">
+                                <bool>true</bool>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLabel" name="label_45">
+                               <property name="text">
+                                <string>No</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <layout class="QHBoxLayout" name="horizontalLayout_60">
+                               <item>
+                                <widget class="QRadioButton" name="radioButton_2">
+                                 <property name="sizePolicy">
+                                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                   <horstretch>0</horstretch>
+                                   <verstretch>0</verstretch>
+                                  </sizepolicy>
+                                 </property>
+                                 <property name="text">
+                                  <string/>
+                                 </property>
+                                </widget>
+                               </item>
+                               <item>
+                                <widget class="QLabel" name="label_44">
+                                 <property name="text">
+                                  <string>Peak  shift (cm-1) :</string>
+                                 </property>
+                                </widget>
+                               </item>
+                               <item>
+                                <widget class="QLineEdit" name="lineEdit_32">
+                                 <property name="sizePolicy">
+                                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                                   <horstretch>0</horstretch>
+                                   <verstretch>0</verstretch>
+                                  </sizepolicy>
+                                 </property>
+                                 <property name="minimumSize">
+                                  <size>
+                                   <width>20</width>
+                                   <height>0</height>
+                                  </size>
+                                 </property>
+                                 <property name="toolTip">
+                                  <string>Type the different between experimental and theoretical values</string>
+                                 </property>
+                                </widget>
+                               </item>
+                              </layout>
+                             </item>
+                            </layout>
+                           </item>
+                           <item>
+                            <spacer name="verticalSpacer_11">
+                             <property name="orientation">
+                              <enum>Qt::Vertical</enum>
+                             </property>
+                             <property name="sizeHint" stdset="0">
+                              <size>
+                               <width>20</width>
+                               <height>40</height>
+                              </size>
+                             </property>
+                            </spacer>
+                           </item>
+                           <item>
+                            <layout class="QHBoxLayout" name="horizontalLayout_64">
+                             <item>
+                              <widget class="QRadioButton" name="radioButton_5">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="text">
+                                <string/>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLabel" name="label_47">
+                               <property name="text">
+                                <string>Reference peak :</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QComboBox" name="comboBox_14"/>
+                             </item>
+                             <item>
+                              <widget class="QLineEdit" name="lineEdit_34">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="minimumSize">
+                                <size>
+                                 <width>20</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                               <property name="toolTip">
+                                <string>Type the theoretical values</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </item>
+                          </layout>
+                         </widget>
+                        </item>
+                        <item>
+                         <spacer name="verticalSpacer_5">
+                          <property name="orientation">
+                           <enum>Qt::Vertical</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>20</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="pushButton_34">
+                          <property name="text">
+                           <string>Save to excel</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="btn_fit_sel_wafers">
+                          <property name="text">
+                           <string>-----</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_33">
+                       <item>
+                        <widget class="QGroupBox" name="peak_table">
+                         <property name="title">
+                          <string>Peak table: </string>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_26">
+                          <item>
+                           <widget class="QScrollArea" name="scrollArea_5">
+                            <property name="widgetResizable">
+                             <bool>true</bool>
+                            </property>
+                            <widget class="QWidget" name="scrollAreaWidgetContents_5">
+                             <property name="geometry">
+                              <rect>
+                               <x>0</x>
+                               <y>0</y>
+                               <width>765</width>
+                               <height>316</height>
+                              </rect>
+                             </property>
+                             <layout class="QVBoxLayout" name="verticalLayout_32">
+                              <item>
+                               <layout class="QVBoxLayout" name="verticalLayout_31"/>
+                              </item>
+                              <item>
+                               <spacer name="verticalSpacer_15">
+                                <property name="orientation">
+                                 <enum>Qt::Vertical</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>20</width>
+                                  <height>40</height>
+                                 </size>
+                                </property>
+                               </spacer>
+                              </item>
+                             </layout>
+                            </widget>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                       <item>
+                        <layout class="QHBoxLayout" name="horizontalLayout_51">
+                         <item>
+                          <widget class="QPushButton" name="pushButton_25">
+                           <property name="text">
+                            <string>Add peak</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="pushButton_10">
+                           <property name="text">
+                            <string>Del peak</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="pushButton_4">
+                           <property name="text">
+                            <string>Fit</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="pushButton_5">
+                           <property name="text">
+                            <string>Copy model</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="pushButton_6">
+                           <property name="text">
+                            <string>Paste model</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="pushButton_7">
+                           <property name="text">
+                            <string>Save Model</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <spacer name="horizontalSpacer_17">
+                           <property name="orientation">
+                            <enum>Qt::Horizontal</enum>
+                           </property>
+                           <property name="sizeHint" stdset="0">
+                            <size>
+                             <width>40</width>
+                             <height>20</height>
+                            </size>
+                           </property>
+                          </spacer>
+                         </item>
+                         <item>
+                          <widget class="QCheckBox" name="limits">
+                           <property name="text">
+                            <string>Limits</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QCheckBox" name="expr">
+                           <property name="text">
+                            <string>Expression</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                      </layout>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
               <widget class="QWidget" name="wafer_plot_view">
                <attribute name="title">
                 <string>Plotting</string>
@@ -830,7 +1312,7 @@
                             <string/>
                            </property>
                            <property name="icon">
-                            <iconset resource="resources_new.qrc">
+                            <iconset>
                              <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                            </property>
                            <property name="iconSize">
@@ -1151,7 +1633,7 @@
                             <string/>
                            </property>
                            <property name="icon">
-                            <iconset resource="resources_new.qrc">
+                            <iconset>
                              <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                            </property>
                            <property name="iconSize">
@@ -1213,7 +1695,7 @@
                      <x>0</x>
                      <y>0</y>
                      <width>248</width>
-                     <height>399</height>
+                     <height>440</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1222,7 +1704,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1386,7 +1867,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1552,533 +2032,6 @@
                    </layout>
                   </widget>
                  </widget>
-                </item>
-               </layout>
-              </widget>
-              <widget class="QWidget" name="fit_model_editor">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <attribute name="title">
-                <string>FITSPY_ Model Editor</string>
-               </attribute>
-               <layout class="QVBoxLayout" name="verticalLayout_14" stretch="0">
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="0">
-                  <item>
-                   <widget class="QWidget" name="widget_17" native="true">
-                    <layout class="QHBoxLayout" name="horizontalLayout_44" stretch="30,10,60">
-                     <property name="leftMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>0</number>
-                     </property>
-                     <item>
-                      <widget class="QWidget" name="widget_5" native="true">
-                       <layout class="QVBoxLayout" name="verticalLayout_29" stretch="0,0,0,30,5,15">
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_50" stretch="30,25,25,20">
-                          <item>
-                           <widget class="QLabel" name="label_41">
-                            <property name="text">
-                             <string>Spectral range :</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="range_min">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>20</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="range_max">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>20</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QPushButton" name="range_apply">
-                            <property name="text">
-                             <string>Extract</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
-                         <spacer name="verticalSpacer_14">
-                          <property name="orientation">
-                           <enum>Qt::Vertical</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>20</width>
-                            <height>40</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                        <item>
-                         <widget class="QGroupBox" name="gb_intensity_norm">
-                          <property name="title">
-                           <string>Baseline :</string>
-                          </property>
-                          <layout class="QVBoxLayout" name="verticalLayout_6">
-                           <property name="leftMargin">
-                            <number>2</number>
-                           </property>
-                           <property name="topMargin">
-                            <number>2</number>
-                           </property>
-                           <property name="rightMargin">
-                            <number>2</number>
-                           </property>
-                           <property name="bottomMargin">
-                            <number>2</number>
-                           </property>
-                           <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="25,25,25,25">
-                             <item>
-                              <widget class="QCheckBox" name="cb_attached">
-                               <property name="text">
-                                <string>Attached</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QRadioButton" name="rbtn_linear">
-                               <property name="text">
-                                <string>Linear</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QRadioButton" name="rbtn_polynomial">
-                               <property name="text">
-                                <string>Polynomial</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QSpinBox" name="degre"/>
-                             </item>
-                            </layout>
-                           </item>
-                           <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0">
-                             <item>
-                              <widget class="QLabel" name="label_37">
-                               <property name="text">
-                                <string>Noise range:</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QLineEdit" name="noise">
-                               <property name="sizePolicy">
-                                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                                 <horstretch>0</horstretch>
-                                 <verstretch>0</verstretch>
-                                </sizepolicy>
-                               </property>
-                               <property name="minimumSize">
-                                <size>
-                                 <width>20</width>
-                                 <height>0</height>
-                                </size>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QPushButton" name="sub_baseline">
-                               <property name="text">
-                                <string>Substract</string>
-                               </property>
-                              </widget>
-                             </item>
-                            </layout>
-                           </item>
-                          </layout>
-                         </widget>
-                        </item>
-                        <item>
-                         <spacer name="verticalSpacer">
-                          <property name="orientation">
-                           <enum>Qt::Vertical</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>20</width>
-                            <height>40</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                        <item>
-                         <widget class="QGroupBox" name="groupBox_8">
-                          <property name="title">
-                           <string>Peak position correction :</string>
-                          </property>
-                          <layout class="QVBoxLayout" name="verticalLayout_28">
-                           <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_61" stretch="0,0,0">
-                             <item>
-                              <widget class="QRadioButton" name="radioButton_3">
-                               <property name="sizePolicy">
-                                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                 <horstretch>0</horstretch>
-                                 <verstretch>0</verstretch>
-                                </sizepolicy>
-                               </property>
-                               <property name="text">
-                                <string/>
-                               </property>
-                               <property name="checked">
-                                <bool>true</bool>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QLabel" name="label_45">
-                               <property name="text">
-                                <string>No</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <layout class="QHBoxLayout" name="horizontalLayout_60">
-                               <item>
-                                <widget class="QRadioButton" name="radioButton_2">
-                                 <property name="sizePolicy">
-                                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                   <horstretch>0</horstretch>
-                                   <verstretch>0</verstretch>
-                                  </sizepolicy>
-                                 </property>
-                                 <property name="text">
-                                  <string/>
-                                 </property>
-                                </widget>
-                               </item>
-                               <item>
-                                <widget class="QLabel" name="label_44">
-                                 <property name="text">
-                                  <string>Peak  shift (cm-1) :</string>
-                                 </property>
-                                </widget>
-                               </item>
-                               <item>
-                                <widget class="QLineEdit" name="lineEdit_32">
-                                 <property name="sizePolicy">
-                                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                                   <horstretch>0</horstretch>
-                                   <verstretch>0</verstretch>
-                                  </sizepolicy>
-                                 </property>
-                                 <property name="minimumSize">
-                                  <size>
-                                   <width>20</width>
-                                   <height>0</height>
-                                  </size>
-                                 </property>
-                                 <property name="toolTip">
-                                  <string>Type the different between experimental and theoretical values</string>
-                                 </property>
-                                </widget>
-                               </item>
-                              </layout>
-                             </item>
-                            </layout>
-                           </item>
-                           <item>
-                            <spacer name="verticalSpacer_11">
-                             <property name="orientation">
-                              <enum>Qt::Vertical</enum>
-                             </property>
-                             <property name="sizeHint" stdset="0">
-                              <size>
-                               <width>20</width>
-                               <height>40</height>
-                              </size>
-                             </property>
-                            </spacer>
-                           </item>
-                           <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_64">
-                             <item>
-                              <widget class="QRadioButton" name="radioButton_5">
-                               <property name="sizePolicy">
-                                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                 <horstretch>0</horstretch>
-                                 <verstretch>0</verstretch>
-                                </sizepolicy>
-                               </property>
-                               <property name="text">
-                                <string/>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QLabel" name="label_47">
-                               <property name="text">
-                                <string>Reference peak :</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QComboBox" name="comboBox_14"/>
-                             </item>
-                             <item>
-                              <widget class="QLineEdit" name="lineEdit_34">
-                               <property name="sizePolicy">
-                                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                                 <horstretch>0</horstretch>
-                                 <verstretch>0</verstretch>
-                                </sizepolicy>
-                               </property>
-                               <property name="minimumSize">
-                                <size>
-                                 <width>20</width>
-                                 <height>0</height>
-                                </size>
-                               </property>
-                               <property name="toolTip">
-                                <string>Type the theoretical values</string>
-                               </property>
-                              </widget>
-                             </item>
-                            </layout>
-                           </item>
-                          </layout>
-                         </widget>
-                        </item>
-                        <item>
-                         <spacer name="verticalSpacer_5">
-                          <property name="orientation">
-                           <enum>Qt::Vertical</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>20</width>
-                            <height>40</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                       </layout>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QWidget" name="widget_15" native="true">
-                       <layout class="QVBoxLayout" name="verticalLayout_22">
-                        <item>
-                         <widget class="QPushButton" name="pushButton_25">
-                          <property name="text">
-                           <string>Add peak</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QPushButton" name="pushButton_10">
-                          <property name="text">
-                           <string>Save fit model</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <spacer name="verticalSpacer_6">
-                          <property name="orientation">
-                           <enum>Qt::Vertical</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>20</width>
-                            <height>40</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                        <item>
-                         <spacer name="verticalSpacer_7">
-                          <property name="orientation">
-                           <enum>Qt::Vertical</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>20</width>
-                            <height>40</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                        <item>
-                         <widget class="QPushButton" name="btn_fit_sel_wafers">
-                          <property name="text">
-                           <string>-----</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QLineEdit" name="lineEdit_3">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="placeholderText">
-                           <string>Assign name for dataframe</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QPushButton" name="pushButton_32">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="text">
-                           <string>Send to Vizulazation</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QPushButton" name="pushButton_34">
-                          <property name="text">
-                           <string>Save to excel</string>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
-                      </widget>
-                     </item>
-                     <item>
-                      <layout class="QVBoxLayout" name="verticalLayout_33">
-                       <item>
-                        <widget class="QGroupBox" name="peak_table">
-                         <property name="title">
-                          <string>Peak table: </string>
-                         </property>
-                         <layout class="QHBoxLayout" name="horizontalLayout_26">
-                          <item>
-                           <widget class="QScrollArea" name="scrollArea_5">
-                            <property name="widgetResizable">
-                             <bool>true</bool>
-                            </property>
-                            <widget class="QWidget" name="scrollAreaWidgetContents_5">
-                             <property name="geometry">
-                              <rect>
-                               <x>0</x>
-                               <y>0</y>
-                               <width>717</width>
-                               <height>354</height>
-                              </rect>
-                             </property>
-                             <layout class="QVBoxLayout" name="verticalLayout_32">
-                              <item>
-                               <layout class="QVBoxLayout" name="verticalLayout_31"/>
-                              </item>
-                              <item>
-                               <spacer name="verticalSpacer_15">
-                                <property name="orientation">
-                                 <enum>Qt::Vertical</enum>
-                                </property>
-                                <property name="sizeHint" stdset="0">
-                                 <size>
-                                  <width>20</width>
-                                  <height>40</height>
-                                 </size>
-                                </property>
-                               </spacer>
-                              </item>
-                              <item>
-                               <layout class="QHBoxLayout" name="horizontalLayout_51">
-                                <item>
-                                 <widget class="QCheckBox" name="limits">
-                                  <property name="text">
-                                   <string>Limits</string>
-                                  </property>
-                                 </widget>
-                                </item>
-                                <item>
-                                 <widget class="QCheckBox" name="expr">
-                                  <property name="text">
-                                   <string>Expression</string>
-                                  </property>
-                                 </widget>
-                                </item>
-                                <item>
-                                 <widget class="QCheckBox" name="checkBox_4">
-                                  <property name="text">
-                                   <string>CheckBox</string>
-                                  </property>
-                                 </widget>
-                                </item>
-                                <item>
-                                 <widget class="QCheckBox" name="checkBox_7">
-                                  <property name="text">
-                                   <string>CheckBox</string>
-                                  </property>
-                                 </widget>
-                                </item>
-                                <item>
-                                 <spacer name="horizontalSpacer_17">
-                                  <property name="orientation">
-                                   <enum>Qt::Horizontal</enum>
-                                  </property>
-                                  <property name="sizeHint" stdset="0">
-                                   <size>
-                                    <width>40</width>
-                                    <height>20</height>
-                                   </size>
-                                  </property>
-                                 </spacer>
-                                </item>
-                               </layout>
-                              </item>
-                             </layout>
-                            </widget>
-                           </widget>
-                          </item>
-                         </layout>
-                        </widget>
-                       </item>
-                      </layout>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                 </layout>
                 </item>
                </layout>
               </widget>
@@ -2309,7 +2262,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/icons8-folder-96.png</normaloff>:/icon/iconpack/icons8-folder-96.png</iconset>
                </property>
                <property name="iconSize">
@@ -2347,7 +2300,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/save.png</normaloff>:/icon/iconpack/save.png</iconset>
                </property>
                <property name="iconSize">
@@ -2385,7 +2338,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/icons8-documents-folder-96.png</normaloff>:/icon/iconpack/icons8-documents-folder-96.png</iconset>
                </property>
                <property name="iconSize">
@@ -2408,7 +2361,7 @@
                 <string/>
                </property>
                <property name="pixmap">
-                <pixmap resource="resources_new.qrc">:/icon/logo.png</pixmap>
+                <pixmap>:/icon/logo.png</pixmap>
                </property>
               </widget>
              </item>
@@ -2492,7 +2445,6 @@
              <property name="font">
               <font>
                <family>Arial</family>
-               <weight>75</weight>
                <italic>false</italic>
                <bold>true</bold>
               </font>
@@ -2569,7 +2521,7 @@
                    <string>Remove</string>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/icons8-trash-128.png</normaloff>:/icon/iconpack/icons8-trash-128.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -2592,7 +2544,7 @@
                    <string>Show</string>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -2615,7 +2567,7 @@
                    <string>Save</string>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -2672,7 +2624,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/select-all.png</normaloff>:/icon/iconpack/select-all.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -2710,7 +2662,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/vertical-line.png</normaloff>:/icon/iconpack/vertical-line.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -2748,7 +2700,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/horizontal-line.png</normaloff>:/icon/iconpack/horizontal-line.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -3076,7 +3028,7 @@
                      <string/>
                     </property>
                     <property name="icon">
-                     <iconset resource="resources_new.qrc">
+                     <iconset>
                       <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                     </property>
                     <property name="iconSize">
@@ -3235,8 +3187,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>323</width>
-                      <height>540</height>
+                      <width>348</width>
+                      <height>607</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,20,0,0,0,0,0,0,0,0,0">
@@ -3264,7 +3216,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -3275,7 +3226,7 @@
                           <string> Collect fit results</string>
                          </property>
                          <property name="icon">
-                          <iconset resource="resources_new.qrc">
+                          <iconset>
                            <normaloff>:/icon/iconpack/collect.png</normaloff>:/icon/iconpack/collect.png</iconset>
                          </property>
                          <property name="iconSize">
@@ -3313,7 +3264,7 @@
                           <string/>
                          </property>
                          <property name="icon">
-                          <iconset resource="resources_new.qrc">
+                          <iconset>
                            <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
                          </property>
                          <property name="iconSize">
@@ -3351,7 +3302,7 @@
                           <string/>
                          </property>
                          <property name="icon">
-                          <iconset resource="resources_new.qrc">
+                          <iconset>
                            <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
                          </property>
                          <property name="iconSize">
@@ -3383,7 +3334,7 @@
                           <string/>
                          </property>
                          <property name="icon">
-                          <iconset resource="resources_new.qrc">
+                          <iconset>
                            <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
                          </property>
                          <property name="iconSize">
@@ -3543,7 +3494,7 @@
                              <string>Add filter(s)</string>
                             </property>
                             <property name="icon">
-                             <iconset resource="resources_new.qrc">
+                             <iconset>
                               <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
                             </property>
                            </widget>
@@ -3590,7 +3541,7 @@
                              <string>Remove filter</string>
                             </property>
                             <property name="icon">
-                             <iconset resource="resources_new.qrc">
+                             <iconset>
                               <normaloff>:/icon/iconpack/close.png</normaloff>:/icon/iconpack/close.png</iconset>
                             </property>
                            </widget>
@@ -3604,7 +3555,7 @@
                              <string>Apply filter(s)</string>
                             </property>
                             <property name="icon">
-                             <iconset resource="resources_new.qrc">
+                             <iconset>
                               <normaloff>:/icon/iconpack/add.png</normaloff>:/icon/iconpack/add.png</iconset>
                             </property>
                            </widget>
@@ -3619,7 +3570,6 @@
                        <property name="font">
                         <font>
                          <pointsize>12</pointsize>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -4068,7 +4018,7 @@
                             <string/>
                            </property>
                            <property name="icon">
-                            <iconset resource="resources_new.qrc">
+                            <iconset>
                              <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                            </property>
                            <property name="iconSize">
@@ -4347,7 +4297,7 @@
                             <string/>
                            </property>
                            <property name="icon">
-                            <iconset resource="resources_new.qrc">
+                            <iconset>
                              <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                            </property>
                            <property name="iconSize">
@@ -5095,7 +5045,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/icons8-folder-96.png</normaloff>:/icon/iconpack/icons8-folder-96.png</iconset>
                </property>
                <property name="iconSize">
@@ -5127,7 +5077,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/save.png</normaloff>:/icon/iconpack/save.png</iconset>
                </property>
                <property name="iconSize">
@@ -5159,7 +5109,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/icons8-documents-folder-96.png</normaloff>:/icon/iconpack/icons8-documents-folder-96.png</iconset>
                </property>
                <property name="iconSize">
@@ -5182,7 +5132,7 @@
                 <string/>
                </property>
                <property name="pixmap">
-                <pixmap resource="resources_new.qrc">:/icon/logo.png</pixmap>
+                <pixmap>:/icon/logo.png</pixmap>
                </property>
               </widget>
              </item>
@@ -5263,7 +5213,6 @@
              <property name="font">
               <font>
                <family>Arial</family>
-               <weight>75</weight>
                <italic>false</italic>
                <bold>true</bold>
               </font>
@@ -5346,7 +5295,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/select-all.png</normaloff>:/icon/iconpack/select-all.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -5381,7 +5330,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/icons8-trash-128.png</normaloff>:/icon/iconpack/icons8-trash-128.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -5602,7 +5551,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1143</width>
+               <width>1139</width>
                <height>921</height>
               </rect>
              </property>
@@ -5689,7 +5638,7 @@
                   <string/>
                  </property>
                  <property name="pixmap">
-                  <pixmap resource="resources_new.qrc">:/icon/logo.png</pixmap>
+                  <pixmap>:/icon/logo.png</pixmap>
                  </property>
                 </widget>
                </item>
@@ -5721,7 +5670,6 @@
                  <property name="font">
                   <font>
                    <pointsize>8</pointsize>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5729,7 +5677,7 @@
                   <string>Open data</string>
                  </property>
                  <property name="icon">
-                  <iconset resource="resources_new.qrc">
+                  <iconset>
                    <normaloff>:/icon/iconpack/icons8-folder-96.png</normaloff>:/icon/iconpack/icons8-folder-96.png</iconset>
                  </property>
                  <property name="iconSize">
@@ -5750,7 +5698,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5758,7 +5705,7 @@
                   <string>Plot recipe</string>
                  </property>
                  <property name="icon">
-                  <iconset resource="resources_new.qrc">
+                  <iconset>
                    <normaloff>:/icon/iconpack/icon.png</normaloff>:/icon/iconpack/icon.png</iconset>
                  </property>
                  <property name="iconSize">
@@ -5779,7 +5726,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5787,7 +5733,7 @@
                   <string>Open work</string>
                  </property>
                  <property name="icon">
-                  <iconset resource="resources_new.qrc">
+                  <iconset>
                    <normaloff>:/icon/iconpack/icons8-documents-folder-96.png</normaloff>:/icon/iconpack/icons8-documents-folder-96.png</iconset>
                  </property>
                  <property name="iconSize">
@@ -5808,7 +5754,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <weight>75</weight>
                    <bold>true</bold>
                   </font>
                  </property>
@@ -5816,7 +5761,7 @@
                   <string>Save work</string>
                  </property>
                  <property name="icon">
-                  <iconset resource="resources_new.qrc">
+                  <iconset>
                    <normaloff>:/icon/iconpack/icons8-save-all-48.png</normaloff>:/icon/iconpack/icons8-save-all-48.png</iconset>
                  </property>
                  <property name="iconSize">
@@ -5858,7 +5803,7 @@
                        <string/>
                       </property>
                       <property name="icon">
-                       <iconset resource="resources_new.qrc">
+                       <iconset>
                         <normaloff>:/icon/iconpack/view.png</normaloff>:/icon/iconpack/view.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -5878,7 +5823,7 @@
                        <string/>
                       </property>
                       <property name="icon">
-                       <iconset resource="resources_new.qrc">
+                       <iconset>
                         <normaloff>:/icon/iconpack/icons8-remove-100.png</normaloff>:/icon/iconpack/icons8-remove-100.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -5899,7 +5844,7 @@
                        <string/>
                       </property>
                       <property name="icon">
-                       <iconset resource="resources_new.qrc">
+                       <iconset>
                         <normaloff>:/icon/iconpack/save-all.png</normaloff>:/icon/iconpack/save-all.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -5954,7 +5899,7 @@
                      <string>Add filter(s)</string>
                     </property>
                     <property name="icon">
-                     <iconset resource="resources_new.qrc">
+                     <iconset>
                       <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
                     </property>
                    </widget>
@@ -5988,7 +5933,7 @@
                      <string>Remove filter</string>
                     </property>
                     <property name="icon">
-                     <iconset resource="resources_new.qrc">
+                     <iconset>
                       <normaloff>:/icon/iconpack/close.png</normaloff>:/icon/iconpack/close.png</iconset>
                     </property>
                    </widget>
@@ -6002,7 +5947,7 @@
                      <string>Apply filter(s)</string>
                     </property>
                     <property name="icon">
-                     <iconset resource="resources_new.qrc">
+                     <iconset>
                       <normaloff>:/icon/iconpack/add.png</normaloff>:/icon/iconpack/add.png</iconset>
                     </property>
                    </widget>
@@ -6038,7 +5983,6 @@
                     <widget class="QPushButton" name="btn_add_a_plot">
                      <property name="font">
                       <font>
-                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -6046,7 +5990,7 @@
                       <string>Add plot</string>
                      </property>
                      <property name="icon">
-                      <iconset resource="resources_new.qrc">
+                      <iconset>
                        <normaloff>:/icon/iconpack/icons8-graph-96.png</normaloff>:/icon/iconpack/icons8-graph-96.png</iconset>
                      </property>
                      <property name="iconSize">
@@ -6136,7 +6080,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -6144,7 +6087,7 @@
                           <string>Plot wafers</string>
                          </property>
                          <property name="icon">
-                          <iconset resource="resources_new.qrc">
+                          <iconset>
                            <normaloff>:/icon/iconpack/wafer_map.png</normaloff>:/icon/iconpack/wafer_map.png</iconset>
                          </property>
                          <property name="iconSize">
@@ -6770,7 +6713,7 @@
                   <string>Clear workspace</string>
                  </property>
                  <property name="icon">
-                  <iconset resource="resources_new.qrc">
+                  <iconset>
                    <normaloff>:/icon/iconpack/icons8-update-96.png</normaloff>:/icon/iconpack/icons8-update-96.png</iconset>
                  </property>
                 </widget>
@@ -6800,7 +6743,7 @@
                   <string>Save all figs</string>
                  </property>
                  <property name="icon">
-                  <iconset resource="resources_new.qrc">
+                  <iconset>
                    <normaloff>:/icon/iconpack/icons8-download-96.png</normaloff>:/icon/iconpack/icons8-download-96.png</iconset>
                  </property>
                  <property name="iconSize">
@@ -6849,7 +6792,7 @@
      <x>0</x>
      <y>0</y>
      <width>1619</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSave">
@@ -6861,7 +6804,7 @@
       <string>Dark/Light mode</string>
      </property>
      <property name="icon">
-      <iconset resource="resources_new.qrc">
+      <iconset>
        <normaloff>:/icon/iconpack/dark-light.png</normaloff>:/icon/iconpack/dark-light.png</iconset>
      </property>
      <addaction name="separator"/>
@@ -6928,7 +6871,7 @@
   </action>
   <action name="actionHelps">
    <property name="icon">
-    <iconset resource="resources_new.qrc">
+    <iconset>
      <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
    </property>
    <property name="text">
@@ -6937,7 +6880,7 @@
   </action>
   <action name="actionDarkMode">
    <property name="icon">
-    <iconset resource="resources_new.qrc">
+    <iconset>
      <normaloff>:/icon/iconpack/dark.png</normaloff>:/icon/iconpack/dark.png</iconset>
    </property>
    <property name="text">
@@ -6946,7 +6889,7 @@
   </action>
   <action name="actionLightMode">
    <property name="icon">
-    <iconset resource="resources_new.qrc">
+    <iconset>
      <normaloff>:/icon/iconpack/light.png</normaloff>:/icon/iconpack/light.png</iconset>
    </property>
    <property name="text">
@@ -6955,7 +6898,7 @@
   </action>
   <action name="actionAbout">
    <property name="icon">
-    <iconset resource="resources_new.qrc">
+    <iconset>
      <normaloff>:/icon/iconpack/about.png</normaloff>:/icon/iconpack/about.png</iconset>
    </property>
    <property name="text">

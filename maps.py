@@ -62,7 +62,8 @@ class Maps(QObject):
         self.ui.cb_residual.stateChanged.connect(self.delay_plot)
         self.ui.cb_filled.stateChanged.connect(self.delay_plot)
         self.ui.cb_peaks.stateChanged.connect(self.delay_plot)
-
+        self.ui.limits.stateChanged.connect(self.delay_plot)
+        self.ui.expr.stateChanged.connect(self.delay_plot)
         # Set a delay for the function "plot1"
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
@@ -190,23 +191,32 @@ class Maps(QObject):
 
         for peak_model in sel_spectrum.peak_models:
             # Create widgets for displaying peak model attributes
-            prefix = QLabel(peak_model.prefix)
-            model = QComboBox()
-            model.addItems(peak_model.name2)
-            model.setFixedWidth(120)  # Set fixed width for the combobox
+            delete = QCheckBox(peak_model.prefix)  # Set text of QCheckBox to prefix text
+            delete.setChecked(False)
+            delete.setFixedWidth(60)
 
-            param_hints = peak_model.param_hints  # Get the param_hints
+            label = QLineEdit()
+            label.setFixedWidth(60)
+
+            model = peak_model.name2
+            cbb = QComboBox()
+            cbb.addItems([model])
+            cbb.setFixedWidth(120)
 
             layout = QHBoxLayout()
-            layout.addWidget(prefix)
-            layout.addWidget(model)
+            layout.addWidget(delete)
+            layout.addWidget(label)
+            layout.addWidget(cbb)
 
+            param_hints = peak_model.param_hints
             for param_hint in param_hints.values():
                 value_val = round(param_hint.get('value', 0.0), 2)
                 value = QLineEdit(str(value_val))
-                value.setFixedWidth(50)
+                value.setFixedWidth(70)
+                value.setAlignment(Qt.AlignRight)
+
                 vary = QCheckBox()
-                vary.setChecked(param_hint.get('vary', False))
+                vary.setChecked(not param_hint.get('vary', False))
 
                 layout.addWidget(value)
                 layout.addWidget(vary)
@@ -215,26 +225,30 @@ class Maps(QObject):
                     max_val = round(param_hint.get('max', 0.0), 2)
                     max_lineedit = QLineEdit(str(max_val))
                     max_lineedit.setFixedWidth(50)
+                    max_lineedit.setAlignment(Qt.AlignRight)
                     min_val = round(param_hint.get('min', 0.0), 2)
                     min_lineedit = QLineEdit(str(min_val))
                     min_lineedit.setFixedWidth(50)
+                    min_lineedit.setAlignment(Qt.AlignRight)
                     layout.addWidget(min_lineedit)
                     layout.addWidget(max_lineedit)
 
                 if self.ui.expr.isChecked():
                     expr_val = str(param_hint.get('expr', ''))
                     expr = QLineEdit(expr_val)
-                    expr.setFixedWidth(50)
+                    expr.setFixedWidth(150)
+                    expr.setAlignment(Qt.AlignRight)  # Align to the right
                     layout.addWidget(expr)
-            # Add horizontal spacer
-            spacer_item1 = QSpacerItem(40, 20, QSizePolicy.Expanding,
-                                       QSizePolicy.Minimum)
+
+                spacer_item = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
+                layout.addItem(spacer_item)
+
+            spacer_item1 = QSpacerItem(40, 20, QSizePolicy.Expanding,QSizePolicy.Minimum)
             layout.addItem(spacer_item1)
-            # Add layout to main GUI layout
+            # Add layout to main GUI
             self.ui.verticalLayout_31.addLayout(layout)
 
-        spacer_item2 = QSpacerItem(20, 40, QSizePolicy.Minimum,
-                                   QSizePolicy.Expanding)
+        spacer_item2 = QSpacerItem(20, 40, QSizePolicy.Minimum,QSizePolicy.Expanding)
         self.ui.verticalLayout_31.addItem(spacer_item2)
 
     def apply_fit_model(self):

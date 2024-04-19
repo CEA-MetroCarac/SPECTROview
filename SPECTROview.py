@@ -206,6 +206,7 @@ class Main:
         self.ui.btn_split_fname_2.clicked.connect(self.maps.split_fname)
         self.ui.btn_add_col_2.clicked.connect(self.maps.add_column)
 
+        self.ui.range_apply.clicked.connect(self.maps.set_x_range)
         ########################################################
         ############## GUI for Spectrums Processing tab #############
         ########################################################

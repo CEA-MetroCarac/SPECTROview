@@ -13,6 +13,8 @@ from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
 from fitspy.app.gui import Appli
+from fitspy.utils import closest_index
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -114,7 +116,6 @@ class Maps(QObject):
                         print(f"Wafer '{wafer_name}' is already opened")
                     else:
                         self.wafers[wafer_name] = wafer_df
-
         self.extract_spectra()
 
     def extract_spectra(self):
@@ -145,6 +146,34 @@ class Maps(QObject):
 
         self.upd_wafers_list()
 
+    def read_spectrum_model(self):
+        """To read fitted params and peak_models of selected spectrum"""
+        sel_spectrum = self.get_spectrum_objet()
+        self.ui.range_min.setText(str(sel_spectrum.x[0]))
+        self.ui.range_max.setText(str(sel_spectrum.x[-1]))
+
+    def set_x_range(self):
+        """Update sel_spectrum's range from QLineEdit"""
+        sel_spectrum = self.get_spectrum_objet()
+        fnames = []
+        fnames.append(sel_spectrum.fname)
+        reinit_spectrum(fnames, self.spectra_fs)
+        new_x_min = float(self.ui.range_min.text())
+        new_x_max = float(self.ui.range_max.text())
+
+        ind_min = closest_index(sel_spectrum.x0, new_x_min)
+        ind_max = closest_index(sel_spectrum.x0, new_x_max)
+
+        sel_spectrum.x = sel_spectrum.x0[ind_min:ind_max + 1].copy()
+        sel_spectrum.y = sel_spectrum.y0[ind_min:ind_max + 1].copy()
+        sel_spectrum.range_max = float(self.ui.range_max.text())
+        self.delay_plot()
+        QTimer.singleShot(100, self.upd_spectra_list)
+
+    def apply_fit_model(self):
+        """To apply all parameters of a fit model"""
+        pass
+
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
         if not fname_json:
@@ -174,6 +203,7 @@ class Maps(QObject):
             show_alert("Load a fit model before fitting.")
             self.ui.btn_fit.setEnabled(True)
             return
+
         if fnames is None:
             wafer_name, coords = self.spectre_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
@@ -194,7 +224,6 @@ class Maps(QObject):
 
     def fit_all(self):
         """ Apply loaded fit model to all selected spectra"""
-
         fnames = self.spectra_fs.fnames
         self.fit(fnames=fnames)
 
@@ -414,6 +443,7 @@ class Maps(QObject):
 
     def plot1(self):
         """Plot all selected spectra"""
+
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
         for spectrum_fs in self.spectra_fs:
@@ -446,7 +476,6 @@ class Maps(QObject):
                     self.ui.cb_bestfit.isChecked():
                 bestfit = spectrum_fs.result_fit.best_fit
                 self.ax.plot(x_values, bestfit, label=f"bestfit")
-
                 for peak_model in spectrum_fs.result_fit.components:
                     # Convert prefix to peak_labels
                     peak_labels = spectrum_fs.peak_labels
@@ -500,6 +529,7 @@ class Maps(QObject):
         self.ax.get_figure().tight_layout()
         self.canvas1.draw()
         self.plot2()
+        self.read_spectrum_model()
 
     def plot2(self):
         """Plot wafer maps of measurement sites"""
@@ -706,6 +736,19 @@ class Maps(QObject):
             if y_coord == 0:
                 item.setSelected(True)
 
+    def get_spectrum_objet(self):
+        """ to get the selected spectrum object"""
+        wafer_name, coords = self.spectre_id()
+        selected_spectra_fs = []
+        for spectrum_fs in self.spectra_fs:
+            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+            if wafer_name_fs == wafer_name and coord_fs in coords:
+                selected_spectra_fs.append(spectrum_fs)
+        if len(selected_spectra_fs) == 0:
+            return
+        sel_spectrum = selected_spectra_fs[0]
+        return sel_spectrum
+
     def spectre_id(self):
         """Get selected spectre id(s)"""
         wafer_item = self.ui.wafers_listbox.currentItem()
@@ -772,6 +815,7 @@ class Maps(QObject):
                 selected_spectra_fs.append(spectrum_fs)
         if len(selected_spectra_fs) == 0:
             return
+
         ui = self.ui.tabWidget
         title = f"Fitting Report - {wafer_name} - {coords}"
         # Show the 'report' of the first selected spectrum

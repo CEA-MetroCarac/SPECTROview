@@ -674,7 +674,7 @@
                <bool>true</bool>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="wafer_plot_view">
                <attribute name="title">
@@ -1593,7 +1593,7 @@
                            </widget>
                           </item>
                           <item>
-                           <widget class="QLineEdit" name="lineEdit_27">
+                           <widget class="QLineEdit" name="range_min">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -1609,7 +1609,7 @@
                            </widget>
                           </item>
                           <item>
-                           <widget class="QLineEdit" name="lineEdit_30">
+                           <widget class="QLineEdit" name="range_max">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -1625,7 +1625,7 @@
                            </widget>
                           </item>
                           <item>
-                           <widget class="QPushButton" name="pushButton_7">
+                           <widget class="QPushButton" name="range_apply">
                             <property name="text">
                              <string>Apply</string>
                             </property>
@@ -1643,7 +1643,7 @@
                            </widget>
                           </item>
                           <item>
-                           <widget class="QLineEdit" name="lineEdit_26">
+                           <widget class="QLineEdit" name="bl_point1">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
                               <horstretch>0</horstretch>
@@ -1659,7 +1659,7 @@
                            </widget>
                           </item>
                           <item>
-                           <widget class="QLineEdit" name="lineEdit_18">
+                           <widget class="QLineEdit" name="bl_point2">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -1943,8 +1943,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>20</width>
-                             <height>28</height>
+                             <width>690</width>
+                             <height>356</height>
                             </rect>
                            </property>
                            <layout class="QVBoxLayout" name="verticalLayout_32">

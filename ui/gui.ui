@@ -704,54 +704,70 @@
                       <widget class="QWidget" name="widget_5" native="true">
                        <layout class="QVBoxLayout" name="verticalLayout_29" stretch="0,0,0,30,5,15,0,0">
                         <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_50" stretch="30,25,25,20">
-                          <item>
-                           <widget class="QLabel" name="label_41">
-                            <property name="text">
-                             <string>Spectral range :</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="range_min">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>20</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="range_max">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>20</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QPushButton" name="range_apply">
-                            <property name="text">
-                             <string>Extract</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
+                         <widget class="QGroupBox" name="groupBox_4">
+                          <property name="title">
+                           <string>Spectral range:</string>
+                          </property>
+                          <layout class="QVBoxLayout" name="verticalLayout_22">
+                           <item>
+                            <layout class="QHBoxLayout" name="horizontalLayout_50" stretch="30,25,0,25,20">
+                             <item>
+                              <widget class="QLabel" name="label_41">
+                               <property name="text">
+                                <string>X min/max</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLineEdit" name="range_min">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="minimumSize">
+                                <size>
+                                 <width>20</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLabel" name="label_38">
+                               <property name="text">
+                                <string>/</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLineEdit" name="range_max">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="minimumSize">
+                                <size>
+                                 <width>20</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="range_apply">
+                               <property name="text">
+                                <string>Extract</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </item>
+                          </layout>
+                         </widget>
                         </item>
                         <item>
                          <spacer name="verticalSpacer_14">
@@ -813,7 +829,7 @@
                             </layout>
                            </item>
                            <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0">
+                            <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0,0">
                              <item>
                               <widget class="QLabel" name="label_37">
                                <property name="text">
@@ -831,11 +847,30 @@
                                </property>
                                <property name="minimumSize">
                                 <size>
-                                 <width>20</width>
-                                 <height>0</height>
+                                 <width>60</width>
+                                 <height>20</height>
+                                </size>
+                               </property>
+                               <property name="maximumSize">
+                                <size>
+                                 <width>60</width>
+                                 <height>20</height>
                                 </size>
                                </property>
                               </widget>
+                             </item>
+                             <item>
+                              <spacer name="horizontalSpacer_18">
+                               <property name="orientation">
+                                <enum>Qt::Horizontal</enum>
+                               </property>
+                               <property name="sizeHint" stdset="0">
+                                <size>
+                                 <width>40</width>
+                                 <height>20</height>
+                                </size>
+                               </property>
+                              </spacer>
                              </item>
                              <item>
                               <widget class="QPushButton" name="sub_baseline">
@@ -1086,14 +1121,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QPushButton" name="pushButton_10">
-                           <property name="text">
-                            <string>Del peak</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QPushButton" name="pushButton_4">
+                          <widget class="QPushButton" name="btn_fit_2">
                            <property name="text">
                             <string>Fit</string>
                            </property>

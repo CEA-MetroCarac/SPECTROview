@@ -22,7 +22,7 @@ from wafer_view import WaferView
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
                                QListWidgetItem)
 from PySide6.QtWidgets import QLabel, QComboBox, QLineEdit, QCheckBox, \
-    QHBoxLayout, QSpacerItem, QSizePolicy
+    QHBoxLayout, QSpacerItem, QSizePolicy, QPushButton
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
@@ -189,19 +189,30 @@ class Maps(QObject):
         sel_spectrum = self.get_spectrum_objet()
         self.clear_layout(self.ui.verticalLayout_31)
 
-        for peak_model in sel_spectrum.peak_models:
-            # Create widgets for displaying peak model attributes
-            delete = QCheckBox(peak_model.prefix)  # Set text of QCheckBox to prefix text
-            delete.setChecked(False)
-            delete.setFixedWidth(60)
+        # Retrieve peak labels from the current spectrum object
+        labels = sel_spectrum.peak_labels
+        peak_models = sel_spectrum.peak_models
+        print(labels)
+        print("Length of labels:", len(labels))
+        print("Length of peak_models:", len(sel_spectrum.peak_models))
 
-            label = QLineEdit()
-            label.setFixedWidth(60)
+        for i, (peak_model, label_text) in enumerate(zip(peak_models, labels)):
+            # Create widgets for displaying peak model attributes
+            prefix = f"del {peak_model.prefix}"
+            delete = QPushButton(prefix)
+            delete.setFixedWidth(70)
+            delete.clicked.connect(lambda idx=i, spectrum=sel_spectrum: self.delete_peak_model(spectrum, idx))
+
+            label = QLineEdit(label_text)
+            label.setFixedWidth(80)
+            label.textChanged.connect(
+                lambda text, idx=i, spectrum=sel_spectrum: self.update_peak_label(spectrum, idx, text))
 
             model = peak_model.name2
             cbb = QComboBox()
             cbb.addItems([model])
             cbb.setFixedWidth(120)
+            cbb.currentIndexChanged.connect(lambda index, pm=peak_model: self.update_model_name(pm, index))
 
             layout = QHBoxLayout()
             layout.addWidget(delete)
@@ -209,52 +220,90 @@ class Maps(QObject):
             layout.addWidget(cbb)
 
             param_hints = peak_model.param_hints
-            for param_hint in param_hints.values():
-                value_val = round(param_hint.get('value', 0.0), 2)
+
+            for param_hint_key, param_hint_value in param_hints.items():
+                value_val = round(param_hint_value.get('value', 0.0), 2)
                 value = QLineEdit(str(value_val))
                 value.setFixedWidth(70)
                 value.setAlignment(Qt.AlignRight)
+                value.textChanged.connect(
+                    lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_value(pm, key, text))
 
                 vary = QCheckBox()
-                vary.setChecked(not param_hint.get('vary', False))
+                vary.setChecked(not param_hint_value.get('vary', False))
+                vary.stateChanged.connect(
+                    lambda state, pm=peak_model, key=param_hint_key: self.update_param_hint_vary(pm, key, not state))
 
                 layout.addWidget(value)
                 layout.addWidget(vary)
 
                 if self.ui.limits.isChecked():
-                    max_val = round(param_hint.get('max', 0.0), 2)
+                    max_val = round(param_hint_value.get('max', 0.0), 2)
                     max_lineedit = QLineEdit(str(max_val))
-                    max_lineedit.setFixedWidth(50)
+                    max_lineedit.setFixedWidth(70)
                     max_lineedit.setAlignment(Qt.AlignRight)
-                    min_val = round(param_hint.get('min', 0.0), 2)
+                    max_lineedit.textChanged.connect(
+                        lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_max(pm, key, text))
+
+                    min_val = round(param_hint_value.get('min', 0.0), 2)
                     min_lineedit = QLineEdit(str(min_val))
-                    min_lineedit.setFixedWidth(50)
+                    min_lineedit.setFixedWidth(70)
                     min_lineedit.setAlignment(Qt.AlignRight)
+                    min_lineedit.textChanged.connect(
+                        lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_min(pm, key, text))
+
                     layout.addWidget(min_lineedit)
                     layout.addWidget(max_lineedit)
 
                 if self.ui.expr.isChecked():
-                    expr_val = str(param_hint.get('expr', ''))
+                    expr_val = str(param_hint_value.get('expr', ''))
                     expr = QLineEdit(expr_val)
                     expr.setFixedWidth(150)
-                    expr.setAlignment(Qt.AlignRight)  # Align to the right
+                    expr.setAlignment(Qt.AlignRight)
+                    expr.textChanged.connect(
+                        lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_expr(pm, key, text))
                     layout.addWidget(expr)
 
                 spacer_item = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
                 layout.addItem(spacer_item)
 
-            spacer_item1 = QSpacerItem(40, 20, QSizePolicy.Expanding,QSizePolicy.Minimum)
+            spacer_item1 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
             layout.addItem(spacer_item1)
             # Add layout to main GUI
             self.ui.verticalLayout_31.addLayout(layout)
 
-        spacer_item2 = QSpacerItem(20, 40, QSizePolicy.Minimum,QSizePolicy.Expanding)
+        spacer_item2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.ui.verticalLayout_31.addItem(spacer_item2)
 
-    def apply_fit_model(self):
-        """To apply all parameters of a fit model"""
-        pass
+    def delete_peak_model(self, spectrum, idx):
+        """"To delete a peak model"""
+        spectrum.del_peak_model(idx)
+        self.upd_spectra_list()
+    def update_peak_label(self, spectrum, idx, text):
+        spectrum.peak_labels[idx] = text
+    def update_model_name(self, pm, index):
+        print(f"Model Name: {pm.name2[index]}")
 
+    def update_param_hint_value(self, pm, key, text):
+        #print(f"Peak Model: {pm.prefix}, Param Hint Key: {key}, Value: {text}")
+        pm.param_hints[key]['value'] = float(text)
+    def update_param_hint_min(self, pm, key, text):
+        pm.param_hints[key]['min'] = float(text)
+    def update_param_hint_max(self, pm, key, text):
+        pm.param_hints[key]['max'] = float(text)
+    def update_param_hint_vary(self, pm, key, state):
+        pm.param_hints[key]['vary'] = state
+        self.upd_spectra_list()
+    def update_param_hint_expr(self, pm, key, text):
+        pm.param_hints[key]['expr'] = text
+
+
+    def apply_fit_model(self, sel_spectrum):
+        """To apply all parameters of a fit model"""
+        sel_spectrum = self.get_spectrum_objet()
+        sel_spectrum.fit()
+        self.delay_plot()
+        QTimer.singleShot(100, self.upd_spectra_list)
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
         if not fname_json:

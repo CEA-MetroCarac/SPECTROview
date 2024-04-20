@@ -74,7 +74,6 @@ def reinit_spectrum(fnames, spectra_fs):
         spectrum.baseline.points = [[], []]
         spectrum.baseline.is_subtracted = False
 
-
 def clear_layout(layout):
     """Clear everything within a given Qlayout"""
     if layout is not None:

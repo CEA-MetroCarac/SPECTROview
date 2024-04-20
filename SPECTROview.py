@@ -207,6 +207,7 @@ class Main:
         self.ui.btn_add_col_2.clicked.connect(self.maps.add_column)
 
         self.ui.range_apply.clicked.connect(self.maps.set_x_range)
+        self.ui.btn_fit_2.clicked.connect(self.maps.apply_fit_model)
         ########################################################
         ############## GUI for Spectrums Processing tab #############
         ########################################################

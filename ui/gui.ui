@@ -1087,22 +1087,33 @@
                                <height>316</height>
                               </rect>
                              </property>
-                             <layout class="QVBoxLayout" name="verticalLayout_32">
+                             <layout class="QVBoxLayout" name="verticalLayout_35">
                               <item>
-                               <layout class="QVBoxLayout" name="verticalLayout_31"/>
-                              </item>
-                              <item>
-                               <spacer name="verticalSpacer_15">
-                                <property name="orientation">
-                                 <enum>Qt::Vertical</enum>
-                                </property>
-                                <property name="sizeHint" stdset="0">
-                                 <size>
-                                  <width>20</width>
-                                  <height>40</height>
-                                 </size>
-                                </property>
-                               </spacer>
+                               <layout class="QVBoxLayout" name="verticalLayout_311">
+                                <item>
+                                 <layout class="QHBoxLayout" name="horizontalLayout_53">
+                                  <item>
+                                   <layout class="QHBoxLayout" name="verticalLayout_31"/>
+                                  </item>
+                                  <item>
+                                   <layout class="QHBoxLayout" name="horizontalLayout_54"/>
+                                  </item>
+                                 </layout>
+                                </item>
+                                <item>
+                                 <spacer name="verticalSpacer_6">
+                                  <property name="orientation">
+                                   <enum>Qt::Vertical</enum>
+                                  </property>
+                                  <property name="sizeHint" stdset="0">
+                                   <size>
+                                    <width>20</width>
+                                    <height>40</height>
+                                   </size>
+                                  </property>
+                                 </spacer>
+                                </item>
+                               </layout>
                               </item>
                              </layout>
                             </widget>
@@ -1722,7 +1733,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>248</width>
+                     <width>236</width>
                      <height>440</height>
                     </rect>
                    </property>
@@ -3215,7 +3226,7 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>348</width>
+                      <width>333</width>
                       <height>607</height>
                      </rect>
                     </property>

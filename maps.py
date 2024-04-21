@@ -23,7 +23,7 @@ from wafer_view import WaferView
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
                                QListWidgetItem)
 from PySide6.QtWidgets import QLabel, QComboBox, QLineEdit, QCheckBox, \
-    QHBoxLayout, QSpacerItem, QSizePolicy, QPushButton, QVBoxLayout
+    QHBoxLayout, QSpacerItem, QSizePolicy, QPushButton, QVBoxLayout, QMainWindow
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
@@ -200,7 +200,6 @@ class Maps(QObject):
         print("Length of labels:", len(labelsss))
         print("Length of peak_models:", len(peak_modelsss))
 
-
         header_labels = ["Delete", "Label", "Model"]
         param_hint_order = ['x0', 'fwhm', 'ampli', 'alpha', 'fwhm_l', 'fwhm_r']
 
@@ -268,7 +267,9 @@ class Maps(QObject):
             current_model_index = PEAK_MODELS.index(peak_model.name2) if peak_model.name2 in PEAK_MODELS else 0
             model.setCurrentIndex(current_model_index)
             model.setFixedWidth(120)
-            model.currentIndexChanged.connect(lambda index, pm=peak_model: self.update_model_name(pm, index))
+            model.currentIndexChanged.connect(
+                lambda index, spectrum=sel_spectrum, idx=i, combo=model: self.update_model_name(spectrum, index,idx,
+                                                                                         combo.currentText()))
             model_layout.addWidget(model)
 
             # variables of peak_model
@@ -347,13 +348,30 @@ class Maps(QObject):
         for param_hint_key, param_hint_layout in param_hint_layouts.items():
             for var_layout in param_hint_layout.values():
                 self.ui.peak_table1.addLayout(var_layout)
+    def update_model_name(self, spectrum, index,idx, new_model):
+        """ Update the model function related to the ith-model """
+        old_model_name = spectrum.peak_models[idx].name2
+        new_model_name = new_model
+        if new_model_name != old_model_name:
+            ampli = spectrum.peak_models[idx].param_hints['ampli']['value']
+            x0 = spectrum.peak_models[idx].param_hints['x0']['value']
+            peak_model = spectrum.create_peak_model(idx +1, new_model_name,
+                                                    x0=x0, ampli=ampli)
+            spectrum.peak_models[idx] = peak_model
+            spectrum.result_fit = lambda: None
+            self.upd_spectra_list()
+
     def add_peak(self):
         """To add a peak_model for the selected spectrum"""
         sel_spectrum = self.get_spectrum_objet()
-        pos = float(self.ui.peak_pos.text())
-        fit_model = self.ui.fit_model.currentText()
-        sel_spectrum.add_peak_model(fit_model, pos)
-        self.upd_spectra_list()
+        peak_pos_text = self.ui.peak_pos.text().strip()
+        if peak_pos_text:
+            pos = float(peak_pos_text)
+            fit_model = self.ui.fit_model.currentText()
+            sel_spectrum.add_peak_model(fit_model, pos)
+            self.upd_spectra_list()
+        else:
+            show_alert("Please enter a peak position.")
     def delete_peak_model(self, spectrum, idx):
         """"To delete a peak model"""
         del spectrum.peak_models[idx]
@@ -391,8 +409,6 @@ class Maps(QObject):
 
     def update_peak_label(self, spectrum, idx, text):
         spectrum.peak_labels[idx] = text
-    def update_model_name(self, pm, index):
-        print(f"Model Name: {pm.name2[index]}")
     def update_param_hint_value(self, pm, key, text):
         pm.param_hints[key]['value'] = float(text)
     def update_param_hint_min(self, pm, key, text):
@@ -411,6 +427,7 @@ class Maps(QObject):
         sel_spectrum.fit()
         self.delay_plot()
         QTimer.singleShot(100, self.upd_spectra_list)
+
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
         if not fname_json:

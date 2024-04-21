@@ -362,7 +362,7 @@ def launcher3(file_paths=None, fname_json=None):
 if __name__ == "__main__":
     dirname = r"/Users/HoanLe/SPECTROview/Python/data_test/RAW 2Dmaps"
     fname1 = os.path.join(dirname, 'D23S2204.2_19.csv')
-    fname_json1 = os.path.join(dirname, 'MoS2_325-490_8cm-shifted.json')
+    fname_json1 = os.path.join(dirname, 'MoS2_325-490_8cm-shifted_simple-labels.json')
 
     fname_json = os.path.join(dirname, 'MoS2_325-490_.json')
     launcher3([fname1], fname_json1)

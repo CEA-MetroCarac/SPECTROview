@@ -794,12 +794,18 @@
                                <property name="text">
                                 <string>Attached</string>
                                </property>
+                               <property name="checked">
+                                <bool>true</bool>
+                               </property>
                               </widget>
                              </item>
                              <item>
                               <widget class="QRadioButton" name="rbtn_linear">
                                <property name="text">
                                 <string>Linear</string>
+                               </property>
+                               <property name="checked">
+                                <bool>true</bool>
                                </property>
                               </widget>
                              </item>
@@ -811,16 +817,37 @@
                               </widget>
                              </item>
                              <item>
-                              <widget class="QSpinBox" name="degre"/>
+                              <widget class="QSpinBox" name="degre">
+                               <property name="minimum">
+                                <number>2</number>
+                               </property>
+                              </widget>
                              </item>
                             </layout>
                            </item>
                            <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0,0">
+                            <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0,0,0,0">
+                             <item>
+                              <widget class="QLabel" name="label_54">
+                               <property name="text">
+                                <string>Nb of points:</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLineEdit" name="lineEdit_3">
+                               <property name="toolTip">
+                                <string>Total number of point to contruct the baseline</string>
+                               </property>
+                              </widget>
+                             </item>
                              <item>
                               <widget class="QLabel" name="label_37">
+                               <property name="toolTip">
+                                <string>Number of nearby points considered to smoothing the noise</string>
+                               </property>
                                <property name="text">
-                                <string>Noise range:</string>
+                                <string>Noise:</string>
                                </property>
                               </widget>
                              </item>
@@ -881,7 +908,7 @@
                             <layout class="QVBoxLayout" name="verticalLayout_31"/>
                            </item>
                            <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="5,30,65">
+                            <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="5,30,65,0">
                              <item>
                               <widget class="QLabel" name="label_53">
                                <property name="text">
@@ -895,14 +922,20 @@
                              <item>
                               <widget class="QComboBox" name="fit_model"/>
                              </item>
+                             <item>
+                              <widget class="QPushButton" name="add_peak">
+                               <property name="maximumSize">
+                                <size>
+                                 <width>120</width>
+                                 <height>16777215</height>
+                                </size>
+                               </property>
+                               <property name="text">
+                                <string>Add peak</string>
+                               </property>
+                              </widget>
+                             </item>
                             </layout>
-                           </item>
-                           <item>
-                            <widget class="QPushButton" name="add_peak">
-                             <property name="text">
-                              <string>Add peak</string>
-                             </property>
-                            </widget>
                            </item>
                           </layout>
                          </widget>
@@ -1067,7 +1100,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>765</width>
-                               <height>316</height>
+                               <height>298</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -1108,21 +1141,42 @@
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_51">
                          <item>
-                          <widget class="QPushButton" name="clear_peaks">
-                           <property name="text">
-                            <string>Clear peaks</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
                           <widget class="QPushButton" name="btn_fit_2">
+                           <property name="minimumSize">
+                            <size>
+                             <width>50</width>
+                             <height>50</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>50</width>
+                             <height>50</height>
+                            </size>
+                           </property>
+                           <property name="toolTip">
+                            <string>Fit the selected spectrum with all current fitting parameters (range, baseline, peaks)</string>
+                           </property>
                            <property name="text">
                             <string>Fit</string>
                            </property>
                           </widget>
                          </item>
                          <item>
+                          <widget class="QPushButton" name="clear_peaks">
+                           <property name="toolTip">
+                            <string>To clear all the current peaks model </string>
+                           </property>
+                           <property name="text">
+                            <string>Clear peaks</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
                           <widget class="QPushButton" name="copy_model">
+                           <property name="toolTip">
+                            <string>To copy the current fitting parameters (model) to paste and apply to other spectra</string>
+                           </property>
                            <property name="text">
                             <string>Copy model</string>
                            </property>
@@ -1130,6 +1184,9 @@
                          </item>
                          <item>
                           <widget class="QPushButton" name="paste_model">
+                           <property name="toolTip">
+                            <string>Paste the copied fit model to the current spectrum</string>
+                           </property>
                            <property name="text">
                             <string>Paste model</string>
                            </property>
@@ -1137,6 +1194,9 @@
                          </item>
                          <item>
                           <widget class="QPushButton" name="save_model">
+                           <property name="toolTip">
+                            <string>Save the fit model as a JSON file</string>
+                           </property>
                            <property name="text">
                             <string>Save Model</string>
                            </property>
@@ -1157,6 +1217,9 @@
                          </item>
                          <item>
                           <widget class="QCheckBox" name="limits">
+                           <property name="toolTip">
+                            <string>Show limits (max, min) of each parameters</string>
+                           </property>
                            <property name="text">
                             <string>Limits</string>
                            </property>
@@ -1164,6 +1227,9 @@
                          </item>
                          <item>
                           <widget class="QCheckBox" name="expr">
+                           <property name="toolTip">
+                            <string>Show the expression of fit parameters</string>
+                           </property>
                            <property name="text">
                             <string>Expression</string>
                            </property>
@@ -1716,7 +1782,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>248</width>
+                     <width>236</width>
                      <height>440</height>
                     </rect>
                    </property>
@@ -3204,7 +3270,7 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>348</width>
+                      <width>333</width>
                       <height>607</height>
                      </rect>
                     </property>

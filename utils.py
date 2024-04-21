@@ -190,6 +190,20 @@ def view_df(tabWidget, df):
     layout.addWidget(table_widget)
     df_viewer.show()
 
+def display_df_in_table(table_widget, df_results):
+    """Display pandas DataFrame in QTableWidget in GUI"""
+    # Set the number of rows and columns in the QTableWidget
+    table_widget.setRowCount(df_results.shape[0])
+    table_widget.setColumnCount(df_results.shape[1])
+    # Set horizontal header labels using DataFrame column names
+    table_widget.setHorizontalHeaderLabels(df_results.columns)
+    # Populate the QTableWidget with data from the DataFrame
+    for row in range(df_results.shape[0]):
+        for col in range(df_results.shape[1]):
+            item = QTableWidgetItem(str(df_results.iat[row, col]))
+            table_widget.setItem(row, col, item)
+    # Resize columns to contents
+    table_widget.resizeColumnsToContents()
 
 def view_text(ui, title, text):
     """ Create a QTextBrowser to display a text content"""
@@ -238,9 +252,9 @@ def view_markdown(ui, title, fname, x, y):
 def dark_palette():
     # Get the dark color palette of the application
     dark_palette = QPalette()
-    dark_palette.setColor(QPalette.Window, QColor(75, 75, 75))
+    dark_palette.setColor(QPalette.Window, QColor(70, 70, 70))
     dark_palette.setColor(QPalette.WindowText, Qt.white)
-    dark_palette.setColor(QPalette.Base, QColor(65, 65, 65))
+    dark_palette.setColor(QPalette.Base, QColor(65, 65, 65)) #QlineEdit Listbox bg
     dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
     dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
     dark_palette.setColor(QPalette.ToolTipText, Qt.white)
@@ -259,18 +273,18 @@ def dark_palette():
 def light_palette():
     # Get the light color palette of the application
     light_palette = QPalette()
-    # Light gray background
-    light_palette.setColor(QPalette.Window, QColor(255, 255, 255))
+    # Slightly darker background
+    light_palette.setColor(QPalette.Window, QColor(225, 225, 225))
     light_palette.setColor(QPalette.WindowText, Qt.black)
-    # White background
-    light_palette.setColor(QPalette.Base, QColor(239, 239, 239))
-    # Light gray alternate background
-    light_palette.setColor(QPalette.AlternateBase, QColor(240, 240, 240))
+    # Off-white background
+    light_palette.setColor(QPalette.Base, QColor(215, 215, 215))
+    # Slightly darker alternate background
+    light_palette.setColor(QPalette.AlternateBase, QColor(230, 230, 230))
     light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
     light_palette.setColor(QPalette.ToolTipText, Qt.black)
     light_palette.setColor(QPalette.Text, Qt.black)
-    # Light gray button color
-    light_palette.setColor(QPalette.Button, QColor(251, 251, 251))
+    # Slightly darker button color
+    light_palette.setColor(QPalette.Button, QColor(230, 230, 230))
     light_palette.setColor(QPalette.ButtonText, Qt.black)
     light_palette.setColor(QPalette.BrightText, Qt.red)
     light_palette.setColor(QPalette.Link, QColor(42, 130, 218))
@@ -278,8 +292,11 @@ def light_palette():
     light_palette.setColor(QPalette.HighlightedText, Qt.black)
 
     light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
-    # Light gray placeholder text color
+    # Slightly darker placeholder text color
+
     return light_palette
+
+
 
 
 class FitThread(QThread):

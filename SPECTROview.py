@@ -8,7 +8,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon
 
-from utils import dark_palette, light_palette, view_markdown, show_alert
+from utils import dark_palette, light_palette, view_markdown, show_alert, PEAK_MODELS
 
 from ui import resources_new
 from dataframe import Dataframe
@@ -208,6 +208,11 @@ class Main:
 
         self.ui.range_apply.clicked.connect(self.maps.set_x_range)
         self.ui.btn_fit_2.clicked.connect(self.maps.apply_fit_model)
+        self.ui.clear_peaks.clicked.connect(self.maps.clear_all_peaks)
+        self.ui.add_peak.clicked.connect(self.maps.add_peak)
+        self.ui.fit_model.addItems(PEAK_MODELS)
+        self.ui.save_model.clicked.connect(self.maps.save_fit_model)
+
         ########################################################
         ############## GUI for Spectrums Processing tab #############
         ########################################################

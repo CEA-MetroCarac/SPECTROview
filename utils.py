@@ -25,6 +25,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 DIRNAME = os.path.dirname(__file__)
 RELPATH = os.path.join(DIRNAME, "resources")
 
+PEAK_MODELS = ["Lorentzian", "Gaussian",  "PseudoVoigt", "GaussianAsym",  "LorentzianAsym"]
 
 def plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
                y_text, xlabel_rot):

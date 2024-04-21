@@ -2,13 +2,14 @@
 import os
 import numpy as np
 import pandas as pd
+import json
 from copy import deepcopy
 from pathlib import Path
 import dill
 from utils import view_df, show_alert, quadrant, zone, view_text, \
     copy_fig_to_clb, \
     translate_param, clear_layout, reinit_spectrum, plot_graph
-from utils import FitThread
+from utils import FitThread, PEAK_MODELS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -22,8 +23,8 @@ from wafer_view import WaferView
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
                                QListWidgetItem)
 from PySide6.QtWidgets import QLabel, QComboBox, QLineEdit, QCheckBox, \
-    QHBoxLayout, QSpacerItem, QSizePolicy, QPushButton,QVBoxLayout
-from PySide6.QtGui import QColor
+    QHBoxLayout, QSpacerItem, QSizePolicy, QPushButton, QVBoxLayout
+from PySide6.QtGui import QColor, QPalette
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
 
@@ -192,20 +193,28 @@ class Maps(QObject):
 
     def show_peak_table(self):
         sel_spectrum = self.get_spectrum_objet()
-        self.clear_layout(self.ui.verticalLayout_31)
+        self.clear_layout(self.ui.peak_table1)
+
+        labelsss = sel_spectrum.peak_labels
+        peak_modelsss = sel_spectrum.peak_models
+        print("Length of labels:", len(labelsss))
+        print("Length of peak_models:", len(peak_modelsss))
+
 
         header_labels = ["Delete", "Label", "Model"]
-        param_hint_order = ['x0', 'fwhm', 'ampli', 'g', 'fwhm_l', 'fwhm_r']
+        param_hint_order = ['x0', 'fwhm', 'ampli', 'alpha', 'fwhm_l', 'fwhm_r']
 
+        # Create and add headers to list
         for param_hint_key in param_hint_order:
             if any(param_hint_key in peak_model.param_hints for peak_model in sel_spectrum.peak_models):
                 header_labels.append(param_hint_key.title())
-                header_labels.append(f"{param_hint_key.title()} Vary")
+                header_labels.append(f"fix {param_hint_key.title()}")
                 if self.ui.limits.isChecked():
-                    header_labels.append(f"{param_hint_key.title()} Min")
-                    header_labels.append(f"{param_hint_key.title()} Max")
+                    header_labels.append(f"min {param_hint_key.title()}")
+                    header_labels.append(f"max {param_hint_key.title()}")
                 if self.ui.expr.isChecked():
-                    header_labels.append(f"{param_hint_key.title()} Expr")
+                    header_labels.append(f"expression {param_hint_key.title()}")
+
         # Create vertical layouts for each column type
         delete_layout = QVBoxLayout()
         label_layout = QVBoxLayout()
@@ -213,7 +222,7 @@ class Maps(QObject):
         param_hint_layouts = {param_hint: {var: QVBoxLayout() for var in ['value', 'min', 'max', 'expr', 'vary']} for
                               param_hint in param_hint_order}
 
-        # Add header labels to layouts
+        # Add header labels to each layout
         for header_label in header_labels:
             label = QLabel(header_label)
             label.setAlignment(Qt.AlignCenter)
@@ -223,63 +232,76 @@ class Maps(QObject):
                 label_layout.addWidget(label)
             elif header_label == "Model":
                 model_layout.addWidget(label)
-            elif header_label.endswith("Vary"):
-                param_hint_key = header_label.split()[0].lower()  # Extract the parameter hint key
+            elif header_label.startswith("fix"):
+                param_hint_key = header_label.split()[1].lower()
                 param_hint_layouts[param_hint_key]['vary'].addWidget(label)
-            elif "Min" in header_label:
-                param_hint_key = header_label.split()[0].lower()  # Extract the parameter hint key
+            elif "min" in header_label:
+                param_hint_key = header_label.split()[1].lower()
                 param_hint_layouts[param_hint_key]['min'].addWidget(label)
-            elif "Max" in header_label:
-                param_hint_key = header_label.split()[0].lower()  # Extract the parameter hint key
+            elif "max" in header_label:
+                param_hint_key = header_label.split()[1].lower()
                 param_hint_layouts[param_hint_key]['max'].addWidget(label)
-            elif "Expr" in header_label:
-                param_hint_key = header_label.split()[0].lower()  # Extract the parameter hint key
+            elif "expression" in header_label:
+                param_hint_key = header_label.split()[1].lower()
                 param_hint_layouts[param_hint_key]['expr'].addWidget(label)
             else:
-                param_hint_key = header_label.split()[0].lower()  # Extract the parameter hint key
+                param_hint_key = header_label.lower()
                 param_hint_layouts[param_hint_key]['value'].addWidget(label)
 
         for i, peak_model in enumerate(sel_spectrum.peak_models):
-            # 1
+            # Button to delete peak_model
             delete = QPushButton(peak_model.prefix)
-            delete.setFixedWidth(70)
+            delete.setFixedWidth(50)
             delete.clicked.connect(lambda idx=i, spectrum=sel_spectrum: self.delete_peak_model(spectrum, idx))
             delete_layout.addWidget(delete)
-            # 2
+
+            # Peak_label
             label = QLineEdit(sel_spectrum.peak_labels[i])
             label.setFixedWidth(80)
             label.textChanged.connect(
                 lambda text, idx=i, spectrum=sel_spectrum: self.update_peak_label(spectrum, idx, text))
             label_layout.addWidget(label)
-            # 3
+
+            # Peak model : Lorentizan, Gaussien, etc...
             model = QComboBox()
-            model.addItems([peak_model.name2])
+            model.addItems(PEAK_MODELS)
+            current_model_index = PEAK_MODELS.index(peak_model.name2) if peak_model.name2 in PEAK_MODELS else 0
+            model.setCurrentIndex(current_model_index)
             model.setFixedWidth(120)
             model.currentIndexChanged.connect(lambda index, pm=peak_model: self.update_model_name(pm, index))
             model_layout.addWidget(model)
 
-            # 4
+            # variables of peak_model
             param_hints = peak_model.param_hints
             for param_hint_key in param_hint_order:
                 if param_hint_key in param_hints:
                     param_hint_value = param_hints[param_hint_key]
 
-                    # 4.1
+                    # 4.1 VALUE
                     value_val = round(param_hint_value.get('value', 0.0), 2)
                     value = QLineEdit(str(value_val))
                     value.setFixedWidth(70)
-                    value.setFixedHeight(24)  # Set a fixed height for QLineEdit
+                    value.setFixedHeight(24)
                     value.setAlignment(Qt.AlignRight)
                     value.textChanged.connect(
                         lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_value(pm, key, text))
                     param_hint_layouts[param_hint_key]['value'].addWidget(value)
 
-                    # 4.2
+                    # 4.2 FIXED or NOT
+                    vary = QCheckBox()
+                    vary.setChecked(not param_hint_value.get('vary', False))
+                    vary.setFixedHeight(24)
+                    vary.stateChanged.connect(
+                        lambda state, pm=peak_model, key=param_hint_key: self.update_param_hint_vary(pm, key,
+                                                                                                     not state))
+                    param_hint_layouts[param_hint_key]['vary'].addWidget(vary)
+
+                    # 4.3 MIN MAX
                     if self.ui.limits.isChecked():
                         min_val = round(param_hint_value.get('min', 0.0), 2)
                         min_lineedit = QLineEdit(str(min_val))
                         min_lineedit.setFixedWidth(70)
-                        min_lineedit.setFixedHeight(24)  # Set a fixed height for QLineEdit
+                        min_lineedit.setFixedHeight(24)
                         min_lineedit.setAlignment(Qt.AlignRight)
                         min_lineedit.textChanged.connect(
                             lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_min(pm, key, text))
@@ -288,12 +310,13 @@ class Maps(QObject):
                         max_val = round(param_hint_value.get('max', 0.0), 2)
                         max_lineedit = QLineEdit(str(max_val))
                         max_lineedit.setFixedWidth(70)
-                        max_lineedit.setFixedHeight(24)  # Set a fixed height for QLineEdit
+                        max_lineedit.setFixedHeight(24)
                         max_lineedit.setAlignment(Qt.AlignRight)
                         max_lineedit.textChanged.connect(
                             lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_max(pm, key, text))
                         param_hint_layouts[param_hint_key]['max'].addWidget(max_lineedit)
 
+                    # 4.4 EXPRESSION
                     if self.ui.expr.isChecked():
                         expr_val = str(param_hint_value.get('expr', ''))
                         expr = QLineEdit(expr_val)
@@ -304,47 +327,73 @@ class Maps(QObject):
                             lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_expr(pm, key, text))
                         param_hint_layouts[param_hint_key]['expr'].addWidget(expr)
 
-                    # 4.3
-                    vary = QCheckBox()
-                    vary.setChecked(not param_hint_value.get('vary', False))
-                    vary.setFixedHeight(24)  # Set a fixed height for QCheckBox
-                    vary.stateChanged.connect(
-                        lambda state, pm=peak_model, key=param_hint_key: self.update_param_hint_vary(pm, key,
-                                                                                                     not state))
-                    param_hint_layouts[param_hint_key]['vary'].addWidget(vary)
-
                 else:
                     # Add empty labels for alignment
                     empty_label = QLabel()
-                    empty_label.setFixedHeight(24)  # Set a fixed height for empty QLabel
+                    empty_label.setFixedHeight(24)
                     param_hint_layouts[param_hint_key]['value'].addWidget(empty_label)
+                    param_hint_layouts[param_hint_key]['vary'].addWidget(empty_label)
                     if self.ui.limits.isChecked():
                         param_hint_layouts[param_hint_key]['min'].addWidget(empty_label)
                         param_hint_layouts[param_hint_key]['max'].addWidget(empty_label)
                     if self.ui.expr.isChecked():
                         param_hint_layouts[param_hint_key]['expr'].addWidget(empty_label)
-                    param_hint_layouts[param_hint_key]['vary'].addWidget(empty_label)
 
         # Add vertical layouts to main layout
-        self.ui.verticalLayout_31.addLayout(delete_layout)
-        self.ui.verticalLayout_31.addLayout(label_layout)
-        self.ui.verticalLayout_31.addLayout(model_layout)
+        self.ui.peak_table1.addLayout(delete_layout)
+        self.ui.peak_table1.addLayout(label_layout)
+        self.ui.peak_table1.addLayout(model_layout)
 
         for param_hint_key, param_hint_layout in param_hint_layouts.items():
             for var_layout in param_hint_layout.values():
-                self.ui.verticalLayout_31.addLayout(var_layout)
-
+                self.ui.peak_table1.addLayout(var_layout)
+    def add_peak(self):
+        """To add a peak_model for the selected spectrum"""
+        sel_spectrum = self.get_spectrum_objet()
+        pos = float(self.ui.peak_pos.text())
+        fit_model = self.ui.fit_model.currentText()
+        sel_spectrum.add_peak_model(fit_model, pos)
+        self.upd_spectra_list()
     def delete_peak_model(self, spectrum, idx):
         """"To delete a peak model"""
-        spectrum.del_peak_model(idx)
+        del spectrum.peak_models[idx]
+        del spectrum.peak_labels[idx]
         self.upd_spectra_list()
+    def clear_all_peaks(self):
+        """To clear all current peak_models of the selected spectrum"""
+        sel_spectrum = self.get_spectrum_objet()
+        sel_spectrum.remove_models()
+        self.upd_spectra_list()
+
+    def save_fit_model(self):
+        """To save the current fit model of the selected spectrum"""
+        sel_spectrum = self.get_spectrum_objet()
+
+        last_dir = self.settings.value("last_directory", "/")
+        save_path, _ = QFileDialog.getSaveFileName(
+            self.ui.tabWidget, "Save fit model", last_dir,
+            "JSON Files (*.json)")
+        if save_path:
+            try:
+                if sel_spectrum:
+                    self.spectra_fs.save(save_path, [sel_spectrum.fname])
+                    QMessageBox.information(
+                        self.ui.tabWidget, "Success",
+                        "Fit model is saved (JSON file).")
+                else:
+                    QMessageBox.warning(
+                        self.ui.tabWidget, "Warning",
+                        "No fit model to save.")
+            except Exception as e:
+                QMessageBox.critical(
+                    self.ui.tabWidget, "Error",
+                    f"Error saving model dictionary: {str(e)}")
+
     def update_peak_label(self, spectrum, idx, text):
         spectrum.peak_labels[idx] = text
     def update_model_name(self, pm, index):
         print(f"Model Name: {pm.name2[index]}")
-
     def update_param_hint_value(self, pm, key, text):
-        # print(f"Peak Model: {pm.prefix}, Param Hint Key: {key}, Value: {text}")
         pm.param_hints[key]['value'] = float(text)
     def update_param_hint_min(self, pm, key, text):
         pm.param_hints[key]['min'] = float(text)
@@ -659,42 +708,42 @@ class Maps(QObject):
                 self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
                              lw=1)
 
-            if hasattr(spectrum_fs.result_fit, 'components') and hasattr(
-                    spectrum_fs.result_fit, 'components') and \
-                    self.ui.cb_bestfit.isChecked():
+            if hasattr(spectrum_fs.result_fit, 'components') and self.ui.cb_bestfit.isChecked():
                 bestfit = spectrum_fs.result_fit.best_fit
                 self.ax.plot(x_values, bestfit, label=f"bestfit")
-                for peak_model in spectrum_fs.result_fit.components:
-                    # Convert prefix to peak_labels
-                    peak_labels = spectrum_fs.peak_labels
-                    prefix = str(peak_model.prefix)
-                    peak_index = int(prefix[1:-1]) - 1
-                    if 0 <= peak_index < len(peak_labels):
-                        peak_label = peak_labels[peak_index]
 
-                    # remove temporarily 'expr'
-                    param_hints_orig = deepcopy(peak_model.param_hints)
-                    for key, _ in peak_model.param_hints.items():
-                        peak_model.param_hints[key]['expr'] = ''
-                    params = peak_model.make_params()
-                    # rassign 'expr'
-                    peak_model.param_hints = param_hints_orig
-                    y_peak = peak_model.eval(params, x=x_values)
+            for peak_model in spectrum_fs.peak_models:
+                # Convert prefix to peak_labels
+                peak_labels = spectrum_fs.peak_labels
+                prefix = str(peak_model.prefix)
+                peak_index = int(prefix[1:-1]) - 1
+                if 0 <= peak_index < len(peak_labels):
+                    peak_label = peak_labels[peak_index]
 
-                    if self.ui.cb_filled.isChecked():
-                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
-                                             label=f"{peak_label}")
-                        if self.ui.cb_peaks.isChecked():
-                            position = peak_model.param_hints['x0']['value']
-                            intensity = peak_model.param_hints['ampli']['value']
-                            position = round(position, 2)
-                            text = f"{peak_label}\n({position})"
-                            self.ax.text(position, intensity, text,
-                                         ha='center', va='bottom',
-                                         color='black', fontsize=12)
-                    else:
-                        self.ax.plot(x_values, y_peak, '--',
-                                     label=f"{peak_label}")
+                # remove temporarily 'expr'
+                param_hints_orig = deepcopy(peak_model.param_hints)
+                for key, _ in peak_model.param_hints.items():
+                    peak_model.param_hints[key]['expr'] = ''
+                params = peak_model.make_params()
+                # rassign 'expr'
+                peak_model.param_hints = param_hints_orig
+
+                y_peak = peak_model.eval(params, x=x_values)
+
+                if self.ui.cb_filled.isChecked():
+                    self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
+                                         label=f"{peak_label}")
+                    if self.ui.cb_peaks.isChecked():
+                        position = peak_model.param_hints['x0']['value']
+                        intensity = peak_model.param_hints['ampli']['value']
+                        position = round(position, 2)
+                        text = f"{peak_label}\n({position})"
+                        self.ax.text(position, intensity, text,
+                                     ha='center', va='bottom',
+                                     color='black', fontsize=12)
+                else:
+                    self.ax.plot(x_values, y_peak, '--',
+                                 label=f"{peak_label}")
 
             if hasattr(spectrum_fs.result_fit,
                        'residual') and self.ui.cb_residual.isChecked():

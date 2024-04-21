@@ -8,7 +8,7 @@ from pathlib import Path
 import dill
 from utils import view_df, show_alert, quadrant, zone, view_text, \
     copy_fig_to_clb, \
-    translate_param, clear_layout, reinit_spectrum, plot_graph
+    translate_param, clear_layout, reinit_spectrum, plot_graph, display_df_in_table
 from utils import FitThread, PEAK_MODELS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
@@ -527,6 +527,8 @@ class Maps(QObject):
         self.df_fit_results['Zone'] = self.df_fit_results.apply(
             lambda row: zone(row, diameter), axis=1)
 
+        display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+
         self.upd_cbb_param()
         self.upd_cbb_wafer()
         self.send_df_to_viz()
@@ -607,7 +609,7 @@ class Maps(QObject):
         """Split fname and populate the combobox"""
         dfr = self.df_fit_results
         fname_parts = dfr.loc[0, 'Wafer'].split('_')
-        self.ui.cbb_split_fname_2.clear()  # Clear existing items in combobox
+        self.ui.cbb_split_fname_2.clear()
         for part in fname_parts:
             self.ui.cbb_split_fname_2.addItem(part)
 
@@ -628,8 +630,9 @@ class Maps(QObject):
         parts = dfr['Wafer'].str.split('_')
         dfr[col_name] = [part[selected_part_index] if len(
             part) > selected_part_index else None for part in parts]
-        show_alert(f"Column added successfully:'{col_name}'")
+        #show_alert(f"Column added successfully:'{col_name}'")
         self.df_fit_results = dfr
+        display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
         self.send_df_to_viz()
         self.upd_cbb_param()
         self.upd_cbb_wafer()

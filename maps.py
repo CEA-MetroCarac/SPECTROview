@@ -176,13 +176,15 @@ class Maps(QObject):
         new_x_max = float(self.ui.range_max.text())
 
         # Set x range for selected spectrum
+        sel_spectrum.range_min = float(self.ui.range_min.text())
+        sel_spectrum.range_max = float(self.ui.range_max.text())
+
         ind_min = closest_index(sel_spectrum.x0, new_x_min)
         ind_max = closest_index(sel_spectrum.x0, new_x_max)
         sel_spectrum.x = sel_spectrum.x0[ind_min:ind_max + 1].copy()
         sel_spectrum.y = sel_spectrum.y0[ind_min:ind_max + 1].copy()
+        sel_spectrum.attractors_calculation()
 
-        sel_spectrum.range_min = float(self.ui.range_min.text())
-        sel_spectrum.range_max = float(self.ui.range_max.text())
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
 
@@ -385,20 +387,29 @@ class Maps(QObject):
         if self.zoom_pan_active == False and self.ui.rdbtn_baseline.isChecked():
             if event.button == 1:
                 if event.inaxes:
-                    x = event.xdata
-                    y = event.ydata
+                    x1 = event.xdata
+                    y1 = event.ydata
             if sel_spectrum.baseline.is_subtracted:
-                show_alert("Already subtracted before. Reinit spectrum to create new baseline")
+                show_alert("Already subtracted before. Reinit spectrum to perform new baseline")
             else:
-                sel_spectrum.baseline.add_point(x, y)
+                sel_spectrum.baseline.add_point(x1, y1)
                 self.upd_spectra_list()
         else:
             return
     def substract_baseline(self):
         sel_spectrum = self.get_spectrum_objet()
-        sel_spectrum.subtract_baseline() # ONLY if it hasn't done before
+        #sel_spectrum.subtract_baseline()  # ONLY if it hasn't done before
+        baseline_points =sel_spectrum.baseline.points
+        if len(baseline_points[0]) == 0:
+            return
+        for fname in [sel_spectrum.fname]:
+            spectrum, _ = self.spectra_fs.get_objects(fname)
+            spectrum.baseline.points = baseline_points.copy()
+            spectrum.subtract_baseline()
+
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
+
     def delete_baseline(self):
         sel_spectrum = self.get_spectrum_objet()
         sel_spectrum.baseline.points = [[], []]
@@ -425,26 +436,16 @@ class Maps(QObject):
     def save_fit_model(self):
         """To save the fit model of the current selected spectrum"""
         sel_spectrum = self.get_spectrum_objet()
-
         last_dir = self.settings.value("last_directory", "/")
         save_path, _ = QFileDialog.getSaveFileName(
             self.ui.tabWidget, "Save fit model", last_dir,
             "JSON Files (*.json)")
-        if save_path:
-            try:
-                if sel_spectrum:
-                    self.spectra_fs.save(save_path, [sel_spectrum.fname])
-                    QMessageBox.information(
-                        self.ui.tabWidget, "Success",
-                        "Fit model is saved (JSON file).")
-                else:
-                    QMessageBox.warning(
-                        self.ui.tabWidget, "Warning",
-                        "No fit model to save.")
-            except Exception as e:
-                QMessageBox.critical(
-                    self.ui.tabWidget, "Error",
-                    f"Error saving model dictionary: {str(e)}")
+        if save_path and sel_spectrum:
+            self.spectra_fs.save(save_path, [sel_spectrum.fname])
+            show_alert("Fit model is saved (JSON file)")
+        else:
+            show_alert("No fit model to save.")
+
 
     def update_peak_label(self, spectrum, idx, text):
         spectrum.peak_labels[idx] = text
@@ -771,13 +772,12 @@ class Maps(QObject):
             y_values = spectrum_fs.y
             self.ax.plot(x_values, y_values, label=f"{coord}", ms=3, lw=2)
 
-            # Baseline plot
+            # BASELINE
             if self.ui.cb_baseline.isChecked():
                 spectrum_fs.baseline.plot(self.ax, x=x_values, y=y_values, show_all=False)
 
             points = spectrum_fs.baseline.points
-            #self.ax.plot(points[0], points[1], 'ko-', label='baseline', ms=8,lw=1)
-
+            self.ax.plot(points[0], points[1], 'ko-', label='baseline', ms=8,lw=1)
 
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0

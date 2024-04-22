@@ -170,9 +170,22 @@
                    </spacer>
                   </item>
                   <item>
-                   <widget class="QLabel" name="rsquared_1">
+                   <widget class="QRadioButton" name="rdbtn_baseline">
                     <property name="text">
-                     <string>R2=0 </string>
+                     <string>baseline</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QRadioButton" name="rdbtn_peak">
+                    <property name="text">
+                     <string>peaks</string>
+                    </property>
+                    <property name="checked">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -190,22 +203,9 @@
                    </spacer>
                   </item>
                   <item>
-                   <widget class="QRadioButton" name="rdbtn_baseline">
+                   <widget class="QLabel" name="rsquared_1">
                     <property name="text">
-                     <string>baseline</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="rdbtn_peak">
-                    <property name="text">
-                     <string>peaks</string>
-                    </property>
-                    <property name="checked">
-                     <bool>false</bool>
+                     <string>R2=0 </string>
                     </property>
                    </widget>
                   </item>
@@ -528,8 +528,8 @@
                         <property name="geometry">
                          <rect>
                           <x>0</x>
-                          <y>0</y>
-                          <width>398</width>
+                          <y>-24</y>
+                          <width>383</width>
                           <height>438</height>
                          </rect>
                         </property>
@@ -602,6 +602,7 @@
                              <widget class="QLabel" name="label_58">
                               <property name="font">
                                <font>
+                                <pointsize>13</pointsize>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -612,6 +613,21 @@
                             </item>
                             <item>
                              <layout class="QHBoxLayout" name="horizontalLayout_50" stretch="30,25,0,25,20">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>2</number>
+                              </property>
                               <item>
                                <widget class="QLabel" name="label_41">
                                 <property name="text">
@@ -712,6 +728,21 @@
                             </item>
                             <item>
                              <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="25,25,25,25">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>2</number>
+                              </property>
                               <item>
                                <widget class="QCheckBox" name="cb_attached">
                                 <property name="text">
@@ -749,7 +780,22 @@
                              </layout>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0,0,0,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0,0,0">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>2</number>
+                              </property>
                               <item>
                                <widget class="QLabel" name="label_54">
                                 <property name="text">
@@ -782,19 +828,6 @@
                                </widget>
                               </item>
                               <item>
-                               <spacer name="horizontalSpacer_18">
-                                <property name="orientation">
-                                 <enum>Qt::Horizontal</enum>
-                                </property>
-                                <property name="sizeHint" stdset="0">
-                                 <size>
-                                  <width>40</width>
-                                  <height>20</height>
-                                 </size>
-                                </property>
-                               </spacer>
-                              </item>
-                              <item>
                                <widget class="QPushButton" name="sub_baseline">
                                 <property name="text">
                                  <string>Substract</string>
@@ -805,6 +838,28 @@
                             </item>
                             <item>
                              <layout class="QHBoxLayout" name="horizontalLayout_58">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>2</number>
+                              </property>
+                              <item>
+                               <widget class="QPushButton" name="pushButton_5">
+                                <property name="text">
+                                 <string>Undo</string>
+                                </property>
+                               </widget>
+                              </item>
                               <item>
                                <widget class="QPushButton" name="del_bl_points">
                                 <property name="text">
@@ -859,6 +914,21 @@
                             </item>
                             <item>
                              <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="5,30,65,0">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>2</number>
+                              </property>
                               <item>
                                <widget class="QLabel" name="label_53">
                                 <property name="text">
@@ -926,7 +996,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>774</width>
-                               <height>306</height>
+                               <height>298</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -1153,7 +1223,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>398</width>
-                       <height>426</height>
+                       <height>418</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
@@ -2122,7 +2192,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>248</width>
+                     <width>236</width>
                      <height>440</height>
                     </rect>
                    </property>
@@ -3750,7 +3820,7 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>348</width>
+                      <width>333</width>
                       <height>607</height>
                      </rect>
                     </property>

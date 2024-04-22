@@ -207,11 +207,15 @@ class Main:
         self.ui.btn_add_col_2.clicked.connect(self.maps.add_column)
 
         self.ui.range_apply.clicked.connect(self.maps.set_x_range)
-        self.ui.btn_fit_2.clicked.connect(self.maps.apply_fit_model)
-        self.ui.clear_peaks.clicked.connect(self.maps.clear_all_peaks)
-        self.ui.add_peak.clicked.connect(self.maps.add_peak)
-        self.ui.fit_model.addItems(PEAK_MODELS)
+        self.ui.sub_baseline.clicked.connect(self.maps.substract_baseline)
+
+        self.ui.sub_baseline.clicked.connect(self.maps.delete_baseline)
+        self.ui.btn_fit_2.clicked.connect(self.maps.fit)
         self.ui.save_model.clicked.connect(self.maps.save_fit_model)
+        self.ui.clear_peaks.clicked.connect(self.maps.clear_all_peaks)
+        self.ui.fit_model.addItems(PEAK_MODELS)
+        self.ui.del_bl_points.clicked.connect(self.maps.delete_baseline)
+
 
         ########################################################
         ############## GUI for Spectrums Processing tab #############

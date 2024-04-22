@@ -140,7 +140,7 @@
                  </widget>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="bottom_frame" stretch="50,25,0,0,0,2">
+                 <layout class="QHBoxLayout" name="bottom_frame" stretch="50,25,0,0,0,0,0,2">
                   <property name="sizeConstraint">
                    <enum>QLayout::SetMaximumSize</enum>
                   </property>
@@ -188,6 +188,26 @@
                      </size>
                     </property>
                    </spacer>
+                  </item>
+                  <item>
+                   <widget class="QRadioButton" name="rdbtn_baseline">
+                    <property name="text">
+                     <string>baseline</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QRadioButton" name="rdbtn_peak">
+                    <property name="text">
+                     <string>peaks</string>
+                    </property>
+                    <property name="checked">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
                   </item>
                   <item>
                    <widget class="QPushButton" name="btn_copy_fig">
@@ -317,10 +337,36 @@
                     <string>View options:</string>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_6">
-                    <item row="1" column="2">
-                     <widget class="QCheckBox" name="cb_filled">
+                    <item row="0" column="0">
+                     <widget class="QCheckBox" name="cb_legend">
+                      <property name="enabled">
+                       <bool>true</bool>
+                      </property>
+                      <property name="toolTip">
+                       <string>To display or remove the legend of the plot</string>
+                      </property>
                       <property name="text">
-                       <string>filled</string>
+                       <string>legend</string>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="1">
+                     <widget class="QCheckBox" name="cb_residual">
+                      <property name="text">
+                       <string>residual</string>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="1">
+                     <widget class="QCheckBox" name="cb_bestfit">
+                      <property name="text">
+                       <string>best-fit</string>
                       </property>
                       <property name="checked">
                        <bool>true</bool>
@@ -338,6 +384,26 @@
                      </widget>
                     </item>
                     <item row="0" column="2">
+                     <widget class="QCheckBox" name="cb_filled">
+                      <property name="text">
+                       <string>filled</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="2">
+                     <widget class="QCheckBox" name="cb_colors">
+                      <property name="text">
+                       <string>colors</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="3">
                      <widget class="QCheckBox" name="cb_peaks">
                       <property name="text">
                        <string>peaks</string>
@@ -347,49 +413,10 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="0">
-                     <widget class="QCheckBox" name="cb_legend">
-                      <property name="enabled">
-                       <bool>true</bool>
-                      </property>
-                      <property name="toolTip">
-                       <string>To display or remove the legend of the plot</string>
-                      </property>
+                    <item row="1" column="3">
+                     <widget class="QCheckBox" name="cb_baseline">
                       <property name="text">
-                       <string>Legend</string>
-                      </property>
-                      <property name="checked">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="1">
-                     <widget class="QCheckBox" name="cb_bestfit">
-                      <property name="text">
-                       <string>best-fit</string>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="1">
-                     <widget class="QCheckBox" name="cb_residual">
-                      <property name="text">
-                       <string>residual</string>
-                      </property>
-                      <property name="checked">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="3">
-                     <widget class="QCheckBox" name="cb_colors">
-                      <property name="text">
-                       <string>colors</string>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
+                       <string>baseline</string>
                       </property>
                      </widget>
                     </item>
@@ -503,7 +530,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>398</width>
-                          <height>439</height>
+                          <height>438</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -779,26 +806,9 @@
                             <item>
                              <layout class="QHBoxLayout" name="horizontalLayout_58">
                               <item>
-                               <widget class="QLabel" name="label_55">
+                               <widget class="QPushButton" name="del_bl_points">
                                 <property name="text">
-                                 <string>X</string>
-                                </property>
-                               </widget>
-                              </item>
-                              <item>
-                               <widget class="QLineEdit" name="bl_point"/>
-                              </item>
-                              <item>
-                               <widget class="QPushButton" name="add_bl_point">
-                                <property name="text">
-                                 <string>Add point</string>
-                                </property>
-                               </widget>
-                              </item>
-                              <item>
-                               <widget class="QPushButton" name="del_bl_point">
-                                <property name="text">
-                                 <string>Remove point</string>
+                                 <string>Remove points</string>
                                 </property>
                                </widget>
                               </item>
@@ -915,8 +925,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>788</width>
-                               <height>307</height>
+                               <width>774</width>
+                               <height>306</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -956,6 +966,21 @@
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_51">
+                         <property name="spacing">
+                          <number>5</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>25</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>5</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>5</number>
+                         </property>
                          <item>
                           <widget class="QPushButton" name="btn_fit_2">
                            <property name="minimumSize">
@@ -1193,7 +1218,7 @@
                       <item>
                        <widget class="QLabel" name="label_56">
                         <property name="text">
-                         <string>Split fname and add a columns:</string>
+                         <string>Add new column(s) from file name:</string>
                         </property>
                        </widget>
                       </item>
@@ -1220,7 +1245,7 @@
                            </size>
                           </property>
                           <property name="toolTip">
-                           <string>Split the file name of spectrum</string>
+                           <string>Split the file name of spectrum to several parts</string>
                           </property>
                           <property name="text">
                            <string>Split</string>
@@ -1236,7 +1261,7 @@
                            </sizepolicy>
                           </property>
                           <property name="toolTip">
-                           <string>Select the value to split</string>
+                           <string>Select file name part</string>
                           </property>
                           <property name="placeholderText">
                            <string/>
@@ -1265,7 +1290,7 @@
                            </size>
                           </property>
                           <property name="toolTip">
-                           <string>To add a new column with the selected value</string>
+                           <string>Add a new column with the selected part</string>
                           </property>
                           <property name="text">
                            <string>Add</string>
@@ -3069,7 +3094,7 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_52">
                 <property name="spacing">
-                 <number>0</number>
+                 <number>3</number>
                 </property>
                 <property name="leftMargin">
                  <number>5</number>
@@ -3085,11 +3110,39 @@
                 </property>
                 <item>
                  <widget class="QPushButton" name="btn_load_model">
+                  <property name="maximumSize">
+                   <size>
+                    <width>85</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
                   <property name="toolTip">
                    <string>Load a fit model to perform spectra fitting</string>
                   </property>
                   <property name="text">
-                   <string>Load fit model</string>
+                   <string>Load model</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_fit">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>85</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string>Hold &quot;Ctrl&quot; and click to apply fit model to all wafer</string>
+                  </property>
+                  <property name="text">
+                   <string>Apply model</string>
                   </property>
                  </widget>
                 </item>
@@ -3122,12 +3175,12 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>16777215</width>
+                    <width>60</width>
                     <height>30</height>
                    </size>
                   </property>
                   <property name="text">
-                   <string>Open FITSPY</string>
+                   <string>FITSPY</string>
                   </property>
                  </widget>
                 </item>
@@ -3240,28 +3293,6 @@
                     <width>22</width>
                     <height>22</height>
                    </size>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="btn_fit">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>40</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="toolTip">
-                   <string>Hold &quot;Ctrl&quot; and click to Fit all wafer</string>
-                  </property>
-                  <property name="text">
-                   <string>Fit</string>
                   </property>
                  </widget>
                 </item>

@@ -126,17 +126,15 @@ def quadrant(row):
 
 def zone(row, diameter):
     """Define 3 zones (Center, Mid-Rayon, Edge) based on X and Y coordinates."""
-    radius = diameter / 2
+    rad = diameter / 2
     x = row['X']
     y = row['Y']
     distance_to_center = np.sqrt(x ** 2 + y ** 2)
-
-    if distance_to_center <= radius * 0.35:
+    if distance_to_center <= rad * 0.35:
         return 'Center'
-    elif distance_to_center > radius * 0.35 and distance_to_center < radius * \
-            0.8:
+    elif distance_to_center > rad * 0.35 and distance_to_center < rad * 0.8:
         return 'Mid-Rayon'
-    elif distance_to_center >= 0.8 * radius:
+    elif distance_to_center >= 0.8 * rad:
         return 'Edge'
     else:
         return np.nan
@@ -169,10 +167,8 @@ def show_alert(message):
 
 def view_df(tabWidget, df):
     """View selected dataframe"""
-    # Create a QDialog to contain the table
     df_viewer = QDialog(tabWidget.parent())
     df_viewer.setWindowTitle("DataFrame Viewer")
-    # Set the window flags
     df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
     # Create a QTableWidget and populate it with data from the DataFrame
     table_widget = QTableWidget(df_viewer)
@@ -183,26 +179,20 @@ def view_df(tabWidget, df):
         for col in range(df.shape[1]):
             item = QTableWidgetItem(str(df.iat[row, col]))
             table_widget.setItem(row, col, item)
-    # Set the resizing mode for the QTableWidget to make it resizable
     table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
-    # Use a QVBoxLayout to arrange the table within a scroll area
     layout = QVBoxLayout(df_viewer)
     layout.addWidget(table_widget)
     df_viewer.show()
 
 def display_df_in_table(table_widget, df_results):
     """Display pandas DataFrame in QTableWidget in GUI"""
-    # Set the number of rows and columns in the QTableWidget
     table_widget.setRowCount(df_results.shape[0])
     table_widget.setColumnCount(df_results.shape[1])
-    # Set horizontal header labels using DataFrame column names
     table_widget.setHorizontalHeaderLabels(df_results.columns)
-    # Populate the QTableWidget with data from the DataFrame
     for row in range(df_results.shape[0]):
         for col in range(df_results.shape[1]):
             item = QTableWidgetItem(str(df_results.iat[row, col]))
             table_widget.setItem(row, col, item)
-    # Resize columns to contents
     table_widget.resizeColumnsToContents()
 
 def view_text(ui, title, text):
@@ -210,28 +200,21 @@ def view_text(ui, title, text):
     report_viewer = QDialog(ui)
     report_viewer.setWindowTitle(title)
     report_viewer.setGeometry(100, 100, 800, 600)
-
-    # Create a QTextBrowser to display the report content
     text_browser = QTextBrowser(report_viewer)
     text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
     text_browser.setOpenExternalLinks(True)
-
-    # Display the report text in QTextBrowser
     text_browser.setPlainText(text)
-    # Scroll to top of document
     text_browser.moveCursor(QTextCursor.Start)
-    # Show the Report viewer dialog without blocking
     layout = QVBoxLayout(report_viewer)
     layout.addWidget(text_browser)
     report_viewer.show()
 
 
 def view_markdown(ui, title, fname, x, y):
+    """To convert MD file to html format and display them in GUI"""
     with open(fname, 'r', encoding='utf-8') as f:
         markdown_content = f.read()
-    # Convert Markdown to HTML using markdown
     html_content = markdown.markdown(markdown_content)
-    # Replace relative image paths with absolute paths
     DIRNAME = os.path.dirname(__file__)
     html_content = html_content.replace('src="',
                                         f'src="'
@@ -250,7 +233,7 @@ def view_markdown(ui, title, fname, x, y):
 
 
 def dark_palette():
-    # Get the dark color palette of the application
+    """Palette color for dark mode of the appli's GUI"""
     dark_palette = QPalette()
     dark_palette.setColor(QPalette.Window, QColor(70, 70, 70))
     dark_palette.setColor(QPalette.WindowText, Qt.white)
@@ -265,42 +248,31 @@ def dark_palette():
     dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
     dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
     dark_palette.setColor(QPalette.HighlightedText, Qt.white)
-    # Placeholder text color
     dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
     return dark_palette
 
 
 def light_palette():
-    # Get the light color palette of the application
+    """Palette color for light mode of the appli's GUI"""
     light_palette = QPalette()
-    # Slightly darker background
     light_palette.setColor(QPalette.Window, QColor(225, 225, 225))
     light_palette.setColor(QPalette.WindowText, Qt.black)
-    # Off-white background
     light_palette.setColor(QPalette.Base, QColor(215, 215, 215))
-    # Slightly darker alternate background
     light_palette.setColor(QPalette.AlternateBase, QColor(230, 230, 230))
     light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
     light_palette.setColor(QPalette.ToolTipText, Qt.black)
     light_palette.setColor(QPalette.Text, Qt.black)
-    # Slightly darker button color
     light_palette.setColor(QPalette.Button, QColor(230, 230, 230))
     light_palette.setColor(QPalette.ButtonText, Qt.black)
     light_palette.setColor(QPalette.BrightText, Qt.red)
     light_palette.setColor(QPalette.Link, QColor(42, 130, 218))
     light_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
     light_palette.setColor(QPalette.HighlightedText, Qt.black)
-
     light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
-    # Slightly darker placeholder text color
-
     return light_palette
 
-
-
-
 class FitThread(QThread):
-    """ Class to perform fitting in a seperate Thread"""
+    """ Class to perform fitting in a separate Thread to avoid GUI freezing/lagging"""
     fit_progress_changed = Signal(int)  # To update progress bar
     fit_progress = Signal(int, float)  # TO display number and elapsed time
     fit_completed = Signal()

@@ -207,9 +207,9 @@ class Main:
         self.ui.btn_split_fname_2.clicked.connect(self.maps.split_fname)
         self.ui.btn_add_col_2.clicked.connect(self.maps.add_column)
 
-        self.ui.range_apply.clicked.connect(self.maps.set_x_range)
+        self.ui.range_apply.clicked.connect(self.maps.set_x_range_handler)
         self.ui.sub_baseline.clicked.connect(self.maps.substract_baseline)
-        self.ui.btn_fit_2.clicked.connect(self.maps.fit)
+        self.ui.btn_fit_2.clicked.connect(self.maps.fit_handler)
         self.ui.save_model.clicked.connect(self.maps.save_fit_model)
         self.ui.clear_peaks.clicked.connect(self.maps.clear_all_peaks)
         self.ui.fit_model.addItems(PEAK_MODELS)
@@ -319,32 +319,8 @@ class Main:
 #     sys.exit(app.exec())
 # if __name__ == "__main__":
 #     launcher()
-
-def launcher2(file_paths=None, fname_json=None):
-    app = QApplication()
-    app.setWindowIcon(QIcon(ICON_APPLI))
-    window = Main()
-    app.setStyle("Fusion")
-    if file_paths is not None:
-        window.maps.open_data(file_paths=file_paths)
-    if fname_json is not None:
-        window.maps.open_model(fname_json=fname_json)
-    window.ui.show()
-    sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    dirname1 = r"C:\Users\VL251876\Documents\Python\SPECTROview\data_test" \
-               r"\RAW 2Dmaps"
-
-    fname1 = os.path.join(dirname1, 'D23S2204.2_17.csv')
-    fname2 = os.path.join(dirname1, 'D23S2204.2_19.csv')
-    fname3 = os.path.join(dirname1, 'D23S2204.2_25.csv')
-    fname_json1 = os.path.join(dirname1, 'MoS2_325-490_8cm-shifted.json')
-
-    launcher2([fname1, fname2, fname3], fname_json1)
-
-# def launcher3(file_paths=None, fname_json=None):
+#
+# def launcher2(file_paths=None, fname_json=None):
 #     app = QApplication()
 #     app.setWindowIcon(QIcon(ICON_APPLI))
 #     window = Main()
@@ -358,10 +334,34 @@ if __name__ == "__main__":
 #
 #
 # if __name__ == "__main__":
-#     dirname = r"/Users/HoanLe/SPECTROview/Python/data_test/RAW 2Dmaps"
-#     fname1 = os.path.join(dirname, 'D23S2204.2_19.csv')
-#     fname_json1 = os.path.join(dirname,
-#     'MoS2_325-490_8cm-shifted_simple-labels.json')
+#     dirname1 = r"C:\Users\VL251876\Documents\Python\SPECTROview\data_test" \
+#                r"\RAW 2Dmaps"
 #
-#     fname_json = os.path.join(dirname, 'MoS2_325-490_.json')
-#     launcher3([fname1], fname_json1)
+#     fname1 = os.path.join(dirname1, 'D23S2204.2_17.csv')
+#     fname2 = os.path.join(dirname1, 'D23S2204.2_19.csv')
+#     fname3 = os.path.join(dirname1, 'D23S2204.2_25.csv')
+#     fname_json1 = os.path.join(dirname1, 'MoS2_325-490_8cm-shifted.json')
+#
+#     launcher2([fname1, fname2, fname3], fname_json1)
+
+def launcher3(file_paths=None, fname_json=None):
+    app = QApplication()
+    app.setWindowIcon(QIcon(ICON_APPLI))
+    window = Main()
+    app.setStyle("Fusion")
+    if file_paths is not None:
+        window.maps.open_data(file_paths=file_paths)
+    if fname_json is not None:
+        window.maps.open_model(fname_json=fname_json)
+    window.ui.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    dirname = r"/Users/HoanLe/SPECTROview/Python/data_test/RAW 2Dmaps"
+    fname1 = os.path.join(dirname, 'D23S2204.2_19.csv')
+    fname_json1 = os.path.join(dirname,
+    'MoS2_325-490_8cm-shifted_simple-labels.json')
+
+    fname_json = os.path.join(dirname, 'MoS2_325-490_.json')
+    launcher3([fname1], fname_json1)

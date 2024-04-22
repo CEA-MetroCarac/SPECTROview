@@ -89,7 +89,7 @@ class Maps(QObject):
         self.ui.cbb_fit_methods.addItems(FIT_METHODS)
         self.ui.cbb_cpu_number.addItems(NCPUS)
 
-        # Connect signals to slots for updating QSettings
+        # FIT SETTINGS
         self.load_fit_settings()
         self.ui.cb_fit_negative.stateChanged.connect(self.save_fit_settings)
         self.ui.max_iteration.valueChanged.connect(self.save_fit_settings)
@@ -98,6 +98,13 @@ class Maps(QObject):
         self.ui.cbb_cpu_number.currentIndexChanged.connect(
             self.save_fit_settings)
         self.ui.xtol.textChanged.connect(self.save_fit_settings)
+
+        # BASELINE
+        self.ui.cb_attached.clicked.connect(self.upd_baseline_settings)
+        self.ui.noise.valueChanged.connect(self.upd_baseline_settings)
+        self.ui.rbtn_linear.clicked.connect(self.upd_baseline_settings)
+        self.ui.rbtn_polynomial.clicked.connect(self.upd_baseline_settings)
+        self.ui.degre.valueChanged.connect(self.upd_baseline_settings)
 
     def open_data(self, wafers=None, file_paths=None):
         """Open CSV files containing RAW spectra of each wafer"""
@@ -157,7 +164,6 @@ class Maps(QObject):
                 x_values = pd.to_numeric(x_values, errors='coerce').tolist()
 
                 y_values = row[2:].tolist()
-
                 fname = f"{wafer_name}_{coord}"
 
                 if not any(spectrum_fs.fname == fname for spectrum_fs in
@@ -170,40 +176,197 @@ class Maps(QObject):
                     spectrum_fs.y = np.asarray(y_values)[:-1]
                     spectrum_fs.y0 = np.asarray(y_values)[:-1]
                     self.spectra_fs.append(spectrum_fs)
-
         self.upd_wafers_list()
 
     def read_spectrum_model(self):
         """To read fitted params and peak_models of selected spectrum"""
-        sel_spectrum = self.get_spectrum_objet()
-        # Read spectral range
+        sel_spectrum, sel_spectra = self.get_spectrum_objet()
         self.ui.range_min.setText(str(sel_spectrum.x[0]))
         self.ui.range_max.setText(str(sel_spectrum.x[-1]))
 
-        # Read peak_models
-
-    def set_x_range(self):
+    def set_x_range(self, fnames=None, new_x_min = None, new_x_max = None):
         """Update sel_spectrum's range from QLineEdit"""
-        sel_spectrum = self.get_spectrum_objet()
-        fnames = []
-        fnames.append(sel_spectrum.fname)
-        reinit_spectrum(fnames, self.spectra_fs)
         new_x_min = float(self.ui.range_min.text())
         new_x_max = float(self.ui.range_max.text())
+        if fnames is None:
+            wafer_name, coords = self.spectre_id()
+            fnames = [f"{wafer_name}_{coord}" for coord in coords]
 
-        # Set x range for selected spectrum
-        sel_spectrum.range_min = float(self.ui.range_min.text())
-        sel_spectrum.range_max = float(self.ui.range_max.text())
+        reinit_spectrum(fnames, self.spectra_fs)
+        for fname in fnames:
+            spectrum, _ = self.spectra_fs.get_objects(fname)
+            # Set x range for selected spectrum
+            spectrum.range_min = float(self.ui.range_min.text())
+            spectrum.range_max = float(self.ui.range_max.text())
 
-        ind_min = closest_index(sel_spectrum.x0, new_x_min)
-        ind_max = closest_index(sel_spectrum.x0, new_x_max)
-        sel_spectrum.x = sel_spectrum.x0[ind_min:ind_max + 1].copy()
-        sel_spectrum.y = sel_spectrum.y0[ind_min:ind_max + 1].copy()
-        sel_spectrum.attractors_calculation()
+            ind_min = closest_index(spectrum.x0, new_x_min)
+            ind_max = closest_index(spectrum.x0, new_x_max)
+            spectrum.x = spectrum.x0[ind_min:ind_max + 1].copy()
+            spectrum.y = spectrum.y0[ind_min:ind_max + 1].copy()
+            spectrum.attractors_calculation()
 
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
+    def set_x_range_all(self):
+        fnames = self.spectra_fs.fnames
+        self.set_x_range(fnames=fnames)
+    def set_x_range_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.set_x_range_all()
+        else:
+            self.set_x_range()
+    def on_click(self, event):
+        """On click action to add a "peak model" or "baseline point" """
+        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        fit_model = self.ui.fit_model.currentText()
+        # Add a new peak_model for current selected peak
+        if self.zoom_pan_active == False and self.ui.rdbtn_peak.isChecked():
+            if event.button == 1:
+                if event.inaxes:
+                    x = event.xdata
+                    y = event.ydata
+            sel_spectrum.add_peak_model(fit_model, x)
+            self.upd_spectra_list()
+        # Add a new baseline point for current selected peak
+        if self.zoom_pan_active == False and self.ui.rdbtn_baseline.isChecked():
+            if event.button == 1:
+                if event.inaxes:
+                    x1 = event.xdata
+                    y1 = event.ydata
+                    if sel_spectrum.baseline.is_subtracted:
+                        show_alert(
+                            "Already subtracted before. Reinit spectrum to perform "
+                            "new baseline")
+                    else:
+                        sel_spectrum.baseline.add_point(x1, y1)
+                        self.upd_spectra_list()
 
+    def upd_baseline_settings(self):
+        """ Pass the settings from GUI to spectrum objects"""
+        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        if sel_spectrum is None:
+            return
+        sel_spectrum.baseline.attached = self.ui.cb_attached.isChecked()
+        sel_spectrum.baseline.sigma = self.ui.noise.value()
+        if self.ui.rbtn_linear.isChecked():
+            sel_spectrum.baseline.mode = "Linear"
+        else:
+            sel_spectrum.baseline.mode = "Polynomial"
+            sel_spectrum.baseline.order_max = self.ui.degre.value()
+        self.upd_spectra_list()
+
+    def plot_baseline_dynamically(self, ax, spectrum):
+        """ To plot baseline points and line"""
+        if not spectrum.baseline.is_subtracted:
+            x_bl = spectrum.x
+            y_bl = spectrum.y if spectrum.baseline.attached else None
+            if len(spectrum.baseline.points[0]) == 0:
+                return
+            # Clear any existing baseline plot
+            for line in ax.lines:
+                if line.get_label() == "Baseline":
+                    line.remove()
+            # Evaluate the baseline
+            baseline_values = spectrum.baseline.eval(x_bl, y_bl)
+            ax.plot(x_bl, baseline_values, 'g', label="Baseline")
+            # Plot the attached baseline points
+            if spectrum.baseline.attached and y_bl is not None:
+                attached_points = spectrum.baseline.attach_points(x_bl, y_bl)
+                ax.plot(attached_points[0], attached_points[1], 'ko', mfc='none')
+            else:
+                ax.plot(spectrum.baseline.points[0], spectrum.baseline.points[1], 'ko', mfc='none')
+
+    def update_model_name(self, spectrum, index, idx, new_model):
+        """ Update the model function (Lorentizan, Gaussian...) related to the ith-model """
+        old_model_name = spectrum.peak_models[idx].name2
+        new_model_name = new_model
+        if new_model_name != old_model_name:
+            ampli = spectrum.peak_models[idx].param_hints['ampli']['value']
+            x0 = spectrum.peak_models[idx].param_hints['x0']['value']
+            peak_model = spectrum.create_peak_model(idx + 1, new_model_name,
+                                                    x0=x0, ampli=ampli)
+            spectrum.peak_models[idx] = peak_model
+            spectrum.result_fit = lambda: None
+            self.upd_spectra_list()
+
+    def substract_baseline(self, fnames=None):
+        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum.subtract_baseline()
+        QTimer.singleShot(50, self.upd_spectra_list)
+        QTimer.singleShot(300, self.rescale)
+    def substract_baseline_all(self):
+        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum.subtract_baseline()
+        QTimer.singleShot(50, self.upd_spectra_list)
+        QTimer.singleShot(300, self.rescale)
+
+    def delete_baseline_points(self):
+        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum.baseline.points = [[], []]
+        QTimer.singleShot(50, self.upd_spectra_list)
+        QTimer.singleShot(300, self.rescale)
+    def get_fit_settings(self):
+        """To get all settings for the fitting action"""
+        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+
+        fit_params = sel_spectrum.fit_params
+        fit_params['fit_negative'] = self.ui.cb_fit_negative.isChecked()
+        fit_params['max_ite'] = self.ui.max_iteration.value()
+        fit_params['method'] = self.ui.cbb_fit_methods.currentText()
+        fit_params['ncpus'] = self.ui.cbb_cpu_number.currentText()
+        fit_params['xtol'] = float(self.ui.xtol.text())
+        sel_spectrum.fit_params = fit_params
+    def fit(self, fnames=None):
+        """To apply all parameters of a fit model"""
+
+        self.get_fit_settings()
+        spectrum, _ = self.get_spectrum_objet()
+        spectrum.fit()
+        QTimer.singleShot(100, self.upd_spectra_list)
+    def fit_all(self, fnames= None):
+        self.get_fit_settings()
+        if fnames is None:
+            wafer_name, coords = self.spectre_id()
+            fnames = [f"{wafer_name}_{coord}" for coord in coords]
+        for fname in fnames:
+            spectrum, _ = self.spectra_fs.get_objects(fname)
+            spectrum.fit()
+        QTimer.singleShot(100, self.upd_spectra_list)
+        fnames = self.spectra_fs.fnames
+        self.fit(fnames=fnames)
+    def fit_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            print("fit all")
+            self.fit_all()
+        else:
+            self.fit()
+    def delete_peak_model(self, spectrum, idx):
+        """"To delete a peak model"""
+        del spectrum.peak_models[idx]
+        del spectrum.peak_labels[idx]
+        self.upd_spectra_list()
+
+    def clear_all_peaks(self):
+        """To clear all current peak_models of the selected spectrum"""
+        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum.remove_models()
+        self.upd_spectra_list()
+
+    def save_fit_model(self):
+        """To save the fit model of the current selected spectrum"""
+        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        last_dir = self.settings.value("last_directory", "/")
+        save_path, _ = QFileDialog.getSaveFileName(
+            self.ui.tabWidget, "Save fit model", last_dir,
+            "JSON Files (*.json)")
+
+        if save_path and sel_spectrum:
+            self.spectra_fs.save(save_path, [sel_spectrum.fname])
+            show_alert("Fit model is saved (JSON file)")
+        else:
+            show_alert("No fit model to save.")
     def clear_layout(self, layout):
         if layout is not None:
             while layout.count():
@@ -216,7 +379,7 @@ class Maps(QObject):
 
     def show_peak_table(self):
         """ To show all fitted parameters in GUI"""
-        sel_spectrum = self.get_spectrum_objet()
+        sel_spectrum, sel_spectra = self.get_spectrum_objet()
         self.clear_layout(self.ui.peak_table1)
 
         header_labels = ["Delete", "Label", "Model"]
@@ -398,134 +561,6 @@ class Maps(QObject):
         for param_hint_key, param_hint_layout in param_hint_layouts.items():
             for var_layout in param_hint_layout.values():
                 self.ui.peak_table1.addLayout(var_layout)
-
-    def update_peak_label(self, spectrum, idx, text):
-        spectrum.peak_labels[idx] = text
-
-    def update_param_hint_value(self, pm, key, text):
-        pm.param_hints[key]['value'] = float(text)
-
-    def update_param_hint_min(self, pm, key, text):
-        pm.param_hints[key]['min'] = float(text)
-
-    def update_param_hint_max(self, pm, key, text):
-        pm.param_hints[key]['max'] = float(text)
-
-    def update_param_hint_vary(self, pm, key, state):
-        pm.param_hints[key]['vary'] = state
-        self.upd_spectra_list()
-
-    def update_param_hint_expr(self, pm, key, text):
-        pm.param_hints[key]['expr'] = text
-
-    def update_model_name(self, spectrum, index, idx, new_model):
-        """ Update the model function related to the ith-model """
-        old_model_name = spectrum.peak_models[idx].name2
-        new_model_name = new_model
-        if new_model_name != old_model_name:
-            ampli = spectrum.peak_models[idx].param_hints['ampli']['value']
-            x0 = spectrum.peak_models[idx].param_hints['x0']['value']
-            peak_model = spectrum.create_peak_model(idx + 1, new_model_name,
-                                                    x0=x0, ampli=ampli)
-            spectrum.peak_models[idx] = peak_model
-            spectrum.result_fit = lambda: None
-            self.upd_spectra_list()
-
-    def on_click(self, event):
-        """On click action to add a "peak model" or "baseline point" """
-        sel_spectrum = self.get_spectrum_objet()
-        fit_model = self.ui.fit_model.currentText()
-        # Add a new peak_model for current selected peak
-        if self.zoom_pan_active == False and self.ui.rdbtn_peak.isChecked():
-            if event.button == 1:
-                if event.inaxes:
-                    x = event.xdata
-                    y = event.ydata
-            sel_spectrum.add_peak_model(fit_model, x)
-            self.upd_spectra_list()
-        # Add a new baseline for current selected peak
-        if self.zoom_pan_active == False and self.ui.rdbtn_baseline.isChecked():
-            if event.button == 1:
-                if event.inaxes:
-                    x1 = event.xdata
-                    y1 = event.ydata
-            if sel_spectrum.baseline.is_subtracted:
-                show_alert(
-                    "Already subtracted before. Reinit spectrum to perform "
-                    "new baseline")
-            else:
-                sel_spectrum.baseline.add_point(x1, y1)
-                self.upd_spectra_list()
-
-    def update_baseline(self):
-        """ Update a baseline attribute"""
-        # Get baseline settings
-        sel_spectrum.baseline.attached = self.ui.cb_attached.isChecked()
-        sel_spectrum.baseline.sigma = self.ui.noise.value()
-
-        if self.ui.rbtn_linear.isChecked():
-            sel_spectrum.baseline.mode = "Linear"
-        else:
-            sel_spectrum.baseline.mode = "Polynomial"
-            sel_spectrum.baseline.order_max = self.ui.degre.value()
-
-    def substract_baseline(self):
-        sel_spectrum = self.get_spectrum_objet()
-
-        sel_spectrum.subtract_baseline()
-        QTimer.singleShot(50, self.upd_spectra_list)
-        QTimer.singleShot(300, self.rescale)
-
-    def delete_baseline_points(self):
-        sel_spectrum = self.get_spectrum_objet()
-        sel_spectrum.baseline.points = [[], []]
-        QTimer.singleShot(50, self.upd_spectra_list)
-        QTimer.singleShot(300, self.rescale)
-
-    def fit(self):
-        """To apply all parameters of a fit model"""
-        sel_spectrum = self.get_spectrum_objet()
-        self.get_fit_settings()
-        sel_spectrum.fit()
-        QTimer.singleShot(100, self.upd_spectra_list)
-
-    def get_fit_settings(self):
-        """To get all settings for the fitting action"""
-        sel_spectrum = self.get_spectrum_objet()
-        fit_params = sel_spectrum.fit_params
-        fit_params['fit_negative'] = self.ui.cb_fit_negative.isChecked()
-        fit_params['max_ite'] = self.ui.max_iteration.value()
-        fit_params['method'] = self.ui.cbb_fit_methods.currentText()
-        fit_params['ncpus'] = self.ui.cbb_cpu_number.currentText()
-        fit_params['xtol'] = float(self.ui.xtol.text())
-        sel_spectrum.fit_params = fit_params
-
-    def delete_peak_model(self, spectrum, idx):
-        """"To delete a peak model"""
-        del spectrum.peak_models[idx]
-        del spectrum.peak_labels[idx]
-        self.upd_spectra_list()
-
-    def clear_all_peaks(self):
-        """To clear all current peak_models of the selected spectrum"""
-        sel_spectrum = self.get_spectrum_objet()
-        sel_spectrum.remove_models()
-        self.upd_spectra_list()
-
-    def save_fit_model(self):
-        """To save the fit model of the current selected spectrum"""
-        sel_spectrum = self.get_spectrum_objet()
-        last_dir = self.settings.value("last_directory", "/")
-        save_path, _ = QFileDialog.getSaveFileName(
-            self.ui.tabWidget, "Save fit model", last_dir,
-            "JSON Files (*.json)")
-
-        if save_path and sel_spectrum:
-            self.spectra_fs.save(save_path, [sel_spectrum.fname])
-            show_alert("Fit model is saved (JSON file)")
-        else:
-            show_alert("No fit model to save.")
-
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
         if not fname_json:
@@ -805,15 +840,9 @@ class Maps(QObject):
         self.ui.frame_graph.addWidget(self.canvas4)
         self.canvas4.draw()
 
-    def toggle_zoom_pan(self, checked):
-        """Toggle zoom and pan functionality"""
-        self.zoom_pan_active = checked
-        if not checked:
-            self.zoom_pan_active = False
 
     def plot1(self):
-        """Plot all selected spectra"""
-
+        """Plot selected spectra"""
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
         for spectrum_fs in self.spectra_fs:
@@ -836,11 +865,8 @@ class Maps(QObject):
             self.ax.plot(x_values, y_values, label=f"{coord}", ms=3, lw=2)
 
             # BASELINE
-            if not spectrum_fs.baseline.is_subtracted:
-                x_bl = spectrum_fs.x
-                y_bl = spectrum_fs.y if spectrum_fs.baseline.attached else None
-                spectrum_fs.baseline.plot(self.ax, x=x_bl, y=y_bl,
-                                          show_all=True)
+            self.plot_baseline_dynamically(ax=self.ax, spectrum=spectrum_fs)
+
 
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
@@ -921,7 +947,6 @@ class Maps(QObject):
                 x, y = coord_fs
                 all_x.append(x)
                 all_y.append(y)
-
         self.ax2.clear()
         self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
         if coords:
@@ -950,7 +975,6 @@ class Maps(QObject):
         x = selected_df['X']
         y = selected_df['Y']
         param = selected_df[sel_param]
-
         vmin = float(
             self.ui.int_vmin.text()) if self.ui.int_vmin.text() else None
         vmax = float(
@@ -994,25 +1018,21 @@ class Maps(QObject):
         xlabel_rot = 0  # Default rotation angle
         if text:
             xlabel_rot = float(text)
-
         ax = self.ax4
         plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
                    x_text, y_text, xlabel_rot)
-
         self.ax4.get_figure().tight_layout()
         self.canvas4.draw()
 
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
         current_row = self.ui.wafers_listbox.currentRow()
-
         self.ui.wafers_listbox.clear()
         wafer_names = list(self.wafers.keys())
         for wafer_name in wafer_names:
             item = QListWidgetItem(wafer_name)
             self.ui.wafers_listbox.addItem(item)
         item_count = self.ui.wafers_listbox.count()
-
         # Management of selecting item of listbox
         if current_row >= item_count:
             current_row = item_count - 1
@@ -1026,7 +1046,6 @@ class Maps(QObject):
     def upd_spectra_list(self):
         """to update the spectra list"""
         current_row = self.ui.spectra_listbox.currentRow()
-
         self.ui.spectra_listbox.clear()
         current_item = self.ui.wafers_listbox.currentItem()
 
@@ -1050,7 +1069,6 @@ class Maps(QObject):
         # Update the item count label
         item_count = self.ui.spectra_listbox.count()
         self.ui.item_count_label.setText(f"{item_count} points")
-
         # Reselect the previously selected item
         if current_row >= 0 and current_row < item_count:
             self.ui.spectra_listbox.setCurrentRow(current_row)
@@ -1116,20 +1134,20 @@ class Maps(QObject):
                 item.setSelected(True)
 
     def get_spectrum_objet(self):
-        """ to get the selected spectrum object"""
+        """ Get the selected spectrum OBJECT"""
         wafer_name, coords = self.spectre_id()
-        selected_spectra_fs = []
+        sel_spectra = []
         for spectrum_fs in self.spectra_fs:
             wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
             if wafer_name_fs == wafer_name and coord_fs in coords:
-                selected_spectra_fs.append(spectrum_fs)
-        if len(selected_spectra_fs) == 0:
+                sel_spectra.append(spectrum_fs)
+        if len(sel_spectra) == 0:
             return
-        sel_spectrum = selected_spectra_fs[0]
-        return sel_spectrum
+        sel_spectrum = sel_spectra[0]
+        return sel_spectrum, sel_spectra
 
     def spectre_id(self):
-        """Get selected spectre id(s)"""
+        """Get selected spectre id(s) from GUI wafer and spectr listboxes"""
         wafer_item = self.ui.wafers_listbox.currentItem()
         if wafer_item is not None:
             wafer_name = wafer_item.text()
@@ -1145,8 +1163,7 @@ class Maps(QObject):
         return None, None
 
     def spectre_id_fs(self, spectrum_fs=None):
-        """Get selected spectre id(s) of FITSPY object"""
-
+        """Get selected spectre id(s) from fitspy spectra object"""
         fname_parts = spectrum_fs.fname.split("_")
         wafer_name_fs = "_".join(fname_parts[:-1])
         coord_str = fname_parts[-1]  # Last part contains the coordinates
@@ -1183,7 +1200,29 @@ class Maps(QObject):
 
     def cosmis_ray_detection(self):
         self.spectra_fs.outliers_limit_calculation()
+    def toggle_zoom_pan(self, checked):
+        """Toggle zoom and pan functionality"""
+        self.zoom_pan_active = checked
+        if not checked:
+            self.zoom_pan_active = False
+    def update_peak_label(self, spectrum, idx, text):
+        spectrum.peak_labels[idx] = text
 
+    def update_param_hint_value(self, pm, key, text):
+        pm.param_hints[key]['value'] = float(text)
+
+    def update_param_hint_min(self, pm, key, text):
+        pm.param_hints[key]['min'] = float(text)
+
+    def update_param_hint_max(self, pm, key, text):
+        pm.param_hints[key]['max'] = float(text)
+
+    def update_param_hint_vary(self, pm, key, state):
+        pm.param_hints[key]['vary'] = state
+        self.upd_spectra_list()
+
+    def update_param_hint_expr(self, pm, key, text):
+        pm.param_hints[key]['expr'] = text
     def view_stats(self):
         """Show the statistique fitting results of the selected spectrum"""
         wafer_name, coords = self.spectre_id()

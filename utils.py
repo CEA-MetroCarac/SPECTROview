@@ -4,6 +4,7 @@ Module contains all utilities functions and common functions
 import time
 import markdown
 import os
+from copy import deepcopy
 
 try:
     import win32clipboard
@@ -14,7 +15,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
-    QTableWidgetItem, QVBoxLayout, QTextBrowser
+    QTableWidgetItem, QVBoxLayout, QTextBrowser, QLabel, QLineEdit, \
+    QPushButton, \
+    QComboBox, QCheckBox
 from PySide6.QtCore import Signal, QThread
 from PySide6.QtGui import QPalette, QColor, QTextCursor
 
@@ -25,7 +28,15 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 DIRNAME = os.path.dirname(__file__)
 RELPATH = os.path.join(DIRNAME, "resources")
 
-PEAK_MODELS = ["Lorentzian", "Gaussian",  "PseudoVoigt", "GaussianAsym",  "LorentzianAsym"]
+PEAK_MODELS = ["Lorentzian", "Gaussian", "PseudoVoigt", "GaussianAsym",
+               "LorentzianAsym"]
+FIT_PARAMS = {'method': 'leastsq', 'fit_negative': False, 'fit_outliers': False,
+              'max_ite': 200, 'coef_noise': 1, 'xtol': 1.e-4, 'ncpus': 'auto'}
+FIT_METHODS = {'Leastsq': 'leastsq', 'Least_squares': 'least_squares',
+               'Nelder-Mead': 'nelder', 'SLSQP': 'slsqp'}
+NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
+         '24', '28', '32']
+
 
 def plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
                y_text, xlabel_rot):
@@ -74,6 +85,7 @@ def reinit_spectrum(fnames, spectra_fs):
         spectrum.remove_models()
         spectrum.baseline.points = [[], []]
         spectrum.baseline.is_subtracted = False
+
 
 def clear_layout(layout):
     """Clear everything within a given Qlayout"""
@@ -184,6 +196,7 @@ def view_df(tabWidget, df):
     layout.addWidget(table_widget)
     df_viewer.show()
 
+
 def display_df_in_table(table_widget, df_results):
     """Display pandas DataFrame in QTableWidget in GUI"""
     table_widget.setRowCount(df_results.shape[0])
@@ -194,6 +207,7 @@ def display_df_in_table(table_widget, df_results):
             item = QTableWidgetItem(str(df_results.iat[row, col]))
             table_widget.setItem(row, col, item)
     table_widget.resizeColumnsToContents()
+
 
 def view_text(ui, title, text):
     """ Create a QTextBrowser to display a text content"""
@@ -237,7 +251,8 @@ def dark_palette():
     dark_palette = QPalette()
     dark_palette.setColor(QPalette.Window, QColor(70, 70, 70))
     dark_palette.setColor(QPalette.WindowText, Qt.white)
-    dark_palette.setColor(QPalette.Base, QColor(65, 65, 65)) #QlineEdit Listbox bg
+    dark_palette.setColor(QPalette.Base,
+                          QColor(65, 65, 65))  # QlineEdit Listbox bg
     dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
     dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
     dark_palette.setColor(QPalette.ToolTipText, Qt.white)
@@ -271,8 +286,10 @@ def light_palette():
     light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
     return light_palette
 
+
 class FitThread(QThread):
-    """ Class to perform fitting in a separate Thread to avoid GUI freezing/lagging"""
+    """ Class to perform fitting in a separate Thread to avoid GUI
+    freezing/lagging"""
     fit_progress_changed = Signal(int)  # To update progress bar
     fit_progress = Signal(int, float)  # TO display number and elapsed time
     fit_completed = Signal()
@@ -286,10 +303,12 @@ class FitThread(QThread):
     def run(self):
         start_time = time.time()  # Record start time
         num = 0
+        fit_model = deepcopy(self.model_fs)
         for index, fname in enumerate(self.fnames):
             progress = int((index + 1) / len(self.fnames) * 100)
             self.fit_progress_changed.emit(progress)
-            self.spectra_fs.apply_model(self.model_fs, fnames=[fname],
+
+            self.spectra_fs.apply_model(fit_model, fnames=[fname],
                                         show_progressbar=None)
             num += 1
             elapsed_time = time.time() - start_time

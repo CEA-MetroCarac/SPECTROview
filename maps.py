@@ -8,8 +8,9 @@ from pathlib import Path
 import dill
 from utils import view_df, show_alert, quadrant, zone, view_text, \
     copy_fig_to_clb, \
-    translate_param, clear_layout, reinit_spectrum, plot_graph, display_df_in_table
-from utils import FitThread, PEAK_MODELS
+    translate_param, clear_layout, reinit_spectrum, plot_graph, \
+    display_df_in_table
+from utils import FitThread, PEAK_MODELS, FIT_PARAMS, FIT_METHODS, NCPUS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -33,7 +34,7 @@ PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 
 
 def update_param_hint_value(pm, key, text):
-    #print(f"Peak Model: {pm.prefix}, Param Hint Key: {key}, Value: {text}")
+    # print(f"Peak Model: {pm.prefix}, Param Hint Key: {key}, Value: {text}")
     pm.param_hints[key]['value'] = float(text)
 
 
@@ -69,6 +70,7 @@ class Maps(QObject):
         self.ui.cb_filled.stateChanged.connect(self.delay_plot)
         self.ui.cb_peaks.stateChanged.connect(self.delay_plot)
         self.ui.cb_baseline.stateChanged.connect(self.delay_plot)
+        self.ui.cb_attached.stateChanged.connect(self.delay_plot)
 
         self.ui.limits.stateChanged.connect(self.delay_plot)
         self.ui.expr.stateChanged.connect(self.delay_plot)
@@ -83,6 +85,20 @@ class Maps(QObject):
         self.plot_styles = ["box plot", "point plot", "bar plot"]
         self.create_plot_widget()
         self.zoom_pan_active = False
+
+        self.ui.cbb_fit_methods.addItems(FIT_METHODS)
+        self.ui.cbb_cpu_number.addItems(NCPUS)
+
+        # Connect signals to slots for updating QSettings
+        self.load_fit_settings()
+        self.ui.cb_fit_negative.stateChanged.connect(self.save_fit_settings)
+        self.ui.max_iteration.valueChanged.connect(self.save_fit_settings)
+        self.ui.cbb_fit_methods.currentIndexChanged.connect(
+            self.save_fit_settings)
+        self.ui.cbb_cpu_number.currentIndexChanged.connect(
+            self.save_fit_settings)
+        self.ui.xtol.textChanged.connect(self.save_fit_settings)
+
     def open_data(self, wafers=None, file_paths=None):
         """Open CSV files containing RAW spectra of each wafer"""
 
@@ -203,17 +219,13 @@ class Maps(QObject):
         sel_spectrum = self.get_spectrum_objet()
         self.clear_layout(self.ui.peak_table1)
 
-        #labelsss = sel_spectrum.peak_labels
-        #peak_modelsss = sel_spectrum.peak_models
-        #print("Length of labels:", len(labelsss))
-        #print("Length of peak_models:", len(peak_modelsss))
-
         header_labels = ["Delete", "Label", "Model"]
         param_hint_order = ['x0', 'fwhm', 'ampli', 'alpha', 'fwhm_l', 'fwhm_r']
 
         # Create and add headers to list
         for param_hint_key in param_hint_order:
-            if any(param_hint_key in peak_model.param_hints for peak_model in sel_spectrum.peak_models):
+            if any(param_hint_key in peak_model.param_hints for peak_model in
+                   sel_spectrum.peak_models):
                 header_labels.append(param_hint_key.title())
                 header_labels.append(f"fix {param_hint_key.title()}")
                 if self.ui.limits.isChecked():
@@ -226,7 +238,9 @@ class Maps(QObject):
         delete_layout = QVBoxLayout()
         label_layout = QVBoxLayout()
         model_layout = QVBoxLayout()
-        param_hint_layouts = {param_hint: {var: QVBoxLayout() for var in ['value', 'min', 'max', 'expr', 'vary']} for
+        param_hint_layouts = {param_hint: {var: QVBoxLayout() for var in
+                                           ['value', 'min', 'max', 'expr',
+                                            'vary']} for
                               param_hint in param_hint_order}
 
         # Add header labels to each layout
@@ -259,25 +273,31 @@ class Maps(QObject):
             # Button to delete peak_model
             delete = QPushButton(peak_model.prefix)
             delete.setFixedWidth(50)
-            delete.clicked.connect(lambda idx=i, spectrum=sel_spectrum: self.delete_peak_model(spectrum, idx))
+            delete.clicked.connect(
+                lambda idx=i, spectrum=sel_spectrum: self.delete_peak_model(
+                    spectrum, idx))
             delete_layout.addWidget(delete)
 
             # Peak_label
             label = QLineEdit(sel_spectrum.peak_labels[i])
             label.setFixedWidth(80)
             label.textChanged.connect(
-                lambda text, idx=i, spectrum=sel_spectrum: self.update_peak_label(spectrum, idx, text))
+                lambda text, idx=i,
+                       spectrum=sel_spectrum: self.update_peak_label(spectrum,
+                                                                     idx, text))
             label_layout.addWidget(label)
 
             # Peak model : Lorentizan, Gaussien, etc...
             model = QComboBox()
             model.addItems(PEAK_MODELS)
-            current_model_index = PEAK_MODELS.index(peak_model.name2) if peak_model.name2 in PEAK_MODELS else 0
+            current_model_index = PEAK_MODELS.index(
+                peak_model.name2) if peak_model.name2 in PEAK_MODELS else 0
             model.setCurrentIndex(current_model_index)
             model.setFixedWidth(120)
             model.currentIndexChanged.connect(
-                lambda index, spectrum=sel_spectrum, idx=i, combo=model: self.update_model_name(spectrum, index,idx,
-                                                                                         combo.currentText()))
+                lambda index, spectrum=sel_spectrum, idx=i,
+                       combo=model: self.update_model_name(spectrum, index, idx,
+                                                           combo.currentText()))
             model_layout.addWidget(model)
 
             # variables of peak_model
@@ -293,7 +313,9 @@ class Maps(QObject):
                     value.setFixedHeight(24)
                     value.setAlignment(Qt.AlignRight)
                     value.textChanged.connect(
-                        lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_value(pm, key, text))
+                        lambda text, pm=peak_model,
+                               key=param_hint_key: self.update_param_hint_value(
+                            pm, key, text))
                     param_hint_layouts[param_hint_key]['value'].addWidget(value)
 
                     # 4.2 FIXED or NOT
@@ -301,8 +323,10 @@ class Maps(QObject):
                     vary.setChecked(not param_hint_value.get('vary', False))
                     vary.setFixedHeight(24)
                     vary.stateChanged.connect(
-                        lambda state, pm=peak_model, key=param_hint_key: self.update_param_hint_vary(pm, key,
-                                                                                                     not state))
+                        lambda state, pm=peak_model,
+                               key=param_hint_key: self.update_param_hint_vary(
+                            pm, key,
+                            not state))
                     param_hint_layouts[param_hint_key]['vary'].addWidget(vary)
 
                     # 4.3 MIN MAX
@@ -313,8 +337,12 @@ class Maps(QObject):
                         min_lineedit.setFixedHeight(24)
                         min_lineedit.setAlignment(Qt.AlignRight)
                         min_lineedit.textChanged.connect(
-                            lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_min(pm, key, text))
-                        param_hint_layouts[param_hint_key]['min'].addWidget(min_lineedit)
+                            lambda text, pm=peak_model,
+                                   key=param_hint_key:
+                            self.update_param_hint_min(
+                                pm, key, text))
+                        param_hint_layouts[param_hint_key]['min'].addWidget(
+                            min_lineedit)
 
                         max_val = round(param_hint_value.get('max', 0.0), 2)
                         max_lineedit = QLineEdit(str(max_val))
@@ -322,31 +350,45 @@ class Maps(QObject):
                         max_lineedit.setFixedHeight(24)
                         max_lineedit.setAlignment(Qt.AlignRight)
                         max_lineedit.textChanged.connect(
-                            lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_max(pm, key, text))
-                        param_hint_layouts[param_hint_key]['max'].addWidget(max_lineedit)
+                            lambda text, pm=peak_model,
+                                   key=param_hint_key:
+                            self.update_param_hint_max(
+                                pm, key, text))
+                        param_hint_layouts[param_hint_key]['max'].addWidget(
+                            max_lineedit)
 
                     # 4.4 EXPRESSION
                     if self.ui.expr.isChecked():
                         expr_val = str(param_hint_value.get('expr', ''))
                         expr = QLineEdit(expr_val)
                         expr.setFixedWidth(150)
-                        expr.setFixedHeight(24)  # Set a fixed height for QLineEdit
+                        expr.setFixedHeight(
+                            24)  # Set a fixed height for QLineEdit
                         expr.setAlignment(Qt.AlignRight)
                         expr.textChanged.connect(
-                            lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_expr(pm, key, text))
-                        param_hint_layouts[param_hint_key]['expr'].addWidget(expr)
+                            lambda text, pm=peak_model,
+                                   key=param_hint_key:
+                            self.update_param_hint_expr(
+                                pm, key, text))
+                        param_hint_layouts[param_hint_key]['expr'].addWidget(
+                            expr)
 
                 else:
                     # Add empty labels for alignment
                     empty_label = QLabel()
                     empty_label.setFixedHeight(24)
-                    param_hint_layouts[param_hint_key]['value'].addWidget(empty_label)
-                    param_hint_layouts[param_hint_key]['vary'].addWidget(empty_label)
+                    param_hint_layouts[param_hint_key]['value'].addWidget(
+                        empty_label)
+                    param_hint_layouts[param_hint_key]['vary'].addWidget(
+                        empty_label)
                     if self.ui.limits.isChecked():
-                        param_hint_layouts[param_hint_key]['min'].addWidget(empty_label)
-                        param_hint_layouts[param_hint_key]['max'].addWidget(empty_label)
+                        param_hint_layouts[param_hint_key]['min'].addWidget(
+                            empty_label)
+                        param_hint_layouts[param_hint_key]['max'].addWidget(
+                            empty_label)
                     if self.ui.expr.isChecked():
-                        param_hint_layouts[param_hint_key]['expr'].addWidget(empty_label)
+                        param_hint_layouts[param_hint_key]['expr'].addWidget(
+                            empty_label)
 
         # Add vertical layouts to main layout
         self.ui.peak_table1.addLayout(delete_layout)
@@ -356,6 +398,26 @@ class Maps(QObject):
         for param_hint_key, param_hint_layout in param_hint_layouts.items():
             for var_layout in param_hint_layout.values():
                 self.ui.peak_table1.addLayout(var_layout)
+
+    def update_peak_label(self, spectrum, idx, text):
+        spectrum.peak_labels[idx] = text
+
+    def update_param_hint_value(self, pm, key, text):
+        pm.param_hints[key]['value'] = float(text)
+
+    def update_param_hint_min(self, pm, key, text):
+        pm.param_hints[key]['min'] = float(text)
+
+    def update_param_hint_max(self, pm, key, text):
+        pm.param_hints[key]['max'] = float(text)
+
+    def update_param_hint_vary(self, pm, key, state):
+        pm.param_hints[key]['vary'] = state
+        self.upd_spectra_list()
+
+    def update_param_hint_expr(self, pm, key, text):
+        pm.param_hints[key]['expr'] = text
+
     def update_model_name(self, spectrum, index, idx, new_model):
         """ Update the model function related to the ith-model """
         old_model_name = spectrum.peak_models[idx].name2
@@ -363,7 +425,7 @@ class Maps(QObject):
         if new_model_name != old_model_name:
             ampli = spectrum.peak_models[idx].param_hints['ampli']['value']
             x0 = spectrum.peak_models[idx].param_hints['x0']['value']
-            peak_model = spectrum.create_peak_model(idx +1, new_model_name,
+            peak_model = spectrum.create_peak_model(idx + 1, new_model_name,
                                                     x0=x0, ampli=ampli)
             spectrum.peak_models[idx] = peak_model
             spectrum.result_fit = lambda: None
@@ -373,7 +435,6 @@ class Maps(QObject):
         """On click action to add a "peak model" or "baseline point" """
         sel_spectrum = self.get_spectrum_objet()
         fit_model = self.ui.fit_model.currentText()
-
         # Add a new peak_model for current selected peak
         if self.zoom_pan_active == False and self.ui.rdbtn_peak.isChecked():
             if event.button == 1:
@@ -382,7 +443,6 @@ class Maps(QObject):
                     y = event.ydata
             sel_spectrum.add_peak_model(fit_model, x)
             self.upd_spectra_list()
-
         # Add a new baseline for current selected peak
         if self.zoom_pan_active == False and self.ui.rdbtn_baseline.isChecked():
             if event.button == 1:
@@ -390,43 +450,62 @@ class Maps(QObject):
                     x1 = event.xdata
                     y1 = event.ydata
             if sel_spectrum.baseline.is_subtracted:
-                show_alert("Already subtracted before. Reinit spectrum to perform new baseline")
+                show_alert(
+                    "Already subtracted before. Reinit spectrum to perform "
+                    "new baseline")
             else:
                 sel_spectrum.baseline.add_point(x1, y1)
                 self.upd_spectra_list()
+
+    def update_baseline(self):
+        """ Update a baseline attribute"""
+        # Get baseline settings
+        sel_spectrum.baseline.attached = self.ui.cb_attached.isChecked()
+        sel_spectrum.baseline.sigma = self.ui.noise.value()
+
+        if self.ui.rbtn_linear.isChecked():
+            sel_spectrum.baseline.mode = "Linear"
         else:
-            return
+            sel_spectrum.baseline.mode = "Polynomial"
+            sel_spectrum.baseline.order_max = self.ui.degre.value()
+
     def substract_baseline(self):
         sel_spectrum = self.get_spectrum_objet()
-        #sel_spectrum.subtract_baseline()  # ONLY if it hasn't done before
-        baseline_points =sel_spectrum.baseline.points
-        if len(baseline_points[0]) == 0:
-            return
-        for fname in [sel_spectrum.fname]:
-            spectrum, _ = self.spectra_fs.get_objects(fname)
-            spectrum.baseline.points = baseline_points.copy()
-            spectrum.subtract_baseline()
 
+        sel_spectrum.subtract_baseline()
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
 
-    def delete_baseline(self):
+    def delete_baseline_points(self):
         sel_spectrum = self.get_spectrum_objet()
         sel_spectrum.baseline.points = [[], []]
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
+
     def fit(self):
         """To apply all parameters of a fit model"""
         sel_spectrum = self.get_spectrum_objet()
-        ##### To add new fit parameters in GUI and pass to fit() as arguments
+        self.get_fit_settings()
         sel_spectrum.fit()
         QTimer.singleShot(100, self.upd_spectra_list)
+
+    def get_fit_settings(self):
+        """To get all settings for the fitting action"""
+        sel_spectrum = self.get_spectrum_objet()
+        fit_params = sel_spectrum.fit_params
+        fit_params['fit_negative'] = self.ui.cb_fit_negative.isChecked()
+        fit_params['max_ite'] = self.ui.max_iteration.value()
+        fit_params['method'] = self.ui.cbb_fit_methods.currentText()
+        fit_params['ncpus'] = self.ui.cbb_cpu_number.currentText()
+        fit_params['xtol'] = float(self.ui.xtol.text())
+        sel_spectrum.fit_params = fit_params
 
     def delete_peak_model(self, spectrum, idx):
         """"To delete a peak model"""
         del spectrum.peak_models[idx]
         del spectrum.peak_labels[idx]
         self.upd_spectra_list()
+
     def clear_all_peaks(self):
         """To clear all current peak_models of the selected spectrum"""
         sel_spectrum = self.get_spectrum_objet()
@@ -440,28 +519,12 @@ class Maps(QObject):
         save_path, _ = QFileDialog.getSaveFileName(
             self.ui.tabWidget, "Save fit model", last_dir,
             "JSON Files (*.json)")
+
         if save_path and sel_spectrum:
             self.spectra_fs.save(save_path, [sel_spectrum.fname])
             show_alert("Fit model is saved (JSON file)")
         else:
             show_alert("No fit model to save.")
-
-
-    def update_peak_label(self, spectrum, idx, text):
-        spectrum.peak_labels[idx] = text
-    def update_param_hint_value(self, pm, key, text):
-        pm.param_hints[key]['value'] = float(text)
-    def update_param_hint_min(self, pm, key, text):
-        pm.param_hints[key]['min'] = float(text)
-    def update_param_hint_max(self, pm, key, text):
-        pm.param_hints[key]['max'] = float(text)
-    def update_param_hint_vary(self, pm, key, state):
-        pm.param_hints[key]['vary'] = state
-        self.upd_spectra_list()
-    def update_param_hint_expr(self, pm, key, text):
-        pm.param_hints[key]['expr'] = text
-
-
 
     def open_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
@@ -742,7 +805,6 @@ class Maps(QObject):
         self.ui.frame_graph.addWidget(self.canvas4)
         self.canvas4.draw()
 
-
     def toggle_zoom_pan(self, checked):
         """Toggle zoom and pan functionality"""
         self.zoom_pan_active = checked
@@ -751,6 +813,7 @@ class Maps(QObject):
 
     def plot1(self):
         """Plot all selected spectra"""
+
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
         for spectrum_fs in self.spectra_fs:
@@ -773,11 +836,11 @@ class Maps(QObject):
             self.ax.plot(x_values, y_values, label=f"{coord}", ms=3, lw=2)
 
             # BASELINE
-            if self.ui.cb_baseline.isChecked():
-                spectrum_fs.baseline.plot(self.ax, x=x_values, y=y_values, show_all=False)
-
-            points = spectrum_fs.baseline.points
-            self.ax.plot(points[0], points[1], 'ko-', label='baseline', ms=8,lw=1)
+            if not spectrum_fs.baseline.is_subtracted:
+                x_bl = spectrum_fs.x
+                y_bl = spectrum_fs.y if spectrum_fs.baseline.attached else None
+                spectrum_fs.baseline.plot(self.ax, x=x_bl, y=y_bl,
+                                          show_all=True)
 
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
@@ -785,7 +848,8 @@ class Maps(QObject):
                 self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
                              lw=1)
 
-            if hasattr(spectrum_fs.result_fit, 'components') and self.ui.cb_bestfit.isChecked():
+            if hasattr(spectrum_fs.result_fit,
+                       'components') and self.ui.cb_bestfit.isChecked():
                 bestfit = spectrum_fs.result_fit.best_fit
                 self.ax.plot(x_values, bestfit, label=f"bestfit")
 
@@ -1234,7 +1298,8 @@ class Maps(QObject):
 
                     self.plot4()
                     self.plot3()
-                    display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+                    display_df_in_table(self.ui.fit_results_table,
+                                        self.df_fit_results)
         except Exception as e:
             show_alert(f"Error loading work: {e}")
 
@@ -1269,3 +1334,38 @@ class Maps(QObject):
 
     def update_pbar(self, progress):
         self.ui.progressBar.setValue(progress)
+
+    def save_fit_settings(self):
+        """Save all fitting settings to QSettings"""
+        fit_params = {
+            'fit_negative': self.ui.cb_fit_negative.isChecked(),
+            'max_ite': self.ui.max_iteration.value(),
+            'method': self.ui.cbb_fit_methods.currentText(),
+            'ncpus': self.ui.cbb_cpu_number.currentText(),
+            'xtol': float(self.ui.xtol.text())
+        }
+        print("settings are saved")
+        # Save the fit_params to QSettings
+        for key, value in fit_params.items():
+            self.settings.setValue(key, value)
+
+    def load_fit_settings(self):
+        """Load last used fitting settings from QSettings"""
+        fit_params = {
+            'fit_negative': self.settings.value('fit_negative',
+                                                defaultValue=False, type=bool),
+            'max_ite': self.settings.value('max_ite', defaultValue=200,
+                                           type=int),
+            'method': self.settings.value('method', defaultValue='leastsq',
+                                          type=str),
+            'ncpus': self.settings.value('ncpus', defaultValue='auto',
+                                         type=str),
+            'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float)
+        }
+
+        # Update GUI elements with the loaded values
+        self.ui.cb_fit_negative.setChecked(fit_params['fit_negative'])
+        self.ui.max_iteration.setValue(fit_params['max_ite'])
+        self.ui.cbb_fit_methods.setCurrentText(fit_params['method'])
+        self.ui.cbb_cpu_number.setCurrentText(fit_params['ncpus'])
+        self.ui.xtol.setText(str(fit_params['xtol']))

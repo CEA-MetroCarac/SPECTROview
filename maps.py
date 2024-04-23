@@ -19,6 +19,7 @@ from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
 
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from wafer_view import WaferView
@@ -70,7 +71,6 @@ class Maps(QObject):
         self.ui.cb_residual.stateChanged.connect(self.delay_plot)
         self.ui.cb_filled.stateChanged.connect(self.delay_plot)
         self.ui.cb_peaks.stateChanged.connect(self.delay_plot)
-        self.ui.cb_baseline.stateChanged.connect(self.delay_plot)
         self.ui.cb_attached.stateChanged.connect(self.delay_plot)
 
         self.ui.cb_limits.stateChanged.connect(self.delay_plot)
@@ -277,6 +277,9 @@ class Maps(QObject):
     def subtract_baseline(self, fnames=None):
         """ Subtract baseline for the selected spectrum(s) """
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        points=sel_spectrum.baseline.points
+        if len(points[0]) == 0:
+            return
         sel_spectrum.subtract_baseline()
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
@@ -606,6 +609,15 @@ class Maps(QObject):
         # plot 2: Measurement sites view
         fig2 = plt.figure()
         self.ax2 = fig2.add_subplot(111)
+        # Remove unnecessary axes
+        self.ax2.spines['right'].set_visible(False)
+        self.ax2.spines['top'].set_visible(False)
+        self.ax2.spines['left'].set_visible(False)
+        self.ax2.tick_params(axis='x', which='both', bottom=True, top=False)
+        self.ax2.tick_params(axis='y', which='both', right=False, left=False)
+        self.ax2.set_xticklabels([])
+        self.ax2.set_yticklabels([])
+
         self.canvas2 = FigureCanvas(fig2)
         layout = self.ui.wafer_plot.layout()
         layout.addWidget(self.canvas2)
@@ -643,13 +655,11 @@ class Maps(QObject):
 
             # BASELINE
             self.plot_baseline_dynamically(ax=self.ax, spectrum=spectrum_fs)
-
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
                 y0_values = spectrum_fs.y0
                 self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
                              lw=1)
-
             if hasattr(spectrum_fs.result_fit,
                        'components') and self.ui.cb_bestfit.isChecked():
                 bestfit = spectrum_fs.result_fit.best_fit
@@ -701,7 +711,7 @@ class Maps(QObject):
         self.ax.set_ylabel("Intensity (a.u)")
         if self.ui.cb_legend.isChecked():
             self.ax.legend(loc='upper right')
-
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.ax.get_figure().tight_layout()
         self.canvas1.draw()
         self.plot2()
@@ -713,6 +723,13 @@ class Maps(QObject):
         wafer_name, coords = self.spectre_id()
         all_x = []
         all_y = []
+        if self.ui.size150.isChecked():
+            r = 75
+        elif self.ui.size200.isChecked():
+            r = 100
+        elif self.ui.size300.isChecked():
+            r = 150
+
         for spectrum_fs in self.spectra_fs:
             wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
             if wafer_name == wafer_name_fs:
@@ -720,10 +737,15 @@ class Maps(QObject):
                 all_x.append(x)
                 all_y.append(y)
         self.ax2.clear()
+        wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
+                                      color='black', linewidth=1)
+        self.ax2.add_patch(wafer_circle)
         self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
         if coords:
             x, y = zip(*coords)
             self.ax2.scatter(x, y, marker='o', color='red', s=40)
+        self.ax2.set_yticklabels([])
+        self.ax2.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.ax2.get_figure().tight_layout()
         self.canvas2.draw()
 

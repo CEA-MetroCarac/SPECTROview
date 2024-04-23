@@ -214,6 +214,7 @@ class Main:
         self.ui.clear_peaks.clicked.connect(self.maps.clear_all_peaks)
         self.ui.fit_model.addItems(PEAK_MODELS)
         self.ui.del_bl_points.clicked.connect(self.maps.delete_baseline_points)
+        self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range)
 
         ########################################################
         ############## GUI for Spectrums Processing tab #############

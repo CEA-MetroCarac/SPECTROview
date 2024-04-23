@@ -101,11 +101,11 @@ class Maps(QObject):
         self.ui.xtol.textChanged.connect(self.save_fit_settings)
 
         # BASELINE
-        self.ui.cb_attached.clicked.connect(self.upd_baseline_settings)
-        self.ui.noise.valueChanged.connect(self.upd_baseline_settings)
-        self.ui.rbtn_linear.clicked.connect(self.upd_baseline_settings)
-        self.ui.rbtn_polynomial.clicked.connect(self.upd_baseline_settings)
-        self.ui.degre.valueChanged.connect(self.upd_baseline_settings)
+        self.ui.cb_attached.clicked.connect(self.get_baseline_settings)
+        self.ui.noise.valueChanged.connect(self.get_baseline_settings)
+        self.ui.rbtn_linear.clicked.connect(self.get_baseline_settings)
+        self.ui.rbtn_polynomial.clicked.connect(self.get_baseline_settings)
+        self.ui.degre.valueChanged.connect(self.get_baseline_settings)
 
     def open_data(self, wafers=None, file_paths=None):
         """Open CSV files containing RAW spectra of each wafer"""
@@ -179,24 +179,22 @@ class Maps(QObject):
                     self.spectra_fs.append(spectrum_fs)
         self.upd_wafers_list()
 
-    def read_spectrum_model(self):
-        """To read fitted params and peak_models of selected spectrum"""
+    def read_x_range(self):
+        """Read x range of selected spectrum"""
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
         self.ui.range_min.setText(str(sel_spectrum.x[0]))
         self.ui.range_max.setText(str(sel_spectrum.x[-1]))
 
     def set_x_range(self, fnames=None, new_x_min=None, new_x_max=None):
-        """Update sel_spectrum's range from QLineEdit"""
+        """ Set new x range for selected spectrum"""
         new_x_min = float(self.ui.range_min.text())
         new_x_max = float(self.ui.range_max.text())
         if fnames is None:
             wafer_name, coords = self.spectre_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
-
         reinit_spectrum(fnames, self.spectra_fs)
         for fname in fnames:
             spectrum, _ = self.spectra_fs.get_objects(fname)
-            # Set x range for selected spectrum
             spectrum.range_min = float(self.ui.range_min.text())
             spectrum.range_max = float(self.ui.range_max.text())
 
@@ -210,18 +208,12 @@ class Maps(QObject):
         QTimer.singleShot(300, self.rescale)
 
     def set_x_range_all(self):
+        """ Set new x range for all spectrum"""
         fnames = self.spectra_fs.fnames
         self.set_x_range(fnames=fnames)
 
-    def set_x_range_handler(self):
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.set_x_range_all()
-        else:
-            self.set_x_range()
-
     def on_click(self, event):
-        """On click action to add a "peak model" or "baseline point" """
+        """On click action to add a "peak models" or "baseline points" """
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
         fit_model = self.ui.fit_model.currentText()
         # Add a new peak_model for current selected peak
@@ -245,8 +237,8 @@ class Maps(QObject):
                     sel_spectrum.baseline.add_point(x1, y1)
                     self.upd_spectra_list()
 
-    def upd_baseline_settings(self):
-        """ Pass the settings from GUI to spectrum objects"""
+    def get_baseline_settings(self):
+        """ Pass baseline settings from GUI to spectrum objects for baseline subtraction"""
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
         if sel_spectrum is None:
             return
@@ -257,10 +249,10 @@ class Maps(QObject):
         else:
             sel_spectrum.baseline.mode = "Polynomial"
             sel_spectrum.baseline.order_max = self.ui.degre.value()
-        self.upd_spectra_list()
+        QTimer.singleShot(100, self.upd_spectra_list)
 
     def plot_baseline_dynamically(self, ax, spectrum):
-        """ To plot baseline points and line"""
+        """ To evaluate and plot baseline points and line dynamically"""
         if not spectrum.baseline.is_subtracted:
             x_bl = spectrum.x
             y_bl = spectrum.y if spectrum.baseline.attached else None
@@ -282,13 +274,15 @@ class Maps(QObject):
                 ax.plot(spectrum.baseline.points[0],
                         spectrum.baseline.points[1], 'ko', mfc='none')
 
-    def substract_baseline(self, fnames=None):
+    def subtract_baseline(self, fnames=None):
+        """ Subtract baseline for the selected spectrum(s) """
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
         sel_spectrum.subtract_baseline()
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
 
-    def substract_baseline_all(self):
+    def subtract_baseline_all(self):
+        """ Subtract baseline for all spectrum(s) """
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
         sel_spectrum.subtract_baseline()
         QTimer.singleShot(50, self.upd_spectra_list)
@@ -303,7 +297,6 @@ class Maps(QObject):
     def get_fit_settings(self):
         """To get all settings for the fitting action"""
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
-
         fit_params = sel_spectrum.fit_params
         fit_params['fit_negative'] = self.ui.cb_fit_negative.isChecked()
         fit_params['max_ite'] = self.ui.max_iteration.value()
@@ -313,7 +306,7 @@ class Maps(QObject):
         sel_spectrum.fit_params = fit_params
 
     def fit(self, fnames=None):
-        """To apply all parameters of a fit model"""
+        """To apply all fit parameters to selected spectrum(s)"""
         self.get_fit_settings()
         if fnames is None:
             wafer_name, coords = self.spectre_id()
@@ -324,24 +317,17 @@ class Maps(QObject):
                 spectrum.fit()
             else:
                 continue
-
         QTimer.singleShot(100, self.upd_spectra_list)
 
     def fit_all(self):
+        """To apply all fit parameters to all spectrum(s)"""
         fnames = self.spectra_fs.fnames
         self.fit(fnames)
         QTimer.singleShot(100, self.upd_spectra_list)
 
-    def fit_handler(self):
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.fit_all()
-        else:
-            self.fit()
 
     def clear_all_peaks(self):
-        """To clear all existing peak_models of the selected spectrum(s)"""
-
+        """To clear all existing peak models of the selected spectrum(s)"""
         wafer_name, coords = self.spectre_id()
         fnames = [f"{wafer_name}_{coord}" for coord in coords]
         for fname in fnames:
@@ -359,7 +345,6 @@ class Maps(QObject):
         save_path, _ = QFileDialog.getSaveFileName(
             self.ui.tabWidget, "Save fit model", last_dir,
             "JSON Files (*.json)")
-
         if save_path and sel_spectrum:
             self.spectra_fs.save(save_path, [sel_spectrum.fname])
             show_alert("Fit model is saved (JSON file)")
@@ -494,9 +479,8 @@ class Maps(QObject):
                     f"Error saving DataFrame: {str(e)}")
 
     def load_fit_results(self, file_paths=None):
-        """Functon to load fitted results to view"""
+        """Functon to load fitted results from an excel file"""
         self.df_fit_results = None
-
         # Initialize the last used directory from QSettings
         last_dir = self.settings.value("last_directory", "/")
         options = QFileDialog.Options()
@@ -508,7 +492,6 @@ class Maps(QObject):
         if file_paths:
             last_dir = QFileInfo(file_paths[0]).absolutePath()
             self.settings.setValue("last_directory", last_dir)
-
             # Load DataFrame from the first selected Excel file
             excel_file_path = file_paths[0]
             try:
@@ -588,14 +571,6 @@ class Maps(QObject):
         fnames = self.spectra_fs.fnames
         self.reinit(fnames)
 
-    def reinit_fnc_handler(self):
-        """Switch between 2 save fit fnc with the Ctrl key"""
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.reinit_all()
-        else:
-            self.reinit()
-
     def rescale(self):
         """Rescale the figure."""
         self.ax.autoscale()
@@ -610,8 +585,6 @@ class Maps(QObject):
         self.ax = fig1.add_subplot(111)
         self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
         self.ax.set_ylabel("Intensity (a.u)")
-
-        # Connect the event handler to the canvas
         self.canvas1 = FigureCanvas(fig1)
         self.canvas1.mpl_connect('button_press_event', self.on_click)
 
@@ -732,7 +705,7 @@ class Maps(QObject):
         self.ax.get_figure().tight_layout()
         self.canvas1.draw()
         self.plot2()
-        self.read_spectrum_model()
+        self.read_x_range()
         self.show_peak_table()
 
     def plot2(self):
@@ -983,13 +956,6 @@ class Maps(QObject):
         wafer_name, coords = self.spectre_id()
         view_df(self.ui.tabWidget, self.wafers[wafer_name])
 
-    def fit_fnc_handler(self):
-        """Switch between 2 save fit fnc with the Ctrl key"""
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.apply_fit_model_all()
-        else:
-            self.apply_fit_model()
 
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
@@ -1013,7 +979,6 @@ class Maps(QObject):
         cb_limits = self.ui.cb_limits
         cb_expr = self.ui.cb_expr
         update = self.upd_spectra_list
-
         show_params = ShowParameters(main_layout, sel_spectrum, cb_limits,
                                      cb_expr, update)
         show_params.show_peak_table(main_layout, sel_spectrum, cb_limits,
@@ -1204,3 +1169,32 @@ class Maps(QObject):
         self.ui.cbb_fit_methods.setCurrentText(fit_params['method'])
         self.ui.cbb_cpu_number.setCurrentText(fit_params['ncpus'])
         self.ui.xtol.setText(str(fit_params['xtol']))
+
+    def set_x_range_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.set_x_range_all()
+        else:
+            self.set_x_range()
+    def apply_fit_model_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.fit_all()
+        else:
+            self.fit()
+
+    def fit_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.apply_fit_model_all()
+        else:
+            self.apply_fit_model()
+
+    def reinit_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.reinit_all()
+        else:
+            self.reinit()

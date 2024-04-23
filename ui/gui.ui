@@ -591,13 +591,13 @@
                       <widget class="QScrollArea" name="scrollArea_3">
                        <property name="minimumSize">
                         <size>
-                         <width>400</width>
+                         <width>430</width>
                          <height>0</height>
                         </size>
                        </property>
                        <property name="maximumSize">
                         <size>
-                         <width>400</width>
+                         <width>430</width>
                          <height>16777215</height>
                         </size>
                        </property>
@@ -609,7 +609,7 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>398</width>
+                          <width>428</width>
                           <height>396</height>
                          </rect>
                         </property>
@@ -704,9 +704,22 @@
                               <item>
                                <widget class="QLabel" name="label_61">
                                 <property name="text">
-                                 <string>X max/min</string>
+                                 <string>X max/min:</string>
                                 </property>
                                </widget>
+                              </item>
+                              <item>
+                               <spacer name="horizontalSpacer_30">
+                                <property name="orientation">
+                                 <enum>Qt::Horizontal</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>40</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                               </spacer>
                               </item>
                               <item>
                                <widget class="QLineEdit" name="range_min"/>
@@ -774,7 +787,7 @@
                              </widget>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="25,25,25,0,0,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="25,25,0,0,0">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -790,22 +803,6 @@
                               <property name="bottomMargin">
                                <number>2</number>
                               </property>
-                              <item>
-                               <widget class="QCheckBox" name="cb_attached">
-                                <property name="sizePolicy">
-                                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                  <horstretch>0</horstretch>
-                                  <verstretch>0</verstretch>
-                                 </sizepolicy>
-                                </property>
-                                <property name="text">
-                                 <string>Attached</string>
-                                </property>
-                                <property name="checked">
-                                 <bool>true</bool>
-                                </property>
-                               </widget>
-                              </item>
                               <item>
                                <widget class="QRadioButton" name="rbtn_linear">
                                 <property name="sizePolicy">
@@ -853,16 +850,19 @@
                                </widget>
                               </item>
                               <item>
-                               <widget class="QSpinBox" name="noise">
-                                <property name="minimum">
-                                 <number>1</number>
+                               <widget class="QDoubleSpinBox" name="noise">
+                                <property name="decimals">
+                                 <number>0</number>
+                                </property>
+                                <property name="value">
+                                 <double>5.000000000000000</double>
                                 </property>
                                </widget>
                               </item>
                              </layout>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0,0">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -879,11 +879,33 @@
                                <number>2</number>
                               </property>
                               <item>
-                               <widget class="QPushButton" name="del_bl_points">
+                               <widget class="QCheckBox" name="cb_attached">
+                                <property name="sizePolicy">
+                                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                  <horstretch>0</horstretch>
+                                  <verstretch>0</verstretch>
+                                 </sizepolicy>
+                                </property>
                                 <property name="text">
-                                 <string>Remove points</string>
+                                 <string>Attached</string>
+                                </property>
+                                <property name="checked">
+                                 <bool>true</bool>
                                 </property>
                                </widget>
+                              </item>
+                              <item>
+                               <spacer name="horizontalSpacer_22">
+                                <property name="orientation">
+                                 <enum>Qt::Horizontal</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>40</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                               </spacer>
                               </item>
                               <item>
                                <widget class="QPushButton" name="btn_undo_baseline">
@@ -945,7 +967,7 @@
                              </widget>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="5,30,65,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="0,0,65,0">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -962,28 +984,35 @@
                                <number>2</number>
                               </property>
                               <item>
-                               <widget class="QLabel" name="label_53">
+                               <widget class="QLabel" name="label_41">
                                 <property name="text">
-                                 <string>X</string>
+                                 <string>Peak model:</string>
                                 </property>
                                </widget>
                               </item>
                               <item>
-                               <widget class="QLineEdit" name="peak_pos"/>
+                               <spacer name="horizontalSpacer_31">
+                                <property name="orientation">
+                                 <enum>Qt::Horizontal</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>40</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                               </spacer>
                               </item>
                               <item>
                                <widget class="QComboBox" name="fit_model"/>
                               </item>
                               <item>
-                               <widget class="QPushButton" name="add_peak">
-                                <property name="maximumSize">
-                                 <size>
-                                  <width>120</width>
-                                  <height>16777215</height>
-                                 </size>
+                               <widget class="QPushButton" name="clear_peaks">
+                                <property name="toolTip">
+                                 <string>To clear all the current peaks model </string>
                                 </property>
                                 <property name="text">
-                                 <string>Add peak</string>
+                                 <string>Clear peaks</string>
                                 </property>
                                </widget>
                               </item>
@@ -1027,7 +1056,7 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>716</width>
+                               <width>686</width>
                                <height>280</height>
                               </rect>
                              </property>
@@ -1102,16 +1131,6 @@
                            </property>
                            <property name="text">
                             <string>Fit</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QPushButton" name="clear_peaks">
-                           <property name="toolTip">
-                            <string>To clear all the current peaks model </string>
-                           </property>
-                           <property name="text">
-                            <string>Clear peaks</string>
                            </property>
                           </widget>
                          </item>
@@ -1236,13 +1255,13 @@
                     </property>
                     <property name="minimumSize">
                      <size>
-                      <width>400</width>
+                      <width>430</width>
                       <height>400</height>
                      </size>
                     </property>
                     <property name="maximumSize">
                      <size>
-                      <width>400</width>
+                      <width>430</width>
                       <height>16777215</height>
                      </size>
                     </property>
@@ -1254,7 +1273,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>398</width>
+                       <width>428</width>
                        <height>400</height>
                       </rect>
                      </property>

@@ -101,11 +101,11 @@ class Maps(QObject):
         self.ui.xtol.textChanged.connect(self.save_fit_settings)
 
         # BASELINE
-        self.ui.cb_attached.clicked.connect(self.get_baseline_settings)
-        self.ui.noise.valueChanged.connect(self.get_baseline_settings)
-        self.ui.rbtn_linear.clicked.connect(self.get_baseline_settings)
-        self.ui.rbtn_polynomial.clicked.connect(self.get_baseline_settings)
-        self.ui.degre.valueChanged.connect(self.get_baseline_settings)
+        self.ui.cb_attached.clicked.connect(self.upd_spectra_list)
+        self.ui.noise.valueChanged.connect(self.upd_spectra_list)
+        self.ui.rbtn_linear.clicked.connect(self.upd_spectra_list)
+        self.ui.rbtn_polynomial.clicked.connect(self.upd_spectra_list)
+        self.ui.degre.valueChanged.connect(self.upd_spectra_list)
 
     def open_data(self, wafers=None, file_paths=None):
         """Open CSV files containing RAW spectra of each wafer"""
@@ -249,10 +249,10 @@ class Maps(QObject):
         else:
             sel_spectrum.baseline.mode = "Polynomial"
             sel_spectrum.baseline.order_max = self.ui.degre.value()
-        QTimer.singleShot(100, self.upd_spectra_list)
 
     def plot_baseline_dynamically(self, ax, spectrum):
         """ To evaluate and plot baseline points and line dynamically"""
+        self.get_baseline_settings()
         if not spectrum.baseline.is_subtracted:
             x_bl = spectrum.x
             y_bl = spectrum.y if spectrum.baseline.attached else None
@@ -264,7 +264,7 @@ class Maps(QObject):
                     line.remove()
             # Evaluate the baseline
             baseline_values = spectrum.baseline.eval(x_bl, y_bl)
-            ax.plot(x_bl, baseline_values, 'g', label="Baseline")
+            ax.plot(x_bl, baseline_values, 'r')
             # Plot the attached baseline points
             if spectrum.baseline.attached and y_bl is not None:
                 attached_points = spectrum.baseline.attach_points(x_bl, y_bl)
@@ -272,7 +272,7 @@ class Maps(QObject):
                         mfc='none')
             else:
                 ax.plot(spectrum.baseline.points[0],
-                        spectrum.baseline.points[1], 'ko', mfc='none')
+                        spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
 
     def subtract_baseline(self, fnames=None):
         """ Subtract baseline for the selected spectrum(s) """
@@ -291,11 +291,12 @@ class Maps(QObject):
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
 
-    def delete_baseline_points(self):
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
-        sel_spectrum.baseline.points = [[], []]
-        QTimer.singleShot(50, self.upd_spectra_list)
-        QTimer.singleShot(300, self.rescale)
+    # def delete_baseline_points(self):
+    #     sel_spectrum, sel_spectra = self.get_spectrum_objet()
+    #     sel_spectrum.baseline.points = [[], []]
+    #     sel_spectrum.baseline.is_subtracted = False
+    #     QTimer.singleShot(50, self.upd_spectra_list)
+    #     QTimer.singleShot(300, self.rescale)
 
     def get_fit_settings(self):
         """To get all settings for the fitting action"""
@@ -656,6 +657,7 @@ class Maps(QObject):
 
             # BASELINE
             self.plot_baseline_dynamically(ax=self.ax, spectrum=spectrum_fs)
+
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
                 y0_values = spectrum_fs.y0
@@ -729,7 +731,7 @@ class Maps(QObject):
         elif self.ui.size200.isChecked():
             r = 100
         elif self.ui.size300.isChecked():
-            r = 150
+            r = 152
 
         for spectrum_fs in self.spectra_fs:
             wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)

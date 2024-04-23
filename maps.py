@@ -284,20 +284,6 @@ class Maps(QObject):
                 ax.plot(spectrum.baseline.points[0],
                         spectrum.baseline.points[1], 'ko', mfc='none')
 
-    def update_model_name(self, spectrum, index, idx, new_model):
-        """ Update the model function (Lorentizan, Gaussian...) related to
-        the ith-model """
-        old_model_name = spectrum.peak_models[idx].name2
-        new_model_name = new_model
-        if new_model_name != old_model_name:
-            ampli = spectrum.peak_models[idx].param_hints['ampli']['value']
-            x0 = spectrum.peak_models[idx].param_hints['x0']['value']
-            peak_model = spectrum.create_peak_model(idx + 1, new_model_name,
-                                                    x0=x0, ampli=ampli)
-            spectrum.peak_models[idx] = peak_model
-            spectrum.result_fit = lambda: None
-            self.upd_spectra_list()
-
     def substract_baseline(self, fnames=None):
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
         sel_spectrum.subtract_baseline()

@@ -588,6 +588,7 @@ class Maps(QObject):
         self.ax = fig1.add_subplot(111)
         self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
         self.ax.set_ylabel("Intensity (a.u)")
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.canvas1 = FigureCanvas(fig1)
         self.canvas1.mpl_connect('button_press_event', self.on_click)
 
@@ -744,6 +745,7 @@ class Maps(QObject):
         if coords:
             x, y = zip(*coords)
             self.ax2.scatter(x, y, marker='o', color='red', s=40)
+
         self.ax2.set_yticklabels([])
         self.ax2.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.ax2.get_figure().tight_layout()

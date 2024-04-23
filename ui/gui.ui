@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1619</width>
+    <width>1561</width>
     <height>1011</height>
    </rect>
   </property>
@@ -340,6 +340,43 @@
                     <string>View options:</string>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_6">
+                    <item row="1" column="1">
+                     <widget class="QCheckBox" name="cb_residual">
+                      <property name="text">
+                       <string>residual</string>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="2">
+                     <widget class="QCheckBox" name="cb_filled">
+                      <property name="text">
+                       <string>filled</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="3">
+                     <widget class="QCheckBox" name="cb_baseline">
+                      <property name="text">
+                       <string>baseline</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="1">
+                     <widget class="QCheckBox" name="cb_bestfit">
+                      <property name="text">
+                       <string>best-fit</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
                     <item row="0" column="0">
                      <widget class="QCheckBox" name="cb_legend">
                       <property name="enabled">
@@ -356,26 +393,6 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="1" column="1">
-                     <widget class="QCheckBox" name="cb_residual">
-                      <property name="text">
-                       <string>residual</string>
-                      </property>
-                      <property name="checked">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="1">
-                     <widget class="QCheckBox" name="cb_bestfit">
-                      <property name="text">
-                       <string>best-fit</string>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="1" column="0">
                      <widget class="QCheckBox" name="cb_raw">
                       <property name="text">
@@ -383,16 +400,6 @@
                       </property>
                       <property name="checked">
                        <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="2">
-                     <widget class="QCheckBox" name="cb_filled">
-                      <property name="text">
-                       <string>filled</string>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
@@ -416,10 +423,10 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="1" column="3">
-                     <widget class="QCheckBox" name="cb_baseline">
+                    <item row="2" column="3">
+                     <widget class="QCheckBox" name="checkBox_4">
                       <property name="text">
-                       <string>baseline</string>
+                       <string>Normalized</string>
                       </property>
                      </widget>
                     </item>
@@ -994,7 +1001,7 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>817</width>
+                               <width>759</width>
                                <height>317</height>
                               </rect>
                              </property>
@@ -4744,7 +4751,7 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>690</width>
+                             <width>649</width>
                              <height>372</height>
                             </rect>
                            </property>
@@ -6161,7 +6168,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1143</width>
+               <width>1085</width>
                <height>920</height>
               </rect>
              </property>
@@ -7407,7 +7414,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1619</width>
+     <width>1561</width>
      <height>21</height>
     </rect>
    </property>

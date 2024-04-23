@@ -226,26 +226,24 @@ class Maps(QObject):
         fit_model = self.ui.fit_model.currentText()
         # Add a new peak_model for current selected peak
         if self.zoom_pan_active == False and self.ui.rdbtn_peak.isChecked():
-            if event.button == 1:
-                if event.inaxes:
-                    x = event.xdata
-                    y = event.ydata
+            if event.button == 1 and event.inaxes:
+                x = event.xdata
+                y = event.ydata
             sel_spectrum.add_peak_model(fit_model, x)
             self.upd_spectra_list()
+
         # Add a new baseline point for current selected peak
         if self.zoom_pan_active == False and self.ui.rdbtn_baseline.isChecked():
-            if event.button == 1:
-                if event.inaxes:
-                    x1 = event.xdata
-                    y1 = event.ydata
-                    if sel_spectrum.baseline.is_subtracted:
-                        show_alert(
-                            "Already subtracted before. Reinit spectrum to "
-                            "perform "
-                            "new baseline")
-                    else:
-                        sel_spectrum.baseline.add_point(x1, y1)
-                        self.upd_spectra_list()
+            if event.button == 1 and event.inaxes:
+                x1 = event.xdata
+                y1 = event.ydata
+                if sel_spectrum.baseline.is_subtracted:
+                    show_alert(
+                        "Already subtracted before. Reinitialize spectrum to "
+                        "perform new baseline")
+                else:
+                    sel_spectrum.baseline.add_point(x1, y1)
+                    self.upd_spectra_list()
 
     def upd_baseline_settings(self):
         """ Pass the settings from GUI to spectrum objects"""

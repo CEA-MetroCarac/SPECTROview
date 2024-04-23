@@ -319,32 +319,8 @@ class Main:
 #     sys.exit(app.exec())
 # if __name__ == "__main__":
 #     launcher()
-#
-# def launcher2(file_paths=None, fname_json=None):
-#     app = QApplication()
-#     app.setWindowIcon(QIcon(ICON_APPLI))
-#     window = Main()
-#     app.setStyle("Fusion")
-#     if file_paths is not None:
-#         window.maps.open_data(file_paths=file_paths)
-#     if fname_json is not None:
-#         window.maps.open_model(fname_json=fname_json)
-#     window.ui.show()
-#     sys.exit(app.exec())
-#
-#
-# if __name__ == "__main__":
-#     dirname1 = r"C:\Users\VL251876\Documents\Python\SPECTROview\data_test" \
-#                r"\RAW 2Dmaps"
-#
-#     fname1 = os.path.join(dirname1, 'D23S2204.2_17.csv')
-#     fname2 = os.path.join(dirname1, 'D23S2204.2_19.csv')
-#     fname3 = os.path.join(dirname1, 'D23S2204.2_25.csv')
-#     fname_json1 = os.path.join(dirname1, 'MoS2_325-490_8cm-shifted.json')
-#
-#     launcher2([fname1, fname2, fname3], fname_json1)
 
-def launcher3(file_paths=None, fname_json=None):
+def launcher2(file_paths=None, fname_json=None):
     app = QApplication()
     app.setWindowIcon(QIcon(ICON_APPLI))
     window = Main()
@@ -358,10 +334,13 @@ def launcher3(file_paths=None, fname_json=None):
 
 
 if __name__ == "__main__":
-    dirname = r"/Users/HoanLe/SPECTROview/Python/data_test/RAW 2Dmaps"
-    fname1 = os.path.join(dirname, 'D23S2204.2_19.csv')
-    fname_json1 = os.path.join(dirname,
-    'MoS2_325-490_8cm-shifted_simple-labels.json')
+    DIRNAME = os.path.dirname(__file__)
+    DATA = os.path.join(DIRNAME, "data_test")
+    DATA_MAPS = os.path.join(DATA, "RAW 2Dmaps")
+    fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
+    fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
+    fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
+    fname_json1 = os.path.join(DATA_MAPS,
+                               'MoS2_325-490_8cm-shifted_simple-labels.json')
 
-    fname_json = os.path.join(dirname, 'MoS2_325-490_.json')
-    launcher3([fname1], fname_json1)
+    launcher2([fname1, fname2, fname3], fname_json1)

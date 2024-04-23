@@ -15,7 +15,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
-    QTableWidgetItem, QVBoxLayout, QTextBrowser, QLabel, QLineEdit, \
+    QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
+    QLineEdit, \
     QPushButton, \
     QComboBox, QCheckBox
 from PySide6.QtCore import Signal, QThread
@@ -303,11 +304,10 @@ class FitThread(QThread):
     def run(self):
         start_time = time.time()  # Record start time
         num = 0
-        fit_model = deepcopy(self.model_fs)
         for index, fname in enumerate(self.fnames):
             progress = int((index + 1) / len(self.fnames) * 100)
             self.fit_progress_changed.emit(progress)
-
+            fit_model = deepcopy(self.model_fs)
             self.spectra_fs.apply_model(fit_model, fnames=[fname],
                                         show_progressbar=None)
             num += 1
@@ -315,3 +315,229 @@ class FitThread(QThread):
             self.fit_progress.emit(num, elapsed_time)
         self.fit_progress_changed.emit(100)
         self.fit_completed.emit()
+
+
+class ShowParameters:
+    def __init__(self, main_layout, sel_spectrum, cb_limits, cb_expr, update):
+        self.main_layout = main_layout
+        self.sel_spectrum = sel_spectrum
+        self.cb_limits = cb_limits
+        self.cb_expr = cb_expr
+        self.update = update
+
+    def clear_layout(self, layout):
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+                else:
+                    self.clear_layout(item.layout())
+
+    def show_peak_table(self, main_layout, sel_spectrum, cb_limits, cb_expr):
+        """ To show all fitted parameters in GUI"""
+        self.clear_layout(main_layout)
+
+        header_labels = ["Delete", "Label", "Model"]
+        param_hint_order = ['x0', 'fwhm', 'ampli', 'alpha', 'fwhm_l', 'fwhm_r']
+
+        # Create and add headers to list
+        for param_hint_key in param_hint_order:
+            if any(param_hint_key in peak_model.param_hints for peak_model in
+                   sel_spectrum.peak_models):
+                header_labels.append(param_hint_key.title())
+                header_labels.append(f"fix {param_hint_key.title()}")
+                if cb_limits.isChecked():
+                    header_labels.append(f"min {param_hint_key.title()}")
+                    header_labels.append(f"max {param_hint_key.title()}")
+                if cb_expr.isChecked():
+                    header_labels.append(f"expression {param_hint_key.title()}")
+
+        # Create vertical layouts for each column type
+        delete_layout = QVBoxLayout()
+        label_layout = QVBoxLayout()
+        model_layout = QVBoxLayout()
+        param_hint_layouts = {param_hint: {var: QVBoxLayout() for var in
+                                           ['value', 'min', 'max', 'expr',
+                                            'vary']} for
+                              param_hint in param_hint_order}
+
+        # Add header labels to each layout
+        for header_label in header_labels:
+            label = QLabel(header_label)
+            label.setAlignment(Qt.AlignCenter)
+            if header_label == "Delete":
+                delete_layout.addWidget(label)
+            elif header_label == "Label":
+                label_layout.addWidget(label)
+            elif header_label == "Model":
+                model_layout.addWidget(label)
+            elif header_label.startswith("fix"):
+                param_hint_key = header_label.split()[1].lower()
+                param_hint_layouts[param_hint_key]['vary'].addWidget(label)
+            elif "min" in header_label:
+                param_hint_key = header_label.split()[1].lower()
+                param_hint_layouts[param_hint_key]['min'].addWidget(label)
+            elif "max" in header_label:
+                param_hint_key = header_label.split()[1].lower()
+                param_hint_layouts[param_hint_key]['max'].addWidget(label)
+            elif "expression" in header_label:
+                param_hint_key = header_label.split()[1].lower()
+                param_hint_layouts[param_hint_key]['expr'].addWidget(label)
+            else:
+                param_hint_key = header_label.lower()
+                param_hint_layouts[param_hint_key]['value'].addWidget(label)
+
+        for i, peak_model in enumerate(sel_spectrum.peak_models):
+            # Button to delete peak_model
+            delete = QPushButton(peak_model.prefix)
+            delete.setFixedWidth(50)
+            delete.clicked.connect(
+                lambda idx=i, spectrum=sel_spectrum: self.delete_peak_model(
+                    spectrum, idx))
+            delete_layout.addWidget(delete)
+
+            # Peak_label
+            label = QLineEdit(sel_spectrum.peak_labels[i])
+            label.setFixedWidth(80)
+            label.textChanged.connect(
+                lambda text, idx=i,
+                       spectrum=sel_spectrum: self.update_peak_label(spectrum,
+                                                                     idx, text))
+            label_layout.addWidget(label)
+
+            # Peak model : Lorentizan, Gaussien, etc...
+            model = QComboBox()
+            model.addItems(PEAK_MODELS)
+            current_model_index = PEAK_MODELS.index(
+                peak_model.name2) if peak_model.name2 in PEAK_MODELS else 0
+            model.setCurrentIndex(current_model_index)
+            model.setFixedWidth(120)
+            model.currentIndexChanged.connect(
+                lambda index, spectrum=sel_spectrum, idx=i,
+                       combo=model: self.update_model_name(spectrum, index, idx,
+                                                           combo.currentText()))
+            model_layout.addWidget(model)
+
+            # variables of peak_model
+            param_hints = peak_model.param_hints
+            for param_hint_key in param_hint_order:
+                if param_hint_key in param_hints:
+                    param_hint_value = param_hints[param_hint_key]
+
+                    # 4.1 VALUE
+                    value_val = round(param_hint_value.get('value', 0.0), 2)
+                    value = QLineEdit(str(value_val))
+                    value.setFixedWidth(70)
+                    value.setFixedHeight(24)
+                    value.setAlignment(Qt.AlignRight)
+                    value.textChanged.connect(
+                        lambda text, pm=peak_model,
+                               key=param_hint_key: self.update_param_hint_value(
+                            pm, key, text))
+                    param_hint_layouts[param_hint_key]['value'].addWidget(value)
+
+                    # 4.2 FIXED or NOT
+                    vary = QCheckBox()
+                    vary.setChecked(not param_hint_value.get('vary', False))
+                    vary.setFixedHeight(24)
+                    vary.stateChanged.connect(
+                        lambda state, pm=peak_model,
+                               key=param_hint_key: self.update_param_hint_vary(
+                            pm, key,
+                            not state))
+                    param_hint_layouts[param_hint_key]['vary'].addWidget(vary)
+
+                    # 4.3 MIN MAX
+                    if cb_limits.isChecked():
+                        min_val = round(param_hint_value.get('min', 0.0), 2)
+                        min_lineedit = QLineEdit(str(min_val))
+                        min_lineedit.setFixedWidth(70)
+                        min_lineedit.setFixedHeight(24)
+                        min_lineedit.setAlignment(Qt.AlignRight)
+                        min_lineedit.textChanged.connect(
+                            lambda text, pm=peak_model,
+                                   key=param_hint_key:
+                            self.update_param_hint_min(
+                                pm, key, text))
+                        param_hint_layouts[param_hint_key]['min'].addWidget(
+                            min_lineedit)
+
+                        max_val = round(param_hint_value.get('max', 0.0), 2)
+                        max_lineedit = QLineEdit(str(max_val))
+                        max_lineedit.setFixedWidth(70)
+                        max_lineedit.setFixedHeight(24)
+                        max_lineedit.setAlignment(Qt.AlignRight)
+                        max_lineedit.textChanged.connect(
+                            lambda text, pm=peak_model,
+                                   key=param_hint_key:
+                            self.update_param_hint_max(
+                                pm, key, text))
+                        param_hint_layouts[param_hint_key]['max'].addWidget(
+                            max_lineedit)
+
+                    # 4.4 EXPRESSION
+                    if cb_expr.isChecked():
+                        expr_val = str(param_hint_value.get('expr', ''))
+                        expr = QLineEdit(expr_val)
+                        expr.setFixedWidth(150)
+                        expr.setFixedHeight(
+                            24)  # Set a fixed height for QLineEdit
+                        expr.setAlignment(Qt.AlignRight)
+                        expr.textChanged.connect(
+                            lambda text, pm=peak_model,
+                                   key=param_hint_key:
+                            self.update_param_hint_expr(
+                                pm, key, text))
+                        param_hint_layouts[param_hint_key]['expr'].addWidget(
+                            expr)
+                else:
+                    # Add empty labels for alignment
+                    empty_label = QLabel()
+                    empty_label.setFixedHeight(24)
+                    param_hint_layouts[param_hint_key]['value'].addWidget(
+                        empty_label)
+                    param_hint_layouts[param_hint_key]['vary'].addWidget(
+                        empty_label)
+                    if cb_limits.isChecked():
+                        param_hint_layouts[param_hint_key]['min'].addWidget(
+                            empty_label)
+                        param_hint_layouts[param_hint_key]['max'].addWidget(
+                            empty_label)
+                    if cb_expr.isChecked():
+                        param_hint_layouts[param_hint_key]['expr'].addWidget(
+                            empty_label)
+
+        # Add vertical layouts to main layout
+        main_layout.addLayout(delete_layout)
+        main_layout.addLayout(label_layout)
+        main_layout.addLayout(model_layout)
+
+        for param_hint_key, param_hint_layout in param_hint_layouts.items():
+            for var_layout in param_hint_layout.values():
+                main_layout.addLayout(var_layout)
+
+    def delete_peak_model(self, spectrum, idx):
+        """"To delete a peak model"""
+        del spectrum.peak_models[idx]
+        del spectrum.peak_labels[idx]
+        self.update()
+
+    def update_peak_label(self, spectrum, idx, text):
+        spectrum.peak_labels[idx] = text
+
+    def update_param_hint_value(self, pm, key, text):
+        pm.param_hints[key]['value'] = float(text)
+
+    def update_param_hint_min(self, pm, key, text):
+        pm.param_hints[key]['min'] = float(text)
+
+    def update_param_hint_max(self, pm, key, text):
+        pm.param_hints[key]['max'] = float(text)
+
+    def update_param_hint_vary(self, pm, key, state):
+        pm.param_hints[key]['vary'] = state
+
+    def update_param_hint_expr(self, pm, key, text):
+        pm.param_hints[key]['expr'] = text

@@ -341,7 +341,7 @@ class ShowParameters:
         """ To show all fitted parameters in GUI"""
         self.clear_layout(main_layout)
 
-        header_labels = ["Delete", "Label", "Model"]
+        header_labels = ["  ", "Label", "Model"]
         param_hint_order = ['x0', 'fwhm', 'ampli', 'alpha', 'fwhm_l', 'fwhm_r']
 
         # Create and add headers to list
@@ -369,7 +369,7 @@ class ShowParameters:
         for header_label in header_labels:
             label = QLabel(header_label)
             label.setAlignment(Qt.AlignCenter)
-            if header_label == "Delete":
+            if header_label == "  ":
                 delete_layout.addWidget(label)
             elif header_label == "Label":
                 label_layout.addWidget(label)

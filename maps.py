@@ -218,6 +218,7 @@ class Maps(QObject):
 
     def on_click(self, event):
         """On click action to add a "peak models" or "baseline points" """
+
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
         fit_model = self.ui.cbb_fit_models.currentText()
         # Add a new peak_model for current selected peak
@@ -628,55 +629,7 @@ class Maps(QObject):
         self.ax.autoscale()
         self.canvas1.draw()
 
-    def create_plot_widget(self):
-        """Create canvas and toolbar for plotting in the GUI"""
-        plt.style.use(PLOT_POLICY)
 
-        # plot 1: spectra plotting
-        fig1 = plt.figure()
-        self.ax = fig1.add_subplot(111)
-        self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
-        self.ax.set_ylabel("Intensity (a.u)")
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        self.canvas1 = FigureCanvas(fig1)
-        self.canvas1.mpl_connect('button_press_event', self.on_click)
-
-        self.toolbar = NavigationToolbar2QT(self.canvas1)
-        rescale = next(
-            a for a in self.toolbar.actions() if a.text() == 'Home')
-        rescale.triggered.connect(self.rescale)
-        for action in self.toolbar.actions():
-            if action.text() == 'Pan' or action.text() == 'Zoom':
-                action.toggled.connect(self.toggle_zoom_pan)
-
-        self.ui.QVBoxlayout.addWidget(self.canvas1)
-        self.ui.toolbar_frame.addWidget(self.toolbar)
-        self.canvas1.figure.tight_layout()
-        self.canvas1.draw()
-
-        # plot 2: Measurement sites view
-        fig2 = plt.figure()
-        self.ax2 = fig2.add_subplot(111)
-        # Remove unnecessary axes
-        self.ax2.spines['right'].set_visible(False)
-        self.ax2.spines['top'].set_visible(False)
-        self.ax2.spines['left'].set_visible(False)
-        self.ax2.tick_params(axis='x', which='both', bottom=True, top=False)
-        self.ax2.tick_params(axis='y', which='both', right=False, left=False)
-        self.ax2.set_xticklabels([])
-        self.ax2.set_yticklabels([])
-
-        self.canvas2 = FigureCanvas(fig2)
-        layout = self.ui.wafer_plot.layout()
-        layout.addWidget(self.canvas2)
-        self.canvas2.draw()
-
-        # plot4: graph
-        fig4 = plt.figure()
-        self.ax4 = fig4.add_subplot(111)
-        self.canvas4 = FigureCanvas(fig4)
-        self.ui.frame_graph.addWidget(self.canvas4)
-        self.canvas4.draw()
 
     def plot1(self):
         """Plot selected spectra"""
@@ -767,11 +720,123 @@ class Maps(QObject):
         self.read_x_range()
         self.show_peak_table()
 
+    def create_plot_widget(self):
+        """Create canvas and toolbar for plotting in the GUI"""
+        plt.style.use(PLOT_POLICY)
+        # plot 1: spectra plotting
+        fig1 = plt.figure()
+        self.ax = fig1.add_subplot(111)
+        self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
+        self.ax.set_ylabel("Intensity (a.u)")
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        self.canvas1 = FigureCanvas(fig1)
+        self.canvas1.mpl_connect('button_press_event', self.on_click)
+
+        self.toolbar = NavigationToolbar2QT(self.canvas1)
+        rescale = next(
+            a for a in self.toolbar.actions() if a.text() == 'Home')
+        rescale.triggered.connect(self.rescale)
+        for action in self.toolbar.actions():
+            if action.text() == 'Pan' or action.text() == 'Zoom':
+                action.toggled.connect(self.toggle_zoom_pan)
+
+        self.ui.QVBoxlayout.addWidget(self.canvas1)
+        self.ui.toolbar_frame.addWidget(self.toolbar)
+        self.canvas1.figure.tight_layout()
+        self.canvas1.draw()
+
+        # plot 2: Measurement sites view
+        fig2 = plt.figure()
+        self.ax2 = fig2.add_subplot(111)
+        self.ax2.spines['right'].set_visible(False)
+        self.ax2.spines['top'].set_visible(False)
+        self.ax2.spines['left'].set_visible(False)
+        self.ax2.tick_params(axis='x', which='both', bottom=True, top=False)
+        self.ax2.tick_params(axis='y', which='both', right=False, left=False)
+
+        self.canvas2 = FigureCanvas(fig2)
+
+        # Variables to keep track of highlighted points and Ctrl key status
+        self.selected_points = []
+        self.ctrl_pressed = False
+        # Connect the mouse and key events to the handler functions
+        fig2.canvas.mpl_connect('button_press_event', self.on_click_sites_mesurements)
+        fig2.canvas.mpl_connect('key_press_event', self.on_key_press)
+        fig2.canvas.mpl_connect('key_release_event', self.on_key_release)
+
+        layout = self.ui.wafer_plot.layout()
+        layout.addWidget(self.canvas2)
+        self.canvas2.draw()
+
+        # plot4: graph
+        fig4 = plt.figure()
+        self.ax4 = fig4.add_subplot(111)
+        self.canvas4 = FigureCanvas(fig4)
+        self.ui.frame_graph.addWidget(self.canvas4)
+        self.canvas4.draw()
+
+    def on_click_sites_mesurements(self, event):
+        """On click action to select the measurements points directly in the plot"""
+        all_x, all_y = self.get_mes_sites_coord()
+        if event.inaxes == self.ax2:
+            x_clicked, y_clicked = event.xdata, event.ydata
+            if event.button == 1:  # Left mouse button
+                all_x = np.array(all_x)
+                all_y = np.array(all_y)
+                distances = np.sqrt((all_x - x_clicked) ** 2 + (all_y - y_clicked) ** 2)
+                nearest_index = np.argmin(distances)
+                nearest_x, nearest_y = all_x[nearest_index], all_y[nearest_index]
+
+                # If Ctrl key is pressed, allow multiple selections
+                if self.ctrl_pressed:
+                    for index in range(self.ui.spectra_listbox.count()):
+                        item = self.ui.spectra_listbox.item(index)
+                        item_text = item.text()
+                        x, y = map(float, item_text.strip('()').split(','))
+                        if x == nearest_x and y == nearest_y:
+                            item.setSelected(True)
+                else:
+                    # Set the current selection in the spectra_listbox
+                    for index in range(self.ui.spectra_listbox.count()):
+                        item = self.ui.spectra_listbox.item(index)
+                        item_text = item.text()
+                        x, y = map(float, item_text.strip('()').split(','))
+                        if x == nearest_x and y == nearest_y:
+                            self.ui.spectra_listbox.setCurrentRow(index)
+                            break
+
+    def on_key_press(self, event):
+        """Handler function for key press event"""
+        if event.key == 'command' or event.key == 'control':
+            self.ctrl_pressed = True
+
+    def on_key_release(self, event):
+        """Handler function for key release event"""
+        if event.key == 'command' or event.key == 'control':
+            self.ctrl_pressed = False
+
+
+
+    def on_drag(self, event):
+        """Handler function for mouse drag event"""
+        pass
+        # if event.button == 1:  # Left mouse button pressed
+        #     if event.inaxes == self.ax2:
+        #         if event.xdata is not None and event.ydata is not None:
+        #             # Find points within the selected area
+        #             all_x, all_y = self.get_mes_sites_coord()
+        #             selected_x, selected_y = [], []
+        #             for x, y in zip(all_x, all_y):
+        #                 if abs(x - event.xdata) < 10 and abs(y - event.ydata) < 10:  # Define your selection criteria here
+        #                     selected_x.append(x)
+        #                     selected_y.append(y)
+        #             # Highlight selected points
+        #             if selected_x and selected_y:
+        #                 self.ax2.scatter(selected_x, selected_y, marker='o', color='green', s=40)
+        #                 self.canvas2.draw()
+
     def plot2(self):
         """Plot wafer maps of measurement sites"""
-        wafer_name, coords = self.spectre_id()
-        all_x = []
-        all_y = []
         if self.ui.size150.isChecked():
             r = 75
         elif self.ui.size200.isChecked():
@@ -779,17 +844,15 @@ class Maps(QObject):
         elif self.ui.size300.isChecked():
             r = 152
 
-        for spectrum_fs in self.spectra_fs:
-            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
-            if wafer_name == wafer_name_fs:
-                x, y = coord_fs
-                all_x.append(x)
-                all_y.append(y)
         self.ax2.clear()
         wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
                                       color='black', linewidth=1)
         self.ax2.add_patch(wafer_circle)
+
+        all_x, all_y = self.get_mes_sites_coord()
         self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
+
+        wafer_name, coords = self.spectre_id()
         if coords:
             x, y = zip(*coords)
             self.ax2.scatter(x, y, marker='o', color='red', s=40)
@@ -867,7 +930,18 @@ class Maps(QObject):
                    x_text, y_text, xlabel_rot)
         self.ax4.get_figure().tight_layout()
         self.canvas4.draw()
-
+    def get_mes_sites_coord(self):
+        """ Get all coordinates of measurements sites of selected wafer"""
+        wafer_name, coords = self.spectre_id()
+        all_x = []
+        all_y = []
+        for spectrum_fs in self.spectra_fs:
+            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+            if wafer_name == wafer_name_fs:
+                x, y = coord_fs
+                all_x.append(x)
+                all_y.append(y)
+        return all_x, all_y
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
         current_row = self.ui.wafers_listbox.currentRow()
@@ -913,6 +987,7 @@ class Maps(QObject):
         # Update the item count label
         item_count = self.ui.spectra_listbox.count()
         self.ui.item_count_label.setText(f"{item_count} points")
+
         # Reselect the previously selected item
         if current_row >= 0 and current_row < item_count:
             self.ui.spectra_listbox.setCurrentRow(current_row)

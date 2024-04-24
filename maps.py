@@ -778,6 +778,7 @@ class Maps(QObject):
     def on_click_sites_mesurements(self, event):
         """On click action to select the measurements points directly in the plot"""
         all_x, all_y = self.get_mes_sites_coord()
+        self.ui.spectra_listbox.clearSelection()
         if event.inaxes == self.ax2:
             x_clicked, y_clicked = event.xdata, event.ydata
             if event.button == 1:  # Left mouse button

@@ -52,7 +52,8 @@ class Maps(QObject):
 
         self.wafers = {}  # list of opened wafers
         self.toolbar = None
-        self.model_fs = None  # FITSPY
+        self.loaded_fit_model = None  # FITSPY
+        self.copied_fit_model = None
         self.spectra_fs = Spectra()  # FITSPY
 
         # Update spectra_listbox when selecting wafer via WAFER LIST
@@ -72,6 +73,9 @@ class Maps(QObject):
         self.ui.cb_filled.stateChanged.connect(self.delay_plot)
         self.ui.cb_peaks.stateChanged.connect(self.delay_plot)
         self.ui.cb_attached.stateChanged.connect(self.delay_plot)
+        self.ui.size300.toggled.connect(self.delay_plot)
+        self.ui.size200.toggled.connect(self.delay_plot)
+        self.ui.size150.toggled.connect(self.delay_plot)
 
         self.ui.cb_limits.stateChanged.connect(self.delay_plot)
         self.ui.cb_expr.stateChanged.connect(self.delay_plot)
@@ -185,7 +189,7 @@ class Maps(QObject):
         self.ui.range_min.setText(str(sel_spectrum.x[0]))
         self.ui.range_max.setText(str(sel_spectrum.x[-1]))
 
-    def set_x_range(self, fnames=None, new_x_min=None, new_x_max=None):
+    def set_x_range(self, fnames=None):
         """ Set new x range for selected spectrum"""
         new_x_min = float(self.ui.range_min.text())
         new_x_max = float(self.ui.range_max.text())
@@ -215,7 +219,7 @@ class Maps(QObject):
     def on_click(self, event):
         """On click action to add a "peak models" or "baseline points" """
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
-        fit_model = self.ui.fit_model.currentText()
+        fit_model = self.ui.cbb_fit_models.currentText()
         # Add a new peak_model for current selected peak
         if self.zoom_pan_active == False and self.ui.rdbtn_peak.isChecked():
             if event.button == 1 and event.inaxes:
@@ -238,7 +242,8 @@ class Maps(QObject):
                     self.upd_spectra_list()
 
     def get_baseline_settings(self):
-        """ Pass baseline settings from GUI to spectrum objects for baseline subtraction"""
+        """ Pass baseline settings from GUI to spectrum objects for baseline
+        subtraction"""
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
         if sel_spectrum is None:
             return
@@ -277,7 +282,7 @@ class Maps(QObject):
     def subtract_baseline(self, fnames=None):
         """ Subtract baseline for the selected spectrum(s) """
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
-        points=sel_spectrum.baseline.points
+        points = sel_spectrum.baseline.points
         if len(points[0]) == 0:
             return
         sel_spectrum.subtract_baseline()
@@ -329,7 +334,6 @@ class Maps(QObject):
         self.fit(fnames)
         QTimer.singleShot(100, self.upd_spectra_list)
 
-
     def clear_all_peaks(self):
         """To clear all existing peak models of the selected spectrum(s)"""
         wafer_name, coords = self.spectre_id()
@@ -355,7 +359,7 @@ class Maps(QObject):
         else:
             show_alert("No fit model to save.")
 
-    def open_model(self, fname_json=None):
+    def open_fit_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
         if not fname_json:
             options = QFileDialog.Options()
@@ -371,7 +375,7 @@ class Maps(QObject):
             if not selected_file:
                 return
             fname_json = selected_file
-        self.model_fs = self.spectra_fs.load_model(fname_json, ind=0)
+        self.loaded_fit_model = self.spectra_fs.load_model(fname_json, ind=0)
         display_name = QFileInfo(fname_json).baseName()
         self.ui.lb_loaded_model.setText(f"'{display_name}' is loaded !")
         # self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
@@ -380,7 +384,7 @@ class Maps(QObject):
         """Fit selected spectrum(s)"""
         # Disable the button to prevent multiple clicks leading to a crash
         self.ui.btn_fit.setEnabled(False)
-        if self.model_fs is None:
+        if self.loaded_fit_model is None:
             show_alert("Load a fit model before fitting.")
             self.ui.btn_fit.setEnabled(True)
             return
@@ -390,7 +394,8 @@ class Maps(QObject):
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
 
         # Start fitting process in a separate thread
-        self.fit_thread = FitThread(self.spectra_fs, self.model_fs, fnames)
+        self.fit_thread = FitThread(self.spectra_fs, self.loaded_fit_model,
+                                    fnames)
         # To update progress bar
         self.fit_thread.fit_progress_changed.connect(self.update_pbar)
         # To display progress in GUI
@@ -442,7 +447,7 @@ class Maps(QObject):
             names.append(name)
         self.df_fit_results = self.df_fit_results.iloc[:,
                               list(np.argsort(names, kind='stable'))]
-        columns = [translate_param(self.model_fs, column) for column in
+        columns = [translate_param(self.loaded_fit_model, column) for column in
                    self.df_fit_results.columns]
         self.df_fit_results.columns = columns
 
@@ -584,7 +589,7 @@ class Maps(QObject):
         """Create canvas and toolbar for plotting in the GUI"""
         plt.style.use(PLOT_POLICY)
 
-        # plot 2: spectra plotting
+        # plot 1: spectra plotting
         fig1 = plt.figure()
         self.ax = fig1.add_subplot(111)
         self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
@@ -597,8 +602,6 @@ class Maps(QObject):
         rescale = next(
             a for a in self.toolbar.actions() if a.text() == 'Home')
         rescale.triggered.connect(self.rescale)
-
-        # Connect zoom and pan actions
         for action in self.toolbar.actions():
             if action.text() == 'Pan' or action.text() == 'Zoom':
                 action.toggled.connect(self.toggle_zoom_pan)
@@ -982,7 +985,6 @@ class Maps(QObject):
         wafer_name, coords = self.spectre_id()
         view_df(self.ui.tabWidget, self.wafers[wafer_name])
 
-
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
         dfs = self.dataframe.original_dfs
@@ -1041,7 +1043,7 @@ class Maps(QObject):
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
                     'wafers': self.wafers,
-                    'model_fs': self.model_fs,
+                    'loaded_fit_model': self.loaded_fit_model,
                     'model_name': self.ui.lb_loaded_model.text(),
                     'df_fit_results': self.df_fit_results,
 
@@ -1086,7 +1088,7 @@ class Maps(QObject):
                     load = dill.load(f)
                     self.spectra_fs = load.get('spectra_fs')
                     self.wafers = load.get('wafers')
-                    self.model_fs = load.get('model_fs')
+                    self.loaded_fit_model = load.get('loaded_fit_model')
                     model_name = load.get('model_name', '')
                     self.ui.lb_loaded_model.setText(model_name)
                     self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
@@ -1202,6 +1204,7 @@ class Maps(QObject):
             self.set_x_range_all()
         else:
             self.set_x_range()
+
     def apply_fit_model_handler(self):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:

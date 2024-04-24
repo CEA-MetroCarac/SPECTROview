@@ -183,7 +183,7 @@ class Main:
         self.ui.btn_sel_verti.clicked.connect(self.maps.select_verti)
         self.ui.btn_sel_horiz.clicked.connect(self.maps.select_horiz)
 
-        self.ui.btn_load_model.clicked.connect(self.maps.open_model)
+        self.ui.btn_load_model.clicked.connect(self.maps.open_fit_model)
         self.ui.btn_fit.clicked.connect(self.maps.fit_fnc_handler)
         self.ui.btn_init.clicked.connect(self.maps.reinit_fnc_handler)
         self.ui.btn_collect_results.clicked.connect(self.maps.collect_results)
@@ -207,13 +207,16 @@ class Main:
         self.ui.btn_split_fname_2.clicked.connect(self.maps.split_fname)
         self.ui.btn_add_col_2.clicked.connect(self.maps.add_column)
 
+        self.ui.range_max.returnPressed.connect(self.maps.set_x_range)
+        self.ui.range_min.returnPressed.connect(self.maps.set_x_range)
         self.ui.range_apply.clicked.connect(self.maps.set_x_range_handler)
         self.ui.sub_baseline.clicked.connect(self.maps.subtract_baseline)
         self.ui.btn_fit_2.clicked.connect(self.maps.apply_fit_model_handler)
         self.ui.save_model.clicked.connect(self.maps.save_fit_model)
         self.ui.clear_peaks.clicked.connect(self.maps.clear_all_peaks)
-        self.ui.fit_model.addItems(PEAK_MODELS)
-        # self.ui.del_bl_points.clicked.connect(self.maps.delete_baseline_points)
+        self.ui.cbb_fit_models.addItems(PEAK_MODELS)
+        # self.ui.del_bl_points.clicked.connect(
+        # self.maps.delete_baseline_points)
         self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range)
 
         ########################################################
@@ -329,7 +332,7 @@ def launcher2(file_paths=None, fname_json=None):
     if file_paths is not None:
         window.maps.open_data(file_paths=file_paths)
     if fname_json is not None:
-        window.maps.open_model(fname_json=fname_json)
+        window.maps.open_fit_model(fname_json=fname_json)
     window.ui.show()
     sys.exit(app.exec())
 
@@ -338,7 +341,7 @@ if __name__ == "__main__":
     DIRNAME = os.path.dirname(__file__)
     DATA = os.path.join(DIRNAME, "data_test")
     DATA_MAPS = os.path.join(DATA, "RAW 2Dmaps")
-    fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
+    fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_09.csv')
     fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
     fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
     fname_json1 = os.path.join(DATA_MAPS,

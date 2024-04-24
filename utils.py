@@ -20,7 +20,7 @@ from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
     QPushButton, \
     QComboBox, QCheckBox
 from PySide6.QtCore import Signal, QThread
-from PySide6.QtGui import QPalette, QColor, QTextCursor
+from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon
 
 from PySide6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -28,6 +28,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 DIRNAME = os.path.dirname(__file__)
 RELPATH = os.path.join(DIRNAME, "resources")
+ICON_DIR = os.path.join(DIRNAME, "ui", "iconpack")
 
 PEAK_MODELS = ["Lorentzian", "Gaussian", "PseudoVoigt", "GaussianAsym",
                "LorentzianAsym"]
@@ -308,6 +309,7 @@ class FitThread(QThread):
             progress = int((index + 1) / len(self.fnames) * 100)
             self.fit_progress_changed.emit(progress)
             fit_model = deepcopy(self.model_fs)
+
             self.spectra_fs.apply_model(fit_model, fnames=[fname],
                                         show_progressbar=None)
             num += 1
@@ -392,6 +394,9 @@ class ShowParameters:
         for i, peak_model in enumerate(sel_spectrum.peak_models):
             # Button to delete peak_model
             delete = QPushButton(peak_model.prefix)
+            icon = QIcon()
+            icon.addFile(os.path.join(ICON_DIR, "close.png"))
+            delete.setIcon(icon)
             delete.setFixedWidth(50)
             delete.clicked.connect(
                 lambda idx=i, spectrum=sel_spectrum: self.delete_peak_model(

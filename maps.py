@@ -291,17 +291,7 @@ class Maps(QObject):
 
     def subtract_baseline_all(self):
         """ Subtract baseline for all spectrum(s) """
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
-        sel_spectrum.subtract_baseline()
-        QTimer.singleShot(50, self.upd_spectra_list)
-        QTimer.singleShot(300, self.rescale)
-
-    # def delete_baseline_points(self):
-    #     sel_spectrum, sel_spectra = self.get_spectrum_objet()
-    #     sel_spectrum.baseline.points = [[], []]
-    #     sel_spectrum.baseline.is_subtracted = False
-    #     QTimer.singleShot(50, self.upd_spectra_list)
-    #     QTimer.singleShot(300, self.rescale)
+        pass
 
     def get_fit_settings(self):
         """To get all settings for the fitting action"""
@@ -332,7 +322,6 @@ class Maps(QObject):
         """To apply all fit parameters to all spectrum(s)"""
         fnames = self.spectra_fs.fnames
         self.fit(fnames)
-        QTimer.singleShot(100, self.upd_spectra_list)
 
     def clear_all_peaks(self):
         """To clear all existing peak models of the selected spectrum(s)"""
@@ -345,6 +334,59 @@ class Maps(QObject):
             else:
                 continue
         QTimer.singleShot(100, self.upd_spectra_list)
+
+    def copy_fit_model(self):
+        """ To copy the model dict of the selected spectrums. If several
+        spectrums are selected →  copy the model dict of 1st spectrum in list"""
+        # Get only 1 spectrum among several selected spectrum:
+        self.get_fit_settings()
+        sel_spectrum, _ = self.get_spectrum_objet()
+        if len(sel_spectrum.peak_models) == 0:
+            self.ui.lbl_copied_fit_model.setText("")
+            show_alert(
+                "The selected spectrum does not have fit model to be copied!")
+            self.copied_fit_model = None
+            return
+        else:
+            self.copied_fit_model = None
+            self.copied_fit_model = deepcopy(sel_spectrum.save())
+        fname = sel_spectrum.fname
+        self.ui.lbl_copied_fit_model.setText(
+            f"The fit model of '{fname}' spectrum is copied to the clipboard.")
+
+    def paste_fit_model(self, fnames=None):
+        """ To apply the copied fit model to selected spectrums"""
+        # Get fnames of all selected spectra
+        self.ui.btn_paste_fit_model.setEnabled(False)
+
+        if fnames is None:
+            wafer_name, coords = self.spectre_id()
+            fnames = [f"{wafer_name}_{coord}" for coord in coords]
+
+        reinit_spectrum(fnames, self.spectra_fs)
+        fit_model = deepcopy(self.copied_fit_model)
+        if self.copied_fit_model is not None:
+            # Starting fit process in a seperate thread
+            self.paste_model_thread = FitThread(self.spectra_fs, fit_model,
+                                                fnames)
+            self.paste_model_thread.fit_progress_changed.connect(
+                self.update_pbar)
+            self.paste_model_thread.fit_progress.connect(
+                lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
+                                                            fnames))
+            self.paste_model_thread.fit_completed.connect(self.fit_completed)
+            self.paste_model_thread.finished.connect(
+                lambda: self.ui.btn_paste_fit_model.setEnabled(True))
+            self.paste_model_thread.start()
+        else:
+            show_alert("Nothing to paste")
+            self.ui.btn_paste_fit_model.setEnabled(True)
+
+    def paste_fit_model_all(self):
+        """ To paste the copied fit model (in clipboard) and apply to
+        selected spectrum(s"""
+        fnames = self.spectra_fs.fnames
+        self.paste_fit_model(fnames)
 
     def save_fit_model(self):
         """To save the fit model of the current selected spectrum"""
@@ -394,19 +436,20 @@ class Maps(QObject):
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
 
         # Start fitting process in a separate thread
-        self.fit_thread = FitThread(self.spectra_fs, self.loaded_fit_model,
-                                    fnames)
+        self.apply_model_thread = FitThread(self.spectra_fs,
+                                            self.loaded_fit_model,
+                                            fnames)
         # To update progress bar
-        self.fit_thread.fit_progress_changed.connect(self.update_pbar)
+        self.apply_model_thread.fit_progress_changed.connect(self.update_pbar)
         # To display progress in GUI
-        self.fit_thread.fit_progress.connect(
+        self.apply_model_thread.fit_progress.connect(
             lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
                                                         fnames))
-        # To update spectra list + plot fitted specturm once fitting finished
-        self.fit_thread.fit_completed.connect(self.fit_completed)
-        self.fit_thread.finished.connect(
+        # To update spectra list + plot fitted spectrum once fitting finished
+        self.apply_model_thread.fit_completed.connect(self.fit_completed)
+        self.apply_model_thread.finished.connect(
             lambda: self.ui.btn_fit.setEnabled(True))
-        self.fit_thread.start()
+        self.apply_model_thread.start()
 
     def apply_fit_model_all(self):
         """ Apply loaded fit model to all selected spectra"""
@@ -1219,6 +1262,14 @@ class Maps(QObject):
             self.apply_fit_model_all()
         else:
             self.apply_fit_model()
+
+    def paste_fit_model_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.paste_fit_model_all()
+        else:
+            self.paste_fit_model()
 
     def reinit_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""

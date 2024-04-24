@@ -214,10 +214,11 @@ class Main:
         self.ui.btn_fit_2.clicked.connect(self.maps.apply_fit_model_handler)
         self.ui.save_model.clicked.connect(self.maps.save_fit_model)
         self.ui.clear_peaks.clicked.connect(self.maps.clear_all_peaks)
+        self.ui.btn_copy_fit_model.clicked.connect(self.maps.copy_fit_model)
+        self.ui.btn_paste_fit_model.clicked.connect(
+            self.maps.paste_fit_model_fnc_handler)
         self.ui.cbb_fit_models.addItems(PEAK_MODELS)
-        # self.ui.del_bl_points.clicked.connect(
-        # self.maps.delete_baseline_points)
-        self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range)
+        self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range_handler)
 
         ########################################################
         ############## GUI for Spectrums Processing tab #############
@@ -341,10 +342,10 @@ if __name__ == "__main__":
     DIRNAME = os.path.dirname(__file__)
     DATA = os.path.join(DIRNAME, "data_test")
     DATA_MAPS = os.path.join(DATA, "RAW 2Dmaps")
-    fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_09.csv')
+    # fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_09.csv')
     fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
     fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
     fname_json1 = os.path.join(DATA_MAPS,
                                'MoS2_325-490_8cm-shifted_simple-labels.json')
 
-    launcher2([fname1, fname2, fname3], fname_json1)
+    launcher2([fname2, fname3], fname_json1)

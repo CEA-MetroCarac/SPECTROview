@@ -592,7 +592,7 @@
                        <property name="minimumSize">
                         <size>
                          <width>430</width>
-                         <height>0</height>
+                         <height>100</height>
                         </size>
                        </property>
                        <property name="maximumSize">
@@ -610,7 +610,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>395</height>
+                          <height>383</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -1084,7 +1084,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>729</width>
-                               <height>302</height>
+                               <height>290</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -1331,7 +1331,7 @@
                     <property name="minimumSize">
                      <size>
                       <width>430</width>
-                      <height>400</height>
+                      <height>100</height>
                      </size>
                     </property>
                     <property name="maximumSize">
@@ -1349,7 +1349,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>399</height>
+                       <height>387</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
@@ -2320,7 +2320,7 @@
                      <x>0</x>
                      <y>0</y>
                      <width>248</width>
-                     <height>409</height>
+                     <height>397</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -2672,8 +2672,8 @@
                <widget class="QGroupBox" name="groupBox_8">
                 <property name="geometry">
                  <rect>
-                  <x>730</x>
-                  <y>170</y>
+                  <x>780</x>
+                  <y>30</y>
                   <width>376</width>
                   <height>110</height>
                  </rect>

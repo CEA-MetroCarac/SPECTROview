@@ -53,9 +53,9 @@ class Maps(QObject):
         self.wafers = {}  # list of opened wafers
         self.toolbar = None
         self.loaded_fit_model = None  # FITSPY
-        self.copied_fit_model = None
+        self.current_fit_model = None
         self.spectra_fs = Spectra()  # FITSPY
-
+        self.df_fit_results = None
         # Update spectra_listbox when selecting wafer via WAFER LIST
         self.ui.wafers_listbox.itemSelectionChanged.connect(
             self.upd_spectra_list)
@@ -152,7 +152,8 @@ class Maps(QObject):
                         continue
                     wafer_name = fname
                     if wafer_name in self.wafers:
-                        print(f"Wafer '{wafer_name}' is already opened")
+                        msg = f"Wafer '{wafer_name}' is already opened"
+                        show_alert(msg)
                     else:
                         self.wafers[wafer_name] = wafer_df
         self.extract_spectra()
@@ -182,6 +183,63 @@ class Maps(QObject):
                     spectrum_fs.y0 = np.asarray(y_values)[:-1]
                     self.spectra_fs.append(spectrum_fs)
         self.upd_wafers_list()
+
+    def open_fit_model(self, fname_json=None):
+        """Load a fit model pre-created by FITSPY tool"""
+        if not fname_json:
+            options = QFileDialog.Options()
+            options |= QFileDialog.ReadOnly
+            selected_file, _ = QFileDialog.getOpenFileName(self.ui,
+                                                           "Select JSON Model "
+                                                           "File",
+                                                           "",
+                                                           "JSON Files ("
+                                                           "*.json);;All "
+                                                           "Files (*)",
+                                                           options=options)
+            if not selected_file:
+                return
+            fname_json = selected_file
+        self.loaded_fit_model = self.spectra_fs.load_model(fname_json, ind=0)
+        display_name = QFileInfo(fname_json).baseName()
+        self.ui.lb_loaded_model.setText(f"'{display_name}' is loaded !")
+        # self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
+
+    def apply_loaded_fit_model(self, fnames=None):
+        """Fit selected spectrum(s) with the LOADED fit model"""
+        # Disable the button to prevent multiple clicks leading to a crash
+        self.ui.btn_fit.setEnabled(False)
+        if self.loaded_fit_model is None:
+            show_alert("Load a fit model before fitting.")
+            self.ui.btn_fit.setEnabled(True)
+            return
+
+        if fnames is None:
+            wafer_name, coords = self.spectre_id()
+            fnames = [f"{wafer_name}_{coord}" for coord in coords]
+
+        # Start fitting process in a separate thread
+        self.apply_model_thread = FitThread(self.spectra_fs,
+                                            self.loaded_fit_model,
+                                            fnames)
+        # To update progress bar
+        self.apply_model_thread.fit_progress_changed.connect(self.update_pbar)
+        # To display progress in GUI
+        self.apply_model_thread.fit_progress.connect(
+            lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
+                                                        fnames))
+        # To update spectra list + plot fitted spectrum once fitting finished
+        self.apply_model_thread.fit_completed.connect(self.fit_completed)
+        self.apply_model_thread.finished.connect(
+            lambda: self.ui.btn_fit.setEnabled(True))
+        self.apply_model_thread.start()
+
+        self.current_fit_model = deepcopy(self.loaded_fit_model)
+
+    def apply_loaded_fit_model_all(self):
+        """ Apply loaded fit model to all selected spectra"""
+        fnames = self.spectra_fs.fnames
+        self.apply_loaded_fit_model(fnames=fnames)
 
     def read_x_range(self):
         """Read x range of selected spectrum"""
@@ -346,11 +404,11 @@ class Maps(QObject):
             self.ui.lbl_copied_fit_model.setText("")
             show_alert(
                 "The selected spectrum does not have fit model to be copied!")
-            self.copied_fit_model = None
+            self.current_fit_model = None
             return
         else:
-            self.copied_fit_model = None
-            self.copied_fit_model = deepcopy(sel_spectrum.save())
+            self.current_fit_model = None
+            self.current_fit_model = deepcopy(sel_spectrum.save())
         fname = sel_spectrum.fname
         self.ui.lbl_copied_fit_model.setText(
             f"The fit model of '{fname}' spectrum is copied to the clipboard.")
@@ -365,8 +423,8 @@ class Maps(QObject):
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
 
         reinit_spectrum(fnames, self.spectra_fs)
-        fit_model = deepcopy(self.copied_fit_model)
-        if self.copied_fit_model is not None:
+        fit_model = deepcopy(self.current_fit_model)
+        if self.current_fit_model is not None:
             # Starting fit process in a seperate thread
             self.paste_model_thread = FitThread(self.spectra_fs, fit_model,
                                                 fnames)
@@ -402,61 +460,6 @@ class Maps(QObject):
         else:
             show_alert("No fit model to save.")
 
-    def open_fit_model(self, fname_json=None):
-        """Load a fit model pre-created by FITSPY tool"""
-        if not fname_json:
-            options = QFileDialog.Options()
-            options |= QFileDialog.ReadOnly
-            selected_file, _ = QFileDialog.getOpenFileName(self.ui,
-                                                           "Select JSON Model "
-                                                           "File",
-                                                           "",
-                                                           "JSON Files ("
-                                                           "*.json);;All "
-                                                           "Files (*)",
-                                                           options=options)
-            if not selected_file:
-                return
-            fname_json = selected_file
-        self.loaded_fit_model = self.spectra_fs.load_model(fname_json, ind=0)
-        display_name = QFileInfo(fname_json).baseName()
-        self.ui.lb_loaded_model.setText(f"'{display_name}' is loaded !")
-        # self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
-
-    def apply_fit_model(self, fnames=None):
-        """Fit selected spectrum(s)"""
-        # Disable the button to prevent multiple clicks leading to a crash
-        self.ui.btn_fit.setEnabled(False)
-        if self.loaded_fit_model is None:
-            show_alert("Load a fit model before fitting.")
-            self.ui.btn_fit.setEnabled(True)
-            return
-
-        if fnames is None:
-            wafer_name, coords = self.spectre_id()
-            fnames = [f"{wafer_name}_{coord}" for coord in coords]
-
-        # Start fitting process in a separate thread
-        self.apply_model_thread = FitThread(self.spectra_fs,
-                                            self.loaded_fit_model,
-                                            fnames)
-        # To update progress bar
-        self.apply_model_thread.fit_progress_changed.connect(self.update_pbar)
-        # To display progress in GUI
-        self.apply_model_thread.fit_progress.connect(
-            lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
-                                                        fnames))
-        # To update spectra list + plot fitted spectrum once fitting finished
-        self.apply_model_thread.fit_completed.connect(self.fit_completed)
-        self.apply_model_thread.finished.connect(
-            lambda: self.ui.btn_fit.setEnabled(True))
-        self.apply_model_thread.start()
-
-    def apply_fit_model_all(self):
-        """ Apply loaded fit model to all selected spectra"""
-        fnames = self.spectra_fs.fnames
-        self.apply_fit_model(fnames=fnames)
-
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.
@@ -470,7 +473,7 @@ class Maps(QObject):
                 success = spectrum_fs.result_fit.success
                 rsquared = spectrum_fs.result_fit.rsquared
                 best_values = spectrum_fs.result_fit.best_values
-                best_values["Wafer"] = wafer_name
+                best_values["Filename"] = wafer_name
                 best_values["X"] = x
                 best_values["Y"] = y
                 best_values["success"] = success
@@ -479,31 +482,40 @@ class Maps(QObject):
                 fit_results_list.append(best_values)
         self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
 
-        # reindex columns according to the parameters names
-        self.df_fit_results = self.df_fit_results.reindex(
-            sorted(self.df_fit_results.columns), axis=1)
-        names = []
-        for name in self.df_fit_results.columns:
-            if name in ["Wafer", "X", 'Y', "success"]:
-                name = '0' + name  # to be in the 3 first columns
-            elif '_' in name:
-                name = 'z' + name[5:]  # model peak parameters to be at the end
-            names.append(name)
-        self.df_fit_results = self.df_fit_results.iloc[:,
-                              list(np.argsort(names, kind='stable'))]
-        columns = [translate_param(self.loaded_fit_model, column) for column in
-                   self.df_fit_results.columns]
-        self.df_fit_results.columns = columns
+        if self.df_fit_results is not None and not self.df_fit_results.empty:
+            # reindex columns according to the parameters names
+            self.df_fit_results = self.df_fit_results.reindex(
+                sorted(self.df_fit_results.columns), axis=1)
+            names = []
+            for name in self.df_fit_results.columns:
+                if name in ["Filename", "X", 'Y', "success"]:
+                    # to be in the 3 first columns
+                    name = '0' + name
+                elif '_' in name:
+                    # model peak parameters to be at the end
+                    name = 'z' + name[5:]
+                names.append(name)
+            self.df_fit_results = self.df_fit_results.iloc[:,
+                                  list(np.argsort(names, kind='stable'))]
+            columns = [translate_param(self.current_fit_model, column) for
+                       column
+                       in self.df_fit_results.columns]
+            self.df_fit_results.columns = columns
 
-        # Add "Quadrant" columns
-        self.df_fit_results['Quadrant'] = self.df_fit_results.apply(quadrant,
-                                                                    axis=1)
-        diameter = float(self.ui.wafer_size.text())
-        # Use a lambda function to pass the row argument to the zone function
-        self.df_fit_results['Zone'] = self.df_fit_results.apply(
-            lambda row: zone(row, diameter), axis=1)
+            # Add "Quadrant" columns
+            self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
+                quadrant,
+                axis=1)
 
-        display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+            diameter = float(self.ui.wafer_size.text())
+            # Use a lambda function to pass the row argument to the zone
+            # function
+            self.df_fit_results['Zone'] = self.df_fit_results.apply(
+                lambda row: zone(row, diameter), axis=1)
+
+            display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+        else:
+            self.ui.fit_results_table.clear()
 
         self.upd_cbb_param()
         self.upd_cbb_wafer()
@@ -533,7 +545,6 @@ class Maps(QObject):
 
     def load_fit_results(self, file_paths=None):
         """Functon to load fitted results from an excel file"""
-        self.df_fit_results = None
         # Initialize the last used directory from QSettings
         last_dir = self.settings.value("last_directory", "/")
         options = QFileDialog.Options()
@@ -549,20 +560,24 @@ class Maps(QObject):
             excel_file_path = file_paths[0]
             try:
                 dfr = pd.read_excel(excel_file_path)
+                self.df_fit_results = None
                 self.df_fit_results = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
-
+        display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
         self.upd_cbb_param()
         self.upd_cbb_wafer()
         self.send_df_to_viz()
 
     def upd_cbb_wafer(self):
-        """to append all values of df_fit_results to comoboxses"""
+        """Update the combobox with unique values from 'Wafer' column."""
         self.ui.cbb_wafer_1.clear()
-        wafer_names = self.df_fit_results['Wafer'].unique()
-        for wafer_name in wafer_names:
-            self.ui.cbb_wafer_1.addItem(wafer_name)
+        try:
+            wafer_names = self.df_fit_results['Filename'].unique()
+            for wafer_name in wafer_names:
+                self.ui.cbb_wafer_1.addItem(wafer_name)
+        except Exception as e:
+            print(f"Error updating combobox with 'Filename' values: {e}")
 
     def upd_cbb_param(self):
         """to append all values of df_fit_results to comoboxses"""
@@ -582,7 +597,10 @@ class Maps(QObject):
     def split_fname(self):
         """Split fname and populate the combobox"""
         dfr = self.df_fit_results
-        fname_parts = dfr.loc[0, 'Wafer'].split('_')
+        try:
+            fname_parts = dfr.loc[0, 'Filename'].split('_')
+        except Exception as e:
+            print(f"Error splitting column header: {e}")
         self.ui.cbb_split_fname_2.clear()
         for part in fname_parts:
             self.ui.cbb_split_fname_2.addItem(part)
@@ -601,14 +619,19 @@ class Maps(QObject):
                 f"different name")
             show_alert(text)
             return
-        parts = dfr['Wafer'].str.split('_')
+        try:
+            parts = dfr['Filename'].str.split('_')
+        except Exception as e:
+            print(f"Error adding new column to fit results dataframe: {e}")
+
         dfr[col_name] = [part[selected_part_index] if len(
             part) > selected_part_index else None for part in parts]
+
         self.df_fit_results = dfr
         display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
         self.send_df_to_viz()
         self.upd_cbb_param()
-        self.upd_cbb_wafer()
+        self.upd_cbb_wafer()  # update combobox with Wafer or Filename
 
     def reinit(self, fnames=None):
         """Reinitialize the selected spectrum(s)"""
@@ -628,8 +651,6 @@ class Maps(QObject):
         """Rescale the figure."""
         self.ax.autoscale()
         self.canvas1.draw()
-
-
 
     def plot1(self):
         """Plot selected spectra"""
@@ -760,7 +781,8 @@ class Maps(QObject):
         self.selected_points = []
         self.ctrl_pressed = False
         # Connect the mouse and key events to the handler functions
-        fig2.canvas.mpl_connect('button_press_event', self.on_click_sites_mesurements)
+        fig2.canvas.mpl_connect('button_press_event',
+                                self.on_click_sites_mesurements)
         fig2.canvas.mpl_connect('key_press_event', self.on_key_press)
         fig2.canvas.mpl_connect('key_release_event', self.on_key_release)
 
@@ -776,7 +798,8 @@ class Maps(QObject):
         self.canvas4.draw()
 
     def on_click_sites_mesurements(self, event):
-        """On click action to select the measurements points directly in the plot"""
+        """On click action to select the measurements points directly in the
+        plot"""
         all_x, all_y = self.get_mes_sites_coord()
         self.ui.spectra_listbox.clearSelection()
         if event.inaxes == self.ax2:
@@ -784,9 +807,11 @@ class Maps(QObject):
             if event.button == 1:  # Left mouse button
                 all_x = np.array(all_x)
                 all_y = np.array(all_y)
-                distances = np.sqrt((all_x - x_clicked) ** 2 + (all_y - y_clicked) ** 2)
+                distances = np.sqrt(
+                    (all_x - x_clicked) ** 2 + (all_y - y_clicked) ** 2)
                 nearest_index = np.argmin(distances)
-                nearest_x, nearest_y = all_x[nearest_index], all_y[nearest_index]
+                nearest_x, nearest_y = all_x[nearest_index], all_y[
+                    nearest_index]
 
                 # If Ctrl key is pressed, allow multiple selections
                 if self.ctrl_pressed:
@@ -816,8 +841,6 @@ class Maps(QObject):
         if event.key == 'command' or event.key == 'control':
             self.ctrl_pressed = False
 
-
-
     def on_drag(self, event):
         """Handler function for mouse drag event"""
         pass
@@ -828,12 +851,15 @@ class Maps(QObject):
         #             all_x, all_y = self.get_mes_sites_coord()
         #             selected_x, selected_y = [], []
         #             for x, y in zip(all_x, all_y):
-        #                 if abs(x - event.xdata) < 10 and abs(y - event.ydata) < 10:  # Define your selection criteria here
+        #                 if abs(x - event.xdata) < 10 and abs(y -
+        #                 event.ydata) < 10:  # Define your selection
+        #                 criteria here
         #                     selected_x.append(x)
         #                     selected_y.append(y)
         #             # Highlight selected points
         #             if selected_x and selected_y:
-        #                 self.ax2.scatter(selected_x, selected_y, marker='o', color='green', s=40)
+        #                 self.ax2.scatter(selected_x, selected_y,
+        #                 marker='o', color='green', s=40)
         #                 self.canvas2.draw()
 
     def plot2(self):
@@ -872,10 +898,11 @@ class Maps(QObject):
         wafer_size = float(self.ui.wafer_size.text())
 
         if wafer_name is not None:
-            selected_df = dfr.query('Wafer == @wafer_name')
+            selected_df = dfr.query('Filename == @wafer_name')
         sel_param = self.ui.cbb_param_1.currentText()
         self.canvas3 = self.plot3_action(selected_df, sel_param, wafer_size,
                                          color)
+
         self.ui.frame_wafer.addWidget(self.canvas3)
 
     def plot3_action(self, selected_df, sel_param, wafer_size, color):
@@ -931,6 +958,7 @@ class Maps(QObject):
                    x_text, y_text, xlabel_rot)
         self.ax4.get_figure().tight_layout()
         self.canvas4.draw()
+
     def get_mes_sites_coord(self):
         """ Get all coordinates of measurements sites of selected wafer"""
         wafer_name, coords = self.spectre_id()
@@ -943,6 +971,7 @@ class Maps(QObject):
                 all_x.append(x)
                 all_y.append(y)
         return all_x, all_y
+
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
         current_row = self.ui.wafers_listbox.currentRow()
@@ -1097,7 +1126,10 @@ class Maps(QObject):
 
     def view_fit_results_df(self):
         """To view selected dataframe"""
-        view_df(self.ui.tabWidget, self.df_fit_results)
+        if self.df_fit_results is not None:
+            view_df(self.ui.tabWidget, self.df_fit_results)
+        else:
+            show_alert("No fit dataframe to display")
 
     def view_wafer_data(self):
         """To view data of selected wafer """
@@ -1163,7 +1195,8 @@ class Maps(QObject):
                     'spectra_fs': self.spectra_fs,
                     'wafers': self.wafers,
                     'loaded_fit_model': self.loaded_fit_model,
-                    'model_name': self.ui.lb_loaded_model.text(),
+                    'current_fit_model': self.current_fit_model,
+                    'loaded_model_name': self.ui.lb_loaded_model.text(),
                     'df_fit_results': self.df_fit_results,
 
                     'cbb_x': self.ui.cbb_x.currentIndex(),
@@ -1208,9 +1241,9 @@ class Maps(QObject):
                     self.spectra_fs = load.get('spectra_fs')
                     self.wafers = load.get('wafers')
                     self.loaded_fit_model = load.get('loaded_fit_model')
-                    model_name = load.get('model_name', '')
-                    self.ui.lb_loaded_model.setText(model_name)
-                    self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
+                    text = load.get('loaded_model_name', '')
+                    self.ui.lb_loaded_model.setText(text)
+                    self.current_fit_model = load.get('current_fit_model')
 
                     self.df_fit_results = load.get('df_fit_results')
                     self.upd_cbb_param()
@@ -1243,8 +1276,8 @@ class Maps(QObject):
                     self.ui.int_vmin.setText(load.get('vmin', ''))
                     self.ui.int_vmax.setText(load.get('vmax', ''))
 
-                    self.plot4()
-                    self.plot3()
+                    # self.plot4()
+                    # self.plot3()
                     display_df_in_table(self.ui.fit_results_table,
                                         self.df_fit_results)
         except Exception as e:
@@ -1335,9 +1368,9 @@ class Maps(QObject):
         """Switch between 2 save fit fnc with the Ctrl key"""
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:
-            self.apply_fit_model_all()
+            self.apply_loaded_fit_model_all()
         else:
-            self.apply_fit_model()
+            self.apply_loaded_fit_model()
 
     def paste_fit_model_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""

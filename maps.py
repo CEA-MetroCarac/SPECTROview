@@ -265,7 +265,6 @@ class Maps(QObject):
             spectrum.x = spectrum.x0[ind_min:ind_max + 1].copy()
             spectrum.y = spectrum.y0[ind_min:ind_max + 1].copy()
             spectrum.attractors_calculation()
-
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
 
@@ -338,24 +337,28 @@ class Maps(QObject):
                 ax.plot(spectrum.baseline.points[0],
                         spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
 
-    def subtract_baseline(self, fnames=None):
+    def subtract_baseline(self, sel_spectra=None):
         """ Subtract baseline for the selected spectrum(s) """
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
-        points = sel_spectrum.baseline.points
+        sel_spectrum, _ = self.get_spectrum_objet()
+        points = deepcopy(sel_spectrum.baseline.points)
         if len(points[0]) == 0:
             return
-        sel_spectrum.subtract_baseline()
+        if sel_spectra is None:
+            _, sel_spectra = self.get_spectrum_objet()
+        for spectrum in sel_spectra:
+            spectrum.baseline.points = points.copy()
+            spectrum.subtract_baseline()
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
 
     def subtract_baseline_all(self):
         """ Subtract baseline for all spectrum(s) """
-        pass
+        self.subtract_baseline(self.spectra_fs)
 
     def get_fit_settings(self):
-        """To get all settings for the fitting action"""
+        """Getall settings for the fitting action"""
         sel_spectrum, sel_spectra = self.get_spectrum_objet()
-        fit_params = sel_spectrum.fit_params
+        fit_params = sel_spectrum.fit_params.copy()
         fit_params['fit_negative'] = self.ui.cb_fit_negative.isChecked()
         fit_params['max_ite'] = self.ui.max_iteration.value()
         fit_params['method'] = self.ui.cbb_fit_methods.currentText()
@@ -364,7 +367,7 @@ class Maps(QObject):
         sel_spectrum.fit_params = fit_params
 
     def fit(self, fnames=None):
-        """To apply all fit parameters to selected spectrum(s)"""
+        """Fit selected spectrum(s) with current parameters"""
         self.get_fit_settings()
         if fnames is None:
             wafer_name, coords = self.spectre_id()
@@ -378,14 +381,15 @@ class Maps(QObject):
         QTimer.singleShot(100, self.upd_spectra_list)
 
     def fit_all(self):
-        """To apply all fit parameters to all spectrum(s)"""
+        """Apply all fit parameters to all spectrum(s)"""
         fnames = self.spectra_fs.fnames
         self.fit(fnames)
 
-    def clear_all_peaks(self):
-        """To clear all existing peak models of the selected spectrum(s)"""
-        wafer_name, coords = self.spectre_id()
-        fnames = [f"{wafer_name}_{coord}" for coord in coords]
+    def clear_peaks(self, fnames=None):
+        """Clear all existing peak models of the selected spectrum(s)"""
+        if fnames is None:
+            wafer_name, coords = self.spectre_id()
+            fnames = [f"{wafer_name}_{coord}" for coord in coords]
         for fname in fnames:
             spectrum, _ = self.spectra_fs.get_objects(fname)
             if len(spectrum.peak_models) != 0:
@@ -393,10 +397,14 @@ class Maps(QObject):
             else:
                 continue
         QTimer.singleShot(100, self.upd_spectra_list)
+    def clear_peaks_all(self):
+        """Clear peaks of all spectra"""
+        fnames=self.spectra_fs.fnames
+        self.clear_peaks(fnames)
 
     def copy_fit_model(self):
-        """ To copy the model dict of the selected spectrums. If several
-        spectrums are selected →  copy the model dict of 1st spectrum in list"""
+        """ To copy the model dict of the selected spectrum. If several
+        spectrums are selected → copy the model dict of first spectrum in list"""
         # Get only 1 spectrum among several selected spectrum:
         self.get_fit_settings()
         sel_spectrum, _ = self.get_spectrum_objet()
@@ -1179,8 +1187,11 @@ class Maps(QObject):
         # Show the 'report' of the first selected spectrum
         spectrum_fs = selected_spectra_fs[0]
         if spectrum_fs.result_fit:
-            text = fit_report(spectrum_fs.result_fit)
-            view_text(ui, title, text)
+            try:
+                text = fit_report(spectrum_fs.result_fit)
+                view_text(ui, title, text)
+            except:
+                return
 
     def save_work(self):
         """Save the current work/results."""
@@ -1329,6 +1340,7 @@ class Maps(QObject):
         for key, value in fit_params.items():
             self.settings.setValue(key, value)
 
+
     def load_fit_settings(self):
         """Load last used fitting settings from QSettings"""
         fit_params = {
@@ -1357,6 +1369,18 @@ class Maps(QObject):
         else:
             self.set_x_range()
 
+    def subtract_baseline_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.subtract_baseline_all()
+        else:
+            self.subtract_baseline()
+    def clear_peaks_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.clear_peaks_all()
+        else:
+            self.clear_peaks()
     def apply_fit_model_handler(self):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:

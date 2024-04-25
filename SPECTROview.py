@@ -210,10 +210,10 @@ class Main:
         self.ui.range_max.returnPressed.connect(self.maps.set_x_range)
         self.ui.range_min.returnPressed.connect(self.maps.set_x_range)
         self.ui.range_apply.clicked.connect(self.maps.set_x_range_handler)
-        self.ui.sub_baseline.clicked.connect(self.maps.subtract_baseline)
+        self.ui.sub_baseline.clicked.connect(self.maps.subtract_baseline_handler)
         self.ui.btn_fit_2.clicked.connect(self.maps.apply_fit_model_handler)
         self.ui.save_model.clicked.connect(self.maps.save_fit_model)
-        self.ui.clear_peaks.clicked.connect(self.maps.clear_all_peaks)
+        self.ui.clear_peaks.clicked.connect(self.maps.clear_peaks_handler)
         self.ui.btn_copy_fit_model.clicked.connect(self.maps.copy_fit_model)
         self.ui.btn_paste_fit_model.clicked.connect(
             self.maps.paste_fit_model_fnc_handler)

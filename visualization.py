@@ -3,8 +3,7 @@ import os
 import numpy as np
 from functools import partial
 from io import BytesIO
-from wafer_plot import WaferPlot
-
+from utils import WaferPlot
 try:
     import win32clipboard
 except:

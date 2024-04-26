@@ -10,8 +10,7 @@ from utils import view_df, show_alert, quadrant, zone, view_text, \
     copy_fig_to_clb, \
     translate_param, clear_layout, reinit_spectrum, plot_graph, \
     display_df_in_table
-from utils import FitThread, ShowParameters, PEAK_MODELS, FIT_PARAMS, \
-    FIT_METHODS, NCPUS
+from utils import FitThread,WaferView, ShowParameters,FIT_METHODS, NCPUS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -22,12 +21,10 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-from wafer_view import WaferView
+
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
                                QListWidgetItem)
-from PySide6.QtWidgets import QLabel, QComboBox, QLineEdit, QCheckBox, \
-    QHBoxLayout, QSpacerItem, QSizePolicy, QPushButton, QVBoxLayout, QMainWindow
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
 
@@ -475,6 +472,7 @@ class Maps(QObject):
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.
+        self.copy_fit_model()
         fit_results_list = []
         self.df_fit_results = None
 
@@ -935,8 +933,7 @@ class Maps(QObject):
 
         wdf = WaferView()
         wdf.plot(ax, x=x, y=y, z=param, cmap=color, vmin=vmin, vmax=vmax,
-                 stats=stats,
-                 r=(wafer_size / 2))
+                 stats=stats, r=(wafer_size / 2))
 
         text = self.ui.plot_title.text()
         title = sel_param if not text else text
@@ -1026,6 +1023,7 @@ class Maps(QObject):
                     else:
                         item.setBackground(QColor(0, 0, 0, 0))
                     self.ui.spectra_listbox.addItem(item)
+
 
         # Update the item count label
         item_count = self.ui.spectra_listbox.count()
@@ -1174,7 +1172,7 @@ class Maps(QObject):
         show_params = ShowParameters(main_layout, sel_spectrum, cb_limits,
                                      cb_expr, update)
         show_params.show_peak_table(main_layout, sel_spectrum, cb_limits,
-                                    cb_expr)
+                                        cb_expr)
 
     def view_stats(self):
         """Show the statistique fitting results of the selected spectrum"""

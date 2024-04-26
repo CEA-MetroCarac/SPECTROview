@@ -9,8 +9,7 @@ import dill
 from utils import view_df, show_alert, view_text, copy_fig_to_clb, \
     translate_param, reinit_spectrum, plot_graph, clear_layout, \
     display_df_in_table
-from utils import FitThread, ShowParameters, FIT_METHODS, NCPUS, PEAK_MODELS, \
-    FIT_PARAMS
+from utils import FitThread, ShowParameters, FIT_METHODS, NCPUS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -726,6 +725,7 @@ class Spectrums(QObject):
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.
+        self.copy_fit_model()
         fit_results_list = []
         self.df_fit_results = None
 
@@ -748,14 +748,13 @@ class Spectrums(QObject):
             names = []
             for name in self.df_fit_results.columns:
                 if name in ["Sample", "success"]:
-                    name = '0' + name  # to be in the 2 first columns
+                    name = '0' + name
                 elif '_' in name:
-                    name = 'z' + name[
-                                 5:]  # model peak parameters to be at the end
+                    name = 'z' + name[5:]
                 names.append(name)
             self.df_fit_results = self.df_fit_results.iloc[:,
                                   list(np.argsort(names, kind='stable'))]
-            columns = [translate_param(self.loaded_model_fs, column) for column
+            columns = [translate_param(self.current_fit_model, column) for column
                        in
                        self.df_fit_results.columns]
             self.df_fit_results.columns = columns
@@ -1090,7 +1089,6 @@ class Spectrums(QObject):
 
     def remove_spectrum(self):
         fnames = self.get_spectrum_fnames()
-        # Filter out selected spectra from self.spectra_fs
         self.spectra_fs = Spectra(
             spectrum_fs for spectrum_fs in self.spectra_fs if
             spectrum_fs.fname not in fnames)

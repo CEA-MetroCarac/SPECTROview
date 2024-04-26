@@ -89,6 +89,7 @@ class Maps(QObject):
 
         self.plot_styles = ["box plot", "point plot", "bar plot"]
         self.create_plot_widget()
+        self.create_spectra_plot_widget()
         self.zoom_pan_active = False
 
         self.ui.cbb_fit_methods.addItems(FIT_METHODS)
@@ -103,7 +104,8 @@ class Maps(QObject):
         self.ui.cbb_cpu_number.currentIndexChanged.connect(
             self.save_fit_settings)
         self.ui.xtol.textChanged.connect(self.save_fit_settings)
-
+        self.ui.sb_dpi_spectra.valueChanged.connect(
+            self.create_spectra_plot_widget)
         # BASELINE
         self.ui.cb_attached.clicked.connect(self.upd_spectra_list)
         self.ui.noise.valueChanged.connect(self.upd_spectra_list)
@@ -397,14 +399,16 @@ class Maps(QObject):
             else:
                 continue
         QTimer.singleShot(100, self.upd_spectra_list)
+
     def clear_peaks_all(self):
         """Clear peaks of all spectra"""
-        fnames=self.spectra_fs.fnames
+        fnames = self.spectra_fs.fnames
         self.clear_peaks(fnames)
 
     def copy_fit_model(self):
         """ To copy the model dict of the selected spectrum. If several
-        spectrums are selected → copy the model dict of first spectrum in list"""
+        spectrums are selected → copy the model dict of first spectrum in
+        list"""
         # Get only 1 spectrum among several selected spectrum:
         self.get_fit_settings()
         sel_spectrum, _ = self.get_spectrum_objet()
@@ -660,6 +664,35 @@ class Maps(QObject):
         self.ax.autoscale()
         self.canvas1.draw()
 
+    def create_spectra_plot_widget(self):
+        """Create canvas and toolbar for plotting in the GUI"""
+        plt.style.use(PLOT_POLICY)
+        # plot 1: spectra plotting
+        clear_layout(self.ui.QVBoxlayout.layout())
+        clear_layout(self.ui.toolbar_frame.layout())
+        self.upd_spectra_list()
+        dpi = float(self.ui.sb_dpi_spectra.text())
+        fig1 = plt.figure(dpi=dpi)
+        self.ax = fig1.add_subplot(111)
+        self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
+        self.ax.set_ylabel("Intensity (a.u)")
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        self.canvas1 = FigureCanvas(fig1)
+        self.canvas1.mpl_connect('button_press_event', self.on_click)
+
+        self.toolbar = NavigationToolbar2QT(self.canvas1)
+        rescale = next(
+            a for a in self.toolbar.actions() if a.text() == 'Home')
+        rescale.triggered.connect(self.rescale)
+        for action in self.toolbar.actions():
+            if action.text() == 'Pan' or action.text() == 'Zoom':
+                action.toggled.connect(self.toggle_zoom_pan)
+
+        self.ui.QVBoxlayout.addWidget(self.canvas1)
+        self.ui.toolbar_frame.addWidget(self.toolbar)
+        self.canvas1.figure.tight_layout()
+        self.canvas1.draw()
+
     def plot1(self):
         """Plot selected spectra"""
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
@@ -750,32 +783,10 @@ class Maps(QObject):
         self.show_peak_table()
 
     def create_plot_widget(self):
-        """Create canvas and toolbar for plotting in the GUI"""
-        plt.style.use(PLOT_POLICY)
-        # plot 1: spectra plotting
-        fig1 = plt.figure()
-        self.ax = fig1.add_subplot(111)
-        self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
-        self.ax.set_ylabel("Intensity (a.u)")
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        self.canvas1 = FigureCanvas(fig1)
-        self.canvas1.mpl_connect('button_press_event', self.on_click)
-
-        self.toolbar = NavigationToolbar2QT(self.canvas1)
-        rescale = next(
-            a for a in self.toolbar.actions() if a.text() == 'Home')
-        rescale.triggered.connect(self.rescale)
-        for action in self.toolbar.actions():
-            if action.text() == 'Pan' or action.text() == 'Zoom':
-                action.toggled.connect(self.toggle_zoom_pan)
-
-        self.ui.QVBoxlayout.addWidget(self.canvas1)
-        self.ui.toolbar_frame.addWidget(self.toolbar)
-        self.canvas1.figure.tight_layout()
-        self.canvas1.draw()
-
+        """ Create plot widget for other plots: measurement sites ,
+        waferdataview, plotview"""
         # plot 2: Measurement sites view
-        fig2 = plt.figure()
+        fig2 = plt.figure(dpi=100)
         self.ax2 = fig2.add_subplot(111)
         self.ax2.spines['right'].set_visible(False)
         self.ax2.spines['top'].set_visible(False)
@@ -1340,7 +1351,6 @@ class Maps(QObject):
         for key, value in fit_params.items():
             self.settings.setValue(key, value)
 
-
     def load_fit_settings(self):
         """Load last used fitting settings from QSettings"""
         fit_params = {
@@ -1375,12 +1385,14 @@ class Maps(QObject):
             self.subtract_baseline_all()
         else:
             self.subtract_baseline()
+
     def clear_peaks_handler(self):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:
             self.clear_peaks_all()
         else:
             self.clear_peaks()
+
     def apply_fit_model_handler(self):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:

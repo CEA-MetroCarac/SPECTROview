@@ -1,6 +1,6 @@
-<div style="text-align: center;">
-    <img src="icon3.png" alt="icon3.png" width="100" height="100">
-</div>
+<p align="center" width="10%">
+    <img align="center" width=250 src="resources\icon3.png">
+</p>
 
 ### SPECTROview (Spectroscopic Data Processing and Visualization)
 

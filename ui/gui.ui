@@ -148,9 +148,12 @@
                    <enum>QLayout::SetMaximumSize</enum>
                   </property>
                   <property name="leftMargin">
-                   <number>0</number>
+                   <number>2</number>
                   </property>
                   <property name="topMargin">
+                   <number>2</number>
+                  </property>
+                  <property name="rightMargin">
                    <number>2</number>
                   </property>
                   <property name="bottomMargin">
@@ -3024,7 +3027,7 @@
                  <string>Fit settings:</string>
                 </property>
                </widget>
-               <widget class="QWidget" name="">
+               <widget class="QWidget" name="layoutWidget">
                 <property name="geometry">
                  <rect>
                   <x>570</x>
@@ -3826,14 +3829,20 @@
                  </widget>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="bottom_frame_3" stretch="50,25,0,0,0,2,0,0,0,0,0,0,0">
+                 <layout class="QHBoxLayout" name="bottom_frame_3" stretch="50,25,0,0,0,0,0,0,0,2">
+                  <property name="spacing">
+                   <number>10</number>
+                  </property>
                   <property name="sizeConstraint">
                    <enum>QLayout::SetMaximumSize</enum>
                   </property>
                   <property name="leftMargin">
-                   <number>0</number>
+                   <number>2</number>
                   </property>
                   <property name="topMargin">
+                   <number>2</number>
+                  </property>
+                  <property name="rightMargin">
                    <number>2</number>
                   </property>
                   <property name="bottomMargin">
@@ -3856,9 +3865,22 @@
                    </spacer>
                   </item>
                   <item>
-                   <widget class="QLabel" name="rsquared_2">
+                   <widget class="QRadioButton" name="rdbtn_baseline_2">
                     <property name="text">
-                     <string>R2=0</string>
+                     <string>baseline</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QRadioButton" name="rdbtn_peak_2">
+                    <property name="text">
+                     <string>peaks</string>
+                    </property>
+                    <property name="checked">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -3874,6 +3896,13 @@
                      </size>
                     </property>
                    </spacer>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="rsquared_2">
+                    <property name="text">
+                     <string>R2</string>
+                    </property>
+                   </widget>
                   </item>
                   <item>
                    <widget class="QPushButton" name="btn_copy_fig_3">
@@ -3896,6 +3925,26 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QLabel" name="label_79">
+                    <property name="text">
+                     <string>DPI:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="sb_dpi_spectra_2">
+                    <property name="minimum">
+                     <number>100</number>
+                    </property>
+                    <property name="maximum">
+                     <number>200</number>
+                    </property>
+                    <property name="singleStep">
+                     <number>10</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <spacer name="horizontalSpacer_25">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
@@ -3907,82 +3956,6 @@
                      </size>
                     </property>
                    </spacer>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="cb_legend_3">
-                    <property name="enabled">
-                     <bool>true</bool>
-                    </property>
-                    <property name="toolTip">
-                     <string>To display or remove the legend of the plot</string>
-                    </property>
-                    <property name="text">
-                     <string>Legend</string>
-                    </property>
-                    <property name="checked">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="cb_raw_3">
-                    <property name="text">
-                     <string>raw</string>
-                    </property>
-                    <property name="checked">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="cb_bestfit_3">
-                    <property name="text">
-                     <string>best-fit</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="cb_residual_3">
-                    <property name="text">
-                     <string>residual</string>
-                    </property>
-                    <property name="checked">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="cb_colors_3">
-                    <property name="text">
-                     <string>colors</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="cb_filled_3">
-                    <property name="text">
-                     <string>filled</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="cb_peaks_3">
-                    <property name="text">
-                     <string>peaks</string>
-                    </property>
-                    <property name="checked">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
                   </item>
                  </layout>
                 </item>
@@ -4026,7 +3999,7 @@
                    <property name="minimumSize">
                     <size>
                      <width>250</width>
-                     <height>400</height>
+                     <height>450</height>
                     </size>
                    </property>
                    <property name="maximumSize">
@@ -4043,385 +4016,11 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>323</width>
-                      <height>540</height>
+                      <width>339</width>
+                      <height>495</height>
                      </rect>
                     </property>
-                    <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,20,0,0,0,0,0,0,0,0,0">
-                     <item>
-                      <layout class="QHBoxLayout" name="horizontalLayout_48">
-                       <item>
-                        <widget class="QPushButton" name="btn_collect_results_3">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="minimumSize">
-                          <size>
-                           <width>140</width>
-                           <height>30</height>
-                          </size>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>140</width>
-                           <height>30</height>
-                          </size>
-                         </property>
-                         <property name="font">
-                          <font>
-                           <weight>75</weight>
-                           <bold>true</bold>
-                          </font>
-                         </property>
-                         <property name="toolTip">
-                          <string>To gather all the best-fit results for visualization</string>
-                         </property>
-                         <property name="text">
-                          <string> Collect fit results</string>
-                         </property>
-                         <property name="icon">
-                          <iconset resource="resources_new.qrc">
-                           <normaloff>:/icon/iconpack/collect.png</normaloff>:/icon/iconpack/collect.png</iconset>
-                         </property>
-                         <property name="iconSize">
-                          <size>
-                           <width>16</width>
-                           <height>22</height>
-                          </size>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QPushButton" name="btn_view_df_5">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="minimumSize">
-                          <size>
-                           <width>30</width>
-                           <height>0</height>
-                          </size>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>30</width>
-                           <height>16777215</height>
-                          </size>
-                         </property>
-                         <property name="toolTip">
-                          <string>View collected fit results</string>
-                         </property>
-                         <property name="text">
-                          <string/>
-                         </property>
-                         <property name="icon">
-                          <iconset resource="resources_new.qrc">
-                           <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
-                         </property>
-                         <property name="iconSize">
-                          <size>
-                           <width>22</width>
-                           <height>22</height>
-                          </size>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QPushButton" name="btn_save_fit_results_3">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="minimumSize">
-                          <size>
-                           <width>30</width>
-                           <height>0</height>
-                          </size>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>30</width>
-                           <height>16777215</height>
-                          </size>
-                         </property>
-                         <property name="toolTip">
-                          <string>Save all fit results in an Excel file</string>
-                         </property>
-                         <property name="text">
-                          <string/>
-                         </property>
-                         <property name="icon">
-                          <iconset resource="resources_new.qrc">
-                           <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
-                         </property>
-                         <property name="iconSize">
-                          <size>
-                           <width>22</width>
-                           <height>22</height>
-                          </size>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QPushButton" name="btn_open_fit_results_3">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>30</width>
-                           <height>16777215</height>
-                          </size>
-                         </property>
-                         <property name="toolTip">
-                          <string>Open fit results (format Excel) to view/plot</string>
-                         </property>
-                         <property name="text">
-                          <string/>
-                         </property>
-                         <property name="icon">
-                          <iconset resource="resources_new.qrc">
-                           <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
-                         </property>
-                         <property name="iconSize">
-                          <size>
-                           <width>22</width>
-                           <height>22</height>
-                          </size>
-                         </property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </item>
-                     <item>
-                      <spacer name="verticalSpacer_12">
-                       <property name="orientation">
-                        <enum>Qt::Vertical</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>20</width>
-                         <height>40</height>
-                        </size>
-                       </property>
-                      </spacer>
-                     </item>
-                     <item>
-                      <spacer name="verticalSpacer_13">
-                       <property name="orientation">
-                        <enum>Qt::Vertical</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>20</width>
-                         <height>40</height>
-                        </size>
-                       </property>
-                      </spacer>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="label_51">
-                       <property name="text">
-                        <string>Split fname and add a columns:</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <layout class="QHBoxLayout" name="horizontalLayout_47" stretch="0,0,40,20">
-                       <item>
-                        <widget class="QPushButton" name="btn_split_fname">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="minimumSize">
-                          <size>
-                           <width>40</width>
-                           <height>0</height>
-                          </size>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>40</width>
-                           <height>16777215</height>
-                          </size>
-                         </property>
-                         <property name="toolTip">
-                          <string>Split the file name of spectrum</string>
-                         </property>
-                         <property name="text">
-                          <string>Split</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QComboBox" name="cbb_split_fname">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="toolTip">
-                          <string>Select the value to split</string>
-                         </property>
-                         <property name="placeholderText">
-                          <string/>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QLineEdit" name="ent_col_name">
-                         <property name="placeholderText">
-                          <string>type column name</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QPushButton" name="btn_add_col">
-                         <property name="minimumSize">
-                          <size>
-                           <width>60</width>
-                           <height>0</height>
-                          </size>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>60</width>
-                           <height>16777215</height>
-                          </size>
-                         </property>
-                         <property name="toolTip">
-                          <string>To add a new column with the selected value</string>
-                         </property>
-                         <property name="text">
-                          <string>Add</string>
-                         </property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="pushButton_2">
-                       <property name="text">
-                        <string/>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QGroupBox" name="groupBox_df_manip_2">
-                       <property name="minimumSize">
-                        <size>
-                         <width>0</width>
-                         <height>200</height>
-                        </size>
-                       </property>
-                       <property name="title">
-                        <string>Data filtering:</string>
-                       </property>
-                       <layout class="QVBoxLayout" name="verticalLayout_23">
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_45">
-                          <item>
-                           <widget class="QLineEdit" name="ent_filter_query_2">
-                            <property name="placeholderText">
-                             <string>Enter query expression (? : see Help menu)</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QPushButton" name="btn_add_filter_2">
-                            <property name="toolTip">
-                             <string>Add filter(s) to dataframe</string>
-                            </property>
-                            <property name="text">
-                             <string>Add filter(s)</string>
-                            </property>
-                            <property name="icon">
-                             <iconset resource="resources_new.qrc">
-                              <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
-                         <widget class="QListWidget" name="filter_listbox">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>100</height>
-                           </size>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_46">
-                          <item>
-                           <spacer name="horizontalSpacer_9">
-                            <property name="orientation">
-                             <enum>Qt::Horizontal</enum>
-                            </property>
-                            <property name="sizeHint" stdset="0">
-                             <size>
-                              <width>40</width>
-                              <height>20</height>
-                             </size>
-                            </property>
-                           </spacer>
-                          </item>
-                          <item>
-                           <widget class="QPushButton" name="btn_remove_filters_2">
-                            <property name="toolTip">
-                             <string>Remove filters from the list</string>
-                            </property>
-                            <property name="text">
-                             <string>Remove filter</string>
-                            </property>
-                            <property name="icon">
-                             <iconset resource="resources_new.qrc">
-                              <normaloff>:/icon/iconpack/close.png</normaloff>:/icon/iconpack/close.png</iconset>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QPushButton" name="btn_apply_filters_2">
-                            <property name="toolTip">
-                             <string>Apply selected filters to selected dataframe</string>
-                            </property>
-                            <property name="text">
-                             <string>Apply filter(s)</string>
-                            </property>
-                            <property name="icon">
-                             <iconset resource="resources_new.qrc">
-                              <normaloff>:/icon/iconpack/add.png</normaloff>:/icon/iconpack/add.png</iconset>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                       </layout>
-                      </widget>
-                     </item>
+                    <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,0,0,0,0,0">
                      <item>
                       <widget class="QLabel" name="label_112">
                        <property name="font">
@@ -4577,6 +4176,117 @@
                        </item>
                       </layout>
                      </item>
+                     <item>
+                      <spacer name="verticalSpacer_12">
+                       <property name="orientation">
+                        <enum>Qt::Vertical</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>20</width>
+                         <height>40</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QGroupBox" name="view_options_box_2">
+                       <property name="maximumSize">
+                        <size>
+                         <width>320</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="title">
+                        <string>View options:</string>
+                       </property>
+                       <layout class="QGridLayout" name="gridLayout_7">
+                        <item row="1" column="1">
+                         <widget class="QCheckBox" name="cb_residual_3">
+                          <property name="text">
+                           <string>residual</string>
+                          </property>
+                          <property name="checked">
+                           <bool>false</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="2">
+                         <widget class="QCheckBox" name="cb_filled_3">
+                          <property name="text">
+                           <string>filled</string>
+                          </property>
+                          <property name="checked">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="1">
+                         <widget class="QCheckBox" name="cb_bestfit_3">
+                          <property name="text">
+                           <string>best-fit</string>
+                          </property>
+                          <property name="checked">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="0">
+                         <widget class="QCheckBox" name="cb_legend_3">
+                          <property name="enabled">
+                           <bool>true</bool>
+                          </property>
+                          <property name="toolTip">
+                           <string>To display or remove the legend of the plot</string>
+                          </property>
+                          <property name="text">
+                           <string>legend</string>
+                          </property>
+                          <property name="checked">
+                           <bool>false</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="0">
+                         <widget class="QCheckBox" name="cb_raw_3">
+                          <property name="text">
+                           <string>raw</string>
+                          </property>
+                          <property name="checked">
+                           <bool>false</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="2">
+                         <widget class="QCheckBox" name="cb_colors_3">
+                          <property name="text">
+                           <string>colors</string>
+                          </property>
+                          <property name="checked">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="3">
+                         <widget class="QCheckBox" name="cb_peaks_3">
+                          <property name="text">
+                           <string>peaks</string>
+                          </property>
+                          <property name="checked">
+                           <bool>false</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="3">
+                         <widget class="QCheckBox" name="cb_normalize_3">
+                          <property name="text">
+                           <string>normalized</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
                     </layout>
                    </widget>
                   </widget>
@@ -4617,482 +4327,740 @@
                <attribute name="title">
                 <string>Fit model builder</string>
                </attribute>
-               <layout class="QVBoxLayout" name="verticalLayout_75" stretch="0">
+               <layout class="QVBoxLayout" name="verticalLayout_46">
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_122" stretch="0">
+                 <layout class="QHBoxLayout" name="horizontalLayout_72" stretch="0">
+                  <property name="spacing">
+                   <number>5</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>5</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>5</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>5</number>
+                  </property>
                   <item>
-                   <widget class="QWidget" name="widget_19" native="true">
-                    <layout class="QHBoxLayout" name="horizontalLayout_123" stretch="30,70">
+                   <widget class="QWidget" name="widget_18" native="true">
+                    <layout class="QHBoxLayout" name="horizontalLayout_73" stretch="0,60">
+                     <property name="spacing">
+                      <number>6</number>
+                     </property>
                      <property name="leftMargin">
-                      <number>0</number>
+                      <number>2</number>
                      </property>
                      <property name="topMargin">
-                      <number>0</number>
+                      <number>2</number>
                      </property>
                      <property name="rightMargin">
-                      <number>0</number>
+                      <number>2</number>
                      </property>
                      <property name="bottomMargin">
-                      <number>0</number>
+                      <number>2</number>
                      </property>
                      <item>
-                      <widget class="QWidget" name="widget_10" native="true">
-                       <layout class="QVBoxLayout" name="verticalLayout_76" stretch="0,25,0,30,5,15">
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_124" stretch="30,25,25,20">
+                      <widget class="QScrollArea" name="scrollArea_4">
+                       <property name="minimumSize">
+                        <size>
+                         <width>430</width>
+                         <height>100</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>430</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="widgetResizable">
+                        <bool>true</bool>
+                       </property>
+                       <widget class="QWidget" name="scrollAreaWidgetContents_4">
+                        <property name="geometry">
+                         <rect>
+                          <x>0</x>
+                          <y>0</y>
+                          <width>428</width>
+                          <height>349</height>
+                         </rect>
+                        </property>
+                        <layout class="QVBoxLayout" name="verticalLayout_39">
+                         <property name="spacing">
+                          <number>10</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>10</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>10</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>10</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>10</number>
+                         </property>
+                         <item>
+                          <widget class="QPushButton" name="btn_cosmis_ray_3">
+                           <property name="minimumSize">
+                            <size>
+                             <width>150</width>
+                             <height>0</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>150</width>
+                             <height>16777215</height>
+                            </size>
+                           </property>
+                           <property name="toolTip">
+                            <string>Detect cosmis ray based on the loaded spectra</string>
+                           </property>
+                           <property name="text">
+                            <string>Cosmic ray detection</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QGroupBox" name="groupBox_5">
+                           <property name="title">
+                            <string/>
+                           </property>
+                           <layout class="QVBoxLayout" name="verticalLayout_40">
+                            <property name="spacing">
+                             <number>5</number>
+                            </property>
+                            <property name="leftMargin">
+                             <number>2</number>
+                            </property>
+                            <property name="topMargin">
+                             <number>2</number>
+                            </property>
+                            <property name="rightMargin">
+                             <number>2</number>
+                            </property>
+                            <property name="bottomMargin">
+                             <number>2</number>
+                            </property>
+                            <item>
+                             <widget class="QLabel" name="label_65">
+                              <property name="font">
+                               <font>
+                                <weight>75</weight>
+                                <bold>true</bold>
+                               </font>
+                              </property>
+                              <property name="text">
+                               <string>Spectral range:</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item>
+                             <layout class="QHBoxLayout" name="horizontalLayout_74">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>2</number>
+                              </property>
+                              <item>
+                               <widget class="QLabel" name="label_66">
+                                <property name="text">
+                                 <string>X max/min:</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <spacer name="horizontalSpacer_34">
+                                <property name="orientation">
+                                 <enum>Qt::Horizontal</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>40</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                               </spacer>
+                              </item>
+                              <item>
+                               <widget class="QLineEdit" name="range_min_2"/>
+                              </item>
+                              <item>
+                               <widget class="QLabel" name="label_67">
+                                <property name="text">
+                                 <string>/</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QLineEdit" name="range_max_2"/>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="range_apply_2">
+                                <property name="toolTip">
+                                 <string>Extract the spectral windows range.
+ Hold 'Ctrl' and press 'Extract' button to apply to all spectra</string>
+                                </property>
+                                <property name="text">
+                                 <string>Extract</string>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </item>
+                           </layout>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLabel" name="label_68">
+                           <property name="text">
+                            <string/>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QGroupBox" name="baseline_2">
+                           <property name="title">
+                            <string/>
+                           </property>
+                           <layout class="QVBoxLayout" name="verticalLayout_41">
+                            <property name="spacing">
+                             <number>5</number>
+                            </property>
+                            <property name="leftMargin">
+                             <number>2</number>
+                            </property>
+                            <property name="topMargin">
+                             <number>2</number>
+                            </property>
+                            <property name="rightMargin">
+                             <number>2</number>
+                            </property>
+                            <property name="bottomMargin">
+                             <number>2</number>
+                            </property>
+                            <item>
+                             <widget class="QLabel" name="label_69">
+                              <property name="font">
+                               <font>
+                                <weight>75</weight>
+                                <bold>true</bold>
+                               </font>
+                              </property>
+                              <property name="text">
+                               <string>Baseline:</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item>
+                             <layout class="QHBoxLayout" name="horizontalLayout_75" stretch="25,25,0,0,0,0">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>2</number>
+                              </property>
+                              <item>
+                               <widget class="QRadioButton" name="rbtn_linear_2">
+                                <property name="sizePolicy">
+                                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                  <horstretch>0</horstretch>
+                                  <verstretch>0</verstretch>
+                                 </sizepolicy>
+                                </property>
+                                <property name="text">
+                                 <string>Linear</string>
+                                </property>
+                                <property name="checked">
+                                 <bool>true</bool>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QRadioButton" name="rbtn_polynomial_2">
+                                <property name="sizePolicy">
+                                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                  <horstretch>0</horstretch>
+                                  <verstretch>0</verstretch>
+                                 </sizepolicy>
+                                </property>
+                                <property name="text">
+                                 <string>Poly</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QSpinBox" name="degre_2">
+                                <property name="minimum">
+                                 <number>1</number>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <spacer name="horizontalSpacer_36">
+                                <property name="orientation">
+                                 <enum>Qt::Horizontal</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>40</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                               </spacer>
+                              </item>
+                              <item>
+                               <widget class="QLabel" name="label_70">
+                                <property name="toolTip">
+                                 <string>Number of nearby points considered to smoothing the noise</string>
+                                </property>
+                                <property name="text">
+                                 <string>Smoothing</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QDoubleSpinBox" name="noise_2">
+                                <property name="decimals">
+                                 <number>0</number>
+                                </property>
+                                <property name="value">
+                                 <double>5.000000000000000</double>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </item>
+                            <item>
+                             <layout class="QHBoxLayout" name="horizontalLayout_76" stretch="0,0,0,0">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>2</number>
+                              </property>
+                              <item>
+                               <widget class="QCheckBox" name="cb_attached_3">
+                                <property name="sizePolicy">
+                                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                  <horstretch>0</horstretch>
+                                  <verstretch>0</verstretch>
+                                 </sizepolicy>
+                                </property>
+                                <property name="text">
+                                 <string>Attached</string>
+                                </property>
+                                <property name="checked">
+                                 <bool>true</bool>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <spacer name="horizontalSpacer_37">
+                                <property name="orientation">
+                                 <enum>Qt::Horizontal</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>40</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                               </spacer>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="btn_undo_baseline_2">
+                                <property name="toolTip">
+                                 <string>To remove all baseline points and undo the baseline subtraction</string>
+                                </property>
+                                <property name="text">
+                                 <string>Undo baseline</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="sub_baseline_2">
+                                <property name="toolTip">
+                                 <string>To subtract the evaluated baseline from the spectrum. 
+ Hold 'Ctrl' and press 'Subtract' button to apply to all spectra</string>
+                                </property>
+                                <property name="text">
+                                 <string>Subtract</string>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </item>
+                           </layout>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLabel" name="label_71">
+                           <property name="text">
+                            <string/>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QGroupBox" name="peaks_2">
+                           <property name="title">
+                            <string/>
+                           </property>
+                           <layout class="QVBoxLayout" name="verticalLayout_42">
+                            <property name="spacing">
+                             <number>5</number>
+                            </property>
+                            <property name="leftMargin">
+                             <number>2</number>
+                            </property>
+                            <property name="topMargin">
+                             <number>2</number>
+                            </property>
+                            <property name="rightMargin">
+                             <number>2</number>
+                            </property>
+                            <property name="bottomMargin">
+                             <number>2</number>
+                            </property>
+                            <item>
+                             <widget class="QLabel" name="label_72">
+                              <property name="font">
+                               <font>
+                                <weight>75</weight>
+                                <bold>true</bold>
+                               </font>
+                              </property>
+                              <property name="text">
+                               <string>Peaks:</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item>
+                             <layout class="QHBoxLayout" name="horizontalLayout_77" stretch="0,0,65,0">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>2</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>2</number>
+                              </property>
+                              <item>
+                               <widget class="QLabel" name="label_73">
+                                <property name="text">
+                                 <string>Peak model:</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <spacer name="horizontalSpacer_38">
+                                <property name="orientation">
+                                 <enum>Qt::Horizontal</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>40</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                               </spacer>
+                              </item>
+                              <item>
+                               <widget class="QComboBox" name="cbb_fit_models_2"/>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="clear_peaks_2">
+                                <property name="toolTip">
+                                 <string>Clear all the current peak models. 
+ Hold 'Ctrl' and press 'Clear peaks' button to apply to all spectra</string>
+                                </property>
+                                <property name="text">
+                                 <string>Clear peaks</string>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </item>
+                           </layout>
+                          </widget>
+                         </item>
+                         <item>
+                          <spacer name="verticalSpacer_15">
+                           <property name="orientation">
+                            <enum>Qt::Vertical</enum>
+                           </property>
+                           <property name="sizeHint" stdset="0">
+                            <size>
+                             <width>20</width>
+                             <height>40</height>
+                            </size>
+                           </property>
+                          </spacer>
+                         </item>
+                        </layout>
+                       </widget>
+                      </widget>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_43">
+                       <item>
+                        <widget class="QGroupBox" name="peak_table_2">
+                         <property name="title">
+                          <string>Peak table: </string>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_78">
                           <item>
-                           <widget class="QLabel" name="label_119">
-                            <property name="text">
-                             <string>Spectral range :</string>
+                           <widget class="QScrollArea" name="scrollArea_6">
+                            <property name="widgetResizable">
+                             <bool>true</bool>
                             </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="lineEdit_36">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>20</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="lineEdit_37">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>20</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QPushButton" name="pushButton_13">
-                            <property name="text">
-                             <string>Apply</string>
-                            </property>
+                            <widget class="QWidget" name="scrollAreaWidgetContents_6">
+                             <property name="geometry">
+                              <rect>
+                               <x>0</x>
+                               <y>0</y>
+                               <width>721</width>
+                               <height>255</height>
+                              </rect>
+                             </property>
+                             <layout class="QVBoxLayout" name="verticalLayout_44">
+                              <item>
+                               <layout class="QVBoxLayout" name="verticalLayout_312">
+                                <item>
+                                 <layout class="QHBoxLayout" name="horizontalLayout_79">
+                                  <item>
+                                   <layout class="QHBoxLayout" name="peak_table1_2"/>
+                                  </item>
+                                  <item>
+                                   <layout class="QHBoxLayout" name="horizontalLayout_80"/>
+                                  </item>
+                                 </layout>
+                                </item>
+                                <item>
+                                 <spacer name="verticalSpacer_16">
+                                  <property name="orientation">
+                                   <enum>Qt::Vertical</enum>
+                                  </property>
+                                  <property name="sizeHint" stdset="0">
+                                   <size>
+                                    <width>20</width>
+                                    <height>40</height>
+                                   </size>
+                                  </property>
+                                 </spacer>
+                                </item>
+                               </layout>
+                              </item>
+                             </layout>
+                            </widget>
                            </widget>
                           </item>
                          </layout>
-                        </item>
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_125" stretch="30,25,25,20">
-                          <item>
-                           <widget class="QLabel" name="label_120">
-                            <property name="text">
-                             <string>Baseline :</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="lineEdit_38">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>10</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="lineEdit_20">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>20</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QPushButton" name="pushButton_14">
-                            <property name="text">
-                             <string>Apply</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
-                         <widget class="QGroupBox" name="gb_intensity_norm_3">
-                          <property name="title">
-                           <string>Intensity normalization</string>
-                          </property>
-                          <layout class="QVBoxLayout" name="verticalLayout_77">
-                           <property name="leftMargin">
-                            <number>2</number>
+                        </widget>
+                       </item>
+                       <item>
+                        <layout class="QHBoxLayout" name="horizontalLayout_81">
+                         <item>
+                          <widget class="QPushButton" name="btn_fit_4">
+                           <property name="minimumSize">
+                            <size>
+                             <width>50</width>
+                             <height>50</height>
+                            </size>
                            </property>
-                           <property name="topMargin">
-                            <number>2</number>
+                           <property name="maximumSize">
+                            <size>
+                             <width>50</width>
+                             <height>50</height>
+                            </size>
                            </property>
-                           <property name="rightMargin">
-                            <number>2</number>
+                           <property name="toolTip">
+                            <string>Fit selected spectrum(s) with all parameters (range, baseline, peaks). 
+ Hold 'Ctrl' and press 'Fit' button to apply to all spectra</string>
                            </property>
-                           <property name="bottomMargin">
-                            <number>2</number>
+                           <property name="text">
+                            <string>Fit</string>
                            </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <layout class="QVBoxLayout" name="verticalLayout_45">
                            <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_126" stretch="30,30,20,20">
+                            <layout class="QHBoxLayout" name="horizontalLayout_82">
+                             <property name="spacing">
+                              <number>5</number>
+                             </property>
+                             <property name="leftMargin">
+                              <number>2</number>
+                             </property>
+                             <property name="topMargin">
+                              <number>0</number>
+                             </property>
+                             <property name="rightMargin">
+                              <number>2</number>
+                             </property>
+                             <property name="bottomMargin">
+                              <number>0</number>
+                             </property>
                              <item>
-                              <widget class="QRadioButton" name="rbtn_max_int_3">
-                               <property name="text">
-                                <string>Max int</string>
+                              <widget class="QPushButton" name="btn_copy_fit_model_2">
+                               <property name="toolTip">
+                                <string>Copy current fit parameters (range, baseline, peaks) of selected spectrum to Clipboard</string>
                                </property>
-                               <property name="checked">
-                                <bool>true</bool>
+                               <property name="text">
+                                <string>Copy model</string>
+                               </property>
+                               <property name="icon">
+                                <iconset resource="resources_new.qrc">
+                                 <normaloff>:/icon/iconpack/copy10.png</normaloff>:/icon/iconpack/copy10.png</iconset>
                                </property>
                               </widget>
                              </item>
                              <item>
-                              <widget class="QRadioButton" name="rbtn_attractor_3">
-                               <property name="text">
-                                <string>Attractor</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QLineEdit" name="text_attractor_3">
-                               <property name="sizePolicy">
-                                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                                 <horstretch>0</horstretch>
-                                 <verstretch>0</verstretch>
-                                </sizepolicy>
-                               </property>
+                              <widget class="QPushButton" name="btn_paste_fit_model_2">
                                <property name="minimumSize">
                                 <size>
-                                 <width>20</width>
+                                 <width>0</width>
                                  <height>0</height>
                                 </size>
                                </property>
                                <property name="maximumSize">
                                 <size>
-                                 <width>80</width>
-                                 <height>16777215</height>
-                                </size>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QPushButton" name="btn_normalize_3">
-                               <property name="sizePolicy">
-                                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                 <horstretch>0</horstretch>
-                                 <verstretch>0</verstretch>
-                                </sizepolicy>
-                               </property>
-                               <property name="text">
-                                <string>Apply</string>
-                               </property>
-                              </widget>
-                             </item>
-                            </layout>
-                           </item>
-                          </layout>
-                         </widget>
-                        </item>
-                        <item>
-                         <spacer name="verticalSpacer_25">
-                          <property name="orientation">
-                           <enum>Qt::Vertical</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>20</width>
-                            <height>40</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                        <item>
-                         <widget class="QGroupBox" name="groupBox_14">
-                          <property name="title">
-                           <string>Peak position correction :</string>
-                          </property>
-                          <layout class="QVBoxLayout" name="verticalLayout_78">
-                           <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_127" stretch="0,0,0">
-                             <item>
-                              <widget class="QRadioButton" name="radioButton_8">
-                               <property name="sizePolicy">
-                                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                 <horstretch>0</horstretch>
-                                 <verstretch>0</verstretch>
-                                </sizepolicy>
-                               </property>
-                               <property name="text">
-                                <string/>
-                               </property>
-                               <property name="checked">
-                                <bool>true</bool>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QLabel" name="label_121">
-                               <property name="text">
-                                <string>No</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <layout class="QHBoxLayout" name="horizontalLayout_128">
-                               <item>
-                                <widget class="QRadioButton" name="radioButton_9">
-                                 <property name="sizePolicy">
-                                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                   <horstretch>0</horstretch>
-                                   <verstretch>0</verstretch>
-                                  </sizepolicy>
-                                 </property>
-                                 <property name="text">
-                                  <string/>
-                                 </property>
-                                </widget>
-                               </item>
-                               <item>
-                                <widget class="QLabel" name="label_122">
-                                 <property name="text">
-                                  <string>Peak  shift (cm-1) :</string>
-                                 </property>
-                                </widget>
-                               </item>
-                               <item>
-                                <widget class="QLineEdit" name="lineEdit_39">
-                                 <property name="sizePolicy">
-                                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                                   <horstretch>0</horstretch>
-                                   <verstretch>0</verstretch>
-                                  </sizepolicy>
-                                 </property>
-                                 <property name="minimumSize">
-                                  <size>
-                                   <width>20</width>
-                                   <height>0</height>
-                                  </size>
-                                 </property>
-                                 <property name="toolTip">
-                                  <string>Type the different between experimental and theoretical values</string>
-                                 </property>
-                                </widget>
-                               </item>
-                              </layout>
-                             </item>
-                            </layout>
-                           </item>
-                           <item>
-                            <spacer name="verticalSpacer_26">
-                             <property name="orientation">
-                              <enum>Qt::Vertical</enum>
-                             </property>
-                             <property name="sizeHint" stdset="0">
-                              <size>
-                               <width>20</width>
-                               <height>40</height>
-                              </size>
-                             </property>
-                            </spacer>
-                           </item>
-                           <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_129">
-                             <item>
-                              <widget class="QRadioButton" name="radioButton_10">
-                               <property name="sizePolicy">
-                                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                 <horstretch>0</horstretch>
-                                 <verstretch>0</verstretch>
-                                </sizepolicy>
-                               </property>
-                               <property name="text">
-                                <string/>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QLabel" name="label_123">
-                               <property name="text">
-                                <string>Reference peak :</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QComboBox" name="comboBox_16"/>
-                             </item>
-                             <item>
-                              <widget class="QLineEdit" name="lineEdit_40">
-                               <property name="sizePolicy">
-                                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                                 <horstretch>0</horstretch>
-                                 <verstretch>0</verstretch>
-                                </sizepolicy>
-                               </property>
-                               <property name="minimumSize">
-                                <size>
-                                 <width>20</width>
-                                 <height>0</height>
+                                 <width>16777215</width>
+                                 <height>40</height>
                                 </size>
                                </property>
                                <property name="toolTip">
-                                <string>Type the theoretical values</string>
+                                <string>Paste the copied fit model to the selected spectrum(s).
+ Hold 'Ctrl' and press 'Paste' button to paste fit model to all spectra, including spectra within different wafers</string>
+                               </property>
+                               <property name="text">
+                                <string>Paste model</string>
+                               </property>
+                               <property name="icon">
+                                <iconset resource="resources_new.qrc">
+                                 <normaloff>:/icon/iconpack/copy_label.png.png</normaloff>:/icon/iconpack/copy_label.png.png</iconset>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="save_model_2">
+                               <property name="toolTip">
+                                <string>Save the fit model as a JSON file</string>
+                               </property>
+                               <property name="text">
+                                <string>Save Model</string>
+                               </property>
+                               <property name="icon">
+                                <iconset resource="resources_new.qrc">
+                                 <normaloff>:/icon/iconpack/save11.png</normaloff>:/icon/iconpack/save11.png</iconset>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <spacer name="horizontalSpacer_39">
+                               <property name="orientation">
+                                <enum>Qt::Horizontal</enum>
+                               </property>
+                               <property name="sizeHint" stdset="0">
+                                <size>
+                                 <width>40</width>
+                                 <height>20</height>
+                                </size>
+                               </property>
+                              </spacer>
+                             </item>
+                             <item>
+                              <widget class="QCheckBox" name="cb_limits_2">
+                               <property name="toolTip">
+                                <string>Show limits (max, min) of each parameters</string>
+                               </property>
+                               <property name="text">
+                                <string>Limits</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QCheckBox" name="cb_expr_2">
+                               <property name="toolTip">
+                                <string>Show the expression of fit parameters</string>
+                               </property>
+                               <property name="text">
+                                <string>Expression</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </item>
+                           <item>
+                            <layout class="QHBoxLayout" name="lbl_copied_fit_model_layout_2">
+                             <property name="leftMargin">
+                              <number>5</number>
+                             </property>
+                             <property name="topMargin">
+                              <number>2</number>
+                             </property>
+                             <property name="rightMargin">
+                              <number>2</number>
+                             </property>
+                             <property name="bottomMargin">
+                              <number>2</number>
+                             </property>
+                             <item>
+                              <widget class="QLabel" name="lbl_copied_fit_model_2">
+                               <property name="text">
+                                <string/>
+                               </property>
+                               <property name="alignment">
+                                <set>Qt::AlignCenter</set>
                                </property>
                               </widget>
                              </item>
                             </layout>
                            </item>
                           </layout>
-                         </widget>
-                        </item>
-                        <item>
-                         <spacer name="verticalSpacer_27">
-                          <property name="orientation">
-                           <enum>Qt::Vertical</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>20</width>
-                            <height>40</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                       </layout>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QGroupBox" name="groupBox_15">
-                       <property name="title">
-                        <string>Peaks: </string>
-                       </property>
-                       <layout class="QHBoxLayout" name="horizontalLayout_130">
-                        <item>
-                         <widget class="QScrollArea" name="scrollArea_8">
-                          <property name="widgetResizable">
-                           <bool>true</bool>
-                          </property>
-                          <widget class="QWidget" name="scrollAreaWidgetContents_8">
-                           <property name="geometry">
-                            <rect>
-                             <x>0</x>
-                             <y>0</y>
-                             <width>649</width>
-                             <height>372</height>
-                            </rect>
-                           </property>
-                          </widget>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QWidget" name="widget_20" native="true">
-                          <layout class="QVBoxLayout" name="verticalLayout_79">
-                           <item>
-                            <widget class="QPushButton" name="pushButton_27">
-                             <property name="text">
-                              <string>Add peak</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QPushButton" name="pushButton_15">
-                             <property name="text">
-                              <string>Save fit model</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <spacer name="verticalSpacer_28">
-                             <property name="orientation">
-                              <enum>Qt::Vertical</enum>
-                             </property>
-                             <property name="sizeHint" stdset="0">
-                              <size>
-                               <width>20</width>
-                               <height>40</height>
-                              </size>
-                             </property>
-                            </spacer>
-                           </item>
-                           <item>
-                            <spacer name="verticalSpacer_29">
-                             <property name="orientation">
-                              <enum>Qt::Vertical</enum>
-                             </property>
-                             <property name="sizeHint" stdset="0">
-                              <size>
-                               <width>20</width>
-                               <height>40</height>
-                              </size>
-                             </property>
-                            </spacer>
-                           </item>
-                           <item>
-                            <widget class="QPushButton" name="btn_fit_sel_wafers_3">
-                             <property name="text">
-                              <string>-----</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QLineEdit" name="lineEdit_7">
-                             <property name="sizePolicy">
-                              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                               <horstretch>0</horstretch>
-                               <verstretch>0</verstretch>
-                              </sizepolicy>
-                             </property>
-                             <property name="placeholderText">
-                              <string>Assign name for dataframe</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QPushButton" name="pushButton_36">
-                             <property name="sizePolicy">
-                              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                               <horstretch>0</horstretch>
-                               <verstretch>0</verstretch>
-                              </sizepolicy>
-                             </property>
-                             <property name="text">
-                              <string>Send to Vizulazation</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QPushButton" name="pushButton_37">
-                             <property name="text">
-                              <string>Save to excel</string>
-                             </property>
-                            </widget>
-                           </item>
-                          </layout>
-                         </widget>
-                        </item>
-                       </layout>
-                      </widget>
+                         </item>
+                        </layout>
+                       </item>
+                      </layout>
                      </item>
                     </layout>
                    </widget>
@@ -5101,10 +5069,502 @@
                 </item>
                </layout>
               </widget>
-              <widget class="QWidget" name="tab">
+              <widget class="QWidget" name="collect_fit_data_2">
                <attribute name="title">
                 <string>Collect fit data</string>
                </attribute>
+               <layout class="QVBoxLayout" name="verticalLayout_47">
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_94" stretch="0,0">
+                  <property name="spacing">
+                   <number>5</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>5</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>5</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>5</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>5</number>
+                  </property>
+                  <item>
+                   <widget class="QScrollArea" name="scrollArea_11">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>430</width>
+                      <height>100</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>430</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="widgetResizable">
+                     <bool>true</bool>
+                    </property>
+                    <widget class="QWidget" name="scrollAreaWidgetContents_11">
+                     <property name="geometry">
+                      <rect>
+                       <x>0</x>
+                       <y>0</y>
+                       <width>411</width>
+                       <height>373</height>
+                      </rect>
+                     </property>
+                     <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
+                      <property name="spacing">
+                       <number>10</number>
+                      </property>
+                      <property name="leftMargin">
+                       <number>10</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>10</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>10</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>10</number>
+                      </property>
+                      <item>
+                       <widget class="QPushButton" name="btn_collect_results_3">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>140</width>
+                          <height>40</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>140</width>
+                          <height>40</height>
+                         </size>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <weight>75</weight>
+                          <bold>true</bold>
+                         </font>
+                        </property>
+                        <property name="toolTip">
+                         <string>To gather all the best fit results in a dataframe for visualization</string>
+                        </property>
+                        <property name="text">
+                         <string> Collect fit results</string>
+                        </property>
+                        <property name="icon">
+                         <iconset resource="resources_new.qrc">
+                          <normaloff>:/icon/iconpack/collect.png</normaloff>:/icon/iconpack/collect.png</iconset>
+                        </property>
+                        <property name="iconSize">
+                         <size>
+                          <width>16</width>
+                          <height>22</height>
+                         </size>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="label_83">
+                        <property name="text">
+                         <string>Add new column(s) from file name:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_95" stretch="0,0,40,20">
+                        <item>
+                         <widget class="QPushButton" name="btn_split_fname">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>40</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>40</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="toolTip">
+                           <string>Split the file name of spectrum to several parts</string>
+                          </property>
+                          <property name="text">
+                           <string>Split</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QComboBox" name="cbb_split_fname">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>120</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>120</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="toolTip">
+                           <string>Select file name part</string>
+                          </property>
+                          <property name="placeholderText">
+                           <string/>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="ent_col_name">
+                          <property name="placeholderText">
+                           <string>type column name</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="btn_add_col">
+                          <property name="minimumSize">
+                           <size>
+                            <width>60</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>60</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="toolTip">
+                           <string>Add a new column containing the selected part</string>
+                          </property>
+                          <property name="text">
+                           <string>Add</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="pushButton_5">
+                        <property name="text">
+                         <string/>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QGroupBox" name="groupBox_df_manip_4">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>200</height>
+                         </size>
+                        </property>
+                        <property name="title">
+                         <string>Data filtering:</string>
+                        </property>
+                        <layout class="QVBoxLayout" name="verticalLayout_54">
+                         <item>
+                          <layout class="QHBoxLayout" name="horizontalLayout_96">
+                           <item>
+                            <widget class="QLineEdit" name="ent_filter_query_2">
+                             <property name="placeholderText">
+                              <string>Enter query expression (? : see Help menu)</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QPushButton" name="btn_add_filter_2">
+                             <property name="toolTip">
+                              <string>Add filter(s) to dataframe</string>
+                             </property>
+                             <property name="text">
+                              <string>Add filter(s)</string>
+                             </property>
+                             <property name="icon">
+                              <iconset resource="resources_new.qrc">
+                               <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
+                         </item>
+                         <item>
+                          <widget class="QListWidget" name="filter_listbox">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="minimumSize">
+                            <size>
+                             <width>0</width>
+                             <height>100</height>
+                            </size>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <layout class="QHBoxLayout" name="horizontalLayout_97">
+                           <item>
+                            <spacer name="horizontalSpacer_45">
+                             <property name="orientation">
+                              <enum>Qt::Horizontal</enum>
+                             </property>
+                             <property name="sizeHint" stdset="0">
+                              <size>
+                               <width>40</width>
+                               <height>20</height>
+                              </size>
+                             </property>
+                            </spacer>
+                           </item>
+                           <item>
+                            <widget class="QPushButton" name="btn_remove_filters_2">
+                             <property name="toolTip">
+                              <string>Remove filters from the list</string>
+                             </property>
+                             <property name="text">
+                              <string>Remove filter</string>
+                             </property>
+                             <property name="icon">
+                              <iconset resource="resources_new.qrc">
+                               <normaloff>:/icon/iconpack/close.png</normaloff>:/icon/iconpack/close.png</iconset>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QPushButton" name="btn_apply_filters_2">
+                             <property name="toolTip">
+                              <string>Apply selected filters to selected dataframe</string>
+                             </property>
+                             <property name="text">
+                              <string>Apply filter(s)</string>
+                             </property>
+                             <property name="icon">
+                              <iconset resource="resources_new.qrc">
+                               <normaloff>:/icon/iconpack/add.png</normaloff>:/icon/iconpack/add.png</iconset>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
+                         </item>
+                         <item>
+                          <spacer name="verticalSpacer_19">
+                           <property name="orientation">
+                            <enum>Qt::Vertical</enum>
+                           </property>
+                           <property name="sizeHint" stdset="0">
+                            <size>
+                             <width>20</width>
+                             <height>40</height>
+                            </size>
+                           </property>
+                          </spacer>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_139"/>
+                      </item>
+                     </layout>
+                    </widget>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QVBoxLayout" name="verticalLayout_55">
+                    <property name="leftMargin">
+                     <number>15</number>
+                    </property>
+                    <item>
+                     <widget class="QTableWidget" name="fit_results_table_2"/>
+                    </item>
+                    <item>
+                     <widget class="QGroupBox" name="groupBox_6">
+                      <property name="title">
+                       <string/>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_98">
+                       <property name="spacing">
+                        <number>9</number>
+                       </property>
+                       <property name="leftMargin">
+                        <number>3</number>
+                       </property>
+                       <property name="topMargin">
+                        <number>3</number>
+                       </property>
+                       <property name="rightMargin">
+                        <number>3</number>
+                       </property>
+                       <property name="bottomMargin">
+                        <number>3</number>
+                       </property>
+                       <item>
+                        <spacer name="horizontalSpacer_46">
+                         <property name="orientation">
+                          <enum>Qt::Horizontal</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>40</width>
+                           <height>20</height>
+                          </size>
+                         </property>
+                        </spacer>
+                       </item>
+                       <item>
+                        <widget class="QPushButton" name="btn_view_df_5">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="minimumSize">
+                          <size>
+                           <width>30</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>30</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="toolTip">
+                          <string>View collected fit results</string>
+                         </property>
+                         <property name="text">
+                          <string/>
+                         </property>
+                         <property name="icon">
+                          <iconset resource="resources_new.qrc">
+                           <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
+                         </property>
+                         <property name="iconSize">
+                          <size>
+                           <width>22</width>
+                           <height>22</height>
+                          </size>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QPushButton" name="btn_save_fit_results_3">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="minimumSize">
+                          <size>
+                           <width>30</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>30</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="toolTip">
+                          <string>Save all fit results in an Excel file</string>
+                         </property>
+                         <property name="text">
+                          <string/>
+                         </property>
+                         <property name="icon">
+                          <iconset resource="resources_new.qrc">
+                           <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
+                         </property>
+                         <property name="iconSize">
+                          <size>
+                           <width>22</width>
+                           <height>22</height>
+                          </size>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QPushButton" name="btn_open_fit_results_3">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>30</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="toolTip">
+                          <string>Open fit results (format Excel) to view/plot</string>
+                         </property>
+                         <property name="text">
+                          <string/>
+                         </property>
+                         <property name="icon">
+                          <iconset resource="resources_new.qrc">
+                           <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
+                         </property>
+                         <property name="iconSize">
+                          <size>
+                           <width>22</width>
+                           <height>22</height>
+                          </size>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
               </widget>
               <widget class="QWidget" name="wafer_plot_view_3">
                <attribute name="title">
@@ -5691,144 +6151,165 @@
                 <bool>true</bool>
                </property>
                <attribute name="title">
-                <string>Fit settings</string>
+                <string>More settings</string>
                </attribute>
-               <widget class="QLabel" name="label_124">
+               <widget class="QLabel" name="label_74">
                 <property name="geometry">
                  <rect>
-                  <x>40</x>
-                  <y>30</y>
-                  <width>111</width>
-                  <height>16</height>
+                  <x>20</x>
+                  <y>10</y>
+                  <width>121</width>
+                  <height>31</height>
                  </rect>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>13</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
                 </property>
                 <property name="text">
-                 <string>Fit negative values:</string>
+                 <string>Fit settings:</string>
                 </property>
                </widget>
-               <widget class="QToolButton" name="toolButton_3">
+               <widget class="QWidget" name="layoutWidget_2">
                 <property name="geometry">
                  <rect>
-                  <x>40</x>
-                  <y>170</y>
-                  <width>191</width>
-                  <height>19</height>
+                  <x>20</x>
+                  <y>50</y>
+                  <width>291</width>
+                  <height>241</height>
                  </rect>
                 </property>
-                <property name="text">
-                 <string>...</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="label_125">
-                <property name="geometry">
-                 <rect>
-                  <x>40</x>
-                  <y>60</y>
-                  <width>111</width>
-                  <height>16</height>
-                 </rect>
-                </property>
-                <property name="text">
-                 <string>Maximumn iterations :</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="label_126">
-                <property name="geometry">
-                 <rect>
-                  <x>40</x>
-                  <y>120</y>
-                  <width>91</width>
-                  <height>16</height>
-                 </rect>
-                </property>
-                <property name="text">
-                 <string>Number of CPUs</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="label_127">
-                <property name="geometry">
-                 <rect>
-                  <x>40</x>
-                  <y>90</y>
-                  <width>111</width>
-                  <height>16</height>
-                 </rect>
-                </property>
-                <property name="text">
-                 <string>Fit method</string>
-                </property>
-               </widget>
-               <widget class="QComboBox" name="comboBox_7">
-                <property name="geometry">
-                 <rect>
-                  <x>170</x>
-                  <y>30</y>
-                  <width>69</width>
-                  <height>22</height>
-                 </rect>
-                </property>
-               </widget>
-               <widget class="QComboBox" name="comboBox_8">
-                <property name="geometry">
-                 <rect>
-                  <x>170</x>
-                  <y>120</y>
-                  <width>151</width>
-                  <height>22</height>
-                 </rect>
-                </property>
-               </widget>
-               <widget class="QComboBox" name="comboBox_9">
-                <property name="geometry">
-                 <rect>
-                  <x>170</x>
-                  <y>90</y>
-                  <width>151</width>
-                  <height>22</height>
-                 </rect>
-                </property>
-               </widget>
-               <widget class="QLineEdit" name="ent_plotwidth_5">
-                <property name="geometry">
-                 <rect>
-                  <x>170</x>
-                  <y>60</y>
-                  <width>81</width>
-                  <height>20</height>
-                 </rect>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>30</width>
-                  <height>0</height>
-                 </size>
-                </property>
-               </widget>
-               <widget class="QSpinBox" name="spinBox_3">
-                <property name="geometry">
-                 <rect>
-                  <x>260</x>
-                  <y>30</y>
-                  <width>42</width>
-                  <height>22</height>
-                 </rect>
-                </property>
-               </widget>
-               <widget class="QDoubleSpinBox" name="doubleSpinBox_3">
-                <property name="geometry">
-                 <rect>
-                  <x>330</x>
-                  <y>30</y>
-                  <width>62</width>
-                  <height>22</height>
-                 </rect>
-                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_48">
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_83">
+                   <item>
+                    <widget class="QLabel" name="label_51">
+                     <property name="text">
+                      <string>Fit negative values:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="cb_fit_negative_2">
+                     <property name="text">
+                      <string/>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_84">
+                   <item>
+                    <widget class="QLabel" name="label_75">
+                     <property name="text">
+                      <string>Maximumn iterations :</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QSpinBox" name="max_iteration_2">
+                     <property name="prefix">
+                      <string/>
+                     </property>
+                     <property name="maximum">
+                      <number>10000</number>
+                     </property>
+                     <property name="value">
+                      <number>200</number>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_85">
+                   <item>
+                    <widget class="QLabel" name="label_76">
+                     <property name="text">
+                      <string>Fit method</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="cbb_fit_methods_2"/>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_86">
+                   <item>
+                    <widget class="QLabel" name="label_77">
+                     <property name="text">
+                      <string>Number of CPUs</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="cbb_cpu_number_2"/>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_87">
+                   <item>
+                    <widget class="QLabel" name="label_78">
+                     <property name="text">
+                      <string>x-tolerence</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="xtol_2">
+                     <property name="text">
+                      <string>0.0001</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <spacer name="verticalSpacer_17">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>40</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_open_fitspy_3">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>30</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>30</height>
+                    </size>
+                   </property>
+                   <property name="toolTip">
+                    <string>Open FITSPY application</string>
+                   </property>
+                   <property name="text">
+                    <string>Open FITSPY</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </widget>
               </widget>
              </widget>
@@ -5854,7 +6335,7 @@
           <property name="lineWidth">
            <number>0</number>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_59" stretch="0,0,0,0,0,65">
+          <layout class="QVBoxLayout" name="verticalLayout_59" stretch="0,0,0,0,65">
            <property name="leftMargin">
             <number>3</number>
            </property>
@@ -6042,24 +6523,30 @@
               </spacer>
              </item>
              <item>
-              <widget class="QPushButton" name="btn_open_fitspy_3">
+              <widget class="QPushButton" name="btn_fit_3">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="minimumSize">
                 <size>
-                 <width>0</width>
-                 <height>30</height>
+                 <width>80</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>16777215</width>
-                 <height>30</height>
+                 <width>80</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="toolTip">
-                <string>Open FITSPY application</string>
+                <string>Hold &quot;Ctrl&quot; and click to Fit all wafer</string>
                </property>
                <property name="text">
-                <string>Open FITSPY</string>
+                <string>Apply model </string>
                </property>
               </widget>
              </item>
@@ -6092,16 +6579,6 @@
              </property>
              <property name="textInteractionFlags">
               <set>Qt::TextSelectableByMouse</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="btn_cosmis_ray_3">
-             <property name="toolTip">
-              <string>Detect cosmis ray based on the loaded spectra</string>
-             </property>
-             <property name="text">
-              <string>Cosmic ray detection</string>
              </property>
             </widget>
            </item>
@@ -6206,26 +6683,17 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_fit_3">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
+                 <spacer name="horizontalSpacer_9">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
                   </property>
-                  <property name="maximumSize">
+                  <property name="sizeHint" stdset="0">
                    <size>
                     <width>40</width>
-                    <height>16777215</height>
+                    <height>20</height>
                    </size>
                   </property>
-                  <property name="toolTip">
-                   <string>Hold &quot;Ctrl&quot; and click to Fit all wafer</string>
-                  </property>
-                  <property name="text">
-                   <string>Fit</string>
-                  </property>
-                 </widget>
+                 </spacer>
                 </item>
                 <item>
                  <widget class="QPushButton" name="btn_init_3">
@@ -6237,13 +6705,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>50</width>
+                    <width>70</width>
                     <height>0</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>40</width>
+                    <width>70</width>
                     <height>16777215</height>
                    </size>
                   </property>
@@ -6251,7 +6719,7 @@
                    <string>Reinitialize to RAW spectrum (Hold Ctrl to reinit all spectra)</string>
                   </property>
                   <property name="text">
-                   <string>Reinit</string>
+                   <string>Reinitialize</string>
                   </property>
                  </widget>
                 </item>
@@ -6525,15 +6993,8 @@
               <layout class="QHBoxLayout" name="horizontalLayout_25">
                <item>
                 <widget class="QPushButton" name="btn_open_df">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
                  <property name="font">
                   <font>
-                   <pointsize>13</pointsize>
                    <weight>75</weight>
                    <bold>true</bold>
                   </font>

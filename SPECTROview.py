@@ -224,10 +224,25 @@ class Main:
         ########################################################
         ############## GUI for Spectrums Processing tab #############
         ########################################################
-        self.ui.btn_open_spectrums.clicked.connect(self.spectrums.open_data)
+        self.ui.cbb_fit_models_2.addItems(PEAK_MODELS)
+        self.ui.range_apply_2.clicked.connect(
+            self.spectrums.set_x_range_handler)
+        self.ui.range_max_2.returnPressed.connect(self.spectrums.set_x_range)
+        self.ui.range_min_2.returnPressed.connect(self.spectrums.set_x_range)
 
-        self.ui.btn_load_model_3.clicked.connect(self.spectrums.open_model)
-        self.ui.btn_fit_3.clicked.connect(self.spectrums.fit_fnc_handler)
+        self.ui.sub_baseline_2.clicked.connect(
+            self.spectrums.subtract_baseline_handler)
+        self.ui.btn_undo_baseline_2.clicked.connect(
+            self.spectrums.set_x_range_handler)
+        self.ui.clear_peaks_2.clicked.connect(
+            self.spectrums.clear_peaks_handler)
+        self.ui.btn_fit_4.clicked.connect(
+            self.spectrums.apply_fit_model_handler)
+
+        self.ui.btn_open_spectrums.clicked.connect(self.spectrums.open_data)
+        self.ui.btn_load_model_3.clicked.connect(self.spectrums.open_fit_model)
+        self.ui.btn_fit_3.clicked.connect(
+            self.spectrums.apply_loaded_fit_model_fnc_handler)
         self.ui.btn_open_fitspy_3.clicked.connect(
             self.spectrums.fitspy_launcher)
         self.ui.btn_cosmis_ray_3.clicked.connect(
@@ -342,7 +357,7 @@ def launcher2(file_paths=None, fname_json=None):
     if file_paths is not None:
         window.spectrums.open_data(file_paths=file_paths)
     if fname_json is not None:
-        window.spectrums.open_model(fname_json=fname_json)
+        window.spectrums.open_fit_model(fname_json=fname_json)
     window.ui.show()
     sys.exit(app.exec())
 
@@ -358,5 +373,5 @@ if __name__ == "__main__":
     fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
     fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
     fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
-    # fname_json1 = os.path.join(DATA,'FITMODEL_MoS2_325-490.json')
-    launcher2([fname1, fname2, fname3])
+    fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
+    launcher2([fname1, fname2, fname3], fname_json1)

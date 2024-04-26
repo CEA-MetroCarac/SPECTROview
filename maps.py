@@ -107,6 +107,7 @@ class Maps(QObject):
         self.ui.xtol.textChanged.connect(self.save_fit_settings)
         self.ui.sb_dpi_spectra.valueChanged.connect(
             self.create_spectra_plot_widget)
+
         # BASELINE
         self.ui.cb_attached.clicked.connect(self.upd_spectra_list)
         self.ui.noise.valueChanged.connect(self.upd_spectra_list)
@@ -206,7 +207,6 @@ class Maps(QObject):
         self.loaded_fit_model = self.spectra_fs.load_model(fname_json, ind=0)
         display_name = QFileInfo(fname_json).baseName()
         self.ui.lb_loaded_model.setText(f"'{display_name}' is loaded !")
-        # self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
 
     def apply_loaded_fit_model(self, fnames=None):
         """Fit selected spectrum(s) with the LOADED fit model"""
@@ -246,7 +246,7 @@ class Maps(QObject):
 
     def read_x_range(self):
         """Read x range of selected spectrum"""
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
         self.ui.range_min.setText(str(sel_spectrum.x[0]))
         self.ui.range_max.setText(str(sel_spectrum.x[-1]))
 
@@ -278,8 +278,7 @@ class Maps(QObject):
 
     def on_click(self, event):
         """On click action to add a "peak models" or "baseline points" """
-
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
         fit_model = self.ui.cbb_fit_models.currentText()
         # Add a new peak_model for current selected peak
         if self.zoom_pan_active == False and self.ui.rdbtn_peak.isChecked():
@@ -305,7 +304,7 @@ class Maps(QObject):
     def get_baseline_settings(self):
         """ Pass baseline settings from GUI to spectrum objects for baseline
         subtraction"""
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
         if sel_spectrum is None:
             return
         sel_spectrum.baseline.attached = self.ui.cb_attached.isChecked()
@@ -342,12 +341,12 @@ class Maps(QObject):
 
     def subtract_baseline(self, sel_spectra=None):
         """ Subtract baseline for the selected spectrum(s) """
-        sel_spectrum, _ = self.get_spectrum_objet()
+        sel_spectrum, _ = self.get_spectrum_object()
         points = deepcopy(sel_spectrum.baseline.points)
         if len(points[0]) == 0:
             return
         if sel_spectra is None:
-            _, sel_spectra = self.get_spectrum_objet()
+            _, sel_spectra = self.get_spectrum_object()
         for spectrum in sel_spectra:
             spectrum.baseline.points = points.copy()
             spectrum.subtract_baseline()
@@ -360,7 +359,7 @@ class Maps(QObject):
 
     def get_fit_settings(self):
         """Getall settings for the fitting action"""
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
         fit_params = sel_spectrum.fit_params.copy()
         fit_params['fit_negative'] = self.ui.cb_fit_negative.isChecked()
         fit_params['max_ite'] = self.ui.max_iteration.value()
@@ -412,7 +411,7 @@ class Maps(QObject):
         list"""
         # Get only 1 spectrum among several selected spectrum:
         self.get_fit_settings()
-        sel_spectrum, _ = self.get_spectrum_objet()
+        sel_spectrum, _ = self.get_spectrum_object()
         if len(sel_spectrum.peak_models) == 0:
             self.ui.lbl_copied_fit_model.setText("")
             show_alert(
@@ -462,7 +461,7 @@ class Maps(QObject):
 
     def save_fit_model(self):
         """To save the fit model of the current selected spectrum"""
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
         last_dir = self.settings.value("last_directory", "/")
         save_path, _ = QFileDialog.getSaveFileName(
             self.ui.tabWidget, "Save fit model", last_dir,
@@ -491,7 +490,6 @@ class Maps(QObject):
                 best_values["Y"] = y
                 best_values["success"] = success
                 best_values["Rsquared"] = rsquared
-
                 fit_results_list.append(best_values)
         self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
 
@@ -515,14 +513,14 @@ class Maps(QObject):
                        in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
 
-            # Add "Quadrant" columns
+            # QUADRANT
             self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
                 quadrant,
                 axis=1)
-
+            # DIAMETER
             diameter = float(self.ui.wafer_size.text())
-            # Use a lambda function to pass the row argument to the zone
-            # function
+
+            # ZONE
             self.df_fit_results['Zone'] = self.df_fit_results.apply(
                 lambda row: zone(row, diameter), axis=1)
 
@@ -644,7 +642,7 @@ class Maps(QObject):
         display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
         self.send_df_to_viz()
         self.upd_cbb_param()
-        self.upd_cbb_wafer()  # update combobox with Wafer or Filename
+        self.upd_cbb_wafer()
 
     def reinit(self, fnames=None):
         """Reinitialize the selected spectrum(s)"""
@@ -668,11 +666,11 @@ class Maps(QObject):
     def create_spectra_plot_widget(self):
         """Create canvas and toolbar for plotting in the GUI"""
         plt.style.use(PLOT_POLICY)
-        # plot 1: spectra plotting
         clear_layout(self.ui.QVBoxlayout.layout())
         clear_layout(self.ui.toolbar_frame.layout())
         self.upd_spectra_list()
         dpi = float(self.ui.sb_dpi_spectra.text())
+
         fig1 = plt.figure(dpi=dpi)
         self.ax = fig1.add_subplot(111)
         self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
@@ -681,6 +679,7 @@ class Maps(QObject):
         self.canvas1 = FigureCanvas(fig1)
         self.canvas1.mpl_connect('button_press_event', self.on_click)
 
+        # Toolbar
         self.toolbar = NavigationToolbar2QT(self.canvas1)
         rescale = next(
             a for a in self.toolbar.actions() if a.text() == 'Home')
@@ -730,6 +729,7 @@ class Maps(QObject):
             # BASELINE
             self.plot_baseline_dynamically(ax=self.ax, spectrum=spectrum_fs)
 
+            # RAW
             if self.ui.cb_raw.isChecked():
                 x0_values = spectrum_fs.x0
                 y0_values = spectrum_fs.y0
@@ -742,9 +742,11 @@ class Maps(QObject):
                 bestfit = spectrum_fs.result_fit.best_fit
                 self.ax.plot(x_values, bestfit, label=f"bestfit")
 
+            if self.ui.cb_bestfit.isChecked():
                 peak_labels = spectrum_fs.peak_labels
                 for i, peak_model in enumerate(spectrum_fs.peak_models):
                     peak_label = peak_labels[i]
+
                     # remove temporarily 'expr'
                     param_hints_orig = deepcopy(peak_model.param_hints)
                     for key, _ in peak_model.param_hints.items():
@@ -752,7 +754,6 @@ class Maps(QObject):
                     params = peak_model.make_params()
                     # rassign 'expr'
                     peak_model.param_hints = param_hints_orig
-
                     y_peak = peak_model.eval(params, x=x_values)
 
                     if self.ui.cb_filled.isChecked():
@@ -1114,7 +1115,7 @@ class Maps(QObject):
             if y_coord == 0:
                 item.setSelected(True)
 
-    def get_spectrum_objet(self):
+    def get_spectrum_object(self):
         """ Get the selected spectrum OBJECT"""
         wafer_name, coords = self.spectre_id()
         sel_spectra = []
@@ -1185,7 +1186,7 @@ class Maps(QObject):
 
     def show_peak_table(self):
         """ To show all fitted parameters in GUI"""
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
         main_layout = self.ui.peak_table1
         cb_limits = self.ui.cb_limits
         cb_expr = self.ui.cb_expr
@@ -1369,7 +1370,7 @@ class Maps(QObject):
         fit_params = {
             'fit_negative': self.settings.value('fit_negative',
                                                 defaultValue=False, type=bool),
-            'max_ite': self.settings.value('max_ite', defaultValue=200,
+            'max_ite': self.settings.value('max_ite', defaultValue=500,
                                            type=int),
             'method': self.settings.value('method', defaultValue='leastsq',
                                           type=str),

@@ -2,11 +2,11 @@
     <img width=100 src="resources/icon3.png">
 </p>
 
-### SPECTROview : All-in-one application for Spectroscopic Data Processing and Visualization.
+### SPECTROview : All-in-one Application for Spectroscopic Data Processing and Visualization.
 
 *Version 2024.5*
 
-Fitting feature are power by
+Fitting features are powered by
 the [FITSPY open-source package](https://github.com/CEA-MetroCarac/fitspy).
 ___
 

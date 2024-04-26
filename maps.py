@@ -793,7 +793,6 @@ class Maps(QObject):
         self.ax2.spines['left'].set_visible(False)
         self.ax2.tick_params(axis='x', which='both', bottom=True, top=False)
         self.ax2.tick_params(axis='y', which='both', right=False, left=False)
-
         self.canvas2 = FigureCanvas(fig2)
 
         # Variables to keep track of highlighted points and Ctrl key status
@@ -804,13 +803,12 @@ class Maps(QObject):
                                 self.on_click_sites_mesurements)
         fig2.canvas.mpl_connect('key_press_event', self.on_key_press)
         fig2.canvas.mpl_connect('key_release_event', self.on_key_release)
-
         layout = self.ui.wafer_plot.layout()
         layout.addWidget(self.canvas2)
         self.canvas2.draw()
 
         # plot4: graph
-        fig4 = plt.figure()
+        fig4 = plt.figure(dpi=80)
         self.ax4 = fig4.add_subplot(111)
         self.canvas4 = FigureCanvas(fig4)
         self.ui.frame_graph.addWidget(self.canvas4)
@@ -832,32 +830,32 @@ class Maps(QObject):
                 nearest_x, nearest_y = all_x[nearest_index], all_y[
                     nearest_index]
 
-                # If Ctrl key is pressed, allow multiple selections
-                if self.ctrl_pressed:
-                    for index in range(self.ui.spectra_listbox.count()):
-                        item = self.ui.spectra_listbox.item(index)
-                        item_text = item.text()
-                        x, y = map(float, item_text.strip('()').split(','))
-                        if x == nearest_x and y == nearest_y:
-                            item.setSelected(True)
+                # Check if Ctrl key is pressed
+                modifiers = QApplication.keyboardModifiers()
+                if modifiers == Qt.ControlModifier:
+                    self.selected_points.append((nearest_x, nearest_y))
                 else:
-                    # Set the current selection in the spectra_listbox
-                    for index in range(self.ui.spectra_listbox.count()):
-                        item = self.ui.spectra_listbox.item(index)
-                        item_text = item.text()
-                        x, y = map(float, item_text.strip('()').split(','))
-                        if x == nearest_x and y == nearest_y:
-                            self.ui.spectra_listbox.setCurrentRow(index)
-                            break
+                    # Clear the selected points list and add the current one
+                    self.selected_points = [(nearest_x, nearest_y)]
+
+        # Set the current selection in the spectra_listbox
+        for index in range(self.ui.spectra_listbox.count()):
+            item = self.ui.spectra_listbox.item(index)
+            item_text = item.text()
+            x, y = map(float, item_text.strip('()').split(','))
+            if (x, y) in self.selected_points:
+                item.setSelected(True)
+            else:
+                item.setSelected(False)
 
     def on_key_press(self, event):
         """Handler function for key press event"""
-        if event.key == 'command' or event.key == 'control':
+        if event.key == 'ctrl':
             self.ctrl_pressed = True
 
     def on_key_release(self, event):
         """Handler function for key release event"""
-        if event.key == 'command' or event.key == 'control':
+        if event.key == 'ctrl':
             self.ctrl_pressed = False
 
     def on_drag(self, event):

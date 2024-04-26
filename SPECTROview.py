@@ -334,21 +334,31 @@ def launcher2(file_paths=None, fname_json=None):
     app.setWindowIcon(QIcon(ICON_APPLI))
     window = Main()
     app.setStyle("Fusion")
+    # if file_paths is not None:
+    #     window.maps.open_data(file_paths=file_paths)
+    # if fname_json is not None:
+    #     window.maps.open_fit_model(fname_json=fname_json)
+
     if file_paths is not None:
-        window.maps.open_data(file_paths=file_paths)
+        window.spectrums.open_data(file_paths=file_paths)
     if fname_json is not None:
-        window.maps.open_fit_model(fname_json=fname_json)
+        window.spectrums.open_model(fname_json=fname_json)
     window.ui.show()
     sys.exit(app.exec())
 
 
 if __name__ == "__main__":
     DIRNAME = os.path.dirname(__file__)
-    DATA = os.path.join(DIRNAME, "data_test")
-    DATA_MAPS = os.path.join(DATA, "RAW 2Dmaps")
+    DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
+    DATA_MAPS = os.path.join(DIRNAME, "RAW 2Dmaps")
     # fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_09.csv')
-    fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
-    fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
-    fname_json1 = os.path.join(DATA_MAPS,
-                               'MoS2_325-490_8cm-shifted_simple-labels.json')
-    launcher2([fname2, fname3], fname_json1)
+    # fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
+    # fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
+    # fname_json1 = os.path.join(DATA_MAPS,
+    #                            'MoS2_325-490_8cm-shifted_simple-labels.json')
+    fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
+    fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
+    fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
+    fname_json1 = os.path.join(DATA,
+                               'Model_MoS2_Si_Full_All_Lorentiaz.json')
+    launcher2([fname1, fname2, fname3], fname_json1)

@@ -698,7 +698,6 @@ class Maps(QObject):
         """Plot selected spectra"""
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
-        max_intensity = 0.0
 
         for spectrum_fs in self.spectra_fs:
             wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
@@ -721,7 +720,7 @@ class Maps(QObject):
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
 
-            # Normalize or Not
+            # NORMALIZE
             if self.ui.cb_normalize.isChecked():
                 max_intensity = 0.0
                 max_intensity = max(max_intensity, max(spectrum_fs.y))
@@ -736,48 +735,50 @@ class Maps(QObject):
                 y0_values = spectrum_fs.y0
                 self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
                              lw=1)
+
+            # BEST-FIT and PEAK_MODELS
             if hasattr(spectrum_fs.result_fit,
                        'components') and self.ui.cb_bestfit.isChecked():
                 bestfit = spectrum_fs.result_fit.best_fit
                 self.ax.plot(x_values, bestfit, label=f"bestfit")
 
-            peak_labels = spectrum_fs.peak_labels
-            for i, peak_model in enumerate(spectrum_fs.peak_models):
-                peak_label = peak_labels[i]
+                peak_labels = spectrum_fs.peak_labels
+                for i, peak_model in enumerate(spectrum_fs.peak_models):
+                    peak_label = peak_labels[i]
+                    # remove temporarily 'expr'
+                    param_hints_orig = deepcopy(peak_model.param_hints)
+                    for key, _ in peak_model.param_hints.items():
+                        peak_model.param_hints[key]['expr'] = ''
+                    params = peak_model.make_params()
+                    # rassign 'expr'
+                    peak_model.param_hints = param_hints_orig
 
-                # remove temporarily 'expr'
-                param_hints_orig = deepcopy(peak_model.param_hints)
-                for key, _ in peak_model.param_hints.items():
-                    peak_model.param_hints[key]['expr'] = ''
-                params = peak_model.make_params()
-                # rassign 'expr'
-                peak_model.param_hints = param_hints_orig
+                    y_peak = peak_model.eval(params, x=x_values)
 
-                y_peak = peak_model.eval(params, x=x_values)
+                    if self.ui.cb_filled.isChecked():
+                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
+                                             label=f"{peak_label}")
+                        if self.ui.cb_peaks.isChecked():
+                            position = peak_model.param_hints['x0']['value']
+                            intensity = peak_model.param_hints['ampli']['value']
+                            position = round(position, 2)
+                            text = f"{peak_label}\n({position})"
+                            self.ax.text(position, intensity, text,
+                                         ha='center', va='bottom',
+                                         color='black', fontsize=12)
+                    else:
 
-                if self.ui.cb_filled.isChecked():
-                    self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
-                                         label=f"{peak_label}")
-                    if self.ui.cb_peaks.isChecked():
-                        position = peak_model.param_hints['x0']['value']
-                        intensity = peak_model.param_hints['ampli']['value']
-                        position = round(position, 2)
-                        text = f"{peak_label}\n({position})"
-                        self.ax.text(position, intensity, text,
-                                     ha='center', va='bottom',
-                                     color='black', fontsize=12)
-                else:
-
-                    self.ax.plot(x_values, y_peak, '--',
-                                 label=f"{peak_label}")
-
+                        self.ax.plot(x_values, y_peak, '--',
+                                     label=f"{peak_label}")
+            # RESIDUAL
             if hasattr(spectrum_fs.result_fit,
                        'residual') and self.ui.cb_residual.isChecked():
                 residual = spectrum_fs.result_fit.residual
                 self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
+
             if self.ui.cb_colors.isChecked() is False:
                 self.ax.set_prop_cycle(None)
-
+            # R-SQUARED
             if hasattr(spectrum_fs.result_fit, 'rsquared'):
                 rsquared = round(spectrum_fs.result_fit.rsquared, 4)
                 self.ui.rsquared_1.setText(f"R2={rsquared}")
@@ -790,6 +791,7 @@ class Maps(QObject):
             self.ax.legend(loc='upper right')
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.ax.get_figure().tight_layout()
+
         self.canvas1.draw()
         self.plot2()
         self.read_x_range()

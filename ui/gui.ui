@@ -54,7 +54,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_2Dmaps">
        <attribute name="title">
@@ -1123,7 +1123,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>727</width>
-                               <height>243</height>
+                               <height>242</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -1213,6 +1213,10 @@
                                <property name="text">
                                 <string>Copy model</string>
                                </property>
+                               <property name="icon">
+                                <iconset resource="resources_new.qrc">
+                                 <normaloff>:/icon/iconpack/copy10.png</normaloff>:/icon/iconpack/copy10.png</iconset>
+                               </property>
                               </widget>
                              </item>
                              <item>
@@ -1236,6 +1240,10 @@
                                <property name="text">
                                 <string>Paste model</string>
                                </property>
+                               <property name="icon">
+                                <iconset resource="resources_new.qrc">
+                                 <normaloff>:/icon/iconpack/copy_label.png.png</normaloff>:/icon/iconpack/copy_label.png.png</iconset>
+                               </property>
                               </widget>
                              </item>
                              <item>
@@ -1245,6 +1253,10 @@
                                </property>
                                <property name="text">
                                 <string>Save Model</string>
+                               </property>
+                               <property name="icon">
+                                <iconset resource="resources_new.qrc">
+                                 <normaloff>:/icon/iconpack/save11.png</normaloff>:/icon/iconpack/save11.png</iconset>
                                </property>
                               </widget>
                              </item>
@@ -3221,9 +3233,16 @@
               </size>
              </property>
              <property name="title">
-              <string>Wafer / 2D map(s):</string>
+              <string/>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <widget class="QLabel" name="label_64">
+                <property name="text">
+                 <string>Wafer(s):</string>
+                </property>
+               </widget>
+              </item>
               <item>
                <widget class="QListWidget" name="wafers_listbox">
                 <property name="sizePolicy">
@@ -3331,7 +3350,7 @@
               </size>
              </property>
              <property name="title">
-              <string>Spectrum(s):</string>
+              <string/>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_10">
               <item>
@@ -3439,6 +3458,13 @@
                  </widget>
                 </item>
                </layout>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_58">
+                <property name="text">
+                 <string>Spectrum(s:)</string>
+                </property>
+               </widget>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_8">

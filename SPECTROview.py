@@ -354,11 +354,9 @@ if __name__ == "__main__":
     # fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_09.csv')
     # fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
     # fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
-    # fname_json1 = os.path.join(DATA_MAPS,
-    #                            'MoS2_325-490_8cm-shifted_simple-labels.json')
+    # fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')
     fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
     fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
     fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
-    fname_json1 = os.path.join(DATA,
-                               'Model_MoS2_Si_Full_All_Lorentiaz.json')
-    launcher2([fname1, fname2, fname3], fname_json1)
+    # fname_json1 = os.path.join(DATA,'FITMODEL_MoS2_325-490.json')
+    launcher2([fname1, fname2, fname3])

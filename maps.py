@@ -65,7 +65,6 @@ class Maps(QObject):
 
         # Connect the stateChanged signal of the legend CHECKBOX
         self.ui.cb_legend.stateChanged.connect(self.delay_plot)
-
         self.ui.cb_raw.stateChanged.connect(self.delay_plot)
         self.ui.cb_bestfit.stateChanged.connect(self.delay_plot)
         self.ui.cb_colors.stateChanged.connect(self.delay_plot)
@@ -73,6 +72,8 @@ class Maps(QObject):
         self.ui.cb_filled.stateChanged.connect(self.delay_plot)
         self.ui.cb_peaks.stateChanged.connect(self.delay_plot)
         self.ui.cb_attached.stateChanged.connect(self.delay_plot)
+        self.ui.cb_normalize.stateChanged.connect(self.delay_plot)
+
         self.ui.size300.toggled.connect(self.delay_plot)
         self.ui.size200.toggled.connect(self.delay_plot)
         self.ui.size150.toggled.connect(self.delay_plot)
@@ -697,14 +698,19 @@ class Maps(QObject):
         """Plot selected spectra"""
         wafer_name, coords = self.spectre_id()  # current selected spectra ID
         selected_spectra_fs = []
+        max_intensity = 0.0
+
         for spectrum_fs in self.spectra_fs:
             wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
             if wafer_name_fs == wafer_name and coord_fs in coords:
                 selected_spectra_fs.append(spectrum_fs)
+
         if len(selected_spectra_fs) == 0:
             return
+
         xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
         self.ax.clear()
+
         # reassign previous axis limits (related to zoom)
         if not xlim == ylim == (0.0, 1.0):
             self.ax.set_xlim(xlim)
@@ -714,6 +720,12 @@ class Maps(QObject):
             fname, coord = self.spectre_id_fs(spectrum_fs)
             x_values = spectrum_fs.x
             y_values = spectrum_fs.y
+
+            # Normalize or Not
+            if self.ui.cb_normalize.isChecked():
+                max_intensity = 0.0
+                max_intensity = max(max_intensity, max(spectrum_fs.y))
+                y_values = y_values / max_intensity
             self.ax.plot(x_values, y_values, label=f"{coord}", ms=3, lw=2)
 
             # BASELINE
@@ -755,6 +767,7 @@ class Maps(QObject):
                                      ha='center', va='bottom',
                                      color='black', fontsize=12)
                 else:
+
                     self.ax.plot(x_values, y_peak, '--',
                                  label=f"{peak_label}")
 

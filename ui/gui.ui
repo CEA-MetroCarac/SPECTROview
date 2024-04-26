@@ -54,7 +54,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_2Dmaps">
        <attribute name="title">
@@ -1206,19 +1206,6 @@
                               <number>0</number>
                              </property>
                              <item>
-                              <spacer name="horizontalSpacer_34">
-                               <property name="orientation">
-                                <enum>Qt::Horizontal</enum>
-                               </property>
-                               <property name="sizeHint" stdset="0">
-                                <size>
-                                 <width>40</width>
-                                 <height>20</height>
-                                </size>
-                               </property>
-                              </spacer>
-                             </item>
-                             <item>
                               <widget class="QPushButton" name="btn_copy_fit_model">
                                <property name="toolTip">
                                 <string>Copy current fit parameters (range, baseline, peaks) of selected spectrum to Clipboard</string>
@@ -1508,6 +1495,18 @@
                             <horstretch>0</horstretch>
                             <verstretch>0</verstretch>
                            </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>120</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>120</width>
+                            <height>16777215</height>
+                           </size>
                           </property>
                           <property name="toolTip">
                            <string>Select file name part</string>
@@ -6803,7 +6802,7 @@
              <item>
               <widget class="QTabWidget" name="Plot_styling">
                <property name="currentIndex">
-                <number>1</number>
+                <number>0</number>
                </property>
                <widget class="QWidget" name="tab_styling_plot">
                 <attribute name="title">

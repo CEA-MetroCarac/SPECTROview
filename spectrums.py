@@ -649,6 +649,80 @@ class Spectrums(QObject):
         else:
             self.fit()
 
+    def copy_fit_model(self):
+        """ To copy the model dict of the selected spectrum. If several
+        spectrums are selected → copy the model dict of first spectrum in
+        list"""
+        # Get only 1 spectrum among several selected spectrum:
+        self.get_fit_settings()
+        sel_spectrum, _ = self.get_spectrum_object()
+        if len(sel_spectrum.peak_models) == 0:
+            self.ui.lbl_copied_fit_model_2.setText("")
+            show_alert(
+                "The selected spectrum does not have fit model to be copied!")
+            self.current_fit_model = None
+            return
+        else:
+            self.current_fit_model = None
+            self.current_fit_model = deepcopy(sel_spectrum.save())
+        fname = sel_spectrum.fname
+        self.ui.lbl_copied_fit_model_2.setText(
+            f"The fit model of '{fname}' spectrum is copied to the clipboard.")
+
+    def paste_fit_model(self, fnames=None):
+        """ To apply the copied fit model to selected spectrums"""
+        # Get fnames of all selected spectra
+        self.ui.btn_paste_fit_model_2.setEnabled(False)
+
+        if fnames is None:
+            fnames = self.get_spectrum_fnames()
+
+        reinit_spectrum(fnames, self.spectra_fs)
+        fit_model = deepcopy(self.current_fit_model)
+        if self.current_fit_model is not None:
+            # Starting fit process in a seperate thread
+            self.paste_model_thread = FitThread(self.spectra_fs, fit_model,
+                                                fnames)
+            self.paste_model_thread.fit_progress_changed.connect(
+                self.update_pbar)
+            self.paste_model_thread.fit_progress.connect(
+                lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
+                                                            fnames))
+            self.paste_model_thread.fit_completed.connect(self.fit_completed)
+            self.paste_model_thread.finished.connect(
+                lambda: self.ui.btn_paste_fit_model_2.setEnabled(True))
+            self.paste_model_thread.start()
+        else:
+            show_alert("Nothing to paste")
+            self.ui.btn_paste_fit_model_2.setEnabled(True)
+
+    def paste_fit_model_all(self):
+        """ To paste the copied fit model (in clipboard) and apply to
+        selected spectrum(s"""
+        fnames = self.spectra_fs.fnames
+        self.paste_fit_model(fnames)
+
+    def paste_fit_model_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.paste_fit_model_all()
+        else:
+            self.paste_fit_model()
+
+    def save_fit_model(self):
+        """To save the fit model of the current selected spectrum"""
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
+        last_dir = self.settings.value("last_directory", "/")
+        save_path, _ = QFileDialog.getSaveFileName(
+            self.ui.tabWidget, "Save fit model", last_dir,
+            "JSON Files (*.json)")
+        if save_path and sel_spectrum:
+            self.spectra_fs.save(save_path, [sel_spectrum.fname])
+            show_alert("Fit model is saved (JSON file)")
+        else:
+            show_alert("No fit model to save.")
+
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.
@@ -986,7 +1060,7 @@ class Spectrums(QObject):
                 self.filtered_df = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
-
+        display_df_in_table(self.ui.fit_results_table_2, self.df_fit_results)
         self.upd_cbb_param()
         self.send_df_to_viz()
 

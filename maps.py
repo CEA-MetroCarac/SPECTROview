@@ -576,6 +576,7 @@ class Maps(QObject):
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
         display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+
         self.upd_cbb_param()
         self.upd_cbb_wafer()
         self.send_df_to_viz()
@@ -874,27 +875,6 @@ class Maps(QObject):
         if event.key == 'ctrl':
             self.ctrl_pressed = False
 
-    def on_drag(self, event):
-        """Handler function for mouse drag event"""
-        pass
-        # if event.button == 1:  # Left mouse button pressed
-        #     if event.inaxes == self.ax2:
-        #         if event.xdata is not None and event.ydata is not None:
-        #             # Find points within the selected area
-        #             all_x, all_y = self.get_mes_sites_coord()
-        #             selected_x, selected_y = [], []
-        #             for x, y in zip(all_x, all_y):
-        #                 if abs(x - event.xdata) < 10 and abs(y -
-        #                 event.ydata) < 10:  # Define your selection
-        #                 criteria here
-        #                     selected_x.append(x)
-        #                     selected_y.append(y)
-        #             # Highlight selected points
-        #             if selected_x and selected_y:
-        #                 self.ax2.scatter(selected_x, selected_y,
-        #                 marker='o', color='green', s=40)
-        #                 self.canvas2.draw()
-
     def plot2(self):
         """Plot wafer maps of measurement sites"""
         if self.ui.size150.isChecked():
@@ -993,7 +973,7 @@ class Maps(QObject):
         self.canvas4.draw()
 
     def get_mes_sites_coord(self):
-        """ Get all coordinates of measurements sites of selected wafer"""
+        """ Get all coordinates of measurement sites of selected wafer"""
         wafer_name, coords = self.spectre_id()
         all_x = []
         all_y = []

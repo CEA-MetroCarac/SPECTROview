@@ -238,6 +238,11 @@ class Main:
             self.spectrums.clear_peaks_handler)
         self.ui.btn_fit_4.clicked.connect(
             self.spectrums.apply_fit_model_handler)
+        self.ui.btn_copy_fit_model_2.clicked.connect(
+            self.spectrums.copy_fit_model)
+        self.ui.btn_paste_fit_model_2.clicked.connect(
+            self.spectrums.paste_fit_model_fnc_handler)
+        self.ui.save_model_2.clicked.connect(self.spectrums.save_fit_model)
 
         self.ui.btn_open_spectrums.clicked.connect(self.spectrums.open_data)
         self.ui.btn_load_model_3.clicked.connect(self.spectrums.open_fit_model)

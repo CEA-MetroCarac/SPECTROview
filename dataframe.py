@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import copy
 import io
-from utils import view_df
+from common import view_df
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QListWidgetItem,  QApplication, QCheckBox
 from PySide6.QtCore import Qt, QFileInfo
 

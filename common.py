@@ -1,5 +1,5 @@
 """
-Module contains all utilities functions and common functions
+Module contains all utilities functions and common methods of the appli
 """
 import time
 import markdown
@@ -42,135 +42,6 @@ NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
          '24', '28', '32']
 
 
-def plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
-               y_text, xlabel_rot):
-    """Plot graph """
-
-    ax.clear()
-    if style == "box plot":
-        sns.boxplot(data=dfr, x=x, y=y, hue=z, dodge=True, ax=ax)
-    elif style == "point plot":
-        sns.pointplot(data=dfr, x=x, y=y, hue=z, linestyle='none',
-                      dodge=True, capsize=0.00, ax=ax)
-    elif style == "scatter plot":
-        sns.scatterplot(data=dfr, x=x, y=y, hue=z, s=100, ax=ax)
-    elif style == "bar plot":
-        sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar='sd', ax=ax)
-
-    if xmin and xmax:
-        ax.set_xlim(float(xmin), float(xmax))
-    if ymin and ymax:
-        ax.set_ylim(float(ymin), float(ymax))
-
-    xlabel = x if not x_text else x_text
-    ylabel = y if not y_text else y_text
-    if xlabel:
-        ax.set_xlabel(xlabel)
-    if ylabel:
-        ax.set_ylabel(ylabel)
-    if title:
-        ax.set_title(title)
-    ax.legend(loc='upper right')
-    plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
-             rotation_mode="anchor")
-    return ax
-
-
-def reinit_spectrum(fnames, spectra_fs):
-    """Reinitilize a FITSPY spectrum object"""
-    for fname in fnames:
-        spectrum, _ = spectra_fs.get_objects(fname)
-        spectrum.range_min = None
-        spectrum.range_max = None
-        spectrum.x = spectrum.x0.copy()
-        spectrum.y = spectrum.y0.copy()
-        spectrum.norm_mode = None
-        spectrum.result_fit = lambda: None
-        spectrum.remove_models()
-        spectrum.baseline.points = [[], []]
-        spectrum.baseline.is_subtracted = False
-
-
-def clear_layout(layout):
-    """Clear everything within a given Qlayout"""
-    if layout is not None:
-        for i in reversed(range(layout.count())):
-            item = layout.itemAt(i)
-            if isinstance(item.widget(),
-                          (FigureCanvas, NavigationToolbar2QT)):
-                widget = item.widget()
-                layout.removeWidget(widget)
-                widget.close()
-
-def translate_param(model_fs, param):
-    """Translate parameter names to plot title"""
-    peak_labels = model_fs["peak_labels"]
-    param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
-                          "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
-                          "alpha": "L/G ratio",
-                          "x0": "Position"}
-    if "_" in param:
-        prefix, param = param.split("_", 1)
-        if param in param_unit_mapping:
-            if param == "alpha":
-                unit = ""  # Set unit to empty string for "alpha"
-            else:
-                unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
-            label = param_unit_mapping[param]
-            # Convert prefix to peak_label
-            peak_index = int(prefix[1:]) - 1
-            if 0 <= peak_index < len(peak_labels):
-                peak_label = peak_labels[peak_index]
-                return f"{label} of peak {peak_label} {unit}"
-    return param
-
-
-def quadrant(row):
-    """Define 4 quadrant of a wafer"""
-    if row['X'] < 0 and row['Y'] < 0:
-        return 'Q1'
-    elif row['X'] < 0 and row['Y'] > 0:
-        return 'Q2'
-    elif row['X'] > 0 and row['Y'] > 0:
-        return 'Q3'
-    elif row['X'] > 0 and row['Y'] < 0:
-        return 'Q4'
-    else:
-        return np.nan
-
-
-def zone(row, diameter):
-    """Define 3 zones (Center, Mid-Rayon, Edge) based on X and Y coordinates."""
-    rad = diameter / 2
-    x = row['X']
-    y = row['Y']
-    distance_to_center = np.sqrt(x ** 2 + y ** 2)
-    if distance_to_center <= rad * 0.35:
-        return 'Center'
-    elif distance_to_center > rad * 0.35 and distance_to_center < rad * 0.8:
-        return 'Mid-Rayon'
-    elif distance_to_center >= 0.8 * rad:
-        return 'Edge'
-    else:
-        return np.nan
-
-
-def copy_fig_to_clb(canvas):
-    """Function to copy canvas figure to clipboard"""
-    if canvas:
-        figure = canvas.figure
-        with BytesIO() as buf:
-            figure.savefig(buf, format='png', dpi=400)
-            data = buf.getvalue()
-        format_id = win32clipboard.RegisterClipboardFormat('PNG')
-        win32clipboard.OpenClipboard()
-        win32clipboard.EmptyClipboard()
-        win32clipboard.SetClipboardData(format_id, data)
-        win32clipboard.CloseClipboard()
-    else:
-        QMessageBox.critical(None, "Error", "No plot to copy.")
-
-
 def show_alert(message):
     """Show alert"""
     msg_box = QMessageBox()
@@ -200,95 +71,265 @@ def view_df(tabWidget, df):
     df_viewer.show()
 
 
-def display_df_in_table(table_widget, df_results):
-    """Display pandas DataFrame in QTableWidget in GUI"""
-    table_widget.setRowCount(df_results.shape[0])
-    table_widget.setColumnCount(df_results.shape[1])
-    table_widget.setHorizontalHeaderLabels(df_results.columns)
-    for row in range(df_results.shape[0]):
-        for col in range(df_results.shape[1]):
-            item = QTableWidgetItem(str(df_results.iat[row, col]))
-            table_widget.setItem(row, col, item)
-    table_widget.resizeColumnsToContents()
+class CommonUtilities():
+    """ Class contain all common methods or utility codes used other modules"""
+    def copy_fit_model(self, sel_spectrum, current_fit_model, label):
+        """ To copy the model dict of the selected spectrum. If several
+        spectrums are selected → copy the model dict of first spectrum in
+        list
+        sel_spectrum : FITSPY spectrum object
+        current_fit_model : FITSPY fit model object
+        label : QLabel to display the fname
+        """
+        if len(sel_spectrum.peak_models) == 0:
+            label.setText("")
+            show_alert(
+                "The selected spectrum does not have fit model to be copied!")
+            current_fit_model = None
+            return
+        else:
+            current_fit_model = None
+            current_fit_model = deepcopy(sel_spectrum.save())
 
+        fname = sel_spectrum.fname
+        label.setText(
+            f"The fit model of '{fname}' spectrum is copied to the clipboard.")
 
-def view_text(ui, title, text):
-    """ Create a QTextBrowser to display a text content"""
-    report_viewer = QDialog(ui)
-    report_viewer.setWindowTitle(title)
-    report_viewer.setGeometry(100, 100, 800, 600)
-    text_browser = QTextBrowser(report_viewer)
-    text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-    text_browser.setOpenExternalLinks(True)
-    text_browser.setPlainText(text)
-    text_browser.moveCursor(QTextCursor.Start)
-    layout = QVBoxLayout(report_viewer)
-    layout.addWidget(text_browser)
-    report_viewer.show()
+        return current_fit_model
 
+    def plot_graph(self, ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
+                   y_text, xlabel_rot):
+        """Plot graph """
 
-def view_markdown(ui, title, fname, x, y):
-    """To convert MD file to html format and display them in GUI"""
-    with open(fname, 'r', encoding='utf-8') as f:
-        markdown_content = f.read()
-    html_content = markdown.markdown(markdown_content)
-    DIRNAME = os.path.dirname(__file__)
-    html_content = html_content.replace('src="',
-                                        f'src="'
-                                        f'{os.path.join(DIRNAME, "resources/")}')
-    about_dialog = QDialog(ui)
-    about_dialog.setWindowTitle(title)
-    about_dialog.resize(x, y)
-    text_browser = QTextBrowser(about_dialog)
-    text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-    text_browser.setOpenExternalLinks(True)
-    text_browser.setHtml(html_content)
-    layout = QVBoxLayout(about_dialog)
-    layout.addWidget(text_browser)
-    about_dialog.setLayout(layout)
-    about_dialog.show()
+        ax.clear()
+        if style == "box plot":
+            sns.boxplot(data=dfr, x=x, y=y, hue=z, dodge=True, ax=ax)
+        elif style == "point plot":
+            sns.pointplot(data=dfr, x=x, y=y, hue=z, linestyle='none',
+                          dodge=True, capsize=0.00, ax=ax)
+        elif style == "scatter plot":
+            sns.scatterplot(data=dfr, x=x, y=y, hue=z, s=100, ax=ax)
+        elif style == "bar plot":
+            sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar='sd', ax=ax)
 
+        if xmin and xmax:
+            ax.set_xlim(float(xmin), float(xmax))
+        if ymin and ymax:
+            ax.set_ylim(float(ymin), float(ymax))
 
-def dark_palette():
-    """Palette color for dark mode of the appli's GUI"""
-    dark_palette = QPalette()
-    dark_palette.setColor(QPalette.Window, QColor(70, 70, 70))
-    dark_palette.setColor(QPalette.WindowText, Qt.white)
-    dark_palette.setColor(QPalette.Base,
-                          QColor(65, 65, 65))  # QlineEdit Listbox bg
-    dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
-    dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
-    dark_palette.setColor(QPalette.ToolTipText, Qt.white)
-    dark_palette.setColor(QPalette.Text, Qt.white)
-    dark_palette.setColor(QPalette.Button, QColor(64, 64, 64))
-    dark_palette.setColor(QPalette.ButtonText, Qt.white)
-    dark_palette.setColor(QPalette.BrightText, Qt.red)
-    dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    dark_palette.setColor(QPalette.HighlightedText, Qt.white)
-    dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
-    return dark_palette
+        xlabel = x if not x_text else x_text
+        ylabel = y if not y_text else y_text
+        if xlabel:
+            ax.set_xlabel(xlabel)
+        if ylabel:
+            ax.set_ylabel(ylabel)
+        if title:
+            ax.set_title(title)
+        ax.legend(loc='upper right')
+        plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
+                 rotation_mode="anchor")
+        return ax
 
+    def reinit_spectrum(self, fnames, spectra_fs):
+        """Reinitilize a FITSPY spectrum object"""
+        for fname in fnames:
+            spectrum, _ = spectra_fs.get_objects(fname)
+            spectrum.range_min = None
+            spectrum.range_max = None
+            spectrum.x = spectrum.x0.copy()
+            spectrum.y = spectrum.y0.copy()
+            spectrum.norm_mode = None
+            spectrum.result_fit = lambda: None
+            spectrum.remove_models()
+            spectrum.baseline.points = [[], []]
+            spectrum.baseline.is_subtracted = False
 
-def light_palette():
-    """Palette color for light mode of the appli's GUI"""
-    light_palette = QPalette()
-    light_palette.setColor(QPalette.Window, QColor(225, 225, 225))
-    light_palette.setColor(QPalette.WindowText, Qt.black)
-    light_palette.setColor(QPalette.Base, QColor(215, 215, 215))
-    light_palette.setColor(QPalette.AlternateBase, QColor(230, 230, 230))
-    light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
-    light_palette.setColor(QPalette.ToolTipText, Qt.black)
-    light_palette.setColor(QPalette.Text, Qt.black)
-    light_palette.setColor(QPalette.Button, QColor(230, 230, 230))
-    light_palette.setColor(QPalette.ButtonText, Qt.black)
-    light_palette.setColor(QPalette.BrightText, Qt.red)
-    light_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    light_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    light_palette.setColor(QPalette.HighlightedText, Qt.black)
-    light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
-    return light_palette
+    def clear_layout(self, layout):
+        """Clear everything within a given Qlayout"""
+        if layout is not None:
+            for i in reversed(range(layout.count())):
+                item = layout.itemAt(i)
+                if isinstance(item.widget(),
+                              (FigureCanvas, NavigationToolbar2QT)):
+                    widget = item.widget()
+                    layout.removeWidget(widget)
+                    widget.close()
 
+    def translate_param(self, model_fs, param):
+        """Translate parameter names to plot title"""
+        peak_labels = model_fs["peak_labels"]
+        param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
+                              "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
+                              "alpha": "L/G ratio",
+                              "x0": "Position"}
+        if "_" in param:
+            prefix, param = param.split("_", 1)
+            if param in param_unit_mapping:
+                if param == "alpha":
+                    unit = ""  # Set unit to empty string for "alpha"
+                else:
+                    unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
+                label = param_unit_mapping[param]
+                # Convert prefix to peak_label
+                peak_index = int(prefix[1:]) - 1
+                if 0 <= peak_index < len(peak_labels):
+                    peak_label = peak_labels[peak_index]
+                    return f"{label} of peak {peak_label} {unit}"
+        return param
+
+    def quadrant(self, row):
+        """Define 4 quadrant of a wafer"""
+        if row['X'] < 0 and row['Y'] < 0:
+            return 'Q1'
+        elif row['X'] < 0 and row['Y'] > 0:
+            return 'Q2'
+        elif row['X'] > 0 and row['Y'] > 0:
+            return 'Q3'
+        elif row['X'] > 0 and row['Y'] < 0:
+            return 'Q4'
+        else:
+            return np.nan
+
+    def zone(self, row, diameter):
+        """Define 3 zones (Center, Mid-Rayon, Edge) based on X and Y coordinates."""
+        rad = diameter / 2
+        x = row['X']
+        y = row['Y']
+        distance_to_center = np.sqrt(x ** 2 + y ** 2)
+        if distance_to_center <= rad * 0.35:
+            return 'Center'
+        elif distance_to_center > rad * 0.35 and distance_to_center < rad * 0.8:
+            return 'Mid-Rayon'
+        elif distance_to_center >= 0.8 * rad:
+            return 'Edge'
+        else:
+            return np.nan
+
+    def copy_fig_to_clb(self, canvas):
+        """Function to copy canvas figure to clipboard"""
+        if canvas:
+            figure = canvas.figure
+            with BytesIO() as buf:
+                figure.savefig(buf, format='png', dpi=400)
+                data = buf.getvalue()
+            format_id = win32clipboard.RegisterClipboardFormat('PNG')
+            win32clipboard.OpenClipboard()
+            win32clipboard.EmptyClipboard()
+            win32clipboard.SetClipboardData(format_id, data)
+            win32clipboard.CloseClipboard()
+        else:
+            QMessageBox.critical(None, "Error", "No plot to copy.")
+
+    def show_alert(self, message):
+        """Show alert"""
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setWindowTitle("Alert")
+        msg_box.setText(message)
+        msg_box.exec_()
+
+    def view_df(self, tabWidget, df):
+        """View selected dataframe"""
+        df_viewer = QDialog(tabWidget.parent())
+        df_viewer.setWindowTitle("DataFrame Viewer")
+        df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
+        # Create a QTableWidget and populate it with data from the DataFrame
+        table_widget = QTableWidget(df_viewer)
+        table_widget.setColumnCount(df.shape[1])
+        table_widget.setRowCount(df.shape[0])
+        table_widget.setHorizontalHeaderLabels(df.columns)
+        for row in range(df.shape[0]):
+            for col in range(df.shape[1]):
+                item = QTableWidgetItem(str(df.iat[row, col]))
+                table_widget.setItem(row, col, item)
+        table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
+        layout = QVBoxLayout(df_viewer)
+        layout.addWidget(table_widget)
+        df_viewer.show()
+
+    def display_df_in_table(self, table_widget, df_results):
+        """Display pandas DataFrame in QTableWidget in GUI"""
+        table_widget.setRowCount(df_results.shape[0])
+        table_widget.setColumnCount(df_results.shape[1])
+        table_widget.setHorizontalHeaderLabels(df_results.columns)
+        for row in range(df_results.shape[0]):
+            for col in range(df_results.shape[1]):
+                item = QTableWidgetItem(str(df_results.iat[row, col]))
+                table_widget.setItem(row, col, item)
+        table_widget.resizeColumnsToContents()
+
+    def view_text(self, ui, title, text):
+        """ Create a QTextBrowser to display a text content"""
+        report_viewer = QDialog(ui)
+        report_viewer.setWindowTitle(title)
+        report_viewer.setGeometry(100, 100, 800, 600)
+        text_browser = QTextBrowser(report_viewer)
+        text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        text_browser.setOpenExternalLinks(True)
+        text_browser.setPlainText(text)
+        text_browser.moveCursor(QTextCursor.Start)
+        layout = QVBoxLayout(report_viewer)
+        layout.addWidget(text_browser)
+        report_viewer.show()
+
+    def view_markdown(self, ui, title, fname, x, y):
+        """To convert MD file to html format and display them in GUI"""
+        with open(fname, 'r', encoding='utf-8') as f:
+            markdown_content = f.read()
+        html_content = markdown.markdown(markdown_content)
+        DIRNAME = os.path.dirname(__file__)
+        html_content = html_content.replace('src="',
+                                            f'src="'
+                                            f'{os.path.join(DIRNAME, "resources/")}')
+        about_dialog = QDialog(ui)
+        about_dialog.setWindowTitle(title)
+        about_dialog.resize(x, y)
+        text_browser = QTextBrowser(about_dialog)
+        text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        text_browser.setOpenExternalLinks(True)
+        text_browser.setHtml(html_content)
+        layout = QVBoxLayout(about_dialog)
+        layout.addWidget(text_browser)
+        about_dialog.setLayout(layout)
+        about_dialog.show()
+    def dark_palette(self):
+        """Palette color for dark mode of the appli's GUI"""
+        dark_palette = QPalette()
+        dark_palette.setColor(QPalette.Window, QColor(70, 70, 70))
+        dark_palette.setColor(QPalette.WindowText, Qt.white)
+        dark_palette.setColor(QPalette.Base,
+                              QColor(65, 65, 65))  # QlineEdit Listbox bg
+        dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
+        dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
+        dark_palette.setColor(QPalette.ToolTipText, Qt.white)
+        dark_palette.setColor(QPalette.Text, Qt.white)
+        dark_palette.setColor(QPalette.Button, QColor(64, 64, 64))
+        dark_palette.setColor(QPalette.ButtonText, Qt.white)
+        dark_palette.setColor(QPalette.BrightText, Qt.red)
+        dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+        dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+        dark_palette.setColor(QPalette.HighlightedText, Qt.white)
+        dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
+        return dark_palette
+
+    def light_palette(self):
+        """Palette color for light mode of the appli's GUI"""
+        light_palette = QPalette()
+        light_palette.setColor(QPalette.Window, QColor(225, 225, 225))
+        light_palette.setColor(QPalette.WindowText, Qt.black)
+        light_palette.setColor(QPalette.Base, QColor(215, 215, 215))
+        light_palette.setColor(QPalette.AlternateBase, QColor(230, 230, 230))
+        light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
+        light_palette.setColor(QPalette.ToolTipText, Qt.black)
+        light_palette.setColor(QPalette.Text, Qt.black)
+        light_palette.setColor(QPalette.Button, QColor(230, 230, 230))
+        light_palette.setColor(QPalette.ButtonText, Qt.black)
+        light_palette.setColor(QPalette.BrightText, Qt.red)
+        light_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+        light_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+        light_palette.setColor(QPalette.HighlightedText, Qt.black)
+        light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
+        return light_palette
 
 class FitThread(QThread):
     """ Class to perform fitting in a separate Thread to avoid GUI

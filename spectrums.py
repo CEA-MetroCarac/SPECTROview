@@ -1,4 +1,6 @@
-# spectrum.py module
+"""
+Module dedicated to the 'Spectrum(s)' TAB of the main GUI
+"""
 import os
 import numpy as np
 import pandas as pd
@@ -6,10 +8,8 @@ from copy import deepcopy
 from pathlib import Path
 import dill
 
-from utils import view_df, show_alert, view_text, copy_fig_to_clb, \
-    translate_param, reinit_spectrum, plot_graph, clear_layout, \
-    display_df_in_table
-from utils import FitThread, ShowParameters, FIT_METHODS, NCPUS
+from common import view_df, show_alert
+from common import FitThread, ShowParameters, FIT_METHODS, NCPUS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -33,11 +33,12 @@ class Spectrums(QObject):
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
 
-    def __init__(self, settings, ui, dataframe):
+    def __init__(self, settings, ui, dataframe, common):
         super().__init__()
         self.settings = settings
         self.ui = ui
         self.dataframe = dataframe
+        self.common = common
 
         self.loaded_fit_model = None
         self.current_fit_model = None
@@ -99,26 +100,6 @@ class Spectrums(QObject):
         self.ui.rbtn_polynomial_2.clicked.connect(self.upd_spectra_list)
         self.ui.degre_2.valueChanged.connect(self.upd_spectra_list)
 
-    def load_fit_settings(self):
-        """Load last used fitting settings from QSettings"""
-        fit_params = {
-            'fit_negative': self.settings.value('fit_negative',
-                                                defaultValue=False, type=bool),
-            'max_ite': self.settings.value('max_ite', defaultValue=500,
-                                           type=int),
-            'method': self.settings.value('method', defaultValue='leastsq',
-                                          type=str),
-            'ncpus': self.settings.value('ncpus', defaultValue='auto',
-                                         type=str),
-            'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float)
-        }
-
-        # Update GUI elements with the loaded values
-        self.ui.cb_fit_negative_2.setChecked(fit_params['fit_negative'])
-        self.ui.max_iteration_2.setValue(fit_params['max_ite'])
-        self.ui.cbb_fit_methods_2.setCurrentText(fit_params['method'])
-        self.ui.cbb_cpu_number_2.setCurrentText(fit_params['ncpus'])
-        self.ui.xtol_2.setText(str(fit_params['xtol']))
 
     def open_data(self, spectra=None, file_paths=None, ):
         if self.spectra_fs is None:
@@ -222,8 +203,8 @@ class Spectrums(QObject):
     def create_spectra_plot_widget(self):
         """Create widget of the spectra plot"""
         plt.style.use(PLOT_POLICY)
-        clear_layout(self.ui.QVBoxlayout_2.layout())
-        clear_layout(self.ui.toolbar_frame_3.layout())
+        self.common.clear_layout(self.ui.QVBoxlayout_2.layout())
+        self.common.clear_layout(self.ui.toolbar_frame_3.layout())
         self.upd_spectra_list()
         dpi = float(self.ui.sb_dpi_spectra_2.text())
 
@@ -248,7 +229,10 @@ class Spectrums(QObject):
         self.ui.toolbar_frame_3.addWidget(self.toolbar)
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
-
+    def rescale(self):
+        """Rescale the figure."""
+        self.ax.autoscale()
+        self.canvas1.draw()
     def on_click(self, event):
         """On click action to add a "peak models" or "baseline points" """
         sel_spectrum, sel_spectra = self.get_spectrum_object()
@@ -297,11 +281,6 @@ class Spectrums(QObject):
         self.canvas3 = FigureCanvas(fig3)
         self.ui.frame_graph_7.addWidget(self.canvas3)
         self.canvas3.draw()
-
-    def rescale(self):
-        """Rescale the figure."""
-        self.ax.autoscale()
-        self.canvas1.draw()
 
     def plot1(self):
         """Plot all selected spectra"""
@@ -402,6 +381,50 @@ class Spectrums(QObject):
         self.read_x_range()
         self.show_peak_table()
 
+    def read_x_range(self):
+        """Read x range of selected spectrum"""
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
+        self.ui.range_min_2.setText(str(sel_spectrum.x[0]))
+        self.ui.range_max_2.setText(str(sel_spectrum.x[-1]))
+
+    def set_x_range(self, fnames=None):
+        """ Set new x range for selected spectrum"""
+        new_x_min = float(self.ui.range_min_2.text())
+        new_x_max = float(self.ui.range_max_2.text())
+        if fnames is None:
+            fnames = self.get_spectrum_fnames()
+        self.common.reinit_spectrum(fnames, self.spectra_fs)
+        for fname in fnames:
+            spectrum, _ = self.spectra_fs.get_objects(fname)
+            spectrum.range_min = float(self.ui.range_min_2.text())
+            spectrum.range_max = float(self.ui.range_max_2.text())
+
+            ind_min = closest_index(spectrum.x0, new_x_min)
+            ind_max = closest_index(spectrum.x0, new_x_max)
+            spectrum.x = spectrum.x0[ind_min:ind_max + 1].copy()
+            spectrum.y = spectrum.y0[ind_min:ind_max + 1].copy()
+            spectrum.attractors_calculation()
+        QTimer.singleShot(50, self.upd_spectra_list)
+        QTimer.singleShot(300, self.rescale)
+
+    def set_x_range_all(self):
+        """ Set new x range for all spectrum"""
+        fnames = self.spectra_fs.fnames
+        self.set_x_range(fnames=fnames)
+
+    def get_baseline_settings(self):
+        """ Pass baseline settings from GUI to spectrum objects for baseline
+        subtraction"""
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
+        if sel_spectrum is None:
+            return
+        sel_spectrum.baseline.attached = self.ui.cb_attached_3.isChecked()
+        sel_spectrum.baseline.sigma = self.ui.noise_2.value()
+        if self.ui.rbtn_linear_2.isChecked():
+            sel_spectrum.baseline.mode = "Linear"
+        else:
+            sel_spectrum.baseline.mode = "Polynomial"
+            sel_spectrum.baseline.order_max = self.ui.degre_2.value()
     def plot_baseline_dynamically(self, ax, spectrum):
         """ To evaluate and plot baseline points and line dynamically"""
         self.get_baseline_settings()
@@ -444,62 +467,8 @@ class Spectrums(QObject):
         """ Subtract baseline for all spectrum(s) """
         self.subtract_baseline(self.spectra_fs)
 
-    def subtract_baseline_handler(self):
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.subtract_baseline_all()
-        else:
-            self.subtract_baseline()
 
-    def read_x_range(self):
-        """Read x range of selected spectrum"""
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        self.ui.range_min_2.setText(str(sel_spectrum.x[0]))
-        self.ui.range_max_2.setText(str(sel_spectrum.x[-1]))
 
-    def set_x_range(self, fnames=None):
-        """ Set new x range for selected spectrum"""
-        new_x_min = float(self.ui.range_min_2.text())
-        new_x_max = float(self.ui.range_max_2.text())
-        if fnames is None:
-            fnames = self.get_spectrum_fnames()
-        reinit_spectrum(fnames, self.spectra_fs)
-        for fname in fnames:
-            spectrum, _ = self.spectra_fs.get_objects(fname)
-            spectrum.range_min = float(self.ui.range_min_2.text())
-            spectrum.range_max = float(self.ui.range_max_2.text())
-
-            ind_min = closest_index(spectrum.x0, new_x_min)
-            ind_max = closest_index(spectrum.x0, new_x_max)
-            spectrum.x = spectrum.x0[ind_min:ind_max + 1].copy()
-            spectrum.y = spectrum.y0[ind_min:ind_max + 1].copy()
-            spectrum.attractors_calculation()
-        QTimer.singleShot(50, self.upd_spectra_list)
-        QTimer.singleShot(300, self.rescale)
-
-    def set_x_range_all(self):
-        """ Set new x range for all spectrum"""
-        fnames = self.spectra_fs.fnames
-        self.set_x_range(fnames=fnames)
-
-    def set_x_range_handler(self):
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.set_x_range_all()
-        else:
-            self.set_x_range()
-
-    def show_peak_table(self):
-        """ To show all fitted parameters in GUI"""
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        main_layout = self.ui.peak_table1_2
-        cb_limits = self.ui.cb_limits_2
-        cb_expr = self.ui.cb_expr_2
-        update = self.upd_spectra_list
-        show_params = ShowParameters(main_layout, sel_spectrum, cb_limits,
-                                     cb_expr, update)
-        show_params.show_peak_table(main_layout, sel_spectrum, cb_limits,
-                                    cb_expr)
 
     def clear_peaks(self, fnames=None):
         """Clear all existing peak models of the selected spectrum(s)"""
@@ -518,40 +487,6 @@ class Spectrums(QObject):
         fnames = self.spectra_fs.fnames
         self.clear_peaks(fnames)
 
-    def clear_peaks_handler(self):
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.clear_peaks_all()
-        else:
-            self.clear_peaks()
-
-    def save_fit_settings(self):
-        """Save all fitting settings to QSettings"""
-        fit_params = {
-            'fit_negative': self.ui.cb_fit_negative_2.isChecked(),
-            'max_ite': self.ui.max_iteration_2.value(),
-            'method': self.ui.cbb_fit_methods_2.currentText(),
-            'ncpus': self.ui.cbb_cpu_number_2.currentText(),
-            'xtol': float(self.ui.xtol_2.text())
-        }
-        print("settings are saved")
-        # Save the fit_params to QSettings
-        for key, value in fit_params.items():
-            self.settings.setValue(key, value)
-
-    def get_baseline_settings(self):
-        """ Pass baseline settings from GUI to spectrum objects for baseline
-        subtraction"""
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        if sel_spectrum is None:
-            return
-        sel_spectrum.baseline.attached = self.ui.cb_attached_3.isChecked()
-        sel_spectrum.baseline.sigma = self.ui.noise_2.value()
-        if self.ui.rbtn_linear_2.isChecked():
-            sel_spectrum.baseline.mode = "Linear"
-        else:
-            sel_spectrum.baseline.mode = "Polynomial"
-            sel_spectrum.baseline.order_max = self.ui.degre_2.value()
 
     def open_fit_model(self, fname_json=None):
         """Load a fit model pre-created by FITSPY tool"""
@@ -605,14 +540,6 @@ class Spectrums(QObject):
         fnames = self.spectra_fs.fnames
         self.apply_loaded_fit_model(fnames=fnames)
 
-    def apply_loaded_fit_model_fnc_handler(self):
-        """Switch between 2 save fit fnc with the Ctrl key"""
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.apply_loaded_fit_model_all()
-        else:
-            self.apply_loaded_fit_model()
-
     def get_fit_settings(self):
         """Getall settings for the fitting action"""
         sel_spectrum, sel_spectra = self.get_spectrum_object()
@@ -642,13 +569,6 @@ class Spectrums(QObject):
         fnames = self.spectra_fs.fnames
         self.fit(fnames)
 
-    def apply_fit_model_handler(self):
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.fit_all()
-        else:
-            self.fit()
-
     def copy_fit_model(self):
         """ To copy the model dict of the selected spectrum. If several
         spectrums are selected → copy the model dict of first spectrum in
@@ -677,7 +597,7 @@ class Spectrums(QObject):
         if fnames is None:
             fnames = self.get_spectrum_fnames()
 
-        reinit_spectrum(fnames, self.spectra_fs)
+        self.common.reinit_spectrum(fnames, self.spectra_fs)
         fit_model = deepcopy(self.current_fit_model)
         if self.current_fit_model is not None:
             # Starting fit process in a seperate thread
@@ -702,13 +622,17 @@ class Spectrums(QObject):
         fnames = self.spectra_fs.fnames
         self.paste_fit_model(fnames)
 
-    def paste_fit_model_fnc_handler(self):
-        """Switch between 2 save fit fnc with the Ctrl key"""
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.paste_fit_model_all()
-        else:
-            self.paste_fit_model()
+    def show_peak_table(self):
+        """ To show all fitted parameters in GUI"""
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
+        main_layout = self.ui.peak_table1_2
+        cb_limits = self.ui.cb_limits_2
+        cb_expr = self.ui.cb_expr_2
+        update = self.upd_spectra_list
+        show_params = ShowParameters(main_layout, sel_spectrum, cb_limits,
+                                     cb_expr, update)
+        show_params.show_peak_table(main_layout, sel_spectrum, cb_limits,
+                                    cb_expr)
 
     def save_fit_model(self):
         """To save the fit model of the current selected spectrum"""
@@ -755,11 +679,10 @@ class Spectrums(QObject):
                 names.append(name)
             self.df_fit_results = self.df_fit_results.iloc[:,
                                   list(np.argsort(names, kind='stable'))]
-            columns = [translate_param(self.current_fit_model, column) for column
-                       in
-                       self.df_fit_results.columns]
+            columns = [self.common.translate_param(self.current_fit_model, column) for column
+                       in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
-            display_df_in_table(self.ui.fit_results_table_2,
+            self.common.display_df_in_table(self.ui.fit_results_table_2,
                                 self.df_fit_results)
         else:
             self.ui.fit_results_table_2.clear()
@@ -777,6 +700,7 @@ class Spectrums(QObject):
             self.ui.cbb_split_fname.addItem(part)
 
     def add_column(self):
+        """Add a column to the dataframe of fit results based on split_fname method"""
         dfr = self.df_fit_results
         col_name = self.ui.ent_col_name.text()
         selected_part_index = self.ui.cbb_split_fname.currentIndex()
@@ -799,7 +723,7 @@ class Spectrums(QObject):
             part) > selected_part_index else None for part in parts]
 
         self.df_fit_results = dfr
-        display_df_in_table(self.ui.fit_results_table_2, self.df_fit_results)
+        self.common.display_df_in_table(self.ui.fit_results_table_2, self.df_fit_results)
         self.send_df_to_viz()
         self.upd_cbb_param()
 
@@ -928,7 +852,7 @@ class Spectrums(QObject):
             xlabel_rot = float(text)
 
         ax = self.ax2
-        plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax,
+        self.common.plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax,
                    title,
                    x_text, y_text, xlabel_rot)
         self.ax2.get_figure().tight_layout()
@@ -958,7 +882,7 @@ class Spectrums(QObject):
             xlabel_rot = float(text)
 
         ax = self.ax3
-        plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
+        self.common.plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
                    x_text, y_text, xlabel_rot)
 
         self.ax3.get_figure().tight_layout()
@@ -990,7 +914,7 @@ class Spectrums(QObject):
         """Reinitialize the selected spectrum(s)"""
         if fnames is None:
             fnames = self.get_spectrum_fnames()
-        reinit_spectrum(fnames, self.spectra_fs)
+        self.common.reinit_spectrum(fnames, self.spectra_fs)
         self.plot_delay()
         self.upd_spectra_list()
         QTimer.singleShot(200, self.rescale)
@@ -1000,13 +924,7 @@ class Spectrums(QObject):
         fnames = self.spectra_fs.fnames
         self.reinit(fnames)
 
-    def reinit_fnc_handler(self):
-        """Switch between 2 save fit fnc with the Ctrl key"""
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
-            self.reinit_all()
-        else:
-            self.reinit()
+
 
     def view_fit_results_df(self):
         """To view selected dataframe"""
@@ -1060,7 +978,7 @@ class Spectrums(QObject):
                 self.filtered_df = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
-        display_df_in_table(self.ui.fit_results_table_2, self.df_fit_results)
+        self.common.display_df_in_table(self.ui.fit_results_table_2, self.df_fit_results)
         self.upd_cbb_param()
         self.send_df_to_viz()
 
@@ -1079,7 +997,7 @@ class Spectrums(QObject):
         spectrum_fs = selected_spectra_fs[0]
         if spectrum_fs.result_fit:
             text = fit_report(spectrum_fs.result_fit)
-            view_text(ui, title, text)
+            self.common.view_text(ui, title, text)
 
     def select_all_spectra(self):
         """ To quickly select all spectra within the spectra listbox"""
@@ -1099,15 +1017,15 @@ class Spectrums(QObject):
 
     def copy_fig(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas1)
+        self.common.copy_fig_to_clb(canvas=self.canvas1)
 
     def copy_fig_graph1(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas2)
+        self.common.copy_fig_to_clb(canvas=self.canvas2)
 
     def copy_fig_graph2(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas3)
+        self.common.copy_fig_to_clb(canvas=self.canvas3)
 
     def save_work(self):
         """Save the current work/results."""
@@ -1182,11 +1100,44 @@ class Spectrums(QObject):
 
                     self.plot2()
                     self.plot3()
-                    display_df_in_table(self.ui.fit_results_table,
+                    self.common.display_df_in_table(self.ui.fit_results_table,
                                         self.df_fit_results)
         except Exception as e:
             show_alert(f"Error loading work: {e}")
+    def load_fit_settings(self):
+        """Reload last used fitting settings from QSettings"""
+        fit_params = {
+            'fit_negative': self.settings.value('fit_negative',
+                                                defaultValue=False, type=bool),
+            'max_ite': self.settings.value('max_ite', defaultValue=500,
+                                           type=int),
+            'method': self.settings.value('method', defaultValue='leastsq',
+                                          type=str),
+            'ncpus': self.settings.value('ncpus', defaultValue='auto',
+                                         type=str),
+            'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float)
+        }
 
+        # Update GUI elements with the loaded values
+        self.ui.cb_fit_negative_2.setChecked(fit_params['fit_negative'])
+        self.ui.max_iteration_2.setValue(fit_params['max_ite'])
+        self.ui.cbb_fit_methods_2.setCurrentText(fit_params['method'])
+        self.ui.cbb_cpu_number_2.setCurrentText(fit_params['ncpus'])
+        self.ui.xtol_2.setText(str(fit_params['xtol']))
+
+    def save_fit_settings(self):
+        """Save all fitting settings to QSettings when interface element's states changed"""
+        fit_params = {
+            'fit_negative': self.ui.cb_fit_negative_2.isChecked(),
+            'max_ite': self.ui.max_iteration_2.value(),
+            'method': self.ui.cbb_fit_methods_2.currentText(),
+            'ncpus': self.ui.cbb_cpu_number_2.currentText(),
+            'xtol': float(self.ui.xtol_2.text())
+        }
+        print("settings are saved")
+        # Save the fit_params to QSettings
+        for key, value in fit_params.items():
+            self.settings.setValue(key, value)
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""
         if self.spectra_fs:
@@ -1205,3 +1156,54 @@ class Spectrums(QObject):
         else:
             show_alert("No spectrum is loaded, FITSPY cannot open")
             return
+
+    def apply_fit_model_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.fit_all()
+        else:
+            self.fit()
+
+    def reinit_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.reinit_all()
+        else:
+            self.reinit()
+    def subtract_baseline_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.subtract_baseline_all()
+        else:
+            self.subtract_baseline()
+
+    def paste_fit_model_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.paste_fit_model_all()
+        else:
+            self.paste_fit_model()
+
+    def set_x_range_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.set_x_range_all()
+        else:
+            self.set_x_range()
+
+    def apply_loaded_fit_model_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.apply_loaded_fit_model_all()
+        else:
+            self.apply_loaded_fit_model()
+
+    def clear_peaks_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.clear_peaks_all()
+        else:
+            self.clear_peaks()

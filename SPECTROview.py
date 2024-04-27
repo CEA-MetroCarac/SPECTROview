@@ -8,8 +8,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon
 
-from utils import dark_palette, light_palette, view_markdown, show_alert, \
-    PEAK_MODELS
+from common import CommonUtilities, PEAK_MODELS
 
 from ui import resources_new
 from dataframe import Dataframe
@@ -34,6 +33,8 @@ class Main:
         self.ui = loader.load(ui_file)
         ui_file.close()
 
+        self.common = CommonUtilities()
+
         # Initialize QSettings
         QSettings.setDefaultFormat(QSettings.IniFormat)
         self.settings = QSettings("CEA-Leti", "SPECTROview")
@@ -52,8 +53,8 @@ class Main:
         self.workspace = SaveLoadWorkspace(self.settings, self.ui,
                                            self.dataframe,
                                            self.visualization)
-        self.spectrums = Spectrums(self.settings, self.ui, self.dataframe)
-        self.maps = Maps(self.settings, self.ui, self.dataframe, self.spectrums)
+        self.spectrums = Spectrums(self.settings, self.ui, self.dataframe, self.common)
+        self.maps = Maps(self.settings, self.ui, self.dataframe, self.spectrums,self.common)
 
 
         # DATAFRAME
@@ -291,11 +292,11 @@ class Main:
         self.ui.btn_copy2_7.clicked.connect(self.spectrums.copy_fig_graph2)
 
     def toggle_dark_mode(self):
-        self.ui.setPalette(dark_palette())
+        self.ui.setPalette(self.common.dark_palette())
         self.settings.setValue("mode", "dark")  # Save to settings
 
     def toggle_light_mode(self):
-        self.ui.setPalette(light_palette())
+        self.ui.setPalette(self.common.light_palette())
         self.settings.setValue("mode", "light")  # Save to settings
 
     def update_combo_hue(self, index):
@@ -311,11 +312,11 @@ class Main:
     def open_doc_df_query(self):
         """Open doc detail about query function of pandas dataframe"""
         title = "Data filtering"
-        view_markdown(self.ui, title, HELP_DFQUERY, 550, 650)
+        self.common.view_markdown(self.ui, title, HELP_DFQUERY, 550, 650)
 
     def show_about(self):
         """Show about dialog """
-        view_markdown(self.ui, "About", ABOUT, 500, 300)
+        self.common.view_markdown(self.ui, "About", ABOUT, 500, 300)
 
 
 expiration_date = datetime.datetime(2024, 10, 1)

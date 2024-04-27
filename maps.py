@@ -1,4 +1,6 @@
-# maps.py module
+"""
+Module dedicated to the 'Wafer/Maps' TAB of the main GUI
+"""
 import os
 import numpy as np
 import pandas as pd
@@ -6,17 +8,13 @@ import json
 from copy import deepcopy
 from pathlib import Path
 import dill
-from utils import view_df, show_alert, quadrant, zone, view_text, \
-    copy_fig_to_clb, \
-    translate_param, clear_layout, reinit_spectrum, plot_graph, \
-    display_df_in_table
-from utils import FitThread,WaferView, ShowParameters,FIT_METHODS, NCPUS
+from common import view_df, show_alert
+from common import FitThread, WaferView, ShowParameters, FIT_METHODS, NCPUS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
 from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
-
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -31,22 +29,17 @@ from tkinter import Tk, END
 DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 
-
-def update_param_hint_value(pm, key, text):
-    # print(f"Peak Model: {pm.prefix}, Param Hint Key: {key}, Value: {text}")
-    pm.param_hints[key]['value'] = float(text)
-
-
 class Maps(QObject):
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
 
-    def __init__(self, settings, ui, dataframe, spectrums):
+    def __init__(self, settings, ui, dataframe, spectrums, common):
         super().__init__()
         self.settings = settings
         self.ui = ui
         self.dataframe = dataframe
         self.spectrums = spectrums
+        self.common = common
 
         self.wafers = {}  # list of opened wafers
         self.toolbar = None
@@ -253,7 +246,7 @@ class Maps(QObject):
         if fnames is None:
             wafer_name, coords = self.spectre_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
-        reinit_spectrum(fnames, self.spectra_fs)
+        self.common.reinit_spectrum(fnames, self.spectra_fs)
         for fname in fnames:
             spectrum, _ = self.spectra_fs.get_objects(fname)
             spectrum.range_min = float(self.ui.range_min.text())
@@ -417,7 +410,6 @@ class Maps(QObject):
         else:
             self.current_fit_model = None
             self.current_fit_model = deepcopy(sel_spectrum.save())
-
         fname = sel_spectrum.fname
         self.ui.lbl_copied_fit_model.setText(
             f"The fit model of '{fname}' spectrum is copied to the clipboard.")
@@ -430,7 +422,7 @@ class Maps(QObject):
             wafer_name, coords = self.spectre_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
 
-        reinit_spectrum(fnames, self.spectra_fs)
+        self.common.reinit_spectrum(fnames, self.spectra_fs)
         fit_model = deepcopy(self.current_fit_model)
         if fit_model is not None:
             # Starting fit process in a seperate thread
@@ -505,23 +497,21 @@ class Maps(QObject):
                 names.append(name)
             self.df_fit_results = self.df_fit_results.iloc[:,
                                   list(np.argsort(names, kind='stable'))]
-            columns = [translate_param(self.current_fit_model, column) for
-                       column
-                       in self.df_fit_results.columns]
+            columns = [self.common.translate_param(self.current_fit_model, column) for
+                       column in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
 
             # QUADRANT
             self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
-                quadrant,
-                axis=1)
+                self.common.quadrant, axis=1)
             # DIAMETER
             diameter = float(self.ui.wafer_size.text())
 
             # ZONE
             self.df_fit_results['Zone'] = self.df_fit_results.apply(
-                lambda row: zone(row, diameter), axis=1)
+                lambda row: self.common.zone(row, diameter), axis=1)
 
-            display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+            self.common.display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
         else:
             self.ui.fit_results_table.clear()
 
@@ -572,7 +562,7 @@ class Maps(QObject):
                 self.df_fit_results = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
-        display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+        self.common.display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
 
         self.upd_cbb_param()
         self.upd_cbb_wafer()
@@ -615,6 +605,7 @@ class Maps(QObject):
             self.ui.cbb_split_fname_2.addItem(part)
 
     def add_column(self):
+        """Add a column to the dataframe of fit results based on split_fname method"""
         dfr = self.df_fit_results
         col_name = self.ui.ent_col_name_2.text()
         selected_part_index = self.ui.cbb_split_fname_2.currentIndex()
@@ -637,7 +628,7 @@ class Maps(QObject):
             part) > selected_part_index else None for part in parts]
 
         self.df_fit_results = dfr
-        display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+        self.common.display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
         self.send_df_to_viz()
         self.upd_cbb_param()
         self.upd_cbb_wafer()
@@ -647,7 +638,7 @@ class Maps(QObject):
         if fnames is None:
             wafer_name, coords = self.spectre_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
-        reinit_spectrum(fnames, self.spectra_fs)
+        self.common.reinit_spectrum(fnames, self.spectra_fs)
         self.upd_spectra_list()
         QTimer.singleShot(200, self.rescale)
 
@@ -664,8 +655,8 @@ class Maps(QObject):
     def create_spectra_plot_widget(self):
         """Create canvas and toolbar for plotting in the GUI"""
         plt.style.use(PLOT_POLICY)
-        clear_layout(self.ui.QVBoxlayout.layout())
-        clear_layout(self.ui.toolbar_frame.layout())
+        self.common.clear_layout(self.ui.QVBoxlayout.layout())
+        self.common.clear_layout(self.ui.toolbar_frame.layout())
         self.upd_spectra_list()
         dpi = float(self.ui.sb_dpi_spectra.text())
 
@@ -901,7 +892,7 @@ class Maps(QObject):
 
     def plot3(self):
         """Plot WaferDataFrame"""
-        clear_layout(self.ui.frame_wafer.layout())
+        self.common.clear_layout(self.ui.frame_wafer.layout())
         dfr = self.df_fit_results
         wafer_name = self.ui.cbb_wafer_1.currentText()
         color = self.ui.cbb_color_pallete.currentText()
@@ -963,7 +954,7 @@ class Maps(QObject):
         if text:
             xlabel_rot = float(text)
         ax = self.ax4
-        plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
+        self.common.plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
                    x_text, y_text, xlabel_rot)
         self.ax4.get_figure().tight_layout()
         self.canvas4.draw()
@@ -1053,15 +1044,15 @@ class Maps(QObject):
 
     def copy_fig(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas1)
+        self.common.copy_fig_to_clb(canvas=self.canvas1)
 
     def copy_fig_wafer(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas3)
+        self.common.copy_fig_to_clb(canvas=self.canvas3)
 
     def copy_fig_graph(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas4)
+        self.common.copy_fig_to_clb(canvas=self.canvas4)
 
     def select_all_spectra(self):
         """ To quickly select all spectra within the spectra listbox"""
@@ -1197,7 +1188,7 @@ class Maps(QObject):
         if spectrum_fs.result_fit:
             try:
                 text = fit_report(spectrum_fs.result_fit)
-                view_text(ui, title, text)
+                self.common.view_text(ui, title, text)
             except:
                 return
 
@@ -1298,7 +1289,7 @@ class Maps(QObject):
 
                     self.plot4()
                     self.plot3()
-                    display_df_in_table(self.ui.fit_results_table,
+                    self.common.display_df_in_table(self.ui.fit_results_table,
                                         self.df_fit_results)
         except Exception as e:
             show_alert(f"Error loading work: {e}")

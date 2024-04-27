@@ -56,9 +56,9 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="tab_2Dmaps">
+      <widget class="QWidget" name="tab_wafer">
        <attribute name="title">
-        <string>Wafer processing</string>
+        <string>Wafer</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_5">
         <property name="leftMargin">
@@ -1411,8 +1411,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>373</height>
+                       <width>301</width>
+                       <height>363</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
@@ -3673,7 +3673,7 @@
               <item>
                <widget class="QPushButton" name="btn_send_to_compare">
                 <property name="text">
-                 <string>Send spectrum(s) to compare</string>
+                 <string>Send selected spectrum(s) to 'Spectra' TAB</string>
                 </property>
                </widget>
               </item>
@@ -3756,9 +3756,9 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_spectrum">
+      <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
-        <string>Spectrum processing</string>
+        <string>Spectra</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_131">
         <property name="leftMargin">
@@ -6894,7 +6894,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_graph_plot">
+      <widget class="QWidget" name="tab_visualization">
        <attribute name="title">
         <string>Data Visualization</string>
        </attribute>
@@ -7994,7 +7994,7 @@
                  </property>
                 </widget>
                </widget>
-               <widget class="QWidget" name="tab_wafer">
+               <widget class="QWidget" name="waferplot_settings">
                 <attribute name="title">
                  <string>Wafer plot settings</string>
                 </attribute>
@@ -8133,11 +8133,6 @@
          </layout>
         </item>
        </layout>
-      </widget>
-      <widget class="QWidget" name="tab_2">
-       <attribute name="title">
-        <string>Tools</string>
-       </attribute>
       </widget>
      </widget>
     </item>

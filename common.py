@@ -155,9 +155,9 @@ class CommonUtilities():
                     layout.removeWidget(widget)
                     widget.close()
 
-    def translate_param(self, model_fs, param):
-        """Translate parameter names to plot title"""
-        peak_labels = model_fs["peak_labels"]
+    def translate_param(self, fit_model, param):
+        """Translate parameter names within column headers: example x0 -> Position, ampli ->  Intensity"""
+        peak_labels = fit_model["peak_labels"]
         param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
                               "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
                               "alpha": "L/G ratio",

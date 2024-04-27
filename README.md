@@ -17,7 +17,7 @@ ___
 - **Optimal GUI for easy and rapid inspection and comparison of spectra.**
 
 <p align="center">
-    <img src="resources/images/main_windows1.PNG">
+    <img src="resources/images/1. Loading files and navigation.gif">
 </p>
 
 - **Collect All Best Fit Results at a Glance**.

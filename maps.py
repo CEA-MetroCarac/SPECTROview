@@ -41,11 +41,12 @@ class Maps(QObject):
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
 
-    def __init__(self, settings, ui, dataframe):
+    def __init__(self, settings, ui, dataframe, spectrums):
         super().__init__()
         self.settings = settings
         self.ui = ui
         self.dataframe = dataframe
+        self.spectrums = spectrums
 
         self.wafers = {}  # list of opened wafers
         self.toolbar = None
@@ -234,8 +235,6 @@ class Maps(QObject):
             lambda: self.ui.btn_fit.setEnabled(True))
         self.apply_model_thread.start()
 
-        self.current_fit_model = deepcopy(self.loaded_fit_model)
-
     def apply_loaded_fit_model_all(self):
         """ Apply loaded fit model to all selected spectra"""
         fnames = self.spectra_fs.fnames
@@ -418,13 +417,13 @@ class Maps(QObject):
         else:
             self.current_fit_model = None
             self.current_fit_model = deepcopy(sel_spectrum.save())
+
         fname = sel_spectrum.fname
         self.ui.lbl_copied_fit_model.setText(
             f"The fit model of '{fname}' spectrum is copied to the clipboard.")
 
     def paste_fit_model(self, fnames=None):
         """ To apply the copied fit model to selected spectrums"""
-        # Get fnames of all selected spectra
         self.ui.btn_paste_fit_model.setEnabled(False)
 
         if fnames is None:
@@ -433,7 +432,7 @@ class Maps(QObject):
 
         reinit_spectrum(fnames, self.spectra_fs)
         fit_model = deepcopy(self.current_fit_model)
-        if self.current_fit_model is not None:
+        if fit_model is not None:
             # Starting fit process in a seperate thread
             self.paste_model_thread = FitThread(self.spectra_fs, fit_model,
                                                 fnames)
@@ -1152,7 +1151,13 @@ class Maps(QObject):
         dfs = self.dataframe.original_dfs
         dfs["2Dmaps_bestfit_results"] = self.df_fit_results
         self.dataframe.action_open_df(file_paths=None, original_dfs=dfs)
-
+    def send_spectrum_to_compare(self):
+        """Send selected spectrums to the 'Spectrums' TAB"""
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
+        for spectrum in sel_spectra:
+            sent_spectrum =deepcopy(spectrum)
+            self.spectrums.spectra_fs.append(sent_spectrum)
+            self.spectrums.upd_spectra_list()
     def cosmis_ray_detection(self):
         self.spectra_fs.outliers_limit_calculation()
 
@@ -1254,10 +1259,11 @@ class Maps(QObject):
                     load = dill.load(f)
                     self.spectra_fs = load.get('spectra_fs')
                     self.wafers = load.get('wafers')
-                    self.loaded_fit_model = load.get('loaded_fit_model')
-                    text = load.get('loaded_model_name', '')
-                    self.ui.lb_loaded_model.setText(text)
                     self.current_fit_model = load.get('current_fit_model')
+                    self.loaded_fit_model = load.get('loaded_fit_model')
+                    model_name = load.get('loaded_model_name', '')
+                    self.ui.lb_loaded_model.setText(model_name)
+
 
                     self.df_fit_results = load.get('df_fit_results')
                     self.upd_cbb_param()
@@ -1290,8 +1296,8 @@ class Maps(QObject):
                     self.ui.int_vmin.setText(load.get('vmin', ''))
                     self.ui.int_vmax.setText(load.get('vmax', ''))
 
-                    # self.plot4()
-                    # self.plot3()
+                    self.plot4()
+                    self.plot3()
                     display_df_in_table(self.ui.fit_results_table,
                                         self.df_fit_results)
         except Exception as e:

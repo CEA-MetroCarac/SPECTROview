@@ -39,7 +39,7 @@ class Spectrums(QObject):
         self.ui = ui
         self.dataframe = dataframe
 
-        self.loaded_model_fs = None
+        self.loaded_fit_model = None
         self.current_fit_model = None
         self.spectra_fs = Spectra()
         self.df_fit_results = None
@@ -569,35 +569,36 @@ class Spectrums(QObject):
             if not selected_file:
                 return
             fname_json = selected_file
-        self.loaded_model_fs = self.spectra_fs.load_model(fname_json, ind=0)
+        self.loaded_fit_model = self.spectra_fs.load_model(fname_json, ind=0)
         display_name = QFileInfo(fname_json).baseName()
         self.ui.lb_loaded_model_3.setText(f"'{display_name}' is loaded !")
 
     def apply_loaded_fit_model(self, fnames=None):
-        """Fit selected spectrum(s)"""
+        """Fit selected spectrum(s) with the LOADED fit model"""
         self.ui.btn_fit_3.setEnabled(False)
-        if self.loaded_model_fs is None:
+
+        if self.loaded_fit_model is None:
             show_alert("Load a fit model before fitting.")
-            self.ui.btn_fit_3.setEnabled(False)
+            self.ui.btn_fit_3.setEnabled(True)
             return
+
         if fnames is None:
             fnames = self.get_spectrum_fnames()
 
         # Start fitting process in a separate thread
-        self.fit_thread = FitThread(self.spectra_fs, self.loaded_model_fs,
-                                    fnames)
+        self.apply_model_thread = FitThread(self.spectra_fs, self.loaded_fit_model,
+                                            fnames)
         # To update progress bar
-        self.fit_thread.fit_progress_changed.connect(self.update_pbar)
+        self.apply_model_thread.fit_progress_changed.connect(self.update_pbar)
         # To display progress in GUI
-        self.fit_thread.fit_progress.connect(
+        self.apply_model_thread.fit_progress.connect(
             lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
                                                         fnames))
-        # To update spectra list + plot fitted specturm once fitting finished
-        self.fit_thread.fit_completed.connect(self.fit_completed)
-
-        self.fit_thread.finished.connect(
+        # To update spectra list + plot fitted spectrum once fitting finished
+        self.apply_model_thread.fit_completed.connect(self.fit_completed)
+        self.apply_model_thread.finished.connect(
             lambda: self.ui.btn_fit_3.setEnabled(True))
-        self.fit_thread.start()
+        self.apply_model_thread.start()
 
     def apply_loaded_fit_model_all(self):
         """ Apply loaded fit model to all selected spectra"""
@@ -1119,8 +1120,9 @@ class Spectrums(QObject):
             if file_path:
                 data_to_save = {
                     'spectra_fs': self.spectra_fs,
-                    'model_fs': self.loaded_model_fs,
-                    'model_name': self.ui.lb_loaded_model_3.text(),
+                    'loaded_fit_model': self.loaded_fit_model,
+                    'current_fit_model': self.current_fit_model,
+                    'loaded_model_name': self.ui.lb_loaded_model_3.text(),
                     'df_fit_results': self.df_fit_results,
                     'filters': self.filters,
 
@@ -1152,10 +1154,11 @@ class Spectrums(QObject):
                 with open(file_path, 'rb') as f:
                     load = dill.load(f)
                     self.spectra_fs = load.get('spectra_fs')
-                    self.loaded_model_fs = load.get('model_fs')
-                    model_name = load.get('model_name', '')
+                    self.current_fit_model = load.get('current_fit_model')
+                    self.loaded_fit_model = load.get('loaded_fit_model')
+                    model_name = load.get('loaded_model_name', '')
                     self.ui.lb_loaded_model_3.setText(model_name)
-                    self.ui.lb_loaded_model_3.setStyleSheet("color: yellow;")
+
 
                     self.df_fit_results = load.get('df_fit_results')
                     self.upd_cbb_param()
@@ -1179,6 +1182,8 @@ class Spectrums(QObject):
 
                     self.plot2()
                     self.plot3()
+                    display_df_in_table(self.ui.fit_results_table,
+                                        self.df_fit_results)
         except Exception as e:
             show_alert(f"Error loading work: {e}")
 

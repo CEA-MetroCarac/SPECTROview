@@ -52,8 +52,9 @@ class Main:
         self.workspace = SaveLoadWorkspace(self.settings, self.ui,
                                            self.dataframe,
                                            self.visualization)
-        self.maps = Maps(self.settings, self.ui, self.dataframe)
         self.spectrums = Spectrums(self.settings, self.ui, self.dataframe)
+        self.maps = Maps(self.settings, self.ui, self.dataframe, self.spectrums)
+
 
         # DATAFRAME
         self.ui.btn_open_df.clicked.connect(
@@ -157,7 +158,7 @@ class Main:
         self.ui.lineEdit_2.setValidator(validator)
 
         # Set default number of plot per row
-        self.ui.spinBox_plot_per_row.setValue(3)
+        self.ui.spinBox_plot_per_row.setValue(2)
 
         # Help : document about pandas_df_query
         self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
@@ -221,6 +222,7 @@ class Main:
         self.ui.cbb_fit_models.addItems(PEAK_MODELS)
         self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range_handler)
 
+        self.ui.btn_send_to_compare.clicked.connect(self.maps.send_spectrum_to_compare)
         ########################################################
         ############## GUI for Spectrums Processing tab #############
         ########################################################
@@ -371,7 +373,7 @@ if __name__ == "__main__":
     DIRNAME = os.path.dirname(__file__)
     DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
     DATA_MAPS = os.path.join(DIRNAME, "data_test", "RAW 2Dmaps")
-    fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_09.csv')
+    fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
     fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
     fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
     fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')

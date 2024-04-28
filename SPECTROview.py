@@ -8,7 +8,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon
 
-from common import CommonUtilities, PEAK_MODELS
+from common import CommonUtilities, FitModelManager, PEAK_MODELS
 
 from ui import resources_new
 from dataframe import Dataframe
@@ -55,7 +55,7 @@ class Main:
                                            self.visualization)
         self.spectrums = Spectrums(self.settings, self.ui, self.dataframe, self.common)
         self.maps = Maps(self.settings, self.ui, self.dataframe, self.spectrums,self.common)
-
+        self.fitmodel_manager = FitModelManager(self.settings)
 
         # DATAFRAME
         self.ui.btn_open_df.clicked.connect(
@@ -185,8 +185,8 @@ class Main:
         self.ui.btn_sel_verti.clicked.connect(self.maps.select_verti)
         self.ui.btn_sel_horiz.clicked.connect(self.maps.select_horiz)
 
-        self.ui.btn_load_model.clicked.connect(self.maps.open_fit_model)
-        self.ui.btn_fit.clicked.connect(self.maps.fit_fnc_handler)
+        self.ui.btn_load_model.clicked.connect(self.maps.load_fit_model)
+        self.ui.btn_apply_model.clicked.connect(self.maps.apply_model_fnc_handler)
         self.ui.btn_init.clicked.connect(self.maps.reinit_fnc_handler)
         self.ui.btn_collect_results.clicked.connect(self.maps.collect_results)
         self.ui.btn_view_df_2.clicked.connect(self.maps.view_fit_results_df)
@@ -214,7 +214,7 @@ class Main:
         self.ui.range_apply.clicked.connect(self.maps.set_x_range_handler)
         self.ui.sub_baseline.clicked.connect(
             self.maps.subtract_baseline_handler)
-        self.ui.btn_fit_2.clicked.connect(self.maps.apply_fit_model_handler)
+        self.ui.btn_fit.clicked.connect(self.maps.fit_fnc_handler)
         self.ui.save_model.clicked.connect(self.maps.save_fit_model)
         self.ui.clear_peaks.clicked.connect(self.maps.clear_peaks_handler)
         self.ui.btn_copy_fit_model.clicked.connect(self.maps.copy_fit_model)
@@ -224,6 +224,10 @@ class Main:
         self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range_handler)
 
         self.ui.btn_send_to_compare.clicked.connect(self.maps.send_spectrum_to_compare)
+        self.ui.btn_default_folder_model.clicked.connect(self.maps.set_default_model_folder)
+
+
+
         ########################################################
         ############## GUI for Spectrums Processing tab #############
         ########################################################
@@ -239,8 +243,8 @@ class Main:
             self.spectrums.set_x_range_handler)
         self.ui.clear_peaks_2.clicked.connect(
             self.spectrums.clear_peaks_handler)
-        self.ui.btn_fit_4.clicked.connect(
-            self.spectrums.apply_fit_model_handler)
+        self.ui.btn_fit_3.clicked.connect(
+            self.spectrums.fit_fnc_handler)
         self.ui.btn_copy_fit_model_2.clicked.connect(
             self.spectrums.copy_fit_model)
         self.ui.btn_paste_fit_model_2.clicked.connect(
@@ -248,9 +252,9 @@ class Main:
         self.ui.save_model_2.clicked.connect(self.spectrums.save_fit_model)
 
         self.ui.btn_open_spectrums.clicked.connect(self.spectrums.open_data)
-        self.ui.btn_load_model_3.clicked.connect(self.spectrums.open_fit_model)
-        self.ui.btn_fit_3.clicked.connect(
-            self.spectrums.apply_loaded_fit_model_fnc_handler)
+        self.ui.btn_load_model_3.clicked.connect(self.spectrums.load_fit_model)
+        self.ui.btn_apply_model_3.clicked.connect(
+            self.spectrums.apply_model_fnc_handler)
         self.ui.btn_open_fitspy_3.clicked.connect(
             self.spectrums.fitspy_launcher)
         self.ui.btn_cosmis_ray_3.clicked.connect(
@@ -291,6 +295,8 @@ class Main:
         self.ui.btn_copy2_3.clicked.connect(self.spectrums.copy_fig_graph1)
         self.ui.btn_copy2_7.clicked.connect(self.spectrums.copy_fig_graph2)
 
+        self.ui.btn_default_folder_model_3.clicked.connect(self.spectrums.set_default_model_folder)
+
     def toggle_dark_mode(self):
         self.ui.setPalette(self.common.dark_palette())
         self.settings.setValue("mode", "dark")  # Save to settings
@@ -322,64 +328,64 @@ class Main:
 expiration_date = datetime.datetime(2024, 10, 1)
 
 
-def launcher():
-    # Check if the current date is past the expiration date
-    if datetime.datetime.now() > expiration_date:
-        text = f"This version of the application has expired on " \
-               f"{expiration_date}, so can not be used anymore. Please " \
-               f"contact the developer for an " \
-               f"updated version"
-        # If expired, disable the central widget
-        app = QApplication(sys.argv)
-        app.setWindowIcon(QIcon(ICON_APPLI))
-        window = Main()
-        window.ui.centralwidget.setEnabled(False)
-        app.setStyle("Fusion")
-        window.ui.show()
-        CommonUtilities.show_alert(text)
-        sys.exit(app.exec())
-
-    # If not expired, continue launching the application as usual
-    app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon(ICON_APPLI))
-    window = Main()
-    window.ui.centralwidget.setEnabled(True)
-    app.setStyle("Fusion")
-    window.ui.show()
-    sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    launcher()
-
-# def launcher2(file_paths=None, fname_json=None):
-#     app = QApplication()
+# def launcher():
+#     # Check if the current date is past the expiration date
+#     if datetime.datetime.now() > expiration_date:
+#         text = f"This version of the application has expired on " \
+#                f"{expiration_date}, so can not be used anymore. Please " \
+#                f"contact the developer for an " \
+#                f"updated version"
+#         # If expired, disable the central widget
+#         app = QApplication(sys.argv)
+#         app.setWindowIcon(QIcon(ICON_APPLI))
+#         window = Main()
+#         window.ui.centralwidget.setEnabled(False)
+#         app.setStyle("Fusion")
+#         window.ui.show()
+#         CommonUtilities.show_alert(text)
+#         sys.exit(app.exec())
+#
+#     # If not expired, continue launching the application as usual
+#     app = QApplication(sys.argv)
 #     app.setWindowIcon(QIcon(ICON_APPLI))
 #     window = Main()
+#     window.ui.centralwidget.setEnabled(True)
 #     app.setStyle("Fusion")
-#     if file_paths is not None:
-#         window.maps.open_data(file_paths=file_paths)
-#     if fname_json is not None:
-#         window.maps.open_fit_model(fname_json=fname_json)
-#
-#     # if file_paths is not None:
-#     #     window.spectrums.open_data(file_paths=file_paths)
-#     # if fname_json is not None:
-#     #     window.spectrums.open_fit_model(fname_json=fname_json)
 #     window.ui.show()
 #     sys.exit(app.exec())
 #
 #
 # if __name__ == "__main__":
-#     DIRNAME = os.path.dirname(__file__)
-#     DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
-#     DATA_MAPS = os.path.join(DIRNAME, "data_test", "RAW 2Dmaps")
-#     fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
-#     fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
-#     fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
-#     fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')
-#     # fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
-#     # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
-#     # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
-#     # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
-#     launcher2([fname1, fname2, fname3],fname_json1)
+#     launcher()
+
+def launcher2(file_paths=None, fname_json=None):
+    app = QApplication()
+    app.setWindowIcon(QIcon(ICON_APPLI))
+    window = Main()
+    app.setStyle("Fusion")
+    if file_paths is not None:
+        window.maps.open_data(file_paths=file_paths)
+    if fname_json is not None:
+        window.maps.load_fit_model(fname_json=fname_json)
+
+    # if file_paths is not None:
+    #     window.spectrums.open_data(file_paths=file_paths)
+    # if fname_json is not None:
+    #     window.spectrums.open_fit_model(fname_json=fname_json)
+    window.ui.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    DIRNAME = os.path.dirname(__file__)
+    DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
+    DATA_MAPS = os.path.join(DIRNAME, "data_test", "RAW 2Dmaps")
+    fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
+    fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
+    fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
+    fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')
+    # fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
+    # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
+    # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
+    # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
+    launcher2([fname1, fname2, fname3]  )

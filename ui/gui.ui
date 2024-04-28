@@ -1135,7 +1135,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>722</width>
-                               <height>228</height>
+                               <height>209</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -1176,7 +1176,7 @@
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_70">
                          <item>
-                          <widget class="QPushButton" name="btn_fit_2">
+                          <widget class="QPushButton" name="btn_fit">
                            <property name="minimumSize">
                             <size>
                              <width>50</width>
@@ -1228,6 +1228,25 @@
                                <property name="icon">
                                 <iconset>
                                  <normaloff>:/icon/iconpack/copy10.png</normaloff>:/icon/iconpack/copy10.png</iconset>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLabel" name="lbl_copied_fit_model">
+                               <property name="minimumSize">
+                                <size>
+                                 <width>50</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                               <property name="maximumSize">
+                                <size>
+                                 <width>50</width>
+                                 <height>16777215</height>
+                                </size>
+                               </property>
+                               <property name="text">
+                                <string/>
                                </property>
                               </widget>
                              </item>
@@ -1308,26 +1327,105 @@
                             </layout>
                            </item>
                            <item>
-                            <layout class="QHBoxLayout" name="lbl_copied_fit_model_layout">
+                            <layout class="QHBoxLayout" name="horizontalLayout_52">
+                             <property name="spacing">
+                              <number>5</number>
+                             </property>
                              <property name="leftMargin">
                               <number>5</number>
                              </property>
                              <property name="topMargin">
-                              <number>2</number>
+                              <number>5</number>
                              </property>
                              <property name="rightMargin">
-                              <number>2</number>
+                              <number>5</number>
                              </property>
                              <property name="bottomMargin">
-                              <number>2</number>
+                              <number>5</number>
                              </property>
                              <item>
-                              <widget class="QLabel" name="lbl_copied_fit_model">
+                              <widget class="QLabel" name="label_80">
                                <property name="text">
-                                <string/>
+                                <string>Select a model:</string>
                                </property>
-                               <property name="alignment">
-                                <set>Qt::AlignCenter</set>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QComboBox" name="cbb_fit_model_list">
+                               <property name="minimumSize">
+                                <size>
+                                 <width>400</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                               <property name="maximumSize">
+                                <size>
+                                 <width>400</width>
+                                 <height>16777215</height>
+                                </size>
+                               </property>
+                               <property name="toolTip">
+                                <string>Go to 'Settings' to specify a folder where fit models are stored </string>
+                               </property>
+                               <property name="placeholderText">
+                                <string>Select a model for fitting</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="btn_apply_model">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="minimumSize">
+                                <size>
+                                 <width>0</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                               <property name="maximumSize">
+                                <size>
+                                 <width>85</width>
+                                 <height>32</height>
+                                </size>
+                               </property>
+                               <property name="toolTip">
+                                <string>Hold &quot;Ctrl&quot; and click to apply fit model to all wafer</string>
+                               </property>
+                               <property name="text">
+                                <string>Apply model</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <spacer name="horizontalSpacer_6">
+                               <property name="orientation">
+                                <enum>Qt::Horizontal</enum>
+                               </property>
+                               <property name="sizeHint" stdset="0">
+                                <size>
+                                 <width>40</width>
+                                 <height>20</height>
+                                </size>
+                               </property>
+                              </spacer>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="btn_load_model">
+                               <property name="maximumSize">
+                                <size>
+                                 <width>85</width>
+                                 <height>16777215</height>
+                                </size>
+                               </property>
+                               <property name="toolTip">
+                                <string>Load a fit model if it is not in the default folder</string>
+                               </property>
+                               <property name="text">
+                                <string>Load model</string>
                                </property>
                               </widget>
                              </item>
@@ -2877,8 +2975,8 @@
                  <rect>
                   <x>20</x>
                   <y>50</y>
-                  <width>291</width>
-                  <height>241</height>
+                  <width>411</width>
+                  <height>263</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -2962,7 +3060,26 @@
                     </widget>
                    </item>
                    <item>
+                    <spacer name="horizontalSpacer_41">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
                     <widget class="QLineEdit" name="xtol">
+                     <property name="maximumSize">
+                      <size>
+                       <width>60</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
                      <property name="text">
                       <string>0.0001</string>
                      </property>
@@ -2986,31 +3103,6 @@
                    </property>
                   </spacer>
                  </item>
-                 <item>
-                  <widget class="QPushButton" name="btn_open_fitspy">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>80</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>80</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>open FITSPY</string>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </widget>
                <widget class="QLabel" name="label_53">
@@ -3032,16 +3124,84 @@
                  <string>Fit settings:</string>
                 </property>
                </widget>
+               <widget class="QPushButton" name="btn_open_fitspy">
+                <property name="geometry">
+                 <rect>
+                  <x>30</x>
+                  <y>360</y>
+                  <width>100</width>
+                  <height>30</height>
+                 </rect>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>100</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>100</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>open FITSPY</string>
+                </property>
+               </widget>
                <widget class="QWidget" name="layoutWidget">
                 <property name="geometry">
                  <rect>
-                  <x>570</x>
-                  <y>160</y>
-                  <width>110</width>
-                  <height>22</height>
+                  <x>20</x>
+                  <y>320</y>
+                  <width>677</width>
+                  <height>33</height>
                  </rect>
                 </property>
-                <layout class="QHBoxLayout" name="horizontalLayout_71"/>
+                <layout class="QHBoxLayout" name="horizontalLayout_45">
+                 <item>
+                  <widget class="QPushButton" name="btn_default_folder_model">
+                   <property name="text">
+                    <string>Define Model Folder</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_40">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="l_defaut_folder_model">
+                   <property name="minimumSize">
+                    <size>
+                     <width>500</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>500</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </widget>
               </widget>
              </widget>
@@ -3361,111 +3521,6 @@
               <string/>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_10">
-              <item>
-               <widget class="QLabel" name="lb_loaded_model">
-                <property name="maximumSize">
-                 <size>
-                  <width>280</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <family>Arial</family>
-                  <italic>false</italic>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>(No model is loaded ....)</string>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-                <property name="margin">
-                 <number>0</number>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_52">
-                <property name="spacing">
-                 <number>5</number>
-                </property>
-                <property name="leftMargin">
-                 <number>5</number>
-                </property>
-                <property name="topMargin">
-                 <number>5</number>
-                </property>
-                <property name="rightMargin">
-                 <number>5</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>5</number>
-                </property>
-                <item>
-                 <widget class="QPushButton" name="btn_load_model">
-                  <property name="maximumSize">
-                   <size>
-                    <width>85</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="toolTip">
-                   <string>Load a fit model to perform spectra fitting</string>
-                  </property>
-                  <property name="text">
-                   <string>Load model</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_6">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="btn_fit">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>0</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>85</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                  <property name="toolTip">
-                   <string>Hold &quot;Ctrl&quot; and click to apply fit model to all wafer</string>
-                  </property>
-                  <property name="text">
-                   <string>Apply model</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
               <item>
                <widget class="QLabel" name="label_58">
                 <property name="text">
@@ -4039,8 +4094,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>344</width>
-                      <height>458</height>
+                      <width>337</width>
+                      <height>328</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,0,0,0,0,0">
@@ -4419,8 +4474,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>428</width>
-                          <height>394</height>
+                          <width>321</width>
+                          <height>360</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -4891,8 +4946,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>744</width>
-                               <height>253</height>
+                               <width>98</width>
+                               <height>40</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -4933,7 +4988,7 @@
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_81">
                          <item>
-                          <widget class="QPushButton" name="btn_fit_4">
+                          <widget class="QPushButton" name="btn_fit_3">
                            <property name="minimumSize">
                             <size>
                              <width>50</width>
@@ -4985,6 +5040,28 @@
                                <property name="icon">
                                 <iconset>
                                  <normaloff>:/icon/iconpack/copy10.png</normaloff>:/icon/iconpack/copy10.png</iconset>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLabel" name="lbl_copied_fit_model_2">
+                               <property name="minimumSize">
+                                <size>
+                                 <width>50</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                               <property name="maximumSize">
+                                <size>
+                                 <width>50</width>
+                                 <height>16777215</height>
+                                </size>
+                               </property>
+                               <property name="text">
+                                <string/>
+                               </property>
+                               <property name="alignment">
+                                <set>Qt::AlignCenter</set>
                                </property>
                               </widget>
                              </item>
@@ -5065,6 +5142,89 @@
                             </layout>
                            </item>
                            <item>
+                            <layout class="QHBoxLayout" name="horizontalLayout_106">
+                             <property name="spacing">
+                              <number>0</number>
+                             </property>
+                             <property name="leftMargin">
+                              <number>5</number>
+                             </property>
+                             <property name="topMargin">
+                              <number>5</number>
+                             </property>
+                             <property name="rightMargin">
+                              <number>5</number>
+                             </property>
+                             <property name="bottomMargin">
+                              <number>5</number>
+                             </property>
+                             <item>
+                              <widget class="QLabel" name="label_81">
+                               <property name="text">
+                                <string>Select a model:</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QComboBox" name="cbb_fit_model_list_3">
+                               <property name="minimumSize">
+                                <size>
+                                 <width>400</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                               <property name="maximumSize">
+                                <size>
+                                 <width>400</width>
+                                 <height>16777215</height>
+                                </size>
+                               </property>
+                               <property name="placeholderText">
+                                <string>Select a model for fitting</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="btn_apply_model_3">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="minimumSize">
+                                <size>
+                                 <width>90</width>
+                                 <height>32</height>
+                                </size>
+                               </property>
+                               <property name="maximumSize">
+                                <size>
+                                 <width>90</width>
+                                 <height>32</height>
+                                </size>
+                               </property>
+                               <property name="toolTip">
+                                <string>Hold &quot;Ctrl&quot; and click to Fit all wafer</string>
+                               </property>
+                               <property name="text">
+                                <string>Apply model </string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="btn_load_model_3">
+                               <property name="toolTip">
+                                <string>Load a fit model if it is not in the default folder</string>
+                               </property>
+                               <property name="text">
+                                <string>Load model</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </item>
+                           <item>
                             <layout class="QHBoxLayout" name="lbl_copied_fit_model_layout_2">
                              <property name="leftMargin">
                               <number>5</number>
@@ -5078,16 +5238,6 @@
                              <property name="bottomMargin">
                               <number>2</number>
                              </property>
-                             <item>
-                              <widget class="QLabel" name="lbl_copied_fit_model_2">
-                               <property name="text">
-                                <string/>
-                               </property>
-                               <property name="alignment">
-                                <set>Qt::AlignCenter</set>
-                               </property>
-                              </widget>
-                             </item>
                             </layout>
                            </item>
                           </layout>
@@ -6358,6 +6508,29 @@
                  </item>
                 </layout>
                </widget>
+               <widget class="QLineEdit" name="l_defaut_folder_model_3">
+                <property name="geometry">
+                 <rect>
+                  <x>30</x>
+                  <y>320</y>
+                  <width>481</width>
+                  <height>21</height>
+                 </rect>
+                </property>
+               </widget>
+               <widget class="QPushButton" name="btn_default_folder_model_3">
+                <property name="geometry">
+                 <rect>
+                  <x>530</x>
+                  <y>310</y>
+                  <width>141</width>
+                  <height>32</height>
+                 </rect>
+                </property>
+                <property name="text">
+                 <string>Define model folder</string>
+                </property>
+               </widget>
               </widget>
              </widget>
             </item>
@@ -6382,7 +6555,7 @@
           <property name="lineWidth">
            <number>0</number>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_59" stretch="0,0,0,0,65">
+          <layout class="QVBoxLayout" name="verticalLayout_59" stretch="0,0,65">
            <property name="leftMargin">
             <number>3</number>
            </property>
@@ -6528,105 +6701,6 @@
               </widget>
              </item>
             </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_106">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <property name="leftMargin">
-              <number>5</number>
-             </property>
-             <property name="topMargin">
-              <number>5</number>
-             </property>
-             <property name="rightMargin">
-              <number>5</number>
-             </property>
-             <property name="bottomMargin">
-              <number>5</number>
-             </property>
-             <item>
-              <widget class="QPushButton" name="btn_load_model_3">
-               <property name="toolTip">
-                <string>Load a fit model to perform spectra fitting</string>
-               </property>
-               <property name="text">
-                <string>Load fit model</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_26">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btn_fit_3">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>80</width>
-                 <height>40</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>40</height>
-                </size>
-               </property>
-               <property name="toolTip">
-                <string>Hold &quot;Ctrl&quot; and click to Fit all wafer</string>
-               </property>
-               <property name="text">
-                <string>Apply model </string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QLabel" name="lb_loaded_model_3">
-             <property name="maximumSize">
-              <size>
-               <width>280</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <family>Arial</family>
-               <italic>false</italic>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>(No model is loaded ....)</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-             <property name="margin">
-              <number>0</number>
-             </property>
-             <property name="textInteractionFlags">
-              <set>Qt::TextSelectableByMouse</set>
-             </property>
-            </widget>
            </item>
            <item>
             <spacer name="spacer_3">
@@ -6929,8 +7003,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1120</width>
-               <height>920</height>
+               <width>98</width>
+               <height>28</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">

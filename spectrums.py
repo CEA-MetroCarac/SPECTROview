@@ -9,7 +9,7 @@ from pathlib import Path
 import dill
 
 from common import view_df, show_alert
-from common import FitThread, ShowParameters, FIT_METHODS, NCPUS
+from common import FitThread, FitModelManager, ShowParameters, FIT_METHODS, NCPUS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -100,7 +100,123 @@ class Spectrums(QObject):
         self.ui.rbtn_polynomial_2.clicked.connect(self.upd_spectra_list)
         self.ui.degre_2.valueChanged.connect(self.upd_spectra_list)
 
+        # Load default folder path from QSettings during application startup
+        self.fit_model_manager = FitModelManager(self.settings)
+        self.fit_model_manager.default_model_folder = self.settings.value("default_model_folder", "")
+        self.ui.l_defaut_folder_model_3.setText(self.fit_model_manager.default_model_folder)
+        QTimer.singleShot(0, self.populate_available_models)
 
+    def set_default_model_folder(self, folder_path=None):
+        """Define a default model folder"""
+        if not folder_path:
+            folder_path = QFileDialog.getExistingDirectory(None, "Select Default Folder", options=QFileDialog.ShowDirsOnly)
+
+        if folder_path:
+            self.fit_model_manager.set_default_model_folder(folder_path)
+            # Save selected folder path back to QSettings
+            self.settings.setValue("default_model_folder", folder_path)
+            self.ui.l_defaut_folder_model_3.setText(self.fit_model_manager.default_model_folder)
+            QTimer.singleShot(0, self.populate_available_models)
+
+    def populate_available_models(self):
+        """Populate availables model's name to the combobox"""
+        # Scan default folder and populate available models in the combobox
+        self.available_models = self.fit_model_manager.get_available_models()
+        self.ui.cbb_fit_model_list_3.clear()
+        self.ui.cbb_fit_model_list_3.addItems(self.available_models)
+
+    def load_fit_model(self, fname_json=None):
+        """Load a fit model pre-created by FITSPY tool"""
+        self.fname_json = fname_json
+        self.upd_model_cbb_list()
+        if not fname_json:
+            options = QFileDialog.Options()
+            options |= QFileDialog.ReadOnly
+            selected_file, _ = QFileDialog.getOpenFileName(self.ui,
+                                                           "Select JSON Model "
+                                                           "File",
+                                                           "",
+                                                           "JSON Files ("
+                                                           "*.json);;All "
+                                                           "Files (*)",
+                                                           options=options)
+            if not selected_file:
+                return
+            self.fname_json = selected_file
+        display_name = QFileInfo(self.fname_json).fileName()
+        # Add the display name to the combobox only if it doesn't already exist
+        if display_name not in [self.ui.cbb_fit_model_list_3.itemText(i) for i in
+                                range(self.ui.cbb_fit_model_list_3.count())]:
+            self.ui.cbb_fit_model_list_3.addItem(display_name)
+            self.ui.cbb_fit_model_list_3.setCurrentText(display_name)
+        else:
+            show_alert('Fit model is already available in the model list')
+
+    def get_loaded_fit_model(self):
+        """Define loaded fit model. If the model is loaded by user from different model folder then the default model """
+        if self.ui.cbb_fit_model_list_3.currentIndex() == -1:
+            self.loaded_fit_model = None
+            return
+        try:
+            # If the file is not found in the selected path, try finding it in the default folder
+            folder_path = self.fit_model_manager.default_model_folder
+            model_name = self.ui.cbb_fit_model_list_3.currentText()
+            path = os.path.join(folder_path, model_name)
+            self.loaded_fit_model = self.spectra_fs.load_model(path, ind=0)
+        except FileNotFoundError:
+            try:
+                self.loaded_fit_model = self.spectra_fs.load_model(self.fname_json, ind=0)
+            except FileNotFoundError:
+                show_alert('Fit model file not found in the default folder.')
+    def save_fit_model(self):
+        """To save the fit model of the current selected spectrum"""
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
+        path = self.fit_model_manager.default_model_folder
+        save_path, _ = QFileDialog.getSaveFileName(
+            self.ui.tabWidget, "Save fit model", path,
+            "JSON Files (*.json)")
+        if save_path and sel_spectrum:
+            self.spectra_fs.save(save_path, [sel_spectrum.fname])
+            show_alert("Fit model is saved (JSON file)")
+        else:
+            show_alert("No fit model to save.")
+
+        self.upd_model_cbb_list()
+    def upd_model_cbb_list(self):
+        """Update and populate the models lists to the combobox"""
+        current_path = self.fit_model_manager.default_model_folder
+        self.set_default_model_folder(current_path)
+    def apply_loaded_fit_model(self, fnames=None):
+        """Fit selected spectrum(s) with the LOADED fit model"""
+        self.get_loaded_fit_model()
+        self.ui.btn_apply_model_3.setEnabled(False)
+        if self.loaded_fit_model is None:
+            show_alert("Select from the list or load a fit model before fitting.")
+            self.ui.btn_apply_model_3.setEnabled(True)
+            return
+
+        if fnames is None:
+            fnames = self.get_spectrum_fnames()
+
+        # Start fitting process in a separate thread
+        self.apply_model_thread = FitThread(self.spectra_fs, self.loaded_fit_model,
+                                            fnames)
+        # To update progress bar
+        self.apply_model_thread.fit_progress_changed.connect(self.update_pbar)
+        # To display progress in GUI
+        self.apply_model_thread.fit_progress.connect(
+            lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
+                                                        fnames))
+        # To update spectra list + plot fitted spectrum once fitting finished
+        self.apply_model_thread.fit_completed.connect(self.fit_completed)
+        self.apply_model_thread.finished.connect(
+            lambda: self.ui.btn_apply_model_3.setEnabled(True))
+        self.apply_model_thread.start()
+
+    def apply_loaded_fit_model_all(self):
+        """ Apply loaded fit model to all selected spectra"""
+        fnames = self.spectra_fs.fnames
+        self.apply_loaded_fit_model(fnames=fnames)
     def open_data(self, spectra=None, file_paths=None, ):
         if self.spectra_fs is None:
             self.spectra_fs = Spectra()
@@ -487,59 +603,6 @@ class Spectrums(QObject):
         fnames = self.spectra_fs.fnames
         self.clear_peaks(fnames)
 
-
-    def open_fit_model(self, fname_json=None):
-        """Load a fit model pre-created by FITSPY tool"""
-        if not fname_json:
-            options = QFileDialog.Options()
-            options |= QFileDialog.ReadOnly
-            selected_file, _ = QFileDialog.getOpenFileName(self.ui,
-                                                           "Select JSON Model "
-                                                           "File",
-                                                           "",
-                                                           "JSON Files ("
-                                                           "*.json);;All "
-                                                           "Files (*)",
-                                                           options=options)
-            if not selected_file:
-                return
-            fname_json = selected_file
-        self.loaded_fit_model = self.spectra_fs.load_model(fname_json, ind=0)
-        display_name = QFileInfo(fname_json).baseName()
-        self.ui.lb_loaded_model_3.setText(f"'{display_name}' is loaded !")
-
-    def apply_loaded_fit_model(self, fnames=None):
-        """Fit selected spectrum(s) with the LOADED fit model"""
-        self.ui.btn_fit_3.setEnabled(False)
-
-        if self.loaded_fit_model is None:
-            show_alert("Load a fit model before fitting.")
-            self.ui.btn_fit_3.setEnabled(True)
-            return
-
-        if fnames is None:
-            fnames = self.get_spectrum_fnames()
-
-        # Start fitting process in a separate thread
-        self.apply_model_thread = FitThread(self.spectra_fs, self.loaded_fit_model,
-                                            fnames)
-        # To update progress bar
-        self.apply_model_thread.fit_progress_changed.connect(self.update_pbar)
-        # To display progress in GUI
-        self.apply_model_thread.fit_progress.connect(
-            lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
-                                                        fnames))
-        # To update spectra list + plot fitted spectrum once fitting finished
-        self.apply_model_thread.fit_completed.connect(self.fit_completed)
-        self.apply_model_thread.finished.connect(
-            lambda: self.ui.btn_fit_3.setEnabled(True))
-        self.apply_model_thread.start()
-
-    def apply_loaded_fit_model_all(self):
-        """ Apply loaded fit model to all selected spectra"""
-        fnames = self.spectra_fs.fnames
-        self.apply_loaded_fit_model(fnames=fnames)
-
     def get_fit_settings(self):
         """Getall settings for the fitting action"""
         sel_spectrum, sel_spectra = self.get_spectrum_object()
@@ -585,9 +648,7 @@ class Spectrums(QObject):
         else:
             self.current_fit_model = None
             self.current_fit_model = deepcopy(sel_spectrum.save())
-        fname = sel_spectrum.fname
-        self.ui.lbl_copied_fit_model_2.setText(
-            f"The fit model of '{fname}' spectrum is copied to the clipboard.")
+        self.ui.lbl_copied_fit_model_2.setText("copied")
 
     def paste_fit_model(self, fnames=None):
         """ To apply the copied fit model to selected spectrums"""
@@ -634,18 +695,7 @@ class Spectrums(QObject):
         show_params.show_peak_table(main_layout, sel_spectrum, cb_limits,
                                     cb_expr)
 
-    def save_fit_model(self):
-        """To save the fit model of the current selected spectrum"""
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        last_dir = self.settings.value("last_directory", "/")
-        save_path, _ = QFileDialog.getSaveFileName(
-            self.ui.tabWidget, "Save fit model", last_dir,
-            "JSON Files (*.json)")
-        if save_path and sel_spectrum:
-            self.spectra_fs.save(save_path, [sel_spectrum.fname])
-            show_alert("Fit model is saved (JSON file)")
-        else:
-            show_alert("No fit model to save.")
+
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
@@ -1157,7 +1207,7 @@ class Spectrums(QObject):
             show_alert("No spectrum is loaded, FITSPY cannot open")
             return
 
-    def apply_fit_model_handler(self):
+    def fit_fnc_handler(self):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:
             self.fit_all()
@@ -1193,7 +1243,7 @@ class Spectrums(QObject):
         else:
             self.set_x_range()
 
-    def apply_loaded_fit_model_fnc_handler(self):
+    def apply_model_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:

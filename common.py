@@ -70,6 +70,43 @@ def view_df(tabWidget, df):
     layout.addWidget(table_widget)
     df_viewer.show()
 
+class FitModelManager:
+    """
+    Class to manage created fit models.
+
+    Attributes:
+        settings (QSettings): An instance of QSettings for managing application settings.
+        default_model_folder (str): The default folder path where fit models are stored.
+        available_models (list): List of available fit models in the default folder.
+    """
+    def __init__(self, settings):
+        """ Initialize the FitModelManager.
+        Args:
+            settings (QSettings): An instance of QSettings for managing application settings.
+        """
+        self.settings = settings
+        self.default_model_folder = self.settings.value("default_model_folder", "")
+        self.available_models = []
+        if self.default_model_folder:
+            self.scan_models()
+
+    def set_default_model_folder(self, folder_path):
+        """Set the default folder path where fit models will be stored."""
+        self.default_model_folder = folder_path
+        self.settings.setValue("default_model_folder", folder_path)
+        self.scan_models()
+
+    def scan_models(self):
+        """Scan the default folder and populate the available_models list."""
+        self.available_models = []
+        if self.default_model_folder:
+            for file_name in os.listdir(self.default_model_folder):
+                if file_name.endswith('.json'):
+                    self.available_models.append(file_name)
+
+    def get_available_models(self):
+        """Retrieve the list of available fit models."""
+        return self.available_models
 
 class CommonUtilities():
     """ Class contain all common methods or utility codes used other modules"""
@@ -156,7 +193,7 @@ class CommonUtilities():
                     widget.close()
 
     def translate_param(self, fit_model, param):
-        """Translate parameter names within column headers: example x0 -> Position, ampli ->  Intensity"""
+        """Translate parameter names to column headers: example x0 -> Position, ampli ->  Intensity"""
         peak_labels = fit_model["peak_labels"]
         param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
                               "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",

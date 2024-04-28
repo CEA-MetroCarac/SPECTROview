@@ -722,7 +722,7 @@ class Spectrums(QObject):
                 axis=1)
             names = []
             for name in self.df_fit_results.columns:
-                if name in ["Sample", "success"]:
+                if name in ["Filename", "success"]:
                     name = '0' + name
                 elif '_' in name:
                     name = 'z' + name[5:]

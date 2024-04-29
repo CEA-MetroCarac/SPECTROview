@@ -9,7 +9,8 @@ from pathlib import Path
 import dill
 
 from common import view_df, show_alert
-from common import FitThread, FitModelManager, ShowParameters, FIT_METHODS, NCPUS
+from common import FitThread, FitModelManager, ShowParameters, FIT_METHODS, \
+    NCPUS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -102,20 +103,26 @@ class Spectrums(QObject):
 
         # Load default folder path from QSettings during application startup
         self.fit_model_manager = FitModelManager(self.settings)
-        self.fit_model_manager.default_model_folder = self.settings.value("default_model_folder", "")
-        self.ui.l_defaut_folder_model_3.setText(self.fit_model_manager.default_model_folder)
+        self.fit_model_manager.default_model_folder = self.settings.value(
+            "default_model_folder", "")
+        self.ui.l_defaut_folder_model_3.setText(
+            self.fit_model_manager.default_model_folder)
         QTimer.singleShot(0, self.populate_available_models)
 
     def set_default_model_folder(self, folder_path=None):
         """Define a default model folder"""
         if not folder_path:
-            folder_path = QFileDialog.getExistingDirectory(None, "Select Default Folder", options=QFileDialog.ShowDirsOnly)
+            folder_path = QFileDialog.getExistingDirectory(None,
+                                                           "Select Default "
+                                                           "Folder",
+                                                           options=QFileDialog.ShowDirsOnly)
 
         if folder_path:
             self.fit_model_manager.set_default_model_folder(folder_path)
             # Save selected folder path back to QSettings
             self.settings.setValue("default_model_folder", folder_path)
-            self.ui.l_defaut_folder_model_3.setText(self.fit_model_manager.default_model_folder)
+            self.ui.l_defaut_folder_model_3.setText(
+                self.fit_model_manager.default_model_folder)
             QTimer.singleShot(0, self.populate_available_models)
 
     def populate_available_models(self):
@@ -145,7 +152,8 @@ class Spectrums(QObject):
             self.fname_json = selected_file
         display_name = QFileInfo(self.fname_json).fileName()
         # Add the display name to the combobox only if it doesn't already exist
-        if display_name not in [self.ui.cbb_fit_model_list_3.itemText(i) for i in
+        if display_name not in [self.ui.cbb_fit_model_list_3.itemText(i) for i
+                                in
                                 range(self.ui.cbb_fit_model_list_3.count())]:
             self.ui.cbb_fit_model_list_3.addItem(display_name)
             self.ui.cbb_fit_model_list_3.setCurrentText(display_name)
@@ -153,21 +161,25 @@ class Spectrums(QObject):
             show_alert('Fit model is already available in the model list')
 
     def get_loaded_fit_model(self):
-        """Define loaded fit model. If the model is loaded by user from different model folder then the default model """
+        """Define loaded fit model. If the model is loaded by user from
+        different model folder then the default model """
         if self.ui.cbb_fit_model_list_3.currentIndex() == -1:
             self.loaded_fit_model = None
             return
         try:
-            # If the file is not found in the selected path, try finding it in the default folder
+            # If the file is not found in the selected path, try finding it
+            # in the default folder
             folder_path = self.fit_model_manager.default_model_folder
             model_name = self.ui.cbb_fit_model_list_3.currentText()
             path = os.path.join(folder_path, model_name)
             self.loaded_fit_model = self.spectra_fs.load_model(path, ind=0)
         except FileNotFoundError:
             try:
-                self.loaded_fit_model = self.spectra_fs.load_model(self.fname_json, ind=0)
+                self.loaded_fit_model = self.spectra_fs.load_model(
+                    self.fname_json, ind=0)
             except FileNotFoundError:
                 show_alert('Fit model file not found in the default folder.')
+
     def save_fit_model(self):
         """To save the fit model of the current selected spectrum"""
         sel_spectrum, sel_spectra = self.get_spectrum_object()
@@ -182,16 +194,19 @@ class Spectrums(QObject):
             show_alert("No fit model to save.")
 
         self.upd_model_cbb_list()
+
     def upd_model_cbb_list(self):
         """Update and populate the models lists to the combobox"""
         current_path = self.fit_model_manager.default_model_folder
         self.set_default_model_folder(current_path)
+
     def apply_loaded_fit_model(self, fnames=None):
         """Fit selected spectrum(s) with the LOADED fit model"""
         self.get_loaded_fit_model()
         self.ui.btn_apply_model_3.setEnabled(False)
         if self.loaded_fit_model is None:
-            show_alert("Select from the list or load a fit model before fitting.")
+            show_alert(
+                "Select from the list or load a fit model before fitting.")
             self.ui.btn_apply_model_3.setEnabled(True)
             return
 
@@ -199,7 +214,8 @@ class Spectrums(QObject):
             fnames = self.get_spectrum_fnames()
 
         # Start fitting process in a separate thread
-        self.apply_model_thread = FitThread(self.spectra_fs, self.loaded_fit_model,
+        self.apply_model_thread = FitThread(self.spectra_fs,
+                                            self.loaded_fit_model,
                                             fnames)
         # To update progress bar
         self.apply_model_thread.fit_progress_changed.connect(self.update_pbar)
@@ -217,6 +233,7 @@ class Spectrums(QObject):
         """ Apply loaded fit model to all selected spectra"""
         fnames = self.spectra_fs.fnames
         self.apply_loaded_fit_model(fnames=fnames)
+
     def open_data(self, spectra=None, file_paths=None, ):
         if self.spectra_fs is None:
             self.spectra_fs = Spectra()
@@ -345,10 +362,12 @@ class Spectrums(QObject):
         self.ui.toolbar_frame_3.addWidget(self.toolbar)
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
+
     def rescale(self):
         """Rescale the figure."""
         self.ax.autoscale()
         self.canvas1.draw()
+
     def on_click(self, event):
         """On click action to add a "peak models" or "baseline points" """
         sel_spectrum, sel_spectra = self.get_spectrum_object()
@@ -541,6 +560,7 @@ class Spectrums(QObject):
         else:
             sel_spectrum.baseline.mode = "Polynomial"
             sel_spectrum.baseline.order_max = self.ui.degre_2.value()
+
     def plot_baseline_dynamically(self, ax, spectrum):
         """ To evaluate and plot baseline points and line dynamically"""
         self.get_baseline_settings()
@@ -582,9 +602,6 @@ class Spectrums(QObject):
     def subtract_baseline_all(self):
         """ Subtract baseline for all spectrum(s) """
         self.subtract_baseline(self.spectra_fs)
-
-
-
 
     def clear_peaks(self, fnames=None):
         """Clear all existing peak models of the selected spectrum(s)"""
@@ -695,8 +712,6 @@ class Spectrums(QObject):
         show_params.show_peak_table(main_layout, sel_spectrum, cb_limits,
                                     cb_expr)
 
-
-
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
         # Add all dict into a list, then convert to a dataframe.
@@ -729,11 +744,13 @@ class Spectrums(QObject):
                 names.append(name)
             self.df_fit_results = self.df_fit_results.iloc[:,
                                   list(np.argsort(names, kind='stable'))]
-            columns = [self.common.translate_param(self.current_fit_model, column) for column
-                       in self.df_fit_results.columns]
+            columns = [
+                self.common.translate_param(self.current_fit_model, column) for
+                column
+                in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
             self.common.display_df_in_table(self.ui.fit_results_table_2,
-                                self.df_fit_results)
+                                            self.df_fit_results)
         else:
             self.ui.fit_results_table_2.clear()
 
@@ -750,7 +767,8 @@ class Spectrums(QObject):
             self.ui.cbb_split_fname.addItem(part)
 
     def add_column(self):
-        """Add a column to the dataframe of fit results based on split_fname method"""
+        """Add a column to the dataframe of fit results based on split_fname
+        method"""
         dfr = self.df_fit_results
         col_name = self.ui.ent_col_name.text()
         selected_part_index = self.ui.cbb_split_fname.currentIndex()
@@ -773,7 +791,8 @@ class Spectrums(QObject):
             part) > selected_part_index else None for part in parts]
 
         self.df_fit_results = dfr
-        self.common.display_df_in_table(self.ui.fit_results_table_2, self.df_fit_results)
+        self.common.display_df_in_table(self.ui.fit_results_table_2,
+                                        self.df_fit_results)
         self.send_df_to_viz()
         self.upd_cbb_param()
 
@@ -903,8 +922,8 @@ class Spectrums(QObject):
 
         ax = self.ax2
         self.common.plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax,
-                   title,
-                   x_text, y_text, xlabel_rot)
+                               title,
+                               x_text, y_text, xlabel_rot)
         self.ax2.get_figure().tight_layout()
         self.canvas2.draw()
 
@@ -932,8 +951,9 @@ class Spectrums(QObject):
             xlabel_rot = float(text)
 
         ax = self.ax3
-        self.common.plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
-                   x_text, y_text, xlabel_rot)
+        self.common.plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax,
+                               title,
+                               x_text, y_text, xlabel_rot)
 
         self.ax3.get_figure().tight_layout()
         self.canvas3.draw()
@@ -973,8 +993,6 @@ class Spectrums(QObject):
         """Reinitialize all spectra"""
         fnames = self.spectra_fs.fnames
         self.reinit(fnames)
-
-
 
     def view_fit_results_df(self):
         """To view selected dataframe"""
@@ -1028,7 +1046,8 @@ class Spectrums(QObject):
                 self.filtered_df = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
-        self.common.display_df_in_table(self.ui.fit_results_table_2, self.df_fit_results)
+        self.common.display_df_in_table(self.ui.fit_results_table_2,
+                                        self.df_fit_results)
         self.upd_cbb_param()
         self.send_df_to_viz()
 
@@ -1090,7 +1109,6 @@ class Spectrums(QObject):
                     'spectra_fs': self.spectra_fs,
                     'loaded_fit_model': self.loaded_fit_model,
                     'current_fit_model': self.current_fit_model,
-                    'loaded_model_name': self.ui.lb_loaded_model_3.text(),
                     'df_fit_results': self.df_fit_results,
                     'filters': self.filters,
 
@@ -1124,9 +1142,6 @@ class Spectrums(QObject):
                     self.spectra_fs = load.get('spectra_fs')
                     self.current_fit_model = load.get('current_fit_model')
                     self.loaded_fit_model = load.get('loaded_fit_model')
-                    model_name = load.get('loaded_model_name', '')
-                    self.ui.lb_loaded_model_3.setText(model_name)
-
 
                     self.df_fit_results = load.get('df_fit_results')
                     self.upd_cbb_param()
@@ -1151,9 +1166,10 @@ class Spectrums(QObject):
                     self.plot2()
                     self.plot3()
                     self.common.display_df_in_table(self.ui.fit_results_table,
-                                        self.df_fit_results)
+                                                    self.df_fit_results)
         except Exception as e:
             show_alert(f"Error loading work: {e}")
+
     def load_fit_settings(self):
         """Reload last used fitting settings from QSettings"""
         fit_params = {
@@ -1176,7 +1192,8 @@ class Spectrums(QObject):
         self.ui.xtol_2.setText(str(fit_params['xtol']))
 
     def save_fit_settings(self):
-        """Save all fitting settings to QSettings when interface element's states changed"""
+        """Save all fitting settings to QSettings when interface element's
+        states changed"""
         fit_params = {
             'fit_negative': self.ui.cb_fit_negative_2.isChecked(),
             'max_ite': self.ui.max_iteration_2.value(),
@@ -1188,6 +1205,7 @@ class Spectrums(QObject):
         # Save the fit_params to QSettings
         for key, value in fit_params.items():
             self.settings.setValue(key, value)
+
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""
         if self.spectra_fs:
@@ -1221,6 +1239,7 @@ class Spectrums(QObject):
             self.reinit_all()
         else:
             self.reinit()
+
     def subtract_baseline_handler(self):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:

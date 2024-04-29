@@ -29,6 +29,7 @@ from tkinter import Tk, END
 DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 
+
 class Maps(QObject):
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
@@ -108,20 +109,26 @@ class Maps(QObject):
 
         # Load default folder path from QSettings during application startup
         self.fit_model_manager = FitModelManager(self.settings)
-        self.fit_model_manager.default_model_folder = self.settings.value("default_model_folder", "")
-        self.ui.l_defaut_folder_model.setText(self.fit_model_manager.default_model_folder)
+        self.fit_model_manager.default_model_folder = self.settings.value(
+            "default_model_folder", "")
+        self.ui.l_defaut_folder_model.setText(
+            self.fit_model_manager.default_model_folder)
         QTimer.singleShot(0, self.populate_available_models)
 
     def set_default_model_folder(self, folder_path=None):
         """Define a default model folder"""
         if not folder_path:
-            folder_path = QFileDialog.getExistingDirectory(None, "Select Default Folder", options=QFileDialog.ShowDirsOnly)
+            folder_path = QFileDialog.getExistingDirectory(None,
+                                                           "Select Default "
+                                                           "Folder",
+                                                           options=QFileDialog.ShowDirsOnly)
 
         if folder_path:
             self.fit_model_manager.set_default_model_folder(folder_path)
             # Save selected folder path back to QSettings
             self.settings.setValue("default_model_folder", folder_path)
-            self.ui.l_defaut_folder_model.setText(self.fit_model_manager.default_model_folder)
+            self.ui.l_defaut_folder_model.setText(
+                self.fit_model_manager.default_model_folder)
             QTimer.singleShot(0, self.populate_available_models)
 
     def populate_available_models(self):
@@ -133,7 +140,7 @@ class Maps(QObject):
 
     def load_fit_model(self, fname_json=None):
         """Load a pre-created fit model"""
-        self.fname_json =fname_json
+        self.fname_json = fname_json
         self.upd_model_cbb_list()
         if not self.fname_json:
             options = QFileDialog.Options()
@@ -159,19 +166,22 @@ class Maps(QObject):
             show_alert('Fit model is already available in the model list')
 
     def get_loaded_fit_model(self):
-        """Define loaded fit model. If the model is loaded by user from different model folder then the default model """
+        """Define loaded fit model. If the model is loaded by user from
+        different model folder then the default model """
         if self.ui.cbb_fit_model_list.currentIndex() == -1:
             self.loaded_fit_model = None
             return
         try:
-            # If the file is not found in the selected path, try finding it in the default folder
+            # If the file is not found in the selected path, try finding it
+            # in the default folder
             folder_path = self.fit_model_manager.default_model_folder
             model_name = self.ui.cbb_fit_model_list.currentText()
             path = os.path.join(folder_path, model_name)
             self.loaded_fit_model = self.spectra_fs.load_model(path, ind=0)
         except FileNotFoundError:
             try:
-                self.loaded_fit_model = self.spectra_fs.load_model(self.fname_json, ind=0)
+                self.loaded_fit_model = self.spectra_fs.load_model(
+                    self.fname_json, ind=0)
             except FileNotFoundError:
                 show_alert('Fit model file not found in the default folder.')
 
@@ -200,7 +210,8 @@ class Maps(QObject):
         # Disable the button to prevent multiple clicks leading to a crash
         self.ui.btn_apply_model.setEnabled(False)
         if self.loaded_fit_model is None:
-            show_alert("Select from the list or load a fit model before fitting.")
+            show_alert(
+                "Select from the list or load a fit model before fitting.")
             self.ui.btn_apply_model.setEnabled(True)
             return
 
@@ -301,9 +312,6 @@ class Maps(QObject):
                     spectrum_fs.y0 = np.asarray(y_values)[:-1]
                     self.spectra_fs.append(spectrum_fs)
         self.upd_wafers_list()
-
-
-
 
     def read_x_range(self):
         """Read x range of selected spectrum"""
@@ -482,9 +490,9 @@ class Maps(QObject):
         else:
             self.current_fit_model = None
             self.current_fit_model = deepcopy(sel_spectrum.save())
-        #fname = sel_spectrum.fname
+        # fname = sel_spectrum.fname
         self.ui.lbl_copied_fit_model.setText("copied")
-        #(f"The fit model of '{fname}' spectrum is copied to the clipboard.")
+        # (f"The fit model of '{fname}' spectrum is copied to the clipboard.")
 
     def paste_fit_model(self, fnames=None):
         """ To apply the copied fit model to selected spectrums"""
@@ -518,7 +526,6 @@ class Maps(QObject):
         selected spectrum(s"""
         fnames = self.spectra_fs.fnames
         self.paste_fit_model(fnames)
-
 
     def collect_results(self):
         """Function to collect best-fit results and append in a dataframe"""
@@ -557,8 +564,9 @@ class Maps(QObject):
                 names.append(name)
             self.df_fit_results = self.df_fit_results.iloc[:,
                                   list(np.argsort(names, kind='stable'))]
-            columns = [self.common.translate_param(self.current_fit_model, column) for
-                       column in self.df_fit_results.columns]
+            columns = [
+                self.common.translate_param(self.current_fit_model, column) for
+                column in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
 
             # QUADRANT
@@ -571,7 +579,8 @@ class Maps(QObject):
             self.df_fit_results['Zone'] = self.df_fit_results.apply(
                 lambda row: self.common.zone(row, diameter), axis=1)
 
-            self.common.display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+            self.common.display_df_in_table(self.ui.fit_results_table,
+                                            self.df_fit_results)
         else:
             self.ui.fit_results_table.clear()
 
@@ -622,7 +631,8 @@ class Maps(QObject):
                 self.df_fit_results = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
-        self.common.display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+        self.common.display_df_in_table(self.ui.fit_results_table,
+                                        self.df_fit_results)
 
         self.upd_cbb_param()
         self.upd_cbb_wafer()
@@ -665,7 +675,8 @@ class Maps(QObject):
             self.ui.cbb_split_fname_2.addItem(part)
 
     def add_column(self):
-        """Add a column to the dataframe of fit results based on split_fname method"""
+        """Add a column to the dataframe of fit results based on split_fname
+        method"""
         dfr = self.df_fit_results
         col_name = self.ui.ent_col_name_2.text()
         selected_part_index = self.ui.cbb_split_fname_2.currentIndex()
@@ -688,7 +699,8 @@ class Maps(QObject):
             part) > selected_part_index else None for part in parts]
 
         self.df_fit_results = dfr
-        self.common.display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+        self.common.display_df_in_table(self.ui.fit_results_table,
+                                        self.df_fit_results)
         self.send_df_to_viz()
         self.upd_cbb_param()
         self.upd_cbb_wafer()
@@ -1014,8 +1026,9 @@ class Maps(QObject):
         if text:
             xlabel_rot = float(text)
         ax = self.ax4
-        self.common.plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
-                   x_text, y_text, xlabel_rot)
+        self.common.plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax,
+                               title,
+                               x_text, y_text, xlabel_rot)
         self.ax4.get_figure().tight_layout()
         self.canvas4.draw()
 
@@ -1073,7 +1086,6 @@ class Maps(QObject):
                     else:
                         item.setBackground(QColor(0, 0, 0, 0))
                     self.ui.spectra_listbox.addItem(item)
-
 
         # Update the item count label
         item_count = self.ui.spectra_listbox.count()
@@ -1202,13 +1214,15 @@ class Maps(QObject):
         dfs = self.dataframe.original_dfs
         dfs["2Dmaps_bestfit_results"] = self.df_fit_results
         self.dataframe.action_open_df(file_paths=None, original_dfs=dfs)
+
     def send_spectrum_to_compare(self):
         """Send selected spectrums to the 'Spectrums' TAB"""
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         for spectrum in sel_spectra:
-            sent_spectrum =deepcopy(spectrum)
+            sent_spectrum = deepcopy(spectrum)
             self.spectrums.spectra_fs.append(sent_spectrum)
             self.spectrums.upd_spectra_list()
+
     def cosmis_ray_detection(self):
         self.spectra_fs.outliers_limit_calculation()
 
@@ -1228,7 +1242,7 @@ class Maps(QObject):
         show_params = ShowParameters(main_layout, sel_spectrum, cb_limits,
                                      cb_expr, update)
         show_params.show_peak_table(main_layout, sel_spectrum, cb_limits,
-                                        cb_expr)
+                                    cb_expr)
 
     def view_stats(self):
         """Show the statistique fitting results of the selected spectrum"""
@@ -1266,7 +1280,6 @@ class Maps(QObject):
                     'wafers': self.wafers,
                     'loaded_fit_model': self.loaded_fit_model,
                     'current_fit_model': self.current_fit_model,
-                    'loaded_model_name': self.ui.lb_loaded_model.text(),
                     'df_fit_results': self.df_fit_results,
 
                     'cbb_x': self.ui.cbb_x.currentIndex(),
@@ -1312,9 +1325,6 @@ class Maps(QObject):
                     self.wafers = load.get('wafers')
                     self.current_fit_model = load.get('current_fit_model')
                     self.loaded_fit_model = load.get('loaded_fit_model')
-                    model_name = load.get('loaded_model_name', '')
-                    self.ui.lb_loaded_model.setText(model_name)
-
 
                     self.df_fit_results = load.get('df_fit_results')
                     self.upd_cbb_param()
@@ -1350,7 +1360,7 @@ class Maps(QObject):
                     self.plot4()
                     self.plot3()
                     self.common.display_df_in_table(self.ui.fit_results_table,
-                                        self.df_fit_results)
+                                                    self.df_fit_results)
         except Exception as e:
             show_alert(f"Error loading work: {e}")
 

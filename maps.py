@@ -690,6 +690,9 @@ class Maps(QObject):
             self.ui.cbb_x.clear()
             self.ui.cbb_y.clear()
             self.ui.cbb_z.clear()
+            self.ui.cbb_x.addItem("None")
+            self.ui.cbb_y.addItem("None")
+            self.ui.cbb_z.addItem("None")
             for column in columns:
                 # remove_special_chars = re.sub(r'\$[^$]+\$', '', column)
                 self.ui.cbb_param_1.addItem(column)
@@ -923,7 +926,7 @@ class Maps(QObject):
         self.canvas2.draw()
 
         # plot4: graph
-        fig4 = plt.figure(dpi=80)
+        fig4 = plt.figure(dpi=90)
         self.ax4 = fig4.add_subplot(111)
         self.canvas4 = FigureCanvas(fig4)
         self.ui.frame_graph.addWidget(self.canvas4)
@@ -1051,7 +1054,13 @@ class Maps(QObject):
             dfr = self.df_fit_results
         x = self.ui.cbb_x.currentText()
         y = self.ui.cbb_y.currentText()
+
         z = self.ui.cbb_z.currentText()
+        if z == "None":
+            hue = None
+        else:
+            hue = z if z != "" else None
+
         style = self.ui.cbb_plot_style.currentText()
         xmin = self.ui.xmin.text()
         ymin = self.ui.ymin.text()
@@ -1067,7 +1076,7 @@ class Maps(QObject):
         if text:
             xlabel_rot = float(text)
         ax = self.ax4
-        self.common.plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax,
+        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin, ymax,
                                title,
                                x_text, y_text, xlabel_rot)
         self.ax4.get_figure().tight_layout()

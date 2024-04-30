@@ -420,14 +420,14 @@ class Spectrums(QObject):
     def create_plot_widget(self):
         """Create canvas and toolbar for plotting in the GUI"""
         # Plot2: graph1
-        fig2 = plt.figure(dpi=80)
+        fig2 = plt.figure(dpi=90)
         self.ax2 = fig2.add_subplot(111)
         self.canvas2 = FigureCanvas(fig2)
         self.ui.frame_graph_3.addWidget(self.canvas2)
         self.canvas2.draw()
 
         # Plot3: graph2
-        fig3 = plt.figure(dpi=80)
+        fig3 = plt.figure(dpi=90)
         self.ax3 = fig3.add_subplot(111)
         self.canvas3 = FigureCanvas(fig3)
         self.ui.frame_graph_7.addWidget(self.canvas3)
@@ -822,6 +822,12 @@ class Spectrums(QObject):
             self.ui.cbb_x_7.clear()
             self.ui.cbb_y_7.clear()
             self.ui.cbb_z_7.clear()
+            self.ui.cbb_x_3.addItem("None")
+            self.ui.cbb_y_3.addItem("None")
+            self.ui.cbb_z_3.addItem("None")
+            self.ui.cbb_x_7.addItem("None")
+            self.ui.cbb_y_7.addItem("None")
+            self.ui.cbb_z_7.addItem("None")
             for column in columns:
                 self.ui.cbb_x_3.addItem(column)
                 self.ui.cbb_y_3.addItem(column)
@@ -844,7 +850,14 @@ class Spectrums(QObject):
             dfr = self.df_fit_results
         x = self.ui.cbb_x_3.currentText()
         y = self.ui.cbb_y_3.currentText()
+
+
         z = self.ui.cbb_z_3.currentText()
+        if z == "None":
+            hue = None
+        else:
+            hue = z if z != "" else None
+
         style = self.ui.cbb_plot_style_3.currentText()
         xmin = self.ui.xmin_3.text()
         ymin = self.ui.ymin_3.text()
@@ -861,7 +874,7 @@ class Spectrums(QObject):
             xlabel_rot = float(text)
 
         ax = self.ax2
-        self.common.plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax,
+        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin, ymax,
                                title,
                                x_text, y_text, xlabel_rot)
         self.ax2.get_figure().tight_layout()
@@ -875,6 +888,11 @@ class Spectrums(QObject):
         x = self.ui.cbb_x_7.currentText()
         y = self.ui.cbb_y_7.currentText()
         z = self.ui.cbb_z_7.currentText()
+
+        if z == "None":
+            hue = None
+        else:
+            hue = z if z != "" else None
         style = self.ui.cbb_plot_style_7.currentText()
         xmin = self.ui.xmin_3.text()
         ymin = self.ui.ymin_3.text()
@@ -891,7 +909,7 @@ class Spectrums(QObject):
             xlabel_rot = float(text)
 
         ax = self.ax3
-        self.common.plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax,
+        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin, ymax,
                                title,
                                x_text, y_text, xlabel_rot)
 

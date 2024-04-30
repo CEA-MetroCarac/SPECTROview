@@ -8,7 +8,7 @@ import json
 from copy import deepcopy
 from pathlib import Path
 import dill
-from common import view_df, show_alert, FitModelManager
+from common import view_df, show_alert, FitModelManager, Filter
 from common import FitThread, WaferView, ShowParameters, FIT_METHODS, NCPUS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
@@ -48,8 +48,17 @@ class Maps(QObject):
         self.current_fit_model = None
         self.spectrums = Spectra()
         self.df_fit_results = None
-        self.filters = []
+
+        # FILTER: Create an instance of the FILTER class
+        self.filter = Filter(self.ui.ent_filter_query_3,
+                             self.ui.filter_listbox_2,
+                             self.df_fit_results)
         self.filtered_df = None
+        # Connect filter signals to filter methods
+        self.ui.btn_add_filter_3.clicked.connect(self.filter.add_filter)
+        self.ui.ent_filter_query_3.returnPressed.connect(self.filter.add_filter)
+        self.ui.btn_remove_filters_3.clicked.connect(self.filter.remove_filter)
+        self.ui.btn_apply_filters_3.clicked.connect(self.apply_filters)
 
         # Update spectra_listbox when selecting wafer via WAFER LIST
         self.ui.wafers_listbox.itemSelectionChanged.connect(
@@ -118,84 +127,12 @@ class Maps(QObject):
             self.fit_model_manager.default_model_folder)
         QTimer.singleShot(0, self.populate_available_models)
 
-    def add_filter(self):
-        filter_expression = self.ui.ent_filter_query_3.text().strip()
-        if filter_expression:
-            filter = {"expression": filter_expression, "state": False}
-            self.filters.append(filter)
-        # Add the filter expression to QListWidget as a checkbox item
-        item = QListWidgetItem()
-        checkbox = QCheckBox(filter_expression)
-        item.setSizeHint(checkbox.sizeHint())
-        self.ui.filter_listbox_2.addItem(item)
-        self.ui.filter_listbox_2.setItemWidget(item, checkbox)
-
-    def remove_filter(self):
-        """To remove a filter from listbox"""
-        selected_items = [item for item in
-                          self.ui.filter_listbox_2.selectedItems()]
-        for item in selected_items:
-            checkbox = self.ui.filter_listbox_2.itemWidget(item)
-            filter_expression = checkbox.text()
-            for filter in self.filters[:]:
-                if filter.get("expression") == filter_expression:
-                    self.filters.remove(filter)
-            self.ui.filter_listbox_2.takeItem(
-                self.ui.filter_listbox_2.row(item))
-
-    def filters_ischecked(self):
-        """Collect selected filters from the UI"""
-        checked_filters = []
-        for i in range(self.ui.filter_listbox_2.count()):
-            item = self.ui.filter_listbox_2.item(i)
-            checkbox = self.ui.filter_listbox_2.itemWidget(item)
-            expression = checkbox.text()
-            state = checkbox.isChecked()
-            checked_filters.append({"expression": expression, "state": state})
-        return checked_filters
-
-    def apply_filters(self, filters=None):
-        if filters:
-            self.filters = filters
-        else:
-            checked_filters = self.filters_ischecked()
-            self.filters = checked_filters
-
-        # Apply all filters at once
-        self.filtered_df = self.df_fit_results.copy()  # Initialize with a
-        # copy of the original DataFrame
-        for filter_data in self.filters:
-            filter_expr = filter_data["expression"]
-            is_checked = filter_data["state"]
-
-            if is_checked:
-                try:
-                    # Ensure filter_expr is a string
-                    filter_expr = str(filter_expr)
-                    print(f"Applying filter expression: {filter_expr}")
-
-                    # Apply the filter
-                    self.filtered_df = self.filtered_df.query(filter_expr)
-                except Exception as e:
-                    QMessageBox.critical(self.ui, "Error",
-                                         f"Filter error: {str(e)}")
-                    print(f"Error applying filter: {str(e)}")
-                    print(f"Filter expression causing the error: {filter_expr}")
-
+    def apply_filters(self):
+        """Apply all checked filters to the current dataframe"""
+        self.filter.set_dataframe(self.df_fit_results)
+        self.filtered_df = self.filter.apply_filters()
         self.common.display_df_in_table(self.ui.fit_results_table,
                                         self.filtered_df)
-
-    def upd_filter_listbox(self):
-        """To update filter listbox"""
-        self.ui.filter_listbox_2.clear()
-        for filter_data in self.filters:
-            filter_expression = filter_data["expression"]
-            item = QListWidgetItem()
-            checkbox = QCheckBox(filter_expression)
-            item.setSizeHint(checkbox.sizeHint())
-            self.ui.filter_listbox_2.addItem(item)
-            self.ui.filter_listbox_2.setItemWidget(item, checkbox)
-            checkbox.setChecked(filter_data["state"])
 
     def view_fit_results_df(self):
         """To view selected dataframe"""
@@ -1378,7 +1315,7 @@ class Maps(QObject):
                     'loaded_fit_model': self.loaded_fit_model,
                     'current_fit_model': self.current_fit_model,
                     'df_fit_results': self.df_fit_results,
-                    'filters': self.filters,
+                    'filters': self.filter.filters,
 
                     'cbb_x': self.ui.cbb_x.currentIndex(),
                     'cbb_y': self.ui.cbb_y.currentIndex(),
@@ -1425,8 +1362,8 @@ class Maps(QObject):
                     self.loaded_fit_model = load.get('loaded_fit_model')
 
                     self.df_fit_results = load.get('df_fit_results')
-                    self.filters = load.get('filters')
-                    self.upd_filter_listbox()
+                    self.filter.filters = load.get('filters')
+                    self.filter.upd_filter_listbox()
 
                     self.upd_cbb_param()
                     self.upd_cbb_wafer()
@@ -1458,8 +1395,8 @@ class Maps(QObject):
                     self.ui.int_vmin.setText(load.get('vmin', ''))
                     self.ui.int_vmax.setText(load.get('vmax', ''))
 
-                    self.plot4()
-                    self.plot3()
+                    # self.plot4()
+                    # self.plot3()
                     self.common.display_df_in_table(self.ui.fit_results_table,
                                                     self.df_fit_results)
 

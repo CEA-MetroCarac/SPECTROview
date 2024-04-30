@@ -8,7 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 import dill
 
-from common import view_df, show_alert
+from common import view_df, show_alert, Filter
 from common import FitThread, FitModelManager, ShowParameters, FIT_METHODS, \
     NCPUS
 from lmfit import fit_report
@@ -45,8 +45,17 @@ class Spectrums(QObject):
         self.current_fit_model = None
         self.spectrums = Spectra()
         self.df_fit_results = None
-        self.filters = []
+
+        # FILTER: Create an instance of the FILTER class
+        self.filter = Filter(self.ui.ent_filter_query_2,
+                             self.ui.filter_listbox,
+                             self.df_fit_results)
         self.filtered_df = None
+        # Connect filter signals to filter methods
+        self.ui.btn_add_filter_2.clicked.connect(self.filter.add_filter)
+        self.ui.ent_filter_query_2.returnPressed.connect(self.filter.add_filter)
+        self.ui.btn_remove_filters_2.clicked.connect(self.filter.remove_filter)
+        self.ui.btn_apply_filters_2.clicked.connect(self.apply_filters)
 
         # Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
@@ -108,6 +117,13 @@ class Spectrums(QObject):
         self.ui.l_defaut_folder_model_3.setText(
             self.fit_model_manager.default_model_folder)
         QTimer.singleShot(0, self.populate_available_models)
+
+    def apply_filters(self, filters=None):
+        """Apply all checked filters to the current dataframe"""
+        self.filter.set_dataframe(self.df_fit_results)
+        self.filtered_df = self.filter.apply_filters()
+        self.common.display_df_in_table(self.ui.fit_results_table_2,
+                                        self.filtered_df)
 
     def set_default_model_folder(self, folder_path=None):
         """Define a default model folder"""
@@ -796,85 +812,6 @@ class Spectrums(QObject):
         self.send_df_to_viz()
         self.upd_cbb_param()
 
-    def add_filter(self):
-        filter_expression = self.ui.ent_filter_query_2.text().strip()
-        if filter_expression:
-            filter = {"expression": filter_expression, "state": False}
-            self.filters.append(filter)
-        # Add the filter expression to QListWidget as a checkbox item
-        item = QListWidgetItem()
-        checkbox = QCheckBox(filter_expression)
-        item.setSizeHint(checkbox.sizeHint())
-        self.ui.filter_listbox.addItem(item)
-        self.ui.filter_listbox.setItemWidget(item, checkbox)
-
-    def filters_ischecked(self):
-        """Collect selected filters from the UI"""
-        checked_filters = []
-        for i in range(self.ui.filter_listbox.count()):
-            item = self.ui.filter_listbox.item(i)
-            checkbox = self.ui.filter_listbox.itemWidget(item)
-            expression = checkbox.text()
-            state = checkbox.isChecked()
-            checked_filters.append({"expression": expression, "state": state})
-        return checked_filters
-
-    def apply_filters(self, filters=None):
-        if filters:
-            self.filters = filters
-        else:
-            checked_filters = self.filters_ischecked()
-            self.filters = checked_filters
-
-        # Apply all filters at once
-        self.filtered_df = self.df_fit_results.copy()  # Initialize with a
-        # copy of the original DataFrame
-
-        for filter_data in self.filters:
-            filter_expr = filter_data["expression"]
-            is_checked = filter_data["state"]
-
-            if is_checked:
-                try:
-                    # Ensure filter_expr is a string
-                    filter_expr = str(filter_expr)
-                    print(f"Applying filter expression: {filter_expr}")
-
-                    # Apply the filter
-                    self.filtered_df = self.filtered_df.query(filter_expr)
-                except Exception as e:
-                    QMessageBox.critical(self.ui, "Error",
-                                         f"Filter error: {str(e)}")
-                    print(f"Error applying filter: {str(e)}")
-                    print(f"Filter expression causing the error: {filter_expr}")
-
-        self.common.display_df_in_table(self.ui.fit_results_table_2,
-                                        self.filtered_df)
-
-    def upd_filter_listbox(self):
-        """To update filter listbox"""
-        self.ui.filter_listbox.clear()
-        for filter_data in self.filters:
-            filter_expression = filter_data["expression"]
-            item = QListWidgetItem()
-            checkbox = QCheckBox(filter_expression)
-            item.setSizeHint(checkbox.sizeHint())
-            self.ui.filter_listbox.addItem(item)
-            self.ui.filter_listbox.setItemWidget(item, checkbox)
-            checkbox.setChecked(filter_data["state"])
-
-    def remove_filter(self):
-        """To remove a filter from listbox"""
-        selected_items = [item for item in
-                          self.ui.filter_listbox.selectedItems()]
-        for item in selected_items:
-            checkbox = self.ui.filter_listbox.itemWidget(item)
-            filter_expression = checkbox.text()
-            for filter in self.filters[:]:
-                if filter.get("expression") == filter_expression:
-                    self.filters.remove(filter)
-            self.ui.filter_listbox.takeItem(self.ui.filter_listbox.row(item))
-
     def upd_cbb_param(self):
         """to append all values of df_fit_results to comoboxses"""
         if self.df_fit_results is not None:
@@ -1118,7 +1055,7 @@ class Spectrums(QObject):
                     'loaded_fit_model': self.loaded_fit_model,
                     'current_fit_model': self.current_fit_model,
                     'df_fit_results': self.df_fit_results,
-                    'filters': self.filters,
+                    'filters': self.filter.filters,
 
                     'cbb_x_1': self.ui.cbb_x_3.currentIndex(),
                     'cbb_y_1': self.ui.cbb_y_3.currentIndex(),
@@ -1153,8 +1090,8 @@ class Spectrums(QObject):
                         self.loaded_fit_model = load.get('loaded_fit_model')
 
                         self.df_fit_results = load.get('df_fit_results')
-                        self.filters = load.get('filters')
-                        self.upd_filter_listbox()
+                        self.filter.filters = load.get('filters')
+                        self.filter.upd_filter_listbox()
 
                         self.upd_cbb_param()
                         self.send_df_to_viz()
@@ -1171,9 +1108,9 @@ class Spectrums(QObject):
                             load.get('plot_style_1', -1))
                         self.ui.cbb_plot_style_7.setCurrentIndex(
                             load.get('plot_style_2', -1))
-
-                        self.plot2()
-                        self.plot3()
+                        #
+                        # self.plot2()
+                        # self.plot3()
                         self.common.display_df_in_table(
                             self.ui.fit_results_table_2,
                             self.df_fit_results)

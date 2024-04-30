@@ -8,7 +8,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon
 
-from common import CommonUtilities, FitModelManager, PEAK_MODELS
+from common import CommonUtilities, FitModelManager, PEAK_MODELS, show_alert
 
 from ui import resources_new
 from dataframe import Dataframe
@@ -231,12 +231,6 @@ class Main:
         self.ui.btn_default_folder_model.clicked.connect(
             self.maps.set_default_model_folder)
 
-        # Filter features:
-        self.ui.btn_add_filter_3.clicked.connect(self.maps.add_filter)
-        self.ui.ent_filter_query_3.returnPressed.connect(self.maps.add_filter)
-        self.ui.btn_apply_filters_3.clicked.connect(self.maps.apply_filters)
-        self.ui.btn_remove_filters_3.clicked.connect(self.maps.remove_filter)
-
         ########################################################
         ############## GUI for Spectrums Processing tab #############
         ########################################################
@@ -292,14 +286,6 @@ class Main:
         self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
         self.ui.btn_add_col.clicked.connect(self.spectrums.add_column)
 
-        self.ui.btn_add_filter_2.clicked.connect(self.spectrums.add_filter)
-        self.ui.ent_filter_query_2.returnPressed.connect(
-            self.spectrums.add_filter)
-        self.ui.btn_apply_filters_2.clicked.connect(
-            self.spectrums.apply_filters)
-        self.ui.btn_remove_filters_2.clicked.connect(
-            self.spectrums.remove_filter)
-
         self.ui.btn_copy_fig_3.clicked.connect(self.spectrums.copy_fig)
         self.ui.btn_copy2_3.clicked.connect(self.spectrums.copy_fig_graph1)
         self.ui.btn_copy2_7.clicked.connect(self.spectrums.copy_fig_graph2)
@@ -335,67 +321,67 @@ class Main:
         self.common.view_markdown(self.ui, "About", ABOUT, 500, 300)
 
 
-expiration_date = datetime.datetime(2024, 10, 1)
+expiration_date = datetime.datetime(2024, 9, 1)
 
 
-# def launcher():
-#     # Check if the current date is past the expiration date
-#     if datetime.datetime.now() > expiration_date:
-#         text = f"This version of the application has expired on " \
-#                f"{expiration_date}, so can not be used anymore. Please " \
-#                f"contact the developer for an " \
-#                f"updated version"
-#         # If expired, disable the central widget
-#         app = QApplication(sys.argv)
-#         app.setWindowIcon(QIcon(ICON_APPLI))
-#         window = Main()
-#         window.ui.centralwidget.setEnabled(False)
-#         app.setStyle("Fusion")
-#         window.ui.show()
-#         CommonUtilities.show_alert(text)
-#         sys.exit(app.exec())
-#
-#     # If not expired, continue launching the application as usual
-#     app = QApplication(sys.argv)
-#     app.setWindowIcon(QIcon(ICON_APPLI))
-#     window = Main()
-#     window.ui.centralwidget.setEnabled(True)
-#     app.setStyle("Fusion")
-#     window.ui.show()
-#     sys.exit(app.exec())
-#
-#
-# if __name__ == "__main__":
-#     launcher()
+def launcher():
+    # Check if the current date is past the expiration date
+    if datetime.datetime.now() > expiration_date:
+        text = f"The current SPECTROview version has expired on " \
+               f"{expiration_date}. Please " \
+               f"contact the developer for an " \
+               f"updated version"
+        # If expired, disable the central widget
+        app = QApplication(sys.argv)
+        app.setWindowIcon(QIcon(ICON_APPLI))
+        window = Main()
+        window.ui.centralwidget.setEnabled(False)
+        app.setStyle("Fusion")
+        window.ui.show()
+        show_alert(text)
+        sys.exit(app.exec())
 
-def launcher2(file_paths=None, fname_json=None):
-    app = QApplication()
+    # If not expired, continue launching the application as usual
+    app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(ICON_APPLI))
     window = Main()
+    window.ui.centralwidget.setEnabled(True)
     app.setStyle("Fusion")
-    if file_paths is not None:
-        window.maps.open_data(file_paths=file_paths)
-    if fname_json is not None:
-        window.maps.load_fit_model(fname_json=fname_json)
-
-    # if file_paths is not None:
-    #     window.spectrums.open_data(file_paths=file_paths)
-    # if fname_json is not None:
-    #     window.spectrums.open_fit_model(fname_json=fname_json)
     window.ui.show()
     sys.exit(app.exec())
 
 
 if __name__ == "__main__":
-    DIRNAME = os.path.dirname(__file__)
-    DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
-    DATA_MAPS = os.path.join(DIRNAME, "data_test", "RAW 2Dmaps")
-    fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
-    fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
-    fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
-    fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')
-    # fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
-    # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
-    # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
-    # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
-    launcher2([fname1, fname2, fname3])
+    launcher()
+
+# def launcher2(file_paths=None, fname_json=None):
+#     app = QApplication()
+#     app.setWindowIcon(QIcon(ICON_APPLI))
+#     window = Main()
+#     app.setStyle("Fusion")
+#     if file_paths is not None:
+#         window.maps.open_data(file_paths=file_paths)
+#     if fname_json is not None:
+#         window.maps.load_fit_model(fname_json=fname_json)
+#
+#     # if file_paths is not None:
+#     #     window.spectrums.open_data(file_paths=file_paths)
+#     # if fname_json is not None:
+#     #     window.spectrums.open_fit_model(fname_json=fname_json)
+#     window.ui.show()
+#     sys.exit(app.exec())
+#
+#
+# if __name__ == "__main__":
+#     DIRNAME = os.path.dirname(__file__)
+#     DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
+#     DATA_MAPS = os.path.join(DIRNAME, "data_test", "RAW 2Dmaps")
+#     fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
+#     fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
+#     fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
+#     fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')
+#     # fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
+#     # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
+#     # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
+#     # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
+#     launcher2([fname1, fname2, fname3])

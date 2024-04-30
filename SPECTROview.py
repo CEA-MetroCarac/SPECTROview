@@ -53,8 +53,10 @@ class Main:
         self.workspace = SaveLoadWorkspace(self.settings, self.ui,
                                            self.dataframe,
                                            self.visualization)
-        self.spectrums = Spectrums(self.settings, self.ui, self.dataframe, self.common)
-        self.maps = Maps(self.settings, self.ui, self.dataframe, self.spectrums,self.common)
+        self.spectrums = Spectrums(self.settings, self.ui, self.dataframe,
+                                   self.common)
+        self.maps = Maps(self.settings, self.ui, self.dataframe, self.spectrums,
+                         self.common)
         self.fitmodel_manager = FitModelManager(self.settings)
 
         # DATAFRAME
@@ -186,7 +188,8 @@ class Main:
         self.ui.btn_sel_horiz.clicked.connect(self.maps.select_horiz)
 
         self.ui.btn_load_model.clicked.connect(self.maps.load_fit_model)
-        self.ui.btn_apply_model.clicked.connect(self.maps.apply_model_fnc_handler)
+        self.ui.btn_apply_model.clicked.connect(
+            self.maps.apply_model_fnc_handler)
         self.ui.btn_init.clicked.connect(self.maps.reinit_fnc_handler)
         self.ui.btn_collect_results.clicked.connect(self.maps.collect_results)
         self.ui.btn_view_df_2.clicked.connect(self.maps.view_fit_results_df)
@@ -223,10 +226,10 @@ class Main:
         self.ui.cbb_fit_models.addItems(PEAK_MODELS)
         self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range_handler)
 
-        self.ui.btn_send_to_compare.clicked.connect(self.maps.send_spectrum_to_compare)
-        self.ui.btn_default_folder_model.clicked.connect(self.maps.set_default_model_folder)
-
-
+        self.ui.btn_send_to_compare.clicked.connect(
+            self.maps.send_spectrum_to_compare)
+        self.ui.btn_default_folder_model.clicked.connect(
+            self.maps.set_default_model_folder)
 
         ########################################################
         ############## GUI for Spectrums Processing tab #############
@@ -295,7 +298,8 @@ class Main:
         self.ui.btn_copy2_3.clicked.connect(self.spectrums.copy_fig_graph1)
         self.ui.btn_copy2_7.clicked.connect(self.spectrums.copy_fig_graph2)
 
-        self.ui.btn_default_folder_model_3.clicked.connect(self.spectrums.set_default_model_folder)
+        self.ui.btn_default_folder_model_3.clicked.connect(
+            self.spectrums.set_default_model_folder)
 
     def toggle_dark_mode(self):
         self.ui.setPalette(self.common.dark_palette())
@@ -388,4 +392,4 @@ if __name__ == "__main__":
     # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
     # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
     # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
-    launcher2([fname1, fname2, fname3]  )
+    launcher2([fname1, fname2, fname3])

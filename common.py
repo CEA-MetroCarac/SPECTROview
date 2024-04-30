@@ -70,22 +70,29 @@ def view_df(tabWidget, df):
     layout.addWidget(table_widget)
     df_viewer.show()
 
+
 class FitModelManager:
     """
     Class to manage created fit models.
 
     Attributes:
-        settings (QSettings): An instance of QSettings for managing application settings.
-        default_model_folder (str): The default folder path where fit models are stored.
-        available_models (list): List of available fit models in the default folder.
+        settings (QSettings): An instance of QSettings for managing
+        application settings.
+        default_model_folder (str): The default folder path where fit models
+        are stored.
+        available_models (list): List of available fit models in the default
+        folder.
     """
+
     def __init__(self, settings):
         """ Initialize the FitModelManager.
         Args:
-            settings (QSettings): An instance of QSettings for managing application settings.
+            settings (QSettings): An instance of QSettings for managing
+            application settings.
         """
         self.settings = settings
-        self.default_model_folder = self.settings.value("default_model_folder", "")
+        self.default_model_folder = self.settings.value("default_model_folder",
+                                                        "")
         self.available_models = []
         if self.default_model_folder:
             self.scan_models()
@@ -108,8 +115,10 @@ class FitModelManager:
         """Retrieve the list of available fit models."""
         return self.available_models
 
+
 class CommonUtilities():
     """ Class contain all common methods or utility codes used other modules"""
+
     def copy_fit_model(self, sel_spectrum, current_fit_model, label):
         """ To copy the model dict of the selected spectrum. If several
         spectrums are selected → copy the model dict of first spectrum in
@@ -134,7 +143,8 @@ class CommonUtilities():
 
         return current_fit_model
 
-    def plot_graph(self, ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title, x_text,
+    def plot_graph(self, ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
+                   x_text,
                    y_text, xlabel_rot):
         """Plot graph """
 
@@ -167,10 +177,10 @@ class CommonUtilities():
                  rotation_mode="anchor")
         return ax
 
-    def reinit_spectrum(self, fnames, spectra_fs):
+    def reinit_spectrum(self, fnames, spectrums):
         """Reinitilize a FITSPY spectrum object"""
         for fname in fnames:
-            spectrum, _ = spectra_fs.get_objects(fname)
+            spectrum, _ = spectrums.get_objects(fname)
             spectrum.range_min = None
             spectrum.range_max = None
             spectrum.x = spectrum.x0.copy()
@@ -193,7 +203,8 @@ class CommonUtilities():
                     widget.close()
 
     def translate_param(self, fit_model, param):
-        """Translate parameter names to column headers: example x0 -> Position, ampli ->  Intensity"""
+        """Translate parameter names to column headers: example x0 ->
+        Position, ampli ->  Intensity"""
         peak_labels = fit_model["peak_labels"]
         param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
                               "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
@@ -228,7 +239,8 @@ class CommonUtilities():
             return np.nan
 
     def zone(self, row, diameter):
-        """Define 3 zones (Center, Mid-Rayon, Edge) based on X and Y coordinates."""
+        """Define 3 zones (Center, Mid-Rayon, Edge) based on X and Y
+        coordinates."""
         rad = diameter / 2
         x = row['X']
         y = row['Y']
@@ -269,7 +281,8 @@ class CommonUtilities():
         """View selected dataframe"""
         df_viewer = QDialog(tabWidget.parent())
         df_viewer.setWindowTitle("DataFrame Viewer")
-        df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
+        df_viewer.setWindowFlags(
+            df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
         # Create a QTableWidget and populate it with data from the DataFrame
         table_widget = QTableWidget(df_viewer)
         table_widget.setColumnCount(df.shape[1])
@@ -329,6 +342,7 @@ class CommonUtilities():
         layout.addWidget(text_browser)
         about_dialog.setLayout(layout)
         about_dialog.show()
+
     def dark_palette(self):
         """Palette color for dark mode of the appli's GUI"""
         dark_palette = QPalette()
@@ -368,6 +382,7 @@ class CommonUtilities():
         light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
         return light_palette
 
+
 class FitThread(QThread):
     """ Class to perform fitting in a separate Thread to avoid GUI
     freezing/lagging"""
@@ -375,10 +390,10 @@ class FitThread(QThread):
     fit_progress = Signal(int, float)  # TO display number and elapsed time
     fit_completed = Signal()
 
-    def __init__(self, spectra_fs, model_fs, fnames):
+    def __init__(self, spectrums, fit_model, fnames):
         super().__init__()
-        self.spectra_fs = spectra_fs
-        self.model_fs = model_fs
+        self.spectrums = spectrums
+        self.fit_model = fit_model
         self.fnames = fnames
 
     def run(self):
@@ -387,10 +402,10 @@ class FitThread(QThread):
         for index, fname in enumerate(self.fnames):
             progress = int((index + 1) / len(self.fnames) * 100)
             self.fit_progress_changed.emit(progress)
-            fit_model = deepcopy(self.model_fs)
+            fit_model = deepcopy(self.fit_model)
 
-            self.spectra_fs.apply_model(fit_model, fnames=[fname],
-                                        show_progressbar=None)
+            self.spectrums.apply_model(fit_model, fnames=[fname],
+                                       show_progressbar=None)
             num += 1
             elapsed_time = time.time() - start_time
             self.fit_progress.emit(num, elapsed_time)
@@ -643,6 +658,7 @@ class ShowParameters:
 
 class WaferView:
     """Class to plot wafer map (for Wafer procesing tab)"""
+
     def __init__(self, inter_method='linear'):
         self.inter_method = inter_method  # Interpolation method
 
@@ -712,6 +728,7 @@ class WaferView:
         """Interpolate data using griddata"""
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
         return zi
+
 
 class WaferPlot:
     """ Class to plot wafer map """

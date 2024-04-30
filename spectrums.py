@@ -43,12 +43,12 @@ class Spectrums(QObject):
 
         self.loaded_fit_model = None
         self.current_fit_model = None
-        self.spectra_fs = Spectra()
+        self.spectrums = Spectra()
         self.df_fit_results = None
         self.filters = []
-        self.filtered_df = None  # FITSPY
+        self.filtered_df = None
 
-        # Connect and plot_spectre of selected SPECTRUM LIST
+        # Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
             self.plot_delay)
         # Connect the stateChanged signal of the legend CHECKBOX
@@ -172,10 +172,10 @@ class Spectrums(QObject):
             folder_path = self.fit_model_manager.default_model_folder
             model_name = self.ui.cbb_fit_model_list_3.currentText()
             path = os.path.join(folder_path, model_name)
-            self.loaded_fit_model = self.spectra_fs.load_model(path, ind=0)
+            self.loaded_fit_model = self.spectrums.load_model(path, ind=0)
         except FileNotFoundError:
             try:
-                self.loaded_fit_model = self.spectra_fs.load_model(
+                self.loaded_fit_model = self.spectrums.load_model(
                     self.fname_json, ind=0)
             except FileNotFoundError:
                 show_alert('Fit model file not found in the default folder.')
@@ -188,7 +188,7 @@ class Spectrums(QObject):
             self.ui.tabWidget, "Save fit model", path,
             "JSON Files (*.json)")
         if save_path and sel_spectrum:
-            self.spectra_fs.save(save_path, [sel_spectrum.fname])
+            self.spectrums.save(save_path, [sel_spectrum.fname])
             show_alert("Fit model is saved (JSON file)")
         else:
             show_alert("No fit model to save.")
@@ -214,7 +214,7 @@ class Spectrums(QObject):
             fnames = self.get_spectrum_fnames()
 
         # Start fitting process in a separate thread
-        self.apply_model_thread = FitThread(self.spectra_fs,
+        self.apply_model_thread = FitThread(self.spectrums,
                                             self.loaded_fit_model,
                                             fnames)
         # To update progress bar
@@ -231,14 +231,14 @@ class Spectrums(QObject):
 
     def apply_loaded_fit_model_all(self):
         """ Apply loaded fit model to all selected spectra"""
-        fnames = self.spectra_fs.fnames
+        fnames = self.spectrums.fnames
         self.apply_loaded_fit_model(fnames=fnames)
 
     def open_data(self, spectra=None, file_paths=None, ):
-        if self.spectra_fs is None:
-            self.spectra_fs = Spectra()
+        if self.spectrums is None:
+            self.spectrums = Spectra()
         if spectra:
-            self.spectra_fs = spectra
+            self.spectrums = spectra
         else:
             if file_paths is None:
                 # Initialize the last used directory from QSettings
@@ -259,7 +259,7 @@ class Spectrums(QObject):
 
                     # Check if fname is already opened
                     if any(spectrum.fname == fname for spectrum in
-                           self.spectra_fs):
+                           self.spectrums):
                         print(f"Spectrum '{fname}' is already opened.")
                         continue
 
@@ -274,27 +274,27 @@ class Spectrums(QObject):
                     y_values = dfr_sorted.iloc[:, 1].tolist()
 
                     # create FITSPY object
-                    spectrum_fs = Spectrum()
-                    spectrum_fs.fname = fname
-                    spectrum_fs.x = np.asarray(x_values)
-                    spectrum_fs.x0 = np.asarray(x_values)
-                    spectrum_fs.y = np.asarray(y_values)
-                    spectrum_fs.y0 = np.asarray(y_values)
-                    self.spectra_fs.append(spectrum_fs)
+                    spectrum = Spectrum()
+                    spectrum.fname = fname
+                    spectrum.x = np.asarray(x_values)
+                    spectrum.x0 = np.asarray(x_values)
+                    spectrum.y = np.asarray(y_values)
+                    spectrum.y0 = np.asarray(y_values)
+                    self.spectrums.append(spectrum)
         QTimer.singleShot(100, self.upd_spectra_list)
 
     def upd_spectra_list(self):
         current_row = self.ui.spectrums_listbox.currentRow()
         self.ui.spectrums_listbox.clear()
-        for spectrum_fs in self.spectra_fs:
-            fname = spectrum_fs.fname
+        for spectrum in self.spectrums:
+            fname = spectrum.fname
             item = QListWidgetItem(fname)
-            if hasattr(spectrum_fs.result_fit,
-                       'success') and spectrum_fs.result_fit.success:
+            if hasattr(spectrum.result_fit,
+                       'success') and spectrum.result_fit.success:
                 item.setBackground(QColor("green"))
-            elif hasattr(spectrum_fs.result_fit,
+            elif hasattr(spectrum.result_fit,
                          'success') and not \
-                    spectrum_fs.result_fit.success:
+                    spectrum.result_fit.success:
                 item.setBackground(QColor("orange"))
             else:
                 item.setBackground(QColor(0, 0, 0, 0))
@@ -325,7 +325,7 @@ class Spectrums(QObject):
         """Get selected spectrum/spectra object"""
         fnames = self.get_spectrum_fnames()
         sel_spectra = []
-        for spectrum in self.spectra_fs:
+        for spectrum in self.spectrums:
             if spectrum.fname in fnames:
                 sel_spectra.append(spectrum)
         if len(sel_spectra) == 0:
@@ -420,13 +420,13 @@ class Spectrums(QObject):
     def plot1(self):
         """Plot all selected spectra"""
         fnames = self.get_spectrum_fnames()
-        selected_spectra_fs = []
+        selected_spectrums = []
 
-        for spectrum_fs in self.spectra_fs:
-            fname = spectrum_fs.fname
+        for spectrum in self.spectrums:
+            fname = spectrum.fname
             if fname in fnames:
-                selected_spectra_fs.append(spectrum_fs)
-        if len(selected_spectra_fs) == 0:
+                selected_spectrums.append(spectrum)
+        if len(selected_spectrums) == 0:
             return
 
         xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
@@ -436,36 +436,36 @@ class Spectrums(QObject):
             self.ax.set_xlim(xlim)
             self.ax.set_ylim(ylim)
 
-        for spectrum_fs in selected_spectra_fs:
-            fname = spectrum_fs.fname
-            x_values = spectrum_fs.x
-            y_values = spectrum_fs.y
+        for spectrum in selected_spectrums:
+            fname = spectrum.fname
+            x_values = spectrum.x
+            y_values = spectrum.y
 
             # NORMALIZE
             if self.ui.cb_normalize_3.isChecked():
                 max_intensity = 0.0
-                max_intensity = max(max_intensity, max(spectrum_fs.y))
+                max_intensity = max(max_intensity, max(spectrum.y))
                 y_values = y_values / max_intensity
             self.ax.plot(x_values, y_values, label=f"{fname}", ms=3, lw=2)
 
             # BASELINE
-            self.plot_baseline_dynamically(ax=self.ax, spectrum=spectrum_fs)
+            self.plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
 
             # RAW
             if self.ui.cb_raw_3.isChecked():
-                x0_values = spectrum_fs.x0
-                y0_values = spectrum_fs.y0
+                x0_values = spectrum.x0
+                y0_values = spectrum.y0
                 self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
                              lw=1)
             # BEST-FIT and PEAK_MODELS
-            if hasattr(spectrum_fs.result_fit, 'components') and hasattr(
-                    spectrum_fs.result_fit, 'components') and \
+            if hasattr(spectrum.result_fit, 'components') and hasattr(
+                    spectrum.result_fit, 'components') and \
                     self.ui.cb_bestfit_3.isChecked():
-                bestfit = spectrum_fs.result_fit.best_fit
+                bestfit = spectrum.result_fit.best_fit
                 self.ax.plot(x_values, bestfit, label=f"bestfit")
             if self.ui.cb_bestfit_3.isChecked():
-                peak_labels = spectrum_fs.peak_labels
-                for i, peak_model in enumerate(spectrum_fs.peak_models):
+                peak_labels = spectrum.peak_labels
+                for i, peak_model in enumerate(spectrum.peak_models):
                     peak_label = peak_labels[i]
 
                     # remove temporarily 'expr'
@@ -492,16 +492,16 @@ class Spectrums(QObject):
                         self.ax.plot(x_values, y_peak, '--',
                                      label=f"{peak_label}")
             # RESIDUAL
-            if hasattr(spectrum_fs.result_fit,
+            if hasattr(spectrum.result_fit,
                        'residual') and self.ui.cb_residual_3.isChecked():
-                residual = spectrum_fs.result_fit.residual
+                residual = spectrum.result_fit.residual
                 self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
             if self.ui.cb_colors_3.isChecked() is False:
                 self.ax.set_prop_cycle(None)
 
             # R-SQUARED
-            if hasattr(spectrum_fs.result_fit, 'rsquared'):
-                rsquared = round(spectrum_fs.result_fit.rsquared, 4)
+            if hasattr(spectrum.result_fit, 'rsquared'):
+                rsquared = round(spectrum.result_fit.rsquared, 4)
                 self.ui.rsquared_2.setText(f"R2={rsquared}")
             else:
                 self.ui.rsquared_2.setText("R2=0")
@@ -528,9 +528,9 @@ class Spectrums(QObject):
         new_x_max = float(self.ui.range_max_2.text())
         if fnames is None:
             fnames = self.get_spectrum_fnames()
-        self.common.reinit_spectrum(fnames, self.spectra_fs)
+        self.common.reinit_spectrum(fnames, self.spectrums)
         for fname in fnames:
-            spectrum, _ = self.spectra_fs.get_objects(fname)
+            spectrum, _ = self.spectrums.get_objects(fname)
             spectrum.range_min = float(self.ui.range_min_2.text())
             spectrum.range_max = float(self.ui.range_max_2.text())
 
@@ -544,7 +544,7 @@ class Spectrums(QObject):
 
     def set_x_range_all(self):
         """ Set new x range for all spectrum"""
-        fnames = self.spectra_fs.fnames
+        fnames = self.spectrums.fnames
         self.set_x_range(fnames=fnames)
 
     def get_baseline_settings(self):
@@ -601,14 +601,14 @@ class Spectrums(QObject):
 
     def subtract_baseline_all(self):
         """ Subtract baseline for all spectrum(s) """
-        self.subtract_baseline(self.spectra_fs)
+        self.subtract_baseline(self.spectrums)
 
     def clear_peaks(self, fnames=None):
         """Clear all existing peak models of the selected spectrum(s)"""
         if fnames is None:
             fnames = self.get_spectrum_fnames()
         for fname in fnames:
-            spectrum, _ = self.spectra_fs.get_objects(fname)
+            spectrum, _ = self.spectrums.get_objects(fname)
             if len(spectrum.peak_models) != 0:
                 spectrum.remove_models()
             else:
@@ -617,7 +617,7 @@ class Spectrums(QObject):
 
     def clear_peaks_all(self):
         """Clear peaks of all spectra"""
-        fnames = self.spectra_fs.fnames
+        fnames = self.spectrums.fnames
         self.clear_peaks(fnames)
 
     def get_fit_settings(self):
@@ -637,7 +637,7 @@ class Spectrums(QObject):
         if fnames is None:
             fnames = self.get_spectrum_fnames()
         for fname in fnames:
-            spectrum, _ = self.spectra_fs.get_objects(fname)
+            spectrum, _ = self.spectrums.get_objects(fname)
             if len(spectrum.peak_models) != 0:
                 spectrum.fit()
             else:
@@ -646,7 +646,7 @@ class Spectrums(QObject):
 
     def fit_all(self):
         """Apply all fit parameters to all spectrum(s)"""
-        fnames = self.spectra_fs.fnames
+        fnames = self.spectrums.fnames
         self.fit(fnames)
 
     def copy_fit_model(self):
@@ -675,11 +675,11 @@ class Spectrums(QObject):
         if fnames is None:
             fnames = self.get_spectrum_fnames()
 
-        self.common.reinit_spectrum(fnames, self.spectra_fs)
+        self.common.reinit_spectrum(fnames, self.spectrums)
         fit_model = deepcopy(self.current_fit_model)
         if self.current_fit_model is not None:
             # Starting fit process in a seperate thread
-            self.paste_model_thread = FitThread(self.spectra_fs, fit_model,
+            self.paste_model_thread = FitThread(self.spectrums, fit_model,
                                                 fnames)
             self.paste_model_thread.fit_progress_changed.connect(
                 self.update_pbar)
@@ -697,7 +697,7 @@ class Spectrums(QObject):
     def paste_fit_model_all(self):
         """ To paste the copied fit model (in clipboard) and apply to
         selected spectrum(s"""
-        fnames = self.spectra_fs.fnames
+        fnames = self.spectrums.fnames
         self.paste_fit_model(fnames)
 
     def show_peak_table(self):
@@ -719,12 +719,12 @@ class Spectrums(QObject):
         fit_results_list = []
         self.df_fit_results = None
 
-        for spectrum_fs in self.spectra_fs:
-            if hasattr(spectrum_fs.result_fit, 'best_values'):
-                success = spectrum_fs.result_fit.success
-                rsquared = spectrum_fs.result_fit.rsquared
-                best_values = spectrum_fs.result_fit.best_values
-                best_values["Filename"] = spectrum_fs.fname
+        for spectrum in self.spectrums:
+            if hasattr(spectrum.result_fit, 'best_values'):
+                success = spectrum.result_fit.success
+                rsquared = spectrum.result_fit.rsquared
+                best_values = spectrum.result_fit.best_values
+                best_values["Filename"] = spectrum.fname
                 best_values["success"] = success
                 best_values["Rsquared"] = rsquared
                 fit_results_list.append(best_values)
@@ -959,7 +959,7 @@ class Spectrums(QObject):
         self.canvas3.draw()
 
     def plot_delay(self):
-        """Trigger the fnc to plot spectre"""
+        """Trigger the fnc to plot spectra"""
         self.delay_timer.start(100)
 
     def fit_progress(self, num, elapsed_time, fnames):
@@ -978,20 +978,20 @@ class Spectrums(QObject):
         self.ui.progressBar_3.setValue(progress)
 
     def cosmis_ray_detection(self):
-        self.spectra_fs.outliers_limit_calculation()
+        self.spectrums.outliers_limit_calculation()
 
     def reinit(self, fnames=None):
         """Reinitialize the selected spectrum(s)"""
         if fnames is None:
             fnames = self.get_spectrum_fnames()
-        self.common.reinit_spectrum(fnames, self.spectra_fs)
+        self.common.reinit_spectrum(fnames, self.spectrums)
         self.plot_delay()
         self.upd_spectra_list()
         QTimer.singleShot(200, self.rescale)
 
     def reinit_all(self):
         """Reinitialize all spectra"""
-        fnames = self.spectra_fs.fnames
+        fnames = self.spectrums.fnames
         self.reinit(fnames)
 
     def view_fit_results_df(self):
@@ -1054,18 +1054,18 @@ class Spectrums(QObject):
     def view_stats(self):
         """Show the statistique fitting results of the selected spectrum"""
         fnames = self.get_spectrum_fnames()
-        selected_spectra_fs = []
-        for spectrum_fs in self.spectra_fs:
-            if spectrum_fs.fname in fnames:
-                selected_spectra_fs.append(spectrum_fs)
-        if len(selected_spectra_fs) == 0:
+        selected_spectrums = []
+        for spectrum in self.spectrums:
+            if spectrum.fname in fnames:
+                selected_spectrums.append(spectrum)
+        if len(selected_spectrums) == 0:
             return
         ui = self.ui.tabWidget
         title = f"Fitting Report - {fnames}"
         # Show the 'report' of the first selected spectrum
-        spectrum_fs = selected_spectra_fs[0]
-        if spectrum_fs.result_fit:
-            text = fit_report(spectrum_fs.result_fit)
+        spectrum = selected_spectrums[0]
+        if spectrum.result_fit:
+            text = fit_report(spectrum.result_fit)
             self.common.view_text(ui, title, text)
 
     def select_all_spectra(self):
@@ -1077,9 +1077,9 @@ class Spectrums(QObject):
 
     def remove_spectrum(self):
         fnames = self.get_spectrum_fnames()
-        self.spectra_fs = Spectra(
-            spectrum_fs for spectrum_fs in self.spectra_fs if
-            spectrum_fs.fname not in fnames)
+        self.spectrums = Spectra(
+            spectrum for spectrum in self.spectrums if
+            spectrum.fname not in fnames)
         self.upd_spectra_list()
         self.ax.clear()
         self.canvas1.draw()
@@ -1106,7 +1106,7 @@ class Spectrums(QObject):
                                                        "*.svspectra)")
             if file_path:
                 data_to_save = {
-                    'spectra_fs': self.spectra_fs,
+                    'spectrums': self.spectrums,
                     'loaded_fit_model': self.loaded_fit_model,
                     'current_fit_model': self.current_fit_model,
                     'df_fit_results': self.df_fit_results,
@@ -1139,34 +1139,38 @@ class Spectrums(QObject):
             if file_path:
                 with open(file_path, 'rb') as f:
                     load = dill.load(f)
-                    self.spectra_fs = load.get('spectra_fs')
-                    self.current_fit_model = load.get('current_fit_model')
-                    self.loaded_fit_model = load.get('loaded_fit_model')
+                    try:
+                        self.spectrums = load.get('spectrums')
+                        self.current_fit_model = load.get('current_fit_model')
+                        self.loaded_fit_model = load.get('loaded_fit_model')
 
-                    self.df_fit_results = load.get('df_fit_results')
-                    self.upd_cbb_param()
-                    self.send_df_to_viz()
-                    self.upd_spectra_list()
+                        self.df_fit_results = load.get('df_fit_results')
+                        self.upd_cbb_param()
+                        self.send_df_to_viz()
+                        self.upd_spectra_list()
 
-                    self.filters = load.get('filters')
-                    self.upd_filter_listbox()
+                        self.filters = load.get('filters')
+                        self.upd_filter_listbox()
 
-                    self.ui.cbb_x_3.setCurrentIndex(load.get('cbb_x_1', -1))
-                    self.ui.cbb_y_3.setCurrentIndex(load.get('cbb_y_1', -1))
-                    self.ui.cbb_z_3.setCurrentIndex(load.get('cbb_z_1', -1))
-                    self.ui.cbb_x_7.setCurrentIndex(load.get('cbb_x_2', -1))
-                    self.ui.cbb_y_7.setCurrentIndex(load.get('cbb_y_2', -1))
-                    self.ui.cbb_z_7.setCurrentIndex(load.get('cbb_z_2', -1))
+                        self.ui.cbb_x_3.setCurrentIndex(load.get('cbb_x_1', -1))
+                        self.ui.cbb_y_3.setCurrentIndex(load.get('cbb_y_1', -1))
+                        self.ui.cbb_z_3.setCurrentIndex(load.get('cbb_z_1', -1))
+                        self.ui.cbb_x_7.setCurrentIndex(load.get('cbb_x_2', -1))
+                        self.ui.cbb_y_7.setCurrentIndex(load.get('cbb_y_2', -1))
+                        self.ui.cbb_z_7.setCurrentIndex(load.get('cbb_z_2', -1))
 
-                    self.ui.cbb_plot_style_3.setCurrentIndex(
-                        load.get('plot_style_1', -1))
-                    self.ui.cbb_plot_style_7.setCurrentIndex(
-                        load.get('plot_style_2', -1))
+                        self.ui.cbb_plot_style_3.setCurrentIndex(
+                            load.get('plot_style_1', -1))
+                        self.ui.cbb_plot_style_7.setCurrentIndex(
+                            load.get('plot_style_2', -1))
 
-                    self.plot2()
-                    self.plot3()
-                    self.common.display_df_in_table(self.ui.fit_results_table,
-                                                    self.df_fit_results)
+                        self.plot2()
+                        self.plot3()
+                        self.common.display_df_in_table(
+                            self.ui.fit_results_table,
+                            self.df_fit_results)
+                    except Exception as e:
+                        show_alert(f"Error loading work: {e}")
         except Exception as e:
             show_alert(f"Error loading work: {e}")
 
@@ -1208,12 +1212,12 @@ class Spectrums(QObject):
 
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""
-        if self.spectra_fs:
+        if self.spectrums:
             plt.style.use('default')
             root = Tk()
             appli = Appli(root, force_terminal_exit=False)
 
-            appli.spectra = self.spectra_fs
+            appli.spectra = self.spectrums
             for spectrum in appli.spectra:
                 fname = spectrum.fname
                 appli.fileselector.filenames.append(fname)

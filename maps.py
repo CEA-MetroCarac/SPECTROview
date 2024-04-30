@@ -21,7 +21,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
-                               QListWidgetItem)
+                               QListWidgetItem, QCheckBox)
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
@@ -44,10 +44,13 @@ class Maps(QObject):
 
         self.wafers = {}  # list of opened wafers
         self.toolbar = None
-        self.loaded_fit_model = None  # FITSPY
+        self.loaded_fit_model = None
         self.current_fit_model = None
-        self.spectrums = Spectra()  # FITSPY
+        self.spectrums = Spectra()
         self.df_fit_results = None
+        self.filters = []
+        self.filtered_df = None
+
         # Update spectra_listbox when selecting wafer via WAFER LIST
         self.ui.wafers_listbox.itemSelectionChanged.connect(
             self.upd_spectra_list)
@@ -114,6 +117,160 @@ class Maps(QObject):
         self.ui.l_defaut_folder_model.setText(
             self.fit_model_manager.default_model_folder)
         QTimer.singleShot(0, self.populate_available_models)
+
+    def add_filter(self):
+        filter_expression = self.ui.ent_filter_query_3.text().strip()
+        if filter_expression:
+            filter = {"expression": filter_expression, "state": False}
+            self.filters.append(filter)
+        # Add the filter expression to QListWidget as a checkbox item
+        item = QListWidgetItem()
+        checkbox = QCheckBox(filter_expression)
+        item.setSizeHint(checkbox.sizeHint())
+        self.ui.filter_listbox_2.addItem(item)
+        self.ui.filter_listbox_2.setItemWidget(item, checkbox)
+
+    def remove_filter(self):
+        """To remove a filter from listbox"""
+        selected_items = [item for item in
+                          self.ui.filter_listbox_2.selectedItems()]
+        for item in selected_items:
+            checkbox = self.ui.filter_listbox_2.itemWidget(item)
+            filter_expression = checkbox.text()
+            for filter in self.filters[:]:
+                if filter.get("expression") == filter_expression:
+                    self.filters.remove(filter)
+            self.ui.filter_listbox_2.takeItem(
+                self.ui.filter_listbox_2.row(item))
+
+    def filters_ischecked(self):
+        """Collect selected filters from the UI"""
+        checked_filters = []
+        for i in range(self.ui.filter_listbox_2.count()):
+            item = self.ui.filter_listbox_2.item(i)
+            checkbox = self.ui.filter_listbox_2.itemWidget(item)
+            expression = checkbox.text()
+            state = checkbox.isChecked()
+            checked_filters.append({"expression": expression, "state": state})
+        return checked_filters
+
+    def apply_filters(self, filters=None):
+        if filters:
+            self.filters = filters
+        else:
+            checked_filters = self.filters_ischecked()
+            self.filters = checked_filters
+
+        # Apply all filters at once
+        self.filtered_df = self.df_fit_results.copy()  # Initialize with a
+        # copy of the original DataFrame
+        for filter_data in self.filters:
+            filter_expr = filter_data["expression"]
+            is_checked = filter_data["state"]
+
+            if is_checked:
+                try:
+                    # Ensure filter_expr is a string
+                    filter_expr = str(filter_expr)
+                    print(f"Applying filter expression: {filter_expr}")
+
+                    # Apply the filter
+                    self.filtered_df = self.filtered_df.query(filter_expr)
+                except Exception as e:
+                    QMessageBox.critical(self.ui, "Error",
+                                         f"Filter error: {str(e)}")
+                    print(f"Error applying filter: {str(e)}")
+                    print(f"Filter expression causing the error: {filter_expr}")
+
+        self.common.display_df_in_table(self.ui.fit_results_table,
+                                        self.filtered_df)
+
+    def upd_filter_listbox(self):
+        """To update filter listbox"""
+        self.ui.filter_listbox_2.clear()
+        for filter_data in self.filters:
+            filter_expression = filter_data["expression"]
+            item = QListWidgetItem()
+            checkbox = QCheckBox(filter_expression)
+            item.setSizeHint(checkbox.sizeHint())
+            self.ui.filter_listbox_2.addItem(item)
+            self.ui.filter_listbox_2.setItemWidget(item, checkbox)
+            checkbox.setChecked(filter_data["state"])
+
+    def view_fit_results_df(self):
+        """To view selected dataframe"""
+        if self.filtered_df is None:
+            df = self.df_fit_results
+        else:
+            df = self.filtered_df
+
+        if df is not None:
+            view_df(self.ui.tabWidget, df)
+        else:
+            show_alert("No fit dataframe to display")
+
+    def collect_results(self):
+        """Function to collect best-fit results and append in a dataframe"""
+        # Add all dict into a list, then convert to a dataframe.
+        self.copy_fit_model()
+        fit_results_list = []
+        self.df_fit_results = None
+
+        for spectrum in self.spectrums:
+            if hasattr(spectrum.result_fit, 'best_values'):
+                wafer_name, coord = self.spectrum_object_id(spectrum)
+                x, y = coord
+                success = spectrum.result_fit.success
+                rsquared = spectrum.result_fit.rsquared
+                best_values = spectrum.result_fit.best_values
+                best_values["Filename"] = wafer_name
+                best_values["X"] = x
+                best_values["Y"] = y
+                best_values["success"] = success
+                best_values["Rsquared"] = rsquared
+                fit_results_list.append(best_values)
+        self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
+
+        if self.df_fit_results is not None and not self.df_fit_results.empty:
+            # reindex columns according to the parameters names
+            self.df_fit_results = self.df_fit_results.reindex(
+                sorted(self.df_fit_results.columns), axis=1)
+            names = []
+            for name in self.df_fit_results.columns:
+                if name in ["Filename", "X", 'Y', "success"]:
+                    # to be in the 3 first columns
+                    name = '0' + name
+                elif '_' in name:
+                    # model peak parameters to be at the end
+                    name = 'z' + name[5:]
+                names.append(name)
+            self.df_fit_results = self.df_fit_results.iloc[:,
+                                  list(np.argsort(names, kind='stable'))]
+            columns = [
+                self.common.translate_param(self.current_fit_model, column) for
+                column in self.df_fit_results.columns]
+            self.df_fit_results.columns = columns
+
+            # QUADRANT
+            self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
+                self.common.quadrant, axis=1)
+            # DIAMETER
+            diameter = float(self.ui.wafer_size.text())
+
+            # ZONE
+            self.df_fit_results['Zone'] = self.df_fit_results.apply(
+                lambda row: self.common.zone(row, diameter), axis=1)
+
+            self.common.display_df_in_table(self.ui.fit_results_table,
+                                            self.df_fit_results)
+
+        else:
+            self.ui.fit_results_table.clear()
+
+        self.filtered_df = self.df_fit_results
+        self.upd_cbb_param()
+        self.upd_cbb_wafer()
+        self.send_df_to_viz()
 
     def set_default_model_folder(self, folder_path=None):
         """Define a default model folder"""
@@ -527,67 +684,6 @@ class Maps(QObject):
         fnames = self.spectrums.fnames
         self.paste_fit_model(fnames)
 
-    def collect_results(self):
-        """Function to collect best-fit results and append in a dataframe"""
-        # Add all dict into a list, then convert to a dataframe.
-        self.copy_fit_model()
-        fit_results_list = []
-        self.df_fit_results = None
-
-        for spectrum in self.spectrums:
-            if hasattr(spectrum.result_fit, 'best_values'):
-                wafer_name, coord = self.spectrum_object_id(spectrum)
-                x, y = coord
-                success = spectrum.result_fit.success
-                rsquared = spectrum.result_fit.rsquared
-                best_values = spectrum.result_fit.best_values
-                best_values["Filename"] = wafer_name
-                best_values["X"] = x
-                best_values["Y"] = y
-                best_values["success"] = success
-                best_values["Rsquared"] = rsquared
-                fit_results_list.append(best_values)
-        self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
-
-        if self.df_fit_results is not None and not self.df_fit_results.empty:
-            # reindex columns according to the parameters names
-            self.df_fit_results = self.df_fit_results.reindex(
-                sorted(self.df_fit_results.columns), axis=1)
-            names = []
-            for name in self.df_fit_results.columns:
-                if name in ["Filename", "X", 'Y', "success"]:
-                    # to be in the 3 first columns
-                    name = '0' + name
-                elif '_' in name:
-                    # model peak parameters to be at the end
-                    name = 'z' + name[5:]
-                names.append(name)
-            self.df_fit_results = self.df_fit_results.iloc[:,
-                                  list(np.argsort(names, kind='stable'))]
-            columns = [
-                self.common.translate_param(self.current_fit_model, column) for
-                column in self.df_fit_results.columns]
-            self.df_fit_results.columns = columns
-
-            # QUADRANT
-            self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
-                self.common.quadrant, axis=1)
-            # DIAMETER
-            diameter = float(self.ui.wafer_size.text())
-
-            # ZONE
-            self.df_fit_results['Zone'] = self.df_fit_results.apply(
-                lambda row: self.common.zone(row, diameter), axis=1)
-
-            self.common.display_df_in_table(self.ui.fit_results_table,
-                                            self.df_fit_results)
-        else:
-            self.ui.fit_results_table.clear()
-
-        self.upd_cbb_param()
-        self.upd_cbb_wafer()
-        self.send_df_to_viz()
-
     def save_fit_results(self):
         """Functon to save fitted results in an excel file"""
         last_dir = self.settings.value("last_directory", "/")
@@ -629,6 +725,7 @@ class Maps(QObject):
                 dfr = pd.read_excel(excel_file_path)
                 self.df_fit_results = None
                 self.df_fit_results = dfr
+                self.filtered_df = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
         self.common.display_df_in_table(self.ui.fit_results_table,
@@ -699,8 +796,12 @@ class Maps(QObject):
             part) > selected_part_index else None for part in parts]
 
         self.df_fit_results = dfr
-        self.common.display_df_in_table(self.ui.fit_results_table,
-                                        self.df_fit_results)
+        # Check if filters are applied
+        if self.filtered_df is None:
+            df = self.df_fit_results
+        else:
+            df = self.filtered_df
+        self.common.display_df_in_table(self.ui.fit_results_table, df)
         self.send_df_to_viz()
         self.upd_cbb_param()
         self.upd_cbb_wafer()
@@ -1007,7 +1108,10 @@ class Maps(QObject):
 
     def plot4(self):
         """Plot graph """
-        dfr = self.df_fit_results
+        if self.filtered_df is not None:
+            dfr = self.filtered_df
+        else:
+            dfr = self.df_fit_results
         x = self.ui.cbb_x.currentText()
         y = self.ui.cbb_y.currentText()
         z = self.ui.cbb_z.currentText()
@@ -1197,13 +1301,6 @@ class Maps(QObject):
         """Trigger the fnc to plot spectra"""
         self.delay_timer.start(100)
 
-    def view_fit_results_df(self):
-        """To view selected dataframe"""
-        if self.df_fit_results is not None:
-            view_df(self.ui.tabWidget, self.df_fit_results)
-        else:
-            show_alert("No fit dataframe to display")
-
     def view_wafer_data(self):
         """To view data of selected wafer """
         wafer_name, coords = self.spectra_id()
@@ -1281,6 +1378,7 @@ class Maps(QObject):
                     'loaded_fit_model': self.loaded_fit_model,
                     'current_fit_model': self.current_fit_model,
                     'df_fit_results': self.df_fit_results,
+                    'filters': self.filters,
 
                     'cbb_x': self.ui.cbb_x.currentIndex(),
                     'cbb_y': self.ui.cbb_y.currentIndex(),
@@ -1331,6 +1429,9 @@ class Maps(QObject):
                     self.upd_cbb_wafer()
                     self.send_df_to_viz()
                     self.upd_wafers_list()
+
+                    self.filters = load.get('filters')
+                    self.upd_filter_listbox()
 
                     # Set default values or None for missing keys
                     self.ui.cbb_x.setCurrentIndex(load.get('cbb_x', -1))

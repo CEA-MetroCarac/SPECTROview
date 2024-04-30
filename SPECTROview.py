@@ -231,6 +231,12 @@ class Main:
         self.ui.btn_default_folder_model.clicked.connect(
             self.maps.set_default_model_folder)
 
+        # Filter features:
+        self.ui.btn_add_filter_3.clicked.connect(self.maps.add_filter)
+        self.ui.ent_filter_query_3.returnPressed.connect(self.maps.add_filter)
+        self.ui.btn_apply_filters_3.clicked.connect(self.maps.apply_filters)
+        self.ui.btn_remove_filters_3.clicked.connect(self.maps.remove_filter)
+
         ########################################################
         ############## GUI for Spectrums Processing tab #############
         ########################################################

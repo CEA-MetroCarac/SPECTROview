@@ -1513,7 +1513,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>411</width>
-                       <height>373</height>
+                       <height>350</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
@@ -1673,11 +1673,17 @@
                        </layout>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="pushButton_4">
-                        <property name="text">
-                         <string/>
+                       <spacer name="verticalSpacer_13">
+                        <property name="orientation">
+                         <enum>Qt::Vertical</enum>
                         </property>
-                       </widget>
+                        <property name="sizeHint" stdset="0">
+                         <size>
+                          <width>20</width>
+                          <height>40</height>
+                         </size>
+                        </property>
+                       </spacer>
                       </item>
                       <item>
                        <widget class="QGroupBox" name="groupBox_df_manip_3">
@@ -5312,8 +5318,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>411</width>
-                       <height>373</height>
+                       <width>428</width>
+                       <height>356</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -5473,11 +5479,17 @@
                        </layout>
                       </item>
                       <item>
-                       <widget class="QPushButton" name="pushButton_5">
-                        <property name="text">
-                         <string/>
+                       <spacer name="verticalSpacer_18">
+                        <property name="orientation">
+                         <enum>Qt::Vertical</enum>
                         </property>
-                       </widget>
+                        <property name="sizeHint" stdset="0">
+                         <size>
+                          <width>20</width>
+                          <height>40</height>
+                         </size>
+                        </property>
+                       </spacer>
                       </item>
                       <item>
                        <widget class="QGroupBox" name="groupBox_df_manip_4">

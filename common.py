@@ -248,7 +248,7 @@ class CommonUtilities():
         if distance_to_center <= rad * 0.35:
             return 'Center'
         elif distance_to_center > rad * 0.35 and distance_to_center < rad * 0.8:
-            return 'Mid-Rayon'
+            return 'Mid-Radius'
         elif distance_to_center >= 0.8 * rad:
             return 'Edge'
         else:

@@ -1000,7 +1000,11 @@ class Spectrums(QObject):
             df = self.df_fit_results
         else:
             df = self.filtered_df
-        view_df(self.ui.tabWidget, df)
+
+        if df is not None:
+            view_df(self.ui.tabWidget, df)
+        else:
+            show_alert("No fit dataframe to display")
 
     def save_fit_results(self):
         """Functon to save fitted results in an excel file"""
@@ -1042,6 +1046,7 @@ class Spectrums(QObject):
             excel_file_path = file_paths[0]
             try:
                 dfr = pd.read_excel(excel_file_path)
+                self.df_fit_results = None
                 self.df_fit_results = dfr
                 self.filtered_df = dfr
             except Exception as e:

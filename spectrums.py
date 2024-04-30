@@ -848,6 +848,9 @@ class Spectrums(QObject):
                     print(f"Error applying filter: {str(e)}")
                     print(f"Filter expression causing the error: {filter_expr}")
 
+        self.common.display_df_in_table(self.ui.fit_results_table_2,
+                                        self.filtered_df)
+
     def upd_filter_listbox(self):
         """To update filter listbox"""
         self.ui.filter_listbox.clear()
@@ -1150,12 +1153,12 @@ class Spectrums(QObject):
                         self.loaded_fit_model = load.get('loaded_fit_model')
 
                         self.df_fit_results = load.get('df_fit_results')
+                        self.filters = load.get('filters')
+                        self.upd_filter_listbox()
+
                         self.upd_cbb_param()
                         self.send_df_to_viz()
                         self.upd_spectra_list()
-
-                        self.filters = load.get('filters')
-                        self.upd_filter_listbox()
 
                         self.ui.cbb_x_3.setCurrentIndex(load.get('cbb_x_1', -1))
                         self.ui.cbb_y_3.setCurrentIndex(load.get('cbb_y_1', -1))
@@ -1172,7 +1175,7 @@ class Spectrums(QObject):
                         self.plot2()
                         self.plot3()
                         self.common.display_df_in_table(
-                            self.ui.fit_results_table,
+                            self.ui.fit_results_table_2,
                             self.df_fit_results)
                     except Exception as e:
                         show_alert(f"Error loading work: {e}")

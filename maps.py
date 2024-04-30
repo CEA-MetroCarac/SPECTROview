@@ -1425,13 +1425,13 @@ class Maps(QObject):
                     self.loaded_fit_model = load.get('loaded_fit_model')
 
                     self.df_fit_results = load.get('df_fit_results')
+                    self.filters = load.get('filters')
+                    self.upd_filter_listbox()
+
                     self.upd_cbb_param()
                     self.upd_cbb_wafer()
                     self.send_df_to_viz()
                     self.upd_wafers_list()
-
-                    self.filters = load.get('filters')
-                    self.upd_filter_listbox()
 
                     # Set default values or None for missing keys
                     self.ui.cbb_x.setCurrentIndex(load.get('cbb_x', -1))

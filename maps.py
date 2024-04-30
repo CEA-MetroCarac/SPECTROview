@@ -39,7 +39,7 @@ class Maps(QObject):
         self.settings = settings
         self.ui = ui
         self.dataframe = dataframe
-        self.spectrums = spectrums
+        self.spectrums_tab = spectrums
         self.common = common
 
         self.wafers = {}  # list of opened wafers
@@ -1254,8 +1254,8 @@ class Maps(QObject):
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         for spectrum in sel_spectra:
             sent_spectrum = deepcopy(spectrum)
-            self.spectrums.spectrums.append(sent_spectrum)
-            self.spectrums.upd_spectra_list()
+            self.spectrums_tab.spectrums.append(sent_spectrum)
+            self.spectrums_tab.upd_spectra_list()
 
     def cosmis_ray_detection(self):
         self.spectrums.outliers_limit_calculation()

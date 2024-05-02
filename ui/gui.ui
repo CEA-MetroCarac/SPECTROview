@@ -583,7 +583,7 @@
                <bool>true</bool>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>2</number>
               </property>
               <widget class="QWidget" name="fit_model_editor">
                <property name="enabled">
@@ -2497,7 +2497,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>236</width>
+                     <width>248</width>
                      <height>440</height>
                     </rect>
                    </property>
@@ -8290,13 +8290,13 @@
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
-                    <height>120</height>
+                    <height>70</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>120</height>
+                    <height>70</height>
                    </size>
                   </property>
                  </widget>
@@ -8439,13 +8439,13 @@
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
-                  <height>100</height>
+                  <height>80</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>100</height>
+                  <height>80</height>
                  </size>
                 </property>
                </widget>
@@ -8512,21 +8512,42 @@
             </spacer>
            </item>
            <item>
-            <widget class="QLabel" name="lbl_selected_ploted">
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
             <widget class="QGroupBox" name="plot_style">
              <property name="title">
               <string>Plot style:</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_8">
+              <item row="0" column="2">
+               <widget class="QRadioButton" name="rdbtn_box">
+                <property name="text">
+                 <string>box</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QRadioButton" name="rdbtn_point">
+                <property name="text">
+                 <string>point</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="3">
+               <widget class="QRadioButton" name="rdbtn_histogram">
+                <property name="text">
+                 <string>histogram</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QRadioButton" name="rdbtn_scatter">
+                <property name="text">
+                 <string>scatter</string>
+                </property>
+               </widget>
+              </item>
               <item row="2" column="1">
                <widget class="QRadioButton" name="rdbtn_bar">
                 <property name="text">
@@ -8541,27 +8562,6 @@
                 </property>
                </widget>
               </item>
-              <item row="2" column="2">
-               <widget class="QRadioButton" name="rdbtn_wafer">
-                <property name="text">
-                 <string>wafer</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
-               <widget class="QRadioButton" name="rdbtn_box">
-                <property name="text">
-                 <string>box</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="3">
-               <widget class="QRadioButton" name="rdbtn_histogram">
-                <property name="text">
-                 <string>histogram</string>
-                </property>
-               </widget>
-              </item>
               <item row="0" column="3">
                <widget class="QRadioButton" name="rdbtn_heatmap">
                 <property name="text">
@@ -8569,20 +8569,10 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="0">
-               <widget class="QRadioButton" name="rdbtn_point">
+              <item row="2" column="2">
+               <widget class="QRadioButton" name="rdbtn_wafer">
                 <property name="text">
-                 <string>point</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QRadioButton" name="rdbtn_scatter">
-                <property name="text">
-                 <string>scatter</string>
+                 <string>wafer</string>
                 </property>
                </widget>
               </item>
@@ -8613,6 +8603,25 @@
              <item>
               <widget class="QComboBox" name="cbb_x_2"/>
              </item>
+             <item>
+              <widget class="QPushButton" name="btn_add_graph">
+               <property name="minimumSize">
+                <size>
+                 <width>100</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Add graph</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>
@@ -8638,6 +8647,25 @@
              </item>
              <item>
               <widget class="QComboBox" name="cbb_y_2"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_upd_graph">
+               <property name="minimumSize">
+                <size>
+                 <width>100</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Update graph</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -8665,6 +8693,25 @@
              <item>
               <widget class="QComboBox" name="cbb_z_2"/>
              </item>
+             <item>
+              <widget class="QPushButton" name="btn_add_line">
+               <property name="minimumSize">
+                <size>
+                 <width>100</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Add a line</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>
@@ -8683,6 +8730,25 @@
              </item>
              <item>
               <widget class="QLineEdit" name="lbl_plot_title"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_copy_graph">
+               <property name="minimumSize">
+                <size>
+                 <width>100</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Copy Graph</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -8759,6 +8825,30 @@
             </layout>
            </item>
            <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_110">
+             <item>
+              <widget class="QLabel" name="label_92">
+               <property name="text">
+                <string>X label rotation (°):</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDoubleSpinBox" name="x_rot">
+               <property name="decimals">
+                <number>0</number>
+               </property>
+               <property name="maximum">
+                <double>50.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>10.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
             <spacer name="verticalSpacer_20">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
@@ -8772,36 +8862,34 @@
             </spacer>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_90">
+            <layout class="QHBoxLayout" name="horizontalLayout_113">
              <item>
-              <widget class="QPushButton" name="btn_add_graph">
+              <widget class="QLabel" name="label_93">
                <property name="text">
-                <string>Add graph</string>
+                <string>Palette:</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="btn_upd_graph">
+              <widget class="QComboBox" name="cbb_palette"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_94">
                <property name="text">
-                <string>Update graph</string>
+                <string>Z min/max</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="btn_add_line">
-               <property name="text">
-                <string>Add a line</string>
-               </property>
-              </widget>
+              <widget class="QLineEdit" name="zmin_2"/>
              </item>
              <item>
-              <widget class="QPushButton" name="btn_copy_graph">
-               <property name="text">
-                <string>Copy Graph</string>
-               </property>
-              </widget>
+              <widget class="QLineEdit" name="zmax_2"/>
              </item>
             </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_90"/>
            </item>
            <item>
             <widget class="QWidget" name="widget" native="true">

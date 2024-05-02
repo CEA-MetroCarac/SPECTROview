@@ -6,7 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 import dill
 
-from common import view_df, show_alert, CommonUtilities, Graph, Filter
+from common import view_df, show_alert, CommonUtilities, Graph, Filter, PALETTE
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -44,7 +44,7 @@ class Visu(QDialog):
         self.ui.ent_filter_query_4.returnPressed.connect(self.filter.add_filter)
         self.ui.btn_remove_filters_4.clicked.connect(self.filter.remove_filter)
         self.ui.btn_apply_filters_4.clicked.connect(self.apply_filters)
-
+        self.ui.cbb_palette.addItems(PALETTE)
         # GRAPH
         self.plots = {}  # Dictionary to store plots
         self.plot_number = 0  # Initialize plot number
@@ -110,6 +110,8 @@ class Visu(QDialog):
         """ Update the existing graph with new properties"""
         sel_graph = self.get_sel_graph()
         if sel_graph:
+            df = self.sel_df if self.filtered_df is None else \
+                self.filtered_df
             plot_style = self.get_plot_style()
             plot_title = self.ui.lbl_plot_title.text()
             x = self.ui.cbb_x_2.currentText()
@@ -118,19 +120,34 @@ class Visu(QDialog):
             xlabel = self.ui.lbl_xlabel.text()
             ylabel = self.ui.lbl_ylabel.text()
             zlabel = self.ui.lbl_zlabel.text()
+            xmin = self.ui.xmin_2.text()
+            ymin = self.ui.ymin_2.text()
+            xmax = self.ui.xmax_2.text()
+            ymax = self.ui.ymax_2.text()
+            zmin = self.ui.zmin_2.text()
+            zmax = self.ui.xmax_2.text()
+            palette = self.ui.cbb_palette.currentText()
+            x_rot = float(self.ui.x_rot.text())
 
-            df = self.sel_df if self.filtered_df is None else \
-                self.filtered_df
+
+            # Apply values for "graph" object
             sel_graph.df = df
             sel_graph.x = x
             sel_graph.y = y
             sel_graph.z = z if z != "None" else None
-
+            sel_graph.xmin = xmin
+            sel_graph.xmax = xmax
+            sel_graph.ymin = ymin
+            sel_graph.ymax = ymax
+            sel_graph.zmin = zmin
+            sel_graph.zmax = zmax
             sel_graph.xlabel = xlabel
             sel_graph.ylabel = ylabel
             sel_graph.zlabel = zlabel
+            sel_graph.x_rot = x_rot
             sel_graph.plot_style = plot_style
             sel_graph.plot_title = plot_title
+            sel_graph.color_palette = palette
             sel_graph.plot()
             sel_graph.setWindowTitle(
                 f"Graph_{sel_graph.plot_number}_{x}_vs._{y}")

@@ -10,7 +10,7 @@ from PySide6.QtCore import QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon
 
 from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
-    show_alert
+    show_alert, PALETTE
 
 from ui import resources_new
 from dataframe import Dataframe
@@ -205,7 +205,7 @@ class Main:
 
         self.ui.btn_plot_wafer.clicked.connect(self.maps.plot3)
         self.ui.btn_plot_graph.clicked.connect(self.maps.plot4)
-        self.ui.cbb_color_pallete.addItems(self.visualization.palette_colors)
+        self.ui.cbb_color_pallete.addItems(PALETTE)
         self.ui.btn_open_fitspy.clicked.connect(self.maps.fitspy_launcher)
         self.ui.btn_cosmis_ray.clicked.connect(self.maps.cosmis_ray_detection)
         self.ui.btn_open_fit_results.clicked.connect(

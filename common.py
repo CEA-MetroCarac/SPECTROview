@@ -41,6 +41,8 @@ FIT_METHODS = {'Leastsq': 'leastsq', 'Least_squares': 'least_squares',
                'Nelder-Mead': 'nelder', 'SLSQP': 'slsqp'}
 NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
          '24', '28', '32']
+PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
+                               'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
 
 
 class Graph(QWidget):
@@ -50,12 +52,12 @@ class Graph(QWidget):
         self.x = None
         self.y = None
         self.z = None
-        self.x_min = None
-        self.x_max = None
-        self.y_min = None
-        self.y_max = None
-        self.z_min = None
-        self.z_max = None
+        self.xmin = None
+        self.xmax = None
+        self.ymin = None
+        self.ymax = None
+        self.zmin = None
+        self.zmax = None
 
         self.plot_style = "point"
         self.color_palette = None
@@ -109,9 +111,18 @@ class Graph(QWidget):
                 show_alert("Unsupported plot style")
         else:
             self.ax.plot([], [])
+        if self.xmin and self.xmax:
+            self.ax.set_xlim(float(self.xmin), float(self.xmax))
+        if self.ymin and self.ymax:
+            self.ax.set_ylim(float(self.ymin), float(self.ymax))
+
+
         self.ax.set_title(self.plot_title)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
+        self.ax.legend(loc='upper right')
+        plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
+                 rotation_mode="anchor")
         self.tight_layout_and_redraw()
 
     def set_plot_style(self, plot_style):

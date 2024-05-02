@@ -694,7 +694,6 @@ class Maps(QObject):
             self.ui.cbb_y.addItem("None")
             self.ui.cbb_z.addItem("None")
             for column in columns:
-                # remove_special_chars = re.sub(r'\$[^$]+\$', '', column)
                 self.ui.cbb_param_1.addItem(column)
                 self.ui.cbb_x.addItem(column)
                 self.ui.cbb_y.addItem(column)
@@ -1076,7 +1075,8 @@ class Maps(QObject):
         if text:
             xlabel_rot = float(text)
         ax = self.ax4
-        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin, ymax,
+        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin,
+                               ymax,
                                title,
                                x_text, y_text, xlabel_rot)
         self.ax4.get_figure().tight_layout()

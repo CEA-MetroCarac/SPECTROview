@@ -13,16 +13,17 @@ except:
 from io import BytesIO
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+
 import matplotlib.patches as patches
-from scipy.interpolate import griddata
 import seaborn as sns
+
+from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
-    QLineEdit, \
-    QPushButton, \
-    QComboBox, QCheckBox, QListWidgetItem
+    QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem
 from PySide6.QtCore import Signal, QThread
-from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon
+from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent
 
 from PySide6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -42,33 +43,93 @@ NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
          '24', '28', '32']
 
 
-def show_alert(message):
-    """Show alert"""
-    msg_box = QMessageBox()
-    msg_box.setIcon(QMessageBox.Warning)
-    msg_box.setWindowTitle("Alert")
-    msg_box.setText(message)
-    msg_box.exec_()
+class Graph(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.x = None
+        self.y = None
+        self.z = None
+        self.x_min = None
+        self.x_max = None
+        self.y_min = None
+        self.y_max = None
+        self.z_min = None
+        self.z_max = None
 
+        self.plot_style = None
+        self.color_palette = None
 
-def view_df(tabWidget, df):
-    """View selected dataframe"""
-    df_viewer = QDialog(tabWidget.parent())
-    df_viewer.setWindowTitle("DataFrame Viewer")
-    df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
-    # Create a QTableWidget and populate it with data from the DataFrame
-    table_widget = QTableWidget(df_viewer)
-    table_widget.setColumnCount(df.shape[1])
-    table_widget.setRowCount(df.shape[0])
-    table_widget.setHorizontalHeaderLabels(df.columns)
-    for row in range(df.shape[0]):
-        for col in range(df.shape[1]):
-            item = QTableWidgetItem(str(df.iat[row, col]))
-            table_widget.setItem(row, col, item)
-    table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
-    layout = QVBoxLayout(df_viewer)
-    layout.addWidget(table_widget)
-    df_viewer.show()
+        self.plot_title = None
+        self.xlabel = None
+        self.ylabel = None
+        self.zlabel = None
+        self.x_rot = 0
+
+        self.figure = Figure()
+        self.canvas = FigureCanvas(self.figure)
+        layout = QVBoxLayout()
+        layout.addWidget(self.canvas)
+        self.setLayout(layout)
+        self.ax = self.figure.add_subplot(111)
+
+    def tight_layout_and_redraw(self):
+        self.figure.tight_layout()
+        self.canvas.draw()
+
+    def plot(self):
+        self.ax.clear()
+        if self.plot_style == 'line':
+            sns.lineplot(x=self.x, y=self.y, hue=self.z, ax=self.ax)
+        elif self.plot_style == 'point':
+            sns.pointplot(x=self.x, y=self.y, hue=self.z, linestyle='none',
+                          dodge=True, capsize=0.00, ax=self.ax)
+        elif self.plot_style == 'scatter':
+            sns.scatterplot(x=self.x, y=self.y, hue=self.z, s=100, ax=self.ax)
+        elif self.plot_style == 'bar':
+            sns.barplot(x=self.x, y=self.y, hue=self.z, errorbar='sd',
+                        ax=self.ax)
+        elif self.plot_style == 'box':
+            sns.boxplot(x=self.x, y=self.y, hue=self.z, dodge=True, ax=self.ax)
+        else:
+            raise ValueError("Unsupported plot style")
+
+        self.ax.set_title(self.plot_title)
+        self.ax.set_xlabel(self.xlabel)
+        self.ax.set_ylabel(self.ylabel)
+        self.tight_layout_and_redraw()
+
+    def set_plot_style(self, plot_style):
+        """Set the plot style"""
+        if plot_style not in ['line', 'point', 'scatter', 'bar', 'box']:
+            raise ValueError("Unsupported plot style")
+        self.plot_style = plot_style
+
+    def update_title(self, new_title):
+        self.plot_title = new_title
+        self.ax.set_title(new_title)
+        self.tight_layout_and_redraw()
+
+    def set_xlabel(self, xlabel):
+        self.xlabel = xlabel
+        self.ax.set_xlabel(xlabel)
+        self.tight_layout_and_redraw()
+
+    def set_ylabel(self, ylabel):
+        self.ylabel = ylabel
+        self.ax.set_ylabel(ylabel)
+        self.tight_layout_and_redraw()
+
+    def set_xlimits(self, xmin, xmax):
+        self.ax.set_xlim(xmin, xmax)
+        self.tight_layout_and_redraw()
+
+    def set_ylimits(self, ymin, ymax):
+        self.ax.set_ylim(ymin, ymax)
+        self.tight_layout_and_redraw()
+
+    def set_legend(self, legend_labels):
+        self.ax.legend(legend_labels)
+        self.tight_layout_and_redraw()
 
 
 class Filter:
@@ -886,3 +947,32 @@ class WaferPlot:
         zi = griddata((x, y), hue, (xi, yi),
                       method=self.inter_method)
         return zi
+
+
+def show_alert(message):
+    """Show alert"""
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Warning)
+    msg_box.setWindowTitle("Alert")
+    msg_box.setText(message)
+    msg_box.exec_()
+
+
+def view_df(tabWidget, df):
+    """View selected dataframe"""
+    df_viewer = QDialog(tabWidget.parent())
+    df_viewer.setWindowTitle("DataFrame Viewer")
+    df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
+    # Create a QTableWidget and populate it with data from the DataFrame
+    table_widget = QTableWidget(df_viewer)
+    table_widget.setColumnCount(df.shape[1])
+    table_widget.setRowCount(df.shape[0])
+    table_widget.setHorizontalHeaderLabels(df.columns)
+    for row in range(df.shape[0]):
+        for col in range(df.shape[1]):
+            item = QTableWidgetItem(str(df.iat[row, col]))
+            table_widget.setItem(row, col, item)
+    table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
+    layout = QVBoxLayout(df_viewer)
+    layout.addWidget(table_widget)
+    df_viewer.show()

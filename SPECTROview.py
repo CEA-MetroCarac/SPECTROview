@@ -3,12 +3,14 @@ import sys
 import os
 import datetime
 
-from PySide6.QtWidgets import QApplication, QListWidget, QComboBox, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
+    QMessageBox
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon
 
-from common import CommonUtilities, FitModelManager, PEAK_MODELS, show_alert
+from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
+    show_alert
 
 from ui import resources_new
 from dataframe import Dataframe
@@ -16,8 +18,8 @@ from visualization import Vizualisation
 from maps import Maps
 from spectrums import Spectrums
 from workspace import SaveLoadWorkspace
+from visu import Visu
 
-from visu import Graph
 DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")
 ICON_APPLI = os.path.join(DIRNAME, "ui", "iconpack", "icon3.png")
@@ -59,6 +61,7 @@ class Main:
         self.maps = Maps(self.settings, self.ui, self.dataframe, self.spectrums,
                          self.common)
         self.fitmodel_manager = FitModelManager(self.settings)
+        self.visu = Visu(self.settings, self.ui)
 
         # DATAFRAME
         self.ui.btn_open_df.clicked.connect(
@@ -294,26 +297,6 @@ class Main:
         self.ui.btn_default_folder_model_3.clicked.connect(
             self.spectrums.set_default_model_folder)
 
-
-        ######### VISU GRAPH Class ############
-        #######################################
-        self.ui.btn_add_plt.clicked.connect(self.plot_test)
-        self.ui.lbl_selected_ploted.setText("Graph Plot 1")
-        self.plot_windows = []
-        self.ui.mdiArea.subWindowActivated.connect(self.update_selected_plot_label)
-
-    def plot_test(self):
-        graph_window = Graph()
-        x_data = [1, 2, 3]
-        y_data = [4, 2, 3]
-        graph_window.plot(x_data, y_data)
-        sub_window = self.ui.mdiArea.addSubWindow(graph_window)
-        sub_window.show()
-
-    def update_selected_plot_label(self, sub_window):
-        if sub_window:
-            self.ui.lbl_selected_ploted.setText(sub_window.windowTitle())
-
     def toggle_dark_mode(self):
         self.ui.setPalette(self.common.dark_palette())
         self.settings.setValue("mode", "dark")  # Save to settings
@@ -332,8 +315,6 @@ class Main:
         self.ui.combo_hue_2.setCurrentIndex(
             self.ui.combo_hue_2.findText(selected_text))
 
-
-
     def open_doc_df_query(self):
         """Open doc detail about query function of pandas dataframe"""
         title = "Data filtering"
@@ -347,64 +328,71 @@ class Main:
 expiration_date = datetime.datetime(2024, 9, 1)
 
 
-def launcher():
-    # Check if the current date is past the expiration date
-    if datetime.datetime.now() > expiration_date:
-        text = f"The current SPECTROview version has expired on " \
-               f"{expiration_date}. Please " \
-               f"contact the developer for an " \
-               f"updated version"
-        # If expired, disable the central widget
-        app = QApplication(sys.argv)
-        app.setWindowIcon(QIcon(ICON_APPLI))
-        window = Main()
-        window.ui.centralwidget.setEnabled(False)
-        app.setStyle("Fusion")
-        window.ui.show()
-        show_alert(text)
-        sys.exit(app.exec())
-
-    # If not expired, continue launching the application as usual
-    app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon(ICON_APPLI))
-    window = Main()
-    window.ui.centralwidget.setEnabled(True)
-    app.setStyle("Fusion")
-    window.ui.show()
-    sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    launcher()
-
-# def launcher2(file_paths=None, fname_json=None):
-#     app = QApplication()
+# def launcher():
+#     # Check if the current date is past the expiration date
+#     if datetime.datetime.now() > expiration_date:
+#         text = f"The current SPECTROview version has expired on " \
+#                f"{expiration_date}. Please " \
+#                f"contact the developer for an " \
+#                f"updated version"
+#         # If expired, disable the central widget
+#         app = QApplication(sys.argv)
+#         app.setWindowIcon(QIcon(ICON_APPLI))
+#         window = Main()
+#         window.ui.centralwidget.setEnabled(False)
+#         app.setStyle("Fusion")
+#         window.ui.show()
+#         show_alert(text)
+#         sys.exit(app.exec())
+#
+#     # If not expired, continue launching the application as usual
+#     app = QApplication(sys.argv)
 #     app.setWindowIcon(QIcon(ICON_APPLI))
 #     window = Main()
+#     window.ui.centralwidget.setEnabled(True)
 #     app.setStyle("Fusion")
-#     if file_paths is not None:
-#         window.maps.open_data(file_paths=file_paths)
-#     if fname_json is not None:
-#         window.maps.load_fit_model(fname_json=fname_json)
-#
-#     # if file_paths is not None:
-#     #     window.spectrums.open_data(file_paths=file_paths)
-#     # if fname_json is not None:
-#     #     window.spectrums.open_fit_model(fname_json=fname_json)
 #     window.ui.show()
 #     sys.exit(app.exec())
 #
 #
 # if __name__ == "__main__":
-#     DIRNAME = os.path.dirname(__file__)
-#     DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
-#     DATA_MAPS = os.path.join(DIRNAME, "data_test", "RAW 2Dmaps")
-#     fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
-#     fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
-#     fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
-#     fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')
-#     # fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
-#     # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
-#     # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
-#     # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
-#     launcher2([fname1, fname2, fname3])
+#     launcher()
+
+def launcher2(file_paths=None, fname_json=None, fnames=None):
+    app = QApplication()
+    app.setWindowIcon(QIcon(ICON_APPLI))
+    window = Main()
+    app.setStyle("Fusion")
+    # if file_paths is not None:
+    #     window.maps.open_data(file_paths=file_paths)
+    # if fname_json is not None:
+    #     window.maps.load_fit_model(fname_json=fname_json)
+    #
+    # if file_paths is not None:
+    #     window.spectrums.open_data(file_paths=file_paths)
+    # if fname_json is not None:
+    #     window.spectrums.open_fit_model(fname_json=fname_json)
+
+    if fnames is not None:
+        window.visu.open_dfs(fnames=fnames)
+    window.ui.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    DIRNAME = os.path.dirname(__file__)
+    DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
+    DATA_MAPS = os.path.join(DIRNAME, "data_test", "RAW 2Dmaps")
+    DATA_DFS = os.path.join(DIRNAME, "data_test")
+    # fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
+    # fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
+    # fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
+    # fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')
+    # fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
+    # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
+    # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
+    # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
+    fname1 = os.path.join(DATA_DFS, 'df1.xlsx')
+    fname2 = os.path.join(DATA_DFS, 'df4.xlsx')
+
+    launcher2(fnames=[fname1, fname2])

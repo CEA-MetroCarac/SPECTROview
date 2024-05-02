@@ -7417,7 +7417,7 @@
              <item>
               <widget class="QTabWidget" name="Plot_styling">
                <property name="currentIndex">
-                <number>2</number>
+                <number>0</number>
                </property>
                <widget class="QWidget" name="tab_styling_plot">
                 <attribute name="title">
@@ -8283,7 +8283,7 @@
            <item>
             <widget class="QPushButton" name="btn_open_dfs">
              <property name="text">
-              <string>Open</string>
+              <string>Open data</string>
              </property>
             </widget>
            </item>
@@ -8455,6 +8455,12 @@
                   <height>100</height>
                  </size>
                 </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>100</height>
+                 </size>
+                </property>
                </widget>
               </item>
               <item>
@@ -8522,6 +8528,9 @@
             <widget class="QLabel" name="lbl_selected_ploted">
              <property name="text">
               <string>TextLabel</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
              </property>
             </widget>
            </item>
@@ -8672,23 +8681,96 @@
             </layout>
            </item>
            <item>
-            <widget class="QPushButton" name="btn_add_graph">
-             <property name="minimumSize">
-              <size>
-               <width>100</width>
-               <height>40</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>100</width>
-               <height>40</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Add graph</string>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_107">
+             <item>
+              <widget class="QLabel" name="label_91">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Plot title: </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lbl_plot_title"/>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_91">
+             <item>
+              <widget class="QLabel" name="label_86">
+               <property name="text">
+                <string>X label</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lbl_xlabel"/>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_92">
+             <item>
+              <widget class="QLabel" name="label_87">
+               <property name="text">
+                <string>Y label</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lbl_ylabel"/>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_93">
+             <item>
+              <widget class="QLabel" name="label_88">
+               <property name="text">
+                <string>Z label</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lbl_zlabel"/>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_102">
+             <item>
+              <widget class="QLabel" name="label_89">
+               <property name="text">
+                <string>X min/max</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="xmin_2"/>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="xmax_2"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_90">
+               <property name="text">
+                <string>Y min/max</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="ymin_2"/>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="ymax_2"/>
+             </item>
+            </layout>
            </item>
            <item>
             <spacer name="verticalSpacer_20">
@@ -8702,6 +8784,38 @@
               </size>
              </property>
             </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_90">
+             <item>
+              <widget class="QPushButton" name="btn_add_graph">
+               <property name="text">
+                <string>Add graph</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_upd_graph">
+               <property name="text">
+                <string>Update graph</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_add_line">
+               <property name="text">
+                <string>Add a line</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_copy_graph">
+               <property name="text">
+                <string>Copy Graph</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QWidget" name="widget" native="true">

@@ -44,8 +44,9 @@ NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
 
 
 class Graph(QWidget):
-    def __init__(self):
+    def __init__(self, plot_number=None):  # Add plot_number as an argument
         super().__init__()
+        self.df = None
         self.x = None
         self.y = None
         self.z = None
@@ -56,7 +57,7 @@ class Graph(QWidget):
         self.z_min = None
         self.z_max = None
 
-        self.plot_style = None
+        self.plot_style = "point"
         self.color_palette = None
 
         self.plot_title = None
@@ -72,27 +73,39 @@ class Graph(QWidget):
         self.setLayout(layout)
         self.ax = self.figure.add_subplot(111)
 
+        # Store plot_number
+        self.plot_number = plot_number
+
     def tight_layout_and_redraw(self):
         self.figure.tight_layout()
         self.canvas.draw()
 
     def plot(self):
         self.ax.clear()
-        if self.plot_style == 'line':
-            sns.lineplot(x=self.x, y=self.y, hue=self.z, ax=self.ax)
-        elif self.plot_style == 'point':
-            sns.pointplot(x=self.x, y=self.y, hue=self.z, linestyle='none',
-                          dodge=True, capsize=0.00, ax=self.ax)
-        elif self.plot_style == 'scatter':
-            sns.scatterplot(x=self.x, y=self.y, hue=self.z, s=100, ax=self.ax)
-        elif self.plot_style == 'bar':
-            sns.barplot(x=self.x, y=self.y, hue=self.z, errorbar='sd',
-                        ax=self.ax)
-        elif self.plot_style == 'box':
-            sns.boxplot(x=self.x, y=self.y, hue=self.z, dodge=True, ax=self.ax)
+        if self.x is not None and self.y is not None:
+            if self.plot_style == 'line':
+                sns.lineplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                             ax=self.ax)
+            elif self.plot_style == 'point':
+                sns.pointplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                              linestyle='none',
+                              dodge=True, capsize=0.00, ax=self.ax)
+            elif self.plot_style == 'scatter':
+                sns.scatterplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                                s=100,
+                                ax=self.ax)
+            elif self.plot_style == 'bar':
+                sns.barplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                            errorbar='sd',
+                            ax=self.ax)
+            elif self.plot_style == 'box':
+                sns.boxplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                            dodge=True,
+                            ax=self.ax)
+            else:
+                show_alert("Unsupported plot style")
         else:
-            raise ValueError("Unsupported plot style")
-
+            self.ax.plot([], [])
         self.ax.set_title(self.plot_title)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)

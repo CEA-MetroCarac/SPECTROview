@@ -20,10 +20,11 @@ from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 class Visu(QDialog):
     """Class to GUI and callbacks"""
 
-    def __init__(self, settings, ui):
+    def __init__(self, settings, ui, common):
         super().__init__()
         self.ui = ui
         self.settings = settings
+        self.common = common
         self.setWindowTitle("Graph Plot")
 
         # DATAFRAME
@@ -45,15 +46,18 @@ class Visu(QDialog):
         self.ui.btn_apply_filters_4.clicked.connect(self.apply_filters)
 
         # GRAPH
+        self.plots = {}  # Dictionary to store plots
         self.plot_number = 0  # Initialize plot number
 
         self.ui.btn_add_graph.clicked.connect(self.add_graph)
+        self.ui.btn_upd_graph.clicked.connect(self.upd_graph)
+        self.ui.btn_copy_graph.clicked.connect(self.copy_fig_to_clb)
 
         # Track selected sub-window
-        self.ui.mdiArea.subWindowActivated.connect(
-            self.update_selected_plot_label)
+        self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
 
     def add_graph(self):
+        """Plot new graph"""
         # Increment plot number
         self.plot_number += 1
 
@@ -63,33 +67,35 @@ class Visu(QDialog):
         else:
             df = self.filtered_df
 
-        x_value = self.ui.cbb_x_2.currentText()
-        y_value = self.ui.cbb_y_2.currentText()
-        z_value = self.ui.cbb_z_2.currentText()
-
+        x = self.ui.cbb_x_2.currentText()
+        y = self.ui.cbb_y_2.currentText()
+        z = self.ui.cbb_z_2.currentText()
+        title = self.ui.lbl_plot_title.text()
         plot_style = self.get_plot_style()
 
         # Create an instance of the Graph class
-        graph = Graph()
+        graph = Graph(plot_number=self.plot_number)
+
         graph.plot_style = plot_style
-        # Set x, y, z values and labels
-        graph.x = df[x_value]
-        graph.y = df[y_value]
-        if z_value == "None":
-            graph.z = None
-        else:
-            graph.z = df[z_value]
-        graph.xlabel = x_value
-        graph.ylabel = y_value
-        graph.zlabel = z_value
+        graph.plot_title = title
+        graph.df = df
+        graph.x = x
+        graph.y = y
+        graph.z = z if z != "None" else None
+        graph.xlabel = x
+        graph.ylabel = y
+        graph.zlabel = z
 
         # Plot the graph
         graph.plot()
 
+        # Store the plot in the dictionary with plot_number as key
+        self.plots[self.plot_number] = graph
+
         # Create a QDialog to hold the Graph instance
         graph_dialog = QDialog(self)
         graph_dialog.setWindowTitle(
-            f"Graph_{self.plot_number}_{x_value}_vs._{y_value}")
+            f"Graph_{self.plot_number}_{y}_vs._{y}")
         layout = QVBoxLayout()
         layout.addWidget(graph)
         graph_dialog.setLayout(layout)
@@ -100,10 +106,74 @@ class Visu(QDialog):
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
 
-    def update_selected_plot_label(self, sub_window):
-        if sub_window:
-            plot_title = sub_window.windowTitle()
-            self.ui.lbl_selected_ploted.setText(plot_title)
+    def upd_graph(self):
+        """ Update the existing graph with new properties"""
+        sel_graph = self.get_sel_graph()
+        if sel_graph:
+            plot_style = self.get_plot_style()
+            plot_title = self.ui.lbl_plot_title.text()
+            x = self.ui.cbb_x_2.currentText()
+            y = self.ui.cbb_y_2.currentText()
+            z = self.ui.cbb_z_2.currentText()
+            xlabel = self.ui.lbl_xlabel.text()
+            ylabel = self.ui.lbl_ylabel.text()
+            zlabel = self.ui.lbl_zlabel.text()
+
+            df = self.sel_df if self.filtered_df is None else \
+                self.filtered_df
+            sel_graph.df = df
+            sel_graph.x = x
+            sel_graph.y = y
+            sel_graph.z = z if z != "None" else None
+
+            sel_graph.xlabel = xlabel
+            sel_graph.ylabel = ylabel
+            sel_graph.zlabel = zlabel
+            sel_graph.plot_style = plot_style
+            sel_graph.plot_title = plot_title
+            sel_graph.plot()
+            sel_graph.setWindowTitle(
+                f"Graph_{sel_graph.plot_number}_{x}_vs._{y}")
+
+    def on_selected_graph(self, sub_window):
+        """Reflect all properties of selected graph object to GUI"""
+        sel_graph = self.get_sel_graph()
+
+        if sel_graph:
+            # Update plot style radio buttons
+            if sel_graph.plot_style == "point":
+                self.ui.rdbtn_point.setChecked(True)
+            elif sel_graph.plot_style == "scatter":
+                self.ui.rdbtn_scatter.setChecked(True)
+            elif sel_graph.plot_style == "box":
+                self.ui.rdbtn_box.setChecked(True)
+            elif sel_graph.plot_style == "heatmap":
+                self.ui.rdbtn_heatmap.setChecked(True)
+            elif sel_graph.plot_style == "line":
+                self.ui.rdbtn_line.setChecked(True)
+            elif sel_graph.plot_style == "bar":
+                self.ui.rdbtn_bar.setChecked(True)
+            elif sel_graph.plot_style == "wafer":
+                self.ui.rdbtn_wafer.setChecked(True)
+            elif sel_graph.plot_style == "histogram":
+                self.ui.rdbtn_histogram.setChecked(True)
+
+            # Update combobox selections
+            x = self.ui.cbb_x_2.findText(sel_graph.x)
+            y = self.ui.cbb_y_2.findText(sel_graph.y)
+            z = self.ui.cbb_z_2.findText(sel_graph.z)
+            self.ui.cbb_x_2.setCurrentIndex(
+                x if x != -1 else 0)
+            self.ui.cbb_y_2.setCurrentIndex(
+                y if y != -1 else 0)
+            self.ui.cbb_z_2.setCurrentIndex(
+                z if z != -1 else 0)
+
+            # Update QLineEdit:
+            self.ui.lbl_plot_title.setText(sel_graph.plot_title)
+            self.ui.lbl_xlabel.setText(sel_graph.xlabel)
+            self.ui.lbl_ylabel.setText(sel_graph.ylabel)
+            self.ui.lbl_zlabel.setText(sel_graph.zlabel)
 
     def get_plot_style(self):
         if self.ui.rdbtn_point.isChecked():
@@ -181,11 +251,13 @@ class Visu(QDialog):
                 self.ui.dfs_listbox.setCurrentRow(0)
 
     def update_gui(self):
+        """To update GUI """
         self.show_df_in_gui()
         self.update_cbb()
         self.sel_df = self.get_sel_df()
 
     def update_cbb(self):
+        """Populate columns of selected data to comboboxes"""
         sel_df = self.get_sel_df()
         if sel_df is not None:
             columns = sel_df.columns.tolist()
@@ -199,6 +271,22 @@ class Visu(QDialog):
                 self.ui.cbb_x_2.addItem(column)
                 self.ui.cbb_y_2.addItem(column)
                 self.ui.cbb_z_2.addItem(column)
+
+    def copy_fig_to_clb(self):
+        """Copy the selected figure to clipboard"""
+        sel_graph = self.get_sel_graph()
+        self.common.copy_fig_to_clb(canvas=sel_graph.canvas)
+
+    def get_sel_graph(self):
+        """Get the canvas of the selected sub window"""
+        sub_window = self.ui.mdiArea.activeSubWindow()
+        if sub_window:
+            graph_dialog = sub_window.widget()
+            if graph_dialog:
+                graph = graph_dialog.layout().itemAt(0).widget()
+                if graph:
+                    sel_graph = graph
+        return sel_graph
 
     def get_sel_df(self):
         """Get selected dataframe"""

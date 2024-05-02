@@ -61,7 +61,7 @@ class Main:
         self.maps = Maps(self.settings, self.ui, self.dataframe, self.spectrums,
                          self.common)
         self.fitmodel_manager = FitModelManager(self.settings)
-        self.visu = Visu(self.settings, self.ui)
+        self.visu = Visu(self.settings, self.ui, self.common)
 
         # DATAFRAME
         self.ui.btn_open_df.clicked.connect(

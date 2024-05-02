@@ -51,17 +51,18 @@ class Main:
 
         # Create an instance of Dataframe and pass the self.ui object
         self.dataframe = Dataframe(self.settings, self.ui)
+        self.visu = Visu(self.settings, self.ui, self.common)
         self.visualization = Vizualisation(self.settings, self.ui,
                                            self.dataframe)
         self.workspace = SaveLoadWorkspace(self.settings, self.ui,
                                            self.dataframe,
                                            self.visualization)
         self.spectrums = Spectrums(self.settings, self.ui, self.dataframe,
-                                   self.common)
+                                   self.common, self.visu)
         self.maps = Maps(self.settings, self.ui, self.dataframe, self.spectrums,
-                         self.common)
+                         self.common, self.visu)
         self.fitmodel_manager = FitModelManager(self.settings)
-        self.visu = Visu(self.settings, self.ui, self.common)
+
 
         # DATAFRAME
         self.ui.btn_open_df.clicked.connect(

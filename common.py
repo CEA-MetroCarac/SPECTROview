@@ -66,7 +66,7 @@ class Graph(QWidget):
         self.zlabel = None
         self.x_rot = 0
 
-        self.figure = Figure()
+        self.figure = Figure(dpi=100)
         self.canvas = FigureCanvas(self.figure)
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
@@ -87,21 +87,24 @@ class Graph(QWidget):
                 sns.lineplot(data=self.df, x=self.x, y=self.y, hue=self.z,
                              ax=self.ax)
             elif self.plot_style == 'point':
-                sns.pointplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                sns.pointplot(data=self.df, x=self.x, y=self.y, hue=self.z, ax=self.ax,
                               linestyle='none',
-                              dodge=True, capsize=0.00, ax=self.ax)
+                              markeredgecolor='black',
+                              markeredgewidth=1,
+                              dodge=True,
+                              err_kws={'linewidth': 1, 'color': 'black'},
+                              capsize=0.05)
             elif self.plot_style == 'scatter':
-                sns.scatterplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                sns.scatterplot(data=self.df, x=self.x, y=self.y, hue=self.z,ax=self.ax,
                                 s=100,
-                                ax=self.ax)
+                                edgecolor='black'
+                                )
             elif self.plot_style == 'bar':
                 sns.barplot(data=self.df, x=self.x, y=self.y, hue=self.z,
-                            errorbar='sd',
-                            ax=self.ax)
+                            errorbar='sd', ax=self.ax)
             elif self.plot_style == 'box':
                 sns.boxplot(data=self.df, x=self.x, y=self.y, hue=self.z,
-                            dodge=True,
-                            ax=self.ax)
+                            dodge=True, ax=self.ax)
             else:
                 show_alert("Unsupported plot style")
         else:

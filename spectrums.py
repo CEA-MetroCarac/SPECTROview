@@ -34,12 +34,13 @@ class Spectrums(QObject):
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
 
-    def __init__(self, settings, ui, dataframe, common):
+    def __init__(self, settings, ui, dataframe, common, visu):
         super().__init__()
         self.settings = settings
         self.ui = ui
         self.dataframe = dataframe
         self.common = common
+        self.visu = visu
 
         self.loaded_fit_model = None
         self.current_fit_model = None
@@ -838,9 +839,14 @@ class Spectrums(QObject):
 
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
+        # TAB Visu_old
         dfs = self.dataframe.original_dfs
-        dfs["fit_results"] = self.df_fit_results
+        dfs["SPECTRUMS"] = self.df_fit_results
         self.dataframe.action_open_df(file_paths=None, original_dfs=dfs)
+        # TAB Visu_new
+        dfs_new = self.visu.dfs
+        dfs_new["SPECTRUMS"] = self.df_fit_results
+        self.visu.open_dfs(dfs=dfs_new, fnames=None)
 
     def plot2(self):
         """Plot graph """

@@ -17,6 +17,7 @@ from maps import Maps
 from spectrums import Spectrums
 from workspace import SaveLoadWorkspace
 
+from visu import Graph
 DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")
 ICON_APPLI = os.path.join(DIRNAME, "ui", "iconpack", "icon3.png")
@@ -293,6 +294,26 @@ class Main:
         self.ui.btn_default_folder_model_3.clicked.connect(
             self.spectrums.set_default_model_folder)
 
+
+        ######### VISU GRAPH Class ############
+        #######################################
+        self.ui.btn_add_plt.clicked.connect(self.plot_test)
+        self.ui.lbl_selected_ploted.setText("Graph Plot 1")
+        self.plot_windows = []
+        self.ui.mdiArea.subWindowActivated.connect(self.update_selected_plot_label)
+
+    def plot_test(self):
+        graph_window = Graph()
+        x_data = [1, 2, 3]
+        y_data = [4, 2, 3]
+        graph_window.plot(x_data, y_data)
+        sub_window = self.ui.mdiArea.addSubWindow(graph_window)
+        sub_window.show()
+
+    def update_selected_plot_label(self, sub_window):
+        if sub_window:
+            self.ui.lbl_selected_ploted.setText(sub_window.windowTitle())
+
     def toggle_dark_mode(self):
         self.ui.setPalette(self.common.dark_palette())
         self.settings.setValue("mode", "dark")  # Save to settings
@@ -310,6 +331,8 @@ class Main:
         selected_text = self.ui.combo_hue.itemText(index)
         self.ui.combo_hue_2.setCurrentIndex(
             self.ui.combo_hue_2.findText(selected_text))
+
+
 
     def open_doc_df_query(self):
         """Open doc detail about query function of pandas dataframe"""

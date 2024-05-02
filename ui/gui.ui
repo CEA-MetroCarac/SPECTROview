@@ -4403,7 +4403,7 @@
                <bool>true</bool>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="fit_model_editor_3">
                <property name="enabled">
@@ -5318,8 +5318,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>411</width>
-                       <height>350</height>
+                       <width>428</width>
+                       <height>356</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -8258,6 +8258,11 @@
             </item>
            </layout>
           </widget>
+          <widget class="QWidget" name="tab_4">
+           <attribute name="title">
+            <string>Page</string>
+           </attribute>
+          </widget>
          </widget>
         </item>
         <item>
@@ -8395,6 +8400,107 @@
                  <string>Merge all dataframes</string>
                 </property>
                </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="groupBox_df_manip_5">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>200</height>
+              </size>
+             </property>
+             <property name="title">
+              <string>Data filtering:</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_56">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_99">
+                <item>
+                 <widget class="QLineEdit" name="ent_filter_query_4">
+                  <property name="placeholderText">
+                   <string>Enter query expression (? : see Help menu)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_add_filter_4">
+                  <property name="toolTip">
+                   <string>Add filter(s) to dataframe</string>
+                  </property>
+                  <property name="text">
+                   <string>Add filter(s)</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources_new.qrc">
+                    <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QListWidget" name="filter_listbox_3">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>100</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_100">
+                <item>
+                 <spacer name="horizontalSpacer_47">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_remove_filters_4">
+                  <property name="toolTip">
+                   <string>Remove filters from the list</string>
+                  </property>
+                  <property name="text">
+                   <string>Remove filter</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources_new.qrc">
+                    <normaloff>:/icon/iconpack/close.png</normaloff>:/icon/iconpack/close.png</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_apply_filters_4">
+                  <property name="toolTip">
+                   <string>Apply selected filters to selected dataframe</string>
+                  </property>
+                  <property name="text">
+                   <string>Apply filter(s)</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources_new.qrc">
+                    <normaloff>:/icon/iconpack/add.png</normaloff>:/icon/iconpack/add.png</iconset>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </widget>

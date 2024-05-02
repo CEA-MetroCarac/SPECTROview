@@ -6,7 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 import dill
 
-from common import view_df, show_alert, CommonUtilities, Graph
+from common import view_df, show_alert, CommonUtilities, Graph, Filter
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -26,17 +26,27 @@ class Visu(QDialog):
         self.settings = settings
         self.setWindowTitle("Graph Plot")
 
-        self.dfs = {}
-        self.filters = None
-        self.filtered_dfs = None
-
         # DATAFRAME
+        self.dfs = {}
+        self.sel_df = None
         self.ui.btn_open_dfs.clicked.connect(self.open_dfs)
         self.ui.btn_view_df_3.clicked.connect(self.show_df)
         self.ui.dfs_listbox.itemSelectionChanged.connect(self.update_gui)
 
-        self.plot_number = 0  # Initialize plot number
+        # FILTER
+        self.filter = Filter(self.ui.ent_filter_query_4,
+                             self.ui.filter_listbox_3,
+                             self.sel_df)
+        self.filtered_dfs = None
+        self.filtered_df = None
+        self.ui.btn_add_filter_4.clicked.connect(self.filter.add_filter)
+        self.ui.ent_filter_query_4.returnPressed.connect(self.filter.add_filter)
+        self.ui.btn_remove_filters_4.clicked.connect(self.filter.remove_filter)
+        self.ui.btn_apply_filters_4.clicked.connect(self.apply_filters)
+
         # GRAPH
+        self.plot_number = 0  # Initialize plot number
+
         self.ui.btn_add_graph.clicked.connect(self.add_graph)
 
         # Track selected sub-window
@@ -48,7 +58,11 @@ class Visu(QDialog):
         self.plot_number += 1
 
         # Get the selected dataframe
-        sel_df = self.get_sel_df()
+        if self.filtered_df is None:
+            df = self.sel_df
+        else:
+            df = self.filtered_df
+
         x_value = self.ui.cbb_x_2.currentText()
         y_value = self.ui.cbb_y_2.currentText()
         z_value = self.ui.cbb_z_2.currentText()
@@ -59,12 +73,12 @@ class Visu(QDialog):
         graph = Graph()
         graph.plot_style = plot_style
         # Set x, y, z values and labels
-        graph.x = sel_df[x_value]
-        graph.y = sel_df[y_value]
+        graph.x = df[x_value]
+        graph.y = df[y_value]
         if z_value == "None":
             graph.z = None
         else:
-            graph.z = sel_df[z_value]
+            graph.z = df[z_value]
         graph.xlabel = x_value
         graph.ylabel = y_value
         graph.zlabel = z_value
@@ -169,6 +183,7 @@ class Visu(QDialog):
     def update_gui(self):
         self.show_df_in_gui()
         self.update_cbb()
+        self.sel_df = self.get_sel_df()
 
     def update_cbb(self):
         sel_df = self.get_sel_df()
@@ -189,18 +204,33 @@ class Visu(QDialog):
         """Get selected dataframe"""
         sel_item = self.ui.dfs_listbox.currentItem()
         sel_df_name = sel_item.text()
-        sel_df = self.dfs[sel_df_name]
-        return sel_df
+        self.sel_df = self.dfs[sel_df_name]
+        return self.sel_df
 
     def show_df(self):
         """To view selected dataframe"""
-        sel_df = self.get_sel_df()
-        if sel_df is not None:
-            view_df(self.ui.tabWidget, sel_df)
+        if self.filtered_df is None:
+            df = self.sel_df
+        else:
+            df = self.filtered_df
+
+        if df is not None:
+            view_df(self.ui.tabWidget, df)
         else:
             show_alert("No fit dataframe to display")
 
     def show_df_in_gui(self):
-        sel_df = self.get_sel_df()
+        self.sel_df = self.get_sel_df()
+        if self.filtered_df is None:
+            df = self.sel_df
+        else:
+            df = self.filtered_df
         common_utils = CommonUtilities()
-        common_utils.display_df_in_table(self.ui.tableWidget, sel_df)
+        common_utils.display_df_in_table(self.ui.tableWidget, df)
+
+    def apply_filters(self):
+        """Apply all checked filters to the current dataframe"""
+        self.filter.set_dataframe(self.sel_df)
+        self.filtered_df = self.filter.apply_filters()
+        common_utils = CommonUtilities()
+        common_utils.display_df_in_table(self.ui.tableWidget, self.filtered_df)

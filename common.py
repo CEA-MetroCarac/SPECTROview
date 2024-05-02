@@ -200,8 +200,7 @@ class Filter:
                     # Apply the filter
                     self.filtered_df = self.filtered_df.query(filter_expr)
                 except Exception as e:
-                    QMessageBox.critical(self.ui, "Error",
-                                         f"Filter error: {str(e)}")
+                    show_alert(f"Filter error: {str(e)}")
                     print(f"Error applying filter: {str(e)}")
                     print(f"Filter expression causing the error: {filter_expr}")
         return self.filtered_df

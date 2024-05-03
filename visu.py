@@ -6,7 +6,9 @@ from copy import deepcopy
 from pathlib import Path
 import dill
 
-from common import view_df, show_alert, CommonUtilities, Graph, Filter, PALETTE
+from common import view_df, show_alert
+from common import PLOT_STYLES, PALETTE
+from common import CommonUtilities, Graph, Filter
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -44,14 +46,15 @@ class Visu(QDialog):
         self.ui.ent_filter_query_4.returnPressed.connect(self.filter.add_filter)
         self.ui.btn_remove_filters_4.clicked.connect(self.filter.remove_filter)
         self.ui.btn_apply_filters_4.clicked.connect(self.apply_filters)
-        self.ui.cbb_palette.addItems(PALETTE)
+
         # GRAPH
         self.plots = {}  # Dictionary to store plots
-        self.plot_number = 0  # Initialize plot number
-
+        self.graph_id = 0  # Initialize graph number
         self.ui.btn_add_graph.clicked.connect(self.add_graph)
         self.ui.btn_upd_graph.clicked.connect(self.upd_graph)
         self.ui.btn_copy_graph.clicked.connect(self.copy_fig_to_clb)
+        self.ui.cbb_palette.addItems(PALETTE)
+        self.ui.cbb_plotstyle.addItems(PLOT_STYLES)
 
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
@@ -59,7 +62,7 @@ class Visu(QDialog):
     def add_graph(self):
         """Plot new graph"""
         # Increment plot number
-        self.plot_number += 1
+        self.graph_id += 1
 
         # Get the selected dataframe
         if self.filtered_df is None:
@@ -71,10 +74,10 @@ class Visu(QDialog):
         y = self.ui.cbb_y_2.currentText()
         z = self.ui.cbb_z_2.currentText()
         title = self.ui.lbl_plot_title.text()
-        plot_style = self.get_plot_style()
+        plot_style = self.ui.cbb_plotstyle.currentText()
 
         # Create an instance of the Graph class
-        graph = Graph(plot_number=self.plot_number)
+        graph = Graph(graph_id=self.graph_id)
 
         graph.plot_style = plot_style
         graph.plot_title = title
@@ -89,13 +92,13 @@ class Visu(QDialog):
         # Plot the graph
         graph.plot()
 
-        # Store the plot in the dictionary with plot_number as key
-        self.plots[self.plot_number] = graph
+        # Store the plot in the dictionary with graph_id as key
+        self.plots[self.graph_id] = graph
 
         # Create a QDialog to hold the Graph instance
         graph_dialog = QDialog(self)
         graph_dialog.setWindowTitle(
-            f"Graph_{self.plot_number}_{y}_vs._{y}")
+            f"Graph_{self.graph_id}_{y}_vs._{y}")
         layout = QVBoxLayout()
         layout.addWidget(graph)
         graph_dialog.setLayout(layout)
@@ -105,14 +108,14 @@ class Visu(QDialog):
         sub_window.setWidget(graph_dialog)
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
-
+    
     def upd_graph(self):
         """ Update the existing graph with new properties"""
         sel_graph = self.get_sel_graph()
         if sel_graph:
             df = self.sel_df if self.filtered_df is None else \
                 self.filtered_df
-            plot_style = self.get_plot_style()
+            plot_style = self.ui.cbb_plotstyle.currentText()
             plot_title = self.ui.lbl_plot_title.text()
             x = self.ui.cbb_x_2.currentText()
             y = self.ui.cbb_y_2.currentText()
@@ -149,30 +152,19 @@ class Visu(QDialog):
             sel_graph.color_palette = palette
             sel_graph.plot()
             sel_graph.setWindowTitle(
-                f"Graph_{sel_graph.plot_number}_{x}_vs._{y}")
+                f"Graph_{sel_graph.graph_id}_{x}_vs._{y}")
 
     def on_selected_graph(self, sub_window):
         """Reflect all properties of selected graph object to GUI"""
         sel_graph = self.get_sel_graph()
 
         if sel_graph:
-            # Update plot style radio buttons
-            if sel_graph.plot_style == "point":
-                self.ui.rdbtn_point.setChecked(True)
-            elif sel_graph.plot_style == "scatter":
-                self.ui.rdbtn_scatter.setChecked(True)
-            elif sel_graph.plot_style == "box":
-                self.ui.rdbtn_box.setChecked(True)
-            elif sel_graph.plot_style == "heatmap":
-                self.ui.rdbtn_heatmap.setChecked(True)
-            elif sel_graph.plot_style == "line":
-                self.ui.rdbtn_line.setChecked(True)
-            elif sel_graph.plot_style == "bar":
-                self.ui.rdbtn_bar.setChecked(True)
-            elif sel_graph.plot_style == "wafer":
-                self.ui.rdbtn_wafer.setChecked(True)
-            elif sel_graph.plot_style == "histogram":
-                self.ui.rdbtn_histogram.setChecked(True)
+            # Plot style
+            plot_style = sel_graph.plot_style
+            items = [self.ui.cbb_plotstyle.itemText(i) for i in
+                     range(self.ui.cbb_plotstyle.count())]
+            if plot_style in items:
+                self.ui.cbb_plotstyle.setCurrentText(plot_style)
 
             # Update combobox selections
             x = self.ui.cbb_x_2.findText(sel_graph.x)
@@ -200,30 +192,12 @@ class Visu(QDialog):
             self.ui.ymax_2.setText(sel_graph.ymax)
             self.ui.zmax_2.setText(sel_graph.zmax)
 
+            # Color palette
             color_palette = sel_graph.color_palette
             combo_items = [self.ui.cbb_palette.itemText(i) for i in
                            range(self.ui.cbb_palette.count())]
             if color_palette in combo_items:
                 self.ui.cbb_palette.setCurrentText(color_palette)
-
-    def get_plot_style(self):
-        if self.ui.rdbtn_point.isChecked():
-            plot_style = "point"
-        elif self.ui.rdbtn_scatter.isChecked():
-            plot_style = "scatter"
-        elif self.ui.rdbtn_box.isChecked():
-            plot_style = "box"
-        elif self.ui.rdbtn_heatmap.isChecked():
-            plot_style = "heatmap"
-        elif self.ui.rdbtn_line.isChecked():
-            plot_style = "line"
-        elif self.ui.rdbtn_bar.isChecked():
-            plot_style = "bar"
-        elif self.ui.rdbtn_wafer.isChecked():
-            plot_style = "wafer"
-        elif self.ui.rdbtn_histogram.isChecked():
-            plot_style = "histogram"
-        return plot_style
 
     def open_dfs(self, dfs=None, fnames=None):
         if self.dfs is None:
@@ -344,12 +318,11 @@ class Visu(QDialog):
             df = self.sel_df
         else:
             df = self.filtered_df
-        common_utils = CommonUtilities()
-        common_utils.display_df_in_table(self.ui.tableWidget, df)
+        self.common.display_df_in_table(self.ui.tableWidget, df)
 
     def apply_filters(self):
         """Apply all checked filters to the current dataframe"""
+        self.sel_df = self.get_sel_df()
         self.filter.set_dataframe(self.sel_df)
         self.filtered_df = self.filter.apply_filters()
-        common_utils = CommonUtilities()
-        common_utils.display_df_in_table(self.ui.tableWidget, self.filtered_df)
+        self.common.display_df_in_table(self.ui.tableWidget, self.filtered_df)

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1600</width>
+    <width>1608</width>
     <height>1011</height>
    </rect>
   </property>
@@ -583,7 +583,7 @@
                <bool>true</bool>
               </property>
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="fit_model_editor">
                <property name="enabled">
@@ -662,8 +662,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>411</width>
-                          <height>311</height>
+                          <width>428</width>
+                          <height>336</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -1137,8 +1137,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>40</width>
-                               <height>30</height>
+                               <width>774</width>
+                               <height>218</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -4957,7 +4957,7 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>768</width>
+                               <width>776</width>
                                <height>234</height>
                               </rect>
                              </property>
@@ -5318,8 +5318,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>411</width>
-                       <height>350</height>
+                       <width>428</width>
+                       <height>356</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -7023,13 +7023,13 @@
          <widget class="QFrame" name="frame_3">
           <property name="minimumSize">
            <size>
-            <width>370</width>
+            <width>390</width>
             <height>0</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>370</width>
+            <width>390</width>
             <height>16777215</height>
            </size>
           </property>
@@ -7039,7 +7039,7 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="5,10,10,2,5,200,0,0">
+          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="5,10,10,2,5,0,200,0,0">
            <property name="spacing">
             <number>5</number>
            </property>
@@ -7477,7 +7477,20 @@
             </layout>
            </item>
            <item>
+            <widget class="QLabel" name="label_97">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QToolBox" name="toolBox">
+             <property name="font">
+              <font>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
              <property name="currentIndex">
               <number>0</number>
              </property>
@@ -7487,10 +7500,10 @@
              <widget class="QWidget" name="page">
               <property name="geometry">
                <rect>
-                <x>-16</x>
+                <x>0</x>
                 <y>0</y>
-                <width>380</width>
-                <height>396</height>
+                <width>384</width>
+                <height>395</height>
                </rect>
               </property>
               <attribute name="label">
@@ -7498,87 +7511,46 @@
               </attribute>
               <layout class="QVBoxLayout" name="verticalLayout_52">
                <item>
-                <widget class="QGroupBox" name="plot_style">
-                 <property name="title">
-                  <string>Plot style:</string>
-                 </property>
-                 <layout class="QGridLayout" name="gridLayout_8">
-                  <property name="leftMargin">
-                   <number>2</number>
-                  </property>
-                  <property name="topMargin">
-                   <number>2</number>
-                  </property>
-                  <property name="rightMargin">
-                   <number>2</number>
-                  </property>
-                  <property name="bottomMargin">
-                   <number>2</number>
-                  </property>
-                  <property name="spacing">
-                   <number>2</number>
-                  </property>
-                  <item row="2" column="2">
-                   <widget class="QRadioButton" name="rdbtn_wafer">
-                    <property name="text">
-                     <string>wafer</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QRadioButton" name="rdbtn_line">
-                    <property name="text">
-                     <string>line</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QRadioButton" name="rdbtn_scatter">
-                    <property name="text">
-                     <string>scatter</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QRadioButton" name="rdbtn_box">
-                    <property name="text">
-                     <string>box</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="3">
-                   <widget class="QRadioButton" name="rdbtn_heatmap">
-                    <property name="text">
-                     <string>heat map</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="3">
-                   <widget class="QRadioButton" name="rdbtn_histogram">
-                    <property name="text">
-                     <string>histogram</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QRadioButton" name="rdbtn_bar">
-                    <property name="text">
-                     <string>bar</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QRadioButton" name="rdbtn_point">
-                    <property name="text">
-                     <string>point</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
+                <layout class="QHBoxLayout" name="horizontalLayout_115">
+                 <item>
+                  <widget class="QLabel" name="label_96">
+                   <property name="minimumSize">
+                    <size>
+                     <width>80</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>80</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <weight>75</weight>
+                     <bold>true</bold>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Plot styles:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="cbb_plotstyle"/>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_93">
+                   <property name="text">
+                    <string>Color palette:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="cbb_palette"/>
+                 </item>
+                </layout>
                </item>
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_71">
@@ -7674,7 +7646,11 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="lbl_plot_title"/>
+                  <widget class="QLineEdit" name="lbl_plot_title">
+                   <property name="placeholderText">
+                    <string>Type to modify the plot title</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -7703,20 +7679,6 @@
                  </item>
                  <item>
                   <widget class="QLineEdit" name="lbl_ylabel"/>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_93">
-                 <item>
-                  <widget class="QLabel" name="label_88">
-                   <property name="text">
-                    <string>Z label</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="lbl_zlabel"/>
                  </item>
                 </layout>
                </item>
@@ -7751,17 +7713,21 @@
                 </layout>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_113">
+                <layout class="QHBoxLayout" name="horizontalLayout_93">
                  <item>
-                  <widget class="QLabel" name="label_93">
+                  <widget class="QLabel" name="label_88">
                    <property name="text">
-                    <string>Palette:</string>
+                    <string>Z label</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QComboBox" name="cbb_palette"/>
+                  <widget class="QLineEdit" name="lbl_zlabel"/>
                  </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_113">
                  <item>
                   <widget class="QLabel" name="label_94">
                    <property name="text">
@@ -7775,7 +7741,33 @@
                  <item>
                   <widget class="QLineEdit" name="zmax_2"/>
                  </item>
+                 <item>
+                  <spacer name="horizontalSpacer_43">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
                 </layout>
+               </item>
+               <item>
+                <spacer name="verticalSpacer_21">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </widget>
@@ -7916,7 +7908,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1124</width>
+               <width>1132</width>
                <height>920</height>
               </rect>
              </property>
@@ -9150,7 +9142,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1600</width>
+     <width>1608</width>
      <height>21</height>
     </rect>
    </property>

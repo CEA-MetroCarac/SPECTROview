@@ -42,13 +42,20 @@ FIT_METHODS = {'Leastsq': 'leastsq', 'Least_squares': 'least_squares',
 NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
          '24', '28', '32']
 PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
-                               'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
+           'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
+PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line',
+               'heatmap', 'histogram', 'wafer']
 
 
 class Graph(QWidget):
-    def __init__(self, plot_number=None):  # Add plot_number as an argument
+    def __init__(self, graph_id=None):  # Add plot_number as an argument
         super().__init__()
-        self.df = None
+        self.df = None  # df or df_name?
+        self.filters = {}  # List of filter
+
+        self.graph_id = graph_id
+
+        self.plot_style = "point"
         self.x = None
         self.y = None
         self.z = None
@@ -59,14 +66,15 @@ class Graph(QWidget):
         self.zmin = None
         self.zmax = None
 
-        self.plot_style = "point"
-        self.color_palette = None
-
         self.plot_title = None
         self.xlabel = None
         self.ylabel = None
         self.zlabel = None
+
         self.x_rot = 0
+        self.grid = True
+        self.legend = True
+        self.color_palette = None
 
         self.figure = Figure(dpi=100)
         self.canvas = FigureCanvas(self.figure)
@@ -74,9 +82,6 @@ class Graph(QWidget):
         layout.addWidget(self.canvas)
         self.setLayout(layout)
         self.ax = self.figure.add_subplot(111)
-
-        # Store plot_number
-        self.plot_number = plot_number
 
     def tight_layout_and_redraw(self):
         self.figure.tight_layout()
@@ -89,7 +94,8 @@ class Graph(QWidget):
                 sns.lineplot(data=self.df, x=self.x, y=self.y, hue=self.z,
                              ax=self.ax)
             elif self.plot_style == 'point':
-                sns.pointplot(data=self.df, x=self.x, y=self.y, hue=self.z, ax=self.ax,
+                sns.pointplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                              ax=self.ax,
                               linestyle='none',
                               markeredgecolor='black',
                               markeredgewidth=1,
@@ -97,7 +103,8 @@ class Graph(QWidget):
                               err_kws={'linewidth': 1, 'color': 'black'},
                               capsize=0.05)
             elif self.plot_style == 'scatter':
-                sns.scatterplot(data=self.df, x=self.x, y=self.y, hue=self.z,ax=self.ax,
+                sns.scatterplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                                ax=self.ax,
                                 s=100,
                                 edgecolor='black'
                                 )
@@ -115,7 +122,6 @@ class Graph(QWidget):
             self.ax.set_xlim(float(self.xmin), float(self.xmax))
         if self.ymin and self.ymax:
             self.ax.set_ylim(float(self.ymin), float(self.ymax))
-
 
         self.ax.set_title(self.plot_title)
         self.ax.set_xlabel(self.xlabel)

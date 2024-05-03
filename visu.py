@@ -125,10 +125,9 @@ class Visu(QDialog):
             xmax = self.ui.xmax_2.text()
             ymax = self.ui.ymax_2.text()
             zmin = self.ui.zmin_2.text()
-            zmax = self.ui.xmax_2.text()
+            zmax = self.ui.zmax_2.text()
             palette = self.ui.cbb_palette.currentText()
             x_rot = float(self.ui.x_rot.text())
-
 
             # Apply values for "graph" object
             sel_graph.df = df
@@ -186,11 +185,26 @@ class Visu(QDialog):
             self.ui.cbb_z_2.setCurrentIndex(
                 z if z != -1 else 0)
 
-            # Update QLineEdit:
+            # Rotation x label:
+            self.ui.x_rot.setValue(sel_graph.x_rot)
+            # Reflect Titles:
             self.ui.lbl_plot_title.setText(sel_graph.plot_title)
             self.ui.lbl_xlabel.setText(sel_graph.xlabel)
             self.ui.lbl_ylabel.setText(sel_graph.ylabel)
             self.ui.lbl_zlabel.setText(sel_graph.zlabel)
+
+            self.ui.xmin_2.setText(sel_graph.xmin)
+            self.ui.ymin_2.setText(sel_graph.ymin)
+            self.ui.zmin_2.setText(sel_graph.zmin)
+            self.ui.xmax_2.setText(sel_graph.xmax)
+            self.ui.ymax_2.setText(sel_graph.ymax)
+            self.ui.zmax_2.setText(sel_graph.zmax)
+
+            color_palette = sel_graph.color_palette
+            combo_items = [self.ui.cbb_palette.itemText(i) for i in
+                           range(self.ui.cbb_palette.count())]
+            if color_palette in combo_items:
+                self.ui.cbb_palette.setCurrentText(color_palette)
 
     def get_plot_style(self):
         if self.ui.rdbtn_point.isChecked():

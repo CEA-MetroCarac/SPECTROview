@@ -72,11 +72,13 @@ class Graph(QWidget):
         self.zlabel = None
 
         self.x_rot = 0
-        self.grid = True
-        self.legend = True
+        self.grid = False
+        self.legend_visible = True
+        self.legend_outside = False
         self.color_palette = None
+        self.dpi = 100
 
-        self.figure = Figure(dpi=100)
+        self.figure = Figure(dpi=self.dpi)
         self.canvas = FigureCanvas(self.figure)
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
@@ -126,9 +128,29 @@ class Graph(QWidget):
         self.ax.set_title(self.plot_title)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
-        self.ax.legend(loc='upper right')
+
+        # Legend
+        if self.legend_visible:
+            self.ax.legend(loc='upper right')
+        else:
+            self.ax.legend().remove()
+        if self.legend_outside:
+            self.ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+        # Grid
+        if self.grid:
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        else:
+            self.ax.grid(False)
+
         plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
                  rotation_mode="anchor")
+        self.tight_layout_and_redraw()
+
+    def set_dpi(self, dpi):
+        """Set DPI and redraw the plot"""
+        self.dpi = dpi
+        self.figure.set_dpi(self.dpi)
         self.tight_layout_and_redraw()
 
     def set_plot_style(self, plot_style):

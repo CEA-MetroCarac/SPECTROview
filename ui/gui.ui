@@ -5318,8 +5318,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>356</height>
+                       <width>411</width>
+                       <height>350</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -7000,6 +7000,153 @@
             <item>
              <widget class="QMdiArea" name="mdiArea"/>
             </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_122">
+              <item>
+               <spacer name="horizontalSpacer_48">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_110">
+                <item>
+                 <widget class="QLabel" name="label_92">
+                  <property name="text">
+                   <string>X label rotation (°):</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QDoubleSpinBox" name="x_rot">
+                  <property name="decimals">
+                   <number>0</number>
+                  </property>
+                  <property name="maximum">
+                   <double>50.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>10.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_99">
+                <property name="text">
+                 <string>  </string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="cb_legend_visible">
+                <property name="text">
+                 <string>Legend</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="cb_legend_outside">
+                <property name="text">
+                 <string>Legend outside</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="cb_grid">
+                <property name="text">
+                 <string>Grid</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_98">
+                <property name="text">
+                 <string>DPI:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="spb_dpi">
+                <property name="decimals">
+                 <number>0</number>
+                </property>
+                <property name="minimum">
+                 <double>100.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>300.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>5.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_upd_graph">
+                <property name="minimumSize">
+                 <size>
+                  <width>100</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>100</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Update Graph</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="resources_new.qrc">
+                  <normaloff>:/icon/iconpack/icons8-update-100.png</normaloff>:/icon/iconpack/icons8-update-100.png</iconset>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>16</width>
+                  <height>16</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_copy_graph">
+                <property name="minimumSize">
+                 <size>
+                  <width>90</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>90</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Copy Graph</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="resources_new.qrc">
+                  <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
            </layout>
           </widget>
           <widget class="QWidget" name="tab_3">
@@ -7131,8 +7278,21 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_109">
                 <property name="spacing">
-                 <number>0</number>
+                 <number>5</number>
                 </property>
+                <item>
+                 <spacer name="horizontalSpacer_44">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
                 <item>
                  <widget class="QPushButton" name="merge_dfs_2">
                   <property name="sizePolicy">
@@ -7418,25 +7578,6 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="btn_upd_graph">
-               <property name="minimumSize">
-                <size>
-                 <width>80</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Update graph</string>
-               </property>
-              </widget>
-             </item>
-             <item>
               <widget class="QPushButton" name="btn_add_line">
                <property name="minimumSize">
                 <size>
@@ -7452,25 +7593,6 @@
                </property>
                <property name="text">
                 <string>Add a line</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btn_copy_graph">
-               <property name="minimumSize">
-                <size>
-                 <width>70</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>70</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Copy Graph</string>
                </property>
               </widget>
              </item>
@@ -7664,7 +7786,11 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="lbl_xlabel"/>
+                  <widget class="QLineEdit" name="lbl_xlabel">
+                   <property name="placeholderText">
+                    <string>X axis label</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -7678,7 +7804,11 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="lbl_ylabel"/>
+                  <widget class="QLineEdit" name="lbl_ylabel">
+                   <property name="placeholderText">
+                    <string>Y axis label</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -7687,28 +7817,44 @@
                  <item>
                   <widget class="QLabel" name="label_89">
                    <property name="text">
-                    <string>X min/max</string>
+                    <string>X limits</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="xmin_2"/>
+                  <widget class="QLineEdit" name="xmin_2">
+                   <property name="placeholderText">
+                    <string>X min</string>
+                   </property>
+                  </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="xmax_2"/>
+                  <widget class="QLineEdit" name="xmax_2">
+                   <property name="placeholderText">
+                    <string>X max</string>
+                   </property>
+                  </widget>
                  </item>
                  <item>
                   <widget class="QLabel" name="label_90">
                    <property name="text">
-                    <string>Y min/max</string>
+                    <string>Y limits</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="ymin_2"/>
+                  <widget class="QLineEdit" name="ymin_2">
+                   <property name="placeholderText">
+                    <string>Y min</string>
+                   </property>
+                  </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="ymax_2"/>
+                  <widget class="QLineEdit" name="ymax_2">
+                   <property name="placeholderText">
+                    <string>Y max</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -7722,7 +7868,11 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="lbl_zlabel"/>
+                  <widget class="QLineEdit" name="lbl_zlabel">
+                   <property name="placeholderText">
+                    <string>Z axis label</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -7736,10 +7886,18 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="zmin_2"/>
+                  <widget class="QLineEdit" name="zmin_2">
+                   <property name="placeholderText">
+                    <string>Z min</string>
+                   </property>
+                  </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="zmax_2"/>
+                  <widget class="QLineEdit" name="zmax_2">
+                   <property name="placeholderText">
+                    <string>Z max</string>
+                   </property>
+                  </widget>
                  </item>
                  <item>
                   <spacer name="horizontalSpacer_43">
@@ -7776,8 +7934,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>344</width>
-                <height>413</height>
+                <width>384</width>
+                <height>395</height>
                </rect>
               </property>
               <attribute name="label">
@@ -7788,44 +7946,6 @@
                 <widget class="QPushButton" name="pushButton_2">
                  <property name="text">
                   <string>Add a vertical line</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QCheckBox" name="checkBox_4">
-                 <property name="text">
-                  <string>Add grid</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="0">
-                <layout class="QHBoxLayout" name="horizontalLayout_110">
-                 <item>
-                  <widget class="QLabel" name="label_92">
-                   <property name="text">
-                    <string>X label rotation (°):</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QDoubleSpinBox" name="x_rot">
-                   <property name="decimals">
-                    <number>0</number>
-                   </property>
-                   <property name="maximum">
-                    <double>50.000000000000000</double>
-                   </property>
-                   <property name="singleStep">
-                    <double>10.000000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item row="5" column="0">
-                <widget class="QCheckBox" name="checkBox_6">
-                 <property name="text">
-                  <string>Add error bar for bar plot</string>
                  </property>
                 </widget>
                </item>
@@ -7855,6 +7975,13 @@
                   </size>
                  </property>
                 </spacer>
+               </item>
+               <item row="1" column="0">
+                <widget class="QCheckBox" name="checkBox_6">
+                 <property name="text">
+                  <string>Add error bar for bar plot</string>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>

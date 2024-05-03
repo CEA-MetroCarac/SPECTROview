@@ -69,18 +69,15 @@ class Visu(QDialog):
             df = self.sel_df
         else:
             df = self.filtered_df
-
         x = self.ui.cbb_x_2.currentText()
         y = self.ui.cbb_y_2.currentText()
         z = self.ui.cbb_z_2.currentText()
-        title = self.ui.lbl_plot_title.text()
-        plot_style = self.ui.cbb_plotstyle.currentText()
 
         # Create an instance of the Graph class
         graph = Graph(graph_id=self.graph_id)
 
-        graph.plot_style = plot_style
-        graph.plot_title = title
+        graph.plot_style = self.ui.cbb_plotstyle.currentText()
+        graph.plot_title = self.ui.lbl_plot_title.text()
         graph.df = df
         graph.x = x
         graph.y = y
@@ -88,6 +85,12 @@ class Visu(QDialog):
         graph.xlabel = x
         graph.ylabel = y
         graph.zlabel = z
+        graph.dpi = float(self.ui.spb_dpi.text())
+        graph.set_dpi(graph.dpi)
+        # Pass legend & grid settings
+        graph.legend_visible = self.ui.cb_legend_visible.isChecked()
+        graph.legend_outside = self.ui.cb_legend_outside.isChecked()
+        graph.grid = self.ui.cb_grid.isChecked()
 
         # Plot the graph
         graph.plot()
@@ -108,7 +111,7 @@ class Visu(QDialog):
         sub_window.setWidget(graph_dialog)
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
-    
+
     def upd_graph(self):
         """ Update the existing graph with new properties"""
         sel_graph = self.get_sel_graph()
@@ -117,6 +120,7 @@ class Visu(QDialog):
                 self.filtered_df
             plot_style = self.ui.cbb_plotstyle.currentText()
             plot_title = self.ui.lbl_plot_title.text()
+
             x = self.ui.cbb_x_2.currentText()
             y = self.ui.cbb_y_2.currentText()
             z = self.ui.cbb_z_2.currentText()
@@ -150,9 +154,14 @@ class Visu(QDialog):
             sel_graph.plot_style = plot_style
             sel_graph.plot_title = plot_title
             sel_graph.color_palette = palette
+            sel_graph.legend_visible = self.ui.cb_legend_visible.isChecked()
+            sel_graph.legend_outside = self.ui.cb_legend_outside.isChecked()
+            sel_graph.grid = self.ui.cb_grid.isChecked()
             sel_graph.plot()
             sel_graph.setWindowTitle(
                 f"Graph_{sel_graph.graph_id}_{x}_vs._{y}")
+            sel_graph.dpi = float(self.ui.spb_dpi.text())
+            sel_graph.set_dpi(sel_graph.dpi)
 
     def on_selected_graph(self, sub_window):
         """Reflect all properties of selected graph object to GUI"""
@@ -184,7 +193,7 @@ class Visu(QDialog):
             self.ui.lbl_xlabel.setText(sel_graph.xlabel)
             self.ui.lbl_ylabel.setText(sel_graph.ylabel)
             self.ui.lbl_zlabel.setText(sel_graph.zlabel)
-
+            # Reflect limits:
             self.ui.xmin_2.setText(sel_graph.xmin)
             self.ui.ymin_2.setText(sel_graph.ymin)
             self.ui.zmin_2.setText(sel_graph.zmin)
@@ -192,12 +201,22 @@ class Visu(QDialog):
             self.ui.ymax_2.setText(sel_graph.ymax)
             self.ui.zmax_2.setText(sel_graph.zmax)
 
-            # Color palette
+            # Reflect legend status
+            self.ui.cb_legend_visible.setChecked(sel_graph.legend_visible)
+            self.ui.cb_legend_outside.setChecked(sel_graph.legend_outside)
+
+            # Grid
+            self.ui.cb_grid.setChecked(sel_graph.grid)
+
+            # Reflect Color palette
             color_palette = sel_graph.color_palette
             combo_items = [self.ui.cbb_palette.itemText(i) for i in
                            range(self.ui.cbb_palette.count())]
             if color_palette in combo_items:
                 self.ui.cbb_palette.setCurrentText(color_palette)
+
+            # Reflect DPI
+            self.ui.spb_dpi.setValue(sel_graph.dpi)
 
     def open_dfs(self, dfs=None, fnames=None):
         if self.dfs is None:
@@ -284,13 +303,18 @@ class Visu(QDialog):
 
     def get_sel_graph(self):
         """Get the canvas of the selected sub window"""
-        sub_window = self.ui.mdiArea.activeSubWindow()
-        if sub_window:
-            graph_dialog = sub_window.widget()
-            if graph_dialog:
-                graph = graph_dialog.layout().itemAt(0).widget()
-                if graph:
-                    sel_graph = graph
+        try:
+            sel_graph = None
+            sub_window = self.ui.mdiArea.activeSubWindow()
+            if sub_window:
+                graph_dialog = sub_window.widget()
+                if graph_dialog:
+                    graph = graph_dialog.layout().itemAt(0).widget()
+                    if graph:
+                        sel_graph = graph
+
+        except Exception as e:
+            print("An error occurred:", e)
         return sel_graph
 
     def get_sel_df(self):

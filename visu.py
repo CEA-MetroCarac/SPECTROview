@@ -31,6 +31,7 @@ class Visu(QDialog):
 
         # DATAFRAME
         self.dfs = {}
+        self.original_dfs = {}
         self.sel_df = None
         self.ui.btn_open_dfs.clicked.connect(self.open_dfs)
         self.ui.btn_view_df_3.clicked.connect(self.show_df)
@@ -66,9 +67,10 @@ class Visu(QDialog):
 
         # Get the selected dataframe
         if self.filtered_df is None:
-            df = self.sel_df
+            df_name = self.ui.dfs_listbox.currentItem().text()
         else:
-            df = self.filtered_df
+            df_name = self.filtered_df_name
+
         x = self.ui.cbb_x_2.currentText()
         y = self.ui.cbb_y_2.currentText()
         z = self.ui.cbb_z_2.currentText()
@@ -78,7 +80,7 @@ class Visu(QDialog):
 
         graph.plot_style = self.ui.cbb_plotstyle.currentText()
         graph.plot_title = self.ui.lbl_plot_title.text()
-        graph.df = df
+        graph.df_name = df_name
         graph.x = x
         graph.y = y
         graph.z = z if z != "None" else None
@@ -93,7 +95,7 @@ class Visu(QDialog):
         graph.grid = self.ui.cb_grid.isChecked()
 
         # Plot the graph
-        graph.plot()
+        graph.plot(self.dfs)
 
         # Store the plot in the dictionary with graph_id as key
         self.plots[self.graph_id] = graph
@@ -116,8 +118,6 @@ class Visu(QDialog):
         """ Update the existing graph with new properties"""
         sel_graph = self.get_sel_graph()
         if sel_graph:
-            df = self.sel_df if self.filtered_df is None else \
-                self.filtered_df
             plot_style = self.ui.cbb_plotstyle.currentText()
             plot_title = self.ui.lbl_plot_title.text()
 
@@ -137,7 +137,7 @@ class Visu(QDialog):
             x_rot = float(self.ui.x_rot.text())
 
             # Apply values for "graph" object
-            sel_graph.df = df
+            graph.df_name = self.ui.dfs_listbox.currentItem().text()
             sel_graph.x = x
             sel_graph.y = y
             sel_graph.z = z if z != "None" else None
@@ -157,7 +157,7 @@ class Visu(QDialog):
             sel_graph.legend_visible = self.ui.cb_legend_visible.isChecked()
             sel_graph.legend_outside = self.ui.cb_legend_outside.isChecked()
             sel_graph.grid = self.ui.cb_grid.isChecked()
-            sel_graph.plot()
+            sel_graph.plot(self.dfs)
             sel_graph.setWindowTitle(
                 f"Graph_{sel_graph.graph_id}_{x}_vs._{y}")
             sel_graph.dpi = float(self.ui.spb_dpi.text())
@@ -174,6 +174,15 @@ class Visu(QDialog):
                      range(self.ui.cbb_plotstyle.count())]
             if plot_style in items:
                 self.ui.cbb_plotstyle.setCurrentText(plot_style)
+
+            # Reflect df_name in the listbox
+            current_items = [self.ui.dfs_listbox.item(i).text() for i in
+                             range(self.ui.dfs_listbox.count())]
+            if sel_graph.df_name not in current_items:
+                self.ui.dfs_listbox.addItem(sel_graph.df_name)
+            else:
+                index = current_items.index(sel_graph.df_name)
+                self.ui.dfs_listbox.setCurrentRow(index)
 
             # Update combobox selections
             x = self.ui.cbb_x_2.findText(sel_graph.x)

@@ -50,7 +50,7 @@ PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line',
 class Graph(QWidget):
     def __init__(self, graph_id=None):  # Add plot_number as an argument
         super().__init__()
-        self.df = None  # df or df_name?
+        self.df_name = None  # df or df_name?
         self.filters = {}  # List of filter
 
         self.graph_id = graph_id
@@ -89,14 +89,18 @@ class Graph(QWidget):
         self.figure.tight_layout()
         self.canvas.draw()
 
-    def plot(self):
+    def plot(self, dfs):
+        """Need to provide 'dfs'= dictionary of dataframes"""
         self.ax.clear()
-        if self.x is not None and self.y is not None:
+        if self.df_name is not None and self.x is not None and self.y is not \
+                None:
+            # Retrive actual dataframe from the dict dfs
+            df = dfs[self.df_name]
             if self.plot_style == 'line':
-                sns.lineplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                sns.lineplot(data=df, x=self.x, y=self.y, hue=self.z,
                              ax=self.ax)
             elif self.plot_style == 'point':
-                sns.pointplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                sns.pointplot(data=df, x=self.x, y=self.y, hue=self.z,
                               ax=self.ax,
                               linestyle='none',
                               markeredgecolor='black',
@@ -105,16 +109,16 @@ class Graph(QWidget):
                               err_kws={'linewidth': 1, 'color': 'black'},
                               capsize=0.05)
             elif self.plot_style == 'scatter':
-                sns.scatterplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                sns.scatterplot(data=df, x=self.x, y=self.y, hue=self.z,
                                 ax=self.ax,
                                 s=100,
                                 edgecolor='black'
                                 )
             elif self.plot_style == 'bar':
-                sns.barplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                sns.barplot(data=df, x=self.x, y=self.y, hue=self.z,
                             errorbar='sd', ax=self.ax)
             elif self.plot_style == 'box':
-                sns.boxplot(data=self.df, x=self.x, y=self.y, hue=self.z,
+                sns.boxplot(data=df, x=self.x, y=self.y, hue=self.z,
                             dodge=True, ax=self.ax)
             else:
                 show_alert("Unsupported plot style")

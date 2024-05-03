@@ -1,10 +1,11 @@
-# visualization.py module
+"""
+Module dedicated to the 'Visualization' TAB of the main GUI
+"""
 import os
 import numpy as np
 from functools import partial
 from io import BytesIO
-from wafer_plot import WaferPlot
-
+from common import WaferPlot
 try:
     import win32clipboard
 except:

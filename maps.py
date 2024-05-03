@@ -1,4 +1,6 @@
-# maps.py module
+"""
+Module dedicated to the 'Wafer/Maps' TAB of the main GUI
+"""
 import os
 import numpy as np
 import pandas as pd
@@ -6,28 +8,21 @@ import json
 from copy import deepcopy
 from pathlib import Path
 import dill
-from utils import view_df, show_alert, quadrant, zone, view_text, \
-    copy_fig_to_clb, \
-    translate_param, clear_layout, reinit_spectrum, plot_graph, \
-    display_df_in_table
-from utils import FitThread, ShowParameters, PEAK_MODELS, FIT_PARAMS, \
-    FIT_METHODS, NCPUS
+from common import view_df, show_alert, FitModelManager, Filter
+from common import FitThread, WaferView, ShowParameters, FIT_METHODS, NCPUS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
 from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
-
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-from wafer_view import WaferView
+
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
-                               QListWidgetItem)
-from PySide6.QtWidgets import QLabel, QComboBox, QLineEdit, QCheckBox, \
-    QHBoxLayout, QSpacerItem, QSizePolicy, QPushButton, QVBoxLayout, QMainWindow
-from PySide6.QtGui import QColor, QPalette
+                               QListWidgetItem, QCheckBox)
+from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
 
@@ -35,37 +30,46 @@ DIRNAME = os.path.dirname(__file__)
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 
 
-def update_param_hint_value(pm, key, text):
-    # print(f"Peak Model: {pm.prefix}, Param Hint Key: {key}, Value: {text}")
-    pm.param_hints[key]['value'] = float(text)
-
-
 class Maps(QObject):
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
 
-    def __init__(self, settings, ui, dataframe):
+    def __init__(self, settings, ui, dataframe, spectrums, common, visu):
         super().__init__()
         self.settings = settings
         self.ui = ui
         self.dataframe = dataframe
+        self.visu = visu
+        self.spectrums_tab = spectrums
+        self.common = common
 
         self.wafers = {}  # list of opened wafers
         self.toolbar = None
-        self.loaded_fit_model = None  # FITSPY
-        self.copied_fit_model = None
-        self.spectra_fs = Spectra()  # FITSPY
+        self.loaded_fit_model = None
+        self.current_fit_model = None
+        self.spectrums = Spectra()
+        self.df_fit_results = None
+
+        # FILTER: Create an instance of the FILTER class
+        self.filter = Filter(self.ui.ent_filter_query_3,
+                             self.ui.filter_listbox_2,
+                             self.df_fit_results)
+        self.filtered_df = None
+        # Connect filter signals to filter methods
+        self.ui.btn_add_filter_3.clicked.connect(self.filter.add_filter)
+        self.ui.ent_filter_query_3.returnPressed.connect(self.filter.add_filter)
+        self.ui.btn_remove_filters_3.clicked.connect(self.filter.remove_filter)
+        self.ui.btn_apply_filters_3.clicked.connect(self.apply_filters)
 
         # Update spectra_listbox when selecting wafer via WAFER LIST
         self.ui.wafers_listbox.itemSelectionChanged.connect(
             self.upd_spectra_list)
 
-        # Connect and plot_spectre of selected SPECTRUM LIST
+        # Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectra_listbox.itemSelectionChanged.connect(self.delay_plot)
 
         # Connect the stateChanged signal of the legend CHECKBOX
         self.ui.cb_legend.stateChanged.connect(self.delay_plot)
-
         self.ui.cb_raw.stateChanged.connect(self.delay_plot)
         self.ui.cb_bestfit.stateChanged.connect(self.delay_plot)
         self.ui.cb_colors.stateChanged.connect(self.delay_plot)
@@ -73,6 +77,8 @@ class Maps(QObject):
         self.ui.cb_filled.stateChanged.connect(self.delay_plot)
         self.ui.cb_peaks.stateChanged.connect(self.delay_plot)
         self.ui.cb_attached.stateChanged.connect(self.delay_plot)
+        self.ui.cb_normalize.stateChanged.connect(self.delay_plot)
+
         self.ui.size300.toggled.connect(self.delay_plot)
         self.ui.size200.toggled.connect(self.delay_plot)
         self.ui.size150.toggled.connect(self.delay_plot)
@@ -89,6 +95,7 @@ class Maps(QObject):
 
         self.plot_styles = ["box plot", "point plot", "bar plot"]
         self.create_plot_widget()
+        self.create_spectra_plot_widget()
         self.zoom_pan_active = False
 
         self.ui.cbb_fit_methods.addItems(FIT_METHODS)
@@ -103,6 +110,8 @@ class Maps(QObject):
         self.ui.cbb_cpu_number.currentIndexChanged.connect(
             self.save_fit_settings)
         self.ui.xtol.textChanged.connect(self.save_fit_settings)
+        self.ui.sb_dpi_spectra.valueChanged.connect(
+            self.create_spectra_plot_widget)
 
         # BASELINE
         self.ui.cb_attached.clicked.connect(self.upd_spectra_list)
@@ -110,6 +119,221 @@ class Maps(QObject):
         self.ui.rbtn_linear.clicked.connect(self.upd_spectra_list)
         self.ui.rbtn_polynomial.clicked.connect(self.upd_spectra_list)
         self.ui.degre.valueChanged.connect(self.upd_spectra_list)
+
+        # Load default folder path from QSettings during application startup
+        self.fit_model_manager = FitModelManager(self.settings)
+        self.fit_model_manager.default_model_folder = self.settings.value(
+            "default_model_folder", "")
+        self.ui.l_defaut_folder_model.setText(
+            self.fit_model_manager.default_model_folder)
+        QTimer.singleShot(0, self.populate_available_models)
+
+    def apply_filters(self):
+        """Apply all checked filters to the current dataframe"""
+        self.filter.set_dataframe(self.df_fit_results)
+        self.filtered_df = self.filter.apply_filters()
+        self.common.display_df_in_table(self.ui.fit_results_table,
+                                        self.filtered_df)
+
+    def view_fit_results_df(self):
+        """To view selected dataframe"""
+        if self.filtered_df is None:
+            df = self.df_fit_results
+        else:
+            df = self.filtered_df
+
+        if df is not None:
+            view_df(self.ui.tabWidget, df)
+        else:
+            show_alert("No fit dataframe to display")
+
+    def collect_results(self):
+        """Function to collect best-fit results and append in a dataframe"""
+        # Add all dict into a list, then convert to a dataframe.
+        self.copy_fit_model()
+        fit_results_list = []
+        self.df_fit_results = None
+
+        for spectrum in self.spectrums:
+            if hasattr(spectrum.result_fit, 'best_values'):
+                wafer_name, coord = self.spectrum_object_id(spectrum)
+                x, y = coord
+                success = spectrum.result_fit.success
+                rsquared = spectrum.result_fit.rsquared
+                best_values = spectrum.result_fit.best_values
+                best_values["Filename"] = wafer_name
+                best_values["X"] = x
+                best_values["Y"] = y
+                best_values["success"] = success
+                best_values["Rsquared"] = rsquared
+                fit_results_list.append(best_values)
+        self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
+
+        if self.df_fit_results is not None and not self.df_fit_results.empty:
+            # reindex columns according to the parameters names
+            self.df_fit_results = self.df_fit_results.reindex(
+                sorted(self.df_fit_results.columns), axis=1)
+            names = []
+            for name in self.df_fit_results.columns:
+                if name in ["Filename", "X", 'Y', "success"]:
+                    # to be in the 3 first columns
+                    name = '0' + name
+                elif '_' in name:
+                    # model peak parameters to be at the end
+                    name = 'z' + name[5:]
+                names.append(name)
+            self.df_fit_results = self.df_fit_results.iloc[:,
+                                  list(np.argsort(names, kind='stable'))]
+            columns = [
+                self.common.translate_param(self.current_fit_model, column) for
+                column in self.df_fit_results.columns]
+            self.df_fit_results.columns = columns
+
+            # QUADRANT
+            self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
+                self.common.quadrant, axis=1)
+            # DIAMETER
+            diameter = float(self.ui.wafer_size.text())
+
+            # ZONE
+            self.df_fit_results['Zone'] = self.df_fit_results.apply(
+                lambda row: self.common.zone(row, diameter), axis=1)
+
+            self.common.display_df_in_table(self.ui.fit_results_table,
+                                            self.df_fit_results)
+
+        else:
+            self.ui.fit_results_table.clear()
+
+        self.filtered_df = self.df_fit_results
+        self.upd_cbb_param()
+        self.upd_cbb_wafer()
+        self.send_df_to_viz()
+
+    def set_default_model_folder(self, folder_path=None):
+        """Define a default model folder"""
+        if not folder_path:
+            folder_path = QFileDialog.getExistingDirectory(None,
+                                                           "Select Default "
+                                                           "Folder",
+                                                           options=QFileDialog.ShowDirsOnly)
+
+        if folder_path:
+            self.fit_model_manager.set_default_model_folder(folder_path)
+            # Save selected folder path back to QSettings
+            self.settings.setValue("default_model_folder", folder_path)
+            self.ui.l_defaut_folder_model.setText(
+                self.fit_model_manager.default_model_folder)
+            QTimer.singleShot(0, self.populate_available_models)
+
+    def populate_available_models(self):
+        """Populate availables model's name to the combobox"""
+        # Scan default folder and populate available models in the combobox
+        self.available_models = self.fit_model_manager.get_available_models()
+        self.ui.cbb_fit_model_list.clear()
+        self.ui.cbb_fit_model_list.addItems(self.available_models)
+
+    def load_fit_model(self, fname_json=None):
+        """Load a pre-created fit model"""
+        self.fname_json = fname_json
+        self.upd_model_cbb_list()
+        if not self.fname_json:
+            options = QFileDialog.Options()
+            options |= QFileDialog.ReadOnly
+            selected_file, _ = QFileDialog.getOpenFileName(self.ui,
+                                                           "Select JSON Model "
+                                                           "File",
+                                                           "",
+                                                           "JSON Files ("
+                                                           "*.json);;All "
+                                                           "Files (*)",
+                                                           options=options)
+            if not selected_file:
+                return
+            self.fname_json = selected_file
+        display_name = QFileInfo(self.fname_json).fileName()
+        # Add the display name to the combobox only if it doesn't already exist
+        if display_name not in [self.ui.cbb_fit_model_list.itemText(i) for i in
+                                range(self.ui.cbb_fit_model_list.count())]:
+            self.ui.cbb_fit_model_list.addItem(display_name)
+            self.ui.cbb_fit_model_list.setCurrentText(display_name)
+        else:
+            show_alert('Fit model is already available in the model list')
+
+    def get_loaded_fit_model(self):
+        """Define loaded fit model. If the model is loaded by user from
+        different model folder then the default model """
+        if self.ui.cbb_fit_model_list.currentIndex() == -1:
+            self.loaded_fit_model = None
+            return
+        try:
+            # If the file is not found in the selected path, try finding it
+            # in the default folder
+            folder_path = self.fit_model_manager.default_model_folder
+            model_name = self.ui.cbb_fit_model_list.currentText()
+            path = os.path.join(folder_path, model_name)
+            self.loaded_fit_model = self.spectrums.load_model(path, ind=0)
+        except FileNotFoundError:
+            try:
+                self.loaded_fit_model = self.spectrums.load_model(
+                    self.fname_json, ind=0)
+            except FileNotFoundError:
+                show_alert('Fit model file not found in the default folder.')
+
+    def save_fit_model(self):
+        """To save the fit model of the current selected spectrum"""
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
+        path = self.fit_model_manager.default_model_folder
+        save_path, _ = QFileDialog.getSaveFileName(
+            self.ui.tabWidget, "Save fit model", path,
+            "JSON Files (*.json)")
+        if save_path and sel_spectrum:
+            self.spectrums.save(save_path, [sel_spectrum.fname])
+            show_alert("Fit model is saved (JSON file)")
+        else:
+            show_alert("No fit model to save.")
+        self.upd_model_cbb_list()
+
+    def upd_model_cbb_list(self):
+        """Update and populate the models lists to the combobox"""
+        current_path = self.fit_model_manager.default_model_folder
+        self.set_default_model_folder(current_path)
+
+    def apply_loaded_fit_model(self, fnames=None):
+        """Fit selected spectrum(s) with the LOADED fit model"""
+        self.get_loaded_fit_model()
+        # Disable the button to prevent multiple clicks leading to a crash
+        self.ui.btn_apply_model.setEnabled(False)
+        if self.loaded_fit_model is None:
+            show_alert(
+                "Select from the list or load a fit model before fitting.")
+            self.ui.btn_apply_model.setEnabled(True)
+            return
+
+        if fnames is None:
+            wafer_name, coords = self.spectra_id()
+            fnames = [f"{wafer_name}_{coord}" for coord in coords]
+
+        # Start fitting process in a separate thread
+        self.apply_model_thread = FitThread(self.spectrums,
+                                            self.loaded_fit_model,
+                                            fnames)
+        # To update progress bar
+        self.apply_model_thread.fit_progress_changed.connect(self.update_pbar)
+        # To display progress in GUI
+        self.apply_model_thread.fit_progress.connect(
+            lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
+                                                        fnames))
+        # To update spectra list + plot fitted spectrum once fitting finished
+        self.apply_model_thread.fit_completed.connect(self.fit_completed)
+        self.apply_model_thread.finished.connect(
+            lambda: self.ui.btn_apply_model.setEnabled(True))
+        self.apply_model_thread.start()
+
+    def apply_loaded_fit_model_all(self):
+        """ Apply loaded fit model to all selected spectra"""
+        fnames = self.spectrums.fnames
+        self.apply_loaded_fit_model(fnames=fnames)
 
     def open_data(self, wafers=None, file_paths=None):
         """Open CSV files containing RAW spectra of each wafer"""
@@ -152,7 +376,8 @@ class Maps(QObject):
                         continue
                     wafer_name = fname
                     if wafer_name in self.wafers:
-                        print(f"Wafer '{wafer_name}' is already opened")
+                        msg = f"Wafer '{wafer_name}' is already opened"
+                        show_alert(msg)
                     else:
                         self.wafers[wafer_name] = wafer_df
         self.extract_spectra()
@@ -171,21 +396,21 @@ class Maps(QObject):
                 y_values = row[2:].tolist()
                 fname = f"{wafer_name}_{coord}"
 
-                if not any(spectrum_fs.fname == fname for spectrum_fs in
-                           self.spectra_fs):
+                if not any(spectrum.fname == fname for spectrum in
+                           self.spectrums):
                     # create FITSPY object
-                    spectrum_fs = Spectrum()
-                    spectrum_fs.fname = fname
-                    spectrum_fs.x = np.asarray(x_values)[:-1]
-                    spectrum_fs.x0 = np.asarray(x_values)[:-1]
-                    spectrum_fs.y = np.asarray(y_values)[:-1]
-                    spectrum_fs.y0 = np.asarray(y_values)[:-1]
-                    self.spectra_fs.append(spectrum_fs)
+                    spectrum = Spectrum()
+                    spectrum.fname = fname
+                    spectrum.x = np.asarray(x_values)[:-1]
+                    spectrum.x0 = np.asarray(x_values)[:-1]
+                    spectrum.y = np.asarray(y_values)[:-1]
+                    spectrum.y0 = np.asarray(y_values)[:-1]
+                    self.spectrums.append(spectrum)
         self.upd_wafers_list()
 
     def read_x_range(self):
         """Read x range of selected spectrum"""
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
         self.ui.range_min.setText(str(sel_spectrum.x[0]))
         self.ui.range_max.setText(str(sel_spectrum.x[-1]))
 
@@ -194,11 +419,11 @@ class Maps(QObject):
         new_x_min = float(self.ui.range_min.text())
         new_x_max = float(self.ui.range_max.text())
         if fnames is None:
-            wafer_name, coords = self.spectre_id()
+            wafer_name, coords = self.spectra_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
-        reinit_spectrum(fnames, self.spectra_fs)
+        self.common.reinit_spectrum(fnames, self.spectrums)
         for fname in fnames:
-            spectrum, _ = self.spectra_fs.get_objects(fname)
+            spectrum, _ = self.spectrums.get_objects(fname)
             spectrum.range_min = float(self.ui.range_min.text())
             spectrum.range_max = float(self.ui.range_max.text())
 
@@ -207,19 +432,17 @@ class Maps(QObject):
             spectrum.x = spectrum.x0[ind_min:ind_max + 1].copy()
             spectrum.y = spectrum.y0[ind_min:ind_max + 1].copy()
             spectrum.attractors_calculation()
-
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
 
     def set_x_range_all(self):
         """ Set new x range for all spectrum"""
-        fnames = self.spectra_fs.fnames
+        fnames = self.spectrums.fnames
         self.set_x_range(fnames=fnames)
 
     def on_click(self, event):
         """On click action to add a "peak models" or "baseline points" """
-
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
         fit_model = self.ui.cbb_fit_models.currentText()
         # Add a new peak_model for current selected peak
         if self.zoom_pan_active == False and self.ui.rdbtn_peak.isChecked():
@@ -245,7 +468,7 @@ class Maps(QObject):
     def get_baseline_settings(self):
         """ Pass baseline settings from GUI to spectrum objects for baseline
         subtraction"""
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
         if sel_spectrum is None:
             return
         sel_spectrum.baseline.attached = self.ui.cb_attached.isChecked()
@@ -280,24 +503,28 @@ class Maps(QObject):
                 ax.plot(spectrum.baseline.points[0],
                         spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
 
-    def subtract_baseline(self, fnames=None):
+    def subtract_baseline(self, sel_spectra=None):
         """ Subtract baseline for the selected spectrum(s) """
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
-        points = sel_spectrum.baseline.points
+        sel_spectrum, _ = self.get_spectrum_object()
+        points = deepcopy(sel_spectrum.baseline.points)
         if len(points[0]) == 0:
             return
-        sel_spectrum.subtract_baseline()
+        if sel_spectra is None:
+            _, sel_spectra = self.get_spectrum_object()
+        for spectrum in sel_spectra:
+            spectrum.baseline.points = points.copy()
+            spectrum.subtract_baseline()
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
 
     def subtract_baseline_all(self):
         """ Subtract baseline for all spectrum(s) """
-        pass
+        self.subtract_baseline(self.spectrums)
 
     def get_fit_settings(self):
-        """To get all settings for the fitting action"""
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
-        fit_params = sel_spectrum.fit_params
+        """Getall settings for the fitting action"""
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
+        fit_params = sel_spectrum.fit_params.copy()
         fit_params['fit_negative'] = self.ui.cb_fit_negative.isChecked()
         fit_params['max_ite'] = self.ui.max_iteration.value()
         fit_params['method'] = self.ui.cbb_fit_methods.currentText()
@@ -306,13 +533,13 @@ class Maps(QObject):
         sel_spectrum.fit_params = fit_params
 
     def fit(self, fnames=None):
-        """To apply all fit parameters to selected spectrum(s)"""
+        """Fit selected spectrum(s) with current parameters"""
         self.get_fit_settings()
         if fnames is None:
-            wafer_name, coords = self.spectre_id()
+            wafer_name, coords = self.spectra_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
         for fname in fnames:
-            spectrum, _ = self.spectra_fs.get_objects(fname)
+            spectrum, _ = self.spectrums.get_objects(fname)
             if len(spectrum.peak_models) != 0:
                 spectrum.fit()
             else:
@@ -320,55 +547,61 @@ class Maps(QObject):
         QTimer.singleShot(100, self.upd_spectra_list)
 
     def fit_all(self):
-        """To apply all fit parameters to all spectrum(s)"""
-        fnames = self.spectra_fs.fnames
+        """Apply all fit parameters to all spectrum(s)"""
+        fnames = self.spectrums.fnames
         self.fit(fnames)
 
-    def clear_all_peaks(self):
-        """To clear all existing peak models of the selected spectrum(s)"""
-        wafer_name, coords = self.spectre_id()
-        fnames = [f"{wafer_name}_{coord}" for coord in coords]
+    def clear_peaks(self, fnames=None):
+        """Clear all existing peak models of the selected spectrum(s)"""
+        if fnames is None:
+            wafer_name, coords = self.spectra_id()
+            fnames = [f"{wafer_name}_{coord}" for coord in coords]
         for fname in fnames:
-            spectrum, _ = self.spectra_fs.get_objects(fname)
+            spectrum, _ = self.spectrums.get_objects(fname)
             if len(spectrum.peak_models) != 0:
                 spectrum.remove_models()
             else:
                 continue
         QTimer.singleShot(100, self.upd_spectra_list)
 
+    def clear_peaks_all(self):
+        """Clear peaks of all spectra"""
+        fnames = self.spectrums.fnames
+        self.clear_peaks(fnames)
+
     def copy_fit_model(self):
-        """ To copy the model dict of the selected spectrums. If several
-        spectrums are selected →  copy the model dict of 1st spectrum in list"""
+        """ To copy the model dict of the selected spectrum. If several
+        spectrums are selected → copy the model dict of first spectrum in
+        list"""
         # Get only 1 spectrum among several selected spectrum:
         self.get_fit_settings()
-        sel_spectrum, _ = self.get_spectrum_objet()
+        sel_spectrum, _ = self.get_spectrum_object()
         if len(sel_spectrum.peak_models) == 0:
             self.ui.lbl_copied_fit_model.setText("")
             show_alert(
                 "The selected spectrum does not have fit model to be copied!")
-            self.copied_fit_model = None
+            self.current_fit_model = None
             return
         else:
-            self.copied_fit_model = None
-            self.copied_fit_model = deepcopy(sel_spectrum.save())
-        fname = sel_spectrum.fname
-        self.ui.lbl_copied_fit_model.setText(
-            f"The fit model of '{fname}' spectrum is copied to the clipboard.")
+            self.current_fit_model = None
+            self.current_fit_model = deepcopy(sel_spectrum.save())
+        # fname = sel_spectrum.fname
+        self.ui.lbl_copied_fit_model.setText("copied")
+        # (f"The fit model of '{fname}' spectrum is copied to the clipboard.")
 
     def paste_fit_model(self, fnames=None):
         """ To apply the copied fit model to selected spectrums"""
-        # Get fnames of all selected spectra
         self.ui.btn_paste_fit_model.setEnabled(False)
 
         if fnames is None:
-            wafer_name, coords = self.spectre_id()
+            wafer_name, coords = self.spectra_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
 
-        reinit_spectrum(fnames, self.spectra_fs)
-        fit_model = deepcopy(self.copied_fit_model)
-        if self.copied_fit_model is not None:
+        self.common.reinit_spectrum(fnames, self.spectrums)
+        fit_model = deepcopy(self.current_fit_model)
+        if fit_model is not None:
             # Starting fit process in a seperate thread
-            self.paste_model_thread = FitThread(self.spectra_fs, fit_model,
+            self.paste_model_thread = FitThread(self.spectrums, fit_model,
                                                 fnames)
             self.paste_model_thread.fit_progress_changed.connect(
                 self.update_pbar)
@@ -386,128 +619,8 @@ class Maps(QObject):
     def paste_fit_model_all(self):
         """ To paste the copied fit model (in clipboard) and apply to
         selected spectrum(s"""
-        fnames = self.spectra_fs.fnames
+        fnames = self.spectrums.fnames
         self.paste_fit_model(fnames)
-
-    def save_fit_model(self):
-        """To save the fit model of the current selected spectrum"""
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
-        last_dir = self.settings.value("last_directory", "/")
-        save_path, _ = QFileDialog.getSaveFileName(
-            self.ui.tabWidget, "Save fit model", last_dir,
-            "JSON Files (*.json)")
-        if save_path and sel_spectrum:
-            self.spectra_fs.save(save_path, [sel_spectrum.fname])
-            show_alert("Fit model is saved (JSON file)")
-        else:
-            show_alert("No fit model to save.")
-
-    def open_fit_model(self, fname_json=None):
-        """Load a fit model pre-created by FITSPY tool"""
-        if not fname_json:
-            options = QFileDialog.Options()
-            options |= QFileDialog.ReadOnly
-            selected_file, _ = QFileDialog.getOpenFileName(self.ui,
-                                                           "Select JSON Model "
-                                                           "File",
-                                                           "",
-                                                           "JSON Files ("
-                                                           "*.json);;All "
-                                                           "Files (*)",
-                                                           options=options)
-            if not selected_file:
-                return
-            fname_json = selected_file
-        self.loaded_fit_model = self.spectra_fs.load_model(fname_json, ind=0)
-        display_name = QFileInfo(fname_json).baseName()
-        self.ui.lb_loaded_model.setText(f"'{display_name}' is loaded !")
-        # self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
-
-    def apply_fit_model(self, fnames=None):
-        """Fit selected spectrum(s)"""
-        # Disable the button to prevent multiple clicks leading to a crash
-        self.ui.btn_fit.setEnabled(False)
-        if self.loaded_fit_model is None:
-            show_alert("Load a fit model before fitting.")
-            self.ui.btn_fit.setEnabled(True)
-            return
-
-        if fnames is None:
-            wafer_name, coords = self.spectre_id()
-            fnames = [f"{wafer_name}_{coord}" for coord in coords]
-
-        # Start fitting process in a separate thread
-        self.apply_model_thread = FitThread(self.spectra_fs,
-                                            self.loaded_fit_model,
-                                            fnames)
-        # To update progress bar
-        self.apply_model_thread.fit_progress_changed.connect(self.update_pbar)
-        # To display progress in GUI
-        self.apply_model_thread.fit_progress.connect(
-            lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
-                                                        fnames))
-        # To update spectra list + plot fitted spectrum once fitting finished
-        self.apply_model_thread.fit_completed.connect(self.fit_completed)
-        self.apply_model_thread.finished.connect(
-            lambda: self.ui.btn_fit.setEnabled(True))
-        self.apply_model_thread.start()
-
-    def apply_fit_model_all(self):
-        """ Apply loaded fit model to all selected spectra"""
-        fnames = self.spectra_fs.fnames
-        self.apply_fit_model(fnames=fnames)
-
-    def collect_results(self):
-        """Function to collect best-fit results and append in a dataframe"""
-        # Add all dict into a list, then convert to a dataframe.
-        fit_results_list = []
-        self.df_fit_results = None
-
-        for spectrum_fs in self.spectra_fs:
-            if hasattr(spectrum_fs.result_fit, 'best_values'):
-                wafer_name, coord = self.spectre_id_fs(spectrum_fs)
-                x, y = coord
-                success = spectrum_fs.result_fit.success
-                rsquared = spectrum_fs.result_fit.rsquared
-                best_values = spectrum_fs.result_fit.best_values
-                best_values["Wafer"] = wafer_name
-                best_values["X"] = x
-                best_values["Y"] = y
-                best_values["success"] = success
-                best_values["Rsquared"] = rsquared
-
-                fit_results_list.append(best_values)
-        self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
-
-        # reindex columns according to the parameters names
-        self.df_fit_results = self.df_fit_results.reindex(
-            sorted(self.df_fit_results.columns), axis=1)
-        names = []
-        for name in self.df_fit_results.columns:
-            if name in ["Wafer", "X", 'Y', "success"]:
-                name = '0' + name  # to be in the 3 first columns
-            elif '_' in name:
-                name = 'z' + name[5:]  # model peak parameters to be at the end
-            names.append(name)
-        self.df_fit_results = self.df_fit_results.iloc[:,
-                              list(np.argsort(names, kind='stable'))]
-        columns = [translate_param(self.loaded_fit_model, column) for column in
-                   self.df_fit_results.columns]
-        self.df_fit_results.columns = columns
-
-        # Add "Quadrant" columns
-        self.df_fit_results['Quadrant'] = self.df_fit_results.apply(quadrant,
-                                                                    axis=1)
-        diameter = float(self.ui.wafer_size.text())
-        # Use a lambda function to pass the row argument to the zone function
-        self.df_fit_results['Zone'] = self.df_fit_results.apply(
-            lambda row: zone(row, diameter), axis=1)
-
-        display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
-
-        self.upd_cbb_param()
-        self.upd_cbb_wafer()
-        self.send_df_to_viz()
 
     def save_fit_results(self):
         """Functon to save fitted results in an excel file"""
@@ -533,7 +646,6 @@ class Maps(QObject):
 
     def load_fit_results(self, file_paths=None):
         """Functon to load fitted results from an excel file"""
-        self.df_fit_results = None
         # Initialize the last used directory from QSettings
         last_dir = self.settings.value("last_directory", "/")
         options = QFileDialog.Options()
@@ -549,20 +661,27 @@ class Maps(QObject):
             excel_file_path = file_paths[0]
             try:
                 dfr = pd.read_excel(excel_file_path)
+                self.df_fit_results = None
                 self.df_fit_results = dfr
+                self.filtered_df = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
+        self.common.display_df_in_table(self.ui.fit_results_table,
+                                        self.df_fit_results)
 
         self.upd_cbb_param()
         self.upd_cbb_wafer()
         self.send_df_to_viz()
 
     def upd_cbb_wafer(self):
-        """to append all values of df_fit_results to comoboxses"""
+        """Update the combobox with unique values from 'Wafer' column."""
         self.ui.cbb_wafer_1.clear()
-        wafer_names = self.df_fit_results['Wafer'].unique()
-        for wafer_name in wafer_names:
-            self.ui.cbb_wafer_1.addItem(wafer_name)
+        try:
+            wafer_names = self.df_fit_results['Filename'].unique()
+            for wafer_name in wafer_names:
+                self.ui.cbb_wafer_1.addItem(wafer_name)
+        except Exception as e:
+            print(f"Error updating combobox with 'Filename' values: {e}")
 
     def upd_cbb_param(self):
         """to append all values of df_fit_results to comoboxses"""
@@ -572,8 +691,10 @@ class Maps(QObject):
             self.ui.cbb_x.clear()
             self.ui.cbb_y.clear()
             self.ui.cbb_z.clear()
+            self.ui.cbb_x.addItem("None")
+            self.ui.cbb_y.addItem("None")
+            self.ui.cbb_z.addItem("None")
             for column in columns:
-                # remove_special_chars = re.sub(r'\$[^$]+\$', '', column)
                 self.ui.cbb_param_1.addItem(column)
                 self.ui.cbb_x.addItem(column)
                 self.ui.cbb_y.addItem(column)
@@ -582,12 +703,17 @@ class Maps(QObject):
     def split_fname(self):
         """Split fname and populate the combobox"""
         dfr = self.df_fit_results
-        fname_parts = dfr.loc[0, 'Wafer'].split('_')
+        try:
+            fname_parts = dfr.loc[0, 'Filename'].split('_')
+        except Exception as e:
+            print(f"Error splitting column header: {e}")
         self.ui.cbb_split_fname_2.clear()
         for part in fname_parts:
             self.ui.cbb_split_fname_2.addItem(part)
 
     def add_column(self):
+        """Add a column to the dataframe of fit results based on split_fname
+        method"""
         dfr = self.df_fit_results
         col_name = self.ui.ent_col_name_2.text()
         selected_part_index = self.ui.cbb_split_fname_2.currentIndex()
@@ -601,11 +727,21 @@ class Maps(QObject):
                 f"different name")
             show_alert(text)
             return
-        parts = dfr['Wafer'].str.split('_')
+        try:
+            parts = dfr['Filename'].str.split('_')
+        except Exception as e:
+            print(f"Error adding new column to fit results dataframe: {e}")
+
         dfr[col_name] = [part[selected_part_index] if len(
             part) > selected_part_index else None for part in parts]
+
         self.df_fit_results = dfr
-        display_df_in_table(self.ui.fit_results_table, self.df_fit_results)
+        # Check if filters are applied
+        if self.filtered_df is None:
+            df = self.df_fit_results
+        else:
+            df = self.filtered_df
+        self.common.display_df_in_table(self.ui.fit_results_table, df)
         self.send_df_to_viz()
         self.upd_cbb_param()
         self.upd_cbb_wafer()
@@ -613,15 +749,15 @@ class Maps(QObject):
     def reinit(self, fnames=None):
         """Reinitialize the selected spectrum(s)"""
         if fnames is None:
-            wafer_name, coords = self.spectre_id()
+            wafer_name, coords = self.spectra_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
-        reinit_spectrum(fnames, self.spectra_fs)
+        self.common.reinit_spectrum(fnames, self.spectrums)
         self.upd_spectra_list()
         QTimer.singleShot(200, self.rescale)
 
     def reinit_all(self):
         """Reinitialize all spectra"""
-        fnames = self.spectra_fs.fnames
+        fnames = self.spectrums.fnames
         self.reinit(fnames)
 
     def rescale(self):
@@ -629,102 +765,15 @@ class Maps(QObject):
         self.ax.autoscale()
         self.canvas1.draw()
 
-
-
-    def plot1(self):
-        """Plot selected spectra"""
-        wafer_name, coords = self.spectre_id()  # current selected spectra ID
-        selected_spectra_fs = []
-        for spectrum_fs in self.spectra_fs:
-            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
-            if wafer_name_fs == wafer_name and coord_fs in coords:
-                selected_spectra_fs.append(spectrum_fs)
-        if len(selected_spectra_fs) == 0:
-            return
-        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
-        self.ax.clear()
-        # reassign previous axis limits (related to zoom)
-        if not xlim == ylim == (0.0, 1.0):
-            self.ax.set_xlim(xlim)
-            self.ax.set_ylim(ylim)
-
-        for spectrum_fs in selected_spectra_fs:
-            fname, coord = self.spectre_id_fs(spectrum_fs)
-            x_values = spectrum_fs.x
-            y_values = spectrum_fs.y
-            self.ax.plot(x_values, y_values, label=f"{coord}", ms=3, lw=2)
-
-            # BASELINE
-            self.plot_baseline_dynamically(ax=self.ax, spectrum=spectrum_fs)
-
-            if self.ui.cb_raw.isChecked():
-                x0_values = spectrum_fs.x0
-                y0_values = spectrum_fs.y0
-                self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
-                             lw=1)
-            if hasattr(spectrum_fs.result_fit,
-                       'components') and self.ui.cb_bestfit.isChecked():
-                bestfit = spectrum_fs.result_fit.best_fit
-                self.ax.plot(x_values, bestfit, label=f"bestfit")
-
-            peak_labels = spectrum_fs.peak_labels
-            for i, peak_model in enumerate(spectrum_fs.peak_models):
-                peak_label = peak_labels[i]
-
-                # remove temporarily 'expr'
-                param_hints_orig = deepcopy(peak_model.param_hints)
-                for key, _ in peak_model.param_hints.items():
-                    peak_model.param_hints[key]['expr'] = ''
-                params = peak_model.make_params()
-                # rassign 'expr'
-                peak_model.param_hints = param_hints_orig
-
-                y_peak = peak_model.eval(params, x=x_values)
-
-                if self.ui.cb_filled.isChecked():
-                    self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
-                                         label=f"{peak_label}")
-                    if self.ui.cb_peaks.isChecked():
-                        position = peak_model.param_hints['x0']['value']
-                        intensity = peak_model.param_hints['ampli']['value']
-                        position = round(position, 2)
-                        text = f"{peak_label}\n({position})"
-                        self.ax.text(position, intensity, text,
-                                     ha='center', va='bottom',
-                                     color='black', fontsize=12)
-                else:
-                    self.ax.plot(x_values, y_peak, '--',
-                                 label=f"{peak_label}")
-
-            if hasattr(spectrum_fs.result_fit,
-                       'residual') and self.ui.cb_residual.isChecked():
-                residual = spectrum_fs.result_fit.residual
-                self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
-            if self.ui.cb_colors.isChecked() is False:
-                self.ax.set_prop_cycle(None)
-
-            if hasattr(spectrum_fs.result_fit, 'rsquared'):
-                rsquared = round(spectrum_fs.result_fit.rsquared, 4)
-                self.ui.rsquared_1.setText(f"R2={rsquared}")
-            else:
-                self.ui.rsquared_1.setText("R2=0")
-
-        self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
-        self.ax.set_ylabel("Intensity (a.u)")
-        if self.ui.cb_legend.isChecked():
-            self.ax.legend(loc='upper right')
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        self.ax.get_figure().tight_layout()
-        self.canvas1.draw()
-        self.plot2()
-        self.read_x_range()
-        self.show_peak_table()
-
-    def create_plot_widget(self):
+    def create_spectra_plot_widget(self):
         """Create canvas and toolbar for plotting in the GUI"""
         plt.style.use(PLOT_POLICY)
-        # plot 1: spectra plotting
-        fig1 = plt.figure()
+        self.common.clear_layout(self.ui.QVBoxlayout.layout())
+        self.common.clear_layout(self.ui.toolbar_frame.layout())
+        self.upd_spectra_list()
+        dpi = float(self.ui.sb_dpi_spectra.text())
+
+        fig1 = plt.figure(dpi=dpi)
         self.ax = fig1.add_subplot(111)
         self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
         self.ax.set_ylabel("Intensity (a.u)")
@@ -732,6 +781,7 @@ class Maps(QObject):
         self.canvas1 = FigureCanvas(fig1)
         self.canvas1.mpl_connect('button_press_event', self.on_click)
 
+        # Toolbar
         self.toolbar = NavigationToolbar2QT(self.canvas1)
         rescale = next(
             a for a in self.toolbar.actions() if a.text() == 'Home')
@@ -745,95 +795,186 @@ class Maps(QObject):
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
 
+    def plot1(self):
+        """Plot selected spectra"""
+        wafer_name, coords = self.spectra_id()  # current selected spectra ID
+        selected_spectrums = []
+
+        for spectrum in self.spectrums:
+            wafer_name_fs, coord_fs = self.spectrum_object_id(spectrum)
+            if wafer_name_fs == wafer_name and coord_fs in coords:
+                selected_spectrums.append(spectrum)
+
+        if len(selected_spectrums) == 0:
+            return
+
+        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
+        self.ax.clear()
+
+        # reassign previous axis limits (related to zoom)
+        if not xlim == ylim == (0.0, 1.0):
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
+
+        for spectrum in selected_spectrums:
+            fname, coord = self.spectrum_object_id(spectrum)
+            x_values = spectrum.x
+            y_values = spectrum.y
+
+            # NORMALIZE
+            if self.ui.cb_normalize.isChecked():
+                max_intensity = 0.0
+                max_intensity = max(max_intensity, max(spectrum.y))
+                y_values = y_values / max_intensity
+            self.ax.plot(x_values, y_values, label=f"{coord}", ms=3, lw=2)
+
+            # BASELINE
+            self.plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
+
+            # RAW
+            if self.ui.cb_raw.isChecked():
+                x0_values = spectrum.x0
+                y0_values = spectrum.y0
+                self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
+                             lw=1)
+
+            # BEST-FIT and PEAK_MODELS
+            if hasattr(spectrum.result_fit,
+                       'components') and self.ui.cb_bestfit.isChecked():
+                bestfit = spectrum.result_fit.best_fit
+                self.ax.plot(x_values, bestfit, label=f"bestfit")
+
+            if self.ui.cb_bestfit.isChecked():
+                peak_labels = spectrum.peak_labels
+                for i, peak_model in enumerate(spectrum.peak_models):
+                    peak_label = peak_labels[i]
+
+                    # remove temporarily 'expr'
+                    param_hints_orig = deepcopy(peak_model.param_hints)
+                    for key, _ in peak_model.param_hints.items():
+                        peak_model.param_hints[key]['expr'] = ''
+                    params = peak_model.make_params()
+                    # rassign 'expr'
+                    peak_model.param_hints = param_hints_orig
+                    y_peak = peak_model.eval(params, x=x_values)
+
+                    if self.ui.cb_filled.isChecked():
+                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
+                                             label=f"{peak_label}")
+                        if self.ui.cb_peaks.isChecked():
+                            position = peak_model.param_hints['x0']['value']
+                            intensity = peak_model.param_hints['ampli']['value']
+                            position = round(position, 2)
+                            text = f"{peak_label}\n({position})"
+                            self.ax.text(position, intensity, text,
+                                         ha='center', va='bottom',
+                                         color='black', fontsize=12)
+                    else:
+
+                        self.ax.plot(x_values, y_peak, '--',
+                                     label=f"{peak_label}")
+            # RESIDUAL
+            if hasattr(spectrum.result_fit,
+                       'residual') and self.ui.cb_residual.isChecked():
+                residual = spectrum.result_fit.residual
+                self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
+
+            if self.ui.cb_colors.isChecked() is False:
+                self.ax.set_prop_cycle(None)
+            # R-SQUARED
+            if hasattr(spectrum.result_fit, 'rsquared'):
+                rsquared = round(spectrum.result_fit.rsquared, 4)
+                self.ui.rsquared_1.setText(f"R2={rsquared}")
+            else:
+                self.ui.rsquared_1.setText("R2=0")
+
+        self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
+        self.ax.set_ylabel("Intensity (a.u)")
+        if self.ui.cb_legend.isChecked():
+            self.ax.legend(loc='upper right')
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        self.ax.get_figure().tight_layout()
+
+        self.canvas1.draw()
+        self.plot2()
+        self.read_x_range()
+        self.show_peak_table()
+
+    def create_plot_widget(self):
+        """ Create plot widget for other plots: measurement sites ,
+        waferdataview, plotview"""
         # plot 2: Measurement sites view
-        fig2 = plt.figure()
+        fig2 = plt.figure(dpi=100)
         self.ax2 = fig2.add_subplot(111)
         self.ax2.spines['right'].set_visible(False)
         self.ax2.spines['top'].set_visible(False)
         self.ax2.spines['left'].set_visible(False)
         self.ax2.tick_params(axis='x', which='both', bottom=True, top=False)
         self.ax2.tick_params(axis='y', which='both', right=False, left=False)
-
         self.canvas2 = FigureCanvas(fig2)
 
         # Variables to keep track of highlighted points and Ctrl key status
         self.selected_points = []
         self.ctrl_pressed = False
         # Connect the mouse and key events to the handler functions
-        fig2.canvas.mpl_connect('button_press_event', self.on_click_sites_mesurements)
+        fig2.canvas.mpl_connect('button_press_event',
+                                self.on_click_sites_mesurements)
         fig2.canvas.mpl_connect('key_press_event', self.on_key_press)
         fig2.canvas.mpl_connect('key_release_event', self.on_key_release)
-
         layout = self.ui.wafer_plot.layout()
         layout.addWidget(self.canvas2)
         self.canvas2.draw()
 
         # plot4: graph
-        fig4 = plt.figure()
+        fig4 = plt.figure(dpi=90)
         self.ax4 = fig4.add_subplot(111)
         self.canvas4 = FigureCanvas(fig4)
         self.ui.frame_graph.addWidget(self.canvas4)
         self.canvas4.draw()
 
     def on_click_sites_mesurements(self, event):
-        """On click action to select the measurements points directly in the plot"""
+        """On click action to select the measurements points directly in the
+        plot"""
         all_x, all_y = self.get_mes_sites_coord()
+        self.ui.spectra_listbox.clearSelection()
         if event.inaxes == self.ax2:
             x_clicked, y_clicked = event.xdata, event.ydata
             if event.button == 1:  # Left mouse button
                 all_x = np.array(all_x)
                 all_y = np.array(all_y)
-                distances = np.sqrt((all_x - x_clicked) ** 2 + (all_y - y_clicked) ** 2)
+                distances = np.sqrt(
+                    (all_x - x_clicked) ** 2 + (all_y - y_clicked) ** 2)
                 nearest_index = np.argmin(distances)
-                nearest_x, nearest_y = all_x[nearest_index], all_y[nearest_index]
+                nearest_x, nearest_y = all_x[nearest_index], all_y[
+                    nearest_index]
 
-                # If Ctrl key is pressed, allow multiple selections
-                if self.ctrl_pressed:
-                    for index in range(self.ui.spectra_listbox.count()):
-                        item = self.ui.spectra_listbox.item(index)
-                        item_text = item.text()
-                        x, y = map(float, item_text.strip('()').split(','))
-                        if x == nearest_x and y == nearest_y:
-                            item.setSelected(True)
+                # Check if Ctrl key is pressed
+                modifiers = QApplication.keyboardModifiers()
+                if modifiers == Qt.ControlModifier:
+                    self.selected_points.append((nearest_x, nearest_y))
                 else:
-                    # Set the current selection in the spectra_listbox
-                    for index in range(self.ui.spectra_listbox.count()):
-                        item = self.ui.spectra_listbox.item(index)
-                        item_text = item.text()
-                        x, y = map(float, item_text.strip('()').split(','))
-                        if x == nearest_x and y == nearest_y:
-                            self.ui.spectra_listbox.setCurrentRow(index)
-                            break
+                    # Clear the selected points list and add the current one
+                    self.selected_points = [(nearest_x, nearest_y)]
+
+        # Set the current selection in the spectra_listbox
+        for index in range(self.ui.spectra_listbox.count()):
+            item = self.ui.spectra_listbox.item(index)
+            item_text = item.text()
+            x, y = map(float, item_text.strip('()').split(','))
+            if (x, y) in self.selected_points:
+                item.setSelected(True)
+            else:
+                item.setSelected(False)
 
     def on_key_press(self, event):
         """Handler function for key press event"""
-        if event.key == 'command' or event.key == 'control':
+        if event.key == 'ctrl':
             self.ctrl_pressed = True
 
     def on_key_release(self, event):
         """Handler function for key release event"""
-        if event.key == 'command' or event.key == 'control':
+        if event.key == 'ctrl':
             self.ctrl_pressed = False
-
-
-
-    def on_drag(self, event):
-        """Handler function for mouse drag event"""
-        pass
-        # if event.button == 1:  # Left mouse button pressed
-        #     if event.inaxes == self.ax2:
-        #         if event.xdata is not None and event.ydata is not None:
-        #             # Find points within the selected area
-        #             all_x, all_y = self.get_mes_sites_coord()
-        #             selected_x, selected_y = [], []
-        #             for x, y in zip(all_x, all_y):
-        #                 if abs(x - event.xdata) < 10 and abs(y - event.ydata) < 10:  # Define your selection criteria here
-        #                     selected_x.append(x)
-        #                     selected_y.append(y)
-        #             # Highlight selected points
-        #             if selected_x and selected_y:
-        #                 self.ax2.scatter(selected_x, selected_y, marker='o', color='green', s=40)
-        #                 self.canvas2.draw()
 
     def plot2(self):
         """Plot wafer maps of measurement sites"""
@@ -852,7 +993,7 @@ class Maps(QObject):
         all_x, all_y = self.get_mes_sites_coord()
         self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
 
-        wafer_name, coords = self.spectre_id()
+        wafer_name, coords = self.spectra_id()
         if coords:
             x, y = zip(*coords)
             self.ax2.scatter(x, y, marker='o', color='red', s=40)
@@ -864,17 +1005,18 @@ class Maps(QObject):
 
     def plot3(self):
         """Plot WaferDataFrame"""
-        clear_layout(self.ui.frame_wafer.layout())
+        self.common.clear_layout(self.ui.frame_wafer.layout())
         dfr = self.df_fit_results
         wafer_name = self.ui.cbb_wafer_1.currentText()
         color = self.ui.cbb_color_pallete.currentText()
         wafer_size = float(self.ui.wafer_size.text())
 
         if wafer_name is not None:
-            selected_df = dfr.query('Wafer == @wafer_name')
+            selected_df = dfr.query('Filename == @wafer_name')
         sel_param = self.ui.cbb_param_1.currentText()
         self.canvas3 = self.plot3_action(selected_df, sel_param, wafer_size,
                                          color)
+
         self.ui.frame_wafer.addWidget(self.canvas3)
 
     def plot3_action(self, selected_df, sel_param, wafer_size, color):
@@ -894,8 +1036,7 @@ class Maps(QObject):
 
         wdf = WaferView()
         wdf.plot(ax, x=x, y=y, z=param, cmap=color, vmin=vmin, vmax=vmax,
-                 stats=stats,
-                 r=(wafer_size / 2))
+                 stats=stats, r=(wafer_size / 2))
 
         text = self.ui.plot_title.text()
         title = sel_param if not text else text
@@ -907,10 +1048,19 @@ class Maps(QObject):
 
     def plot4(self):
         """Plot graph """
-        dfr = self.df_fit_results
+        if self.filtered_df is not None:
+            dfr = self.filtered_df
+        else:
+            dfr = self.df_fit_results
         x = self.ui.cbb_x.currentText()
         y = self.ui.cbb_y.currentText()
+
         z = self.ui.cbb_z.currentText()
+        if z == "None":
+            hue = None
+        else:
+            hue = z if z != "" else None
+
         style = self.ui.cbb_plot_style.currentText()
         xmin = self.ui.xmin.text()
         ymin = self.ui.ymin.text()
@@ -926,22 +1076,26 @@ class Maps(QObject):
         if text:
             xlabel_rot = float(text)
         ax = self.ax4
-        plot_graph(ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
-                   x_text, y_text, xlabel_rot)
+        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin,
+                               ymax,
+                               title,
+                               x_text, y_text, xlabel_rot)
         self.ax4.get_figure().tight_layout()
         self.canvas4.draw()
+
     def get_mes_sites_coord(self):
-        """ Get all coordinates of measurements sites of selected wafer"""
-        wafer_name, coords = self.spectre_id()
+        """ Get all coordinates of measurement sites of selected wafer"""
+        wafer_name, coords = self.spectra_id()
         all_x = []
         all_y = []
-        for spectrum_fs in self.spectra_fs:
-            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+        for spectrum in self.spectrums:
+            wafer_name_fs, coord_fs = self.spectrum_object_id(spectrum)
             if wafer_name == wafer_name_fs:
                 x, y = coord_fs
                 all_x.append(x)
                 all_y.append(y)
         return all_x, all_y
+
     def upd_wafers_list(self):
         """ To update the wafer listbox"""
         current_row = self.ui.wafers_listbox.currentRow()
@@ -969,16 +1123,16 @@ class Maps(QObject):
 
         if current_item is not None:
             wafer_name = current_item.text()
-            for spectrum_fs in self.spectra_fs:
-                wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+            for spectrum in self.spectrums:
+                wafer_name_fs, coord_fs = self.spectrum_object_id(spectrum)
                 if wafer_name == wafer_name_fs:
                     item = QListWidgetItem(str(coord_fs))
-                    if hasattr(spectrum_fs.result_fit,
-                               'success') and spectrum_fs.result_fit.success:
+                    if hasattr(spectrum.result_fit,
+                               'success') and spectrum.result_fit.success:
                         item.setBackground(QColor("green"))
-                    elif hasattr(spectrum_fs.result_fit,
+                    elif hasattr(spectrum.result_fit,
                                  'success') and not \
-                            spectrum_fs.result_fit.success:
+                            spectrum.result_fit.success:
                         item.setBackground(QColor("orange"))
                     else:
                         item.setBackground(QColor(0, 0, 0, 0))
@@ -998,12 +1152,12 @@ class Maps(QObject):
 
     def remove_wafer(self):
         """To remove a wafer from the listbox and wafers df"""
-        wafer_name, coords = self.spectre_id()
+        wafer_name, coords = self.spectra_id()
         if wafer_name in self.wafers:
             del self.wafers[wafer_name]
-            self.spectra_fs = Spectra(
-                spectrum_fs for spectrum_fs in self.spectra_fs if
-                not spectrum_fs.fname.startswith(wafer_name))
+            self.spectrums = Spectra(
+                spectrum for spectrum in self.spectrums if
+                not spectrum.fname.startswith(wafer_name))
             self.upd_wafers_list()
         self.ui.spectra_listbox.clear()
         self.ax.clear()
@@ -1013,15 +1167,15 @@ class Maps(QObject):
 
     def copy_fig(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas1)
+        self.common.copy_fig_to_clb(canvas=self.canvas1)
 
     def copy_fig_wafer(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas3)
+        self.common.copy_fig_to_clb(canvas=self.canvas3)
 
     def copy_fig_graph(self):
         """To copy figure canvas to clipboard"""
-        copy_fig_to_clb(canvas=self.canvas4)
+        self.common.copy_fig_to_clb(canvas=self.canvas4)
 
     def select_all_spectra(self):
         """ To quickly select all spectra within the spectra listbox"""
@@ -1052,21 +1206,21 @@ class Maps(QObject):
             if y_coord == 0:
                 item.setSelected(True)
 
-    def get_spectrum_objet(self):
+    def get_spectrum_object(self):
         """ Get the selected spectrum OBJECT"""
-        wafer_name, coords = self.spectre_id()
+        wafer_name, coords = self.spectra_id()
         sel_spectra = []
-        for spectrum_fs in self.spectra_fs:
-            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+        for spectrum in self.spectrums:
+            wafer_name_fs, coord_fs = self.spectrum_object_id(spectrum)
             if wafer_name_fs == wafer_name and coord_fs in coords:
-                sel_spectra.append(spectrum_fs)
+                sel_spectra.append(spectrum)
         if len(sel_spectra) == 0:
             return
         sel_spectrum = sel_spectra[0]
         return sel_spectrum, sel_spectra
 
-    def spectre_id(self):
-        """Get selected spectre id(s) from GUI wafer and spectr listboxes"""
+    def spectra_id(self):
+        """Get selected spectra id(s) from GUI wafer and spectr listboxes"""
         wafer_item = self.ui.wafers_listbox.currentItem()
         if wafer_item is not None:
             wafer_name = wafer_item.text()
@@ -1081,9 +1235,9 @@ class Maps(QObject):
             return wafer_name, coords
         return None, None
 
-    def spectre_id_fs(self, spectrum_fs=None):
-        """Get selected spectre id(s) from fitspy spectra object"""
-        fname_parts = spectrum_fs.fname.split("_")
+    def spectrum_object_id(self, spectrum=None):
+        """Get selected spectrum's ID from fitspy spectra object"""
+        fname_parts = spectrum.fname.split("_")
         wafer_name_fs = "_".join(fname_parts[:-1])
         coord_str = fname_parts[-1]  # Last part contains the coordinates
         coord_fs = tuple(
@@ -1091,26 +1245,35 @@ class Maps(QObject):
         return wafer_name_fs, coord_fs
 
     def delay_plot(self):
-        """Trigger the fnc to plot spectre"""
+        """Trigger the fnc to plot spectra"""
         self.delay_timer.start(100)
-
-    def view_fit_results_df(self):
-        """To view selected dataframe"""
-        view_df(self.ui.tabWidget, self.df_fit_results)
 
     def view_wafer_data(self):
         """To view data of selected wafer """
-        wafer_name, coords = self.spectre_id()
+        wafer_name, coords = self.spectra_id()
         view_df(self.ui.tabWidget, self.wafers[wafer_name])
 
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
+        # TAB Visu_old
         dfs = self.dataframe.original_dfs
         dfs["2Dmaps_bestfit_results"] = self.df_fit_results
         self.dataframe.action_open_df(file_paths=None, original_dfs=dfs)
+        # TAB Visu_new
+        dfs_new = self.visu.dfs
+        dfs_new["2Dmaps_bestfit_results"] = self.df_fit_results
+        self.visu.open_dfs(dfs=dfs_new, fnames=None)
+
+    def send_spectrum_to_compare(self):
+        """Send selected spectrums to the 'Spectrums' TAB"""
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
+        for spectrum in sel_spectra:
+            sent_spectrum = deepcopy(spectrum)
+            self.spectrums_tab.spectrums.append(sent_spectrum)
+            self.spectrums_tab.upd_spectra_list()
 
     def cosmis_ray_detection(self):
-        self.spectra_fs.outliers_limit_calculation()
+        self.spectrums.outliers_limit_calculation()
 
     def toggle_zoom_pan(self, checked):
         """Toggle zoom and pan functionality"""
@@ -1120,7 +1283,7 @@ class Maps(QObject):
 
     def show_peak_table(self):
         """ To show all fitted parameters in GUI"""
-        sel_spectrum, sel_spectra = self.get_spectrum_objet()
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
         main_layout = self.ui.peak_table1
         cb_limits = self.ui.cb_limits
         cb_expr = self.ui.cb_expr
@@ -1132,22 +1295,25 @@ class Maps(QObject):
 
     def view_stats(self):
         """Show the statistique fitting results of the selected spectrum"""
-        wafer_name, coords = self.spectre_id()
-        selected_spectra_fs = []
-        for spectrum_fs in self.spectra_fs:
-            wafer_name_fs, coord_fs = self.spectre_id_fs(spectrum_fs)
+        wafer_name, coords = self.spectra_id()
+        selected_spectrums = []
+        for spectrum in self.spectrums:
+            wafer_name_fs, coord_fs = self.spectrum_object_id(spectrum)
             if wafer_name_fs == wafer_name and coord_fs in coords:
-                selected_spectra_fs.append(spectrum_fs)
-        if len(selected_spectra_fs) == 0:
+                selected_spectrums.append(spectrum)
+        if len(selected_spectrums) == 0:
             return
 
         ui = self.ui.tabWidget
         title = f"Fitting Report - {wafer_name} - {coords}"
         # Show the 'report' of the first selected spectrum
-        spectrum_fs = selected_spectra_fs[0]
-        if spectrum_fs.result_fit:
-            text = fit_report(spectrum_fs.result_fit)
-            view_text(ui, title, text)
+        spectrum = selected_spectrums[0]
+        if spectrum.result_fit:
+            try:
+                text = fit_report(spectrum.result_fit)
+                self.common.view_text(ui, title, text)
+            except:
+                return
 
     def save_work(self):
         """Save the current work/results."""
@@ -1159,11 +1325,12 @@ class Maps(QObject):
                                                        "*.svmap)")
             if file_path:
                 data_to_save = {
-                    'spectra_fs': self.spectra_fs,
+                    'spectrums': self.spectrums,
                     'wafers': self.wafers,
                     'loaded_fit_model': self.loaded_fit_model,
-                    'model_name': self.ui.lb_loaded_model.text(),
+                    'current_fit_model': self.current_fit_model,
                     'df_fit_results': self.df_fit_results,
+                    'filters': self.filter.filters,
 
                     'cbb_x': self.ui.cbb_x.currentIndex(),
                     'cbb_y': self.ui.cbb_y.currentIndex(),
@@ -1204,14 +1371,15 @@ class Maps(QObject):
             if file_path:
                 with open(file_path, 'rb') as f:
                     load = dill.load(f)
-                    self.spectra_fs = load.get('spectra_fs')
+                    self.spectrums = load.get('spectrums')
                     self.wafers = load.get('wafers')
+                    self.current_fit_model = load.get('current_fit_model')
                     self.loaded_fit_model = load.get('loaded_fit_model')
-                    model_name = load.get('model_name', '')
-                    self.ui.lb_loaded_model.setText(model_name)
-                    self.ui.lb_loaded_model.setStyleSheet("color: yellow;")
 
                     self.df_fit_results = load.get('df_fit_results')
+                    self.filter.filters = load.get('filters')
+                    self.filter.upd_filter_listbox()
+
                     self.upd_cbb_param()
                     self.upd_cbb_wafer()
                     self.send_df_to_viz()
@@ -1242,21 +1410,22 @@ class Maps(QObject):
                     self.ui.int_vmin.setText(load.get('vmin', ''))
                     self.ui.int_vmax.setText(load.get('vmax', ''))
 
-                    self.plot4()
-                    self.plot3()
-                    display_df_in_table(self.ui.fit_results_table,
-                                        self.df_fit_results)
+                    # self.plot4()
+                    # self.plot3()
+                    self.common.display_df_in_table(self.ui.fit_results_table,
+                                                    self.df_fit_results)
+
         except Exception as e:
             show_alert(f"Error loading work: {e}")
 
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""
-        if self.spectra_fs:
+        if self.spectrums:
             plt.style.use('default')
             root = Tk()
             appli = Appli(root, force_terminal_exit=False)
 
-            appli.spectra = self.spectra_fs
+            appli.spectra = self.spectrums
             for spectrum in appli.spectra:
                 fname = spectrum.fname
                 appli.fileselector.filenames.append(fname)
@@ -1300,7 +1469,7 @@ class Maps(QObject):
         fit_params = {
             'fit_negative': self.settings.value('fit_negative',
                                                 defaultValue=False, type=bool),
-            'max_ite': self.settings.value('max_ite', defaultValue=200,
+            'max_ite': self.settings.value('max_ite', defaultValue=500,
                                            type=int),
             'method': self.settings.value('method', defaultValue='leastsq',
                                           type=str),
@@ -1323,20 +1492,34 @@ class Maps(QObject):
         else:
             self.set_x_range()
 
-    def apply_fit_model_handler(self):
+    def subtract_baseline_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.subtract_baseline_all()
+        else:
+            self.subtract_baseline()
+
+    def clear_peaks_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.clear_peaks_all()
+        else:
+            self.clear_peaks()
+
+    def fit_fnc_handler(self):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:
             self.fit_all()
         else:
             self.fit()
 
-    def fit_fnc_handler(self):
+    def apply_model_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:
-            self.apply_fit_model_all()
+            self.apply_loaded_fit_model_all()
         else:
-            self.apply_fit_model()
+            self.apply_loaded_fit_model()
 
     def paste_fit_model_fnc_handler(self):
         """Switch between 2 save fit fnc with the Ctrl key"""

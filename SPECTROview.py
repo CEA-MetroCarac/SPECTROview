@@ -3,13 +3,14 @@ import sys
 import os
 import datetime
 
-from PySide6.QtWidgets import QApplication, QListWidget, QComboBox, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
+    QMessageBox
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon
 
-from utils import dark_palette, light_palette, view_markdown, show_alert, \
-    PEAK_MODELS
+from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
+    show_alert, PALETTE
 
 from ui import resources_new
 from dataframe import Dataframe
@@ -17,6 +18,7 @@ from visualization import Vizualisation
 from maps import Maps
 from spectrums import Spectrums
 from workspace import SaveLoadWorkspace
+from visu import Visu
 
 DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")
@@ -34,6 +36,8 @@ class Main:
         self.ui = loader.load(ui_file)
         ui_file.close()
 
+        self.common = CommonUtilities()
+
         # Initialize QSettings
         QSettings.setDefaultFormat(QSettings.IniFormat)
         self.settings = QSettings("CEA-Leti", "SPECTROview")
@@ -47,13 +51,18 @@ class Main:
 
         # Create an instance of Dataframe and pass the self.ui object
         self.dataframe = Dataframe(self.settings, self.ui)
+        self.visu = Visu(self.settings, self.ui, self.common)
         self.visualization = Vizualisation(self.settings, self.ui,
                                            self.dataframe)
         self.workspace = SaveLoadWorkspace(self.settings, self.ui,
                                            self.dataframe,
                                            self.visualization)
-        self.maps = Maps(self.settings, self.ui, self.dataframe)
-        self.spectrums = Spectrums(self.settings, self.ui, self.dataframe)
+        self.spectrums = Spectrums(self.settings, self.ui, self.dataframe,
+                                   self.common, self.visu)
+        self.maps = Maps(self.settings, self.ui, self.dataframe, self.spectrums,
+                         self.common, self.visu)
+        self.fitmodel_manager = FitModelManager(self.settings)
+
 
         # DATAFRAME
         self.ui.btn_open_df.clicked.connect(
@@ -157,7 +166,7 @@ class Main:
         self.ui.lineEdit_2.setValidator(validator)
 
         # Set default number of plot per row
-        self.ui.spinBox_plot_per_row.setValue(3)
+        self.ui.spinBox_plot_per_row.setValue(2)
 
         # Help : document about pandas_df_query
         self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
@@ -183,8 +192,9 @@ class Main:
         self.ui.btn_sel_verti.clicked.connect(self.maps.select_verti)
         self.ui.btn_sel_horiz.clicked.connect(self.maps.select_horiz)
 
-        self.ui.btn_load_model.clicked.connect(self.maps.open_fit_model)
-        self.ui.btn_fit.clicked.connect(self.maps.fit_fnc_handler)
+        self.ui.btn_load_model.clicked.connect(self.maps.load_fit_model)
+        self.ui.btn_apply_model.clicked.connect(
+            self.maps.apply_model_fnc_handler)
         self.ui.btn_init.clicked.connect(self.maps.reinit_fnc_handler)
         self.ui.btn_collect_results.clicked.connect(self.maps.collect_results)
         self.ui.btn_view_df_2.clicked.connect(self.maps.view_fit_results_df)
@@ -195,7 +205,7 @@ class Main:
 
         self.ui.btn_plot_wafer.clicked.connect(self.maps.plot3)
         self.ui.btn_plot_graph.clicked.connect(self.maps.plot4)
-        self.ui.cbb_color_pallete.addItems(self.visualization.palette_colors)
+        self.ui.cbb_color_pallete.addItems(PALETTE)
         self.ui.btn_open_fitspy.clicked.connect(self.maps.fitspy_launcher)
         self.ui.btn_cosmis_ray.clicked.connect(self.maps.cosmis_ray_detection)
         self.ui.btn_open_fit_results.clicked.connect(
@@ -210,23 +220,49 @@ class Main:
         self.ui.range_max.returnPressed.connect(self.maps.set_x_range)
         self.ui.range_min.returnPressed.connect(self.maps.set_x_range)
         self.ui.range_apply.clicked.connect(self.maps.set_x_range_handler)
-        self.ui.sub_baseline.clicked.connect(self.maps.subtract_baseline)
-        self.ui.btn_fit_2.clicked.connect(self.maps.apply_fit_model_handler)
+        self.ui.sub_baseline.clicked.connect(
+            self.maps.subtract_baseline_handler)
+        self.ui.btn_fit.clicked.connect(self.maps.fit_fnc_handler)
         self.ui.save_model.clicked.connect(self.maps.save_fit_model)
-        self.ui.clear_peaks.clicked.connect(self.maps.clear_all_peaks)
+        self.ui.clear_peaks.clicked.connect(self.maps.clear_peaks_handler)
         self.ui.btn_copy_fit_model.clicked.connect(self.maps.copy_fit_model)
         self.ui.btn_paste_fit_model.clicked.connect(
             self.maps.paste_fit_model_fnc_handler)
         self.ui.cbb_fit_models.addItems(PEAK_MODELS)
         self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range_handler)
 
+        self.ui.btn_send_to_compare.clicked.connect(
+            self.maps.send_spectrum_to_compare)
+        self.ui.btn_default_folder_model.clicked.connect(
+            self.maps.set_default_model_folder)
+
         ########################################################
         ############## GUI for Spectrums Processing tab #############
         ########################################################
-        self.ui.btn_open_spectrums.clicked.connect(self.spectrums.open_data)
+        self.ui.cbb_fit_models_2.addItems(PEAK_MODELS)
+        self.ui.range_apply_2.clicked.connect(
+            self.spectrums.set_x_range_handler)
+        self.ui.range_max_2.returnPressed.connect(self.spectrums.set_x_range)
+        self.ui.range_min_2.returnPressed.connect(self.spectrums.set_x_range)
 
-        self.ui.btn_load_model_3.clicked.connect(self.spectrums.open_model)
-        self.ui.btn_fit_3.clicked.connect(self.spectrums.fit_fnc_handler)
+        self.ui.sub_baseline_2.clicked.connect(
+            self.spectrums.subtract_baseline_handler)
+        self.ui.btn_undo_baseline_2.clicked.connect(
+            self.spectrums.set_x_range_handler)
+        self.ui.clear_peaks_2.clicked.connect(
+            self.spectrums.clear_peaks_handler)
+        self.ui.btn_fit_3.clicked.connect(
+            self.spectrums.fit_fnc_handler)
+        self.ui.btn_copy_fit_model_2.clicked.connect(
+            self.spectrums.copy_fit_model)
+        self.ui.btn_paste_fit_model_2.clicked.connect(
+            self.spectrums.paste_fit_model_fnc_handler)
+        self.ui.save_model_2.clicked.connect(self.spectrums.save_fit_model)
+
+        self.ui.btn_open_spectrums.clicked.connect(self.spectrums.open_data)
+        self.ui.btn_load_model_3.clicked.connect(self.spectrums.load_fit_model)
+        self.ui.btn_apply_model_3.clicked.connect(
+            self.spectrums.apply_model_fnc_handler)
         self.ui.btn_open_fitspy_3.clicked.connect(
             self.spectrums.fitspy_launcher)
         self.ui.btn_cosmis_ray_3.clicked.connect(
@@ -255,24 +291,19 @@ class Main:
         self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
         self.ui.btn_add_col.clicked.connect(self.spectrums.add_column)
 
-        self.ui.btn_add_filter_2.clicked.connect(self.spectrums.add_filter)
-        self.ui.ent_filter_query_2.returnPressed.connect(
-            self.spectrums.add_filter)
-        self.ui.btn_apply_filters_2.clicked.connect(
-            self.spectrums.apply_filters)
-        self.ui.btn_remove_filters_2.clicked.connect(
-            self.spectrums.remove_filter)
-
         self.ui.btn_copy_fig_3.clicked.connect(self.spectrums.copy_fig)
         self.ui.btn_copy2_3.clicked.connect(self.spectrums.copy_fig_graph1)
         self.ui.btn_copy2_7.clicked.connect(self.spectrums.copy_fig_graph2)
 
+        self.ui.btn_default_folder_model_3.clicked.connect(
+            self.spectrums.set_default_model_folder)
+
     def toggle_dark_mode(self):
-        self.ui.setPalette(dark_palette())
+        self.ui.setPalette(self.common.dark_palette())
         self.settings.setValue("mode", "dark")  # Save to settings
 
     def toggle_light_mode(self):
-        self.ui.setPalette(light_palette())
+        self.ui.setPalette(self.common.light_palette())
         self.settings.setValue("mode", "light")  # Save to settings
 
     def update_combo_hue(self, index):
@@ -288,20 +319,21 @@ class Main:
     def open_doc_df_query(self):
         """Open doc detail about query function of pandas dataframe"""
         title = "Data filtering"
-        view_markdown(self.ui, title, HELP_DFQUERY, 550, 650)
+        self.common.view_markdown(self.ui, title, HELP_DFQUERY, 550, 650)
 
     def show_about(self):
         """Show about dialog """
-        view_markdown(self.ui, "About", ABOUT, 500, 300)
+        self.common.view_markdown(self.ui, "About", ABOUT, 500, 300)
 
 
-# expiration_date = datetime.datetime(2024, 10, 1)
-#
+expiration_date = datetime.datetime(2024, 9, 1)
+
+
 # def launcher():
 #     # Check if the current date is past the expiration date
 #     if datetime.datetime.now() > expiration_date:
-#         text = f"This version of the application has expired on " \
-#                f"{expiration_date}, so can not be used anymore. Please " \
+#         text = f"The current SPECTROview version has expired on " \
+#                f"{expiration_date}. Please " \
 #                f"contact the developer for an " \
 #                f"updated version"
 #         # If expired, disable the central widget
@@ -322,30 +354,46 @@ class Main:
 #     app.setStyle("Fusion")
 #     window.ui.show()
 #     sys.exit(app.exec())
+#
+#
 # if __name__ == "__main__":
 #     launcher()
 
-def launcher2(file_paths=None, fname_json=None):
+def launcher2(file_paths=None, fname_json=None, fnames=None):
     app = QApplication()
     app.setWindowIcon(QIcon(ICON_APPLI))
     window = Main()
     app.setStyle("Fusion")
-    if file_paths is not None:
-        window.maps.open_data(file_paths=file_paths)
-    if fname_json is not None:
-        window.maps.open_fit_model(fname_json=fname_json)
+    # if file_paths is not None:
+    #     window.maps.open_data(file_paths=file_paths)
+    # if fname_json is not None:
+    #     window.maps.load_fit_model(fname_json=fname_json)
+    #
+    # if file_paths is not None:
+    #     window.spectrums.open_data(file_paths=file_paths)
+    # if fname_json is not None:
+    #     window.spectrums.open_fit_model(fname_json=fname_json)
+
+    if fnames is not None:
+        window.visu.open_dfs(fnames=fnames)
     window.ui.show()
     sys.exit(app.exec())
 
 
 if __name__ == "__main__":
     DIRNAME = os.path.dirname(__file__)
-    DATA = os.path.join(DIRNAME, "data_test")
-    DATA_MAPS = os.path.join(DATA, "RAW 2Dmaps")
-    # fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_09.csv')
-    fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
-    fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
-    fname_json1 = os.path.join(DATA_MAPS,
-                               'MoS2_325-490_8cm-shifted_simple-labels.json')
+    DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
+    DATA_MAPS = os.path.join(DIRNAME, "data_test", "RAW 2Dmaps")
+    DATA_DFS = os.path.join(DIRNAME, "data_test")
+    # fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
+    # fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
+    # fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
+    # fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')
+    # fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
+    # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
+    # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
+    # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
+    fname1 = os.path.join(DATA_DFS, 'df1.xlsx')
+    fname2 = os.path.join(DATA_DFS, 'df4.xlsx')
 
-    launcher2([fname2, fname3], fname_json1)
+    launcher2(fnames=[fname1, fname2])

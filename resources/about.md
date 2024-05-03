@@ -7,8 +7,8 @@
 *Version 2024.5*
 
 Fitting features are powered
-by the [FITSPY open-source package](https://github.com/CEA-MetroCarac/fitspy)
-(v2024.04)
+by the [FITSPY](https://github.com/CEA-MetroCarac/fitspy)
+ and [LMFIT](https://lmfit.github.io/lmfit-py/) open-source packages.
 
 For any feedback,
 contact: [van-hoan.le@cea.fr](mailto:van-hoan.le@cea.fr)

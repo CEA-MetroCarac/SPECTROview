@@ -165,7 +165,7 @@ class Visu(QDialog):
 
     def on_selected_graph(self, sub_window):
         """Reflect all properties of selected graph object to GUI"""
-        sel_graph = self.get_sel_graph()
+        sel_graph, graph_dialog = self.get_sel_graph()
 
         if sel_graph:
             # Plot style
@@ -353,6 +353,7 @@ class Visu(QDialog):
         """Get the canvas of the selected sub window"""
         try:
             sel_graph = None
+            graph_dialog = None
             sub_window = self.ui.mdiArea.activeSubWindow()
             if sub_window:
                 graph_dialog = sub_window.widget()

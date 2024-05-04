@@ -396,4 +396,4 @@ if __name__ == "__main__":
     fname1 = os.path.join(DATA_DFS, 'Wafer300_sSOI.xlsx')
     fname2 = os.path.join(DATA_DFS, 'df1.xlsx')
 
-    launcher2(fnames=[fname1, fname2])
+    launcher2(fnames=[fname2, fname1])

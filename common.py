@@ -82,9 +82,10 @@ class Graph(QWidget):
         self.figure = None
         self.ax = None
         self.canvas = None
-        self.graph_layout = QVBoxLayout()  # Store layout as an attribute
-        self.setLayout(self.graph_layout)  # Set layout for the widget
+        self.graph_layout = QVBoxLayout()
+        self.setLayout(self.graph_layout)
     def clear_layout(self):
+        """Clear the layout of graph"""
         graph_layout = self.graph_layout
         if graph_layout:
             while graph_layout.count():
@@ -94,22 +95,20 @@ class Graph(QWidget):
                     widget.deleteLater()
 
     def create_plot_widget(self, dpi, layout=None):
+        """Create figure canvas"""
         if dpi:
             self.dpi = dpi
         else:
             self.dpi = 100
-        self.clear_layout()  # Clear existing layout if any
-        # Create new plot widget
+        self.clear_layout()
+        plt.close('all')
         self.figure = plt.figure(dpi=self.dpi)
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
-
-        # Add canvas to the specified layout or the default graph_layout
         if layout:
             layout.addWidget(self.canvas)
         else:
             self.graph_layout.addWidget(self.canvas)
-
         self.canvas.figure.tight_layout()
         self.canvas.draw()
 
@@ -164,27 +163,28 @@ class Graph(QWidget):
         if self.ymin and self.ymax:
             self.ax.set_ylim(float(self.ymin), float(self.ymax))
 
-
-        self.ax.set_title(self.plot_title)
-        self.ax.set_xlabel(self.xlabel)
-        self.ax.set_ylabel(self.ylabel)
-
-        # Legend
-        if self.legend_visible:
-            self.ax.legend(loc='upper right')
+        if self.plot_style == 'wafer':
+            self.ax.set_title(self.z)
         else:
-            self.ax.legend().remove()
-        if self.legend_outside:
-            self.ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+            self.ax.set_title(self.plot_title)
+            self.ax.set_xlabel(self.xlabel)
+            self.ax.set_ylabel(self.ylabel)
 
-        # Grid
-        if self.grid:
-            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        else:
-            self.ax.grid(False)
-
-        plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
-                 rotation_mode="anchor")
+            # Legend
+            if self.legend_visible:
+                self.ax.legend(loc='upper right')
+            else:
+                self.ax.legend().remove()
+            if self.legend_outside:
+                self.ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+            # Grid
+            if self.grid:
+                self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+            else:
+                self.ax.grid(False)
+            # Rotation
+            plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
+                     rotation_mode="anchor")
         self.ax.get_figure().tight_layout()
         self.canvas.draw()
 

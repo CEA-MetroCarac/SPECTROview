@@ -52,7 +52,7 @@ class Visu(QDialog):
         self.ui.btn_adjust_dpi.clicked.connect(self.adjust_dpi)
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
-
+        #self.ui.spb_dpi.valueChanged.connect(self.adjust_dpi)
     def add_graph(self, df_name = None, filters = None):
         """Plot new graph"""
         # Increment plot number
@@ -105,7 +105,7 @@ class Visu(QDialog):
 
         # Create a QDialog to hold the Graph instance
         graph_dialog = QDialog(self)
-        graph_dialog.setWindowTitle(f"Graph_{graph.graph_id}: ({x} vs. {y})")
+        graph_dialog.setWindowTitle(f"Graph_{graph.graph_id}: ({x} vs. {y} vs. {z})")
         layout = QVBoxLayout()
         layout.addWidget(graph)
         graph_dialog.setLayout(layout)
@@ -153,13 +153,13 @@ class Visu(QDialog):
             x_rot = float(self.ui.x_rot.text())
             current_filters = self.filter.get_current_filters()
 
-
             # Apply values for "graph" object
             sel_graph.df_name = self.ui.dfs_listbox.currentItem().text()
             sel_graph.filters = current_filters
             sel_graph.x = x
             sel_graph.y = y
             sel_graph.z = z if z != "None" else None
+
             sel_graph.xmin = xmin
             sel_graph.xmax = xmax
             sel_graph.ymin = ymin
@@ -178,16 +178,20 @@ class Visu(QDialog):
             sel_graph.legend_visible = self.ui.cb_legend_visible.isChecked()
             sel_graph.legend_outside = self.ui.cb_legend_outside.isChecked()
             sel_graph.grid = self.ui.cb_grid.isChecked()
-            sel_graph.plot(self.filtered_df)
-            graph_dialog.setWindowTitle(f"Graph_{sel_graph.graph_id}: ({x} vs. {y})")
+            sel_graph.dpi = float(self.ui.spb_dpi.text())
+            graph_dialog.setWindowTitle(f"Graph_{sel_graph.graph_id}: ({x} vs. {y} vs.{z})")
+            if plot_style =='wafer':
+                sel_graph.create_plot_widget(sel_graph.dpi, sel_graph.graph_layout)
+                sel_graph.plot(self.filtered_df)
+            else:
+                sel_graph.plot(self.filtered_df)
 
     def adjust_dpi(self):
         sel_graph, graph_dialog = self.get_sel_graph()
         dpi = float(self.ui.spb_dpi.text())
         if sel_graph:
-            self.common.clear_layout(sel_graph.graph_layout)
             sel_graph.create_plot_widget(dpi, sel_graph.graph_layout )
-            sel_graph.plot(self.filtered_df)
+            QTimer.singleShot(100, self.upd_graph)
 
     def on_selected_graph(self, sub_window):
         """Reflect all properties of selected graph object to GUI"""

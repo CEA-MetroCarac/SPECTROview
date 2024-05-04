@@ -77,14 +77,39 @@ class Graph(QWidget):
         self.color_palette = None
         self.dpi = 100
 
-        self.figure = Figure(dpi=100)
-        self.canvas = FigureCanvas(self.figure)
-        layout = QVBoxLayout()
-        layout.addWidget(self.canvas)
-        self.setLayout(layout)
+        self.figure = None
+        self.ax = None
+        self.canvas = None
+        self.graph_layout = QVBoxLayout()  # Store layout as an attribute
+        self.setLayout(self.graph_layout)  # Set layout for the widget
+    def clear_layout(self):
+        graph_layout = self.graph_layout
+        if graph_layout:
+            while graph_layout.count():
+                item = graph_layout.takeAt(0)
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+
+    def create_plot_widget(self, dpi, layout=None):
+        if dpi:
+            self.dpi = dpi
+        else:
+            self.dpi = 100
+        self.clear_layout()  # Clear existing layout if any
+        # Create new plot widget
+        self.figure = plt.figure(dpi=self.dpi)
         self.ax = self.figure.add_subplot(111)
+        self.canvas = FigureCanvas(self.figure)
 
+        # Add canvas to the specified layout or the default graph_layout
+        if layout:
+            layout.addWidget(self.canvas)
+        else:
+            self.graph_layout.addWidget(self.canvas)
 
+        self.canvas.figure.tight_layout()
+        self.canvas.draw()
 
     def plot(self, df):
         """Need to provide 'dfs'= dictionary of dataframes"""
@@ -145,12 +170,7 @@ class Graph(QWidget):
 
         plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
                  rotation_mode="anchor")
-        self.tight_layout_and_redraw()
-
-    def set_dpi(self, dpi):
-        """Set DPI and redraw the plot"""
-        self.dpi = dpi
-        self.figure.set_dpi(self.dpi)
+        self.ax.get_figure().tight_layout()
         self.canvas.draw()
 
     def tight_layout_and_redraw(self):
@@ -256,7 +276,7 @@ class Filter:
                     # Apply the filter
                     self.filtered_df = self.filtered_df.query(filter_expr)
                 except Exception as e:
-                    show_alert(f"Filter error: {str(e)}")
+                    #show_alert(f"Filter error: {str(e)}")
                     print(f"Error applying filter: {str(e)}")
                     print(f"Filter expression causing the error: {filter_expr}")
         return self.filtered_df

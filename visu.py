@@ -49,7 +49,7 @@ class Visu(QDialog):
         self.ui.btn_copy_graph.clicked.connect(self.copy_fig_to_clb)
         self.ui.cbb_palette.addItems(PALETTE)
         self.ui.cbb_plotstyle.addItems(PLOT_STYLES)
-
+        self.ui.btn_adjust_dpi.clicked.connect(self.adjust_dpi)
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
 
@@ -88,7 +88,6 @@ class Visu(QDialog):
         graph.ylabel = y
         graph.zlabel = z
         graph.dpi = float(self.ui.spb_dpi.text())
-        graph.set_dpi(graph.dpi)
 
         # Pass legend & grid settings
         graph.legend_visible = self.ui.cb_legend_visible.isChecked()
@@ -96,14 +95,15 @@ class Visu(QDialog):
         graph.grid = self.ui.cb_grid.isChecked()
 
         # Plot the graph
+        graph.create_plot_widget(graph.dpi)
         graph.plot(filtered_df)
 
         # Store the plot in the dictionary with graph_id as key
-        self.plots[self.graph_id] = graph
+        self.plots[graph.graph_id] = graph
 
         # Create a QDialog to hold the Graph instance
         graph_dialog = QDialog(self)
-        graph_dialog.setWindowTitle(f"Graph_{self.graph_id}: ({x} vs. {y})")
+        graph_dialog.setWindowTitle(f"Graph_{graph.graph_id}: ({x} vs. {y})")
         layout = QVBoxLayout()
         layout.addWidget(graph)
         graph_dialog.setLayout(layout)
@@ -113,7 +113,21 @@ class Visu(QDialog):
         sub_window.setWidget(graph_dialog)
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
-
+    def get_sel_graph(self):
+        """Get the canvas of the selected sub window"""
+        try:
+            sel_graph = None
+            graph_dialog = None
+            sub_window = self.ui.mdiArea.activeSubWindow()
+            if sub_window:
+                graph_dialog = sub_window.widget()
+                if graph_dialog:
+                    graph = graph_dialog.layout().itemAt(0).widget()
+                    if graph:
+                        sel_graph = graph
+        except Exception as e:
+            print("An error occurred:", e)
+        return sel_graph, graph_dialog
     def upd_graph(self):
         """ Update the existing graph with new properties"""
         sel_graph, graph_dialog = self.get_sel_graph()
@@ -135,6 +149,7 @@ class Visu(QDialog):
             palette = self.ui.cbb_palette.currentText()
             x_rot = float(self.ui.x_rot.text())
             current_filters = self.filter.get_current_filters()
+
 
             # Apply values for "graph" object
             sel_graph.df_name = self.ui.dfs_listbox.currentItem().text()
@@ -160,9 +175,14 @@ class Visu(QDialog):
             sel_graph.grid = self.ui.cb_grid.isChecked()
             sel_graph.plot(self.filtered_df)
             graph_dialog.setWindowTitle(f"Graph_{sel_graph.graph_id}: ({x} vs. {y})")
-            sel_graph.dpi = float(self.ui.spb_dpi.text())
-            sel_graph.set_dpi(sel_graph.dpi)
 
+    def adjust_dpi(self):
+        sel_graph, graph_dialog = self.get_sel_graph()
+        dpi = float(self.ui.spb_dpi.text())
+        if sel_graph:
+            self.common.clear_layout(sel_graph.graph_layout)
+            sel_graph.create_plot_widget(dpi, sel_graph.graph_layout )
+            sel_graph.plot(self.filtered_df)
     def on_selected_graph(self, sub_window):
         """Reflect all properties of selected graph object to GUI"""
         sel_graph, graph_dialog = self.get_sel_graph()
@@ -184,7 +204,7 @@ class Visu(QDialog):
                 index = current_items.index(sel_graph.df_name)
                 self.ui.dfs_listbox.setCurrentRow(index)
 
-            # Reflect filters in the listbox
+            # Reflect filter's states in the listbox
             self.reflect_filters_to_gui(sel_graph)
 
             # Update combobox selections
@@ -264,6 +284,7 @@ class Visu(QDialog):
                 item.setSizeHint(checkbox.sizeHint())
                 self.ui.filter_listbox_3.addItem(item)
                 self.ui.filter_listbox_3.setItemWidget(item, checkbox)
+
     def open_dfs(self, dfs=None, fnames=None):
         if self.original_dfs is None:
             self.original_dfs = {}
@@ -349,21 +370,7 @@ class Visu(QDialog):
         sel_graph = self.get_sel_graph()
         self.common.copy_fig_to_clb(canvas=sel_graph.canvas)
 
-    def get_sel_graph(self):
-        """Get the canvas of the selected sub window"""
-        try:
-            sel_graph = None
-            graph_dialog = None
-            sub_window = self.ui.mdiArea.activeSubWindow()
-            if sub_window:
-                graph_dialog = sub_window.widget()
-                if graph_dialog:
-                    graph = graph_dialog.layout().itemAt(0).widget()
-                    if graph:
-                        sel_graph = graph
-        except Exception as e:
-            print("An error occurred:", e)
-        return sel_graph, graph_dialog
+
 
     def get_sel_df(self):
         """Get the current selected df among the df within 'dfr' dict"""

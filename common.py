@@ -84,15 +84,6 @@ class Graph(QWidget):
         self.canvas = None
         self.graph_layout = QVBoxLayout()
         self.setLayout(self.graph_layout)
-    def clear_layout(self):
-        """Clear the layout of graph"""
-        graph_layout = self.graph_layout
-        if graph_layout:
-            while graph_layout.count():
-                item = graph_layout.takeAt(0)
-                widget = item.widget()
-                if widget:
-                    widget.deleteLater()
 
     def create_plot_widget(self, dpi, layout=None):
         """Create figure canvas"""
@@ -188,6 +179,16 @@ class Graph(QWidget):
         self.ax.get_figure().tight_layout()
         self.canvas.draw()
 
+    def clear_layout(self):
+        """Clear the layout of graph"""
+        graph_layout = self.graph_layout
+        if graph_layout:
+            while graph_layout.count():
+                item = graph_layout.takeAt(0)
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+
     def tight_layout_and_redraw(self):
         self.figure.tight_layout()
         self.canvas.draw()
@@ -197,34 +198,6 @@ class Graph(QWidget):
             raise ValueError("Unsupported plot style")
         self.plot_style = plot_style
 
-    def update_title(self, new_title):
-        self.plot_title = new_title
-        self.ax.set_title(new_title)
-        self.tight_layout_and_redraw()
-
-    def set_xlabel(self, xlabel):
-        self.xlabel = xlabel
-        self.ax.set_xlabel(xlabel)
-        self.tight_layout_and_redraw()
-
-    def set_ylabel(self, ylabel):
-        self.ylabel = ylabel
-        self.ax.set_ylabel(ylabel)
-        self.tight_layout_and_redraw()
-
-    def set_xlimits(self, xmin, xmax):
-        self.ax.set_xlim(xmin, xmax)
-        self.tight_layout_and_redraw()
-
-    def set_ylimits(self, ymin, ymax):
-        self.ax.set_ylim(ymin, ymax)
-        self.tight_layout_and_redraw()
-
-    def set_legend(self, legend_labels):
-        self.ax.legend(legend_labels)
-        self.tight_layout_and_redraw()
-
-
 class Filter:
     """Class to handler "filter features" of the dataframe"""
 
@@ -232,8 +205,7 @@ class Filter:
         self.line_edit = line_edit
         self.listbox = listbox
         self.df = df
-        self.filters = []  # List of filter
-
+        self.filters = []
 
     def add_filter(self):
         filter_expression = self.line_edit.text().strip()
@@ -942,7 +914,6 @@ class WaferView:
 
 class WaferPlot:
     """ Class to plot wafer map """
-
     def __init__(self, wafer_df, wafer_size, margin, hue=None,
                  inter_method='linear'):
         self.wafer_df = wafer_df

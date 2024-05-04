@@ -32,17 +32,15 @@ class Visu(QDialog):
         self.ui.dfs_listbox.itemSelectionChanged.connect(self.update_gui)
 
         # FILTER
-        self.filter = Filter(self.ui.ent_filter_query_4,
-                             self.ui.filter_listbox_3,
-                             self.sel_df)
-        self.filtered_df = None
+        self.filter = Filter(self.ui.filter_query,self.ui.listbox_filters, self.sel_df)
+        self.ui.filter_query.returnPressed.connect(self.filter.add_filter)
         self.ui.btn_add_filter_4.clicked.connect(self.filter.add_filter)
-        self.ui.ent_filter_query_4.returnPressed.connect(self.filter.add_filter)
         self.ui.btn_remove_filters_4.clicked.connect(self.filter.remove_filter)
         self.ui.btn_apply_filters_4.clicked.connect(self.apply_filters)
+        self.filtered_df = None
 
         # GRAPH
-        self.plots = {}  # Dictionary to store plots
+        self.plots = {}
         self.graph_id = 0  # Initialize graph number
         self.ui.btn_add_graph.clicked.connect(self.add_graph)
         self.ui.btn_upd_graph.clicked.connect(self.upd_graph)
@@ -52,12 +50,10 @@ class Visu(QDialog):
         self.ui.btn_adjust_dpi.clicked.connect(self.adjust_dpi)
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
-        #self.ui.spb_dpi.valueChanged.connect(self.adjust_dpi)
-    def add_graph(self, df_name = None, filters = None):
-        """Plot new graph"""
-        # Increment plot number
-        self.graph_id += 1
 
+    def add_graph(self, df_name=None, filters=None):
+        """Plot new graph"""
+        self.graph_id += 1
         # Get the current dataframe (filtered or not)
         if filters:
             current_filters = filters
@@ -115,21 +111,8 @@ class Visu(QDialog):
         sub_window.setWidget(graph_dialog)
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
-    def get_sel_graph(self):
-        """Get the canvas of the selected sub window"""
-        try:
-            sel_graph = None
-            graph_dialog = None
-            sub_window = self.ui.mdiArea.activeSubWindow()
-            if sub_window:
-                graph_dialog = sub_window.widget()
-                if graph_dialog:
-                    graph = graph_dialog.layout().itemAt(0).widget()
-                    if graph:
-                        sel_graph = graph
-        except Exception as e:
-            print("An error occurred:", e)
-        return sel_graph, graph_dialog
+
+
     def upd_graph(self):
         """ Update the existing graph with new properties"""
         sel_graph, graph_dialog = self.get_sel_graph()
@@ -267,38 +250,36 @@ class Visu(QDialog):
     def reflect_filters_to_gui(self, sel_graph):
         """Reflect the filters of a graph object and their states to the df listbox"""
         # Clear the existing items and uncheck them
-        for index in range(self.ui.filter_listbox_3.count()):
-            item = self.ui.filter_listbox_3.item(index)
+        for index in range(self.ui.listbox_filters.count()):
+            item = self.ui.listbox_filters.item(index)
             if isinstance(item, QListWidgetItem):
-                widget = self.ui.filter_listbox_3.itemWidget(item)
+                widget = self.ui.listbox_filters.itemWidget(item)
                 if isinstance(widget, QCheckBox):
                     widget.setChecked(False)
 
         for filter_info in sel_graph.filters:
             filter_expression = filter_info["expression"]
             filter_state = filter_info["state"]
-
             # Check if the filter expression already exists in the listbox
             existing_item = None
-            for index in range(self.ui.filter_listbox_3.count()):
-                item = self.ui.filter_listbox_3.item(index)
+            for index in range(self.ui.listbox_filters.count()):
+                item = self.ui.listbox_filters.item(index)
                 if isinstance(item, QListWidgetItem):
-                    widget = self.ui.filter_listbox_3.itemWidget(item)
+                    widget = self.ui.listbox_filters.itemWidget(item)
                     if isinstance(widget, QCheckBox) and widget.text() == filter_expression:
                         existing_item = item
                         break
-
             # Update the state if the filter expression already exists, otherwise add a new item
             if existing_item:
-                checkbox = self.ui.filter_listbox_3.itemWidget(existing_item)
+                checkbox = self.ui.listbox_filters.itemWidget(existing_item)
                 checkbox.setChecked(filter_state)
             else:
                 item = QListWidgetItem()
                 checkbox = QCheckBox(filter_expression)
                 checkbox.setChecked(filter_state)
                 item.setSizeHint(checkbox.sizeHint())
-                self.ui.filter_listbox_3.addItem(item)
-                self.ui.filter_listbox_3.setItemWidget(item, checkbox)
+                self.ui.listbox_filters.addItem(item)
+                self.ui.listbox_filters.setItemWidget(item, checkbox)
 
     def open_dfs(self, dfs=None, fnames=None):
         if self.original_dfs is None:
@@ -318,16 +299,13 @@ class Visu(QDialog):
             if fnames:
                 last_dir = QFileInfo(fnames[0]).absolutePath()
                 self.settings.setValue("last_directory", last_dir)
-
                 for fnames in fnames:
                     fnames = Path(fnames)
                     fname = fnames.stem  # get fname w/o extension
                     extension = fnames.suffix.lower()
-
                     if extension == '.xlsx':
                         excel_file = pd.ExcelFile(fnames)
                         sheet_names = excel_file.sheet_names
-
                         for sheet_name in sheet_names:
                             # Remove spaces within sheet_names
                             sheet_name_cleaned = sheet_name.replace(" ", "")
@@ -385,7 +363,21 @@ class Visu(QDialog):
         sel_graph = self.get_sel_graph()
         self.common.copy_fig_to_clb(canvas=sel_graph.canvas)
 
-
+    def get_sel_graph(self):
+        """Get the canvas of the selected sub window"""
+        try:
+            sel_graph = None
+            graph_dialog = None
+            sub_window = self.ui.mdiArea.activeSubWindow()
+            if sub_window:
+                graph_dialog = sub_window.widget()
+                if graph_dialog:
+                    graph = graph_dialog.layout().itemAt(0).widget()
+                    if graph:
+                        sel_graph = graph
+        except Exception as e:
+            print("An error occurred:", e)
+        return sel_graph, graph_dialog
 
     def get_sel_df(self):
         """Get the current selected df among the df within 'dfr' dict"""

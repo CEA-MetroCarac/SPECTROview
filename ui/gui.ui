@@ -7410,7 +7410,7 @@
                  <number>5</number>
                 </property>
                 <item>
-                 <widget class="QLineEdit" name="ent_filter_query_4">
+                 <widget class="QLineEdit" name="filter_query">
                   <property name="placeholderText">
                    <string>Enter query expression (? : see Help menu)</string>
                   </property>
@@ -7433,7 +7433,7 @@
                </layout>
               </item>
               <item>
-               <widget class="QListWidget" name="filter_listbox_3">
+               <widget class="QListWidget" name="listbox_filters">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
                   <horstretch>0</horstretch>

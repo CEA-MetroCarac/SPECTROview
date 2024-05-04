@@ -146,14 +146,9 @@ class Visu(QDialog):
             ymin = self.ui.ymin_2.text()
             xmax = self.ui.xmax_2.text()
             ymax = self.ui.ymax_2.text()
-            try:
-                zmin = float(self.ui.zmin_2.text())
-            except ValueError:
-                zmin = None
-            try:
-                zmax = float(self.ui.zmax_2.text())
-            except ValueError:
-                zmax = None
+            zmin = self.ui.zmin_2.text()
+            zmax = self.ui.zmax_2.text()
+
             palette = self.ui.cbb_palette.currentText()
             x_rot = float(self.ui.x_rot.text())
             current_filters = self.filter.get_current_filters()

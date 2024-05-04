@@ -144,19 +144,26 @@ class Graph(QWidget):
                 sns.boxplot(data=df, x=self.x, y=self.y, hue=self.z,
                             dodge=True, ax=self.ax)
             elif self.plot_style == 'wafer':
-
+                if self.zmin and self.zmax:
+                    vmin= self.zmin
+                    vmax = self.zmax
+                else:
+                    vmin = None
+                    vmax = None
                 wdf = WaferView()
-                wdf.plot(self.ax, x=df[self.x], y=df[self.y], z=df[self.z], cmap=self.color_palette, vmin=self.zmin, vmax=self.zmax,
+                wdf.plot(self.ax, x=df[self.x], y=df[self.y], z=df[self.z], cmap=self.color_palette, vmin=vmin, vmax=vmax,
                          stats=self.wafer_stats, r=(self.wafer_size / 2))
 
             else:
                 show_alert("Unsupported plot style")
         else:
             self.ax.plot([], [])
+
         if self.xmin and self.xmax:
             self.ax.set_xlim(float(self.xmin), float(self.xmax))
         if self.ymin and self.ymax:
             self.ax.set_ylim(float(self.ymin), float(self.ymax))
+
 
         self.ax.set_title(self.plot_title)
         self.ax.set_xlabel(self.xlabel)

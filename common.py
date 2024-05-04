@@ -43,8 +43,7 @@ NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
          '24', '28', '32']
 PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
-PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line',
-               'heatmap', 'histogram', 'wafer']
+PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line']
 
 
 class Graph(QWidget):
@@ -78,24 +77,21 @@ class Graph(QWidget):
         self.color_palette = None
         self.dpi = 100
 
-        self.figure = Figure(dpi=self.dpi)
+        self.figure = Figure(dpi=100)
         self.canvas = FigureCanvas(self.figure)
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
         self.setLayout(layout)
         self.ax = self.figure.add_subplot(111)
 
-    def tight_layout_and_redraw(self):
-        self.figure.tight_layout()
-        self.canvas.draw()
 
-    def plot(self, dfs):
+
+    def plot(self, df):
         """Need to provide 'dfs'= dictionary of dataframes"""
         self.ax.clear()
         if self.df_name is not None and self.x is not None and self.y is not \
                 None:
             # Retrive actual dataframe from the dict dfs
-            df = dfs[self.df_name]
             if self.plot_style == 'line':
                 sns.lineplot(data=df, x=self.x, y=self.y, hue=self.z,
                              ax=self.ax)
@@ -155,8 +151,11 @@ class Graph(QWidget):
         """Set DPI and redraw the plot"""
         self.dpi = dpi
         self.figure.set_dpi(self.dpi)
-        self.tight_layout_and_redraw()
+        self.canvas.draw()
 
+    def tight_layout_and_redraw(self):
+        self.figure.tight_layout()
+        self.canvas.draw()
     def set_plot_style(self, plot_style):
         """Set the plot style"""
         if plot_style not in ['line', 'point', 'scatter', 'bar', 'box']:
@@ -200,9 +199,6 @@ class Filter:
         self.df = df
         self.filters = []  # List of filter
 
-    def set_dataframe(self, df):
-        """Set the dataframe to be filtered"""
-        self.df = df
 
     def add_filter(self):
         filter_expression = self.line_edit.text().strip()
@@ -228,7 +224,7 @@ class Filter:
                     self.filters.remove(filter)
             self.listbox.takeItem(self.listbox.row(item))
 
-    def filters_ischecked(self):
+    def get_current_filters(self):
         """Collect selected filters from the UI"""
         checked_filters = []
         for i in range(self.listbox.count()):
@@ -240,10 +236,11 @@ class Filter:
         return checked_filters
 
     def apply_filters(self, filters=None):
+        """Apply filters to a given df"""
         if filters:
             self.filters = filters
         else:
-            checked_filters = self.filters_ischecked()
+            checked_filters = self.get_current_filters()
             self.filters = checked_filters
         # Apply all filters at once
         self.filtered_df = self.df.copy()

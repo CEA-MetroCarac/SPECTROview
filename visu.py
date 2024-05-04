@@ -1,21 +1,16 @@
 import os
 import numpy as np
 import pandas as pd
-import json
 from copy import deepcopy
 from pathlib import Path
 import dill
 
 from common import view_df, show_alert
 from common import PLOT_STYLES, PALETTE
-from common import CommonUtilities, Graph, Filter
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
+from common import  Graph, Filter
 
 from PySide6.QtWidgets import QApplication, QFileDialog, QDialog, QVBoxLayout, \
-    QLineEdit, QListWidgetItem, QMdiSubWindow
-from PySide6.QtGui import QResizeEvent
+    QLineEdit, QListWidgetItem, QMdiSubWindow,QCheckBox
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 
 
@@ -30,7 +25,6 @@ class Visu(QDialog):
         self.setWindowTitle("Graph Plot")
 
         # DATAFRAME
-        self.dfs = {}
         self.original_dfs = {}
         self.sel_df = None
         self.ui.btn_open_dfs.clicked.connect(self.open_dfs)
@@ -41,7 +35,6 @@ class Visu(QDialog):
         self.filter = Filter(self.ui.ent_filter_query_4,
                              self.ui.filter_listbox_3,
                              self.sel_df)
-        self.filtered_dfs = None
         self.filtered_df = None
         self.ui.btn_add_filter_4.clicked.connect(self.filter.add_filter)
         self.ui.ent_filter_query_4.returnPressed.connect(self.filter.add_filter)
@@ -60,16 +53,22 @@ class Visu(QDialog):
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
 
-    def add_graph(self):
+    def add_graph(self, df_name = None, filters = None):
         """Plot new graph"""
         # Increment plot number
         self.graph_id += 1
 
-        # Get the selected dataframe
-        if self.filtered_df is None:
-            df_name = self.ui.dfs_listbox.currentItem().text()
+        # Get the current dataframe (filtered or not)
+        if filters:
+            current_filters = filters
         else:
-            df_name = self.filtered_df_name
+            current_filters = self.filter.get_current_filters()
+        if df_name:
+            df = self.original_dfs[df_name]
+            filtered_df = self.apply_filters(df, current_filters)
+        else:
+            df_name = self.ui.dfs_listbox.currentItem().text()
+            filtered_df = self.apply_filters(self.sel_df, current_filters)
 
         x = self.ui.cbb_x_2.currentText()
         y = self.ui.cbb_y_2.currentText()
@@ -81,6 +80,7 @@ class Visu(QDialog):
         graph.plot_style = self.ui.cbb_plotstyle.currentText()
         graph.plot_title = self.ui.lbl_plot_title.text()
         graph.df_name = df_name
+        graph.filters = current_filters
         graph.x = x
         graph.y = y
         graph.z = z if z != "None" else None
@@ -89,21 +89,21 @@ class Visu(QDialog):
         graph.zlabel = z
         graph.dpi = float(self.ui.spb_dpi.text())
         graph.set_dpi(graph.dpi)
+
         # Pass legend & grid settings
         graph.legend_visible = self.ui.cb_legend_visible.isChecked()
         graph.legend_outside = self.ui.cb_legend_outside.isChecked()
         graph.grid = self.ui.cb_grid.isChecked()
 
         # Plot the graph
-        graph.plot(self.dfs)
+        graph.plot(filtered_df)
 
         # Store the plot in the dictionary with graph_id as key
         self.plots[self.graph_id] = graph
 
         # Create a QDialog to hold the Graph instance
         graph_dialog = QDialog(self)
-        graph_dialog.setWindowTitle(
-            f"Graph_{self.graph_id}_{y}_vs._{y}")
+        graph_dialog.setWindowTitle(f"Graph_{self.graph_id}: ({x} vs. {y})")
         layout = QVBoxLayout()
         layout.addWidget(graph)
         graph_dialog.setLayout(layout)
@@ -116,11 +116,10 @@ class Visu(QDialog):
 
     def upd_graph(self):
         """ Update the existing graph with new properties"""
-        sel_graph = self.get_sel_graph()
+        sel_graph, graph_dialog = self.get_sel_graph()
         if sel_graph:
             plot_style = self.ui.cbb_plotstyle.currentText()
             plot_title = self.ui.lbl_plot_title.text()
-
             x = self.ui.cbb_x_2.currentText()
             y = self.ui.cbb_y_2.currentText()
             z = self.ui.cbb_z_2.currentText()
@@ -135,9 +134,11 @@ class Visu(QDialog):
             zmax = self.ui.zmax_2.text()
             palette = self.ui.cbb_palette.currentText()
             x_rot = float(self.ui.x_rot.text())
+            current_filters = self.filter.get_current_filters()
 
             # Apply values for "graph" object
-            graph.df_name = self.ui.dfs_listbox.currentItem().text()
+            sel_graph.df_name = self.ui.dfs_listbox.currentItem().text()
+            sel_graph.filters = current_filters
             sel_graph.x = x
             sel_graph.y = y
             sel_graph.z = z if z != "None" else None
@@ -157,9 +158,8 @@ class Visu(QDialog):
             sel_graph.legend_visible = self.ui.cb_legend_visible.isChecked()
             sel_graph.legend_outside = self.ui.cb_legend_outside.isChecked()
             sel_graph.grid = self.ui.cb_grid.isChecked()
-            sel_graph.plot(self.dfs)
-            sel_graph.setWindowTitle(
-                f"Graph_{sel_graph.graph_id}_{x}_vs._{y}")
+            sel_graph.plot(self.filtered_df)
+            graph_dialog.setWindowTitle(f"Graph_{sel_graph.graph_id}: ({x} vs. {y})")
             sel_graph.dpi = float(self.ui.spb_dpi.text())
             sel_graph.set_dpi(sel_graph.dpi)
 
@@ -183,6 +183,9 @@ class Visu(QDialog):
             else:
                 index = current_items.index(sel_graph.df_name)
                 self.ui.dfs_listbox.setCurrentRow(index)
+
+            # Reflect filters in the listbox
+            self.reflect_filters_to_gui(sel_graph)
 
             # Update combobox selections
             x = self.ui.cbb_x_2.findText(sel_graph.x)
@@ -226,12 +229,46 @@ class Visu(QDialog):
 
             # Reflect DPI
             self.ui.spb_dpi.setValue(sel_graph.dpi)
+    def reflect_filters_to_gui(self, sel_graph):
+        """Reflect the filters of a graph object and their states to the df listbox"""
+        # Clear the existing items and uncheck them
+        for index in range(self.ui.filter_listbox_3.count()):
+            item = self.ui.filter_listbox_3.item(index)
+            if isinstance(item, QListWidgetItem):
+                widget = self.ui.filter_listbox_3.itemWidget(item)
+                if isinstance(widget, QCheckBox):
+                    widget.setChecked(False)
 
+        for filter_info in sel_graph.filters:
+            filter_expression = filter_info["expression"]
+            filter_state = filter_info["state"]
+
+            # Check if the filter expression already exists in the listbox
+            existing_item = None
+            for index in range(self.ui.filter_listbox_3.count()):
+                item = self.ui.filter_listbox_3.item(index)
+                if isinstance(item, QListWidgetItem):
+                    widget = self.ui.filter_listbox_3.itemWidget(item)
+                    if isinstance(widget, QCheckBox) and widget.text() == filter_expression:
+                        existing_item = item
+                        break
+
+            # Update the state if the filter expression already exists, otherwise add a new item
+            if existing_item:
+                checkbox = self.ui.filter_listbox_3.itemWidget(existing_item)
+                checkbox.setChecked(filter_state)
+            else:
+                item = QListWidgetItem()
+                checkbox = QCheckBox(filter_expression)
+                checkbox.setChecked(filter_state)
+                item.setSizeHint(checkbox.sizeHint())
+                self.ui.filter_listbox_3.addItem(item)
+                self.ui.filter_listbox_3.setItemWidget(item, checkbox)
     def open_dfs(self, dfs=None, fnames=None):
-        if self.dfs is None:
-            self.dfs = {}
+        if self.original_dfs is None:
+            self.original_dfs = {}
         if dfs:
-            self.dfs = dfs
+            self.original_dfs = dfs
         else:
             if fnames is None:
                 # Initialize the last used directory from QSettings
@@ -259,7 +296,7 @@ class Visu(QDialog):
                             # Remove spaces within sheet_names
                             sheet_name_cleaned = sheet_name.replace(" ", "")
                             df_name = f"{fname}_{sheet_name_cleaned}"
-                            self.dfs[df_name] = pd.read_excel(
+                            self.original_dfs[df_name] = pd.read_excel(
                                 excel_file, sheet_name=sheet_name)
                     else:
                         pass
@@ -269,7 +306,7 @@ class Visu(QDialog):
         """ To update the dataframe listbox"""
         current_row = self.ui.dfs_listbox.currentRow()
         self.ui.dfs_listbox.clear()
-        df_names = list(self.dfs.keys())
+        df_names = list(self.original_dfs.keys())
         for df_name in df_names:
             item = QListWidgetItem(df_name)
             self.ui.dfs_listbox.addItem(item)
@@ -288,6 +325,8 @@ class Visu(QDialog):
         self.show_df_in_gui()
         self.update_cbb()
         self.sel_df = self.get_sel_df()
+        current_filters = self.filter.get_current_filters()
+        self.filtered_df = self.apply_filters(self.sel_df, current_filters)
 
     def update_cbb(self):
         """Populate columns of selected data to comboboxes"""
@@ -321,41 +360,42 @@ class Visu(QDialog):
                     graph = graph_dialog.layout().itemAt(0).widget()
                     if graph:
                         sel_graph = graph
-
         except Exception as e:
             print("An error occurred:", e)
-        return sel_graph
+        return sel_graph, graph_dialog
 
     def get_sel_df(self):
-        """Get selected dataframe"""
+        """Get the current selected df among the df within 'dfr' dict"""
         sel_item = self.ui.dfs_listbox.currentItem()
         sel_df_name = sel_item.text()
-        self.sel_df = self.dfs[sel_df_name]
+        self.sel_df = self.original_dfs[sel_df_name]
         return self.sel_df
 
     def show_df(self):
         """To view selected dataframe"""
-        if self.filtered_df is None:
-            df = self.sel_df
-        else:
-            df = self.filtered_df
-
-        if df is not None:
-            view_df(self.ui.tabWidget, df)
+        current_filters = self.filter.get_current_filters()
+        current_df = self.apply_filters(self.sel_df, current_filters)
+        if current_df is not None:
+            view_df(self.ui.tabWidget, current_df)
         else:
             show_alert("No fit dataframe to display")
 
     def show_df_in_gui(self):
-        self.sel_df = self.get_sel_df()
-        if self.filtered_df is None:
-            df = self.sel_df
-        else:
-            df = self.filtered_df
-        self.common.display_df_in_table(self.ui.tableWidget, df)
+        current_filters = self.filter.get_current_filters()
+        current_df = self.apply_filters(self.sel_df, current_filters)
+        self.common.display_df_in_table(self.ui.tableWidget, current_df)
 
-    def apply_filters(self):
-        """Apply all checked filters to the current dataframe"""
-        self.sel_df = self.get_sel_df()
-        self.filter.set_dataframe(self.sel_df)
-        self.filtered_df = self.filter.apply_filters()
+    def apply_filters(self, df=None, filters=None):
+        """Apply filters to the specified dataframe or the current dataframe"""
+        if df is None:
+            sel_df = self.get_sel_df()
+        else:
+            sel_df = df
+        if filters is None:
+            current_filters = self.filter.get_current_filters()
+        else:
+            current_filters = filters
+        self.filter.df = sel_df
+        self.filtered_df = self.filter.apply_filters(current_filters)
         self.common.display_df_in_table(self.ui.tableWidget, self.filtered_df)
+        return self.filtered_df

@@ -393,7 +393,7 @@ if __name__ == "__main__":
     # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
     # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
     # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
-    fname1 = os.path.join(DATA_DFS, 'df1.xlsx')
-    fname2 = os.path.join(DATA_DFS, 'df4.xlsx')
+    fname1 = os.path.join(DATA_DFS, 'Wafer300_sSOI.xlsx')
+    fname2 = os.path.join(DATA_DFS, 'df1.xlsx')
 
     launcher2(fnames=[fname1, fname2])

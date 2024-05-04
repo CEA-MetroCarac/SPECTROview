@@ -43,7 +43,7 @@ NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
          '24', '28', '32']
 PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
-PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line']
+PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'wafer']
 
 
 class Graph(QWidget):
@@ -74,8 +74,10 @@ class Graph(QWidget):
         self.grid = False
         self.legend_visible = True
         self.legend_outside = False
-        self.color_palette = None
+        self.color_palette = "jet"
         self.dpi = 100
+        self.wafer_size = 300
+        self.wafer_stats = True
 
         self.figure = None
         self.ax = None
@@ -141,6 +143,12 @@ class Graph(QWidget):
             elif self.plot_style == 'box':
                 sns.boxplot(data=df, x=self.x, y=self.y, hue=self.z,
                             dodge=True, ax=self.ax)
+            elif self.plot_style == 'wafer':
+
+                wdf = WaferView()
+                wdf.plot(self.ax, x=df[self.x], y=df[self.y], z=df[self.z], cmap=self.color_palette, vmin=self.zmin, vmax=self.zmax,
+                         stats=self.wafer_stats, r=(self.wafer_size / 2))
+
             else:
                 show_alert("Unsupported plot style")
         else:

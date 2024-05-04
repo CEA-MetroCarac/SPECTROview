@@ -79,6 +79,7 @@ class Visu(QDialog):
 
         graph.plot_style = self.ui.cbb_plotstyle.currentText()
         graph.plot_title = self.ui.lbl_plot_title.text()
+        graph.color_palette = self.ui.cbb_palette.currentText()
         graph.df_name = df_name
         graph.filters = current_filters
         graph.x = x
@@ -88,7 +89,8 @@ class Visu(QDialog):
         graph.ylabel = y
         graph.zlabel = z
         graph.dpi = float(self.ui.spb_dpi.text())
-
+        graph.wafer_size = float(self.ui.lbl_wafersize.text())
+        graph.wafer_stats = self.ui.cb_wafer_stats.isChecked()
         # Pass legend & grid settings
         graph.legend_visible = self.ui.cb_legend_visible.isChecked()
         graph.legend_outside = self.ui.cb_legend_outside.isChecked()
@@ -144,8 +146,14 @@ class Visu(QDialog):
             ymin = self.ui.ymin_2.text()
             xmax = self.ui.xmax_2.text()
             ymax = self.ui.ymax_2.text()
-            zmin = self.ui.zmin_2.text()
-            zmax = self.ui.zmax_2.text()
+            try:
+                zmin = float(self.ui.zmin_2.text())
+            except ValueError:
+                zmin = None
+            try:
+                zmax = float(self.ui.zmax_2.text())
+            except ValueError:
+                zmax = None
             palette = self.ui.cbb_palette.currentText()
             x_rot = float(self.ui.x_rot.text())
             current_filters = self.filter.get_current_filters()
@@ -170,6 +178,8 @@ class Visu(QDialog):
             sel_graph.plot_style = plot_style
             sel_graph.plot_title = plot_title
             sel_graph.color_palette = palette
+            sel_graph.wafer_size = float(self.ui.lbl_wafersize.text())
+            sel_graph.wafer_stats = self.ui.cb_wafer_stats.isChecked()
             sel_graph.legend_visible = self.ui.cb_legend_visible.isChecked()
             sel_graph.legend_outside = self.ui.cb_legend_outside.isChecked()
             sel_graph.grid = self.ui.cb_grid.isChecked()
@@ -183,6 +193,7 @@ class Visu(QDialog):
             self.common.clear_layout(sel_graph.graph_layout)
             sel_graph.create_plot_widget(dpi, sel_graph.graph_layout )
             sel_graph.plot(self.filtered_df)
+
     def on_selected_graph(self, sub_window):
         """Reflect all properties of selected graph object to GUI"""
         sel_graph, graph_dialog = self.get_sel_graph()
@@ -217,6 +228,11 @@ class Visu(QDialog):
                 y if y != -1 else 0)
             self.ui.cbb_z_2.setCurrentIndex(
                 z if z != -1 else 0)
+
+            # WAFER
+            self.ui.lbl_wafersize.setText(str(sel_graph.wafer_size))
+            self.ui.cb_wafer_stats.setChecked(sel_graph.wafer_stats)
+
 
             # Rotation x label:
             self.ui.x_rot.setValue(sel_graph.x_rot)

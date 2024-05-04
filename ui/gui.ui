@@ -583,7 +583,7 @@
                <bool>true</bool>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>2</number>
               </property>
               <widget class="QWidget" name="fit_model_editor">
                <property name="enabled">
@@ -2497,7 +2497,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>248</width>
+                     <width>236</width>
                      <height>440</height>
                     </rect>
                    </property>
@@ -7059,53 +7059,15 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_upd_graph">
-                <property name="minimumSize">
-                 <size>
-                  <width>100</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>100</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
                 <property name="text">
                  <string>Update Graph</string>
-                </property>
-                <property name="icon">
-                 <iconset>
-                  <normaloff>:/icon/iconpack/icons8-update-100.png</normaloff>:/icon/iconpack/icons8-update-100.png</iconset>
-                </property>
-                <property name="iconSize">
-                 <size>
-                  <width>16</width>
-                  <height>16</height>
-                 </size>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="btn_copy_graph">
-                <property name="minimumSize">
-                 <size>
-                  <width>90</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>90</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
                 <property name="text">
                  <string>Copy Graph</string>
-                </property>
-                <property name="icon">
-                 <iconset>
-                  <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                 </property>
                </widget>
               </item>
@@ -7586,9 +7548,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>0</y>
+                <y>-57</y>
                 <width>409</width>
-                <height>390</height>
+                <height>423</height>
                </rect>
               </property>
               <attribute name="label">
@@ -7842,7 +7804,7 @@
                  <item>
                   <widget class="QLabel" name="label_94">
                    <property name="text">
-                    <string>Z min/max</string>
+                    <string>Z limits / color range</string>
                    </property>
                   </widget>
                  </item>
@@ -7887,6 +7849,24 @@
                   </size>
                  </property>
                 </spacer>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_124">
+                 <item>
+                  <widget class="QLabel" name="label_98">
+                   <property name="text">
+                    <string>Wafer size (mm)</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="lbl_wafersize">
+                   <property name="text">
+                    <string>300</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </item>
               </layout>
              </widget>
@@ -7970,6 +7950,16 @@
                   </widget>
                  </item>
                 </layout>
+               </item>
+               <item row="0" column="1">
+                <widget class="QCheckBox" name="cb_wafer_stats">
+                 <property name="text">
+                  <string>Stats on wafer plot</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>

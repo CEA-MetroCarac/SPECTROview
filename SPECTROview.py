@@ -13,11 +13,8 @@ from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
     show_alert, PALETTE
 
 from ui import resources_new
-from dataframe import Dataframe
-from visualization import Vizualisation
 from maps import Maps
 from spectrums import Spectrums
-from workspace import SaveLoadWorkspace
 from visu import Visu
 
 DIRNAME = os.path.dirname(__file__)
@@ -50,131 +47,10 @@ class Main:
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
 
         # Create an instance of Dataframe and pass the self.ui object
-        self.dataframe = Dataframe(self.settings, self.ui)
         self.visu = Visu(self.settings, self.ui, self.common)
-        self.visualization = Vizualisation(self.settings, self.ui,
-                                           self.dataframe)
-        self.workspace = SaveLoadWorkspace(self.settings, self.ui,
-                                           self.dataframe,
-                                           self.visualization)
-        self.spectrums = Spectrums(self.settings, self.ui, self.dataframe,
-                                   self.common, self.visu)
-        self.maps = Maps(self.settings, self.ui, self.dataframe, self.spectrums,
-                         self.common, self.visu)
+        self.spectrums = Spectrums(self.settings, self.ui, self.common, self.visu)
+        self.maps = Maps(self.settings, self.ui,  self.spectrums, self.common, self.visu)
         self.fitmodel_manager = FitModelManager(self.settings)
-
-
-        # DATAFRAME
-        self.ui.btn_open_df.clicked.connect(
-            lambda event: self.dataframe.action_open_df())
-
-        self.listbox_dfs = self.ui.findChild(QListWidget, 'listbox_dfs')
-        # Connect the itemClicked signal to select_dataframe
-        self.listbox_dfs.itemClicked.connect(self.dataframe.select_df)
-
-        self.combo_xaxis = self.ui.findChild(QComboBox, 'combo_xaxis')
-        self.combo_yaxis = self.ui.findChild(QComboBox, 'combo_yaxis')
-        self.combo_hue = self.ui.findChild(QComboBox, 'combo_hue')
-        self.combo_hue_2 = self.ui.findChild(QComboBox, 'combo_hue_2')
-
-        # Save/load workspace
-        self.ui.btn_clearworkspace.clicked.connect(
-            self.visualization.clear_workspace)
-        self.ui.btn_save_work.clicked.connect(
-            lambda event: self.workspace.save_workspace())
-        self.ui.btn_open_work.clicked.connect(
-            lambda event: self.workspace.load_workspace())
-        self.ui.btn_plot_recipe.clicked.connect(
-            lambda event: self.workspace.load_recipe())
-
-        # Populate df columns to comboboxes
-        self.combo_xaxis.activated.connect(
-            self.dataframe.set_selected_x_column)
-        self.combo_yaxis.activated.connect(
-            self.dataframe.set_selected_y_column)
-        self.combo_hue.activated.connect(
-            self.dataframe.set_selected_hue_column)
-        self.combo_hue_2.activated.connect(
-            self.dataframe.set_selected_hue_column)
-        # Bidirectional synchronization between two comboboax
-        self.ui.combo_hue.currentIndexChanged.connect(self.update_combo_hue_2)
-        self.ui.combo_hue_2.currentIndexChanged.connect(self.update_combo_hue)
-
-        # REMOVE, SAVE DataFrames ###
-        self.ui.btn_view_df.clicked.connect(self.dataframe.view_df)
-        self.ui.btn_remove_df.clicked.connect(self.dataframe.remove_df)
-        self.ui.btn_save_all_df.clicked.connect(
-            self.dataframe.save_all_df_handler)
-
-        # Concantenate dataframes in listbox to a global dataframe
-        self.ui.merge_dfs.clicked.connect(self.dataframe.concat_dfs)
-
-        # df FILTERS:
-        self.ui.ent_filter_query.returnPressed.connect(
-            self.dataframe.add_filter)
-        # ADD filter
-        self.ui.btn_add_filter.clicked.connect(self.dataframe.add_filter)
-        # REMOVE filter
-        self.ui.btn_remove_filters.clicked.connect(
-            self.dataframe.remove_selected_filters)
-        # APPLY filter
-        self.ui.btn_apply_filters.clicked.connect(
-            self.dataframe.apply_filters)
-
-        # PLOT STYLING
-        self.ui.combo_plot_style.addItems(self.visualization.plot_styles)
-
-        self.ui.combo_plot_style.currentIndexChanged.connect(
-            self.visualization.set_selected_plot_style)
-
-        self.ui.combo_palette_color.addItems(self.visualization.palette_colors)
-        self.ui.combo_palette_color.currentIndexChanged.connect(
-            self.visualization.set_selected_palette_colors)
-
-        self.ui.btn_add_a_plot.clicked.connect(self.visualization.add_a_plot)
-        self.ui.btn_add_wafer_plot.clicked.connect(
-            self.visualization.add_wafer_plots)
-
-        # Set default values for plot width & height
-        self.ui.ent_plotwidth.setText("470")
-        self.ui.ent_plotheight.setText("400")
-        self.ui.ent_plot_display_dpi.setText("80")
-        self.ui.ent_plot_save_dpi.setText("300")
-        self.ui.ent_xlabel_rot.setText("0")  # x_label rotation
-        self.ui.lineEdit_2.setText("1")  # data point transparency
-
-        self.ui.checkBox.setChecked(True)  # include stats values in wafer plot
-        self.ui.checkBox_2.setChecked(False)  # legend inside or outside
-        self.ui.checkBox_3.setChecked(False)  # Grid
-
-        self.ui.btn_clear_all_entry.clicked.connect(
-            self.visualization.clear_entries)
-
-        # Save fig function:
-        self.ui.btn_save_all_figs.clicked.connect(
-            self.visualization.save_all_figs)
-
-        # Define limits of axis, accept only floats numbers (not text)
-        validator = QDoubleValidator()
-        self.ui.ent_xmax.setValidator(validator)
-        self.ui.ent_ymax.setValidator(validator)
-        self.ui.ent_xmin.setValidator(validator)
-        self.ui.ent_ymin.setValidator(validator)
-        self.ui.ent_colorscale_max.setValidator(validator)
-        self.ui.ent_colorscale_min.setValidator(validator)
-        self.ui.ent_xlabel_rot.setValidator(validator)
-        self.ui.lineEdit_2.setValidator(validator)
-
-        # Set default number of plot per row
-        self.ui.spinBox_plot_per_row.setValue(2)
-
-        # Help : document about pandas_df_query
-        self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
-
-        # About dialog
-        self.ui.actionAbout.triggered.connect(self.show_about)
-        # Toggle to switch Dark/light mode
-        # self.ui.radio_darkmode.clicked.connect(self.change_style)
 
         ########################################################
         ############## GUI for Wafer Processing tab #############

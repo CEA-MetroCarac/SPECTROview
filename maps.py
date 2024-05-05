@@ -34,11 +34,10 @@ class Maps(QObject):
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
 
-    def __init__(self, settings, ui, dataframe, spectrums, common, visu):
+    def __init__(self, settings, ui,  spectrums, common, visu):
         super().__init__()
         self.settings = settings
         self.ui = ui
-        self.dataframe = dataframe
         self.visu = visu
         self.spectrums_tab = spectrums
         self.common = common
@@ -1255,12 +1254,8 @@ class Maps(QObject):
 
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
-        # TAB Visu_old
-        dfs = self.dataframe.original_dfs
-        dfs["2Dmaps_bestfit_results"] = self.df_fit_results
-        self.dataframe.action_open_df(file_paths=None, original_dfs=dfs)
-        # TAB Visu_new
-        dfs_new = self.visu.dfs
+
+        dfs_new = self.visu.original_dfs
         dfs_new["2Dmaps_bestfit_results"] = self.df_fit_results
         self.visu.open_dfs(dfs=dfs_new, fnames=None)
 

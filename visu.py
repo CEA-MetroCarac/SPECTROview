@@ -44,7 +44,7 @@ class Visu(QDialog):
         self.plots = {}
         self.graph_id = 0  # Initialize graph number
         self.ui.btn_add_graph.clicked.connect(self.add_graph)
-        self.ui.btn_upd_graph.clicked.connect(self.upd_graph)
+        self.ui.btn_upd_graph.clicked.connect(self.update_graph)
         self.ui.btn_copy_graph.clicked.connect(self.copy_fig_to_clb)
         self.ui.cbb_palette.addItems(PALETTE)
         self.ui.cbb_plotstyle.addItems(PLOT_STYLES)
@@ -119,7 +119,7 @@ class Visu(QDialog):
         sub_window.show()
 
 
-    def upd_graph(self):
+    def update_graph(self):
         """ Update the existing graph with new properties"""
         sel_graph, graph_dialog = self.get_sel_graph()
         if sel_graph:
@@ -183,7 +183,7 @@ class Visu(QDialog):
         dpi = float(self.ui.spb_dpi.text())
         if sel_graph:
             sel_graph.create_plot_widget(dpi, sel_graph.graph_layout )
-            QTimer.singleShot(100, self.upd_graph)
+            QTimer.singleShot(100, self.update_graph)
 
     def on_selected_graph(self, sub_window):
         """Reflect all properties of selected graph object to GUI"""
@@ -327,9 +327,9 @@ class Visu(QDialog):
                                 excel_file, sheet_name=sheet_name)
                     else:
                         pass
-        self.upd_dfs_list()
+        self.update_dfs_list()
 
-    def upd_dfs_list(self):
+    def update_dfs_list(self):
         """ To update the dataframe listbox"""
         current_row = self.ui.dfs_listbox.currentRow()
         self.ui.dfs_listbox.clear()
@@ -352,8 +352,6 @@ class Visu(QDialog):
         self.show_df_in_gui()
         self.update_cbb()
         self.sel_df = self.get_sel_df()
-        current_filters = self.filter.get_current_filters()
-        self.filtered_df = self.apply_filters(self.sel_df, current_filters)
 
     def update_cbb(self):
         """Populate columns of selected data to comboboxes"""
@@ -495,6 +493,7 @@ class Visu(QDialog):
                     load = json.load(f)
                     self.original_dfs = {key: pd.DataFrame(value) for key, value in
                                          load.get('original_dfs', {}).items()}
+                    self.update_dfs_list()
                     self.sel_df = pd.DataFrame(load.get('sel_df', {})) if load.get('sel_df') is not None else None
                     self.filter.filters = load.get('filters', [])
                     self.filtered_df = pd.DataFrame(load.get('filtered_df', {})) if load.get(
@@ -558,6 +557,7 @@ class Visu(QDialog):
                         sub_window.show()
 
                     self.filter.upd_filter_listbox()
+
 
         except Exception as e:
             show_alert(f"Error loading work: {e}")

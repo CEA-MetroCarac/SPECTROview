@@ -11,7 +11,7 @@ from common import PLOT_STYLES, PALETTE
 from common import Graph, Filter
 
 from PySide6.QtWidgets import QApplication, QFileDialog, QDialog, QVBoxLayout, \
-    QLineEdit, QListWidgetItem, QMdiSubWindow,QCheckBox
+    QLineEdit, QListWidgetItem, QMdiSubWindow,QCheckBox, QMdiArea, QSizePolicy
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 
 
@@ -112,12 +112,25 @@ class Visu(QDialog):
         layout.addWidget(graph)
         graph_dialog.setLayout(layout)
 
-        # Add the QDialog to the mdiArea
+        # Set the size policy of the QDialog to Fixed
+        graph_dialog.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+        # Add the QDialog to a QMdiSubWindow
         sub_window = QMdiSubWindow()
         sub_window.setWidget(graph_dialog)
         self.ui.mdiArea.addSubWindow(sub_window)
-        sub_window.show()
 
+        # Set the size policy of the QMdiSubWindow to Fixed
+        sub_window.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+        # Show the sub_window
+        sub_window.show()
+        # Cascade sub-windows to avoid overlapping
+        #self.ui.mdiArea.setViewMode(QMdiArea.TabbedView)
+        self.ui.mdiArea.tileSubWindows()
+        #self.ui.mdiArea.cascadeSubWindows(Qt.Vertical)
+
+        #self.ui.mdiArea.tileSubWindows(Qt.Vertical)
 
     def update_graph(self):
         """ Update the existing graph with new properties"""

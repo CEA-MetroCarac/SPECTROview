@@ -583,7 +583,7 @@
                <bool>true</bool>
               </property>
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="fit_model_editor">
                <property name="enabled">
@@ -662,8 +662,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>413</width>
-                          <height>360</height>
+                          <width>428</width>
+                          <height>375</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -1134,8 +1134,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>46</width>
-                               <height>40</height>
+                               <width>730</width>
+                               <height>214</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -1509,7 +1509,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>413</width>
+                       <width>428</width>
                        <height>343</height>
                       </rect>
                      </property>
@@ -2497,7 +2497,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>236</width>
+                     <width>248</width>
                      <height>440</height>
                     </rect>
                    </property>
@@ -5307,7 +5307,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>413</width>
+                       <width>428</width>
                        <height>343</height>
                       </rect>
                      </property>
@@ -6963,13 +6963,28 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="tab_graphs">
        <attribute name="title">
         <string>Graph</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_47">
+        <property name="spacing">
+         <number>5</number>
+        </property>
+        <property name="leftMargin">
+         <number>5</number>
+        </property>
+        <property name="topMargin">
+         <number>5</number>
+        </property>
+        <property name="rightMargin">
+         <number>5</number>
+        </property>
+        <property name="bottomMargin">
+         <number>5</number>
+        </property>
         <item>
-         <widget class="QTabWidget" name="tabWidget_4">
+         <widget class="QTabWidget" name="Graphs">
           <property name="tabPosition">
            <enum>QTabWidget::North</enum>
           </property>
@@ -6979,11 +6994,26 @@
           <property name="currentIndex">
            <number>0</number>
           </property>
-          <widget class="QWidget" name="tab_2">
+          <widget class="QWidget" name="graph">
            <attribute name="title">
             <string>Plot view</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_49">
+            <property name="spacing">
+             <number>5</number>
+            </property>
+            <property name="leftMargin">
+             <number>5</number>
+            </property>
+            <property name="topMargin">
+             <number>5</number>
+            </property>
+            <property name="rightMargin">
+             <number>5</number>
+            </property>
+            <property name="bottomMargin">
+             <number>5</number>
+            </property>
             <item>
              <widget class="QMdiArea" name="mdiArea"/>
             </item>
@@ -6994,7 +7024,7 @@
                 <item>
                  <widget class="QPushButton" name="btn_adjust_dpi">
                   <property name="text">
-                   <string>Adjust DPI</string>
+                   <string>Text size</string>
                   </property>
                  </widget>
                 </item>
@@ -7015,6 +7045,13 @@
                  </widget>
                 </item>
                </layout>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_copy_graph">
+                <property name="text">
+                 <string>Copy Graph</string>
+                </property>
+               </widget>
               </item>
               <item>
                <spacer name="horizontalSpacer_48">
@@ -7091,18 +7128,11 @@
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QPushButton" name="btn_copy_graph">
-                <property name="text">
-                 <string>Copy Graph</string>
-                </property>
-               </widget>
-              </item>
              </layout>
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab_3">
+          <widget class="QWidget" name="dataframe">
            <attribute name="title">
             <string>Dataframe(s)</string>
            </attribute>
@@ -7120,7 +7150,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QFrame" name="frame_3">
+         <widget class="QFrame" name="sidebar_2">
           <property name="minimumSize">
            <size>
             <width>390</width>
@@ -7139,7 +7169,7 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="5,10,10,2,5,0,200,0,0">
+          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="0,10,10,2,5,0,200,0,0">
            <property name="spacing">
             <number>5</number>
            </property>
@@ -7156,33 +7186,51 @@
             <number>2</number>
            </property>
            <item>
-            <widget class="QPushButton" name="btn_open_dfs">
-             <property name="minimumSize">
-              <size>
-               <width>100</width>
-               <height>30</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>100</width>
-               <height>30</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Open data</string>
-             </property>
-             <property name="icon">
-              <iconset>
-               <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>25</width>
-               <height>25</height>
-              </size>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_125">
+             <item>
+              <widget class="QPushButton" name="btn_open_dfs">
+               <property name="minimumSize">
+                <size>
+                 <width>100</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Open data</string>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>25</width>
+                 <height>25</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_save_work_2">
+               <property name="text">
+                <string>Save Work</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_open_work_2">
+               <property name="text">
+                <string>Open Work</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QGroupBox" name="groupBox_loaded_df_2">
@@ -7575,7 +7623,7 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-57</y>
+                <y>0</y>
                 <width>409</width>
                 <height>423</height>
                </rect>
@@ -7903,42 +7951,79 @@
                 <x>0</x>
                 <y>0</y>
                 <width>384</width>
-                <height>381</height>
+                <height>390</height>
                </rect>
               </property>
               <attribute name="label">
                <string>More options</string>
               </attribute>
-              <layout class="QGridLayout" name="gridLayout_10">
-               <item row="3" column="0">
+              <layout class="QVBoxLayout" name="verticalLayout_53">
+               <item>
+                <widget class="QCheckBox" name="cb_wafer_stats">
+                 <property name="text">
+                  <string>Stats on wafer plot</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QCheckBox" name="checkBox_6">
                  <property name="text">
-                  <string>Add error bar for bar plot</string>
+                  <string>add error bar for 'bar_plot'</string>
                  </property>
                 </widget>
                </item>
-               <item row="5" column="1">
-                <widget class="QPushButton" name="pushButton_4">
-                 <property name="text">
-                  <string>Add a horizontal line</string>
-                 </property>
-                </widget>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_126">
+                 <item>
+                  <widget class="QLabel" name="label_100">
+                   <property name="text">
+                    <string>Trendline order:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QDoubleSpinBox" name="spb_trendline_oder">
+                   <property name="decimals">
+                    <number>0</number>
+                   </property>
+                   <property name="minimum">
+                    <double>1.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>10.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="cb_trendline_eq">
+                   <property name="text">
+                    <string>add trendline eq</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </item>
-               <item row="3" column="1">
-                <widget class="QCheckBox" name="checkBox_5">
-                 <property name="text">
-                  <string>Put legends outside</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="0">
+               <item>
                 <widget class="QPushButton" name="pushButton_2">
                  <property name="text">
                   <string>Add a vertical line</string>
                  </property>
                 </widget>
                </item>
-               <item row="8" column="0">
+               <item>
+                <widget class="QPushButton" name="pushButton_4">
+                 <property name="text">
+                  <string>Add a horizontal line</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <spacer name="verticalSpacer_20">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
@@ -7950,16 +8035,6 @@
                   </size>
                  </property>
                 </spacer>
-               </item>
-               <item row="0" column="1">
-                <widget class="QCheckBox" name="cb_wafer_stats">
-                 <property name="text">
-                  <string>Stats on wafer plot</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                </widget>
                </item>
               </layout>
              </widget>

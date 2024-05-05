@@ -13,6 +13,8 @@ except:
 from io import BytesIO
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import linregress
+
 from matplotlib.figure import Figure
 
 import matplotlib.patches as patches
@@ -43,7 +45,7 @@ NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
          '24', '28', '32']
 PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
-PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'wafer']
+PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
 
 
 class Graph(QWidget):
@@ -78,9 +80,13 @@ class Graph(QWidget):
         self.dpi = 100
         self.wafer_size = 300
         self.wafer_stats = True
-
+        self.trendline_order =1
+        self.show_trendline_eq =True
         self.figure = None
         self.ax = None
+        self.ax2 =None
+        self.ax3 =None
+        self.ax4 = None
         self.canvas = None
         self.graph_layout = QVBoxLayout()
         self.setLayout(self.graph_layout)
@@ -125,14 +131,25 @@ class Graph(QWidget):
                 sns.scatterplot(data=df, x=self.x, y=self.y, hue=self.z,
                                 ax=self.ax,
                                 s=100,
-                                edgecolor='black'
-                                )
+                                edgecolor='black')
             elif self.plot_style == 'bar':
                 sns.barplot(data=df, x=self.x, y=self.y, hue=self.z,
                             errorbar='sd', ax=self.ax)
             elif self.plot_style == 'box':
                 sns.boxplot(data=df, x=self.x, y=self.y, hue=self.z,
                             dodge=True, ax=self.ax)
+            elif self.plot_style == 'trendline':
+                sns.regplot(data=df, x=self.x, y=self.y, ax=self.ax, scatter=True, order=self.trendline_order)
+                if self.show_trendline_eq:
+                    # Calculate trendline equation and show in the plot
+                    x_data = df[self.x]
+                    y_data = df[self.y]
+                    coefficients = np.polyfit(x_data, y_data, self.trendline_order)
+                    equation = 'y = '
+                    for i, coeff in enumerate(coefficients[::-1]):
+                        equation += f'{coeff:.2f}x^{self.trendline_order - i} + ' if i < self.trendline_order else f'{coeff:.2f}'
+                    self.ax.annotate(equation, xy=(0.02, 0.95), xycoords='axes fraction', fontsize=10, color='blue')
+
             elif self.plot_style == 'wafer':
                 if self.zmin and self.zmax:
                     vmin= self.zmin

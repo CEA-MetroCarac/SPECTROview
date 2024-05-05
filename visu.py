@@ -7,7 +7,7 @@ import dill
 
 from common import view_df, show_alert
 from common import PLOT_STYLES, PALETTE
-from common import  Graph, Filter
+from common import Graph, Filter
 
 from PySide6.QtWidgets import QApplication, QFileDialog, QDialog, QVBoxLayout, \
     QLineEdit, QListWidgetItem, QMdiSubWindow,QCheckBox
@@ -91,6 +91,8 @@ class Visu(QDialog):
         graph.legend_visible = self.ui.cb_legend_visible.isChecked()
         graph.legend_outside = self.ui.cb_legend_outside.isChecked()
         graph.grid = self.ui.cb_grid.isChecked()
+        graph.trendline_order = float(self.ui.spb_trendline_oder.text())
+        graph.show_trendline_eq = self.ui.cb_trendline_eq.isChecked()
 
         # Plot the graph
         graph.create_plot_widget(graph.dpi)
@@ -162,6 +164,9 @@ class Visu(QDialog):
             sel_graph.legend_outside = self.ui.cb_legend_outside.isChecked()
             sel_graph.grid = self.ui.cb_grid.isChecked()
             sel_graph.dpi = float(self.ui.spb_dpi.text())
+            sel_graph.trendline_order = float(self.ui.spb_trendline_oder.text())
+            sel_graph.show_trendline_eq = self.ui.cb_trendline_eq.isChecked()
+
             graph_dialog.setWindowTitle(f"Graph_{sel_graph.graph_id}: ({x} vs. {y} vs.{z})")
             if plot_style =='wafer':
                 sel_graph.create_plot_widget(sel_graph.dpi, sel_graph.graph_layout)
@@ -247,6 +252,10 @@ class Visu(QDialog):
 
             # Reflect DPI
             self.ui.spb_dpi.setValue(sel_graph.dpi)
+
+            # Trendline
+            self.ui.spb_trendline_oder.setValue(sel_graph.trendline_order)
+            self.ui.cb_trendline_eq.setChecked(sel_graph.show_trendline_eq)
     def reflect_filters_to_gui(self, sel_graph):
         """Reflect the filters of a graph object and their states to the df listbox"""
         # Clear the existing items and uncheck them

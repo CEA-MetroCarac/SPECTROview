@@ -4,6 +4,7 @@ import pandas as pd
 from copy import deepcopy
 from pathlib import Path
 import dill
+import json
 
 from common import view_df, show_alert
 from common import PLOT_STYLES, PALETTE
@@ -51,6 +52,9 @@ class Visu(QDialog):
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
 
+        # SAVE / LOAD
+        self.ui.btn_save_work_2.clicked.connect(self.save)
+        self.ui.btn_open_work_2.clicked.connect(self.load)
     def add_graph(self, df_name=None, filters=None):
         """Plot new graph"""
         self.graph_id += 1
@@ -113,6 +117,8 @@ class Visu(QDialog):
         sub_window.setWidget(graph_dialog)
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
+        print(self.plots)
+        print(graph.graph_id)
 
 
     def upd_graph(self):
@@ -423,3 +429,137 @@ class Visu(QDialog):
         self.filtered_df = self.filter.apply_filters(current_filters)
         self.common.display_df_in_table(self.ui.tableWidget, self.filtered_df)
         return self.filtered_df
+
+    def save(self):
+        """Save current work"""
+        try:
+            file_path, _ = QFileDialog.getSaveFileName(None,
+                                                       "Save work",
+                                                       "",
+                                                       "SPECTROview Files (*.json)")
+            if file_path:
+                # Convert Graph objects to serializable format
+                plots_data = {}
+                for graph_id, graph in self.plots.items():
+                    graph_data = {
+                        'df_name': graph.df_name,
+                        'filters': graph.filters,
+                        'graph_id': graph.graph_id,
+                        'plot_style': graph.plot_style,
+                        'x': graph.x,
+                        'y': graph.y,
+                        'z': graph.z,
+                        'xmin': graph.xmin,
+                        'xmax': graph.xmax,
+                        'ymin': graph.ymin,
+                        'ymax': graph.ymax,
+                        'zmin': graph.zmin,
+                        'zmax': graph.zmax,
+                        'plot_title': graph.plot_title,
+                        'xlabel': graph.xlabel,
+                        'ylabel': graph.ylabel,
+                        'zlabel': graph.zlabel,
+                        'x_rot': graph.x_rot,
+                        'grid': graph.grid,
+                        'legend_visible': graph.legend_visible,
+                        'legend_outside': graph.legend_outside,
+                        'color_palette': graph.color_palette,
+                        'dpi': graph.dpi,
+                        'wafer_size': graph.wafer_size,
+                        'wafer_stats': graph.wafer_stats,
+                        'trendline_order': graph.trendline_order,
+                        'show_trendline_eq': graph.show_trendline_eq,
+                    }
+                    plots_data[graph_id] = graph_data
+
+                # Prepare data to save
+                data_to_save = {
+                    'original_dfs': {key: df.to_dict() for key, df in self.original_dfs.items()},
+                    'plots': plots_data,
+                }
+
+                # Save to JSON file
+                with open(file_path, 'w') as f:
+                    json.dump(data_to_save, f, indent=4)
+                show_alert("Work saved successfully.")
+        except Exception as e:
+            show_alert(f"Error saving work: {e}")
+
+    def load(self):
+        """Open saved work"""
+        try:
+            file_path, _ = QFileDialog.getOpenFileName(None,
+                                                       "Load work",
+                                                       "",
+                                                       "SPECTROview Files (*.json)")
+            if file_path:
+                with open(file_path, 'r') as f:
+                    load = json.load(f)
+                    self.original_dfs = {key: pd.DataFrame(value) for key, value in
+                                         load.get('original_dfs', {}).items()}
+                    self.sel_df = pd.DataFrame(load.get('sel_df', {})) if load.get('sel_df') is not None else None
+                    self.filter.filters = load.get('filters', [])
+                    self.filtered_df = pd.DataFrame(load.get('filtered_df', {})) if load.get(
+                        'filtered_df') is not None else None
+
+                    # Clear current plots before loading
+                    self.plots.clear()
+                    self.ui.mdiArea.closeAllSubWindows()
+
+                    # Load plots
+                    plots_data = load.get('plots', {})
+                    for graph_id, graph_data in plots_data.items():
+                        # Recreate graph instance
+                        graph = Graph(graph_id=graph_data['graph_id'])
+                        graph.df_name = graph_data['df_name']
+                        graph.filters = graph_data['filters']
+                        graph.plot_style = graph_data['plot_style']
+                        graph.x = graph_data['x']
+                        graph.y = graph_data['y']
+                        graph.z = graph_data['z']
+                        graph.xmin = graph_data['xmin']
+                        graph.xmax = graph_data['xmax']
+                        graph.ymin = graph_data['ymin']
+                        graph.ymax = graph_data['ymax']
+                        graph.zmin = graph_data['zmin']
+                        graph.zmax = graph_data['zmax']
+                        graph.plot_title = graph_data['plot_title']
+                        graph.xlabel = graph_data['xlabel']
+                        graph.ylabel = graph_data['ylabel']
+                        graph.zlabel = graph_data['zlabel']
+                        graph.x_rot = graph_data['x_rot']
+                        graph.grid = graph_data['grid']
+                        graph.legend_visible = graph_data['legend_visible']
+                        graph.legend_outside = graph_data['legend_outside']
+                        graph.color_palette = graph_data['color_palette']
+                        graph.dpi = graph_data['dpi']
+                        graph.wafer_size = graph_data['wafer_size']
+                        graph.wafer_stats = graph_data['wafer_stats']
+                        graph.trendline_order = graph_data['trendline_order']
+                        graph.show_trendline_eq = graph_data['show_trendline_eq']
+
+                        # Plot the graph
+                        graph.create_plot_widget(graph.dpi)
+                        filtered_df = self.apply_filters(self.original_dfs[graph.df_name], graph.filters)
+                        graph.plot(filtered_df)
+
+                        # Store the plot in the dictionary with graph_id as key
+                        self.plots[graph.graph_id] = graph
+
+                        # Create a QDialog to hold the Graph instance
+                        graph_dialog = QDialog(self)
+                        graph_dialog.setWindowTitle(f"Graph_{graph.graph_id}: ({graph.x} vs. {graph.y} vs. {graph.z})")
+                        layout = QVBoxLayout()
+                        layout.addWidget(graph)
+                        graph_dialog.setLayout(layout)
+
+                        # Add the QDialog to the mdiArea
+                        sub_window = QMdiSubWindow()
+                        sub_window.setWidget(graph_dialog)
+                        self.ui.mdiArea.addSubWindow(sub_window)
+                        sub_window.show()
+
+                    self.filter.upd_filter_listbox()
+
+        except Exception as e:
+            show_alert(f"Error loading work: {e}")

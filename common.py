@@ -82,11 +82,9 @@ class Graph(QWidget):
         self.wafer_stats = True
         self.trendline_order =1
         self.show_trendline_eq =True
+
         self.figure = None
         self.ax = None
-        self.ax2 =None
-        self.ax3 =None
-        self.ax4 = None
         self.canvas = None
         self.graph_layout = QVBoxLayout()
         self.setLayout(self.graph_layout)
@@ -206,14 +204,6 @@ class Graph(QWidget):
                 if widget:
                     widget.deleteLater()
 
-    def tight_layout_and_redraw(self):
-        self.figure.tight_layout()
-        self.canvas.draw()
-    def set_plot_style(self, plot_style):
-        """Set the plot style"""
-        if plot_style not in ['line', 'point', 'scatter', 'bar', 'box']:
-            raise ValueError("Unsupported plot style")
-        self.plot_style = plot_style
 
 class Filter:
     """Class to handler "filter features" of the dataframe"""

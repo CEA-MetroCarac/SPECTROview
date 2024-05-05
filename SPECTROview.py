@@ -329,71 +329,71 @@ class Main:
 expiration_date = datetime.datetime(2024, 9, 1)
 
 
-# def launcher():
-#     # Check if the current date is past the expiration date
-#     if datetime.datetime.now() > expiration_date:
-#         text = f"The current SPECTROview version has expired on " \
-#                f"{expiration_date}. Please " \
-#                f"contact the developer for an " \
-#                f"updated version"
-#         # If expired, disable the central widget
-#         app = QApplication(sys.argv)
-#         app.setWindowIcon(QIcon(ICON_APPLI))
-#         window = Main()
-#         window.ui.centralwidget.setEnabled(False)
-#         app.setStyle("Fusion")
-#         window.ui.show()
-#         show_alert(text)
-#         sys.exit(app.exec())
-#
-#     # If not expired, continue launching the application as usual
-#     app = QApplication(sys.argv)
-#     app.setWindowIcon(QIcon(ICON_APPLI))
-#     window = Main()
-#     window.ui.centralwidget.setEnabled(True)
-#     app.setStyle("Fusion")
-#     window.ui.show()
-#     sys.exit(app.exec())
-#
-#
-# if __name__ == "__main__":
-#     launcher()
+def launcher():
+    # Check if the current date is past the expiration date
+    if datetime.datetime.now() > expiration_date:
+        text = f"The current SPECTROview version has expired on " \
+               f"{expiration_date}. Please " \
+               f"contact the developer for an " \
+               f"updated version"
+        # If expired, disable the central widget
+        app = QApplication(sys.argv)
+        app.setWindowIcon(QIcon(ICON_APPLI))
+        window = Main()
+        window.ui.centralwidget.setEnabled(False)
+        app.setStyle("Fusion")
+        window.ui.show()
+        show_alert(text)
+        sys.exit(app.exec())
 
-def launcher2(file_paths=None, fname_json=None, fnames=None):
-    app = QApplication()
+    # If not expired, continue launching the application as usual
+    app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(ICON_APPLI))
     window = Main()
+    window.ui.centralwidget.setEnabled(True)
     app.setStyle("Fusion")
-    # if file_paths is not None:
-    #     window.maps.open_data(file_paths=file_paths)
-    # if fname_json is not None:
-    #     window.maps.load_fit_model(fname_json=fname_json)
-    #
-    # if file_paths is not None:
-    #     window.spectrums.open_data(file_paths=file_paths)
-    # if fname_json is not None:
-    #     window.spectrums.open_fit_model(fname_json=fname_json)
-
-    if fnames is not None:
-        window.visu.open_dfs(fnames=fnames)
     window.ui.show()
     sys.exit(app.exec())
 
 
 if __name__ == "__main__":
-    DIRNAME = os.path.dirname(__file__)
-    DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
-    DATA_MAPS = os.path.join(DIRNAME, "data_test", "RAW 2Dmaps")
-    DATA_DFS = os.path.join(DIRNAME, "data_test")
-    # fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
-    # fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
-    # fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
-    # fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')
-    # fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
-    # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
-    # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
-    # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
-    fname1 = os.path.join(DATA_DFS, 'Wafer300_sSOI.xlsx')
-    fname2 = os.path.join(DATA_DFS, 'df1.xlsx')
+    launcher()
 
-    launcher2(fnames=[fname2, fname1])
+# def launcher2(file_paths=None, fname_json=None, fnames=None):
+#     app = QApplication()
+#     app.setWindowIcon(QIcon(ICON_APPLI))
+#     window = Main()
+#     app.setStyle("Fusion")
+#     # if file_paths is not None:
+#     #     window.maps.open_data(file_paths=file_paths)
+#     # if fname_json is not None:
+#     #     window.maps.load_fit_model(fname_json=fname_json)
+#     #
+#     # if file_paths is not None:
+#     #     window.spectrums.open_data(file_paths=file_paths)
+#     # if fname_json is not None:
+#     #     window.spectrums.open_fit_model(fname_json=fname_json)
+#
+#     if fnames is not None:
+#         window.visu.open_dfs(fnames=fnames)
+#     window.ui.show()
+#     sys.exit(app.exec())
+#
+#
+# if __name__ == "__main__":
+#     DIRNAME = os.path.dirname(__file__)
+#     DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
+#     DATA_MAPS = os.path.join(DIRNAME, "data_test", "RAW 2Dmaps")
+#     DATA_DFS = os.path.join(DIRNAME, "data_test")
+#     # fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
+#     # fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
+#     # fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
+#     # fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')
+#     # fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
+#     # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
+#     # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
+#     # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
+#     fname1 = os.path.join(DATA_DFS, 'Wafer300_sSOI.xlsx')
+#     fname2 = os.path.join(DATA_DFS, 'df1.xlsx')
+#
+#     launcher2(fnames=[fname2, fname1])

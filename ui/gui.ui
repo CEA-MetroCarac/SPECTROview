@@ -662,8 +662,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>413</width>
-                          <height>360</height>
+                          <width>428</width>
+                          <height>373</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -1134,8 +1134,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>46</width>
-                               <height>40</height>
+                               <width>774</width>
+                               <height>251</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -1509,8 +1509,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>413</width>
-                       <height>343</height>
+                       <width>322</width>
+                       <height>354</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
@@ -2497,8 +2497,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>236</width>
-                     <height>440</height>
+                     <width>215</width>
+                     <height>402</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -4094,8 +4094,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>337</width>
-                      <height>433</height>
+                      <width>341</width>
+                      <height>464</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,0,0,0,0,0">
@@ -4474,8 +4474,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>413</width>
-                          <height>360</height>
+                          <width>428</width>
+                          <height>394</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -4946,8 +4946,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>46</width>
-                               <height>40</height>
+                               <width>776</width>
+                               <height>272</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -5307,8 +5307,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>413</width>
-                       <height>343</height>
+                       <width>322</width>
+                       <height>354</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -7015,7 +7015,14 @@
              <number>5</number>
             </property>
             <item>
-             <widget class="QMdiArea" name="mdiArea"/>
+             <widget class="QMdiArea" name="mdiArea">
+              <property name="verticalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOn</enum>
+              </property>
+              <property name="horizontalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOff</enum>
+              </property>
+             </widget>
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_122">
@@ -7624,8 +7631,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>409</width>
-                <height>423</height>
+                <width>384</width>
+                <height>394</height>
                </rect>
               </property>
               <attribute name="label">
@@ -7950,8 +7957,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>293</width>
-                <height>178</height>
+                <width>256</width>
+                <height>160</height>
                </rect>
               </property>
               <attribute name="label">
@@ -8077,7 +8084,7 @@
      <x>0</x>
      <y>0</y>
      <width>1608</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSave">

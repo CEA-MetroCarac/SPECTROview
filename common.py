@@ -83,6 +83,7 @@ class Graph(QWidget):
         self.trendline_order =1
         self.show_trendline_eq =True
 
+
         self.figure = None
         self.ax = None
         self.canvas = None

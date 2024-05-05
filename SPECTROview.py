@@ -79,6 +79,7 @@ class Main:
             self.maps.save_fit_results)
         self.ui.btn_view_wafer.clicked.connect(self.maps.view_wafer_data)
 
+
         self.ui.btn_plot_wafer.clicked.connect(self.maps.plot3)
         self.ui.btn_plot_graph.clicked.connect(self.maps.plot4)
         self.ui.cbb_color_pallete.addItems(PALETTE)

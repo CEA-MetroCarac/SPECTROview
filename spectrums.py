@@ -842,6 +842,8 @@ class Spectrums(QObject):
         dfs_new["SPECTRUMS"] = self.df_fit_results
         self.visu.open_dfs(dfs=dfs_new, fnames=None)
 
+
+
     def plot2(self):
         """Plot graph """
         if self.filtered_df is not None:

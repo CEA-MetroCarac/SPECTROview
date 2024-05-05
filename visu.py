@@ -118,6 +118,7 @@ class Visu(QDialog):
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
 
+
     def upd_graph(self):
         """ Update the existing graph with new properties"""
         sel_graph, graph_dialog = self.get_sel_graph()

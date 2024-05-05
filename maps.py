@@ -1252,6 +1252,7 @@ class Maps(QObject):
         wafer_name, coords = self.spectra_id()
         view_df(self.ui.tabWidget, self.wafers[wafer_name])
 
+
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
 

@@ -662,8 +662,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>428</width>
-                          <height>373</height>
+                          <width>321</width>
+                          <height>360</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -1134,8 +1134,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>774</width>
-                               <height>251</height>
+                               <width>98</width>
+                               <height>40</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -1509,8 +1509,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>322</width>
-                       <height>354</height>
+                       <width>301</width>
+                       <height>343</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
@@ -2497,8 +2497,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>215</width>
-                     <height>402</height>
+                     <width>236</width>
+                     <height>440</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -4094,8 +4094,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>341</width>
-                      <height>464</height>
+                      <width>337</width>
+                      <height>328</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,0,0,0,0,0">
@@ -4474,8 +4474,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>428</width>
-                          <height>394</height>
+                          <width>321</width>
+                          <height>360</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -4946,8 +4946,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>776</width>
-                               <height>272</height>
+                               <width>98</width>
+                               <height>40</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -5307,8 +5307,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>322</width>
-                       <height>354</height>
+                       <width>301</width>
+                       <height>343</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -7027,6 +7027,20 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_122">
               <item>
+               <widget class="QPushButton" name="btn_minimize_all">
+                <property name="text">
+                 <string>Mini All</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_maximize_all">
+                <property name="text">
+                 <string>Maxi All</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <layout class="QHBoxLayout" name="horizontalLayout_123">
                 <item>
                  <widget class="QPushButton" name="btn_adjust_dpi">
@@ -7631,8 +7645,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>384</width>
-                <height>394</height>
+                <width>409</width>
+                <height>423</height>
                </rect>
               </property>
               <attribute name="label">
@@ -7957,8 +7971,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>256</width>
-                <height>160</height>
+                <width>293</width>
+                <height>178</height>
                </rect>
               </property>
               <attribute name="label">
@@ -8084,7 +8098,7 @@
      <x>0</x>
      <y>0</y>
      <width>1608</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSave">

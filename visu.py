@@ -55,6 +55,8 @@ class Visu(QDialog):
         # SAVE / LOAD
         self.ui.btn_save_work_2.clicked.connect(self.save)
         self.ui.btn_open_work_2.clicked.connect(self.load)
+        self.ui.btn_minimize_all.clicked.connect(self.minimize_all)
+        self.ui.btn_maximize_all.clicked.connect(self.restore_all)
     def add_graph(self, df_name=None, filters=None):
         """Plot new graph"""
         self.graph_id += 1
@@ -429,6 +431,17 @@ class Visu(QDialog):
         self.filtered_df = self.filter.apply_filters(current_filters)
         self.common.display_df_in_table(self.ui.tableWidget, self.filtered_df)
         return self.filtered_df
+
+    def minimize_all(self):
+        """Minimize all sub windows"""
+        for sub_window in self.ui.mdiArea.subWindowList():
+            sub_window.showMinimized()
+
+    def restore_all(self):
+        """Restore all sub windows to normal view"""
+        for sub_window in self.ui.mdiArea.subWindowList():
+            if sub_window.isMinimized():
+                sub_window.showNormal()
 
     def save(self):
         """Save current work"""

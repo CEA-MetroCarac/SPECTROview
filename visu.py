@@ -11,7 +11,9 @@ from common import PLOT_STYLES, PALETTE
 from common import Graph, Filter
 
 from PySide6.QtWidgets import QApplication, QFileDialog, QDialog, QVBoxLayout, \
-    QLineEdit, QListWidgetItem, QMdiSubWindow,QCheckBox, QMdiArea, QSizePolicy, QMessageBox
+    QLineEdit, QListWidgetItem, QMdiSubWindow, QCheckBox, QMdiArea, \
+    QSizePolicy, \
+    QMessageBox
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 
 
@@ -37,7 +39,8 @@ class Visu(QDialog):
         self.ui.btn_save_df_2.clicked.connect(self.save_df_to_excel)
 
         # FILTER
-        self.filter = Filter(self.ui.filter_query,self.ui.listbox_filters, self.sel_df)
+        self.filter = Filter(self.ui.filter_query, self.ui.listbox_filters,
+                             self.sel_df)
         self.ui.filter_query.returnPressed.connect(self.filter.add_filter)
         self.ui.btn_add_filter_4.clicked.connect(self.filter.add_filter)
         self.ui.btn_remove_filters_4.clicked.connect(self.filter.remove_filter)
@@ -55,13 +58,14 @@ class Visu(QDialog):
         self.ui.btn_adjust_dpi.clicked.connect(self.adjust_dpi)
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
-        self.ui.cbb_graph_list.currentIndexChanged.connect(self.select_sub_window_from_combo_box)
+        self.ui.cbb_graph_list.currentIndexChanged.connect(
+            self.select_sub_window_from_combo_box)
 
         # SAVE / LOAD
-        self.ui.btn_save_work_2.clicked.connect(self.save)
-        self.ui.btn_open_work_2.clicked.connect(self.load)
-        #self.ui.btn_minimize_all.clicked.connect(self.minimize_all)
-        #self.ui.btn_maximize_all.clicked.connect(self.restore_all)
+        self.ui.btn_save_work.clicked.connect(self.save)
+        self.ui.btn_load_work.clicked.connect(self.load)
+        # self.ui.btn_minimize_all.clicked.connect(self.minimize_all)
+        # self.ui.btn_maximize_all.clicked.connect(self.restore_all)
 
     def add_graph(self, df_name=None, filters=None):
         """Plot new graph"""
@@ -82,7 +86,8 @@ class Visu(QDialog):
         z = self.ui.cbb_z_2.currentText()
 
         # Get available graph IDs considering any vacancies
-        available_ids = [i for i in range(1, len(self.plots) + 2) if i not in self.plots]
+        available_ids = [i for i in range(1, len(self.plots) + 2) if
+                         i not in self.plots]
 
         # Use the smallest available ID or assign a new one
         if available_ids:
@@ -123,7 +128,8 @@ class Visu(QDialog):
 
         # Create a QDialog to hold the Graph instance
         graph_dialog = QDialog(self)
-        graph_dialog.setWindowTitle(f"Graph_{graph.graph_id}: ({x} vs. {y} vs. {z})")
+        graph_dialog.setWindowTitle(
+            f"Graph_{graph.graph_id}: ({x} vs. {y} vs. {z})")
         layout = QVBoxLayout()
         layout.addWidget(graph)
         graph_dialog.setLayout(layout)
@@ -136,7 +142,6 @@ class Visu(QDialog):
 
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
-
 
     def delete_graph(self, graph_id):
         """Delete a graph from the self.plots dictionary"""
@@ -196,9 +201,11 @@ class Visu(QDialog):
             sel_graph.trendline_order = float(self.ui.spb_trendline_oder.text())
             sel_graph.show_trendline_eq = self.ui.cb_trendline_eq.isChecked()
 
-            graph_dialog.setWindowTitle(f"Graph_{sel_graph.graph_id}: ({x} vs. {y} vs.{z})")
-            if plot_style =='wafer':
-                sel_graph.create_plot_widget(sel_graph.dpi, sel_graph.graph_layout)
+            graph_dialog.setWindowTitle(
+                f"Graph_{sel_graph.graph_id}: ({x} vs. {y} vs.{z})")
+            if plot_style == 'wafer':
+                sel_graph.create_plot_widget(sel_graph.dpi,
+                                             sel_graph.graph_layout)
                 sel_graph.plot(self.filtered_df)
             else:
                 sel_graph.plot(self.filtered_df)
@@ -207,7 +214,7 @@ class Visu(QDialog):
         sel_graph, graph_dialog = self.get_sel_graph()
         dpi = float(self.ui.spb_dpi.text())
         if sel_graph:
-            sel_graph.create_plot_widget(dpi, sel_graph.graph_layout )
+            sel_graph.create_plot_widget(dpi, sel_graph.graph_layout)
             QTimer.singleShot(100, self.update_graph)
 
     def on_selected_graph(self, sub_window):
@@ -249,7 +256,6 @@ class Visu(QDialog):
             self.ui.lbl_wafersize.setText(str(sel_graph.wafer_size))
             self.ui.cb_wafer_stats.setChecked(sel_graph.wafer_stats)
 
-
             # Rotation x label:
             self.ui.x_rot.setValue(sel_graph.x_rot)
             # Reflect Titles:
@@ -285,8 +291,10 @@ class Visu(QDialog):
             # Trendline
             self.ui.spb_trendline_oder.setValue(sel_graph.trendline_order)
             self.ui.cb_trendline_eq.setChecked(sel_graph.show_trendline_eq)
+
     def reflect_filters_to_gui(self, sel_graph):
-        """Reflect the filters of a graph object and their states to the df listbox"""
+        """Reflect the filters of a graph object and their states to the df
+        listbox"""
         # Clear the existing items and uncheck them
         for index in range(self.ui.listbox_filters.count()):
             item = self.ui.listbox_filters.item(index)
@@ -304,10 +312,13 @@ class Visu(QDialog):
                 item = self.ui.listbox_filters.item(index)
                 if isinstance(item, QListWidgetItem):
                     widget = self.ui.listbox_filters.itemWidget(item)
-                    if isinstance(widget, QCheckBox) and widget.text() == filter_expression:
+                    if isinstance(widget,
+                                  QCheckBox) and widget.text() == \
+                            filter_expression:
                         existing_item = item
                         break
-            # Update the state if the filter expression already exists, otherwise add a new item
+            # Update the state if the filter expression already exists,
+            # otherwise add a new item
             if existing_item:
                 checkbox = self.ui.listbox_filters.itemWidget(existing_item)
                 checkbox.setChecked(filter_state)
@@ -438,6 +449,7 @@ class Visu(QDialog):
             for item in items:
                 row = self.ui.dfs_listbox.row(item)
                 self.ui.dfs_listbox.takeItem(row)
+
     def save_df_to_excel(self):
         """Functon to save fitted results in an excel file"""
         last_dir = self.settings.value("last_directory", "/")
@@ -455,6 +467,7 @@ class Visu(QDialog):
                 QMessageBox.warning(
                     self.ui.tabWidget, "Warning",
                     "DataFrame is empty. Nothing to save.")
+
     def show_df(self):
         """To view selected dataframe"""
         current_filters = self.filter.get_current_filters()
@@ -468,7 +481,8 @@ class Visu(QDialog):
         current_filters = self.filter.get_current_filters()
         current_df = self.apply_filters(self.sel_df, current_filters)
         if self.filtered_df is not None:  # Check if filtered_df is not None
-            self.common.display_df_in_table(self.ui.tableWidget, self.filtered_df)
+            self.common.display_df_in_table(self.ui.tableWidget,
+                                            self.filtered_df)
 
     def apply_filters(self, df=None, filters=None):
         """Apply filters to the specified dataframe or the current dataframe"""
@@ -485,7 +499,8 @@ class Visu(QDialog):
         self.filtered_df = self.filter.apply_filters(current_filters)
 
         if self.filtered_df is not None:  # Check if filtered_df is not None
-            self.common.display_df_in_table(self.ui.tableWidget, self.filtered_df)
+            self.common.display_df_in_table(self.ui.tableWidget,
+                                            self.filtered_df)
 
         return self.filtered_df
 
@@ -493,7 +508,9 @@ class Visu(QDialog):
         """Populate graph titles into a combobox"""
         self.ui.cbb_graph_list.clear()
         for graph_id, graph in self.plots.items():
-            self.ui.cbb_graph_list.addItem(f"Graph_{graph_id}: ({graph.x} vs. {graph.y} vs. {graph.z or 'None'})")
+            self.ui.cbb_graph_list.addItem(
+                f"Graph_{graph_id}: ({graph.x} vs. {graph.y} vs. "
+                f"{graph.z or 'None'})")
 
     def select_sub_window_from_combo_box(self, index):
         graph_title = self.ui.cbb_graph_list.currentText()
@@ -501,17 +518,20 @@ class Visu(QDialog):
             graph_dialog = sub_window.widget()
             if isinstance(graph_dialog, QDialog):
                 graph = graph_dialog.layout().itemAt(0).widget()
-                if graph and graph_title == f"Graph_{graph.graph_id}: ({graph.x} vs. {graph.y} vs. {graph.z or 'None'})":
+                if graph and graph_title == f"Graph_{graph.graph_id}: (" \
+                                            f"{graph.x} vs. {graph.y} vs. " \
+                                            f"{graph.z or 'None'})":
                     if sub_window.isMinimized():
                         sub_window.showNormal()
                     self.ui.mdiArea.setActiveSubWindow(sub_window)
                     return
+
     def clear_env(self):
         # Clear original dataframes
         self.original_dfs = {}
         self.sel_df = None
         self.filtered_df = None
-        self.filter.filters= []
+        self.filter.filters = []
         self.ui.mdiArea.closeAllSubWindows()
         self.plots.clear()
         # Clear GUI elements
@@ -525,27 +545,14 @@ class Visu(QDialog):
         self.ui.tableWidget.setColumnCount(0)
         self.ui.cbb_graph_list.clear()
 
-
-    # def minimize_all(self):
-    #     """Minimize all sub windows"""
-    #     for sub_window in self.ui.mdiArea.subWindowList():
-    #         sub_window.showMinimized()
-    #         self.populate_graph_combo_box()
-    #
-    # def restore_all(self):
-    #     """Restore all sub windows to normal view"""
-    #     for sub_window in self.ui.mdiArea.subWindowList():
-    #         if sub_window.isMinimized():
-    #             sub_window.showNormal()
-    #             self.populate_graph_combo_box()
-
     def save(self):
         """Save current work"""
         try:
             file_path, _ = QFileDialog.getSaveFileName(None,
                                                        "Save work",
                                                        "",
-                                                       "SPECTROview Files (*.json)")
+                                                       "SPECTROview Files ("
+                                                       "*.json)")
             if file_path:
                 # Convert Graph objects to serializable format
                 plots_data = {}
@@ -583,7 +590,8 @@ class Visu(QDialog):
 
                 # Prepare data to save
                 data_to_save = {
-                    'original_dfs': {key: df.to_dict() for key, df in self.original_dfs.items()},
+                    'original_dfs': {key: df.to_dict() for key, df in
+                                     self.original_dfs.items()},
                     'plots': plots_data,
                 }
 
@@ -600,16 +608,21 @@ class Visu(QDialog):
             file_path, _ = QFileDialog.getOpenFileName(None,
                                                        "Load work",
                                                        "",
-                                                       "SPECTROview Files (*.json)")
+                                                       "SPECTROview Files ("
+                                                       "*.json)")
             if file_path:
                 with open(file_path, 'r') as f:
                     load = json.load(f)
-                    self.original_dfs = {key: pd.DataFrame(value) for key, value in
+                    self.original_dfs = {key: pd.DataFrame(value) for key, value
+                                         in
                                          load.get('original_dfs', {}).items()}
                     self.update_dfs_list()
-                    self.sel_df = pd.DataFrame(load.get('sel_df', {})) if load.get('sel_df') is not None else None
+                    self.sel_df = pd.DataFrame(
+                        load.get('sel_df', {})) if load.get(
+                        'sel_df') is not None else None
                     self.filter.filters = load.get('filters', [])
-                    self.filtered_df = pd.DataFrame(load.get('filtered_df', {})) if load.get(
+                    self.filtered_df = pd.DataFrame(
+                        load.get('filtered_df', {})) if load.get(
                         'filtered_df') is not None else None
 
                     self.ui.mdiArea.closeAllSubWindows()
@@ -645,11 +658,13 @@ class Visu(QDialog):
                         graph.wafer_size = graph_data['wafer_size']
                         graph.wafer_stats = graph_data['wafer_stats']
                         graph.trendline_order = graph_data['trendline_order']
-                        graph.show_trendline_eq = graph_data['show_trendline_eq']
+                        graph.show_trendline_eq = graph_data[
+                            'show_trendline_eq']
 
                         # Plot the graph
                         graph.create_plot_widget(graph.dpi)
-                        filtered_df = self.apply_filters(self.original_dfs[graph.df_name], graph.filters)
+                        filtered_df = self.apply_filters(
+                            self.original_dfs[graph.df_name], graph.filters)
                         graph.plot(filtered_df)
 
                         # Store the plot in the dictionary with graph_id as key
@@ -657,7 +672,9 @@ class Visu(QDialog):
 
                         # Create a QDialog to hold the Graph instance
                         graph_dialog = QDialog(self)
-                        graph_dialog.setWindowTitle(f"Graph_{graph.graph_id}: ({graph.x} vs. {graph.y} vs. {graph.z})")
+                        graph_dialog.setWindowTitle(
+                            f"Graph_{graph.graph_id}: ({graph.x} vs. "
+                            f"{graph.y} vs. {graph.z})")
                         layout = QVBoxLayout()
                         layout.addWidget(graph)
                         graph_dialog.setLayout(layout)
@@ -665,7 +682,8 @@ class Visu(QDialog):
                         # Add the QDialog to the mdiArea
                         sub_window = MdiSubWindow(graph.graph_id)
                         sub_window.setWidget(graph_dialog)
-                        # Connect the subwindow's close event to delete the graph
+                        # Connect the subwindow's close event to delete the
+                        # graph
                         sub_window.closed.connect(self.delete_graph)
                         self.ui.mdiArea.addSubWindow(sub_window)
                         sub_window.show()
@@ -676,6 +694,7 @@ class Visu(QDialog):
         except Exception as e:
             show_alert(f"Error loading work: {e}")
 
+
 class MdiSubWindow(QMdiSubWindow):
     """Custom class of QMdiSubWindow to get signal when closing sub window"""
     closed = Signal(int)
@@ -683,6 +702,7 @@ class MdiSubWindow(QMdiSubWindow):
     def __init__(self, graph_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.graph_id = graph_id
+
     def closeEvent(self, event):
         """Override closeEvent to emit a signal when the subwindow is closing"""
         self.closed.emit(self.graph_id)

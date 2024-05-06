@@ -258,22 +258,24 @@ class Filter:
             checked_filters = self.get_current_filters()
             self.filters = checked_filters
         # Apply all filters at once
-        self.filtered_df = self.df.copy()
-        # copy of the original DataFrame
-        for filter_data in self.filters:
-            filter_expr = filter_data["expression"]
-            is_checked = filter_data["state"]
+        self.filtered_df = self.df.copy() if self.df is not None else None  # Check if self.df is not None
 
-            if is_checked:
-                try:
-                    filter_expr = str(filter_expr)
-                    print(f"Applying filter expression: {filter_expr}")
-                    # Apply the filter
-                    self.filtered_df = self.filtered_df.query(filter_expr)
-                except Exception as e:
-                    #show_alert(f"Filter error: {str(e)}")
-                    print(f"Error applying filter: {str(e)}")
-                    print(f"Filter expression causing the error: {filter_expr}")
+        if self.filtered_df is not None:  # Check if filtered_df is not None
+            for filter_data in self.filters:
+                filter_expr = filter_data["expression"]
+                is_checked = filter_data["state"]
+
+                if is_checked:
+                    try:
+                        filter_expr = str(filter_expr)
+                        print(f"Applying filter expression: {filter_expr}")
+                        # Apply the filter
+                        self.filtered_df = self.filtered_df.query(filter_expr)
+                    except Exception as e:
+                        # show_alert(f"Filter error: {str(e)}")
+                        print(f"Error applying filter: {str(e)}")
+                        print(f"Filter expression causing the error: {filter_expr}")
+
         return self.filtered_df
 
     def upd_filter_listbox(self):

@@ -11,7 +11,7 @@ from common import PLOT_STYLES, PALETTE
 from common import Graph, Filter
 
 from PySide6.QtWidgets import QApplication, QFileDialog, QDialog, QVBoxLayout, \
-    QLineEdit, QListWidgetItem, QMdiSubWindow,QCheckBox, QMdiArea, QSizePolicy
+    QLineEdit, QListWidgetItem, QMdiSubWindow,QCheckBox, QMdiArea, QSizePolicy, QMessageBox
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 
 
@@ -25,12 +25,16 @@ class Visu(QDialog):
         self.common = common
         self.setWindowTitle("Graph Plot")
 
+        self.ui.btn_clear_env.clicked.connect(self.clear_env)
+
         # DATAFRAME
         self.original_dfs = {}
         self.sel_df = None
         self.ui.btn_open_dfs.clicked.connect(self.open_dfs)
         self.ui.btn_view_df_3.clicked.connect(self.show_df)
         self.ui.dfs_listbox.itemSelectionChanged.connect(self.update_gui)
+        self.ui.btn_remove_df_2.clicked.connect(self.remove_df)
+        self.ui.btn_save_df_2.clicked.connect(self.save_df_to_excel)
 
         # FILTER
         self.filter = Filter(self.ui.filter_query,self.ui.listbox_filters, self.sel_df)
@@ -51,15 +55,16 @@ class Visu(QDialog):
         self.ui.btn_adjust_dpi.clicked.connect(self.adjust_dpi)
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
+        self.ui.cbb_graph_list.currentIndexChanged.connect(self.select_sub_window_from_combo_box)
 
         # SAVE / LOAD
         self.ui.btn_save_work_2.clicked.connect(self.save)
         self.ui.btn_open_work_2.clicked.connect(self.load)
-        self.ui.btn_minimize_all.clicked.connect(self.minimize_all)
-        self.ui.btn_maximize_all.clicked.connect(self.restore_all)
+        #self.ui.btn_minimize_all.clicked.connect(self.minimize_all)
+        #self.ui.btn_maximize_all.clicked.connect(self.restore_all)
+
     def add_graph(self, df_name=None, filters=None):
         """Plot new graph"""
-        self.graph_id += 1
         # Get the current dataframe (filtered or not)
         if filters:
             current_filters = filters
@@ -76,8 +81,17 @@ class Visu(QDialog):
         y = self.ui.cbb_y_2.currentText()
         z = self.ui.cbb_z_2.currentText()
 
+        # Get available graph IDs considering any vacancies
+        available_ids = [i for i in range(1, len(self.plots) + 2) if i not in self.plots]
+
+        # Use the smallest available ID or assign a new one
+        if available_ids:
+            graph_id = min(available_ids)
+        else:
+            graph_id = len(self.plots) + 1
+
         # Create an instance of the Graph class
-        graph = Graph(graph_id=self.graph_id)
+        graph = Graph(graph_id=graph_id)
 
         graph.plot_style = self.ui.cbb_plotstyle.currentText()
         graph.plot_title = self.ui.lbl_plot_title.text()
@@ -115,15 +129,20 @@ class Visu(QDialog):
         graph_dialog.setLayout(layout)
 
         # Add the QDialog to a QMdiSubWindow
-        sub_window = QMdiSubWindow()
+        sub_window = MdiSubWindow(graph_id)
         sub_window.setWidget(graph_dialog)
+        # delete graph when sub windows is closed
+        sub_window.closed.connect(self.delete_graph)
+
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
 
-        #self.ui.mdiArea.setViewMode(QMdiArea.TabbedView)
-        #self.ui.mdiArea.tileSubWindows()
-        #self.ui.mdiArea.cascadeSubWindows(Qt.Vertical)
-        #self.ui.mdiArea.tileSubWindows(Qt.Vertical)
+
+    def delete_graph(self, graph_id):
+        """Delete a graph from the self.plots dictionary"""
+        if graph_id in self.plots:
+            del self.plots[graph_id]
+            print(f"Plot is deleted: {graph_id}")
 
     def update_graph(self):
         """ Update the existing graph with new properties"""
@@ -400,9 +419,42 @@ class Visu(QDialog):
         """Get the current selected df among the df within 'dfr' dict"""
         sel_item = self.ui.dfs_listbox.currentItem()
         sel_df_name = sel_item.text()
-        self.sel_df = self.original_dfs[sel_df_name]
+        if sel_df_name in self.original_dfs:
+            self.sel_df = self.original_dfs[sel_df_name]
+        else:
+            self.sel_df = None  # Return None if the dataframe doesn't exist
         return self.sel_df
 
+    def remove_df(self):
+        """Remove a dataframe from the listbox and self.original_dfs"""
+        sel_item = self.ui.dfs_listbox.currentItem()
+        sel_df_name = sel_item.text()
+        if sel_df_name in self.original_dfs:
+            del self.original_dfs[sel_df_name]
+
+        # Remove from listbox
+        items = self.ui.dfs_listbox.findItems(sel_df_name, Qt.MatchExactly)
+        if items:
+            for item in items:
+                row = self.ui.dfs_listbox.row(item)
+                self.ui.dfs_listbox.takeItem(row)
+    def save_df_to_excel(self):
+        """Functon to save fitted results in an excel file"""
+        last_dir = self.settings.value("last_directory", "/")
+        save_path, _ = QFileDialog.getSaveFileName(
+            self.ui.tabWidget, "Save DF fit results", last_dir,
+            "Excel Files (*.xlsx)")
+        if save_path:
+            sel_df = self.get_sel_df()
+            if not sel_df.empty:
+                sel_df.to_excel(save_path, index=False)
+                QMessageBox.information(
+                    self.ui.tabWidget, "Success",
+                    "DataFrame saved successfully.")
+            else:
+                QMessageBox.warning(
+                    self.ui.tabWidget, "Warning",
+                    "DataFrame is empty. Nothing to save.")
     def show_df(self):
         """To view selected dataframe"""
         current_filters = self.filter.get_current_filters()
@@ -415,7 +467,8 @@ class Visu(QDialog):
     def show_df_in_gui(self):
         current_filters = self.filter.get_current_filters()
         current_df = self.apply_filters(self.sel_df, current_filters)
-        self.common.display_df_in_table(self.ui.tableWidget, current_df)
+        if self.filtered_df is not None:  # Check if filtered_df is not None
+            self.common.display_df_in_table(self.ui.tableWidget, self.filtered_df)
 
     def apply_filters(self, df=None, filters=None):
         """Apply filters to the specified dataframe or the current dataframe"""
@@ -427,21 +480,64 @@ class Visu(QDialog):
             current_filters = self.filter.get_current_filters()
         else:
             current_filters = filters
+
         self.filter.df = sel_df
         self.filtered_df = self.filter.apply_filters(current_filters)
-        self.common.display_df_in_table(self.ui.tableWidget, self.filtered_df)
+
+        if self.filtered_df is not None:  # Check if filtered_df is not None
+            self.common.display_df_in_table(self.ui.tableWidget, self.filtered_df)
+
         return self.filtered_df
 
-    def minimize_all(self):
-        """Minimize all sub windows"""
-        for sub_window in self.ui.mdiArea.subWindowList():
-            sub_window.showMinimized()
+    def populate_graph_combo_box(self):
+        """Populate graph titles into a combobox"""
+        self.ui.cbb_graph_list.clear()
+        for graph_id, graph in self.plots.items():
+            self.ui.cbb_graph_list.addItem(f"Graph_{graph_id}: ({graph.x} vs. {graph.y} vs. {graph.z or 'None'})")
 
-    def restore_all(self):
-        """Restore all sub windows to normal view"""
+    def select_sub_window_from_combo_box(self, index):
+        graph_title = self.ui.cbb_graph_list.currentText()
         for sub_window in self.ui.mdiArea.subWindowList():
-            if sub_window.isMinimized():
-                sub_window.showNormal()
+            graph_dialog = sub_window.widget()
+            if isinstance(graph_dialog, QDialog):
+                graph = graph_dialog.layout().itemAt(0).widget()
+                if graph and graph_title == f"Graph_{graph.graph_id}: ({graph.x} vs. {graph.y} vs. {graph.z or 'None'})":
+                    if sub_window.isMinimized():
+                        sub_window.showNormal()
+                    self.ui.mdiArea.setActiveSubWindow(sub_window)
+                    return
+    def clear_env(self):
+        # Clear original dataframes
+        self.original_dfs = {}
+        self.sel_df = None
+        self.filtered_df = None
+        self.filter.filters= []
+        self.ui.mdiArea.closeAllSubWindows()
+        self.plots.clear()
+        # Clear GUI elements
+        self.ui.dfs_listbox.clear()
+        self.ui.cbb_x_2.clear()
+        self.ui.cbb_y_2.clear()
+        self.ui.cbb_z_2.clear()
+        self.ui.listbox_filters.clear()
+        self.ui.tableWidget.clearContents()
+        self.ui.tableWidget.setRowCount(0)
+        self.ui.tableWidget.setColumnCount(0)
+        self.ui.cbb_graph_list.clear()
+
+
+    # def minimize_all(self):
+    #     """Minimize all sub windows"""
+    #     for sub_window in self.ui.mdiArea.subWindowList():
+    #         sub_window.showMinimized()
+    #         self.populate_graph_combo_box()
+    #
+    # def restore_all(self):
+    #     """Restore all sub windows to normal view"""
+    #     for sub_window in self.ui.mdiArea.subWindowList():
+    #         if sub_window.isMinimized():
+    #             sub_window.showNormal()
+    #             self.populate_graph_combo_box()
 
     def save(self):
         """Save current work"""
@@ -516,9 +612,8 @@ class Visu(QDialog):
                     self.filtered_df = pd.DataFrame(load.get('filtered_df', {})) if load.get(
                         'filtered_df') is not None else None
 
-                    # Clear current plots before loading
-                    self.plots.clear()
                     self.ui.mdiArea.closeAllSubWindows()
+                    self.plots = {}
 
                     # Load plots
                     plots_data = load.get('plots', {})
@@ -568,13 +663,27 @@ class Visu(QDialog):
                         graph_dialog.setLayout(layout)
 
                         # Add the QDialog to the mdiArea
-                        sub_window = QMdiSubWindow()
+                        sub_window = MdiSubWindow(graph.graph_id)
                         sub_window.setWidget(graph_dialog)
+                        # Connect the subwindow's close event to delete the graph
+                        sub_window.closed.connect(self.delete_graph)
                         self.ui.mdiArea.addSubWindow(sub_window)
                         sub_window.show()
 
                     self.filter.upd_filter_listbox()
-
+                    self.populate_graph_combo_box()
 
         except Exception as e:
             show_alert(f"Error loading work: {e}")
+
+class MdiSubWindow(QMdiSubWindow):
+    """Custom class of QMdiSubWindow to get signal when closing sub window"""
+    closed = Signal(int)
+
+    def __init__(self, graph_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.graph_id = graph_id
+    def closeEvent(self, event):
+        """Override closeEvent to emit a signal when the subwindow is closing"""
+        self.closed.emit(self.graph_id)
+        super().closeEvent(event)

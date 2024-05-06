@@ -662,8 +662,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>321</width>
-                          <height>360</height>
+                          <width>428</width>
+                          <height>375</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -1134,8 +1134,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>98</width>
-                               <height>40</height>
+                               <width>730</width>
+                               <height>214</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -1509,8 +1509,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>301</width>
-                       <height>343</height>
+                       <width>428</width>
+                       <height>379</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
@@ -4094,8 +4094,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>337</width>
-                      <height>328</height>
+                      <width>344</width>
+                      <height>465</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,0,0,0,0,0">
@@ -4474,8 +4474,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>321</width>
-                          <height>360</height>
+                          <width>428</width>
+                          <height>400</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -4946,8 +4946,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>98</width>
-                               <height>40</height>
+                               <width>752</width>
+                               <height>239</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -5307,7 +5307,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>301</width>
+                       <width>413</width>
                        <height>343</height>
                       </rect>
                      </property>
@@ -7027,18 +7027,7 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_122">
               <item>
-               <widget class="QPushButton" name="btn_minimize_all">
-                <property name="text">
-                 <string>Mini All</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="btn_maximize_all">
-                <property name="text">
-                 <string>Maxi All</string>
-                </property>
-               </widget>
+               <widget class="QComboBox" name="cbb_graph_list"/>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_123">
@@ -7073,19 +7062,6 @@
                  <string>Copy Graph</string>
                 </property>
                </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_48">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_110">
@@ -7409,7 +7385,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_save_all_df_2">
+                 <widget class="QPushButton" name="btn_save_df_2">
                   <property name="minimumSize">
                    <size>
                     <width>30</width>
@@ -7615,6 +7591,26 @@
                </property>
                <property name="text">
                 <string>Add a line</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_clear_env">
+               <property name="text">
+                <string>Clear env</string>
                </property>
               </widget>
              </item>

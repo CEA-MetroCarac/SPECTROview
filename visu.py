@@ -139,9 +139,11 @@ class Visu(QDialog):
         sub_window.setWidget(graph_dialog)
         # delete graph when sub windows is closed
         sub_window.closed.connect(self.delete_graph)
-
+        # Set initial size of the QMdiSubWindow
+        sub_window.resize(600, 450)
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
+        QTimer.singleShot(100, self.update_graph)
 
     def delete_graph(self, graph_id):
         """Delete a graph from the self.plots dictionary"""
@@ -407,7 +409,7 @@ class Visu(QDialog):
 
     def copy_fig_to_clb(self):
         """Copy the selected figure to clipboard"""
-        sel_graph = self.get_sel_graph()
+        sel_graph, graph_dialog = self.get_sel_graph()
         self.common.copy_fig_to_clb(canvas=sel_graph.canvas)
 
     def get_sel_graph(self):
@@ -682,11 +684,11 @@ class Visu(QDialog):
                         # Add the QDialog to the mdiArea
                         sub_window = MdiSubWindow(graph.graph_id)
                         sub_window.setWidget(graph_dialog)
-                        # Connect the subwindow's close event to delete the
-                        # graph
                         sub_window.closed.connect(self.delete_graph)
                         self.ui.mdiArea.addSubWindow(sub_window)
+                        sub_window.resize(600, 450)
                         sub_window.show()
+                        self.update_graph()
 
                     self.filter.upd_filter_listbox()
                     self.populate_graph_combo_box()

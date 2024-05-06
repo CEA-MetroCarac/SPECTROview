@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icon">
+    <file>iconpack/icons8-documents-folder-80.png</file>
     <file>iconpack/baseline.png</file>
     <file>iconpack/dark.png</file>
     <file>iconpack/dark-light.png</file>

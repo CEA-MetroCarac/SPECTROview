@@ -45,11 +45,15 @@ class Main:
             self.toggle_dark_mode()  # Toggle to dark mode by default
         self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
+        self.ui.actionAbout.triggered.connect(self.show_about)
+        self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
 
         # Create an instance of Dataframe and pass the self.ui object
         self.visu = Visu(self.settings, self.ui, self.common)
-        self.spectrums = Spectrums(self.settings, self.ui, self.common, self.visu)
-        self.maps = Maps(self.settings, self.ui,  self.spectrums, self.common, self.visu)
+        self.spectrums = Spectrums(self.settings, self.ui, self.common,
+                                   self.visu)
+        self.maps = Maps(self.settings, self.ui, self.spectrums, self.common,
+                         self.visu)
         self.fitmodel_manager = FitModelManager(self.settings)
 
         ########################################################
@@ -78,7 +82,6 @@ class Main:
         self.ui.btn_save_fit_results.clicked.connect(
             self.maps.save_fit_results)
         self.ui.btn_view_wafer.clicked.connect(self.maps.view_wafer_data)
-
 
         self.ui.btn_plot_wafer.clicked.connect(self.maps.plot3)
         self.ui.btn_plot_graph.clicked.connect(self.maps.plot4)

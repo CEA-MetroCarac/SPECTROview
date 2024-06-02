@@ -1047,3 +1047,22 @@ def view_df(tabWidget, df):
     layout = QVBoxLayout(df_viewer)
     layout.addWidget(table_widget)
     df_viewer.show()
+
+def dragEnterEvent(event):
+    if event.mimeData().hasUrls():
+        event.acceptProposedAction()
+    else:
+        event.ignore()
+
+def dragMoveEvent(event):
+    if event.mimeData().hasUrls():
+        event.acceptProposedAction()
+    else:
+        event.ignore()
+
+def dropEvent(event):
+    if event.mimeData().hasUrls():
+        file_paths = [url.toLocalFile() for url in event.mimeData().urls()]
+        self.open_data(file_paths=file_paths)
+    else:
+        event.ignore()

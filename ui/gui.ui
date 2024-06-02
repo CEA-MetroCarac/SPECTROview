@@ -54,7 +54,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_wafer">
        <attribute name="title">
@@ -236,7 +236,7 @@
                      <string/>
                     </property>
                     <property name="icon">
-                     <iconset resource="resources_new.qrc">
+                     <iconset>
                       <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                     </property>
                     <property name="iconSize">
@@ -663,7 +663,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>341</height>
+                          <height>375</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -729,7 +729,6 @@
                              <widget class="QLabel" name="label_54">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -836,7 +835,6 @@
                              <widget class="QLabel" name="label_52">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -1037,7 +1035,6 @@
                              <widget class="QLabel" name="label_57">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -1137,8 +1134,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>774</width>
-                               <height>223</height>
+                               <width>730</width>
+                               <height>214</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -1229,7 +1226,7 @@
                                 <string>Copy model</string>
                                </property>
                                <property name="icon">
-                                <iconset resource="resources_new.qrc">
+                                <iconset>
                                  <normaloff>:/icon/iconpack/copy10.png</normaloff>:/icon/iconpack/copy10.png</iconset>
                                </property>
                               </widget>
@@ -1275,7 +1272,7 @@
                                 <string>Paste model</string>
                                </property>
                                <property name="icon">
-                                <iconset resource="resources_new.qrc">
+                                <iconset>
                                  <normaloff>:/icon/iconpack/copy_label.png.png</normaloff>:/icon/iconpack/copy_label.png.png</iconset>
                                </property>
                               </widget>
@@ -1289,7 +1286,7 @@
                                 <string>Save Model</string>
                                </property>
                                <property name="icon">
-                                <iconset resource="resources_new.qrc">
+                                <iconset>
                                  <normaloff>:/icon/iconpack/save11.png</normaloff>:/icon/iconpack/save11.png</iconset>
                                </property>
                               </widget>
@@ -1512,8 +1509,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
-                       <height>350</height>
+                       <width>301</width>
+                       <height>343</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
@@ -1554,7 +1551,6 @@
                         </property>
                         <property name="font">
                          <font>
-                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -1565,7 +1561,7 @@
                          <string> Collect fit results</string>
                         </property>
                         <property name="icon">
-                         <iconset resource="resources_new.qrc">
+                         <iconset>
                           <normaloff>:/icon/iconpack/collect.png</normaloff>:/icon/iconpack/collect.png</iconset>
                         </property>
                         <property name="iconSize">
@@ -1715,7 +1711,7 @@
                               <string>Add filter(s)</string>
                              </property>
                              <property name="icon">
-                              <iconset resource="resources_new.qrc">
+                              <iconset>
                                <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
                              </property>
                             </widget>
@@ -1762,7 +1758,7 @@
                               <string>Remove filter</string>
                              </property>
                              <property name="icon">
-                              <iconset resource="resources_new.qrc">
+                              <iconset>
                                <normaloff>:/icon/iconpack/close.png</normaloff>:/icon/iconpack/close.png</iconset>
                              </property>
                             </widget>
@@ -1776,7 +1772,7 @@
                               <string>Apply filter(s)</string>
                              </property>
                              <property name="icon">
-                              <iconset resource="resources_new.qrc">
+                              <iconset>
                                <normaloff>:/icon/iconpack/add.png</normaloff>:/icon/iconpack/add.png</iconset>
                              </property>
                             </widget>
@@ -1875,7 +1871,7 @@
                           <string/>
                          </property>
                          <property name="icon">
-                          <iconset resource="resources_new.qrc">
+                          <iconset>
                            <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
                          </property>
                          <property name="iconSize">
@@ -1913,7 +1909,7 @@
                           <string/>
                          </property>
                          <property name="icon">
-                          <iconset resource="resources_new.qrc">
+                          <iconset>
                            <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
                          </property>
                          <property name="iconSize">
@@ -1945,7 +1941,7 @@
                           <string/>
                          </property>
                          <property name="icon">
-                          <iconset resource="resources_new.qrc">
+                          <iconset>
                            <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
                          </property>
                          <property name="iconSize">
@@ -2119,7 +2115,7 @@
                             <string/>
                            </property>
                            <property name="icon">
-                            <iconset resource="resources_new.qrc">
+                            <iconset>
                              <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                            </property>
                            <property name="iconSize">
@@ -2440,7 +2436,7 @@
                             <string/>
                            </property>
                            <property name="icon">
-                            <iconset resource="resources_new.qrc">
+                            <iconset>
                              <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                            </property>
                            <property name="iconSize">
@@ -2501,8 +2497,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>201</width>
-                     <height>375</height>
+                     <width>236</width>
+                     <height>440</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -2511,7 +2507,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -2675,7 +2670,6 @@
                       <property name="font">
                        <font>
                         <pointsize>12</pointsize>
-                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -3154,7 +3148,6 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -3288,7 +3281,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/icons8-folder-96.png</normaloff>:/icon/iconpack/icons8-folder-96.png</iconset>
                </property>
                <property name="iconSize">
@@ -3326,7 +3319,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/save.png</normaloff>:/icon/iconpack/save.png</iconset>
                </property>
                <property name="iconSize">
@@ -3364,7 +3357,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/icons8-documents-folder-96.png</normaloff>:/icon/iconpack/icons8-documents-folder-96.png</iconset>
                </property>
                <property name="iconSize">
@@ -3387,7 +3380,7 @@
                 <string/>
                </property>
                <property name="pixmap">
-                <pixmap resource="resources_new.qrc">:/icon/logo.png</pixmap>
+                <pixmap>:/icon/logo.png</pixmap>
                </property>
               </widget>
              </item>
@@ -3448,7 +3441,7 @@
                    <string>Remove</string>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/icons8-trash-128.png</normaloff>:/icon/iconpack/icons8-trash-128.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -3471,7 +3464,7 @@
                    <string>Show</string>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -3494,7 +3487,7 @@
                    <string>Save</string>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -3558,7 +3551,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/select-all.png</normaloff>:/icon/iconpack/select-all.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -3596,7 +3589,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/vertical-line.png</normaloff>:/icon/iconpack/vertical-line.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -3634,7 +3627,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/horizontal-line.png</normaloff>:/icon/iconpack/horizontal-line.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -3998,7 +3991,7 @@
                      <string/>
                     </property>
                     <property name="icon">
-                     <iconset resource="resources_new.qrc">
+                     <iconset>
                       <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                     </property>
                     <property name="iconSize">
@@ -4101,8 +4094,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>339</width>
-                      <height>507</height>
+                      <width>344</width>
+                      <height>465</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,0,0,0,0,0">
@@ -4111,7 +4104,6 @@
                        <property name="font">
                         <font>
                          <pointsize>12</pointsize>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -4483,7 +4475,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>358</height>
+                          <height>400</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -4549,7 +4541,6 @@
                              <widget class="QLabel" name="label_65">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -4656,7 +4647,6 @@
                              <widget class="QLabel" name="label_69">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -4857,7 +4847,6 @@
                              <widget class="QLabel" name="label_72">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -4957,8 +4946,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>776</width>
-                               <height>240</height>
+                               <width>752</width>
+                               <height>239</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -5049,7 +5038,7 @@
                                 <string>Copy model</string>
                                </property>
                                <property name="icon">
-                                <iconset resource="resources_new.qrc">
+                                <iconset>
                                  <normaloff>:/icon/iconpack/copy10.png</normaloff>:/icon/iconpack/copy10.png</iconset>
                                </property>
                               </widget>
@@ -5098,7 +5087,7 @@
                                 <string>Paste model</string>
                                </property>
                                <property name="icon">
-                                <iconset resource="resources_new.qrc">
+                                <iconset>
                                  <normaloff>:/icon/iconpack/copy_label.png.png</normaloff>:/icon/iconpack/copy_label.png.png</iconset>
                                </property>
                               </widget>
@@ -5112,7 +5101,7 @@
                                 <string>Save Model</string>
                                </property>
                                <property name="icon">
-                                <iconset resource="resources_new.qrc">
+                                <iconset>
                                  <normaloff>:/icon/iconpack/save11.png</normaloff>:/icon/iconpack/save11.png</iconset>
                                </property>
                               </widget>
@@ -5318,8 +5307,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
-                       <height>350</height>
+                       <width>301</width>
+                       <height>343</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -5360,7 +5349,6 @@
                         </property>
                         <property name="font">
                          <font>
-                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -5371,7 +5359,7 @@
                          <string> Collect fit results</string>
                         </property>
                         <property name="icon">
-                         <iconset resource="resources_new.qrc">
+                         <iconset>
                           <normaloff>:/icon/iconpack/collect.png</normaloff>:/icon/iconpack/collect.png</iconset>
                         </property>
                         <property name="iconSize">
@@ -5521,7 +5509,7 @@
                               <string>Add filter(s)</string>
                              </property>
                              <property name="icon">
-                              <iconset resource="resources_new.qrc">
+                              <iconset>
                                <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
                              </property>
                             </widget>
@@ -5568,7 +5556,7 @@
                               <string>Remove filter</string>
                              </property>
                              <property name="icon">
-                              <iconset resource="resources_new.qrc">
+                              <iconset>
                                <normaloff>:/icon/iconpack/close.png</normaloff>:/icon/iconpack/close.png</iconset>
                              </property>
                             </widget>
@@ -5582,7 +5570,7 @@
                               <string>Apply filter(s)</string>
                              </property>
                              <property name="icon">
-                              <iconset resource="resources_new.qrc">
+                              <iconset>
                                <normaloff>:/icon/iconpack/add.png</normaloff>:/icon/iconpack/add.png</iconset>
                              </property>
                             </widget>
@@ -5681,7 +5669,7 @@
                           <string/>
                          </property>
                          <property name="icon">
-                          <iconset resource="resources_new.qrc">
+                          <iconset>
                            <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
                          </property>
                          <property name="iconSize">
@@ -5719,7 +5707,7 @@
                           <string/>
                          </property>
                          <property name="icon">
-                          <iconset resource="resources_new.qrc">
+                          <iconset>
                            <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
                          </property>
                          <property name="iconSize">
@@ -5751,7 +5739,7 @@
                           <string/>
                          </property>
                          <property name="icon">
-                          <iconset resource="resources_new.qrc">
+                          <iconset>
                            <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
                          </property>
                          <property name="iconSize">
@@ -6037,7 +6025,7 @@
                             <string/>
                            </property>
                            <property name="icon">
-                            <iconset resource="resources_new.qrc">
+                            <iconset>
                              <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                            </property>
                            <property name="iconSize">
@@ -6316,7 +6304,7 @@
                             <string/>
                            </property>
                            <property name="icon">
-                            <iconset resource="resources_new.qrc">
+                            <iconset>
                              <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                            </property>
                            <property name="iconSize">
@@ -6370,7 +6358,6 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -6617,7 +6604,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/icons8-folder-96.png</normaloff>:/icon/iconpack/icons8-folder-96.png</iconset>
                </property>
                <property name="iconSize">
@@ -6649,7 +6636,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/save.png</normaloff>:/icon/iconpack/save.png</iconset>
                </property>
                <property name="iconSize">
@@ -6681,7 +6668,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/icons8-documents-folder-96.png</normaloff>:/icon/iconpack/icons8-documents-folder-96.png</iconset>
                </property>
                <property name="iconSize">
@@ -6704,7 +6691,7 @@
                 <string/>
                </property>
                <property name="pixmap">
-                <pixmap resource="resources_new.qrc">:/icon/logo.png</pixmap>
+                <pixmap>:/icon/logo.png</pixmap>
                </property>
               </widget>
              </item>
@@ -6740,7 +6727,7 @@
              <property name="title">
               <string>Spectrum(s):</string>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_61" stretch="0,0,0,0">
+             <layout class="QVBoxLayout" name="verticalLayout_61" stretch="0,0,0,0,0">
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_103">
                 <item>
@@ -6764,7 +6751,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/select-all.png</normaloff>:/icon/iconpack/select-all.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -6799,7 +6786,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/icons8-trash-128.png</normaloff>:/icon/iconpack/icons8-trash-128.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -6876,6 +6863,9 @@
                </layout>
               </item>
               <item>
+               <layout class="QVBoxLayout" name="listbox_layout"/>
+              </item>
+              <item>
                <widget class="QListWidget" name="spectrums_listbox">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
@@ -6889,8 +6879,14 @@
                   <height>0</height>
                  </size>
                 </property>
+                <property name="acceptDrops">
+                 <bool>true</bool>
+                </property>
                 <property name="dragEnabled">
-                 <bool>false</bool>
+                 <bool>true</bool>
+                </property>
+                <property name="dragDropOverwriteMode">
+                 <bool>true</bool>
                 </property>
                 <property name="selectionMode">
                  <enum>QAbstractItemView::ExtendedSelection</enum>
@@ -7091,7 +7087,7 @@
                  <string/>
                 </property>
                 <property name="icon">
-                 <iconset resource="resources_new.qrc">
+                 <iconset>
                   <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                 </property>
                </widget>
@@ -7157,7 +7153,7 @@
                  <string>Update Graph</string>
                 </property>
                 <property name="icon">
-                 <iconset resource="resources_new.qrc">
+                 <iconset>
                   <normaloff>:/icon/iconpack/icons8-update-100.png</normaloff>:/icon/iconpack/icons8-update-100.png</iconset>
                 </property>
                </widget>
@@ -7239,7 +7235,7 @@
                 <string>Open data</string>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
                </property>
                <property name="iconSize">
@@ -7256,7 +7252,7 @@
                 <string>Save Work</string>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
                </property>
                <property name="iconSize">
@@ -7273,7 +7269,7 @@
                 <string>Load Work</string>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/icons8-documents-folder-80.png</normaloff>:/icon/iconpack/icons8-documents-folder-80.png</iconset>
                </property>
                <property name="iconSize">
@@ -7411,7 +7407,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/view11.png</normaloff>:/icon/iconpack/view11.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -7443,7 +7439,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/icons8-trash-128.png</normaloff>:/icon/iconpack/icons8-trash-128.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -7476,7 +7472,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -7540,7 +7536,7 @@
                    <string>Add filter(s)</string>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
                   </property>
                  </widget>
@@ -7593,7 +7589,7 @@
                    <string>Remove filter</string>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/close.png</normaloff>:/icon/iconpack/close.png</iconset>
                   </property>
                  </widget>
@@ -7607,7 +7603,7 @@
                    <string>Apply filter(s)</string>
                   </property>
                   <property name="icon">
-                   <iconset resource="resources_new.qrc">
+                   <iconset>
                     <normaloff>:/icon/iconpack/add.png</normaloff>:/icon/iconpack/add.png</iconset>
                   </property>
                  </widget>
@@ -7644,7 +7640,7 @@
                 <string>Add graph</string>
                </property>
                <property name="icon">
-                <iconset resource="resources_new.qrc">
+                <iconset>
                  <normaloff>:/icon/iconpack/icons8-graph-96.png</normaloff>:/icon/iconpack/icons8-graph-96.png</iconset>
                </property>
                <property name="iconSize">
@@ -7700,7 +7696,6 @@
             <widget class="QToolBox" name="toolBox">
              <property name="font">
               <font>
-               <weight>50</weight>
                <bold>false</bold>
               </font>
              </property>
@@ -7715,8 +7710,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>384</width>
-                <height>391</height>
+                <width>409</width>
+                <height>433</height>
                </rect>
               </property>
               <attribute name="label">
@@ -7741,7 +7736,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -7849,7 +7843,6 @@
                   <widget class="QLabel" name="label_91">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -8040,7 +8033,7 @@
                     <string>Clear env</string>
                    </property>
                    <property name="icon">
-                    <iconset resource="resources_new.qrc">
+                    <iconset>
                      <normaloff>:/icon/iconpack/icons8-update-96.png</normaloff>:/icon/iconpack/icons8-update-96.png</iconset>
                    </property>
                   </widget>
@@ -8054,8 +8047,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>243</width>
-                <height>150</height>
+                <width>293</width>
+                <height>178</height>
                </rect>
               </property>
               <attribute name="label">
@@ -8181,7 +8174,7 @@
      <x>0</x>
      <y>0</y>
      <width>1608</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSave">
@@ -8193,7 +8186,7 @@
       <string>Dark/Light mode</string>
      </property>
      <property name="icon">
-      <iconset resource="resources_new.qrc">
+      <iconset>
        <normaloff>:/icon/iconpack/dark-light.png</normaloff>:/icon/iconpack/dark-light.png</iconset>
      </property>
      <addaction name="separator"/>
@@ -8260,7 +8253,7 @@
   </action>
   <action name="actionHelps">
    <property name="icon">
-    <iconset resource="resources_new.qrc">
+    <iconset>
      <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
    </property>
    <property name="text">
@@ -8269,7 +8262,7 @@
   </action>
   <action name="actionDarkMode">
    <property name="icon">
-    <iconset resource="resources_new.qrc">
+    <iconset>
      <normaloff>:/icon/iconpack/dark.png</normaloff>:/icon/iconpack/dark.png</iconset>
    </property>
    <property name="text">
@@ -8278,7 +8271,7 @@
   </action>
   <action name="actionLightMode">
    <property name="icon">
-    <iconset resource="resources_new.qrc">
+    <iconset>
      <normaloff>:/icon/iconpack/light.png</normaloff>:/icon/iconpack/light.png</iconset>
    </property>
    <property name="text">
@@ -8287,7 +8280,7 @@
   </action>
   <action name="actionAbout">
    <property name="icon">
-    <iconset resource="resources_new.qrc">
+    <iconset>
      <normaloff>:/icon/iconpack/about.png</normaloff>:/icon/iconpack/about.png</iconset>
    </property>
    <property name="text">

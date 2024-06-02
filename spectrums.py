@@ -21,7 +21,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
-                               QListWidgetItem, QCheckBox)
+                               QListWidgetItem, QCheckBox, QListWidget)
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
@@ -56,6 +56,14 @@ class Spectrums(QObject):
         self.ui.ent_filter_query_2.returnPressed.connect(self.filter.add_filter)
         self.ui.btn_remove_filters_2.clicked.connect(self.filter.remove_filter)
         self.ui.btn_apply_filters_2.clicked.connect(self.apply_filters)
+        # Drag and drop for Listbox
+        self.ui.spectrums_listbox.setDragEnabled(True)
+        self.ui.spectrums_listbox.setAcceptDrops(True)
+        self.ui.spectrums_listbox.setDragDropMode(QListWidget.InternalMove)
+        self.ui.spectrums_listbox.dragEnterEvent = self.dragEnterEvent
+        self.ui.spectrums_listbox.dragMoveEvent = self.dragMoveEvent
+        self.ui.spectrums_listbox.dropEvent = self.dropEvent
+
 
         # Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
@@ -117,6 +125,8 @@ class Spectrums(QObject):
         self.ui.l_defaut_folder_model_3.setText(
             self.fit_model_manager.default_model_folder)
         QTimer.singleShot(0, self.populate_available_models)
+
+
 
     def apply_filters(self, filters=None):
         """Apply all checked filters to the current dataframe"""
@@ -249,6 +259,25 @@ class Spectrums(QObject):
         """ Apply loaded fit model to all selected spectra"""
         fnames = self.spectrums.fnames
         self.apply_loaded_fit_model(fnames=fnames)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            file_paths = [url.toLocalFile() for url in event.mimeData().urls()]
+            self.open_data(file_paths=file_paths)
+        else:
+            event.ignore()
 
     def open_data(self, spectra=None, file_paths=None, ):
         if self.spectrums is None:

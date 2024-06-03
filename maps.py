@@ -34,7 +34,7 @@ class Maps(QObject):
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
 
-    def __init__(self, settings, ui,  spectrums, common, visu):
+    def __init__(self, settings, ui, spectrums, common, visu):
         super().__init__()
         self.settings = settings
         self.ui = ui
@@ -1252,12 +1252,10 @@ class Maps(QObject):
         wafer_name, coords = self.spectra_id()
         view_df(self.ui.tabWidget, self.wafers[wafer_name])
 
-
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
-
         dfs_new = self.visu.original_dfs
-        dfs_new["2Dmaps_bestfit_results"] = self.df_fit_results
+        dfs_new["WAFERS_best_fit"] = self.df_fit_results
         self.visu.open_dfs(dfs=dfs_new, fnames=None)
 
     def send_spectrum_to_compare(self):

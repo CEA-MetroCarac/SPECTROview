@@ -431,11 +431,14 @@ class Visu(QDialog):
     def get_sel_df(self):
         """Get the current selected df among the df within 'dfr' dict"""
         sel_item = self.ui.dfs_listbox.currentItem()
-        sel_df_name = sel_item.text()
-        if sel_df_name in self.original_dfs:
-            self.sel_df = self.original_dfs[sel_df_name]
+        if sel_item is not None:
+            sel_df_name = sel_item.text()
+            if sel_df_name in self.original_dfs:
+                self.sel_df = self.original_dfs[sel_df_name]
+            else:
+                self.sel_df = None  # Return None if the dataframe doesn't exist
         else:
-            self.sel_df = None  # Return None if the dataframe doesn't exist
+            self.sel_df = None  # Return None if no item is selected
         return self.sel_df
 
     def remove_df(self):

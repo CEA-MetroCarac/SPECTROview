@@ -21,7 +21,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
-                               QListWidgetItem, QCheckBox, QListWidget)
+                               QListWidgetItem, QCheckBox, QListWidget,
+                               QAbstractItemView)
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
@@ -46,6 +47,13 @@ class Spectrums(QObject):
         self.spectrums = Spectra()
         self.df_fit_results = None
 
+        # Create a customized QListWidget
+        self.ui.spectrums_listbox = CustomListWidget()
+        self.ui.spectrums_listbox.setDragDropMode(QListWidget.InternalMove)
+        self.ui.listbox_layout.addWidget(self.ui.spectrums_listbox)
+        self.ui.spectrums_listbox.items_reordered.connect(
+            self.update_spectrums_order)
+
         # FILTER: Create an instance of the FILTER class
         self.filter = Filter(self.ui.ent_filter_query_2,
                              self.ui.filter_listbox,
@@ -56,14 +64,6 @@ class Spectrums(QObject):
         self.ui.ent_filter_query_2.returnPressed.connect(self.filter.add_filter)
         self.ui.btn_remove_filters_2.clicked.connect(self.filter.remove_filter)
         self.ui.btn_apply_filters_2.clicked.connect(self.apply_filters)
-        # Drag and drop for Listbox
-        self.ui.spectrums_listbox.setDragEnabled(True)
-        self.ui.spectrums_listbox.setAcceptDrops(True)
-        self.ui.spectrums_listbox.setDragDropMode(QListWidget.InternalMove)
-        self.ui.spectrums_listbox.dragEnterEvent = self.dragEnterEvent
-        self.ui.spectrums_listbox.dragMoveEvent = self.dragMoveEvent
-        self.ui.spectrums_listbox.dropEvent = self.dropEvent
-
 
         # Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
@@ -126,7 +126,124 @@ class Spectrums(QObject):
             self.fit_model_manager.default_model_folder)
         QTimer.singleShot(0, self.populate_available_models)
 
+    def update_spectrums_order(self):
+        """To update the oder of spectrums when user rearrange via listbox"""
+        new_order = []
+        for index in range(self.ui.spectrums_listbox.count()):
+            item_text = self.ui.spectrums_listbox.item(index).text()
+            # Find the corresponding spectrum in the original list
+            for spectrum in self.spectrums:
+                if spectrum.fname == item_text:
+                    new_order.append(spectrum)
+                    break
+        # Clear the existing list and update with the new order
+        self.spectrums.clear()
+        self.spectrums.extend(new_order)
 
+    def open_data(self, spectra=None, file_paths=None, ):
+        if self.spectrums is None:
+            self.spectrums = Spectra()
+        if spectra:
+            self.spectrums = spectra
+        else:
+            if file_paths is None:
+                # Initialize the last used directory from QSettings
+                last_dir = self.settings.value("last_directory", "/")
+                options = QFileDialog.Options()
+                options |= QFileDialog.ReadOnly
+                file_paths, _ = QFileDialog.getOpenFileNames(
+                    self.ui.tabWidget, "Open RAW spectra TXT File(s)", last_dir,
+                    "Text Files (*.txt)", options=options)
+
+            if file_paths:
+                last_dir = QFileInfo(file_paths[0]).absolutePath()
+                self.settings.setValue("last_directory", last_dir)
+
+                for file_path in file_paths:
+                    file_path = Path(file_path)
+                    fname = file_path.stem
+
+                    # Check if fname is already opened
+                    if any(spectrum.fname == fname for spectrum in
+                           self.spectrums):
+                        print(f"Spectrum '{fname}' is already opened.")
+                        continue
+
+                    dfr = pd.read_csv(file_path, header=None, skiprows=1,
+                                      delimiter="\t")
+                    dfr_sorted = dfr.sort_values(by=0)  # increasing order
+                    # Convert values to float
+                    dfr_sorted.iloc[:, 0] = dfr_sorted.iloc[:, 0].astype(float)
+                    dfr_sorted.iloc[:, 1] = dfr_sorted.iloc[:, 1].astype(float)
+
+                    x_values = dfr_sorted.iloc[:, 0].tolist()
+                    y_values = dfr_sorted.iloc[:, 1].tolist()
+
+                    # create FITSPY object
+                    spectrum = Spectrum()
+                    spectrum.fname = fname
+                    spectrum.x = np.asarray(x_values)
+                    spectrum.x0 = np.asarray(x_values)
+                    spectrum.y = np.asarray(y_values)
+                    spectrum.y0 = np.asarray(y_values)
+                    self.spectrums.append(spectrum)
+        QTimer.singleShot(100, self.upd_spectra_list)
+
+    def upd_spectra_list(self):
+        current_row = self.ui.spectrums_listbox.currentRow()
+        self.ui.spectrums_listbox.clear()
+        for spectrum in self.spectrums:
+            fname = spectrum.fname
+            item = QListWidgetItem(fname)
+            if hasattr(spectrum.result_fit,
+                       'success') and spectrum.result_fit.success:
+                item.setBackground(QColor("green"))
+            elif hasattr(spectrum.result_fit,
+                         'success') and not \
+                    spectrum.result_fit.success:
+                item.setBackground(QColor("orange"))
+            else:
+                item.setBackground(QColor(0, 0, 0, 0))
+            self.ui.spectrums_listbox.addItem(item)
+
+        item_count = self.ui.spectrums_listbox.count()
+        self.ui.item_count_label_3.setText(f"{item_count} points")
+        # Management of selecting item of listbox
+        if current_row >= item_count:
+            current_row = item_count - 1
+        if current_row >= 0:
+            self.ui.spectrums_listbox.setCurrentRow(current_row)
+        else:
+            if item_count > 0:
+                self.ui.spectrums_listbox.setCurrentRow(0)
+        QTimer.singleShot(50, self.plot_delay)
+
+    def on_click(self, event):
+        """On click action to add a "peak models" or "baseline points" """
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
+        fit_model = self.ui.cbb_fit_models_2.currentText()
+
+        # Add a new peak_model for current selected peak
+        if self.zoom_pan_active == False and self.ui.rdbtn_peak_2.isChecked():
+            if event.button == 1 and event.inaxes:
+                x = event.xdata
+                y = event.ydata
+            sel_spectrum.add_peak_model(fit_model, x)
+            self.upd_spectra_list()
+
+        # Add a new baseline point for current selected peak
+        if self.zoom_pan_active == False and \
+                self.ui.rdbtn_baseline_2.isChecked():
+            if event.button == 1 and event.inaxes:
+                x1 = event.xdata
+                y1 = event.ydata
+                if sel_spectrum.baseline.is_subtracted:
+                    show_alert(
+                        "Already subtracted before. Reinitialize spectrum to "
+                        "perform new baseline")
+                else:
+                    sel_spectrum.baseline.add_point(x1, y1)
+                    self.upd_spectra_list()
 
     def apply_filters(self, filters=None):
         """Apply all checked filters to the current dataframe"""
@@ -260,103 +377,6 @@ class Spectrums(QObject):
         fnames = self.spectrums.fnames
         self.apply_loaded_fit_model(fnames=fnames)
 
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-        else:
-            event.ignore()
-
-    def dragMoveEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-        else:
-            event.ignore()
-
-    def dropEvent(self, event):
-        if event.mimeData().hasUrls():
-            file_paths = [url.toLocalFile() for url in event.mimeData().urls()]
-            self.open_data(file_paths=file_paths)
-        else:
-            event.ignore()
-
-    def open_data(self, spectra=None, file_paths=None, ):
-        if self.spectrums is None:
-            self.spectrums = Spectra()
-        if spectra:
-            self.spectrums = spectra
-        else:
-            if file_paths is None:
-                # Initialize the last used directory from QSettings
-                last_dir = self.settings.value("last_directory", "/")
-                options = QFileDialog.Options()
-                options |= QFileDialog.ReadOnly
-                file_paths, _ = QFileDialog.getOpenFileNames(
-                    self.ui.tabWidget, "Open RAW spectra TXT File(s)", last_dir,
-                    "Text Files (*.txt)", options=options)
-
-            if file_paths:
-                last_dir = QFileInfo(file_paths[0]).absolutePath()
-                self.settings.setValue("last_directory", last_dir)
-
-                for file_path in file_paths:
-                    file_path = Path(file_path)
-                    fname = file_path.stem
-
-                    # Check if fname is already opened
-                    if any(spectrum.fname == fname for spectrum in
-                           self.spectrums):
-                        print(f"Spectrum '{fname}' is already opened.")
-                        continue
-
-                    dfr = pd.read_csv(file_path, header=None, skiprows=1,
-                                      delimiter="\t")
-                    dfr_sorted = dfr.sort_values(by=0)  # increasing order
-                    # Convert values to float
-                    dfr_sorted.iloc[:, 0] = dfr_sorted.iloc[:, 0].astype(float)
-                    dfr_sorted.iloc[:, 1] = dfr_sorted.iloc[:, 1].astype(float)
-
-                    x_values = dfr_sorted.iloc[:, 0].tolist()
-                    y_values = dfr_sorted.iloc[:, 1].tolist()
-
-                    # create FITSPY object
-                    spectrum = Spectrum()
-                    spectrum.fname = fname
-                    spectrum.x = np.asarray(x_values)
-                    spectrum.x0 = np.asarray(x_values)
-                    spectrum.y = np.asarray(y_values)
-                    spectrum.y0 = np.asarray(y_values)
-                    self.spectrums.append(spectrum)
-        QTimer.singleShot(100, self.upd_spectra_list)
-
-    def upd_spectra_list(self):
-        current_row = self.ui.spectrums_listbox.currentRow()
-        self.ui.spectrums_listbox.clear()
-        for spectrum in self.spectrums:
-            fname = spectrum.fname
-            item = QListWidgetItem(fname)
-            if hasattr(spectrum.result_fit,
-                       'success') and spectrum.result_fit.success:
-                item.setBackground(QColor("green"))
-            elif hasattr(spectrum.result_fit,
-                         'success') and not \
-                    spectrum.result_fit.success:
-                item.setBackground(QColor("orange"))
-            else:
-                item.setBackground(QColor(0, 0, 0, 0))
-            self.ui.spectrums_listbox.addItem(item)
-
-        item_count = self.ui.spectrums_listbox.count()
-        self.ui.item_count_label_3.setText(f"{item_count} points")
-        # Management of selecting item of listbox
-        if current_row >= item_count:
-            current_row = item_count - 1
-        if current_row >= 0:
-            self.ui.spectrums_listbox.setCurrentRow(current_row)
-        else:
-            if item_count > 0:
-                self.ui.spectrums_listbox.setCurrentRow(0)
-        QTimer.singleShot(50, self.plot_delay)
-
     def get_spectrum_fnames(self):
         """Get fname of the selected spectra"""
         items = self.ui.spectrums_listbox.selectedItems()
@@ -412,33 +432,6 @@ class Spectrums(QObject):
         """Rescale the figure."""
         self.ax.autoscale()
         self.canvas1.draw()
-
-    def on_click(self, event):
-        """On click action to add a "peak models" or "baseline points" """
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        fit_model = self.ui.cbb_fit_models_2.currentText()
-
-        # Add a new peak_model for current selected peak
-        if self.zoom_pan_active == False and self.ui.rdbtn_peak_2.isChecked():
-            if event.button == 1 and event.inaxes:
-                x = event.xdata
-                y = event.ydata
-            sel_spectrum.add_peak_model(fit_model, x)
-            self.upd_spectra_list()
-
-        # Add a new baseline point for current selected peak
-        if self.zoom_pan_active == False and \
-                self.ui.rdbtn_baseline_2.isChecked():
-            if event.button == 1 and event.inaxes:
-                x1 = event.xdata
-                y1 = event.ydata
-                if sel_spectrum.baseline.is_subtracted:
-                    show_alert(
-                        "Already subtracted before. Reinitialize spectrum to "
-                        "perform new baseline")
-                else:
-                    sel_spectrum.baseline.add_point(x1, y1)
-                    self.upd_spectra_list()
 
     def toggle_zoom_pan(self, checked):
         """Toggle zoom and pan functionality"""
@@ -868,10 +861,8 @@ class Spectrums(QObject):
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to visu tab"""
         dfs_new = self.visu.original_dfs
-        dfs_new["SPECTRUMS"] = self.df_fit_results
+        dfs_new["SPECTRUMS_best_fit"] = self.df_fit_results
         self.visu.open_dfs(dfs=dfs_new, fnames=None)
-
-
 
     def plot2(self):
         """Plot graph """
@@ -881,7 +872,6 @@ class Spectrums(QObject):
             dfr = self.df_fit_results
         x = self.ui.cbb_x_3.currentText()
         y = self.ui.cbb_y_3.currentText()
-
 
         z = self.ui.cbb_z_3.currentText()
         if z == "None":
@@ -905,7 +895,8 @@ class Spectrums(QObject):
             xlabel_rot = float(text)
 
         ax = self.ax2
-        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin, ymax,
+        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin,
+                               ymax,
                                title,
                                x_text, y_text, xlabel_rot)
         self.ax2.get_figure().tight_layout()
@@ -940,7 +931,8 @@ class Spectrums(QObject):
             xlabel_rot = float(text)
 
         ax = self.ax3
-        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin, ymax,
+        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin,
+                               ymax,
                                title,
                                x_text, y_text, xlabel_rot)
 
@@ -1274,3 +1266,18 @@ class Spectrums(QObject):
             self.clear_peaks_all()
         else:
             self.clear_peaks()
+
+
+class CustomListWidget(QListWidget):
+    """To create a custimized Qlistwidget allowing to rearrange spectrum
+    order"""
+    items_reordered = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setDragDropMode(QListWidget.InternalMove)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+
+    def dropEvent(self, event):
+        super().dropEvent(event)
+        self.items_reordered.emit()

@@ -119,6 +119,7 @@ class Visu(QDialog):
         graph.grid = self.ui.cb_grid.isChecked()
         graph.trendline_order = float(self.ui.spb_trendline_oder.text())
         graph.show_trendline_eq = self.ui.cb_trendline_eq.isChecked()
+        graph.show_bar_plot_error_bar = self.ui.cb_show_err_bar_plot.isChecked()
 
         # Plot the graph
         graph.create_plot_widget(graph.dpi)
@@ -204,6 +205,8 @@ class Visu(QDialog):
             sel_graph.dpi = float(self.ui.spb_dpi.text())
             sel_graph.trendline_order = float(self.ui.spb_trendline_oder.text())
             sel_graph.show_trendline_eq = self.ui.cb_trendline_eq.isChecked()
+            sel_graph.show_bar_plot_error_bar = \
+                self.ui.cb_show_err_bar_plot.isChecked()
 
             graph_dialog.setWindowTitle(
                 f"Graph_{sel_graph.graph_id}: ({x} vs. {y} vs.{z})")
@@ -295,6 +298,10 @@ class Visu(QDialog):
             # Trendline
             self.ui.spb_trendline_oder.setValue(sel_graph.trendline_order)
             self.ui.cb_trendline_eq.setChecked(sel_graph.show_trendline_eq)
+
+            # Show error bar for bar_plot
+            self.ui.cb_show_err_bar_plot.setChecked(
+                sel_graph.show_bar_plot_error_bar)
 
     def reflect_filters_to_gui(self, sel_graph):
         """Reflect the filters of a graph object and their states to the df
@@ -592,6 +599,7 @@ class Visu(QDialog):
                         'wafer_stats': graph.wafer_stats,
                         'trendline_order': graph.trendline_order,
                         'show_trendline_eq': graph.show_trendline_eq,
+                        'show_bar_plot_error_bar': graph.show_bar_plot_error_bar
                     }
                     plots_data[graph_id] = graph_data
 
@@ -667,6 +675,12 @@ class Visu(QDialog):
                         graph.trendline_order = graph_data['trendline_order']
                         graph.show_trendline_eq = graph_data[
                             'show_trendline_eq']
+
+                        try:
+                            graph.show_bar_plot_error_bar = graph_data[
+                                'show_bar_plot_error_bar']
+                        except KeyError:
+                            graph.show_bar_plot_error_bar = False
 
                         # Plot the graph
                         graph.create_plot_widget(graph.dpi)

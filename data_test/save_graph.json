@@ -7570,14 +7570,15 @@
             "zlabel": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
             "x_rot": 0.0,
             "grid": false,
-            "legend_visible": true,
+            "legend_visible": false,
             "legend_outside": false,
             "color_palette": "jet",
             "dpi": 100.0,
             "wafer_size": 200.0,
             "wafer_stats": true,
             "trendline_order": 1.0,
-            "show_trendline_eq": true
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": false
         },
         "3": {
             "df_name": "2Dmaps_bestfit_results",
@@ -7599,14 +7600,15 @@
             "zlabel": "Slot",
             "x_rot": 0.0,
             "grid": false,
-            "legend_visible": true,
+            "legend_visible": false,
             "legend_outside": false,
             "color_palette": "jet",
             "dpi": 100.0,
             "wafer_size": 200.0,
             "wafer_stats": true,
             "trendline_order": 1.0,
-            "show_trendline_eq": true
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": false
         },
         "5": {
             "df_name": "2Dmaps_bestfit_results",
@@ -7635,7 +7637,8 @@
             "wafer_size": 200.0,
             "wafer_stats": true,
             "trendline_order": 1.0,
-            "show_trendline_eq": true
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": false
         },
         "2": {
             "df_name": "2Dmaps_bestfit_results",
@@ -7644,7 +7647,7 @@
             "plot_style": "bar",
             "x": "Filename",
             "y": "Intensity of peak E$^1_{2g}$ (a.u)",
-            "z": "Quadrant",
+            "z": "Zone",
             "xmin": "",
             "xmax": "",
             "ymin": "",
@@ -7658,13 +7661,14 @@
             "x_rot": 20.0,
             "grid": false,
             "legend_visible": true,
-            "legend_outside": false,
+            "legend_outside": true,
             "color_palette": "jet",
             "dpi": 100.0,
             "wafer_size": 200.0,
             "wafer_stats": true,
             "trendline_order": 1.0,
-            "show_trendline_eq": true
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": true
         }
     }
 }

@@ -8099,9 +8099,12 @@
                 </widget>
                </item>
                <item>
-                <widget class="QCheckBox" name="checkBox_6">
+                <widget class="QCheckBox" name="cb_show_err_bar_plot">
                  <property name="text">
                   <string>add error bar for 'bar_plot'</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>

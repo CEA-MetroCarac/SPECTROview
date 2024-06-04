@@ -82,6 +82,7 @@ class Graph(QWidget):
         self.wafer_stats = True
         self.trendline_order = 1
         self.show_trendline_eq = True
+        self.show_bar_plot_error_bar = True
 
         self.figure = None
         self.ax = None
@@ -131,8 +132,13 @@ class Graph(QWidget):
                                 s=100,
                                 edgecolor='black')
             elif self.plot_style == 'bar':
-                sns.barplot(data=df, x=self.x, y=self.y, hue=self.z,
-                            errorbar='sd', ax=self.ax)
+                if self.show_bar_plot_error_bar:
+                    sns.barplot(data=df, x=self.x, y=self.y, hue=self.z,
+                                errorbar='sd', ax=self.ax)
+                else:
+                    sns.barplot(data=df, x=self.x, y=self.y, hue=self.z,
+                                errorbar=None, ax=self.ax)
+
             elif self.plot_style == 'box':
                 sns.boxplot(data=df, x=self.x, y=self.y, hue=self.z,
                             dodge=True, ax=self.ax)
@@ -182,7 +188,6 @@ class Graph(QWidget):
                 self.ax.set_title(self.plot_title)
             else:
                 self.ax.set_title(self.z)
-                print(self.z)
         else:
             self.ax.set_title(self.plot_title)
             self.ax.set_xlabel(self.xlabel)

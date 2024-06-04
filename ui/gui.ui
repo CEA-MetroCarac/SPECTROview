@@ -1512,7 +1512,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>411</width>
+                       <width>318</width>
                        <height>350</height>
                       </rect>
                      </property>
@@ -2501,7 +2501,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>231</width>
+                     <width>201</width>
                      <height>375</height>
                     </rect>
                    </property>
@@ -5318,7 +5318,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>411</width>
+                       <width>318</width>
                        <height>350</height>
                       </rect>
                      </property>
@@ -7173,7 +7173,7 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="0,10,10,2,5,0,200,0,0">
+          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="0,10,10,5,200,0,0">
            <property name="spacing">
             <number>5</number>
            </property>
@@ -7605,13 +7605,6 @@
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="label_95">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item>
             <layout class="QHBoxLayout" name="horizontalLayout_114">
              <item>
               <widget class="QPushButton" name="btn_add_graph">
@@ -7706,13 +7699,6 @@
             </layout>
            </item>
            <item>
-            <widget class="QLabel" name="label_97">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item>
             <widget class="QToolBox" name="toolBox">
              <property name="font">
               <font>
@@ -7732,7 +7718,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>384</width>
-                <height>396</height>
+                <height>432</height>
                </rect>
               </property>
               <attribute name="label">
@@ -8080,8 +8066,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>384</width>
-                <height>391</height>
+                <width>243</width>
+                <height>150</height>
                </rect>
               </property>
               <attribute name="label">

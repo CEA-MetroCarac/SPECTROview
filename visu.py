@@ -131,7 +131,7 @@ class Visu(QDialog):
         # Create a QDialog to hold the Graph instance
         graph_dialog = QDialog(self)
         graph_dialog.setWindowTitle(
-            f"Graph_{graph.graph_id}: ({x} vs. {y} vs. {z})")
+            f"Graph_{graph.graph_id}: [{x}] - [{y}] - [{z}]")
         layout = QVBoxLayout()
         layout.addWidget(graph)
         graph_dialog.setLayout(layout)
@@ -139,6 +139,7 @@ class Visu(QDialog):
         # Add the QDialog to a QMdiSubWindow
         sub_window = MdiSubWindow(graph_id)
         sub_window.setWidget(graph_dialog)
+
         # delete graph when sub windows is closed
         sub_window.closed.connect(self.delete_graph)
 
@@ -154,7 +155,7 @@ class Visu(QDialog):
         """Delete a graph from the self.plots dictionary"""
         if graph_id in self.plots:
             del self.plots[graph_id]
-            print(f"Plot is deleted: {graph_id}")
+            print(f"Plot {graph_id} is deleted")
 
     def update_graph(self):
         """ Update the existing graph with new properties"""
@@ -217,7 +218,7 @@ class Visu(QDialog):
                 self.ui.cb_show_err_bar_plot.isChecked()
 
             graph_dialog.setWindowTitle(
-                f"Graph_{sel_graph.graph_id}: ({x} vs. {y} vs.{z})")
+                f"Graph_{sel_graph.graph_id}: [{x}] - [{y}] - [{z}]")
             if plot_style == 'wafer':
                 sel_graph.create_plot_widget(sel_graph.dpi,
                                              sel_graph.graph_layout)
@@ -650,6 +651,7 @@ class Visu(QDialog):
                         load.get('filtered_df', {})) if load.get(
                         'filtered_df') is not None else None
 
+                    # Close all existing plots before loading
                     self.ui.mdiArea.closeAllSubWindows()
                     self.plots = {}
 
@@ -713,8 +715,9 @@ class Visu(QDialog):
                         # Create a QDialog to hold the Graph instance
                         graph_dialog = QDialog(self)
                         graph_dialog.setWindowTitle(
-                            f"Graph_{graph.graph_id}: ({graph.x} vs. "
-                            f"{graph.y} vs. {graph.z})")
+                            f"Graph_{graph.graph_id}: [{graph.x}] - "
+                            f"[{graph.y}] - [{graph.z}]")
+
                         layout = QVBoxLayout()
                         layout.addWidget(graph)
                         graph_dialog.setLayout(layout)

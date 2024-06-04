@@ -143,7 +143,9 @@ class Visu(QDialog):
         sub_window.closed.connect(self.delete_graph)
 
         # Set initial size of the QMdiSubWindow
-        sub_window.resize(600, 450)
+
+        sub_window.resize(graph.plot_width, graph.plot_height)
+
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
         QTimer.singleShot(100, self.update_graph)
@@ -156,8 +158,14 @@ class Visu(QDialog):
 
     def update_graph(self):
         """ Update the existing graph with new properties"""
-        sel_graph, graph_dialog = self.get_sel_graph()
+        sel_graph, graph_dialog, sub_window = self.get_sel_graph()
         if sel_graph:
+
+            # Retrieve the current size of the subwindow
+            sub_window_size = sub_window.size()
+            sel_graph.plot_width = sub_window_size.width()
+            sel_graph.plot_height = sub_window_size.height()
+
             plot_style = self.ui.cbb_plotstyle.currentText()
             plot_title = self.ui.lbl_plot_title.text()
             x = self.ui.cbb_x_2.currentText()
@@ -218,7 +226,7 @@ class Visu(QDialog):
                 sel_graph.plot(self.filtered_df)
 
     def adjust_dpi(self):
-        sel_graph, graph_dialog = self.get_sel_graph()
+        sel_graph, graph_dialog, sub_window = self.get_sel_graph()
         dpi = float(self.ui.spb_dpi.text())
         if sel_graph:
             sel_graph.create_plot_widget(dpi, sel_graph.graph_layout)
@@ -226,7 +234,7 @@ class Visu(QDialog):
 
     def on_selected_graph(self, sub_window):
         """Reflect all properties of selected graph object to GUI"""
-        sel_graph, graph_dialog = self.get_sel_graph()
+        sel_graph, graph_dialog, sub_window = self.get_sel_graph()
 
         if sel_graph:
             # Plot style
@@ -418,7 +426,7 @@ class Visu(QDialog):
 
     def copy_fig_to_clb(self):
         """Copy the selected figure to clipboard"""
-        sel_graph, graph_dialog = self.get_sel_graph()
+        sel_graph, graph_dialog, sub_window = self.get_sel_graph()
         self.common.copy_fig_to_clb(canvas=sel_graph.canvas)
 
     def get_sel_graph(self):
@@ -435,7 +443,7 @@ class Visu(QDialog):
                         sel_graph = graph
         except Exception as e:
             print("An error occurred:", e)
-        return sel_graph, graph_dialog
+        return sel_graph, graph_dialog, sub_window
 
     def get_sel_df(self):
         """Get the current selected df among the df within 'dfr' dict"""
@@ -572,6 +580,8 @@ class Visu(QDialog):
                 plots_data = {}
                 for graph_id, graph in self.plots.items():
                     graph_data = {
+                        'plot_width': graph.plot_width,
+                        'plot_height': graph.plot_height,
                         'df_name': graph.df_name,
                         'filters': graph.filters,
                         'graph_id': graph.graph_id,
@@ -648,6 +658,15 @@ class Visu(QDialog):
                     for graph_id, graph_data in plots_data.items():
                         # Recreate graph instance
                         graph = Graph(graph_id=graph_data['graph_id'])
+
+                        # Get plot size
+                        try:
+                            graph.plot_width = graph_data['plot_width']
+                            graph.plot_height = graph_data['plot_height']
+                        except KeyError:
+                            graph.plot_width = 600
+                            graph.plot_width = 450
+
                         graph.df_name = graph_data['df_name']
                         graph.filters = graph_data['filters']
                         graph.plot_style = graph_data['plot_style']
@@ -705,7 +724,7 @@ class Visu(QDialog):
                         sub_window.setWidget(graph_dialog)
                         sub_window.closed.connect(self.delete_graph)
                         self.ui.mdiArea.addSubWindow(sub_window)
-                        sub_window.resize(600, 450)
+                        sub_window.resize(graph.plot_width, graph.plot_height)
                         sub_window.show()
                         self.update_graph()
 
@@ -728,3 +747,10 @@ class MdiSubWindow(QMdiSubWindow):
         """Override closeEvent to emit a signal when the subwindow is closing"""
         self.closed.emit(self.graph_id)
         super().closeEvent(event)
+
+    def resizeEvent(self, event):
+        """Override resizeEvent to handle window resizing"""
+        new_size = self.size()
+        width, height = new_size.width(), new_size.height()
+        print(f"Subwindow resized: Width = {width}, Height = {height}")
+        super().resizeEvent(event)

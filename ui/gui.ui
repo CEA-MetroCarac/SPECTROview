@@ -54,7 +54,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_wafer">
        <attribute name="title">
@@ -7617,14 +7617,14 @@
               <widget class="QPushButton" name="btn_add_graph">
                <property name="minimumSize">
                 <size>
-                 <width>100</width>
+                 <width>80</width>
                  <height>0</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>100</width>
-                 <height>16777215</height>
+                 <width>80</width>
+                 <height>100</height>
                 </size>
                </property>
                <property name="text">
@@ -7636,8 +7636,8 @@
                </property>
                <property name="iconSize">
                 <size>
-                 <width>35</width>
-                 <height>35</height>
+                 <width>30</width>
+                 <height>30</height>
                 </size>
                </property>
               </widget>
@@ -7646,13 +7646,13 @@
               <widget class="QPushButton" name="btn_upd_graph">
                <property name="minimumSize">
                 <size>
-                 <width>100</width>
+                 <width>90</width>
                  <height>0</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>100</width>
+                 <width>90</width>
                  <height>100</height>
                 </size>
                </property>
@@ -7732,7 +7732,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>384</width>
-                <height>391</height>
+                <height>396</height>
                </rect>
               </property>
               <attribute name="label">

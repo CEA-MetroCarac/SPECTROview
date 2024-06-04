@@ -99,7 +99,8 @@ class Visu(QDialog):
         graph = Graph(graph_id=graph_id)
 
         graph.plot_style = self.ui.cbb_plotstyle.currentText()
-        graph.plot_title = self.ui.lbl_plot_title.text()
+        title = self.ui.lbl_plot_title.text()
+        graph.plot_title = title if title != "None" else None
         graph.color_palette = self.ui.cbb_palette.currentText()
         graph.df_name = df_name
         graph.filters = current_filters
@@ -139,6 +140,7 @@ class Visu(QDialog):
         sub_window.setWidget(graph_dialog)
         # delete graph when sub windows is closed
         sub_window.closed.connect(self.delete_graph)
+
         # Set initial size of the QMdiSubWindow
         sub_window.resize(600, 450)
         self.ui.mdiArea.addSubWindow(sub_window)

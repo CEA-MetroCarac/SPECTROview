@@ -80,9 +80,8 @@ class Graph(QWidget):
         self.dpi = 100
         self.wafer_size = 300
         self.wafer_stats = True
-        self.trendline_order =1
-        self.show_trendline_eq =True
-
+        self.trendline_order = 1
+        self.show_trendline_eq = True
 
         self.figure = None
         self.ax = None
@@ -138,26 +137,34 @@ class Graph(QWidget):
                 sns.boxplot(data=df, x=self.x, y=self.y, hue=self.z,
                             dodge=True, ax=self.ax)
             elif self.plot_style == 'trendline':
-                sns.regplot(data=df, x=self.x, y=self.y, ax=self.ax, scatter=True, order=self.trendline_order)
+                sns.regplot(data=df, x=self.x, y=self.y, ax=self.ax,
+                            scatter=True, order=self.trendline_order)
                 if self.show_trendline_eq:
                     # Calculate trendline equation and show in the plot
                     x_data = df[self.x]
                     y_data = df[self.y]
-                    coefficients = np.polyfit(x_data, y_data, self.trendline_order)
+                    coefficients = np.polyfit(x_data, y_data,
+                                              self.trendline_order)
                     equation = 'y = '
                     for i, coeff in enumerate(coefficients[::-1]):
-                        equation += f'{coeff:.2f}x^{self.trendline_order - i} + ' if i < self.trendline_order else f'{coeff:.2f}'
-                    self.ax.annotate(equation, xy=(0.02, 0.95), xycoords='axes fraction', fontsize=10, color='blue')
+                        equation += (
+                            f'{coeff:.2f}x^{self.trendline_order - i} + '
+                            if i < self.trendline_order else f'{coeff:.2f}')
+
+                    self.ax.annotate(equation, xy=(0.02, 0.95),
+                                     xycoords='axes fraction', fontsize=10,
+                                     color='blue')
 
             elif self.plot_style == 'wafer':
                 if self.zmin and self.zmax:
-                    vmin= self.zmin
+                    vmin = self.zmin
                     vmax = self.zmax
                 else:
                     vmin = None
                     vmax = None
                 wdf = WaferView()
-                wdf.plot(self.ax, x=df[self.x], y=df[self.y], z=df[self.z], cmap=self.color_palette, vmin=vmin, vmax=vmax,
+                wdf.plot(self.ax, x=df[self.x], y=df[self.y], z=df[self.z],
+                         cmap=self.color_palette, vmin=vmin, vmax=vmax,
                          stats=self.wafer_stats, r=(self.wafer_size / 2))
 
             else:
@@ -171,7 +178,11 @@ class Graph(QWidget):
             self.ax.set_ylim(float(self.ymin), float(self.ymax))
 
         if self.plot_style == 'wafer':
-            self.ax.set_title(self.z)
+            if self.plot_title:
+                self.ax.set_title(self.plot_title)
+            else:
+                self.ax.set_title(self.z)
+                print(self.z)
         else:
             self.ax.set_title(self.plot_title)
             self.ax.set_xlabel(self.xlabel)
@@ -258,7 +269,8 @@ class Filter:
             checked_filters = self.get_current_filters()
             self.filters = checked_filters
         # Apply all filters at once
-        self.filtered_df = self.df.copy() if self.df is not None else None  # Check if self.df is not None
+        # Check if self.df is not None
+        self.filtered_df = self.df.copy() if self.df is not None else None
 
         if self.filtered_df is not None:  # Check if filtered_df is not None
             for filter_data in self.filters:
@@ -274,7 +286,9 @@ class Filter:
                     except Exception as e:
                         # show_alert(f"Filter error: {str(e)}")
                         print(f"Error applying filter: {str(e)}")
-                        print(f"Filter expression causing the error: {filter_expr}")
+                        print(
+                            f"Filter expression causing the error: "
+                            f"{filter_expr}")
 
         return self.filtered_df
 
@@ -924,6 +938,7 @@ class WaferView:
 
 class WaferPlot:
     """ Class to plot wafer map """
+
     def __init__(self, wafer_df, wafer_size, margin, hue=None,
                  inter_method='linear'):
         self.wafer_df = wafer_df
@@ -1048,17 +1063,20 @@ def view_df(tabWidget, df):
     layout.addWidget(table_widget)
     df_viewer.show()
 
+
 def dragEnterEvent(event):
     if event.mimeData().hasUrls():
         event.acceptProposedAction()
     else:
         event.ignore()
 
+
 def dragMoveEvent(event):
     if event.mimeData().hasUrls():
         event.acceptProposedAction()
     else:
         event.ignore()
+
 
 def dropEvent(event):
     if event.mimeData().hasUrls():

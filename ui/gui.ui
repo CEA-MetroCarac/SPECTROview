@@ -54,7 +54,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_wafer">
        <attribute name="title">
@@ -1512,7 +1512,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
+                       <width>411</width>
                        <height>350</height>
                       </rect>
                      </property>
@@ -2501,7 +2501,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>201</width>
+                     <width>231</width>
                      <height>375</height>
                     </rect>
                    </property>
@@ -3175,7 +3175,7 @@
                  <item>
                   <widget class="QPushButton" name="btn_default_folder_model">
                    <property name="text">
-                    <string>Define Model Folder</string>
+                    <string>Model Folder</string>
                    </property>
                   </widget>
                  </item>
@@ -5318,7 +5318,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
+                       <width>411</width>
                        <height>350</height>
                       </rect>
                      </property>
@@ -6536,7 +6536,7 @@
                  </rect>
                 </property>
                 <property name="text">
-                 <string>Specify Model Folder:</string>
+                 <string>Model Folder:</string>
                 </property>
                </widget>
               </widget>
@@ -7132,17 +7132,6 @@
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QPushButton" name="btn_upd_graph">
-                <property name="text">
-                 <string>Update Graph</string>
-                </property>
-                <property name="icon">
-                 <iconset resource="resources_new.qrc">
-                  <normaloff>:/icon/iconpack/icons8-update-100.png</normaloff>:/icon/iconpack/icons8-update-100.png</iconset>
-                </property>
-               </widget>
-              </item>
              </layout>
             </item>
            </layout>
@@ -7277,6 +7266,23 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_clear_env">
+               <property name="text">
+                <string>Clear env</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources_new.qrc">
+                 <normaloff>:/icon/iconpack/icons8-update-96.png</normaloff>:/icon/iconpack/icons8-update-96.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>25</width>
+                 <height>25</height>
+                </size>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -7622,7 +7628,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>Add graph</string>
+                <string>Add plot</string>
                </property>
                <property name="icon">
                 <iconset resource="resources_new.qrc">
@@ -7635,6 +7641,48 @@
                 </size>
                </property>
               </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_upd_graph">
+               <property name="minimumSize">
+                <size>
+                 <width>100</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>100</height>
+                </size>
+               </property>
+               <property name="text">
+                <string> Update plot</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources_new.qrc">
+                 <normaloff>:/icon/iconpack/icons8-update-100.png</normaloff>:/icon/iconpack/icons8-update-100.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>20</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
              </item>
              <item>
               <widget class="QPushButton" name="btn_add_line">
@@ -7654,19 +7702,6 @@
                 <string>Add a line</string>
                </property>
               </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
              </item>
             </layout>
            </item>
@@ -7825,6 +7860,13 @@
                 </layout>
                </item>
                <item>
+                <widget class="QLabel" name="label">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_107">
                  <item>
                   <widget class="QLabel" name="label_91">
@@ -7931,6 +7973,13 @@
                 </layout>
                </item>
                <item>
+                <widget class="QLabel" name="label_2">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_93">
                  <item>
                   <widget class="QLabel" name="label_88">
@@ -7987,17 +8036,11 @@
                 </layout>
                </item>
                <item>
-                <spacer name="verticalSpacer_21">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
+                <widget class="QLabel" name="label_3">
+                 <property name="text">
+                  <string/>
                  </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
+                </widget>
                </item>
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_124">
@@ -8015,18 +8058,20 @@
                    </property>
                   </widget>
                  </item>
-                 <item>
-                  <widget class="QPushButton" name="btn_clear_env">
-                   <property name="text">
-                    <string>Clear env</string>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources_new.qrc">
-                     <normaloff>:/icon/iconpack/icons8-update-96.png</normaloff>:/icon/iconpack/icons8-update-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
+               </item>
+               <item>
+                <spacer name="verticalSpacer_4">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </widget>
@@ -8035,8 +8080,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>243</width>
-                <height>150</height>
+                <width>384</width>
+                <height>391</height>
                </rect>
               </property>
               <attribute name="label">

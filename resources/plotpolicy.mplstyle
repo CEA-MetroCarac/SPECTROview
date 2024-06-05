@@ -9,8 +9,8 @@ figure.figsize : 8, 6
 
 xtick.major.size : 5
 xtick.major.width : 1
-xtick.minor.size : 3
-xtick.minor.width : 0.8
+xtick.minor.size : 2
+xtick.minor.width : 0.5
 
 xtick.direction: out
 xtick.minor.visible : True
@@ -19,10 +19,10 @@ xtick.top : True
 # Set y axis
 ytick.major.size : 5
 ytick.major.width : 1
-ytick.minor.size : 3
-ytick.minor.width : 0.8
+ytick.minor.size : 2
+ytick.minor.width : 0.5
 
-ytick.direction: out
+ytick.direction: in
 ytick.minor.visible : True
 ytick.right : True
 

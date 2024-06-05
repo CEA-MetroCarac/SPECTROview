@@ -8,7 +8,7 @@
 
 xtick.major.size : 5
 xtick.major.width : 1
-xtick.minor.size : 3
+xtick.minor.size : 2
 xtick.minor.width : 0.8
 
 xtick.direction: out
@@ -18,7 +18,7 @@ xtick.top : True
 # Set y axis
 ytick.major.size : 5
 ytick.major.width : 1
-ytick.minor.size : 3
+ytick.minor.size : 2
 ytick.minor.width : 0.8
 
 ytick.direction: out

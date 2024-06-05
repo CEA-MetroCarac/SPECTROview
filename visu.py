@@ -616,9 +616,9 @@ class Visu(QDialog):
 
                 # Prepare data to save
                 data_to_save = {
+                    'plots': plots_data,
                     'original_dfs': {key: df.to_dict() for key, df in
                                      self.original_dfs.items()},
-                    'plots': plots_data,
                 }
 
                 # Save to JSON file

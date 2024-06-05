@@ -1,4 +1,280 @@
 {
+    "plots": {
+        "1": {
+            "plot_width": 560,
+            "plot_height": 410,
+            "df_name": "2Dmaps_bestfit_results",
+            "filters": [
+                {
+                    "expression": "Filename != \"D23S2204.2_17\"",
+                    "state": false
+                },
+                {
+                    "expression": "Filename != \"D23S2204.2_19\"",
+                    "state": false
+                },
+                {
+                    "expression": "Filename == \"D23S2204.2_19\"",
+                    "state": true
+                }
+            ],
+            "graph_id": 1,
+            "plot_style": "wafer",
+            "x": "X",
+            "y": "Y",
+            "z": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
+            "xmin": "",
+            "xmax": "",
+            "ymin": "",
+            "ymax": "",
+            "zmin": "",
+            "zmax": "",
+            "plot_title": "",
+            "xlabel": "X",
+            "ylabel": "Y",
+            "zlabel": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
+            "x_rot": 0.0,
+            "grid": false,
+            "legend_visible": false,
+            "legend_outside": false,
+            "color_palette": "jet",
+            "dpi": 100.0,
+            "wafer_size": 200.0,
+            "wafer_stats": true,
+            "trendline_order": 1.0,
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": false
+        },
+        "5": {
+            "plot_width": 675,
+            "plot_height": 418,
+            "df_name": "2Dmaps_bestfit_results",
+            "filters": [
+                {
+                    "expression": "Filename != \"D23S2204.2_17\"",
+                    "state": false
+                },
+                {
+                    "expression": "Filename != \"D23S2204.2_19\"",
+                    "state": false
+                },
+                {
+                    "expression": "Filename == \"D23S2204.2_19\"",
+                    "state": false
+                }
+            ],
+            "graph_id": 5,
+            "plot_style": "scatter",
+            "x": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
+            "y": "Intensity of peak E$^1_{2g}$ (a.u)",
+            "z": "Slot",
+            "xmin": "",
+            "xmax": "",
+            "ymin": "",
+            "ymax": "",
+            "zmin": "",
+            "zmax": "",
+            "plot_title": "",
+            "xlabel": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
+            "ylabel": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
+            "zlabel": "Slot",
+            "x_rot": 0.0,
+            "grid": false,
+            "legend_visible": false,
+            "legend_outside": false,
+            "color_palette": "jet",
+            "dpi": 100.0,
+            "wafer_size": 200.0,
+            "wafer_stats": true,
+            "trendline_order": 1.0,
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": false
+        },
+        "2": {
+            "plot_width": 694,
+            "plot_height": 415,
+            "df_name": "2Dmaps_bestfit_results",
+            "filters": [
+                {
+                    "expression": "Filename != \"D23S2204.2_17\"",
+                    "state": true
+                },
+                {
+                    "expression": "Filename != \"D23S2204.2_19\"",
+                    "state": true
+                },
+                {
+                    "expression": "Filename == \"D23S2204.2_19\"",
+                    "state": false
+                }
+            ],
+            "graph_id": 2,
+            "plot_style": "bar",
+            "x": "Filename",
+            "y": "Intensity of peak E$^1_{2g}$ (a.u)",
+            "z": "Zone",
+            "xmin": "",
+            "xmax": "",
+            "ymin": "",
+            "ymax": "",
+            "zmin": "",
+            "zmax": "",
+            "plot_title": "",
+            "xlabel": "",
+            "ylabel": "Intensity of peak E$^1_{2g}$ (a.u)",
+            "zlabel": "Quadrant",
+            "x_rot": 20.0,
+            "grid": false,
+            "legend_visible": true,
+            "legend_outside": true,
+            "color_palette": "jet",
+            "dpi": 100.0,
+            "wafer_size": 200.0,
+            "wafer_stats": true,
+            "trendline_order": 1.0,
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": true
+        },
+        "4": {
+            "plot_width": 670,
+            "plot_height": 435,
+            "df_name": "2Dmaps_bestfit_results",
+            "filters": [
+                {
+                    "expression": "Filename != \"D23S2204.2_17\"",
+                    "state": false
+                },
+                {
+                    "expression": "Filename != \"D23S2204.2_19\"",
+                    "state": false
+                },
+                {
+                    "expression": "Filename == \"D23S2204.2_19\"",
+                    "state": false
+                }
+            ],
+            "graph_id": 4,
+            "plot_style": "trendline",
+            "x": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
+            "y": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
+            "z": "Slot",
+            "xmin": "",
+            "xmax": "",
+            "ymin": "",
+            "ymax": "",
+            "zmin": "",
+            "zmax": "",
+            "plot_title": "",
+            "xlabel": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
+            "ylabel": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
+            "zlabel": "Slot",
+            "x_rot": 0.0,
+            "grid": false,
+            "legend_visible": false,
+            "legend_outside": false,
+            "color_palette": "jet",
+            "dpi": 100.0,
+            "wafer_size": 200.0,
+            "wafer_stats": true,
+            "trendline_order": 1.0,
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": false
+        },
+        "3": {
+            "plot_width": 676,
+            "plot_height": 428,
+            "df_name": "2Dmaps_bestfit_results",
+            "filters": [
+                {
+                    "expression": "Filename != \"D23S2204.2_17\"",
+                    "state": true
+                },
+                {
+                    "expression": "Filename != \"D23S2204.2_19\"",
+                    "state": true
+                },
+                {
+                    "expression": "Filename == \"D23S2204.2_19\"",
+                    "state": false
+                }
+            ],
+            "graph_id": 3,
+            "plot_style": "point",
+            "x": "Filename",
+            "y": "Intensity of peak E$^1_{2g}$ (a.u)",
+            "z": "Zone",
+            "xmin": "",
+            "xmax": "",
+            "ymin": "750",
+            "ymax": "1500",
+            "zmin": "",
+            "zmax": "",
+            "plot_title": "",
+            "xlabel": "",
+            "ylabel": "Intensity of peak E$^1_{2g}$ (a.u)",
+            "zlabel": "Zone",
+            "x_rot": 20.0,
+            "grid": false,
+            "legend_visible": true,
+            "legend_outside": false,
+            "color_palette": "jet",
+            "dpi": 100.0,
+            "wafer_size": 200.0,
+            "wafer_stats": true,
+            "trendline_order": 1.0,
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": true
+        },
+        "6": {
+            "plot_width": 582,
+            "plot_height": 435,
+            "df_name": "2Dmaps_bestfit_results",
+            "filters": [
+                {
+                    "expression": "Filename != \"D23S2204.2_17\"",
+                    "state": true
+                },
+                {
+                    "expression": "Filename != \"D23S2204.2_19\"",
+                    "state": true
+                },
+                {
+                    "expression": "Filename == \"D23S2204.2_19\"",
+                    "state": false
+                },
+                {
+                    "expression": "Zone != \"Edge\"",
+                    "state": true
+                }
+            ],
+            "graph_id": 6,
+            "plot_style": "box",
+            "x": "Filename",
+            "y": "Intensity of peak E$^1_{2g}$ (a.u)",
+            "z": "Zone",
+            "xmin": "",
+            "xmax": "",
+            "ymin": "",
+            "ymax": "",
+            "zmin": "",
+            "zmax": "",
+            "plot_title": "",
+            "xlabel": "",
+            "ylabel": "Intensity of peak E$^1_{2g}$ (a.u)",
+            "zlabel": "Zone",
+            "x_rot": 20.0,
+            "grid": false,
+            "legend_visible": true,
+            "legend_outside": false,
+            "color_palette": "jet",
+            "dpi": 100.0,
+            "wafer_size": 200.0,
+            "wafer_stats": true,
+            "trendline_order": 1.0,
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": true
+        }
+    },
     "original_dfs": {
         "2Dmaps_bestfit_results": {
             "Filename": {
@@ -7547,136 +7823,6 @@
                 "47": "19",
                 "48": "19"
             }
-        }
-    },
-    "plots": {
-        "1": {
-            "plot_width": 560,
-            "plot_height": 410,
-            "df_name": "2Dmaps_bestfit_results",
-            "filters": [],
-            "graph_id": 1,
-            "plot_style": "wafer",
-            "x": "X",
-            "y": "Y",
-            "z": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
-            "xmin": "",
-            "xmax": "",
-            "ymin": "",
-            "ymax": "",
-            "zmin": "",
-            "zmax": "",
-            "plot_title": "",
-            "xlabel": "X",
-            "ylabel": "Y",
-            "zlabel": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
-            "x_rot": 0.0,
-            "grid": false,
-            "legend_visible": false,
-            "legend_outside": false,
-            "color_palette": "jet",
-            "dpi": 100.0,
-            "wafer_size": 200.0,
-            "wafer_stats": true,
-            "trendline_order": 1.0,
-            "show_trendline_eq": true,
-            "show_bar_plot_error_bar": false
-        },
-        "5": {
-            "plot_width": 675,
-            "plot_height": 418,
-            "df_name": "2Dmaps_bestfit_results",
-            "filters": [],
-            "graph_id": 5,
-            "plot_style": "scatter",
-            "x": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
-            "y": "Intensity of peak E$^1_{2g}$ (a.u)",
-            "z": "Slot",
-            "xmin": "",
-            "xmax": "",
-            "ymin": "",
-            "ymax": "",
-            "zmin": "",
-            "zmax": "",
-            "plot_title": "",
-            "xlabel": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
-            "ylabel": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
-            "zlabel": "Slot",
-            "x_rot": 0.0,
-            "grid": false,
-            "legend_visible": false,
-            "legend_outside": false,
-            "color_palette": "jet",
-            "dpi": 100.0,
-            "wafer_size": 200.0,
-            "wafer_stats": true,
-            "trendline_order": 1.0,
-            "show_trendline_eq": true,
-            "show_bar_plot_error_bar": false
-        },
-        "2": {
-            "plot_width": 694,
-            "plot_height": 415,
-            "df_name": "2Dmaps_bestfit_results",
-            "filters": [],
-            "graph_id": 2,
-            "plot_style": "bar",
-            "x": "Filename",
-            "y": "Intensity of peak E$^1_{2g}$ (a.u)",
-            "z": "Zone",
-            "xmin": "",
-            "xmax": "",
-            "ymin": "",
-            "ymax": "",
-            "zmin": "",
-            "zmax": "",
-            "plot_title": "",
-            "xlabel": "",
-            "ylabel": "Intensity of peak E$^1_{2g}$ (a.u)",
-            "zlabel": "Quadrant",
-            "x_rot": 20.0,
-            "grid": false,
-            "legend_visible": true,
-            "legend_outside": true,
-            "color_palette": "jet",
-            "dpi": 100.0,
-            "wafer_size": 200.0,
-            "wafer_stats": true,
-            "trendline_order": 1.0,
-            "show_trendline_eq": true,
-            "show_bar_plot_error_bar": true
-        },
-        "4": {
-            "plot_width": 670,
-            "plot_height": 435,
-            "df_name": "2Dmaps_bestfit_results",
-            "filters": [],
-            "graph_id": 4,
-            "plot_style": "trendline",
-            "x": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
-            "y": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
-            "z": "Slot",
-            "xmin": "",
-            "xmax": "",
-            "ymin": "",
-            "ymax": "",
-            "zmin": "",
-            "zmax": "",
-            "plot_title": "",
-            "xlabel": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
-            "ylabel": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
-            "zlabel": "Slot",
-            "x_rot": 0.0,
-            "grid": false,
-            "legend_visible": false,
-            "legend_outside": false,
-            "color_palette": "jet",
-            "dpi": 100.0,
-            "wafer_size": 200.0,
-            "wafer_stats": true,
-            "trendline_order": 1.0,
-            "show_trendline_eq": true,
-            "show_bar_plot_error_bar": false
         }
     }
 }

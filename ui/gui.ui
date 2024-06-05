@@ -54,7 +54,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_wafer">
        <attribute name="title">
@@ -1512,7 +1512,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
+                       <width>411</width>
                        <height>350</height>
                       </rect>
                      </property>
@@ -2501,7 +2501,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>201</width>
+                     <width>231</width>
                      <height>375</height>
                     </rect>
                    </property>
@@ -5318,7 +5318,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
+                       <width>411</width>
                        <height>350</height>
                       </rect>
                      </property>
@@ -7173,7 +7173,7 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="0,10,10,5,200,0,0">
+          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="0,10,20,5,40,0,0">
            <property name="spacing">
             <number>5</number>
            </property>
@@ -7537,7 +7537,7 @@
               <item>
                <widget class="QListWidget" name="listbox_filters">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
@@ -7551,7 +7551,7 @@
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>80</height>
+                  <height>200</height>
                  </size>
                 </property>
                </widget>
@@ -7645,7 +7645,7 @@
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>90</width>
+                 <width>100</width>
                  <height>100</height>
                 </size>
                </property>
@@ -7718,7 +7718,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>384</width>
-                <height>432</height>
+                <height>396</height>
                </rect>
               </property>
               <attribute name="label">

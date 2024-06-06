@@ -150,12 +150,14 @@ class Visu(QDialog):
         self.ui.mdiArea.addSubWindow(sub_window)
         sub_window.show()
         QTimer.singleShot(100, self.update_graph)
+        self.populate_graph_combo_box()
 
     def delete_graph(self, graph_id):
         """Delete a graph from the self.plots dictionary"""
         if graph_id in self.plots:
             del self.plots[graph_id]
             print(f"Plot {graph_id} is deleted")
+            self.populate_graph_combo_box()
 
     def update_graph(self):
         """ Update the existing graph with new properties"""
@@ -533,8 +535,12 @@ class Visu(QDialog):
         for graph_id, graph in self.plots.items():
             self.ui.cbb_graph_list.addItem(
                 f"Graph_{graph.graph_id}: [{graph.x}] - [{graph.y}] - [{graph.z}]")
+        # Set the current selection to the last item added
+        if self.ui.cbb_graph_list.count() > 0:
+            self.ui.cbb_graph_list.setCurrentIndex(self.ui.cbb_graph_list.count() - 1)
 
-    def select_sub_window_from_combo_box(self, index):
+    def select_sub_window_from_combo_box(self):
+        """Select and show a graph on top via a combobox"""
         graph_title = self.ui.cbb_graph_list.currentText()
         for sub_window in self.ui.mdiArea.subWindowList():
             graph_dialog = sub_window.widget()

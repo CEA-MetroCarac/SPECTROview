@@ -4,11 +4,11 @@
 
 ### SPECTROview : An all-in-one Application for Spectroscopic Data Processing and Visualization.
 
-*Version 2024.5*
+*Version 2024.6a*
 
 Fitting features are powered
 by the [FITSPY](https://github.com/CEA-MetroCarac/fitspy)
- and [LMFIT](https://lmfit.github.io/lmfit-py/) open-source packages.
+and [LMFIT](https://lmfit.github.io/lmfit-py/) open-source packages.
 ___
 
 ## Main features:

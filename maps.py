@@ -9,7 +9,7 @@ from copy import deepcopy
 from pathlib import Path
 import dill
 from common import view_df, show_alert, FitModelManager, Filter
-from common import FitThread, WaferView, ShowParameters, FIT_METHODS, NCPUS
+from common import FitThread, WaferPlot, ShowParameters, FIT_METHODS, NCPUS
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -1033,7 +1033,7 @@ class Maps(QObject):
         fig = plt.figure(dpi=80)
         ax = fig.add_subplot(111)
 
-        wdf = WaferView()
+        wdf = WaferPlot()
         wdf.plot(ax, x=x, y=y, z=param, cmap=color, vmin=vmin, vmax=vmax,
                  stats=stats, r=(wafer_size / 2))
 

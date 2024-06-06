@@ -532,8 +532,7 @@ class Visu(QDialog):
         self.ui.cbb_graph_list.clear()
         for graph_id, graph in self.plots.items():
             self.ui.cbb_graph_list.addItem(
-                f"Graph_{graph_id}: ({graph.x} vs. {graph.y} vs. "
-                f"{graph.z or 'None'})")
+                f"Graph_{graph.graph_id}: [{graph.x}] - [{graph.y}] - [{graph.z}]")
 
     def select_sub_window_from_combo_box(self, index):
         graph_title = self.ui.cbb_graph_list.currentText()
@@ -541,9 +540,7 @@ class Visu(QDialog):
             graph_dialog = sub_window.widget()
             if isinstance(graph_dialog, QDialog):
                 graph = graph_dialog.layout().itemAt(0).widget()
-                if graph and graph_title == f"Graph_{graph.graph_id}: (" \
-                                            f"{graph.x} vs. {graph.y} vs. " \
-                                            f"{graph.z or 'None'})":
+                if graph and graph_title == f"Graph_{graph.graph_id}: [{graph.x}] - [{graph.y}] - [{graph.z}]":
                     if sub_window.isMinimized():
                         sub_window.showNormal()
                     self.ui.mdiArea.setActiveSubWindow(sub_window)

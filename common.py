@@ -49,6 +49,8 @@ PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
 
 
 class Graph(QWidget):
+    """Class to create and handle plot/graph objects """
+
     def __init__(self, graph_id=None):  # Add plot_number as an argument
         super().__init__()
         self.df_name = None  # df or df_name?
@@ -612,6 +614,7 @@ class FitThread(QThread):
 
 class ShowParameters:
     """Class dedicated to show fit paramters in a Peak_tables"""
+
     def __init__(self, main_layout, sel_spectrum, cb_limits, cb_expr, update):
         self.main_layout = main_layout
         self.sel_spectrum = sel_spectrum

@@ -17,7 +17,7 @@ from PySide6.QtWidgets import QApplication, QFileDialog, QDialog, QVBoxLayout, \
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 
 
-class Visu(QDialog):
+class Visualization(QDialog):
     """Class to GUI and callbacks"""
 
     def __init__(self, settings, ui, common):
@@ -318,7 +318,8 @@ class Visu(QDialog):
             # Show error bar for bar_plot
             self.ui.cb_show_err_bar_plot.setChecked(
                 graph.show_bar_plot_error_bar)
-            self.apply_filters()
+            
+            # self.apply_filters()
 
     def reflect_filters_to_gui(self, sel_graph):
         """Reflect the filters of a graph object and their states to the df
@@ -540,7 +541,8 @@ class Visu(QDialog):
         self.ui.cbb_graph_list.clear()
         for graph_id, graph in self.plots.items():
             self.ui.cbb_graph_list.addItem(
-                f"Graph_{graph.graph_id}: [{graph.x}] - [{graph.y}] - ["
+                f"{graph.graph_id}-{graph.plot_style}_plot: [{graph.x}] - ["
+                f"{graph.y}] - ["
                 f"{graph.z}]")
         # Set the current selection to the last item added
         if self.ui.cbb_graph_list.count() > 0:
@@ -554,7 +556,8 @@ class Visu(QDialog):
             graph_dialog = sub_window.widget()
             if isinstance(graph_dialog, QDialog):
                 graph = graph_dialog.layout().itemAt(0).widget()
-                if graph and graph_title == f"Graph_{graph.graph_id}: [" \
+                if graph and graph_title == f"{graph.graph_id}-" \
+                                            f"{graph.plot_style}_plot: [" \
                                             f"{graph.x}] - [{graph.y}] - [" \
                                             f"{graph.z}]":
                     if sub_window.isMinimized():

@@ -15,7 +15,7 @@ from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
 from ui import resources_new
 from maps import Maps
 from spectrums import Spectrums
-from visu import Visu
+from visualization import Visualization
 
 DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")
@@ -49,7 +49,7 @@ class Main:
         self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
 
         # Create an instance of Dataframe and pass the self.ui object
-        self.visu = Visu(self.settings, self.ui, self.common)
+        self.visu = Visualization(self.settings, self.ui, self.common)
         self.spectrums = Spectrums(self.settings, self.ui, self.common,
                                    self.visu)
         self.maps = Maps(self.settings, self.ui, self.spectrums, self.common,

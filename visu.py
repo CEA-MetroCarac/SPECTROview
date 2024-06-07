@@ -55,7 +55,10 @@ class Visu(QDialog):
         self.ui.btn_copy_graph.clicked.connect(self.copy_fig_to_clb)
         self.ui.cbb_palette.addItems(PALETTE)
         self.ui.cbb_plotstyle.addItems(PLOT_STYLES)
+
         self.ui.btn_adjust_dpi.clicked.connect(self.adjust_dpi)
+        # self.ui.spb_dpi.valueChanged.connect(self.adjust_dpi)
+
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
         self.ui.cbb_graph_list.currentIndexChanged.connect(
@@ -64,7 +67,7 @@ class Visu(QDialog):
         # SAVE / LOAD
         self.ui.btn_save_work.clicked.connect(self.save)
         self.ui.btn_load_work.clicked.connect(self.load)
-        # self.ui.btn_minimize_all.clicked.connect(self.minimize_all)
+        self.ui.btn_minimize_all.clicked.connect(self.minimize_all_graph)
         # self.ui.btn_maximize_all.clicked.connect(self.restore_all)
 
     def add_graph(self, df_name=None, filters=None):
@@ -131,7 +134,8 @@ class Visu(QDialog):
         # Create a QDialog to hold the Graph instance
         graph_dialog = QDialog(self)
         graph_dialog.setWindowTitle(
-            f"Graph_{graph.graph_id}: [{x}] - [{y}] - [{z}]")
+            f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - "
+            f"[{z}]")
         layout = QVBoxLayout()
         layout.addWidget(graph)
         graph_dialog.setLayout(layout)
@@ -160,14 +164,13 @@ class Visu(QDialog):
             self.populate_graph_combo_box()
 
     def update_graph(self):
-        """ Update the existing graph with new properties"""
-        sel_graph, graph_dialog, sub_window = self.get_sel_graph()
-        if sel_graph:
-
-            # Retrieve the current size of the subwindow
+        """ Update the selected graph with new properties"""
+        graph, graph_dialog, sub_window = self.get_sel_graph()
+        if graph:
+            # Retrieve the current size of the sub_window
             sub_window_size = sub_window.size()
-            sel_graph.plot_width = sub_window_size.width()
-            sel_graph.plot_height = sub_window_size.height()
+            graph.plot_width = sub_window_size.width()
+            graph.plot_height = sub_window_size.height()
 
             plot_style = self.ui.cbb_plotstyle.currentText()
             plot_title = self.ui.lbl_plot_title.text()
@@ -189,59 +192,61 @@ class Visu(QDialog):
             current_filters = self.filter.get_current_filters()
 
             # Apply values for "graph" object
-            sel_graph.df_name = self.ui.dfs_listbox.currentItem().text()
-            sel_graph.filters = current_filters
-            sel_graph.x = x
-            sel_graph.y = y
-            sel_graph.z = z if z != "None" else None
+            graph.df_name = self.ui.dfs_listbox.currentItem().text()
+            graph.filters = current_filters
+            graph.x = x
+            graph.y = y
+            graph.z = z if z != "None" else None
 
-            sel_graph.xmin = xmin
-            sel_graph.xmax = xmax
-            sel_graph.ymin = ymin
-            sel_graph.ymax = ymax
-            sel_graph.zmin = zmin
-            sel_graph.zmax = zmax
-            sel_graph.xlabel = xlabel
-            sel_graph.ylabel = ylabel
-            sel_graph.zlabel = zlabel
-            sel_graph.x_rot = x_rot
-            sel_graph.plot_style = plot_style
-            sel_graph.plot_title = plot_title
-            sel_graph.color_palette = palette
-            sel_graph.wafer_size = float(self.ui.lbl_wafersize.text())
-            sel_graph.wafer_stats = self.ui.cb_wafer_stats.isChecked()
-            sel_graph.legend_visible = self.ui.cb_legend_visible.isChecked()
-            sel_graph.legend_outside = self.ui.cb_legend_outside.isChecked()
-            sel_graph.grid = self.ui.cb_grid.isChecked()
-            sel_graph.dpi = float(self.ui.spb_dpi.text())
-            sel_graph.trendline_order = float(self.ui.spb_trendline_oder.text())
-            sel_graph.show_trendline_eq = self.ui.cb_trendline_eq.isChecked()
-            sel_graph.show_bar_plot_error_bar = \
+            graph.xmin = xmin
+            graph.xmax = xmax
+            graph.ymin = ymin
+            graph.ymax = ymax
+            graph.zmin = zmin
+            graph.zmax = zmax
+            graph.xlabel = xlabel
+            graph.ylabel = ylabel
+            graph.zlabel = zlabel
+            graph.x_rot = x_rot
+            graph.plot_style = plot_style
+            graph.plot_title = plot_title
+            graph.color_palette = palette
+            graph.wafer_size = float(self.ui.lbl_wafersize.text())
+            graph.wafer_stats = self.ui.cb_wafer_stats.isChecked()
+            graph.legend_visible = self.ui.cb_legend_visible.isChecked()
+            graph.legend_outside = self.ui.cb_legend_outside.isChecked()
+            graph.grid = self.ui.cb_grid.isChecked()
+            graph.dpi = float(self.ui.spb_dpi.text())
+            graph.trendline_order = float(self.ui.spb_trendline_oder.text())
+            graph.show_trendline_eq = self.ui.cb_trendline_eq.isChecked()
+            graph.show_bar_plot_error_bar = \
                 self.ui.cb_show_err_bar_plot.isChecked()
 
             graph_dialog.setWindowTitle(
-                f"Graph_{sel_graph.graph_id}: [{x}] - [{y}] - [{z}]")
+                f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - ["
+                f"{z}]")
             if plot_style == 'wafer':
-                sel_graph.create_plot_widget(sel_graph.dpi,
-                                             sel_graph.graph_layout)
-                sel_graph.plot(self.filtered_df)
+                graph.create_plot_widget(graph.dpi,
+                                         graph.graph_layout)
+                graph.plot(self.filtered_df)
             else:
-                sel_graph.plot(self.filtered_df)
+                graph.plot(self.filtered_df)
 
     def adjust_dpi(self):
-        sel_graph, graph_dialog, sub_window = self.get_sel_graph()
+        graph, graph_dialog, sub_window = self.get_sel_graph()
         dpi = float(self.ui.spb_dpi.text())
-        if sel_graph:
-            sel_graph.create_plot_widget(dpi, sel_graph.graph_layout)
+        if graph:
+            # Recreate the plot widget with new DPI
+            graph.create_plot_widget(dpi, graph.graph_layout)
             QTimer.singleShot(100, self.update_graph)
 
     def on_selected_graph(self, sub_window):
         """Reflect all properties of selected graph object to GUI"""
-        sel_graph, graph_dialog, sub_window = self.get_sel_graph()
+        graph, graph_dialog, sub_window = self.get_sel_graph()
 
-        if sel_graph:
+        if graph:
             # Plot style
-            plot_style = sel_graph.plot_style
+            plot_style = graph.plot_style
             items = [self.ui.cbb_plotstyle.itemText(i) for i in
                      range(self.ui.cbb_plotstyle.count())]
             if plot_style in items:
@@ -250,19 +255,19 @@ class Visu(QDialog):
             # Reflect df_name in the listbox
             current_items = [self.ui.dfs_listbox.item(i).text() for i in
                              range(self.ui.dfs_listbox.count())]
-            if sel_graph.df_name not in current_items:
-                self.ui.dfs_listbox.addItem(sel_graph.df_name)
+            if graph.df_name not in current_items:
+                self.ui.dfs_listbox.addItem(graph.df_name)
             else:
-                index = current_items.index(sel_graph.df_name)
+                index = current_items.index(graph.df_name)
                 self.ui.dfs_listbox.setCurrentRow(index)
 
             # Reflect filter's states in the listbox
-            self.reflect_filters_to_gui(sel_graph)
+            self.reflect_filters_to_gui(graph)
 
             # Update combobox selections
-            x = self.ui.cbb_x_2.findText(sel_graph.x)
-            y = self.ui.cbb_y_2.findText(sel_graph.y)
-            z = self.ui.cbb_z_2.findText(sel_graph.z)
+            x = self.ui.cbb_x_2.findText(graph.x)
+            y = self.ui.cbb_y_2.findText(graph.y)
+            z = self.ui.cbb_z_2.findText(graph.z)
             self.ui.cbb_x_2.setCurrentIndex(
                 x if x != -1 else 0)
             self.ui.cbb_y_2.setCurrentIndex(
@@ -271,48 +276,49 @@ class Visu(QDialog):
                 z if z != -1 else 0)
 
             # WAFER
-            self.ui.lbl_wafersize.setText(str(sel_graph.wafer_size))
-            self.ui.cb_wafer_stats.setChecked(sel_graph.wafer_stats)
+            self.ui.lbl_wafersize.setText(str(graph.wafer_size))
+            self.ui.cb_wafer_stats.setChecked(graph.wafer_stats)
 
             # Rotation x label:
-            self.ui.x_rot.setValue(sel_graph.x_rot)
+            self.ui.x_rot.setValue(graph.x_rot)
             # Reflect Titles:
-            self.ui.lbl_plot_title.setText(sel_graph.plot_title)
-            self.ui.lbl_xlabel.setText(sel_graph.xlabel)
-            self.ui.lbl_ylabel.setText(sel_graph.ylabel)
-            self.ui.lbl_zlabel.setText(sel_graph.zlabel)
+            self.ui.lbl_plot_title.setText(graph.plot_title)
+            self.ui.lbl_xlabel.setText(graph.xlabel)
+            self.ui.lbl_ylabel.setText(graph.ylabel)
+            self.ui.lbl_zlabel.setText(graph.zlabel)
             # Reflect limits:
-            self.ui.xmin_2.setText(sel_graph.xmin)
-            self.ui.ymin_2.setText(sel_graph.ymin)
-            self.ui.zmin_2.setText(sel_graph.zmin)
-            self.ui.xmax_2.setText(sel_graph.xmax)
-            self.ui.ymax_2.setText(sel_graph.ymax)
-            self.ui.zmax_2.setText(sel_graph.zmax)
+            self.ui.xmin_2.setText(graph.xmin)
+            self.ui.ymin_2.setText(graph.ymin)
+            self.ui.zmin_2.setText(graph.zmin)
+            self.ui.xmax_2.setText(graph.xmax)
+            self.ui.ymax_2.setText(graph.ymax)
+            self.ui.zmax_2.setText(graph.zmax)
 
             # Reflect legend status
-            self.ui.cb_legend_visible.setChecked(sel_graph.legend_visible)
-            self.ui.cb_legend_outside.setChecked(sel_graph.legend_outside)
+            self.ui.cb_legend_visible.setChecked(graph.legend_visible)
+            self.ui.cb_legend_outside.setChecked(graph.legend_outside)
 
             # Grid
-            self.ui.cb_grid.setChecked(sel_graph.grid)
+            self.ui.cb_grid.setChecked(graph.grid)
 
             # Reflect Color palette
-            color_palette = sel_graph.color_palette
+            color_palette = graph.color_palette
             combo_items = [self.ui.cbb_palette.itemText(i) for i in
                            range(self.ui.cbb_palette.count())]
             if color_palette in combo_items:
                 self.ui.cbb_palette.setCurrentText(color_palette)
 
             # Reflect DPI
-            self.ui.spb_dpi.setValue(sel_graph.dpi)
+            self.ui.spb_dpi.setValue(graph.dpi)
 
             # Trendline
-            self.ui.spb_trendline_oder.setValue(sel_graph.trendline_order)
-            self.ui.cb_trendline_eq.setChecked(sel_graph.show_trendline_eq)
+            self.ui.spb_trendline_oder.setValue(graph.trendline_order)
+            self.ui.cb_trendline_eq.setChecked(graph.show_trendline_eq)
 
             # Show error bar for bar_plot
             self.ui.cb_show_err_bar_plot.setChecked(
-                sel_graph.show_bar_plot_error_bar)
+                graph.show_bar_plot_error_bar)
+            self.apply_filters()
 
     def reflect_filters_to_gui(self, sel_graph):
         """Reflect the filters of a graph object and their states to the df
@@ -534,10 +540,12 @@ class Visu(QDialog):
         self.ui.cbb_graph_list.clear()
         for graph_id, graph in self.plots.items():
             self.ui.cbb_graph_list.addItem(
-                f"Graph_{graph.graph_id}: [{graph.x}] - [{graph.y}] - [{graph.z}]")
+                f"Graph_{graph.graph_id}: [{graph.x}] - [{graph.y}] - ["
+                f"{graph.z}]")
         # Set the current selection to the last item added
         if self.ui.cbb_graph_list.count() > 0:
-            self.ui.cbb_graph_list.setCurrentIndex(self.ui.cbb_graph_list.count() - 1)
+            self.ui.cbb_graph_list.setCurrentIndex(
+                self.ui.cbb_graph_list.count() - 1)
 
     def select_sub_window_from_combo_box(self):
         """Select and show a graph on top via a combobox"""
@@ -546,11 +554,18 @@ class Visu(QDialog):
             graph_dialog = sub_window.widget()
             if isinstance(graph_dialog, QDialog):
                 graph = graph_dialog.layout().itemAt(0).widget()
-                if graph and graph_title == f"Graph_{graph.graph_id}: [{graph.x}] - [{graph.y}] - [{graph.z}]":
+                if graph and graph_title == f"Graph_{graph.graph_id}: [" \
+                                            f"{graph.x}] - [{graph.y}] - [" \
+                                            f"{graph.z}]":
                     if sub_window.isMinimized():
                         sub_window.showNormal()
                     self.ui.mdiArea.setActiveSubWindow(sub_window)
                     return
+
+    def minimize_all_graph(self):
+        """Minimize all graph sub-windows"""
+        for sub_window in self.ui.mdiArea.subWindowList():
+            sub_window.showMinimized()
 
     def clear_env(self):
         # Clear original dataframes
@@ -718,7 +733,8 @@ class Visu(QDialog):
                         # Create a QDialog to hold the Graph instance
                         graph_dialog = QDialog(self)
                         graph_dialog.setWindowTitle(
-                            f"Graph_{graph.graph_id}: [{graph.x}] - "
+                            f"{graph.graph_id}-{graph.plot_style}_plot: ["
+                            f"{graph.x}] - "
                             f"[{graph.y}] - [{graph.z}]")
 
                         layout = QVBoxLayout()

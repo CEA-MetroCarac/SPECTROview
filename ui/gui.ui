@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1608</width>
-    <height>1024</height>
+    <width>1628</width>
+    <height>1050</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -663,7 +663,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>341</height>
+                          <height>352</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -1137,8 +1137,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>774</width>
-                               <height>223</height>
+                               <width>794</width>
+                               <height>234</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -4102,7 +4102,7 @@
                       <x>0</x>
                       <y>0</y>
                       <width>339</width>
-                      <height>507</height>
+                      <height>521</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,0,0,0,0,0">
@@ -4483,7 +4483,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>358</height>
+                          <height>370</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -4957,8 +4957,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>776</width>
-                               <height>240</height>
+                               <width>796</width>
+                               <height>252</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -6959,7 +6959,7 @@
       </widget>
       <widget class="QWidget" name="tab_graphs">
        <attribute name="title">
-        <string>Graph</string>
+        <string>Data Visualization</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_47">
         <property name="spacing">
@@ -7011,10 +7011,10 @@
             <item>
              <widget class="QMdiArea" name="mdiArea">
               <property name="verticalScrollBarPolicy">
-               <enum>Qt::ScrollBarAlwaysOn</enum>
+               <enum>Qt::ScrollBarAsNeeded</enum>
               </property>
               <property name="horizontalScrollBarPolicy">
-               <enum>Qt::ScrollBarAlwaysOff</enum>
+               <enum>Qt::ScrollBarAsNeeded</enum>
               </property>
              </widget>
             </item>
@@ -7022,6 +7022,13 @@
              <layout class="QHBoxLayout" name="horizontalLayout_122">
               <item>
                <widget class="QComboBox" name="cbb_graph_list"/>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_minimize_all">
+                <property name="text">
+                 <string>Minimize All</string>
+                </property>
+               </widget>
               </item>
               <item>
                <spacer name="horizontalSpacer_2">
@@ -7041,7 +7048,7 @@
                 <item>
                  <widget class="QPushButton" name="btn_adjust_dpi">
                   <property name="text">
-                   <string>Text size</string>
+                   <string>Adj DPI:</string>
                   </property>
                  </widget>
                 </item>
@@ -7065,17 +7072,6 @@
                  </widget>
                 </item>
                </layout>
-              </item>
-              <item>
-               <widget class="QPushButton" name="btn_copy_graph">
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="icon">
-                 <iconset resource="resources_new.qrc">
-                  <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
-                </property>
-               </widget>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_110">
@@ -7129,6 +7125,17 @@
                <widget class="QCheckBox" name="cb_grid">
                 <property name="text">
                  <string>Grid</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_copy_graph">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="resources_new.qrc">
+                  <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                 </property>
                </widget>
               </item>
@@ -7718,7 +7725,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>384</width>
-                <height>396</height>
+                <height>412</height>
                </rect>
               </property>
               <attribute name="label">
@@ -8195,7 +8202,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1608</width>
+     <width>1628</width>
      <height>21</height>
     </rect>
    </property>
@@ -8293,7 +8300,7 @@
   </action>
   <action name="actionLightMode">
    <property name="icon">
-    <iconset resource="resources_new.qrc">
+    <iconset>
      <normaloff>:/icon/iconpack/light.png</normaloff>:/icon/iconpack/light.png</iconset>
    </property>
    <property name="text">

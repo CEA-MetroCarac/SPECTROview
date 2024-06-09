@@ -13,10 +13,6 @@ except:
 from io import BytesIO
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import linregress
-
-from matplotlib.figure import Figure
-
 import matplotlib.patches as patches
 import seaborn as sns
 
@@ -62,33 +58,44 @@ class Graph(QWidget):
         self.plot_style = "point"
         self.x = None
         self.y = None
+        self.y2 = None
+        self.y3 = None
         self.z = None
         self.xmin = None
         self.xmax = None
         self.ymin = None
         self.ymax = None
+        self.y2min = None
+        self.y2max = None
+        self.y3min = None
+        self.y3max = None
         self.zmin = None
         self.zmax = None
 
         self.plot_title = None
         self.xlabel = None
         self.ylabel = None
+        self.y2label = None
+        self.y3label = None
         self.zlabel = None
 
         self.x_rot = 0
         self.grid = False
         self.legend_visible = True
         self.legend_outside = False
-        self.color_palette = "jet"
+        self.color_palette = "jet" # Palette for 2D maps
         self.dpi = 100
         self.wafer_size = 300
         self.wafer_stats = True
         self.trendline_order = 1
         self.show_trendline_eq = True
         self.show_bar_plot_error_bar = True
+        self.join_for_point_plot = False
 
         self.figure = None
         self.ax = None
+        self.ax2 = None  # Secondary y-axis
+        self.ax3 = None  # Tertiary y-axis
         self.canvas = None
         self.graph_layout = QVBoxLayout()
         self.setLayout(self.graph_layout)
@@ -114,105 +121,145 @@ class Graph(QWidget):
     def plot(self, df):
         """Need to provide 'dfs'= dictionary of dataframes"""
         self.ax.clear()
-        if self.df_name is not None and self.x is not None and self.y is not \
-                None:
-            # Retrive actual dataframe from the dict dfs
-            if self.plot_style == 'line':
-                sns.lineplot(data=df, x=self.x, y=self.y, hue=self.z,
-                             ax=self.ax)
-            elif self.plot_style == 'point':
-                sns.pointplot(data=df, x=self.x, y=self.y, hue=self.z,
-                              ax=self.ax,
-                              linestyle='none',
-                              markeredgecolor='black',
-                              markeredgewidth=1,
-                              dodge=True,
-                              err_kws={'linewidth': 1, 'color': 'black'},
-                              capsize=0.05)
-            elif self.plot_style == 'scatter':
-                sns.scatterplot(data=df, x=self.x, y=self.y, hue=self.z,
-                                ax=self.ax,
-                                s=100,
-                                edgecolor='black')
-            elif self.plot_style == 'bar':
-                if self.show_bar_plot_error_bar:
-                    sns.barplot(data=df, x=self.x, y=self.y, hue=self.z,
-                                errorbar='sd', ax=self.ax)
-                else:
-                    sns.barplot(data=df, x=self.x, y=self.y, hue=self.z,
-                                errorbar=None, ax=self.ax)
+        if self.ax2:
+            self.ax2.clear()
+        if self.ax3:
+            self.ax3.clear()
 
-            elif self.plot_style == 'box':
-                sns.boxplot(data=df, x=self.x, y=self.y, hue=self.z,
-                            dodge=True, ax=self.ax)
-            elif self.plot_style == 'trendline':
-                sns.regplot(data=df, x=self.x, y=self.y, ax=self.ax,
-                            scatter=True, order=self.trendline_order)
-                if self.show_trendline_eq:
-                    # Calculate trendline equation and show in the plot
-                    x_data = df[self.x]
-                    y_data = df[self.y]
-                    coefficients = np.polyfit(x_data, y_data,
-                                              self.trendline_order)
-                    equation = 'y = '
-                    for i, coeff in enumerate(coefficients[::-1]):
-                        equation += (
-                            f'{coeff:.2f}x^{self.trendline_order - i} + '
-                            if i < self.trendline_order else f'{coeff:.2f}')
-
-                    self.ax.annotate(equation, xy=(0.02, 0.95),
-                                     xycoords='axes fraction', fontsize=10,
-                                     color='blue')
-
-            elif self.plot_style == 'wafer':
-                if self.zmin and self.zmax:
-                    vmin = self.zmin
-                    vmax = self.zmax
-                else:
-                    vmin = None
-                    vmax = None
-                wdf = WaferPlot()
-                wdf.plot(self.ax, x=df[self.x], y=df[self.y], z=df[self.z],
-                         cmap=self.color_palette, vmin=vmin, vmax=vmax,
-                         stats=self.wafer_stats, r=(self.wafer_size / 2))
-
-            else:
-                show_alert("Unsupported plot style")
+        if self.df_name is not None and self.x is not None and self.y is not None:
+            self._plot_primary_axis(df)
+            self._plot_secondary_axis(df)
+            self._plot_tertiary_axis(df)
         else:
             self.ax.plot([], [])
 
+        self._set_limits()
+        self._set_labels()
+        self._set_legend()
+        self._set_grid()
+        self._set_rotation()
+
+        self.ax.get_figure().tight_layout()
+        self.canvas.draw()
+
+    def _plot_primary_axis(self, df):
+        if self.plot_style == 'line':
+            sns.lineplot(data=df, x=self.x, y=self.y, hue=self.z, ax=self.ax)
+        elif self.plot_style == 'point':
+            sns.pointplot(data=df, x=self.x, y=self.y, hue=self.z, ax=self.ax,
+                          join=self.join_for_point_plot, markeredgecolor='black', markeredgewidth=1,
+                          dodge=True, err_kws={'linewidth': 1, 'color': 'black'}, capsize=0.02)
+        elif self.plot_style == 'scatter':
+            sns.scatterplot(data=df, x=self.x, y=self.y, hue=self.z, ax=self.ax,
+                            s=100, edgecolor='black')
+        elif self.plot_style == 'bar':
+            if self.show_bar_plot_error_bar:
+                sns.barplot(data=df, x=self.x, y=self.y, hue=self.z, errorbar='sd', ax=self.ax)
+            else:
+                sns.barplot(data=df, x=self.x, y=self.y, hue=self.z, errorbar=None, ax=self.ax)
+        elif self.plot_style == 'box':
+            sns.boxplot(data=df, x=self.x, y=self.y, hue=self.z, dodge=True, ax=self.ax)
+        elif self.plot_style == 'trendline':
+            sns.regplot(data=df, x=self.x, y=self.y, ax=self.ax, scatter=True, order=self.trendline_order)
+            if self.show_trendline_eq:
+                self._annotate_trendline_eq(df)
+        elif self.plot_style == 'wafer':
+            self._plot_wafer(df)
+        else:
+            show_alert("Unsupported plot style")
+
+    def _plot_secondary_axis(self, df):
+        if self.ax2:
+            self.ax2.remove()
+            self.ax2 = None
+        if hasattr(self, 'y2') and self.y2:
+            self.ax2 = self.ax.twinx()
+            if self.plot_style == 'line':
+                sns.lineplot(data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2)
+            elif self.plot_style == 'point':
+                sns.pointplot(data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
+                              join=self.join_for_point_plot, marker='s', markeredgecolor='black', markeredgewidth=1,
+                              dodge=True, err_kws={'linewidth': 1, 'color': 'black'}, capsize=0.02)
+            elif self.plot_style == 'scatter':
+                sns.scatterplot(data=df, x=self.x, marker='s', y=self.y2, hue=self.z, ax=self.ax2,
+                                s=100, edgecolor='black')
+            else:
+                self.ax2.remove()
+                self.ax2 = None
+
+    def _plot_tertiary_axis(self, df):
+        if self.ax3:
+            self.ax3.remove()
+            self.ax3 = None
+        if hasattr(self, 'y3') and self.y3:
+            self.ax3 = self.ax.twinx()
+            self.ax3.spines["right"].set_position(("outward", 100))
+            if self.plot_style == 'line':
+                sns.lineplot(data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3)
+            elif self.plot_style == 'point':
+                sns.pointplot(data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
+                              join=self.join_for_point_plot, marker='^', markeredgecolor='black', markeredgewidth=1,
+                              dodge=True, err_kws={'linewidth': 1, 'color': 'black'}, capsize=0.02)
+            elif self.plot_style == 'scatter':
+                sns.scatterplot(data=df, x=self.x, marker='^', y=self.y3, hue=self.z, ax=self.ax3,
+                                s=100, edgecolor='black')
+            else:
+                self.ax3.remove()
+                self.ax3 = None
+
+    def _annotate_trendline_eq(self, df):
+        x_data = df[self.x]
+        y_data = df[self.y]
+        coefficients = np.polyfit(x_data, y_data, self.trendline_order)
+        equation = 'y = '
+        for i, coeff in enumerate(coefficients[::-1]):
+            equation += (f'{coeff:.2f}x^{self.trendline_order - i} + '
+                         if i < self.trendline_order else f'{coeff:.2f}')
+        self.ax.annotate(equation, xy=(0.02, 0.95), xycoords='axes fraction',
+                         fontsize=10, color='blue')
+
+    def _plot_wafer(self, df):
+        vmin = self.zmin if self.zmin else None
+        vmax = self.zmax if self.zmax else None
+        wdf = WaferPlot()
+        wdf.plot(self.ax, x=df[self.x], y=df[self.y], z=df[self.z], cmap=self.color_palette,
+                 vmin=vmin, vmax=vmax, stats=self.wafer_stats, r=(self.wafer_size / 2))
+
+    def _set_limits(self):
         if self.xmin and self.xmax:
             self.ax.set_xlim(float(self.xmin), float(self.xmax))
         if self.ymin and self.ymax:
             self.ax.set_ylim(float(self.ymin), float(self.ymax))
+        if self.ax2 and self.y2min and self.y2max:
+            self.ax2.set_ylim(float(self.y2min), float(self.y2max))
+        if self.ax3 and self.y3min and self.y3max:
+            self.ax3.set_ylim(float(self.y3min), float(self.y3max))
 
-        if self.plot_style == 'wafer':
-            if self.plot_title:
-                self.ax.set_title(self.plot_title)
-            else:
-                self.ax.set_title(self.z)
+    def _set_labels(self):
+        self.ax.set_title(self.plot_title)
+        self.ax.set_xlabel(self.xlabel)
+        self.ax.set_ylabel(self.ylabel)
+        if self.ax2:
+            self.ax2.set_ylabel(self.y2label)
+        if self.ax3:
+            self.ax3.set_ylabel(self.y3label)
+
+    def _set_legend(self):
+        if self.legend_visible:
+            self.ax.legend(loc='upper right')
         else:
-            self.ax.set_title(self.plot_title)
-            self.ax.set_xlabel(self.xlabel)
-            self.ax.set_ylabel(self.ylabel)
+            self.ax.legend().remove()
+        if self.legend_outside:
+            self.ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-            # Legend
-            if self.legend_visible:
-                self.ax.legend(loc='upper right')
-            else:
-                self.ax.legend().remove()
-            if self.legend_outside:
-                self.ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-            # Grid
-            if self.grid:
-                self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-            else:
-                self.ax.grid(False)
-            # Rotation
-            plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
-                     rotation_mode="anchor")
-        self.ax.get_figure().tight_layout()
-        self.canvas.draw()
+    def _set_grid(self):
+        if self.grid:
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        else:
+            self.ax.grid(False)
+
+    def _set_rotation(self):
+        plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right", rotation_mode="anchor")
 
     def clear_layout(self):
         """Clear the layout of graph"""

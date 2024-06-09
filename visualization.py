@@ -52,6 +52,11 @@ class Visualization(QDialog):
         self.graph_id = 0  # Initialize graph number
         self.ui.btn_add_graph.clicked.connect(self.add_graph)
         self.ui.btn_upd_graph.clicked.connect(self.update_graph)
+        self.ui.btn_add_y2.clicked.connect(self.add_y2)
+        self.ui.btn_remove_y2.clicked.connect(self.remove_y2)
+        self.ui.btn_add_y3.clicked.connect(self.add_y3)
+        self.ui.btn_remove_y3.clicked.connect(self.remove_y3)
+
         self.ui.btn_copy_graph.clicked.connect(self.copy_fig_to_clb)
         self.ui.cbb_palette.addItems(PALETTE)
         self.ui.cbb_plotstyle.addItems(PLOT_STYLES)
@@ -88,10 +93,9 @@ class Visualization(QDialog):
         y = self.ui.cbb_y_2.currentText()
         z = self.ui.cbb_z_2.currentText()
 
-        # Get available graph IDs considering any vacancies
+        # Get available graph IDs considering any vacancies in the list
         available_ids = [i for i in range(1, len(self.plots) + 2) if
                          i not in self.plots]
-
         # Use the smallest available ID or assign a new one
         if available_ids:
             graph_id = min(available_ids)
@@ -123,6 +127,7 @@ class Visualization(QDialog):
         graph.trendline_order = float(self.ui.spb_trendline_oder.text())
         graph.show_trendline_eq = self.ui.cb_trendline_eq.isChecked()
         graph.show_bar_plot_error_bar = self.ui.cb_show_err_bar_plot.isChecked()
+        graph.join_for_point_plot = self.ui.cb_join_for_point_plot.isChecked()
 
         # Plot the graph
         graph.create_plot_widget(graph.dpi)
@@ -143,12 +148,9 @@ class Visualization(QDialog):
         # Add the QDialog to a QMdiSubWindow
         sub_window = MdiSubWindow(graph_id)
         sub_window.setWidget(graph_dialog)
-
         # delete graph when sub windows is closed
         sub_window.closed.connect(self.delete_graph)
-
         # Set initial size of the QMdiSubWindow
-
         sub_window.resize(graph.plot_width, graph.plot_height)
 
         self.ui.mdiArea.addSubWindow(sub_window)
@@ -221,6 +223,7 @@ class Visualization(QDialog):
             graph.show_trendline_eq = self.ui.cb_trendline_eq.isChecked()
             graph.show_bar_plot_error_bar = \
                 self.ui.cb_show_err_bar_plot.isChecked()
+            graph.join_for_point_plot = self.ui.cb_join_for_point_plot.isChecked()
 
             graph_dialog.setWindowTitle(
                 f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - ["
@@ -231,7 +234,60 @@ class Visualization(QDialog):
                 graph.plot(self.filtered_df)
             else:
                 graph.plot(self.filtered_df)
+    def add_y2(self):
+        """Add 2nd Y axis for the selected plot"""
+        y2 = self.ui.cbb_y2_2.currentText()
+        y2min = self.ui.y2min_2.text()
+        y2max = self.ui.y2max_2.text()
 
+        graph, graph_dialog, sub_window = self.get_sel_graph()
+        graph.y2 = y2
+        graph.y2label = y2
+        graph.y2min = y2min
+        graph.y2max = y2max
+        self.update_graph()
+    def add_y3(self):
+        """Add 2nd Y axis for the selected plot"""
+        y3 = self.ui.cbb_y3_2.currentText()
+        y3min = self.ui.y3min_2.text()
+        y3max = self.ui.y3max_2.text()
+
+        graph, graph_dialog, sub_window = self.get_sel_graph()
+        graph.y3 = y3
+        graph.y3label = y3
+        graph.y3min = y3min
+        graph.y3max = y3max
+
+        self.update_graph()
+
+    def remove_y2(self):
+        """Remove the 2nd Y axis from the selected plot"""
+        graph, graph_dialog, sub_window = self.get_sel_graph()
+        if graph.ax2:
+            graph.ax2.remove()  # Remove the ax2 instance
+            graph.ax2 = None
+
+        # Clear y2-related attributes
+        graph.y2 = None
+        graph.y2label = None
+        graph.y2min = None
+        graph.y2max = None
+
+        self.update_graph()
+    def remove_y3(self):
+        """Remove the 2nd Y axis from the selected plot"""
+        graph, graph_dialog, sub_window = self.get_sel_graph()
+        if graph.ax3:
+            graph.ax3.remove()  # Remove the ax2 instance
+            graph.ax3 = None
+
+        # Clear y2-related attributes
+        graph.y3 = None
+        graph.y3label = None
+        graph.y3min = None
+        graph.y3max = None
+
+        self.update_graph()
     def adjust_dpi(self):
         graph, graph_dialog, sub_window = self.get_sel_graph()
         dpi = float(self.ui.spb_dpi.text())
@@ -267,11 +323,17 @@ class Visualization(QDialog):
             # Update combobox selections
             x = self.ui.cbb_x_2.findText(graph.x)
             y = self.ui.cbb_y_2.findText(graph.y)
+            y2 = self.ui.cbb_y_2.findText(graph.y2)
+            y3 = self.ui.cbb_y_2.findText(graph.y3)
             z = self.ui.cbb_z_2.findText(graph.z)
             self.ui.cbb_x_2.setCurrentIndex(
                 x if x != -1 else 0)
             self.ui.cbb_y_2.setCurrentIndex(
                 y if y != -1 else 0)
+            self.ui.cbb_y2_2.setCurrentIndex(
+                y2 if y2 != -1 else 0)
+            self.ui.cbb_y3_2.setCurrentIndex(
+                y3 if y3 != -1 else 0)
             self.ui.cbb_z_2.setCurrentIndex(
                 z if z != -1 else 0)
 
@@ -285,14 +347,21 @@ class Visualization(QDialog):
             self.ui.lbl_plot_title.setText(graph.plot_title)
             self.ui.lbl_xlabel.setText(graph.xlabel)
             self.ui.lbl_ylabel.setText(graph.ylabel)
+            self.ui.lbl_y2label.setText(graph.y2label)
+            self.ui.lbl_y3label.setText(graph.y3label)
             self.ui.lbl_zlabel.setText(graph.zlabel)
+
             # Reflect limits:
             self.ui.xmin_2.setText(graph.xmin)
-            self.ui.ymin_2.setText(graph.ymin)
-            self.ui.zmin_2.setText(graph.zmin)
             self.ui.xmax_2.setText(graph.xmax)
+            self.ui.ymin_2.setText(graph.ymin)
             self.ui.ymax_2.setText(graph.ymax)
+            self.ui.y2min_2.setText(graph.y2min)
+            self.ui.y2max_2.setText(graph.y2max)
+            self.ui.y3min_2.setText(graph.y3min)
+            self.ui.y3max_2.setText(graph.y3max)
             self.ui.zmax_2.setText(graph.zmax)
+            self.ui.zmin_2.setText(graph.zmin)
 
             # Reflect legend status
             self.ui.cb_legend_visible.setChecked(graph.legend_visible)
@@ -318,6 +387,8 @@ class Visualization(QDialog):
             # Show error bar for bar_plot
             self.ui.cb_show_err_bar_plot.setChecked(
                 graph.show_bar_plot_error_bar)
+            self.ui.cb_join_for_point_plot.setChecked(
+                graph.join_for_point_plot)
             
             # self.apply_filters()
 
@@ -425,13 +496,19 @@ class Visualization(QDialog):
             columns = sel_df.columns.tolist()
             self.ui.cbb_x_2.clear()
             self.ui.cbb_y_2.clear()
+            self.ui.cbb_y2_2.clear()
+            self.ui.cbb_y3_2.clear()
             self.ui.cbb_z_2.clear()
             self.ui.cbb_x_2.addItem("None")
             self.ui.cbb_y_2.addItem("None")
+            self.ui.cbb_y2_2.addItem("None")
+            self.ui.cbb_y3_2.addItem("None")
             self.ui.cbb_z_2.addItem("None")
             for column in columns:
                 self.ui.cbb_x_2.addItem(column)
                 self.ui.cbb_y_2.addItem(column)
+                self.ui.cbb_y2_2.addItem(column)
+                self.ui.cbb_y3_2.addItem(column)
                 self.ui.cbb_z_2.addItem(column)
 
     def copy_fig_to_clb(self):
@@ -582,6 +659,8 @@ class Visualization(QDialog):
         self.ui.dfs_listbox.clear()
         self.ui.cbb_x_2.clear()
         self.ui.cbb_y_2.clear()
+        self.ui.cbb_y2_2.clear()
+        self.ui.cbb_y3_2.clear()
         self.ui.cbb_z_2.clear()
         self.ui.listbox_filters.clear()
         self.ui.tableWidget.clearContents()
@@ -610,16 +689,24 @@ class Visualization(QDialog):
                         'plot_style': graph.plot_style,
                         'x': graph.x,
                         'y': graph.y,
+                        'y2': graph.y2,
+                        'y3': graph.y3,
                         'z': graph.z,
                         'xmin': graph.xmin,
                         'xmax': graph.xmax,
                         'ymin': graph.ymin,
                         'ymax': graph.ymax,
+                        'y2min': graph.y2min,
+                        'y2max': graph.y2max,
+                        'y3min': graph.y3min,
+                        'y3max': graph.y3max,
                         'zmin': graph.zmin,
                         'zmax': graph.zmax,
                         'plot_title': graph.plot_title,
                         'xlabel': graph.xlabel,
                         'ylabel': graph.ylabel,
+                        'y2label': graph.y2label,
+                        'y3label': graph.y3label,
                         'zlabel': graph.zlabel,
                         'x_rot': graph.x_rot,
                         'grid': graph.grid,
@@ -631,7 +718,8 @@ class Visualization(QDialog):
                         'wafer_stats': graph.wafer_stats,
                         'trendline_order': graph.trendline_order,
                         'show_trendline_eq': graph.show_trendline_eq,
-                        'show_bar_plot_error_bar': graph.show_bar_plot_error_bar
+                        'show_bar_plot_error_bar': graph.show_bar_plot_error_bar,
+                        'join_for_point_plot': graph.join_for_point_plot
                     }
                     plots_data[graph_id] = graph_data
 
@@ -686,9 +774,21 @@ class Visualization(QDialog):
                         try:
                             graph.plot_width = graph_data['plot_width']
                             graph.plot_height = graph_data['plot_height']
+
                         except KeyError:
                             graph.plot_width = 600
                             graph.plot_width = 450
+                        try:
+                            graph.y2 = graph_data['y2']
+                            graph.y3 = graph_data['y3']
+                            graph.y2min = graph_data['y2min']
+                            graph.y2max = graph_data['y2max']
+                            graph.y3min = graph_data['y3min']
+                            graph.y3max = graph_data['y3max']
+                            graph.y2label = graph_data['y2label']
+                            graph.y3label = graph_data['y3label']
+                        except KeyError:
+                            pass
 
                         graph.df_name = graph_data['df_name']
                         graph.filters = graph_data['filters']
@@ -700,6 +800,7 @@ class Visualization(QDialog):
                         graph.xmax = graph_data['xmax']
                         graph.ymin = graph_data['ymin']
                         graph.ymax = graph_data['ymax']
+
                         graph.zmin = graph_data['zmin']
                         graph.zmax = graph_data['zmax']
                         graph.plot_title = graph_data['plot_title']
@@ -723,6 +824,12 @@ class Visualization(QDialog):
                                 'show_bar_plot_error_bar']
                         except KeyError:
                             graph.show_bar_plot_error_bar = False
+
+                        try:
+                            graph.join_for_point_plot = graph_data[
+                                'join_for_point_plot']
+                        except KeyError:
+                            graph.join_for_point_plot = False
 
                         # Plot the graph
                         graph.create_plot_widget(graph.dpi)

@@ -187,6 +187,9 @@ class Graph(QWidget):
                 self.ax2.remove()
                 self.ax2 = None
 
+            self.ax2.set_ylabel(self.y2label)
+
+
     def _plot_tertiary_axis(self, df):
         if self.ax3:
             self.ax3.remove()
@@ -207,6 +210,7 @@ class Graph(QWidget):
                 self.ax3.remove()
                 self.ax3 = None
 
+            self.ax3.set_ylabel(self.y3label)
     def _annotate_trendline_eq(self, df):
         x_data = df[self.x]
         y_data = df[self.y]
@@ -239,10 +243,7 @@ class Graph(QWidget):
         self.ax.set_title(self.plot_title)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
-        if self.ax2:
-            self.ax2.set_ylabel(self.y2label)
-        if self.ax3:
-            self.ax3.set_ylabel(self.y3label)
+
 
     def _set_legend(self):
         if self.legend_visible:

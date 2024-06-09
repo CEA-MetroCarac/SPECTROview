@@ -181,6 +181,8 @@ class Visualization(QDialog):
             z = self.ui.cbb_z_2.currentText()
             xlabel = self.ui.lbl_xlabel.text()
             ylabel = self.ui.lbl_ylabel.text()
+            y2label = self.ui.lbl_y2label.text()
+            y3label = self.ui.lbl_y3label.text()
             zlabel = self.ui.lbl_zlabel.text()
             xmin = self.ui.xmin_2.text()
             ymin = self.ui.ymin_2.text()
@@ -208,6 +210,8 @@ class Visualization(QDialog):
             graph.zmax = zmax
             graph.xlabel = xlabel
             graph.ylabel = ylabel
+            graph.y2label = y2label
+            graph.y3label = y3label
             graph.zlabel = zlabel
             graph.x_rot = x_rot
             graph.plot_style = plot_style
@@ -257,7 +261,6 @@ class Visualization(QDialog):
         graph.y3label = y3
         graph.y3min = y3min
         graph.y3max = y3max
-
         self.update_graph()
 
     def remove_y2(self):

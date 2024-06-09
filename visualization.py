@@ -48,10 +48,15 @@ class Visualization(QDialog):
         self.filtered_df = None
 
         # GRAPH
+        self.sub_windows = []
         self.plots = {}
         self.graph_id = 0  # Initialize graph number
         self.ui.btn_add_graph.clicked.connect(self.add_graph)
         self.ui.btn_upd_graph.clicked.connect(self.update_graph)
+        # GRAPH: add 2nd and 3rd lines for the current ax
+        self.ui.btn_add_y12.clicked.connect(self.add_y12)
+        self.ui.btn_add_y13.clicked.connect(self.add_y13)
+        # GRAPH: add twin axis (second and third y axis)
         self.ui.btn_add_y2.clicked.connect(self.add_y2)
         self.ui.btn_remove_y2.clicked.connect(self.remove_y2)
         self.ui.btn_add_y3.clicked.connect(self.add_y3)
@@ -112,11 +117,11 @@ class Visualization(QDialog):
         graph.df_name = df_name
         graph.filters = current_filters
         graph.x = x
-        graph.y = y
+        if len(graph.y) == 0:
+            graph.y.append(y)
+        else:
+            graph.y[0] = y
         graph.z = z if z != "None" else None
-        graph.xlabel = x
-        graph.ylabel = y
-        graph.zlabel = z
         graph.dpi = float(self.ui.spb_dpi.text())
         graph.wafer_size = float(self.ui.lbl_wafersize.text())
         graph.wafer_stats = self.ui.cb_wafer_stats.isChecked()
@@ -157,13 +162,9 @@ class Visualization(QDialog):
         sub_window.show()
         QTimer.singleShot(100, self.update_graph)
         self.populate_graph_combo_box()
+        # Add sub-window to the list
+        self.sub_windows.append(sub_window)
 
-    def delete_graph(self, graph_id):
-        """Delete a graph from the self.plots dictionary"""
-        if graph_id in self.plots:
-            del self.plots[graph_id]
-            print(f"Plot {graph_id} is deleted")
-            self.populate_graph_combo_box()
 
     def update_graph(self):
         """ Update the selected graph with new properties"""
@@ -199,7 +200,10 @@ class Visualization(QDialog):
             graph.df_name = self.ui.dfs_listbox.currentItem().text()
             graph.filters = current_filters
             graph.x = x
-            graph.y = y
+            if len(graph.y) == 0:
+                graph.y.append(y)
+            else:
+                graph.y[0] = y
             graph.z = z if z != "None" else None
 
             graph.xmin = xmin
@@ -232,36 +236,60 @@ class Visualization(QDialog):
             graph_dialog.setWindowTitle(
                 f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - ["
                 f"{z}]")
+
             if plot_style == 'wafer':
                 graph.create_plot_widget(graph.dpi,
                                          graph.graph_layout)
                 graph.plot(self.filtered_df)
             else:
                 graph.plot(self.filtered_df)
+    def add_y12(self):
+        """Add a second line in the current plot ax"""
+        graph, graph_dialog, sub_window = self.get_sel_graph()
+        y12 = self.ui.cbb_y12.currentText()
+        if len(graph.y) == 1:
+            graph.y.append(y12)
+        else:
+            graph.y[1] = y12
+        self.update_graph()
+    def add_y13(self):
+        """Add a 3rd line in the current plot ax"""
+        graph, graph_dialog, sub_window = self.get_sel_graph()
+        y13 = self.ui.cbb_y13.currentText()
+        if len(graph.y) == 2:
+            graph.y.append(y13)
+        else:
+            graph.y[2] = y13
+        self.update_graph()
+
     def add_y2(self):
         """Add 2nd Y axis for the selected plot"""
-        y2 = self.ui.cbb_y2_2.currentText()
-        y2min = self.ui.y2min_2.text()
-        y2max = self.ui.y2max_2.text()
-
         graph, graph_dialog, sub_window = self.get_sel_graph()
-        graph.y2 = y2
-        graph.y2label = y2
-        graph.y2min = y2min
-        graph.y2max = y2max
-        self.update_graph()
+        if graph.plot_style =='line' or graph.plot_style =='point' or graph.plot_style =='scatter':
+            y2 = self.ui.cbb_y2_2.currentText()
+            y2min = self.ui.y2min_2.text()
+            y2max = self.ui.y2max_2.text()
+            graph.y2 = y2
+            graph.y2label = y2
+            graph.y2min = y2min
+            graph.y2max = y2max
+            self.update_graph()
+        else:
+            pass
     def add_y3(self):
         """Add 2nd Y axis for the selected plot"""
-        y3 = self.ui.cbb_y3_2.currentText()
-        y3min = self.ui.y3min_2.text()
-        y3max = self.ui.y3max_2.text()
-
         graph, graph_dialog, sub_window = self.get_sel_graph()
-        graph.y3 = y3
-        graph.y3label = y3
-        graph.y3min = y3min
-        graph.y3max = y3max
-        self.update_graph()
+        if graph.plot_style == 'line' or graph.plot_style == 'point' or graph.plot_style == 'scatter':
+            y3 = self.ui.cbb_y3_2.currentText()
+            y3min = self.ui.y3min_2.text()
+            y3max = self.ui.y3max_2.text()
+            graph.y3 = y3
+            graph.y3label = y3
+            graph.y3min = y3min
+            graph.y3max = y3max
+            self.update_graph()
+        else:
+            pass
 
     def remove_y2(self):
         """Remove the 2nd Y axis from the selected plot"""
@@ -325,7 +353,7 @@ class Visualization(QDialog):
 
             # Update combobox selections
             x = self.ui.cbb_x_2.findText(graph.x)
-            y = self.ui.cbb_y_2.findText(graph.y)
+            y = self.ui.cbb_y_2.findText(graph.y[0])
             y2 = self.ui.cbb_y_2.findText(graph.y2)
             y3 = self.ui.cbb_y_2.findText(graph.y3)
             z = self.ui.cbb_z_2.findText(graph.z)
@@ -499,17 +527,23 @@ class Visualization(QDialog):
             columns = sel_df.columns.tolist()
             self.ui.cbb_x_2.clear()
             self.ui.cbb_y_2.clear()
+            self.ui.cbb_y12.clear()
+            self.ui.cbb_y13.clear()
             self.ui.cbb_y2_2.clear()
             self.ui.cbb_y3_2.clear()
             self.ui.cbb_z_2.clear()
             self.ui.cbb_x_2.addItem("None")
             self.ui.cbb_y_2.addItem("None")
+            self.ui.cbb_y12.addItem("None")
+            self.ui.cbb_y13.addItem("None")
             self.ui.cbb_y2_2.addItem("None")
             self.ui.cbb_y3_2.addItem("None")
             self.ui.cbb_z_2.addItem("None")
             for column in columns:
                 self.ui.cbb_x_2.addItem(column)
                 self.ui.cbb_y_2.addItem(column)
+                self.ui.cbb_y12.addItem(column)
+                self.ui.cbb_y13.addItem(column)
                 self.ui.cbb_y2_2.addItem(column)
                 self.ui.cbb_y3_2.addItem(column)
                 self.ui.cbb_z_2.addItem(column)
@@ -622,7 +656,7 @@ class Visualization(QDialog):
         for graph_id, graph in self.plots.items():
             self.ui.cbb_graph_list.addItem(
                 f"{graph.graph_id}-{graph.plot_style}_plot: [{graph.x}] - ["
-                f"{graph.y}] - ["
+                f"{graph.y[0]}] - ["
                 f"{graph.z}]")
         # Set the current selection to the last item added
         if self.ui.cbb_graph_list.count() > 0:
@@ -638,13 +672,23 @@ class Visualization(QDialog):
                 graph = graph_dialog.layout().itemAt(0).widget()
                 if graph and graph_title == f"{graph.graph_id}-" \
                                             f"{graph.plot_style}_plot: [" \
-                                            f"{graph.x}] - [{graph.y}] - [" \
+                                            f"{graph.x}] - [{graph.y[0]}] - [" \
                                             f"{graph.z}]":
                     if sub_window.isMinimized():
                         sub_window.showNormal()
                     self.ui.mdiArea.setActiveSubWindow(sub_window)
                     return
 
+    def delete_graph(self, graph_id):
+        """Delete a graph from the self.plots dictionary"""
+        graph, graph_dialog, sub_window = self.get_sel_graph()
+        graph_id = graph.graph_id
+        self.plots.pop(graph_id)  # Remove the graph from the dictionary
+        if sub_window:
+            self.ui.mdiArea.removeSubWindow(sub_window)
+            sub_window.close()
+            self.populate_graph_combo_box()
+        print(f"Plot {graph_id} is deleted")
     def minimize_all_graph(self):
         """Minimize all graph sub-windows"""
         for sub_window in self.ui.mdiArea.subWindowList():
@@ -656,7 +700,12 @@ class Visualization(QDialog):
         self.sel_df = None
         self.filtered_df = None
         self.filter.filters = []
-        self.ui.mdiArea.closeAllSubWindows()
+
+        # Close and delete all sub-windows
+        for sub_window in self.ui.mdiArea.subWindowList():
+            self.ui.mdiArea.removeSubWindow(sub_window)
+            sub_window.close()
+
         self.plots.clear()
         # Clear GUI elements
         self.ui.dfs_listbox.clear()
@@ -742,6 +791,7 @@ class Visualization(QDialog):
 
     def load(self):
         """Open saved work"""
+        self.clear_env()
         try:
             file_path, _ = QFileDialog.getOpenFileName(None,
                                                        "Load work",
@@ -763,9 +813,7 @@ class Visualization(QDialog):
                         load.get('filtered_df', {})) if load.get(
                         'filtered_df') is not None else None
 
-                    # Close all existing plots before loading
-                    self.ui.mdiArea.closeAllSubWindows()
-                    self.plots = {}
+
 
                     # Load plots
                     plots_data = load.get('plots', {})
@@ -848,7 +896,7 @@ class Visualization(QDialog):
                         graph_dialog.setWindowTitle(
                             f"{graph.graph_id}-{graph.plot_style}_plot: ["
                             f"{graph.x}] - "
-                            f"[{graph.y}] - [{graph.z}]")
+                            f"[{graph.y[0]}] - [{graph.z}]")
 
                         layout = QVBoxLayout()
                         layout.addWidget(graph)

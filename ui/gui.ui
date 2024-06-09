@@ -1509,7 +1509,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>413</width>
+                       <width>301</width>
                        <height>343</height>
                       </rect>
                      </property>
@@ -5307,7 +5307,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>413</width>
+                       <width>301</width>
                        <height>343</height>
                       </rect>
                      </property>
@@ -7008,7 +7008,14 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_122">
               <item>
-               <widget class="QComboBox" name="cbb_graph_list"/>
+               <widget class="QComboBox" name="cbb_graph_list">
+                <property name="minimumSize">
+                 <size>
+                  <width>160</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </widget>
               </item>
               <item>
                <widget class="QPushButton" name="btn_minimize_all">
@@ -7733,11 +7740,26 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>409</width>
-                    <height>495</height>
+                    <width>395</width>
+                    <height>417</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
+                   <property name="spacing">
+                    <number>5</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>5</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>5</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>5</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>5</number>
+                   </property>
                    <item>
                     <layout class="QHBoxLayout" name="horizontalLayout_115">
                      <item>
@@ -8107,7 +8129,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>372</width>
-                    <height>365</height>
+                    <height>384</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -8206,7 +8228,29 @@
              </widget>
              <widget class="QWidget" name="tab_3">
               <attribute name="title">
-               <string>Multiples Y axis</string>
+               <string>Legends</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_15">
+               <property name="spacing">
+                <number>2</number>
+               </property>
+               <property name="leftMargin">
+                <number>2</number>
+               </property>
+               <property name="topMargin">
+                <number>2</number>
+               </property>
+               <property name="rightMargin">
+                <number>2</number>
+               </property>
+               <property name="bottomMargin">
+                <number>2</number>
+               </property>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_5">
+              <attribute name="title">
+               <string>Multi Yaxis/Lines</string>
               </attribute>
               <layout class="QVBoxLayout" name="verticalLayout_8">
                <property name="spacing">
@@ -8234,11 +8278,33 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>373</width>
-                    <height>350</height>
+                    <width>372</width>
+                    <height>384</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_9">
+                   <property name="spacing">
+                    <number>5</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>5</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>5</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>5</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>5</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_12">
+                     <property name="text">
+                      <string>Multiples Y-axis:</string>
+                     </property>
+                    </widget>
+                   </item>
                    <item>
                     <layout class="QHBoxLayout" name="horizontalLayout_6">
                      <item>
@@ -8317,19 +8383,6 @@
                       <widget class="QLineEdit" name="y2max_2"/>
                      </item>
                     </layout>
-                   </item>
-                   <item>
-                    <spacer name="verticalSpacer_2">
-                     <property name="orientation">
-                      <enum>Qt::Vertical</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>20</width>
-                       <height>40</height>
-                      </size>
-                     </property>
-                    </spacer>
                    </item>
                    <item>
                     <layout class="QHBoxLayout" name="horizontalLayout_10">
@@ -8422,6 +8475,116 @@
                       </size>
                      </property>
                     </spacer>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_11">
+                     <item>
+                      <widget class="QLabel" name="label100_2">
+                       <property name="maximumSize">
+                        <size>
+                         <width>50</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string>Y12:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QComboBox" name="cbb_y12">
+                       <property name="minimumSize">
+                        <size>
+                         <width>160</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_add_y12">
+                       <property name="text">
+                        <string>Add</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_remove_y12">
+                       <property name="text">
+                        <string>Remove</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_12">
+                     <item>
+                      <widget class="QLabel" name="label_10">
+                       <property name="text">
+                        <string>Y12 label:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="lbl_y12label"/>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_14">
+                     <item>
+                      <widget class="QLabel" name="label_14">
+                       <property name="maximumSize">
+                        <size>
+                         <width>50</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string>Y13:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QComboBox" name="cbb_y13">
+                       <property name="minimumSize">
+                        <size>
+                         <width>160</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_add_y13">
+                       <property name="text">
+                        <string>Add </string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_remove_y13">
+                       <property name="text">
+                        <string>Remove</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_15">
+                     <item>
+                      <widget class="QLabel" name="label_15">
+                       <property name="text">
+                        <string>Y13 label:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="lbl_y3label_2"/>
+                     </item>
+                    </layout>
                    </item>
                   </layout>
                  </widget>

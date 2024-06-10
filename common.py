@@ -14,6 +14,7 @@ from io import BytesIO
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.colors as mcolors
 import seaborn as sns
 
 from scipy.interpolate import griddata
@@ -26,6 +27,19 @@ from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent
 from PySide6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+
+# Define a dictionary mapping RGBA tuples to named colors
+rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for color_name in mcolors.CSS4_COLORS}
+
+def rgba_to_named_color(rgba):
+    """Convert RGBA tuple to a named color string."""
+    # Check if the exact RGBA tuple exists in the dictionary
+    rgba_tuple = tuple(rgba)
+    if rgba_tuple in rgba_to_named_color_dict:
+        return rgba_to_named_color_dict[rgba_tuple]
+    else:
+        # If exact match is not found, return the closest color name
+        return mcolors.to_hex(rgba)  # Use hex as fallback if needed
 
 DIRNAME = os.path.dirname(__file__)
 RELPATH = os.path.join(DIRNAME, "resources")
@@ -158,6 +172,10 @@ class Graph(QWidget):
         self.ax.get_figure().tight_layout()
         self.canvas.draw()
 
+    def rgba_to_hex(rgba):
+        """Convert RGBA tuple to a hexadecimal color string."""
+        return mcolors.to_hex(rgba)
+
     def get_legend_properties(self):
         """Retrieve properties of each existing legend item"""
         legend_properties = []
@@ -168,12 +186,22 @@ class Graph(QWidget):
                 legend_handles = legend.legendHandles
                 for idx, text in enumerate(legend_texts):
                     label = text.get_text()
-                    marker = legend_handles[idx].get_marker()
-                    color = legend_handles[idx].get_markerfacecolor()
+                    handle = legend_handles[idx]
+
+                    if self.plot_style in ['point', 'scatter']:
+                        color = handle.get_markerfacecolor()
+                        marker = handle.get_marker()
+                    elif self.plot_style in ['box', 'bar']:
+                        color = rgba_to_named_color(handle.get_facecolor())
+                        marker = 'nan'  # Box and bar plots do not use markers
+                    else:
+                        color = 'nan'
+                        marker = 'nan'
+
                     legend_properties.append(
                         {'label': label, 'marker': marker, 'color': color})
-        self.legend_properties = legend_properties
 
+        self.legend_properties = legend_properties
         return self.legend_properties
 
     def show_legend_properties(self, main_layout):
@@ -256,8 +284,10 @@ class Graph(QWidget):
                                   capsize=0.02)
             elif self.plot_style == 'scatter':
                 sns.scatterplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                                s=100, edgecolor='black',
-                                marker=markers, palette=colors)
+                                s=100, edgecolor='black', palette=colors)
+            elif self.plot_style == 'box':
+                sns.boxplot(data=df, x=self.x, y=y, hue=self.z, dodge=True,
+                            ax=self.ax, palette=colors)
 
             elif self.plot_style == 'line':
                 sns.lineplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax)
@@ -265,14 +295,12 @@ class Graph(QWidget):
                 if self.show_bar_plot_error_bar:
                     sns.barplot(data=df, x=self.x, y=y, hue=self.z,
                                 errorbar='sd', ax=self.ax,
-                                palette=self.legend_colors)
+                                palette=colors)
                 else:
                     sns.barplot(data=df, x=self.x, y=y, hue=self.z,
                                 errorbar=None, ax=self.ax,
-                                palette=self.legend_colors)
-            elif self.plot_style == 'box':
-                sns.boxplot(data=df, x=self.x, y=y, hue=self.z, dodge=True,
-                            ax=self.ax, palette=palette)
+                                palette=colors)
+
             elif self.plot_style == 'trendline':
                 sns.regplot(data=df, x=self.x, y=y, ax=self.ax, scatter=True,
                             order=self.trendline_order)
@@ -311,8 +339,11 @@ class Graph(QWidget):
                 for idx, prop in enumerate(self.legend_properties):
                     legend_labels.append(prop['label'])
                     handles[idx].set_label(prop['label'])  # Set legend label
-                    handles[idx].set_marker(prop['marker'])  # Set marker
                     handles[idx].set_color(prop['color'])  # Set color
+                    if self.plot_style in ['point', 'scatter']:
+                        handles[idx].set_marker(prop['marker'])  # Set marker
+                    else:
+                        pass
             else:
                 legend_labels = labels
                 self.legend_properties = self.get_legend_properties()
@@ -1173,6 +1204,7 @@ def show_alert(message):
     msg_box.setWindowTitle("Alert")
     msg_box.setText(message)
     msg_box.exec_()
+
 
 
 def view_df(tabWidget, df):

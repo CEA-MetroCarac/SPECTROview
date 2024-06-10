@@ -165,7 +165,6 @@ class Visualization(QDialog):
         # Add sub-window to the list
         self.sub_windows.append(sub_window)
 
-
     def update_graph(self):
         """ Update the selected graph with new properties"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
@@ -231,7 +230,8 @@ class Visualization(QDialog):
             graph.show_trendline_eq = self.ui.cb_trendline_eq.isChecked()
             graph.show_bar_plot_error_bar = \
                 self.ui.cb_show_err_bar_plot.isChecked()
-            graph.join_for_point_plot = self.ui.cb_join_for_point_plot.isChecked()
+            graph.join_for_point_plot = \
+                self.ui.cb_join_for_point_plot.isChecked()
 
             graph_dialog.setWindowTitle(
                 f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - ["
@@ -243,6 +243,7 @@ class Visualization(QDialog):
                 graph.plot(self.filtered_df)
             else:
                 graph.plot(self.filtered_df)
+
     def add_y12(self):
         """Add a second line in the current plot ax"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
@@ -252,6 +253,7 @@ class Visualization(QDialog):
         else:
             graph.y[1] = y12
         self.update_graph()
+
     def add_y13(self):
         """Add a 3rd line in the current plot ax"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
@@ -265,7 +267,8 @@ class Visualization(QDialog):
     def add_y2(self):
         """Add 2nd Y axis for the selected plot"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
-        if graph.plot_style =='line' or graph.plot_style =='point' or graph.plot_style =='scatter':
+        if graph.plot_style == 'line' or graph.plot_style == 'point' or \
+                graph.plot_style == 'scatter':
             y2 = self.ui.cbb_y2_2.currentText()
             y2min = self.ui.y2min_2.text()
             y2max = self.ui.y2max_2.text()
@@ -276,10 +279,12 @@ class Visualization(QDialog):
             self.update_graph()
         else:
             pass
+
     def add_y3(self):
         """Add 2nd Y axis for the selected plot"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
-        if graph.plot_style == 'line' or graph.plot_style == 'point' or graph.plot_style == 'scatter':
+        if graph.plot_style == 'line' or graph.plot_style == 'point' or \
+                graph.plot_style == 'scatter':
             y3 = self.ui.cbb_y3_2.currentText()
             y3min = self.ui.y3min_2.text()
             y3max = self.ui.y3max_2.text()
@@ -305,6 +310,7 @@ class Visualization(QDialog):
         graph.y2max = None
 
         self.update_graph()
+
     def remove_y3(self):
         """Remove the 2nd Y axis from the selected plot"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
@@ -319,6 +325,7 @@ class Visualization(QDialog):
         graph.y3max = None
 
         self.update_graph()
+
     def adjust_dpi(self):
         graph, graph_dialog, sub_window = self.get_sel_graph()
         dpi = float(self.ui.spb_dpi.text())
@@ -357,16 +364,11 @@ class Visualization(QDialog):
             y2 = self.ui.cbb_y_2.findText(graph.y2)
             y3 = self.ui.cbb_y_2.findText(graph.y3)
             z = self.ui.cbb_z_2.findText(graph.z)
-            self.ui.cbb_x_2.setCurrentIndex(
-                x if x != -1 else 0)
-            self.ui.cbb_y_2.setCurrentIndex(
-                y if y != -1 else 0)
-            self.ui.cbb_y2_2.setCurrentIndex(
-                y2 if y2 != -1 else 0)
-            self.ui.cbb_y3_2.setCurrentIndex(
-                y3 if y3 != -1 else 0)
-            self.ui.cbb_z_2.setCurrentIndex(
-                z if z != -1 else 0)
+            self.ui.cbb_x_2.setCurrentIndex(x if x != -1 else 0)
+            self.ui.cbb_y_2.setCurrentIndex(y if y != -1 else 0)
+            self.ui.cbb_y2_2.setCurrentIndex(y2 if y2 != -1 else 0)
+            self.ui.cbb_y3_2.setCurrentIndex(y3 if y3 != -1 else 0)
+            self.ui.cbb_z_2.setCurrentIndex(z if z != -1 else 0)
 
             # WAFER
             self.ui.lbl_wafersize.setText(str(graph.wafer_size))
@@ -420,7 +422,7 @@ class Visualization(QDialog):
                 graph.show_bar_plot_error_bar)
             self.ui.cb_join_for_point_plot.setChecked(
                 graph.join_for_point_plot)
-            
+
             # self.apply_filters()
 
     def reflect_filters_to_gui(self, sel_graph):
@@ -683,12 +685,14 @@ class Visualization(QDialog):
         """Delete a graph from the self.plots dictionary"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
         graph_id = graph.graph_id
-        self.plots.pop(graph_id)  # Remove the graph from the dictionary
+        # Remove the graph from the dictionary
+        self.plots.pop(graph_id)
         if sub_window:
             self.ui.mdiArea.removeSubWindow(sub_window)
             sub_window.close()
             self.populate_graph_combo_box()
         print(f"Plot {graph_id} is deleted")
+
     def minimize_all_graph(self):
         """Minimize all graph sub-windows"""
         for sub_window in self.ui.mdiArea.subWindowList():
@@ -705,8 +709,8 @@ class Visualization(QDialog):
         for sub_window in self.ui.mdiArea.subWindowList():
             self.ui.mdiArea.removeSubWindow(sub_window)
             sub_window.close()
-
         self.plots.clear()
+
         # Clear GUI elements
         self.ui.dfs_listbox.clear()
         self.ui.cbb_x_2.clear()
@@ -770,7 +774,8 @@ class Visualization(QDialog):
                         'wafer_stats': graph.wafer_stats,
                         'trendline_order': graph.trendline_order,
                         'show_trendline_eq': graph.show_trendline_eq,
-                        'show_bar_plot_error_bar': graph.show_bar_plot_error_bar,
+                        'show_bar_plot_error_bar':
+                            graph.show_bar_plot_error_bar,
                         'join_for_point_plot': graph.join_for_point_plot
                     }
                     plots_data[graph_id] = graph_data
@@ -812,8 +817,6 @@ class Visualization(QDialog):
                     self.filtered_df = pd.DataFrame(
                         load.get('filtered_df', {})) if load.get(
                         'filtered_df') is not None else None
-
-
 
                     # Load plots
                     plots_data = load.get('plots', {})

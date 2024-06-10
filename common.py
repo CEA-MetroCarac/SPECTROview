@@ -58,8 +58,8 @@ class Graph(QWidget):
         self.plot_style = "point"
         self.x = None
         self.y = []
-        self.y2 = None # 2nd Y axis
-        self.y3 = None # 3rd Y axis
+        self.y2 = None  # 2nd Y axis
+        self.y3 = None  # 3rd Y axis
         self.z = None
         self.xmin = None
         self.xmax = None
@@ -75,15 +75,15 @@ class Graph(QWidget):
         self.plot_title = None
         self.xlabel = None
         self.ylabel = None
-        self.y2label = None #2nd Y axis
-        self.y3label = None #3rd Y axis
+        self.y2label = None  # 2nd Y axis
+        self.y3label = None  # 3rd Y axis
         self.zlabel = None
 
         self.x_rot = 0
         self.grid = False
         self.legend_visible = True
         self.legend_outside = False
-        self.color_palette = "jet" #Palette for 2D maps
+        self.color_palette = "jet"  # Palette for 2D maps
         self.dpi = 100
         self.wafer_size = 300
         self.wafer_stats = True
@@ -119,14 +119,14 @@ class Graph(QWidget):
         self.canvas.draw()
 
     def plot(self, df):
-        """Need to provide 'dfs'= dictionary of dataframes"""
         self.ax.clear()
         if self.ax2:
             self.ax2.clear()
         if self.ax3:
             self.ax3.clear()
 
-        if self.df_name is not None and self.x is not None and self.y is not None:
+        if self.df_name is not None and self.x is not None and self.y is not \
+                None:
             self._plot_primary_axis(df)
             self._plot_secondary_axis(df)
             self._plot_tertiary_axis(df)
@@ -148,20 +148,28 @@ class Graph(QWidget):
                 sns.lineplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax)
             elif self.plot_style == 'point':
                 sns.pointplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                              linestyles='-' if self.join_for_point_plot else 'none', markeredgecolor='black', markeredgewidth=1,
-                              dodge=True, err_kws={'linewidth': 1, 'color': 'black'}, capsize=0.02)
+                              linestyles='-' if self.join_for_point_plot else
+                              'none',
+                              markeredgecolor='black', markeredgewidth=1,
+                              dodge=True,
+                              err_kws={'linewidth': 1, 'color': 'black'},
+                              capsize=0.02)
             elif self.plot_style == 'scatter':
                 sns.scatterplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
                                 s=100, edgecolor='black')
             elif self.plot_style == 'bar':
                 if self.show_bar_plot_error_bar:
-                    sns.barplot(data=df, x=self.x, y=y, hue=self.z, errorbar='sd', ax=self.ax)
+                    sns.barplot(data=df, x=self.x, y=y, hue=self.z,
+                                errorbar='sd', ax=self.ax)
                 else:
-                    sns.barplot(data=df, x=self.x, y=y, hue=self.z, errorbar=None, ax=self.ax)
+                    sns.barplot(data=df, x=self.x, y=y, hue=self.z,
+                                errorbar=None, ax=self.ax)
             elif self.plot_style == 'box':
-                sns.boxplot(data=df, x=self.x, y=y, hue=self.z, dodge=True, ax=self.ax)
+                sns.boxplot(data=df, x=self.x, y=y, hue=self.z, dodge=True,
+                            ax=self.ax)
             elif self.plot_style == 'trendline':
-                sns.regplot(data=df, x=self.x, y=y, ax=self.ax, scatter=True, order=self.trendline_order)
+                sns.regplot(data=df, x=self.x, y=y, ax=self.ax, scatter=True,
+                            order=self.trendline_order)
                 if self.show_trendline_eq:
                     self._annotate_trendline_eq(df)
             elif self.plot_style == 'wafer':
@@ -176,16 +184,20 @@ class Graph(QWidget):
         if hasattr(self, 'y2') and self.y2:
             self.ax2 = self.ax.twinx()
             if self.plot_style == 'line':
-                sns.lineplot(data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2, color='red')
+                sns.lineplot(data=df, x=self.x, y=self.y2, hue=self.z,
+                             ax=self.ax2, color='red')
             elif self.plot_style == 'point':
                 sns.pointplot(
                     data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
                     linestyles='-' if self.join_for_point_plot else 'none',
-                    marker='s', color='red', markeredgecolor='black', markeredgewidth=1,
-                    dodge=True, err_kws={'linewidth': 1, 'color': 'black'}, capsize=0.02
+                    marker='s', color='red', markeredgecolor='black',
+                    markeredgewidth=1,
+                    dodge=True, err_kws={'linewidth': 1, 'color': 'black'},
+                    capsize=0.02
                 )
             elif self.plot_style == 'scatter':
-                sns.scatterplot(data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
+                sns.scatterplot(data=df, x=self.x, y=self.y2, hue=self.z,
+                                ax=self.ax2,
                                 s=100, edgecolor='black', color='red')
             else:
                 self.ax2.remove()
@@ -202,16 +214,20 @@ class Graph(QWidget):
             self.ax3 = self.ax.twinx()
             self.ax3.spines["right"].set_position(("outward", 100))
             if self.plot_style == 'line':
-                sns.lineplot(data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3, color='green')
+                sns.lineplot(data=df, x=self.x, y=self.y3, hue=self.z,
+                             ax=self.ax3, color='green')
             elif self.plot_style == 'point':
                 sns.pointplot(
                     data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
                     linestyles='-' if self.join_for_point_plot else 'none',
-                    marker='s', color='red', markeredgecolor='black', markeredgewidth=1,
-                    dodge=True, err_kws={'linewidth': 1, 'color': 'black'}, capsize=0.02
+                    marker='s', color='red', markeredgecolor='black',
+                    markeredgewidth=1,
+                    dodge=True, err_kws={'linewidth': 1, 'color': 'black'},
+                    capsize=0.02
                 )
             elif self.plot_style == 'scatter':
-                sns.scatterplot(data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
+                sns.scatterplot(data=df, x=self.x, y=self.y3, hue=self.z,
+                                ax=self.ax3,
                                 s=100, edgecolor='black', color='green')
             else:
                 self.ax3.remove()
@@ -219,7 +235,9 @@ class Graph(QWidget):
 
             self.ax3.set_ylabel(self.y3label, color='green')
             self.ax3.tick_params(axis='y', colors='green')
+
     def _annotate_trendline_eq(self, df):
+        """Add the trendline equation in the plot"""
         x_data = df[self.x]
         y_data = df[self.y[0]]
         coefficients = np.polyfit(x_data, y_data, self.trendline_order)
@@ -231,12 +249,17 @@ class Graph(QWidget):
                          fontsize=10, color='blue')
 
     def _plot_wafer(self, df):
+        """PLot wafer plot by creating an object of WaferPlot Class"""
         vmin = self.zmin if self.zmin else None
         vmax = self.zmax if self.zmax else None
         wdf = WaferPlot()
-        wdf.plot(self.ax, x=df[self.x], y=df[self.y[0]], z=df[self.z], cmap=self.color_palette,
-                 vmin=vmin, vmax=vmax, stats=self.wafer_stats, r=(self.wafer_size / 2))
+        wdf.plot(self.ax, x=df[self.x], y=df[self.y[0]], z=df[self.z],
+                 cmap=self.color_palette,
+                 vmin=vmin, vmax=vmax, stats=self.wafer_stats,
+                 r=(self.wafer_size / 2))
+
     def _set_limits(self):
+        """Set the limits of axis"""
         if self.xmin and self.xmax:
             self.ax.set_xlim(float(self.xmin), float(self.xmax))
         if self.ymin and self.ymax:
@@ -265,7 +288,7 @@ class Graph(QWidget):
                 self.ax.set_ylabel(self.y[0])
 
     def _set_legend(self):
-        """Manually add legend for lines on the primary axis"""
+        """Manually add legend of all ax (1->3) in one box"""
         handles, labels = self.ax.get_legend_handles_labels()
         if self.ax2:
             handles2, labels2 = self.ax2.get_legend_handles_labels()
@@ -283,16 +306,20 @@ class Graph(QWidget):
             else:
                 self.ax.legend().remove()
             if self.legend_outside:
-                self.ax.legend(handles, labels, loc='center left', bbox_to_anchor=(1, 0.5))
+                self.ax.legend(handles, labels, loc='center left',
+                               bbox_to_anchor=(1, 0.5))
 
     def _set_grid(self):
+        """Add grid for the plot"""
         if self.grid:
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
         else:
             self.ax.grid(False)
 
     def _set_rotation(self):
-        plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right", rotation_mode="anchor")
+        """Set rotation of the ticklabels of the x axis"""
+        plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
+                 rotation_mode="anchor")
 
     def clear_layout(self):
         """Clear the layout of graph"""

@@ -3,8 +3,8 @@
 # Set default figure size
 
 # Set color cycle: red, blue, green, violet, gray, yellow,  
-#axes.prop_cycle : cycler('color', ['e60049', '0bb4ff', '50e991', 'e6d800', '9b19f5', 'ffa300', 'dc0ab4', 'b3d4ff', '00bfa0'])
-
+#axes.prop_cycle : cycler('color', ['FF0000', '00FF00', '0000FF', 'FFFF00', 'FFA500', '00FFFF', 'FF00FF', 'b3d4ff', 'FFC0CB'])
+#axes.prop_cycle : cycler('color',['red', 'green', 'blue', 'yellow', 'orange', 'purple', 'cyan', 'magenta', 'lime', 'pink'])
 
 xtick.major.size : 5
 xtick.major.width : 1

@@ -42,14 +42,10 @@ NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
 PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
 PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
-DEFAULT_COLORS = ['red', 'green', 'blue', 'yellow', 'orange', 'purple', 'cyan',
-                  'magenta', 'lime', 'pink']
-MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>']
-DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
 
 
 class Graph(QWidget):
-    """Class to create and handle plot objects """
+    """Class to create and handle plot/graph objects """
 
     def __init__(self, graph_id=None):  # Add plot_number as an argument
         super().__init__()
@@ -87,9 +83,8 @@ class Graph(QWidget):
         self.grid = False
         self.legend_visible = True
         self.legend_outside = False
-
-        self.legend_properties = []
-
+        self.legend_properties = {}  # Dictionary to hold legend customization
+        self.colors = {}
         self.color_palette = "jet"  # Palette for 2D maps
         self.dpi = 100
         self.wafer_size = 300
@@ -107,23 +102,13 @@ class Graph(QWidget):
         self.graph_layout = QVBoxLayout()
         self.setLayout(self.graph_layout)
 
-    def clear_layout(self, layout):
-        if layout is not None:
-            while layout.count():
-                item = layout.takeAt(0)
-                widget = item.widget()
-                if widget:
-                    widget.deleteLater()
-                else:
-                    self.clear_layout(item.layout())
-
     def create_plot_widget(self, dpi, layout=None):
         """Create figure canvas"""
         if dpi:
             self.dpi = dpi
         else:
             self.dpi = 100
-        self.clear_layout(self.graph_layout)
+        self.clear_layout()
         plt.close('all')
         self.figure = plt.figure(dpi=self.dpi)
         self.ax = self.figure.add_subplot(111)
@@ -155,124 +140,35 @@ class Graph(QWidget):
         self._set_grid()
         self._set_rotation()
         self._set_legend()
+
         self.ax.get_figure().tight_layout()
         self.canvas.draw()
 
-    def get_legend_properties(self):
-        """Retrieve properties of each existing legend item"""
-        legend_properties = []
-        if self.ax:
-            legend = self.ax.get_legend()
-            if legend:
-                legend_texts = legend.get_texts()
-                legend_handles = legend.legendHandles
-                for idx, text in enumerate(legend_texts):
-                    label = text.get_text()
-                    marker = legend_handles[idx].get_marker()
-                    color = legend_handles[idx].get_markerfacecolor()
-                    legend_properties.append(
-                        {'label': label, 'marker': marker, 'color': color})
-        self.legend_properties = legend_properties
-
-        return self.legend_properties
-
-    def show_legend_properties(self, main_layout):
-        """Show legend properties of the selected graph in GUI"""
-        self.clear_layout(main_layout)
-        headers = ['Label', 'Marker', 'Color']
-
-        # Create vertical layouts for each property type
-        label_layout = QVBoxLayout()
-        marker_layout = QVBoxLayout()
-        color_layout = QVBoxLayout()
-        for header in headers:
-            label = QLabel(header)
-            label.setAlignment(Qt.AlignCenter)
-            if header == "Label":
-                label_layout.addWidget(label)
-            elif header == "Marker":
-                marker_layout.addWidget(label)
-            elif header == "Color":
-                color_layout.addWidget(label)
-
-        for idx, prop in enumerate(self.legend_properties):
-            # LABEL
-            label = QLineEdit(prop['label'])
-            label.setFixedWidth(200)
-            label.textChanged.connect(
-                lambda text, idx=idx: self.update_legend_label(idx, text))
-            label_layout.addWidget(label)
-
-            # MARKER
-            marker = QComboBox()
-            marker.addItems(MARKERS)  # Add more markers as needed
-            marker.setCurrentText(prop['marker'])
-            marker.currentTextChanged.connect(
-                lambda text, idx=idx: self.update_legend_marker(idx, text))
-            marker_layout.addWidget(marker)
-
-            # COLOR
-            color = QComboBox()
-            color.addItems(DEFAULT_COLORS)
-            color.setCurrentText(prop['color'])
-            color.currentTextChanged.connect(
-                lambda text, idx=idx: self.update_legend_color(idx, text))
-            color_layout.addWidget(color)
-
-            # Add vertical layouts to main layout
-        main_layout.addLayout(label_layout)
-        main_layout.addLayout(marker_layout)
-        main_layout.addLayout(color_layout)
-
     def _plot_primary_axis(self, df):
-        if not self.legend_properties:
-            markers = DEFAULT_MARKERS
-            colors = DEFAULT_COLORS
-        else:
-            markers = [str(prop['marker']) for prop in self.legend_properties]
-            colors = [str(prop['color']) for prop in self.legend_properties]
         for y in self.y:
-            if self.plot_style == 'point':
-                try:
-                    sns.pointplot(data=df, x=self.x, y=y, hue=self.z,
-                                  ax=self.ax,
-                                  linestyles='-' if self.join_for_point_plot
-                                  else
-                                  'none', marker=markers, palette=colors,
-                                  markeredgecolor='black', markeredgewidth=1,
-                                  dodge=True,
-                                  err_kws={'linewidth': 1, 'color': 'black'},
-                                  capsize=0.02)
-                except KeyError:
-                    sns.pointplot(data=df, x=self.x, y=y, hue=self.z,
-                                  ax=self.ax,
-                                  linestyles='-' if self.join_for_point_plot
-                                  else
-                                  'none', marker=DEFAULT_MARKERS,
-                                  palette=DEFAULT_COLORS,
-                                  markeredgecolor='black', markeredgewidth=1,
-                                  dodge=True,
-                                  err_kws={'linewidth': 1, 'color': 'black'},
-                                  capsize=0.02)
+            if self.plot_style == 'line':
+                sns.lineplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax)
+            elif self.plot_style == 'point':
+                sns.pointplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
+                              linestyles='-' if self.join_for_point_plot else
+                              'none',
+                              markeredgecolor='black', markeredgewidth=1,
+                              dodge=True,
+                              err_kws={'linewidth': 1, 'color': 'black'},
+                              capsize=0.02)
             elif self.plot_style == 'scatter':
                 sns.scatterplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                                s=100, edgecolor='black',
-                                marker=markers, palette=colors)
-
-            elif self.plot_style == 'line':
-                sns.lineplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax)
+                                s=100, edgecolor='black')
             elif self.plot_style == 'bar':
                 if self.show_bar_plot_error_bar:
                     sns.barplot(data=df, x=self.x, y=y, hue=self.z,
-                                errorbar='sd', ax=self.ax,
-                                palette=self.legend_colors)
+                                errorbar='sd', ax=self.ax)
                 else:
                     sns.barplot(data=df, x=self.x, y=y, hue=self.z,
-                                errorbar=None, ax=self.ax,
-                                palette=self.legend_colors)
+                                errorbar=None, ax=self.ax)
             elif self.plot_style == 'box':
                 sns.boxplot(data=df, x=self.x, y=y, hue=self.z, dodge=True,
-                            ax=self.ax, palette=palette)
+                            ax=self.ax)
             elif self.plot_style == 'trendline':
                 sns.regplot(data=df, x=self.x, y=y, ax=self.ax, scatter=True,
                             order=self.trendline_order)
@@ -283,72 +179,6 @@ class Graph(QWidget):
             else:
                 show_alert("Unsupported plot style")
 
-    def update_legend_color(self, idx, text):
-        self.legend_properties[idx]['color'] = text
-
-    def update_legend_marker(self, idx, text):
-        self.legend_properties[idx]['marker'] = text
-
-    def update_legend_label(self, idx, text):
-        self.legend_properties[idx]['label'] = text
-
-    def _set_legend(self):
-        """Manually add legend of all ax (1->3) in one box"""
-        handles, labels = self.ax.get_legend_handles_labels()
-        if self.ax2:
-            handles2, labels2 = self.ax2.get_legend_handles_labels()
-            handles += handles2
-            labels += labels2
-            self.ax2.legend().remove()  # Turn off legend for ax2
-        if self.ax3:
-            handles3, labels3 = self.ax3.get_legend_handles_labels()
-            handles += handles3
-            labels += labels3
-            self.ax3.legend().remove()  # Turn off legend for ax3
-        if handles:
-            legend_labels = []
-            if self.legend_properties:
-                for idx, prop in enumerate(self.legend_properties):
-                    legend_labels.append(prop['label'])
-                    handles[idx].set_label(prop['label'])  # Set legend label
-                    handles[idx].set_marker(prop['marker'])  # Set marker
-                    handles[idx].set_color(prop['color'])  # Set color
-            else:
-                legend_labels = labels
-                self.legend_properties = self.get_legend_properties()
-
-            if self.legend_visible:
-                self.ax.legend(handles, legend_labels, loc='upper right')
-            else:
-                self.ax.legend().remove()
-            if self.legend_outside:
-                self.ax.legend(handles, legend_labels, loc='center left',
-                               bbox_to_anchor=(1, 0.5))
-
-    def update_legend(self, legend_properties):
-        """Update legend properties based on user modifications"""
-        if self.ax:
-            legend = self.ax.get_legend()
-            if legend:
-                for idx, properties in enumerate(legend_properties):
-                    legend.get_texts()[idx].set_text(properties['label'])
-                    legend.legendHandles[idx].set_marker(properties['marker'])
-                    legend.legendHandles[idx].set_markerfacecolor(
-                        properties['color'])
-            self.canvas.draw()
-
-    def _set_grid(self):
-        """Add grid for the plot"""
-        if self.grid:
-            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        else:
-            self.ax.grid(False)
-
-    def _set_rotation(self):
-        """Set rotation of the ticklabels of the x axis"""
-        plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
-                 rotation_mode="anchor")
-
     def _plot_secondary_axis(self, df):
         if self.ax2:
             self.ax2.remove()
@@ -357,8 +187,7 @@ class Graph(QWidget):
             self.ax2 = self.ax.twinx()
             if self.plot_style == 'line':
                 sns.lineplot(data=df, x=self.x, y=self.y2, hue=self.z,
-                             ax=self.ax2, color='red',
-                             palette=self.legend_colors)
+                             ax=self.ax2, color='red')
             elif self.plot_style == 'point':
                 sns.pointplot(
                     data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
@@ -388,8 +217,7 @@ class Graph(QWidget):
             self.ax3.spines["right"].set_position(("outward", 100))
             if self.plot_style == 'line':
                 sns.lineplot(data=df, x=self.x, y=self.y3, hue=self.z,
-                             ax=self.ax3, color='green',
-                             palette=self.legend_colors)
+                             ax=self.ax3, color='green')
             elif self.plot_style == 'point':
                 sns.pointplot(
                     data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
@@ -397,13 +225,12 @@ class Graph(QWidget):
                     marker='s', color='red', markeredgecolor='black',
                     markeredgewidth=1,
                     dodge=True, err_kws={'linewidth': 1, 'color': 'black'},
-                    capsize=0.02, palette=self.legend_colors
+                    capsize=0.02
                 )
             elif self.plot_style == 'scatter':
                 sns.scatterplot(data=df, x=self.x, y=self.y3, hue=self.z,
                                 ax=self.ax3,
-                                s=100, edgecolor='black', color='green',
-                                palette=self.legend_colors)
+                                s=100, edgecolor='black', color='green')
             else:
                 self.ax3.remove()
                 self.ax3 = None
@@ -461,6 +288,133 @@ class Graph(QWidget):
                 self.ax.set_ylabel(self.ylabel)
             else:
                 self.ax.set_ylabel(self.y[0])
+
+    def _set_legend(self):
+        """Manually add legend of all ax (1->3) in one box"""
+        handles, labels = self.ax.get_legend_handles_labels()
+        if self.ax2:
+            handles2, labels2 = self.ax2.get_legend_handles_labels()
+            handles += handles2
+            labels += labels2
+            self.ax2.legend().remove()  # Turn off legend for ax2
+        if self.ax3:
+            handles3, labels3 = self.ax3.get_legend_handles_labels()
+            handles += handles3
+            labels += labels3
+            self.ax3.legend().remove()  # Turn off legend for ax3
+        if handles:
+            if self.legend_visible:
+                self.ax.legend(handles, labels, loc='upper right')
+            else:
+                self.ax.legend().remove()
+            if self.legend_outside:
+                self.ax.legend(handles, labels, loc='center left',
+                               bbox_to_anchor=(1, 0.5))
+        self.legend_properties = self.get_legend_properties()
+        print(f"legend properties = {self.legend_properties}")
+
+    def _set_grid(self):
+        """Add grid for the plot"""
+        if self.grid:
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        else:
+            self.ax.grid(False)
+
+    def _set_rotation(self):
+        """Set rotation of the ticklabels of the x axis"""
+        plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
+                 rotation_mode="anchor")
+
+    def clear_layout(self):
+        """Clear the layout of graph"""
+        graph_layout = self.graph_layout
+        if graph_layout:
+            while graph_layout.count():
+                item = graph_layout.takeAt(0)
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+
+    def get_legend_properties(self):
+        """Retrieve properties of each existing legend item"""
+        legend_properties = []
+        if self.ax:
+            legend = self.ax.get_legend()
+            if legend:
+                legend_texts = legend.get_texts()
+                legend_handles = legend.legendHandles
+                for idx, text in enumerate(legend_texts):
+                    label = text.get_text()
+                    marker = legend_handles[idx].get_marker()
+                    color = legend_handles[idx].get_markerfacecolor()
+                    legend_properties.append(
+                        {'label': label, 'marker': marker, 'color': color})
+        self.legend_properties = legend_properties
+        return legend_properties
+
+    def update_legend(self, legend_properties):
+        """Update legend properties based on user modifications"""
+        if self.ax:
+            legend = self.ax.get_legend()
+            if legend:
+                for idx, properties in enumerate(legend_properties):
+                    legend.get_texts()[idx].set_text(properties['label'])
+                    legend.legendHandles[idx].set_marker(properties['marker'])
+                    legend.legendHandles[idx].set_markerfacecolor(
+                        properties['color'])
+            self.canvas.draw()
+
+
+class LegendProperties:
+    """Customize legend of a matplotlib plot"""
+
+    def __init__(self, main_layout, legend_properties):
+        self.main_layout = main_layout
+        self.legend_properties = legend_properties
+        self.label_lineedits = []
+        self.color_comboboxes = []
+        self.marker_comboboxes = []
+
+    def clear_layout(self, layout):
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+                else:
+                    self.clear_layout(item.layout())
+
+    def show_legend_properties(self, main_layout, legend_properties):
+        self.clear_layout(main_layout)
+        self.label_lineedits = []
+        self.color_comboboxes = []
+        self.marker_comboboxes = []
+
+        for idx, prop in enumerate(legend_properties):
+            hbox = QHBoxLayout()
+            hbox.addWidget(QLabel(f'Item {idx + 1}:'))
+
+            label_lineedit = QLineEdit()
+            label_lineedit.setText(prop['label'])
+            hbox.addWidget(label_lineedit)
+            self.label_lineedits.append(label_lineedit)
+
+            color_combobox = QComboBox()
+            color_combobox.addItems(
+                ['red', 'green', 'blue', 'yellow'])  # Add more colors as needed
+            color_combobox.setCurrentText(prop['color'])
+            hbox.addWidget(color_combobox)
+            self.color_comboboxes.append(color_combobox)
+
+            marker_combobox = QComboBox()
+            marker_combobox.addItems(
+                ['o', 's', 'D', '^'])  # Add more markers as needed
+            marker_combobox.setCurrentText(prop['marker'])
+            hbox.addWidget(marker_combobox)
+            self.marker_comboboxes.append(marker_combobox)
+
+            main_layout.addLayout(hbox)
 
 
 class ShowParameters:

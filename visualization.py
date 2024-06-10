@@ -97,6 +97,7 @@ class Visualization(QDialog):
         x = self.ui.cbb_x_2.currentText()
         y = self.ui.cbb_y_2.currentText()
         z = self.ui.cbb_z_2.currentText()
+        x_rot = float(self.ui.x_rot.text())
 
         # Get available graph IDs considering any vacancies in the list
         available_ids = [i for i in range(1, len(self.plots) + 2) if
@@ -121,6 +122,7 @@ class Visualization(QDialog):
             graph.y.append(y)
         else:
             graph.y[0] = y
+        graph.x_rot = x_rot
         graph.z = z if z != "None" else None
         graph.dpi = float(self.ui.spb_dpi.text())
         graph.wafer_size = float(self.ui.lbl_wafersize.text())
@@ -164,6 +166,12 @@ class Visualization(QDialog):
         self.populate_graph_combo_box()
         # Add sub-window to the list
         self.sub_windows.append(sub_window)
+
+    def show_legend_table(self):
+        """ To show all legend's properties in GUI"""
+        graph, graph_dialog, sub_window = self.get_sel_graph()
+        main_layout = self.ui.main_layout
+        graph.show_legend_properties(main_layout)
 
     def update_graph(self):
         """ Update the selected graph with new properties"""
@@ -424,6 +432,9 @@ class Visualization(QDialog):
                 graph.join_for_point_plot)
 
             # self.apply_filters()
+
+            # Show legends on GUI for customization
+            self.show_legend_table()
 
     def reflect_filters_to_gui(self, sel_graph):
         """Reflect the filters of a graph object and their states to the df
@@ -769,6 +780,7 @@ class Visualization(QDialog):
                         'legend_visible': graph.legend_visible,
                         'legend_outside': graph.legend_outside,
                         'color_palette': graph.color_palette,
+                        'legend_properties': graph.legend_properties,
                         'dpi': graph.dpi,
                         'wafer_size': graph.wafer_size,
                         'wafer_stats': graph.wafer_stats,
@@ -796,7 +808,7 @@ class Visualization(QDialog):
 
     def load(self):
         """Open saved work"""
-        self.clear_env()
+
         try:
             file_path, _ = QFileDialog.getOpenFileName(None,
                                                        "Load work",
@@ -804,6 +816,7 @@ class Visualization(QDialog):
                                                        "SPECTROview Files ("
                                                        "*.json)")
             if file_path:
+                self.clear_env()
                 with open(file_path, 'r') as f:
                     load = json.load(f)
                     self.original_dfs = {key: pd.DataFrame(value) for key, value
@@ -872,20 +885,18 @@ class Visualization(QDialog):
                         graph.trendline_order = graph_data['trendline_order']
                         graph.show_trendline_eq = graph_data[
                             'show_trendline_eq']
+                        
+                        graph.legend_properties = graph_data[
+                            'legend_properties']
 
-                        try:
-                            graph.show_bar_plot_error_bar = graph_data[
-                                'show_bar_plot_error_bar']
-                        except KeyError:
-                            graph.show_bar_plot_error_bar = False
+                        graph.show_bar_plot_error_bar = graph_data[
+                            'show_bar_plot_error_bar']
 
-                        try:
-                            graph.join_for_point_plot = graph_data[
-                                'join_for_point_plot']
-                        except KeyError:
-                            graph.join_for_point_plot = False
+                        graph.join_for_point_plot = graph_data[
+                            'join_for_point_plot']
 
                         # Plot the graph
+
                         graph.create_plot_widget(graph.dpi)
                         filtered_df = self.apply_filters(
                             self.original_dfs[graph.df_name], graph.filters)

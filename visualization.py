@@ -48,7 +48,6 @@ class Visualization(QDialog):
         self.filtered_df = None
 
         # GRAPH
-        self.sub_windows = []
         self.plots = {}
         self.graph_id = 0  # Initialize graph number
         # Add a graph
@@ -87,14 +86,20 @@ class Visualization(QDialog):
         self.ui.btn_minimize_all.clicked.connect(self.minimize_all_graph)
 
     def plotting(self, update_graph=False, update_legend=False):
-        """Plotting new graph or update the existing graph"""
+        """Plot new graph or update the existing graph
+
+        update_graph: bool, optional
+            Activation key to create new plot (False) or update existing plot (True)
+        update_legend: bool, optional
+            Activation key to update existing plot with legend-properties or not.
+        """
         if update_graph:
             graph, graph_dialog, sub_window = self.get_sel_graph()
             sub_window_size = sub_window.size()
             graph.plot_width = sub_window_size.width()
             graph.plot_height = sub_window_size.height()
         else:
-            # Get available graph IDs considering any vacancies in the list
+            # Get available graph IDs considering vacancies in the list
             available_ids = [i for i in range(1, len(self.plots) + 2) if
                              i not in self.plots]
             graph_id = min(available_ids) if available_ids else len(
@@ -141,15 +146,12 @@ class Visualization(QDialog):
         graph.show_bar_plot_error_bar = self.ui.cb_show_err_bar_plot.isChecked()
         graph.join_for_point_plot = self.ui.cb_join_for_point_plot.isChecked()
 
+        # PLOTTING
         graph.create_plot_widget(graph.dpi)
-        graph.plot(self.filtered_df)
-
+        # Create new graph
         if not update_graph:
             # Create a QDialog to hold the Graph instance
             graph_dialog = QDialog(self)
-            graph_dialog.setWindowTitle(
-                f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - ["
-                f"{z}]")
             layout = QVBoxLayout()
             layout.addWidget(graph)
             graph_dialog.setLayout(layout)
@@ -161,18 +163,13 @@ class Visualization(QDialog):
             sub_window.resize(graph.plot_width, graph.plot_height)
             self.ui.mdiArea.addSubWindow(sub_window)
             sub_window.show()
-
-            self.populate_graph_combo_box()
-            # Add sub-window to the list
-            self.sub_windows.append(sub_window)
+            self.add_graph_list_to_combobox()
+        # Update existing graph
         else:
             graph, graph_dialog, sub_window = self.get_sel_graph()
             sub_window_size = sub_window.size()
             graph.plot_width = sub_window_size.width()
             graph.plot_height = sub_window_size.height()
-            graph_dialog.setWindowTitle(
-                f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - ["
-                f"{z}]")
 
             xlabel = self.ui.lbl_xlabel.text()
             ylabel = self.ui.lbl_ylabel.text()
@@ -196,13 +193,15 @@ class Visualization(QDialog):
             graph.y2label = y2label
             graph.y3label = y3label
             graph.zlabel = zlabel
+        text = f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - [{z}]"
+        graph_dialog.setWindowTitle(text)
 
-        QTimer.singleShot(100, self.refresh_graph)
-        self.show_legend_table()
+        #Plot action
+        QTimer.singleShot(100, self.plot_action)
+        self.customize_legend()
 
-    def refresh_graph(self):
-        """Function to re-plot graph to ensure figure_tightlayout when
-        changing figsize"""
+    def plot_action(self):
+        """Plot action to plot the figure with given paramters"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
         if graph:
             if graph.plot_style == 'wafer':
@@ -211,25 +210,20 @@ class Visualization(QDialog):
             else:
                 graph.plot(self.filtered_df)
 
-    def update_graph(self, update_legend=False):
-        """ Update the selected graph with new properties"""
-        graph, graph_dialog, sub_window = self.get_sel_graph()
-        if graph:
-            graph.plot(self.filtered_df)
-
-    def show_legend_table(self):
-        """ To show all legend's properties in GUI"""
+    def customize_legend(self):
+        """ Show all legend's properties in GUI for customization"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
         main_layout = self.ui.main_layout
-        graph.show_legend_properties(main_layout)
+        graph.customize_legend_via_gui(main_layout)
 
     def adjust_dpi(self):
+        """ Adjust DPI of the selected plot"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
         dpi = float(self.ui.spb_dpi.text())
         if graph:
             # Recreate the plot widget with new DPI
             graph.create_plot_widget(dpi, graph.graph_layout)
-            QTimer.singleShot(100, self.refresh_graph)
+            QTimer.singleShot(100, self.plot_action)
 
     def on_selected_graph(self, sub_window):
         """Reflect all properties of selected graph object to GUI"""
@@ -321,7 +315,7 @@ class Visualization(QDialog):
                 graph.join_for_point_plot)
 
             # Show legends on GUI for customization
-            self.show_legend_table()
+            self.customize_legend()
 
     def reflect_filters_to_gui(self, sel_graph):
         """Reflect the filters of a graph object and their states to the df
@@ -483,7 +477,7 @@ class Visualization(QDialog):
         return self.sel_df
 
     def remove_df(self):
-        """Remove a dataframe from the listbox and self.original_dfs"""
+        """Remove a dataframe from the listbox and self.original_dfs list"""
         sel_item = self.ui.dfs_listbox.currentItem()
         sel_df_name = sel_item.text()
         if sel_df_name in self.original_dfs:
@@ -497,7 +491,7 @@ class Visualization(QDialog):
                 self.ui.dfs_listbox.takeItem(row)
 
     def save_df_to_excel(self):
-        """Functon to save fitted results in an excel file"""
+        """Save fitted selected dataframe in an excel file"""
         last_dir = self.settings.value("last_directory", "/")
         save_path, _ = QFileDialog.getSaveFileName(
             self.ui.tabWidget, "Save DF fit results", last_dir,
@@ -515,7 +509,7 @@ class Visualization(QDialog):
                     "DataFrame is empty. Nothing to save.")
 
     def show_df(self):
-        """To view selected dataframe"""
+        """Show selected dataframe in a top view"""
         current_filters = self.filter.get_current_filters()
         current_df = self.apply_filters(self.sel_df, current_filters)
         if current_df is not None:
@@ -524,6 +518,7 @@ class Visualization(QDialog):
             show_alert("No fit dataframe to display")
 
     def show_df_in_gui(self):
+        """Show selected dataframe in a QTableWidget"""
         current_filters = self.filter.get_current_filters()
         current_df = self.apply_filters(self.sel_df, current_filters)
         if self.filtered_df is not None:  # Check if filtered_df is not None
@@ -550,7 +545,7 @@ class Visualization(QDialog):
 
         return self.filtered_df
 
-    def populate_graph_combo_box(self):
+    def add_graph_list_to_combobox(self):
         """Populate graph titles into a combobox"""
         self.ui.cbb_graph_list.clear()
         for graph_id, graph in self.plots.items():
@@ -588,7 +583,7 @@ class Visualization(QDialog):
         if sub_window:
             self.ui.mdiArea.removeSubWindow(sub_window)
             sub_window.close()
-            self.populate_graph_combo_box()
+            self.add_graph_list_to_combobox()
         print(f"Plot {graph_id} is deleted")
 
     def minimize_all_graph(self):
@@ -859,11 +854,7 @@ class Visualization(QDialog):
 
                         # Plot the graph
                         graph.create_plot_widget(graph.dpi)
-                        filtered_df = self.apply_filters(
-                            self.original_dfs[graph.df_name], graph.filters)
-
-                        graph.plot(filtered_df)
-                        # Store the plot in the dictionary with graph_id as key
+                        self.apply_filters(self.original_dfs[graph.df_name], graph.filters)
                         self.plots[graph.graph_id] = graph
 
                         # Create a QDialog to hold the Graph instance
@@ -872,7 +863,6 @@ class Visualization(QDialog):
                             f"{graph.graph_id}-{graph.plot_style}_plot: ["
                             f"{graph.x}] - "
                             f"[{graph.y[0]}] - [{graph.z}]")
-
                         layout = QVBoxLayout()
                         layout.addWidget(graph)
                         graph_dialog.setLayout(layout)
@@ -884,9 +874,10 @@ class Visualization(QDialog):
                         self.ui.mdiArea.addSubWindow(sub_window)
                         sub_window.resize(graph.plot_width, graph.plot_height)
                         sub_window.show()
-                        self.refresh_graph()  # to ensure figure_fit
+
+                        self.plot_action()
                     self.filter.upd_filter_listbox()
-                    self.populate_graph_combo_box()
+                    self.add_graph_list_to_combobox()
 
         except Exception as e:
             show_alert(f"Error loading work: {e}")

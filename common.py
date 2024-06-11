@@ -233,7 +233,7 @@ class Graph(QWidget):
         self.legend_properties = legend_properties
         return self.legend_properties
 
-    def show_legend_properties(self, main_layout):
+    def customize_legend_via_gui(self, main_layout):
         """Show legend properties in GUI for user modifications"""
         self.clear_layout(main_layout)
         headers = ['Label', 'Marker', 'Color']

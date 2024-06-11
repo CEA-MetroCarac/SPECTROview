@@ -29,17 +29,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 # Define a dictionary mapping RGBA tuples to named colors
-rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for color_name in mcolors.CSS4_COLORS}
-
-def rgba_to_named_color(rgba):
-    """Convert RGBA tuple to a named color string."""
-    # Check if the exact RGBA tuple exists in the dictionary
-    rgba_tuple = tuple(rgba)
-    if rgba_tuple in rgba_to_named_color_dict:
-        return rgba_to_named_color_dict[rgba_tuple]
-    else:
-        # If exact match is not found, return the closest color name
-        return mcolors.to_hex(rgba)  # Use hex as fallback if needed
+rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for
+                            color_name in mcolors.CSS4_COLORS}
 
 DIRNAME = os.path.dirname(__file__)
 RELPATH = os.path.join(DIRNAME, "resources")
@@ -56,18 +47,59 @@ NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
 PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
 PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
-DEFAULT_COLORS = ['red', 'green', 'blue', 'yellow', 'orange', 'purple', 'cyan',
-                  'magenta', 'lime', 'pink']
+DEFAULT_COLORS = ['blue', 'red', 'green', 'orange', 'purple', 'yellow', 'cyan',
+                  'magenta', 'lime', 'pink', 'brown', 'teal', 'navy', 'gold',
+                  'silver', 'indigo', 'violet', 'olive', 'maroon', 'skyblue']
 MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>']
 DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
+
+
+def rgba_to_named_color(rgba):
+    """Convert RGBA tuple to a named color string."""
+    # Check if the exact RGBA tuple exists in the dictionary
+    rgba_tuple = tuple(rgba)
+    if rgba_tuple in rgba_to_named_color_dict:
+        return rgba_to_named_color_dict[rgba_tuple]
+    else:
+        # If exact match is not found, return the closest color name
+        return mcolors.to_hex(rgba)  # Use hex as fallback if needed
+
+
+def show_alert(message):
+    """Show alert"""
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Warning)
+    msg_box.setWindowTitle("Alert")
+    msg_box.setText(message)
+    msg_box.exec_()
+
+
+def view_df(tabWidget, df):
+    """View selected dataframe"""
+    df_viewer = QDialog(tabWidget.parent())
+    df_viewer.setWindowTitle("DataFrame Viewer")
+    df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
+    # Create a QTableWidget and populate it with data from the DataFrame
+    table_widget = QTableWidget(df_viewer)
+    table_widget.setColumnCount(df.shape[1])
+    table_widget.setRowCount(df.shape[0])
+    table_widget.setHorizontalHeaderLabels(df.columns)
+    for row in range(df.shape[0]):
+        for col in range(df.shape[1]):
+            item = QTableWidgetItem(str(df.iat[row, col]))
+            table_widget.setItem(row, col, item)
+    table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
+    layout = QVBoxLayout(df_viewer)
+    layout.addWidget(table_widget)
+    df_viewer.show()
 
 
 class Graph(QWidget):
     """Class to create and handle plot objects """
 
-    def __init__(self, graph_id=None):  # Add plot_number as an argument
+    def __init__(self, graph_id=None):
         super().__init__()
-        self.df_name = None  # df or df_name?
+        self.df_name = None
         self.filters = {}  # List of filter
 
         self.graph_id = graph_id
@@ -75,36 +107,36 @@ class Graph(QWidget):
         self.plot_height = 450
         self.plot_style = "point"
         self.x = None
-        self.y = []
-        self.y2 = None  # 2nd Y axis
-        self.y3 = None  # 3rd Y axis
+        self.y = []  # Multiple y column allowing to plot multiples lines
         self.z = None
         self.xmin = None
         self.xmax = None
         self.ymin = None
         self.ymax = None
-        self.y2min = None
-        self.y2max = None
-        self.y3min = None
-        self.y3max = None
         self.zmin = None
         self.zmax = None
 
         self.plot_title = None
         self.xlabel = None
         self.ylabel = None
-        self.y2label = None  # 2nd Y axis
-        self.y3label = None  # 3rd Y axis
         self.zlabel = None
+
+        self.y2 = None  # Secondary y-axis
+        self.y3 = None  # Tertiary y-axis
+        self.y2min = None
+        self.y2max = None
+        self.y3min = None
+        self.y3max = None
+        self.y2label = None  # Secondary y-axis
+        self.y3label = None  # Tertiary y-axis
 
         self.x_rot = 0
         self.grid = False
         self.legend_visible = True
         self.legend_outside = False
-
         self.legend_properties = []
 
-        self.color_palette = "jet"  # Palette for 2D maps
+        self.color_palette = "jet"  # Palette for wafer maps
         self.dpi = 100
         self.wafer_size = 300
         self.wafer_stats = True
@@ -118,7 +150,7 @@ class Graph(QWidget):
         self.ax2 = None  # Secondary y-axis
         self.ax3 = None  # Tertiary y-axis
         self.canvas = None
-        self.graph_layout = QVBoxLayout()
+        self.graph_layout = QVBoxLayout()  # Layout for store plot
         self.setLayout(self.graph_layout)
 
     def clear_layout(self, layout):
@@ -150,6 +182,7 @@ class Graph(QWidget):
         self.canvas.draw()
 
     def plot(self, df):
+        """Plot action"""
         self.ax.clear()
         if self.ax2:
             self.ax2.clear()
@@ -169,12 +202,10 @@ class Graph(QWidget):
         self._set_grid()
         self._set_rotation()
         self._set_legend()
+
+        self.get_legend_properties()
         self.ax.get_figure().tight_layout()
         self.canvas.draw()
-
-    def rgba_to_hex(rgba):
-        """Convert RGBA tuple to a hexadecimal color string."""
-        return mcolors.to_hex(rgba)
 
     def get_legend_properties(self):
         """Retrieve properties of each existing legend item"""
@@ -185,30 +216,27 @@ class Graph(QWidget):
                 legend_texts = legend.get_texts()
                 legend_handles = legend.legendHandles
                 for idx, text in enumerate(legend_texts):
+
                     label = text.get_text()
                     handle = legend_handles[idx]
-
-                    if self.plot_style in ['point', 'scatter']:
+                    if self.plot_style in ['point', 'scatter', 'line']:
                         color = handle.get_markerfacecolor()
                         marker = handle.get_marker()
                     elif self.plot_style in ['box', 'bar']:
                         color = rgba_to_named_color(handle.get_facecolor())
-                        marker = 'nan'  # Box and bar plots do not use markers
+                        marker = 'nan'  # Box & bar plots do not use markers
                     else:
                         color = 'nan'
                         marker = 'nan'
-
                     legend_properties.append(
                         {'label': label, 'marker': marker, 'color': color})
-
         self.legend_properties = legend_properties
         return self.legend_properties
 
     def show_legend_properties(self, main_layout):
-        """Show legend properties of the selected graph in GUI"""
+        """Show legend properties in GUI for user modifications"""
         self.clear_layout(main_layout)
         headers = ['Label', 'Marker', 'Color']
-
         # Create vertical layouts for each property type
         label_layout = QVBoxLayout()
         marker_layout = QVBoxLayout()
@@ -219,7 +247,10 @@ class Graph(QWidget):
             if header == "Label":
                 label_layout.addWidget(label)
             elif header == "Marker":
-                marker_layout.addWidget(label)
+                if self.plot_style == 'point':
+                    marker_layout.addWidget(label)
+                else:
+                    pass
             elif header == "Color":
                 color_layout.addWidget(label)
 
@@ -228,29 +259,37 @@ class Graph(QWidget):
             label = QLineEdit(prop['label'])
             label.setFixedWidth(200)
             label.textChanged.connect(
-                lambda text, idx=idx: self.update_legend_label(idx, text))
+                lambda text, idx=idx: self.udp_legend(idx, 'label', text))
             label_layout.addWidget(label)
 
-            # MARKER
-            marker = QComboBox()
-            marker.addItems(MARKERS)  # Add more markers as needed
-            marker.setCurrentText(prop['marker'])
-            marker.currentTextChanged.connect(
-                lambda text, idx=idx: self.update_legend_marker(idx, text))
-            marker_layout.addWidget(marker)
+            if self.plot_style == 'point':
+                # MARKER
+                marker = QComboBox()
+                marker.addItems(MARKERS)  # Add more markers as needed
+                marker.setCurrentText(prop['marker'])
+                marker.currentTextChanged.connect(
+                    lambda text, idx=idx: self.udp_legend(idx, 'marker', text))
+                marker_layout.addWidget(marker)
+            else:
+                pass
 
             # COLOR
             color = QComboBox()
             color.addItems(DEFAULT_COLORS)
             color.setCurrentText(prop['color'])
             color.currentTextChanged.connect(
-                lambda text, idx=idx: self.update_legend_color(idx, text))
+                lambda text, idx=idx: self.udp_legend(idx, 'color', text))
             color_layout.addWidget(color)
 
-            # Add vertical layouts to main layout
+        # Add vertical layouts to main layout
         main_layout.addLayout(label_layout)
         main_layout.addLayout(marker_layout)
         main_layout.addLayout(color_layout)
+
+    def udp_legend(self, idx, property_type, text):
+        """update legend properties based on user modifications via GUI"""
+        self.legend_properties[idx][property_type] = text
+        self._set_legend()
 
     def _plot_primary_axis(self, df):
         if not self.legend_properties:
@@ -261,45 +300,28 @@ class Graph(QWidget):
             colors = [str(prop['color']) for prop in self.legend_properties]
         for y in self.y:
             if self.plot_style == 'point':
-                try:
-                    sns.pointplot(data=df, x=self.x, y=y, hue=self.z,
-                                  ax=self.ax,
-                                  linestyles='-' if self.join_for_point_plot
-                                  else
-                                  'none', marker=markers, palette=colors,
-                                  markeredgecolor='black', markeredgewidth=1,
-                                  dodge=True,
-                                  err_kws={'linewidth': 1, 'color': 'black'},
-                                  capsize=0.02)
-                except KeyError:
-                    sns.pointplot(data=df, x=self.x, y=y, hue=self.z,
-                                  ax=self.ax,
-                                  linestyles='-' if self.join_for_point_plot
-                                  else
-                                  'none', marker=DEFAULT_MARKERS,
-                                  palette=DEFAULT_COLORS,
-                                  markeredgecolor='black', markeredgewidth=1,
-                                  dodge=True,
-                                  err_kws={'linewidth': 1, 'color': 'black'},
-                                  capsize=0.02)
+                sns.pointplot(data=df, x=self.x, y=y, hue=self.z,
+                              ax=self.ax,
+                              linestyles='-' if self.join_for_point_plot
+                              else 'none', marker=markers, palette=colors,
+                              markeredgecolor='black', markeredgewidth=1,
+                              dodge=True,
+                              err_kws={'linewidth': 1, 'color': 'black'},
+                              capsize=0.02)
             elif self.plot_style == 'scatter':
                 sns.scatterplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
                                 s=100, edgecolor='black', palette=colors)
             elif self.plot_style == 'box':
                 sns.boxplot(data=df, x=self.x, y=y, hue=self.z, dodge=True,
                             ax=self.ax, palette=colors)
-
             elif self.plot_style == 'line':
-                sns.lineplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax)
+                sns.lineplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
+                             palette=colors)
             elif self.plot_style == 'bar':
-                if self.show_bar_plot_error_bar:
-                    sns.barplot(data=df, x=self.x, y=y, hue=self.z,
-                                errorbar='sd', ax=self.ax,
-                                palette=colors)
-                else:
-                    sns.barplot(data=df, x=self.x, y=y, hue=self.z,
-                                errorbar=None, ax=self.ax,
-                                palette=colors)
+                sns.barplot(data=df, x=self.x, y=y, hue=self.z,
+                            errorbar='sd' if self.show_bar_plot_error_bar
+                            else None, err_kws={'linewidth': 1},
+                            ax=self.ax, palette=colors)
 
             elif self.plot_style == 'trendline':
                 sns.regplot(data=df, x=self.x, y=y, ax=self.ax, scatter=True,
@@ -310,15 +332,6 @@ class Graph(QWidget):
                 self._plot_wafer(df)
             else:
                 show_alert("Unsupported plot style")
-
-    def update_legend_color(self, idx, text):
-        self.legend_properties[idx]['color'] = text
-
-    def update_legend_marker(self, idx, text):
-        self.legend_properties[idx]['marker'] = text
-
-    def update_legend_label(self, idx, text):
-        self.legend_properties[idx]['label'] = text
 
     def _set_legend(self):
         """Manually add legend of all ax (1->3) in one box"""
@@ -356,18 +369,6 @@ class Graph(QWidget):
                 self.ax.legend(handles, legend_labels, loc='center left',
                                bbox_to_anchor=(1, 0.5))
 
-    def update_legend(self, legend_properties):
-        """Update legend properties based on user modifications"""
-        if self.ax:
-            legend = self.ax.get_legend()
-            if legend:
-                for idx, properties in enumerate(legend_properties):
-                    legend.get_texts()[idx].set_text(properties['label'])
-                    legend.legendHandles[idx].set_marker(properties['marker'])
-                    legend.legendHandles[idx].set_markerfacecolor(
-                        properties['color'])
-            self.canvas.draw()
-
     def _set_grid(self):
         """Add grid for the plot"""
         if self.grid:
@@ -379,68 +380,6 @@ class Graph(QWidget):
         """Set rotation of the ticklabels of the x axis"""
         plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
                  rotation_mode="anchor")
-
-    def _plot_secondary_axis(self, df):
-        if self.ax2:
-            self.ax2.remove()
-            self.ax2 = None
-        if hasattr(self, 'y2') and self.y2:
-            self.ax2 = self.ax.twinx()
-            if self.plot_style == 'line':
-                sns.lineplot(data=df, x=self.x, y=self.y2, hue=self.z,
-                             ax=self.ax2, color='red',
-                             palette=self.legend_colors)
-            elif self.plot_style == 'point':
-                sns.pointplot(
-                    data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
-                    linestyles='-' if self.join_for_point_plot else 'none',
-                    marker='s', color='red', markeredgecolor='black',
-                    markeredgewidth=1,
-                    dodge=True, err_kws={'linewidth': 1, 'color': 'black'},
-                    capsize=0.02
-                )
-            elif self.plot_style == 'scatter':
-                sns.scatterplot(data=df, x=self.x, y=self.y2, hue=self.z,
-                                ax=self.ax2,
-                                s=100, edgecolor='black', color='red')
-            else:
-                self.ax2.remove()
-                self.ax2 = None
-
-            self.ax2.set_ylabel(self.y2label, color='red')
-            self.ax2.tick_params(axis='y', colors='red')
-
-    def _plot_tertiary_axis(self, df):
-        if self.ax3:
-            self.ax3.remove()
-            self.ax3 = None
-        if hasattr(self, 'y3') and self.y3:
-            self.ax3 = self.ax.twinx()
-            self.ax3.spines["right"].set_position(("outward", 100))
-            if self.plot_style == 'line':
-                sns.lineplot(data=df, x=self.x, y=self.y3, hue=self.z,
-                             ax=self.ax3, color='green',
-                             palette=self.legend_colors)
-            elif self.plot_style == 'point':
-                sns.pointplot(
-                    data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
-                    linestyles='-' if self.join_for_point_plot else 'none',
-                    marker='s', color='red', markeredgecolor='black',
-                    markeredgewidth=1,
-                    dodge=True, err_kws={'linewidth': 1, 'color': 'black'},
-                    capsize=0.02, palette=self.legend_colors
-                )
-            elif self.plot_style == 'scatter':
-                sns.scatterplot(data=df, x=self.x, y=self.y3, hue=self.z,
-                                ax=self.ax3,
-                                s=100, edgecolor='black', color='green',
-                                palette=self.legend_colors)
-            else:
-                self.ax3.remove()
-                self.ax3 = None
-
-            self.ax3.set_ylabel(self.y3label, color='green')
-            self.ax3.tick_params(axis='y', colors='green')
 
     def _annotate_trendline_eq(self, df):
         """Add the trendline equation in the plot"""
@@ -493,9 +432,67 @@ class Graph(QWidget):
             else:
                 self.ax.set_ylabel(self.y[0])
 
+    def _plot_secondary_axis(self, df):
+        if self.ax2:
+            self.ax2.remove()
+            self.ax2 = None
+        if hasattr(self, 'y2') and self.y2:
+            self.ax2 = self.ax.twinx()
+            if self.plot_style == 'line':
+                sns.lineplot(data=df, x=self.x, y=self.y2, hue=self.z,
+                             ax=self.ax2, color='red')
+            elif self.plot_style == 'point':
+                sns.pointplot(
+                    data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
+                    linestyles='-' if self.join_for_point_plot else 'none',
+                    marker='s', color='red', markeredgecolor='black',
+                    markeredgewidth=1,
+                    dodge=True, err_kws={'linewidth': 1, 'color': 'black'},
+                    capsize=0.02
+                )
+            elif self.plot_style == 'scatter':
+                sns.scatterplot(data=df, x=self.x, y=self.y2, hue=self.z,
+                                ax=self.ax2,
+                                s=100, edgecolor='black', color='red')
+            else:
+                self.ax2.remove()
+                self.ax2 = None
+
+            self.ax2.set_ylabel(self.y2label, color='red')
+            self.ax2.tick_params(axis='y', colors='red')
+
+    def _plot_tertiary_axis(self, df):
+        if self.ax3:
+            self.ax3.remove()
+            self.ax3 = None
+        if hasattr(self, 'y3') and self.y3:
+            self.ax3 = self.ax.twinx()
+            self.ax3.spines["right"].set_position(("outward", 100))
+            if self.plot_style == 'line':
+                sns.lineplot(data=df, x=self.x, y=self.y3, hue=self.z,
+                             ax=self.ax3, color='green')
+            elif self.plot_style == 'point':
+                sns.pointplot(
+                    data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
+                    linestyles='-' if self.join_for_point_plot else 'none',
+                    marker='s', color='red', markeredgecolor='black',
+                    markeredgewidth=1,
+                    dodge=True, err_kws={'linewidth': 1, 'color': 'black'},
+                    capsize=0.02
+                )
+            elif self.plot_style == 'scatter':
+                sns.scatterplot(data=df, x=self.x, y=self.y3, hue=self.z,
+                                ax=self.ax3,
+                                s=100, edgecolor='black', color='green')
+            else:
+                self.ax3.remove()
+                self.ax3 = None
+            self.ax3.set_ylabel(self.y3label, color='green')
+            self.ax3.tick_params(axis='y', colors='green')
+
 
 class ShowParameters:
-    """Class dedicated to show fit paramters in a Peak_tables"""
+    """Class dedicated to show fit paramters in a Peak_tables in GUI"""
 
     def __init__(self, main_layout, sel_spectrum, cb_limits, cb_expr, update):
         self.main_layout = main_layout
@@ -505,6 +502,7 @@ class ShowParameters:
         self.update = update
 
     def clear_layout(self, layout):
+        """To clear a given layout"""
         if layout is not None:
             while layout.count():
                 item = layout.takeAt(0)
@@ -740,7 +738,7 @@ class ShowParameters:
 
 
 class Filter:
-    """Class to handler "filter features" for querying pandas dataframe"""
+    """Class for Handling "Filter Features" in Querying Pandas DataFrames"""
 
     def __init__(self, line_edit, listbox, df):
         self.line_edit = line_edit
@@ -1195,33 +1193,3 @@ class WaferPlot:
         """Interpolate data using griddata"""
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
         return zi
-
-
-def show_alert(message):
-    """Show alert"""
-    msg_box = QMessageBox()
-    msg_box.setIcon(QMessageBox.Warning)
-    msg_box.setWindowTitle("Alert")
-    msg_box.setText(message)
-    msg_box.exec_()
-
-
-
-def view_df(tabWidget, df):
-    """View selected dataframe"""
-    df_viewer = QDialog(tabWidget.parent())
-    df_viewer.setWindowTitle("DataFrame Viewer")
-    df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
-    # Create a QTableWidget and populate it with data from the DataFrame
-    table_widget = QTableWidget(df_viewer)
-    table_widget.setColumnCount(df.shape[1])
-    table_widget.setRowCount(df.shape[0])
-    table_widget.setHorizontalHeaderLabels(df.columns)
-    for row in range(df.shape[0]):
-        for col in range(df.shape[1]):
-            item = QTableWidgetItem(str(df.iat[row, col]))
-            table_widget.setItem(row, col, item)
-    table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
-    layout = QVBoxLayout(df_viewer)
-    layout.addWidget(table_widget)
-    df_viewer.show()

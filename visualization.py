@@ -54,10 +54,7 @@ class Visualization(QDialog):
         self.ui.btn_add_graph.clicked.connect(self.plotting)
         # Update an existing graph
         self.ui.btn_upd_graph.clicked.connect(
-            lambda: self.plotting(update_graph=True, update_legend=False))
-        # Update legends
-        self.ui.btn_apply_legend.clicked.connect(
-            lambda: self.plotting(update_graph=True, update_legend=True))
+            lambda: self.plotting(update_graph=True))
 
         # GRAPH: add 2nd and 3rd lines for the current ax
         self.ui.btn_add_y12.clicked.connect(self.add_y12)
@@ -72,9 +69,6 @@ class Visualization(QDialog):
         self.ui.cbb_palette.addItems(PALETTE)
         self.ui.cbb_plotstyle.addItems(PLOT_STYLES)
 
-        self.ui.btn_adjust_dpi.clicked.connect(self.adjust_dpi)
-        # self.ui.spb_dpi.valueChanged.connect(self.adjust_dpi)
-
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
         self.ui.cbb_graph_list.currentIndexChanged.connect(
@@ -85,14 +79,14 @@ class Visualization(QDialog):
         self.ui.btn_load_work.clicked.connect(self.load)
         self.ui.btn_minimize_all.clicked.connect(self.minimize_all_graph)
 
-    def plotting(self, update_graph=False, update_legend=False):
+    def plotting(self, update_graph=False):
         """Plot new graph or update the existing graph
 
         update_graph: bool, optional
-            Activation key to create new plot (False) or update existing plot (True)
-        update_legend: bool, optional
-            Activation key to update existing plot with legend-properties or not.
+            Activation key to create new plot (False) or update existing plot
+            (True)
         """
+
         if update_graph:
             graph, graph_dialog, sub_window = self.get_sel_graph()
             sub_window_size = sub_window.size()
@@ -107,9 +101,6 @@ class Visualization(QDialog):
             graph = Graph(graph_id=graph_id)
             self.plots[graph.graph_id] = graph
 
-        if not update_legend:
-            graph.legend_properties = []
-
         graph.plot_style = self.ui.cbb_plotstyle.currentText()
         title = self.ui.lbl_plot_title.text()
         graph.plot_title = title if title != "None" else None
@@ -123,6 +114,9 @@ class Visualization(QDialog):
         x = self.ui.cbb_x_2.currentText()
         y = self.ui.cbb_y_2.currentText()
         z = self.ui.cbb_z_2.currentText()
+
+        # Check if z has changed and reset legend_properties if needed
+        self.is_z_changed(graph)
         graph.x = x
         if len(graph.y) == 0:
             graph.y.append(y)
@@ -148,6 +142,7 @@ class Visualization(QDialog):
 
         # PLOTTING
         graph.create_plot_widget(graph.dpi)
+
         # Create new graph
         if not update_graph:
             # Create a QDialog to hold the Graph instance
@@ -157,7 +152,7 @@ class Visualization(QDialog):
             graph_dialog.setLayout(layout)
 
             # Add the QDialog to a QMdiSubWindow
-            sub_window = MdiSubWindow(graph_id)
+            sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize)
             sub_window.setWidget(graph_dialog)
             sub_window.closed.connect(self.delete_graph)
             sub_window.resize(graph.plot_width, graph.plot_height)
@@ -193,12 +188,13 @@ class Visualization(QDialog):
             graph.y2label = y2label
             graph.y3label = y3label
             graph.zlabel = zlabel
-        text = f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - [{z}]"
+        text = f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - [" \
+               f"{z}]"
         graph_dialog.setWindowTitle(text)
 
-        #Plot action
+        # Plot action
         QTimer.singleShot(100, self.plot_action)
-        self.customize_legend()
+        QTimer.singleShot(200, self.customize_legend)
 
     def plot_action(self):
         """Plot action to plot the figure with given paramters"""
@@ -210,26 +206,40 @@ class Visualization(QDialog):
             else:
                 graph.plot(self.filtered_df)
 
+    def is_z_changed(self, graph):
+        """
+        Check if the z value from the combobox is different from the current 
+        graph.z.
+        If yes, reinitialize graph.legend_properties to an empty list.
+
+        Parameters:
+        graph: Graph object
+            The graph object to check and update.
+        """
+        current_z = self.ui.cbb_z_2.currentText()
+        if current_z != graph.z:
+            graph.legend_properties = []
+            print("z' values are changed, resets legends to default")
+            return True
+        return False
+
     def customize_legend(self):
         """ Show all legend's properties in GUI for customization"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
         main_layout = self.ui.main_layout
         graph.customize_legend_via_gui(main_layout)
 
-    def adjust_dpi(self):
-        """ Adjust DPI of the selected plot"""
-        graph, graph_dialog, sub_window = self.get_sel_graph()
-        dpi = float(self.ui.spb_dpi.text())
-        if graph:
-            # Recreate the plot widget with new DPI
-            graph.create_plot_widget(dpi, graph.graph_layout)
-            QTimer.singleShot(100, self.plot_action)
-
     def on_selected_graph(self, sub_window):
         """Reflect all properties of selected graph object to GUI"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
 
         if graph:
+            # Display figure size in GUI
+            sub_window_size = sub_window.size()
+            width = sub_window_size.width()
+            height = sub_window_size.height()
+            self.ui.lbl_figsize.setText(f"({width}x{height})")
+
             # Plot style
             plot_style = graph.plot_style
             items = [self.ui.cbb_plotstyle.itemText(i) for i in
@@ -625,7 +635,7 @@ class Visualization(QDialog):
             graph.y.append(y12)
         else:
             graph.y[1] = y12
-        self.plotting(update_graph=True, update_legend=False)
+        self.plotting(update_graph=True)
 
     def add_y13(self):
         """Add a 3rd line in the current plot ax"""
@@ -635,7 +645,7 @@ class Visualization(QDialog):
             graph.y.append(y13)
         else:
             graph.y[2] = y13
-        self.plotting(update_graph=True, update_legend=False)
+        self.plotting(update_graph=True)
 
     def add_y2(self):
         """Add 2nd Y axis for the selected plot"""
@@ -649,7 +659,7 @@ class Visualization(QDialog):
             graph.y2label = y2
             graph.y2min = y2min
             graph.y2max = y2max
-            self.plotting(update_graph=True, update_legend=False)
+            self.plotting(update_graph=True)
         else:
             pass
 
@@ -665,7 +675,7 @@ class Visualization(QDialog):
             graph.y3label = y3
             graph.y3min = y3min
             graph.y3max = y3max
-            self.plotting(update_graph=True, update_legend=False)
+            self.plotting(update_graph=True)
         else:
             pass
 
@@ -682,7 +692,7 @@ class Visualization(QDialog):
         graph.y2min = None
         graph.y2max = None
 
-        self.plotting(update_graph=True, update_legend=False)
+        self.plotting(update_graph=True)
 
     def remove_y3(self):
         """Remove the 2nd Y axis from the selected plot"""
@@ -697,7 +707,7 @@ class Visualization(QDialog):
         graph.y3min = None
         graph.y3max = None
 
-        self.plotting(update_graph=True, update_legend=False)
+        self.plotting(update_graph=True)
 
     def save(self):
         """Save current work"""
@@ -854,7 +864,8 @@ class Visualization(QDialog):
 
                         # Plot the graph
                         graph.create_plot_widget(graph.dpi)
-                        self.apply_filters(self.original_dfs[graph.df_name], graph.filters)
+                        self.apply_filters(self.original_dfs[graph.df_name],
+                                           graph.filters)
                         self.plots[graph.graph_id] = graph
 
                         # Create a QDialog to hold the Graph instance
@@ -868,7 +879,8 @@ class Visualization(QDialog):
                         graph_dialog.setLayout(layout)
 
                         # Add the QDialog to the mdiArea
-                        sub_window = MdiSubWindow(graph.graph_id)
+                        sub_window = MdiSubWindow(graph.graph_id,
+                                                  self.ui.lbl_figsize)
                         sub_window.setWidget(graph_dialog)
                         sub_window.closed.connect(self.delete_graph)
                         self.ui.mdiArea.addSubWindow(sub_window)
@@ -876,6 +888,7 @@ class Visualization(QDialog):
                         sub_window.show()
 
                         self.plot_action()
+
                     self.filter.upd_filter_listbox()
                     self.add_graph_list_to_combobox()
 
@@ -883,13 +896,18 @@ class Visualization(QDialog):
             show_alert(f"Error loading work: {e}")
 
 
+from PySide6.QtWidgets import QMdiSubWindow, QLabel, QVBoxLayout
+from PySide6.QtCore import Signal
+
+
 class MdiSubWindow(QMdiSubWindow):
     """Custom class of QMdiSubWindow to get signal when closing sub window"""
     closed = Signal(int)
 
-    def __init__(self, graph_id, *args, **kwargs):
+    def __init__(self, graph_id, figsize_label, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.graph_id = graph_id
+        self.figsize_label = figsize_label
 
     def closeEvent(self, event):
         """Override closeEvent to emit a signal when the subwindow is closing"""
@@ -900,5 +918,6 @@ class MdiSubWindow(QMdiSubWindow):
         """Override resizeEvent to handle window resizing"""
         new_size = self.size()
         width, height = new_size.width(), new_size.height()
-        print(f"Subwindow resized: Width = {width}, Height = {height}")
+        # Update QLabel with the new size
+        self.figsize_label.setText(f"({width}x{height})")
         super().resizeEvent(event)

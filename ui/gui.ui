@@ -7038,6 +7038,13 @@
                </widget>
               </item>
               <item>
+               <widget class="QLabel" name="lbl_figsize">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
                <spacer name="horizontalSpacer_2">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
@@ -7052,10 +7059,16 @@
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_123">
+                <property name="leftMargin">
+                 <number>5</number>
+                </property>
+                <property name="rightMargin">
+                 <number>5</number>
+                </property>
                 <item>
-                 <widget class="QPushButton" name="btn_adjust_dpi">
+                 <widget class="QLabel" name="label_16">
                   <property name="text">
-                   <string>Adj DPI:</string>
+                   <string>DPI:</string>
                   </property>
                  </widget>
                 </item>
@@ -7082,6 +7095,15 @@
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_110">
+                <property name="leftMargin">
+                 <number>5</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>5</number>
+                </property>
                 <item>
                  <widget class="QLabel" name="label_92">
                   <property name="text">
@@ -7103,13 +7125,6 @@
                  </widget>
                 </item>
                </layout>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_99">
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
               </item>
               <item>
                <widget class="QCheckBox" name="cb_legend_visible">
@@ -7648,6 +7663,19 @@
                 </size>
                </property>
               </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_49">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
              </item>
              <item>
               <widget class="QPushButton" name="btn_upd_graph">
@@ -8264,13 +8292,6 @@
                        </property>
                       </spacer>
                      </item>
-                     <item>
-                      <widget class="QPushButton" name="btn_apply_legend">
-                       <property name="text">
-                        <string>Apply</string>
-                       </property>
-                      </widget>
-                     </item>
                     </layout>
                    </item>
                    <item>
@@ -8329,8 +8350,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>372</width>
-                    <height>368</height>
+                    <width>362</width>
+                    <height>310</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_9">

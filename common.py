@@ -222,12 +222,13 @@ class Graph(QWidget):
                     if self.plot_style in ['point', 'scatter', 'line']:
                         color = handle.get_markerfacecolor()
                         marker = handle.get_marker()
+                    # Box & bar plots do not use markers → set defautl values
                     elif self.plot_style in ['box', 'bar']:
                         color = rgba_to_named_color(handle.get_facecolor())
-                        marker = 'nan'  # Box & bar plots do not use markers
+                        marker = 'o'
                     else:
-                        color = 'nan'
-                        marker = 'nan'
+                        color = 'blue'
+                        marker = 'o'
                     legend_properties.append(
                         {'label': label, 'marker': marker, 'color': color})
         self.legend_properties = legend_properties

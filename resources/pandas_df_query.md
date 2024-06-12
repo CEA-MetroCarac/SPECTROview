@@ -19,14 +19,13 @@ typing as following: **(column_name) (operator) (value)**:
 3. **(value)**: it could be numeric or string values. String value must be
    enclosed in double quotes (cf. example below)
 
-### Here is an example:
+### Here are some examples of using filters:
 
 <div style="text-align: center;">
     <img src="dfr_filter.png">
 </div>
-Four different filters are used: 
 
 - Confocal != "high"
-- `Laser Power <= 5
 - Thickness == "1ML" or Thickness == "3ML"
 - a3_LOM >= 1000
+- `Laser Power <= 5

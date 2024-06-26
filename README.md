@@ -48,7 +48,7 @@ ___
 - **Dedicated Module for Data Visualization**
 
 <p align="center">
-    <img src="GIF/Visualization_TAB.jpg">
+    <img src="GIF/7. Visualisation TAB.gif">
 </p>
 
 

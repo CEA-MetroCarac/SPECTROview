@@ -15,7 +15,7 @@ from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
 from ui import resources_new
 from maps import Maps
 from spectrums import Spectrums
-from visualization import Visualization
+from visualisation import Visualization
 
 DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")

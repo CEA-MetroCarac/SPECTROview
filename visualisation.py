@@ -7,13 +7,12 @@ import dill
 import json
 
 from common import view_df, show_alert
-from common import PLOT_STYLES, PALETTE
+from common import PLOT_STYLES, PALETTE, LEGEND_LOCATION
 from common import Graph, Filter
 
 from PySide6.QtWidgets import QApplication, QFileDialog, QDialog, QVBoxLayout, \
-    QLineEdit, QListWidgetItem, QMdiSubWindow, QCheckBox, QMdiArea, \
-    QSizePolicy, \
-    QMessageBox
+    QLineEdit, QListWidgetItem, QMdiSubWindow, QCheckBox, QMdiArea, QLabel, \
+    QSizePolicy, QMessageBox
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 
 
@@ -68,6 +67,7 @@ class Visualization(QDialog):
         self.ui.btn_copy_graph.clicked.connect(self.copy_fig_to_clb)
         self.ui.cbb_palette.addItems(PALETTE)
         self.ui.cbb_plotstyle.addItems(PLOT_STYLES)
+        self.ui.cbb_legend_loc.addItems(LEGEND_LOCATION)
 
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
@@ -104,6 +104,7 @@ class Visualization(QDialog):
 
         # Collecting properties of graph from GUI
         graph.plot_style = self.ui.cbb_plotstyle.currentText()
+
         title = self.ui.lbl_plot_title.text()
         graph.plot_title = title if title != "None" else None
 
@@ -140,6 +141,7 @@ class Visualization(QDialog):
         graph.dpi = float(self.ui.spb_dpi.text())
 
         graph.legend_visible = self.ui.cb_legend_visible.isChecked()
+        graph.legend_location = self.ui.cbb_legend_loc.currentText()
         graph.legend_outside = self.ui.cb_legend_outside.isChecked()
         graph.grid = self.ui.cb_grid.isChecked()
         graph.trendline_order = float(self.ui.spb_trendline_oder.text())
@@ -317,6 +319,12 @@ class Visualization(QDialog):
             # Reflect legend status
             self.ui.cb_legend_visible.setChecked(graph.legend_visible)
             self.ui.cb_legend_outside.setChecked(graph.legend_outside)
+            # Reflect legend location:
+            legend_loc = graph.legend_location
+            items = [self.ui.cbb_legend_loc.itemText(i) for i in
+                     range(self.ui.cbb_legend_loc.count())]
+            if legend_loc in items:
+                self.ui.cbb_legend_loc.setCurrentText(legend_loc)
 
             # Grid
             self.ui.cb_grid.setChecked(graph.grid)
@@ -767,6 +775,7 @@ class Visualization(QDialog):
                         'x_rot': graph.x_rot,
                         'grid': graph.grid,
                         'legend_visible': graph.legend_visible,
+                        'legend_location': graph.legend_location,
                         'legend_outside': graph.legend_outside,
                         'color_palette': graph.color_palette,
                         'legend_properties': graph.legend_properties,
@@ -852,6 +861,10 @@ class Visualization(QDialog):
                         graph.x_rot = graph_data['x_rot']
                         graph.grid = graph_data['grid']
                         graph.legend_visible = graph_data['legend_visible']
+                        # Get from saved files, it not set defaut values
+                        graph.legend_location = graph_data.get(
+                            'legend_location', 'upper right')
+
                         graph.legend_outside = graph_data['legend_outside']
                         graph.color_palette = graph_data['color_palette']
                         graph.dpi = graph_data['dpi']
@@ -863,10 +876,8 @@ class Visualization(QDialog):
 
                         graph.legend_properties = graph_data[
                             'legend_properties']
-
                         graph.show_bar_plot_error_bar = graph_data[
                             'show_bar_plot_error_bar']
-
                         graph.join_for_point_plot = graph_data[
                             'join_for_point_plot']
 
@@ -900,10 +911,6 @@ class Visualization(QDialog):
 
         except Exception as e:
             show_alert(f"Error loading work: {e}")
-
-
-from PySide6.QtWidgets import QMdiSubWindow, QLabel, QVBoxLayout
-from PySide6.QtCore import Signal
 
 
 class MdiSubWindow(QMdiSubWindow):

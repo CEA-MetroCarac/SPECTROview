@@ -52,6 +52,9 @@ DEFAULT_COLORS = ['blue', 'red', 'green', 'orange', 'purple', 'cyan', 'magenta',
                   'indigo', 'violet', 'olive', 'maroon', 'skyblue']
 MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>']
 DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
+LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
+                   'center left', 'center right', 'lower center',
+                   'upper center', 'center']
 
 
 def rgba_to_named_color(rgba):
@@ -133,6 +136,7 @@ class Graph(QWidget):
         self.x_rot = 0
         self.grid = False
         self.legend_visible = True
+        self.legend_location = 'upper right'
         self.legend_outside = False
         self.legend_properties = []
 
@@ -371,7 +375,7 @@ class Graph(QWidget):
                 self.legend_properties = self.get_legend_properties()
 
             if self.legend_visible:
-                self.ax.legend(handles, legend_labels, loc='upper right')
+                self.ax.legend(handles, legend_labels, loc=self.legend_location)
             else:
                 self.ax.legend().remove()
             if self.legend_outside:

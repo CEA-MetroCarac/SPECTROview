@@ -1,29 +1,29 @@
 # Matplotlib style for Jupyter notebooks
 
 # Set default figure size
-figure.figsize : 8, 6
 
-axes.prop_cycle : cycler('color', ['e60049', '0bb4ff', '50e991', 'e6d800', '9b19f5', 'ffa300', 'dc0ab4', 'b3d4ff', '00bfa0'])
-
+# Set color cycle: red, blue, green, violet, gray, yellow,  
+#axes.prop_cycle : cycler('color', ['FF0000', '00FF00', '0000FF', 'FFFF00', 'FFA500', '00FFFF', 'FF00FF', 'b3d4ff', 'FFC0CB'])
+axes.prop_cycle : cycler('color',['blue', 'red', 'green', 'orange', 'purple', 'cyan', 'magenta', 'lime', 'pink', 'brown', 'gold', 'teal', 'navy', 'silver', 'indigo', 'violet', 'olive', 'maroon', 'skyblue'])
 
 xtick.major.size : 5
-xtick.major.width : 1
+xtick.major.width : 0.8
 xtick.minor.size : 2
-xtick.minor.width : 0.5
+xtick.minor.width : 0.8
 
 xtick.direction: out
 xtick.minor.visible : True
-xtick.top : True
+xtick.top : False
 
 # Set y axis
 ytick.major.size : 5
-ytick.major.width : 1
+ytick.major.width : 0.8
 ytick.minor.size : 2
-ytick.minor.width : 0.5
+ytick.minor.width : 0.8
 
-ytick.direction: in
+ytick.direction: out
 ytick.minor.visible : True
-ytick.right : True
+ytick.right : False
 
 # Set line widths
 axes.linewidth : 1.
@@ -41,9 +41,11 @@ legend.frameon       : True
 legend.numpoints     : 1      # the number of points in the legend line
 legend.fontsize : 10
 legend.borderpad     : 0.4    # border whitespace in fontsize units
-legend.markerscale   : 0.7    # the relative size of legend markers vs. original
+legend.markerscale   : 0.6    # relative size of legend markers vs.original
 legend.title_fontsize : 12
-
+legend.edgecolor     : black  # set the edge color of the legend box to black
+legend.framealpha    : 0.7      # transparency (1 = opaque, 0 = transparent)
+legend.fancybox      : False   # True =rounded box, False=square.
 
 # Fontsizes
 xtick.labelsize : 12
@@ -51,7 +53,7 @@ ytick.labelsize : 12
 axes.titlesize : 14
 axes.labelsize : 14
 
-figure.dpi       : 150      # figure dots per inch
+figure.dpi       : 100      # figure dots per inch
 
 # Use sans-serif fonts
 font.family : sans-serif
@@ -61,4 +63,4 @@ mathtext.fontset : dejavusans
 text.usetex : False
 
 # errorbar props
-errorbar.capsize: 0.05
+errorbar.capsize: 0.02

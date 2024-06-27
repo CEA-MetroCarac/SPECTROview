@@ -9,8 +9,9 @@ from pathlib import Path
 import dill
 
 from common import view_df, show_alert, Filter
-from common import FitThread, FitModelManager, ShowParameters, FIT_METHODS, \
-    NCPUS
+from common import FitThread, FitModelManager, ShowParameters, DataframeTable
+from common import PLOT_POLICY, NCPUS, FIT_METHODS
+
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -26,9 +27,6 @@ from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
-
-DIRNAME = os.path.dirname(__file__)
-PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy_spectre.mplstyle")
 
 
 class Spectrums(QObject):
@@ -249,8 +247,7 @@ class Spectrums(QObject):
         """Apply all checked filters to the current dataframe"""
         self.filter.set_dataframe(self.df_fit_results)
         self.filtered_df = self.filter.apply_filters()
-        self.common.display_df_in_table(self.ui.fit_results_table_2,
-                                        self.filtered_df)
+        self.display_df_in_GUI(self.filtered_df)
 
     def set_default_model_folder(self, folder_path=None):
         """Define a default model folder"""
@@ -787,14 +784,26 @@ class Spectrums(QObject):
                 column
                 in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
-            self.common.display_df_in_table(self.ui.fit_results_table_2,
-                                            self.df_fit_results)
+
+            self.display_df_in_GUI(self.df_fit_results)
         else:
             self.ui.fit_results_table_2.clear()
 
         self.filtered_df = self.df_fit_results
         self.upd_cbb_param()
         self.send_df_to_viz()
+
+    def display_df_in_GUI(self, df):
+        # Clear existing widgets from layout_df_table
+        while self.ui.layout_df_table2.count():
+            item = self.ui.layout_df_table2.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+        # Add the new DataframeTable
+        df_table = DataframeTable(df)
+        self.ui.layout_df_table2.addWidget(df_table)
 
     def split_fname(self):
         """Split fname and populate the combobox"""
@@ -829,8 +838,7 @@ class Spectrums(QObject):
             part) > selected_part_index else None for part in parts]
 
         self.df_fit_results = dfr
-        self.common.display_df_in_table(self.ui.fit_results_table_2,
-                                        self.df_fit_results)
+        self.display_df_in_GUI(self.df_fit_results)
         self.send_df_to_viz()
         self.upd_cbb_param()
 
@@ -1032,8 +1040,7 @@ class Spectrums(QObject):
                 self.filtered_df = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
-        self.common.display_df_in_table(self.ui.fit_results_table_2,
-                                        self.df_fit_results)
+        self.display_df_in_GUI(self.df_fit_results)
         self.upd_cbb_param()
         self.send_df_to_viz()
 
@@ -1152,9 +1159,7 @@ class Spectrums(QObject):
                         #
                         # self.plot2()
                         # self.plot3()
-                        self.common.display_df_in_table(
-                            self.ui.fit_results_table_2,
-                            self.df_fit_results)
+                        self.display_df_in_GUI(self.df_fit_results)
                     except Exception as e:
                         show_alert(f"Error loading work: {e}")
         except Exception as e:

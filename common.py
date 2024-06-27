@@ -4,7 +4,9 @@ Module contains all utilities functions and common methods of the appli
 import time
 import markdown
 import os
+import sys
 from copy import deepcopy
+import pandas as pd
 
 try:
     import win32clipboard
@@ -20,11 +22,12 @@ import seaborn as sns
 from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
-    QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem
-from PySide6.QtCore import Signal, QThread
-from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent
+    QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, \
+    QApplication, QMainWindow, QWidget, QMenu
+from PySide6.QtCore import Signal, QThread, Qt
+from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
+    QAction, Qt
 
-from PySide6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
@@ -35,6 +38,8 @@ rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for
 DIRNAME = os.path.dirname(__file__)
 RELPATH = os.path.join(DIRNAME, "resources")
 ICON_DIR = os.path.join(DIRNAME, "ui", "iconpack")
+
+PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy.mplstyle")
 
 PEAK_MODELS = ["Lorentzian", "Gaussian", "PseudoVoigt", "GaussianAsym",
                "LorentzianAsym"]
@@ -95,6 +100,70 @@ def view_df(tabWidget, df):
     layout = QVBoxLayout(df_viewer)
     layout.addWidget(table_widget)
     df_viewer.show()
+
+
+class DataframeTable(QWidget):
+    def __init__(self, df):
+        super().__init__()
+        self.df = df
+        self.initUI()
+
+    def initUI(self):
+        layout = QVBoxLayout(self)
+
+        # Create QTableWidget
+        self.table_widget = QTableWidget()
+        layout.addWidget(self.table_widget)
+
+        # Display the DataFrame in the QTableWidget
+        self.display_df_in_table()
+
+        # Enable copy action
+        self.table_widget.setContextMenuPolicy(Qt.ActionsContextMenu)
+        copy_action = QAction("Copy", self)
+        copy_action.triggered.connect(self.copy_data)
+        self.table_widget.addAction(copy_action)
+
+    def display_df_in_table(self):
+        """Display pandas DataFrame in QTableWidget in GUI"""
+        self.table_widget.setRowCount(self.df.shape[0])
+        self.table_widget.setColumnCount(self.df.shape[1])
+        self.table_widget.setHorizontalHeaderLabels(self.df.columns)
+        for row in range(self.df.shape[0]):
+            for col in range(self.df.shape[1]):
+                item = QTableWidgetItem(str(self.df.iat[row, col]))
+                self.table_widget.setItem(row, col, item)
+        self.table_widget.resizeColumnsToContents()
+
+    def copy_data(self):
+        selected_indexes = self.table_widget.selectedIndexes()
+        if not selected_indexes:
+            return
+
+        # Collect unique rows and columns
+        rows = set(index.row() for index in selected_indexes)
+        cols = set(index.column() for index in selected_indexes)
+
+        data = []
+        for row in sorted(rows):
+            row_data = []
+            for col in sorted(cols):
+                item = self.table_widget.item(row, col)
+                if item is not None:
+                    row_data.append(item.text())
+                else:
+                    row_data.append('')
+            data.append('\t'.join(row_data))
+
+        # Join all rows with newline character and copy to clipboard
+        QApplication.clipboard().setText('\n'.join(data))
+
+    def keyPressEvent(self, event):
+        # Override key press event to handle Ctrl+C for copying
+        if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_C:
+            self.copy_data()
+        else:
+            super().keyPressEvent(event)
 
 
 class Graph(QWidget):

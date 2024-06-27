@@ -1235,6 +1235,25 @@
                               </widget>
                              </item>
                              <item>
+                              <widget class="QLabel" name="lbl_copied_fit_model">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="minimumSize">
+                                <size>
+                                 <width>50</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                               <property name="text">
+                                <string/>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
                               <widget class="QPushButton" name="btn_paste_fit_model">
                                <property name="minimumSize">
                                 <size>
@@ -1806,7 +1825,7 @@
                      <number>15</number>
                     </property>
                     <item>
-                     <widget class="QTableWidget" name="fit_results_table"/>
+                     <layout class="QVBoxLayout" name="layout_df_table"/>
                     </item>
                     <item>
                      <widget class="QGroupBox" name="groupBox_3">
@@ -3525,7 +3544,7 @@
               <item>
                <widget class="QLabel" name="label_58">
                 <property name="text">
-                 <string>Spectrum(s:)</string>
+                 <string>Quick selection :</string>
                 </property>
                </widget>
               </item>
@@ -5123,6 +5142,25 @@
                               </widget>
                              </item>
                              <item>
+                              <widget class="QLabel" name="lbl_copied_fit_model_2">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="minimumSize">
+                                <size>
+                                 <width>50</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                               <property name="text">
+                                <string/>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
                               <widget class="QPushButton" name="btn_paste_fit_model_2">
                                <property name="minimumSize">
                                 <size>
@@ -5377,8 +5415,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>411</width>
-                       <height>350</height>
+                       <width>428</width>
+                       <height>352</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -5677,7 +5715,7 @@
                      <number>15</number>
                     </property>
                     <item>
-                     <widget class="QTableWidget" name="fit_results_table_2"/>
+                     <layout class="QVBoxLayout" name="layout_df_table2"/>
                     </item>
                     <item>
                      <widget class="QGroupBox" name="groupBox_6">
@@ -7230,7 +7268,7 @@
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_50">
             <item>
-             <widget class="QTableWidget" name="tableWidget"/>
+             <layout class="QVBoxLayout" name="layout_df"/>
             </item>
            </layout>
           </widget>
@@ -7808,7 +7846,7 @@
               </size>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab_plot_settings">
               <attribute name="title">
@@ -8230,8 +8268,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>372</width>
-                    <height>368</height>
+                    <width>235</width>
+                    <height>226</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">

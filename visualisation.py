@@ -8,7 +8,7 @@ import json
 
 from common import view_df, show_alert
 from common import PLOT_STYLES, PALETTE, LEGEND_LOCATION
-from common import Graph, Filter
+from common import Graph, Filter, DataframeTable
 
 from PySide6.QtWidgets import QApplication, QFileDialog, QDialog, QVBoxLayout, \
     QLineEdit, QListWidgetItem, QMdiSubWindow, QCheckBox, QMdiArea, QLabel, \
@@ -445,9 +445,10 @@ class Visualization(QDialog):
 
     def update_gui(self):
         """To update GUI whenever a dataframe is selected via listbox"""
-        self.show_df_in_gui()
+
         self.update_cbb()
         self.sel_df = self.get_sel_df()
+        QTimer.singleShot(100, self.display_df_in_GUI)
 
     def update_cbb(self):
         """Populate columns of selected data to comboboxes"""
@@ -552,11 +553,19 @@ class Visualization(QDialog):
         else:
             show_alert("No fit dataframe to display")
 
-    def show_df_in_gui(self):
+    def display_df_in_GUI(self):
         """Show selected dataframe in a QTableWidget"""
         if self.filtered_df is not None:  # Check if filtered_df is not None
-            self.common.display_df_in_table(self.ui.tableWidget,
-                                            self.filtered_df)
+            # Clear existing widgets from layout_df_table
+            while self.ui.layout_df.count():
+                item = self.ui.layout_df.takeAt(0)
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+
+            # Add the new DataframeTable
+            df_table = DataframeTable(self.filtered_df)
+            self.ui.layout_df.addWidget(df_table)
 
     def apply_filters(self, df=None, filters=None):
         """Apply filters to the specified dataframe or the current dataframe"""
@@ -572,9 +581,7 @@ class Visualization(QDialog):
         self.filter.df = sel_df
         self.filtered_df = self.filter.apply_filters(current_filters)
 
-        if self.filtered_df is not None:  # Check if filtered_df is not None
-            self.common.display_df_in_table(self.ui.tableWidget,
-                                            self.filtered_df)
+        self.display_df_in_GUI()
 
         return self.filtered_df
 
@@ -645,10 +652,15 @@ class Visualization(QDialog):
         self.ui.cbb_y3_2.clear()
         self.ui.cbb_z_2.clear()
         self.ui.listbox_filters.clear()
-        self.ui.tableWidget.clearContents()
-        self.ui.tableWidget.setRowCount(0)
-        self.ui.tableWidget.setColumnCount(0)
+
         self.ui.cbb_graph_list.clear()
+
+        # Clear df table
+        while self.ui.layout_df.count():
+            item = self.ui.layout_df.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
 
     def add_y12(self):
         """Add a second line in the current plot ax"""

@@ -71,6 +71,10 @@ class Main:
         self.ui.btn_sel_all.clicked.connect(self.maps.select_all_spectra)
         self.ui.btn_sel_verti.clicked.connect(self.maps.select_verti)
         self.ui.btn_sel_horiz.clicked.connect(self.maps.select_horiz)
+        self.ui.btn_sel_q1.clicked.connect(self.maps.select_Q1)
+        self.ui.btn_sel_q2.clicked.connect(self.maps.select_Q2)
+        self.ui.btn_sel_q3.clicked.connect(self.maps.select_Q3)
+        self.ui.btn_sel_q4.clicked.connect(self.maps.select_Q4)
 
         self.ui.btn_load_model.clicked.connect(self.maps.load_fit_model)
         self.ui.btn_apply_model.clicked.connect(

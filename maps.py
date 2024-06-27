@@ -1178,31 +1178,41 @@ class Maps(QObject):
 
     def select_all_spectra(self):
         """ To quickly select all spectra within the spectra listbox"""
-        item_count = self.ui.spectra_listbox.count()
-        for i in range(item_count):
-            item = self.ui.spectra_listbox.item(i)
-            item.setSelected(True)
+        self._select_spectra(lambda x, y: True)
 
     def select_verti(self):
         """ To select all spectra vertically within the spectra listbox"""
-        self.ui.spectra_listbox.clearSelection()  # Clear all selection
-        item_count = self.ui.spectra_listbox.count()
-        for i in range(item_count):
-            item = self.ui.spectra_listbox.item(i)
-            coord_str = item.text()
-            x_coord, y_coord = map(float, coord_str.strip('()').split(','))
-            if x_coord == 0:
-                item.setSelected(True)
+        self._select_spectra(lambda x, y: x == 0)
 
     def select_horiz(self):
-        """ To quickly select all spectra vertically the spectra listbox"""
+        """ To quickly select all spectra horizontally"""
+        self._select_spectra(lambda x, y: y == 0)
+
+    def select_Q1(self):
+        """ To quickly select all spectra in quadrant 1 """
+        self._select_spectra(lambda x, y: x < 0 and y < 0)
+
+    def select_Q2(self):
+        """ To quickly select all spectra in quadrant 2"""
+        self._select_spectra(lambda x, y: x < 0 and y > 0)
+
+    def select_Q3(self):
+        """ To quickly select all spectra in quadrant 3"""
+        self._select_spectra(lambda x, y: x > 0 and y > 0)
+
+    def select_Q4(self):
+        """ To quickly select all spectra in quadrant 4 """
+        self._select_spectra(lambda x, y: x > 0 and y < 0)
+
+    def _select_spectra(self, condition):
+        """ Helper function to select spectra based on a given condition """
         self.ui.spectra_listbox.clearSelection()  # Clear all selection
         item_count = self.ui.spectra_listbox.count()
         for i in range(item_count):
             item = self.ui.spectra_listbox.item(i)
             coord_str = item.text()
             x_coord, y_coord = map(float, coord_str.strip('()').split(','))
-            if y_coord == 0:
+            if condition(x_coord, y_coord):
                 item.setSelected(True)
 
     def get_spectrum_object(self):

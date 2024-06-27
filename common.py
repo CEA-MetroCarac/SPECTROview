@@ -47,9 +47,9 @@ NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
 PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
 PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
-DEFAULT_COLORS = ['blue', 'red', 'green', 'orange', 'purple', 'yellow', 'cyan',
-                  'magenta', 'lime', 'pink', 'brown', 'teal', 'navy', 'gold',
-                  'silver', 'indigo', 'violet', 'olive', 'maroon', 'skyblue']
+DEFAULT_COLORS = ['blue', 'red', 'green', 'orange', 'purple', 'cyan', 'magenta',
+                  'lime', 'pink', 'brown', 'gold', 'teal', 'navy', 'silver',
+                  'indigo', 'violet', 'olive', 'maroon', 'skyblue']
 MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>']
 DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
 
@@ -350,14 +350,22 @@ class Graph(QWidget):
         if handles:
             legend_labels = []
             if self.legend_properties:
-                for idx, prop in enumerate(self.legend_properties):
-                    legend_labels.append(prop['label'])
-                    handles[idx].set_label(prop['label'])  # Set legend label
-                    handles[idx].set_color(prop['color'])  # Set color
-                    if self.plot_style in ['point', 'scatter']:
-                        handles[idx].set_marker(prop['marker'])  # Set marker
-                    else:
-                        pass
+                try:
+                    for idx, prop in enumerate(self.legend_properties):
+                        legend_labels.append(prop['label'])
+                        handles[idx].set_label(
+                            prop['label'])  # Set legend label
+                        handles[idx].set_color(prop['color'])  # Set color
+                        if self.plot_style in ['point', 'scatter']:
+                            handles[idx].set_marker(
+                                prop['marker'])  # Set marker
+                        else:
+                            pass
+                except Exception as e:
+                    self.legend_properties = []
+                    legend_labels = labels
+                    self.legend_properties = self.get_legend_properties()
+
             else:
                 legend_labels = labels
                 self.legend_properties = self.get_legend_properties()
@@ -797,7 +805,6 @@ class Filter:
             for filter_data in self.filters:
                 filter_expr = filter_data["expression"]
                 is_checked = filter_data["state"]
-
                 if is_checked:
                     try:
                         filter_expr = str(filter_expr)
@@ -807,9 +814,6 @@ class Filter:
                     except Exception as e:
                         # show_alert(f"Filter error: {str(e)}")
                         print(f"Error applying filter: {str(e)}")
-                        print(
-                            f"Filter expression causing the error: "
-                            f"{filter_expr}")
 
         return self.filtered_df
 

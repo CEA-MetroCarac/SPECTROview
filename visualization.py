@@ -86,8 +86,8 @@ class Visualization(QDialog):
             Activation key to create new plot (False) or update existing plot
             (True)
         """
-
         if update_graph:
+            # Get current graph
             graph, graph_dialog, sub_window = self.get_sel_graph()
             sub_window_size = sub_window.size()
             graph.plot_width = sub_window_size.width()
@@ -98,25 +98,32 @@ class Visualization(QDialog):
                              i not in self.plots]
             graph_id = min(available_ids) if available_ids else len(
                 self.plots) + 1
+            # Create new graph
             graph = Graph(graph_id=graph_id)
             self.plots[graph.graph_id] = graph
 
+        # Collecting properties of graph from GUI
         graph.plot_style = self.ui.cbb_plotstyle.currentText()
         title = self.ui.lbl_plot_title.text()
         graph.plot_title = title if title != "None" else None
 
         current_filters = self.filter.get_current_filters()
+        if current_filters != graph.filters:
+            graph.legend_properties = []
+            # print("filter changed → legends are reinit")
+        else:
+            pass
         current_df_name = self.ui.dfs_listbox.currentItem().text()
-        self.filtered_df = self.apply_filters(self.sel_df, current_filters)
         graph.df_name = current_df_name
         graph.filters = current_filters
 
         x = self.ui.cbb_x_2.currentText()
         y = self.ui.cbb_y_2.currentText()
         z = self.ui.cbb_z_2.currentText()
-
         # Check if z has changed and reset legend_properties if needed
+
         self.is_z_changed(graph)
+
         graph.x = x
         if len(graph.y) == 0:
             graph.y.append(y)
@@ -143,9 +150,8 @@ class Visualization(QDialog):
         # PLOTTING
         graph.create_plot_widget(graph.dpi)
 
-        # Create new graph
         if not update_graph:
-            # Create a QDialog to hold the Graph instance
+            # Create new graph widget
             graph_dialog = QDialog(self)
             layout = QVBoxLayout()
             layout.addWidget(graph)
@@ -159,8 +165,8 @@ class Visualization(QDialog):
             self.ui.mdiArea.addSubWindow(sub_window)
             sub_window.show()
             self.add_graph_list_to_combobox()
-        # Update existing graph
         else:
+            # Update existing graph
             graph, graph_dialog, sub_window = self.get_sel_graph()
             sub_window_size = sub_window.size()
             graph.plot_width = sub_window_size.width()
@@ -188,6 +194,7 @@ class Visualization(QDialog):
             graph.y2label = y2label
             graph.y3label = y3label
             graph.zlabel = zlabel
+
         text = f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - [" \
                f"{z}]"
         graph_dialog.setWindowTitle(text)
@@ -199,6 +206,8 @@ class Visualization(QDialog):
     def plot_action(self):
         """Plot action to plot the figure with given paramters"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
+        self.filtered_df = self.apply_filters(self.sel_df, graph.filters)
+        # print(f"self.sel_df {self.sel_df}")
         if graph:
             if graph.plot_style == 'wafer':
                 graph.create_plot_widget(graph.dpi, graph.graph_layout)
@@ -219,7 +228,15 @@ class Visualization(QDialog):
         current_z = self.ui.cbb_z_2.currentText()
         if current_z != graph.z:
             graph.legend_properties = []
-            print("z' values are changed, resets legends to default")
+            print("'z' values are changed, resets legends to default")
+            return True
+        return False
+
+    def is_graph_filters_changed(self, graph):
+        current_z = self.ui.cbb_z_2.currentText()
+        if current_z != graph.z:
+            graph.legend_properties = []
+            print("'z' values are changed, resets legends to default")
             return True
         return False
 
@@ -419,7 +436,7 @@ class Visualization(QDialog):
                 self.ui.dfs_listbox.setCurrentRow(0)
 
     def update_gui(self):
-        """To update GUI """
+        """To update GUI whenever a dataframe is selected via listbox"""
         self.show_df_in_gui()
         self.update_cbb()
         self.sel_df = self.get_sel_df()
@@ -529,8 +546,6 @@ class Visualization(QDialog):
 
     def show_df_in_gui(self):
         """Show selected dataframe in a QTableWidget"""
-        current_filters = self.filter.get_current_filters()
-        current_df = self.apply_filters(self.sel_df, current_filters)
         if self.filtered_df is not None:  # Check if filtered_df is not None
             self.common.display_df_in_table(self.ui.tableWidget,
                                             self.filtered_df)
@@ -797,13 +812,6 @@ class Visualization(QDialog):
                                          in
                                          load.get('original_dfs', {}).items()}
                     self.update_dfs_list()
-                    self.sel_df = pd.DataFrame(
-                        load.get('sel_df', {})) if load.get(
-                        'sel_df') is not None else None
-                    self.filter.filters = load.get('filters', [])
-                    self.filtered_df = pd.DataFrame(
-                        load.get('filtered_df', {})) if load.get(
-                        'filtered_df') is not None else None
 
                     # Load plots
                     plots_data = load.get('plots', {})
@@ -864,8 +872,6 @@ class Visualization(QDialog):
 
                         # Plot the graph
                         graph.create_plot_widget(graph.dpi)
-                        self.apply_filters(self.original_dfs[graph.df_name],
-                                           graph.filters)
                         self.plots[graph.graph_id] = graph
 
                         # Create a QDialog to hold the Graph instance

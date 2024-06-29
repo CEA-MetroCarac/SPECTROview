@@ -198,10 +198,10 @@ class Graph(QWidget):
     """Class to create and handle plot objects.
 
     This class provides functionality to create and customize plots using matplotlib
-    and seaborn libraries within a PyQt-based GUI application. It supports plotting
+    and seaborn libraries within a Pyside6-based GUI application. It supports plotting
     various styles such as point plots, scatter plots, box plots, line plots, bar plots,
-    trendline plots, and wafer plots. The class allows customization of plot properties
-    including titles, labels, axis limits, grid display, legend appearance, color
+    trendline plots, and wafer plots.
+    The class allows customization of plot properties including titles, labels, axis limits, grid display, legend appearance, color
     palettes, and more. It also supports multiple y-axis plotting and the option to show
     trendline equations.
 
@@ -664,7 +664,7 @@ class Graph(QWidget):
 
 
 class ShowParameters:
-    """Class dedicated to show fit paramters of a Spectrum object in the GUI"""
+    """Class dedicated to show fit paramters of Spectrum objects in the GUI"""
 
     def __init__(self, main_layout, sel_spectrum, cb_limits, cb_expr, update):
         self.main_layout = main_layout
@@ -910,7 +910,15 @@ class ShowParameters:
 
 
 class Filter:
-    """Class for Handling "Filter Features" in Querying Pandas DataFrames"""
+    """
+    Class for Handling "Filter Features" in Querying Pandas DataFrames
+
+    Attributes:
+    line_edit (QLineEdit): Input field for filter expressions.
+    listbox (QListWidget): List widget to display filter expressions as checkboxes.
+    df (pandas.DataFrame): DataFrame to be filtered.
+    filters (list): List to store filter expressions and their states.
+    """
 
     def __init__(self, line_edit, listbox, df):
         self.line_edit = line_edit
@@ -919,6 +927,12 @@ class Filter:
         self.filters = []
 
     def add_filter(self):
+        """
+        Add a filter expression to the filters list and update the UI.
+
+        Retrieves the filter expression from line_edit and adds it to filters.
+        Updates the listbox to display the new filter expression as a checkbox item.
+        """
         filter_expression = self.line_edit.text().strip()
         if filter_expression:
             filter = {"expression": filter_expression, "state": False}
@@ -931,7 +945,12 @@ class Filter:
         self.listbox.setItemWidget(item, checkbox)
 
     def remove_filter(self):
-        """To remove a filter from listbox"""
+        """
+        Remove selected filter(s) from the filters list and UI.
+
+        Retrieves selected items from listbox, identifies corresponding filters,
+        and removes them from filters list. Updates the listbox accordingly.
+        """
         selected_items = [item for item in
                           self.listbox.selectedItems()]
         for item in selected_items:
@@ -943,7 +962,13 @@ class Filter:
             self.listbox.takeItem(self.listbox.row(item))
 
     def get_current_filters(self):
-        """Collect selected filters from the UI"""
+        """
+        Retrieve the current state of filters as displayed in the UI.
+
+        Returns:
+        list: List of dictionaries representing filter expressions and their states.
+        Each dictionary has keys 'expression' and 'state'.
+        """
         checked_filters = []
         for i in range(self.listbox.count()):
             item = self.listbox.item(i)
@@ -954,7 +979,16 @@ class Filter:
         return checked_filters
 
     def apply_filters(self, filters=None):
-        """Apply filters to a given df"""
+        """
+        Apply filters to the DataFrame (self.df) based on the current or provided filters.
+
+        Args:
+        filters (list, optional): List of dictionaries representing filter expressions and their states.
+                                  Defaults to None, meaning current UI filters are used.
+
+        Returns:
+        pandas.DataFrame or None: Filtered DataFrame based on applied filters or None if self.df is None.
+        """
         if filters:
             self.filters = filters
         else:
@@ -981,7 +1015,12 @@ class Filter:
         return self.filtered_df
 
     def upd_filter_listbox(self):
-        """To update filter listbox"""
+        """
+        Update the listbox UI to reflect changes in filters.
+
+        Clears the listbox and re-populates it with current filters.
+        Each filter is displayed as a checkbox item.
+        """
         self.listbox.clear()
         for filter_data in self.filters:
             filter_expression = filter_data["expression"]
@@ -994,7 +1033,14 @@ class Filter:
 
 
 class FitModelManager:
-    """Class to manage fit models"""
+    """
+    Class to manage fit models created by USERS.
+
+    Attributes:
+    settings (QSettings): QSettings object to store and retrieve settings.
+    default_model_folder (str): Default folder path where fit models are stored.
+    available_models (list): List of available fit model filenames in the default folder.
+    """
 
     def __init__(self, settings):
         self.settings = settings
@@ -1005,13 +1051,23 @@ class FitModelManager:
             self.scan_models()
 
     def set_default_model_folder(self, folder_path):
-        """Set the default folder path where fit models will be stored."""
+        """
+        Set the default folder path where fit models will be stored.
+
+        Args:
+        folder_path (str): Path to the default folder.
+        """
         self.default_model_folder = folder_path
         self.settings.setValue("default_model_folder", folder_path)
         self.scan_models()
 
     def scan_models(self):
-        """Scan the default folder and populate the available_models list."""
+        """
+        Scan the default folder and populate the available_models list.
+
+        This method scans the default_model_folder for files with the '.json' extension
+        and updates the available_models list accordingly.
+        """
         self.available_models = []
         if self.default_model_folder:
             for file_name in os.listdir(self.default_model_folder):
@@ -1019,7 +1075,12 @@ class FitModelManager:
                     self.available_models.append(file_name)
 
     def get_available_models(self):
-        """Retrieve the list of available fit models."""
+        """
+        Retrieve the list of available fit model filenames.
+
+        Returns:
+        list: List of available fit model filenames in the default folder.
+        """
         return self.available_models
 
 
@@ -1296,10 +1357,30 @@ class WaferPlot:
     """Class to plot wafer map"""
 
     def __init__(self, inter_method='linear'):
+        """
+        Initialize WaferPlot instance.
+
+        Args:
+        inter_method (str, optional): Interpolation method for data interpolation. Defaults to 'linear'.
+        """
         self.inter_method = inter_method  # Interpolation method
 
     def plot(self, ax, x, y, z, cmap="jet", r=100, vmax=None, vmin=None,
              stats=True):
+        """
+        Plot a wafer map on the provided axes.
+
+        Args:
+        ax (matplotlib.axes.Axes): Axes object to plot the wafer map.
+        x (array-like): X-coordinates of measurement points.
+        y (array-like): Y-coordinates of measurement points.
+        z (array-like): Z-values (measurement data) corresponding to (x, y) points.
+        cmap (str, optional): Colormap for the plot. Defaults to "jet".
+        r (float, optional): Radius of the wafer in millimeters. Defaults to 100.
+        vmax (float, optional): Maximum value for the color scale. Defaults to None.
+        vmin (float, optional): Minimum value for the color scale. Defaults to None.
+        stats (bool, optional): Whether to display statistical values on the plot. Defaults to True.
+        """
         # Generate a meshgrid for the wafer and Interpolate z onto the meshgrid
         xi, yi = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
         zi = self.interpolate_data(x, y, z, xi, yi)
@@ -1334,7 +1415,13 @@ class WaferPlot:
             self.stats(z, ax)
 
     def stats(self, z, ax):
-        """Calculate and display statistical values in the wafer plot"""
+        """
+        Calculate and display statistical values in the wafer plot.
+
+        Args:
+        z (array-like): Z-values (measurement data) corresponding to (x, y) points.
+        ax (matplotlib.axes.Axes): Axes object to plot the wafer map.
+        """
         # Calculate statistical values
         mean_value = z.mean()
         max_value = z.max()
@@ -1358,6 +1445,18 @@ class WaferPlot:
                 transform=ax.transAxes, fontsize=10, verticalalignment='bottom')
 
     def interpolate_data(self, x, y, z, xi, yi):
-        """Interpolate data using griddata"""
+        """
+        Interpolate data onto a regular grid using the specified interpolation method.
+
+        Args:
+        x (array-like): X-coordinates of measurement points.
+        y (array-like): Y-coordinates of measurement points.
+        z (array-like): Z-values (measurement data) corresponding to (x, y) points.
+        xi (array-like): X-coordinates of the regular grid.
+        yi (array-like): Y-coordinates of the regular grid.
+
+        Returns:
+        array-like: Interpolated values on the regular grid.
+        """
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
         return zi

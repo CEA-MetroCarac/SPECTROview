@@ -17,7 +17,23 @@ from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 
 
 class Visualization(QDialog):
-    """Class to GUI and callbacks"""
+    """
+    This class provides a GUI for plotting graphs based on selected dataframes,
+    applying filters, customizing graph properties, and managing graph instances.
+
+    Attributes:
+        settings (QSettings): Object for managing application settings.
+        ui (Ui_MainWindow): User interface object.
+        common (Common): Object providing common functionalities.
+
+        original_dfs (dict): Dictionary holding original dataframes loaded from files.
+        sel_df (pd.DataFrame or None): Currently selected dataframe for visualization.
+        filtered_df (pd.DataFrame or None): Dataframe after applying current filters.
+        plots (dict): Dictionary storing Graph instances.
+        graph_id (int): Identifier for the next graph to be created.
+
+        filter (Filter): Instance of Filter class managing filter operations.
+    """
 
     def __init__(self, settings, ui, common):
         super().__init__()
@@ -80,19 +96,20 @@ class Visualization(QDialog):
         self.ui.btn_minimize_all.clicked.connect(self.minimize_all_graph)
 
     def plotting(self, update_graph=False):
-        """Plot new graph or update the existing graph
+        """
+        Plot a new graph or update an existing graph.
 
-        update_graph: bool, optional
-            Activation key to create new plot (False) or update existing plot
-            (True)
+        Args:
+            update_graph (bool, optional): If True, update the existing graph; otherwise, create a new one.
         """
         if update_graph:
-            # Get current graph
+            # Update the selected graph
             graph, graph_dialog, sub_window = self.get_sel_graph()
             sub_window_size = sub_window.size()
             graph.plot_width = sub_window_size.width()
             graph.plot_height = sub_window_size.height()
         else:
+            # Create new graph
             # Get available graph IDs considering vacancies in the list
             available_ids = [i for i in range(1, len(self.plots) + 2) if
                              i not in self.plots]
@@ -111,7 +128,6 @@ class Visualization(QDialog):
         current_filters = self.filter.get_current_filters()
         if current_filters != graph.filters:
             graph.legend_properties = []
-            # print("filter changed → legends are reinit")
         else:
             pass
         current_df_name = self.ui.dfs_listbox.currentItem().text()
@@ -121,8 +137,8 @@ class Visualization(QDialog):
         x = self.ui.cbb_x_2.currentText()
         y = self.ui.cbb_y_2.currentText()
         z = self.ui.cbb_z_2.currentText()
-        # Check if z has changed and reset legend_properties if needed
 
+        # Check if z has changed and reset legend_properties if needed
         self.is_z_changed(graph)
 
         graph.x = x
@@ -206,7 +222,10 @@ class Visualization(QDialog):
         QTimer.singleShot(200, self.customize_legend)
 
     def plot_action(self):
-        """Plot action to plot the figure with given paramters"""
+        """
+        Perform the plot action for the selected graph.
+        This method fetches the selected graph, applies filters, and triggers the actual plotting.
+        """
         graph, graph_dialog, sub_window = self.get_sel_graph()
         self.filtered_df = self.apply_filters(self.sel_df, graph.filters)
         # print(f"self.sel_df {self.sel_df}")
@@ -219,22 +238,14 @@ class Visualization(QDialog):
 
     def is_z_changed(self, graph):
         """
-        Check if the z value from the combobox is different from the current 
-        graph.z.
-        If yes, reinitialize graph.legend_properties to an empty list.
+        Check if the z-axis value has changed from the current graph settings.
 
-        Parameters:
-        graph: Graph object
-            The graph object to check and update.
+        Args:
+            graph (Graph): The graph object to check and update if necessary.
+
+        Returns:
+            bool: True if z-axis has changed, False otherwise.
         """
-        current_z = self.ui.cbb_z_2.currentText()
-        if current_z != graph.z:
-            graph.legend_properties = []
-            print("'z' values are changed, resets legends to default")
-            return True
-        return False
-
-    def is_graph_filters_changed(self, graph):
         current_z = self.ui.cbb_z_2.currentText()
         if current_z != graph.z:
             graph.legend_properties = []
@@ -249,7 +260,12 @@ class Visualization(QDialog):
         graph.customize_legend_via_gui(main_layout)
 
     def on_selected_graph(self, sub_window):
-        """Reflect all properties of selected graph object to GUI"""
+        """
+        Update GUI elements based on the properties of the selected graph.
+
+        Args:
+            sub_window (QMdiSubWindow): Selected sub-window containing the graph.
+        """
         graph, graph_dialog, sub_window = self.get_sel_graph()
 
         if graph:
@@ -353,8 +369,13 @@ class Visualization(QDialog):
             self.customize_legend()
 
     def reflect_filters_to_gui(self, sel_graph):
-        """Reflect the filters of a graph object and their states to the df
-        listbox"""
+        """
+        Reflect the state of filters associated with a graph to the GUI.
+
+        Args:
+            sel_graph (Graph): Selected graph object.
+
+        """
         # Clear the existing items and uncheck them
         for index in range(self.ui.listbox_filters.count()):
             item = self.ui.listbox_filters.item(index)
@@ -391,6 +412,14 @@ class Visualization(QDialog):
                 self.ui.listbox_filters.setItemWidget(item, checkbox)
 
     def open_dfs(self, dfs=None, fnames=None):
+        """
+        Open and load dataframes from Excel files.
+
+        Args:
+            dfs (dict, optional): Dictionary of dataframes to load.
+            fnames (list, optional): List of filenames to open.
+
+        """
         if self.original_dfs is None:
             self.original_dfs = {}
         if dfs:
@@ -426,7 +455,9 @@ class Visualization(QDialog):
         self.update_dfs_list()
 
     def update_dfs_list(self):
-        """ To update the dataframe listbox"""
+        """
+        This method updates the dataframe listbox with current dataframes.
+        """
         current_row = self.ui.dfs_listbox.currentRow()
         self.ui.dfs_listbox.clear()
         df_names = list(self.original_dfs.keys())
@@ -444,7 +475,12 @@ class Visualization(QDialog):
                 self.ui.dfs_listbox.setCurrentRow(0)
 
     def update_gui(self):
-        """To update GUI whenever a dataframe is selected via listbox"""
+        """
+        Update the GUI elements based on the selected dataframe.
+
+        This method updates comboboxes and other GUI elements with data from the selected dataframe.
+
+        """
 
         self.update_cbb()
         self.sel_df = self.get_sel_df()
@@ -479,12 +515,26 @@ class Visualization(QDialog):
                 self.ui.cbb_z_2.addItem(column)
 
     def copy_fig_to_clb(self):
-        """Copy the selected figure to clipboard"""
+        """
+        Copy the selected graph figure to the clipboard.
+
+        This method copies the current graph figure to the system clipboard.
+
+        """
         sel_graph, graph_dialog, sub_window = self.get_sel_graph()
         self.common.copy_fig_to_clb(canvas=sel_graph.canvas)
 
     def get_sel_graph(self):
-        """Get the canvas of the selected sub window"""
+        """
+        Retrieve the currently selected graph object.
+
+        Returns:
+            Tuple: (sel_graph, graph_dialog, sub_window)
+                sel_graph (Graph or None): Selected graph object.
+                graph_dialog (QDialog or None): Graph dialog containing the graph.
+                sub_window (QMdiSubWindow or None): Sub-window containing the graph.
+
+        """
         try:
             sel_graph = None
             graph_dialog = None
@@ -500,7 +550,13 @@ class Visualization(QDialog):
         return sel_graph, graph_dialog, sub_window
 
     def get_sel_df(self):
-        """Get the current selected df among the df within 'dfr' dict"""
+        """
+        Retrieve the currently selected dataframe.
+
+        Returns:
+            pd.DataFrame or None: Currently selected dataframe.
+
+        """
         sel_item = self.ui.dfs_listbox.currentItem()
         if sel_item is not None:
             sel_df_name = sel_item.text()
@@ -513,7 +569,9 @@ class Visualization(QDialog):
         return self.sel_df
 
     def remove_df(self):
-        """Remove a dataframe from the listbox and self.original_dfs list"""
+        """
+        Remove the selected dataframe from the listbox and original_dfs dictionary.
+        """
         sel_item = self.ui.dfs_listbox.currentItem()
         sel_df_name = sel_item.text()
         if sel_df_name in self.original_dfs:
@@ -527,7 +585,7 @@ class Visualization(QDialog):
                 self.ui.dfs_listbox.takeItem(row)
 
     def save_df_to_excel(self):
-        """Save fitted selected dataframe in an excel file"""
+        """This method saves the currently selected dataframe to an Excel file."""
         last_dir = self.settings.value("last_directory", "/")
         save_path, _ = QFileDialog.getSaveFileName(
             self.ui.tabWidget, "Save DF fit results", last_dir,
@@ -545,7 +603,7 @@ class Visualization(QDialog):
                     "DataFrame is empty. Nothing to save.")
 
     def show_df(self):
-        """Show selected dataframe in a top view"""
+        """This method displays the selected dataframe in a new window"""
         current_filters = self.filter.get_current_filters()
         current_df = self.apply_filters(self.sel_df, current_filters)
         if current_df is not None:
@@ -554,17 +612,23 @@ class Visualization(QDialog):
             show_alert("No fit dataframe to display")
 
     def display_df_in_GUI(self):
-        """Display a given DataFrame in the GUI via QTableWidget.
-
-            This method creates an instance of the DataframeTable class, which takes a pandas
-            DataFrame and a layout as arguments. It then initializes the DataframeTable and adds
-            it to the specified layout in the GUI. The QTableWidget within DataframeTable displays
-            the DataFrame, providing functionalities such as copying selected data to the clipboard.
-            """
+        """
+        This method creates an instance of DataframeTable to display the DataFrame in GUI.
+        """
         df_table = DataframeTable(self.filtered_df, self.ui.layout_df)
 
     def apply_filters(self, df=None, filters=None):
-        """Apply filters to the specified dataframe or the current dataframe"""
+        """
+        Apply filters to the specified dataframe or the currently selected dataframe.
+
+        Args:
+            df (pd.DataFrame, optional): Dataframe to apply filters to.
+            filters (list, optional): List of filters to apply.
+
+        Returns:
+            pd.DataFrame: Filtered dataframe.
+
+        """
         if df is None:
             sel_df = self.get_sel_df()
         else:
@@ -582,7 +646,12 @@ class Visualization(QDialog):
         return self.filtered_df
 
     def add_graph_list_to_combobox(self):
-        """Populate graph titles into a combobox"""
+        """
+        Populate graph titles into the combobox for graph selection.
+
+        This method updates the combobox with current graph titles.
+
+        """
         self.ui.cbb_graph_list.clear()
         for graph_id, graph in self.plots.items():
             self.ui.cbb_graph_list.addItem(
@@ -595,7 +664,9 @@ class Visualization(QDialog):
                 self.ui.cbb_graph_list.count() - 1)
 
     def select_sub_window_from_combo_box(self):
-        """Select and show a graph on top via a combobox"""
+        """
+        This method selects and displays a graph based on the user selection in the combobox.
+        """
         graph_title = self.ui.cbb_graph_list.currentText()
         for sub_window in self.ui.mdiArea.subWindowList():
             graph_dialog = sub_window.widget()
@@ -611,7 +682,13 @@ class Visualization(QDialog):
                     return
 
     def delete_graph(self, graph_id):
-        """Delete a graph from the self.plots dictionary"""
+        """
+        Delete the specified graph from the plots dictionary.
+
+        Args:
+            graph_id (int): Identifier of the graph to delete.
+
+        """
         graph, graph_dialog, sub_window = self.get_sel_graph()
         graph_id = graph.graph_id
         # Remove the graph from the dictionary
@@ -623,11 +700,16 @@ class Visualization(QDialog):
         print(f"Plot {graph_id} is deleted")
 
     def minimize_all_graph(self):
-        """Minimize all graph sub-windows"""
+        """
+        This method minimizes all open graph sub-windows.
+        """
         for sub_window in self.ui.mdiArea.subWindowList():
             sub_window.showMinimized()
 
     def clear_env(self):
+        """
+        This method reinit all attributes.
+        """
         # Clear original dataframes
         self.original_dfs = {}
         self.sel_df = None
@@ -922,21 +1004,47 @@ class Visualization(QDialog):
 
 
 class MdiSubWindow(QMdiSubWindow):
-    """Custom class of QMdiSubWindow to get signal when closing sub window"""
+    """
+    Custom class of QMdiSubWindow to get signal when closing subwindow.
+
+    Attributes:
+    closed (Signal): Signal emitted when the subwindow is closing, carrying the graph ID.
+    graph_id (int): ID associated with the graph in the subwindow.
+    figsize_label (QLabel): QLabel used to display the size of the subwindow.
+    """
     closed = Signal(int)
 
     def __init__(self, graph_id, figsize_label, *args, **kwargs):
+        """
+        Initialize MdiSubWindow instance.
+
+        Args:
+        graph_id (int): ID associated with the graph in the subwindow.
+        figsize_label (QLabel): QLabel used to display the size of the subwindow.
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+        """
         super().__init__(*args, **kwargs)
         self.graph_id = graph_id
         self.figsize_label = figsize_label
 
     def closeEvent(self, event):
-        """Override closeEvent to emit a signal when the subwindow is closing"""
+        """
+        Override closeEvent to emit a signal when the subwindow is closing.
+
+        Args:
+        event (QCloseEvent): Close event object.
+        """
         self.closed.emit(self.graph_id)
         super().closeEvent(event)
 
     def resizeEvent(self, event):
-        """Override resizeEvent to handle window resizing"""
+        """
+        Override resizeEvent to handle window resizing.
+
+        Args:
+        event (QResizeEvent): Resize event object.
+        """
         new_size = self.size()
         width, height = new_size.width(), new_size.height()
         # Update QLabel with the new size

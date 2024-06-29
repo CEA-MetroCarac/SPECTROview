@@ -792,18 +792,18 @@ class Spectrums(QObject):
         self.filtered_df = self.df_fit_results
         self.upd_cbb_param()
         self.send_df_to_viz()
-
     def display_df_in_GUI(self, df):
-        # Clear existing widgets from layout_df_table
-        while self.ui.layout_df_table2.count():
-            item = self.ui.layout_df_table2.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+        """Display a given DataFrame in the GUI via QTableWidget.
 
-        # Add the new DataframeTable
-        df_table = DataframeTable(df)
-        self.ui.layout_df_table2.addWidget(df_table)
+            This method creates an instance of the DataframeTable class, which takes a pandas
+            DataFrame and a layout as arguments. It then initializes the DataframeTable and adds
+            it to the specified layout in the GUI. The QTableWidget within DataframeTable displays
+            the DataFrame, providing functionalities such as copying selected data to the clipboard.
+
+            Args:
+                df (pd.DataFrame): The DataFrame to be displayed in the GUI.
+            """
+        df_table = DataframeTable(df, self.ui.layout_df_table2)
 
     def split_fname(self):
         """Split fname and populate the combobox"""

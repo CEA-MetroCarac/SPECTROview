@@ -554,18 +554,14 @@ class Visualization(QDialog):
             show_alert("No fit dataframe to display")
 
     def display_df_in_GUI(self):
-        """Show selected dataframe in a QTableWidget"""
-        if self.filtered_df is not None:  # Check if filtered_df is not None
-            # Clear existing widgets from layout_df_table
-            while self.ui.layout_df.count():
-                item = self.ui.layout_df.takeAt(0)
-                widget = item.widget()
-                if widget:
-                    widget.deleteLater()
+        """Display a given DataFrame in the GUI via QTableWidget.
 
-            # Add the new DataframeTable
-            df_table = DataframeTable(self.filtered_df)
-            self.ui.layout_df.addWidget(df_table)
+            This method creates an instance of the DataframeTable class, which takes a pandas
+            DataFrame and a layout as arguments. It then initializes the DataframeTable and adds
+            it to the specified layout in the GUI. The QTableWidget within DataframeTable displays
+            the DataFrame, providing functionalities such as copying selected data to the clipboard.
+            """
+        df_table = DataframeTable(self.filtered_df, self.ui.layout_df)
 
     def apply_filters(self, df=None, filters=None):
         """Apply filters to the specified dataframe or the current dataframe"""

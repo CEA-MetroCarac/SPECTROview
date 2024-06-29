@@ -103,13 +103,35 @@ def view_df(tabWidget, df):
 
 
 class DataframeTable(QWidget):
-    def __init__(self, df):
+    """Class to display a given dataframe in GUI via QTableWidget.
+
+    This class takes a pandas DataFrame and displays it within a QTableWidget, which
+    is added to a specified layout in your GUI. It provides functionality to copy
+    selected data to the clipboard using a context menu or a keyboard shortcut.
+
+    Attributes:
+        df (pd.DataFrame): The DataFrame to be displayed in the QTableWidget.
+        layout (QVBoxLayout): The layout in your GUI where the QTableWidget will be placed.
+
+    """
+    def __init__(self, df, layout):
         super().__init__()
         self.df = df
+        self.external_layout = layout
         self.initUI()
 
     def initUI(self):
+        """Initializes the user interface by creating and configuring the QTableWidget"""
+        # Clear existing widgets from external layout
+        while self.external_layout.count():
+            item = self.external_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+        # Set the internal layout
         layout = QVBoxLayout(self)
+        self.setLayout(layout)
 
         # Create QTableWidget
         self.table_widget = QTableWidget()
@@ -118,14 +140,17 @@ class DataframeTable(QWidget):
         # Display the DataFrame in the QTableWidget
         self.display_df_in_table()
 
-        # Enable copy action
+        # Enable copy action via context menu
         self.table_widget.setContextMenuPolicy(Qt.ActionsContextMenu)
         copy_action = QAction("Copy", self)
         copy_action.triggered.connect(self.copy_data)
         self.table_widget.addAction(copy_action)
 
+        # Add this widget to the external layout
+        self.external_layout.addWidget(self)
+
     def display_df_in_table(self):
-        """Display pandas DataFrame in QTableWidget in GUI"""
+        """Populates the QTableWidget with data from the DataFrame"""
         self.table_widget.setRowCount(self.df.shape[0])
         self.table_widget.setColumnCount(self.df.shape[1])
         self.table_widget.setHorizontalHeaderLabels(self.df.columns)
@@ -136,6 +161,7 @@ class DataframeTable(QWidget):
         self.table_widget.resizeColumnsToContents()
 
     def copy_data(self):
+        """Copies selected data from the QTableWidget to the clipboard"""
         selected_indexes = self.table_widget.selectedIndexes()
         if not selected_indexes:
             return
@@ -156,10 +182,12 @@ class DataframeTable(QWidget):
             data.append('\t'.join(row_data))
 
         # Join all rows with newline character and copy to clipboard
-        QApplication.clipboard().setText('\n'.join(data))
+        clipboard = QApplication.clipboard()
+        clipboard.setText('\n'.join(data))
+        print(f"Copied data to clipboard:\n{clipboard.text()}")  # Debug statement
 
     def keyPressEvent(self, event):
-        # Override key press event to handle Ctrl+C for copying
+        """Handles key press events to enable copying with Ctrl+C"""
         if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_C:
             self.copy_data()
         else:
@@ -167,7 +195,66 @@ class DataframeTable(QWidget):
 
 
 class Graph(QWidget):
-    """Class to create and handle plot objects """
+    """Class to create and handle plot objects.
+
+    This class provides functionality to create and customize plots using matplotlib
+    and seaborn libraries within a PyQt-based GUI application. It supports plotting
+    various styles such as point plots, scatter plots, box plots, line plots, bar plots,
+    trendline plots, and wafer plots. The class allows customization of plot properties
+    including titles, labels, axis limits, grid display, legend appearance, color
+    palettes, and more. It also supports multiple y-axis plotting and the option to show
+    trendline equations.
+
+    Attributes:
+        df_name (str or None): Name of the DataFrame used for plotting.
+        filters (dict): Dictionary containing filter parameters.
+        graph_id: Identifier for the graph instance.
+        plot_width (int): Width of the plot in pixels.
+        plot_height (int): Height of the plot in pixels.
+        plot_style (str): Style of the plot (e.g., 'point', 'scatter', 'line', etc.).
+        x (str or None): Column name for the x-axis data.
+        y (list): List of column names for the primary y-axis data.
+        z (str or None): Column name for grouping data (used in hue).
+        xmin (float or None): Minimum limit for the x-axis.
+        xmax (float or None): Maximum limit for the x-axis.
+        ymin (float or None): Minimum limit for the primary y-axis.
+        ymax (float or None): Maximum limit for the primary y-axis.
+        zmin (float or None): Minimum limit for the secondary y-axis.
+        zmax (float or None): Maximum limit for the secondary y-axis.
+        plot_title (str or None): Title of the plot.
+        xlabel (str or None): Label for the x-axis.
+        ylabel (str or None): Label for the primary y-axis.
+        zlabel (str or None): Label for the secondary y-axis.
+        y2 (str or None): Column name for the secondary y-axis.
+        y3 (str or None): Column name for the tertiary y-axis.
+        y2min (float or None): Minimum limit for the secondary y-axis.
+        y2max (float or None): Maximum limit for the secondary y-axis.
+        y3min (float or None): Minimum limit for the tertiary y-axis.
+        y3max (float or None): Maximum limit for the tertiary y-axis.
+        y2label (str or None): Label for the secondary y-axis.
+        y3label (str or None): Label for the tertiary y-axis.
+        x_rot (int): Rotation angle for x-axis tick labels.
+        grid (bool): Flag indicating whether to display grid lines.
+        legend_visible (bool): Flag indicating whether the legend is visible.
+        legend_location (str): Location of the legend ('upper right', 'lower left', etc.).
+        legend_outside (bool): Flag indicating whether the legend should be outside the plot.
+        legend_properties (list): List of dictionaries containing properties of legend items.
+        color_palette (str): Name of the color palette to use.
+        dpi (int): Dots per inch (resolution) of the plot.
+        wafer_size (int): Size of the wafer plot.
+        wafer_stats (bool): Flag indicating whether to display statistics on the wafer plot.
+        trendline_order (int): Order of the polynomial for trendline fitting.
+        show_trendline_eq (bool): Flag indicating whether to show the trendline equation.
+        show_bar_plot_error_bar (bool): Flag indicating whether to show error bars on bar plots.
+        join_for_point_plot (bool): Flag indicating whether to join points in point plots.
+
+        figure: Matplotlib figure object.
+        ax: Matplotlib axis object for the primary plot.
+        ax2: Matplotlib axis object for the secondary y-axis plot.
+        ax3: Matplotlib axis object for the tertiary y-axis plot.
+        canvas: Matplotlib FigureCanvasQTAgg object for displaying the plot.
+        graph_layout (QVBoxLayout): Layout for storing the plot widget.
+        """
 
     def __init__(self, graph_id=None):
         super().__init__()
@@ -227,6 +314,7 @@ class Graph(QWidget):
         self.setLayout(self.graph_layout)
 
     def clear_layout(self, layout):
+        """Clears all widgets and layouts from the specified layout."""
         if layout is not None:
             while layout.count():
                 item = layout.takeAt(0)
@@ -237,7 +325,8 @@ class Graph(QWidget):
                     self.clear_layout(item.layout())
 
     def create_plot_widget(self, dpi, layout=None):
-        """Create figure canvas"""
+        """Creates a new plot canvas with the specified DPI and adds it to the specified
+            layout or the default graph_layout"""
         if dpi:
             self.dpi = dpi
         else:
@@ -255,7 +344,7 @@ class Graph(QWidget):
         self.canvas.draw()
 
     def plot(self, df):
-        """Plot action"""
+        """Updates the plot based on the provided DataFrame and plot settings."""
         self.ax.clear()
         if self.ax2:
             self.ax2.clear()
@@ -281,7 +370,7 @@ class Graph(QWidget):
         self.canvas.draw()
 
     def get_legend_properties(self):
-        """Retrieve properties of each existing legend item"""
+        """Retrieves properties of each existing legend item."""
         legend_properties = []
         if self.ax:
             legend = self.ax.get_legend()
@@ -308,7 +397,7 @@ class Graph(QWidget):
         return self.legend_properties
 
     def customize_legend_via_gui(self, main_layout):
-        """Show legend properties in GUI for user modifications"""
+        """Displays legend properties in the GUI for user modifications."""
         self.clear_layout(main_layout)
         headers = ['Label', 'Marker', 'Color']
         # Create vertical layouts for each property type
@@ -361,11 +450,12 @@ class Graph(QWidget):
         main_layout.addLayout(color_layout)
 
     def udp_legend(self, idx, property_type, text):
-        """update legend properties based on user modifications via GUI"""
+        """Updates legend properties based on user modifications via GUI."""
         self.legend_properties[idx][property_type] = text
         self._set_legend()
 
     def _plot_primary_axis(self, df):
+        """Plots data on the primary axis based on the current plot style."""
         if not self.legend_properties:
             markers = DEFAULT_MARKERS
             colors = DEFAULT_COLORS
@@ -408,7 +498,7 @@ class Graph(QWidget):
                 show_alert("Unsupported plot style")
 
     def _set_legend(self):
-        """Manually add legend of all ax (1->3) in one box"""
+        """Sets up and displays the legend for the plot."""
         handles, labels = self.ax.get_legend_handles_labels()
         if self.ax2:
             handles2, labels2 = self.ax2.get_legend_handles_labels()
@@ -574,7 +664,7 @@ class Graph(QWidget):
 
 
 class ShowParameters:
-    """Class dedicated to show fit paramters in a Peak_tables in GUI"""
+    """Class dedicated to show fit paramters of a Spectrum object in the GUI"""
 
     def __init__(self, main_layout, sel_spectrum, cb_limits, cb_expr, update):
         self.main_layout = main_layout

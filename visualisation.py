@@ -94,7 +94,68 @@ class Visualization(QDialog):
         self.ui.btn_save_work.clicked.connect(self.save)
         self.ui.btn_load_work.clicked.connect(self.load)
         self.ui.btn_minimize_all.clicked.connect(self.minimize_all_graph)
+    def open_dfs(self, dfs=None, fnames=None):
+        """
+        Open and load dataframes from Excel files.
 
+        Args:
+            dfs (dict, optional): Dictionary of dataframes to load.
+            fnames (list, optional): List of filenames to open.
+
+        """
+        if self.original_dfs is None:
+            self.original_dfs = {}
+        if dfs:
+            self.original_dfs = dfs
+        else:
+            if fnames is None:
+                # Initialize the last used directory from QSettings
+                last_dir = self.settings.value("last_directory", "/")
+                options = QFileDialog.Options()
+                options |= QFileDialog.ReadOnly
+                fnames, _ = QFileDialog.getOpenFileNames(
+                    self.ui.tabWidget, "Open dataframe(s)", last_dir,
+                    "Excel Files (*.xlsx)", options=options)
+                # Load RAW spectra data from CSV files
+            if fnames:
+                last_dir = QFileInfo(fnames[0]).absolutePath()
+                self.settings.setValue("last_directory", last_dir)
+                for fnames in fnames:
+                    fnames = Path(fnames)
+                    fname = fnames.stem  # get fname w/o extension
+                    extension = fnames.suffix.lower()
+                    if extension == '.xlsx':
+                        excel_file = pd.ExcelFile(fnames)
+                        sheet_names = excel_file.sheet_names
+                        for sheet_name in sheet_names:
+                            # Remove spaces within sheet_names
+                            sheet_name_cleaned = sheet_name.replace(" ", "")
+                            df_name = f"{fname}_{sheet_name_cleaned}"
+                            self.original_dfs[df_name] = pd.read_excel(
+                                excel_file, sheet_name=sheet_name)
+                    else:
+                        pass
+        self.update_dfs_list()
+
+    def update_dfs_list(self):
+        """
+        This method updates the dataframe listbox with current dataframes.
+        """
+        current_row = self.ui.dfs_listbox.currentRow()
+        self.ui.dfs_listbox.clear()
+        df_names = list(self.original_dfs.keys())
+        for df_name in df_names:
+            item = QListWidgetItem(df_name)
+            self.ui.dfs_listbox.addItem(item)
+        item_count = self.ui.dfs_listbox.count()
+        # Management of selecting item of listbox
+        if current_row >= item_count:
+            current_row = item_count - 1
+        if current_row >= 0:
+            self.ui.dfs_listbox.setCurrentRow(current_row)
+        else:
+            if item_count > 0:
+                self.ui.dfs_listbox.setCurrentRow(0)
     def plotting(self, update_graph=False):
         """
         Plot a new graph or update an existing graph.
@@ -411,68 +472,7 @@ class Visualization(QDialog):
                 self.ui.listbox_filters.addItem(item)
                 self.ui.listbox_filters.setItemWidget(item, checkbox)
 
-    def open_dfs(self, dfs=None, fnames=None):
-        """
-        Open and load dataframes from Excel files.
 
-        Args:
-            dfs (dict, optional): Dictionary of dataframes to load.
-            fnames (list, optional): List of filenames to open.
-
-        """
-        if self.original_dfs is None:
-            self.original_dfs = {}
-        if dfs:
-            self.original_dfs = dfs
-        else:
-            if fnames is None:
-                # Initialize the last used directory from QSettings
-                last_dir = self.settings.value("last_directory", "/")
-                options = QFileDialog.Options()
-                options |= QFileDialog.ReadOnly
-                fnames, _ = QFileDialog.getOpenFileNames(
-                    self.ui.tabWidget, "Open dataframe(s)", last_dir,
-                    "Excel Files (*.xlsx)", options=options)
-                # Load RAW spectra data from CSV files
-            if fnames:
-                last_dir = QFileInfo(fnames[0]).absolutePath()
-                self.settings.setValue("last_directory", last_dir)
-                for fnames in fnames:
-                    fnames = Path(fnames)
-                    fname = fnames.stem  # get fname w/o extension
-                    extension = fnames.suffix.lower()
-                    if extension == '.xlsx':
-                        excel_file = pd.ExcelFile(fnames)
-                        sheet_names = excel_file.sheet_names
-                        for sheet_name in sheet_names:
-                            # Remove spaces within sheet_names
-                            sheet_name_cleaned = sheet_name.replace(" ", "")
-                            df_name = f"{fname}_{sheet_name_cleaned}"
-                            self.original_dfs[df_name] = pd.read_excel(
-                                excel_file, sheet_name=sheet_name)
-                    else:
-                        pass
-        self.update_dfs_list()
-
-    def update_dfs_list(self):
-        """
-        This method updates the dataframe listbox with current dataframes.
-        """
-        current_row = self.ui.dfs_listbox.currentRow()
-        self.ui.dfs_listbox.clear()
-        df_names = list(self.original_dfs.keys())
-        for df_name in df_names:
-            item = QListWidgetItem(df_name)
-            self.ui.dfs_listbox.addItem(item)
-        item_count = self.ui.dfs_listbox.count()
-        # Management of selecting item of listbox
-        if current_row >= item_count:
-            current_row = item_count - 1
-        if current_row >= 0:
-            self.ui.dfs_listbox.setCurrentRow(current_row)
-        else:
-            if item_count > 0:
-                self.ui.dfs_listbox.setCurrentRow(0)
 
     def update_gui(self):
         """

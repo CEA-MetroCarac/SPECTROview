@@ -1,6 +1,3 @@
-"""
-Module dedicated to the 'Spectrum(s)' TAB of the main GUI
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -34,11 +31,6 @@ class Spectrums(QObject):
     Class manages the GUI interactions and operations related to spectra fittings,
     and visualization of fitted data within "SPACTRA" TAB of the application.
 
-
-    Signals:
-        fit_progress_changed:
-            Signal emitted to indicate progress during fitting operations.
-
     Attributes:
         fit_progress_changed (Signal):
             Signal emitted to update the progress during fitting operations.
@@ -62,6 +54,7 @@ class Spectrums(QObject):
             Object managing filtering operations on fit results.
         filtered_df (DataFrame):
             Filtered DataFrame based on applied filters.
+
     """
     # Define a signal for progress updates
     fit_progress_changed = Signal(int)
@@ -157,25 +150,6 @@ class Spectrums(QObject):
             self.fit_model_manager.default_model_folder)
         QTimer.singleShot(0, self.populate_available_models)
 
-    def update_spectrums_order(self):
-        """
-        Update the order of spectrums when user rearranges them via listbox drag-and-drop.
-
-        This method retrieves the new order of spectrums from the customized
-        QListWidget and updates the internal list of spectrums accordingly.
-        """
-
-        new_order = []
-        for index in range(self.ui.spectrums_listbox.count()):
-            item_text = self.ui.spectrums_listbox.item(index).text()
-            # Find the corresponding spectrum in the original list
-            for spectrum in self.spectrums:
-                if spectrum.fname == item_text:
-                    new_order.append(spectrum)
-                    break
-        # Clear the existing list and update with the new order
-        self.spectrums.clear()
-        self.spectrums.extend(new_order)
 
     def open_data(self, spectra=None, file_paths=None):
         """
@@ -308,7 +282,25 @@ class Spectrums(QObject):
                 else:
                     sel_spectrum.baseline.add_point(x1, y1)
                     self.upd_spectra_list()
+    def update_spectrums_order(self):
+        """
+        Update the order of spectrums when user rearranges them via listbox drag-and-drop.
 
+        This method retrieves the new order of spectrums from the customized
+        QListWidget and updates the internal list of spectrums accordingly.
+        """
+
+        new_order = []
+        for index in range(self.ui.spectrums_listbox.count()):
+            item_text = self.ui.spectrums_listbox.item(index).text()
+            # Find the corresponding spectrum in the original list
+            for spectrum in self.spectrums:
+                if spectrum.fname == item_text:
+                    new_order.append(spectrum)
+                    break
+        # Clear the existing list and update with the new order
+        self.spectrums.clear()
+        self.spectrums.extend(new_order)
     def apply_filters(self, filters=None):
         """
         Apply currently checked filters to the fit results DataFrame.

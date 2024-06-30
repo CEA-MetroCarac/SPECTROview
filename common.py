@@ -925,7 +925,9 @@ class Filter:
         self.listbox = listbox
         self.df = df
         self.filters = []
-
+    def set_dataframe(self, df):
+        """Set the dataframe to be filtered"""
+        self.df = df
     def add_filter(self):
         """
         Add a filter expression to the filters list and update the UI.

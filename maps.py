@@ -1,6 +1,3 @@
-"""
-Module dedicated to the 'Wafer/Maps' TAB of the main GUI
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -34,11 +31,9 @@ class Maps(QObject):
     Class manages the GUI interactions and operations related to spectra fittings,
     and visualization of fitted data within "WAFER" TAB of the application.
 
-    Signals:
-        fit_progress_changed:
-            Signal emitted to indicate progress during fitting operations.
-
     Attributes:
+        fit_progress_changed (Signal):
+            Signal emitted to indicate progress during fitting operations.
         settings (QSettings):
             Application settings object.
         ui (QWidget):
@@ -172,10 +167,89 @@ class Maps(QObject):
             self.fit_model_manager.default_model_folder)
         #Show available fit models
         QTimer.singleShot(0, self.populate_available_models)
+    def open_data(self, wafers=None, file_paths=None):
+        """
+        Open hyperspactral data which is wafer dataframe .
+        """
 
+        if self.wafers is None:
+            self.wafers = {}
+        if wafers:
+            self.wafers = wafers
+        else:
+            if file_paths is None:
+                # Initialize the last used directory from QSettings
+                last_dir = self.settings.value("last_directory", "/")
+                options = QFileDialog.Options()
+                options |= QFileDialog.ReadOnly
+                file_paths, _ = QFileDialog.getOpenFileNames(
+                    self.ui.tabWidget, "Open RAW spectra CSV File(s)", last_dir,
+                    "CSV Files (*.csv);;Text Files (*.txt)", options=options)
+            # Load RAW spectra data from CSV files
+            if file_paths:
+                last_dir = QFileInfo(file_paths[0]).absolutePath()
+                self.settings.setValue("last_directory", last_dir)
+
+                for file_path in file_paths:
+                    file_path = Path(file_path)
+                    fname = file_path.stem  # get fname w/o extension
+                    extension = file_path.suffix.lower()  # get file extension
+
+                    if extension == '.csv':
+                        wafer_df = pd.read_csv(file_path, skiprows=1,
+                                               delimiter=";")
+                    elif extension == '.txt':
+                        wafer_df = pd.read_csv(file_path, delimiter="\t")
+                        wafer_df.columns = ['Y', 'X'] + list(
+                            wafer_df.columns[2:])
+                        # Reorder df as increasing wavenumber
+                        sorted_columns = sorted(wafer_df.columns[2:], key=float)
+                        wafer_df = wafer_df[['X', 'Y'] + sorted_columns]
+                    else:
+                        show_alert(f"Unsupported file format: {extension}")
+                        continue
+                    wafer_name = fname
+                    if wafer_name in self.wafers:
+                        msg = f"Wafer '{wafer_name}' is already opened"
+                        show_alert(msg)
+                    else:
+                        self.wafers[wafer_name] = wafer_df
+        self.extract_spectra()
+
+    def extract_spectra(self):
+        """
+        Extract all spectra from each wafer dataframe.
+
+        Iterates through `wafers` dictionary, extracts spectra,
+        and updates `spectrums` list with Spectrum objects.
+        """
+
+        for wafer_name, wafer_df in self.wafers.items():
+            coord_columns = wafer_df.columns[:2]
+            for _, row in wafer_df.iterrows():
+
+                # Extract XY coords, wavenumber, and intensity values
+                coord = tuple(row[coord_columns])
+                x_values = wafer_df.columns[2:].tolist()
+                x_values = pd.to_numeric(x_values, errors='coerce').tolist()
+
+                y_values = row[2:].tolist()
+                fname = f"{wafer_name}_{coord}"
+
+                if not any(spectrum.fname == fname for spectrum in
+                           self.spectrums):
+                    # create FITSPY object
+                    spectrum = Spectrum()
+                    spectrum.fname = fname
+                    spectrum.x = np.asarray(x_values)[:-1]
+                    spectrum.x0 = np.asarray(x_values)[:-1]
+                    spectrum.y = np.asarray(y_values)[:-1]
+                    spectrum.y0 = np.asarray(y_values)[:-1]
+                    self.spectrums.append(spectrum)
+        self.upd_wafers_list()
     def apply_filters(self):
         """
-        Apply all checked filters to the current dataframe.
+        Apply all checked filters to the current selected dataframe.
 
         This method sets the current dataframe for filtering, applies all checked filters,
         and displays the filtered dataframe in the GUI.
@@ -447,88 +521,7 @@ class Maps(QObject):
         fnames = self.spectrums.fnames
         self.apply_loaded_fit_model(fnames=fnames)
 
-    def open_data(self, wafers=None, file_paths=None):
-        """
-        Apply loaded fit model to all selected spectra.
 
-        Applies `loaded_fit_model` to all spectra in `spectrums`.
-        """
-
-        if self.wafers is None:
-            self.wafers = {}
-        if wafers:
-            self.wafers = wafers
-        else:
-            if file_paths is None:
-                # Initialize the last used directory from QSettings
-                last_dir = self.settings.value("last_directory", "/")
-                options = QFileDialog.Options()
-                options |= QFileDialog.ReadOnly
-                file_paths, _ = QFileDialog.getOpenFileNames(
-                    self.ui.tabWidget, "Open RAW spectra CSV File(s)", last_dir,
-                    "CSV Files (*.csv);;Text Files (*.txt)", options=options)
-            # Load RAW spectra data from CSV files
-            if file_paths:
-                last_dir = QFileInfo(file_paths[0]).absolutePath()
-                self.settings.setValue("last_directory", last_dir)
-
-                for file_path in file_paths:
-                    file_path = Path(file_path)
-                    fname = file_path.stem  # get fname w/o extension
-                    extension = file_path.suffix.lower()  # get file extension
-
-                    if extension == '.csv':
-                        wafer_df = pd.read_csv(file_path, skiprows=1,
-                                               delimiter=";")
-                    elif extension == '.txt':
-                        wafer_df = pd.read_csv(file_path, delimiter="\t")
-                        wafer_df.columns = ['Y', 'X'] + list(
-                            wafer_df.columns[2:])
-                        # Reorder df as increasing wavenumber
-                        sorted_columns = sorted(wafer_df.columns[2:], key=float)
-                        wafer_df = wafer_df[['X', 'Y'] + sorted_columns]
-                    else:
-                        show_alert(f"Unsupported file format: {extension}")
-                        continue
-                    wafer_name = fname
-                    if wafer_name in self.wafers:
-                        msg = f"Wafer '{wafer_name}' is already opened"
-                        show_alert(msg)
-                    else:
-                        self.wafers[wafer_name] = wafer_df
-        self.extract_spectra()
-
-    def extract_spectra(self):
-        """
-        Extract all spectra from each wafer dataframe.
-
-        Iterates through `wafers` dictionary, extracts spectra,
-        and updates `spectrums` list with Spectrum objects.
-        """
-
-        for wafer_name, wafer_df in self.wafers.items():
-            coord_columns = wafer_df.columns[:2]
-            for _, row in wafer_df.iterrows():
-
-                # Extract XY coords, wavenumber, and intensity values
-                coord = tuple(row[coord_columns])
-                x_values = wafer_df.columns[2:].tolist()
-                x_values = pd.to_numeric(x_values, errors='coerce').tolist()
-
-                y_values = row[2:].tolist()
-                fname = f"{wafer_name}_{coord}"
-
-                if not any(spectrum.fname == fname for spectrum in
-                           self.spectrums):
-                    # create FITSPY object
-                    spectrum = Spectrum()
-                    spectrum.fname = fname
-                    spectrum.x = np.asarray(x_values)[:-1]
-                    spectrum.x0 = np.asarray(x_values)[:-1]
-                    spectrum.y = np.asarray(y_values)[:-1]
-                    spectrum.y0 = np.asarray(y_values)[:-1]
-                    self.spectrums.append(spectrum)
-        self.upd_wafers_list()
 
     def read_x_range(self):
         """

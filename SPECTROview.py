@@ -5,19 +5,6 @@ This module initializes the main window of the SPECTROview application,
 loads necessary UI components, connects GUI elements to backend methods,
 and manages application settings.
 
-The module includes:
-- Constants for file paths and resources used within the application.
-- Main class `Main` that initializes the application's main window,
-  sets up event handlers, manages UI states (dark/light mode),
-  and initializes various components like visualization, spectra handling,
-  fit model management, and more.
-- Helper functions `toggle_dark_mode`, `toggle_light_mode`, `update_combo_hue`,
-  `open_doc_df_query`, and `show_about` for handling UI interactions and
-  displaying information.
-- The `launcher` function that checks the expiration date of the application,
-  initializes the QApplication, sets up the main window, and handles the
-  launch of the application.
-
 Attributes:
     DIRNAME (str): Directory name of the current script file.
     UI_FILE (str): Path to the .ui file defining the application's GUI layout.
@@ -43,8 +30,6 @@ Functions:
     toggle_light_mode():
         Switches the application UI to light mode and saves the preference to
         application settings.
-    update_combo_hue(): Updates the combo boxes in the UI to reflect changes
-        madein the other.
     open_doc_df_query():
         Opens a Markdown file (`pandas_df_query.md`) in a dialog to provide
         detailed information about data filtering in Pandas DataFrame.
@@ -247,16 +232,6 @@ class Main:
     def toggle_light_mode(self):
         self.ui.setPalette(self.common.light_palette())
         self.settings.setValue("mode", "light")  # Save to settings
-
-    def update_combo_hue(self, index):
-        selected_text = self.ui.combo_hue_2.itemText(index)
-        self.ui.combo_hue.setCurrentIndex(
-            self.ui.combo_hue.findText(selected_text))
-
-    def update_combo_hue_2(self, index):
-        selected_text = self.ui.combo_hue.itemText(index)
-        self.ui.combo_hue_2.setCurrentIndex(
-            self.ui.combo_hue_2.findText(selected_text))
 
     def open_doc_df_query(self):
         """Open doc detail about query function of pandas dataframe"""

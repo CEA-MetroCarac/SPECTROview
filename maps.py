@@ -185,8 +185,9 @@ class Maps(QObject):
                 options = QFileDialog.Options()
                 options |= QFileDialog.ReadOnly
                 file_paths, _ = QFileDialog.getOpenFileNames(
-                    self.ui.tabWidget, "Open RAW spectra CSV File(s)", last_dir,
-                    "CSV Files (*.csv);;Text Files (*.txt)", options=options)
+                    self.ui.tabWidget, "Open spectra file(s)", last_dir,
+                    "SPECTROview formats (*.csv *.txt)", options=options)
+                
             # Load RAW spectra data from CSV files
             if file_paths:
                 last_dir = QFileInfo(file_paths[0]).absolutePath()

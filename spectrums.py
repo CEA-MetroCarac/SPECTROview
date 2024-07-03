@@ -28,7 +28,8 @@ from tkinter import Tk, END
 
 class Spectrums(QObject):
     """
-    Class manages the GUI interactions and operations related to spectra fittings,
+    Class manages the GUI interactions and operations related to spectra
+    fittings,
     and visualization of fitted data within "SPACTRA" TAB of the application.
 
     Attributes:
@@ -150,18 +151,22 @@ class Spectrums(QObject):
             self.fit_model_manager.default_model_folder)
         QTimer.singleShot(0, self.populate_available_models)
 
-
     def open_data(self, spectra=None, file_paths=None):
         """
-        Open and load raw spectral data from file paths or provided Spectra object.
+        Open and load raw spectral data from file paths or provided Spectra
+        object.
 
-        If file_paths is not provided, a file dialog is opened to select text files.
+        If file_paths is not provided, a file dialog is opened to select text
+        files.
         The loaded spectra are added to the internal Spectra object.
 
         Args:
-            spectra (Spectra, optional): Spectra object containing pre-loaded data.
-            file_paths (list of str, optional): List of file paths to load raw spectra data.
+            spectra (Spectra, optional): Spectra object containing pre-loaded
+            data.
+            file_paths (list of str, optional): List of file paths to load
+            raw spectra data.
         """
+
         if self.spectrums is None:
             self.spectrums = Spectra()
         if spectra:
@@ -249,14 +254,18 @@ class Spectrums(QObject):
 
     def on_click(self, event):
         """
-        Handle click events on spectra plot canvas for adding peak models or baseline points.
+        Handle click events on spectra plot canvas for adding peak models or
+        baseline points.
 
-        This method interprets click events on the spectra plot canvas to add peak models
-        or baseline points. It manages the UI interaction based on the type of click (left
+        This method interprets click events on the spectra plot canvas to add
+        peak models
+        or baseline points. It manages the UI interaction based on the type
+        of click (left
         click for adding peaks, right click for baseline points).
 
         Args:
-            event (QMouseEvent): Mouse click event containing information about the click position.
+            event (QMouseEvent): Mouse click event containing information
+            about the click position.
         """
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         fit_model = self.ui.cbb_fit_models_2.currentText()
@@ -282,9 +291,11 @@ class Spectrums(QObject):
                 else:
                     sel_spectrum.baseline.add_point(x1, y1)
                     self.upd_spectra_list()
+
     def update_spectrums_order(self):
         """
-        Update the order of spectrums when user rearranges them via listbox drag-and-drop.
+        Update the order of spectrums when user rearranges them via listbox
+        drag-and-drop.
 
         This method retrieves the new order of spectrums from the customized
         QListWidget and updates the internal list of spectrums accordingly.
@@ -301,15 +312,19 @@ class Spectrums(QObject):
         # Clear the existing list and update with the new order
         self.spectrums.clear()
         self.spectrums.extend(new_order)
+
     def apply_filters(self, filters=None):
         """
         Apply currently checked filters to the fit results DataFrame.
 
-        This method applies the currently checked filters in the UI to the fit results
-        DataFrame. It updates the filtered_df attribute with the filtered results.
+        This method applies the currently checked filters in the UI to the
+        fit results
+        DataFrame. It updates the filtered_df attribute with the filtered
+        results.
 
         Args:
-            filters (list of str, optional): List of filter names to apply. Defaults to None.
+            filters (list of str, optional): List of filter names to apply.
+            Defaults to None.
         """
         self.filter.set_dataframe(self.df_fit_results)
         self.filtered_df = self.filter.apply_filters()
@@ -319,11 +334,13 @@ class Spectrums(QObject):
         """
         Set the default folder path for fit models.
 
-        This method sets the default folder path for loading and saving fit models.
+        This method sets the default folder path for loading and saving fit
+        models.
         It updates the settings and UI elements accordingly.
 
         Args:
-            folder_path (str, optional): Folder path to set as default. Defaults to None.
+            folder_path (str, optional): Folder path to set as default.
+            Defaults to None.
         """
         if not folder_path:
             folder_path = QFileDialog.getExistingDirectory(None,
@@ -343,7 +360,8 @@ class Spectrums(QObject):
         """
         Populate the available fit models in the UI combobox.
 
-        This method populates the available fit models from the default model folder
+        This method populates the available fit models from the default model
+        folder
         into the UI combobox for model selection.
         """
         # Scan default folder and populate available models in the combobox
@@ -355,12 +373,15 @@ class Spectrums(QObject):
         """
         Load a fit model from a JSON file or from the UI selection.
 
-        This method loads a fit model from a specified JSON file or from the current
-        selection in the UI combobox. It updates the loaded_fit_model and current_fit_model
+        This method loads a fit model from a specified JSON file or from the
+        current
+        selection in the UI combobox. It updates the loaded_fit_model and
+        current_fit_model
         attributes accordingly.
 
         Args:
-            fname_json (str, optional): File name of the JSON file to load. Defaults to None.
+            fname_json (str, optional): File name of the JSON file to load.
+            Defaults to None.
         """
         self.fname_json = fname_json
         self.upd_model_cbb_list()
@@ -436,7 +457,8 @@ class Spectrums(QObject):
         """
         Update and populate the model list in the UI combobox.
 
-        This method updates the model list in the UI combobox based on the available
+        This method updates the model list in the UI combobox based on the
+        available
         fit models loaded from the default model folder.
         """
         current_path = self.fit_model_manager.default_model_folder
@@ -450,7 +472,8 @@ class Spectrums(QObject):
         based on the provided file names.
 
         Args:
-            fnames (list of str, optional): List of filenames to apply the fit model. Defaults to None.
+            fnames (list of str, optional): List of filenames to apply the
+            fit model. Defaults to None.
         """
         self.get_loaded_fit_model()
         self.ui.btn_apply_model_3.setEnabled(False)
@@ -703,8 +726,10 @@ class Spectrums(QObject):
     def read_x_range(self):
         """Read the x range of the selected spectrum.
 
-        This method retrieves the selected spectrum object, reads its x-axis range,
-        and sets the minimum and maximum x values in the corresponding GUI text fields.
+        This method retrieves the selected spectrum object, reads its x-axis
+        range,
+        and sets the minimum and maximum x values in the corresponding GUI
+        text fields.
         """
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         self.ui.range_min_2.setText(str(sel_spectrum.x[0]))
@@ -713,13 +738,17 @@ class Spectrums(QObject):
     def set_x_range(self, fnames=None):
         """Set a new x range for the selected spectrum.
 
-        This method updates the x range of the selected spectrum(s) based on the values
-        provided in the GUI. It recalculates the spectrum data within the specified range
+        This method updates the x range of the selected spectrum(s) based on
+        the values
+        provided in the GUI. It recalculates the spectrum data within the
+        specified range
         and updates the GUI accordingly.
 
         Args:
-            fnames (list, optional): List of filenames of the spectra to be updated.
-                                     If None, the filenames are retrieved from the GUI selection.
+            fnames (list, optional): List of filenames of the spectra to be
+            updated.
+                                     If None, the filenames are retrieved
+                                     from the GUI selection.
         """
         new_x_min = float(self.ui.range_min_2.text())
         new_x_max = float(self.ui.range_max_2.text())
@@ -743,16 +772,20 @@ class Spectrums(QObject):
         """Set a new x range for all spectra.
 
         This method updates the x range for all spectra using the range values
-        provided in the GUI and recalculates the spectrum data within the specified range.
+        provided in the GUI and recalculates the spectrum data within the
+        specified range.
         """
         fnames = self.spectrums.fnames
         self.set_x_range(fnames=fnames)
 
     def get_baseline_settings(self):
-        """Retrieve baseline settings from the GUI and apply to the selected spectrum.
+        """Retrieve baseline settings from the GUI and apply to the selected
+        spectrum.
 
-        This method extracts the baseline settings (e.g., attached baseline, noise level,
-        baseline mode, polynomial order) from the GUI and applies them to the selected spectrum object.
+        This method extracts the baseline settings (e.g., attached baseline,
+        noise level,
+        baseline mode, polynomial order) from the GUI and applies them to the
+        selected spectrum object.
         """
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         if sel_spectrum is None:
@@ -768,12 +801,14 @@ class Spectrums(QObject):
     def plot_baseline_dynamically(self, ax, spectrum):
         """Dynamically evaluate and plot the baseline for a given spectrum.
 
-        This method retrieves the baseline settings, evaluates the baseline points and line,
+        This method retrieves the baseline settings, evaluates the baseline
+        points and line,
         and plots them dynamically on the provided axis.
 
         Args:
             ax (matplotlib.axes.Axes): The axis on which to plot the baseline.
-            spectrum (object): The spectrum object for which the baseline is being plotted.
+            spectrum (object): The spectrum object for which the baseline is
+            being plotted.
         """
         self.get_baseline_settings()
         if not spectrum.baseline.is_subtracted:
@@ -804,8 +839,10 @@ class Spectrums(QObject):
         using the points defined in the baseline settings.
 
         Args:
-            sel_spectra (list, optional): List of selected spectra objects. If None,
-                                          the selected spectra are retrieved from the GUI.
+            sel_spectra (list, optional): List of selected spectra objects.
+            If None,
+                                          the selected spectra are retrieved
+                                          from the GUI.
         """
         sel_spectrum, _ = self.get_spectrum_object()
         points = deepcopy(sel_spectrum.baseline.points)
@@ -822,7 +859,8 @@ class Spectrums(QObject):
     def subtract_baseline_all(self):
         """Subtract the baseline for all spectra.
 
-        This method performs baseline subtraction on all spectra using the points
+        This method performs baseline subtraction on all spectra using the
+        points
         defined in the baseline settings.
         """
         self.subtract_baseline(self.spectrums)
@@ -833,8 +871,10 @@ class Spectrums(QObject):
         This method removes all peak models from the selected spectra.
 
         Args:
-            fnames (list, optional): List of filenames of the spectra to be cleared.
-                                     If None, the filenames are retrieved from the GUI selection.
+            fnames (list, optional): List of filenames of the spectra to be
+            cleared.
+                                     If None, the filenames are retrieved
+                                     from the GUI selection.
         """
         if fnames is None:
             fnames = self.get_spectrum_fnames()
@@ -857,8 +897,10 @@ class Spectrums(QObject):
     def get_fit_settings(self):
         """Retrieve all settings for the fitting action from the GUI.
 
-        This method extracts the fitting parameters (e.g., fit_negative, max_iterations,
-        fitting method, number of CPUs, tolerance) from the GUI and applies them to the
+        This method extracts the fitting parameters (e.g., fit_negative,
+        max_iterations,
+        fitting method, number of CPUs, tolerance) from the GUI and applies
+        them to the
         selected spectrum object.
         """
         sel_spectrum, sel_spectra = self.get_spectrum_object()
@@ -873,12 +915,15 @@ class Spectrums(QObject):
     def fit(self, fnames=None):
         """Fit the selected spectrum(s) with current parameters.
 
-        This method performs fitting on the selected spectrum(s) using the parameters
+        This method performs fitting on the selected spectrum(s) using the
+        parameters
         defined in the GUI and updates the GUI accordingly.
 
         Args:
-            fnames (list, optional): List of filenames of the spectra to be fitted.
-                                     If None, the filenames are retrieved from the GUI selection.
+            fnames (list, optional): List of filenames of the spectra to be
+            fitted.
+                                     If None, the filenames are retrieved
+                                     from the GUI selection.
         """
         self.get_fit_settings()
         if fnames is None:
@@ -900,7 +945,8 @@ class Spectrums(QObject):
         """Copy the model dictionary of the selected spectrum.
 
         This method copies the model dictionary of the first spectrum in the
-        selected spectra list, if it exists, and sets the copied model in the GUI.
+        selected spectra list, if it exists, and sets the copied model in the
+        GUI.
         """
         # Get only 1 spectrum among several selected spectrum:
         self.get_fit_settings()
@@ -923,8 +969,10 @@ class Spectrums(QObject):
         performs fitting in a separate thread.
 
         Args:
-            fnames (list, optional): List of filenames of the spectra to be fitted.
-                                     If None, the filenames are retrieved from the GUI selection.
+            fnames (list, optional): List of filenames of the spectra to be
+            fitted.
+                                     If None, the filenames are retrieved
+                                     from the GUI selection.
         """
         # Get fnames of all selected spectra
         self.ui.btn_paste_fit_model_2.setEnabled(False)
@@ -952,7 +1000,8 @@ class Spectrums(QObject):
             self.ui.btn_paste_fit_model_2.setEnabled(True)
 
     def paste_fit_model_all(self):
-        """Paste the copied fit model (in clipboard) and apply to selected spectrum(s)."""
+        """Paste the copied fit model (in clipboard) and apply to selected
+        spectrum(s)."""
 
         fnames = self.spectrums.fnames
         self.paste_fit_model(fnames)
@@ -1035,7 +1084,8 @@ class Spectrums(QObject):
             self.ui.cbb_split_fname.addItem(part)
 
     def add_column(self):
-        """Add a column to the dataframe of fit results based on the split_fname method."""
+        """Add a column to the dataframe of fit results based on the
+        split_fname method."""
 
         dfr = self.df_fit_results
         col_name = self.ui.ent_col_name.text()
@@ -1089,7 +1139,8 @@ class Spectrums(QObject):
                 self.ui.cbb_z_7.addItem(column)
 
     def send_df_to_viz(self):
-        """Send the collected spectral data dataframe to the visualization tab."""
+        """Send the collected spectral data dataframe to the visualization
+        tab."""
 
         dfs_new = self.visu.original_dfs
         dfs_new["SPECTRUMS_best_fit"] = self.df_fit_results
@@ -1215,7 +1266,8 @@ class Spectrums(QObject):
         """Reinitialize the selected spectrum(s).
 
         Args:
-            fnames (list, optional): List of filenames of the spectra to be reinitialized. Defaults to None.
+            fnames (list, optional): List of filenames of the spectra to be
+            reinitialized. Defaults to None.
         """
         if fnames is None:
             fnames = self.get_spectrum_fnames()
@@ -1382,7 +1434,7 @@ class Spectrums(QObject):
         except Exception as e:
             show_alert(f"Error saving work: {e}")
 
-    def load_work(self):
+    def load_work(self, file_path):
         """
         Load a previously saved application state from a file.
 
@@ -1395,44 +1447,38 @@ class Spectrums(QObject):
         fails.
         """
         try:
-            file_path, _ = QFileDialog.getOpenFileName(None,
-                                                       "Load work",
-                                                       "",
-                                                       "SPECTROview Files ("
-                                                       "*.svspectra)")
-            if file_path:
-                with open(file_path, 'rb') as f:
-                    load = dill.load(f)
-                    try:
-                        self.spectrums = load.get('spectrums')
-                        self.current_fit_model = load.get('current_fit_model')
-                        self.loaded_fit_model = load.get('loaded_fit_model')
+            with open(file_path, 'rb') as f:
+                load = dill.load(f)
+                try:
+                    self.spectrums = load.get('spectrums')
+                    self.current_fit_model = load.get('current_fit_model')
+                    self.loaded_fit_model = load.get('loaded_fit_model')
 
-                        self.df_fit_results = load.get('df_fit_results')
-                        self.filter.filters = load.get('filters')
-                        self.filter.upd_filter_listbox()
+                    self.df_fit_results = load.get('df_fit_results')
+                    self.filter.filters = load.get('filters')
+                    self.filter.upd_filter_listbox()
 
-                        self.upd_cbb_param()
-                        self.send_df_to_viz()
-                        self.upd_spectra_list()
+                    self.upd_cbb_param()
+                    self.send_df_to_viz()
+                    self.upd_spectra_list()
 
-                        self.ui.cbb_x_3.setCurrentIndex(load.get('cbb_x_1', -1))
-                        self.ui.cbb_y_3.setCurrentIndex(load.get('cbb_y_1', -1))
-                        self.ui.cbb_z_3.setCurrentIndex(load.get('cbb_z_1', -1))
-                        self.ui.cbb_x_7.setCurrentIndex(load.get('cbb_x_2', -1))
-                        self.ui.cbb_y_7.setCurrentIndex(load.get('cbb_y_2', -1))
-                        self.ui.cbb_z_7.setCurrentIndex(load.get('cbb_z_2', -1))
+                    self.ui.cbb_x_3.setCurrentIndex(load.get('cbb_x_1', -1))
+                    self.ui.cbb_y_3.setCurrentIndex(load.get('cbb_y_1', -1))
+                    self.ui.cbb_z_3.setCurrentIndex(load.get('cbb_z_1', -1))
+                    self.ui.cbb_x_7.setCurrentIndex(load.get('cbb_x_2', -1))
+                    self.ui.cbb_y_7.setCurrentIndex(load.get('cbb_y_2', -1))
+                    self.ui.cbb_z_7.setCurrentIndex(load.get('cbb_z_2', -1))
 
-                        self.ui.cbb_plot_style_3.setCurrentIndex(
-                            load.get('plot_style_1', -1))
-                        self.ui.cbb_plot_style_7.setCurrentIndex(
-                            load.get('plot_style_2', -1))
-                        #
-                        # self.plot2()
-                        # self.plot3()
-                        self.display_df_in_GUI(self.df_fit_results)
-                    except Exception as e:
-                        show_alert(f"Error loading work: {e}")
+                    self.ui.cbb_plot_style_3.setCurrentIndex(
+                        load.get('plot_style_1', -1))
+                    self.ui.cbb_plot_style_7.setCurrentIndex(
+                        load.get('plot_style_2', -1))
+
+                    # self.plot2()
+                    # self.plot3()
+                    self.display_df_in_GUI(self.df_fit_results)
+                except Exception as e:
+                    show_alert(f"Error loading work: {e}")
         except Exception as e:
             show_alert(f"Error loading work: {e}")
 
@@ -1546,7 +1592,8 @@ class Spectrums(QObject):
 
 class CustomListWidget(QListWidget):
     """
-    Customized QListWidget with drag-and-drop functionality for rearranging items.
+    Customized QListWidget with drag-and-drop functionality for rearranging
+    items.
 
     This class inherits from QListWidget and provides extended functionality
     for reordering items via drag-and-drop operations.

@@ -28,7 +28,8 @@ from tkinter import Tk, END
 
 class Maps(QObject):
     """
-    Class manages the GUI interactions and operations related to spectra fittings,
+    Class manages the GUI interactions and operations related to spectra
+    fittings,
     and visualization of fitted data within "WAFER" TAB of the application.
 
     Attributes:
@@ -165,8 +166,9 @@ class Maps(QObject):
             "default_model_folder", "")
         self.ui.l_defaut_folder_model.setText(
             self.fit_model_manager.default_model_folder)
-        #Show available fit models
+        # Show available fit models
         QTimer.singleShot(0, self.populate_available_models)
+
     def open_data(self, wafers=None, file_paths=None):
         """
         Open hyperspactral data which is wafer dataframe .
@@ -247,11 +249,13 @@ class Maps(QObject):
                     spectrum.y0 = np.asarray(y_values)[:-1]
                     self.spectrums.append(spectrum)
         self.upd_wafers_list()
+
     def apply_filters(self):
         """
         Apply all checked filters to the current selected dataframe.
 
-        This method sets the current dataframe for filtering, applies all checked filters,
+        This method sets the current dataframe for filtering, applies all
+        checked filters,
         and displays the filtered dataframe in the GUI.
         """
         self.filter.set_dataframe(self.df_fit_results)
@@ -262,8 +266,10 @@ class Maps(QObject):
         """
         View the selected dataframe in the GUI.
 
-        This method checks if a filtered dataframe exists and displays it in a table in the GUI.
-        If no filtered dataframe exists, it displays an alert indicating no data is available.
+        This method checks if a filtered dataframe exists and displays it in
+        a table in the GUI.
+        If no filtered dataframe exists, it displays an alert indicating no
+        data is available.
         """
         if self.filtered_df is None:
             df = self.df_fit_results
@@ -280,10 +286,13 @@ class Maps(QObject):
         Collect best-fit results and append them to a dataframe.
 
         This method iterates through each spectrum in self.spectrums, collects
-        best-fit results including parameters and metadata, and formats them into
-        a pandas DataFrame. It then processes the DataFrame by reindexing columns,
+        best-fit results including parameters and metadata, and formats them
+        into
+        a pandas DataFrame. It then processes the DataFrame by reindexing
+        columns,
         translating parameter names, and adding additional metadata columns like
-        Quadrant and Zone. Finally, it displays the processed DataFrame in the GUI.
+        Quadrant and Zone. Finally, it displays the processed DataFrame in
+        the GUI.
         """
         # Add all dict into a list, then convert to a dataframe.
         self.copy_fit_model()
@@ -348,10 +357,14 @@ class Maps(QObject):
     def display_df_in_GUI(self, df):
         """Display a given DataFrame in the GUI via QTableWidget.
 
-        This method creates an instance of the DataframeTable class, which takes a pandas
-        DataFrame and a layout as arguments. It then initializes the DataframeTable and adds
-        it to the specified layout in the GUI. The QTableWidget within DataframeTable displays
-        the DataFrame, providing functionalities such as copying selected data to the clipboard.
+        This method creates an instance of the DataframeTable class,
+        which takes a pandas
+        DataFrame and a layout as arguments. It then initializes the
+        DataframeTable and adds
+        it to the specified layout in the GUI. The QTableWidget within
+        DataframeTable displays
+        the DataFrame, providing functionalities such as copying selected
+        data to the clipboard.
 
         Args:
             df (pd.DataFrame): The DataFrame to be displayed in the GUI.
@@ -452,7 +465,8 @@ class Maps(QObject):
         """
         Save the fit model of the currently selected spectrum.
 
-        Prompts the user to select a location to save the fit model as a JSON file.
+        Prompts the user to select a location to save the fit model as a JSON
+        file.
         Updates the UI and displays a message upon successful saving.
         """
         sel_spectrum, sel_spectra = self.get_spectrum_object()
@@ -471,7 +485,8 @@ class Maps(QObject):
         """
         Update and populate the model list in the combobox.
 
-        Updates the list of models in the combobox based on the default model folder.
+        Updates the list of models in the combobox based on the default model
+        folder.
         """
         current_path = self.fit_model_manager.default_model_folder
         self.set_default_model_folder(current_path)
@@ -520,8 +535,6 @@ class Maps(QObject):
         """
         fnames = self.spectrums.fnames
         self.apply_loaded_fit_model(fnames=fnames)
-
-
 
     def read_x_range(self):
         """
@@ -592,7 +605,8 @@ class Maps(QObject):
 
     def get_baseline_settings(self):
         """
-        Pass baseline settings from GUI to spectrum objects for baseline subtraction.
+        Pass baseline settings from GUI to spectrum objects for baseline
+        subtraction.
 
         Updates baseline settings (`attached`, `sigma`, `mode`, `order_max`)
         for the selected spectrum based on GUI input.
@@ -642,7 +656,8 @@ class Maps(QObject):
         Subtract baseline for the selected spectrum(s).
 
         Retrieves baseline points from the selected spectrum and subtracts
-        it from either the selected spectrum or a provided list of spectra (`sel_spectra`).
+        it from either the selected spectrum or a provided list of spectra (
+        `sel_spectra`).
         Updates UI and triggers spectrum list update and rescaling.
         """
         sel_spectrum, _ = self.get_spectrum_object()
@@ -685,7 +700,8 @@ class Maps(QObject):
         Fit selected spectrum(s) with current parameters.
 
         Applies fitting operation to the selected spectrum(s) using the current
-        fit parameters (`fit_params`). Updates UI and triggers spectrum list update.
+        fit parameters (`fit_params`). Updates UI and triggers spectrum list
+        update.
         """
 
         self.get_fit_settings()
@@ -709,7 +725,8 @@ class Maps(QObject):
         """
         Clear all existing peak models of the selected spectrum(s).
 
-        Removes all peak models from the selected spectrum(s) or a specified list
+        Removes all peak models from the selected spectrum(s) or a specified
+        list
         of spectra (`fnames`). Updates UI and triggers spectrum list update.
         """
 
@@ -734,7 +751,8 @@ class Maps(QObject):
         Copy the model dict of the selected spectrum.
 
         Copies the fit model dictionary (`save()`) of the selected spectrum
-        to the clipboard. Updates UI with status and alerts if no fit model is found.
+        to the clipboard. Updates UI with status and alerts if no fit model
+        is found.
         """
 
         # Get only 1 spectrum among several selected spectrum:
@@ -758,7 +776,8 @@ class Maps(QObject):
         Apply the copied fit model to selected spectra.
 
         Pastes the previously copied fit model to selected spectra (`fnames`)
-        and starts the fitting process in a separate thread. Updates UI with progress
+        and starts the fitting process in a separate thread. Updates UI with
+        progress
         and completion events.
         """
 
@@ -799,8 +818,10 @@ class Maps(QObject):
         """
         Save fitted results in an Excel file.
 
-        Prompts user to select a location to save the fitted results (`df_fit_results`)
-        as an Excel file. Displays success or error messages based on the save operation.
+        Prompts user to select a location to save the fitted results (
+        `df_fit_results`)
+        as an Excel file. Displays success or error messages based on the
+        save operation.
         """
 
         last_dir = self.settings.value("last_directory", "/")
@@ -827,8 +848,10 @@ class Maps(QObject):
         """
         Load fitted results from an Excel file.
 
-        Prompts user to select one or more Excel files containing fitted results.
-        Loads dataframes from the selected files and updates `df_fit_results` and UI.
+        Prompts user to select one or more Excel files containing fitted
+        results.
+        Loads dataframes from the selected files and updates `df_fit_results`
+        and UI.
         """
 
         # Initialize the last used directory from QSettings
@@ -862,7 +885,8 @@ class Maps(QObject):
         """
         Update the combobox with unique values from 'Wafer' column.
 
-        Updates the combobox (`cbb_wafer_1`) with unique values from the 'Filename'
+        Updates the combobox (`cbb_wafer_1`) with unique values from the
+        'Filename'
         column of `df_fit_results`.
         """
 
@@ -878,7 +902,8 @@ class Maps(QObject):
         """
         Update comboboxes with all values of `df_fit_results`.
 
-        Updates multiple comboboxes (`cbb_param_1`, `cbb_x`, `cbb_y`, `cbb_z`) with
+        Updates multiple comboboxes (`cbb_param_1`, `cbb_x`, `cbb_y`,
+        `cbb_z`) with
         all column names of `df_fit_results`.
         """
 
@@ -960,8 +985,10 @@ class Maps(QObject):
         Reinitialize the selected spectrum(s).
 
         Parameters:
-        - fnames (list of str, optional): List of spectrum filenames to reinitialize. If None,
-          reinitializes all spectra associated with the current wafer and coordinates.
+        - fnames (list of str, optional): List of spectrum filenames to
+        reinitialize. If None,
+          reinitializes all spectra associated with the current wafer and
+          coordinates.
 
         Action:
         - Calls common.reinit_spectrum() to reinitialize the spectra.
@@ -1149,11 +1176,13 @@ class Maps(QObject):
 
     def create_plot_widget(self):
         """
-        Create plot widgets for other plots: measurement sites, waferdataview, plotview.
+        Create plot widgets for other plots: measurement sites,
+        waferdataview, plotview.
 
         Action:
         - Creates canvas and axes for Measurement Sites view.
-        - Configures mouse and key events for selecting points in the Measurement Sites plot.
+        - Configures mouse and key events for selecting points in the
+        Measurement Sites plot.
         - Adds canvas to the UI layout.
 
         - Creates canvas and axes for Graph plot.
@@ -1249,7 +1278,8 @@ class Maps(QObject):
         Plot wafer maps of measurement sites.
 
         Action:
-        - Configures plot elements such as wafer circle, measurement sites, and selected coordinates.
+        - Configures plot elements such as wafer circle, measurement sites,
+        and selected coordinates.
         - Draws the plot on the canvas.
         """
         if self.ui.size150.isChecked():
@@ -1397,7 +1427,8 @@ class Maps(QObject):
 
         Action:
         - Retrieves the wafer name and coordinates.
-        - Iterates through spectra to find measurement sites belonging to the selected wafer.
+        - Iterates through spectra to find measurement sites belonging to the
+        selected wafer.
         """
         wafer_name, coords = self.spectra_id()
         all_x = []
@@ -1444,7 +1475,8 @@ class Maps(QObject):
         with coordinates of spectra belonging to the selected wafer. Each item's
         background color reflects the success of its fit result.
 
-        Updates the item count label and maintains the selection of the previously
+        Updates the item count label and maintains the selection of the
+        previously
         selected item if possible. Initiates a delayed plot update using QTimer.
         """
         ...
@@ -1785,7 +1817,7 @@ class Maps(QObject):
                                                        "Save work",
                                                        "",
                                                        "SPECTROview Files ("
-                                                       "*.svmap)")
+                                                       "*.svmaps)")
             if file_path:
                 data_to_save = {
                     'spectrums': self.spectrums,
@@ -1823,73 +1855,62 @@ class Maps(QObject):
         except Exception as e:
             show_alert(f"Error saving work: {e}")
 
-    def load_work(self):
+    def load_work(self, file_path):
         """
         Load a previously saved application state from a file.
-
-        Opens a file dialog to select a saved file and loads its contents to
-        restore the application state, including spectra, wafers, fit models,
-        fit results, filters, GUI settings, and plot settings.
-
         Updates the GUI and application state based on the loaded data. Shows
         an alert upon successful loading or displays an error message if loading
         fails.
         """
         try:
-            file_path, _ = QFileDialog.getOpenFileName(None,
-                                                       "Load work",
-                                                       "",
-                                                       "SPECTROview Files ("
-                                                       "*.svmap)")
-            if file_path:
-                with open(file_path, 'rb') as f:
-                    load = dill.load(f)
-                    self.spectrums = load.get('spectrums')
-                    self.wafers = load.get('wafers')
-                    self.current_fit_model = load.get('current_fit_model')
-                    self.loaded_fit_model = load.get('loaded_fit_model')
+            with open(file_path, 'rb') as f:
+                load = dill.load(f)
+                self.spectrums = load.get('spectrums')
+                self.wafers = load.get('wafers')
+                self.current_fit_model = load.get('current_fit_model')
+                self.loaded_fit_model = load.get('loaded_fit_model')
 
-                    self.df_fit_results = load.get('df_fit_results')
-                    self.filter.filters = load.get('filters')
-                    self.filter.upd_filter_listbox()
+                self.df_fit_results = load.get('df_fit_results')
+                self.filter.filters = load.get('filters')
+                self.filter.upd_filter_listbox()
 
-                    self.upd_cbb_param()
-                    self.upd_cbb_wafer()
-                    self.send_df_to_viz()
-                    self.upd_wafers_list()
+                self.upd_cbb_param()
+                self.upd_cbb_wafer()
+                self.send_df_to_viz()
+                self.upd_wafers_list()
 
-                    # Set default values or None for missing keys
-                    self.ui.cbb_x.setCurrentIndex(load.get('cbb_x', -1))
-                    self.ui.cbb_y.setCurrentIndex(load.get('cbb_y', -1))
-                    self.ui.cbb_z.setCurrentIndex(load.get('cbb_z', -1))
-                    self.ui.cbb_param_1.setCurrentIndex(
-                        load.get('cbb_param_1', -1))
-                    self.ui.cbb_wafer_1.setCurrentIndex(
-                        load.get('cbb_wafer_1', -1))
-                    self.ui.plot_title.setText(load.get('plot_title', ''))
-                    self.ui.ent_plot_title_2.setText(
-                        load.get('plot_title2', ''))
-                    self.ui.xmin.setText(load.get('xmin', ''))
-                    self.ui.xmax.setText(load.get('xmax', ''))
-                    self.ui.ymax.setText(load.get('ymax', ''))
-                    self.ui.ymin.setText(load.get('ymin', ''))
-                    self.ui.ent_xaxis_lbl.setText(load.get('xaxis_lbl', ''))
-                    self.ui.ent_yaxis_lbl.setText(load.get('yaxis_lbl', ''))
-                    self.ui.ent_x_rot.setText(load.get('x_rot', ''))
+                # Set default values or None for missing keys
+                self.ui.cbb_x.setCurrentIndex(load.get('cbb_x', -1))
+                self.ui.cbb_y.setCurrentIndex(load.get('cbb_y', -1))
+                self.ui.cbb_z.setCurrentIndex(load.get('cbb_z', -1))
+                self.ui.cbb_param_1.setCurrentIndex(
+                    load.get('cbb_param_1', -1))
+                self.ui.cbb_wafer_1.setCurrentIndex(
+                    load.get('cbb_wafer_1', -1))
+                self.ui.plot_title.setText(load.get('plot_title', ''))
+                self.ui.ent_plot_title_2.setText(
+                    load.get('plot_title2', ''))
+                self.ui.xmin.setText(load.get('xmin', ''))
+                self.ui.xmax.setText(load.get('xmax', ''))
+                self.ui.ymax.setText(load.get('ymax', ''))
+                self.ui.ymin.setText(load.get('ymin', ''))
+                self.ui.ent_xaxis_lbl.setText(load.get('xaxis_lbl', ''))
+                self.ui.ent_yaxis_lbl.setText(load.get('yaxis_lbl', ''))
+                self.ui.ent_x_rot.setText(load.get('x_rot', ''))
 
-                    self.ui.cbb_color_pallete.setCurrentIndex(
-                        load.get('color_pal', -1))
-                    self.ui.wafer_size.setText(load.get('wafer_size', ''))
-                    self.ui.int_vmin.setText(load.get('vmin', ''))
-                    self.ui.int_vmax.setText(load.get('vmax', ''))
+                self.ui.cbb_color_pallete.setCurrentIndex(
+                    load.get('color_pal', -1))
+                self.ui.wafer_size.setText(load.get('wafer_size', ''))
+                self.ui.int_vmin.setText(load.get('vmin', ''))
+                self.ui.int_vmax.setText(load.get('vmax', ''))
 
-                    # self.plot4()
-                    # self.plot3()
+                # self.plot4()
+                # self.plot3()
 
-                    self.display_df_in_GUI(self.df_fit_results)
+                self.display_df_in_GUI(self.df_fit_results)
 
         except Exception as e:
-            show_alert(f"Error loading work: {e}")
+            show_alert(f"Error loading saved work (Maps Tab): {e}")
 
     def fitspy_launcher(self):
         """
@@ -1961,7 +1982,8 @@ class Maps(QObject):
         Save all fitting settings to persistent storage (QSettings).
 
         Saves all current fitting settings, such as fit negativity, maximum
-        iterations, fitting method, CPU usage, and tolerance, to the application's
+        iterations, fitting method, CPU usage, and tolerance, to the
+        application's
         persistent settings storage (QSettings).
 
         Prints a message confirming that settings are saved to console.
@@ -1982,7 +2004,8 @@ class Maps(QObject):
         """
         Load last used fitting settings from persistent storage (QSettings).
 
-        Loads previously saved fitting settings from the application's persistent
+        Loads previously saved fitting settings from the application's
+        persistent
         settings storage (QSettings) and updates the GUI with these settings.
 
         If settings are not found, default values are applied.
@@ -2025,7 +2048,8 @@ class Maps(QObject):
         Handler for subtracting baseline based on keyboard modifiers.
 
         Determines whether to subtract baseline for all spectra or just the
-        selected spectrum based on the Ctrl key modifier. Calls respective methods
+        selected spectrum based on the Ctrl key modifier. Calls respective
+        methods
         for subtracting baseline accordingly.
         """
         modifiers = QApplication.keyboardModifiers()
@@ -2067,7 +2091,8 @@ class Maps(QObject):
         Handler for applying loaded fit model based on keyboard modifiers.
 
         Determines whether to apply loaded fit model for all spectra or just the
-        selected spectrum based on the Ctrl key modifier. Calls respective methods
+        selected spectrum based on the Ctrl key modifier. Calls respective
+        methods
         for applying fit model accordingly.
         """
         modifiers = QApplication.keyboardModifiers()
@@ -2080,7 +2105,8 @@ class Maps(QObject):
         """
         Handler for pasting fit model based on keyboard modifiers.
 
-        Determines whether to paste fit model for all spectra or just the selected
+        Determines whether to paste fit model for all spectra or just the
+        selected
         spectrum based on the Ctrl key modifier. Calls respective methods for
         pasting fit model accordingly.
         """

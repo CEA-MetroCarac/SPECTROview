@@ -38,8 +38,10 @@ Functions:
         file (`about.md`).
 
 Usage:
-    Run this module to launch the SPECTROview application. It initializes the main
-    window, connects event handlers, and manages the overall application lifecycle.
+    Run this module to launch the SPECTROview application. It initializes the
+    main
+    window, connects event handlers, and manages the overall application
+    lifecycle.
 """
 
 import sys
@@ -47,7 +49,7 @@ import os
 import datetime
 
 from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
-    QMessageBox
+    QMessageBox, QFileDialog
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings
 from PySide6.QtGui import QDoubleValidator, QIcon
@@ -86,10 +88,6 @@ class Main:
             self.toggle_light_mode()
         else:
             self.toggle_dark_mode()  # Toggle to dark mode by default
-        self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
-        self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
-        self.ui.actionAbout.triggered.connect(self.show_about)
-        self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
 
         # Create an instance of Dataframe and pass the self.ui object
         self.visu = Visualization(self.settings, self.ui, self.common)
@@ -99,12 +97,20 @@ class Main:
                          self.visu)
         self.fitmodel_manager = FitModelManager(self.settings)
 
+        # MENU ACTIONS:
+        self.ui.actionOpen_wafer.triggered.connect(self.open_wafers)
+        self.ui.actionOpen_spectra.triggered.connect(self.open_spectra)
+        self.ui.actionOpen_dfs.triggered.connect(self.open_dfs)
+        self.ui.action_reload.triggered.connect(self.reload)
+
+        self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
+        self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
+        self.ui.actionAbout.triggered.connect(self.show_about)
+        self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
+
         ########################################################
         ############## GUI for Wafer Processing tab #############
         ########################################################
-
-        self.ui.btn_open_wafers.clicked.connect(self.maps.open_data)
-
         self.ui.btn_remove_wafer.clicked.connect(self.maps.remove_wafer)
 
         self.ui.btn_copy_fig.clicked.connect(self.maps.copy_fig)
@@ -140,7 +146,6 @@ class Main:
 
         self.ui.cbb_plot_style.addItems(self.maps.plot_styles)
         self.ui.btn_sw.clicked.connect(self.maps.save_work)
-        self.ui.btn_lw.clicked.connect(self.maps.load_work)
         self.ui.btn_split_fname_2.clicked.connect(self.maps.split_fname)
         self.ui.btn_add_col_2.clicked.connect(self.maps.add_column)
 
@@ -186,7 +191,6 @@ class Main:
             self.spectrums.paste_fit_model_fnc_handler)
         self.ui.save_model_2.clicked.connect(self.spectrums.save_fit_model)
 
-        self.ui.btn_open_spectrums.clicked.connect(self.spectrums.open_data)
         self.ui.btn_load_model_3.clicked.connect(self.spectrums.load_fit_model)
         self.ui.btn_apply_model_3.clicked.connect(
             self.spectrums.apply_model_fnc_handler)
@@ -209,7 +213,6 @@ class Main:
             self.spectrums.load_fit_results)
 
         self.ui.btn_sw_3.clicked.connect(self.spectrums.save_work)
-        self.ui.btn_lw_3.clicked.connect(self.spectrums.load_work)
         self.ui.cbb_plot_style_3.addItems(self.spectrums.plot_styles)
         self.ui.cbb_plot_style_7.addItems(self.spectrums.plot_styles)
         self.ui.btn_plot_graph_3.clicked.connect(self.spectrums.plot2)
@@ -224,6 +227,57 @@ class Main:
 
         self.ui.btn_default_folder_model_3.clicked.connect(
             self.spectrums.set_default_model_folder)
+
+    def open_wafers(self):
+        """Open wafer spectroscopic data"""
+        self.ui.tabWidget.setCurrentWidget(self.ui.tab_wafer)
+        self.maps.open_data()
+
+    def open_spectra(self):
+        """Open spectra data"""
+        self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
+        self.spectrums.open_data()
+
+    def open_dfs(self):
+        """Open dataframes"""
+        self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
+        self.visu.open_dfs()
+
+    def reload(self):
+        """
+        Unified method to load previously saved application states from
+        different file formats.
+
+        Opens a file dialog to select a saved file and loads its contents to
+        restore
+        the application state. Supports SPECTROview Files with extensions
+        .svmap, .svspectra, and .json.
+
+        Updates the GUI and application state based on the loaded data. Shows
+        an alert upon successful loading or displays an error message if loading
+        fails.
+        """
+        try:
+            file_path, _ = QFileDialog.getOpenFileName(None, "Load saved work",
+                                                       "",
+                                                       "SPECTROview Files ("
+                                                       "*.svmaps *.svspectra "
+                                                       "*.svgraphs)")
+            if file_path:
+                file_extension = file_path.split('.')[-1]
+                if file_extension == 'svmaps':
+                    self.ui.tabWidget.setCurrentWidget(self.ui.tab_wafer)
+                    self.maps.load_work(file_path)
+                elif file_extension == 'svspectra':
+                    self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
+                    self.spectrums.load_work(file_path)
+                elif file_extension == 'svgraphs':
+                    self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
+                    self.visu.load(file_path)
+                else:
+                    show_alert("Unsupported file format")
+        except Exception as e:
+            show_alert(f"Error loading saved work: {e}")
 
     def toggle_dark_mode(self):
         self.ui.setPalette(self.common.dark_palette())

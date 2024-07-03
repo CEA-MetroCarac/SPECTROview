@@ -19,16 +19,20 @@ from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 class Visualization(QDialog):
     """
     This class provides a GUI for plotting graphs based on selected dataframes,
-    applying filters, customizing graph properties, and managing graph instances.
+    applying filters, customizing graph properties, and managing graph
+    instances.
 
     Attributes:
         settings (QSettings): Object for managing application settings.
         ui (Ui_MainWindow): User interface object.
         common (Common): Object providing common functionalities.
 
-        original_dfs (dict): Dictionary holding original dataframes loaded from files.
-        sel_df (pd.DataFrame or None): Currently selected dataframe for visualization.
-        filtered_df (pd.DataFrame or None): Dataframe after applying current filters.
+        original_dfs (dict): Dictionary holding original dataframes loaded
+        from files.
+        sel_df (pd.DataFrame or None): Currently selected dataframe for
+        visualization.
+        filtered_df (pd.DataFrame or None): Dataframe after applying current
+        filters.
         plots (dict): Dictionary storing Graph instances.
         graph_id (int): Identifier for the next graph to be created.
 
@@ -47,7 +51,6 @@ class Visualization(QDialog):
         # DATAFRAME
         self.original_dfs = {}
         self.sel_df = None
-        self.ui.btn_open_dfs.clicked.connect(self.open_dfs)
         self.ui.btn_view_df_3.clicked.connect(self.show_df)
         self.ui.dfs_listbox.itemSelectionChanged.connect(self.update_gui)
         self.ui.btn_remove_df_2.clicked.connect(self.remove_df)
@@ -92,8 +95,8 @@ class Visualization(QDialog):
 
         # SAVE / LOAD
         self.ui.btn_save_work.clicked.connect(self.save)
-        self.ui.btn_load_work.clicked.connect(self.load)
         self.ui.btn_minimize_all.clicked.connect(self.minimize_all_graph)
+
     def open_dfs(self, dfs=None, fnames=None):
         """
         Open and load dataframes from Excel files.
@@ -103,6 +106,7 @@ class Visualization(QDialog):
             fnames (list, optional): List of filenames to open.
 
         """
+
         if self.original_dfs is None:
             self.original_dfs = {}
         if dfs:
@@ -156,12 +160,14 @@ class Visualization(QDialog):
         else:
             if item_count > 0:
                 self.ui.dfs_listbox.setCurrentRow(0)
+
     def plotting(self, update_graph=False):
         """
         Plot a new graph or update an existing graph.
 
         Args:
-            update_graph (bool, optional): If True, update the existing graph; otherwise, create a new one.
+            update_graph (bool, optional): If True, update the existing
+            graph; otherwise, create a new one.
         """
         if update_graph:
             # Update the selected graph
@@ -285,7 +291,8 @@ class Visualization(QDialog):
     def plot_action(self):
         """
         Perform the plot action for the selected graph.
-        This method fetches the selected graph, applies filters, and triggers the actual plotting.
+        This method fetches the selected graph, applies filters, and triggers
+        the actual plotting.
         """
         graph, graph_dialog, sub_window = self.get_sel_graph()
         self.filtered_df = self.apply_filters(self.sel_df, graph.filters)
@@ -325,7 +332,8 @@ class Visualization(QDialog):
         Update GUI elements based on the properties of the selected graph.
 
         Args:
-            sub_window (QMdiSubWindow): Selected sub-window containing the graph.
+            sub_window (QMdiSubWindow): Selected sub-window containing the
+            graph.
         """
         graph, graph_dialog, sub_window = self.get_sel_graph()
 
@@ -472,19 +480,17 @@ class Visualization(QDialog):
                 self.ui.listbox_filters.addItem(item)
                 self.ui.listbox_filters.setItemWidget(item, checkbox)
 
-
-
     def update_gui(self):
         """
         Update the GUI elements based on the selected dataframe.
 
-        This method updates comboboxes and other GUI elements with data from the selected dataframe.
+        This method updates comboboxes and other GUI elements with data from
+        the selected dataframe.
 
         """
 
         self.update_cbb()
         self.sel_df = self.get_sel_df()
-        QTimer.singleShot(100, self.display_df_in_GUI)
 
     def update_cbb(self):
         """Populate columns of selected data to comboboxes"""
@@ -531,8 +537,10 @@ class Visualization(QDialog):
         Returns:
             Tuple: (sel_graph, graph_dialog, sub_window)
                 sel_graph (Graph or None): Selected graph object.
-                graph_dialog (QDialog or None): Graph dialog containing the graph.
-                sub_window (QMdiSubWindow or None): Sub-window containing the graph.
+                graph_dialog (QDialog or None): Graph dialog containing the
+                graph.
+                sub_window (QMdiSubWindow or None): Sub-window containing the
+                graph.
 
         """
         try:
@@ -570,7 +578,8 @@ class Visualization(QDialog):
 
     def remove_df(self):
         """
-        Remove the selected dataframe from the listbox and original_dfs dictionary.
+        Remove the selected dataframe from the listbox and original_dfs
+        dictionary.
         """
         sel_item = self.ui.dfs_listbox.currentItem()
         sel_df_name = sel_item.text()
@@ -585,7 +594,8 @@ class Visualization(QDialog):
                 self.ui.dfs_listbox.takeItem(row)
 
     def save_df_to_excel(self):
-        """This method saves the currently selected dataframe to an Excel file."""
+        """This method saves the currently selected dataframe to an Excel
+        file."""
         last_dir = self.settings.value("last_directory", "/")
         save_path, _ = QFileDialog.getSaveFileName(
             self.ui.tabWidget, "Save DF fit results", last_dir,
@@ -611,15 +621,10 @@ class Visualization(QDialog):
         else:
             show_alert("No fit dataframe to display")
 
-    def display_df_in_GUI(self):
-        """
-        This method creates an instance of DataframeTable to display the DataFrame in GUI.
-        """
-        df_table = DataframeTable(self.filtered_df, self.ui.layout_df)
-
     def apply_filters(self, df=None, filters=None):
         """
-        Apply filters to the specified dataframe or the currently selected dataframe.
+        Apply filters to the specified dataframe or the currently selected
+        dataframe.
 
         Args:
             df (pd.DataFrame, optional): Dataframe to apply filters to.
@@ -640,8 +645,6 @@ class Visualization(QDialog):
 
         self.filter.df = sel_df
         self.filtered_df = self.filter.apply_filters(current_filters)
-
-        self.display_df_in_GUI()
 
         return self.filtered_df
 
@@ -665,7 +668,8 @@ class Visualization(QDialog):
 
     def select_sub_window_from_combo_box(self):
         """
-        This method selects and displays a graph based on the user selection in the combobox.
+        This method selects and displays a graph based on the user selection
+        in the combobox.
         """
         graph_title = self.ui.cbb_graph_list.currentText()
         for sub_window in self.ui.mdiArea.subWindowList():
@@ -732,13 +736,6 @@ class Visualization(QDialog):
         self.ui.listbox_filters.clear()
 
         self.ui.cbb_graph_list.clear()
-
-        # Clear df table
-        while self.ui.layout_df.count():
-            item = self.ui.layout_df.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
 
     def add_y12(self):
         """Add a second line in the current plot ax"""
@@ -829,7 +826,7 @@ class Visualization(QDialog):
                                                        "Save work",
                                                        "",
                                                        "SPECTROview Files ("
-                                                       "*.json)")
+                                                       "*.svgraphs)")
             if file_path:
                 # Convert Graph objects to serializable format
                 plots_data = {}
@@ -894,110 +891,103 @@ class Visualization(QDialog):
         except Exception as e:
             show_alert(f"Error saving work: {e}")
 
-    def load(self):
-        """Open saved work"""
-
+    def load(self, file_path):
+        """Reload saved works"""
         try:
-            file_path, _ = QFileDialog.getOpenFileName(None,
-                                                       "Load work",
-                                                       "",
-                                                       "SPECTROview Files ("
-                                                       "*.json)")
-            if file_path:
-                self.clear_env()
-                with open(file_path, 'r') as f:
-                    load = json.load(f)
-                    self.original_dfs = {key: pd.DataFrame(value) for key, value
-                                         in
-                                         load.get('original_dfs', {}).items()}
-                    self.update_dfs_list()
+            self.clear_env()
+            with open(file_path, 'r') as f:
+                load = json.load(f)
+                self.original_dfs = {key: pd.DataFrame(value) for key, value
+                                     in
+                                     load.get('original_dfs', {}).items()}
+                self.update_dfs_list()
 
-                    # Load plots
-                    plots_data = load.get('plots', {})
-                    for graph_id, graph_data in plots_data.items():
-                        # Recreate graph instance
-                        graph = Graph(graph_id=graph_data['graph_id'])
+                # Load plots
+                plots_data = load.get('plots', {})
+                for graph_id, graph_data in plots_data.items():
+                    # Recreate graph instance
+                    graph = Graph(graph_id=graph_data['graph_id'])
 
-                        # Get plot size
-                        graph.plot_width = graph_data['plot_width']
-                        graph.plot_height = graph_data['plot_height']
+                    # Get plot size
+                    graph.plot_width = graph_data['plot_width']
+                    graph.plot_height = graph_data['plot_height']
 
-                        graph.df_name = graph_data['df_name']
-                        graph.filters = graph_data['filters']
-                        graph.plot_style = graph_data['plot_style']
-                        graph.x = graph_data['x']
-                        graph.y = graph_data['y']
-                        graph.z = graph_data['z']
-                        graph.xmin = graph_data['xmin']
-                        graph.xmax = graph_data['xmax']
-                        graph.ymin = graph_data['ymin']
-                        graph.ymax = graph_data['ymax']
-                        graph.zmin = graph_data['zmin']
-                        graph.zmax = graph_data['zmax']
+                    graph.df_name = graph_data['df_name']
+                    graph.filters = graph_data['filters']
+                    graph.plot_style = graph_data['plot_style']
+                    graph.x = graph_data['x']
+                    graph.y = graph_data['y']
+                    graph.z = graph_data['z']
+                    graph.xmin = graph_data['xmin']
+                    graph.xmax = graph_data['xmax']
+                    graph.ymin = graph_data['ymin']
+                    graph.ymax = graph_data['ymax']
+                    graph.zmin = graph_data['zmin']
+                    graph.zmax = graph_data['zmax']
 
-                        graph.y2 = graph_data['y2']
-                        graph.y3 = graph_data['y3']
-                        graph.y2min = graph_data['y2min']
-                        graph.y2max = graph_data['y2max']
-                        graph.y3min = graph_data['y3min']
-                        graph.y3max = graph_data['y3max']
-                        graph.y2label = graph_data['y2label']
-                        graph.y3label = graph_data['y3label']
+                    graph.y2 = graph_data['y2']
+                    graph.y3 = graph_data['y3']
+                    graph.y2min = graph_data['y2min']
+                    graph.y2max = graph_data['y2max']
+                    graph.y3min = graph_data['y3min']
+                    graph.y3max = graph_data['y3max']
+                    graph.y2label = graph_data['y2label']
+                    graph.y3label = graph_data['y3label']
 
-                        graph.plot_title = graph_data['plot_title']
-                        graph.xlabel = graph_data['xlabel']
-                        graph.ylabel = graph_data['ylabel']
-                        graph.zlabel = graph_data['zlabel']
-                        graph.x_rot = graph_data['x_rot']
-                        graph.grid = graph_data['grid']
-                        graph.legend_visible = graph_data['legend_visible']
-                        # Get from saved files, it not set defaut values
-                        graph.legend_location = graph_data.get(
-                            'legend_location', 'upper right')
+                    graph.plot_title = graph_data['plot_title']
+                    graph.xlabel = graph_data['xlabel']
+                    graph.ylabel = graph_data['ylabel']
+                    graph.zlabel = graph_data['zlabel']
+                    graph.x_rot = graph_data['x_rot']
+                    graph.grid = graph_data['grid']
+                    graph.legend_visible = graph_data['legend_visible']
+                    # Get from saved files, it not set defaut values
+                    graph.legend_location = graph_data.get(
+                        'legend_location', 'upper right')
 
-                        graph.legend_outside = graph_data['legend_outside']
-                        graph.color_palette = graph_data['color_palette']
-                        graph.dpi = graph_data['dpi']
-                        graph.wafer_size = graph_data['wafer_size']
-                        graph.wafer_stats = graph_data['wafer_stats']
-                        graph.trendline_order = graph_data['trendline_order']
-                        graph.show_trendline_eq = graph_data[
-                            'show_trendline_eq']
+                    graph.legend_outside = graph_data['legend_outside']
+                    graph.color_palette = graph_data['color_palette']
+                    graph.dpi = graph_data['dpi']
+                    graph.wafer_size = graph_data['wafer_size']
+                    graph.wafer_stats = graph_data['wafer_stats']
+                    graph.trendline_order = graph_data['trendline_order']
+                    graph.show_trendline_eq = graph_data[
+                        'show_trendline_eq']
 
-                        graph.legend_properties = graph_data[
-                            'legend_properties']
-                        graph.show_bar_plot_error_bar = graph_data[
-                            'show_bar_plot_error_bar']
-                        graph.join_for_point_plot = graph_data[
-                            'join_for_point_plot']
+                    graph.legend_properties = graph_data[
+                        'legend_properties']
+                    graph.show_bar_plot_error_bar = graph_data[
+                        'show_bar_plot_error_bar']
+                    graph.join_for_point_plot = graph_data[
+                        'join_for_point_plot']
 
-                        # Plot the graph
-                        graph.create_plot_widget(graph.dpi)
-                        self.plots[graph.graph_id] = graph
+                    # Plot the graph
+                    graph.create_plot_widget(graph.dpi)
+                    self.plots[graph.graph_id] = graph
 
-                        # Create a QDialog to hold the Graph instance
-                        graph_dialog = QDialog(self)
-                        graph_dialog.setWindowTitle(
-                            f"{graph.graph_id}-{graph.plot_style}_plot: ["
-                            f"{graph.x}] - "
-                            f"[{graph.y[0]}] - [{graph.z}]")
-                        layout = QVBoxLayout()
-                        layout.addWidget(graph)
-                        graph_dialog.setLayout(layout)
+                    # Create a QDialog to hold the Graph instance
+                    graph_dialog = QDialog(self)
+                    graph_dialog.setWindowTitle(
+                        f"{graph.graph_id}-{graph.plot_style}_plot: ["
+                        f"{graph.x}] - "
+                        f"[{graph.y[0]}] - [{graph.z}]")
+                    layout = QVBoxLayout()
+                    layout.addWidget(graph)
+                    graph_dialog.setLayout(layout)
 
-                        # Add the QDialog to the mdiArea
-                        sub_window = MdiSubWindow(graph.graph_id,
-                                                  self.ui.lbl_figsize)
-                        sub_window.setWidget(graph_dialog)
-                        sub_window.closed.connect(self.delete_graph)
-                        self.ui.mdiArea.addSubWindow(sub_window)
-                        sub_window.resize(graph.plot_width, graph.plot_height)
-                        sub_window.show()
+                    # Add the QDialog to the mdiArea
+                    sub_window = MdiSubWindow(graph.graph_id,
+                                              self.ui.lbl_figsize)
+                    sub_window.setWidget(graph_dialog)
+                    sub_window.closed.connect(self.delete_graph)
+                    self.ui.mdiArea.addSubWindow(sub_window)
+                    sub_window.resize(graph.plot_width, graph.plot_height)
+                    sub_window.show()
 
-                        self.plot_action()
+                    self.plot_action()
 
-                    self.filter.upd_filter_listbox()
-                    self.add_graph_list_to_combobox()
+                self.filter.upd_filter_listbox()
+                self.add_graph_list_to_combobox()
 
         except Exception as e:
             show_alert(f"Error loading work: {e}")
@@ -1008,7 +998,8 @@ class MdiSubWindow(QMdiSubWindow):
     Custom class of QMdiSubWindow to get signal when closing subwindow.
 
     Attributes:
-    closed (Signal): Signal emitted when the subwindow is closing, carrying the graph ID.
+    closed (Signal): Signal emitted when the subwindow is closing, carrying
+    the graph ID.
     graph_id (int): ID associated with the graph in the subwindow.
     figsize_label (QLabel): QLabel used to display the size of the subwindow.
     """
@@ -1020,7 +1011,8 @@ class MdiSubWindow(QMdiSubWindow):
 
         Args:
         graph_id (int): ID associated with the graph in the subwindow.
-        figsize_label (QLabel): QLabel used to display the size of the subwindow.
+        figsize_label (QLabel): QLabel used to display the size of the
+        subwindow.
         *args: Variable length argument list.
         **kwargs: Arbitrary keyword arguments.
         """

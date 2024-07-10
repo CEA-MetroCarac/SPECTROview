@@ -187,7 +187,7 @@ class Maps(QObject):
                 file_paths, _ = QFileDialog.getOpenFileNames(
                     self.ui.tabWidget, "Open spectra file(s)", last_dir,
                     "SPECTROview formats (*.csv *.txt)", options=options)
-                
+
             # Load RAW spectra data from CSV files
             if file_paths:
                 last_dir = QFileInfo(file_paths[0]).absolutePath()
@@ -1570,6 +1570,7 @@ class Maps(QObject):
         """
         Select all spectra listed horizontally in the spectra listbox.
         """
+        self._select_spectra(lambda x, y: y == 0)
 
     def select_Q1(self):
         """

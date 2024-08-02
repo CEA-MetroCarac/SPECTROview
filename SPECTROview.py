@@ -249,7 +249,8 @@ class Main:
         different file formats.
 
         Opens a file dialog to select a saved file and loads its contents to
-        restore the application state. Supports SPECTROview Files with extensions
+        restore the application state. Supports SPECTROview Files with
+        extensions
         .svmap, .svspectra, and .svgraphs.
 
         Updates the GUI and application state based on the loaded data. Shows
@@ -296,7 +297,7 @@ class Main:
         self.common.view_markdown(self.ui, "About", ABOUT, 500, 300)
 
 
-expiration_date = datetime.datetime(2024, 12, 24)
+expiration_date = datetime.datetime(2024, 12, 31)
 
 
 def launcher():

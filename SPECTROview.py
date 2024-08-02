@@ -245,13 +245,12 @@ class Main:
 
     def reload(self):
         """
-        Unified method to load previously saved application states from
+        Load previously saved application states from
         different file formats.
 
         Opens a file dialog to select a saved file and loads its contents to
-        restore
-        the application state. Supports SPECTROview Files with extensions
-        .svmap, .svspectra, and .json.
+        restore the application state. Supports SPECTROview Files with extensions
+        .svmap, .svspectra, and .svgraphs.
 
         Updates the GUI and application state based on the loaded data. Shows
         an alert upon successful loading or displays an error message if loading
@@ -297,7 +296,7 @@ class Main:
         self.common.view_markdown(self.ui, "About", ABOUT, 500, 300)
 
 
-expiration_date = datetime.datetime(2024, 12, 31)
+expiration_date = datetime.datetime(2024, 12, 24)
 
 
 def launcher():

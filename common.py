@@ -105,15 +105,19 @@ def view_df(tabWidget, df):
 class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.
 
-    This class takes a pandas DataFrame and displays it within a QTableWidget, which
-    is added to a specified layout in your GUI. It provides functionality to copy
+    This class takes a pandas DataFrame and displays it within a
+    QTableWidget, which
+    is added to a specified layout in your GUI. It provides functionality to
+    copy
     selected data to the clipboard using a context menu or a keyboard shortcut.
 
     Attributes:
         df (pd.DataFrame): The DataFrame to be displayed in the QTableWidget.
-        layout (QVBoxLayout): The layout in your GUI where the QTableWidget will be placed.
+        layout (QVBoxLayout): The layout in your GUI where the QTableWidget
+        will be placed.
 
     """
+
     def __init__(self, df, layout):
         super().__init__()
         self.df = df
@@ -121,7 +125,8 @@ class DataframeTable(QWidget):
         self.initUI()
 
     def initUI(self):
-        """Initializes the user interface by creating and configuring the QTableWidget"""
+        """Initializes the user interface by creating and configuring the
+        QTableWidget"""
         # Clear existing widgets from external layout
         while self.external_layout.count():
             item = self.external_layout.takeAt(0)
@@ -184,7 +189,8 @@ class DataframeTable(QWidget):
         # Join all rows with newline character and copy to clipboard
         clipboard = QApplication.clipboard()
         clipboard.setText('\n'.join(data))
-        print(f"Copied data to clipboard:\n{clipboard.text()}")  # Debug statement
+        print(
+            f"Copied data to clipboard:\n{clipboard.text()}")  # Debug statement
 
     def keyPressEvent(self, event):
         """Handles key press events to enable copying with Ctrl+C"""
@@ -197,12 +203,17 @@ class DataframeTable(QWidget):
 class Graph(QWidget):
     """Class to create and handle plot objects.
 
-    This class provides functionality to create and customize plots using matplotlib
-    and seaborn libraries within a Pyside6-based GUI application. It supports plotting
-    various styles such as point plots, scatter plots, box plots, line plots, bar plots,
+    This class provides functionality to create and customize plots using
+    matplotlib
+    and seaborn libraries within a Pyside6-based GUI application. It supports
+    plotting
+    various styles such as point plots, scatter plots, box plots, line plots,
+    bar plots,
     trendline plots, and wafer plots.
-    The class allows customization of plot properties including titles, labels, axis limits, grid display, legend appearance, color
-    palettes, and more. It also supports multiple y-axis plotting and the option to show
+    The class allows customization of plot properties including titles,
+    labels, axis limits, grid display, legend appearance, color
+    palettes, and more. It also supports multiple y-axis plotting and the
+    option to show
     trendline equations.
 
     Attributes:
@@ -211,7 +222,8 @@ class Graph(QWidget):
         graph_id: Identifier for the graph instance.
         plot_width (int): Width of the plot in pixels.
         plot_height (int): Height of the plot in pixels.
-        plot_style (str): Style of the plot (e.g., 'point', 'scatter', 'line', etc.).
+        plot_style (str): Style of the plot (e.g., 'point', 'scatter',
+        'line', etc.).
         x (str or None): Column name for the x-axis data.
         y (list): List of column names for the primary y-axis data.
         z (str or None): Column name for grouping data (used in hue).
@@ -236,17 +248,24 @@ class Graph(QWidget):
         x_rot (int): Rotation angle for x-axis tick labels.
         grid (bool): Flag indicating whether to display grid lines.
         legend_visible (bool): Flag indicating whether the legend is visible.
-        legend_location (str): Location of the legend ('upper right', 'lower left', etc.).
-        legend_outside (bool): Flag indicating whether the legend should be outside the plot.
-        legend_properties (list): List of dictionaries containing properties of legend items.
+        legend_location (str): Location of the legend ('upper right', 'lower
+        left', etc.).
+        legend_outside (bool): Flag indicating whether the legend should be
+        outside the plot.
+        legend_properties (list): List of dictionaries containing properties
+        of legend items.
         color_palette (str): Name of the color palette to use.
         dpi (int): Dots per inch (resolution) of the plot.
         wafer_size (int): Size of the wafer plot.
-        wafer_stats (bool): Flag indicating whether to display statistics on the wafer plot.
+        wafer_stats (bool): Flag indicating whether to display statistics on
+        the wafer plot.
         trendline_order (int): Order of the polynomial for trendline fitting.
-        show_trendline_eq (bool): Flag indicating whether to show the trendline equation.
-        show_bar_plot_error_bar (bool): Flag indicating whether to show error bars on bar plots.
-        join_for_point_plot (bool): Flag indicating whether to join points in point plots.
+        show_trendline_eq (bool): Flag indicating whether to show the
+        trendline equation.
+        show_bar_plot_error_bar (bool): Flag indicating whether to show error
+        bars on bar plots.
+        join_for_point_plot (bool): Flag indicating whether to join points in
+        point plots.
 
         figure: Matplotlib figure object.
         ax: Matplotlib axis object for the primary plot.
@@ -325,7 +344,8 @@ class Graph(QWidget):
                     self.clear_layout(item.layout())
 
     def create_plot_widget(self, dpi, layout=None):
-        """Creates a new plot canvas with the specified DPI and adds it to the specified
+        """Creates a new plot canvas with the specified DPI and adds it to
+        the specified
             layout or the default graph_layout"""
         if dpi:
             self.dpi = dpi
@@ -344,7 +364,8 @@ class Graph(QWidget):
         self.canvas.draw()
 
     def plot(self, df):
-        """Updates the plot based on the provided DataFrame and plot settings."""
+        """Updates the plot based on the provided DataFrame and plot
+        settings."""
         self.ax.clear()
         if self.ax2:
             self.ax2.clear()
@@ -550,8 +571,9 @@ class Graph(QWidget):
 
     def _set_rotation(self):
         """Set rotation of the ticklabels of the x axis"""
-        plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
-                 rotation_mode="anchor")
+        if self.x_rot != 0:
+            plt.setp(self.ax.get_xticklabels(), rotation=self.x_rot, ha="right",
+                     rotation_mode="anchor")
 
     def _annotate_trendline_eq(self, df):
         """Add the trendline equation in the plot"""
@@ -915,7 +937,8 @@ class Filter:
 
     Attributes:
     line_edit (QLineEdit): Input field for filter expressions.
-    listbox (QListWidget): List widget to display filter expressions as checkboxes.
+    listbox (QListWidget): List widget to display filter expressions as
+    checkboxes.
     df (pandas.DataFrame): DataFrame to be filtered.
     filters (list): List to store filter expressions and their states.
     """
@@ -925,15 +948,18 @@ class Filter:
         self.listbox = listbox
         self.df = df
         self.filters = []
+
     def set_dataframe(self, df):
         """Set the dataframe to be filtered"""
         self.df = df
+
     def add_filter(self):
         """
         Add a filter expression to the filters list and update the UI.
 
         Retrieves the filter expression from line_edit and adds it to filters.
-        Updates the listbox to display the new filter expression as a checkbox item.
+        Updates the listbox to display the new filter expression as a
+        checkbox item.
         """
         filter_expression = self.line_edit.text().strip()
         if filter_expression:
@@ -968,7 +994,8 @@ class Filter:
         Retrieve the current state of filters as displayed in the UI.
 
         Returns:
-        list: List of dictionaries representing filter expressions and their states.
+        list: List of dictionaries representing filter expressions and their
+        states.
         Each dictionary has keys 'expression' and 'state'.
         """
         checked_filters = []
@@ -982,14 +1009,18 @@ class Filter:
 
     def apply_filters(self, filters=None):
         """
-        Apply filters to the DataFrame (self.df) based on the current or provided filters.
+        Apply filters to the DataFrame (self.df) based on the current or
+        provided filters.
 
         Args:
-        filters (list, optional): List of dictionaries representing filter expressions and their states.
-                                  Defaults to None, meaning current UI filters are used.
+        filters (list, optional): List of dictionaries representing filter
+        expressions and their states.
+                                  Defaults to None, meaning current UI
+                                  filters are used.
 
         Returns:
-        pandas.DataFrame or None: Filtered DataFrame based on applied filters or None if self.df is None.
+        pandas.DataFrame or None: Filtered DataFrame based on applied filters
+        or None if self.df is None.
         """
         if filters:
             self.filters = filters
@@ -1041,7 +1072,8 @@ class FitModelManager:
     Attributes:
     settings (QSettings): QSettings object to store and retrieve settings.
     default_model_folder (str): Default folder path where fit models are stored.
-    available_models (list): List of available fit model filenames in the default folder.
+    available_models (list): List of available fit model filenames in the
+    default folder.
     """
 
     def __init__(self, settings):
@@ -1067,7 +1099,8 @@ class FitModelManager:
         """
         Scan the default folder and populate the available_models list.
 
-        This method scans the default_model_folder for files with the '.json' extension
+        This method scans the default_model_folder for files with the '.json'
+        extension
         and updates the available_models list accordingly.
         """
         self.available_models = []
@@ -1143,8 +1176,9 @@ class CommonUtilities():
         if title:
             ax.set_title(title)
         ax.legend(loc='upper right')
-        plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
-                 rotation_mode="anchor")
+        if xlabel_rot != 0:
+            plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
+                     rotation_mode="anchor")
         return ax
 
     def reinit_spectrum(self, fnames, spectrums):
@@ -1363,7 +1397,8 @@ class WaferPlot:
         Initialize WaferPlot instance.
 
         Args:
-        inter_method (str, optional): Interpolation method for data interpolation. Defaults to 'linear'.
+        inter_method (str, optional): Interpolation method for data
+        interpolation. Defaults to 'linear'.
         """
         self.inter_method = inter_method  # Interpolation method
 
@@ -1376,12 +1411,17 @@ class WaferPlot:
         ax (matplotlib.axes.Axes): Axes object to plot the wafer map.
         x (array-like): X-coordinates of measurement points.
         y (array-like): Y-coordinates of measurement points.
-        z (array-like): Z-values (measurement data) corresponding to (x, y) points.
+        z (array-like): Z-values (measurement data) corresponding to (x,
+        y) points.
         cmap (str, optional): Colormap for the plot. Defaults to "jet".
-        r (float, optional): Radius of the wafer in millimeters. Defaults to 100.
-        vmax (float, optional): Maximum value for the color scale. Defaults to None.
-        vmin (float, optional): Minimum value for the color scale. Defaults to None.
-        stats (bool, optional): Whether to display statistical values on the plot. Defaults to True.
+        r (float, optional): Radius of the wafer in millimeters. Defaults to
+        100.
+        vmax (float, optional): Maximum value for the color scale. Defaults
+        to None.
+        vmin (float, optional): Minimum value for the color scale. Defaults
+        to None.
+        stats (bool, optional): Whether to display statistical values on the
+        plot. Defaults to True.
         """
         # Generate a meshgrid for the wafer and Interpolate z onto the meshgrid
         xi, yi = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
@@ -1421,7 +1461,8 @@ class WaferPlot:
         Calculate and display statistical values in the wafer plot.
 
         Args:
-        z (array-like): Z-values (measurement data) corresponding to (x, y) points.
+        z (array-like): Z-values (measurement data) corresponding to (x,
+        y) points.
         ax (matplotlib.axes.Axes): Axes object to plot the wafer map.
         """
         # Calculate statistical values
@@ -1448,12 +1489,14 @@ class WaferPlot:
 
     def interpolate_data(self, x, y, z, xi, yi):
         """
-        Interpolate data onto a regular grid using the specified interpolation method.
+        Interpolate data onto a regular grid using the specified
+        interpolation method.
 
         Args:
         x (array-like): X-coordinates of measurement points.
         y (array-like): Y-coordinates of measurement points.
-        z (array-like): Z-values (measurement data) corresponding to (x, y) points.
+        z (array-like): Z-values (measurement data) corresponding to (x,
+        y) points.
         xi (array-like): X-coordinates of the regular grid.
         yi (array-like): Y-coordinates of the regular grid.
 

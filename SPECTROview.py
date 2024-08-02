@@ -297,7 +297,7 @@ class Main:
         self.common.view_markdown(self.ui, "About", ABOUT, 500, 300)
 
 
-expiration_date = datetime.datetime(2024, 10, 1)
+expiration_date = datetime.datetime(2024, 12, 31)
 
 
 def launcher():

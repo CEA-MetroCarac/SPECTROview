@@ -1176,6 +1176,7 @@ class CommonUtilities():
         if title:
             ax.set_title(title)
         ax.legend(loc='upper right')
+
         if xlabel_rot != 0:
             plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
                      rotation_mode="anchor")

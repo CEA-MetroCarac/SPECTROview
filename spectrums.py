@@ -93,6 +93,9 @@ class Spectrums(QObject):
         # Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
             self.plot_delay)
+        # Connect the checkbox signal to the method
+        self.ui.checkBox.stateChanged.connect(self.check_uncheck_all)
+
         # Connect the stateChanged signal of the legend CHECKBOX
         self.ui.cb_legend_3.stateChanged.connect(self.plot_delay)
         self.ui.cb_raw_3.stateChanged.connect(self.plot_delay)
@@ -270,6 +273,16 @@ class Spectrums(QObject):
                 if spectrum:
                     checked_spectra.append(spectrum)
         return checked_spectra
+
+    def check_uncheck_all(self, state):
+        """
+        Check or uncheck all items in the listbox based on the state of the main checkbox.
+        """
+        check_state = Qt.Unchecked if state == 0 else Qt.Checked
+        for index in range(self.ui.spectrums_listbox.count()):
+            item = self.ui.spectrums_listbox.item(index)
+            item.setCheckState(check_state)
+
 
     def on_click(self, event):
         """
@@ -1028,8 +1041,8 @@ class Spectrums(QObject):
     def paste_fit_model_all(self):
         """Paste the copied fit model (in clipboard) and apply to selected
         spectrum(s)."""
-
-        fnames = self.spectrums.fnames
+        checked_spectra = self.get_checked_spectra()
+        fnames = checked_spectra.fnames
         self.paste_fit_model(fnames)
 
     def show_peak_table(self):
@@ -1306,7 +1319,8 @@ class Spectrums(QObject):
 
     def reinit_all(self):
         """Reinitialize all spectra"""
-        fnames = self.spectrums.fnames
+        checked_spectra = self.get_checked_spectra()
+        fnames = checked_spectra.fnames
         self.reinit(fnames)
 
     def view_fit_results_df(self):

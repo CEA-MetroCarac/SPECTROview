@@ -190,13 +190,11 @@ class Spectrums(QObject):
                     fname = file_path.stem
 
                     # Check if fname is already opened
-                    if any(spectrum.fname == fname for spectrum in
-                           self.spectrums):
+                    if any(spectrum.fname == fname for spectrum in self.spectrums):
                         print(f"Spectrum '{fname}' is already opened.")
                         continue
 
-                    dfr = pd.read_csv(file_path, header=None, skiprows=1,
-                                      delimiter="\t")
+                    dfr = pd.read_csv(file_path, header=None, skiprows=1, delimiter="\t")
                     dfr_sorted = dfr.sort_values(by=0)  # increasing order
                     # Convert values to float
                     dfr_sorted.iloc[:, 0] = dfr_sorted.iloc[:, 0].astype(float)
@@ -213,6 +211,7 @@ class Spectrums(QObject):
                     spectrum.y = np.asarray(y_values)
                     spectrum.y0 = np.asarray(y_values)
                     self.spectrums.append(spectrum)
+
         QTimer.singleShot(100, self.upd_spectra_list)
 
     def upd_spectra_list(self):
@@ -224,17 +223,23 @@ class Spectrums(QObject):
         and noise parameters based on user selections.
         """
 
+        # Store the checked state of each item
+        checked_states = {}
+        for index in range(self.ui.spectrums_listbox.count()):
+            item = self.ui.spectrums_listbox.item(index)
+            checked_states[item.text()] = item.checkState()
+
         current_row = self.ui.spectrums_listbox.currentRow()
         self.ui.spectrums_listbox.clear()
         for spectrum in self.spectrums:
             fname = spectrum.fname
             item = QListWidgetItem(fname)
-            if hasattr(spectrum.result_fit,
-                       'success') and spectrum.result_fit.success:
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            # Restore the checked state if it was stored, otherwise default to checked
+            item.setCheckState(checked_states.get(fname, Qt.Checked))
+            if hasattr(spectrum.result_fit, 'success') and spectrum.result_fit.success:
                 item.setBackground(QColor("green"))
-            elif hasattr(spectrum.result_fit,
-                         'success') and not \
-                    spectrum.result_fit.success:
+            elif hasattr(spectrum.result_fit, 'success') and not spectrum.result_fit.success:
                 item.setBackground(QColor("orange"))
             else:
                 item.setBackground(QColor(0, 0, 0, 0))
@@ -251,6 +256,20 @@ class Spectrums(QObject):
             if item_count > 0:
                 self.ui.spectrums_listbox.setCurrentRow(0)
         QTimer.singleShot(50, self.plot_delay)
+
+    def get_checked_spectra(self):
+        """
+        Get the list of selected spectra based on the checkbox states in the listbox.
+        """
+        checked_spectra = Spectra()
+        for index in range(self.ui.spectrums_listbox.count()):
+            item = self.ui.spectrums_listbox.item(index)
+            if item.checkState() == Qt.Checked:
+                fname = item.text()
+                spectrum = next((s for s in self.spectrums if s.fname == fname), None)
+                if spectrum:
+                    checked_spectra.append(spectrum)
+        return checked_spectra
 
     def on_click(self, event):
         """
@@ -509,7 +528,8 @@ class Spectrums(QObject):
         This method applies the loaded fit model to all spectra in the current
         Spectra object.
         """
-        fnames = self.spectrums.fnames
+        checked_spectra= self.get_checked_spectra()
+        fnames = checked_spectra.fnames
         self.apply_loaded_fit_model(fnames=fnames)
 
     def get_spectrum_fnames(self):
@@ -775,7 +795,9 @@ class Spectrums(QObject):
         provided in the GUI and recalculates the spectrum data within the
         specified range.
         """
-        fnames = self.spectrums.fnames
+
+        checked_spectra = self.get_checked_spectra()
+        fnames = checked_spectra.fnames
         self.set_x_range(fnames=fnames)
 
     def get_baseline_settings(self):
@@ -863,7 +885,9 @@ class Spectrums(QObject):
         points
         defined in the baseline settings.
         """
-        self.subtract_baseline(self.spectrums)
+        checked_spectra = self.get_checked_spectra()
+        fnames = checked_spectra.fnames
+        self.subtract_baseline(checked_spectra)
 
     def clear_peaks(self, fnames=None):
         """Clear all existing peak models of the selected spectrum(s).
@@ -891,7 +915,8 @@ class Spectrums(QObject):
 
         This method removes all peak models from all spectra.
         """
-        fnames = self.spectrums.fnames
+        checked_spectra = self.get_checked_spectra()
+        fnames = checked_spectra.fnames
         self.clear_peaks(fnames)
 
     def get_fit_settings(self):
@@ -938,7 +963,8 @@ class Spectrums(QObject):
 
     def fit_all(self):
         """Apply all fit parameters to all spectrum(s)"""
-        fnames = self.spectrums.fnames
+        checked_spectra = self.get_checked_spectra()
+        fnames = checked_spectra.fnames
         self.fit(fnames)
 
     def copy_fit_model(self):

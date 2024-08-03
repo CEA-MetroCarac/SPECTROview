@@ -1053,7 +1053,9 @@ class Spectrums(QObject):
         fit_results_list = []
         self.df_fit_results = None
 
-        for spectrum in self.spectrums:
+        checked_spectra = self.get_checked_spectra()
+
+        for spectrum in checked_spectra:
             if hasattr(spectrum.result_fit, 'best_values'):
                 success = spectrum.result_fit.success
                 rsquared = spectrum.result_fit.rsquared

@@ -168,6 +168,8 @@ class Maps(QObject):
             self.fit_model_manager.default_model_folder)
         # Show available fit models
         QTimer.singleShot(0, self.populate_available_models)
+        self.ui.btn_refresh_model_folder.clicked.connect(
+            self.populate_available_models)
 
     def open_data(self, wafers=None, file_paths=None):
         """
@@ -380,9 +382,6 @@ class Maps(QObject):
 
             self.display_df_in_GUI(self.df_fit_results)
 
-        else:
-            self.ui.fit_results_table.clear()
-
         self.filtered_df = self.df_fit_results
         self.upd_cbb_param()
         self.upd_cbb_wafer()
@@ -434,6 +433,7 @@ class Maps(QObject):
         the combobox in the UI.
         """
         # Scan default folder and populate available models in the combobox
+        self.fit_model_manager.scan_models()
         self.available_models = self.fit_model_manager.get_available_models()
         self.ui.cbb_fit_model_list.clear()
         self.ui.cbb_fit_model_list.addItems(self.available_models)
@@ -794,16 +794,13 @@ class Maps(QObject):
         sel_spectrum, _ = self.get_spectrum_object()
         if len(sel_spectrum.peak_models) == 0:
             self.ui.lbl_copied_fit_model.setText("")
-            show_alert(
-                "The selected spectrum does not have fit model to be copied!")
+            show_alert("Select a fitted spectrum to copied or collect data")
             self.current_fit_model = None
             return
         else:
             self.current_fit_model = None
             self.current_fit_model = deepcopy(sel_spectrum.save())
-        # fname = sel_spectrum.fname
         self.ui.lbl_copied_fit_model.setText("copied")
-        # (f"The fit model of '{fname}' spectrum is copied to the clipboard.")
 
     def paste_fit_model(self, fnames=None):
         """

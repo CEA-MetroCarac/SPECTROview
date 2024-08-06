@@ -2793,6 +2793,19 @@
                  <string>Model Folder:</string>
                 </property>
                </widget>
+               <widget class="QPushButton" name="btn_refresh_model_folder_3">
+                <property name="geometry">
+                 <rect>
+                  <x>650</x>
+                  <y>320</y>
+                  <width>75</width>
+                  <height>23</height>
+                 </rect>
+                </property>
+                <property name="text">
+                 <string>refresh</string>
+                </property>
+               </widget>
               </widget>
              </widget>
             </item>
@@ -4643,7 +4656,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
+                       <width>411</width>
                        <height>350</height>
                       </rect>
                      </property>
@@ -5632,7 +5645,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>201</width>
+                     <width>231</width>
                      <height>375</height>
                     </rect>
                    </property>
@@ -6336,6 +6349,13 @@
                      <width>500</width>
                      <height>16777215</height>
                     </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_refresh_model_folder">
+                   <property name="text">
+                    <string>refresh</string>
                    </property>
                   </widget>
                  </item>

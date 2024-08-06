@@ -153,6 +153,8 @@ class Spectrums(QObject):
         self.ui.l_defaut_folder_model_3.setText(
             self.fit_model_manager.default_model_folder)
         QTimer.singleShot(0, self.populate_available_models)
+        self.ui.btn_refresh_model_folder_3.clicked.connect(
+            self.populate_available_models)
 
     def open_data(self, spectra=None, file_paths=None):
         """
@@ -193,11 +195,13 @@ class Spectrums(QObject):
                     fname = file_path.stem
 
                     # Check if fname is already opened
-                    if any(spectrum.fname == fname for spectrum in self.spectrums):
+                    if any(spectrum.fname == fname for spectrum in
+                           self.spectrums):
                         print(f"Spectrum '{fname}' is already opened.")
                         continue
 
-                    dfr = pd.read_csv(file_path, header=None, skiprows=1, delimiter="\t")
+                    dfr = pd.read_csv(file_path, header=None, skiprows=1,
+                                      delimiter="\t")
                     dfr_sorted = dfr.sort_values(by=0)  # increasing order
                     # Convert values to float
                     dfr_sorted.iloc[:, 0] = dfr_sorted.iloc[:, 0].astype(float)
@@ -238,11 +242,13 @@ class Spectrums(QObject):
             fname = spectrum.fname
             item = QListWidgetItem(fname)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            # Restore the checked state if it was stored, otherwise default to checked
+            # Restore the checked state if it was stored,
             item.setCheckState(checked_states.get(fname, Qt.Checked))
-            if hasattr(spectrum.result_fit, 'success') and spectrum.result_fit.success:
+            if hasattr(spectrum.result_fit,
+                       'success') and spectrum.result_fit.success:
                 item.setBackground(QColor("green"))
-            elif hasattr(spectrum.result_fit, 'success') and not spectrum.result_fit.success:
+            elif hasattr(spectrum.result_fit,
+                         'success') and not spectrum.result_fit.success:
                 item.setBackground(QColor("orange"))
             else:
                 item.setBackground(QColor(0, 0, 0, 0))
@@ -262,27 +268,29 @@ class Spectrums(QObject):
 
     def get_checked_spectra(self):
         """
-        Get the list of selected spectra based on the checkbox states in the listbox.
+        Get the list of selected spectra based on the checkbox states in the
+        listbox.
         """
         checked_spectra = Spectra()
         for index in range(self.ui.spectrums_listbox.count()):
             item = self.ui.spectrums_listbox.item(index)
             if item.checkState() == Qt.Checked:
                 fname = item.text()
-                spectrum = next((s for s in self.spectrums if s.fname == fname), None)
+                spectrum = next((s for s in self.spectrums if s.fname == fname),
+                                None)
                 if spectrum:
                     checked_spectra.append(spectrum)
         return checked_spectra
 
     def check_uncheck_all(self, state):
         """
-        Check or uncheck all items in the listbox based on the state of the main checkbox.
+        Check or uncheck all items in the listbox based on the state of the
+        main checkbox.
         """
         check_state = Qt.Unchecked if state == 0 else Qt.Checked
         for index in range(self.ui.spectrums_listbox.count()):
             item = self.ui.spectrums_listbox.item(index)
             item.setCheckState(check_state)
-
 
     def on_click(self, event):
         """
@@ -391,12 +399,12 @@ class Spectrums(QObject):
     def populate_available_models(self):
         """
         Populate the available fit models in the UI combobox.
-
         This method populates the available fit models from the default model
         folder
         into the UI combobox for model selection.
         """
         # Scan default folder and populate available models in the combobox
+        self.fit_model_manager.scan_models()
         self.available_models = self.fit_model_manager.get_available_models()
         self.ui.cbb_fit_model_list_3.clear()
         self.ui.cbb_fit_model_list_3.addItems(self.available_models)
@@ -541,7 +549,7 @@ class Spectrums(QObject):
         This method applies the loaded fit model to all spectra in the current
         Spectra object.
         """
-        checked_spectra= self.get_checked_spectra()
+        checked_spectra = self.get_checked_spectra()
         fnames = checked_spectra.fnames
         self.apply_loaded_fit_model(fnames=fnames)
 
@@ -992,8 +1000,7 @@ class Spectrums(QObject):
         sel_spectrum, _ = self.get_spectrum_object()
         if len(sel_spectrum.peak_models) == 0:
             self.ui.lbl_copied_fit_model_2.setText("")
-            show_alert(
-                "The selected spectrum does not have fit model to be copied!")
+            show_alert("Select a fitted spectrum to copied or collect data")
             self.current_fit_model = None
             return
         else:
@@ -1098,10 +1105,7 @@ class Spectrums(QObject):
                 column
                 in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
-
             self.display_df_in_GUI(self.df_fit_results)
-        else:
-            self.ui.fit_results_table_2.clear()
 
         self.filtered_df = self.df_fit_results
         self.upd_cbb_param()

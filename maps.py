@@ -199,8 +199,19 @@ class Maps(QObject):
                     extension = file_path.suffix.lower()  # get file extension
 
                     if extension == '.csv':
-                        wafer_df = pd.read_csv(file_path, skiprows=1,
-                                               delimiter=";")
+                        # Read 3 first line of CSV files
+                        with open(file_path, 'r') as file:
+                            lines = [next(file) for _ in range(3)]
+
+                        # Check 2nd line to determine old and new format
+                        if len(lines[1].split(';')) > 3:
+                            # If contains more than 3 columns
+                            wafer_df = pd.read_csv(file_path, skiprows=1,
+                                                   delimiter=";")
+                        else:
+                            wafer_df = pd.read_csv(file_path, header=None,
+                                                   skiprows=2,
+                                                   delimiter=";")
                     elif extension == '.txt':
                         wafer_df = pd.read_csv(file_path, delimiter="\t")
                         wafer_df.columns = ['Y', 'X'] + list(
@@ -208,9 +219,11 @@ class Maps(QObject):
                         # Reorder df as increasing wavenumber
                         sorted_columns = sorted(wafer_df.columns[2:], key=float)
                         wafer_df = wafer_df[['X', 'Y'] + sorted_columns]
+                        print("Detect labspec6  2D map format")
                     else:
                         show_alert(f"Unsupported file format: {extension}")
                         continue
+
                     wafer_name = fname
                     if wafer_name in self.wafers:
                         msg = f"Wafer '{wafer_name}' is already opened"
@@ -222,34 +235,54 @@ class Maps(QObject):
     def extract_spectra(self):
         """
         Extract all spectra from each wafer dataframe.
-
-        Iterates through `wafers` dictionary, extracts spectra,
-        and updates `spectrums` list with Spectrum objects.
         """
-
         for wafer_name, wafer_df in self.wafers.items():
-            coord_columns = wafer_df.columns[:2]
-            for _, row in wafer_df.iterrows():
-
-                # Extract XY coords, wavenumber, and intensity values
-                coord = tuple(row[coord_columns])
-                x_values = wafer_df.columns[2:].tolist()
-                x_values = pd.to_numeric(x_values, errors='coerce').tolist()
-
-                y_values = row[2:].tolist()
-                fname = f"{wafer_name}_{coord}"
-
-                if not any(spectrum.fname == fname for spectrum in
-                           self.spectrums):
-                    # create FITSPY object
-                    spectrum = Spectrum()
-                    spectrum.fname = fname
-                    spectrum.x = np.asarray(x_values)[:-1]
-                    spectrum.x0 = np.asarray(x_values)[:-1]
-                    spectrum.y = np.asarray(y_values)[:-1]
-                    spectrum.y0 = np.asarray(y_values)[:-1]
-                    self.spectrums.append(spectrum)
+            if len(wafer_df.columns) > 2 and 'X' in wafer_df.columns and 'Y' \
+                    in wafer_df.columns:
+                self.process_old_format(wafer_df, wafer_name)
+            else:
+                self.process_new_format(wafer_df, wafer_name)
         self.upd_wafers_list()
+
+    def process_old_format(self, wafer_df, wafer_name):
+        """
+        Process old format wafer dataframe.
+        """
+        for _, row in wafer_df.iterrows():
+            coord = tuple(row[['X', 'Y']])
+            x_values = wafer_df.columns[2:].tolist()
+            x_values = pd.to_numeric(x_values, errors='coerce').tolist()
+            y_values = row[2:].tolist()
+            fname = f"{wafer_name}_{coord}"
+            if not any(spectrum.fname == fname for spectrum in self.spectrums):
+                spectrum = Spectrum()
+                spectrum.fname = fname
+                spectrum.x = np.asarray(x_values)
+                spectrum.x0 = np.asarray(x_values)
+                spectrum.y = np.asarray(y_values)
+                spectrum.y0 = np.asarray(y_values)
+                self.spectrums.append(spectrum)
+
+    def process_new_format(self, wafer_df, wafer_name):
+        """
+        Process new format wafer dataframe.
+        """
+        for i in range(0, len(wafer_df), 2):
+            coord_row = wafer_df.iloc[i]
+            intensity_row = wafer_df.iloc[i + 1]
+            coord = (coord_row.iloc[0], coord_row.iloc[1])
+            x_values = coord_row.iloc[2:].tolist()
+            x_values = pd.to_numeric(x_values, errors='coerce').tolist()
+            y_values = intensity_row.iloc[2:].tolist()
+            fname = f"{wafer_name}_{coord}"
+            if not any(spectrum.fname == fname for spectrum in self.spectrums):
+                spectrum = Spectrum()
+                spectrum.fname = fname
+                spectrum.x = np.asarray(x_values)
+                spectrum.x0 = np.asarray(x_values)
+                spectrum.y = np.asarray(y_values)
+                spectrum.y0 = np.asarray(y_values)
+                self.spectrums.append(spectrum)
 
     def apply_filters(self):
         """

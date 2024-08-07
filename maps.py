@@ -1110,6 +1110,8 @@ class Maps(QObject):
             if wafer_name_fs == wafer_name and coord_fs in coords:
                 selected_spectrums.append(spectrum)
 
+        # Only plot 10 first spectra to advoid crash
+        selected_spectrums = selected_spectrums[:50]
         if len(selected_spectrums) == 0:
             return
 

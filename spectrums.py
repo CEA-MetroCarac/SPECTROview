@@ -674,6 +674,8 @@ class Spectrums(QObject):
             fname = spectrum.fname
             if fname in fnames:
                 selected_spectrums.append(spectrum)
+        # Only plot 100 first spectra to advoid crash
+        selected_spectrums = selected_spectrums[:50]
         if len(selected_spectrums) == 0:
             return
 

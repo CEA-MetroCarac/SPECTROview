@@ -1499,6 +1499,11 @@ class Spectrums(QObject):
                 load = dill.load(f)
                 try:
                     self.spectrums = load.get('spectrums')
+                    # BUGFIX for new fitspy version
+                    for spectrum in self.spectrums:
+                        spectrum.baseline.coef = 5
+                        spectrum.baseline.y_eval = None
+
                     self.current_fit_model = load.get('current_fit_model')
                     self.loaded_fit_model = load.get('loaded_fit_model')
 

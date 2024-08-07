@@ -1900,6 +1900,12 @@ class Maps(QObject):
             with open(file_path, 'rb') as f:
                 load = dill.load(f)
                 self.spectrums = load.get('spectrums')
+
+                # BUGFIX for new fitspy version
+                for spectrum in self.spectrums:
+                    spectrum.baseline.coef = 5
+                    spectrum.baseline.y_eval = None
+
                 self.wafers = load.get('wafers')
                 self.current_fit_model = load.get('current_fit_model')
                 self.loaded_fit_model = load.get('loaded_fit_model')

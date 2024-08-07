@@ -46,12 +46,15 @@ Usage:
 
 import sys
 import os
+import numpy as np
+import pandas as pd
 import datetime
+from pathlib import Path
 
 from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
     QMessageBox, QFileDialog
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile, QSettings
+from PySide6.QtCore import QFile, QSettings, QFileInfo
 from PySide6.QtGui import QDoubleValidator, QIcon
 
 from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
@@ -98,8 +101,9 @@ class Main:
         self.fitmodel_manager = FitModelManager(self.settings)
 
         # MENU ACTIONS:
-        self.ui.actionOpen_wafer.triggered.connect(self.open_wafers)
-        self.ui.actionOpen_spectra.triggered.connect(self.open_spectra)
+        self.ui.actionOpen.triggered.connect(lambda: self.open_data())
+        # self.ui.actionOpen_wafer.triggered.connect(self.open_wafers)
+        # self.ui.actionOpen_spectra.triggered.connect(self.open_spectra)
         self.ui.actionOpen_dfs.triggered.connect(self.open_dfs)
         self.ui.action_reload.triggered.connect(self.reload)
 
@@ -228,15 +232,64 @@ class Main:
         self.ui.btn_default_folder_model_3.clicked.connect(
             self.spectrums.set_default_model_folder)
 
-    def open_wafers(self):
-        """Open wafer spectroscopic data"""
-        self.ui.tabWidget.setCurrentWidget(self.ui.tab_wafer)
-        self.maps.open_data()
+    def open_data(self, file_paths=None):
+        """
+        Universal actionmenu to open all kind of spectroscopic data which can be either hyperspectral or spectra.
+        """
+        if file_paths is None:
+            # Initialize the last used directory from QSettings
+            last_dir = self.settings.value("last_directory", "/")
+            options = QFileDialog.Options()
+            options |= QFileDialog.ReadOnly
+            file_paths, _ = QFileDialog.getOpenFileNames(
+                self.ui.tabWidget, "Open spectra file(s)", last_dir,
+                "SPECTROview formats (*.csv *.txt)", options=options)
 
-    def open_spectra(self):
-        """Open spectra data"""
-        self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
-        self.spectrums.open_data()
+        if file_paths:
+            last_dir = QFileInfo(file_paths[0]).absolutePath()
+            self.settings.setValue("last_directory", last_dir)
+
+            spectra_files = []
+            hyperspectral_files = []
+
+            for file_path in file_paths:
+                file_path = Path(file_path)
+                extension = file_path.suffix.lower()  # get file extension
+
+                if extension == '.csv':
+                    df = pd.read_csv(file_path, delimiter=";", header=None, skiprows=3)
+                elif extension == '.txt':
+                    df = pd.read_csv(file_path, delimiter="\t", header=None, skiprows=3)
+                else:
+                    self.show_alert(f"Unsupported file format: {extension}")
+                    continue
+
+                if df.shape[1] == 2:
+                    spectra_files.append(str(file_path))
+                elif df.shape[1] > 3:
+                    hyperspectral_files.append(str(file_path))
+                else:
+                    self.show_alert(f"Invalid number of columns in file: {file_path}")
+
+            # Open all spectra files at once
+            if spectra_files:
+                self.spectrums.open_spectra(file_paths=spectra_files)
+
+            # Open all hyperspectral files at once
+            if hyperspectral_files:
+                self.maps.open_hyperspectra(file_paths=hyperspectral_files)
+
+        self.update_ui()
+
+    # def open_wafers(self):
+    #     """Open wafer spectroscopic data"""
+    #     self.ui.tabWidget.setCurrentWidget(self.ui.tab_wafer)
+    #     self.maps.open_hyperspectra()
+    #
+    # def open_spectra(self):
+    #     """Open spectra data"""
+    #     self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
+    #     self.spectrums.open_spectra()
 
     def open_dfs(self):
         """Open dataframes"""

@@ -171,7 +171,7 @@ class Maps(QObject):
         self.ui.btn_refresh_model_folder.clicked.connect(
             self.populate_available_models)
 
-    def open_data(self, wafers=None, file_paths=None):
+    def open_hyperspectra(self, wafers=None, file_paths=None):
         """
         Open hyperspactral data which is wafer dataframe .
         """
@@ -233,7 +233,7 @@ class Maps(QObject):
                     else:
                         self.wafers[wafer_name] = wafer_df
         self.extract_spectra()
-
+        self.ui.tabWidget.setCurrentWidget(self.ui.tab_wafer)
     def extract_spectra(self):
         """
         Extract all spectra from each wafer dataframe.

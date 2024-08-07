@@ -156,7 +156,7 @@ class Spectrums(QObject):
         self.ui.btn_refresh_model_folder_3.clicked.connect(
             self.populate_available_models)
 
-    def open_data(self, spectra=None, file_paths=None):
+    def open_spectra(self, spectra=None, file_paths=None):
         """
         Open and load raw spectral data from file paths or provided Spectra
         object.
@@ -220,7 +220,7 @@ class Spectrums(QObject):
                     self.spectrums.append(spectrum)
 
         QTimer.singleShot(100, self.upd_spectra_list)
-
+        self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
     def upd_spectra_list(self):
         """
         Update the spectrums list in the UI based on the current data.

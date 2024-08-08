@@ -234,6 +234,7 @@ class Maps(QObject):
                         self.wafers[wafer_name] = wafer_df
         self.extract_spectra()
         self.ui.tabWidget.setCurrentWidget(self.ui.tab_wafer)
+
     def extract_spectra(self):
         """
         Extract all spectra from each wafer dataframe.
@@ -545,10 +546,11 @@ class Maps(QObject):
             wafer_name, coords = self.spectra_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
 
+        ncpus = int(self.ui.ncpus.text())
         # Start fitting process in a separate thread
         self.apply_model_thread = FitThread(self.spectrums,
-                                            self.loaded_fit_model,
-                                            fnames)
+                                            self.loaded_fit_model, fnames,
+                                            ncpus)
         # To update progress bar
         self.apply_model_thread.fit_progress_changed.connect(self.update_pbar)
         # To display progress in GUI

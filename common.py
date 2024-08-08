@@ -8,6 +8,11 @@ import sys
 from copy import deepcopy
 import pandas as pd
 import multiprocessing as mp
+import dill
+from multiprocessing import Queue
+from threading import Thread
+from fitspy.spectra import Spectra
+from concurrent.futures import ProcessPoolExecutor
 
 try:
     import win32clipboard
@@ -1361,74 +1366,37 @@ class CommonUtilities():
         return light_palette
 
 
-class FitModelThread(QThread):
-    progressChanged = Signal(int)
-    progressTextChanged = Signal(str)
-    finished = Signal()
-
-    def __init__(self, spectrums, model, fnames):
-        super().__init__()
-        self.spectrums = spectrums
-        self.model = model
-        self.fnames = fnames
-
-    def run(self):
-        print("FitModelThread started")  # Initial debug print
-        ntot = len(self.fnames)
-        self.spectrums.pbar_index = 0
-        ncpus = 1
-        fit_only = False
-        show_progressbar = True
-
-        args = (self.model, self.fnames, ncpus, fit_only, show_progressbar)
-        print(f"Calling apply_model with args: {args}")  # Debug print
-
-        self.spectrums.apply_model(*args)
-        print("apply_model finished")  # Debug print
-
-        while self.spectrums.pbar_index < ntot:
-            num = self.spectrums.pbar_index + 1
-            percent = 100 * num / ntot
-            msg = f"{num}/{ntot} fitted ({self.spectrums.exec_time:.2f}s)"
-
-            print(
-                f"Inside while loop: pbar_index={self.spectrums.pbar_index}, "
-                f"percent={percent}")  # Debug print
-
-            self.progressChanged.emit(percent)
-            self.progressTextChanged.emit(msg)
-
-        self.finished.emit()
-        print("FitModelThread finished")  # Debug print
-
-
 class FitThread(QThread):
     """ Class to perform fitting in a separate Thread to avoid GUI
     freezing/lagging"""
     fit_progress_changed = Signal(int)  # To update progress bar
-    fit_progress = Signal(int, float)  # TO display number and elapsed time
+    fit_progress = Signal(int, float)  # To display number and elapsed time
     fit_completed = Signal()
 
-    def __init__(self, spectrums, fit_model, fnames):
+    def __init__(self, spectrums, fit_model, fnames, ncpus=1):
         super().__init__()
         self.spectrums = spectrums
         self.fit_model = fit_model
         self.fnames = fnames
+        self.ncpus = ncpus
 
     def run(self):
         start_time = time.time()  # Record start time
-        num = 0
-        for index, fname in enumerate(self.fnames):
-            progress = int((index + 1) / len(self.fnames) * 100)
-            self.fit_progress_changed.emit(progress)
-            fit_model = deepcopy(self.fit_model)
-
-            self.spectrums.apply_model(fit_model, fnames=[fname],
-                                       show_progressbar=None)
-            num += 1
-            elapsed_time = time.time() - start_time
-            self.fit_progress.emit(num, elapsed_time)
-        self.fit_progress_changed.emit(100)
+        if self.ncpus > 1:
+            self.spectrums.apply_model(self.fit_model, fnames=self.fnames,
+                                       ncpus=self.ncpus, show_progressbar=True)
+        else:
+            num = 0
+            for index, fname in enumerate(self.fnames):
+                progress = int((index + 1) / len(self.fnames) * 100)
+                self.fit_progress_changed.emit(progress)
+                fit_model = deepcopy(self.fit_model)
+                self.spectrums.apply_model(fit_model, fnames=[fname],
+                                           show_progressbar=None)
+                num += 1
+                elapsed_time = time.time() - start_time
+                self.fit_progress.emit(num, elapsed_time)
+            self.fit_progress_changed.emit(100)
         self.fit_completed.emit()
 
 

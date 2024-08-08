@@ -1367,10 +1367,8 @@ class CommonUtilities():
 
 
 class FitThread(QThread):
-    """ Class to perform fitting in a separate Thread to avoid GUI
-    freezing/lagging"""
-    fit_progress_changed = Signal(int)
-    fit_completed = Signal()
+    """ Class to perform fitting in a separate Thread """
+    progress_changed = Signal(int)
 
     def __init__(self, spectrums, fit_model, fnames, ncpus=1):
         super().__init__()
@@ -1383,21 +1381,12 @@ class FitThread(QThread):
         fit_model = deepcopy(self.fit_model)
         self.spectrums.apply_model(fit_model, fnames=self.fnames,
                                    ncpus=self.ncpus, show_progressbar=True)
-        self.fit_completed.emit()
-        self.fit_progress_changed.emit(100)
+        self.progress_changed.emit(100)
 
 
 class WaferPlot:
     """Class to plot wafer map"""
-
     def __init__(self, inter_method='linear'):
-        """
-        Initialize WaferPlot instance.
-
-        Args:
-        inter_method (str, optional): Interpolation method for data
-        interpolation. Defaults to 'linear'.
-        """
         self.inter_method = inter_method  # Interpolation method
 
     def plot(self, ax, x, y, z, cmap="jet", r=100, vmax=None, vmin=None,

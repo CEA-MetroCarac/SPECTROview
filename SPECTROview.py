@@ -234,7 +234,8 @@ class Main:
 
     def open_data(self, file_paths=None):
         """
-        Universal actionmenu to open all kind of spectroscopic data which can be either hyperspectral or spectra.
+        Universal actionmenu to open all kind of spectroscopic data which can
+        be either hyperspectral or spectra.
         """
         if file_paths is None:
             # Initialize the last used directory from QSettings
@@ -257,9 +258,11 @@ class Main:
                 extension = file_path.suffix.lower()  # get file extension
 
                 if extension == '.csv':
-                    df = pd.read_csv(file_path, delimiter=";", header=None, skiprows=3)
+                    df = pd.read_csv(file_path, delimiter=";", header=None,
+                                     skiprows=3)
                 elif extension == '.txt':
-                    df = pd.read_csv(file_path, delimiter="\t", header=None, skiprows=3)
+                    df = pd.read_csv(file_path, delimiter="\t", header=None,
+                                     skiprows=3)
                 else:
                     self.show_alert(f"Unsupported file format: {extension}")
                     continue
@@ -269,7 +272,8 @@ class Main:
                 elif df.shape[1] > 3:
                     hyperspectral_files.append(str(file_path))
                 else:
-                    self.show_alert(f"Invalid number of columns in file: {file_path}")
+                    self.show_alert(
+                        f"Invalid number of columns in file: {file_path}")
 
             # Open all spectra files at once
             if spectra_files:
@@ -278,8 +282,6 @@ class Main:
             # Open all hyperspectral files at once
             if hyperspectral_files:
                 self.maps.open_hyperspectra(file_paths=hyperspectral_files)
-
-        self.update_ui()
 
     # def open_wafers(self):
     #     """Open wafer spectroscopic data"""

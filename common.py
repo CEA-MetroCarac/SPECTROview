@@ -1369,8 +1369,7 @@ class CommonUtilities():
 class FitThread(QThread):
     """ Class to perform fitting in a separate Thread to avoid GUI
     freezing/lagging"""
-    fit_progress_changed = Signal(int)  # To update progress bar
-    fit_progress = Signal(int, float)  # To display number and elapsed time
+    fit_progress_changed = Signal(int)
     fit_completed = Signal()
 
     def __init__(self, spectrums, fit_model, fnames, ncpus=1):
@@ -1381,23 +1380,11 @@ class FitThread(QThread):
         self.ncpus = ncpus
 
     def run(self):
-        start_time = time.time()  # Record start time
-        if self.ncpus > 1:
-            self.spectrums.apply_model(self.fit_model, fnames=self.fnames,
-                                       ncpus=self.ncpus, show_progressbar=True)
-        else:
-            num = 0
-            for index, fname in enumerate(self.fnames):
-                progress = int((index + 1) / len(self.fnames) * 100)
-                self.fit_progress_changed.emit(progress)
-                fit_model = deepcopy(self.fit_model)
-                self.spectrums.apply_model(fit_model, fnames=[fname],
-                                           show_progressbar=None)
-                num += 1
-                elapsed_time = time.time() - start_time
-                self.fit_progress.emit(num, elapsed_time)
-            self.fit_progress_changed.emit(100)
+        fit_model = deepcopy(self.fit_model)
+        self.spectrums.apply_model(fit_model, fnames=self.fnames,
+                                   ncpus=self.ncpus, show_progressbar=True)
         self.fit_completed.emit()
+        self.fit_progress_changed.emit(100)
 
 
 class WaferPlot:

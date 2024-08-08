@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 import pandas as pd
 import json
@@ -547,21 +548,38 @@ class Maps(QObject):
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
 
         ncpus = int(self.ui.ncpus.text())
+        self.ntot = len(fnames)
+
         # Start fitting process in a separate thread
         self.apply_model_thread = FitThread(self.spectrums,
                                             self.loaded_fit_model, fnames,
                                             ncpus)
         # To update progress bar
         self.apply_model_thread.fit_progress_changed.connect(self.update_pbar)
-        # To display progress in GUI
-        self.apply_model_thread.fit_progress.connect(
-            lambda num, elapsed_time: self.fit_progress(num, elapsed_time,
-                                                        fnames))
-        # To update spectra list + plot fitted spectrum once fitting finished
         self.apply_model_thread.fit_completed.connect(self.fit_completed)
         self.apply_model_thread.finished.connect(
             lambda: self.ui.btn_apply_model.setEnabled(True))
         self.apply_model_thread.start()
+
+        # Store the start time
+        self.start_time = time.time()
+
+        # Create a QTimer to update the progress bar
+        self.progress_timer = QTimer(self)
+        self.progress_timer.timeout.connect(self.update_progress_bar)
+        self.progress_timer.start(400)
+
+    def update_progress_bar(self):
+        """Update fitting progress"""
+        index = self.spectrums.pbar_index
+        percent = 100 * ( index+ 1) / self.ntot
+        elapsed_time = time.time() - self.start_time
+        text = f"{index}/{self.ntot} ({elapsed_time:.2f}s)"
+        self.ui.progressBar.setValue(percent)
+        self.ui.progress.setText(text)
+        if self.spectrums.pbar_index >= self.ntot - 1:
+            self.progress_timer.stop()
+
 
     def apply_loaded_fit_model_all(self):
         """

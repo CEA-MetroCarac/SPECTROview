@@ -1,10 +1,10 @@
 <RCC>
   <qresource prefix="icon">
+    <file>iconpack/light-mode-svgrepo-com.png</file>
     <file>iconpack/icons8-documents-folder-80.png</file>
-    <file>iconpack/baseline.png</file>
+    <file>iconpack/icons8-light-mode-78.png</file>
     <file>iconpack/dark.png</file>
     <file>iconpack/dark-light.png</file>
-    <file>iconpack/light.png</file>
     <file>iconpack/paste10.png</file>
     <file>iconpack/about.png</file>
     <file>iconpack/copy10.png</file>

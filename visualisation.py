@@ -97,48 +97,30 @@ class Visualization(QDialog):
         self.ui.btn_save_work.clicked.connect(self.save)
         self.ui.btn_minimize_all.clicked.connect(self.minimize_all_graph)
 
-    def open_dfs(self, dfs=None, fnames=None):
-        """
-        Open and load dataframes from Excel files.
-
-        Args:
-            dfs (dict, optional): Dictionary of dataframes to load.
-            fnames (list, optional): List of filenames to open.
-
-        """
+    def open_dfs(self, dfs=None, file_paths=None):
+        """Open and load dataframes from Excel files."""
 
         if self.original_dfs is None:
             self.original_dfs = {}
         if dfs:
-            self.original_dfs = dfs
+            self.original_dfs = dfs  # If dataframes are passed directly
         else:
-            if fnames is None:
-                # Initialize the last used directory from QSettings
-                last_dir = self.settings.value("last_directory", "/")
-                options = QFileDialog.Options()
-                options |= QFileDialog.ReadOnly
-                fnames, _ = QFileDialog.getOpenFileNames(
-                    self.ui.tabWidget, "Open dataframe(s)", last_dir,
-                    "Excel Files (*.xlsx)", options=options)
-                # Load RAW spectra data from CSV files
-            if fnames:
-                last_dir = QFileInfo(fnames[0]).absolutePath()
-                self.settings.setValue("last_directory", last_dir)
-                for fnames in fnames:
-                    fnames = Path(fnames)
-                    fname = fnames.stem  # get fname w/o extension
-                    extension = fnames.suffix.lower()
+            if file_paths:
+                for file_path in file_paths:
+                    file_path = Path(file_path)
+                    fname = file_path.stem  # get fname w/o extension
+                    extension = file_path.suffix.lower()
                     if extension == '.xlsx':
-                        excel_file = pd.ExcelFile(fnames)
+                        excel_file = pd.ExcelFile(file_path)
                         sheet_names = excel_file.sheet_names
                         for sheet_name in sheet_names:
-                            # Remove spaces within sheet_names
                             sheet_name_cleaned = sheet_name.replace(" ", "")
                             df_name = f"{fname}_{sheet_name_cleaned}"
                             self.original_dfs[df_name] = pd.read_excel(
                                 excel_file, sheet_name=sheet_name)
                     else:
-                        pass
+                        show_alert(f"Unsupported file format: {extension}")
+
         self.update_dfs_list()
 
     def update_dfs_list(self):
@@ -162,13 +144,7 @@ class Visualization(QDialog):
                 self.ui.dfs_listbox.setCurrentRow(0)
 
     def plotting(self, update_graph=False):
-        """
-        Plot a new graph or update an existing graph.
-
-        Args:
-            update_graph (bool, optional): If True, update the existing
-            graph; otherwise, create a new one.
-        """
+        """Plot a new graph or update an existing graph."""
         if update_graph:
             # Update the selected graph
             graph, graph_dialog, sub_window = self.get_sel_graph()
@@ -305,15 +281,7 @@ class Visualization(QDialog):
                 graph.plot(self.filtered_df)
 
     def is_z_changed(self, graph):
-        """
-        Check if the z-axis value has changed from the current graph settings.
-
-        Args:
-            graph (Graph): The graph object to check and update if necessary.
-
-        Returns:
-            bool: True if z-axis has changed, False otherwise.
-        """
+        """Check if z-axis value has changed from the current graph settings"""
         current_z = self.ui.cbb_z_2.currentText()
         if current_z != graph.z:
             graph.legend_properties = []
@@ -328,13 +296,7 @@ class Visualization(QDialog):
         graph.customize_legend_via_gui(main_layout)
 
     def on_selected_graph(self, sub_window):
-        """
-        Update GUI elements based on the properties of the selected graph.
-
-        Args:
-            sub_window (QMdiSubWindow): Selected sub-window containing the
-            graph.
-        """
+        """Update GUI elements based on the properties of the selected graph"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
 
         if graph:
@@ -438,13 +400,8 @@ class Visualization(QDialog):
             self.customize_legend()
 
     def reflect_filters_to_gui(self, sel_graph):
-        """
-        Reflect the state of filters associated with a graph to the GUI.
+        """Reflect the state of filters associated with a graph to the GUI"""
 
-        Args:
-            sel_graph (Graph): Selected graph object.
-
-        """
         # Clear the existing items and uncheck them
         for index in range(self.ui.listbox_filters.count()):
             item = self.ui.listbox_filters.item(index)
@@ -481,14 +438,7 @@ class Visualization(QDialog):
                 self.ui.listbox_filters.setItemWidget(item, checkbox)
 
     def update_gui(self):
-        """
-        Update the GUI elements based on the selected dataframe.
-
-        This method updates comboboxes and other GUI elements with data from
-        the selected dataframe.
-
-        """
-
+        """Update the GUI elements based on the selected dataframe"""
         self.update_cbb()
         self.sel_df = self.get_sel_df()
 
@@ -521,12 +471,7 @@ class Visualization(QDialog):
                 self.ui.cbb_z_2.addItem(column)
 
     def copy_fig_to_clb(self):
-        """
-        Copy the selected graph figure to the clipboard.
-
-        This method copies the current graph figure to the system clipboard.
-
-        """
+        """Copy the selected graph figure to the clipboard"""
         sel_graph, graph_dialog, sub_window = self.get_sel_graph()
         self.common.copy_fig_to_clb(canvas=sel_graph.canvas)
 
@@ -558,13 +503,7 @@ class Visualization(QDialog):
         return sel_graph, graph_dialog, sub_window
 
     def get_sel_df(self):
-        """
-        Retrieve the currently selected dataframe.
-
-        Returns:
-            pd.DataFrame or None: Currently selected dataframe.
-
-        """
+        """Retrieve the currently selected dataframe"""
         sel_item = self.ui.dfs_listbox.currentItem()
         if sel_item is not None:
             sel_df_name = sel_item.text()

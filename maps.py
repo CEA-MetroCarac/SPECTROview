@@ -167,7 +167,7 @@ class Maps(QObject):
             self.populate_available_models)
 
     def open_hyperspectra(self, wafers=None, file_paths=None):
-        """Open hyperspectral data which is wafer dataframe"""
+        """Open hyperspectral data"""
 
         if self.wafers is None:
             self.wafers = {}
@@ -214,7 +214,6 @@ class Maps(QObject):
                         # Reorder df as increasing wavenumber
                         sorted_columns = sorted(wafer_df.columns[2:], key=float)
                         wafer_df = wafer_df[['X', 'Y'] + sorted_columns]
-                        print("Detect labspec6  2D map format")
                     else:
                         show_alert(f"Unsupported file format: {extension}")
                         continue
@@ -637,13 +636,14 @@ class Maps(QObject):
     def paste_fit_model(self, fnames=None):
         """Apply the copied fit model to selected spectra."""
 
-        self.ui.btn_paste_fit_model.setEnabled(False)
+        self.ui.centralwidget.setEnabled(False)  # Disable GUI
         if fnames is None:
             wafer_name, coords = self.spectra_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
 
         self.common.reinit_spectrum(fnames, self.spectrums)
         fit_model = deepcopy(self.current_fit_model)
+
         self.ntot = len(fnames)
         ncpus = int(self.ui.ncpus.text())
 
@@ -653,7 +653,7 @@ class Maps(QObject):
             self.thread.start()
         else:
             show_alert("Nothing to paste")
-            self.ui.btn_paste_fit_model.setEnabled(True)
+            self.ui.centralwidget.setEnabled(True)
 
         # Update progress bar & text
         self.start_time = time.time()
@@ -669,11 +669,10 @@ class Maps(QObject):
     def apply_loaded_fit_model(self, fnames=None):
         """Fit selected spectrum(s) with the loaded fit model."""
         self.get_loaded_fit_model()
-        # Disable the button to prevent multiple clicks leading to a crash
-        self.ui.btn_apply_model.setEnabled(False)
+        self.ui.centralwidget.setEnabled(False)  # Disable GUI
         if self.loaded_fit_model is None:
             show_alert("Select from the list or load a fit model.")
-            self.ui.btn_apply_model.setEnabled(True)
+            self.ui.centralwidget.setEnabled(True)
             return
 
         if fnames is None:
@@ -696,13 +695,13 @@ class Maps(QObject):
         self.progress_timer.start(400)
 
     def update_progress_bar(self):
-        """Update fitting progress"""
+        """Update fitting progress in GUI"""
         index = self.spectrums.pbar_index
         percent = 100 * (index + 1) / self.ntot
         elapsed_time = time.time() - self.start_time
         text = f"{index}/{self.ntot} ({elapsed_time:.2f}s)"
         self.ui.progressBar.setValue(percent)
-        self.ui.progress.setText(text)
+        self.ui.progressText.setText(text)
         if self.spectrums.pbar_index >= self.ntot - 1:
             self.progress_timer.stop()
 
@@ -711,8 +710,7 @@ class Maps(QObject):
         self.upd_spectra_list()
         QTimer.singleShot(200, self.rescale)
         self.ui.progressBar.setValue(100)
-        self.ui.btn_apply_model.setEnabled(True)
-        self.ui.btn_paste_fit_model.setEnabled(True)
+        self.ui.centralwidget.setEnabled(True)
 
     def apply_loaded_fit_model_all(self):
         """Apply loaded fit model to all selected spectra"""
@@ -1336,7 +1334,10 @@ class Maps(QObject):
 
     def select_all_spectra(self):
         """Select all spectra listed in the spectra listbox"""
-        self._select_spectra(lambda x, y: True)
+        item_count = self.ui.spectra_listbox.count()
+        for i in range(item_count):
+            item = self.ui.spectra_listbox.item(i)
+            item.setSelected(True)
 
     def select_verti(self):
         """Select all spectra listed vertically"""
@@ -1448,7 +1449,7 @@ class Maps(QObject):
         tab."""
         dfs_new = self.visu.original_dfs
         dfs_new["WAFERS_best_fit"] = self.df_fit_results
-        self.visu.open_dfs(dfs=dfs_new, fnames=None)
+        self.visu.open_dfs(dfs=dfs_new, file_paths=None)
 
     def send_spectrum_to_compare(self):
         """

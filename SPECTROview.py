@@ -102,11 +102,7 @@ class Main:
         self.fitmodel_manager = FitModelManager(self.settings)
 
         # MENU ACTIONS:
-        self.ui.actionOpen.triggered.connect(lambda: self.open_data())
-        # self.ui.actionOpen_wafer.triggered.connect(self.open_wafers)
-        # self.ui.actionOpen_spectra.triggered.connect(self.open_spectra)
-        self.ui.actionOpen_dfs.triggered.connect(self.open_dfs)
-        self.ui.action_reload.triggered.connect(self.reload)
+        self.ui.actionOpen.triggered.connect(lambda: self.open())
 
         self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
@@ -233,10 +229,12 @@ class Main:
         self.ui.btn_default_folder_model_3.clicked.connect(
             self.spectrums.set_default_model_folder)
 
-    def open_data(self, file_paths=None):
+    def open(self, file_paths=None):
         """
-        Universal actionmenu to open all kind of spectroscopic data which can
-        be either hyperspectral or spectra.
+        Universal action to open all supported files of SPECTROview:
+         - spectroscopic data which can be hyperspectral or spectra (CSV, TXT).
+         - dataframes (Excel)
+         - saved work of SPECTROview (svmaps, svspectra, svgraphs)
         """
         if file_paths is None:
             # Initialize the last used directory from QSettings
@@ -245,7 +243,8 @@ class Main:
             options |= QFileDialog.ReadOnly
             file_paths, _ = QFileDialog.getOpenFileNames(
                 self.ui.tabWidget, "Open spectra file(s)", last_dir,
-                "SPECTROview formats (*.csv *.txt)", options=options)
+                "SPECTROview formats (*.csv *.txt *.svspectra *.svmaps * "
+                ".svgraphs)", options=options)
 
         if file_paths:
             last_dir = QFileInfo(file_paths[0]).absolutePath()
@@ -253,87 +252,61 @@ class Main:
 
             spectra_files = []
             hyperspectral_files = []
+            dataframes = []
+            svspectra = None
+            svmaps = None
+            svgraphs = None
+            df = None
 
             for file_path in file_paths:
                 file_path = Path(file_path)
                 extension = file_path.suffix.lower()  # get file extension
+                if extension == '.svspectra':
+                    svspectra = str(file_path)
+                elif extension == '.svmaps':
+                    svmaps = str(file_path)
+                elif extension == '.svgraphs':
+                    svgraphs = str(file_path)
 
-                if extension == '.csv':
+                elif extension == '.xlsx':
+                    dataframes.append(str(file_path))
+
+                elif extension == '.csv':
                     df = pd.read_csv(file_path, delimiter=";", header=None,
                                      skiprows=3)
                 elif extension == '.txt':
                     df = pd.read_csv(file_path, delimiter="\t", header=None,
                                      skiprows=3)
                 else:
-                    self.show_alert(f"Unsupported file format: {extension}")
+                    show_alert(f"Unsupported file format: {extension}")
                     continue
+                if df is not None:
+                    if df.shape[1] == 2:
+                        spectra_files.append(str(file_path))
+                    elif df.shape[1] > 3:
+                        hyperspectral_files.append(str(file_path))
+                    else:
+                        show_alert(
+                            f"Invalid number of columns in file: {file_path}")
 
-                if df.shape[1] == 2:
-                    spectra_files.append(str(file_path))
-                elif df.shape[1] > 3:
-                    hyperspectral_files.append(str(file_path))
-                else:
-                    self.show_alert(
-                        f"Invalid number of columns in file: {file_path}")
-
-            # Open all spectra files at once
+            # Open files with corresponding method
             if spectra_files:
                 self.spectrums.open_spectra(file_paths=spectra_files)
-
-            # Open all hyperspectral files at once
             if hyperspectral_files:
                 self.maps.open_hyperspectra(file_paths=hyperspectral_files)
+            if dataframes:
+                self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
+                self.visu.open_dfs(file_paths=dataframes)
 
-    # def open_wafers(self):
-    #     """Open wafer spectroscopic data"""
-    #     self.ui.tabWidget.setCurrentWidget(self.ui.tab_wafer)
-    #     self.maps.open_hyperspectra()
-    #
-    # def open_spectra(self):
-    #     """Open spectra data"""
-    #     self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
-    #     self.spectrums.open_spectra()
-
-    def open_dfs(self):
-        """Open dataframes"""
-        self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
-        self.visu.open_dfs()
-
-    def reload(self):
-        """
-        Load previously saved application states from
-        different file formats.
-
-        Opens a file dialog to select a saved file and loads its contents to
-        restore the application state. Supports SPECTROview Files with
-        extensions
-        .svmap, .svspectra, and .svgraphs.
-
-        Updates the GUI and application state based on the loaded data. Shows
-        an alert upon successful loading or displays an error message if loading
-        fails.
-        """
-        try:
-            file_path, _ = QFileDialog.getOpenFileName(None, "Load saved work",
-                                                       "",
-                                                       "SPECTROview Files ("
-                                                       "*.svmaps *.svspectra "
-                                                       "*.svgraphs)")
-            if file_path:
-                file_extension = file_path.split('.')[-1]
-                if file_extension == 'svmaps':
-                    self.ui.tabWidget.setCurrentWidget(self.ui.tab_wafer)
-                    self.maps.load_work(file_path)
-                elif file_extension == 'svspectra':
-                    self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
-                    self.spectrums.load_work(file_path)
-                elif file_extension == 'svgraphs':
-                    self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
-                    self.visu.load(file_path)
-                else:
-                    show_alert("Unsupported file format")
-        except Exception as e:
-            show_alert(f"Error loading saved work: {e}")
+            if svspectra:
+                self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
+                self.spectrums.load_work(svspectra)
+            if svmaps:
+                self.ui.tabWidget.setCurrentWidget(self.ui.tab_wafer)
+                self.maps.load_work(svmaps)
+            if svgraphs:
+                self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
+                self.visu.load(svgraphs)
 
     def toggle_dark_mode(self):
         self.ui.setPalette(self.common.dark_palette())

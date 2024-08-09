@@ -1380,12 +1380,14 @@ class FitThread(QThread):
     def run(self):
         fit_model = deepcopy(self.fit_model)
         self.spectrums.apply_model(fit_model, fnames=self.fnames,
-                                   ncpus=self.ncpus, show_progressbar=True)
+                                   ncpus=self.ncpus, show_progressbar=False)
+
         self.progress_changed.emit(100)
 
 
 class WaferPlot:
     """Class to plot wafer map"""
+
     def __init__(self, inter_method='linear'):
         self.inter_method = inter_method  # Interpolation method
 

@@ -50,6 +50,7 @@ import numpy as np
 import pandas as pd
 import datetime
 from pathlib import Path
+import ctypes
 
 from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
     QMessageBox, QFileDialog
@@ -383,6 +384,9 @@ def launcher():
 
 
 if __name__ == "__main__":
+    import multiprocessing
+
+    multiprocessing.freeze_support()
     launcher()
 
 # def launcher2(file_paths=None, fname_json=None, fnames=None):

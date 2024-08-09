@@ -72,6 +72,7 @@ class Maps(QObject):
             Manager for handling fit model operations.
 
     """
+
     def __init__(self, settings, ui, spectrums, common, visu):
         super().__init__()
         self.settings = settings
@@ -126,7 +127,6 @@ class Maps(QObject):
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot1)
-
 
         self.plot_styles = ["box plot", "point plot", "bar plot"]
         self.create_plot_widget()
@@ -648,7 +648,7 @@ class Maps(QObject):
         ncpus = int(self.ui.ncpus.text())
 
         if fit_model is not None:
-            self.thread = FitThread(self.spectrums, fit_model,fnames,ncpus)
+            self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
             self.thread.finished.connect(self.fit_completed)
             self.thread.start()
         else:
@@ -679,12 +679,13 @@ class Maps(QObject):
         if fnames is None:
             wafer_name, coords = self.spectra_id()
             fnames = [f"{wafer_name}_{coord}" for coord in coords]
+
         self.ntot = len(fnames)
         ncpus = int(self.ui.ncpus.text())
-        fit_model= self.loaded_fit_model
-        spectra= self.spectrums
+        fit_model = self.loaded_fit_model
+        spectra = self.spectrums
 
-        self.thread = FitThread(spectra,fit_model,fnames,ncpus)
+        self.thread = FitThread(spectra, fit_model, fnames, ncpus)
         self.thread.finished.connect(self.fit_completed)
         self.thread.start()
 
@@ -697,7 +698,7 @@ class Maps(QObject):
     def update_progress_bar(self):
         """Update fitting progress"""
         index = self.spectrums.pbar_index
-        percent = 100 * ( index+ 1) / self.ntot
+        percent = 100 * (index + 1) / self.ntot
         elapsed_time = time.time() - self.start_time
         text = f"{index}/{self.ntot} ({elapsed_time:.2f}s)"
         self.ui.progressBar.setValue(percent)
@@ -1443,7 +1444,8 @@ class Maps(QObject):
         view_df(self.ui.tabWidget, self.wafers[wafer_name])
 
     def send_df_to_viz(self):
-        """Send the collected spectral data dataframe to the visualization tab."""
+        """Send the collected spectral data dataframe to the visualization
+        tab."""
         dfs_new = self.visu.original_dfs
         dfs_new["WAFERS_best_fit"] = self.df_fit_results
         self.visu.open_dfs(dfs=dfs_new, fnames=None)

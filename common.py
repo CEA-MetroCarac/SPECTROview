@@ -39,6 +39,9 @@ from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
+import base64
+import zlib
+
 # Define a dictionary mapping RGBA tuples to named colors
 rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for
                             color_name in mcolors.CSS4_COLORS}
@@ -69,7 +72,17 @@ LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
                    'center left', 'center right', 'lower center',
                    'upper center', 'center']
 
+def compress_and_encode(array):
+    """Compress and encode a numpy array to a base64 string."""
+    compressed = zlib.compress(array.tobytes())
+    encoded = base64.b64encode(compressed).decode('utf-8')
+    return encoded
 
+def decode_and_decompress(data, dtype):
+    """Decode and decompress a base64 string to a numpy array."""
+    decoded = base64.b64decode(data.encode('utf-8'))
+    decompressed = zlib.decompress(decoded)
+    return np.frombuffer(decompressed, dtype=dtype)
 def rgba_to_named_color(rgba):
     """Convert RGBA tuple to a named color string."""
     # Check if the exact RGBA tuple exists in the dictionary
@@ -135,13 +148,14 @@ class CSpectrum(Spectrum):
             save_to_json(fname_json, model_dict_json)
 
         return model_dict
+
     def _prepare_model_dict(self, excluded_keys, include_arrays=True):
         """Helper function to prepare the model dictionary."""
         model_dict = {}
         for key, val in vars(self).items():
             if key not in excluded_keys:
-                if include_arrays and isinstance(val, np.ndarray): # Handle numpy arrays
-                    model_dict[key] = val.tolist()
+                if include_arrays and isinstance(val, np.ndarray):  # Handle numpy arrays
+                    model_dict[key] = compress_and_encode(val)
                 else:
                     model_dict[key] = val
 
@@ -162,20 +176,22 @@ class CSpectrum(Spectrum):
             model_dict['result_fit_success'] = self.result_fit.success
 
         return model_dict
+
     def set_attributes(self, model_dict):
         """Set attributes from a dictionary (obtained from a .json reloading)"""
 
         # Call the original set_attributes from the Spectrum class
         super().set_attributes(model_dict)
-        # Convert x, y, x0, y0 from lists to numpy arrays if necessary
+
+        # Convert x, y, x0, y0 from base64-encoded strings to numpy arrays if necessary
         if 'x0' in model_dict:
-            self.x0 = np.array(model_dict['x0'])
+            self.x0 = decode_and_decompress(model_dict['x0'], dtype=np.float64)
         if 'y0' in model_dict:
-            self.y0 = np.array(model_dict['y0'])
+            self.y0 = decode_and_decompress(model_dict['y0'], dtype=np.float64)
         if 'x' in model_dict:
-            self.x = np.array(model_dict['x'])
+            self.x = decode_and_decompress(model_dict['x'], dtype=np.float64)
         if 'y' in model_dict:
-            self.y = np.array(model_dict['y'])
+            self.y = decode_and_decompress(model_dict['y'], dtype=np.float64)
 
 
 class CSpectra(Spectra):

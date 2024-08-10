@@ -512,6 +512,7 @@ class Spectrums(QObject):
             fname = spectrum.fname
             if fname in fnames:
                 selected_spectrums.append(spectrum)
+
         # Only plot 100 first spectra to advoid crash
         selected_spectrums = selected_spectrums[:50]
         if len(selected_spectrums) == 0:
@@ -545,12 +546,14 @@ class Spectrums(QObject):
                 y0_values = spectrum.y0
                 self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
                              lw=1)
+
+            # Background
+            y_bkg = np.zeros_like(x_values)
+            if spectrum.bkg_model is not None:
+                y_bkg = spectrum.bkg_model.eval(spectrum.bkg_model.make_params(), x=x_values)
+
             # BEST-FIT and PEAK_MODELS
-            if hasattr(spectrum.result_fit, 'components') and hasattr(
-                    spectrum.result_fit, 'components') and \
-                    self.ui.cb_bestfit_3.isChecked():
-                bestfit = spectrum.result_fit.best_fit
-                self.ax.plot(x_values, bestfit, label=f"bestfit")
+            y_peaks = np.zeros_like(x_values)
             if self.ui.cb_bestfit_3.isChecked():
                 peak_labels = spectrum.peak_labels
                 for i, peak_model in enumerate(spectrum.peak_models):
@@ -564,7 +567,7 @@ class Spectrums(QObject):
                     # rassign 'expr'
                     peak_model.param_hints = param_hints_orig
                     y_peak = peak_model.eval(params, x=x_values)
-
+                    y_peaks += y_peak
                     if self.ui.cb_filled_3.isChecked():
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
                                              label=f"{peak_label}")
@@ -579,6 +582,11 @@ class Spectrums(QObject):
                     else:
                         self.ax.plot(x_values, y_peak, '--',
                                      label=f"{peak_label}")
+
+                if hasattr(spectrum.result_fit, 'success') and self.ui.cb_bestfit_3.isChecked():
+                    y_fit = y_bkg + y_peaks
+                    self.ax.plot(x_values, y_fit, label=f"bestfit")
+
             # RESIDUAL
             if hasattr(spectrum.result_fit,
                        'residual') and self.ui.cb_residual_3.isChecked():
@@ -1341,7 +1349,6 @@ class Spectrums(QObject):
                     self.upd_cbb_param()
                     self.send_df_to_viz()
                     self.upd_spectra_list()
-                    self.fit_all()
 
                     self.ui.cbb_x_3.setCurrentIndex(load.get('cbb_x_1', -1))
                     self.ui.cbb_y_3.setCurrentIndex(load.get('cbb_y_1', -1))

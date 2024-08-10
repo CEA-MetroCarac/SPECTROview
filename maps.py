@@ -951,13 +951,13 @@ class Maps(QObject):
                 y0_values = spectrum.y0
                 self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
                              lw=1)
+            # Background
+            y_bkg = np.zeros_like(x_values)
+            if spectrum.bkg_model is not None:
+                y_bkg = spectrum.bkg_model.eval(spectrum.bkg_model.make_params(), x=x_values)
 
             # BEST-FIT and PEAK_MODELS
-            if hasattr(spectrum.result_fit,
-                       'components') and self.ui.cb_bestfit.isChecked():
-                bestfit = spectrum.result_fit.best_fit
-                self.ax.plot(x_values, bestfit, label=f"bestfit")
-
+            y_peaks = np.zeros_like(x_values)
             if self.ui.cb_bestfit.isChecked():
                 peak_labels = spectrum.peak_labels
                 for i, peak_model in enumerate(spectrum.peak_models):
@@ -971,7 +971,7 @@ class Maps(QObject):
                     # rassign 'expr'
                     peak_model.param_hints = param_hints_orig
                     y_peak = peak_model.eval(params, x=x_values)
-
+                    y_peaks += y_peak
                     if self.ui.cb_filled.isChecked():
                         self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
                                              label=f"{peak_label}")
@@ -987,6 +987,9 @@ class Maps(QObject):
 
                         self.ax.plot(x_values, y_peak, '--',
                                      label=f"{peak_label}")
+                if hasattr(spectrum.result_fit, 'success') and self.ui.cb_bestfit.isChecked():
+                    y_fit = y_bkg + y_peaks
+                    self.ax.plot(x_values, y_fit, label=f"bestfit")
             # RESIDUAL
             if hasattr(spectrum.result_fit,
                        'residual') and self.ui.cb_residual.isChecked():
@@ -1609,7 +1612,6 @@ class Maps(QObject):
                 self.upd_cbb_wafer()
                 self.send_df_to_viz()
                 self.upd_wafers_list()
-                self.fit_all()
 
         except Exception as e:
             show_alert(f"Error loading saved work (Maps Tab): {e}")

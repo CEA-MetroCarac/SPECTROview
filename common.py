@@ -5,6 +5,7 @@ import time
 import markdown
 import os
 import sys
+import json
 from copy import deepcopy
 import pandas as pd
 import multiprocessing as mp
@@ -285,7 +286,6 @@ class Graph(QWidget):
         super().__init__()
         self.df_name = None
         self.filters = {}  # List of filter
-
         self.graph_id = graph_id
         self.plot_width = 600
         self.plot_height = 450
@@ -690,7 +690,31 @@ class Graph(QWidget):
             self.ax3.set_ylabel(self.y3label, color='green')
             self.ax3.tick_params(axis='y', colors='green')
 
+    def save(self, fname=None):
+        """ Save Graph object to serialization. Save it if a fname is given """
+        # List of keys to exclude from serialization
+        excluded_keys = ['figure', 'canvas', 'setLayout', 'graph_layout', 'some_signal_instance']
 
+        dict_graph = {}
+        for key, val in vars(self).items():
+            if key not in excluded_keys and not callable(val):
+                try:
+                    json.dumps(val)
+                    dict_graph[key] = val
+                except TypeError:
+                   continue
+
+        if fname is not None:
+            with open(fname, 'w') as f:
+                json.dump(dict_graph, f, indent=4)
+
+        return dict_graph
+
+    def set_attributes(self, attributes_dict):
+        """Set attributes of the Graph object from a given dictionary."""
+        for key, value in attributes_dict.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 class ShowParameters:
     """Class dedicated to show fit paramters of Spectrum objects in the GUI"""
 

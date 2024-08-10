@@ -761,50 +761,7 @@ class Visualization(QDialog):
                 # Convert Graph objects to serializable format
                 plots_data = {}
                 for graph_id, graph in self.plots.items():
-                    graph_data = {
-                        'plot_width': graph.plot_width,
-                        'plot_height': graph.plot_height,
-                        'df_name': graph.df_name,
-                        'filters': graph.filters,
-                        'graph_id': graph.graph_id,
-                        'plot_style': graph.plot_style,
-                        'x': graph.x,
-                        'y': graph.y,
-                        'z': graph.z,
-                        'xmin': graph.xmin,
-                        'xmax': graph.xmax,
-                        'ymin': graph.ymin,
-                        'ymax': graph.ymax,
-                        'zmin': graph.zmin,
-                        'zmax': graph.zmax,
-                        'y2': graph.y2,
-                        'y3': graph.y3,
-                        'y2min': graph.y2min,
-                        'y2max': graph.y2max,
-                        'y3min': graph.y3min,
-                        'y3max': graph.y3max,
-                        'plot_title': graph.plot_title,
-                        'xlabel': graph.xlabel,
-                        'ylabel': graph.ylabel,
-                        'zlabel': graph.zlabel,
-                        'y2label': graph.y2label,
-                        'y3label': graph.y3label,
-                        'x_rot': graph.x_rot,
-                        'grid': graph.grid,
-                        'legend_visible': graph.legend_visible,
-                        'legend_location': graph.legend_location,
-                        'legend_outside': graph.legend_outside,
-                        'color_palette': graph.color_palette,
-                        'legend_properties': graph.legend_properties,
-                        'dpi': graph.dpi,
-                        'wafer_size': graph.wafer_size,
-                        'wafer_stats': graph.wafer_stats,
-                        'trendline_order': graph.trendline_order,
-                        'show_trendline_eq': graph.show_trendline_eq,
-                        'show_bar_plot_error_bar':
-                            graph.show_bar_plot_error_bar,
-                        'join_for_point_plot': graph.join_for_point_plot
-                    }
+                    graph_data = graph.save(fname=None)
                     plots_data[graph_id] = graph_data
 
                 # Prepare data to save
@@ -813,11 +770,11 @@ class Visualization(QDialog):
                     'original_dfs': {key: df.to_dict() for key, df in
                                      self.original_dfs.items()},
                 }
-
                 # Save to JSON file
                 with open(file_path, 'w') as f:
                     json.dump(data_to_save, f, indent=4)
                 show_alert("Work saved successfully.")
+
         except Exception as e:
             show_alert(f"Error saving work: {e}")
 
@@ -827,69 +784,15 @@ class Visualization(QDialog):
             self.clear_env()
             with open(file_path, 'r') as f:
                 load = json.load(f)
-                self.original_dfs = {key: pd.DataFrame(value) for key, value
-                                     in
-                                     load.get('original_dfs', {}).items()}
+                self.original_dfs = {key: pd.DataFrame(value) for key, value in load.get('original_dfs', {}).items()}
                 self.update_dfs_list()
 
                 # Load plots
                 plots_data = load.get('plots', {})
                 for graph_id, graph_data in plots_data.items():
                     # Recreate graph instance
-                    graph = Graph(graph_id=graph_data['graph_id'])
-
-                    # Get plot size
-                    graph.plot_width = graph_data['plot_width']
-                    graph.plot_height = graph_data['plot_height']
-
-                    graph.df_name = graph_data['df_name']
-                    graph.filters = graph_data['filters']
-                    graph.plot_style = graph_data['plot_style']
-                    graph.x = graph_data['x']
-                    graph.y = graph_data['y']
-                    graph.z = graph_data['z']
-                    graph.xmin = graph_data['xmin']
-                    graph.xmax = graph_data['xmax']
-                    graph.ymin = graph_data['ymin']
-                    graph.ymax = graph_data['ymax']
-                    graph.zmin = graph_data['zmin']
-                    graph.zmax = graph_data['zmax']
-
-                    graph.y2 = graph_data['y2']
-                    graph.y3 = graph_data['y3']
-                    graph.y2min = graph_data['y2min']
-                    graph.y2max = graph_data['y2max']
-                    graph.y3min = graph_data['y3min']
-                    graph.y3max = graph_data['y3max']
-                    graph.y2label = graph_data['y2label']
-                    graph.y3label = graph_data['y3label']
-
-                    graph.plot_title = graph_data['plot_title']
-                    graph.xlabel = graph_data['xlabel']
-                    graph.ylabel = graph_data['ylabel']
-                    graph.zlabel = graph_data['zlabel']
-                    graph.x_rot = graph_data['x_rot']
-                    graph.grid = graph_data['grid']
-                    graph.legend_visible = graph_data['legend_visible']
-                    # Get from saved files, it not set defaut values
-                    graph.legend_location = graph_data.get(
-                        'legend_location', 'upper right')
-
-                    graph.legend_outside = graph_data['legend_outside']
-                    graph.color_palette = graph_data['color_palette']
-                    graph.dpi = graph_data['dpi']
-                    graph.wafer_size = graph_data['wafer_size']
-                    graph.wafer_stats = graph_data['wafer_stats']
-                    graph.trendline_order = graph_data['trendline_order']
-                    graph.show_trendline_eq = graph_data[
-                        'show_trendline_eq']
-
-                    graph.legend_properties = graph_data[
-                        'legend_properties']
-                    graph.show_bar_plot_error_bar = graph_data[
-                        'show_bar_plot_error_bar']
-                    graph.join_for_point_plot = graph_data[
-                        'join_for_point_plot']
+                    graph = Graph(graph_id=graph_id)
+                    graph.set_attributes(graph_data)
 
                     # Plot the graph
                     graph.create_plot_widget(graph.dpi)
@@ -898,16 +801,14 @@ class Visualization(QDialog):
                     # Create a QDialog to hold the Graph instance
                     graph_dialog = QDialog(self)
                     graph_dialog.setWindowTitle(
-                        f"{graph.graph_id}-{graph.plot_style}_plot: ["
-                        f"{graph.x}] - "
-                        f"[{graph.y[0]}] - [{graph.z}]")
+                        f"{graph.graph_id}-{graph.plot_style}_plot: [{graph.x}] - [{graph.y[0]}] - [{graph.z}]"
+                    )
                     layout = QVBoxLayout()
                     layout.addWidget(graph)
                     graph_dialog.setLayout(layout)
 
                     # Add the QDialog to the mdiArea
-                    sub_window = MdiSubWindow(graph.graph_id,
-                                              self.ui.lbl_figsize)
+                    sub_window = MdiSubWindow(graph.graph_id, self.ui.lbl_figsize)
                     sub_window.setWidget(graph_dialog)
                     sub_window.closed.connect(self.delete_graph)
                     self.ui.mdiArea.addSubWindow(sub_window)
@@ -936,37 +837,17 @@ class MdiSubWindow(QMdiSubWindow):
     closed = Signal(int)
 
     def __init__(self, graph_id, figsize_label, *args, **kwargs):
-        """
-        Initialize MdiSubWindow instance.
-
-        Args:
-        graph_id (int): ID associated with the graph in the subwindow.
-        figsize_label (QLabel): QLabel used to display the size of the
-        subwindow.
-        *args: Variable length argument list.
-        **kwargs: Arbitrary keyword arguments.
-        """
         super().__init__(*args, **kwargs)
         self.graph_id = graph_id
         self.figsize_label = figsize_label
 
     def closeEvent(self, event):
-        """
-        Override closeEvent to emit a signal when the subwindow is closing.
-
-        Args:
-        event (QCloseEvent): Close event object.
-        """
+        """Override closeEvent to emit a signal when the subwindow is closing"""
         self.closed.emit(self.graph_id)
         super().closeEvent(event)
 
     def resizeEvent(self, event):
-        """
-        Override resizeEvent to handle window resizing.
-
-        Args:
-        event (QResizeEvent): Resize event object.
-        """
+        """Override resizeEvent to handle window resizing"""
         new_size = self.size()
         width, height = new_size.width(), new_size.height()
         # Update QLabel with the new size

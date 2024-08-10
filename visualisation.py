@@ -46,8 +46,6 @@ class Visualization(QDialog):
         self.common = common
         self.setWindowTitle("Graph Plot")
 
-        self.ui.btn_clear_env.clicked.connect(self.clear_env)
-
         # DATAFRAME
         self.original_dfs = {}
         self.sel_df = None
@@ -93,8 +91,6 @@ class Visualization(QDialog):
         self.ui.cbb_graph_list.currentIndexChanged.connect(
             self.select_sub_window_from_combo_box)
 
-        # SAVE / LOAD
-        self.ui.btn_save_work.clicked.connect(self.save)
         self.ui.btn_minimize_all.clicked.connect(self.minimize_all_graph)
 
     def open_dfs(self, dfs=None, file_paths=None):
@@ -625,22 +621,18 @@ class Visualization(QDialog):
                     return
 
     def delete_graph(self, graph_id):
-        """
-        Delete the specified graph from the plots dictionary.
-
-        Args:
-            graph_id (int): Identifier of the graph to delete.
-
-        """
+        """Delete the specified graph from the plots dictionary"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
+        if graph is None:
+            return
         graph_id = graph.graph_id
-        # Remove the graph from the dictionary
-        self.plots.pop(graph_id)
-        if sub_window:
-            self.ui.mdiArea.removeSubWindow(sub_window)
-            sub_window.close()
-            self.add_graph_list_to_combobox()
-        print(f"Plot {graph_id} is deleted")
+        if graph_id:
+            self.plots.pop(graph_id, None)
+            if sub_window:
+                self.ui.mdiArea.removeSubWindow(sub_window)
+                sub_window.close()
+                self.add_graph_list_to_combobox()
+            print(f"Plot {graph_id} is deleted")
 
     def minimize_all_graph(self):
         """
@@ -673,7 +665,6 @@ class Visualization(QDialog):
         self.ui.cbb_y3_2.clear()
         self.ui.cbb_z_2.clear()
         self.ui.listbox_filters.clear()
-
         self.ui.cbb_graph_list.clear()
 
     def add_y12(self):

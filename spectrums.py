@@ -1240,9 +1240,10 @@ class Spectrums(QObject):
                     self.ui.cbb_plot_style_7.setCurrentIndex(
                         load.get('plot_style_2', -1))
 
-                    # self.plot2()
-                    # self.plot3()
-                    self.display_df_in_GUI(self.df_fit_results)
+                    try:
+                        self.display_df_in_GUI(self.df_fit_results)
+                    except:
+                        pass
                 except Exception as e:
                     show_alert(f"Error loading work: {e}")
         except Exception as e:

@@ -101,8 +101,10 @@ class Main:
                          self.visu)
         self.fitmodel_manager = FitModelManager(self.settings)
 
-        # MENU ACTIONS:
+        # TOOLBAR
         self.ui.actionOpen.triggered.connect(lambda: self.open())
+        self.ui.actionSave.triggered.connect(self.save)
+        self.ui.actionClear_env.triggered.connect(self.clear_env)
 
         self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
@@ -146,7 +148,6 @@ class Main:
             self.maps.load_fit_results)
 
         self.ui.cbb_plot_style.addItems(self.maps.plot_styles)
-        self.ui.btn_sw.clicked.connect(self.maps.save_work)
         self.ui.btn_split_fname_2.clicked.connect(self.maps.split_fname)
         self.ui.btn_add_col_2.clicked.connect(self.maps.add_column)
 
@@ -213,7 +214,6 @@ class Main:
         self.ui.btn_open_fit_results_3.clicked.connect(
             self.spectrums.load_fit_results)
 
-        self.ui.btn_sw_3.clicked.connect(self.spectrums.save_work)
         self.ui.cbb_plot_style_3.addItems(self.spectrums.plot_styles)
         self.ui.cbb_plot_style_7.addItems(self.spectrums.plot_styles)
         self.ui.btn_plot_graph_3.clicked.connect(self.spectrums.plot2)
@@ -308,6 +308,25 @@ class Main:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
                 self.visu.load(svgraphs)
 
+    def save(self):
+        """Saves the current work depending on the active tab"""
+        current_tab = self.ui.tabWidget.currentWidget()
+        if current_tab == self.ui.tab_spectra:
+            self.spectrums.save_work()
+        elif current_tab == self.ui.tab_wafer:
+            self.maps.save_work()
+        elif current_tab == self.ui.tab_graphs:
+            self.visu.save()
+        else:
+            show_alert("No valid tab is selected for saving.")
+
+    def clear_env(self):
+        """Clear working enviroments"""
+        current_tab = self.ui.tabWidget.currentWidget()
+        if current_tab == self.ui.tab_graphs:
+            self.visu.clear_env()
+        else:
+            show_alert("No valid tab is selected for saving.")
     def toggle_dark_mode(self):
         self.ui.setPalette(self.common.dark_palette())
         self.settings.setValue("mode", "dark")  # Save to settings

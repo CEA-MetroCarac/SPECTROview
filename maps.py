@@ -1608,8 +1608,10 @@ class Maps(QObject):
 
                 # self.plot4()
                 # self.plot3()
-
-                self.display_df_in_GUI(self.df_fit_results)
+                try:
+                    self.display_df_in_GUI(self.df_fit_results)
+                except:
+                    pass
 
         except Exception as e:
             show_alert(f"Error loading saved work (Maps Tab): {e}")

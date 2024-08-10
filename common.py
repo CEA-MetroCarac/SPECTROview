@@ -109,19 +109,38 @@ def view_df(tabWidget, df):
     layout.addWidget(table_widget)
     df_viewer.show()
 class CSpectrum(Spectrum):
-    """Overraide the save method of Spectrum class"""
     def save(self, fname_json=None):
-        """ Return a 'model_dict' dictionary from the spectrum attributes and
-            Save it if a 'fname_json' is given """
+        """Override the save method of Spectrum class."""
+        excluded_keys = ['outliers_limit', 'peak_models', 'peak_index',
+                         'bkg_model', 'result_fit', 'baseline', 'attractors']
+        model_dict = self._prepare_model_dict(excluded_keys)
 
-        excluded_keys = ['outliers_limit',
+        if fname_json is not None:
+            model_dict_json = model_dict.copy()
+            model_dict_json['baseline'].pop('y_eval')
+            save_to_json(fname_json, model_dict_json)
+
+        return model_dict
+
+    def copy(self, fname_json=None):
+        """Override the copy method of Spectrum class."""
+        excluded_keys = ['x0', 'y0', 'x', 'y', 'outliers_limit',
                          'peak_models', 'peak_index', 'bkg_model',
                          'result_fit', 'baseline', 'attractors']
+        model_dict = self._prepare_model_dict(excluded_keys, include_arrays=False)
+
+        if fname_json is not None:
+            model_dict_json = model_dict.copy()
+            model_dict_json['baseline'].pop('y_eval')
+            save_to_json(fname_json, model_dict_json)
+
+        return model_dict
+    def _prepare_model_dict(self, excluded_keys, include_arrays=True):
+        """Helper function to prepare the model dictionary."""
         model_dict = {}
         for key, val in vars(self).items():
             if key not in excluded_keys:
-                # Convert numpy arrays to lists for JSON serialization
-                if isinstance(val, np.ndarray):
+                if include_arrays and isinstance(val, np.ndarray): # Handle numpy arrays
                     model_dict[key] = val.tolist()
                 else:
                     model_dict[key] = val
@@ -142,54 +161,12 @@ class CSpectrum(Spectrum):
         if hasattr(self.result_fit, 'success'):
             model_dict['result_fit_success'] = self.result_fit.success
 
-        if fname_json is not None:
-            model_dict_json = model_dict.copy()
-            model_dict_json['baseline'].pop('y_eval')
-            save_to_json(fname_json, model_dict_json)
-
         return model_dict
-
-    def copy(self, fname_json=None):
-        """ Return a 'model_dict' dictionary from the spectrum attributes and
-            Save it if a 'fname_json' is given """
-
-        excluded_keys = ['x0', 'y0', 'x', 'y', 'outliers_limit',
-                         'peak_models', 'peak_index', 'bkg_model',
-                         'result_fit', 'baseline', 'attractors']
-        model_dict = {}
-        for key, val in vars(self).items():
-            if key not in excluded_keys:
-                model_dict[key] = val
-
-        model_dict['baseline'] = dict(vars(self.baseline).items())
-
-        bkg_model = self.bkg_model
-        if bkg_model is not None:
-            model_dict['bkg_model'] = {bkg_model.name2: bkg_model.param_hints}
-
-        peak_models = {}
-        for i, peak_model in enumerate(self.peak_models):
-            model_name = self.get_model_name(peak_model)
-            peak_models[i] = {}
-            peak_models[i][model_name] = peak_model.param_hints
-        model_dict['peak_models'] = peak_models
-
-        if hasattr(self.result_fit, 'success'):
-            model_dict['result_fit_success'] = self.result_fit.success
-
-        if fname_json is not None:
-            model_dict_json = model_dict.copy()
-            model_dict_json['baseline'].pop('y_eval')
-            save_to_json(fname_json, model_dict_json)
-
-        return model_dict
-
     def set_attributes(self, model_dict):
         """Set attributes from a dictionary (obtained from a .json reloading)"""
 
         # Call the original set_attributes from the Spectrum class
         super().set_attributes(model_dict)
-
         # Convert x, y, x0, y0 from lists to numpy arrays if necessary
         if 'x0' in model_dict:
             self.x0 = np.array(model_dict['x0'])
@@ -225,25 +202,13 @@ class CSpectra(Spectra):
         return None, None
 
     def save(self, fname_json, fnames=None):
-        """
-        Save spectra in a .json file
-
-        Parameters
-        ----------
-        fname_json: str
-            Filename associated to the .json file for the spectra saving
-        fnames: list of str, optional
-            List of the spectrum 'fnames' to save. If None, consider all the
-            spectrum contained in the 'spectra' list
-        """
+        """Override the save method of Spectra class"""
         dirname = os.path.dirname(fname_json)
         if not os.path.isdir(dirname):
             print(f"directory {dirname} doesn't exist")
             return
-
         if fnames is None:
             fnames = self.fnames
-
         dict_spectra = {}
         for i, fname in enumerate(fnames):
             spectrum, _ = self.get_objects(fname)
@@ -281,7 +246,6 @@ class CSpectra(Spectra):
                 spectrum.set_attributes(dict_spectra[i])
                 spectrum.preprocess()
                 spectra.append(spectrum)
-
         return spectra
 
 class DataframeTable(QWidget):
@@ -1599,17 +1563,12 @@ class WaferPlot:
         ax (matplotlib.axes.Axes): Axes object to plot the wafer map.
         x (array-like): X-coordinates of measurement points.
         y (array-like): Y-coordinates of measurement points.
-        z (array-like): Z-values (measurement data) corresponding to (x,
-        y) points.
+        z (array-like): measurement data corresponding to (x,y) points.
         cmap (str, optional): Colormap for the plot. Defaults to "jet".
-        r (float, optional): Radius of the wafer in millimeters. Defaults to
-        100.
-        vmax (float, optional): Maximum value for the color scale. Defaults
-        to None.
-        vmin (float, optional): Minimum value for the color scale. Defaults
-        to None.
-        stats (bool, optional): Whether to display statistical values on the
-        plot. Defaults to True.
+        r (float, optional): Radius of the wafer in millimeters.
+        vmax (float, optional): Maximum value for the color scale.
+        vmin (float, optional): Minimum value for the color scale.
+        stats (bool, optional): Display statistical values on the plot.
         """
         # Generate a meshgrid for the wafer and Interpolate z onto the meshgrid
         xi, yi = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
@@ -1647,11 +1606,6 @@ class WaferPlot:
     def stats(self, z, ax):
         """
         Calculate and display statistical values in the wafer plot.
-
-        Args:
-        z (array-like): Z-values (measurement data) corresponding to (x,
-        y) points.
-        ax (matplotlib.axes.Axes): Axes object to plot the wafer map.
         """
         # Calculate statistical values
         mean_value = z.mean()
@@ -1679,17 +1633,6 @@ class WaferPlot:
         """
         Interpolate data onto a regular grid using the specified
         interpolation method.
-
-        Args:
-        x (array-like): X-coordinates of measurement points.
-        y (array-like): Y-coordinates of measurement points.
-        z (array-like): Z-values (measurement data) corresponding to (x,
-        y) points.
-        xi (array-like): X-coordinates of the regular grid.
-        yi (array-like): Y-coordinates of the regular grid.
-
-        Returns:
-        array-like: Interpolated values on the regular grid.
         """
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
         return zi

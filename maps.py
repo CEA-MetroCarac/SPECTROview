@@ -648,6 +648,7 @@ class Maps(QObject):
         ncpus = int(self.ui.ncpus.text())
 
         if fit_model is not None:
+            self.spectrums.pbar_index = 0
             self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
             self.thread.finished.connect(self.fit_completed)
             self.thread.start()
@@ -683,6 +684,7 @@ class Maps(QObject):
         ncpus = int(self.ui.ncpus.text())
         fit_model = self.loaded_fit_model
         spectra = self.spectrums
+        self.spectrums.pbar_index = 0
 
         self.thread = FitThread(spectra, fit_model, fnames, ncpus)
         self.thread.finished.connect(self.fit_completed)

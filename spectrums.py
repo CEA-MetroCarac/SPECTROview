@@ -771,6 +771,8 @@ class Spectrums(QObject):
         self.ntot = len(fnames)
         ncpus = int(self.ui.ncpus.text())
         fit_model = self.loaded_fit_model
+        self.spectrums.pbar_index = 0
+
         self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
         self.thread.finished.connect(self.fit_completed)
         self.thread.start()
@@ -818,6 +820,7 @@ class Spectrums(QObject):
         ncpus = int(self.ui.ncpus.text())
 
         if fit_model is not None:
+            self.spectrums.pbar_index = 0
             self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
             self.thread.finished.connect(self.fit_completed)
             self.thread.start()

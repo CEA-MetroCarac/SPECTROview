@@ -11,8 +11,8 @@ from common import FitThread, WaferPlot, ShowParameters, DataframeTable
 from common import FIT_METHODS, NCPUS, PLOT_POLICY
 
 from lmfit import fit_report
-from fitspy.spectra import Spectra
-from fitspy.spectrum import Spectrum
+from common import CSpectra, CSpectrum
+
 from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
 import matplotlib.pyplot as plt
@@ -85,7 +85,7 @@ class Maps(QObject):
         self.toolbar = None
         self.loaded_fit_model = None
         self.current_fit_model = None
-        self.spectrums = Spectra()
+        self.spectrums = CSpectra()
         self.df_fit_results = None
 
         # FILTER: Create an instance of the FILTER class
@@ -246,7 +246,7 @@ class Maps(QObject):
             y_values = row[2:].tolist()
             fname = f"{wafer_name}_{coord}"
             if not any(spectrum.fname == fname for spectrum in self.spectrums):
-                spectrum = Spectrum()
+                spectrum = CSpectrum()
                 spectrum.fname = fname
                 spectrum.x = np.asarray(x_values)
                 spectrum.x0 = np.asarray(x_values)
@@ -265,7 +265,7 @@ class Maps(QObject):
             y_values = intensity_row.iloc[2:].tolist()
             fname = f"{wafer_name}_{coord}"
             if not any(spectrum.fname == fname for spectrum in self.spectrums):
-                spectrum = Spectrum()
+                spectrum = CSpectrum()
                 spectrum.fname = fname
                 spectrum.x = np.asarray(x_values)
                 spectrum.x0 = np.asarray(x_values)
@@ -630,7 +630,7 @@ class Maps(QObject):
             return
         else:
             self.current_fit_model = None
-            self.current_fit_model = deepcopy(sel_spectrum.save())
+            self.current_fit_model = deepcopy(sel_spectrum.copy())
         self.ui.lbl_copied_fit_model.setText("copied")
 
     def paste_fit_model(self, fnames=None):
@@ -1312,7 +1312,7 @@ class Maps(QObject):
         wafer_name, coords = self.spectra_id()
         if wafer_name in self.wafers:
             del self.wafers[wafer_name]
-            self.spectrums = Spectra(
+            self.spectrums = CSpectra(
                 spectrum for spectrum in self.spectrums if
                 not spectrum.fname.startswith(wafer_name))
             self.upd_wafers_list()
@@ -1512,20 +1512,20 @@ class Maps(QObject):
                 return
 
     def save_work(self):
-        """Save the current application states to a file."""
+        """Save the current application states to a JSON file."""
         try:
             file_path, _ = QFileDialog.getSaveFileName(None,
                                                        "Save work",
                                                        "",
-                                                       "SPECTROview Files ("
-                                                       "*.svmaps)")
+                                                       "SPECTROview Files (*.maps)")
             if file_path:
+                # Prepare the data to save
                 data_to_save = {
-                    'spectrums': self.spectrums,
-                    'wafers': self.wafers,
+                    'spectrums': [spectrum.save() for spectrum in self.spectrums],
+                    'wafers': {k: v.to_dict() for k, v in self.wafers.items()},
                     'loaded_fit_model': self.loaded_fit_model,
                     'current_fit_model': self.current_fit_model,
-                    'df_fit_results': self.df_fit_results,
+                    'df_fit_results': self.df_fit_results.to_dict() if self.df_fit_results is not None else None,
                     'filters': self.filter.filters,
 
                     'cbb_x': self.ui.cbb_x.currentIndex(),
@@ -1550,50 +1550,49 @@ class Maps(QObject):
                     'wafer_size': self.ui.wafer_size.text(),
                     "color_pal": self.ui.cbb_color_pallete.currentIndex(),
                 }
-                with open(file_path, 'wb') as f:
-                    dill.dump(data_to_save, f)
+                # Write data to a JSON file
+                with open(file_path, 'w') as f:
+                    json.dump(data_to_save, f, indent=4)
                 show_alert("Work saved successfully.")
         except Exception as e:
             show_alert(f"Error saving work: {e}")
 
     def load_work(self, file_path):
-        """
-        Load a previously saved application state from a file.
-        """
+        """Load a previously saved application state from a JSON file."""
         try:
-            with open(file_path, 'rb') as f:
-                load = dill.load(f)
-                self.spectrums = load.get('spectrums')
+            with open(file_path, 'r') as f:
+                load = json.load(f)
+                # Load spectrums
+                self.spectrums = CSpectra()
+                for spectrum_data in load.get('spectrums', []):
+                    spectrum = CSpectrum()
+                    spectrum.set_attributes(spectrum_data)
+                    self.spectrums.append(spectrum)
 
-                # BUGFIX for new fitspy version
-                for spectrum in self.spectrums:
-                    spectrum.baseline.coef = 5
-                    spectrum.baseline.y_eval = None
+                # Load wafers
+                self.wafers = {k: pd.DataFrame(v) for k, v in load.get('wafers', {}).items()}
 
-                self.wafers = load.get('wafers')
                 self.current_fit_model = load.get('current_fit_model')
                 self.loaded_fit_model = load.get('loaded_fit_model')
 
-                self.df_fit_results = load.get('df_fit_results')
-                self.filter.filters = load.get('filters')
+                # Load dataframe results
+                df = load.get('df_fit_results')
+                if df is not None:
+                    self.df_fit_results = pd.DataFrame(df)
+                    self.display_df_in_GUI(self.df_fit_results)
+
+                # Load filters
+                self.filter.filters = load.get('filters', [])
                 self.filter.upd_filter_listbox()
 
-                self.upd_cbb_param()
-                self.upd_cbb_wafer()
-                self.send_df_to_viz()
-                self.upd_wafers_list()
-
-                # Set default values or None for missing keys
+                # Update combo boxes and plot settings
                 self.ui.cbb_x.setCurrentIndex(load.get('cbb_x', -1))
                 self.ui.cbb_y.setCurrentIndex(load.get('cbb_y', -1))
                 self.ui.cbb_z.setCurrentIndex(load.get('cbb_z', -1))
-                self.ui.cbb_param_1.setCurrentIndex(
-                    load.get('cbb_param_1', -1))
-                self.ui.cbb_wafer_1.setCurrentIndex(
-                    load.get('cbb_wafer_1', -1))
+                self.ui.cbb_param_1.setCurrentIndex(load.get('cbb_param_1', -1))
+                self.ui.cbb_wafer_1.setCurrentIndex(load.get('cbb_wafer_1', -1))
                 self.ui.plot_title.setText(load.get('plot_title', ''))
-                self.ui.ent_plot_title_2.setText(
-                    load.get('plot_title2', ''))
+                self.ui.ent_plot_title_2.setText(load.get('plot_title2', ''))
                 self.ui.xmin.setText(load.get('xmin', ''))
                 self.ui.xmax.setText(load.get('xmax', ''))
                 self.ui.ymax.setText(load.get('ymax', ''))
@@ -1601,19 +1600,16 @@ class Maps(QObject):
                 self.ui.ent_xaxis_lbl.setText(load.get('xaxis_lbl', ''))
                 self.ui.ent_yaxis_lbl.setText(load.get('yaxis_lbl', ''))
                 self.ui.ent_x_rot.setText(load.get('x_rot', ''))
-
-                self.ui.cbb_color_pallete.setCurrentIndex(
-                    load.get('color_pal', -1))
+                self.ui.cbb_color_pallete.setCurrentIndex(load.get('color_pal', -1))
                 self.ui.wafer_size.setText(load.get('wafer_size', ''))
                 self.ui.int_vmin.setText(load.get('vmin', ''))
                 self.ui.int_vmax.setText(load.get('vmax', ''))
 
-                # self.plot4()
-                # self.plot3()
-                try:
-                    self.display_df_in_GUI(self.df_fit_results)
-                except:
-                    pass
+                self.upd_cbb_param()
+                self.upd_cbb_wafer()
+                self.send_df_to_viz()
+                self.upd_wafers_list()
+                self.fit_all()
 
         except Exception as e:
             show_alert(f"Error loading saved work (Maps Tab): {e}")

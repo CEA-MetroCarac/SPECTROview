@@ -472,18 +472,7 @@ class Visualization(QDialog):
         self.common.copy_fig_to_clb(canvas=sel_graph.canvas)
 
     def get_sel_graph(self):
-        """
-        Retrieve the currently selected graph object.
-
-        Returns:
-            Tuple: (sel_graph, graph_dialog, sub_window)
-                sel_graph (Graph or None): Selected graph object.
-                graph_dialog (QDialog or None): Graph dialog containing the
-                graph.
-                sub_window (QMdiSubWindow or None): Sub-window containing the
-                graph.
-
-        """
+        """Retrieve the currently selected graph object"""
         try:
             sel_graph = None
             graph_dialog = None
@@ -756,7 +745,7 @@ class Visualization(QDialog):
                                                        "Save work",
                                                        "",
                                                        "SPECTROview Files ("
-                                                       "*.svgraphs)")
+                                                       "*.graphs)")
             if file_path:
                 # Convert Graph objects to serializable format
                 plots_data = {}

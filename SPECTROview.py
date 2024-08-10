@@ -234,7 +234,7 @@ class Main:
         Universal action to open all supported files of SPECTROview:
          - spectroscopic data which can be hyperspectral or spectra (CSV, TXT).
          - dataframes (Excel)
-         - saved work of SPECTROview (svmaps, svspectra, svgraphs)
+         - saved work of SPECTROview (.maps, .spectra, .graphs)
         """
         if file_paths is None:
             # Initialize the last used directory from QSettings
@@ -243,8 +243,8 @@ class Main:
             options |= QFileDialog.ReadOnly
             file_paths, _ = QFileDialog.getOpenFileNames(
                 self.ui.tabWidget, "Open spectra file(s)", last_dir,
-                "SPECTROview formats (*.csv *.txt *.svspectra *.svmaps * "
-                ".svgraphs)", options=options)
+                "SPECTROview formats (*.csv *.txt *.spectra *.maps * "
+                ".graphs)", options=options)
 
         if file_paths:
             last_dir = QFileInfo(file_paths[0]).absolutePath()
@@ -253,20 +253,20 @@ class Main:
             spectra_files = []
             hyperspectral_files = []
             dataframes = []
-            svspectra = None
-            svmaps = None
-            svgraphs = None
+            spectra_file = None
+            maps_file = None
+            graphs_file = None
             df = None
 
             for file_path in file_paths:
                 file_path = Path(file_path)
                 extension = file_path.suffix.lower()  # get file extension
-                if extension == '.svspectra':
-                    svspectra = str(file_path)
-                elif extension == '.svmaps':
-                    svmaps = str(file_path)
-                elif extension == '.svgraphs':
-                    svgraphs = str(file_path)
+                if extension == '.spectra':
+                    spectra_file = str(file_path)
+                elif extension == '.maps':
+                    maps_file = str(file_path)
+                elif extension == '.graphs':
+                    graphs_file = str(file_path)
 
                 elif extension == '.xlsx':
                     dataframes.append(str(file_path))
@@ -298,15 +298,15 @@ class Main:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
                 self.visu.open_dfs(file_paths=dataframes)
 
-            if svspectra:
+            if spectra_file:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
-                self.spectrums.load_work(svspectra)
-            if svmaps:
+                self.spectrums.load_work(spectra_file)
+            if maps_file:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_wafer)
-                self.maps.load_work(svmaps)
-            if svgraphs:
+                self.maps.load_work(maps_file)
+            if graphs_file:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
-                self.visu.load(svgraphs)
+                self.visu.load(graphs_file)
 
     def save(self):
         """Saves the current work depending on the active tab"""

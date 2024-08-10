@@ -5,14 +5,16 @@ import pandas as pd
 from copy import deepcopy
 from pathlib import Path
 import dill
+import json
 
 from common import view_df, show_alert, Filter
 from common import FitThread, FitModelManager, ShowParameters, DataframeTable
 from common import PLOT_POLICY, NCPUS, FIT_METHODS
 
 from lmfit import fit_report
-from fitspy.spectra import Spectra
-from fitspy.spectrum import Spectrum
+from common import CSpectrum, CSpectra
+
+
 from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
 import matplotlib.pyplot as plt
@@ -68,7 +70,7 @@ class Spectrums(QObject):
 
         self.loaded_fit_model = None
         self.current_fit_model = None
-        self.spectrums = Spectra()
+        self.spectrums = CSpectra()
         self.df_fit_results = None
 
         # Create a customized QListWidget
@@ -157,7 +159,7 @@ class Spectrums(QObject):
         """Open and load raw spectral data"""
 
         if self.spectrums is None:
-            self.spectrums = Spectra()
+            self.spectrums = CSpectra()
         if spectra:
             self.spectrums = spectra
         else:
@@ -195,7 +197,7 @@ class Spectrums(QObject):
                     y_values = dfr_sorted.iloc[:, 1].tolist()
 
                     # create FITSPY object
-                    spectrum = Spectrum()
+                    spectrum = CSpectrum()
                     spectrum.fname = fname
                     spectrum.x = np.asarray(x_values)
                     spectrum.x0 = np.asarray(x_values)
@@ -249,7 +251,7 @@ class Spectrums(QObject):
         """
         Get a list of selected spectra based on listbox's checkbox states.
         """
-        checked_spectra = Spectra()
+        checked_spectra = CSpectra()
         for index in range(self.ui.spectrums_listbox.count()):
             item = self.ui.spectrums_listbox.item(index)
             if item.checkState() == Qt.Checked:
@@ -741,20 +743,7 @@ class Spectrums(QObject):
         fnames = checked_spectra.fnames
         self.fit(fnames)
 
-    def copy_fit_model(self):
-        """Copy the model dictionary of the selected spectrum"""
-        # Get only 1 spectrum among several selected spectrum:
-        self.get_fit_settings()
-        sel_spectrum, _ = self.get_spectrum_object()
-        if len(sel_spectrum.peak_models) == 0:
-            self.ui.lbl_copied_fit_model_2.setText("")
-            show_alert("Select a fitted spectrum to copied or collect data")
-            self.current_fit_model = None
-            return
-        else:
-            self.current_fit_model = None
-            self.current_fit_model = deepcopy(sel_spectrum.save())
-        self.ui.lbl_copied_fit_model_2.setText("copied")
+
 
     def apply_loaded_fit_model(self, fnames=None):
         """Apply the loaded fit model to selected spectra"""
@@ -807,10 +796,22 @@ class Spectrums(QObject):
         checked_spectra = self.get_checked_spectra()
         fnames = checked_spectra.fnames
         self.apply_loaded_fit_model(fnames=fnames)
-
+    def copy_fit_model(self):
+        """Copy the model dictionary of the selected spectrum"""
+        # Get only 1 spectrum among several selected spectrum:
+        self.get_fit_settings()
+        sel_spectrum, _ = self.get_spectrum_object()
+        if len(sel_spectrum.peak_models) == 0:
+            self.ui.lbl_copied_fit_model_2.setText("")
+            show_alert("Select a fitted spectrum to copied or collect data")
+            self.current_fit_model = None
+            return
+        else:
+            self.current_fit_model = None
+            self.current_fit_model = deepcopy(sel_spectrum.copy())
+        self.ui.lbl_copied_fit_model_2.setText("copied")
     def paste_fit_model(self, fnames=None):
         """Apply the copied fit model to the selected spectra"""
-
         self.ui.centralwidget.setEnabled(False)  # Disable GUI
         if fnames is None:
             fnames = self.get_spectrum_fnames()
@@ -1176,81 +1177,7 @@ class Spectrums(QObject):
         """To copy figure canvas to clipboard"""
         self.common.copy_fig_to_clb(canvas=self.canvas3)
 
-    def save_work(self):
-        """Save the current application state to a file"""
-        try:
-            file_path, _ = QFileDialog.getSaveFileName(None,
-                                                       "Save work",
-                                                       "",
-                                                       "SPECTROview Files ("
-                                                       "*.svspectra)")
-            if file_path:
-                data_to_save = {
-                    'spectrums': self.spectrums,
-                    'loaded_fit_model': self.loaded_fit_model,
-                    'current_fit_model': self.current_fit_model,
-                    'df_fit_results': self.df_fit_results,
-                    'filters': self.filter.filters,
 
-                    'cbb_x_1': self.ui.cbb_x_3.currentIndex(),
-                    'cbb_y_1': self.ui.cbb_y_3.currentIndex(),
-                    'cbb_z_1': self.ui.cbb_z_3.currentIndex(),
-                    'cbb_x_2': self.ui.cbb_x_7.currentIndex(),
-                    'cbb_y_2': self.ui.cbb_y_7.currentIndex(),
-                    'cbb_z_2': self.ui.cbb_z_7.currentIndex(),
-
-                    "plot_style_1": self.ui.cbb_plot_style_3.currentIndex(),
-                    "plot_style_2": self.ui.cbb_plot_style_7.currentIndex(),
-                }
-                with open(file_path, 'wb') as f:
-                    dill.dump(data_to_save, f)
-                show_alert("Work saved successfully.")
-        except Exception as e:
-            show_alert(f"Error saving work: {e}")
-
-    def load_work(self, file_path):
-        """Load a previously saved application state from a file."""
-        try:
-            with open(file_path, 'rb') as f:
-                load = dill.load(f)
-                try:
-                    self.spectrums = load.get('spectrums')
-                    # BUGFIX for new fitspy version
-                    for spectrum in self.spectrums:
-                        spectrum.baseline.coef = 5
-                        spectrum.baseline.y_eval = None
-
-                    self.current_fit_model = load.get('current_fit_model')
-                    self.loaded_fit_model = load.get('loaded_fit_model')
-
-                    self.df_fit_results = load.get('df_fit_results')
-                    self.filter.filters = load.get('filters')
-                    self.filter.upd_filter_listbox()
-
-                    self.upd_cbb_param()
-                    self.send_df_to_viz()
-                    self.upd_spectra_list()
-
-                    self.ui.cbb_x_3.setCurrentIndex(load.get('cbb_x_1', -1))
-                    self.ui.cbb_y_3.setCurrentIndex(load.get('cbb_y_1', -1))
-                    self.ui.cbb_z_3.setCurrentIndex(load.get('cbb_z_1', -1))
-                    self.ui.cbb_x_7.setCurrentIndex(load.get('cbb_x_2', -1))
-                    self.ui.cbb_y_7.setCurrentIndex(load.get('cbb_y_2', -1))
-                    self.ui.cbb_z_7.setCurrentIndex(load.get('cbb_z_2', -1))
-
-                    self.ui.cbb_plot_style_3.setCurrentIndex(
-                        load.get('plot_style_1', -1))
-                    self.ui.cbb_plot_style_7.setCurrentIndex(
-                        load.get('plot_style_2', -1))
-
-                    try:
-                        self.display_df_in_GUI(self.df_fit_results)
-                    except:
-                        pass
-                except Exception as e:
-                    show_alert(f"Error loading work: {e}")
-        except Exception as e:
-            show_alert(f"Error loading work: {e}")
 
     def load_fit_settings(self):
         """Reload last used fitting settings from QSettings"""
@@ -1358,6 +1285,78 @@ class Spectrums(QObject):
             self.clear_peaks_all()
         else:
             self.clear_peaks()
+
+    def save_work(self):
+        """Save the current application state to a file"""
+        try:
+            file_path, _ = QFileDialog.getSaveFileName(None,
+                                                       "Save work",
+                                                       "",
+                                                       "SPECTROview Files ("
+                                                       "*.spectra)")
+            if file_path:
+                data_to_save = {
+                    'spectrums': [spectrum.save() for spectrum in self.spectrums],
+                    'loaded_fit_model': self.loaded_fit_model,
+                    'current_fit_model': self.current_fit_model,
+                    'df_fit_results': self.df_fit_results.to_dict() if self.df_fit_results is not None else None,
+                    'filters': self.filter.filters,
+                    'cbb_x_1': self.ui.cbb_x_3.currentIndex(),
+                    'cbb_y_1': self.ui.cbb_y_3.currentIndex(),
+                    'cbb_z_1': self.ui.cbb_z_3.currentIndex(),
+                    'cbb_x_2': self.ui.cbb_x_7.currentIndex(),
+                    'cbb_y_2': self.ui.cbb_y_7.currentIndex(),
+                    'cbb_z_2': self.ui.cbb_z_7.currentIndex(),
+                    "plot_style_1": self.ui.cbb_plot_style_3.currentIndex(),
+                    "plot_style_2": self.ui.cbb_plot_style_7.currentIndex(),
+                }
+                with open(file_path, 'w') as f:
+                    json.dump(data_to_save, f, indent=4)
+                show_alert("Work saved successfully.")
+        except Exception as e:
+            show_alert(f"Error saving work: {e}")
+
+    def load_work(self, file_path):
+        """Load a previously saved application state from a file."""
+        try:
+            with open(file_path, 'r') as f:
+                load = json.load(f)
+                try:
+                    self.spectrums = CSpectra()  # Use CSpectra instead of Spectra
+                    for spectrum_data in load.get('spectrums', []):
+                        spectrum = CSpectrum()  # Create CSpectrum instances
+                        spectrum.set_attributes(spectrum_data)
+                        self.spectrums.append(spectrum)
+
+                    self.current_fit_model = load.get('current_fit_model')
+                    self.loaded_fit_model = load.get('loaded_fit_model')
+                    df = load.get('df_fit_results')
+                    if df is not None:
+                        self.df_fit_results = pd.DataFrame(df)
+                        self.display_df_in_GUI(self.df_fit_results)
+
+                    self.filter.filters = load.get('filters', [])
+                    self.filter.upd_filter_listbox()
+
+                    self.upd_cbb_param()
+                    self.send_df_to_viz()
+                    self.upd_spectra_list()
+                    self.fit_all()
+
+                    self.ui.cbb_x_3.setCurrentIndex(load.get('cbb_x_1', -1))
+                    self.ui.cbb_y_3.setCurrentIndex(load.get('cbb_y_1', -1))
+                    self.ui.cbb_z_3.setCurrentIndex(load.get('cbb_z_1', -1))
+                    self.ui.cbb_x_7.setCurrentIndex(load.get('cbb_x_2', -1))
+                    self.ui.cbb_y_7.setCurrentIndex(load.get('cbb_y_2', -1))
+                    self.ui.cbb_z_7.setCurrentIndex(load.get('cbb_z_2', -1))
+
+                    self.ui.cbb_plot_style_3.setCurrentIndex(load.get('plot_style_1', -1))
+                    self.ui.cbb_plot_style_7.setCurrentIndex(load.get('plot_style_2', -1))
+
+                except Exception as e:
+                    show_alert(f"Error loading work: {e}")
+        except Exception as e:
+            show_alert(f"Error loading work: {e}")
 
 
 class CustomListWidget(QListWidget):

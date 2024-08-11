@@ -116,9 +116,8 @@ class Maps(QObject):
         self.ui.cb_attached.stateChanged.connect(self.delay_plot)
         self.ui.cb_normalize.stateChanged.connect(self.delay_plot)
 
-        self.ui.size300.toggled.connect(self.delay_plot)
-        self.ui.size200.toggled.connect(self.delay_plot)
-        self.ui.size150.toggled.connect(self.delay_plot)
+        self.ui.cbb_wafer_size.currentIndexChanged.connect(self.delay_plot)
+        self.ui.rdbt_show_wafer.toggled.connect(self.delay_plot)
 
         self.ui.cb_limits.stateChanged.connect(self.delay_plot)
         self.ui.cb_expr.stateChanged.connect(self.delay_plot)
@@ -1110,17 +1109,14 @@ class Maps(QObject):
         """
         Plot wafer maps of measurement sites
         """
-        if self.ui.size150.isChecked():
-            r = 75
-        elif self.ui.size200.isChecked():
-            r = 100
-        elif self.ui.size300.isChecked():
-            r = 152
+        r = int(self.ui.cbb_wafer_size.currentText())/2
 
         self.ax2.clear()
-        wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
-                                      color='black', linewidth=1)
-        self.ax2.add_patch(wafer_circle)
+        if self.ui.rdbt_show_wafer.isChecked():
+            wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
+                                          color='black', linewidth=1)
+            self.ax2.add_patch(wafer_circle)
+            self.ax2.set_yticklabels([])
 
         all_x, all_y = self.get_mes_sites_coord()
         self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
@@ -1130,7 +1126,6 @@ class Maps(QObject):
             x, y = zip(*coords)
             self.ax2.scatter(x, y, marker='o', color='red', s=40)
 
-        self.ax2.set_yticklabels([])
         self.ax2.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.ax2.get_figure().tight_layout()
         self.canvas2.draw()

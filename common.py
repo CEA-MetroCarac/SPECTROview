@@ -44,6 +44,7 @@ PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy.mplstyle")
 
 PEAK_MODELS = ["Lorentzian", "Gaussian", "PseudoVoigt", "GaussianAsym",
                "LorentzianAsym"]
+WAFER_SIZE = ['100', '150', '200', '300']
 
 FIT_PARAMS = {'method': 'leastsq', 'fit_negative': False, 'fit_outliers': False,
               'max_ite': 200, 'coef_noise': 1, 'xtol': 1.e-4, 'ncpus': 'auto'}

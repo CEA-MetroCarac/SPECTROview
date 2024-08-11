@@ -56,7 +56,7 @@ from PySide6.QtCore import QFile, QSettings, QFileInfo
 from PySide6.QtGui import QIcon
 
 from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
-    show_alert, PALETTE
+    show_alert, PALETTE, WAFER_SIZE
 
 from ui import resources #Icon, logo, etc..
 from maps import Maps
@@ -160,6 +160,9 @@ class Main:
         self.ui.btn_paste_fit_model.clicked.connect(
             self.maps.paste_fit_model_fnc_handler)
         self.ui.cbb_fit_models.addItems(PEAK_MODELS)
+        self.ui.cbb_wafer_size.addItems(WAFER_SIZE)
+        self.ui.cbb_wafer_size.setCurrentIndex(3)
+
         self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range_handler)
 
         self.ui.btn_send_to_compare.clicked.connect(

@@ -349,7 +349,7 @@
                       <x>0</x>
                       <y>0</y>
                       <width>344</width>
-                      <height>448</height>
+                      <height>450</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0,0,0,0,0,0,0">
@@ -729,7 +729,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>372</height>
+                          <height>385</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -1218,7 +1218,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>717</width>
-                               <height>202</height>
+                               <height>224</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -1588,8 +1588,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>367</height>
+                       <width>301</width>
+                       <height>343</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -3472,23 +3472,19 @@
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QLabel" name="label_38">
+                    <widget class="QRadioButton" name="rdbt_show_2Dmap">
                      <property name="text">
-                      <string>Wafer size</string>
+                      <string>2D map</string>
+                     </property>
+                     <property name="checked">
+                      <bool>false</bool>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="size150">
+                    <widget class="QRadioButton" name="rdbt_show_wafer">
                      <property name="text">
-                      <string>150</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QRadioButton" name="size200">
-                     <property name="text">
-                      <string>200</string>
+                      <string>Wafer</string>
                      </property>
                      <property name="checked">
                       <bool>true</bool>
@@ -3496,9 +3492,18 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="size300">
-                     <property name="text">
-                      <string>300</string>
+                    <widget class="QComboBox" name="cbb_wafer_size">
+                     <property name="toolTip">
+                      <string>Wafer diamters (nm)</string>
+                     </property>
+                     <property name="currentText">
+                      <string/>
+                     </property>
+                     <property name="currentIndex">
+                      <number>-1</number>
+                     </property>
+                     <property name="placeholderText">
+                      <string>Wafer diamters (nm)</string>
                      </property>
                     </widget>
                    </item>
@@ -4211,7 +4216,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>699</width>
-                               <height>189</height>
+                               <height>198</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -8662,22 +8667,6 @@
    <addaction name="actionLightMode"/>
    <addaction name="separator"/>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1553</width>
-     <height>24</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menukl">
-    <property name="title">
-     <string>kl</string>
-    </property>
-   </widget>
-   <addaction name="menukl"/>
-  </widget>
   <action name="actionabout">
    <property name="text">
     <string>About</string>
@@ -8842,7 +8831,7 @@
   </action>
  </widget>
  <resources>
-  <include location="resources_new.qrc"/>
+  <include location="resources.qrc"/>
  </resources>
  <connections/>
 </ui>

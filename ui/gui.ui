@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1553</width>
-    <height>1006</height>
+    <height>1019</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1218,7 +1218,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>717</width>
-                               <height>182</height>
+                               <height>195</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -1589,7 +1589,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>347</height>
+                       <height>346</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -2844,7 +2844,7 @@
           <property name="lineWidth">
            <number>0</number>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_59" stretch="0,65">
+          <layout class="QVBoxLayout" name="verticalLayout_59" stretch="0">
            <property name="leftMargin">
             <number>3</number>
            </property>
@@ -2857,51 +2857,6 @@
            <property name="bottomMargin">
             <number>3</number>
            </property>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_101">
-             <property name="leftMargin">
-              <number>2</number>
-             </property>
-             <property name="topMargin">
-              <number>2</number>
-             </property>
-             <property name="rightMargin">
-              <number>2</number>
-             </property>
-             <property name="bottomMargin">
-              <number>2</number>
-             </property>
-             <item>
-              <spacer name="horizontalSpacer_54">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QLabel" name="logo_2">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="pixmap">
-                <pixmap resource="resources.qrc">:/icon/logo.png</pixmap>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
            <item>
             <widget class="QGroupBox" name="groupBox_12">
              <property name="sizePolicy">
@@ -4229,7 +4184,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>699</width>
-                               <height>164</height>
+                               <height>163</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -4617,7 +4572,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>353</height>
+                       <height>343</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
@@ -6341,7 +6296,7 @@
           <property name="lineWidth">
            <number>0</number>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_17" stretch="5,30,65">
+          <layout class="QVBoxLayout" name="verticalLayout_17" stretch="30,65">
            <property name="leftMargin">
             <number>3</number>
            </property>
@@ -6354,51 +6309,6 @@
            <property name="bottomMargin">
             <number>3</number>
            </property>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_24">
-             <property name="leftMargin">
-              <number>2</number>
-             </property>
-             <property name="topMargin">
-              <number>2</number>
-             </property>
-             <property name="rightMargin">
-              <number>2</number>
-             </property>
-             <property name="bottomMargin">
-              <number>2</number>
-             </property>
-             <item>
-              <spacer name="horizontalSpacer_53">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QLabel" name="logo_">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="pixmap">
-                <pixmap resource="resources.qrc">:/icon/logo.png</pixmap>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
            <item>
             <widget class="QGroupBox" name="groupBox">
              <property name="sizePolicy">

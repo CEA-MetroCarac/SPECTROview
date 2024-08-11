@@ -5,14 +5,13 @@ import pandas as pd
 import json
 from copy import deepcopy
 from pathlib import Path
-import dill
-from common import view_df, show_alert, FitModelManager, Filter
-from common import FitThread, WaferPlot, ShowParameters, DataframeTable
+from common import view_df, show_alert, spectrum_to_dict, set_attributes
+from common import FitThread, WaferPlot, ShowParameters, DataframeTable, FitModelManager, Filter
 from common import FIT_METHODS, NCPUS, PLOT_POLICY
 
 from lmfit import fit_report
-from common import CSpectra, CSpectrum
-
+from fitspy.spectra import Spectra
+from fitspy.spectrum import Spectrum
 from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
 import matplotlib.pyplot as plt
@@ -85,7 +84,7 @@ class Maps(QObject):
         self.toolbar = None
         self.loaded_fit_model = None
         self.current_fit_model = None
-        self.spectrums = CSpectra()
+        self.spectrums = Spectra()
         self.df_fit_results = None
 
         # FILTER: Create an instance of the FILTER class
@@ -246,7 +245,7 @@ class Maps(QObject):
             y_values = row[2:].tolist()
             fname = f"{wafer_name}_{coord}"
             if not any(spectrum.fname == fname for spectrum in self.spectrums):
-                spectrum = CSpectrum()
+                spectrum = Spectrum()
                 spectrum.fname = fname
                 spectrum.x = np.asarray(x_values)
                 spectrum.x0 = np.asarray(x_values)
@@ -265,7 +264,7 @@ class Maps(QObject):
             y_values = intensity_row.iloc[2:].tolist()
             fname = f"{wafer_name}_{coord}"
             if not any(spectrum.fname == fname for spectrum in self.spectrums):
-                spectrum = CSpectrum()
+                spectrum = Spectrum()
                 spectrum.fname = fname
                 spectrum.x = np.asarray(x_values)
                 spectrum.x0 = np.asarray(x_values)
@@ -630,7 +629,7 @@ class Maps(QObject):
             return
         else:
             self.current_fit_model = None
-            self.current_fit_model = deepcopy(sel_spectrum.copy())
+            self.current_fit_model = deepcopy(sel_spectrum.save())
         self.ui.lbl_copied_fit_model.setText("copied")
 
     def paste_fit_model(self, fnames=None):
@@ -1315,7 +1314,7 @@ class Maps(QObject):
         wafer_name, coords = self.spectra_id()
         if wafer_name in self.wafers:
             del self.wafers[wafer_name]
-            self.spectrums = CSpectra(
+            self.spectrums = Spectra(
                 spectrum for spectrum in self.spectrums if
                 not spectrum.fname.startswith(wafer_name))
             self.upd_wafers_list()
@@ -1514,6 +1513,7 @@ class Maps(QObject):
             except:
                 return
 
+
     def save_work(self):
         """Save the current application states to a JSON file."""
         try:
@@ -1524,7 +1524,7 @@ class Maps(QObject):
             if file_path:
                 # Prepare the data to save
                 data_to_save = {
-                    'spectrums': [spectrum.save() for spectrum in self.spectrums],
+                    'spectrums': [spectrum_to_dict(spectrum) for spectrum in self.spectrums],
                     'wafers': {k: v.to_dict() for k, v in self.wafers.items()},
                     'loaded_fit_model': self.loaded_fit_model,
                     'current_fit_model': self.current_fit_model,
@@ -1566,10 +1566,11 @@ class Maps(QObject):
             with open(file_path, 'r') as f:
                 load = json.load(f)
                 # Load spectrums
-                self.spectrums = CSpectra()
+
+                self.spectrums = Spectra()
                 for spectrum_data in load.get('spectrums', []):
-                    spectrum = CSpectrum()
-                    spectrum.set_attributes(spectrum_data)
+                    spectrum = Spectrum()
+                    set_attributes(spectrum, spectrum_data)
                     self.spectrums.append(spectrum)
 
                 # Load wafers

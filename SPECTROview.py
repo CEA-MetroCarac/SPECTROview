@@ -46,22 +46,19 @@ Usage:
 
 import sys
 import os
-import numpy as np
 import pandas as pd
 import datetime
 from pathlib import Path
-import ctypes
 
-from PySide6.QtWidgets import QApplication, QDialog, QListWidget, QComboBox, \
-    QMessageBox, QFileDialog
+from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings, QFileInfo
-from PySide6.QtGui import QDoubleValidator, QIcon
+from PySide6.QtGui import QIcon
 
 from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
     show_alert, PALETTE
 
-from ui import resources_new
+from ui import resources #Icon, logo, etc..
 from maps import Maps
 from spectrums import Spectrums
 from visualisation import Visualization

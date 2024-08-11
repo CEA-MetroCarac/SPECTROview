@@ -1,21 +1,11 @@
 """
 Module contains all utilities functions and common methods of the appli
 """
-import time
 import markdown
 import os
-import sys
 import json
 from copy import deepcopy
 import pandas as pd
-import dill
-import itertools
-
-from fitspy.spectrum import Spectrum
-from fitspy.spectra import Spectra
-from fitspy.utils import save_to_json, load_from_json
-from fitspy.spectra_map import SpectraMap
-
 try:
     import win32clipboard
 except:
@@ -72,17 +62,56 @@ LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
                    'center left', 'center right', 'lower center',
                    'upper center', 'center']
 
-def compress_and_encode(array):
+def compress(array):
     """Compress and encode a numpy array to a base64 string."""
     compressed = zlib.compress(array.tobytes())
     encoded = base64.b64encode(compressed).decode('utf-8')
     return encoded
 
-def decode_and_decompress(data, dtype):
+def decompress(data, dtype):
     """Decode and decompress a base64 string to a numpy array."""
     decoded = base64.b64decode(data.encode('utf-8'))
     decompressed = zlib.decompress(decoded)
     return np.frombuffer(decompressed, dtype=dtype)
+
+def spectrum_to_dict(spectrum):
+    """Custom "save" method to save fitted spectrum data in a dictionary"""
+    excluded_keys = ['outliers_limit', 'peak_models', 'peak_index', 'bkg_model', 'result_fit', 'baseline', 'attractors']
+    model_dict = {}
+    for key, val in vars(spectrum).items():
+        if key not in excluded_keys:
+            if isinstance(val, np.ndarray):  # 'x0', 'y0', 'x', 'y'
+                model_dict[key] = compress(val)
+            else:
+                model_dict[key] = val
+
+    model_dict['baseline'] = dict(vars(spectrum.baseline).items())
+    bkg_model = spectrum.bkg_model
+    if bkg_model is not None:
+        model_dict['bkg_model'] = {bkg_model.name2: bkg_model.param_hints}
+
+    peak_models = {}
+    for i, peak_model in enumerate(spectrum.peak_models):
+        model_name = spectrum.get_model_name(peak_model)
+        peak_models[i] = {}
+        peak_models[i][model_name] = peak_model.param_hints
+    model_dict['peak_models'] = peak_models
+
+    if hasattr(spectrum.result_fit, 'success'):
+        model_dict['result_fit_success'] = spectrum.result_fit.success
+
+    return model_dict
+def set_attributes(spectrum, model_dict):
+    """To set attributes of spectrum from JSON dict"""
+    spectrum.set_attributes(model_dict)
+    if 'x0' in model_dict:
+        spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
+    if 'y0' in model_dict:
+        spectrum.y0 = decompress(model_dict['y0'], dtype=np.float64)
+    if 'x' in model_dict:
+        spectrum.x = decompress(model_dict['x'], dtype=np.float64)
+    if 'y' in model_dict:
+        spectrum.y = decompress(model_dict['y'], dtype=np.float64)
 def rgba_to_named_color(rgba):
     """Convert RGBA tuple to a named color string."""
     # Check if the exact RGBA tuple exists in the dictionary
@@ -121,148 +150,6 @@ def view_df(tabWidget, df):
     layout = QVBoxLayout(df_viewer)
     layout.addWidget(table_widget)
     df_viewer.show()
-class CSpectrum(Spectrum):
-    def save(self, fname_json=None):
-        """Override the save method of Spectrum class."""
-        excluded_keys = ['outliers_limit', 'peak_models', 'peak_index',
-                         'bkg_model', 'result_fit', 'baseline', 'attractors']
-        model_dict = self._prepare_model_dict(excluded_keys)
-
-        if fname_json is not None:
-            model_dict_json = model_dict.copy()
-            model_dict_json['baseline'].pop('y_eval')
-            save_to_json(fname_json, model_dict_json)
-
-        return model_dict
-
-    def copy(self, fname_json=None):
-        """Override the copy method of Spectrum class."""
-        excluded_keys = ['x0', 'y0', 'x', 'y', 'outliers_limit',
-                         'peak_models', 'peak_index', 'bkg_model',
-                         'result_fit', 'baseline', 'attractors']
-        model_dict = self._prepare_model_dict(excluded_keys, include_arrays=False)
-
-        if fname_json is not None:
-            model_dict_json = model_dict.copy()
-            model_dict_json['baseline'].pop('y_eval')
-            save_to_json(fname_json, model_dict_json)
-
-        return model_dict
-
-    def _prepare_model_dict(self, excluded_keys, include_arrays=True):
-        """Helper function to prepare the model dictionary."""
-        model_dict = {}
-        for key, val in vars(self).items():
-            if key not in excluded_keys:
-                if include_arrays and isinstance(val, np.ndarray):  # Handle numpy arrays
-                    model_dict[key] = compress_and_encode(val)
-                else:
-                    model_dict[key] = val
-
-        model_dict['baseline'] = dict(vars(self.baseline).items())
-
-        bkg_model = self.bkg_model
-        if bkg_model is not None:
-            model_dict['bkg_model'] = {bkg_model.name2: bkg_model.param_hints}
-
-        peak_models = {}
-        for i, peak_model in enumerate(self.peak_models):
-            model_name = self.get_model_name(peak_model)
-            peak_models[i] = {}
-            peak_models[i][model_name] = peak_model.param_hints
-        model_dict['peak_models'] = peak_models
-
-        if hasattr(self.result_fit, 'success'):
-            model_dict['result_fit_success'] = self.result_fit.success
-
-        return model_dict
-
-    def set_attributes(self, model_dict):
-        """Set attributes from a dictionary (obtained from a .json reloading)"""
-
-        # Call the original set_attributes from the Spectrum class
-        super().set_attributes(model_dict)
-
-        # Convert x, y, x0, y0 from base64-encoded strings to numpy arrays if necessary
-        if 'x0' in model_dict:
-            self.x0 = decode_and_decompress(model_dict['x0'], dtype=np.float64)
-        if 'y0' in model_dict:
-            self.y0 = decode_and_decompress(model_dict['y0'], dtype=np.float64)
-        if 'x' in model_dict:
-            self.x = decode_and_decompress(model_dict['x'], dtype=np.float64)
-        if 'y' in model_dict:
-            self.y = decode_and_decompress(model_dict['y'], dtype=np.float64)
-
-
-class CSpectra(Spectra):
-    def __init__(self, spectra_list=None):
-        if spectra_list is not None:
-            super().__init__(spectra_list)
-        else:
-            super().__init__()
-        self.spectra_maps = []
-        self.pbar_index = 0
-
-    def get_objects(self, fname):
-        """Return spectrum and parent (spectra or spectra map) related to 'fname'"""
-        fnames = [spectrum.fname for spectrum in self]
-        if fname in fnames:
-            return self[fnames.index(fname)], self
-
-        for spectra_map in self.spectra_maps:
-            fnames = [spectrum.fname for spectrum in spectra_map]
-            if fname in fnames:
-                return spectra_map[fnames.index(fname)], spectra_map
-
-        print(f"{fname} not found in spectra")
-        return None, None
-
-    def save(self, fname_json, fnames=None):
-        """Override the save method of Spectra class"""
-        dirname = os.path.dirname(fname_json)
-        if not os.path.isdir(dirname):
-            print(f"directory {dirname} doesn't exist")
-            return
-        if fnames is None:
-            fnames = self.fnames
-        dict_spectra = {}
-        for i, fname in enumerate(fnames):
-            spectrum, _ = self.get_objects(fname)
-            dict_spectra[i] = spectrum.save()
-            dict_spectra[i]['baseline'].pop('y_eval')
-
-        save_to_json(fname_json, dict_spectra, indent=3)
-
-    @staticmethod
-    def load(fname_json):
-        """Return a CSpectra object from a .json file"""
-
-        dict_spectra = load_from_json(fname_json)
-
-        spectra = CSpectra()
-        fname_maps = []
-        for i in range(len(dict_spectra.keys())):
-            fname = dict_spectra[i]['fname']
-
-            # spectrum attached to a SpectraMap object
-            if "X=" in fname:
-                fname_map = fname.split("  X=")[0]
-                if fname_map not in fname_maps:
-                    spectra.spectra_maps.append(SpectraMap.load_map(fname_map))
-                    fname_maps.append(fname_map)
-                ind = fname_maps.index(fname_map)
-                spectra_map = spectra.spectra_maps[ind]
-                for spectrum in spectra_map:
-                    if fname == spectrum.fname:
-                        spectrum.set_attributes(dict_spectra[i])
-                        spectrum.preprocess()
-                        break
-            else:
-                spectrum = CSpectrum()  # Use CSpectrum instead of Spectrum
-                spectrum.set_attributes(dict_spectra[i])
-                spectrum.preprocess()
-                spectra.append(spectrum)
-        return spectra
 
 class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.

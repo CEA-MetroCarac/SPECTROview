@@ -4,17 +4,15 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 from pathlib import Path
-import dill
 import json
 
-from common import view_df, show_alert, Filter
-from common import FitThread, FitModelManager, ShowParameters, DataframeTable
+from common import view_df, show_alert, spectrum_to_dict, set_attributes
+from common import FitThread, FitModelManager, ShowParameters, DataframeTable, Filter
 from common import PLOT_POLICY, NCPUS, FIT_METHODS
 
 from lmfit import fit_report
-from common import CSpectrum, CSpectra
-
-
+from fitspy.spectra import Spectra
+from fitspy.spectrum import Spectrum
 from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
 import matplotlib.pyplot as plt
@@ -70,7 +68,7 @@ class Spectrums(QObject):
 
         self.loaded_fit_model = None
         self.current_fit_model = None
-        self.spectrums = CSpectra()
+        self.spectrums = Spectra()
         self.df_fit_results = None
 
         # Create a customized QListWidget
@@ -159,7 +157,7 @@ class Spectrums(QObject):
         """Open and load raw spectral data"""
 
         if self.spectrums is None:
-            self.spectrums = CSpectra()
+            self.spectrums = Spectra()
         if spectra:
             self.spectrums = spectra
         else:
@@ -197,7 +195,7 @@ class Spectrums(QObject):
                     y_values = dfr_sorted.iloc[:, 1].tolist()
 
                     # create FITSPY object
-                    spectrum = CSpectrum()
+                    spectrum = Spectrum()
                     spectrum.fname = fname
                     spectrum.x = np.asarray(x_values)
                     spectrum.x0 = np.asarray(x_values)
@@ -251,7 +249,7 @@ class Spectrums(QObject):
         """
         Get a list of selected spectra based on listbox's checkbox states.
         """
-        checked_spectra = CSpectra()
+        checked_spectra = Spectra()
         for index in range(self.ui.spectrums_listbox.count()):
             item = self.ui.spectrums_listbox.item(index)
             if item.checkState() == Qt.Checked:
@@ -816,7 +814,7 @@ class Spectrums(QObject):
             return
         else:
             self.current_fit_model = None
-            self.current_fit_model = deepcopy(sel_spectrum.copy())
+            self.current_fit_model = deepcopy(sel_spectrum.save())
         self.ui.lbl_copied_fit_model_2.setText("copied")
     def paste_fit_model(self, fnames=None):
         """Apply the copied fit model to the selected spectra"""
@@ -1304,7 +1302,7 @@ class Spectrums(QObject):
                                                        "*.spectra)")
             if file_path:
                 data_to_save = {
-                    'spectrums': [spectrum.save() for spectrum in self.spectrums],
+                    'spectrums': [spectrum_to_dict(spectrum) for spectrum in self.spectrums],
                     'loaded_fit_model': self.loaded_fit_model,
                     'current_fit_model': self.current_fit_model,
                     'df_fit_results': self.df_fit_results.to_dict() if self.df_fit_results is not None else None,
@@ -1330,10 +1328,10 @@ class Spectrums(QObject):
             with open(file_path, 'r') as f:
                 load = json.load(f)
                 try:
-                    self.spectrums = CSpectra()  # Use CSpectra instead of Spectra
+                    self.spectrums = Spectra()
                     for spectrum_data in load.get('spectrums', []):
-                        spectrum = CSpectrum()  # Create CSpectrum instances
-                        spectrum.set_attributes(spectrum_data)
+                        spectrum = Spectrum()
+                        set_attributes(spectrum, spectrum_data)
                         self.spectrums.append(spectrum)
 
                     self.current_fit_model = load.get('current_fit_model')

@@ -809,7 +809,8 @@ class Spectrums(QObject):
         sel_spectrum, _ = self.get_spectrum_object()
         if len(sel_spectrum.peak_models) == 0:
             self.ui.lbl_copied_fit_model_2.setText("")
-            show_alert("Select a fitted spectrum to copied or collect data")
+            msg =("Select spectrum is not fitted or No fit results to collect")
+            show_alert(msg)
             self.current_fit_model = None
             return
         else:
@@ -868,17 +869,21 @@ class Spectrums(QObject):
         fit_results_list = []
         self.df_fit_results = None
 
+        # Only work on selected spectra (via checkboxes)
         checked_spectra = self.get_checked_spectra()
 
         for spectrum in checked_spectra:
-            if hasattr(spectrum.result_fit, 'best_values'):
-                success = spectrum.result_fit.success
-                rsquared = spectrum.result_fit.rsquared
-                best_values = spectrum.result_fit.best_values
-                best_values["Filename"] = spectrum.fname
-                best_values["success"] = success
-                best_values["Rsquared"] = rsquared
-                fit_results_list.append(best_values)
+            if hasattr(spectrum, 'peak_models'):
+                fit_result = {'Filename': spectrum.fname}
+                for model in spectrum.peak_models:
+                    if hasattr(model, 'param_names') and hasattr(model, 'param_hints'):
+                        for param_name in model.param_names:
+                            key = param_name.split('_')[1]
+                            if key in model.param_hints and 'value' in model.param_hints[key]:
+                                fit_result[param_name] = model.param_hints[key]['value']
+
+                if len(fit_result) > 1:
+                    fit_results_list.append(fit_result)
         self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
 
         if self.df_fit_results is not None and not self.df_fit_results.empty:
@@ -1307,14 +1312,6 @@ class Spectrums(QObject):
                     'current_fit_model': self.current_fit_model,
                     'df_fit_results': self.df_fit_results.to_dict() if self.df_fit_results is not None else None,
                     'filters': self.filter.filters,
-                    'cbb_x_1': self.ui.cbb_x_3.currentIndex(),
-                    'cbb_y_1': self.ui.cbb_y_3.currentIndex(),
-                    'cbb_z_1': self.ui.cbb_z_3.currentIndex(),
-                    'cbb_x_2': self.ui.cbb_x_7.currentIndex(),
-                    'cbb_y_2': self.ui.cbb_y_7.currentIndex(),
-                    'cbb_z_2': self.ui.cbb_z_7.currentIndex(),
-                    "plot_style_1": self.ui.cbb_plot_style_3.currentIndex(),
-                    "plot_style_2": self.ui.cbb_plot_style_7.currentIndex(),
                 }
                 with open(file_path, 'w') as f:
                     json.dump(data_to_save, f, indent=4)
@@ -1336,32 +1333,15 @@ class Spectrums(QObject):
 
                     self.current_fit_model = load.get('current_fit_model')
                     self.loaded_fit_model = load.get('loaded_fit_model')
-                    df = load.get('df_fit_results')
-                    if df is not None:
-                        self.df_fit_results = pd.DataFrame(df)
-                        self.display_df_in_GUI(self.df_fit_results)
-
                     self.filter.filters = load.get('filters', [])
                     self.filter.upd_filter_listbox()
 
-                    self.upd_cbb_param()
-                    self.send_df_to_viz()
+                    QTimer.singleShot(300, self.collect_results)
                     self.upd_spectra_list()
-
-                    self.ui.cbb_x_3.setCurrentIndex(load.get('cbb_x_1', -1))
-                    self.ui.cbb_y_3.setCurrentIndex(load.get('cbb_y_1', -1))
-                    self.ui.cbb_z_3.setCurrentIndex(load.get('cbb_z_1', -1))
-                    self.ui.cbb_x_7.setCurrentIndex(load.get('cbb_x_2', -1))
-                    self.ui.cbb_y_7.setCurrentIndex(load.get('cbb_y_2', -1))
-                    self.ui.cbb_z_7.setCurrentIndex(load.get('cbb_z_2', -1))
-
-                    self.ui.cbb_plot_style_3.setCurrentIndex(load.get('plot_style_1', -1))
-                    self.ui.cbb_plot_style_7.setCurrentIndex(load.get('plot_style_2', -1))
-
                 except Exception as e:
                     show_alert(f"Error loading work: {e}")
         except Exception as e:
-            show_alert(f"Error loading work: {e}")
+            show_alert(f"Error loading saved work (Spectrums Tab): {e}")
 
 
 class CustomListWidget(QListWidget):

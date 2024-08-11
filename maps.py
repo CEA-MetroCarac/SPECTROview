@@ -298,26 +298,28 @@ class Maps(QObject):
             show_alert("No fit dataframe to display")
 
     def collect_results(self):
-        """Collect fit results to create a dataframe"""
-        # Add all dict into a list, then convert to a dataframe.
+        """Collect fit results to create a consolidated dataframe"""
+        # Add all dicts into a list, then convert to a dataframe.
         self.copy_fit_model()
         fit_results_list = []
         self.df_fit_results = None
 
         for spectrum in self.spectrums:
-            if hasattr(spectrum.result_fit, 'best_values'):
+            if hasattr(spectrum, 'peak_models'):
                 wafer_name, coord = self.spectrum_object_id(spectrum)
                 x, y = coord
-                success = spectrum.result_fit.success
-                rsquared = spectrum.result_fit.rsquared
-                best_values = spectrum.result_fit.best_values
-                best_values["Filename"] = wafer_name
-                best_values["X"] = x
-                best_values["Y"] = y
-                best_values["success"] = success
-                best_values["Rsquared"] = rsquared
-                fit_results_list.append(best_values)
-        self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
+                fit_result = {'Filename': wafer_name, 'X': x, 'Y': y}
+
+                for model in spectrum.peak_models:
+                    if hasattr(model, 'param_names') and hasattr(model, 'param_hints'):
+                        for param_name in model.param_names:
+                            key = param_name.split('_')[1]
+                            if key in model.param_hints and 'value' in model.param_hints[key]:
+                                fit_result[param_name] = model.param_hints[key]['value']
+
+                if len(fit_result) > 3:
+                    fit_results_list.append(fit_result)
+        self.df_fit_results = pd.DataFrame(fit_results_list).round(3)
 
         if self.df_fit_results is not None and not self.df_fit_results.empty:
             # reindex columns according to the parameters names
@@ -349,7 +351,7 @@ class Maps(QObject):
             self.df_fit_results['Zone'] = self.df_fit_results.apply(
                 lambda row: self.common.zone(row, diameter), axis=1)
 
-            self.display_df_in_GUI(self.df_fit_results)
+        self.display_df_in_GUI(self.df_fit_results)
 
         self.filtered_df = self.df_fit_results
         self.upd_cbb_param()
@@ -570,7 +572,6 @@ class Maps(QObject):
 
     def get_fit_settings(self):
         """Get all settings for the fitting action."""
-
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         fit_params = sel_spectrum.fit_params.copy()
         fit_params['fit_negative'] = self.ui.cb_fit_negative.isChecked()
@@ -624,7 +625,8 @@ class Maps(QObject):
         sel_spectrum, _ = self.get_spectrum_object()
         if len(sel_spectrum.peak_models) == 0:
             self.ui.lbl_copied_fit_model.setText("")
-            show_alert("Select a fitted spectrum to copied or collect data")
+            msg = ("Select spectrum is not fitted or No fit results to collect")
+            show_alert(msg)
             self.current_fit_model = None
             return
         else:
@@ -773,7 +775,6 @@ class Maps(QObject):
 
     def upd_cbb_wafer(self):
         """Update the combobox with unique values from 'Wafer' column"""
-
         self.ui.cbb_wafer_1.clear()
         try:
             wafer_names = self.df_fit_results['Filename'].unique()
@@ -1522,7 +1523,6 @@ class Maps(QObject):
                                                        "",
                                                        "SPECTROview Files (*.maps)")
             if file_path:
-                # Prepare the data to save
                 data_to_save = {
                     'spectrums': [spectrum_to_dict(spectrum) for spectrum in self.spectrums],
                     'wafers': {k: v.to_dict() for k, v in self.wafers.items()},
@@ -1530,30 +1530,7 @@ class Maps(QObject):
                     'current_fit_model': self.current_fit_model,
                     'df_fit_results': self.df_fit_results.to_dict() if self.df_fit_results is not None else None,
                     'filters': self.filter.filters,
-
-                    'cbb_x': self.ui.cbb_x.currentIndex(),
-                    'cbb_y': self.ui.cbb_y.currentIndex(),
-                    'cbb_z': self.ui.cbb_z.currentIndex(),
-                    "cbb_param_1": self.ui.cbb_param_1.currentIndex(),
-                    "cbb_wafer_1": self.ui.cbb_wafer_1.currentIndex(),
-
-                    'plot_title': self.ui.plot_title.text(),
-                    'plot_title2': self.ui.ent_plot_title_2.text(),
-                    'xmin': self.ui.xmin.text(),
-                    'xmax': self.ui.xmax.text(),
-                    'ymax': self.ui.ymax.text(),
-                    'ymin': self.ui.ymin.text(),
-                    'xaxis_lbl': self.ui.ent_xaxis_lbl.text(),
-                    'yaxis_lbl': self.ui.ent_yaxis_lbl.text(),
-                    'x_rot': self.ui.ent_x_rot.text(),
-                    "plot_style": self.ui.cbb_plot_style.currentIndex(),
-                    'vmin': self.ui.int_vmin.text(),
-                    'vmax': self.ui.int_vmax.text(),
-
-                    'wafer_size': self.ui.wafer_size.text(),
-                    "color_pal": self.ui.cbb_color_pallete.currentIndex(),
                 }
-                # Write data to a JSON file
                 with open(file_path, 'w') as f:
                     json.dump(data_to_save, f, indent=4)
                 show_alert("Work saved successfully.")
@@ -1565,55 +1542,24 @@ class Maps(QObject):
         try:
             with open(file_path, 'r') as f:
                 load = json.load(f)
-                # Load spectrums
+                try:
+                    self.spectrums = Spectra()
+                    for spectrum_data in load.get('spectrums', []):
+                        spectrum = Spectrum()
+                        set_attributes(spectrum, spectrum_data)
+                        self.spectrums.append(spectrum)
 
-                self.spectrums = Spectra()
-                for spectrum_data in load.get('spectrums', []):
-                    spectrum = Spectrum()
-                    set_attributes(spectrum, spectrum_data)
-                    self.spectrums.append(spectrum)
+                    self.wafers = {k: pd.DataFrame(v) for k, v in load.get('wafers', {}).items()}
+                    self.current_fit_model = load.get('current_fit_model')
+                    self.loaded_fit_model = load.get('loaded_fit_model')
+                    self.filter.filters = load.get('filters', [])
+                    self.filter.upd_filter_listbox()
 
-                # Load wafers
-                self.wafers = {k: pd.DataFrame(v) for k, v in load.get('wafers', {}).items()}
+                    QTimer.singleShot(300, self.collect_results)
+                    self.upd_wafers_list()
 
-                self.current_fit_model = load.get('current_fit_model')
-                self.loaded_fit_model = load.get('loaded_fit_model')
-
-                # Load dataframe results
-                df = load.get('df_fit_results')
-                if df is not None:
-                    self.df_fit_results = pd.DataFrame(df)
-                    self.display_df_in_GUI(self.df_fit_results)
-
-                # Load filters
-                self.filter.filters = load.get('filters', [])
-                self.filter.upd_filter_listbox()
-
-                # Update combo boxes and plot settings
-                self.ui.cbb_x.setCurrentIndex(load.get('cbb_x', -1))
-                self.ui.cbb_y.setCurrentIndex(load.get('cbb_y', -1))
-                self.ui.cbb_z.setCurrentIndex(load.get('cbb_z', -1))
-                self.ui.cbb_param_1.setCurrentIndex(load.get('cbb_param_1', -1))
-                self.ui.cbb_wafer_1.setCurrentIndex(load.get('cbb_wafer_1', -1))
-                self.ui.plot_title.setText(load.get('plot_title', ''))
-                self.ui.ent_plot_title_2.setText(load.get('plot_title2', ''))
-                self.ui.xmin.setText(load.get('xmin', ''))
-                self.ui.xmax.setText(load.get('xmax', ''))
-                self.ui.ymax.setText(load.get('ymax', ''))
-                self.ui.ymin.setText(load.get('ymin', ''))
-                self.ui.ent_xaxis_lbl.setText(load.get('xaxis_lbl', ''))
-                self.ui.ent_yaxis_lbl.setText(load.get('yaxis_lbl', ''))
-                self.ui.ent_x_rot.setText(load.get('x_rot', ''))
-                self.ui.cbb_color_pallete.setCurrentIndex(load.get('color_pal', -1))
-                self.ui.wafer_size.setText(load.get('wafer_size', ''))
-                self.ui.int_vmin.setText(load.get('vmin', ''))
-                self.ui.int_vmax.setText(load.get('vmax', ''))
-
-                self.upd_cbb_param()
-                self.upd_cbb_wafer()
-                self.send_df_to_viz()
-                self.upd_wafers_list()
-
+                except Exception as e:
+                    show_alert(f"Error loading work: {e}")
         except Exception as e:
             show_alert(f"Error loading saved work (Maps Tab): {e}")
 

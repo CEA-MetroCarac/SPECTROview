@@ -63,6 +63,7 @@ DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
 LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
                    'center left', 'center right', 'lower center',
                    'upper center', 'center']
+X_AXIS = ['Raman shift (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
 
 def compress(array):
     """Compress and encode a numpy array to a base64 string."""

@@ -113,6 +113,7 @@ class Spectrums(QObject):
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot1)
+        self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.plot_delay)
 
         self.plot_styles = ["point plot", "scatter plot", "box plot",
                             "bar plot"]
@@ -454,7 +455,8 @@ class Spectrums(QObject):
 
         fig1 = plt.figure(dpi=dpi)
         self.ax = fig1.add_subplot(111)
-        self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
+        txt = self.ui.cbb_xaxis_unit.currentText()
+        self.ax.set_xlabel(txt)
         self.ax.set_ylabel("Intensity (a.u)")
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.canvas1 = FigureCanvas(fig1)
@@ -600,7 +602,10 @@ class Spectrums(QObject):
             else:
                 self.ui.rsquared_2.setText("R2=0")
 
-        self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
+        #self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
+        txt = self.ui.cbb_xaxis_unit.currentText()
+        self.ax.set_xlabel(txt)
+
         self.ax.set_ylabel("Intensity (a.u)")
         if self.ui.cb_legend_3.isChecked():
             self.ax.legend(loc='upper right')

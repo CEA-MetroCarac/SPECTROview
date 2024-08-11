@@ -56,7 +56,7 @@ from PySide6.QtCore import QFile, QSettings, QFileInfo
 from PySide6.QtGui import QIcon
 
 from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
-    show_alert, PALETTE, WAFER_SIZE
+    show_alert, PALETTE, WAFER_SIZE, X_AXIS
 
 from ui import resources #Icon, logo, etc..
 from maps import Maps
@@ -107,6 +107,10 @@ class Main:
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
         self.ui.actionAbout.triggered.connect(self.show_about)
         self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
+
+        # Statusbar
+        self.ui.cbb_xaxis_unit.addItems(X_AXIS)
+        self.ui.cbb_xaxis_unit.setCurrentIndex(0)
 
         ########################################################
         ############## GUI for Wafer Processing tab #############

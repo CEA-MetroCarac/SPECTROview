@@ -133,6 +133,15 @@ def show_alert(message):
     msg_box.setText(message)
     msg_box.exec_()
 
+def clear_layout(layout):
+    """To clear a given layout"""
+    if layout is not None:
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
 
 def view_df(tabWidget, df):
     """View selected dataframe"""

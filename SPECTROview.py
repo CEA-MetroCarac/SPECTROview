@@ -325,8 +325,12 @@ class Main:
         current_tab = self.ui.tabWidget.currentWidget()
         if current_tab == self.ui.tab_graphs:
             self.visu.clear_env()
+        elif current_tab == self.ui.tab_wafer:
+            self.maps.clear_env()
+        elif current_tab == self.ui.tab_spectra:
+            self.spectrums.clear_env()
         else:
-            show_alert("No valid tab is selected for saving.")
+            show_alert("No thing to clear.")
     def toggle_dark_mode(self):
         self.ui.setPalette(self.common.dark_palette())
         self.settings.setValue("mode", "dark")  # Save to settings

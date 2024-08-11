@@ -5,7 +5,7 @@ import pandas as pd
 import json
 from copy import deepcopy
 from pathlib import Path
-from common import view_df, show_alert, spectrum_to_dict, set_attributes
+from common import view_df, show_alert, spectrum_to_dict, set_attributes,clear_layout
 from common import FitThread, WaferPlot, ShowParameters, DataframeTable, FitModelManager, Filter
 from common import FIT_METHODS, NCPUS, PLOT_POLICY
 
@@ -1687,3 +1687,38 @@ class Maps(QObject):
             self.reinit_all()
         else:
             self.reinit()
+
+    def clear_env(self):
+        """Clear the environment and reset the application state"""
+        # Clear loaded wafers and spectra
+        self.wafers.clear()
+        self.spectrums = Spectra()
+        self.loaded_fit_model = None
+        self.current_fit_model = None
+
+        # Clear DataFrames and Filters
+        self.df_fit_results = None
+        self.filtered_df = None
+
+        # Clear UI elements that display data
+        self.ui.wafers_listbox.clear()
+        self.ui.spectra_listbox.clear()
+        self.ui.rsquared_1.clear()
+        self.ui.item_count_label.setText("0 points")
+
+        # Clear plot areas
+        self.ax.clear()
+        self.ax2.clear()
+        self.ax4.clear()
+        if hasattr(self, 'canvas1'):
+            self.canvas1.draw()
+        if hasattr(self, 'canvas2'):
+            self.canvas2.draw()
+        if hasattr(self, 'canvas4'):
+            self.canvas4.draw()
+
+        # Refresh the UI to reflect the cleared state
+        QTimer.singleShot(50, self.rescale)
+        QTimer.singleShot(100, self.upd_wafers_list)
+        print("'Maps' Tab environment has been cleared and reset.")
+

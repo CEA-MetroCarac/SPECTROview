@@ -1343,6 +1343,38 @@ class Spectrums(QObject):
         except Exception as e:
             show_alert(f"Error loading saved work (Spectrums Tab): {e}")
 
+    def clear_env(self):
+        """Clear the environment and reset the application state"""
+        # Clear loaded spectrums
+        self.spectrums = Spectra()
+        self.loaded_fit_model = None
+        self.current_fit_model = None
+
+        # Clear DataFrames and Filters
+        self.df_fit_results = None
+        self.filtered_df = None
+
+        # Clear UI elements that display data
+        self.ui.spectrums_listbox.clear()
+        self.ui.rsquared_2.clear()
+        self.ui.item_count_label_3.setText("0 points")
+
+        # Clear plot areas
+        self.ax.clear()
+        self.ax2.clear()
+        self.ax3.clear()
+        if hasattr(self, 'canvas1'):
+            self.canvas1.draw()
+        if hasattr(self, 'canvas2'):
+            self.canvas2.draw()
+        if hasattr(self, 'canvas3'):
+            self.canvas3.draw()
+
+        # Refresh the UI to reflect the cleared state
+        QTimer.singleShot(50, self.rescale)
+        QTimer.singleShot(100, self.upd_spectra_list)
+        print("'Spectrums' Tab environment has been cleared and reset.")
+
 
 class CustomListWidget(QListWidget):
     """

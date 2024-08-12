@@ -4,39 +4,36 @@ Module contains all utilities functions and common methods of the appli
 import markdown
 import os
 import json
+import base64
+import zlib
 from copy import deepcopy
+from io import BytesIO
+
 import pandas as pd
+import numpy as np
+
 try:
     import win32clipboard
 except:
     pass
-from io import BytesIO
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import matplotlib.colors as mcolors
+
 import seaborn as sns
 
 from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
-    QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
-    QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, \
-    QApplication, QMainWindow, QWidget, QMenu
-from PySide6.QtCore import Signal, QThread, Qt
-from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
-    QAction, Qt
+    QTableWidgetItem,  QHBoxLayout, QTextBrowser, QLabel, \
+     QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, \
+    QApplication,  QWidget, QStyledItemDelegate, QComboBox, QLabel, QVBoxLayout, QLineEdit
+from PySide6.QtCore import Signal, QThread, Qt, QSize
+from PySide6.QtGui import QPalette,  QTextCursor, QIcon, QResizeEvent, \
+    QAction, Qt, QColor
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 
-import base64
-import zlib
-
-# Define a dictionary mapping RGBA tuples to named colors
-rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for
-                            color_name in mcolors.CSS4_COLORS}
 
 DIRNAME = os.path.dirname(__file__)
 RELPATH = os.path.join(DIRNAME, "resources")
@@ -57,9 +54,9 @@ NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
 PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
 PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
-DEFAULT_COLORS = ['blue', 'red', 'green', 'orange', 'purple', 'cyan', 'magenta',
-                  'lime', 'pink', 'brown', 'gold', 'teal', 'navy', 'silver',
-                  'indigo', 'violet', 'olive', 'maroon', 'skyblue']
+DEFAULT_COLORS = ['#0000ff', '#ff0000', '#008200', '#ffa000', '#8d0085', '#00ffff', '#ff00ff',
+                  '#00ff00', '#ffbdcb', '#b41722', '#ffd500', '#008281', '#000086', '#c0c0c0',
+                  '#808000', '#8d0000', '#6fd0ef']
 MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>']
 DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
 LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
@@ -80,7 +77,7 @@ def decompress(data, dtype):
     return np.frombuffer(decompressed, dtype=dtype)
 
 def spectrum_to_dict(spectrum):
-    """Custom "save" method to save fitted spectrum data in a dictionary"""
+    """Custom "save" method to save Spectrum object in a dictionary"""
     excluded_keys = ['outliers_limit', 'peak_models', 'peak_index', 'bkg_model', 'result_fit', 'baseline', 'attractors']
     model_dict = {}
     for key, val in vars(spectrum).items():
@@ -107,7 +104,7 @@ def spectrum_to_dict(spectrum):
 
     return model_dict
 def set_attributes(spectrum, model_dict):
-    """To set attributes of spectrum from JSON dict"""
+    """To set attributes of 'Spectrum' object from JSON dict"""
     spectrum.set_attributes(model_dict)
     if 'x0' in model_dict:
         spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
@@ -117,16 +114,6 @@ def set_attributes(spectrum, model_dict):
         spectrum.x = decompress(model_dict['x'], dtype=np.float64)
     if 'y' in model_dict:
         spectrum.y = decompress(model_dict['y'], dtype=np.float64)
-def rgba_to_named_color(rgba):
-    """Convert RGBA tuple to a named color string."""
-    # Check if the exact RGBA tuple exists in the dictionary
-    rgba_tuple = tuple(rgba)
-    if rgba_tuple in rgba_to_named_color_dict:
-        return rgba_to_named_color_dict[rgba_tuple]
-    else:
-        # If exact match is not found, return the closest color name
-        return mcolors.to_hex(rgba)  # Use hex as fallback if needed
-
 
 def show_alert(message):
     """Show alert"""
@@ -344,7 +331,7 @@ class Graph(QWidget):
         self.figure = plt.figure(dpi=self.dpi)
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
-        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.toolbar = NavigationToolbar2QT(self.canvas, self)
         for action in self.toolbar.actions():
             if action.text() in ['Save', 'Subplots']:
                 action.setVisible(False)
@@ -438,7 +425,7 @@ class Graph(QWidget):
                         marker = handle.get_marker()
                     # Box & bar plots do not use markers → set defautl values
                     elif self.plot_style in ['box', 'bar']:
-                        color = rgba_to_named_color(handle.get_facecolor())
+                        color = handle.get_facecolor()
                         marker = 'o'
                     else:
                         color = 'blue'
@@ -490,17 +477,36 @@ class Graph(QWidget):
 
             # COLOR
             color = QComboBox()
-            color.addItems(DEFAULT_COLORS)
+            delegate = ColorDelegate(color)
+            color.setItemDelegate(delegate)
+            for color_code in DEFAULT_COLORS:
+                item = color.addItem(color_code)
+                item = color.model().item(color.count() - 1)
+                item.setBackground(QColor(color_code))
             color.setCurrentText(prop['color'])
+            color.currentIndexChanged.connect(lambda idx, color=color: self.update_combobox_color(color))
             color.currentTextChanged.connect(
                 lambda text, idx=idx: self.udp_legend(idx, 'color', text))
             color_layout.addWidget(color)
+
+            # Ensure the color is updated on load
+            self.update_combobox_color(color)
 
         # Add vertical layouts to main layout
         main_layout.addLayout(label_layout)
         main_layout.addLayout(marker_layout)
         main_layout.addLayout(color_layout)
 
+    def update_combobox_color(self, combobox):
+        """Update combobox background color based on the selected color."""
+        selected_color = combobox.currentText()
+        color = QColor(selected_color)
+        palette = combobox.palette()
+        palette.setColor(QPalette.Button, color)
+        palette.setColor(QPalette.ButtonText, Qt.white)
+        combobox.setAutoFillBackground(True)
+        combobox.setPalette(palette)
+        combobox.update()
     def udp_legend(self, idx, property_type, text):
         """Updates legend properties based on user modifications via GUI."""
         self.legend_properties[idx][property_type] = text
@@ -1424,7 +1430,18 @@ class FitThread(QThread):
                                    ncpus=self.ncpus, show_progressbar=False)
 
         self.progress_changed.emit(100)
+class ColorDelegate(QStyledItemDelegate):
+    """Show color in background of color selector comboboxes."""
+    def paint(self, painter, option, index):
+        painter.save()
+        color = index.data(Qt.BackgroundRole)
+        if color:
+            painter.fillRect(option.rect, color)
+        painter.drawText(option.rect, Qt.AlignCenter, index.data(Qt.DisplayRole))
+        painter.restore()
 
+    def sizeHint(self, option, index):
+        return QSize(70, 20)
 
 class WaferPlot:
     """Class to plot wafer map"""

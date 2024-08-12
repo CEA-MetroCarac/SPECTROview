@@ -464,12 +464,14 @@ class Spectrums(QObject):
 
         # Toolbar
         self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
+        for action in self.toolbar.actions():
+            if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+                action.setVisible(False)
+            if action.text() == 'Pan' or action.text() == 'Zoom':
+                action.toggled.connect(self.toggle_zoom_pan)
         rescale = next(
             a for a in self.toolbar.actions() if a.text() == 'Home')
         rescale.triggered.connect(self.rescale)
-        for action in self.toolbar.actions():
-            if action.text() == 'Pan' or action.text() == 'Zoom':
-                action.toggled.connect(self.toggle_zoom_pan)
 
         self.ui.QVBoxlayout_2.addWidget(self.canvas1)
         self.ui.toolbar_frame_3.addWidget(self.toolbar)

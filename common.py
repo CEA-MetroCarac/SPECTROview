@@ -264,90 +264,18 @@ class DataframeTable(QWidget):
 
 
 class Graph(QWidget):
-    """Class to create and handle plot objects.
-
-    This class provides functionality to create and customize plots using
-    matplotlib
-    and seaborn libraries within a Pyside6-based GUI application. It supports
-    plotting
-    various styles such as point plots, scatter plots, box plots, line plots,
-    bar plots,
-    trendline plots, and wafer plots.
-    The class allows customization of plot properties including titles,
-    labels, axis limits, grid display, legend appearance, color
-    palettes, and more. It also supports multiple y-axis plotting and the
-    option to show
-    trendline equations.
-
-    Attributes:
-        df_name (str or None): Name of the DataFrame used for plotting.
-        filters (dict): Dictionary containing filter parameters.
-        graph_id: Identifier for the graph instance.
-        plot_width (int): Width of the plot in pixels.
-        plot_height (int): Height of the plot in pixels.
-        plot_style (str): Style of the plot (e.g., 'point', 'scatter',
-        'line', etc.).
-        x (str or None): Column name for the x-axis data.
-        y (list): List of column names for the primary y-axis data.
-        z (str or None): Column name for grouping data (used in hue).
-        xmin (float or None): Minimum limit for the x-axis.
-        xmax (float or None): Maximum limit for the x-axis.
-        ymin (float or None): Minimum limit for the primary y-axis.
-        ymax (float or None): Maximum limit for the primary y-axis.
-        zmin (float or None): Minimum limit for the secondary y-axis.
-        zmax (float or None): Maximum limit for the secondary y-axis.
-        plot_title (str or None): Title of the plot.
-        xlabel (str or None): Label for the x-axis.
-        ylabel (str or None): Label for the primary y-axis.
-        zlabel (str or None): Label for the secondary y-axis.
-        y2 (str or None): Column name for the secondary y-axis.
-        y3 (str or None): Column name for the tertiary y-axis.
-        y2min (float or None): Minimum limit for the secondary y-axis.
-        y2max (float or None): Maximum limit for the secondary y-axis.
-        y3min (float or None): Minimum limit for the tertiary y-axis.
-        y3max (float or None): Maximum limit for the tertiary y-axis.
-        y2label (str or None): Label for the secondary y-axis.
-        y3label (str or None): Label for the tertiary y-axis.
-        x_rot (int): Rotation angle for x-axis tick labels.
-        grid (bool): Flag indicating whether to display grid lines.
-        legend_visible (bool): Flag indicating whether the legend is visible.
-        legend_location (str): Location of the legend ('upper right', 'lower
-        left', etc.).
-        legend_outside (bool): Flag indicating whether the legend should be
-        outside the plot.
-        legend_properties (list): List of dictionaries containing properties
-        of legend items.
-        color_palette (str): Name of the color palette to use.
-        dpi (int): Dots per inch (resolution) of the plot.
-        wafer_size (int): Size of the wafer plot.
-        wafer_stats (bool): Flag indicating whether to display statistics on
-        the wafer plot.
-        trendline_order (int): Order of the polynomial for trendline fitting.
-        show_trendline_eq (bool): Flag indicating whether to show the
-        trendline equation.
-        show_bar_plot_error_bar (bool): Flag indicating whether to show error
-        bars on bar plots.
-        join_for_point_plot (bool): Flag indicating whether to join points in
-        point plots.
-
-        figure: Matplotlib figure object.
-        ax: Matplotlib axis object for the primary plot.
-        ax2: Matplotlib axis object for the secondary y-axis plot.
-        ax3: Matplotlib axis object for the tertiary y-axis plot.
-        canvas: Matplotlib FigureCanvasQTAgg object for displaying the plot.
-        graph_layout (QVBoxLayout): Layout for storing the plot widget.
-        """
+    """Class to create and handle plot objects."""
 
     def __init__(self, graph_id=None):
         super().__init__()
         self.df_name = None
-        self.filters = {}  # List of filter
+        self.filters = {}
         self.graph_id = graph_id
         self.plot_width = 600
         self.plot_height = 450
         self.plot_style = "point"
         self.x = None
-        self.y = []  # Multiple y column allowing to plot multiples lines
+        self.y = []
         self.z = None
         self.xmin = None
         self.xmax = None
@@ -361,14 +289,14 @@ class Graph(QWidget):
         self.ylabel = None
         self.zlabel = None
 
-        self.y2 = None  # Secondary y-axis
-        self.y3 = None  # Tertiary y-axis
+        self.y2 = None
+        self.y3 = None
         self.y2min = None
         self.y2max = None
         self.y3min = None
         self.y3max = None
-        self.y2label = None  # Secondary y-axis
-        self.y3label = None  # Tertiary y-axis
+        self.y2label = None
+        self.y3label = None
 
         self.x_rot = 0
         self.grid = False
@@ -377,7 +305,7 @@ class Graph(QWidget):
         self.legend_outside = False
         self.legend_properties = []
 
-        self.color_palette = "jet"  # Palette for wafer maps
+        self.color_palette = "jet"
         self.dpi = 100
         self.wafer_size = 300
         self.wafer_stats = True
@@ -388,12 +316,11 @@ class Graph(QWidget):
 
         self.figure = None
         self.ax = None
-        self.ax2 = None  # Secondary y-axis
-        self.ax3 = None  # Tertiary y-axis
+        self.ax2 = None
+        self.ax3 = None
         self.canvas = None
-        self.graph_layout = QVBoxLayout()  # Layout for store plot
+        self.graph_layout = QVBoxLayout()
         self.setLayout(self.graph_layout)
-
     def clear_layout(self, layout):
         """Clears all widgets and layouts from the specified layout."""
         if layout is not None:
@@ -404,40 +331,49 @@ class Graph(QWidget):
                     widget.deleteLater()
                 else:
                     self.clear_layout(item.layout())
-
     def create_plot_widget(self, dpi, layout=None):
-        """Creates a new plot canvas with the specified DPI and adds it to
-        the specified
-            layout or the default graph_layout"""
+        """Creates a new plot canvas with the specified DPI and adds it to the layout."""
         if dpi:
             self.dpi = dpi
         else:
             self.dpi = 100
+
         self.clear_layout(self.graph_layout)
         plt.close('all')
 
         self.figure = plt.figure(dpi=self.dpi)
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
+        self.toolbar = NavigationToolbar(self.canvas, self)
 
         if layout:
             layout.addWidget(self.canvas)
+            layout.addWidget(self.toolbar)
         else:
             self.graph_layout.addWidget(self.canvas)
+            self.graph_layout.addWidget(self.toolbar)
+
         self.canvas.figure.tight_layout()
         self.canvas.draw()
 
+        # Set default labels if not already set
+        self.xlabel = self.xlabel if self.xlabel is not None else self.x
+        self.ylabel = self.ylabel if self.ylabel is not None else self.y[0] if self.y else None
+        self.ax.set_xlabel(self.xlabel)
+        self.ax.set_ylabel(self.ylabel)
+        self.ax.set_title(self.plot_title)
+
     def plot(self, df):
-        """Updates the plot based on the provided DataFrame and plot
-        settings."""
+        """Updates the plot based on the provided DataFrame and plot settings."""
+        # Clear the axes
         self.ax.clear()
         if self.ax2:
             self.ax2.clear()
         if self.ax3:
             self.ax3.clear()
 
-        if self.df_name is not None and self.x is not None and self.y is not \
-                None:
+        # Perform the plotting
+        if self.df_name is not None and self.x is not None and self.y is not None:
             self._plot_primary_axis(df)
             self._plot_secondary_axis(df)
             self._plot_tertiary_axis(df)
@@ -453,6 +389,34 @@ class Graph(QWidget):
         self.get_legend_properties()
         self.ax.get_figure().tight_layout()
         self.canvas.draw()
+
+        self.canvas.mpl_connect('draw_event', self.update_graph_properties)
+    def update_graph_properties(self, event=None):
+        """Updates the graph attributes based on the current plot state."""
+        if self.ax:
+            self.xmin, self.xmax = self.ax.get_xlim()
+            self.ymin, self.ymax = self.ax.get_ylim()
+            self.xlabel = self.ax.get_xlabel()
+            self.ylabel = self.ax.get_ylabel()
+            self.plot_title = self.ax.get_title()
+
+        if self.ax2:
+            self.y2min, self.y2max = self.ax2.get_ylim()
+            self.y2label = self.ax2.get_ylabel()
+
+        if self.ax3:
+            self.y3min, self.y3max = self.ax3.get_ylim()
+            self.y3label = self.ax3.get_ylabel()
+    def _set_limits(self):
+        """Set the limits of the axis."""
+        if self.xmin and self.xmax:
+            self.ax.set_xlim(float(self.xmin), float(self.xmax))
+        if self.ymin and self.ymax:
+            self.ax.set_ylim(float(self.ymin), float(self.ymax))
+        if self.ax2 and self.y2min and self.y2max:
+            self.ax2.set_ylim(float(self.y2min), float(self.y2max))
+        if self.ax3 and self.y3min and self.y3max:
+            self.ax3.set_ylim(float(self.y3min), float(self.y3max))
 
     def get_legend_properties(self):
         """Retrieves properties of each existing legend item."""
@@ -661,16 +625,6 @@ class Graph(QWidget):
                  vmin=vmin, vmax=vmax, stats=self.wafer_stats,
                  r=(self.wafer_size / 2))
 
-    def _set_limits(self):
-        """Set the limits of axis"""
-        if self.xmin and self.xmax:
-            self.ax.set_xlim(float(self.xmin), float(self.xmax))
-        if self.ymin and self.ymax:
-            self.ax.set_ylim(float(self.ymin), float(self.ymax))
-        if self.ax2 and self.y2min and self.y2max:
-            self.ax2.set_ylim(float(self.y2min), float(self.y2max))
-        if self.ax3 and self.y3min and self.y3max:
-            self.ax3.set_ylim(float(self.y3min), float(self.y3max))
 
     def _set_labels(self):
         """Set titles and labels for axis and plot"""
@@ -684,11 +638,13 @@ class Graph(QWidget):
             if self.xlabel:
                 self.ax.set_xlabel(self.xlabel)
             else:
-                self.ax.set_xlabel(self.x)
+                self.xlabel=self.x
+                self.ax.set_xlabel(self.xlabel)
             if self.ylabel:
                 self.ax.set_ylabel(self.ylabel)
             else:
-                self.ax.set_ylabel(self.y[0])
+                self.ylabel = self.y
+                self.ax.set_ylabel(self.ylabel)
 
     def _plot_secondary_axis(self, df):
         if self.ax2:

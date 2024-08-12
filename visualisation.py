@@ -161,9 +161,6 @@ class Visualization(QDialog):
         # Collecting properties of graph from GUI
         graph.plot_style = self.ui.cbb_plotstyle.currentText()
 
-        title = self.ui.lbl_plot_title.text()
-        graph.plot_title = title if title != "None" else None
-
         current_filters = self.filter.get_current_filters()
         if current_filters != graph.filters:
             graph.legend_properties = []
@@ -204,6 +201,16 @@ class Visualization(QDialog):
         graph.show_bar_plot_error_bar = self.ui.cb_show_err_bar_plot.isChecked()
         graph.join_for_point_plot = self.ui.cb_join_for_point_plot.isChecked()
 
+        # Ensure xlabel and ylabel are set; if not, default to x and y
+        graph.xlabel = graph.xlabel if graph.xlabel is not None else graph.x
+        graph.ylabel = graph.ylabel if graph.ylabel is not None else graph.y[0] if graph.y else None
+
+        # Ensure xlim and ylim are set; if not, let them auto-adjust or use full data range
+        graph.xmin = graph.xmin if graph.xmin is not None else None
+        graph.xmax = graph.xmax if graph.xmax is not None else None
+        graph.ymin = graph.ymin if graph.ymin is not None else None
+        graph.ymax = graph.ymax if graph.ymax is not None else None
+
         # PLOTTING
         graph.create_plot_widget(graph.dpi)
 
@@ -229,29 +236,6 @@ class Visualization(QDialog):
             graph.plot_width = sub_window_size.width()
             graph.plot_height = sub_window_size.height()
 
-            xlabel = self.ui.lbl_xlabel.text()
-            ylabel = self.ui.lbl_ylabel.text()
-            y2label = self.ui.lbl_y2label.text()
-            y3label = self.ui.lbl_y3label.text()
-            zlabel = self.ui.lbl_zlabel.text()
-            xmin = self.ui.xmin_2.text()
-            ymin = self.ui.ymin_2.text()
-            xmax = self.ui.xmax_2.text()
-            ymax = self.ui.ymax_2.text()
-            zmin = self.ui.zmin_2.text()
-            zmax = self.ui.zmax_2.text()
-            graph.xmin = xmin
-            graph.xmax = xmax
-            graph.ymin = ymin
-            graph.ymax = ymax
-            graph.zmin = zmin
-            graph.zmax = zmax
-            graph.xlabel = xlabel
-            graph.ylabel = ylabel
-            graph.y2label = y2label
-            graph.y3label = y3label
-            graph.zlabel = zlabel
-
         text = f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - [" \
                f"{z}]"
         graph_dialog.setWindowTitle(text)
@@ -268,7 +252,6 @@ class Visualization(QDialog):
         """
         graph, graph_dialog, sub_window = self.get_sel_graph()
         self.filtered_df = self.apply_filters(self.sel_df, graph.filters)
-        # print(f"self.sel_df {self.sel_df}")
         if graph:
             if graph.plot_style == 'wafer':
                 graph.create_plot_widget(graph.dpi, graph.graph_layout)
@@ -288,8 +271,8 @@ class Visualization(QDialog):
     def customize_legend(self):
         """ Show all legend's properties in GUI for customization"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
-        main_layout = self.ui.main_layout
-        graph.customize_legend_via_gui(main_layout)
+        legends_layout = self.ui.legends_layout
+        graph.customize_legend_via_gui(legends_layout)
 
     def on_selected_graph(self, sub_window):
         """Update GUI elements based on the properties of the selected graph"""
@@ -339,25 +322,6 @@ class Visualization(QDialog):
 
             # Rotation x label:
             self.ui.x_rot.setValue(graph.x_rot)
-            # Reflect Titles:
-            self.ui.lbl_plot_title.setText(graph.plot_title)
-            self.ui.lbl_xlabel.setText(graph.xlabel)
-            self.ui.lbl_ylabel.setText(graph.ylabel)
-            self.ui.lbl_y2label.setText(graph.y2label)
-            self.ui.lbl_y3label.setText(graph.y3label)
-            self.ui.lbl_zlabel.setText(graph.zlabel)
-
-            # Reflect limits:
-            self.ui.xmin_2.setText(graph.xmin)
-            self.ui.xmax_2.setText(graph.xmax)
-            self.ui.ymin_2.setText(graph.ymin)
-            self.ui.ymax_2.setText(graph.ymax)
-            self.ui.y2min_2.setText(graph.y2min)
-            self.ui.y2max_2.setText(graph.y2max)
-            self.ui.y3min_2.setText(graph.y3min)
-            self.ui.y3max_2.setText(graph.y3max)
-            self.ui.zmax_2.setText(graph.zmax)
-            self.ui.zmin_2.setText(graph.zmin)
 
             # Reflect legend status
             self.ui.cb_legend_visible.setChecked(graph.legend_visible)
@@ -621,7 +585,6 @@ class Visualization(QDialog):
                 self.ui.mdiArea.removeSubWindow(sub_window)
                 sub_window.close()
                 self.add_graph_list_to_combobox()
-            print(f"Plot {graph_id} is deleted")
 
     def minimize_all_graph(self):
         """

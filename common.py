@@ -345,6 +345,9 @@ class Graph(QWidget):
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
+        for action in self.toolbar.actions():
+            if action.text() in ['Save', 'Subplots']:
+                action.setVisible(False)
 
         if layout:
             layout.addWidget(self.canvas)

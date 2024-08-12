@@ -91,29 +91,29 @@ class Spectrums(QObject):
 
         # Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
-            self.plot_delay)
+            self.refresh_gui)
         # Connect the checkbox signal to the method
         self.ui.checkBox.stateChanged.connect(self.check_uncheck_all)
 
         # Connect the stateChanged signal of the legend CHECKBOX
-        self.ui.cb_legend_3.stateChanged.connect(self.plot_delay)
-        self.ui.cb_raw_3.stateChanged.connect(self.plot_delay)
-        self.ui.cb_bestfit_3.stateChanged.connect(self.plot_delay)
-        self.ui.cb_colors_3.stateChanged.connect(self.plot_delay)
-        self.ui.cb_residual_3.stateChanged.connect(self.plot_delay)
-        self.ui.cb_filled_3.stateChanged.connect(self.plot_delay)
-        self.ui.cb_peaks_3.stateChanged.connect(self.plot_delay)
-        self.ui.cb_attached_3.stateChanged.connect(self.plot_delay)
-        self.ui.cb_normalize_3.stateChanged.connect(self.plot_delay)
+        self.ui.cb_legend_3.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_raw_3.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_bestfit_3.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_colors_3.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_residual_3.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_filled_3.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_peaks_3.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_attached_3.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_normalize_3.stateChanged.connect(self.refresh_gui)
 
-        self.ui.cb_limits_2.stateChanged.connect(self.plot_delay)
-        self.ui.cb_expr_2.stateChanged.connect(self.plot_delay)
+        self.ui.cb_limits_2.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_expr_2.stateChanged.connect(self.refresh_gui)
 
         # Set a delay for the function plot1
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot1)
-        self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.plot_delay)
+        self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_gui)
 
         self.plot_styles = ["point plot", "scatter plot", "box plot",
                             "bar plot"]
@@ -244,7 +244,7 @@ class Spectrums(QObject):
         else:
             if item_count > 0:
                 self.ui.spectrums_listbox.setCurrentRow(0)
-        QTimer.singleShot(50, self.plot_delay)
+        QTimer.singleShot(50, self.refresh_gui)
 
     def get_checked_spectra(self):
         """
@@ -1065,7 +1065,7 @@ class Spectrums(QObject):
         self.ax3.get_figure().tight_layout()
         self.canvas3.draw()
 
-    def plot_delay(self):
+    def refresh_gui(self):
         """Trigger the fnc to plot spectra"""
         self.delay_timer.start(100)
 
@@ -1077,7 +1077,7 @@ class Spectrums(QObject):
         if fnames is None:
             fnames = self.get_spectrum_fnames()
         self.common.reinit_spectrum(fnames, self.spectrums)
-        self.plot_delay()
+        self.refresh_gui()
         self.upd_spectra_list()
         QTimer.singleShot(200, self.rescale)
 

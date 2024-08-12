@@ -103,25 +103,25 @@ class Maps(QObject):
             self.upd_spectra_list)
 
         # Connect and plot_spectra of selected SPECTRUM LIST
-        self.ui.spectra_listbox.itemSelectionChanged.connect(self.delay_plot)
+        self.ui.spectra_listbox.itemSelectionChanged.connect(self.refresh_gui)
 
         # Connect the stateChanged signal of the legend CHECKBOX
-        self.ui.cb_legend.stateChanged.connect(self.delay_plot)
-        self.ui.cb_raw.stateChanged.connect(self.delay_plot)
-        self.ui.cb_bestfit.stateChanged.connect(self.delay_plot)
-        self.ui.cb_colors.stateChanged.connect(self.delay_plot)
-        self.ui.cb_residual.stateChanged.connect(self.delay_plot)
-        self.ui.cb_filled.stateChanged.connect(self.delay_plot)
-        self.ui.cb_peaks.stateChanged.connect(self.delay_plot)
-        self.ui.cb_attached.stateChanged.connect(self.delay_plot)
-        self.ui.cb_normalize.stateChanged.connect(self.delay_plot)
+        self.ui.cb_legend.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_raw.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_bestfit.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_colors.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_residual.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_filled.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_peaks.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_attached.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_normalize.stateChanged.connect(self.refresh_gui)
 
-        self.ui.cbb_wafer_size.currentIndexChanged.connect(self.delay_plot)
-        self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.delay_plot)
-        self.ui.rdbt_show_wafer.toggled.connect(self.delay_plot)
+        self.ui.cbb_wafer_size.currentIndexChanged.connect(self.refresh_gui)
+        self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_gui)
+        self.ui.rdbt_show_wafer.toggled.connect(self.refresh_gui)
 
-        self.ui.cb_limits.stateChanged.connect(self.delay_plot)
-        self.ui.cb_expr.stateChanged.connect(self.delay_plot)
+        self.ui.cb_limits.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_expr.stateChanged.connect(self.refresh_gui)
         # Set a delay for the function "plot1"
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
@@ -1305,7 +1305,7 @@ class Maps(QObject):
         else:
             if self.ui.spectra_listbox.count() > 0:
                 self.ui.spectra_listbox.setCurrentRow(0)
-        QTimer.singleShot(50, self.delay_plot)
+        QTimer.singleShot(50, self.refresh_gui)
 
     def remove_wafer(self):
         """
@@ -1439,7 +1439,7 @@ class Maps(QObject):
             map(float, coord_str.split('(')[1].split(')')[0].split(',')))
         return wafer_name_fs, coord_fs
 
-    def delay_plot(self):
+    def refresh_gui(self):
         """Trigger a function to plot spectra after a delay"""
         self.delay_timer.start(100)
 

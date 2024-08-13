@@ -1,26 +1,26 @@
 {
     "plots": {
-        "6": {
+        "1": {
             "df_name": "sample_data_inline_Sheet1",
             "filters": [],
-            "graph_id": 6,
+            "graph_id": 1,
             "plot_width": 600,
             "plot_height": 450,
-            "plot_style": "trendline",
-            "x": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
+            "plot_style": "point",
+            "x": "Filename",
             "y": [
                 "Position of peak A$_{1g}$ (cm\u207b\u00b9)"
             ],
-            "z": "Filename",
-            "xmin": 390.62975,
-            "xmax": 393.18725,
-            "ymin": 413.71400385169346,
-            "ymax": 416.1418594169154,
+            "z": "Zone",
+            "xmin": null,
+            "xmax": null,
+            "ymin": null,
+            "ymax": null,
             "zmin": null,
             "zmax": null,
             "plot_title": "",
-            "xlabel": "Position of peak E$^1_{2g}$ (cm\u207b\u00b9)",
-            "ylabel": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
+            "xlabel": null,
+            "ylabel": null,
             "zlabel": null,
             "y2": null,
             "y3": null,
@@ -35,54 +35,23 @@
             "legend_visible": true,
             "legend_location": "upper right",
             "legend_outside": false,
-            "legend_properties": [],
-            "color_palette": "jet",
-            "dpi": 110.0,
-            "wafer_size": 300.0,
-            "wafer_stats": true,
-            "trendline_order": 1.0,
-            "show_trendline_eq": true,
-            "show_bar_plot_error_bar": true,
-            "join_for_point_plot": false,
-            "ax2": null,
-            "ax3": null
-        },
-        "5": {
-            "df_name": "sample_data_inline_Sheet1",
-            "filters": [],
-            "graph_id": 5,
-            "plot_width": 600,
-            "plot_height": 450,
-            "plot_style": "point",
-            "x": "Filename",
-            "y": [
-                "Position of peak A$_{1g}$ (cm\u207b\u00b9)"
+            "legend_properties": [
+                {
+                    "label": "Center",
+                    "marker": "o",
+                    "color": "blue"
+                },
+                {
+                    "label": "Mid-Radius",
+                    "marker": "o",
+                    "color": "red"
+                },
+                {
+                    "label": "Edge",
+                    "marker": "o",
+                    "color": "green"
+                }
             ],
-            "z": null,
-            "xmin": -0.5,
-            "xmax": 2.5,
-            "ymin": 414.0947457397959,
-            "ymax": 414.59044558673475,
-            "zmin": null,
-            "zmax": null,
-            "plot_title": "",
-            "xlabel": "Filename",
-            "ylabel": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
-            "zlabel": null,
-            "y2": null,
-            "y3": null,
-            "y2min": null,
-            "y2max": null,
-            "y3min": null,
-            "y3max": null,
-            "y2label": null,
-            "y3label": null,
-            "x_rot": 0.0,
-            "grid": false,
-            "legend_visible": true,
-            "legend_location": "upper right",
-            "legend_outside": false,
-            "legend_properties": [],
             "color_palette": "jet",
             "dpi": 110.0,
             "wafer_size": 300.0,
@@ -100,21 +69,21 @@
             "graph_id": 2,
             "plot_width": 600,
             "plot_height": 450,
-            "plot_style": "box",
+            "plot_style": "scatter",
             "x": "Filename",
             "y": [
                 "Position of peak A$_{1g}$ (cm\u207b\u00b9)"
             ],
-            "z": "Filename",
-            "xmin": -0.5,
-            "xmax": 2.5,
-            "ymin": 413.76959999999997,
-            "ymax": 415.7364,
+            "z": "Zone",
+            "xmin": null,
+            "xmax": null,
+            "ymin": null,
+            "ymax": null,
             "zmin": null,
             "zmax": null,
             "plot_title": "",
-            "xlabel": "Filename",
-            "ylabel": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
+            "xlabel": null,
+            "ylabel": null,
             "zlabel": null,
             "y2": null,
             "y3": null,
@@ -129,7 +98,86 @@
             "legend_visible": true,
             "legend_location": "upper right",
             "legend_outside": false,
-            "legend_properties": [],
+            "legend_properties": [
+                {
+                    "label": "Center",
+                    "marker": "o",
+                    "color": "blue"
+                },
+                {
+                    "label": "Mid-Radius",
+                    "marker": "o",
+                    "color": "red"
+                },
+                {
+                    "label": "Edge",
+                    "marker": "o",
+                    "color": "green"
+                }
+            ],
+            "color_palette": "jet",
+            "dpi": 110.0,
+            "wafer_size": 300.0,
+            "wafer_stats": true,
+            "trendline_order": 1.0,
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": true,
+            "join_for_point_plot": false,
+            "ax2": null,
+            "ax3": null
+        },
+        "3": {
+            "df_name": "sample_data_inline_Sheet1",
+            "filters": [],
+            "graph_id": 3,
+            "plot_width": 600,
+            "plot_height": 450,
+            "plot_style": "box",
+            "x": "Filename",
+            "y": [
+                "Position of peak A$_{1g}$ (cm\u207b\u00b9)"
+            ],
+            "z": "Zone",
+            "xmin": null,
+            "xmax": null,
+            "ymin": null,
+            "ymax": null,
+            "zmin": null,
+            "zmax": null,
+            "plot_title": "",
+            "xlabel": null,
+            "ylabel": null,
+            "zlabel": null,
+            "y2": null,
+            "y3": null,
+            "y2min": null,
+            "y2max": null,
+            "y3min": null,
+            "y3max": null,
+            "y2label": null,
+            "y3label": null,
+            "x_rot": 20.0,
+            "grid": false,
+            "legend_visible": true,
+            "legend_location": "upper right",
+            "legend_outside": false,
+            "legend_properties": [
+                {
+                    "label": "Center",
+                    "marker": "o",
+                    "color": "#2020df"
+                },
+                {
+                    "label": "Mid-Radius",
+                    "marker": "o",
+                    "color": "#df2020"
+                },
+                {
+                    "label": "Edge",
+                    "marker": "o",
+                    "color": "#107010"
+                }
+            ],
             "color_palette": "jet",
             "dpi": 110.0,
             "wafer_size": 300.0,
@@ -147,30 +195,30 @@
             "graph_id": 4,
             "plot_width": 600,
             "plot_height": 450,
-            "plot_style": "scatter",
+            "plot_style": "bar",
             "x": "Filename",
             "y": [
                 "Position of peak A$_{1g}$ (cm\u207b\u00b9)"
             ],
-            "z": "Filename",
-            "xmin": -0.1,
-            "xmax": 2.1,
-            "ymin": 413.76959999999997,
-            "ymax": 415.7364,
-            "zmin": "",
-            "zmax": "",
+            "z": "Zone",
+            "xmin": null,
+            "xmax": null,
+            "ymin": null,
+            "ymax": null,
+            "zmin": null,
+            "zmax": null,
             "plot_title": "",
-            "xlabel": "Filename",
-            "ylabel": "Position of peak A$_{1g}$ (cm\u207b\u00b9)",
-            "zlabel": "",
+            "xlabel": null,
+            "ylabel": null,
+            "zlabel": null,
             "y2": null,
             "y3": null,
             "y2min": null,
             "y2max": null,
             "y3min": null,
             "y3max": null,
-            "y2label": "",
-            "y3label": "",
+            "y2label": null,
+            "y3label": null,
             "x_rot": 20.0,
             "grid": false,
             "legend_visible": true,
@@ -178,19 +226,19 @@
             "legend_outside": false,
             "legend_properties": [
                 {
-                    "label": "A",
+                    "label": "Center",
                     "marker": "o",
-                    "color": "blue"
+                    "color": "#2020df"
                 },
                 {
-                    "label": "B",
+                    "label": "Mid-Radius",
                     "marker": "o",
-                    "color": "red"
+                    "color": "#df2020"
                 },
                 {
-                    "label": "C",
+                    "label": "Edge",
                     "marker": "o",
-                    "color": "silver"
+                    "color": "#107010"
                 }
             ],
             "color_palette": "jet",

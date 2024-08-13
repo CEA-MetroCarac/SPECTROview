@@ -729,7 +729,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>372</height>
+                          <height>375</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -1218,7 +1218,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>717</width>
-                               <height>190</height>
+                               <height>214</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -1588,8 +1588,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>301</width>
-                       <height>343</height>
+                       <width>428</width>
+                       <height>379</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -4171,7 +4171,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>699</width>
-                               <height>172</height>
+                               <height>192</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -7467,7 +7467,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>395</width>
-                    <height>384</height>
+                    <height>417</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -7613,19 +7613,109 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QLabel" name="label_86">
-                     <property name="font">
-                      <font>
-                       <bold>true</bold>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>Customize colors and legends:</string>
-                     </property>
-                    </widget>
+                    <layout class="QHBoxLayout" name="horizontalLayout_107">
+                     <item>
+                      <widget class="QLabel" name="label_91">
+                       <property name="font">
+                        <font>
+                         <bold>true</bold>
+                        </font>
+                       </property>
+                       <property name="text">
+                        <string>Plot title: </string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="lbl_plot_title">
+                       <property name="placeholderText">
+                        <string>Type to modify the plot title</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
                    </item>
                    <item>
-                    <layout class="QHBoxLayout" name="legends_layout"/>
+                    <layout class="QHBoxLayout" name="horizontalLayout_91">
+                     <item>
+                      <widget class="QLabel" name="label_86">
+                       <property name="text">
+                        <string>X label</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="lbl_xlabel">
+                       <property name="placeholderText">
+                        <string>X axis label</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_92">
+                     <item>
+                      <widget class="QLabel" name="label_87">
+                       <property name="text">
+                        <string>Y label</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="lbl_ylabel">
+                       <property name="placeholderText">
+                        <string>Y axis label</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_102">
+                     <item>
+                      <widget class="QLabel" name="label_89">
+                       <property name="text">
+                        <string>X limits</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="xmin_2">
+                       <property name="placeholderText">
+                        <string>X min</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="xmax_2">
+                       <property name="placeholderText">
+                        <string>X max</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="label_90">
+                       <property name="text">
+                        <string>Y limits</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="ymin_2">
+                       <property name="placeholderText">
+                        <string>Y min</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="ymax_2">
+                       <property name="placeholderText">
+                        <string>Y max</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
                    </item>
                    <item>
                     <widget class="QLabel" name="label_2">
@@ -7883,6 +7973,25 @@
                       <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_13">
+                     <property name="font">
+                      <font>
+                       <pointsize>9</pointsize>
+                       <bold>true</bold>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Customize color and legend:</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="main_layout"/>
                    </item>
                    <item>
                     <layout class="QHBoxLayout" name="horizontalLayout_13">
@@ -8486,22 +8595,6 @@
    <addaction name="actionDarkMode"/>
    <addaction name="actionLightMode"/>
    <addaction name="separator"/>
-  </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1553</width>
-     <height>24</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuzer">
-    <property name="title">
-     <string>zer</string>
-    </property>
-   </widget>
-   <addaction name="menuzer"/>
   </widget>
   <action name="actionabout">
    <property name="text">

@@ -361,8 +361,7 @@ def launcher():
     if datetime.datetime.now() > expiration_date:
         text = f"The current SPECTROview version has expired on " \
                f"{expiration_date}. Please " \
-               f"contact the developer for an " \
-               f"updated version"
+               f"contact the developer for a new version"
         # If expired, disable the central widget
         app = QApplication(sys.argv)
         app.setWindowIcon(QIcon(ICON_APPLI))

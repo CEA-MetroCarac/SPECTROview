@@ -1,34 +1,42 @@
 """
-Module contains all utilities common methods of the application
+Module contains all utilities functions and common methods of the appli
 """
 import markdown
 import os
 import json
-import base64
-import zlib
 from copy import deepcopy
-from io import BytesIO
 import pandas as pd
-import numpy as np
 try:
     import win32clipboard
 except:
     pass
+from io import BytesIO
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.colors as mcolors
 import seaborn as sns
 
 from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
-    QTableWidgetItem,  QHBoxLayout, QTextBrowser, QLabel, \
-     QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, \
-    QApplication,  QWidget, QStyledItemDelegate, QComboBox, QLabel, QVBoxLayout, QLineEdit
+    QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
+    QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, \
+    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate
 from PySide6.QtCore import Signal, QThread, Qt, QSize
-from PySide6.QtGui import QPalette,  QTextCursor, QIcon, QResizeEvent, \
-    QAction, Qt, QColor
+from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
+    QAction, Qt
 
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+
+
+import base64
+import zlib
+
+# Define a dictionary mapping RGBA tuples to named colors
+rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for
+                            color_name in mcolors.CSS4_COLORS}
 
 DIRNAME = os.path.dirname(__file__)
 RELPATH = os.path.join(DIRNAME, "resources")
@@ -49,6 +57,7 @@ NCPUS = ['auto', '1', '2', '3', '4', '6', '8', '10', '12', '14', '16', '20',
 PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
 PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
+
 DEFAULT_COLORS = ['#0000ff', '#ff0000', '#008200', '#ffa000', '#8d0085', '#00ffff', '#ff00ff',
                   '#00ff00', '#ffbdcb', '#b41722', '#ffd500', '#008281', '#000086', '#c0c0c0',
                   '#808000', '#8d0000', '#6fd0ef']
@@ -58,13 +67,6 @@ LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
                    'center left', 'center right', 'lower center',
                    'upper center', 'center']
 X_AXIS = ['Raman shift (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
-
-
-def rgb_to_hex(rgb):
-    """Convert an RGB tuple to a hex color string."""
-    # Check if the values are floats and convert them to integers in the range 0-255
-    rgb = tuple(int(c * 255) if isinstance(c, float) else int(c) for c in rgb)
-    return '#{:02x}{:02x}{:02x}'.format(*rgb)
 
 def compress(array):
     """Compress and encode a numpy array to a base64 string."""
@@ -79,7 +81,7 @@ def decompress(data, dtype):
     return np.frombuffer(decompressed, dtype=dtype)
 
 def spectrum_to_dict(spectrum):
-    """Custom "save" method to save Spectrum object in a dictionary"""
+    """Custom "save" method to save fitted spectrum data in a dictionary"""
     excluded_keys = ['outliers_limit', 'peak_models', 'peak_index', 'bkg_model', 'result_fit', 'baseline', 'attractors']
     model_dict = {}
     for key, val in vars(spectrum).items():
@@ -106,7 +108,7 @@ def spectrum_to_dict(spectrum):
 
     return model_dict
 def set_attributes(spectrum, model_dict):
-    """To set attributes of 'Spectrum' object from JSON dict"""
+    """To set attributes of spectrum from JSON dict"""
     spectrum.set_attributes(model_dict)
     if 'x0' in model_dict:
         spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
@@ -116,6 +118,16 @@ def set_attributes(spectrum, model_dict):
         spectrum.x = decompress(model_dict['x'], dtype=np.float64)
     if 'y' in model_dict:
         spectrum.y = decompress(model_dict['y'], dtype=np.float64)
+def rgba_to_named_color(rgba):
+    """Convert RGBA tuple to a named color string."""
+    # Check if the exact RGBA tuple exists in the dictionary
+    rgba_tuple = tuple(rgba)
+    if rgba_tuple in rgba_to_named_color_dict:
+        return rgba_to_named_color_dict[rgba_tuple]
+    else:
+        # If exact match is not found, return the closest color name
+        return mcolors.to_hex(rgba)  # Use hex as fallback if needed
+
 
 def show_alert(message):
     """Show alert"""
@@ -154,8 +166,22 @@ def view_df(tabWidget, df):
     layout.addWidget(table_widget)
     df_viewer.show()
 
+
 class DataframeTable(QWidget):
-    """Class to display a given dataframe in GUI via QTableWidget with copy/paste functionality"""
+    """Class to display a given dataframe in GUI via QTableWidget.
+
+    This class takes a pandas DataFrame and displays it within a
+    QTableWidget, which
+    is added to a specified layout in your GUI. It provides functionality to
+    copy
+    selected data to the clipboard using a context menu or a keyboard shortcut.
+
+    Attributes:
+        df (pd.DataFrame): The DataFrame to be displayed in the QTableWidget.
+        layout (QVBoxLayout): The layout in your GUI where the QTableWidget
+        will be placed.
+
+    """
 
     def __init__(self, df, layout):
         super().__init__()
@@ -229,7 +255,8 @@ class DataframeTable(QWidget):
         clipboard = QApplication.clipboard()
         clipboard.setText('\n'.join(data))
         print(
-            f"Copied data to clipboard:\n{clipboard.text()}")
+            f"Copied data to clipboard:\n{clipboard.text()}")  # Debug statement
+
     def keyPressEvent(self, event):
         """Handles key press events to enable copying with Ctrl+C"""
         if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_C:
@@ -237,20 +264,103 @@ class DataframeTable(QWidget):
         else:
             super().keyPressEvent(event)
 
+class ColorDelegate(QStyledItemDelegate):
+    """Show color in background of color selector comboboxes."""
+    def paint(self, painter, option, index):
+        painter.save()
+        color = index.data(Qt.BackgroundRole)
+        if color:
+            painter.fillRect(option.rect, color)
+        painter.drawText(option.rect, Qt.AlignCenter, index.data(Qt.DisplayRole))
+        painter.restore()
 
+    def sizeHint(self, option, index):
+        return QSize(70, 20)
 class Graph(QWidget):
-    """Class to create and handle plot/graph objects."""
+    """Class to create and handle plot objects.
+
+    This class provides functionality to create and customize plots using
+    matplotlib
+    and seaborn libraries within a Pyside6-based GUI application. It supports
+    plotting
+    various styles such as point plots, scatter plots, box plots, line plots,
+    bar plots,
+    trendline plots, and wafer plots.
+    The class allows customization of plot properties including titles,
+    labels, axis limits, grid display, legend appearance, color
+    palettes, and more. It also supports multiple y-axis plotting and the
+    option to show
+    trendline equations.
+
+    Attributes:
+        df_name (str or None): Name of the DataFrame used for plotting.
+        filters (dict): Dictionary containing filter parameters.
+        graph_id: Identifier for the graph instance.
+        plot_width (int): Width of the plot in pixels.
+        plot_height (int): Height of the plot in pixels.
+        plot_style (str): Style of the plot (e.g., 'point', 'scatter',
+        'line', etc.).
+        x (str or None): Column name for the x-axis data.
+        y (list): List of column names for the primary y-axis data.
+        z (str or None): Column name for grouping data (used in hue).
+        xmin (float or None): Minimum limit for the x-axis.
+        xmax (float or None): Maximum limit for the x-axis.
+        ymin (float or None): Minimum limit for the primary y-axis.
+        ymax (float or None): Maximum limit for the primary y-axis.
+        zmin (float or None): Minimum limit for the secondary y-axis.
+        zmax (float or None): Maximum limit for the secondary y-axis.
+        plot_title (str or None): Title of the plot.
+        xlabel (str or None): Label for the x-axis.
+        ylabel (str or None): Label for the primary y-axis.
+        zlabel (str or None): Label for the secondary y-axis.
+        y2 (str or None): Column name for the secondary y-axis.
+        y3 (str or None): Column name for the tertiary y-axis.
+        y2min (float or None): Minimum limit for the secondary y-axis.
+        y2max (float or None): Maximum limit for the secondary y-axis.
+        y3min (float or None): Minimum limit for the tertiary y-axis.
+        y3max (float or None): Maximum limit for the tertiary y-axis.
+        y2label (str or None): Label for the secondary y-axis.
+        y3label (str or None): Label for the tertiary y-axis.
+        x_rot (int): Rotation angle for x-axis tick labels.
+        grid (bool): Flag indicating whether to display grid lines.
+        legend_visible (bool): Flag indicating whether the legend is visible.
+        legend_location (str): Location of the legend ('upper right', 'lower
+        left', etc.).
+        legend_outside (bool): Flag indicating whether the legend should be
+        outside the plot.
+        legend_properties (list): List of dictionaries containing properties
+        of legend items.
+        color_palette (str): Name of the color palette to use.
+        dpi (int): Dots per inch (resolution) of the plot.
+        wafer_size (int): Size of the wafer plot.
+        wafer_stats (bool): Flag indicating whether to display statistics on
+        the wafer plot.
+        trendline_order (int): Order of the polynomial for trendline fitting.
+        show_trendline_eq (bool): Flag indicating whether to show the
+        trendline equation.
+        show_bar_plot_error_bar (bool): Flag indicating whether to show error
+        bars on bar plots.
+        join_for_point_plot (bool): Flag indicating whether to join points in
+        point plots.
+
+        figure: Matplotlib figure object.
+        ax: Matplotlib axis object for the primary plot.
+        ax2: Matplotlib axis object for the secondary y-axis plot.
+        ax3: Matplotlib axis object for the tertiary y-axis plot.
+        canvas: Matplotlib FigureCanvasQTAgg object for displaying the plot.
+        graph_layout (QVBoxLayout): Layout for storing the plot widget.
+        """
 
     def __init__(self, graph_id=None):
         super().__init__()
         self.df_name = None
-        self.filters = {}
+        self.filters = {}  # List of filter
         self.graph_id = graph_id
         self.plot_width = 600
-        self.plot_height = 500
+        self.plot_height = 450
         self.plot_style = "point"
         self.x = None
-        self.y = []
+        self.y = []  # Multiple y column allowing to plot multiples lines
         self.z = None
         self.xmin = None
         self.xmax = None
@@ -264,14 +374,14 @@ class Graph(QWidget):
         self.ylabel = None
         self.zlabel = None
 
-        self.y2 = None
-        self.y3 = None
+        self.y2 = None  # Secondary y-axis
+        self.y3 = None  # Tertiary y-axis
         self.y2min = None
         self.y2max = None
         self.y3min = None
         self.y3max = None
-        self.y2label = None
-        self.y3label = None
+        self.y2label = None  # Secondary y-axis
+        self.y3label = None  # Tertiary y-axis
 
         self.x_rot = 0
         self.grid = False
@@ -280,7 +390,7 @@ class Graph(QWidget):
         self.legend_outside = False
         self.legend_properties = []
 
-        self.color_palette = "jet"
+        self.color_palette = "jet"  # Palette for wafer maps
         self.dpi = 100
         self.wafer_size = 300
         self.wafer_stats = True
@@ -291,11 +401,12 @@ class Graph(QWidget):
 
         self.figure = None
         self.ax = None
-        self.ax2 = None
-        self.ax3 = None
+        self.ax2 = None  # Secondary y-axis
+        self.ax3 = None  # Tertiary y-axis
         self.canvas = None
-        self.graph_layout = QVBoxLayout()
+        self.graph_layout = QVBoxLayout()  # Layout for store plot
         self.setLayout(self.graph_layout)
+
     def clear_layout(self, layout):
         """Clears all widgets and layouts from the specified layout."""
         if layout is not None:
@@ -306,13 +417,15 @@ class Graph(QWidget):
                     widget.deleteLater()
                 else:
                     self.clear_layout(item.layout())
+
     def create_plot_widget(self, dpi, layout=None):
-        """Creates a new plot canvas with the specified DPI and adds it to the layout."""
+        """Creates a new plot canvas with the specified DPI and adds it to
+        the specified
+            layout or the default graph_layout"""
         if dpi:
             self.dpi = dpi
         else:
             self.dpi = 100
-
         self.clear_layout(self.graph_layout)
         plt.close('all')
 
@@ -321,7 +434,7 @@ class Graph(QWidget):
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
         for action in self.toolbar.actions():
-            if action.text() in ['Save', 'Subplots']:
+            if action.text() in ['Save', 'Subplots', 'Customize']:
                 action.setVisible(False)
 
         if layout:
@@ -334,24 +447,19 @@ class Graph(QWidget):
         self.canvas.figure.tight_layout()
         self.canvas.draw()
 
-        # Set default labels if not already set
-        self.xlabel = self.xlabel if self.xlabel is not None else self.x
-        self.ylabel = self.ylabel if self.ylabel is not None else self.y[0] if self.y else None
-        self.ax.set_xlabel(self.xlabel)
-        self.ax.set_ylabel(self.ylabel)
-        self.ax.set_title(self.plot_title)
+
 
     def plot(self, df):
-        """Updates the plot based on the provided DataFrame and plot settings."""
-        # Clear the axes
+        """Updates the plot based on the provided DataFrame and plot
+        settings."""
         self.ax.clear()
         if self.ax2:
             self.ax2.clear()
         if self.ax3:
             self.ax3.clear()
 
-        # Perform the plotting
-        if self.df_name is not None and self.x is not None and self.y is not None:
+        if self.df_name is not None and self.x is not None and self.y is not \
+                None:
             self._plot_primary_axis(df)
             self._plot_secondary_axis(df)
             self._plot_tertiary_axis(df)
@@ -368,35 +476,21 @@ class Graph(QWidget):
         self.ax.get_figure().tight_layout()
         self.canvas.draw()
 
-        self.canvas.mpl_connect('draw_event', self.update_graph_properties)
+        #self.canvas.mpl_connect('draw_event', self.update_graph_properties)
+
     def update_graph_properties(self, event=None):
         """Updates the graph attributes based on the current plot state."""
         if self.ax:
             self.xmin, self.xmax = self.ax.get_xlim()
             self.ymin, self.ymax = self.ax.get_ylim()
-            self.xlabel = self.ax.get_xlabel()
-            self.ylabel = self.ax.get_ylabel()
-            self.plot_title = self.ax.get_title()
+            print(f" xlimts = {self.ax.get_xlim()}")
+            print(f" xmin = {self.xmin}, xmax = {self.xmax}, ")
 
         if self.ax2:
             self.y2min, self.y2max = self.ax2.get_ylim()
-            self.y2label = self.ax2.get_ylabel()
 
         if self.ax3:
             self.y3min, self.y3max = self.ax3.get_ylim()
-            self.y3label = self.ax3.get_ylabel()
-
-    def _set_limits(self):
-        """Set the limits of the axis."""
-        if self.xmin and self.xmax:
-            self.ax.set_xlim(float(self.xmin), float(self.xmax))
-        if self.ymin and self.ymax:
-            self.ax.set_ylim(float(self.ymin), float(self.ymax))
-        if self.ax2 and self.y2min and self.y2max:
-            self.ax2.set_ylim(float(self.y2min), float(self.y2max))
-        if self.ax3 and self.y3min and self.y3max:
-            self.ax3.set_ylim(float(self.y3min), float(self.y3max))
-
     def get_legend_properties(self):
         """Retrieves properties of each existing legend item."""
         legend_properties = []
@@ -414,7 +508,7 @@ class Graph(QWidget):
                         marker = handle.get_marker()
                     # Box & bar plots do not use markers → set defautl values
                     elif self.plot_style in ['box', 'bar']:
-                        color = handle.get_facecolor()
+                        color = rgba_to_named_color(handle.get_facecolor())
                         marker = 'o'
                     else:
                         color = 'blue'
@@ -423,8 +517,6 @@ class Graph(QWidget):
                         {'label': label, 'marker': marker, 'color': color})
         self.legend_properties = legend_properties
         return self.legend_properties
-
-
 
     def customize_legend_via_gui(self, main_layout):
         """Displays legend properties in the GUI for user modifications."""
@@ -475,13 +567,9 @@ class Graph(QWidget):
                 item = color.model().item(color.count() - 1)
                 item.setBackground(QColor(color_code))
 
-            # Convert RGB list to hex if necessary
-            if isinstance(prop['color'], list):
-                prop_color = rgb_to_hex(prop['color'])
-            else:
-                prop_color = prop['color']
-            color.setCurrentText(prop_color)
+            color.setCurrentText(prop['color'])
             color.currentIndexChanged.connect(lambda idx, color=color: self.update_combobox_color(color))
+
             color.currentTextChanged.connect(
                 lambda text, idx=idx: self.udp_legend(idx, 'color', text))
             color_layout.addWidget(color)
@@ -493,7 +581,6 @@ class Graph(QWidget):
         main_layout.addLayout(label_layout)
         main_layout.addLayout(marker_layout)
         main_layout.addLayout(color_layout)
-
     def update_combobox_color(self, combobox):
         """Update combobox background color based on the selected color."""
         selected_color = combobox.currentText()
@@ -631,6 +718,16 @@ class Graph(QWidget):
                  vmin=vmin, vmax=vmax, stats=self.wafer_stats,
                  r=(self.wafer_size / 2))
 
+    def _set_limits(self):
+        """Set the limits of axis"""
+        if self.xmin and self.xmax:
+            self.ax.set_xlim(float(self.xmin), float(self.xmax))
+        if self.ymin and self.ymax:
+            self.ax.set_ylim(float(self.ymin), float(self.ymax))
+        if self.ax2 and self.y2min and self.y2max:
+            self.ax2.set_ylim(float(self.y2min), float(self.y2max))
+        if self.ax3 and self.y3min and self.y3max:
+            self.ax3.set_ylim(float(self.y3min), float(self.y3max))
 
     def _set_labels(self):
         """Set titles and labels for axis and plot"""
@@ -644,13 +741,11 @@ class Graph(QWidget):
             if self.xlabel:
                 self.ax.set_xlabel(self.xlabel)
             else:
-                self.xlabel=self.x
-                self.ax.set_xlabel(self.xlabel)
+                self.ax.set_xlabel(self.x)
             if self.ylabel:
                 self.ax.set_ylabel(self.ylabel)
             else:
-                self.ylabel = self.y
-                self.ax.set_ylabel(self.ylabel)
+                self.ax.set_ylabel(self.y[0])
 
     def _plot_secondary_axis(self, df):
         if self.ax2:
@@ -1004,7 +1099,13 @@ class Filter:
         self.df = df
 
     def add_filter(self):
-        """Add a filter expression to the filters list and update the UI"""
+        """
+        Add a filter expression to the filters list and update the UI.
+
+        Retrieves the filter expression from line_edit and adds it to filters.
+        Updates the listbox to display the new filter expression as a
+        checkbox item.
+        """
         filter_expression = self.line_edit.text().strip()
         if filter_expression:
             filter = {"expression": filter_expression, "state": False}
@@ -1017,7 +1118,12 @@ class Filter:
         self.listbox.setItemWidget(item, checkbox)
 
     def remove_filter(self):
-        """Remove selected filter(s) from the filters list and UI"""
+        """
+        Remove selected filter(s) from the filters list and UI.
+
+        Retrieves selected items from listbox, identifies corresponding filters,
+        and removes them from filters list. Updates the listbox accordingly.
+        """
         selected_items = [item for item in
                           self.listbox.selectedItems()]
         for item in selected_items:
@@ -1050,9 +1156,13 @@ class Filter:
         """
         Apply filters to the DataFrame (self.df) based on the current or
         provided filters.
+
         Args:
         filters (list, optional): List of dictionaries representing filter
-        expressions and their states.Defaults to None, meaning current UI filters are used.
+        expressions and their states.
+                                  Defaults to None, meaning current UI
+                                  filters are used.
+
         Returns:
         pandas.DataFrame or None: Filtered DataFrame based on applied filters
         or None if self.df is None.
@@ -1083,7 +1193,12 @@ class Filter:
         return self.filtered_df
 
     def upd_filter_listbox(self):
-        """Update the listbox UI to reflect changes in filters"""
+        """
+        Update the listbox UI to reflect changes in filters.
+
+        Clears the listbox and re-populates it with current filters.
+        Each filter is displayed as a checkbox item.
+        """
         self.listbox.clear()
         for filter_data in self.filters:
             filter_expression = filter_data["expression"]
@@ -1096,7 +1211,15 @@ class Filter:
 
 
 class FitModelManager:
-    """Class to manage the folter containing fit models created by user"""
+    """
+    Class to manage fit models created by USERS.
+
+    Attributes:
+    settings (QSettings): QSettings object to store and retrieve settings.
+    default_model_folder (str): Default folder path where fit models are stored.
+    available_models (list): List of available fit model filenames in the
+    default folder.
+    """
 
     def __init__(self, settings):
         self.settings = settings
@@ -1107,13 +1230,24 @@ class FitModelManager:
             self.scan_models()
 
     def set_default_model_folder(self, folder_path):
-        """Set the default folder storing fit models"""
+        """
+        Set the default folder path where fit models will be stored.
+
+        Args:
+        folder_path (str): Path to the default folder.
+        """
         self.default_model_folder = folder_path
         self.settings.setValue("default_model_folder", folder_path)
         self.scan_models()
 
     def scan_models(self):
-        """Scan the default folder and populate available models to list"""
+        """
+        Scan the default folder and populate the available_models list.
+
+        This method scans the default_model_folder for files with the '.json'
+        extension
+        and updates the available_models list accordingly.
+        """
         self.available_models = []
         if self.default_model_folder:
             for file_name in os.listdir(self.default_model_folder):
@@ -1121,12 +1255,41 @@ class FitModelManager:
                     self.available_models.append(file_name)
 
     def get_available_models(self):
-        """Retrieve the list of available fit model filenames"""
+        """
+        Retrieve the list of available fit model filenames.
+
+        Returns:
+        list: List of available fit model filenames in the default folder.
+        """
         return self.available_models
 
 
 class CommonUtilities():
     """ Class contain all common methods or utility codes used other modules"""
+
+    def copy_fit_model(self, sel_spectrum, current_fit_model, label):
+        """ To copy the model dict of the selected spectrum. If several
+        spectrums are selected → copy the model dict of first spectrum in
+        list
+        sel_spectrum : FITSPY spectrum object
+        current_fit_model : FITSPY fit model object
+        label : QLabel to display the fname
+        """
+        if len(sel_spectrum.peak_models) == 0:
+            label.setText("")
+            show_alert(
+                "The selected spectrum does not have fit model to be copied!")
+            current_fit_model = None
+            return
+        else:
+            current_fit_model = None
+            current_fit_model = deepcopy(sel_spectrum.save())
+
+        fname = sel_spectrum.fname
+        label.setText(
+            f"The fit model of '{fname}' spectrum is copied to the clipboard.")
+
+        return current_fit_model
 
     def plot_graph(self, ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
                    x_text,
@@ -1190,9 +1353,8 @@ class CommonUtilities():
                     widget.close()
 
     def translate_param(self, fit_model, param):
-        """Translate parameter names to column headers:e.g. 'x0' to
-        'Position', 'ampli' to  'Intensity'..."""
-
+        """Translate parameter names to column headers: example x0 ->
+        Position, ampli ->  Intensity"""
         peak_labels = fit_model["peak_labels"]
         param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
                               "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
@@ -1360,18 +1522,7 @@ class FitThread(QThread):
                                    ncpus=self.ncpus, show_progressbar=False)
 
         self.progress_changed.emit(100)
-class ColorDelegate(QStyledItemDelegate):
-    """Show color in background of color selector comboboxes."""
-    def paint(self, painter, option, index):
-        painter.save()
-        color = index.data(Qt.BackgroundRole)
-        if color:
-            painter.fillRect(option.rect, color)
-        painter.drawText(option.rect, Qt.AlignCenter, index.data(Qt.DisplayRole))
-        painter.restore()
 
-    def sizeHint(self, option, index):
-        return QSize(70, 20)
 
 class WaferPlot:
     """Class to plot wafer map"""

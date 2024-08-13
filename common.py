@@ -1,5 +1,5 @@
 """
-Module contains all utilities functions and common methods of the appli
+Module contains all utilities common methods of the application
 """
 import markdown
 import os
@@ -8,17 +8,16 @@ import base64
 import zlib
 from copy import deepcopy
 from io import BytesIO
-
 import pandas as pd
 import numpy as np
-
 try:
     import win32clipboard
 except:
     pass
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import seaborn as sns
 
 from scipy.interpolate import griddata
@@ -29,10 +28,6 @@ from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
 from PySide6.QtCore import Signal, QThread, Qt, QSize
 from PySide6.QtGui import QPalette,  QTextCursor, QIcon, QResizeEvent, \
     QAction, Qt, QColor
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-
 
 
 DIRNAME = os.path.dirname(__file__)
@@ -63,6 +58,13 @@ LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
                    'center left', 'center right', 'lower center',
                    'upper center', 'center']
 X_AXIS = ['Raman shift (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
+
+
+def rgb_to_hex(rgb):
+    """Convert an RGB tuple to a hex color string."""
+    # Check if the values are floats and convert them to integers in the range 0-255
+    rgb = tuple(int(c * 255) if isinstance(c, float) else int(c) for c in rgb)
+    return '#{:02x}{:02x}{:02x}'.format(*rgb)
 
 def compress(array):
     """Compress and encode a numpy array to a base64 string."""
@@ -153,20 +155,7 @@ def view_df(tabWidget, df):
     df_viewer.show()
 
 class DataframeTable(QWidget):
-    """Class to display a given dataframe in GUI via QTableWidget.
-
-    This class takes a pandas DataFrame and displays it within a
-    QTableWidget, which
-    is added to a specified layout in your GUI. It provides functionality to
-    copy
-    selected data to the clipboard using a context menu or a keyboard shortcut.
-
-    Attributes:
-        df (pd.DataFrame): The DataFrame to be displayed in the QTableWidget.
-        layout (QVBoxLayout): The layout in your GUI where the QTableWidget
-        will be placed.
-
-    """
+    """Class to display a given dataframe in GUI via QTableWidget with copy/paste functionality"""
 
     def __init__(self, df, layout):
         super().__init__()
@@ -240,8 +229,7 @@ class DataframeTable(QWidget):
         clipboard = QApplication.clipboard()
         clipboard.setText('\n'.join(data))
         print(
-            f"Copied data to clipboard:\n{clipboard.text()}")  # Debug statement
-
+            f"Copied data to clipboard:\n{clipboard.text()}")
     def keyPressEvent(self, event):
         """Handles key press events to enable copying with Ctrl+C"""
         if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_C:
@@ -251,7 +239,7 @@ class DataframeTable(QWidget):
 
 
 class Graph(QWidget):
-    """Class to create and handle plot objects."""
+    """Class to create and handle plot/graph objects."""
 
     def __init__(self, graph_id=None):
         super().__init__()
@@ -259,7 +247,7 @@ class Graph(QWidget):
         self.filters = {}
         self.graph_id = graph_id
         self.plot_width = 600
-        self.plot_height = 450
+        self.plot_height = 500
         self.plot_style = "point"
         self.x = None
         self.y = []
@@ -397,6 +385,7 @@ class Graph(QWidget):
         if self.ax3:
             self.y3min, self.y3max = self.ax3.get_ylim()
             self.y3label = self.ax3.get_ylabel()
+
     def _set_limits(self):
         """Set the limits of the axis."""
         if self.xmin and self.xmax:
@@ -434,6 +423,8 @@ class Graph(QWidget):
                         {'label': label, 'marker': marker, 'color': color})
         self.legend_properties = legend_properties
         return self.legend_properties
+
+
 
     def customize_legend_via_gui(self, main_layout):
         """Displays legend properties in the GUI for user modifications."""
@@ -483,7 +474,13 @@ class Graph(QWidget):
                 item = color.addItem(color_code)
                 item = color.model().item(color.count() - 1)
                 item.setBackground(QColor(color_code))
-            color.setCurrentText(prop['color'])
+
+            # Convert RGB list to hex if necessary
+            if isinstance(prop['color'], list):
+                prop_color = rgb_to_hex(prop['color'])
+            else:
+                prop_color = prop['color']
+            color.setCurrentText(prop_color)
             color.currentIndexChanged.connect(lambda idx, color=color: self.update_combobox_color(color))
             color.currentTextChanged.connect(
                 lambda text, idx=idx: self.udp_legend(idx, 'color', text))
@@ -1007,13 +1004,7 @@ class Filter:
         self.df = df
 
     def add_filter(self):
-        """
-        Add a filter expression to the filters list and update the UI.
-
-        Retrieves the filter expression from line_edit and adds it to filters.
-        Updates the listbox to display the new filter expression as a
-        checkbox item.
-        """
+        """Add a filter expression to the filters list and update the UI"""
         filter_expression = self.line_edit.text().strip()
         if filter_expression:
             filter = {"expression": filter_expression, "state": False}
@@ -1026,12 +1017,7 @@ class Filter:
         self.listbox.setItemWidget(item, checkbox)
 
     def remove_filter(self):
-        """
-        Remove selected filter(s) from the filters list and UI.
-
-        Retrieves selected items from listbox, identifies corresponding filters,
-        and removes them from filters list. Updates the listbox accordingly.
-        """
+        """Remove selected filter(s) from the filters list and UI"""
         selected_items = [item for item in
                           self.listbox.selectedItems()]
         for item in selected_items:
@@ -1064,13 +1050,9 @@ class Filter:
         """
         Apply filters to the DataFrame (self.df) based on the current or
         provided filters.
-
         Args:
         filters (list, optional): List of dictionaries representing filter
-        expressions and their states.
-                                  Defaults to None, meaning current UI
-                                  filters are used.
-
+        expressions and their states.Defaults to None, meaning current UI filters are used.
         Returns:
         pandas.DataFrame or None: Filtered DataFrame based on applied filters
         or None if self.df is None.
@@ -1101,12 +1083,7 @@ class Filter:
         return self.filtered_df
 
     def upd_filter_listbox(self):
-        """
-        Update the listbox UI to reflect changes in filters.
-
-        Clears the listbox and re-populates it with current filters.
-        Each filter is displayed as a checkbox item.
-        """
+        """Update the listbox UI to reflect changes in filters"""
         self.listbox.clear()
         for filter_data in self.filters:
             filter_expression = filter_data["expression"]
@@ -1119,15 +1096,7 @@ class Filter:
 
 
 class FitModelManager:
-    """
-    Class to manage fit models created by USERS.
-
-    Attributes:
-    settings (QSettings): QSettings object to store and retrieve settings.
-    default_model_folder (str): Default folder path where fit models are stored.
-    available_models (list): List of available fit model filenames in the
-    default folder.
-    """
+    """Class to manage the folter containing fit models created by user"""
 
     def __init__(self, settings):
         self.settings = settings
@@ -1138,24 +1107,13 @@ class FitModelManager:
             self.scan_models()
 
     def set_default_model_folder(self, folder_path):
-        """
-        Set the default folder path where fit models will be stored.
-
-        Args:
-        folder_path (str): Path to the default folder.
-        """
+        """Set the default folder storing fit models"""
         self.default_model_folder = folder_path
         self.settings.setValue("default_model_folder", folder_path)
         self.scan_models()
 
     def scan_models(self):
-        """
-        Scan the default folder and populate the available_models list.
-
-        This method scans the default_model_folder for files with the '.json'
-        extension
-        and updates the available_models list accordingly.
-        """
+        """Scan the default folder and populate available models to list"""
         self.available_models = []
         if self.default_model_folder:
             for file_name in os.listdir(self.default_model_folder):
@@ -1163,41 +1121,12 @@ class FitModelManager:
                     self.available_models.append(file_name)
 
     def get_available_models(self):
-        """
-        Retrieve the list of available fit model filenames.
-
-        Returns:
-        list: List of available fit model filenames in the default folder.
-        """
+        """Retrieve the list of available fit model filenames"""
         return self.available_models
 
 
 class CommonUtilities():
     """ Class contain all common methods or utility codes used other modules"""
-
-    def copy_fit_model(self, sel_spectrum, current_fit_model, label):
-        """ To copy the model dict of the selected spectrum. If several
-        spectrums are selected → copy the model dict of first spectrum in
-        list
-        sel_spectrum : FITSPY spectrum object
-        current_fit_model : FITSPY fit model object
-        label : QLabel to display the fname
-        """
-        if len(sel_spectrum.peak_models) == 0:
-            label.setText("")
-            show_alert(
-                "The selected spectrum does not have fit model to be copied!")
-            current_fit_model = None
-            return
-        else:
-            current_fit_model = None
-            current_fit_model = deepcopy(sel_spectrum.save())
-
-        fname = sel_spectrum.fname
-        label.setText(
-            f"The fit model of '{fname}' spectrum is copied to the clipboard.")
-
-        return current_fit_model
 
     def plot_graph(self, ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
                    x_text,
@@ -1261,8 +1190,9 @@ class CommonUtilities():
                     widget.close()
 
     def translate_param(self, fit_model, param):
-        """Translate parameter names to column headers: example x0 ->
-        Position, ampli ->  Intensity"""
+        """Translate parameter names to column headers:e.g. 'x0' to
+        'Position', 'ampli' to  'Intensity'..."""
+
         peak_labels = fit_model["peak_labels"]
         param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
                               "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",

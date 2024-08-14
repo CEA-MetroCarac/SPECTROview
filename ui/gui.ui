@@ -1601,8 +1601,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>384</height>
+                       <width>301</width>
+                       <height>343</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -4581,8 +4581,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>359</height>
+                       <width>301</width>
+                       <height>343</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
@@ -5569,7 +5569,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>248</width>
+                     <width>236</width>
                      <height>440</height>
                     </rect>
                    </property>
@@ -7696,7 +7696,7 @@
                      <item>
                       <widget class="QPushButton" name="btn_get_limits">
                        <property name="text">
-                        <string>Get limits</string>
+                        <string>Set current limits</string>
                        </property>
                       </widget>
                      </item>
@@ -7892,8 +7892,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>372</width>
-                    <height>494</height>
+                    <width>277</width>
+                    <height>298</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -8114,8 +8114,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>372</width>
-                    <height>439</height>
+                    <width>364</width>
+                    <height>371</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_9">
@@ -8459,7 +8459,7 @@
       <item>
        <widget class="QLabel" name="label_38">
         <property name="text">
-         <string>      </string>
+         <string/>
         </property>
        </widget>
       </item>

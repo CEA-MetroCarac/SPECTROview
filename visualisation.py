@@ -311,6 +311,7 @@ class Visualization(QDialog):
         self.ui.xmax_2.setText(format_value(graph.xmax))
         self.ui.ymin_2.setText(format_value(graph.ymin))
         self.ui.ymax_2.setText(format_value(graph.ymax))
+        self.plotting(update_graph=True)
 
     def clear_limits(self):
         """Clear all entryboxes of x and y limits"""

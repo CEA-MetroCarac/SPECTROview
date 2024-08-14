@@ -357,7 +357,7 @@ class Graph(QWidget):
         self.filters = {}  # List of filter
         self.graph_id = graph_id
         self.plot_width = 600
-        self.plot_height = 450
+        self.plot_height = 500
         self.plot_style = "point"
         self.x = None
         self.y = []  # Multiple y column allowing to plot multiples lines
@@ -476,21 +476,6 @@ class Graph(QWidget):
         self.ax.get_figure().tight_layout()
         self.canvas.draw()
 
-        #self.canvas.mpl_connect('draw_event', self.update_graph_properties)
-
-    def update_graph_properties(self, event=None):
-        """Updates the graph attributes based on the current plot state."""
-        if self.ax:
-            self.xmin, self.xmax = self.ax.get_xlim()
-            self.ymin, self.ymax = self.ax.get_ylim()
-            print(f" xlimts = {self.ax.get_xlim()}")
-            print(f" xmin = {self.xmin}, xmax = {self.xmax}, ")
-
-        if self.ax2:
-            self.y2min, self.y2max = self.ax2.get_ylim()
-
-        if self.ax3:
-            self.y3min, self.y3max = self.ax3.get_ylim()
     def get_legend_properties(self):
         """Retrieves properties of each existing legend item."""
         legend_properties = []

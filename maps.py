@@ -69,7 +69,6 @@ class Maps(QObject):
             List of available fit model names.
         fit_model_manager (FitModelManager):
             Manager for handling fit model operations.
-
     """
 
     def __init__(self, settings, ui, spectrums, common, visu):
@@ -117,7 +116,7 @@ class Maps(QObject):
         self.ui.cb_normalize.stateChanged.connect(self.refresh_gui)
 
         self.ui.cbb_wafer_size.currentIndexChanged.connect(self.refresh_gui)
-        self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_gui)
+        self.ui.cbb_xaxis_unit2.currentIndexChanged.connect(self.refresh_gui)
         self.ui.rdbt_show_wafer.toggled.connect(self.refresh_gui)
 
         self.ui.cb_limits.stateChanged.connect(self.refresh_gui)
@@ -887,7 +886,7 @@ class Maps(QObject):
 
         fig1 = plt.figure(dpi=dpi)
         self.ax = fig1.add_subplot(111)
-        txt = self.ui.cbb_xaxis_unit.currentText()
+        txt = self.ui.cbb_xaxis_unit2.currentText()
         self.ax.set_xlabel(txt)
         self.ax.set_ylabel("Intensity (a.u)")
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
@@ -1010,7 +1009,7 @@ class Maps(QObject):
                 self.ui.rsquared_1.setText("R2=0")
 
         # self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
-        txt = self.ui.cbb_xaxis_unit.currentText()
+        txt = self.ui.cbb_xaxis_unit2.currentText()
         self.ax.set_xlabel(txt)
         self.ax.set_ylabel("Intensity (a.u)")
         if self.ui.cb_legend.isChecked():

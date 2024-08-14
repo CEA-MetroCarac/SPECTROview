@@ -690,7 +690,7 @@
                   </property>
                   <item>
                    <widget class="QWidget" name="widget_18" native="true">
-                    <layout class="QHBoxLayout" name="horizontalLayout_73" stretch="0,60">
+                    <layout class="QHBoxLayout" name="horizontalLayout_73" stretch="50,50">
                      <property name="spacing">
                       <number>6</number>
                      </property>
@@ -729,7 +729,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>375</height>
+                          <height>380</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -784,6 +784,16 @@
                               </size>
                              </property>
                             </spacer>
+                           </item>
+                           <item>
+                            <widget class="QLabel" name="label_22">
+                             <property name="text">
+                              <string>X-axis unit:</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QComboBox" name="cbb_xaxis_unit"/>
                            </item>
                           </layout>
                          </item>
@@ -1200,7 +1210,7 @@
                       </widget>
                      </item>
                      <item>
-                      <layout class="QVBoxLayout" name="verticalLayout_43">
+                      <layout class="QVBoxLayout" name="verticalLayout_43" stretch="85,15">
                        <item>
                         <widget class="QGroupBox" name="peak_table_2">
                          <property name="title">
@@ -1218,7 +1228,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>717</width>
-                               <height>214</height>
+                               <height>221</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -1258,18 +1268,21 @@
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_81">
+                         <property name="spacing">
+                          <number>5</number>
+                         </property>
                          <item>
                           <widget class="QPushButton" name="btn_fit_3">
                            <property name="minimumSize">
                             <size>
                              <width>50</width>
-                             <height>70</height>
+                             <height>50</height>
                             </size>
                            </property>
                            <property name="maximumSize">
                             <size>
                              <width>50</width>
-                             <height>70</height>
+                             <height>50</height>
                             </size>
                            </property>
                            <property name="toolTip">
@@ -1292,13 +1305,13 @@
                               <number>5</number>
                              </property>
                              <property name="topMargin">
-                              <number>5</number>
+                              <number>2</number>
                              </property>
                              <property name="rightMargin">
                               <number>5</number>
                              </property>
                              <property name="bottomMargin">
-                              <number>5</number>
+                              <number>2</number>
                              </property>
                              <item>
                               <widget class="QPushButton" name="btn_copy_fit_model_2">
@@ -1431,13 +1444,13 @@
                               <number>5</number>
                              </property>
                              <property name="topMargin">
-                              <number>5</number>
+                              <number>2</number>
                              </property>
                              <property name="rightMargin">
                               <number>5</number>
                              </property>
                              <property name="bottomMargin">
-                              <number>5</number>
+                              <number>2</number>
                              </property>
                              <item>
                               <widget class="QLabel" name="label_81">
@@ -1589,7 +1602,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>379</height>
+                       <height>384</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
@@ -3682,7 +3695,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>372</height>
+                          <height>378</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -3737,6 +3750,16 @@
                               </size>
                              </property>
                             </spacer>
+                           </item>
+                           <item>
+                            <widget class="QLabel" name="label_99">
+                             <property name="text">
+                              <string>X-axis unit:</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QComboBox" name="cbb_xaxis_unit2"/>
                            </item>
                           </layout>
                          </item>
@@ -4153,7 +4176,7 @@
                       </widget>
                      </item>
                      <item>
-                      <layout class="QVBoxLayout" name="verticalLayout_33">
+                      <layout class="QVBoxLayout" name="verticalLayout_33" stretch="85,15">
                        <item>
                         <widget class="QGroupBox" name="peak_table">
                          <property name="title">
@@ -4171,7 +4194,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>699</width>
-                               <height>192</height>
+                               <height>196</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -4216,13 +4239,13 @@
                            <property name="minimumSize">
                             <size>
                              <width>50</width>
-                             <height>70</height>
+                             <height>50</height>
                             </size>
                            </property>
                            <property name="maximumSize">
                             <size>
                              <width>50</width>
-                             <height>70</height>
+                             <height>50</height>
                             </size>
                            </property>
                            <property name="toolTip">
@@ -4245,13 +4268,13 @@
                               <number>5</number>
                              </property>
                              <property name="topMargin">
-                              <number>5</number>
+                              <number>2</number>
                              </property>
                              <property name="rightMargin">
                               <number>5</number>
                              </property>
                              <property name="bottomMargin">
-                              <number>5</number>
+                              <number>2</number>
                              </property>
                              <item>
                               <widget class="QPushButton" name="btn_copy_fit_model">
@@ -4384,13 +4407,13 @@
                               <number>5</number>
                              </property>
                              <property name="topMargin">
-                              <number>5</number>
+                              <number>2</number>
                              </property>
                              <property name="rightMargin">
                               <number>5</number>
                              </property>
                              <property name="bottomMargin">
-                              <number>5</number>
+                              <number>2</number>
                              </property>
                              <item>
                               <widget class="QLabel" name="label_80">
@@ -4558,8 +4581,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>301</width>
-                       <height>343</height>
+                       <width>428</width>
+                       <height>359</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
@@ -5546,7 +5569,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>236</width>
+                     <width>248</width>
                      <height>440</height>
                     </rect>
                    </property>
@@ -6926,16 +6949,6 @@
              </layout>
             </item>
             <item>
-             <widget class="QCheckBox" name="cb_legend_visible">
-              <property name="text">
-               <string>Legend</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
              <widget class="QCheckBox" name="cb_legend_outside">
               <property name="text">
                <string>Legend outside</string>
@@ -6984,7 +6997,7 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="10,20,5,0,0">
+          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="10,10,5,74,1">
            <property name="spacing">
             <number>5</number>
            </property>
@@ -7198,7 +7211,7 @@
              <property name="minimumSize">
               <size>
                <width>0</width>
-               <height>200</height>
+               <height>150</height>
               </size>
              </property>
              <property name="title">
@@ -7238,11 +7251,39 @@
                    <string>Add filter(s) to dataframe</string>
                   </property>
                   <property name="text">
-                   <string>Add filter(s)</string>
+                   <string/>
                   </property>
                   <property name="icon">
                    <iconset resource="resources.qrc">
-                    <normaloff>:/icon/iconpack/filter.png</normaloff>:/icon/iconpack/filter.png</iconset>
+                    <normaloff>:/icon/iconpack/add.png</normaloff>:/icon/iconpack/add.png</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_remove_filters_4">
+                  <property name="toolTip">
+                   <string>Remove filters from the list</string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources.qrc">
+                    <normaloff>:/icon/iconpack/close.png</normaloff>:/icon/iconpack/close.png</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_apply_filters_4">
+                  <property name="toolTip">
+                   <string>Apply selected filters to selected dataframe</string>
+                  </property>
+                  <property name="text">
+                   <string>Apply</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources.qrc">
+                    <normaloff>:/icon/iconpack/done.png</normaloff>:/icon/iconpack/done.png</iconset>
                   </property>
                  </widget>
                 </item>
@@ -7265,72 +7306,39 @@
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>200</height>
+                  <height>100</height>
                  </size>
                 </property>
                </widget>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_100">
-                <item>
-                 <spacer name="horizontalSpacer_47">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="btn_remove_filters_4">
-                  <property name="toolTip">
-                   <string>Remove filters from the list</string>
-                  </property>
-                  <property name="text">
-                   <string>Remove filter</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icon/iconpack/close.png</normaloff>:/icon/iconpack/close.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="btn_apply_filters_4">
-                  <property name="toolTip">
-                   <string>Apply selected filters to selected dataframe</string>
-                  </property>
-                  <property name="text">
-                   <string>Apply filter(s)</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icon/iconpack/add.png</normaloff>:/icon/iconpack/add.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
               </item>
              </layout>
             </widget>
            </item>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_114">
+             <property name="leftMargin">
+              <number>10</number>
+             </property>
+             <property name="topMargin">
+              <number>5</number>
+             </property>
+             <property name="rightMargin">
+              <number>10</number>
+             </property>
+             <property name="bottomMargin">
+              <number>5</number>
+             </property>
              <item>
               <widget class="QPushButton" name="btn_add_graph">
                <property name="minimumSize">
                 <size>
-                 <width>80</width>
+                 <width>100</width>
                  <height>0</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>80</width>
+                 <width>100</width>
                  <height>100</height>
                 </size>
                </property>
@@ -7366,13 +7374,13 @@
               <widget class="QPushButton" name="btn_upd_graph">
                <property name="minimumSize">
                 <size>
-                 <width>90</width>
+                 <width>110</width>
                  <height>0</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>100</width>
+                 <width>110</width>
                  <height>100</height>
                 </size>
                </property>
@@ -7467,7 +7475,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>395</width>
-                    <height>417</height>
+                    <height>494</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -7672,6 +7680,36 @@
                     </layout>
                    </item>
                    <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_19">
+                     <item>
+                      <widget class="QLabel" name="label_97">
+                       <property name="font">
+                        <font>
+                         <bold>true</bold>
+                        </font>
+                       </property>
+                       <property name="text">
+                        <string>Axis limits:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_get_limits">
+                       <property name="text">
+                        <string>Get limits</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_clear_limits">
+                       <property name="text">
+                        <string>Clear limits</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
                     <layout class="QHBoxLayout" name="horizontalLayout_102">
                      <item>
                       <widget class="QLabel" name="label_89">
@@ -7855,10 +7893,20 @@
                     <x>0</x>
                     <y>0</y>
                     <width>372</width>
-                    <height>384</height>
+                    <height>494</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">
+                   <item>
+                    <widget class="QCheckBox" name="cb_legend_visible">
+                     <property name="text">
+                      <string>Show legend</string>
+                     </property>
+                     <property name="checked">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
                    <item>
                     <widget class="QCheckBox" name="cb_show_err_bar_plot">
                      <property name="text">
@@ -8066,8 +8114,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>364</width>
-                    <height>371</height>
+                    <width>372</width>
+                    <height>439</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_9">
@@ -8409,26 +8457,16 @@
        <number>5</number>
       </property>
       <item>
-       <widget class="QLabel" name="label_22">
-        <property name="text">
-         <string>X-axis unit:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="cbb_xaxis_unit"/>
-      </item>
-      <item>
        <widget class="QLabel" name="label_38">
         <property name="text">
-         <string>   |                 </string>
+         <string>      </string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QLabel" name="label_19">
         <property name="text">
-         <string>Multi-processing:</string>
+         <string>Number of CPUs:</string>
         </property>
        </widget>
       </item>
@@ -8446,13 +8484,6 @@
         </property>
         <property name="maximum">
          <number>64</number>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_20">
-        <property name="text">
-         <string>CPUs</string>
         </property>
        </widget>
       </item>

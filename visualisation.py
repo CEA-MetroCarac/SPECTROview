@@ -68,6 +68,8 @@ class Visualization(QDialog):
         self.graph_id = 0  # Initialize graph number
         # Add a graph
         self.ui.btn_add_graph.clicked.connect(self.plotting)
+        self.ui.btn_get_limits.clicked.connect(self.set_current_limits)
+        self.ui.btn_clear_limits.clicked.connect(self.clear_limits)
         # Update an existing graph
         self.ui.btn_upd_graph.clicked.connect(
             lambda: self.plotting(update_graph=True))
@@ -189,7 +191,7 @@ class Visualization(QDialog):
 
         graph.color_palette = self.ui.cbb_palette.currentText()
         graph.wafer_size = float(self.ui.lbl_wafersize.text())
-        graph.x_rot = float(self.ui.x_rot.text())
+
         graph.wafer_size = float(self.ui.lbl_wafersize.text())
         graph.wafer_stats = self.ui.cb_wafer_stats.isChecked()
 
@@ -229,6 +231,7 @@ class Visualization(QDialog):
             graph.plot_width = sub_window_size.width()
             graph.plot_height = sub_window_size.height()
 
+            graph.x_rot = float(self.ui.x_rot.text())
             xlabel = self.ui.lbl_xlabel.text()
             ylabel = self.ui.lbl_ylabel.text()
             y2label = self.ui.lbl_y2label.text()
@@ -291,6 +294,30 @@ class Visualization(QDialog):
         main_layout = self.ui.main_layout
         graph.customize_legend_via_gui(main_layout)
 
+    def set_current_limits(self):
+        """Get and set current scales for selected plot"""
+        graph, graph_dialog, sub_window = self.get_sel_graph()
+        graph.xmin, graph.xmax = graph.ax.get_xlim()
+        graph.ymin, graph.ymax = graph.ax.get_ylim()
+        def format_value(value):
+            if isinstance(value, (int, float)):  # Check if the value is a number
+                return str(round(value, 3))
+            elif value is None:  # Handle None values
+                return ""
+            else:  # If the value is already a string or another type
+                return str(value)
+        # Update the QLineEdit widgets
+        self.ui.xmin_2.setText(format_value(graph.xmin))
+        self.ui.xmax_2.setText(format_value(graph.xmax))
+        self.ui.ymin_2.setText(format_value(graph.ymin))
+        self.ui.ymax_2.setText(format_value(graph.ymax))
+
+    def clear_limits(self):
+        """Clear all entryboxes of x and y limits"""
+        self.ui.xmin_2.clear()
+        self.ui.xmax_2.clear()
+        self.ui.ymin_2.clear()
+        self.ui.ymax_2.clear()
     def on_selected_graph(self, sub_window):
         """Update GUI elements based on the properties of the selected graph"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
@@ -347,17 +374,26 @@ class Visualization(QDialog):
             self.ui.lbl_y3label.setText(graph.y3label)
             self.ui.lbl_zlabel.setText(graph.zlabel)
 
-            # Reflect limits:
-            self.ui.xmin_2.setText(graph.xmin)
-            self.ui.xmax_2.setText(graph.xmax)
-            self.ui.ymin_2.setText(graph.ymin)
-            self.ui.ymax_2.setText(graph.ymax)
-            self.ui.y2min_2.setText(graph.y2min)
-            self.ui.y2max_2.setText(graph.y2max)
-            self.ui.y3min_2.setText(graph.y3min)
-            self.ui.y3max_2.setText(graph.y3max)
-            self.ui.zmax_2.setText(graph.zmax)
-            self.ui.zmin_2.setText(graph.zmin)
+            # Reflect limits values:
+            def format_value(value):
+                if isinstance(value, (int, float)):  # Check if the value is a number
+                    return str(round(value, 3))
+                elif value is None:  # Handle None values
+                    return ""
+                else:  # If the value is already a string or another type
+                    return str(value)
+
+            # Update the QLineEdit widgets
+            self.ui.xmin_2.setText(format_value(graph.xmin))
+            self.ui.xmax_2.setText(format_value(graph.xmax))
+            self.ui.ymin_2.setText(format_value(graph.ymin))
+            self.ui.ymax_2.setText(format_value(graph.ymax))
+            self.ui.y2min_2.setText(format_value(graph.y2min))
+            self.ui.y2max_2.setText(format_value(graph.y2max))
+            self.ui.y3min_2.setText(format_value(graph.y3min))
+            self.ui.y3max_2.setText(format_value(graph.y3max))
+            self.ui.zmax_2.setText(format_value(graph.zmax))
+            self.ui.zmin_2.setText(format_value(graph.zmin))
 
             # Reflect legend status
             self.ui.cb_legend_visible.setChecked(graph.legend_visible)

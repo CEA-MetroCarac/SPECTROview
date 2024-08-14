@@ -1195,8 +1195,6 @@ class Spectrums(QObject):
         """To copy figure canvas to clipboard"""
         self.common.copy_fig_to_clb(canvas=self.canvas3)
 
-
-
     def load_fit_settings(self):
         """Reload last used fitting settings from QSettings"""
         fit_params = {

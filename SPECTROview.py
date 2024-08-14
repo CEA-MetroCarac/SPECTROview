@@ -111,6 +111,8 @@ class Main:
         # Statusbar
         self.ui.cbb_xaxis_unit.addItems(X_AXIS)
         self.ui.cbb_xaxis_unit.setCurrentIndex(0)
+        self.ui.cbb_xaxis_unit2.addItems(X_AXIS)
+        self.ui.cbb_xaxis_unit2.setCurrentIndex(0)
 
         ########################################################
         ############## GUI for Wafer Processing tab #############
@@ -354,7 +356,6 @@ class Main:
 
 
 expiration_date = datetime.datetime(2024, 12, 31)
-
 
 def launcher():
     # Check if the current date is past the expiration date

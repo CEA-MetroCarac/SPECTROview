@@ -9,7 +9,7 @@ Attributes:
     DIRNAME (str): Directory name of the current script file.
     UI_FILE (str): Path to the .ui file defining the application's GUI layout.
     ICON_APPLI (str): Path to the application's icon file.
-    HELP_DFQUERY (str): Path to the Markdown document detailing pandas DataFrame
+    HELP_MANUAL (str): Path to the Markdown document detailing pandas DataFrame
         query functions.
     ABOUT (str): Path to the Markdown document providing information about the
         application.
@@ -31,7 +31,7 @@ Functions:
         Switches the application UI to light mode and saves the preference to
         application settings.
     open_doc_df_query():
-        Opens a Markdown file (`pandas_df_query.md`) in a dialog to provide
+        Opens a Markdown file (`manual.md`) in a dialog to provide
         detailed information about data filtering in Pandas DataFrame.
     show_about():
         Displays an about dialog with information loaded from a Markdown
@@ -66,7 +66,7 @@ from visualisation import Visualization
 DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")
 ICON_APPLI = os.path.join(DIRNAME, "ui", "iconpack", "icon3.png")
-HELP_DFQUERY = os.path.join(DIRNAME, "resources", "pandas_df_query.md")
+HELP_MANUAL = os.path.join(DIRNAME, "resources", "manual.md")
 ABOUT = os.path.join(DIRNAME, "resources", "about.md")
 
 
@@ -106,7 +106,7 @@ class Main:
         self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
         self.ui.actionAbout.triggered.connect(self.show_about)
-        self.ui.actionHelps.triggered.connect(self.open_doc_df_query)
+        self.ui.actionHelps.triggered.connect(self.openn_manual)
 
         # Statusbar
         self.ui.cbb_xaxis_unit.addItems(X_AXIS)
@@ -345,10 +345,10 @@ class Main:
         self.ui.setPalette(self.common.light_palette())
         self.settings.setValue("mode", "light")  # Save to settings
 
-    def open_doc_df_query(self):
+    def openn_manual(self):
         """Open doc detail about query function of pandas dataframe"""
-        title = "Data filtering"
-        self.common.view_markdown(self.ui, title, HELP_DFQUERY, 550, 650)
+        title = "SPECTROview Manual"
+        self.common.view_markdown(self.ui, title, HELP_MANUAL, 1400, 900)
 
     def show_about(self):
         """Show about dialog """

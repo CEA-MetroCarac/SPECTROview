@@ -40,14 +40,14 @@ All file/data formats supported by SPECTROview can be opened via a signal push b
 Excel files contaning datasheets within one or multiples Excel sheets is supportted. 
 User can directly load an Excel files for plotting via the "data visualization" Tab.
 
-# 1. "Spectra" and "Maps" tabs
+# 2. "Spectra" and "Maps" tabs
 The 'Spectra' and 'Maps' tab sharing almost the same feature and GUI except some specific GUi element for 2Dmaps/hyperspectral data navigation.
 
-# 2. "Data Visualization" TAB
+# 3. "Data Visualization" TAB
 
 
 
-# 3. Data filtering feature
+# 4. Data filtering feature
 
 The **pandas.DataFrame.query()** method allows you to filter rows from a
 DataFrame based on a boolean expression. It's a powerful and flexible way to

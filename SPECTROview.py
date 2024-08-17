@@ -9,7 +9,7 @@ Attributes:
     DIRNAME (str): Directory name of the current script file.
     UI_FILE (str): Path to the .ui file defining the application's GUI layout.
     ICON_APPLI (str): Path to the application's icon file.
-    HELP_MANUAL (str): Path to the Markdown document detailing pandas DataFrame
+    USER_MANUAL (str): Path to the Markdown document detailing pandas DataFrame
         query functions.
     ABOUT (str): Path to the Markdown document providing information about the
         application.
@@ -31,7 +31,7 @@ Functions:
         Switches the application UI to light mode and saves the preference to
         application settings.
     open_doc_df_query():
-        Opens a Markdown file (`manual.md`) in a dialog to provide
+        Opens a Markdown file (`user_manual.md`) in a dialog to provide
         detailed information about data filtering in Pandas DataFrame.
     show_about():
         Displays an about dialog with information loaded from a Markdown
@@ -66,7 +66,7 @@ from visualisation import Visualization
 DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")
 ICON_APPLI = os.path.join(DIRNAME, "ui", "iconpack", "icon3.png")
-HELP_MANUAL = os.path.join(DIRNAME, "resources", "manual.md")
+USER_MANUAL = os.path.join(DIRNAME, "resources", "user_manual.md")
 ABOUT = os.path.join(DIRNAME, "resources", "about.md")
 
 
@@ -348,7 +348,7 @@ class Main:
     def openn_manual(self):
         """Open doc detail about query function of pandas dataframe"""
         title = "SPECTROview Manual"
-        self.common.view_markdown(self.ui, title, HELP_MANUAL, 1400, 900)
+        self.common.view_markdown(self.ui, title, USER_MANUAL, 1400, 900)
 
     def show_about(self):
         """Show about dialog """

@@ -58,7 +58,7 @@ from PySide6.QtGui import QIcon
 from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
     show_alert, PALETTE, WAFER_SIZE, X_AXIS
 
-from ui import resources #Icon, logo, etc..
+from ui import resources  # Icon, logo, etc..
 from maps import Maps
 from spectrums import Spectrums
 from visualisation import Visualization
@@ -106,7 +106,7 @@ class Main:
         self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
         self.ui.actionAbout.triggered.connect(self.show_about)
-        self.ui.actionHelps.triggered.connect(self.openn_manual)
+        self.ui.actionHelps.triggered.connect(self.open_manual)
 
         # Statusbar
         self.ui.cbb_xaxis_unit.addItems(X_AXIS)
@@ -337,6 +337,7 @@ class Main:
             self.spectrums.clear_env()
         else:
             show_alert("No thing to clear.")
+
     def toggle_dark_mode(self):
         self.ui.setPalette(self.common.dark_palette())
         self.settings.setValue("mode", "dark")  # Save to settings
@@ -345,10 +346,10 @@ class Main:
         self.ui.setPalette(self.common.light_palette())
         self.settings.setValue("mode", "light")  # Save to settings
 
-    def openn_manual(self):
+    def open_manual(self):
         """Open doc detail about query function of pandas dataframe"""
         title = "SPECTROview Manual"
-        self.common.view_markdown(self.ui, title, USER_MANUAL, 1400, 900)
+        self.common.view_markdown(self.ui, title, USER_MANUAL, 1200, 900)
 
     def show_about(self):
         """Show about dialog """
@@ -356,6 +357,7 @@ class Main:
 
 
 expiration_date = datetime.datetime(2024, 12, 31)
+
 
 def launcher():
     # Check if the current date is past the expiration date

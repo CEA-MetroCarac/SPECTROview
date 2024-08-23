@@ -7,7 +7,8 @@ from pathlib import Path
 import json
 
 from common import view_df, show_alert, spectrum_to_dict, set_attributes
-from common import FitThread, FitModelManager, ShowParameters, DataframeTable, Filter
+from common import FitThread, FitModelManager, ShowParameters, DataframeTable, \
+    Filter
 from common import PLOT_POLICY, NCPUS, FIT_METHODS
 
 from lmfit import fit_report
@@ -552,7 +553,8 @@ class Spectrums(QObject):
             # Background
             y_bkg = np.zeros_like(x_values)
             if spectrum.bkg_model is not None:
-                y_bkg = spectrum.bkg_model.eval(spectrum.bkg_model.make_params(), x=x_values)
+                y_bkg = spectrum.bkg_model.eval(
+                    spectrum.bkg_model.make_params(), x=x_values)
 
             # BEST-FIT and PEAK_MODELS
             y_peaks = np.zeros_like(x_values)
@@ -585,7 +587,8 @@ class Spectrums(QObject):
                         self.ax.plot(x_values, y_peak, '--',
                                      label=f"{peak_label}")
 
-                if hasattr(spectrum.result_fit, 'success') and self.ui.cb_bestfit_3.isChecked():
+                if hasattr(spectrum.result_fit,
+                           'success') and self.ui.cb_bestfit_3.isChecked():
                     y_fit = y_bkg + y_peaks
                     self.ax.plot(x_values, y_fit, label=f"bestfit")
 
@@ -604,7 +607,7 @@ class Spectrums(QObject):
             else:
                 self.ui.rsquared_2.setText("R2=0")
 
-        #self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
+        # self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
         txt = self.ui.cbb_xaxis_unit.currentText()
         self.ax.set_xlabel(txt)
 
@@ -756,8 +759,6 @@ class Spectrums(QObject):
         fnames = checked_spectra.fnames
         self.fit(fnames)
 
-
-
     def apply_loaded_fit_model(self, fnames=None):
         """Apply the loaded fit model to selected spectra"""
         self.get_loaded_fit_model()
@@ -809,6 +810,7 @@ class Spectrums(QObject):
         checked_spectra = self.get_checked_spectra()
         fnames = checked_spectra.fnames
         self.apply_loaded_fit_model(fnames=fnames)
+
     def copy_fit_model(self):
         """Copy the model dictionary of the selected spectrum"""
         # Get only 1 spectrum among several selected spectrum:
@@ -816,7 +818,7 @@ class Spectrums(QObject):
         sel_spectrum, _ = self.get_spectrum_object()
         if len(sel_spectrum.peak_models) == 0:
             self.ui.lbl_copied_fit_model_2.setText("")
-            msg =("Select spectrum is not fitted or No fit results to collect")
+            msg = ("Select spectrum is not fitted or No fit results to collect")
             show_alert(msg)
             self.current_fit_model = None
             return
@@ -824,6 +826,7 @@ class Spectrums(QObject):
             self.current_fit_model = None
             self.current_fit_model = deepcopy(sel_spectrum.save())
         self.ui.lbl_copied_fit_model_2.setText("copied")
+
     def paste_fit_model(self, fnames=None):
         """Apply the copied fit model to the selected spectra"""
         self.ui.centralwidget.setEnabled(False)  # Disable GUI
@@ -883,11 +886,14 @@ class Spectrums(QObject):
             if hasattr(spectrum, 'peak_models'):
                 fit_result = {'Filename': spectrum.fname}
                 for model in spectrum.peak_models:
-                    if hasattr(model, 'param_names') and hasattr(model, 'param_hints'):
+                    if hasattr(model, 'param_names') and hasattr(model,
+                                                                 'param_hints'):
                         for param_name in model.param_names:
                             key = param_name.split('_')[1]
-                            if key in model.param_hints and 'value' in model.param_hints[key]:
-                                fit_result[param_name] = model.param_hints[key]['value']
+                            if key in model.param_hints and 'value' in \
+                                    model.param_hints[key]:
+                                fit_result[param_name] = model.param_hints[key][
+                                    'value']
 
                 if len(fit_result) > 1:
                     fit_results_list.append(fit_result)
@@ -1312,10 +1318,8 @@ class Spectrums(QObject):
                                                        "*.spectra)")
             if file_path:
                 data_to_save = {
-                    'spectrums': [spectrum_to_dict(spectrum) for spectrum in self.spectrums],
-                    'loaded_fit_model': self.loaded_fit_model,
-                    'current_fit_model': self.current_fit_model,
-                    'df_fit_results': self.df_fit_results.to_dict() if self.df_fit_results is not None else None,
+                    'spectrums': [spectrum_to_dict(spectrum) for spectrum in
+                                  self.spectrums],
                     'filters': self.filter.filters,
                 }
                 with open(file_path, 'w') as f:
@@ -1330,14 +1334,14 @@ class Spectrums(QObject):
             with open(file_path, 'r') as f:
                 load = json.load(f)
                 try:
+                    # Load all spectra
                     self.spectrums = Spectra()
                     for spectrum_data in load.get('spectrums', []):
                         spectrum = Spectrum()
                         set_attributes(spectrum, spectrum_data)
                         self.spectrums.append(spectrum)
 
-                    self.current_fit_model = load.get('current_fit_model')
-                    self.loaded_fit_model = load.get('loaded_fit_model')
+                    # Load all filters
                     self.filter.filters = load.get('filters', [])
                     self.filter.upd_filter_listbox()
 

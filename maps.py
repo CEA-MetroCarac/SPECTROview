@@ -5,8 +5,10 @@ import pandas as pd
 import json
 from copy import deepcopy
 from pathlib import Path
-from common import view_df, show_alert, spectrum_to_dict, set_attributes,clear_layout
-from common import FitThread, WaferPlot, ShowParameters, DataframeTable, FitModelManager, Filter
+from common import view_df, show_alert, spectrum_to_dict, set_attributes, \
+    clear_layout
+from common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
+    FitModelManager, Filter
 from common import FIT_METHODS, NCPUS, PLOT_POLICY
 
 from lmfit import fit_report
@@ -310,11 +312,14 @@ class Maps(QObject):
                 fit_result = {'Filename': wafer_name, 'X': x, 'Y': y}
 
                 for model in spectrum.peak_models:
-                    if hasattr(model, 'param_names') and hasattr(model, 'param_hints'):
+                    if hasattr(model, 'param_names') and hasattr(model,
+                                                                 'param_hints'):
                         for param_name in model.param_names:
                             key = param_name.split('_')[1]
-                            if key in model.param_hints and 'value' in model.param_hints[key]:
-                                fit_result[param_name] = model.param_hints[key]['value']
+                            if key in model.param_hints and 'value' in \
+                                    model.param_hints[key]:
+                                fit_result[param_name] = model.param_hints[key][
+                                    'value']
 
                 if len(fit_result) > 3:
                     fit_results_list.append(fit_result)
@@ -957,7 +962,8 @@ class Maps(QObject):
             # Background
             y_bkg = np.zeros_like(x_values)
             if spectrum.bkg_model is not None:
-                y_bkg = spectrum.bkg_model.eval(spectrum.bkg_model.make_params(), x=x_values)
+                y_bkg = spectrum.bkg_model.eval(
+                    spectrum.bkg_model.make_params(), x=x_values)
 
             # BEST-FIT and PEAK_MODELS
             y_peaks = np.zeros_like(x_values)
@@ -990,7 +996,8 @@ class Maps(QObject):
 
                         self.ax.plot(x_values, y_peak, '--',
                                      label=f"{peak_label}")
-                if hasattr(spectrum.result_fit, 'success') and self.ui.cb_bestfit.isChecked():
+                if hasattr(spectrum.result_fit,
+                           'success') and self.ui.cb_bestfit.isChecked():
                     y_fit = y_bkg + y_peaks
                     self.ax.plot(x_values, y_fit, label=f"bestfit")
             # RESIDUAL
@@ -1115,7 +1122,7 @@ class Maps(QObject):
         """
         Plot wafer maps of measurement sites
         """
-        r = int(self.ui.cbb_wafer_size.currentText())/2
+        r = int(self.ui.cbb_wafer_size.currentText()) / 2
 
         self.ax2.clear()
         if self.ui.rdbt_show_wafer.isChecked():
@@ -1515,21 +1522,21 @@ class Maps(QObject):
             except:
                 return
 
-
     def save_work(self):
         """Save the current application states to a JSON file."""
         try:
             file_path, _ = QFileDialog.getSaveFileName(None,
                                                        "Save work",
                                                        "",
-                                                       "SPECTROview Files (*.maps)")
+                                                       "SPECTROview Files ("
+                                                       "*.maps)")
             if file_path:
                 data_to_save = {
-                    'spectrums': [spectrum_to_dict(spectrum) for spectrum in self.spectrums],
+                    'spectrums': [spectrum_to_dict(spectrum) for spectrum in
+                                  self.spectrums],
                     'wafers': {k: v.to_dict() for k, v in self.wafers.items()},
-                    'loaded_fit_model': self.loaded_fit_model,
-                    'current_fit_model': self.current_fit_model,
-                    'df_fit_results': self.df_fit_results.to_dict() if self.df_fit_results is not None else None,
+                    # 'df_fit_results': self.df_fit_results.to_dict() if
+                    # self.df_fit_results is not None else None,
                     'filters': self.filter.filters,
                 }
                 with open(file_path, 'w') as f:
@@ -1550,9 +1557,8 @@ class Maps(QObject):
                         set_attributes(spectrum, spectrum_data)
                         self.spectrums.append(spectrum)
 
-                    self.wafers = {k: pd.DataFrame(v) for k, v in load.get('wafers', {}).items()}
-                    self.current_fit_model = load.get('current_fit_model')
-                    self.loaded_fit_model = load.get('loaded_fit_model')
+                    self.wafers = {k: pd.DataFrame(v) for k, v in
+                                   load.get('wafers', {}).items()}
                     self.filter.filters = load.get('filters', [])
                     self.filter.upd_filter_listbox()
 
@@ -1727,4 +1733,3 @@ class Maps(QObject):
         QTimer.singleShot(50, self.rescale)
         QTimer.singleShot(100, self.upd_wafers_list)
         print("'Maps' Tab environment has been cleared and reset.")
-

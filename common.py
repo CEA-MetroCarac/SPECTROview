@@ -6,6 +6,7 @@ import os
 import json
 from copy import deepcopy
 import pandas as pd
+
 try:
     import win32clipboard
 except:
@@ -28,8 +29,8 @@ from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-
+from matplotlib.backends.backend_qt5agg import \
+    NavigationToolbar2QT as NavigationToolbar
 
 import base64
 import zlib
@@ -58,15 +59,18 @@ PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
 PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
 
-DEFAULT_COLORS = ['#0000ff', '#ff0000', '#008200', '#ffa000', '#8d0085', '#00ffff', '#ff00ff',
-                  '#00ff00', '#ffbdcb', '#b41722', '#ffd500', '#008281', '#000086', '#c0c0c0',
+DEFAULT_COLORS = ['#0000ff', '#ff0000', '#008200', '#ffa000', '#8d0085',
+                  '#00ffff', '#ff00ff',
+                  '#00ff00', '#ffbdcb', '#b41722', '#ffd500', '#008281',
+                  '#000086', '#c0c0c0',
                   '#808000', '#8d0000', '#6fd0ef']
 MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>']
 DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
 LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
                    'center left', 'center right', 'lower center',
                    'upper center', 'center']
-X_AXIS = ['Raman shift (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
+X_AXIS = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
+
 
 def compress(array):
     """Compress and encode a numpy array to a base64 string."""
@@ -74,16 +78,20 @@ def compress(array):
     encoded = base64.b64encode(compressed).decode('utf-8')
     return encoded
 
+
 def decompress(data, dtype):
     """Decode and decompress a base64 string to a numpy array."""
     decoded = base64.b64decode(data.encode('utf-8'))
     decompressed = zlib.decompress(decoded)
     return np.frombuffer(decompressed, dtype=dtype)
 
+
 def spectrum_to_dict(spectrum):
     """Custom "save" method to save fitted spectrum data in a dictionary"""
-    excluded_keys = ['outliers_limit', 'peak_models', 'peak_index', 'bkg_model', 'result_fit', 'baseline', 'attractors']
+    excluded_keys = ['outliers_limit', 'peak_models', 'peak_index', 'bkg_model',
+                     'result_fit', 'baseline', 'attractors']
     model_dict = {}
+
     for key, val in vars(spectrum).items():
         if key not in excluded_keys:
             if isinstance(val, np.ndarray):  # 'x0', 'y0', 'x', 'y'
@@ -91,7 +99,21 @@ def spectrum_to_dict(spectrum):
             else:
                 model_dict[key] = val
 
-    model_dict['baseline'] = dict(vars(spectrum.baseline).items())
+    # Handle baseline separately
+    if hasattr(spectrum, 'baseline'):
+        baseline_dict = {}
+        for k, v in vars(spectrum.baseline).items():
+            if isinstance(v, np.ndarray):
+                if k == 'y_eval':  # Specifically handle 'y_eval' if it's
+                    # an ndarray
+                    baseline_dict[k] = compress(v)
+                else:
+                    baseline_dict[
+                        k] = v.tolist()  # Convert other ndarrays to lists
+            else:
+                baseline_dict[k] = v
+        model_dict['baseline'] = baseline_dict
+
     bkg_model = spectrum.bkg_model
     if bkg_model is not None:
         model_dict['bkg_model'] = {bkg_model.name2: bkg_model.param_hints}
@@ -107,6 +129,8 @@ def spectrum_to_dict(spectrum):
         model_dict['result_fit_success'] = spectrum.result_fit.success
 
     return model_dict
+
+
 def set_attributes(spectrum, model_dict):
     """To set attributes of spectrum from JSON dict"""
     spectrum.set_attributes(model_dict)
@@ -118,6 +142,8 @@ def set_attributes(spectrum, model_dict):
         spectrum.x = decompress(model_dict['x'], dtype=np.float64)
     if 'y' in model_dict:
         spectrum.y = decompress(model_dict['y'], dtype=np.float64)
+
+
 def rgba_to_named_color(rgba):
     """Convert RGBA tuple to a named color string."""
     # Check if the exact RGBA tuple exists in the dictionary
@@ -136,6 +162,7 @@ def show_alert(message):
     msg_box.setWindowTitle("Alert")
     msg_box.setText(message)
     msg_box.exec_()
+
 
 def clear_layout(layout):
     """To clear a given layout"""
@@ -264,18 +291,23 @@ class DataframeTable(QWidget):
         else:
             super().keyPressEvent(event)
 
+
 class ColorDelegate(QStyledItemDelegate):
     """Show color in background of color selector comboboxes."""
+
     def paint(self, painter, option, index):
         painter.save()
         color = index.data(Qt.BackgroundRole)
         if color:
             painter.fillRect(option.rect, color)
-        painter.drawText(option.rect, Qt.AlignCenter, index.data(Qt.DisplayRole))
+        painter.drawText(option.rect, Qt.AlignCenter,
+                         index.data(Qt.DisplayRole))
         painter.restore()
 
     def sizeHint(self, option, index):
         return QSize(70, 20)
+
+
 class Graph(QWidget):
     """Class to create and handle plot objects.
 
@@ -447,8 +479,6 @@ class Graph(QWidget):
         self.canvas.figure.tight_layout()
         self.canvas.draw()
 
-
-
     def plot(self, df):
         """Updates the plot based on the provided DataFrame and plot
         settings."""
@@ -553,7 +583,8 @@ class Graph(QWidget):
                 item.setBackground(QColor(color_code))
 
             color.setCurrentText(prop['color'])
-            color.currentIndexChanged.connect(lambda idx, color=color: self.update_combobox_color(color))
+            color.currentIndexChanged.connect(
+                lambda idx, color=color: self.update_combobox_color(color))
 
             color.currentTextChanged.connect(
                 lambda text, idx=idx: self.udp_legend(idx, 'color', text))
@@ -566,6 +597,7 @@ class Graph(QWidget):
         main_layout.addLayout(label_layout)
         main_layout.addLayout(marker_layout)
         main_layout.addLayout(color_layout)
+
     def update_combobox_color(self, combobox):
         """Update combobox background color based on the selected color."""
         selected_color = combobox.currentText()
@@ -576,6 +608,7 @@ class Graph(QWidget):
         combobox.setAutoFillBackground(True)
         combobox.setPalette(palette)
         combobox.update()
+
     def udp_legend(self, idx, property_type, text):
         """Updates legend properties based on user modifications via GUI."""
         self.legend_properties[idx][property_type] = text
@@ -793,7 +826,8 @@ class Graph(QWidget):
     def save(self, fname=None):
         """ Save Graph object to serialization. Save it if a fname is given """
         # List of keys to exclude from serialization
-        excluded_keys = ['figure', 'canvas', 'setLayout', 'graph_layout', 'some_signal_instance']
+        excluded_keys = ['figure', 'canvas', 'setLayout', 'graph_layout',
+                         'some_signal_instance']
 
         dict_graph = {}
         for key, val in vars(self).items():
@@ -802,7 +836,7 @@ class Graph(QWidget):
                     json.dumps(val)
                     dict_graph[key] = val
                 except TypeError:
-                   continue
+                    continue
 
         if fname is not None:
             with open(fname, 'w') as f:
@@ -815,6 +849,8 @@ class Graph(QWidget):
         for key, value in attributes_dict.items():
             if hasattr(self, key):
                 setattr(self, key, value)
+
+
 class ShowParameters:
     """Class dedicated to show fit paramters of Spectrum objects in the GUI"""
 

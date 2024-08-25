@@ -4,44 +4,6 @@ Main module for SPECTROview application.
 This module initializes the main window of the SPECTROview application,
 loads necessary UI components, connects GUI elements to backend methods,
 and manages application settings.
-
-Attributes:
-    DIRNAME (str): Directory name of the current script file.
-    UI_FILE (str): Path to the .ui file defining the application's GUI layout.
-    ICON_APPLI (str): Path to the application's icon file.
-    USER_MANUAL (str): Path to the Markdown document detailing pandas DataFrame
-        query functions.
-    ABOUT (str): Path to the Markdown document providing information about the
-        application.
-
-Classes:
-    Main:
-        Represents the main application class responsible for initializing the
-        GUI, setting up event handlers, managing application settings, and
-        launching various modules for spectral processing and visualization.
-Functions:
-    launcher():
-        Function to launch the SPECTROview application. Checks if the current
-        date is past the expiration date and displays an alert if the version
-        has expired.
-    toggle_dark_mode():
-        Switches the application UI to dark mode and saves the preference to
-        application settings.
-    toggle_light_mode():
-        Switches the application UI to light mode and saves the preference to
-        application settings.
-    open_doc_df_query():
-        Opens a Markdown file (`user_manual.md`) in a dialog to provide
-        detailed information about data filtering in Pandas DataFrame.
-    show_about():
-        Displays an about dialog with information loaded from a Markdown
-        file (`about.md`).
-
-Usage:
-    Run this module to launch the SPECTROview application. It initializes the
-    main
-    window, connects event handlers, and manages the overall application
-    lifecycle.
 """
 
 import sys

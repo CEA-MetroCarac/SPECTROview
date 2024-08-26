@@ -1,3 +1,7 @@
+[![Github](https://img.shields.io/badge/GitHub-GPL--3.0-informational)](https://github.com/CEA-MetroCarac/spectroview)
+[![PyPI](https://img.shields.io/pypi/spectroview)](https://pypi.org/project/spectroview/)
+
+
 <p align="center">
     <img width=100 src="spectroview/resources/icon3.png">
 </p>

@@ -4,6 +4,7 @@ Main module for SPECTROview application.
 This module initializes the main window of the SPECTROview application,
 loads necessary UI components, connects GUI elements to backend methods,
 and manages application settings.
+
 """
 
 import sys
@@ -19,7 +20,7 @@ from PySide6.QtGui import QIcon
 
 from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
     show_alert, PALETTE, WAFER_SIZE, X_AXIS
-
+    
 from ui import resources  # Icon, logo, etc..
 from maps import Maps
 from spectrums import Spectrums
@@ -28,7 +29,7 @@ from visualisation import Visualization
 DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")
 ICON_APPLI = os.path.join(DIRNAME, "ui", "iconpack", "icon3.png")
-USER_MANUAL = os.path.join(DIRNAME, "resources", "user_manual.md")
+USER_MANUAL = os.path.join(DIRNAME, "doc", "user_manual.md")
 ABOUT = os.path.join(DIRNAME, "resources", "about.md")
 
 
@@ -311,11 +312,11 @@ class Main:
     def open_manual(self):
         """Open doc detail about query function of pandas dataframe"""
         title = "SPECTROview Manual"
-        self.common.view_markdown(self.ui, title, USER_MANUAL, 1200, 900)
+        self.common.view_markdown(self.ui, title, USER_MANUAL, 1200, 900, "doc/")
 
     def show_about(self):
         """Show about dialog """
-        self.common.view_markdown(self.ui, "About", ABOUT, 500, 350)
+        self.common.view_markdown(self.ui, "About", ABOUT, 500, 350, "resources/")
 
 
 expiration_date = datetime.datetime(2024, 12, 31)

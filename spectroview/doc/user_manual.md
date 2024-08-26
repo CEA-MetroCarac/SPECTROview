@@ -1,7 +1,7 @@
 # SPECTROview user manual
 
 <p align="center">
-    <img width=100 src="icon3.png">
+    <img width=100 src="figures/icon.png">
 </p>
 
 <!-- TOC -->
@@ -26,7 +26,7 @@ spectroscopic data and easy visualization of fitted data. The application
 features three main modules (tabs), each developed for a specific purpose:
 
 <p align="center">
-    <img width=300 src="manual_figures/fig0.png">
+    <img width=300 src="figures/fig0.png">
 </p>
 
 - **Spectra**: for processing one or multiples discrete spectra.
@@ -70,7 +70,7 @@ The 'Spectra' and 'Maps' tab sharing almost the same feature and GUI except
 some specific GUi element for 2Dmaps/hyperspectral data navigation.
 
 <p align="center">
-    <img width=1100 src="manual_figures/fig1.png">
+    <img width=1100 src="figures/fig1.png">
 </p>
 
 # 3. "Data Visualization" TAB
@@ -82,7 +82,7 @@ DataFrame based on a boolean expression. It's a powerful and flexible way to
 subset your DataFrame to include only the rows that meet specific conditions.
 
 <p align="center">
-    <img width=450 src="manual_figures/dfr_filter.png">
+    <img width=350 src="figures/dfr_filter.png">
 </p>
 
 In **SPECTROview**, `query()` method is integrated and can be used via GUI by

@@ -69,6 +69,7 @@ DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
 LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
                    'center left', 'center right', 'lower center',
                    'upper center', 'center']
+
 X_AXIS = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
 
 
@@ -1465,7 +1466,7 @@ class CommonUtilities():
         layout.addWidget(text_browser)
         report_viewer.show()
 
-    def view_markdown(self, ui, title, fname, x, y):
+    def view_markdown(self, ui, title, fname, x, y, working_folder):
         """To convert MD file to html format and display them in GUI"""
         with open(fname, 'r', encoding='utf-8') as f:
             markdown_content = f.read()
@@ -1473,7 +1474,7 @@ class CommonUtilities():
         DIRNAME = os.path.dirname(__file__)
         html_content = html_content.replace('src="',
                                             f'src="'
-                                            f'{os.path.join(DIRNAME, "resources/")}')
+                                            f'{os.path.join(DIRNAME, working_folder)}')
         about_dialog = QDialog(ui)
         about_dialog.setWindowTitle(title)
         about_dialog.resize(x, y)

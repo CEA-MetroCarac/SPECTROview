@@ -5,6 +5,7 @@ import pandas as pd
 import json
 from copy import deepcopy
 from pathlib import Path
+
 from common import view_df, show_alert, spectrum_to_dict, set_attributes, \
     clear_layout
 from common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
@@ -16,6 +17,7 @@ from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
 from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas

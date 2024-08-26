@@ -18,10 +18,11 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings, QFileInfo
 from PySide6.QtGui import QIcon
 
-from common import CommonUtilities, FitModelManager, PEAK_MODELS, \
-    show_alert, PALETTE, WAFER_SIZE, X_AXIS
+from common import CommonUtilities, FitModelManager
+from common import PEAK_MODELS, PALETTE, WAFER_SIZE, X_AXIS
+from common import show_alert
     
-from ui import resources  # Icon, logo, etc..
+from ui import resources 
 from maps import Maps
 from spectrums import Spectrums
 from visualisation import Visualization
@@ -354,41 +355,3 @@ if __name__ == "__main__":
     multiprocessing.freeze_support()
     launcher()
 
-# def launcher2(file_paths=None, fname_json=None, fnames=None):
-#     app = QApplication()
-#     app.setWindowIcon(QIcon(ICON_APPLI))
-#     window = Main()
-#     app.setStyle("Fusion")
-#     # if file_paths is not None:
-#     #     window.maps.open_data(file_paths=file_paths)
-#     # if fname_json is not None:
-#     #     window.maps.load_fit_model(fname_json=fname_json)
-#     #
-#     # if file_paths is not None:
-#     #     window.spectrums.open_data(file_paths=file_paths)
-#     # if fname_json is not None:
-#     #     window.spectrums.open_fit_model(fname_json=fname_json)
-#
-#     if fnames is not None:
-#         window.visu.open_dfs(fnames=fnames)
-#     window.ui.show()
-#     sys.exit(app.exec())
-#
-#
-# if __name__ == "__main__":
-#     DIRNAME = os.path.dirname(__file__)
-#     DATA = os.path.join(DIRNAME, "data_test", "RAW_spectra")
-#     DATA_MAPS = os.path.join(DIRNAME, "data_test", "RAW 2Dmaps")
-#     DATA_DFS = os.path.join(DIRNAME, "data_test")
-#     # fname1 = os.path.join(DATA_MAPS, 'D23S2204.2_17.csv')
-#     # fname2 = os.path.join(DATA_MAPS, 'D23S2204.2_19.csv')
-#     # fname3 = os.path.join(DATA_MAPS, 'D23S2204.2_25.csv')
-#     # fname_json1 = os.path.join(DATA_MAPS, 'FITMODEL_MoS2_325-490.json')
-#     # fname1 = os.path.join(DATA, '1ML-285nm_532nm_std_p1_100x_3sx3.txt')
-#     # fname2 = os.path.join(DATA, '3ML-285nm_532nm_high_p1_100x_3sx3.txt')
-#     # fname3 = os.path.join(DATA, '12ML-285nm_532nm_high_p1_100x_3sx3.txt')
-#     # fname_json1 = os.path.join(DATA, 'FITMODEL_MoS2_325-490.json')
-#     fname1 = os.path.join(DATA_DFS, 'Wafer300_sSOI.xlsx')
-#     fname2 = os.path.join(DATA_DFS, 'df1.xlsx')
-#
-#     launcher2(fnames=[fname2, fname1])

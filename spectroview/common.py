@@ -11,6 +11,7 @@ try:
     import win32clipboard
 except:
     pass
+
 from io import BytesIO
 import numpy as np
 import matplotlib.pyplot as plt
@@ -29,8 +30,6 @@ from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-from matplotlib.backends.backend_qt5agg import \
-    NavigationToolbar2QT as NavigationToolbar
 
 import base64
 import zlib

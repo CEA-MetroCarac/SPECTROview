@@ -3,12 +3,11 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 from pathlib import Path
-import dill
 import json
 
 from common import view_df, show_alert
 from common import PLOT_STYLES, PALETTE, LEGEND_LOCATION
-from common import Graph, Filter, DataframeTable
+from common import Graph, Filter
 
 from PySide6.QtWidgets import QApplication, QFileDialog, QDialog, QVBoxLayout, \
     QLineEdit, QListWidgetItem, QMdiSubWindow, QCheckBox, QMdiArea, QLabel, \

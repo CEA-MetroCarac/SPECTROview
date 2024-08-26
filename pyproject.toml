@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spectroview"
+version = "2024.8.7"
+description = "A tool for Spectroscopic Data Processing and Visualization."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Van Hoan Le", email = "van-hoan.le@cea.fr"}
+]
+homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X"
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black"]
+
+[project.scripts]
+spectroview = "spectroview.SPECTROview:launcher"
+
+[project.dependencies]
+numpy = "*"
+pandas = "*"
+matplotlib = "*"
+seaborn = "*"
+pyside6 = "*"
+scipy = "*"
+lmfit = "*"
+parse = "*"
+dill = "*"
+rosettasciio = "*"
+fitspy = "*"
+pywin32 = {version = "*", markers = "platform_system == 'Windows'"}

@@ -312,16 +312,14 @@ class Main:
 
     def open_manual(self):
         """Open doc detail about query function of pandas dataframe"""
-        title = "SPECTROview Manual"
+        title = "SPECTROview User Manual"
         self.common.view_markdown(self.ui, title, USER_MANUAL, 1200, 900, "doc/")
 
     def show_about(self):
         """Show about dialog """
         self.common.view_markdown(self.ui, "About", ABOUT, 500, 350, "resources/")
 
-
 expiration_date = datetime.datetime(2024, 12, 31)
-
 
 def launcher():
     # Check if the current date is past the expiration date

@@ -1,4 +1,4 @@
-# SPECTROview user manual
+<h1 align="center">SPECTROview User Manual</h1>
 
 <p align="center">
     <img width=100 src="figures/icon.png">

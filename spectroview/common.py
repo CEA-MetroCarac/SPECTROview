@@ -1,5 +1,5 @@
 """
-Module contains all utilities functions and common methods of the appli
+Module contains all common methods/class different modules of SPECTROview application
 """
 import markdown
 import os
@@ -87,7 +87,7 @@ def decompress(data, dtype):
 
 
 def spectrum_to_dict(spectrum):
-    """Custom "save" method to save fitted spectrum data in a dictionary"""
+    """Custom "save" method to save 'Spectrum' object in a dictionary"""
     excluded_keys = ['outliers_limit', 'peak_models', 'peak_index', 'bkg_model',
                      'result_fit', 'baseline', 'attractors']
     model_dict = {}
@@ -132,7 +132,7 @@ def spectrum_to_dict(spectrum):
 
 
 def set_attributes(spectrum, model_dict):
-    """To set attributes of spectrum from JSON dict"""
+    """Set attributes of Spectrum object from JSON dict"""
     spectrum.set_attributes(model_dict)
     if 'x0' in model_dict:
         spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
@@ -207,7 +207,6 @@ class DataframeTable(QWidget):
         df (pd.DataFrame): The DataFrame to be displayed in the QTableWidget.
         layout (QVBoxLayout): The layout in your GUI where the QTableWidget
         will be placed.
-
     """
 
     def __init__(self, df, layout):
@@ -1410,7 +1409,7 @@ class CommonUtilities():
             return np.nan
 
     def zone(self, row, diameter):
-        """Define 3 zones (Center, Mid-Rayon, Edge) based on X and Y
+        """Define 3 zones (Center, Mid-Radius, Edge) based on X and Y
         coordinates."""
         rad = diameter / 2
         x = row['X']

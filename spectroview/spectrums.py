@@ -118,7 +118,6 @@ class Spectrums(QObject):
 
         self.plot_styles = ["point plot", "scatter plot", "box plot",
                             "bar plot"]
-        self.create_plot_widget()
         self.create_spectra_plot_widget()
         self.zoom_pan_active = False
 
@@ -489,22 +488,6 @@ class Spectrums(QObject):
         self.zoom_pan_active = checked
         if not checked:
             self.zoom_pan_active = False
-
-    def create_plot_widget(self):
-        """Create canvas and toolbar for plotting in the GUI"""
-        # Plot2: graph1
-        fig2 = plt.figure(dpi=90)
-        self.ax2 = fig2.add_subplot(111)
-        self.canvas2 = FigureCanvas(fig2)
-        self.ui.frame_graph_3.addWidget(self.canvas2)
-        self.canvas2.draw()
-
-        # Plot3: graph2
-        fig3 = plt.figure(dpi=90)
-        self.ax3 = fig3.add_subplot(111)
-        self.canvas3 = FigureCanvas(fig3)
-        self.ui.frame_graph_7.addWidget(self.canvas3)
-        self.canvas3.draw()
 
     def plot1(self):
         """Plot spectra or fit results in the main plot area"""
@@ -937,7 +920,7 @@ class Spectrums(QObject):
             self.display_df_in_GUI(self.df_fit_results)
 
         self.filtered_df = self.df_fit_results
-        self.upd_cbb_param()
+        
         self.send_df_to_viz()
 
     def display_df_in_GUI(self, df):
@@ -980,32 +963,6 @@ class Spectrums(QObject):
         self.df_fit_results = dfr
         self.display_df_in_GUI(self.df_fit_results)
         self.send_df_to_viz()
-        self.upd_cbb_param()
-
-    def upd_cbb_param(self):
-        """Append all values of df_fit_results to comboboxes."""
-
-        if self.df_fit_results is not None:
-            columns = self.df_fit_results.columns.tolist()
-            self.ui.cbb_x_3.clear()
-            self.ui.cbb_y_3.clear()
-            self.ui.cbb_z_3.clear()
-            self.ui.cbb_x_7.clear()
-            self.ui.cbb_y_7.clear()
-            self.ui.cbb_z_7.clear()
-            self.ui.cbb_x_3.addItem("None")
-            self.ui.cbb_y_3.addItem("None")
-            self.ui.cbb_z_3.addItem("None")
-            self.ui.cbb_x_7.addItem("None")
-            self.ui.cbb_y_7.addItem("None")
-            self.ui.cbb_z_7.addItem("None")
-            for column in columns:
-                self.ui.cbb_x_3.addItem(column)
-                self.ui.cbb_y_3.addItem(column)
-                self.ui.cbb_z_3.addItem(column)
-                self.ui.cbb_x_7.addItem(column)
-                self.ui.cbb_y_7.addItem(column)
-                self.ui.cbb_z_7.addItem(column)
 
     def send_df_to_viz(self):
         """Send the collected spectral data to the visualization tab"""
@@ -1014,80 +971,6 @@ class Spectrums(QObject):
         dfs_new["SPECTRUMS_best_fit"] = self.df_fit_results
         self.visu.open_dfs(dfs=dfs_new, file_paths=None)
 
-    def plot2(self):
-        """Plot graph """
-        if self.filtered_df is not None:
-            dfr = self.filtered_df
-        else:
-            dfr = self.df_fit_results
-        x = self.ui.cbb_x_3.currentText()
-        y = self.ui.cbb_y_3.currentText()
-
-        z = self.ui.cbb_z_3.currentText()
-        if z == "None":
-            hue = None
-        else:
-            hue = z if z != "" else None
-
-        style = self.ui.cbb_plot_style_3.currentText()
-        xmin = self.ui.xmin_3.text()
-        ymin = self.ui.ymin_3.text()
-        xmax = self.ui.xmax_3.text()
-        ymax = self.ui.ymax_3.text()
-
-        title = self.ui.ent_plot_title_5.text()
-        x_text = self.ui.ent_xaxis_lbl_3.text()
-        y_text = self.ui.ent_yaxis_lbl_3.text()
-
-        text = self.ui.ent_x_rot_3.text()
-        xlabel_rot = 0  # Default rotation angle
-        if text:
-            xlabel_rot = float(text)
-
-        ax = self.ax2
-        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin,
-                               ymax,
-                               title,
-                               x_text, y_text, xlabel_rot)
-        self.ax2.get_figure().tight_layout()
-        self.canvas2.draw()
-
-    def plot3(self):
-        if self.filtered_df is not None:
-            dfr = self.filtered_df
-        else:
-            dfr = self.df_fit_results
-        x = self.ui.cbb_x_7.currentText()
-        y = self.ui.cbb_y_7.currentText()
-        z = self.ui.cbb_z_7.currentText()
-
-        if z == "None":
-            hue = None
-        else:
-            hue = z if z != "" else None
-        style = self.ui.cbb_plot_style_7.currentText()
-        xmin = self.ui.xmin_3.text()
-        ymin = self.ui.ymin_3.text()
-        xmax = self.ui.xmax_3.text()
-        ymax = self.ui.ymax_3.text()
-
-        title = self.ui.ent_plot_title_5.text()
-        x_text = self.ui.ent_xaxis_lbl_3.text()
-        y_text = self.ui.ent_yaxis_lbl_3.text()
-
-        text = self.ui.ent_x_rot_3.text()
-        xlabel_rot = 0  # Default rotation angle
-        if text:
-            xlabel_rot = float(text)
-
-        ax = self.ax3
-        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin,
-                               ymax,
-                               title,
-                               x_text, y_text, xlabel_rot)
-
-        self.ax3.get_figure().tight_layout()
-        self.canvas3.draw()
 
     def refresh_gui(self):
         """Trigger the fnc to plot spectra"""
@@ -1169,7 +1052,7 @@ class Spectrums(QObject):
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
         self.display_df_in_GUI(self.df_fit_results)
-        self.upd_cbb_param()
+        
         self.send_df_to_viz()
 
     def view_stats(self):
@@ -1208,14 +1091,6 @@ class Spectrums(QObject):
     def copy_fig(self):
         """To copy figure canvas to clipboard"""
         self.common.copy_fig_to_clb(canvas=self.canvas1)
-
-    def copy_fig_graph1(self):
-        """To copy figure canvas to clipboard"""
-        self.common.copy_fig_to_clb(canvas=self.canvas2)
-
-    def copy_fig_graph2(self):
-        """To copy figure canvas to clipboard"""
-        self.common.copy_fig_to_clb(canvas=self.canvas3)
 
     def load_fit_settings(self):
         """Reload last used fitting settings from QSettings"""
@@ -1386,14 +1261,9 @@ class Spectrums(QObject):
 
         # Clear plot areas
         self.ax.clear()
-        self.ax2.clear()
-        self.ax3.clear()
         if hasattr(self, 'canvas1'):
             self.canvas1.draw()
-        if hasattr(self, 'canvas2'):
-            self.canvas2.draw()
-        if hasattr(self, 'canvas3'):
-            self.canvas3.draw()
+        
 
         # Refresh the UI to reflect the cleared state
         QTimer.singleShot(50, self.rescale)

@@ -84,8 +84,6 @@ class Main:
         self.ui.btn_remove_wafer.clicked.connect(self.maps.remove_map)
 
         self.ui.btn_copy_fig.clicked.connect(self.maps.copy_fig)
-        self.ui.btn_copy_fig_wafaer.clicked.connect(self.maps.copy_fig_wafer)
-        self.ui.btn_copy_fig_graph.clicked.connect(self.maps.copy_fig_graph)
 
         self.ui.btn_sel_all.clicked.connect(self.maps.select_all_spectra)
         self.ui.btn_sel_verti.clicked.connect(self.maps.select_verti)
@@ -106,15 +104,11 @@ class Main:
             self.maps.save_fit_results)
         self.ui.btn_view_wafer.clicked.connect(self.maps.view_map_data)
 
-        self.ui.btn_plot_wafer.clicked.connect(self.maps.plot3)
-        self.ui.btn_plot_graph.clicked.connect(self.maps.plot4)
-        self.ui.cbb_color_pallete.addItems(PALETTE)
         self.ui.btn_open_fitspy.clicked.connect(self.maps.fitspy_launcher)
         self.ui.btn_cosmis_ray.clicked.connect(self.maps.cosmis_ray_detection)
         self.ui.btn_open_fit_results.clicked.connect(
             self.maps.load_fit_results)
 
-        self.ui.cbb_plot_style.addItems(self.maps.plot_styles)
         self.ui.btn_split_fname_2.clicked.connect(self.maps.split_fname)
         self.ui.btn_add_col_2.clicked.connect(self.maps.add_column)
 
@@ -184,17 +178,10 @@ class Main:
         self.ui.btn_open_fit_results_3.clicked.connect(
             self.spectrums.load_fit_results)
 
-        self.ui.cbb_plot_style_3.addItems(self.spectrums.plot_styles)
-        self.ui.cbb_plot_style_7.addItems(self.spectrums.plot_styles)
-        self.ui.btn_plot_graph_3.clicked.connect(self.spectrums.plot2)
-        self.ui.btn_plot_graph_7.clicked.connect(self.spectrums.plot3)
-
         self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
         self.ui.btn_add_col.clicked.connect(self.spectrums.add_column)
 
         self.ui.btn_copy_fig_3.clicked.connect(self.spectrums.copy_fig)
-        self.ui.btn_copy2_3.clicked.connect(self.spectrums.copy_fig_graph1)
-        self.ui.btn_copy2_7.clicked.connect(self.spectrums.copy_fig_graph2)
 
         self.ui.btn_default_folder_model_3.clicked.connect(
             self.spectrums.set_default_model_folder)

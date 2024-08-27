@@ -351,7 +351,8 @@ class Maps(QObject):
             self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
                 self.common.quadrant, axis=1)
             # DIAMETER
-            diameter = float(self.ui.wafer_size.text())
+            
+            diameter = float(self.ui.cbb_wafer_size.currentText())
 
             # ZONE
             self.df_fit_results['Zone'] = self.df_fit_results.apply(
@@ -360,8 +361,7 @@ class Maps(QObject):
         self.display_df_in_GUI(self.df_fit_results)
 
         self.filtered_df = self.df_fit_results
-        self.upd_cbb_param()
-        self.upd_cbb_map()
+
         self.send_df_to_viz()
 
     def display_df_in_GUI(self, df):
@@ -791,39 +791,9 @@ class Maps(QObject):
                 show_alert("Error loading DataFrame:", e)
 
         self.display_df_in_GUI(self.df_fit_results)
-
-        self.upd_cbb_param()
-        self.upd_cbb_map()
         self.send_df_to_viz()
 
-    def upd_cbb_map(self):
-        """Update the combobox with unique values from 'Map' column"""
-        self.ui.cbb_wafer_1.clear()
-        try:
-            map_names = self.df_fit_results['Filename'].unique()
-            for map_name in map_names:
-                self.ui.cbb_wafer_1.addItem(map_name)
-        except Exception as e:
-            print(f"Error updating combobox with 'Filename' values: {e}")
-
-    def upd_cbb_param(self):
-        """Update comboboxes with all values of `df_fit_results`"""
-
-        if self.df_fit_results is not None:
-            columns = self.df_fit_results.columns.tolist()
-            self.ui.cbb_param_1.clear()
-            self.ui.cbb_x.clear()
-            self.ui.cbb_y.clear()
-            self.ui.cbb_z.clear()
-            self.ui.cbb_x.addItem("None")
-            self.ui.cbb_y.addItem("None")
-            self.ui.cbb_z.addItem("None")
-            for column in columns:
-                self.ui.cbb_param_1.addItem(column)
-                self.ui.cbb_x.addItem(column)
-                self.ui.cbb_y.addItem(column)
-                self.ui.cbb_z.addItem(column)
-
+    
     def split_fname(self):
         """Split 'Filename' column and populate the combobox"""
         dfr = self.df_fit_results
@@ -867,8 +837,7 @@ class Maps(QObject):
             df = self.filtered_df
         self.display_df_in_GUI(df)
         self.send_df_to_viz()
-        self.upd_cbb_param()
-        self.upd_cbb_map()
+
 
     def reinit(self, fnames=None):
         """Reinitialize the selected spectrum(s)."""
@@ -1075,12 +1044,7 @@ class Maps(QObject):
         layout.addWidget(self.canvas2)
         self.canvas2.draw()
 
-        # plot4: graph
-        fig4 = plt.figure(dpi=90)
-        self.ax4 = fig4.add_subplot(111)
-        self.canvas4 = FigureCanvas(fig4)
-        self.ui.frame_graph.addWidget(self.canvas4)
-        self.canvas4.draw()
+
 
     def on_click_sites_mesurements(self, event):
         """
@@ -1161,92 +1125,7 @@ class Maps(QObject):
         self.ax2.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.ax2.get_figure().tight_layout()
         self.canvas2.draw()
-
-    def plot3(self):
-        """
-        Plot WaferDataFrame.
-        """
-        self.common.clear_layout(self.ui.frame_wafer.layout())
-        dfr = self.df_fit_results
-        map_name = self.ui.cbb_wafer_1.currentText()
-        color = self.ui.cbb_color_pallete.currentText()
-        wafer_size = float(self.ui.wafer_size.text())
-
-        if map_name is not None:
-            selected_df = dfr.query('Filename == @map_name')
-        sel_param = self.ui.cbb_param_1.currentText()
-        self.canvas3 = self.plot3_action(selected_df, sel_param, wafer_size,
-                                         color)
-
-        self.ui.frame_wafer.addWidget(self.canvas3)
-
-    def plot3_action(self, selected_df, sel_param, wafer_size, color):
-        """
-        Plot wafer map of a selected parameter.
-        """
-        x = selected_df['X']
-        y = selected_df['Y']
-        param = selected_df[sel_param]
-        vmin = float(
-            self.ui.int_vmin.text()) if self.ui.int_vmin.text() else None
-        vmax = float(
-            self.ui.int_vmax.text()) if self.ui.int_vmax.text() else None
-        stats = self.ui.cb_stats.isChecked()
-
-        plt.close('all')
-        fig = plt.figure(dpi=80)
-        ax = fig.add_subplot(111)
-
-        wdf = WaferPlot()
-        wdf.plot(ax, x=x, y=y, z=param, cmap=color, vmin=vmin, vmax=vmax,
-                 stats=stats, r=(wafer_size / 2))
-
-        text = self.ui.plot_title.text()
-        title = sel_param if not text else text
-        ax.set_title(f"{title}")
-
-        fig.tight_layout()
-        canvas = FigureCanvas(fig)
-        return canvas
-
-    def plot4(self):
-        """
-        Plot graph.
-        """
-        if self.filtered_df is not None:
-            dfr = self.filtered_df
-        else:
-            dfr = self.df_fit_results
-        x = self.ui.cbb_x.currentText()
-        y = self.ui.cbb_y.currentText()
-
-        z = self.ui.cbb_z.currentText()
-        if z == "None":
-            hue = None
-        else:
-            hue = z if z != "" else None
-
-        style = self.ui.cbb_plot_style.currentText()
-        xmin = self.ui.xmin.text()
-        ymin = self.ui.ymin.text()
-        xmax = self.ui.xmax.text()
-        ymax = self.ui.ymax.text()
-
-        title = self.ui.ent_plot_title_2.text()
-        x_text = self.ui.ent_xaxis_lbl.text()
-        y_text = self.ui.ent_yaxis_lbl.text()
-
-        text = self.ui.ent_x_rot.text()
-        xlabel_rot = 0  # Default rotation angle
-        if text:
-            xlabel_rot = float(text)
-        ax = self.ax4
-        self.common.plot_graph(ax, dfr, x, y, hue, style, xmin, xmax, ymin,
-                               ymax,
-                               title,
-                               x_text, y_text, xlabel_rot)
-        self.ax4.get_figure().tight_layout()
-        self.canvas4.draw()
+    
 
     def get_mes_sites_coord(self):
         """
@@ -1355,14 +1234,6 @@ class Maps(QObject):
     def copy_fig(self):
         """Copy figure to clipboard"""
         self.common.copy_fig_to_clb(canvas=self.canvas1)
-
-    def copy_fig_wafer(self):
-        """Copy the figure of the waferplot"""
-        self.common.copy_fig_to_clb(canvas=self.canvas3)
-
-    def copy_fig_graph(self):
-        """Copy the figure of the graph plot to the clipboard"""
-        self.common.copy_fig_to_clb(canvas=self.canvas4)
 
     def select_all_spectra(self):
         """Select all spectra listed in the spectra listbox"""

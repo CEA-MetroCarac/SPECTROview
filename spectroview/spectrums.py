@@ -7,8 +7,7 @@ from pathlib import Path
 import json
 
 from common import view_df, show_alert, spectrum_to_dict, set_attributes
-from common import FitThread, FitModelManager, ShowParameters, DataframeTable, \
-    Filter
+from common import FitThread, FitModelManager, ShowParameters, DataframeTable
 from common import PLOT_POLICY, NCPUS, FIT_METHODS
 
 from lmfit import fit_report
@@ -53,10 +52,6 @@ class Spectrums(QObject):
             Collection of Spectrum objects containing spectral data.
         df_fit_results (DataFrame):
             DataFrame containing fit results.
-        filter (Filter):
-            Object managing filtering operations on fit results.
-        filtered_df (DataFrame):
-            Filtered DataFrame based on applied filters.
 
     """
 
@@ -78,17 +73,6 @@ class Spectrums(QObject):
         self.ui.listbox_layout.addWidget(self.ui.spectrums_listbox)
         self.ui.spectrums_listbox.items_reordered.connect(
             self.update_spectrums_order)
-
-        # FILTER: Create an instance of the FILTER class
-        self.filter = Filter(self.ui.ent_filter_query_2,
-                             self.ui.filter_listbox,
-                             self.df_fit_results)
-        self.filtered_df = None
-        # Connect filter signals to filter methods
-        self.ui.btn_add_filter_2.clicked.connect(self.filter.add_filter)
-        self.ui.ent_filter_query_2.returnPressed.connect(self.filter.add_filter)
-        self.ui.btn_remove_filters_2.clicked.connect(self.filter.remove_filter)
-        self.ui.btn_apply_filters_2.clicked.connect(self.apply_filters)
 
         # Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
@@ -319,13 +303,6 @@ class Spectrums(QObject):
         self.spectrums.clear()
         self.spectrums.extend(new_order)
 
-    def apply_filters(self, filters=None):
-        """
-        Apply currently checked filters to the fit results DataFrame.
-        """
-        self.filter.set_dataframe(self.df_fit_results)
-        self.filtered_df = self.filter.apply_filters()
-        self.display_df_in_GUI(self.filtered_df)
 
     def set_default_model_folder(self, folder_path=None):
         """
@@ -918,8 +895,6 @@ class Spectrums(QObject):
                 in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
             self.display_df_in_GUI(self.df_fit_results)
-
-        self.filtered_df = self.df_fit_results
         
         self.send_df_to_viz()
 
@@ -996,15 +971,13 @@ class Spectrums(QObject):
 
     def view_fit_results_df(self):
         """To view selected dataframe"""
-        if self.filtered_df is None:
-            df = self.df_fit_results
-        else:
-            df = self.filtered_df
-
-        if df is not None:
+        df = getattr(self, 'df_fit_results', None)  
+        
+        if df is not None and not df.empty: 
             view_df(self.ui.tabWidget, df)
         else:
             show_alert("No fit dataframe to display")
+
 
     def save_fit_results(self):
         """Functon to save fitted results in an excel file"""
@@ -1031,6 +1004,7 @@ class Spectrums(QObject):
     def load_fit_results(self, file_paths=None):
         """Functon to load fitted results to view"""
         self.df_fit_results = None
+        
         # Initialize the last used directory from QSettings
         last_dir = self.settings.value("last_directory", "/")
         options = QFileDialog.Options()
@@ -1048,11 +1022,9 @@ class Spectrums(QObject):
                 dfr = pd.read_excel(excel_file_path)
                 self.df_fit_results = None
                 self.df_fit_results = dfr
-                self.filtered_df = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
         self.display_df_in_GUI(self.df_fit_results)
-        
         self.send_df_to_viz()
 
     def view_stats(self):
@@ -1210,8 +1182,7 @@ class Spectrums(QObject):
             if file_path:
                 data_to_save = {
                     'spectrums': [spectrum_to_dict(spectrum) for spectrum in
-                                  self.spectrums],
-                    'filters': self.filter.filters,
+                                  self.spectrums]
                 }
                 with open(file_path, 'w') as f:
                     json.dump(data_to_save, f, indent=4)
@@ -1232,10 +1203,6 @@ class Spectrums(QObject):
                         set_attributes(spectrum, spectrum_data)
                         self.spectrums.append(spectrum)
 
-                    # Load all filters
-                    self.filter.filters = load.get('filters', [])
-                    self.filter.upd_filter_listbox()
-
                     QTimer.singleShot(300, self.collect_results)
                     self.upd_spectra_list()
                 except Exception as e:
@@ -1250,9 +1217,8 @@ class Spectrums(QObject):
         self.loaded_fit_model = None
         self.current_fit_model = None
 
-        # Clear DataFrames and Filters
+        # Clear DataFrames 
         self.df_fit_results = None
-        self.filtered_df = None
 
         # Clear UI elements that display data
         self.ui.spectrums_listbox.clear()

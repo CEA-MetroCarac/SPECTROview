@@ -695,12 +695,25 @@ class Spectrums(QObject):
         """Subtract the baseline for the selected spectrum(s)"""
         sel_spectrum, _ = self.get_spectrum_object()
         points = deepcopy(sel_spectrum.baseline.points)
+        mode = sel_spectrum.baseline.mode  
+        coef = sel_spectrum.baseline.coef  
+        distance = sel_spectrum.baseline.distance
+        sigma = sel_spectrum.baseline.sigma 
+        attached = sel_spectrum.baseline.attached 
+        is_subtracted = sel_spectrum.baseline.is_subtracted
         if len(points[0]) == 0:
             return
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
         for spectrum in sel_spectra:
             spectrum.baseline.points = points.copy()
+            spectrum.baseline.mode = mode
+            spectrum.baseline.coef = coef
+            spectrum.baseline.distance = distance
+            spectrum.baseline.sigma = sigma
+            spectrum.baseline.attached = attached 
+            spectrum.baseline.is_subtracted = is_subtracted
+            
             spectrum.subtract_baseline()
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)

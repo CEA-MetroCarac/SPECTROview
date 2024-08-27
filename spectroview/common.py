@@ -89,12 +89,12 @@ def decompress(data, dtype):
 def spectrum_to_dict(spectrum):
     """Custom "save" method to save 'Spectrum' object in a dictionary"""
     excluded_keys = ['outliers_limit', 'peak_models', 'peak_index', 'bkg_model',
-                     'result_fit', 'baseline', 'attractors']
+                     'result_fit', 'baseline', 'attractors', 'x', 'y']
     model_dict = {}
 
     for key, val in vars(spectrum).items():
         if key not in excluded_keys:
-            if isinstance(val, np.ndarray):  # 'x0', 'y0', 'x', 'y'
+            if isinstance(val, np.ndarray):  # 'x0', 'y0'
                 model_dict[key] = compress(val)
             else:
                 model_dict[key] = val
@@ -104,9 +104,8 @@ def spectrum_to_dict(spectrum):
         baseline_dict = {}
         for k, v in vars(spectrum.baseline).items():
             if isinstance(v, np.ndarray):
-                if k == 'y_eval':  # Specifically handle 'y_eval' if it's
-                    # an ndarray
-                    baseline_dict[k] = compress(v)
+                if k == 'y_eval': 
+                    continue
                 else:
                     baseline_dict[
                         k] = v.tolist()  # Convert other ndarrays to lists
@@ -138,10 +137,7 @@ def set_attributes(spectrum, model_dict):
         spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
     if 'y0' in model_dict:
         spectrum.y0 = decompress(model_dict['y0'], dtype=np.float64)
-    if 'x' in model_dict:
-        spectrum.x = decompress(model_dict['x'], dtype=np.float64)
-    if 'y' in model_dict:
-        spectrum.y = decompress(model_dict['y'], dtype=np.float64)
+
 
 
 def rgba_to_named_color(rgba):

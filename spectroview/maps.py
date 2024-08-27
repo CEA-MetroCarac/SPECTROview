@@ -551,6 +551,7 @@ class Maps(QObject):
             baseline_values = spectrum.baseline.eval(x_bl, y_bl,
                                                      attached=attached)
             ax.plot(x_bl, baseline_values, 'r')
+
             # Plot the attached baseline points
             if spectrum.baseline.attached and y_bl is not None:
                 attached_points = spectrum.baseline.attached_points(x_bl, y_bl)
@@ -1553,8 +1554,6 @@ class Maps(QObject):
                     'spectrums': [spectrum_to_dict(spectrum) for spectrum in
                                   self.spectrums],
                     'maps': {k: v.to_dict() for k, v in self.maps.items()},
-                    # 'df_fit_results': self.df_fit_results.to_dict() if
-                    # self.df_fit_results is not None else None,
                     'filters': self.filter.filters,
                 }
                 with open(file_path, 'w') as f:
@@ -1573,6 +1572,7 @@ class Maps(QObject):
                     for spectrum_data in load.get('spectrums', []):
                         spectrum = Spectrum()
                         set_attributes(spectrum, spectrum_data)
+                        spectrum.preprocess()
                         self.spectrums.append(spectrum)
 
                     self.maps = {k: pd.DataFrame(v) for k, v in

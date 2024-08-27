@@ -642,7 +642,7 @@ class Spectrums(QObject):
             ind_max = closest_index(spectrum.x0, new_x_max)
             spectrum.x = spectrum.x0[ind_min:ind_max + 1].copy()
             spectrum.y = spectrum.y0[ind_min:ind_max + 1].copy()
-            spectrum.attractors_calculation()
+            
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
 
@@ -680,11 +680,13 @@ class Spectrums(QObject):
                 if line.get_label() == "Baseline":
                     line.remove()
             # Evaluate the baseline
-            baseline_values = spectrum.baseline.eval(x_bl, y_bl)
+            attached = spectrum.baseline.attached
+            baseline_values = spectrum.baseline.eval(x_bl, y_bl, attached=attached)
+            
             ax.plot(x_bl, baseline_values, 'r')
             # Plot the attached baseline points
             if spectrum.baseline.attached and y_bl is not None:
-                attached_points = spectrum.baseline.attach_points(x_bl, y_bl)
+                attached_points = spectrum.baseline.attached_points(x_bl, y_bl)
                 ax.plot(attached_points[0], attached_points[1], 'ko',
                         mfc='none')
             else:
@@ -697,10 +699,11 @@ class Spectrums(QObject):
         points = deepcopy(sel_spectrum.baseline.points)
         mode = sel_spectrum.baseline.mode  
         coef = sel_spectrum.baseline.coef  
-        distance = sel_spectrum.baseline.distance
         sigma = sel_spectrum.baseline.sigma 
         attached = sel_spectrum.baseline.attached 
         is_subtracted = sel_spectrum.baseline.is_subtracted
+        y_eval = sel_spectrum.baseline.y_eval
+        
         if len(points[0]) == 0:
             return
         if sel_spectra is None:
@@ -709,10 +712,10 @@ class Spectrums(QObject):
             spectrum.baseline.points = points.copy()
             spectrum.baseline.mode = mode
             spectrum.baseline.coef = coef
-            spectrum.baseline.distance = distance
             spectrum.baseline.sigma = sigma
             spectrum.baseline.attached = attached 
             spectrum.baseline.is_subtracted = is_subtracted
+            spectrum.baseline.y_eval = y_eval
             
             spectrum.subtract_baseline()
         QTimer.singleShot(50, self.upd_spectra_list)

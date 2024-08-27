@@ -204,11 +204,11 @@ class Maps(QObject):
                         if len(lines[1].split(';')) > 3:
                             # If contains more than 3 columns
                             map_df = pd.read_csv(file_path, skiprows=1,
-                                                   delimiter=";")
+                                                 delimiter=";")
                         else:
                             map_df = pd.read_csv(file_path, header=None,
-                                                   skiprows=2,
-                                                   delimiter=";")
+                                                 skiprows=2,
+                                                 delimiter=";")
                     elif extension == '.txt':
                         map_df = pd.read_csv(file_path, delimiter="\t")
                         map_df.columns = ['Y', 'X'] + list(
@@ -485,7 +485,6 @@ class Maps(QObject):
             ind_max = closest_index(spectrum.x0, new_x_max)
             spectrum.x = spectrum.x0[ind_min:ind_max + 1].copy()
             spectrum.y = spectrum.y0[ind_min:ind_max + 1].copy()
-            spectrum.attractors_calculation()
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
 
@@ -537,6 +536,7 @@ class Maps(QObject):
     def plot_baseline_dynamically(self, ax, spectrum):
         """Evaluate and plot baseline points and line dynamically"""
         self.get_baseline_settings()
+
         if not spectrum.baseline.is_subtracted:
             x_bl = spectrum.x
             y_bl = spectrum.y if spectrum.baseline.attached else None
@@ -547,11 +547,13 @@ class Maps(QObject):
                 if line.get_label() == "Baseline":
                     line.remove()
             # Evaluate the baseline
-            baseline_values = spectrum.baseline.eval(x_bl, y_bl)
+            attached = spectrum.baseline.attached
+            baseline_values = spectrum.baseline.eval(x_bl, y_bl,
+                                                     attached=attached)
             ax.plot(x_bl, baseline_values, 'r')
             # Plot the attached baseline points
             if spectrum.baseline.attached and y_bl is not None:
-                attached_points = spectrum.baseline.attach_points(x_bl, y_bl)
+                attached_points = spectrum.baseline.attached_points(x_bl, y_bl)
                 ax.plot(attached_points[0], attached_points[1], 'ko',
                         mfc='none')
             else:
@@ -562,13 +564,13 @@ class Maps(QObject):
         """Subtract baseline for the selected spectrum(s)."""
         sel_spectrum, _ = self.get_spectrum_object()
         points = deepcopy(sel_spectrum.baseline.points)
-        mode = sel_spectrum.baseline.mode  
-        coef = sel_spectrum.baseline.coef  
-        distance = sel_spectrum.baseline.distance
-        sigma = sel_spectrum.baseline.sigma 
-        attached = sel_spectrum.baseline.attached 
+        mode = sel_spectrum.baseline.mode
+        coef = sel_spectrum.baseline.coef
+        sigma = sel_spectrum.baseline.sigma
+        attached = sel_spectrum.baseline.attached
         is_subtracted = sel_spectrum.baseline.is_subtracted
-        
+        y_eval = sel_spectrum.baseline.y_eval
+
         if len(points[0]) == 0:
             return
         if sel_spectra is None:
@@ -577,11 +579,11 @@ class Maps(QObject):
             spectrum.baseline.points = points.copy()
             spectrum.baseline.mode = mode
             spectrum.baseline.coef = coef
-            spectrum.baseline.distance = distance
             spectrum.baseline.sigma = sigma
-            spectrum.baseline.attached = attached 
+            spectrum.baseline.attached = attached
             spectrum.baseline.is_subtracted = is_subtracted
-            
+            spectrum.baseline.y_eval = y_eval
+
             spectrum.subtract_baseline()
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
@@ -1574,7 +1576,7 @@ class Maps(QObject):
                         self.spectrums.append(spectrum)
 
                     self.maps = {k: pd.DataFrame(v) for k, v in
-                                   load.get('maps', {}).items()}
+                                 load.get('maps', {}).items()}
                     self.filter.filters = load.get('filters', [])
                     self.filter.upd_filter_listbox()
 

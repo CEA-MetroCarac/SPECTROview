@@ -79,9 +79,9 @@ class Main:
         self.ui.cbb_xaxis_unit2.setCurrentIndex(0)
 
         ########################################################
-        ############## GUI for Wafer Processing tab #############
+        ############## GUI for Maps Processing tab #############
         ########################################################
-        self.ui.btn_remove_wafer.clicked.connect(self.maps.remove_wafer)
+        self.ui.btn_remove_wafer.clicked.connect(self.maps.remove_map)
 
         self.ui.btn_copy_fig.clicked.connect(self.maps.copy_fig)
         self.ui.btn_copy_fig_wafaer.clicked.connect(self.maps.copy_fig_wafer)
@@ -104,7 +104,7 @@ class Main:
         self.ui.btn_show_stats.clicked.connect(self.maps.view_stats)
         self.ui.btn_save_fit_results.clicked.connect(
             self.maps.save_fit_results)
-        self.ui.btn_view_wafer.clicked.connect(self.maps.view_wafer_data)
+        self.ui.btn_view_wafer.clicked.connect(self.maps.view_map_data)
 
         self.ui.btn_plot_wafer.clicked.connect(self.maps.plot3)
         self.ui.btn_plot_graph.clicked.connect(self.maps.plot4)
@@ -272,7 +272,7 @@ class Main:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
                 self.spectrums.load_work(spectra_file)
             if maps_file:
-                self.ui.tabWidget.setCurrentWidget(self.ui.tab_wafer)
+                self.ui.tabWidget.setCurrentWidget(self.ui.tab_maps)
                 self.maps.load_work(maps_file)
             if graphs_file:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
@@ -283,7 +283,7 @@ class Main:
         current_tab = self.ui.tabWidget.currentWidget()
         if current_tab == self.ui.tab_spectra:
             self.spectrums.save_work()
-        elif current_tab == self.ui.tab_wafer:
+        elif current_tab == self.ui.tab_maps:
             self.maps.save_work()
         elif current_tab == self.ui.tab_graphs:
             self.visu.save()
@@ -295,7 +295,7 @@ class Main:
         current_tab = self.ui.tabWidget.currentWidget()
         if current_tab == self.ui.tab_graphs:
             self.visu.clear_env()
-        elif current_tab == self.ui.tab_wafer:
+        elif current_tab == self.ui.tab_maps:
             self.maps.clear_env()
         elif current_tab == self.ui.tab_spectra:
             self.spectrums.clear_env()

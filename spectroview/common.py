@@ -146,18 +146,10 @@ def view_df(tabWidget, df):
     df_viewer.setWindowTitle("DataFrame Viewer")
     df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
     # Create a QTableWidget and populate it with data from the DataFrame
-    table_widget = QTableWidget(df_viewer)
-    table_widget.setColumnCount(df.shape[1])
-    table_widget.setRowCount(df.shape[0])
-    table_widget.setHorizontalHeaderLabels(df.columns)
-    for row in range(df.shape[0]):
-        for col in range(df.shape[1]):
-            item = QTableWidgetItem(str(df.iat[row, col]))
-            table_widget.setItem(row, col, item)
-    table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
     layout = QVBoxLayout(df_viewer)
-    layout.addWidget(table_widget)
-    df_viewer.show()
+    dataframe_table = DataframeTable(df, layout)
+    df_viewer.setLayout(layout)
+    df_viewer.exec_()
 
 
 class DataframeTable(QWidget):
@@ -197,6 +189,7 @@ class DataframeTable(QWidget):
 
         # Create QTableWidget
         self.table_widget = QTableWidget()
+        self.table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
         layout.addWidget(self.table_widget)
 
         # Display the DataFrame in the QTableWidget

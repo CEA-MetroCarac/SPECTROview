@@ -9,7 +9,7 @@ from pathlib import Path
 from common import view_df, show_alert, spectrum_to_dict, set_attributes, \
     clear_layout, compress
 from common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
-    FitModelManager, Filter
+    FitModelManager
 from common import FIT_METHODS, NCPUS, PLOT_POLICY
 
 from lmfit import fit_report
@@ -52,17 +52,6 @@ class Maps(QObject):
         self.spectrums = Spectra()
         self.df_fit_results = None
 
-        # FILTER: Create an instance of the FILTER class
-        self.filter = Filter(self.ui.ent_filter_query_3,
-                             self.ui.filter_listbox_2,
-                             self.df_fit_results)
-        self.filtered_df = None
-        # Connect filter signals to filter methods
-        self.ui.btn_add_filter_3.clicked.connect(self.filter.add_filter)
-        self.ui.ent_filter_query_3.returnPressed.connect(self.filter.add_filter)
-        self.ui.btn_remove_filters_3.clicked.connect(self.filter.remove_filter)
-        self.ui.btn_apply_filters_3.clicked.connect(self.apply_filters)
-
         # Update spectra_listbox when selecting maps via MAPS LIST
         self.ui.maps_listbox.itemSelectionChanged.connect(
             self.upd_spectra_list)
@@ -90,7 +79,7 @@ class Maps(QObject):
         # Set a delay for the function "plot1"
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
-        self.delay_timer.timeout.connect(self.plot1)
+        self.delay_timer.timeout.connect(self.plot)
 
         self.plot_styles = ["box plot", "point plot", "bar plot"]
         self.create_plot_widget()
@@ -249,27 +238,11 @@ class Maps(QObject):
                 spectrum.y0 = np.asarray(y_values)
                 self.spectrums.append(spectrum)
 
-    def apply_filters(self):
-        """
-        Apply all checked filters to the current selected dataframe.
-        """
-        self.filter.set_dataframe(self.df_fit_results)
-        self.filtered_df = self.filter.apply_filters()
-        self.display_df_in_GUI(self.filtered_df)
 
     def view_fit_results_df(self):
-        """
-        Checks if a filtered dataframe exists and displays it in
-        a table in the GUI.
-        If no filtered dataframe exists, it displays an alert indicating no
-        data is available.
-        """
-        if self.filtered_df is None:
-            df = self.df_fit_results
-        else:
-            df = self.filtered_df
-
-        if df is not None:
+        """To view selected dataframe in GUI"""
+        df = getattr(self, 'df_fit_results', None)  
+        if df is not None and not df.empty: 
             view_df(self.ui.tabWidget, df)
         else:
             show_alert("No fit dataframe to display")
@@ -334,7 +307,6 @@ class Maps(QObject):
 
         self.display_df_in_GUI(self.df_fit_results)
 
-        self.filtered_df = self.df_fit_results
 
     def display_df_in_GUI(self, df):
         """Display a given df in the GUI via QTableWidget"""
@@ -758,7 +730,6 @@ class Maps(QObject):
                 dfr = pd.read_excel(excel_file_path)
                 self.df_fit_results = None
                 self.df_fit_results = dfr
-                self.filtered_df = dfr
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
 
@@ -800,12 +771,7 @@ class Maps(QObject):
             part) > selected_part_index else None for part in parts]
 
         self.df_fit_results = dfr
-        # Check if filters are applied
-        if self.filtered_df is None:
-            df = self.df_fit_results
-        else:
-            df = self.filtered_df
-        self.display_df_in_GUI(df)
+        self.display_df_in_GUI(self.df_fit_results)
 
 
     def reinit(self, fnames=None):
@@ -872,7 +838,7 @@ class Maps(QObject):
         self.canvas1.figure.tight_layout()
         self.canvas1.draw()
 
-    def plot1(self):
+    def plot(self):
         """Plot selected spectra"""
         map_name, coords = self.spectra_id()  # current selected spectra ID
         selected_spectrums = []
@@ -982,7 +948,7 @@ class Maps(QObject):
         self.ax.get_figure().tight_layout()
 
         self.canvas1.draw()
-        self.plot2()
+        self.plot_measurement_sites()
         self.read_x_range()
         self.show_peak_table()
 
@@ -1070,7 +1036,7 @@ class Maps(QObject):
         if event.key == 'ctrl':
             self.ctrl_pressed = False
 
-    def plot2(self):
+    def plot_measurement_sites(self):
         """
         Plot 2D maps of measurement points
         """
@@ -1416,7 +1382,6 @@ class Maps(QObject):
                         spectrum.preprocess()
                         self.spectrums.append(spectrum)
 
-
                     self.maps = {k: pd.DataFrame(v) for k, v in
                                  load.get('maps', {}).items()}
 
@@ -1566,9 +1531,8 @@ class Maps(QObject):
         self.loaded_fit_model = None
         self.current_fit_model = None
 
-        # Clear DataFrames and Filters
+        # Clear DataFrames
         self.df_fit_results = None
-        self.filtered_df = None
 
         # Clear UI elements that display data
         self.ui.maps_listbox.clear()
@@ -1579,13 +1543,10 @@ class Maps(QObject):
         # Clear plot areas
         self.ax.clear()
         self.ax2.clear()
-        self.ax4.clear()
         if hasattr(self, 'canvas1'):
             self.canvas1.draw()
         if hasattr(self, 'canvas2'):
             self.canvas2.draw()
-        if hasattr(self, 'canvas4'):
-            self.canvas4.draw()
 
         # Refresh the UI to reflect the cleared state
         QTimer.singleShot(50, self.rescale)

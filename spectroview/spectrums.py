@@ -75,7 +75,7 @@ class Spectrums(QObject):
         # Set a delay for the function plot1
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
-        self.delay_timer.timeout.connect(self.plot1)
+        self.delay_timer.timeout.connect(self.plot)
         self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_gui)
 
         self.create_spectra_plot_widget()
@@ -441,7 +441,7 @@ class Spectrums(QObject):
         if not checked:
             self.zoom_pan_active = False
 
-    def plot1(self):
+    def plot(self):
         """Plot spectra or fit results in the main plot area"""
         fnames = self.get_spectrum_fnames()
         selected_spectrums = []
@@ -943,7 +943,7 @@ class Spectrums(QObject):
         self.reinit(fnames)
 
     def view_fit_results_df(self):
-        """To view selected dataframe"""
+        """To view selected dataframe in GUI"""
         df = getattr(self, 'df_fit_results', None)  
         
         if df is not None and not df.empty: 

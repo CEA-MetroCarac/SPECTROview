@@ -7,7 +7,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from common import view_df, show_alert, spectrum_to_dict, set_attributes, \
-    clear_layout
+    clear_layout, compress
 from common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
     FitModelManager, Filter
 from common import FIT_METHODS, NCPUS, PLOT_POLICY
@@ -1416,22 +1416,22 @@ class Maps(QObject):
         """Save the current application states to a JSON file."""
         try:
             file_path, _ = QFileDialog.getSaveFileName(None,
-                                                       "Save work",
-                                                       "",
-                                                       "SPECTROview Files ("
-                                                       "*.maps)")
+                                                    "Save work",
+                                                    "",
+                                                    "SPECTROview Files (*.maps)")
             if file_path:
+                spectrums_data = spectrum_to_dict(self.spectrums)
                 data_to_save = {
-                    'spectrums': [spectrum_to_dict(spectrum) for spectrum in
-                                  self.spectrums],
+                    'spectrums': spectrums_data,
                     'maps': {k: v.to_dict() for k, v in self.maps.items()},
-                    'filters': self.filter.filters,
                 }
+
                 with open(file_path, 'w') as f:
                     json.dump(data_to_save, f, indent=4)
                 show_alert("Work saved successfully.")
         except Exception as e:
             show_alert(f"Error saving work: {e}")
+
 
     def load_work(self, file_path):
         """Load a previously saved application state from a JSON file."""
@@ -1440,16 +1440,15 @@ class Maps(QObject):
                 load = json.load(f)
                 try:
                     self.spectrums = Spectra()
-                    for spectrum_data in load.get('spectrums', []):
+                    for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
                         spectrum = Spectrum()
                         set_attributes(spectrum, spectrum_data)
                         spectrum.preprocess()
                         self.spectrums.append(spectrum)
 
+
                     self.maps = {k: pd.DataFrame(v) for k, v in
                                  load.get('maps', {}).items()}
-                    self.filter.filters = load.get('filters', [])
-                    self.filter.upd_filter_listbox()
 
                     QTimer.singleShot(300, self.collect_results)
                     self.upd_maps_list()

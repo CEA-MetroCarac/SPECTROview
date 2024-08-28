@@ -1181,12 +1181,12 @@ class Spectrums(QObject):
                                                        "*.spectra)")
             if file_path:
                 data_to_save = {
-                    'spectrums': [spectrum_to_dict(spectrum) for spectrum in
-                                  self.spectrums]
+                    'spectrums': spectrum_to_dict(self.spectrums)
                 }
                 with open(file_path, 'w') as f:
                     json.dump(data_to_save, f, indent=4)
                 show_alert("Work saved successfully.")
+                
         except Exception as e:
             show_alert(f"Error saving work: {e}")
 
@@ -1198,7 +1198,7 @@ class Spectrums(QObject):
                 try:
                     # Load all spectra
                     self.spectrums = Spectra()
-                    for spectrum_data in load.get('spectrums', []):
+                    for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
                         spectrum = Spectrum()
                         set_attributes(spectrum, spectrum_data)
                         spectrum.preprocess()

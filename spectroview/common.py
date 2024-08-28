@@ -86,48 +86,18 @@ def decompress(data, dtype):
     return np.frombuffer(decompressed, dtype=dtype)
 
 
-def spectrum_to_dict(spectrum):
+def spectrum_to_dict(spectrums):
     """Custom "save" method to save 'Spectrum' object in a dictionary"""
-    excluded_keys = ['outliers_limit', 'peak_models', 'peak_index', 'bkg_model',
-                     'result_fit', 'baseline', 'attractors', 'x', 'y']
-    model_dict = {}
+    spectrums_data = spectrums.save()
 
-    for key, val in vars(spectrum).items():
-        if key not in excluded_keys:
-            if isinstance(val, np.ndarray):  # 'x0', 'y0'
-                model_dict[key] = compress(val)
-            else:
-                model_dict[key] = val
+    # Iterate over the saved spectrums data and update x0 and y0
+    for i, spectrum in enumerate(spectrums):
+        spectrums_data[i].update({
+            "x0": compress(spectrum.x0),
+            "y0": compress(spectrum.y0)
+            })
 
-    # Handle baseline separately
-    if hasattr(spectrum, 'baseline'):
-        baseline_dict = {}
-        for k, v in vars(spectrum.baseline).items():
-            if isinstance(v, np.ndarray):
-                if k == 'y_eval': 
-                    continue
-                else:
-                    baseline_dict[
-                        k] = v.tolist()  # Convert other ndarrays to lists
-            else:
-                baseline_dict[k] = v
-        model_dict['baseline'] = baseline_dict
-
-    bkg_model = spectrum.bkg_model
-    if bkg_model is not None:
-        model_dict['bkg_model'] = {bkg_model.name2: bkg_model.param_hints}
-
-    peak_models = {}
-    for i, peak_model in enumerate(spectrum.peak_models):
-        model_name = spectrum.get_model_name(peak_model)
-        peak_models[i] = {}
-        peak_models[i][model_name] = peak_model.param_hints
-    model_dict['peak_models'] = peak_models
-
-    if hasattr(spectrum.result_fit, 'success'):
-        model_dict['result_fit_success'] = spectrum.result_fit.success
-
-    return model_dict
+    return spectrums_data
 
 
 def set_attributes(spectrum, model_dict):
@@ -1347,15 +1317,8 @@ class CommonUtilities():
         """Reinitilize a FITSPY spectrum object"""
         for fname in fnames:
             spectrum, _ = spectrums.get_objects(fname)
-            spectrum.range_min = None
-            spectrum.range_max = None
-            spectrum.x = spectrum.x0.copy()
-            spectrum.y = spectrum.y0.copy()
-            spectrum.norm_mode = None
-            spectrum.result_fit = lambda: None
-            spectrum.remove_models()
-            spectrum.baseline.points = [[], []]
-            spectrum.baseline.is_subtracted = False
+            spectrum.reinit()
+            spectrum.baseline.mode = "Linear"
 
     def clear_layout(self, layout):
         """Clear everything in a given Qlayout"""

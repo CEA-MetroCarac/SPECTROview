@@ -1201,6 +1201,7 @@ class Spectrums(QObject):
                     for spectrum_data in load.get('spectrums', []):
                         spectrum = Spectrum()
                         set_attributes(spectrum, spectrum_data)
+                        spectrum.preprocess()
                         self.spectrums.append(spectrum)
 
                     QTimer.singleShot(300, self.collect_results)

@@ -110,7 +110,7 @@ class Maps(QObject):
         self.ui.rbtn_polynomial.clicked.connect(self.upd_spectra_list)
         self.ui.degre.valueChanged.connect(self.upd_spectra_list)
         self.ui.btn_copy_bl.clicked.connect(self.copy_baseline)
-        self.ui.btn_paste_bl.clicked.connect(self.paste_baseline)
+        self.ui.btn_paste_bl.clicked.connect(self.paste_baseline_handler)
         self.ui.sub_baseline.clicked.connect(self.subtract_baseline_handler)
 
         # Load default folder path from QSettings during application startup
@@ -511,28 +511,29 @@ class Maps(QObject):
                         spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
 
     def copy_baseline(self):
+        """Copy baseline of the selected spectrum"""
         sel_spectrum, _ = self.get_spectrum_object()
         self.current_baseline = baseline_to_dict(sel_spectrum)
         print(self.current_baseline)
         
     
     def paste_baseline(self, sel_spectra=None):
-        """Paste the copied baseline attributes to the given spectrum."""
+        """Paste baseline to the selected spectrum(s)"""
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
-        print(sel_spectra)
-        print(len(sel_spectra))
         dict_to_baseline(self.current_baseline, sel_spectra)
-        self.refresh_gui
-        print('pasted')
+        
+        QTimer.singleShot(50, self.upd_spectra_list)
+        QTimer.singleShot(300, self.rescale)
+
+    def paste_baseline_all(self):
+        """Paste baseline to the all spectrum(s)"""
+        self.paste_baseline(self.spectrums)
 
     def subtract_baseline(self, sel_spectra=None):
         """Subtract baseline for the selected spectrum(s)."""
-        
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
-        print(sel_spectra)
-        print(len(sel_spectra))
         dict_to_baseline(self.current_baseline, sel_spectra)
         
         for spectrum in sel_spectra:
@@ -1470,6 +1471,13 @@ class Maps(QObject):
             self.set_x_range_all()
         else:
             self.set_x_range()
+    
+    def paste_baseline_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.paste_baseline_all()
+        else:
+            self.paste_baseline()
 
     def subtract_baseline_handler(self):
         """

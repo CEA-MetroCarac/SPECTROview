@@ -893,6 +893,8 @@ class ShowParameters:
 
         for i, peak_model in enumerate(sel_spectrum.peak_models):
             # Button to delete peak_model
+            #print(i, sel_spectrum.peak_labels[i], sel_spectrum.get_model_name(peak_model))
+            
             delete = QPushButton(peak_model.prefix)
             icon = QIcon()
             icon.addFile(os.path.join(ICON_DIR, "close.png"))
@@ -1039,6 +1041,7 @@ class ShowParameters:
 
     def delete_peak_model(self, spectrum, idx):
         """"To delete a peak model"""
+        
         del spectrum.peak_models[idx]
         del spectrum.peak_labels[idx]
         self.update()

@@ -811,7 +811,6 @@ class Spectrums(QObject):
 
     def show_peak_table(self):
         """Show all fitted parameters in the GUI."""
-
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         main_layout = self.ui.peak_table1_2
         cb_limits = self.ui.cb_limits_2

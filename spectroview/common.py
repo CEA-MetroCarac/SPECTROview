@@ -900,9 +900,7 @@ class ShowParameters:
             icon.addFile(os.path.join(ICON_DIR, "close.png"))
             delete.setIcon(icon)
             delete.setFixedWidth(50)
-            delete.clicked.connect(
-                lambda idx=i, spectrum=sel_spectrum: self.delete_peak_model(
-                    spectrum, idx))
+            delete.clicked.connect(self.delete_helper(sel_spectrum, i))
             delete_layout.addWidget(delete)
 
             # Peak_label
@@ -1038,7 +1036,10 @@ class ShowParameters:
             spectrum.peak_models[idx] = peak_model
             spectrum.result_fit = lambda: None
             self.update()
-
+    def delete_helper(self, spectrum, idx):
+        """Helper method"""
+        return lambda: self.delete_peak_model(spectrum, idx)
+    
     def delete_peak_model(self, spectrum, idx):
         """"To delete a peak model"""
         

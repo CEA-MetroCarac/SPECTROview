@@ -239,8 +239,6 @@ class DataframeTable(QWidget):
         # Join all rows with newline character and copy to clipboard
         clipboard = QApplication.clipboard()
         clipboard.setText('\n'.join(data))
-        print(
-            f"Copied data to clipboard:\n{clipboard.text()}")  # Debug statement
 
     def keyPressEvent(self, event):
         """Handles key press events to enable copying with Ctrl+C"""

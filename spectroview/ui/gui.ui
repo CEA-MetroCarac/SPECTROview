@@ -785,7 +785,7 @@
                              </widget>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_75" stretch="25,25,0,0,0,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_75" stretch="25,25,0,0,0,0,0">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -838,6 +838,22 @@
                                </widget>
                               </item>
                               <item>
+                               <widget class="QCheckBox" name="cb_attached_3">
+                                <property name="sizePolicy">
+                                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                  <horstretch>0</horstretch>
+                                  <verstretch>0</verstretch>
+                                 </sizepolicy>
+                                </property>
+                                <property name="text">
+                                 <string>Attached</string>
+                                </property>
+                                <property name="checked">
+                                 <bool>true</bool>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
                                <spacer name="horizontalSpacer_36">
                                 <property name="orientation">
                                  <enum>Qt::Horizontal</enum>
@@ -873,7 +889,7 @@
                              </layout>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_76" stretch="0,0,0,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_76" stretch="0,0,0,0,0">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -890,18 +906,12 @@
                                <number>2</number>
                               </property>
                               <item>
-                               <widget class="QCheckBox" name="cb_attached_3">
-                                <property name="sizePolicy">
-                                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                  <horstretch>0</horstretch>
-                                  <verstretch>0</verstretch>
-                                 </sizepolicy>
+                               <widget class="QPushButton" name="btn_undo_baseline_2">
+                                <property name="toolTip">
+                                 <string>To remove all baseline points and undo the baseline subtraction</string>
                                 </property>
                                 <property name="text">
-                                 <string>Attached</string>
-                                </property>
-                                <property name="checked">
-                                 <bool>true</bool>
+                                 <string>Undo</string>
                                 </property>
                                </widget>
                               </item>
@@ -919,12 +929,16 @@
                                </spacer>
                               </item>
                               <item>
-                               <widget class="QPushButton" name="btn_undo_baseline_2">
-                                <property name="toolTip">
-                                 <string>To remove all baseline points and undo the baseline subtraction</string>
-                                </property>
+                               <widget class="QPushButton" name="btn_copy_bl_2">
                                 <property name="text">
-                                 <string>Undo baseline</string>
+                                 <string>Copy</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="btn_paste_bl_2">
+                                <property name="text">
+                                 <string>Paste</string>
                                 </property>
                                </widget>
                               </item>
@@ -3076,7 +3090,7 @@
                              </widget>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="25,25,0,0,0,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="25,25,0,0,0,0,0">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -3129,6 +3143,22 @@
                                </widget>
                               </item>
                               <item>
+                               <widget class="QCheckBox" name="cb_attached">
+                                <property name="sizePolicy">
+                                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                  <horstretch>0</horstretch>
+                                  <verstretch>0</verstretch>
+                                 </sizepolicy>
+                                </property>
+                                <property name="text">
+                                 <string>Attached</string>
+                                </property>
+                                <property name="checked">
+                                 <bool>true</bool>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
                                <spacer name="horizontalSpacer_32">
                                 <property name="orientation">
                                  <enum>Qt::Horizontal</enum>
@@ -3164,7 +3194,7 @@
                              </layout>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_57" stretch="0,0,0,0,0">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -3181,18 +3211,12 @@
                                <number>2</number>
                               </property>
                               <item>
-                               <widget class="QCheckBox" name="cb_attached">
-                                <property name="sizePolicy">
-                                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                  <horstretch>0</horstretch>
-                                  <verstretch>0</verstretch>
-                                 </sizepolicy>
+                               <widget class="QPushButton" name="btn_undo_baseline">
+                                <property name="toolTip">
+                                 <string>To remove all baseline points and undo the baseline subtraction</string>
                                 </property>
                                 <property name="text">
-                                 <string>Attached</string>
-                                </property>
-                                <property name="checked">
-                                 <bool>true</bool>
+                                 <string>Undo</string>
                                 </property>
                                </widget>
                               </item>
@@ -3210,12 +3234,16 @@
                                </spacer>
                               </item>
                               <item>
-                               <widget class="QPushButton" name="btn_undo_baseline">
-                                <property name="toolTip">
-                                 <string>To remove all baseline points and undo the baseline subtraction</string>
-                                </property>
+                               <widget class="QPushButton" name="btn_copy_bl">
                                 <property name="text">
-                                 <string>Undo baseline</string>
+                                 <string>Copy</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="btn_paste_bl">
+                                <property name="text">
+                                 <string>Paste</string>
                                 </property>
                                </widget>
                               </item>

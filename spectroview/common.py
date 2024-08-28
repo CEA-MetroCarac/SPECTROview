@@ -100,7 +100,7 @@ def spectrum_to_dict(spectrums):
     return spectrums_data
 
 
-def set_attributes(spectrum, model_dict):
+def dict_to_spectrum(spectrum, model_dict):
     """Set attributes of Spectrum object from JSON dict"""
     spectrum.set_attributes(model_dict)
     if 'x0' in model_dict:
@@ -108,7 +108,15 @@ def set_attributes(spectrum, model_dict):
     if 'y0' in model_dict:
         spectrum.y0 = decompress(model_dict['y0'], dtype=np.float64)
 
+def baseline_to_dict(spectrum):
+    dict_baseline = dict(vars(spectrum.baseline).items())
+    return dict_baseline
 
+def dict_to_baseline(dict_baseline, spectrums):
+    for spectrum in spectrums:
+        for key in vars(spectrum.baseline).keys():
+                    if key in dict_baseline.keys():
+                        setattr(spectrum.baseline, key, dict_baseline[key])
 
 def rgba_to_named_color(rgba):
     """Convert RGBA tuple to a named color string."""

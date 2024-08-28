@@ -6,7 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 import json
 
-from common import view_df, show_alert, spectrum_to_dict, set_attributes
+from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum
 from common import FitThread, FitModelManager, ShowParameters, DataframeTable
 from common import PLOT_POLICY, NCPUS, FIT_METHODS
 
@@ -1172,7 +1172,7 @@ class Spectrums(QObject):
                     self.spectrums = Spectra()
                     for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
                         spectrum = Spectrum()
-                        set_attributes(spectrum, spectrum_data)
+                        dict_to_spectrum(spectrum, spectrum_data)
                         spectrum.preprocess()
                         self.spectrums.append(spectrum)
 

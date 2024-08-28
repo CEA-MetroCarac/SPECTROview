@@ -6,8 +6,8 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
-from common import view_df, show_alert, spectrum_to_dict, set_attributes, \
-    clear_layout, compress
+from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, \
+    clear_layout, compress, baseline_to_dict, dict_to_baseline
 from common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
     FitModelManager
 from common import FIT_METHODS, NCPUS, PLOT_POLICY
@@ -512,45 +512,30 @@ class Maps(QObject):
 
     def copy_baseline(self):
         sel_spectrum, _ = self.get_spectrum_object()
-
-        # Use deepcopy to ensure copies of mutable objects
-        self.copied_points = deepcopy(sel_spectrum.baseline.points)
-        self.copied_mode = deepcopy(sel_spectrum.baseline.mode)
-        self.copied_coef = deepcopy(sel_spectrum.baseline.coef)
+        self.current_baseline = baseline_to_dict(sel_spectrum)
+        print(self.current_baseline)
         
-        self.copied_sigma = deepcopy(sel_spectrum.baseline.sigma)
-        self.copied_attached = deepcopy(sel_spectrum.baseline.attached)
-        self.copied_is_subtracted = deepcopy(sel_spectrum.baseline.is_subtracted)
     
-    def paste_baseline(self, spectrum=None):
+    def paste_baseline(self, sel_spectra=None):
         """Paste the copied baseline attributes to the given spectrum."""
-        if spectrum is None:
-            spectrum, _ = self.get_spectrum_object()
-
-        # Ensure we have a valid spectrum object
-        if spectrum is None:
-            print("No spectrum provided or selected.")
-            return
-        spectrum.baseline.points = self.copied_points.copy()
-        spectrum.baseline.mode = self.copied_mode
-        spectrum.baseline.coef = self.copied_coef
-        spectrum.baseline.sigma = self.copied_sigma
-        spectrum.baseline.attached = self.copied_attached
-        spectrum.baseline.is_subtracted = self.copied_is_subtracted
-        
-        self.refresh_gui()
-        
-    def subtract_baseline(self, sel_spectra=None):
-        """Subtract baseline for the selected spectrum(s)."""
-        self.copy_baseline()
-
-        if len(self.copied_points[0]) == 0:
-            return
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
+        print(sel_spectra)
+        print(len(sel_spectra))
+        dict_to_baseline(self.current_baseline, sel_spectra)
+        self.refresh_gui
+        print('pasted')
+
+    def subtract_baseline(self, sel_spectra=None):
+        """Subtract baseline for the selected spectrum(s)."""
+        
+        if sel_spectra is None:
+            _, sel_spectra = self.get_spectrum_object()
+        print(sel_spectra)
+        print(len(sel_spectra))
+        dict_to_baseline(self.current_baseline, sel_spectra)
         
         for spectrum in sel_spectra:
-            self.paste_baseline(spectrum)
             spectrum.subtract_baseline()
             
         QTimer.singleShot(50, self.upd_spectra_list)
@@ -1401,7 +1386,7 @@ class Maps(QObject):
                     self.spectrums = Spectra()
                     for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
                         spectrum = Spectrum()
-                        set_attributes(spectrum, spectrum_data)
+                        dict_to_spectrum(spectrum, spectrum_data)
                         spectrum.preprocess()
                         self.spectrums.append(spectrum)
 

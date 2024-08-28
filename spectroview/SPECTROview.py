@@ -115,8 +115,7 @@ class Main:
         self.ui.range_max.returnPressed.connect(self.maps.set_x_range)
         self.ui.range_min.returnPressed.connect(self.maps.set_x_range)
         self.ui.range_apply.clicked.connect(self.maps.set_x_range_handler)
-        self.ui.sub_baseline.clicked.connect(
-            self.maps.subtract_baseline_handler)
+        
         self.ui.btn_fit.clicked.connect(self.maps.fit_fnc_handler)
         self.ui.save_model.clicked.connect(self.maps.save_fit_model)
         self.ui.clear_peaks.clicked.connect(self.maps.clear_peaks_handler)

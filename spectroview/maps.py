@@ -109,6 +109,9 @@ class Maps(QObject):
         self.ui.rbtn_linear.clicked.connect(self.upd_spectra_list)
         self.ui.rbtn_polynomial.clicked.connect(self.upd_spectra_list)
         self.ui.degre.valueChanged.connect(self.upd_spectra_list)
+        self.ui.btn_copy_bl.clicked.connect(self.copy_baseline)
+        self.ui.btn_paste_bl.clicked.connect(self.paste_baseline)
+        self.ui.sub_baseline.clicked.connect(self.subtract_baseline_handler)
 
         # Load default folder path from QSettings during application startup
         self.fit_model_manager = FitModelManager(self.settings)
@@ -507,31 +510,49 @@ class Maps(QObject):
                 ax.plot(spectrum.baseline.points[0],
                         spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
 
+    def copy_baseline(self):
+        sel_spectrum, _ = self.get_spectrum_object()
+
+        # Use deepcopy to ensure copies of mutable objects
+        self.copied_points = deepcopy(sel_spectrum.baseline.points)
+        self.copied_mode = deepcopy(sel_spectrum.baseline.mode)
+        self.copied_coef = deepcopy(sel_spectrum.baseline.coef)
+        
+        self.copied_sigma = deepcopy(sel_spectrum.baseline.sigma)
+        self.copied_attached = deepcopy(sel_spectrum.baseline.attached)
+        self.copied_is_subtracted = deepcopy(sel_spectrum.baseline.is_subtracted)
+    
+    def paste_baseline(self, spectrum=None):
+        """Paste the copied baseline attributes to the given spectrum."""
+        if spectrum is None:
+            spectrum, _ = self.get_spectrum_object()
+
+        # Ensure we have a valid spectrum object
+        if spectrum is None:
+            print("No spectrum provided or selected.")
+            return
+        spectrum.baseline.points = self.copied_points.copy()
+        spectrum.baseline.mode = self.copied_mode
+        spectrum.baseline.coef = self.copied_coef
+        spectrum.baseline.sigma = self.copied_sigma
+        spectrum.baseline.attached = self.copied_attached
+        spectrum.baseline.is_subtracted = self.copied_is_subtracted
+        
+        self.refresh_gui()
+        
     def subtract_baseline(self, sel_spectra=None):
         """Subtract baseline for the selected spectrum(s)."""
-        sel_spectrum, _ = self.get_spectrum_object()
-        points = deepcopy(sel_spectrum.baseline.points)
-        mode = sel_spectrum.baseline.mode
-        coef = sel_spectrum.baseline.coef
-        sigma = sel_spectrum.baseline.sigma
-        attached = sel_spectrum.baseline.attached
-        is_subtracted = sel_spectrum.baseline.is_subtracted
-        y_eval = sel_spectrum.baseline.y_eval
+        self.copy_baseline()
 
-        if len(points[0]) == 0:
+        if len(self.copied_points[0]) == 0:
             return
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
+        
         for spectrum in sel_spectra:
-            spectrum.baseline.points = points.copy()
-            spectrum.baseline.mode = mode
-            spectrum.baseline.coef = coef
-            spectrum.baseline.sigma = sigma
-            spectrum.baseline.attached = attached
-            spectrum.baseline.is_subtracted = is_subtracted
-            spectrum.baseline.y_eval = y_eval
-
+            self.paste_baseline(spectrum)
             spectrum.subtract_baseline()
+            
         QTimer.singleShot(50, self.upd_spectra_list)
         QTimer.singleShot(300, self.rescale)
 

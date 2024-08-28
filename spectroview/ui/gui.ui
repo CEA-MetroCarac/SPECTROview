@@ -930,15 +930,29 @@
                               </item>
                               <item>
                                <widget class="QPushButton" name="btn_copy_bl_2">
+                                <property name="toolTip">
+                                 <string>Copy the baseline of the selected spectrum</string>
+                                </property>
                                 <property name="text">
-                                 <string>Copy</string>
+                                 <string/>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                                 </property>
                                </widget>
                               </item>
                               <item>
                                <widget class="QPushButton" name="btn_paste_bl_2">
+                                <property name="toolTip">
+                                 <string>Paste the copied baseline to the selected spectrum(s)</string>
+                                </property>
                                 <property name="text">
-                                 <string>Paste</string>
+                                 <string/>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
                                 </property>
                                </widget>
                               </item>
@@ -1186,7 +1200,7 @@
                                </property>
                                <property name="icon">
                                 <iconset resource="resources.qrc">
-                                 <normaloff>:/icon/iconpack/copy10.png</normaloff>:/icon/iconpack/copy10.png</iconset>
+                                 <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                                </property>
                               </widget>
                              </item>
@@ -1232,7 +1246,7 @@
                                </property>
                                <property name="icon">
                                 <iconset resource="resources.qrc">
-                                 <normaloff>:/icon/iconpack/copy_label.png.png</normaloff>:/icon/iconpack/copy_label.png.png</iconset>
+                                 <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
                                </property>
                               </widget>
                              </item>
@@ -3235,15 +3249,29 @@
                               </item>
                               <item>
                                <widget class="QPushButton" name="btn_copy_bl">
+                                <property name="toolTip">
+                                 <string>Copy the baseline of the selected spectrum</string>
+                                </property>
                                 <property name="text">
-                                 <string>Copy</string>
+                                 <string/>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                                 </property>
                                </widget>
                               </item>
                               <item>
                                <widget class="QPushButton" name="btn_paste_bl">
+                                <property name="toolTip">
+                                 <string>Paste the copied baseline to the selected spectrum(s)</string>
+                                </property>
                                 <property name="text">
-                                 <string>Paste</string>
+                                 <string/>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
                                 </property>
                                </widget>
                               </item>
@@ -3488,7 +3516,7 @@
                                </property>
                                <property name="icon">
                                 <iconset resource="resources.qrc">
-                                 <normaloff>:/icon/iconpack/copy10.png</normaloff>:/icon/iconpack/copy10.png</iconset>
+                                 <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
                                </property>
                               </widget>
                              </item>
@@ -3534,7 +3562,7 @@
                                </property>
                                <property name="icon">
                                 <iconset resource="resources.qrc">
-                                 <normaloff>:/icon/iconpack/copy_label.png.png</normaloff>:/icon/iconpack/copy_label.png.png</iconset>
+                                 <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
                                </property>
                               </widget>
                              </item>
@@ -3783,8 +3811,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>331</height>
+                       <width>318</width>
+                       <height>128</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0">

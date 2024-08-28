@@ -294,16 +294,18 @@ class Maps(QObject):
                 column in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
 
-            # QUADRANT
-            self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
-                self.common.quadrant, axis=1)
-            # DIAMETER
             
-            diameter = float(self.ui.cbb_wafer_size.currentText())
-
-            # ZONE
-            self.df_fit_results['Zone'] = self.df_fit_results.apply(
-                lambda row: self.common.zone(row, diameter), axis=1)
+            if self.ui.rdbt_show_wafer.isChecked():
+                # DIAMETER
+                diameter = float(self.ui.cbb_wafer_size.currentText())
+                # QUADRANT
+                self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
+                    self.common.quadrant, axis=1)
+                # ZONE
+                self.df_fit_results['Zone'] = self.df_fit_results.apply(
+                    lambda row: self.common.zone(row, diameter), axis=1)
+            else: 
+                pass
 
         self.display_df_in_GUI(self.df_fit_results)
 

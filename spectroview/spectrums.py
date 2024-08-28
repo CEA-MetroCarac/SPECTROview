@@ -32,27 +32,6 @@ class Spectrums(QObject):
     Class manages the GUI interactions and operations related to spectra
     fittings,
     and visualization of fitted data within "SPACTRA" TAB of the application.
-
-    Attributes:
-        fit_progress_changed (Signal):
-            Signal emitted to update the progress during fitting operations.
-        settings (QSettings):
-            Application settings object for storing persistent settings.
-        ui (QObject):
-            UI object providing access to GUI elements.
-        common (object):
-            Object for common utility functions used across the application.
-        visu (object):
-            Visualization object for managing plot-related functionalities.
-        loaded_fit_model (object):
-            Currently loaded fit model object.
-        current_fit_model (object):
-            Currently selected fit model object.
-        spectrums (Spectra):
-            Collection of Spectrum objects containing spectral data.
-        df_fit_results (DataFrame):
-            DataFrame containing fit results.
-
     """
 
     def __init__(self, settings, ui, common, visu):
@@ -90,7 +69,6 @@ class Spectrums(QObject):
         self.ui.cb_peaks_3.stateChanged.connect(self.refresh_gui)
         self.ui.cb_attached_3.stateChanged.connect(self.refresh_gui)
         self.ui.cb_normalize_3.stateChanged.connect(self.refresh_gui)
-
         self.ui.cb_limits_2.stateChanged.connect(self.refresh_gui)
         self.ui.cb_expr_2.stateChanged.connect(self.refresh_gui)
 
@@ -100,8 +78,6 @@ class Spectrums(QObject):
         self.delay_timer.timeout.connect(self.plot1)
         self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_gui)
 
-        self.plot_styles = ["point plot", "scatter plot", "box plot",
-                            "bar plot"]
         self.create_spectra_plot_widget()
         self.zoom_pan_active = False
 
@@ -110,7 +86,6 @@ class Spectrums(QObject):
 
         # FIT SETTINGS
         self.load_fit_settings()
-
         self.ui.cb_fit_negative_2.stateChanged.connect(self.save_fit_settings)
         self.ui.max_iteration_2.valueChanged.connect(self.save_fit_settings)
         self.ui.cbb_fit_methods_2.currentIndexChanged.connect(
@@ -120,6 +95,8 @@ class Spectrums(QObject):
         self.ui.xtol_2.textChanged.connect(self.save_fit_settings)
         self.ui.sb_dpi_spectra_2.valueChanged.connect(
             self.create_spectra_plot_widget)
+        
+        self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
 
         # BASELINE
         self.ui.cb_attached_3.clicked.connect(self.upd_spectra_list)
@@ -290,7 +267,6 @@ class Spectrums(QObject):
         Update the order of spectra when user rearranges them via listbox
         drag-and-drop.
         """
-
         new_order = []
         for index in range(self.ui.spectrums_listbox.count()):
             item_text = self.ui.spectrums_listbox.item(index).text()
@@ -313,7 +289,6 @@ class Spectrums(QObject):
                                                            "Select Default "
                                                            "Folder",
                                                            options=QFileDialog.ShowDirsOnly)
-
         if folder_path:
             self.fit_model_manager.set_default_model_folder(folder_path)
             # Save selected folder path back to QSettings
@@ -381,7 +356,7 @@ class Spectrums(QObject):
                 self.loaded_fit_model = self.spectrums.load_model(
                     self.fname_json, ind=0)
             except FileNotFoundError:
-                show_alert('Fit model file not found in the default folder.')
+                show_alert('Fit model file not found in the default folder')
 
     def save_fit_model(self):
         """
@@ -895,8 +870,7 @@ class Spectrums(QObject):
                 in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
             self.display_df_in_GUI(self.df_fit_results)
-        
-        self.send_df_to_viz()
+
 
     def display_df_in_GUI(self, df):
         """Display a given DataFrame in the GUI via QTableWidget"""
@@ -937,13 +911,12 @@ class Spectrums(QObject):
 
         self.df_fit_results = dfr
         self.display_df_in_GUI(self.df_fit_results)
-        self.send_df_to_viz()
 
     def send_df_to_viz(self):
         """Send the collected spectral data to the visualization tab"""
-
         dfs_new = self.visu.original_dfs
-        dfs_new["SPECTRUMS_best_fit"] = self.df_fit_results
+        df_name = self.ui.ent_send_df_to_viz.text()
+        dfs_new[df_name] = self.df_fit_results
         self.visu.open_dfs(dfs=dfs_new, file_paths=None)
 
 
@@ -1025,7 +998,7 @@ class Spectrums(QObject):
             except Exception as e:
                 show_alert("Error loading DataFrame:", e)
         self.display_df_in_GUI(self.df_fit_results)
-        self.send_df_to_viz()
+
 
     def view_stats(self):
         """Show statistical fitting results of the selected spectrum."""

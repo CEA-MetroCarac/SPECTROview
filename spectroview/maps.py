@@ -35,44 +35,6 @@ class Maps(QObject):
     Class manages the GUI interactions and operations related to spectra
     fittings,
     and visualization of fitted data within 'Maps' TAB of the application.
-
-    Attributes:
-        settings (QSettings):
-            Application settings object.
-        ui (QWidget):
-            Main user interface widget.
-        visu (Visualization):
-            Visualization module instance.
-        spectrums_tab (Spectra):
-            Collection of opened spectra.
-        common (CommonFunctions):
-            Utility functions and common operations.
-
-        maps (dict):
-            Dictionary of opened maps containing raw spectra data.
-        loaded_fit_model (object):
-            Currently loaded fit model.
-        current_fit_model (object):
-            Fit model currently applied for fitting operations.
-
-        spectrums (Spectra):
-            Instance of the Spectra class for managing spectrum objects.
-        df_fit_results (pd.DataFrame):
-            DataFrame containing fit results.
-        filter (Filter):
-            Instance of the Filter class for data filtering operations.
-        filtered_df (pd.DataFrame):
-            DataFrame containing filtered fit results.
-        delay_timer (QTimer):
-            Timer for delaying plot updates.
-        plot_styles (list):
-            List of available plot styles.
-        zoom_pan_active (bool):
-            Flag indicating whether zoom and pan operations are active.
-        available_models (list):
-            List of available fit model names.
-        fit_model_manager (FitModelManager):
-            Manager for handling fit model operations.
     """
 
     def __init__(self, settings, ui, spectrums, common, visu):
@@ -149,6 +111,8 @@ class Maps(QObject):
         self.ui.xtol.textChanged.connect(self.save_fit_settings)
         self.ui.sb_dpi_spectra.valueChanged.connect(
             self.create_spectra_plot_widget)
+        
+        self.ui.btn_send_to_viz2.clicked.connect(self.send_df_to_viz)
 
         # BASELINE
         self.ui.cb_attached.clicked.connect(self.upd_spectra_list)
@@ -246,6 +210,11 @@ class Maps(QObject):
             x_values = map_df.columns[2:].tolist()
             x_values = pd.to_numeric(x_values, errors='coerce').tolist()
             y_values = row[2:].tolist()
+            # Skip the last value
+            if len(x_values) > 1:
+                x_values = x_values[:-1]
+            if len(y_values) > 1:
+                y_values = y_values[:-1]
             fname = f"{map_name}_{coord}"
             if not any(spectrum.fname == fname for spectrum in self.spectrums):
                 spectrum = Spectrum()
@@ -265,6 +234,11 @@ class Maps(QObject):
             x_values = coord_row.iloc[2:].tolist()
             x_values = pd.to_numeric(x_values, errors='coerce').tolist()
             y_values = intensity_row.iloc[2:].tolist()
+            # Skip the last value
+            if len(x_values) > 1:
+                x_values = x_values[:-1]
+            if len(y_values) > 1:
+                y_values = y_values[:-1]
             fname = f"{map_name}_{coord}"
             if not any(spectrum.fname == fname for spectrum in self.spectrums):
                 spectrum = Spectrum()
@@ -361,8 +335,6 @@ class Maps(QObject):
         self.display_df_in_GUI(self.df_fit_results)
 
         self.filtered_df = self.df_fit_results
-
-        self.send_df_to_viz()
 
     def display_df_in_GUI(self, df):
         """Display a given df in the GUI via QTableWidget"""
@@ -791,8 +763,6 @@ class Maps(QObject):
                 show_alert("Error loading DataFrame:", e)
 
         self.display_df_in_GUI(self.df_fit_results)
-        self.send_df_to_viz()
-
     
     def split_fname(self):
         """Split 'Filename' column and populate the combobox"""
@@ -836,7 +806,6 @@ class Maps(QObject):
         else:
             df = self.filtered_df
         self.display_df_in_GUI(df)
-        self.send_df_to_viz()
 
 
     def reinit(self, fnames=None):
@@ -1351,7 +1320,8 @@ class Maps(QObject):
         """Send the collected spectral data dataframe to the visualization
         tab."""
         dfs_new = self.visu.original_dfs
-        dfs_new["MAPS_best_fit"] = self.df_fit_results
+        df_name = self.ui.ent_send_df_to_viz2.text()
+        dfs_new[df_name] = self.df_fit_results
         self.visu.open_dfs(dfs=dfs_new, file_paths=None)
 
     def send_spectrum_to_compare(self):

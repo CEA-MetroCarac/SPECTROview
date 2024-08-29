@@ -52,7 +52,7 @@ class Main:
         if self.settings.value("mode") == "light":
             self.toggle_light_mode()
         else:
-            self.toggle_dark_mode()  # Toggle to dark mode by default
+            self.toggle_dark_mode()
 
         # Create an instance of Dataframe and pass the self.ui object
         self.visu = Visualization(self.settings, self.ui, self.common)

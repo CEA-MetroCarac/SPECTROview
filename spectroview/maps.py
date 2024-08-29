@@ -7,9 +7,9 @@ from copy import deepcopy
 from pathlib import Path
 
 from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, \
-    clear_layout, compress, baseline_to_dict, dict_to_baseline
+    clear_layout, compress, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox
 from common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
-    FitModelManager
+    FitModelManager, CustomListWidget
 from common import FIT_METHODS, PLOT_POLICY
 
 from lmfit import fit_report
@@ -23,8 +23,8 @@ import matplotlib.patches as patches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
-                               QListWidgetItem, QCheckBox)
+from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,QAbstractItemView,
+                               QListWidgetItem, QCheckBox, QListWidget)
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
@@ -55,6 +55,18 @@ class Maps(QObject):
         # Update spectra_listbox when selecting maps via MAPS LIST
         self.ui.maps_listbox.itemSelectionChanged.connect(
             self.upd_spectra_list)
+        
+        # Create a customized QListWidget
+        self.ui.spectra_listbox = CustomListWidget()
+        self.ui.spectra_listbox.setDragDropMode(QAbstractItemView.NoDragDrop)
+        self.ui.listbox_layout2.addWidget(self.ui.spectra_listbox)
+
+        # Connect and plot_spectra of selected SPECTRUM LIST
+        self.ui.spectra_listbox.itemSelectionChanged.connect(
+            self.refresh_gui)
+        # Connect the checkbox signal to the method
+        self.ui.checkBox_2.stateChanged.connect(self.check_uncheck_all)
+        
 
         # Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectra_listbox.itemSelectionChanged.connect(self.refresh_gui)
@@ -1117,20 +1129,37 @@ class Maps(QObject):
                 self.ui.maps_listbox.setCurrentRow(0)
         QTimer.singleShot(100, self.upd_spectra_list)
 
+    def check_uncheck_all(self, state):
+        """
+        Check or uncheck all items in the listbox based on the state of the
+        main checkbox.
+        """
+        check_state = Qt.Unchecked if state == 0 else Qt.Checked
+        for index in range(self.ui.spectra_listbox.count()):
+            item = self.ui.spectra_listbox.item(index)
+            item.setCheckState(check_state)
+    
     def upd_spectra_list(self):
-        """
-        Update the spectra list based on the currently selected map.
-        """
+        """Show spectrums in a listbox"""
+        
+        checked_states = {}
+        for index in range(self.ui.spectra_listbox.count()):
+            item = self.ui.spectra_listbox.item(index)
+            checked_states[item.text()] = item.checkState()
+          
         current_row = self.ui.spectra_listbox.currentRow()
         self.ui.spectra_listbox.clear()
         current_item = self.ui.maps_listbox.currentItem()
 
         if current_item is not None:
             map_name = current_item.text()
+            
             for spectrum in self.spectrums:
                 map_name_fs, coord_fs = self.spectrum_object_id(spectrum)
                 if map_name == map_name_fs:
                     item = QListWidgetItem(str(coord_fs))
+                    item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+                    item.setCheckState(checked_states.get(coord_fs, Qt.Checked))
                     if hasattr(spectrum.result_fit,
                                'success') and spectrum.result_fit.success:
                         item.setBackground(QColor("green"))

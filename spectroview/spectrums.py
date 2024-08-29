@@ -6,8 +6,8 @@ from copy import deepcopy
 from pathlib import Path
 import json
 
-from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline
-from common import FitThread, FitModelManager, ShowParameters, DataframeTable
+from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox
+from common import FitThread, FitModelManager, ShowParameters, DataframeTable, CustomListWidget
 from common import PLOT_POLICY, FIT_METHODS
 
 from lmfit import fit_report
@@ -48,7 +48,6 @@ class Spectrums(QObject):
 
         # Create a customized QListWidget
         self.ui.spectrums_listbox = CustomListWidget()
-        self.ui.spectrums_listbox.setDragDropMode(QListWidget.InternalMove)
         self.ui.listbox_layout.addWidget(self.ui.spectrums_listbox)
         self.ui.spectrums_listbox.items_reordered.connect(
             self.update_spectrums_order)
@@ -169,7 +168,7 @@ class Spectrums(QObject):
         self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
 
     def upd_spectra_list(self):
-        """Update spectrums list based on the current data"""
+        """Show spectrums in a listbox"""
 
         # Store the checked state of each item
         checked_states = {}
@@ -179,24 +178,15 @@ class Spectrums(QObject):
 
         current_row = self.ui.spectrums_listbox.currentRow()
         self.ui.spectrums_listbox.clear()
+        
         for spectrum in self.spectrums:
             fname = spectrum.fname
-            item = QListWidgetItem(fname)
-            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            # Restore the checked state if it was stored,
-            item.setCheckState(checked_states.get(fname, Qt.Checked))
-            if hasattr(spectrum.result_fit,
-                       'success') and spectrum.result_fit.success:
-                item.setBackground(QColor("green"))
-            elif hasattr(spectrum.result_fit,
-                         'success') and not spectrum.result_fit.success:
-                item.setBackground(QColor("orange"))
-            else:
-                item.setBackground(QColor(0, 0, 0, 0))
+            item = populate_spectrum_listbox(spectrum, fname,checked_states)
             self.ui.spectrums_listbox.addItem(item)
 
         item_count = self.ui.spectrums_listbox.count()
         self.ui.item_count_label_3.setText(f"{item_count} points")
+        
         # Management of selecting item of listbox
         if current_row >= item_count:
             current_row = item_count - 1
@@ -206,7 +196,7 @@ class Spectrums(QObject):
             if item_count > 0:
                 self.ui.spectrums_listbox.setCurrentRow(0)
         QTimer.singleShot(50, self.refresh_gui)
-
+        
     def get_checked_spectra(self):
         """
         Get a list of selected spectra based on listbox's checkbox states.
@@ -377,6 +367,8 @@ class Spectrums(QObject):
 
     def get_spectrum_fnames(self):
         """Get the filenames of currently selected spectra in the UI"""
+        if self.ui.spectrums_listbox.count() == 0:
+            return []
         items = self.ui.spectrums_listbox.selectedItems()
         fnames = []
         for item in items:
@@ -386,15 +378,20 @@ class Spectrums(QObject):
 
     def get_spectrum_object(self):
         """Get the Spectrum object of currently selected spectra"""
+        
         fnames = self.get_spectrum_fnames()
         sel_spectra = []
         for spectrum in self.spectrums:
             if spectrum.fname in fnames:
                 sel_spectra.append(spectrum)
+                
         if len(sel_spectra) == 0:
             return
         sel_spectrum = sel_spectra[0]
-        return sel_spectrum, sel_spectra
+        if sel_spectrum is not None and sel_spectra:
+            return sel_spectrum, sel_spectra
+        else:
+            return None, None
 
     def create_spectra_plot_widget(self):
         """Create the widget for displaying spectra plots"""
@@ -1186,30 +1183,4 @@ class Spectrums(QObject):
         print("'Spectrums' Tab environment has been cleared and reset.")
 
 
-class CustomListWidget(QListWidget):
-    """
-    Customized QListWidget with drag-and-drop functionality for rearranging
-    items.
 
-    This class inherits from QListWidget and provides extended functionality
-    for reordering items via drag-and-drop operations.
-
-    Signals:
-        items_reordered:
-            Emitted when items in the list widget are reordered by the user
-            using drag-and-drop.
-    """
-    items_reordered = Signal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setDragDropMode(QListWidget.InternalMove)
-        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
-
-    def dropEvent(self, event):
-        """
-        Overrides the dropEvent method to emit the items_reordered signal
-            after an item is dropped into a new position.
-        """
-        super().dropEvent(event)
-        self.items_reordered.emit()

@@ -23,7 +23,7 @@ from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
     QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, \
-    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate
+    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView
 from PySide6.QtCore import Signal, QThread, Qt, QSize
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
     QAction, Qt
@@ -83,6 +83,23 @@ def decompress(data, dtype):
     decompressed = zlib.decompress(decoded)
     return np.frombuffer(decompressed, dtype=dtype)
 
+
+
+def populate_spectrum_listbox(spectrum, spectrum_name, checked_states):
+    """ Populate the listbox with spectrums with colors"""
+    item = QListWidgetItem(spectrum_name)            
+    item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+    item.setCheckState(checked_states.get(spectrum_name, Qt.Checked))
+    if hasattr(spectrum.result_fit,
+                'success') and spectrum.result_fit.success:
+        item.setBackground(QColor("green"))
+    elif hasattr(spectrum.result_fit,
+                    'success') and not spectrum.result_fit.success:
+        item.setBackground(QColor("orange"))
+    else:
+        item.setBackground(QColor(0, 0, 0, 0))
+        
+    return item
 
 def spectrum_to_dict(spectrums):
     """Custom "save" method to save 'Spectrum' object in a dictionary"""
@@ -1592,3 +1609,32 @@ class WaferPlot:
         """
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
         return zi
+
+
+class CustomListWidget(QListWidget):
+    """
+    Customized QListWidget with drag-and-drop functionality for rearranging
+    items.
+
+    This class inherits from QListWidget and provides extended functionality
+    for reordering items via drag-and-drop operations.
+
+    Signals:
+        items_reordered:
+            Emitted when items in the list widget are reordered by the user
+            using drag-and-drop.
+    """
+    items_reordered = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setDragDropMode(QListWidget.InternalMove)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+
+    def dropEvent(self, event):
+        """
+        Overrides the dropEvent method to emit the items_reordered signal
+            after an item is dropped into a new position.
+        """
+        super().dropEvent(event)
+        self.items_reordered.emit()

@@ -6,7 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 import json
 
-from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox
+from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox,plot_baseline_dynamically
 from common import FitThread, FitModelManager, ShowParameters, DataframeTable, CustomListWidget
 from common import PLOT_POLICY, FIT_METHODS
 
@@ -394,7 +394,7 @@ class Spectrums(QObject):
             return None, None
 
     def create_spectra_plot_widget(self):
-        """Create the widget for displaying spectra plots"""
+        """Create canvas and toolbar for plotting in the GUI."""
 
         plt.style.use(PLOT_POLICY)
         self.common.clear_layout(self.ui.QVBoxlayout_2.layout())
@@ -473,7 +473,7 @@ class Spectrums(QObject):
             self.ax.plot(x_values, y_values, label=f"{fname}", ms=3, lw=2)
 
             # BASELINE
-            self.plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
+            plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
 
             # RAW
             if self.ui.cb_raw_3.isChecked():
@@ -599,33 +599,6 @@ class Spectrums(QObject):
             else:
                 sel_spectrum.baseline.mode = "Polynomial"
                 sel_spectrum.baseline.order_max = self.ui.degre_2.value()
-
-    
-    def plot_baseline_dynamically(self, ax, spectrum):
-        """Evaluate and plot baseline points and line dynamically"""
-        if not spectrum.baseline.is_subtracted:
-            x_bl = spectrum.x
-            y_bl = spectrum.y if spectrum.baseline.attached else None
-            if len(spectrum.baseline.points[0]) == 0:
-                return
-            # Clear any existing baseline plot
-            for line in ax.lines:
-                if line.get_label() == "Baseline":
-                    line.remove()
-            # Evaluate the baseline
-            attached = spectrum.baseline.attached
-            baseline_values = spectrum.baseline.eval(x_bl, y_bl,
-                                                     attached=attached)
-            ax.plot(x_bl, baseline_values, 'r')
-
-            # Plot the attached baseline points
-            if spectrum.baseline.attached and y_bl is not None:
-                attached_points = spectrum.baseline.attached_points(x_bl, y_bl)
-                ax.plot(attached_points[0], attached_points[1], 'ko',
-                        mfc='none')
-            else:
-                ax.plot(spectrum.baseline.points[0],
-                        spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
                 
     def copy_baseline(self):
         """Copy baseline of the selected spectrum"""

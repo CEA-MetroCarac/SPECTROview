@@ -7,7 +7,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, \
-    clear_layout, compress, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox
+    clear_layout, compress, baseline_to_dict, dict_to_baseline, plot_baseline_dynamically
 from common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
     FitModelManager, CustomListWidget
 from common import FIT_METHODS, PLOT_POLICY
@@ -494,31 +494,7 @@ class Maps(QObject):
                 sel_spectrum.baseline.mode = "Polynomial"
                 sel_spectrum.baseline.order_max = self.ui.degre.value()
 
-    def plot_baseline_dynamically(self, ax, spectrum):
-        """Evaluate and plot baseline points and line dynamically"""
-        if not spectrum.baseline.is_subtracted:
-            x_bl = spectrum.x
-            y_bl = spectrum.y if spectrum.baseline.attached else None
-            if len(spectrum.baseline.points[0]) == 0:
-                return
-            # Clear any existing baseline plot
-            for line in ax.lines:
-                if line.get_label() == "Baseline":
-                    line.remove()
-            # Evaluate the baseline
-            attached = spectrum.baseline.attached
-            baseline_values = spectrum.baseline.eval(x_bl, y_bl,
-                                                     attached=attached)
-            ax.plot(x_bl, baseline_values, 'r')
-
-            # Plot the attached baseline points
-            if spectrum.baseline.attached and y_bl is not None:
-                attached_points = spectrum.baseline.attached_points(x_bl, y_bl)
-                ax.plot(attached_points[0], attached_points[1], 'ko',
-                        mfc='none')
-            else:
-                ax.plot(spectrum.baseline.points[0],
-                        spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
+    
 
     def copy_baseline(self):
         """Copy baseline of the selected spectrum"""
@@ -811,18 +787,7 @@ class Maps(QObject):
         self.canvas1.draw()
 
     def create_spectra_plot_widget(self):
-        """
-        Create canvas and toolbar for plotting in the GUI.
-
-        Action:
-        - Sets the plot style.
-        - Clears existing layouts in the UI.
-        - Updates the spectra list in the UI.
-        - Creates a new FigureCanvas for plotting.
-        - Configures plot elements such as axes labels, grid, and connections.
-        - Adds canvas and toolbar to the UI layout.
-        - Draws the plot on the canvas.
-        """
+        """Create canvas and toolbar for plotting in the GUI."""
         plt.style.use(PLOT_POLICY)
         self.common.clear_layout(self.ui.QVBoxlayout.layout())
         self.common.clear_layout(self.ui.toolbar_frame.layout())
@@ -891,7 +856,7 @@ class Maps(QObject):
             self.ax.plot(x_values, y_values, label=f"{coord}", ms=3, lw=2)
 
             # BASELINE
-            self.plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
+            plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
 
             # RAW
             if self.ui.cb_raw.isChecked():

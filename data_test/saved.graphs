@@ -244,7 +244,7 @@
                 }
             ],
             "color_palette": "jet",
-            "dpi": 140.0,
+            "dpi": 110.0,
             "wafer_size": 300.0,
             "wafer_stats": true,
             "trendline_order": 1.0,

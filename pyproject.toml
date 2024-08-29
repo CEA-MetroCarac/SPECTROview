@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "spectroview"
 version = "0.1.1"
-description = "A tool for Spectroscopic Data Processing and Visualization."
+description = "A Tool for Spectroscopic Data Processing and Visualization."
 readme = "README.md"
 requires-python = ">=3.8"
 license = {file = "LICENSE"}
@@ -40,7 +40,7 @@ dependencies = [
 ]
 
 [project.urls]
-homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
+Homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
 
 [project.optional-dependencies]
 dev = ["pytest", "black"]

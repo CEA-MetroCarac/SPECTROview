@@ -1,3 +1,4 @@
+[![PyPI version](https://badge.fury.io/py/spectroview.svg)](https://badge.fury.io/py/spectroview)
 [![Github](https://img.shields.io/badge/GitHub-GPL--3.0-informational)](https://github.com/CEA-MetroCarac/spectroview)
 
 
@@ -5,7 +6,7 @@
     <img width=100 src="app/resources/icon3.png">
 </p>
 
-### SPECTROview : A tool for Spectroscopic Data Processing and Visualization.
+### SPECTROview : A Tool for Spectroscopic Data Processing and Visualization.
 
 *Version 0.1.1 (build 29-08-2024)*
 

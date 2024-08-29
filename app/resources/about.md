@@ -4,7 +4,7 @@
 
 ### SPECTROview (Spectroscopic Data Processing and Visualization)
 
-*Version 0.1.1 (build 29-08-2024)*
+*Version 0.1.2 (build 29-08-2024)*
 
 Fitting features are powered
 by the [FITSPY](https://github.com/CEA-MetroCarac/fitspy)

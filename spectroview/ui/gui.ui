@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -697,7 +697,7 @@
                               <item>
                                <widget class="QLabel" name="label_66">
                                 <property name="text">
-                                 <string>X max/min:</string>
+                                 <string>X min/max:</string>
                                 </property>
                                </widget>
                               </item>
@@ -872,7 +872,7 @@
                                  <string>Number of nearby points considered to smoothing the noise</string>
                                 </property>
                                 <property name="text">
-                                 <string>Smoothing</string>
+                                 <string>Correct noise</string>
                                 </property>
                                </widget>
                               </item>
@@ -911,7 +911,11 @@
                                  <string>To remove all baseline points and undo the baseline subtraction</string>
                                 </property>
                                 <property name="text">
-                                 <string>Undo</string>
+                                 <string/>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
                                 </property>
                                </widget>
                               </item>
@@ -1060,7 +1064,11 @@
  Hold 'Ctrl' and press 'Clear peaks' button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Clear peaks</string>
+                                 <string>Clear</string>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
                                 </property>
                                </widget>
                               </item>
@@ -3016,7 +3024,7 @@
                               <item>
                                <widget class="QLabel" name="label_61">
                                 <property name="text">
-                                 <string>X max/min:</string>
+                                 <string>X min/max:</string>
                                 </property>
                                </widget>
                               </item>
@@ -3191,7 +3199,7 @@
                                  <string>Number of nearby points considered to smoothing the noise</string>
                                 </property>
                                 <property name="text">
-                                 <string>Smoothing</string>
+                                 <string>Correct Noise</string>
                                 </property>
                                </widget>
                               </item>
@@ -3230,7 +3238,11 @@
                                  <string>To remove all baseline points and undo the baseline subtraction</string>
                                 </property>
                                 <property name="text">
-                                 <string>Undo</string>
+                                 <string/>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
                                 </property>
                                </widget>
                               </item>
@@ -3379,7 +3391,11 @@
  Hold 'Ctrl' and press 'Clear peaks' button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Clear peaks</string>
+                                 <string/>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
                                 </property>
                                </widget>
                               </item>
@@ -6147,8 +6163,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>235</width>
-                    <height>249</height>
+                    <width>372</width>
+                    <height>501</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">

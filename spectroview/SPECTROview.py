@@ -15,7 +15,7 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile, QSettings, QFileInfo
+from PySide6.QtCore import QFile, QSettings, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon
 
 from common import CommonUtilities, FitModelManager
@@ -308,7 +308,7 @@ class Main:
 expiration_date = datetime.datetime(2024, 12, 31)
 
 def launcher():
-    # Check if the current date is past the expiration date
+    QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     if datetime.datetime.now() > expiration_date:
         text = f"The current SPECTROview version has expired on " \
                f"{expiration_date}. Please " \

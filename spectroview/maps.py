@@ -89,30 +89,42 @@ class Maps(QObject):
         self.ui.cbb_fit_methods.addItems(FIT_METHODS)
         self.ui.cbb_cpu_number.addItems(NCPUS)
 
-        # FIT SETTINGS
-        self.load_fit_settings()
-        self.ui.cb_fit_negative.stateChanged.connect(self.save_fit_settings)
-        self.ui.max_iteration.valueChanged.connect(self.save_fit_settings)
+        # Save SETTINGS 
+        self.load_settings()
+        self.ui.cb_fit_negative.stateChanged.connect(self.save_settings)
+        self.ui.max_iteration.valueChanged.connect(self.save_settings)
         self.ui.cbb_fit_methods.currentIndexChanged.connect(
-            self.save_fit_settings)
+            self.save_settings)
         self.ui.cbb_cpu_number.currentIndexChanged.connect(
-            self.save_fit_settings)
-        self.ui.xtol.textChanged.connect(self.save_fit_settings)
+            self.save_settings)
+        self.ui.xtol.textChanged.connect(self.save_settings)
         self.ui.sb_dpi_spectra.valueChanged.connect(
             self.create_spectra_plot_widget)
+        
+        self.ui.cb_attached.stateChanged.connect(self.save_settings)
+        self.ui.noise.valueChanged.connect(self.save_settings)
+        self.ui.rbtn_linear.toggled.connect(self.save_settings)
+        self.ui.degre.valueChanged.connect(self.save_settings)
         
         self.ui.btn_send_to_viz2.clicked.connect(self.send_df_to_viz)
 
         # BASELINE
-        self.ui.cb_attached.clicked.connect(self.upd_spectra_list)
-        self.ui.noise.valueChanged.connect(self.upd_spectra_list)
-        self.ui.rbtn_linear.clicked.connect(self.upd_spectra_list)
-        self.ui.rbtn_polynomial.clicked.connect(self.upd_spectra_list)
-        self.ui.degre.valueChanged.connect(self.upd_spectra_list)
+        self.ui.cb_attached.clicked.connect(self.refresh_gui)
+        self.ui.noise.valueChanged.connect(self.refresh_gui)
+        self.ui.rbtn_linear.clicked.connect(self.refresh_gui)
+        self.ui.rbtn_polynomial.clicked.connect(self.refresh_gui)
+        self.ui.degre.valueChanged.connect(self.refresh_gui)
+        
+        self.ui.cb_attached.stateChanged.connect(self.get_baseline_settings)
+        self.ui.noise.valueChanged.connect(self.get_baseline_settings)
+        self.ui.rbtn_linear.toggled.connect(self.get_baseline_settings)
+        self.ui.degre.valueChanged.connect(self.get_baseline_settings)
+        
         self.ui.btn_copy_bl.clicked.connect(self.copy_baseline)
         self.ui.btn_paste_bl.clicked.connect(self.paste_baseline_handler)
         self.ui.sub_baseline.clicked.connect(self.subtract_baseline_handler)
-
+        
+        
         # Load default folder path from QSettings during application startup
         self.fit_model_manager = FitModelManager(self.settings)
         self.fit_model_manager.default_model_folder = self.settings.value(
@@ -215,6 +227,7 @@ class Maps(QObject):
                 spectrum.x0 = np.asarray(x_values)
                 spectrum.y = np.asarray(y_values)
                 spectrum.y0 = np.asarray(y_values)
+                spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
 
     def process_new_format(self, map_df, map_name):
@@ -239,6 +252,7 @@ class Maps(QObject):
                 spectrum.x0 = np.asarray(x_values)
                 spectrum.y = np.asarray(y_values)
                 spectrum.y0 = np.asarray(y_values)
+                spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
 
 
@@ -448,7 +462,7 @@ class Maps(QObject):
         """
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         fit_model = self.ui.cbb_fit_models.currentText()
-        # Add a new peak_model for current selected peak
+        # Add a new peak_model 
         if self.zoom_pan_active == False and self.ui.rdbtn_peak.isChecked():
             if event.button == 1 and event.inaxes:
                 x = event.xdata
@@ -456,7 +470,7 @@ class Maps(QObject):
             sel_spectrum.add_peak_model(fit_model, x)
             self.upd_spectra_list()
 
-        # Add a new baseline point for current selected peak
+        # Add a new baseline point
         if self.zoom_pan_active == False and self.ui.rdbtn_baseline.isChecked():
             if event.button == 1 and event.inaxes:
                 x1 = event.xdata
@@ -470,21 +484,22 @@ class Maps(QObject):
                     self.upd_spectra_list()
 
     def get_baseline_settings(self):
-        """Get baseline settings from GUI and set to spectrum objects"""
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        if sel_spectrum is None:
+        """Get baseline settings from GUI and set to selected spectrum"""
+        spectrum_object = self.get_spectrum_object()
+        if spectrum_object is None:
             return
-        sel_spectrum.baseline.attached = self.ui.cb_attached.isChecked()
-        sel_spectrum.baseline.sigma = self.ui.noise.value()
-        if self.ui.rbtn_linear.isChecked():
-            sel_spectrum.baseline.mode = "Linear"
         else:
-            sel_spectrum.baseline.mode = "Polynomial"
-            sel_spectrum.baseline.order_max = self.ui.degre.value()
+            sel_spectrum, sel_spectra = spectrum_object  
+            sel_spectrum.baseline.attached = self.ui.cb_attached.isChecked()
+            sel_spectrum.baseline.sigma = self.ui.noise.value()
+            if self.ui.rbtn_linear.isChecked():
+                sel_spectrum.baseline.mode = "Linear"
+            else:
+                sel_spectrum.baseline.mode = "Polynomial"
+                sel_spectrum.baseline.order_max = self.ui.degre.value()
 
     def plot_baseline_dynamically(self, ax, spectrum):
         """Evaluate and plot baseline points and line dynamically"""
-        self.get_baseline_settings()
 
         if not spectrum.baseline.is_subtracted:
             x_bl = spectrum.x
@@ -514,8 +529,7 @@ class Maps(QObject):
         """Copy baseline of the selected spectrum"""
         sel_spectrum, _ = self.get_spectrum_object()
         self.current_baseline = baseline_to_dict(sel_spectrum)
-        print(self.current_baseline)
-        
+
     
     def paste_baseline(self, sel_spectra=None):
         """Paste baseline to the selected spectrum(s)"""
@@ -523,28 +537,31 @@ class Maps(QObject):
             _, sel_spectra = self.get_spectrum_object()
         dict_to_baseline(self.current_baseline, sel_spectra)
         
-        QTimer.singleShot(50, self.upd_spectra_list)
+        QTimer.singleShot(50, self.refresh_gui)
         QTimer.singleShot(300, self.rescale)
 
-    def paste_baseline_all(self):
-        """Paste baseline to the all spectrum(s)"""
-        self.paste_baseline(self.spectrums)
-
     def subtract_baseline(self, sel_spectra=None):
-        """Subtract baseline for the selected spectrum(s)."""
+        """Subtract baseline action for the selected spectrum(s)."""
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
-        dict_to_baseline(self.current_baseline, sel_spectra)
+        # dict_to_baseline(self.current_baseline, sel_spectra)
         
         for spectrum in sel_spectra:
-            spectrum.subtract_baseline()
+            if not spectrum.baseline.is_subtracted:
+                spectrum.subtract_baseline()
+            else: 
+                continue
             
-        QTimer.singleShot(50, self.upd_spectra_list)
+        QTimer.singleShot(50, self.refresh_gui)
         QTimer.singleShot(300, self.rescale)
 
     def subtract_baseline_all(self):
         """Subtracts baseline points for all spectra"""
         self.subtract_baseline(self.spectrums)
+    
+    def paste_baseline_all(self):
+        """Paste baseline to the all spectrum(s)"""
+        self.paste_baseline(self.spectrums)
 
     def get_fit_settings(self):
         """Get all settings for the fitting action."""
@@ -1423,27 +1440,28 @@ class Maps(QObject):
             show_alert("No spectrum is loaded; FITSPY cannot open")
             return
 
-    def save_fit_settings(self):
+    def save_settings(self):
         """
-        Save all fitting settings to persistent storage (QSettings).
-        """
-        fit_params = {
+        Save all settings to persistent storage (QSettings).
+        """        
+        gui_states = {
             'fit_negative': self.ui.cb_fit_negative.isChecked(),
             'max_ite': self.ui.max_iteration.value(),
             'method': self.ui.cbb_fit_methods.currentText(),
             'ncpus': self.ui.cbb_cpu_number.currentText(),
-            'xtol': float(self.ui.xtol.text())
+            'xtol': float(self.ui.xtol.text()),
+            'attached': self.ui.cb_attached.isChecked()
         }
+        # Save the gui states to QSettings
         print("settings are saved")
-        # Save the fit_params to QSettings
-        for key, value in fit_params.items():
+        for key, value in gui_states.items():
             self.settings.setValue(key, value)
 
-    def load_fit_settings(self):
+    def load_settings(self):
         """
         Load last used fitting settings from persistent storage (QSettings).
         """
-        fit_params = {
+        gui_states = {
             'fit_negative': self.settings.value('fit_negative',
                                                 defaultValue=False, type=bool),
             'max_ite': self.settings.value('max_ite', defaultValue=500,
@@ -1452,15 +1470,20 @@ class Maps(QObject):
                                           type=str),
             'ncpus': self.settings.value('ncpus', defaultValue='auto',
                                          type=str),
-            'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float)
+            'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float), 
+            'attached': self.settings.value('attached',
+                                                defaultValue=True, type=bool)
         }
+        
 
         # Update GUI elements with the loaded values
-        self.ui.cb_fit_negative.setChecked(fit_params['fit_negative'])
-        self.ui.max_iteration.setValue(fit_params['max_ite'])
-        self.ui.cbb_fit_methods.setCurrentText(fit_params['method'])
-        self.ui.cbb_cpu_number.setCurrentText(fit_params['ncpus'])
-        self.ui.xtol.setText(str(fit_params['xtol']))
+        self.ui.cb_fit_negative.setChecked(gui_states['fit_negative'])
+        self.ui.max_iteration.setValue(gui_states['max_ite'])
+        self.ui.cbb_fit_methods.setCurrentText(gui_states['method'])
+        self.ui.cbb_cpu_number.setCurrentText(gui_states['ncpus'])
+        self.ui.xtol.setText(str(gui_states['xtol']))
+    
+        self.ui.cb_attached.setChecked(gui_states['attached'])
 
     def set_x_range_handler(self):
         """

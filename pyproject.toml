@@ -12,7 +12,6 @@ license = {file = "LICENSE"}
 authors = [
     {name = "Van Hoan Le", email = "van-hoan.le@cea.fr"}
 ]
-homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -22,22 +21,30 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X"
 ]
 
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib==3.8.4",
+    "seaborn==0.13.2",
+    "pyside6",
+    "markdown",
+    "scipy",
+    "lmfit",
+    "parse",
+    "dill",
+    "rosettasciio",
+    "fitspy",
+    "pywin32; platform_system == 'Windows'"
+]
+
+[project.urls]
+homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
+
 [project.optional-dependencies]
 dev = ["pytest", "black"]
 
 [project.scripts]
 spectroview = "spectroview.SPECTROview:launcher"
 
-[project.dependencies]
-numpy = "*"
-pandas = "*"
-matplotlib = "==3.8.4" 
-seaborn = "==0.13.2"
-pyside6 = "*"
-scipy = "*"
-lmfit = "*"
-parse = "*"
-dill = "*"
-rosettasciio = "*"
-fitspy = "*"
-pywin32 = {version = "*", markers = "platform_system == 'Windows'"}
+[tool.setuptools.packages.find]
+where = ["spectroview"]

@@ -7,7 +7,7 @@
 
 ### SPECTROview : A tool for Spectroscopic Data Processing and Visualization.
 
-*Version 2024.8.7 (build 19-08-2024)*
+*Version 0.1.1 (build 29-08-2024)*
 
 Fitting features are powered
 by the [FITSPY](https://github.com/CEA-MetroCarac/fitspy)

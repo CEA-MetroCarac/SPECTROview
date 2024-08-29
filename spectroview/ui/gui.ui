@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -935,7 +935,8 @@
                               <item>
                                <widget class="QPushButton" name="btn_copy_bl_2">
                                 <property name="toolTip">
-                                 <string>Copy the baseline of the selected spectrum</string>
+                                 <string>Copy the baseline of the selected spectrum.  
+ Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
                                  <string/>
@@ -949,7 +950,8 @@
                               <item>
                                <widget class="QPushButton" name="btn_paste_bl_2">
                                 <property name="toolTip">
-                                 <string>Paste the copied baseline to the selected spectrum(s)</string>
+                                 <string>Paste the copied baseline to the selected spectrum(s).  
+ Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
                                  <string/>
@@ -963,8 +965,8 @@
                               <item>
                                <widget class="QPushButton" name="sub_baseline_2">
                                 <property name="toolTip">
-                                 <string>To subtract the evaluated baseline from the spectrum. 
- Hold 'Ctrl' and press 'Subtract' button to apply to all spectra</string>
+                                 <string>Subtract baseline for selected spectrum(s). 
+ Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
                                  <string>Subtract</string>
@@ -3248,7 +3250,8 @@
                               <item>
                                <widget class="QPushButton" name="btn_copy_bl">
                                 <property name="toolTip">
-                                 <string>Copy the baseline of the selected spectrum</string>
+                                 <string>Copy the baseline of the selected spectrum.  
+ Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
                                  <string/>
@@ -3262,7 +3265,8 @@
                               <item>
                                <widget class="QPushButton" name="btn_paste_bl">
                                 <property name="toolTip">
-                                 <string>Paste the copied baseline to the selected spectrum(s)</string>
+                                 <string>Paste the copied baseline to the selected spectrum(s).  
+ Hold 'Ctrl' and press button to apply to all spectra.</string>
                                 </property>
                                 <property name="text">
                                  <string/>
@@ -3276,8 +3280,8 @@
                               <item>
                                <widget class="QPushButton" name="sub_baseline">
                                 <property name="toolTip">
-                                 <string>To subtract the evaluated baseline from the spectrum. 
- Hold 'Ctrl' and press 'Subtract' button to apply to all spectra</string>
+                                 <string>Subtract baseline for selected spectrum(s). 
+ Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
                                  <string>Subtract</string>

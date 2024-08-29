@@ -48,12 +48,12 @@
                 {
                     "label": "A",
                     "marker": "o",
-                    "color": "#8d0085"
+                    "color": "red"
                 },
                 {
                     "label": "B",
                     "marker": "o",
-                    "color": "cyan"
+                    "color": "#000086"
                 },
                 {
                     "label": "C",
@@ -182,7 +182,7 @@
             "ax2": null,
             "ax3": null
         },
-        "1": {
+        "2": {
             "df_name": "WAFERS_best_fit",
             "filters": [
                 {
@@ -194,9 +194,9 @@
                     "state": false
                 }
             ],
-            "graph_id": 1,
-            "plot_width": 750,
-            "plot_height": 578,
+            "graph_id": 2,
+            "plot_width": 600,
+            "plot_height": 500,
             "plot_style": "scatter",
             "x": "Position of peak A1g (cm\u207b\u00b9)",
             "y": [
@@ -228,19 +228,19 @@
             "legend_outside": false,
             "legend_properties": [
                 {
-                    "label": "Center",
+                    "label": "A",
                     "marker": "o",
-                    "color": "#ff00ff"
+                    "color": "#0000ff"
                 },
                 {
-                    "label": "Mid-Radius",
+                    "label": "B",
                     "marker": "o",
-                    "color": "#008281"
+                    "color": "#c0c0c0"
                 },
                 {
-                    "label": "Edge",
+                    "label": "C",
                     "marker": "o",
-                    "color": "#8d0000"
+                    "color": "#008200"
                 }
             ],
             "color_palette": "jet",

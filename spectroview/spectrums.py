@@ -6,7 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 import json
 
-from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum
+from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline
 from common import FitThread, FitModelManager, ShowParameters, DataframeTable
 from common import PLOT_POLICY, FIT_METHODS
 
@@ -88,11 +88,21 @@ class Spectrums(QObject):
         self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
 
         # BASELINE
-        self.ui.cb_attached_2.clicked.connect(self.upd_spectra_list)
-        self.ui.noise_2.valueChanged.connect(self.upd_spectra_list)
-        self.ui.rbtn_linear_2.clicked.connect(self.upd_spectra_list)
-        self.ui.rbtn_polynomial_2.clicked.connect(self.upd_spectra_list)
-        self.ui.degre_2.valueChanged.connect(self.upd_spectra_list)
+        self.ui.cb_attached_2.clicked.connect(self.refresh_gui)
+        self.ui.noise_2.valueChanged.connect(self.refresh_gui)
+        self.ui.rbtn_linear_2.clicked.connect(self.refresh_gui)
+        self.ui.rbtn_polynomial_2.clicked.connect(self.refresh_gui)
+        self.ui.degre_2.valueChanged.connect(self.refresh_gui)
+        
+        self.ui.cb_attached_2.clicked.connect(self.get_baseline_settings)
+        self.ui.noise_2.valueChanged.connect(self.get_baseline_settings)
+        self.ui.rbtn_linear_2.clicked.connect(self.get_baseline_settings)
+        self.ui.rbtn_polynomial_2.clicked.connect(self.get_baseline_settings)
+        self.ui.degre_2.valueChanged.connect(self.get_baseline_settings)
+        
+        self.ui.btn_copy_bl_2.clicked.connect(self.copy_baseline)
+        self.ui.btn_paste_bl_2.clicked.connect(self.paste_baseline_handler)
+        self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
 
         # Load default folder path from QSettings during application startup
         self.fit_model_manager = FitModelManager(self.settings)
@@ -152,6 +162,7 @@ class Spectrums(QObject):
                     spectrum.x0 = np.asarray(x_values)
                     spectrum.y = np.asarray(y_values)
                     spectrum.y0 = np.asarray(y_values)
+                    spectrum.baseline.mode = "Linear"
                     self.spectrums.append(spectrum)
 
         QTimer.singleShot(100, self.upd_spectra_list)
@@ -578,22 +589,23 @@ class Spectrums(QObject):
         self.set_x_range(fnames=fnames)
 
     def get_baseline_settings(self):
-        """Retrieve baseline settings from the GUI and apply to the selected
-        spectrum"""
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        if sel_spectrum is None:
+        """Get baseline settings from GUI and set to selected spectrum"""
+        spectrum_object = self.get_spectrum_object()
+        if spectrum_object is None:
             return
-        sel_spectrum.baseline.attached = self.ui.cb_attached_2.isChecked()
-        sel_spectrum.baseline.sigma = self.ui.noise_2.value()
-        if self.ui.rbtn_linear_2.isChecked():
-            sel_spectrum.baseline.mode = "Linear"
         else:
-            sel_spectrum.baseline.mode = "Polynomial"
-            sel_spectrum.baseline.order_max = self.ui.degre_2.value()
+            sel_spectrum, sel_spectra = spectrum_object  
+            sel_spectrum.baseline.attached = self.ui.cb_attached_2.isChecked()
+            sel_spectrum.baseline.sigma = self.ui.noise_2.value()
+            if self.ui.rbtn_linear_2.isChecked():
+                sel_spectrum.baseline.mode = "Linear"
+            else:
+                sel_spectrum.baseline.mode = "Polynomial"
+                sel_spectrum.baseline.order_max = self.ui.degre_2.value()
 
+    
     def plot_baseline_dynamically(self, ax, spectrum):
-        """Dynamically evaluate and plot the baseline for a given spectrum"""
-        self.get_baseline_settings()
+        """Evaluate and plot baseline points and line dynamically"""
         if not spectrum.baseline.is_subtracted:
             x_bl = spectrum.x
             y_bl = spectrum.y if spectrum.baseline.attached else None
@@ -605,9 +617,10 @@ class Spectrums(QObject):
                     line.remove()
             # Evaluate the baseline
             attached = spectrum.baseline.attached
-            baseline_values = spectrum.baseline.eval(x_bl, y_bl, attached=attached)
-            
+            baseline_values = spectrum.baseline.eval(x_bl, y_bl,
+                                                     attached=attached)
             ax.plot(x_bl, baseline_values, 'r')
+
             # Plot the attached baseline points
             if spectrum.baseline.attached and y_bl is not None:
                 attached_points = spectrum.baseline.attached_points(x_bl, y_bl)
@@ -616,39 +629,41 @@ class Spectrums(QObject):
             else:
                 ax.plot(spectrum.baseline.points[0],
                         spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
+                
+    def copy_baseline(self):
+        """Copy baseline of the selected spectrum"""
+        sel_spectrum, _ = self.get_spectrum_object()
+        self.current_baseline = baseline_to_dict(sel_spectrum)
+
+    
+    def paste_baseline(self, sel_spectra=None):
+        """Paste baseline to the selected spectrum(s)"""
+        if sel_spectra is None:
+            _, sel_spectra = self.get_spectrum_object()
+        dict_to_baseline(self.current_baseline, sel_spectra)
+        
+        QTimer.singleShot(50, self.refresh_gui)
 
     def subtract_baseline(self, sel_spectra=None):
-        """Subtract the baseline for the selected spectrum(s)"""
-        sel_spectrum, _ = self.get_spectrum_object()
-        points = deepcopy(sel_spectrum.baseline.points)
-        mode = sel_spectrum.baseline.mode  
-        coef = sel_spectrum.baseline.coef  
-        sigma = sel_spectrum.baseline.sigma 
-        attached = sel_spectrum.baseline.attached 
-        is_subtracted = sel_spectrum.baseline.is_subtracted
-        y_eval = sel_spectrum.baseline.y_eval
-        
-        if len(points[0]) == 0:
-            return
+        """Subtract baseline action for the selected spectrum(s)."""
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
         for spectrum in sel_spectra:
-            spectrum.baseline.points = points.copy()
-            spectrum.baseline.mode = mode
-            spectrum.baseline.coef = coef
-            spectrum.baseline.sigma = sigma
-            spectrum.baseline.attached = attached 
-            spectrum.baseline.is_subtracted = is_subtracted
-            spectrum.baseline.y_eval = y_eval
-            
-            spectrum.subtract_baseline()
-        QTimer.singleShot(50, self.upd_spectra_list)
+            if not spectrum.baseline.is_subtracted:
+                spectrum.subtract_baseline()
+            else: 
+                continue
+        QTimer.singleShot(50, self.refresh_gui)
         QTimer.singleShot(300, self.rescale)
 
+    def paste_baseline_all(self):
+        """Paste baseline to the all spectrum(s)"""
+        checked_spectra = self.get_checked_spectra()
+        self.paste_baseline(checked_spectra)
+        
     def subtract_baseline_all(self):
         """Subtract the baseline for all spectra"""
         checked_spectra = self.get_checked_spectra()
-        fnames = checked_spectra.fnames
         self.subtract_baseline(checked_spectra)
 
     def clear_peaks(self, fnames=None):
@@ -1059,6 +1074,13 @@ class Spectrums(QObject):
             self.reinit_all()
         else:
             self.reinit()
+    
+    def paste_baseline_handler(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.paste_baseline_all()
+        else:
+            self.paste_baseline()
 
     def subtract_baseline_handler(self):
         modifiers = QApplication.keyboardModifiers()

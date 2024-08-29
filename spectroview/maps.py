@@ -69,13 +69,13 @@ class Maps(QObject):
         self.ui.cb_peaks.stateChanged.connect(self.refresh_gui)
         self.ui.cb_attached.stateChanged.connect(self.refresh_gui)
         self.ui.cb_normalize.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_limits.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_expr.stateChanged.connect(self.refresh_gui)
 
         self.ui.cbb_wafer_size.currentIndexChanged.connect(self.refresh_gui)
         self.ui.cbb_xaxis_unit2.currentIndexChanged.connect(self.refresh_gui)
         self.ui.rdbt_show_wafer.toggled.connect(self.refresh_gui)
-
-        self.ui.cb_limits.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_expr.stateChanged.connect(self.refresh_gui)
+        
         # Set a delay for the function "plot1"
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
@@ -484,7 +484,6 @@ class Maps(QObject):
 
     def plot_baseline_dynamically(self, ax, spectrum):
         """Evaluate and plot baseline points and line dynamically"""
-
         if not spectrum.baseline.is_subtracted:
             x_bl = spectrum.x
             y_bl = spectrum.y if spectrum.baseline.attached else None
@@ -522,20 +521,16 @@ class Maps(QObject):
         dict_to_baseline(self.current_baseline, sel_spectra)
         
         QTimer.singleShot(50, self.refresh_gui)
-        QTimer.singleShot(300, self.rescale)
 
     def subtract_baseline(self, sel_spectra=None):
         """Subtract baseline action for the selected spectrum(s)."""
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
-        # dict_to_baseline(self.current_baseline, sel_spectra)
-        
         for spectrum in sel_spectra:
             if not spectrum.baseline.is_subtracted:
                 spectrum.subtract_baseline()
             else: 
                 continue
-            
         QTimer.singleShot(50, self.refresh_gui)
         QTimer.singleShot(300, self.rescale)
 

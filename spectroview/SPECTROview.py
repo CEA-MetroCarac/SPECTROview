@@ -99,10 +99,6 @@ class Main:
             self.save_settings)
         self.ui.xtol_2.textChanged.connect(self.save_settings)
         self.ui.cb_attached_2.stateChanged.connect(self.save_settings)
-        
-        ## Visualization module:
-        
-
 
         ########################################################
         ############## GUI for Maps Processing tab #############
@@ -371,13 +367,13 @@ class Main:
                                                 defaultValue=True, type=bool),
             
             # Spectra module
-            'fit_negative2': self.settings.value('fit_negative',
+            'fit_negative2': self.settings.value('fit_negative2',
                                                 defaultValue=False, type=bool),
-            'max_ite2': self.settings.value('max_ite', defaultValue=500,
+            'max_ite2': self.settings.value('max_ite2', defaultValue=500,
                                            type=int),
-            'method2': self.settings.value('method', defaultValue='leastsq',
+            'method2': self.settings.value('method2', defaultValue='leastsq',
                                           type=str),
-            'xtol2': self.settings.value('xtol', defaultValue=1.e-4, type=float),
+            'xtol2': self.settings.value('xtol2', defaultValue=1.e-4, type=float),
             'attached2': self.settings.value('attached2',
                                                 defaultValue=True, type=bool),
         }
@@ -394,7 +390,7 @@ class Main:
         self.ui.max_iteration_2.setValue(gui_states['max_ite2'])
         self.ui.cbb_fit_methods_2.setCurrentText(gui_states['method2'])
         self.ui.xtol_2.setText(str(gui_states['xtol2']))
-        self.ui.cb_attached_2.setChecked(gui_states['attached'])
+        self.ui.cb_attached_2.setChecked(gui_states['attached2'])
         
 expiration_date = datetime.datetime(2024, 12, 31)
 

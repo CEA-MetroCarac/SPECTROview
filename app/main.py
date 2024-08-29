@@ -18,14 +18,14 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon
 
-from common import CommonUtilities, FitModelManager
-from common import PEAK_MODELS, PALETTE, WAFER_SIZE, X_AXIS
-from common import show_alert
+from .common import CommonUtilities, FitModelManager
+from .common import PEAK_MODELS, PALETTE, WAFER_SIZE, X_AXIS
+from .common import show_alert
     
-from ui import resources 
-from maps import Maps
-from spectrums import Spectrums
-from visualisation import Visualization
+from .ui import resources 
+from .maps import Maps
+from .spectrums import Spectrums
+from .visualisation import Visualization
 
 DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")

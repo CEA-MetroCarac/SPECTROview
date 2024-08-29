@@ -6,11 +6,11 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
-from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, \
+from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, \
     clear_layout, compress, baseline_to_dict, dict_to_baseline, plot_baseline_dynamically
-from common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
+from .common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
     FitModelManager, CustomListWidget
-from common import FIT_METHODS, PLOT_POLICY
+from .common import FIT_METHODS, PLOT_POLICY
 
 from lmfit import fit_report
 from fitspy.spectra import Spectra

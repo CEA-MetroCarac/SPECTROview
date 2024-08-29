@@ -6,9 +6,9 @@ from copy import deepcopy
 from pathlib import Path
 import json
 
-from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox,plot_baseline_dynamically
-from common import FitThread, FitModelManager, ShowParameters, DataframeTable, CustomListWidget
-from common import PLOT_POLICY, FIT_METHODS
+from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox,plot_baseline_dynamically
+from .common import FitThread, FitModelManager, ShowParameters, DataframeTable, CustomListWidget
+from .common import PLOT_POLICY, FIT_METHODS
 
 from lmfit import fit_report
 from fitspy.spectra import Spectra

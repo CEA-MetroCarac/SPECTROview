@@ -26,6 +26,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "fitspy",
     "numpy",
     "openpyxl",
     "pandas",
@@ -35,10 +36,6 @@ dependencies = [
     "markdown",
     "scipy",
     "lmfit",
-    "parse",
-    "dill",
-    "rosettasciio",
-    "fitspy",
     "pywin32; platform_system == 'Windows'"
 ]
 
@@ -49,7 +46,23 @@ homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
 dev = ["pytest", "black"]
 
 [project.scripts]
-spectroview = "app.SPECTROview:launcher"
+spectroview = "app.main:launcher"
 
 [tool.setuptools.packages.find]
-where = ["spectroview"]
+where = ["."]
+include = ["app*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+app = [
+    "doc/*.md",
+    "doc/figures/*.png",
+    "resources/*.mplstyle", 
+    "resources/*.png", 
+    "resources/*.md",
+    "ui/*.ui",
+    "ui/*.qrc",
+    "ui/iconpack/*.png",
+    "ui/iconpack/*.ico",
+    
+]

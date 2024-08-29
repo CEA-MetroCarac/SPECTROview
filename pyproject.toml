@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spectroview"
-version = "2024.8.7"
+version = "0.1.1"
 description = "A tool for Spectroscopic Data Processing and Visualization."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -14,7 +14,11 @@ authors = [
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
@@ -23,6 +27,7 @@ classifiers = [
 
 dependencies = [
     "numpy",
+    "openpyxl",
     "pandas",
     "matplotlib==3.8.4",
     "seaborn==0.13.2",
@@ -44,7 +49,7 @@ homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
 dev = ["pytest", "black"]
 
 [project.scripts]
-spectroview = "spectroview.SPECTROview:launcher"
+spectroview = "app.SPECTROview:launcher"
 
 [tool.setuptools.packages.find]
 where = ["spectroview"]

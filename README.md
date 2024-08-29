@@ -1,5 +1,7 @@
 [![PyPI version](https://badge.fury.io/py/spectroview.svg)](https://badge.fury.io/py/spectroview)
+[![Downloads](https://img.shields.io/pypi/dm/spectroview.svg)](https://pypi.org/project/spectroview/)
 [![Github](https://img.shields.io/badge/GitHub-GPL--3.0-informational)](https://github.com/CEA-MetroCarac/spectroview)
+
 
 <p align="center">
     <img width=100 src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/icon3.png">

@@ -10,7 +10,7 @@ from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, \
     clear_layout, compress, baseline_to_dict, dict_to_baseline
 from common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
     FitModelManager
-from common import FIT_METHODS, NCPUS, PLOT_POLICY
+from common import FIT_METHODS, PLOT_POLICY
 
 from lmfit import fit_report
 from fitspy.spectra import Spectra
@@ -87,27 +87,11 @@ class Maps(QObject):
         self.zoom_pan_active = False
 
         self.ui.cbb_fit_methods.addItems(FIT_METHODS)
-        self.ui.cbb_cpu_number.addItems(NCPUS)
-
-        # Save SETTINGS 
-        self.load_settings()
-        self.ui.cb_fit_negative.stateChanged.connect(self.save_settings)
-        self.ui.max_iteration.valueChanged.connect(self.save_settings)
-        self.ui.cbb_fit_methods.currentIndexChanged.connect(
-            self.save_settings)
-        self.ui.cbb_cpu_number.currentIndexChanged.connect(
-            self.save_settings)
-        self.ui.xtol.textChanged.connect(self.save_settings)
         self.ui.sb_dpi_spectra.valueChanged.connect(
             self.create_spectra_plot_widget)
         
-        self.ui.cb_attached.stateChanged.connect(self.save_settings)
-        self.ui.noise.valueChanged.connect(self.save_settings)
-        self.ui.rbtn_linear.toggled.connect(self.save_settings)
-        self.ui.degre.valueChanged.connect(self.save_settings)
-        
         self.ui.btn_send_to_viz2.clicked.connect(self.send_df_to_viz)
-
+        
         # BASELINE
         self.ui.cb_attached.clicked.connect(self.refresh_gui)
         self.ui.noise.valueChanged.connect(self.refresh_gui)
@@ -570,7 +554,7 @@ class Maps(QObject):
         fit_params['fit_negative'] = self.ui.cb_fit_negative.isChecked()
         fit_params['max_ite'] = self.ui.max_iteration.value()
         fit_params['method'] = self.ui.cbb_fit_methods.currentText()
-        fit_params['ncpus'] = self.ui.cbb_cpu_number.currentText()
+        fit_params['ncpus'] = self.ui.ncpus.value()
         fit_params['xtol'] = float(self.ui.xtol.text())
         sel_spectrum.fit_params = fit_params
 
@@ -1440,50 +1424,7 @@ class Maps(QObject):
             show_alert("No spectrum is loaded; FITSPY cannot open")
             return
 
-    def save_settings(self):
-        """
-        Save all settings to persistent storage (QSettings).
-        """        
-        gui_states = {
-            'fit_negative': self.ui.cb_fit_negative.isChecked(),
-            'max_ite': self.ui.max_iteration.value(),
-            'method': self.ui.cbb_fit_methods.currentText(),
-            'ncpus': self.ui.cbb_cpu_number.currentText(),
-            'xtol': float(self.ui.xtol.text()),
-            'attached': self.ui.cb_attached.isChecked()
-        }
-        # Save the gui states to QSettings
-        print("settings are saved")
-        for key, value in gui_states.items():
-            self.settings.setValue(key, value)
-
-    def load_settings(self):
-        """
-        Load last used fitting settings from persistent storage (QSettings).
-        """
-        gui_states = {
-            'fit_negative': self.settings.value('fit_negative',
-                                                defaultValue=False, type=bool),
-            'max_ite': self.settings.value('max_ite', defaultValue=500,
-                                           type=int),
-            'method': self.settings.value('method', defaultValue='leastsq',
-                                          type=str),
-            'ncpus': self.settings.value('ncpus', defaultValue='auto',
-                                         type=str),
-            'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float), 
-            'attached': self.settings.value('attached',
-                                                defaultValue=True, type=bool)
-        }
-        
-
-        # Update GUI elements with the loaded values
-        self.ui.cb_fit_negative.setChecked(gui_states['fit_negative'])
-        self.ui.max_iteration.setValue(gui_states['max_ite'])
-        self.ui.cbb_fit_methods.setCurrentText(gui_states['method'])
-        self.ui.cbb_cpu_number.setCurrentText(gui_states['ncpus'])
-        self.ui.xtol.setText(str(gui_states['xtol']))
     
-        self.ui.cb_attached.setChecked(gui_states['attached'])
 
     def set_x_range_handler(self):
         """

@@ -838,7 +838,7 @@
                                </widget>
                               </item>
                               <item>
-                               <widget class="QCheckBox" name="cb_attached_3">
+                               <widget class="QCheckBox" name="cb_attached_2">
                                 <property name="sizePolicy">
                                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                                   <horstretch>0</horstretch>
@@ -1929,20 +1929,6 @@
                    </item>
                    <item>
                     <widget class="QComboBox" name="cbb_fit_methods_2"/>
-                   </item>
-                  </layout>
-                 </item>
-                 <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_86">
-                   <item>
-                    <widget class="QLabel" name="label_77">
-                     <property name="text">
-                      <string>Number of CPUs</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QComboBox" name="cbb_cpu_number_2"/>
                    </item>
                   </layout>
                  </item>
@@ -4378,20 +4364,6 @@
                    </item>
                    <item>
                     <widget class="QComboBox" name="cbb_fit_methods"/>
-                   </item>
-                  </layout>
-                 </item>
-                 <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_67">
-                   <item>
-                    <widget class="QLabel" name="label_26">
-                     <property name="text">
-                      <string>Number of CPUs</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QComboBox" name="cbb_cpu_number"/>
                    </item>
                   </layout>
                  </item>

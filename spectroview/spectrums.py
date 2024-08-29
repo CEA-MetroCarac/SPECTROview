@@ -8,7 +8,7 @@ import json
 
 from common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum
 from common import FitThread, FitModelManager, ShowParameters, DataframeTable
-from common import PLOT_POLICY, NCPUS, FIT_METHODS
+from common import PLOT_POLICY, FIT_METHODS
 
 from lmfit import fit_report
 from fitspy.spectra import Spectra
@@ -67,7 +67,7 @@ class Spectrums(QObject):
         self.ui.cb_residual_3.stateChanged.connect(self.refresh_gui)
         self.ui.cb_filled_3.stateChanged.connect(self.refresh_gui)
         self.ui.cb_peaks_3.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_attached_3.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_attached_2.stateChanged.connect(self.refresh_gui)
         self.ui.cb_normalize_3.stateChanged.connect(self.refresh_gui)
         self.ui.cb_limits_2.stateChanged.connect(self.refresh_gui)
         self.ui.cb_expr_2.stateChanged.connect(self.refresh_gui)
@@ -82,24 +82,13 @@ class Spectrums(QObject):
         self.zoom_pan_active = False
 
         self.ui.cbb_fit_methods_2.addItems(FIT_METHODS)
-        self.ui.cbb_cpu_number_2.addItems(NCPUS)
-
-        # FIT SETTINGS
-        self.load_fit_settings()
-        self.ui.cb_fit_negative_2.stateChanged.connect(self.save_fit_settings)
-        self.ui.max_iteration_2.valueChanged.connect(self.save_fit_settings)
-        self.ui.cbb_fit_methods_2.currentIndexChanged.connect(
-            self.save_fit_settings)
-        self.ui.cbb_cpu_number_2.currentIndexChanged.connect(
-            self.save_fit_settings)
-        self.ui.xtol_2.textChanged.connect(self.save_fit_settings)
         self.ui.sb_dpi_spectra_2.valueChanged.connect(
             self.create_spectra_plot_widget)
         
         self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
 
         # BASELINE
-        self.ui.cb_attached_3.clicked.connect(self.upd_spectra_list)
+        self.ui.cb_attached_2.clicked.connect(self.upd_spectra_list)
         self.ui.noise_2.valueChanged.connect(self.upd_spectra_list)
         self.ui.rbtn_linear_2.clicked.connect(self.upd_spectra_list)
         self.ui.rbtn_polynomial_2.clicked.connect(self.upd_spectra_list)
@@ -594,7 +583,7 @@ class Spectrums(QObject):
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         if sel_spectrum is None:
             return
-        sel_spectrum.baseline.attached = self.ui.cb_attached_3.isChecked()
+        sel_spectrum.baseline.attached = self.ui.cb_attached_2.isChecked()
         sel_spectrum.baseline.sigma = self.ui.noise_2.value()
         if self.ui.rbtn_linear_2.isChecked():
             sel_spectrum.baseline.mode = "Linear"
@@ -687,7 +676,7 @@ class Spectrums(QObject):
         fit_params['fit_negative'] = self.ui.cb_fit_negative_2.isChecked()
         fit_params['max_ite'] = self.ui.max_iteration_2.value()
         fit_params['method'] = self.ui.cbb_fit_methods_2.currentText()
-        fit_params['ncpus'] = self.ui.cbb_cpu_number_2.currentText()
+        fit_params['ncpus'] = self.ui.ncpus.value()
         fit_params['xtol'] = float(self.ui.xtol_2.text())
         sel_spectrum.fit_params = fit_params
 
@@ -1036,41 +1025,6 @@ class Spectrums(QObject):
         """To copy figure canvas to clipboard"""
         self.common.copy_fig_to_clb(canvas=self.canvas1)
 
-    def load_fit_settings(self):
-        """Reload last used fitting settings from QSettings"""
-        fit_params = {
-            'fit_negative': self.settings.value('fit_negative',
-                                                defaultValue=False, type=bool),
-            'max_ite': self.settings.value('max_ite', defaultValue=500,
-                                           type=int),
-            'method': self.settings.value('method', defaultValue='leastsq',
-                                          type=str),
-            'ncpus': self.settings.value('ncpus', defaultValue='auto',
-                                         type=str),
-            'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float)
-        }
-
-        # Update GUI elements with the loaded values
-        self.ui.cb_fit_negative_2.setChecked(fit_params['fit_negative'])
-        self.ui.max_iteration_2.setValue(fit_params['max_ite'])
-        self.ui.cbb_fit_methods_2.setCurrentText(fit_params['method'])
-        self.ui.cbb_cpu_number_2.setCurrentText(fit_params['ncpus'])
-        self.ui.xtol_2.setText(str(fit_params['xtol']))
-
-    def save_fit_settings(self):
-        """Save all fitting settings to QSettings when interface element's
-        states changed"""
-        fit_params = {
-            'fit_negative': self.ui.cb_fit_negative_2.isChecked(),
-            'max_ite': self.ui.max_iteration_2.value(),
-            'method': self.ui.cbb_fit_methods_2.currentText(),
-            'ncpus': self.ui.cbb_cpu_number_2.currentText(),
-            'xtol': float(self.ui.xtol_2.text())
-        }
-        print("settings are saved")
-        # Save the fit_params to QSettings
-        for key, value in fit_params.items():
-            self.settings.setValue(key, value)
 
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""

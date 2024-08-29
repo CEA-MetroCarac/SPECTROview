@@ -77,6 +77,32 @@ class Main:
         self.ui.cbb_xaxis_unit.setCurrentIndex(0)
         self.ui.cbb_xaxis_unit2.addItems(X_AXIS)
         self.ui.cbb_xaxis_unit2.setCurrentIndex(0)
+        
+        # Save GUI states to settings
+        ## Maps module:
+        self.load_settings()
+        self.ui.cb_fit_negative.stateChanged.connect(self.save_settings)
+        self.ui.max_iteration.valueChanged.connect(self.save_settings)
+        self.ui.cbb_fit_methods.currentIndexChanged.connect(
+            self.save_settings)
+        self.ui.xtol.textChanged.connect(self.save_settings)
+        self.ui.cb_attached.stateChanged.connect(self.save_settings)
+        
+        self.ui.noise.valueChanged.connect(self.save_settings)
+        self.ui.rbtn_linear.toggled.connect(self.save_settings)
+        self.ui.degre.valueChanged.connect(self.save_settings)
+        
+        ## Spectra module:
+        self.ui.cb_fit_negative_2.stateChanged.connect(self.save_settings)
+        self.ui.max_iteration_2.valueChanged.connect(self.save_settings)
+        self.ui.cbb_fit_methods_2.currentIndexChanged.connect(
+            self.save_settings)
+        self.ui.xtol_2.textChanged.connect(self.save_settings)
+        self.ui.cb_attached_2.stateChanged.connect(self.save_settings)
+        
+        ## Visualization module:
+        
+
 
         ########################################################
         ############## GUI for Maps Processing tab #############
@@ -304,7 +330,72 @@ class Main:
     def show_about(self):
         """Show about dialog """
         self.common.view_markdown(self.ui, "About", ABOUT, 500, 350, "resources/")
+        
+    def save_settings(self):
+        """
+        Save all settings to persistent storage (QSettings).
+        """        
+        gui_states = {
+            # Maps module
+            'fit_negative': self.ui.cb_fit_negative.isChecked(),
+            'max_ite': self.ui.max_iteration.value(),
+            'method': self.ui.cbb_fit_methods.currentText(),
+            'xtol': float(self.ui.xtol.text()),
+            'attached': self.ui.cb_attached.isChecked(),
+            
+            # Spectra module
+            'fit_negative2': self.ui.cb_fit_negative_2.isChecked(),
+            'max_ite2': self.ui.max_iteration_2.value(),
+            'method2': self.ui.cbb_fit_methods_2.currentText(),
+            'xtol2': float(self.ui.xtol_2.text()),
+            'attached2': self.ui.cb_attached_2.isChecked()
+        }
+        # Save the gui states to QSettings
+        for key, value in gui_states.items():
+            self.settings.setValue(key, value)
 
+    def load_settings(self):
+        """
+        Load last used fitting settings from persistent storage (QSettings).
+        """
+        gui_states = {
+            # Maps module
+            'fit_negative': self.settings.value('fit_negative',
+                                                defaultValue=False, type=bool),
+            'max_ite': self.settings.value('max_ite', defaultValue=500,
+                                           type=int),
+            'method': self.settings.value('method', defaultValue='leastsq',
+                                          type=str),
+            'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float), 
+            'attached': self.settings.value('attached',
+                                                defaultValue=True, type=bool),
+            
+            # Spectra module
+            'fit_negative2': self.settings.value('fit_negative',
+                                                defaultValue=False, type=bool),
+            'max_ite2': self.settings.value('max_ite', defaultValue=500,
+                                           type=int),
+            'method2': self.settings.value('method', defaultValue='leastsq',
+                                          type=str),
+            'xtol2': self.settings.value('xtol', defaultValue=1.e-4, type=float),
+            'attached2': self.settings.value('attached2',
+                                                defaultValue=True, type=bool),
+        }
+        
+
+        # Update GUI elements with the loaded values
+        self.ui.cb_fit_negative.setChecked(gui_states['fit_negative'])
+        self.ui.max_iteration.setValue(gui_states['max_ite'])
+        self.ui.cbb_fit_methods.setCurrentText(gui_states['method'])
+        self.ui.xtol.setText(str(gui_states['xtol']))
+        self.ui.cb_attached.setChecked(gui_states['attached'])
+        
+        self.ui.cb_fit_negative_2.setChecked(gui_states['fit_negative2'])
+        self.ui.max_iteration_2.setValue(gui_states['max_ite2'])
+        self.ui.cbb_fit_methods_2.setCurrentText(gui_states['method2'])
+        self.ui.xtol_2.setText(str(gui_states['xtol2']))
+        self.ui.cb_attached_2.setChecked(gui_states['attached'])
+        
 expiration_date = datetime.datetime(2024, 12, 31)
 
 def launcher():

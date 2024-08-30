@@ -41,6 +41,13 @@ ___
 pip install spectroview
 ```
 
+## Installation from Github:
+
+```bash
+pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
+```
+
+
 ## To launch SPECTROview:
 ```bash
 spectroview

@@ -709,7 +709,7 @@ class Spectrums(QObject):
         self.start_time = time.time()
         self.progress_timer = QTimer(self)
         self.progress_timer.timeout.connect(self.update_progress_bar)
-        self.progress_timer.start(400)
+        self.progress_timer.start(100)
 
     def update_progress_bar(self):
         """Update fitting progress in GUI"""
@@ -775,7 +775,7 @@ class Spectrums(QObject):
         self.start_time = time.time()
         self.progress_timer = QTimer(self)
         self.progress_timer.timeout.connect(self.update_progress_bar)
-        self.progress_timer.start(400)
+        self.progress_timer.start(100)
 
     def paste_fit_model_all(self):
         """Apply the copied fit model to selected spectrum(s)"""

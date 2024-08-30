@@ -9,31 +9,18 @@
 
 ### SPECTROview : A Tool for Spectroscopic Data Processing and Visualization.
 
-
-
 Fitting features are powered by the [FITSPY](https://github.com/CEA-MetroCarac/fitspy) and [LMFIT](https://lmfit.github.io/lmfit-py/) open-source packages.
 ___
 
-## Main features:
+## Features:
 
-- **Optimal GUI for easy and rapid inspection and comparison of spectra.**
-
-<p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/1.%20Loading%20files%20and%20navigation.gif">
-</p>
-
-- **Fit Multiple Spectra or Wafer Spectroscopic Data...**
-
--- with pre-defined model:
+- **Cross-platform compatibility (Windows, macOS, Linux).**
+- **Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps).**
+- **Optimized user inferface for easy and quick inspection and comparison of spectra.**
+- **Ability to fit multiple spectra or wafer spectroscopic data using predefined models or by creating custom fit models.**
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/3.%20fit_with_predefined_model.gif">
-</p>
-
--- or by building a new fit model:
-
-<p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/2.%20build_fit_model.gif">
 </p>
 
 - **Collect All Best Fit Results at a Glance**.
@@ -42,17 +29,29 @@ ___
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/5.collecting-fit-results.gif">
 </p>
 
-- **Effortless, Easy, and Rapid Visualization of Spectroscopic Data**.
-
+- **Dedicated module for effortless, fast, and easy data visualization.**
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/6.%20plotting.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/Visu_tab.png">
 </p>
 
-- **Dedicated Module for Data Visualization**
 
-<p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/7.%20Visualisation%20TAB.gif">
-</p>
+# Installation
+
+## From PyPI
+```bash
+pip install spectroview
+```
+
+## From Github
+```bash
+pip install git@github.com:CEA-MetroCarac/SPECTROview.git
+```
+
+## To launch SPECTROview application
+```bash
+spectroview
+```
+
 
 ---
 

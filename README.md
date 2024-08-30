@@ -35,19 +35,18 @@ ___
 </p>
 
 
-# Installation
+## Installation from PyPI
 
-## From PyPI
 ```bash
 pip install spectroview
 ```
 
-## From Github
+## Installation from Github
 ```bash
 pip install git@github.com:CEA-MetroCarac/SPECTROview.git
 ```
 
-## To launch SPECTROview application
+## To launch SPECTROview
 ```bash
 spectroview
 ```

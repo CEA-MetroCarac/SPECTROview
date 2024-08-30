@@ -51,6 +51,9 @@ pip install git@github.com:CEA-MetroCarac/SPECTROview.git
 spectroview
 ```
 
+## Acknowledgements
+
+This work carried out on the CEA - Platform for Nanocharacterisation (PFNC) and was supported by the “Recherche Technologique de Base” program of the French National Research Agency (ANR).
 
 ---
 

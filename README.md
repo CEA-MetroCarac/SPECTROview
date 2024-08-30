@@ -23,7 +23,7 @@ ___
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/3.%20fit_with_predefined_model.gif">
 </p>
 
-- **Collect All Best Fit Results at a Glance**.
+- **Collect all best-fit results with one click**.
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/5.collecting-fit-results.gif">
@@ -41,11 +41,6 @@ ___
 pip install spectroview
 ```
 
-## Installation from Github
-```bash
-pip install git@github.com:CEA-MetroCarac/SPECTROview.git
-```
-
 ## To launch SPECTROview
 ```bash
 spectroview
@@ -53,8 +48,7 @@ spectroview
 
 ## Acknowledgements
 
-This work carried out on the CEA - Platform for Nanocharacterisation (PFNC) and was supported by the “Recherche Technologique de Base” program of the French National Research Agency (ANR).
+This work, carried out on the CEA - Platform for Nanocharacterisation (PFNC) was supported by the “Recherche Technologique de Base” program of the French National Research Agency (ANR).
 
 ---
-
 For any feedback, contact: [van-hoan.le@cea.fr](mailto:van-hoan.le@cea.fr)

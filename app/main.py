@@ -79,6 +79,7 @@ class Main:
         self.ui.cbb_xaxis_unit2.setCurrentIndex(0)
         
         # Save GUI states to settings
+        self.ui.ncpus.valueChanged.connect(self.save_settings)
         ## Maps module:
         self.load_settings()
         self.ui.cb_fit_negative.stateChanged.connect(self.save_settings)
@@ -332,16 +333,17 @@ class Main:
         Save all settings to persistent storage (QSettings).
         """        
         gui_states = {
+            'ncpu': self.ui.ncpus.text(),
             # Maps module
             'fit_negative': self.ui.cb_fit_negative.isChecked(),
-            'max_ite': self.ui.max_iteration.value(),
+            'max_ite': self.ui.max_iteration.text(),
             'method': self.ui.cbb_fit_methods.currentText(),
             'xtol': float(self.ui.xtol.text()),
             'attached': self.ui.cb_attached.isChecked(),
             
             # Spectra module
             'fit_negative2': self.ui.cb_fit_negative_2.isChecked(),
-            'max_ite2': self.ui.max_iteration_2.value(),
+            'max_ite2': self.ui.max_iteration_2.text(),
             'method2': self.ui.cbb_fit_methods_2.currentText(),
             'xtol2': float(self.ui.xtol_2.text()),
             'attached2': self.ui.cb_attached_2.isChecked()
@@ -355,6 +357,8 @@ class Main:
         Load last used fitting settings from persistent storage (QSettings).
         """
         gui_states = {
+            'ncpu': self.settings.value('ncpu', defaultValue=1,
+                                           type=int),
             # Maps module
             'fit_negative': self.settings.value('fit_negative',
                                                 defaultValue=False, type=bool),
@@ -377,9 +381,9 @@ class Main:
             'attached2': self.settings.value('attached2',
                                                 defaultValue=True, type=bool),
         }
-        
 
         # Update GUI elements with the loaded values
+        self.ui.ncpus.setValue(gui_states['ncpu'])
         self.ui.cb_fit_negative.setChecked(gui_states['fit_negative'])
         self.ui.max_iteration.setValue(gui_states['max_ite'])
         self.ui.cbb_fit_methods.setCurrentText(gui_states['method'])

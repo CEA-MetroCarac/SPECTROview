@@ -15,9 +15,9 @@ ___
 ## Features:
 
 - **Cross-platform compatibility (Windows, macOS, Linux).**
-- **Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps).**
 - **Optimized user inferface for easy and quick inspection and comparison of spectra.**
-- **Ability to fit multiple spectra or wafer spectroscopic data using predefined models or by creating custom fit models.**
+- **Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps).**
+- **Ability to fit multiple spectra or 2Dmaps using predefined models or by creating custom fit models.**
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/3.%20fit_with_predefined_model.gif">

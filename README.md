@@ -35,13 +35,13 @@ ___
 </p>
 
 
-## Installation from PyPI
+## Installation from PyPI:
 
 ```bash
 pip install spectroview
 ```
 
-## To launch SPECTROview
+## To launch SPECTROview:
 ```bash
 spectroview
 ```

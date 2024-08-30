@@ -1,6 +1,6 @@
-[![PyPI version](https://badge.fury.io/py/spectroview.svg)](https://badge.fury.io/py/spectroview)
-[![Downloads](https://img.shields.io/pypi/dm/spectroview.svg)](https://pypi.org/project/spectroview/)
+[![PyPI version](https://badge.fury.io/py/spectroview.svg?cache=no)](https://badge.fury.io/py/spectroview)
 [![Github](https://img.shields.io/badge/GitHub-GPL--3.0-informational)](https://github.com/CEA-MetroCarac/spectroview)
+[![Downloads](https://img.shields.io/pypi/dm/spectroview.svg)](https://pypi.org/project/spectroview/)
 
 
 <p align="center">

@@ -4,8 +4,12 @@
 
 # Set color cycle: red, blue, green, violet, gray, yellow,  
 #axes.prop_cycle : cycler('color', ['FF0000', '00FF00', '0000FF', 'FFFF00', 'FFA500', '00FFFF', 'FF00FF', 'b3d4ff', 'FFC0CB'])
-axes.prop_cycle : cycler('color',['blue', 'red', 'green', 'orange', 'purple', 'cyan', 'magenta', 'lime', 'pink', 'brown', 'gold', 'teal', 'navy', 'silver', 'indigo', 'violet', 'olive', 'maroon', 'skyblue'])
-
+#axes.prop_cycle : cycler('color',['blue', 'red', 'green', 'orange', 'purple', 'cyan', 'magenta', 'lime', 'pink', 'brown', 'gold', 'teal', 'navy', 'silver', 'indigo', 'violet', 'olive', 'maroon', 'skyblue'])
+axes.prop_cycle : ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+                  '#8c564b', '#e377c2',
+                  '#7f7f7f', '#bcbd22', '#17becf', '#ffd500', '#008281',
+                  '#000086', '#c0c0c0',
+                  '#808000', '#8d0000', '#6fd0ef']
 xtick.major.size : 5
 xtick.major.width : 0.8
 xtick.minor.size : 2
@@ -50,8 +54,8 @@ legend.fancybox      : False   # True =rounded box, False=square.
 # Fontsizes
 xtick.labelsize : 12
 ytick.labelsize : 12
-axes.titlesize : 14
-axes.labelsize : 14
+axes.titlesize : 12
+axes.labelsize : 12
 
 figure.dpi       : 100      # figure dots per inch
 

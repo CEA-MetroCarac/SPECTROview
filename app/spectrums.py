@@ -49,12 +49,9 @@ class Spectrums(QObject):
 
         # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget()
-        # Add the toolbar and canvas to the layouts in your UI
-        self.ui.toolbar_layout.addWidget(self.spectra_widget.view_options_button) 
-        self.ui.toolbar_layout.addWidget(self.spectra_widget.toolbar)
-        self.ui.toolbar_layout.addWidget(self.spectra_widget.rdbtn_baseline)
-        self.ui.toolbar_layout.addWidget(self.spectra_widget.rdbtn_peak)
+        # Add canvas and toolbar to the layouts
         self.ui.fig_canvas_layout.addWidget(self.spectra_widget.canvas)
+        self.ui.toolbar_layout.addWidget(self.spectra_widget.control_widget) 
         
         self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
 
@@ -201,7 +198,6 @@ class Spectrums(QObject):
 
     def upd_spectra_list(self):
         """Show spectrums in a listbox"""
-
         # Store the checked state of each item
         checked_states = {}
         for index in range(self.ui.spectrums_listbox.count()):
@@ -821,13 +817,8 @@ class Spectrums(QObject):
             spectrum for spectrum in self.spectrums if
             spectrum.fname not in fnames)
         self.upd_spectra_list()
-        self.ax.clear()
-        self.canvas.draw()
-
-    def copy_fig(self):
-        """To copy figure canvas to clipboard"""
-        self.common.copy_fig_to_clb(canvas=self.canvas)
-
+        self.spectra_widget.ax.clear()
+        self.spectra_widget.canvas.draw()
 
     def fitspy_launcher(self):
         """To Open FITSPY with selected spectra"""

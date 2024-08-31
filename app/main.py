@@ -199,8 +199,6 @@ class Main:
         self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
         self.ui.btn_add_col.clicked.connect(self.spectrums.add_column)
 
-        self.ui.btn_copy_fig_3.clicked.connect(self.spectrums.copy_fig)
-
         self.ui.btn_default_folder_model_3.clicked.connect(
             self.spectrums.set_default_model_folder)
 

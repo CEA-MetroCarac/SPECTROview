@@ -56,9 +56,9 @@ PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
 PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
 
-DEFAULT_COLORS = ['#0000ff', '#ff0000', '#008200', '#ffa000', '#8d0085',
-                  '#00ffff', '#ff00ff',
-                  '#00ff00', '#ffbdcb', '#b41722', '#ffd500', '#008281',
+DEFAULT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+                  '#8c564b', '#e377c2',
+                  '#7f7f7f', '#bcbd22', '#17becf', '#ffd500', '#008281',
                   '#000086', '#c0c0c0',
                   '#808000', '#8d0000', '#6fd0ef']
 MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>']
@@ -89,7 +89,6 @@ class SpectraViewWidget(QWidget):
     def initUI(self):
         """Initialize the UI components."""
         self.create_plot_widget()
-        self.setup_view_options()
 
     def create_plot_widget(self):
         """Create or update canvas and toolbar for plotting in the GUI."""
@@ -118,28 +117,67 @@ class SpectraViewWidget(QWidget):
             self.rdbtn_baseline = QRadioButton("Baseline", self)
             self.rdbtn_peak = QRadioButton("Peak", self)
             self.rdbtn_baseline.setChecked(True) 
+            self.R2 = QLabel("R2=0", self)
 
-            # Add toolbar and radio buttons to the layout
-            layout = QHBoxLayout()
-            layout.addWidget(self.toolbar)
-            layout.addWidget(self.rdbtn_peak)
-            layout.addWidget(self.rdbtn_baseline)
+            # Create a QPushButton for Copy figure canvans
+            self.btn_copy = QPushButton("", self)
+            icon = QIcon()
+            icon.addFile(u":/icon/iconpack/copy.png", QSize(), QIcon.Normal, QIcon.Off)
+            self.btn_copy.setIcon(icon)
+            self.btn_copy.setIconSize(QSize(24, 24))
+            self.btn_copy.clicked.connect(self.copy_fig)
 
-            # Create a container widget and set the layout
-            container_widget = QWidget()
-            container_widget.setLayout(layout)
+            self.create_view_options()
 
-            # Add the container widget to the main widget layout
-            main_layout = QVBoxLayout(self)
-            main_layout.addWidget(container_widget)
-            main_layout.addWidget(self.canvas)
-            self.setLayout(main_layout)
+            #Add all items in a same layout
+            self.control_widget = QWidget(self)
+            self.control_layout = QHBoxLayout(self.control_widget)
+            
+            # Add widgets to the horizontal layout
+            self.control_layout.addWidget(self.view_options_button)
+            self.control_layout.addWidget(self.toolbar)
+            self.control_layout.addWidget(self.rdbtn_baseline)
+            self.control_layout.addWidget(self.rdbtn_peak)
+            self.control_layout.addWidget(self.R2)
+            self.control_layout.addWidget(self.btn_copy)
+
+            # Set the layout of control_widget
+            self.control_widget.setLayout(self.control_layout)
 
         self.update_plot_styles()
 
+    def create_view_options(self):
+        """Create widget containing all view options."""
+        self.view_options_button = QToolButton()
+        self.view_options_button.setText("View Options")
+        self.view_options_button.setPopupMode(QToolButton.MenuButtonPopup)
+
+        self.view_options_menu = QMenu(self.view_options_button)
+
+        view_options = [
+            ("Legends", "Legends"),
+            ("Colors", "Colors", True),
+            ("Peaks", "Show Peaks"),
+            ("Filled", "Filled", True),
+            ("Bestfit", "Best Fit", True),
+            ("Raw", "Raw data"),
+            ("Residual", "Residual"),
+            ("Normalized", "Normalized"),
+        ]
+
+        for option_name, option_label, *checked in view_options:
+            action = QAction(option_label, self)
+            action.setCheckable(True)
+            action.setChecked(checked[0] if checked else False)
+            action.triggered.connect(self.refresh_plot)
+            self.view_options[option_name] = action
+            self.view_options_menu.addAction(action)
+
+        self.view_options_button.setMenu(self.view_options_menu)
+
     def update_plot_styles(self):
         """Apply styles and settings to the plot."""
-        self.ax.set_xlabel("X-Axis Label")  # Default label
+        self.ax.set_xlabel("Wavenumber (cm-1)")  # Default label
         self.ax.set_ylabel("Intensity (a.u)")
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
 
@@ -180,40 +218,18 @@ class SpectraViewWidget(QWidget):
                         sel_spectrum.baseline.add_point(x_click, y_click)
         self.refresh_plot()  
 
-    def setup_view_options(self):
-        """Create widget containing all view options."""
-        self.view_options_button = QToolButton()
-        self.view_options_button.setText("View Options")
-        self.view_options_button.setPopupMode(QToolButton.MenuButtonPopup)
-
-        self.view_options_menu = QMenu(self.view_options_button)
-
-        view_options = [
-            ("Legends", "Legends"),
-            ("Colors", "Colors", True),
-            ("Peaks", "Show Peaks"),
-            ("Filled", "Filled", True),
-            ("Bestfit", "Best Fit", True),
-            ("Raw", "Raw data"),
-            ("Residual", "Residual"),
-            ("Normalized", "Normalized"),
-        ]
-
-        for option_name, option_label, *checked in view_options:
-            action = QAction(option_label, self)
-            action.setCheckable(True)
-            action.setChecked(checked[0] if checked else False)
-            action.triggered.connect(self.refresh_plot)
-            self.view_options[option_name] = action
-            self.view_options_menu.addAction(action)
-
-        self.view_options_button.setMenu(self.view_options_menu)
-
     def plot(self, sel_spectrums):
         """Plot spectra or fit results in the figure canvas."""
-        if sel_spectrums:
-            self.sel_spectrums = sel_spectrums
-        
+        if not sel_spectrums:
+            # Clear the plot if no spectra are selected
+            self.ax.clear()
+            self.ax.set_title("No Data Available")
+            self.ax.set_xlabel("X-axis")
+            self.ax.set_ylabel("Y-axis")
+            self.canvas.draw_idle()  # Refresh the canvas
+            return
+        self.sel_spectrums = sel_spectrums
+
         self.prepare_plot()
 
         for spectrum in self.sel_spectrums:
@@ -248,6 +264,11 @@ class SpectraViewWidget(QWidget):
 
         if self.view_options['Residual'].isChecked() and hasattr(spectrum.result_fit, 'residual'):
             self.plot_residual(spectrum)
+        
+        if hasattr(spectrum.result_fit, 'rsquared'):
+            self.show_R2(spectrum)
+        else:
+            self.show_R2(None)
 
         # Reset color cycle if Colors option is not checked
         if not self.view_options['Colors'].isChecked():
@@ -322,6 +343,14 @@ class SpectraViewWidget(QWidget):
         residual = spectrum.result_fit.residual
         self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
 
+    def show_R2(self, spectrum):
+        """Display R² value in the GUI."""
+        if spectrum is not None and hasattr(spectrum.result_fit, 'rsquared'):
+            rsquared = round(spectrum.result_fit.rsquared, 4)
+            self.R2.setText(f"R²={rsquared}")
+        else:
+            self.R2.setText("R²=0")
+
     def finalize_plot(self):
         """Finalize plot settings and draw the canvas."""
         self.ax.set_xlabel("Wavenumber (cm-1)")
@@ -329,6 +358,7 @@ class SpectraViewWidget(QWidget):
 
         if self.view_options['Legends'].isChecked():
             self.ax.legend(loc='upper right')
+        
 
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.figure.tight_layout()
@@ -338,6 +368,21 @@ class SpectraViewWidget(QWidget):
         """Refresh the plot based on user view options."""
         self.plot(self.sel_spectrums )  
     
+    
+    def copy_fig(self):
+        """To copy figure canvas to clipboard"""
+        if self.canvas:
+            figure = self.canvas.figure
+            with BytesIO() as buf:
+                figure.savefig(buf, format='png', dpi=400)
+                data = buf.getvalue()
+            format_id = win32clipboard.RegisterClipboardFormat('PNG')
+            win32clipboard.OpenClipboard()
+            win32clipboard.EmptyClipboard()
+            win32clipboard.SetClipboardData(format_id, data)
+            win32clipboard.CloseClipboard()
+        else:
+            QMessageBox.critical(None, "Error", "No plot to copy.")
     
 class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.

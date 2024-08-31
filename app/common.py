@@ -118,7 +118,7 @@ class SpectraViewWidget(QWidget):
             self.rdbtn_baseline = QRadioButton("Baseline", self)
             self.rdbtn_peak = QRadioButton("Peak", self)
             self.rdbtn_baseline.setChecked(True) 
-            
+
             # Add toolbar and radio buttons to the layout
             layout = QHBoxLayout()
             layout.addWidget(self.toolbar)
@@ -154,6 +154,32 @@ class SpectraViewWidget(QWidget):
         self.ax.autoscale()
         self.canvas.draw()
 
+    def on_click(self, event):
+        """
+        Handle click events on spectra plot canvas for adding peak models or baseline points.
+        """
+        if event.inaxes != self.ax: # Ignore clicks outside the plot area
+            return
+
+        x_click = event.xdata
+        y_click = event.ydata
+
+        if self.sel_spectrums:
+            sel_spectrum = self.sel_spectrums[0]
+            if self.zoom_pan_active:
+                # Do nothing if zoom or pan is active
+                return
+            if self.rdbtn_peak.isChecked():
+                if event.button == 1:  # Left mouse button
+                    sel_spectrum.add_peak_model('Gaussian', x_click)
+            elif self.rdbtn_baseline.isChecked():
+                if event.button == 1: 
+                    if sel_spectrum.baseline.is_subtracted:
+                        show_alert("Already subtracted before. Reinitialize spectrum to perform new baseline")
+                    else:
+                        sel_spectrum.baseline.add_point(x_click, y_click)
+        self.refresh_plot()  
+
     def setup_view_options(self):
         """Create widget containing all view options."""
         self.view_options_button = QToolButton()
@@ -184,75 +210,120 @@ class SpectraViewWidget(QWidget):
         self.view_options_button.setMenu(self.view_options_menu)
 
     def plot(self, sel_spectrums):
-        """Plot spectra or fit results in figure canvas."""
+        """Plot spectra or fit results in the figure canvas."""
         if sel_spectrums:
             self.sel_spectrums = sel_spectrums
-
         
+        self.prepare_plot()
+
+        for spectrum in self.sel_spectrums:
+            self.plot_spectrum(spectrum)
+
+        self.finalize_plot()
+
+    def prepare_plot(self):
+        """Prepare the plot area before plotting spectra."""
+        # Save current xlim and ylim to maintain zoom/pan state
         xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
         self.ax.clear() 
+
+        # Restore xlim and ylim if they were changed
         if not xlim == ylim == (0.0, 1.0):
             self.ax.set_xlim(xlim)
             self.ax.set_ylim(ylim)
 
-        for spectrum in self.sel_spectrums :
-            fname = spectrum.fname
-            x_values = spectrum.x
-            y_values = spectrum.y
+    def plot_spectrum(self, spectrum):
+        """Plot a single spectrum on the canvas."""
+        x_values = spectrum.x
+        y_values = self.get_y_values(spectrum)
 
-            if self.view_options['Normalized'].isChecked():
-                max_intensity = max(spectrum.y)
-                y_values = y_values / max_intensity
+        self.ax.plot(x_values, y_values, label=f"{spectrum.fname}", ms=3, lw=2)
+        plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
 
-            self.ax.plot(x_values, y_values, label=f"{fname}", ms=3, lw=2)
-            plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
+        if self.view_options['Raw'].isChecked():
+            self.plot_raw_data(spectrum)
 
-            if self.view_options['Raw'].isChecked():
-                x0_values = spectrum.x0
-                y0_values = spectrum.y0
-                self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3, lw=1)
+        if self.view_options['Bestfit'].isChecked():
+            self.plot_peaks_and_bestfit(spectrum)
 
-            y_bkg = np.zeros_like(x_values)
-            if spectrum.bkg_model is not None:
-                y_bkg = spectrum.bkg_model.eval(
-                    spectrum.bkg_model.make_params(), x=x_values)
+        if self.view_options['Residual'].isChecked() and hasattr(spectrum.result_fit, 'residual'):
+            self.plot_residual(spectrum)
 
-            y_peaks = np.zeros_like(x_values)
-            if self.view_options['Bestfit'].isChecked():
-                peak_labels = spectrum.peak_labels
-                for i, peak_model in enumerate(spectrum.peak_models):
-                    peak_label = peak_labels[i]
-                    param_hints_orig = deepcopy(peak_model.param_hints)
-                    for key in peak_model.param_hints.keys():
-                        peak_model.param_hints[key]['expr'] = ''
-                    params = peak_model.make_params()
-                    peak_model.param_hints = param_hints_orig
-                    y_peak = peak_model.eval(params, x=x_values)
-                    y_peaks += y_peak
-                    if self.view_options['Filled'].isChecked():
-                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.5, label=f"{peak_label}")
-                        if self.view_options['Peaks'].isChecked():
-                            position = peak_model.param_hints['x0']['value']
-                            intensity = peak_model.param_hints['ampli']['value']
-                            position = round(position, 2)
-                            text = f"{peak_label}\n({position})"
-                            self.ax.text(position, intensity, text,
-                                         ha='center', va='bottom',
-                                         color='black', fontsize=12)
-                    else:
-                        self.ax.plot(x_values, y_peak, '--', label=f"{peak_label}")
+        # Reset color cycle if Colors option is not checked
+        if not self.view_options['Colors'].isChecked():
+            self.ax.set_prop_cycle(None)
 
-                if hasattr(spectrum.result_fit, 'success'):
-                    y_fit = y_bkg + y_peaks
-                    self.ax.plot(x_values, y_fit, label=f"bestfit")
+    def get_y_values(self, spectrum):
+        """Get y-values for a spectrum, applying normalization if needed."""
+        y_values = spectrum.y
+        if self.view_options['Normalized'].isChecked():
+            max_intensity = max(spectrum.y)
+            y_values = y_values / max_intensity
+        return y_values
 
-            if hasattr(spectrum.result_fit, 'residual') and self.view_options['Residual'].isChecked():
-                residual = spectrum.result_fit.residual
-                self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
+    def plot_raw_data(self, spectrum):
+        """Plot raw data points if the option is checked."""
+        x0_values = spectrum.x0
+        y0_values = spectrum.y0
+        self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3, lw=1)
 
-            if not self.view_options['Colors'].isChecked():
-                self.ax.set_prop_cycle(None)
+    def plot_peaks_and_bestfit(self, spectrum):
+        """Plot peaks and best-fit line if the option is checked."""
+        x_values = spectrum.x
+        y_peaks = np.zeros_like(x_values)
+        y_bkg = self.get_background_y_values(spectrum)
 
+        peak_labels = spectrum.peak_labels
+        for i, peak_model in enumerate(spectrum.peak_models):
+            y_peak = self.evaluate_peak_model(peak_model, x_values)
+            y_peaks += y_peak
+            self.plot_peak(y_peak, x_values, peak_labels[i], peak_model)
+
+        if hasattr(spectrum.result_fit, 'success'):
+            y_fit = y_bkg + y_peaks
+            self.ax.plot(x_values, y_fit, label="bestfit")
+
+    def get_background_y_values(self, spectrum):
+        """Get y-values for the background model."""
+        x_values = spectrum.x
+        if spectrum.bkg_model is not None:
+            return spectrum.bkg_model.eval(spectrum.bkg_model.make_params(), x=x_values)
+        return np.zeros_like(x_values)
+
+    def evaluate_peak_model(self, peak_model, x_values):
+        """Evaluate the peak model to get y-values."""
+        param_hints_orig = deepcopy(peak_model.param_hints)
+        for key in peak_model.param_hints.keys():
+            peak_model.param_hints[key]['expr'] = ''
+        params = peak_model.make_params()
+        peak_model.param_hints = param_hints_orig
+        return peak_model.eval(params, x=x_values)
+
+    def plot_peak(self, y_peak, x_values, peak_label, peak_model):
+        """Plot individual peak with or without filling."""
+        if self.view_options['Filled'].isChecked():
+            self.ax.fill_between(x_values, 0, y_peak, alpha=0.5, label=f"{peak_label}")
+            if self.view_options['Peaks'].isChecked():
+                self.annotate_peak(peak_model, peak_label)
+        else:
+            self.ax.plot(x_values, y_peak, '--', label=f"{peak_label}")
+
+    def annotate_peak(self, peak_model, peak_label):
+        """Annotate peaks on the plot with labels."""
+        position = peak_model.param_hints['x0']['value']
+        intensity = peak_model.param_hints['ampli']['value']
+        position = round(position, 2)
+        text = f"{peak_label}\n({position})"
+        self.ax.text(position, intensity, text, ha='center', va='bottom', color='black', fontsize=12)
+
+    def plot_residual(self, spectrum):
+        """Plot the residuals if available."""
+        x_values = spectrum.x
+        residual = spectrum.result_fit.residual
+        self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
+
+    def finalize_plot(self):
+        """Finalize plot settings and draw the canvas."""
         self.ax.set_xlabel("Wavenumber (cm-1)")
         self.ax.set_ylabel("Intensity (a.u)")
 
@@ -266,48 +337,7 @@ class SpectraViewWidget(QWidget):
     def refresh_plot(self):
         """Refresh the plot based on user view options."""
         self.plot(self.sel_spectrums )  
-
-    def on_click(self, event):
-        """
-        Handle click events on spectra plot canvas for adding peak models or baseline points.
-        """
-        if event.inaxes != self.ax:
-            # Ignore clicks outside the plot area
-            return
-
-        x_click = event.xdata
-        y_click = event.ydata
-
-        # Log the click position
-        print(f"Clicked at x={x_click}, y={y_click}")
-
-        if self.sel_spectrums:
-            sel_spectrum = self.sel_spectrums[0]  # Example: Select the first spectrum
-
-            if self.zoom_pan_active:
-                # Do nothing if zoom or pan is active
-                return
-
-            # Check which radio button is selected and perform the corresponding action
-            if self.rdbtn_peak.isChecked():
-                # Adding a new peak model
-                if event.button == 1:  # Left mouse button
-                    print(f"Adding peak model at x={x_click}")
-                    sel_spectrum.add_peak_model('Gaussian', x_click)
-                    self.upd_spectra_list()
-            elif self.rdbtn_baseline.isChecked():
-                # Adding a new baseline point
-                if event.button == 1:  # Left mouse button
-                    print(f"Adding baseline point at x={x_click}, y={y_click}")
-                    if sel_spectrum.baseline.is_subtracted:
-                        show_alert("Already subtracted before. Reinitialize spectrum to perform new baseline")
-                    else:
-                        sel_spectrum.baseline.add_point(x_click, y_click)
-                        self.upd_spectra_list()
-
-        self.refresh_plot()  # Update the plot to reflect changes
-
-
+    
     
 class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.

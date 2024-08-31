@@ -50,6 +50,7 @@ class Spectrums(QObject):
         # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget()
         # Add the toolbar and canvas to the layouts in your UI
+        self.ui.toolbar_layout.addWidget(self.spectra_widget.view_options_button) 
         self.ui.toolbar_layout.addWidget(self.spectra_widget.toolbar)
         self.ui.toolbar_layout.addWidget(self.spectra_widget.rdbtn_baseline)
         self.ui.toolbar_layout.addWidget(self.spectra_widget.rdbtn_peak)
@@ -421,7 +422,7 @@ class Spectrums(QObject):
             spectrum.y = spectrum.y0[ind_min:ind_max + 1].copy()
             
         QTimer.singleShot(50, self.upd_spectra_list)
-        QTimer.singleShot(300, self.rescale)
+        QTimer.singleShot(300, self.spectra_widget.rescale)
 
     def set_x_range_all(self):
         """Set a new x range for all spectra"""
@@ -469,7 +470,7 @@ class Spectrums(QObject):
             else: 
                 continue
         QTimer.singleShot(50, self.refresh_gui)
-        QTimer.singleShot(300, self.rescale)
+        QTimer.singleShot(300, self.spectra_widget.rescale)
 
     def paste_baseline_all(self):
         """Paste baseline to the all spectrum(s)"""
@@ -570,7 +571,7 @@ class Spectrums(QObject):
     def fit_completed(self):
         """Update GUI after completing fitting process."""
         self.upd_spectra_list()
-        QTimer.singleShot(200, self.rescale)
+        QTimer.singleShot(200,  self.spectra_widget.rescale)
         self.ui.progressBar.setValue(100)
         self.ui.centralwidget.setEnabled(True)
 
@@ -749,7 +750,7 @@ class Spectrums(QObject):
         self.common.reinit_spectrum(fnames, self.spectrums)
         self.refresh_gui()
         self.upd_spectra_list()
-        QTimer.singleShot(200, self.rescale)
+        QTimer.singleShot(200, self.spectra_widget.rescale)
 
     def reinit_all(self):
         """Reinitialize all spectra"""
@@ -968,6 +969,6 @@ class Spectrums(QObject):
         
 
         # Refresh the UI to reflect the cleared state
-        QTimer.singleShot(50, self.rescale)
+        QTimer.singleShot(50, self.spectra_widget.rescale)
         QTimer.singleShot(100, self.upd_spectra_list)
         print("'Spectrums' Tab environment has been cleared and reset.")

@@ -20,9 +20,9 @@ import matplotlib.colors as mcolors
 import seaborn as sns
 
 from scipy.interpolate import griddata
-from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
+from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, \
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
-    QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, \
+    QLineEdit, QWidget, QPushButton,QToolButton, QSpinBox, QComboBox, QCheckBox, QListWidgetItem, \
     QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy
 from PySide6.QtCore import Signal, QThread, Qt, QSize
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
@@ -198,6 +198,140 @@ def view_df(tabWidget, df):
     df_viewer.setLayout(layout)
     df_viewer.exec_()
 
+class SpectraViewWidget(QWidget):
+    """Class to manage the spectra view, including figure canvas, toolbar, and view options."""
+
+    def __init__(self):
+        super().__init__()
+        self.dpi = 100  
+        self.initUI()
+
+    def initUI(self):
+        """Initialize the UI components."""
+        self.create_view_options_widget()
+        self.create_spectra_plot_widget()
+
+
+    def create_view_options_widget(self):
+        """Create widget containing all view options."""
+        # Create the QToolButton
+        self.view_options_button = QToolButton()
+        self.view_options_button.setText("View Options")
+        self.view_options_button.setPopupMode(QToolButton.MenuButtonPopup)
+
+        # Create a QMenu for the QToolButton
+        self.view_options_menu = QMenu(self.view_options_button)
+
+        view_options = [
+            ("Legends", "Legends"),
+            ("Colors", "Colors", True),
+            ("Peaks", "Show Peaks"),
+            ("Filled", "Filled", True),
+            ("Bestfit", "Best Fit", True),
+            ("Raw", "Raw data"),
+            ("Residual", "Residual"),
+            ("Normalized", "Normalized"),
+        ]
+
+        # Create a dictionary to store QAction references
+        self.display_options = {}  # Initialize the display_options attribute
+
+        for option_name, option_label, *checked in view_options:
+            # Create a QAction for each option
+            action = QAction(option_label, self)
+            action.setCheckable(True)
+            action.setChecked(checked[0] if checked else False)
+
+            # Add the action to the dictionary
+            self.display_options[option_name] = action
+
+            # Add the QAction to the QMenu
+            self.view_options_menu.addAction(action)
+
+        # Create the QSpinBox
+        self.dpi_spinbox = QSpinBox()
+        self.dpi_spinbox.setMinimum(100)
+        self.dpi_spinbox.setMaximum(300)
+        self.dpi_spinbox.setValue(self.dpi)
+
+        # Create a QLabel for the text size
+        self.text_size_label = QLabel("Text size:")
+
+        # Create a QWidget to contain both QLabel and QSpinBox
+        spinbox_widget = QWidget()
+        spinbox_layout = QHBoxLayout(spinbox_widget)
+        spinbox_layout.addWidget(self.text_size_label)
+        spinbox_layout.addWidget(self.dpi_spinbox)
+        spinbox_layout.setContentsMargins(0, 0, 0, 0)
+        spinbox_layout.setSpacing(5)
+
+        # Create a QWidgetAction for the combined QLabel and QSpinBox widget
+        spinbox_action = QWidgetAction(self)
+        spinbox_action.setDefaultWidget(spinbox_widget)
+
+        # Add the QWidgetAction to the QMenu
+        self.view_options_menu.addAction(spinbox_action)
+
+        # Connect the QSpinBox valueChanged signal to update the dpi value
+        self.dpi_spinbox.valueChanged.connect(self.update_dpi_value)
+
+        # Set the QMenu to the QToolButton
+        self.view_options_button.setMenu(self.view_options_menu)
+
+        self.get_view_options()
+
+    def create_spectra_plot_widget(self):
+        """Create canvas and toolbar for plotting in the GUI."""
+        plt.style.use('ggplot')  
+
+        # Create figure and axis
+        self.figure = plt.figure(dpi=self.dpi)
+        self.ax = self.figure.add_subplot(111)
+        self.ax.set_xlabel("X-Axis Label")  # Default label
+        self.ax.set_ylabel("Intensity (a.u)")
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+
+        # Create canvas and toolbar
+        self.canvas = FigureCanvas(self.figure)
+        self.toolbar = NavigationToolbar2QT(self.canvas, self)
+
+        # Set up toolbar actions
+        for action in self.toolbar.actions():
+            if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+                action.setVisible(False)
+            if action.text() == 'Pan' or action.text() == 'Zoom':
+                action.toggled.connect(self.toggle_zoom_pan)
+        rescale = next(a for a in self.toolbar.actions() if a.text() == 'Home')
+        rescale.triggered.connect(self.rescale)
+
+
+    def rescale(self):
+        """Rescale the spectra plot to fit within the axes"""
+        self.ax.autoscale()
+        self.canvas.draw()
+
+    def update_dpi_value(self, value):
+        """Update the dpi value for the plot."""
+        self.dpi = value
+        self.create_spectra_plot_widget()  # Re-create the plot widget with new DPI
+
+    def toggle_zoom_pan(self, toggled):
+        """Handle zoom and pan toggling."""
+        self.zoom_pan_active = toggled
+        if not toggled:
+            self.zoom_pan_active = False
+
+    def refresh_plot(self):
+        """Placeholder method for refreshing the plot."""
+        self.ax.clear()
+        self.ax.set_xlabel("X-Axis Label")  # Update with dynamic label if needed
+        self.ax.set_ylabel("Intensity (a.u)")
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        self.canvas.draw()
+
+    def get_view_options(self):
+        """Return the current state of view options."""
+        return {key: action.isChecked() for key, action in self.display_options.items()}
 
 class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.

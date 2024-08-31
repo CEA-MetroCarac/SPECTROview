@@ -147,7 +147,7 @@
                    <number>0</number>
                   </property>
                   <item>
-                   <layout class="QVBoxLayout" name="QVBoxlayout_2">
+                   <layout class="QVBoxLayout" name="fig_canvas_layout">
                     <property name="spacing">
                      <number>6</number>
                     </property>
@@ -177,7 +177,7 @@
                   <number>2</number>
                  </property>
                  <item>
-                  <layout class="QHBoxLayout" name="toolbar_frame_3"/>
+                  <layout class="QHBoxLayout" name="toolbar_layout"/>
                  </item>
                  <item>
                   <spacer name="horizontalSpacer_24">

@@ -21,7 +21,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,QToolButton,
                                QListWidgetItem, QCheckBox, QListWidget,QSizePolicy,
-                               QAbstractItemView, QMenu,QWidget, QVBoxLayout, QSpinBox, QWidgetAction, QLabel)
+                               QAbstractItemView, QMenu,QWidget, QHBoxLayout, QSpinBox, QWidgetAction, QLabel)
 from PySide6.QtGui import QColor, QAction
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
@@ -118,12 +118,12 @@ class Spectrums(QObject):
 
         # Create a QMenu for the QToolButton
         self.view_options_menu = QMenu(self.view_options_button)
-       
+
         view_options = [
             ("Legends", "Legends"),
-            ("Colors", "Colors", True),    
+            ("Colors", "Colors", True),
             ("Peaks", "Show Peaks"),
-            ("Filled", "Filled", True), 
+            ("Filled", "Filled", True),
             ("Bestfit", "Best Fit", True),
             ("Raw", "Raw data"),
             ("Residual", "Residual"),
@@ -137,7 +137,7 @@ class Spectrums(QObject):
             # Create a QAction for each option
             action = QAction(option_label, self)
             action.setCheckable(True)
-            action.setChecked(checked[0] if checked else False)  
+            action.setChecked(checked[0] if checked else False)
 
             # Connect the action to the refresh_gui method
             action.triggered.connect(self.refresh_gui)
@@ -150,28 +150,37 @@ class Spectrums(QObject):
 
         # Create the QSpinBox
         self.dpi_spinbox = QSpinBox()
-        self.dpi_spinbox.setMinimum(100) 
-        self.dpi_spinbox.setMaximum(300) 
+        self.dpi_spinbox.setMinimum(100)
+        self.dpi_spinbox.setMaximum(300)
         self.dpi_spinbox.setValue(100)
 
         # Create a QLabel for the text size
-        self.text_size_label = QLabel("Text Size")
-        
-        # Create a QWidgetAction for the QSpinBox
+        self.text_size_label = QLabel("Text size:")
+
+        # Create a QWidget to contain both QLabel and QSpinBox
+        spinbox_widget = QWidget()
+        spinbox_layout = QHBoxLayout(spinbox_widget)
+        spinbox_layout.addWidget(self.text_size_label)
+        spinbox_layout.addWidget(self.dpi_spinbox)
+        spinbox_layout.setContentsMargins(0, 0, 0, 0)
+        spinbox_layout.setSpacing(5)
+
+        # Create a QWidgetAction for the combined QLabel and QSpinBox widget
         spinbox_action = QWidgetAction(self)
-        spinbox_action.setDefaultWidget(self.dpi_spinbox)
-        
+        spinbox_action.setDefaultWidget(spinbox_widget)
+
         # Add the QWidgetAction to the QMenu
         self.view_options_menu.addAction(spinbox_action)
-        
+
         # Connect the QSpinBox valueChanged signal to update the dpi value
         self.dpi_spinbox.valueChanged.connect(self.update_dpi_value)
 
         # Set the QMenu to the QToolButton
         self.view_options_button.setMenu(self.view_options_menu)
-        
+
         # Add the QToolButton to the desired layout
         self.ui.bottom_frame_3.addWidget(self.view_options_button)
+
 
     def update_dpi_value(self, value):
         """Update the dpi value in the related QSpinBox"""
@@ -181,21 +190,21 @@ class Spectrums(QObject):
         """Create canvas and toolbar for plotting in the GUI."""
 
         plt.style.use(PLOT_POLICY)
-        self.common.clear_layout(self.ui.QVBoxlayout_2.layout())
-        self.common.clear_layout(self.ui.toolbar_frame_3.layout())
+        self.common.clear_layout(self.ui.fig_canvas_layout.layout())
+        self.common.clear_layout(self.ui.toolbar_layout.layout())
         self.upd_spectra_list()
 
-        fig1 = plt.figure(dpi=self.dpi)
-        self.ax = fig1.add_subplot(111)
+        fig = plt.figure(dpi=self.dpi)
+        self.ax = fig.add_subplot(111)
         txt = self.ui.cbb_xaxis_unit.currentText()
         self.ax.set_xlabel(txt)
         self.ax.set_ylabel("Intensity (a.u)")
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        self.canvas1 = FigureCanvas(fig1)
-        self.canvas1.mpl_connect('button_press_event', self.on_click)
+        self.canvas = FigureCanvas(fig)
+        self.canvas.mpl_connect('button_press_event', self.on_click)
 
         # Toolbar
-        self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
+        self.toolbar = NavigationToolbar2QT(self.canvas, self.ui)
         for action in self.toolbar.actions():
             if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
                 action.setVisible(False)
@@ -205,10 +214,10 @@ class Spectrums(QObject):
             a for a in self.toolbar.actions() if a.text() == 'Home')
         rescale.triggered.connect(self.rescale)
 
-        self.ui.QVBoxlayout_2.addWidget(self.canvas1)
-        self.ui.toolbar_frame_3.addWidget(self.toolbar)
-        self.canvas1.figure.tight_layout()
-        self.canvas1.draw()
+        self.ui.fig_canvas_layout.addWidget(self.canvas)
+        self.ui.toolbar_layout.addWidget(self.toolbar)
+        self.canvas.figure.tight_layout()
+        self.canvas.draw()
 
         
     def plot(self):
@@ -321,7 +330,7 @@ class Spectrums(QObject):
             self.ax.legend(loc='upper right')
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.ax.get_figure().tight_layout()
-        self.canvas1.draw()
+        self.canvas.draw()
         self.read_x_range()
         self.show_peak_table()
 
@@ -610,7 +619,7 @@ class Spectrums(QObject):
     def rescale(self):
         """Rescale the spectra plot to fit within the axes"""
         self.ax.autoscale()
-        self.canvas1.draw()
+        self.canvas.draw()
 
     def toggle_zoom_pan(self, checked):
         """Toggle zoom and pan functionality for spectra plot"""
@@ -1047,11 +1056,11 @@ class Spectrums(QObject):
             spectrum.fname not in fnames)
         self.upd_spectra_list()
         self.ax.clear()
-        self.canvas1.draw()
+        self.canvas.draw()
 
     def copy_fig(self):
         """To copy figure canvas to clipboard"""
-        self.common.copy_fig_to_clb(canvas=self.canvas1)
+        self.common.copy_fig_to_clb(canvas=self.canvas)
 
 
     def fitspy_launcher(self):
@@ -1190,7 +1199,7 @@ class Spectrums(QObject):
         # Clear plot areas
         self.ax.clear()
         if hasattr(self, 'canvas1'):
-            self.canvas1.draw()
+            self.canvas.draw()
         
 
         # Refresh the UI to reflect the cleared state

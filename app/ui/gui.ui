@@ -157,7 +157,7 @@
                 </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="bottom_frame_3" stretch="50,25,0,0,0,0,0,2">
+                <layout class="QHBoxLayout" name="bottom_frame_3" stretch="50,25,0,0,0">
                  <property name="spacing">
                   <number>10</number>
                  </property>
@@ -193,22 +193,9 @@
                   </spacer>
                  </item>
                  <item>
-                  <widget class="QRadioButton" name="rdbtn_baseline_2">
+                  <widget class="QLabel" name="rsquared_2">
                    <property name="text">
-                    <string>baseline</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="rdbtn_peak_2">
-                   <property name="text">
-                    <string>peaks</string>
-                   </property>
-                   <property name="checked">
-                    <bool>false</bool>
+                    <string>R2</string>
                    </property>
                   </widget>
                  </item>
@@ -224,13 +211,6 @@
                     </size>
                    </property>
                   </spacer>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="rsquared_2">
-                   <property name="text">
-                    <string>R2</string>
-                   </property>
-                  </widget>
                  </item>
                  <item>
                   <widget class="QPushButton" name="btn_copy_fig_3">
@@ -269,19 +249,6 @@
                     </size>
                    </property>
                   </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_25">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
                  </item>
                 </layout>
                </item>
@@ -3599,7 +3566,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
+                       <width>413</width>
                        <height>243</height>
                       </rect>
                      </property>
@@ -5480,7 +5447,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>395</width>
-                    <height>494</height>
+                    <height>479</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">

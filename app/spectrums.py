@@ -47,15 +47,15 @@ class Spectrums(QObject):
         self.df_fit_results = None
         self.dpi=100
 
-       # Initialize SpectraViewWidget
+        # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget()
-        self.ui.toolbar_layout.addWidget(self.spectra_widget.view_options_button)
-        self.ui.fig_canvas_layout.addWidget(self.spectra_widget.canvas)
+        # Add the toolbar and canvas to the layouts in your UI
         self.ui.toolbar_layout.addWidget(self.spectra_widget.toolbar)
-
+        self.ui.toolbar_layout.addWidget(self.spectra_widget.rdbtn_baseline)
+        self.ui.toolbar_layout.addWidget(self.spectra_widget.rdbtn_peak)
+        self.ui.fig_canvas_layout.addWidget(self.spectra_widget.canvas)
         
         self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
-
 
         # Create a customized QListWidget
         self.ui.spectrums_listbox = CustomListWidget()
@@ -75,8 +75,6 @@ class Spectrums(QObject):
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot)
         self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_gui)
-
-        self.zoom_pan_active = False
 
         self.ui.cbb_fit_methods_2.addItems(FIT_METHODS)
         
@@ -140,12 +138,6 @@ class Spectrums(QObject):
         
         self.read_x_range()
         self.show_peak_table()
-
-    def refresh_gui(self):
-        """Trigger the function to plot spectra"""
-        print("Refreshing GUI")
-        self.delay_timer.start(100)
-
 
     def refresh_gui(self):
         """Trigger the fnc to plot spectra"""
@@ -261,35 +253,7 @@ class Spectrums(QObject):
             item = self.ui.spectrums_listbox.item(index)
             item.setCheckState(check_state)
 
-    def on_click(self, event):
-        """
-        Handle click events on spectra plot canvas for adding peak models or
-        baseline points.
-        """
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        fit_model = self.ui.cbb_fit_models_2.currentText()
-
-        # Add a new peak_model for current selected peak
-        if self.zoom_pan_active == False and self.ui.rdbtn_peak_2.isChecked():
-            if event.button == 1 and event.inaxes:
-                x = event.xdata
-                y = event.ydata
-            sel_spectrum.add_peak_model(fit_model, x)
-            self.upd_spectra_list()
-
-        # Add a new baseline point for current selected peak
-        if self.zoom_pan_active == False and \
-                self.ui.rdbtn_baseline_2.isChecked():
-            if event.button == 1 and event.inaxes:
-                x1 = event.xdata
-                y1 = event.ydata
-                if sel_spectrum.baseline.is_subtracted:
-                    show_alert(
-                        "Already subtracted before. Reinitialize spectrum to "
-                        "perform new baseline")
-                else:
-                    sel_spectrum.baseline.add_point(x1, y1)
-                    self.upd_spectra_list()
+    
 
     def update_spectrums_order(self):
         """

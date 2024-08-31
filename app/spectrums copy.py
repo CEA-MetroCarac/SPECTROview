@@ -67,7 +67,7 @@ class Spectrums(QObject):
         self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_gui)
 
         self.create_spectra_plot_widget()
-        self.zoom_pan_active = False
+        
         self.create_view_options_widget()
 
         self.ui.cbb_fit_methods_2.addItems(FIT_METHODS)

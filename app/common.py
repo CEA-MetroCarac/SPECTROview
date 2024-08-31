@@ -23,7 +23,7 @@ from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, \
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
     QLineEdit, QWidget, QPushButton,QToolButton, QSpinBox, QComboBox, QCheckBox, QListWidgetItem, \
-    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy
+    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy, QRadioButton
 from PySide6.QtCore import Signal, QThread, Qt, QSize,QTimer
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
     QAction, Qt
@@ -82,8 +82,8 @@ class SpectraViewWidget(QWidget):
         self.ax = None
         self.canvas = None
         self.toolbar = None
+        self.zoom_pan_active = False
         self.view_options = {}
-
         self.initUI()
 
     def initUI(self):
@@ -99,6 +99,8 @@ class SpectraViewWidget(QWidget):
             self.figure = plt.figure(dpi=self.dpi)
             self.ax = self.figure.add_subplot(111)
             self.canvas = FigureCanvas(self.figure)
+            self.canvas.mpl_connect('button_press_event', self.on_click)
+
             self.toolbar = NavigationToolbar2QT(self.canvas, self)
 
             # Set up the toolbar visibility and connect events
@@ -111,6 +113,27 @@ class SpectraViewWidget(QWidget):
             rescale = next((a for a in self.toolbar.actions() if a.text() == 'Home'), None)
             if rescale:
                 rescale.triggered.connect(self.rescale)
+
+            # Create radio buttons for Peak and Baseline
+            self.rdbtn_baseline = QRadioButton("Baseline", self)
+            self.rdbtn_peak = QRadioButton("Peak", self)
+            self.rdbtn_baseline.setChecked(True) 
+            
+            # Add toolbar and radio buttons to the layout
+            layout = QHBoxLayout()
+            layout.addWidget(self.toolbar)
+            layout.addWidget(self.rdbtn_peak)
+            layout.addWidget(self.rdbtn_baseline)
+
+            # Create a container widget and set the layout
+            container_widget = QWidget()
+            container_widget.setLayout(layout)
+
+            # Add the container widget to the main widget layout
+            main_layout = QVBoxLayout(self)
+            main_layout.addWidget(container_widget)
+            main_layout.addWidget(self.canvas)
+            self.setLayout(main_layout)
 
         self.update_plot_styles()
 
@@ -165,9 +188,9 @@ class SpectraViewWidget(QWidget):
         if sel_spectrums:
             self.sel_spectrums = sel_spectrums
 
-        self.ax.clear()  # Properly clear the plot before redrawing
-        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
         
+        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
+        self.ax.clear() 
         if not xlim == ylim == (0.0, 1.0):
             self.ax.set_xlim(xlim)
             self.ax.set_ylim(ylim)
@@ -240,18 +263,52 @@ class SpectraViewWidget(QWidget):
         self.figure.tight_layout()
         self.canvas.draw()
 
-    def update_dpi_value(self, value):
-        """Update the DPI value for the plot."""
-        self.dpi = value
-        self.figure.set_dpi(self.dpi)
-        self.canvas.draw()
-
     def refresh_plot(self):
         """Refresh the plot based on user view options."""
-        self.plot(self.sel_spectrums )  # Assuming sel_spectrums is defined elsewhere
+        self.plot(self.sel_spectrums )  
+
+    def on_click(self, event):
+        """
+        Handle click events on spectra plot canvas for adding peak models or baseline points.
+        """
+        if event.inaxes != self.ax:
+            # Ignore clicks outside the plot area
+            return
+
+        x_click = event.xdata
+        y_click = event.ydata
+
+        # Log the click position
+        print(f"Clicked at x={x_click}, y={y_click}")
+
+        if self.sel_spectrums:
+            sel_spectrum = self.sel_spectrums[0]  # Example: Select the first spectrum
+
+            if self.zoom_pan_active:
+                # Do nothing if zoom or pan is active
+                return
+
+            # Check which radio button is selected and perform the corresponding action
+            if self.rdbtn_peak.isChecked():
+                # Adding a new peak model
+                if event.button == 1:  # Left mouse button
+                    print(f"Adding peak model at x={x_click}")
+                    sel_spectrum.add_peak_model('Gaussian', x_click)
+                    self.upd_spectra_list()
+            elif self.rdbtn_baseline.isChecked():
+                # Adding a new baseline point
+                if event.button == 1:  # Left mouse button
+                    print(f"Adding baseline point at x={x_click}, y={y_click}")
+                    if sel_spectrum.baseline.is_subtracted:
+                        show_alert("Already subtracted before. Reinitialize spectrum to perform new baseline")
+                    else:
+                        sel_spectrum.baseline.add_point(x_click, y_click)
+                        self.upd_spectra_list()
+
+        self.refresh_plot()  # Update the plot to reflect changes
 
 
-
+    
 class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.
 

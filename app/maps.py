@@ -702,31 +702,6 @@ class Maps(QObject):
                 QMessageBox.critical(
                     self.ui.tabWidget, "Error",
                     f"Error saving DataFrame: {str(e)}")
-
-    def load_fit_results(self, file_paths=None):
-        """Load fitted results from an Excel file"""
-
-        # Initialize the last used directory from QSettings
-        last_dir = self.settings.value("last_directory", "/")
-        options = QFileDialog.Options()
-        options |= QFileDialog.ReadOnly
-        file_paths, _ = QFileDialog.getOpenFileNames(
-            self.ui.tabWidget, "Open File(s)", last_dir,
-            "Excel Files (*.xlsx *.xls)", options=options)
-        # Load dataframes from Excel files
-        if file_paths:
-            last_dir = QFileInfo(file_paths[0]).absolutePath()
-            self.settings.setValue("last_directory", last_dir)
-            # Load DataFrame from the first selected Excel file
-            excel_file_path = file_paths[0]
-            try:
-                dfr = pd.read_excel(excel_file_path)
-                self.df_fit_results = None
-                self.df_fit_results = dfr
-            except Exception as e:
-                show_alert("Error loading DataFrame:", e)
-
-        self.display_df_in_GUI(self.df_fit_results)
     
     def split_fname(self):
         """Split 'Filename' column and populate the combobox"""

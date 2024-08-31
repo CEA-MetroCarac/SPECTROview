@@ -348,11 +348,18 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>296</width>
-                      <height>488</height>
+                      <width>337</width>
+                      <height>448</height>
                      </rect>
                     </property>
-                    <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0">
+                    <layout class="QVBoxLayout" name="verticalLayout_74" stretch="0,0,0">
+                     <item>
+                      <widget class="QToolButton" name="toolButton">
+                       <property name="text">
+                        <string>...</string>
+                       </property>
+                      </widget>
+                     </item>
                      <item>
                       <spacer name="verticalSpacer_12">
                        <property name="orientation">
@@ -575,7 +582,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>343</height>
+                          <height>380</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -668,7 +675,6 @@
                              <widget class="QLabel" name="label_65">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -744,13 +750,6 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QLabel" name="label_68">
-                           <property name="text">
-                            <string/>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
                           <widget class="QGroupBox" name="baseline_2">
                            <property name="title">
                             <string/>
@@ -775,7 +774,6 @@
                              <widget class="QLabel" name="label_69">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -979,13 +977,6 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QLabel" name="label_71">
-                           <property name="text">
-                            <string/>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
                           <widget class="QGroupBox" name="peaks_2">
                            <property name="title">
                             <string/>
@@ -1010,7 +1001,6 @@
                              <widget class="QLabel" name="label_72">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -1114,8 +1104,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>731</width>
-                               <height>237</height>
+                               <width>717</width>
+                               <height>221</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -1489,10 +1479,10 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>347</height>
+                       <height>384</height>
                       </rect>
                      </property>
-                     <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0">
+                     <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
                       <property name="spacing">
                        <number>10</number>
                       </property>
@@ -1530,7 +1520,6 @@
                         </property>
                         <property name="font">
                          <font>
-                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -1649,6 +1638,13 @@
                        </layout>
                       </item>
                       <item>
+                       <widget class="QLabel" name="label_28">
+                        <property name="text">
+                         <string>Send fit data to 'Visualization' tab:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
                        <layout class="QHBoxLayout" name="horizontalLayout_21">
                         <item>
                          <widget class="QLineEdit" name="ent_send_df_to_viz">
@@ -1660,7 +1656,7 @@
                         <item>
                          <widget class="QPushButton" name="btn_send_to_viz">
                           <property name="text">
-                           <string>Send to Visualization</string>
+                           <string>Send</string>
                           </property>
                          </widget>
                         </item>
@@ -1693,6 +1689,13 @@
                            </size>
                           </property>
                          </spacer>
+                        </item>
+                        <item>
+                         <widget class="QLabel" name="label_20">
+                          <property name="text">
+                           <string>Export fit results:</string>
+                          </property>
+                         </widget>
                         </item>
                         <item>
                          <widget class="QPushButton" name="btn_view_df_5">
@@ -1761,38 +1764,6 @@
                           <property name="icon">
                            <iconset resource="resources.qrc">
                             <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
-                          </property>
-                          <property name="iconSize">
-                           <size>
-                            <width>22</width>
-                            <height>22</height>
-                           </size>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QPushButton" name="btn_open_fit_results_3">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="maximumSize">
-                           <size>
-                            <width>30</width>
-                            <height>16777215</height>
-                           </size>
-                          </property>
-                          <property name="toolTip">
-                           <string>Open fit results (format Excel) to view/plot</string>
-                          </property>
-                          <property name="text">
-                           <string/>
-                          </property>
-                          <property name="icon">
-                           <iconset resource="resources.qrc">
-                            <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
                           </property>
                           <property name="iconSize">
                            <size>
@@ -1878,7 +1849,6 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -2908,7 +2878,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>327</height>
+                          <height>355</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -3001,7 +2971,6 @@
                              <widget class="QLabel" name="label_54">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -3077,13 +3046,6 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QLabel" name="label_59">
-                           <property name="text">
-                            <string/>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
                           <widget class="QGroupBox" name="baseline">
                            <property name="title">
                             <string/>
@@ -3108,7 +3070,6 @@
                              <widget class="QLabel" name="label_52">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -3312,13 +3273,6 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QLabel" name="label_60">
-                           <property name="text">
-                            <string/>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
                           <widget class="QGroupBox" name="peaks">
                            <property name="title">
                             <string/>
@@ -3343,7 +3297,6 @@
                              <widget class="QLabel" name="label_57">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -3447,8 +3400,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>730</width>
-                               <height>221</height>
+                               <width>682</width>
+                               <height>196</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -3836,10 +3789,10 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>331</height>
+                       <height>359</height>
                       </rect>
                      </property>
-                     <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0">
+                     <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
                       <property name="spacing">
                        <number>10</number>
                       </property>
@@ -3877,7 +3830,6 @@
                         </property>
                         <property name="font">
                          <font>
-                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -3996,6 +3948,13 @@
                        </layout>
                       </item>
                       <item>
+                       <widget class="QLabel" name="label_29">
+                        <property name="text">
+                         <string>Send fit data to 'Visualization' tab:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
                        <layout class="QHBoxLayout" name="horizontalLayout_7">
                         <item>
                          <widget class="QLineEdit" name="ent_send_df_to_viz2">
@@ -4007,7 +3966,7 @@
                         <item>
                          <widget class="QPushButton" name="btn_send_to_viz2">
                           <property name="text">
-                           <string>Send to Visualization</string>
+                           <string>Send</string>
                           </property>
                          </widget>
                         </item>
@@ -4040,6 +3999,13 @@
                            </size>
                           </property>
                          </spacer>
+                        </item>
+                        <item>
+                         <widget class="QLabel" name="label_30">
+                          <property name="text">
+                           <string>Export fit results:</string>
+                          </property>
+                         </widget>
                         </item>
                         <item>
                          <widget class="QPushButton" name="btn_view_df_2">
@@ -4108,38 +4074,6 @@
                           <property name="icon">
                            <iconset resource="resources.qrc">
                             <normaloff>:/icon/iconpack/save12.png</normaloff>:/icon/iconpack/save12.png</iconset>
-                          </property>
-                          <property name="iconSize">
-                           <size>
-                            <width>22</width>
-                            <height>22</height>
-                           </size>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QPushButton" name="btn_open_fit_results">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="maximumSize">
-                           <size>
-                            <width>30</width>
-                            <height>16777215</height>
-                           </size>
-                          </property>
-                          <property name="toolTip">
-                           <string>Open fit results (format Excel) to view/plot</string>
-                          </property>
-                          <property name="text">
-                           <string/>
-                          </property>
-                          <property name="icon">
-                           <iconset resource="resources.qrc">
-                            <normaloff>:/icon/iconpack/opened-folder.png</normaloff>:/icon/iconpack/opened-folder.png</iconset>
                           </property>
                           <property name="iconSize">
                            <size>
@@ -4489,7 +4423,6 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -5735,8 +5668,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>372</width>
-                    <height>501</height>
+                    <width>395</width>
+                    <height>494</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -5773,7 +5706,6 @@
                        </property>
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5888,7 +5820,6 @@
                       <widget class="QLabel" name="label_91">
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5948,7 +5879,6 @@
                       <widget class="QLabel" name="label_97">
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -6156,8 +6086,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>235</width>
-                    <height>249</height>
+                    <width>277</width>
+                    <height>298</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -6291,7 +6221,6 @@
                      <property name="font">
                       <font>
                        <pointsize>9</pointsize>
-                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -6379,8 +6308,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>362</width>
-                    <height>310</height>
+                    <width>364</width>
+                    <height>371</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_9">

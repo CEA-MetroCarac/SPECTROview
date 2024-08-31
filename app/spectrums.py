@@ -19,10 +19,10 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,
-                               QListWidgetItem, QCheckBox, QListWidget,
-                               QAbstractItemView)
-from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,QToolButton,
+                               QListWidgetItem, QCheckBox, QListWidget,QSizePolicy,
+                               QAbstractItemView, QMenu,QWidget, QVBoxLayout, QSpinBox, QWidgetAction, QLabel)
+from PySide6.QtGui import QColor, QAction
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
 
@@ -58,20 +58,8 @@ class Spectrums(QObject):
         # Connect the checkbox signal to the method
         self.ui.checkBox.stateChanged.connect(self.check_uncheck_all)
 
-        # Connect the stateChanged signal of the legend CHECKBOX
-        self.ui.cb_legend_3.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_raw_3.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_bestfit_3.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_colors_3.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_residual_3.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_filled_3.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_peaks_3.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_attached_2.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_normalize_3.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_limits_2.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_expr_2.stateChanged.connect(self.refresh_gui)
-
-        # Set a delay for the function plot1
+        
+        # Set a delay for the function plot
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot)
@@ -79,6 +67,7 @@ class Spectrums(QObject):
 
         self.create_spectra_plot_widget()
         self.zoom_pan_active = False
+        self.create_view_options_widget()
 
         self.ui.cbb_fit_methods_2.addItems(FIT_METHODS)
         self.ui.sb_dpi_spectra_2.valueChanged.connect(
@@ -112,6 +101,229 @@ class Spectrums(QObject):
         QTimer.singleShot(0, self.populate_available_models)
         self.ui.btn_refresh_model_folder_3.clicked.connect(
             self.populate_available_models)
+
+        # Connect the stateChanged signal of the legend CHECKBOX
+        self.ui.cb_limits_2.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_expr_2.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_attached_2.stateChanged.connect(self.refresh_gui)
+
+
+    def create_view_options_widget(self):
+        """Create widget containing all view options"""
+        # Create the QToolButton
+        self.view_options_button = QToolButton()
+        self.view_options_button.setText("View Options")
+        self.view_options_button.setPopupMode(QToolButton.MenuButtonPopup)
+
+        # Create a QMenu for the QToolButton
+        self.view_options_menu = QMenu(self.view_options_button)
+
+        view_options = [
+            ("Legends", "Legends"),
+            ("Colors", "Colors", True),    
+            ("Peaks", "Show Peaks"),
+            ("Filled", "Filled", True), 
+            ("Bestfit", "Best Fit", True),
+            ("Raw", "Raw data"),
+            ("Residual", "Residual"),
+            ("Normalized", "Normalized"),
+        ]
+
+        # Create a dictionary to store QAction references
+        self.view_options_actions = {}
+
+        for option_name, option_label, *checked in view_options:
+            # Create a QAction for each option
+            action = QAction(option_label, self)
+            action.setCheckable(True)
+            action.setChecked(checked[0] if checked else False)  
+
+            # Connect the action to the refresh_gui method
+            action.triggered.connect(self.refresh_gui)
+
+            # Add the action to the dictionary
+            self.view_options_actions[option_name] = action
+
+            # Add the QAction to the QMenu
+            self.view_options_menu.addAction(action)
+
+        # Create the QSpinBox
+        self.dpi_spinbox = QSpinBox()
+        self.dpi_spinbox.setMinimum(1)  # Set minimum value
+        self.dpi_spinbox.setMaximum(300)  # Set maximum value
+        self.dpi_spinbox.setValue(self.ui.sb_dpi_spectra_2.value())  # Set current value
+
+        # Create a QLabel for the text size
+        self.text_size_label = QLabel("Text Size")
+        
+        # Create a QWidgetAction for the QSpinBox
+        spinbox_action = QWidgetAction(self)
+        spinbox_action.setDefaultWidget(self.dpi_spinbox)
+        
+        # Add the QWidgetAction to the QMenu
+        self.view_options_menu.addAction(spinbox_action)
+        
+        # Connect the QSpinBox valueChanged signal to update the dpi value
+        self.dpi_spinbox.valueChanged.connect(self.update_dpi_value)
+
+        # Set the QMenu to the QToolButton
+        self.view_options_button.setMenu(self.view_options_menu)
+        
+        # Add the QToolButton to the desired layout
+        self.ui.bottom_frame_3.addWidget(self.view_options_button)
+
+    def update_dpi_value(self, value):
+        """Update the dpi value in the related QSpinBox"""
+        self.ui.sb_dpi_spectra_2.setValue(value)
+
+    def create_spectra_plot_widget(self):
+        """Create canvas and toolbar for plotting in the GUI."""
+
+        plt.style.use(PLOT_POLICY)
+        self.common.clear_layout(self.ui.QVBoxlayout_2.layout())
+        self.common.clear_layout(self.ui.toolbar_frame_3.layout())
+        self.upd_spectra_list()
+        dpi = float(self.ui.sb_dpi_spectra_2.text())
+
+        fig1 = plt.figure(dpi=dpi)
+        self.ax = fig1.add_subplot(111)
+        txt = self.ui.cbb_xaxis_unit.currentText()
+        self.ax.set_xlabel(txt)
+        self.ax.set_ylabel("Intensity (a.u)")
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        self.canvas1 = FigureCanvas(fig1)
+        self.canvas1.mpl_connect('button_press_event', self.on_click)
+
+        # Toolbar
+        self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
+        for action in self.toolbar.actions():
+            if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+                action.setVisible(False)
+            if action.text() == 'Pan' or action.text() == 'Zoom':
+                action.toggled.connect(self.toggle_zoom_pan)
+        rescale = next(
+            a for a in self.toolbar.actions() if a.text() == 'Home')
+        rescale.triggered.connect(self.rescale)
+
+        self.ui.QVBoxlayout_2.addWidget(self.canvas1)
+        self.ui.toolbar_frame_3.addWidget(self.toolbar)
+        self.canvas1.figure.tight_layout()
+        self.canvas1.draw()
+
+        
+    def plot(self):
+        """Plot spectra or fit results in the main plot area"""
+        fnames = self.get_spectrum_fnames()
+        selected_spectrums = []
+
+        for spectrum in self.spectrums:
+            fname = spectrum.fname
+            if fname in fnames:
+                selected_spectrums.append(spectrum)
+
+        # Only plot 50 first spectra to advoid crash
+        selected_spectrums = selected_spectrums[:50]
+        if len(selected_spectrums) == 0:
+            return
+
+        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
+        self.ax.clear()
+        # reassign previous axis limits (related to zoom)
+        if not xlim == ylim == (0.0, 1.0):
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
+
+        for spectrum in selected_spectrums:
+            fname = spectrum.fname
+            x_values = spectrum.x
+            y_values = spectrum.y
+
+            # NORMALIZE
+            if self.view_options_actions['Normalized'].isChecked():
+                max_intensity = 0.0
+                max_intensity = max(max_intensity, max(spectrum.y))
+                y_values = y_values / max_intensity
+            self.ax.plot(x_values, y_values, label=f"{fname}", ms=3, lw=2)
+
+            # BASELINE
+            plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
+
+            # RAW
+            if self.view_options_actions['Raw'].isChecked():
+                x0_values = spectrum.x0
+                y0_values = spectrum.y0
+                self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
+                             lw=1)
+
+            # Background
+            y_bkg = np.zeros_like(x_values)
+            if spectrum.bkg_model is not None:
+                y_bkg = spectrum.bkg_model.eval(
+                    spectrum.bkg_model.make_params(), x=x_values)
+
+            # BEST-FIT and PEAK_MODELS
+            y_peaks = np.zeros_like(x_values)
+            if self.view_options_actions['Bestfit'].isChecked():
+                peak_labels = spectrum.peak_labels
+                for i, peak_model in enumerate(spectrum.peak_models):
+                    peak_label = peak_labels[i]
+
+                    # remove temporarily 'expr'
+                    param_hints_orig = deepcopy(peak_model.param_hints)
+                    for key, _ in peak_model.param_hints.items():
+                        peak_model.param_hints[key]['expr'] = ''
+                    params = peak_model.make_params()
+                    # rassign 'expr'
+                    peak_model.param_hints = param_hints_orig
+                    y_peak = peak_model.eval(params, x=x_values)
+                    y_peaks += y_peak
+                    if self.view_options_actions['Filled'].isChecked():
+                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
+                                             label=f"{peak_label}")
+                        if self.view_options_actions['Peaks'].isChecked():
+                            position = peak_model.param_hints['x0']['value']
+                            intensity = peak_model.param_hints['ampli']['value']
+                            position = round(position, 2)
+                            text = f"{peak_label}\n({position})"
+                            self.ax.text(position, intensity, text,
+                                         ha='center', va='bottom',
+                                         color='black', fontsize=12)
+                    else:
+                        self.ax.plot(x_values, y_peak, '--',
+                                     label=f"{peak_label}")
+
+                if hasattr(spectrum.result_fit,
+                           'success') and self.view_options_actions['Bestfit'].isChecked():
+                    y_fit = y_bkg + y_peaks
+                    self.ax.plot(x_values, y_fit, label=f"bestfit")
+
+            # RESIDUAL
+            if hasattr(spectrum.result_fit,
+                       'residual') and self.view_options_actions['Residual'].isChecked():
+                residual = spectrum.result_fit.residual
+                self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
+            if self.view_options_actions['Colors'].isChecked() is False:
+                self.ax.set_prop_cycle(None)
+
+            # R-SQUARED
+            if hasattr(spectrum.result_fit, 'rsquared'):
+                rsquared = round(spectrum.result_fit.rsquared, 4)
+                self.ui.rsquared_2.setText(f"R2={rsquared}")
+            else:
+                self.ui.rsquared_2.setText("R2=0")
+
+        # self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
+        txt = self.ui.cbb_xaxis_unit.currentText()
+        self.ax.set_xlabel(txt)
+
+        self.ax.set_ylabel("Intensity (a.u)")
+        if self.view_options_actions['Legends'].isChecked():
+            self.ax.legend(loc='upper right')
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        self.ax.get_figure().tight_layout()
+        self.canvas1.draw()
+        self.read_x_range()
+        self.show_peak_table()
 
     def open_spectra(self, spectra=None, file_paths=None):
         """Open and load raw spectral data"""
@@ -393,39 +605,7 @@ class Spectrums(QObject):
         else:
             return None, None
 
-    def create_spectra_plot_widget(self):
-        """Create canvas and toolbar for plotting in the GUI."""
-
-        plt.style.use(PLOT_POLICY)
-        self.common.clear_layout(self.ui.QVBoxlayout_2.layout())
-        self.common.clear_layout(self.ui.toolbar_frame_3.layout())
-        self.upd_spectra_list()
-        dpi = float(self.ui.sb_dpi_spectra_2.text())
-
-        fig1 = plt.figure(dpi=dpi)
-        self.ax = fig1.add_subplot(111)
-        txt = self.ui.cbb_xaxis_unit.currentText()
-        self.ax.set_xlabel(txt)
-        self.ax.set_ylabel("Intensity (a.u)")
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        self.canvas1 = FigureCanvas(fig1)
-        self.canvas1.mpl_connect('button_press_event', self.on_click)
-
-        # Toolbar
-        self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
-        for action in self.toolbar.actions():
-            if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
-                action.setVisible(False)
-            if action.text() == 'Pan' or action.text() == 'Zoom':
-                action.toggled.connect(self.toggle_zoom_pan)
-        rescale = next(
-            a for a in self.toolbar.actions() if a.text() == 'Home')
-        rescale.triggered.connect(self.rescale)
-
-        self.ui.QVBoxlayout_2.addWidget(self.canvas1)
-        self.ui.toolbar_frame_3.addWidget(self.toolbar)
-        self.canvas1.figure.tight_layout()
-        self.canvas1.draw()
+    
 
     def rescale(self):
         """Rescale the spectra plot to fit within the axes"""
@@ -438,119 +618,7 @@ class Spectrums(QObject):
         if not checked:
             self.zoom_pan_active = False
 
-    def plot(self):
-        """Plot spectra or fit results in the main plot area"""
-        fnames = self.get_spectrum_fnames()
-        selected_spectrums = []
-
-        for spectrum in self.spectrums:
-            fname = spectrum.fname
-            if fname in fnames:
-                selected_spectrums.append(spectrum)
-
-        # Only plot 100 first spectra to advoid crash
-        selected_spectrums = selected_spectrums[:50]
-        if len(selected_spectrums) == 0:
-            return
-
-        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
-        self.ax.clear()
-        # reassign previous axis limits (related to zoom)
-        if not xlim == ylim == (0.0, 1.0):
-            self.ax.set_xlim(xlim)
-            self.ax.set_ylim(ylim)
-
-        for spectrum in selected_spectrums:
-            fname = spectrum.fname
-            x_values = spectrum.x
-            y_values = spectrum.y
-
-            # NORMALIZE
-            if self.ui.cb_normalize_3.isChecked():
-                max_intensity = 0.0
-                max_intensity = max(max_intensity, max(spectrum.y))
-                y_values = y_values / max_intensity
-            self.ax.plot(x_values, y_values, label=f"{fname}", ms=3, lw=2)
-
-            # BASELINE
-            plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
-
-            # RAW
-            if self.ui.cb_raw_3.isChecked():
-                x0_values = spectrum.x0
-                y0_values = spectrum.y0
-                self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
-                             lw=1)
-
-            # Background
-            y_bkg = np.zeros_like(x_values)
-            if spectrum.bkg_model is not None:
-                y_bkg = spectrum.bkg_model.eval(
-                    spectrum.bkg_model.make_params(), x=x_values)
-
-            # BEST-FIT and PEAK_MODELS
-            y_peaks = np.zeros_like(x_values)
-            if self.ui.cb_bestfit_3.isChecked():
-                peak_labels = spectrum.peak_labels
-                for i, peak_model in enumerate(spectrum.peak_models):
-                    peak_label = peak_labels[i]
-
-                    # remove temporarily 'expr'
-                    param_hints_orig = deepcopy(peak_model.param_hints)
-                    for key, _ in peak_model.param_hints.items():
-                        peak_model.param_hints[key]['expr'] = ''
-                    params = peak_model.make_params()
-                    # rassign 'expr'
-                    peak_model.param_hints = param_hints_orig
-                    y_peak = peak_model.eval(params, x=x_values)
-                    y_peaks += y_peak
-                    if self.ui.cb_filled_3.isChecked():
-                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
-                                             label=f"{peak_label}")
-                        if self.ui.cb_peaks_3.isChecked():
-                            position = peak_model.param_hints['x0']['value']
-                            intensity = peak_model.param_hints['ampli']['value']
-                            position = round(position, 2)
-                            text = f"{peak_label}\n({position})"
-                            self.ax.text(position, intensity, text,
-                                         ha='center', va='bottom',
-                                         color='black', fontsize=12)
-                    else:
-                        self.ax.plot(x_values, y_peak, '--',
-                                     label=f"{peak_label}")
-
-                if hasattr(spectrum.result_fit,
-                           'success') and self.ui.cb_bestfit_3.isChecked():
-                    y_fit = y_bkg + y_peaks
-                    self.ax.plot(x_values, y_fit, label=f"bestfit")
-
-            # RESIDUAL
-            if hasattr(spectrum.result_fit,
-                       'residual') and self.ui.cb_residual_3.isChecked():
-                residual = spectrum.result_fit.residual
-                self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
-            if self.ui.cb_colors_3.isChecked() is False:
-                self.ax.set_prop_cycle(None)
-
-            # R-SQUARED
-            if hasattr(spectrum.result_fit, 'rsquared'):
-                rsquared = round(spectrum.result_fit.rsquared, 4)
-                self.ui.rsquared_2.setText(f"R2={rsquared}")
-            else:
-                self.ui.rsquared_2.setText("R2=0")
-
-        # self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
-        txt = self.ui.cbb_xaxis_unit.currentText()
-        self.ax.set_xlabel(txt)
-
-        self.ax.set_ylabel("Intensity (a.u)")
-        if self.ui.cb_legend_3.isChecked():
-            self.ax.legend(loc='upper right')
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        self.ax.get_figure().tight_layout()
-        self.canvas1.draw()
-        self.read_x_range()
-        self.show_peak_table()
+    
 
     def read_x_range(self):
         """Read the x range of the selected spectrum"""
@@ -1129,6 +1197,3 @@ class Spectrums(QObject):
         QTimer.singleShot(50, self.rescale)
         QTimer.singleShot(100, self.upd_spectra_list)
         print("'Spectrums' Tab environment has been cleared and reset.")
-
-
-

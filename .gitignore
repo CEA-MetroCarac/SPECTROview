@@ -5,3 +5,4 @@ __pycache__/
 *.egg*
 test.py
 app/main.py
+app/.DS_Store

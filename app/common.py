@@ -23,7 +23,7 @@ from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget, \
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
     QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, \
-    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView
+    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy
 from PySide6.QtCore import Signal, QThread, Qt, QSize
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
     QAction, Qt

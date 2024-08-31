@@ -7,7 +7,7 @@ from pathlib import Path
 import json
 
 from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox,plot_baseline_dynamically
-from .common import FitThread, FitModelManager, ShowParameters, DataframeTable, CustomListWidget, SpectraViewWidget
+from .common import FitThread, FitModelManager, ShowParameters, DataframeTable, CustomListWidget
 from .common import PLOT_POLICY, FIT_METHODS
 
 from lmfit import fit_report
@@ -21,7 +21,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,QToolButton,
                                QListWidgetItem, QCheckBox, QListWidget,QSizePolicy,
-                               QAbstractItemView, QMenu,QWidget, QHBoxLayout, QSpinBox, QWidgetAction, QLabel)
+                               QAbstractItemView, QMenu,QWidget, QVBoxLayout, QSpinBox, QWidgetAction, QLabel)
 from PySide6.QtGui import QColor, QAction
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
 from tkinter import Tk, END
@@ -47,16 +47,6 @@ class Spectrums(QObject):
         self.df_fit_results = None
         self.dpi=100
 
-       # Initialize SpectraViewWidget
-        self.spectra_widget = SpectraViewWidget()
-        self.ui.toolbar_layout.addWidget(self.spectra_widget.view_options_button)
-        self.ui.fig_canvas_layout.addWidget(self.spectra_widget.canvas)
-        self.ui.toolbar_layout.addWidget(self.spectra_widget.toolbar)
-
-        
-        self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
-
-
         # Create a customized QListWidget
         self.ui.spectrums_listbox = CustomListWidget()
         self.ui.listbox_layout.addWidget(self.ui.spectrums_listbox)
@@ -76,16 +66,34 @@ class Spectrums(QObject):
         self.delay_timer.timeout.connect(self.plot)
         self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_gui)
 
+        self.create_spectra_plot_widget()
         self.zoom_pan_active = False
+        self.create_view_options_widget()
 
         self.ui.cbb_fit_methods_2.addItems(FIT_METHODS)
+        self.dpi_spinbox.valueChanged.connect(
+            self.create_spectra_plot_widget)
         
         self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
 
         # BASELINE
-        self.setup_baseline_controls()
+        self.ui.cb_attached_2.clicked.connect(self.refresh_gui)
+        self.ui.noise_2.valueChanged.connect(self.refresh_gui)
+        self.ui.rbtn_linear_2.clicked.connect(self.refresh_gui)
+        self.ui.rbtn_polynomial_2.clicked.connect(self.refresh_gui)
+        self.ui.degre_2.valueChanged.connect(self.refresh_gui)
+        
+        self.ui.cb_attached_2.clicked.connect(self.get_baseline_settings)
+        self.ui.noise_2.valueChanged.connect(self.get_baseline_settings)
+        self.ui.rbtn_linear_2.clicked.connect(self.get_baseline_settings)
+        self.ui.rbtn_polynomial_2.clicked.connect(self.get_baseline_settings)
+        self.ui.degre_2.valueChanged.connect(self.get_baseline_settings)
+        
+        self.ui.btn_copy_bl_2.clicked.connect(self.copy_baseline)
+        self.ui.btn_paste_bl_2.clicked.connect(self.paste_baseline_handler)
+        self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
 
-        # Load default folder path
+        # Load default folder path from QSettings during application startup
         self.fit_model_manager = FitModelManager(self.settings)
         self.fit_model_manager.default_model_folder = self.settings.value(
             "default_model_folder", "")
@@ -95,62 +103,227 @@ class Spectrums(QObject):
         self.ui.btn_refresh_model_folder_3.clicked.connect(
             self.populate_available_models)
 
-        # Connect checkboxes to refresh GUI
+        # Connect the stateChanged signal of the legend CHECKBOX
         self.ui.cb_limits_2.stateChanged.connect(self.refresh_gui)
         self.ui.cb_expr_2.stateChanged.connect(self.refresh_gui)
         self.ui.cb_attached_2.stateChanged.connect(self.refresh_gui)
 
-    def setup_baseline_controls(self):
-        """Set up baseline controls and their signal connections."""
-        self.ui.cb_attached_2.clicked.connect(self.refresh_gui)
-        self.ui.noise_2.valueChanged.connect(self.refresh_gui)
-        self.ui.rbtn_linear_2.clicked.connect(self.refresh_gui)
-        self.ui.rbtn_polynomial_2.clicked.connect(self.refresh_gui)
-        self.ui.degre_2.valueChanged.connect(self.refresh_gui)
 
-        self.ui.cb_attached_2.clicked.connect(self.get_baseline_settings)
-        self.ui.noise_2.valueChanged.connect(self.get_baseline_settings)
-        self.ui.rbtn_linear_2.clicked.connect(self.get_baseline_settings)
-        self.ui.rbtn_polynomial_2.clicked.connect(self.get_baseline_settings)
-        self.ui.degre_2.valueChanged.connect(self.get_baseline_settings)
+    def create_view_options_widget(self):
+        """Create widget containing all view options"""
+        # Create the QToolButton
+        self.view_options_button = QToolButton()
+        self.view_options_button.setText("View Options")
+        self.view_options_button.setPopupMode(QToolButton.MenuButtonPopup)
 
-        self.ui.btn_copy_bl_2.clicked.connect(self.copy_baseline)
-        self.ui.btn_paste_bl_2.clicked.connect(self.paste_baseline_handler)
-        self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
+        # Create a QMenu for the QToolButton
+        self.view_options_menu = QMenu(self.view_options_button)
+       
+        view_options = [
+            ("Legends", "Legends"),
+            ("Colors", "Colors", True),    
+            ("Peaks", "Show Peaks"),
+            ("Filled", "Filled", True), 
+            ("Bestfit", "Best Fit", True),
+            ("Raw", "Raw data"),
+            ("Residual", "Residual"),
+            ("Normalized", "Normalized"),
+        ]
 
+        # Create a dictionary to store QAction references
+        self.view_options_actions = {}
 
-    def recreate_spectra_widget(self):
-        """Delegate creation of the spectra widget to the SpectraViewWidget."""
-        print("Creating spectra plot widget")
-        self.spectra_widget.create_spectra_widget()
+        for option_name, option_label, *checked in view_options:
+            # Create a QAction for each option
+            action = QAction(option_label, self)
+            action.setCheckable(True)
+            action.setChecked(checked[0] if checked else False)  
 
+            # Connect the action to the refresh_gui method
+            action.triggered.connect(self.refresh_gui)
+
+            # Add the action to the dictionary
+            self.view_options_actions[option_name] = action
+
+            # Add the QAction to the QMenu
+            self.view_options_menu.addAction(action)
+
+        # Create the QSpinBox
+        self.dpi_spinbox = QSpinBox()
+        self.dpi_spinbox.setMinimum(100) 
+        self.dpi_spinbox.setMaximum(300) 
+        self.dpi_spinbox.setValue(100)
+
+        # Create a QLabel for the text size
+        self.text_size_label = QLabel("Text Size")
+        
+        # Create a QWidgetAction for the QSpinBox
+        spinbox_action = QWidgetAction(self)
+        spinbox_action.setDefaultWidget(self.dpi_spinbox)
+        
+        # Add the QWidgetAction to the QMenu
+        self.view_options_menu.addAction(spinbox_action)
+        
+        # Connect the QSpinBox valueChanged signal to update the dpi value
+        self.dpi_spinbox.valueChanged.connect(self.update_dpi_value)
+
+        # Set the QMenu to the QToolButton
+        self.view_options_button.setMenu(self.view_options_menu)
+        
+        # Add the QToolButton to the desired layout
+        self.ui.bottom_frame_3.addWidget(self.view_options_button)
+
+    def update_dpi_value(self, value):
+        """Update the dpi value in the related QSpinBox"""
+        self.dpi=value
+
+    def create_spectra_plot_widget(self):
+        """Create canvas and toolbar for plotting in the GUI."""
+
+        plt.style.use(PLOT_POLICY)
+        self.common.clear_layout(self.ui.QVBoxlayout_2.layout())
+        self.common.clear_layout(self.ui.toolbar_frame_3.layout())
+        self.upd_spectra_list()
+
+        fig1 = plt.figure(dpi=self.dpi)
+        self.ax = fig1.add_subplot(111)
+        txt = self.ui.cbb_xaxis_unit.currentText()
+        self.ax.set_xlabel(txt)
+        self.ax.set_ylabel("Intensity (a.u)")
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        self.canvas1 = FigureCanvas(fig1)
+        self.canvas1.mpl_connect('button_press_event', self.on_click)
+
+        # Toolbar
+        self.toolbar = NavigationToolbar2QT(self.canvas1, self.ui)
+        for action in self.toolbar.actions():
+            if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+                action.setVisible(False)
+            if action.text() == 'Pan' or action.text() == 'Zoom':
+                action.toggled.connect(self.toggle_zoom_pan)
+        rescale = next(
+            a for a in self.toolbar.actions() if a.text() == 'Home')
+        rescale.triggered.connect(self.rescale)
+
+        self.ui.QVBoxlayout_2.addWidget(self.canvas1)
+        self.ui.toolbar_frame_3.addWidget(self.toolbar)
+        self.canvas1.figure.tight_layout()
+        self.canvas1.draw()
+
+        
     def plot(self):
-        """Plot spectra or fit results in the main plot area."""
+        """Plot spectra or fit results in the main plot area"""
         fnames = self.get_spectrum_fnames()
-        selected_spectrums = Spectra()
-        selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
+        selected_spectrums = []
 
-        # Limit the number of spectra to avoid crashes
+        for spectrum in self.spectrums:
+            fname = spectrum.fname
+            if fname in fnames:
+                selected_spectrums.append(spectrum)
+
+        # Only plot 50 first spectra to advoid crash
         selected_spectrums = selected_spectrums[:50]
-
-        if not selected_spectrums:
+        if len(selected_spectrums) == 0:
             return
 
-        self.spectra_widget.plot(selected_spectrums)
-        
+        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
+        self.ax.clear()
+        # reassign previous axis limits (related to zoom)
+        if not xlim == ylim == (0.0, 1.0):
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
+
+        for spectrum in selected_spectrums:
+            fname = spectrum.fname
+            x_values = spectrum.x
+            y_values = spectrum.y
+
+            # NORMALIZE
+            if self.view_options_actions['Normalized'].isChecked():
+                max_intensity = 0.0
+                max_intensity = max(max_intensity, max(spectrum.y))
+                y_values = y_values / max_intensity
+            self.ax.plot(x_values, y_values, label=f"{fname}", ms=3, lw=2)
+
+            # BASELINE
+            plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
+
+            # RAW
+            if self.view_options_actions['Raw'].isChecked():
+                x0_values = spectrum.x0
+                y0_values = spectrum.y0
+                self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
+                             lw=1)
+
+            # Background
+            y_bkg = np.zeros_like(x_values)
+            if spectrum.bkg_model is not None:
+                y_bkg = spectrum.bkg_model.eval(
+                    spectrum.bkg_model.make_params(), x=x_values)
+
+            # BEST-FIT and PEAK_MODELS
+            y_peaks = np.zeros_like(x_values)
+            if self.view_options_actions['Bestfit'].isChecked():
+                peak_labels = spectrum.peak_labels
+                for i, peak_model in enumerate(spectrum.peak_models):
+                    peak_label = peak_labels[i]
+
+                    # remove temporarily 'expr'
+                    param_hints_orig = deepcopy(peak_model.param_hints)
+                    for key, _ in peak_model.param_hints.items():
+                        peak_model.param_hints[key]['expr'] = ''
+                    params = peak_model.make_params()
+                    # rassign 'expr'
+                    peak_model.param_hints = param_hints_orig
+                    y_peak = peak_model.eval(params, x=x_values)
+                    y_peaks += y_peak
+                    if self.view_options_actions['Filled'].isChecked():
+                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
+                                             label=f"{peak_label}")
+                        if self.view_options_actions['Peaks'].isChecked():
+                            position = peak_model.param_hints['x0']['value']
+                            intensity = peak_model.param_hints['ampli']['value']
+                            position = round(position, 2)
+                            text = f"{peak_label}\n({position})"
+                            self.ax.text(position, intensity, text,
+                                         ha='center', va='bottom',
+                                         color='black', fontsize=12)
+                    else:
+                        self.ax.plot(x_values, y_peak, '--',
+                                     label=f"{peak_label}")
+
+                if hasattr(spectrum.result_fit,
+                           'success') and self.view_options_actions['Bestfit'].isChecked():
+                    y_fit = y_bkg + y_peaks
+                    self.ax.plot(x_values, y_fit, label=f"bestfit")
+
+            # RESIDUAL
+            if hasattr(spectrum.result_fit,
+                       'residual') and self.view_options_actions['Residual'].isChecked():
+                residual = spectrum.result_fit.residual
+                self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
+            if self.view_options_actions['Colors'].isChecked() is False:
+                self.ax.set_prop_cycle(None)
+
+            # R-SQUARED
+            if hasattr(spectrum.result_fit, 'rsquared'):
+                rsquared = round(spectrum.result_fit.rsquared, 4)
+                self.ui.rsquared_2.setText(f"R2={rsquared}")
+            else:
+                self.ui.rsquared_2.setText("R2=0")
+
+        # self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
+        txt = self.ui.cbb_xaxis_unit.currentText()
+        self.ax.set_xlabel(txt)
+
+        self.ax.set_ylabel("Intensity (a.u)")
+        if self.view_options_actions['Legends'].isChecked():
+            self.ax.legend(loc='upper right')
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        self.ax.get_figure().tight_layout()
+        self.canvas1.draw()
         self.read_x_range()
         self.show_peak_table()
-
-    def refresh_gui(self):
-        """Trigger the function to plot spectra"""
-        print("Refreshing GUI")
-        self.delay_timer.start(100)
-
-
-    def refresh_gui(self):
-        """Trigger the fnc to plot spectra"""
-        self.delay_timer.start(100)
-
 
     def open_spectra(self, spectra=None, file_paths=None):
         """Open and load raw spectral data"""
@@ -431,6 +604,20 @@ class Spectrums(QObject):
             return sel_spectrum, sel_spectra
         else:
             return None, None
+
+    
+
+    def rescale(self):
+        """Rescale the spectra plot to fit within the axes"""
+        self.ax.autoscale()
+        self.canvas1.draw()
+
+    def toggle_zoom_pan(self, checked):
+        """Toggle zoom and pan functionality for spectra plot"""
+        self.zoom_pan_active = checked
+        if not checked:
+            self.zoom_pan_active = False
+
     
 
     def read_x_range(self):
@@ -774,7 +961,10 @@ class Spectrums(QObject):
         self.visu.open_dfs(dfs=dfs_new, file_paths=None)
 
 
-    
+    def refresh_gui(self):
+        """Trigger the fnc to plot spectra"""
+        self.delay_timer.start(100)
+
     def cosmis_ray_detection(self):
         self.spectrums.outliers_limit_calculation()
 
@@ -857,11 +1047,11 @@ class Spectrums(QObject):
             spectrum.fname not in fnames)
         self.upd_spectra_list()
         self.ax.clear()
-        self.canvas.draw()
+        self.canvas1.draw()
 
     def copy_fig(self):
         """To copy figure canvas to clipboard"""
-        self.common.copy_fig_to_clb(canvas=self.canvas)
+        self.common.copy_fig_to_clb(canvas=self.canvas1)
 
 
     def fitspy_launcher(self):
@@ -1000,7 +1190,7 @@ class Spectrums(QObject):
         # Clear plot areas
         self.ax.clear()
         if hasattr(self, 'canvas1'):
-            self.canvas.draw()
+            self.canvas1.draw()
         
 
         # Refresh the UI to reflect the cleared state

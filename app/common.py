@@ -24,7 +24,7 @@ from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, 
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
     QLineEdit, QWidget, QPushButton,QToolButton, QSpinBox, QComboBox, QCheckBox, QListWidgetItem, \
     QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy
-from PySide6.QtCore import Signal, QThread, Qt, QSize
+from PySide6.QtCore import Signal, QThread, Qt, QSize,QTimer
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
     QAction, Qt
 
@@ -70,156 +70,73 @@ LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
 X_AXIS = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
 
 
-def compress(array):
-    """Compress and encode a numpy array to a base64 string."""
-    compressed = zlib.compress(array.tobytes())
-    encoded = base64.b64encode(compressed).decode('utf-8')
-    return encoded
-
-
-def decompress(data, dtype):
-    """Decode and decompress a base64 string to a numpy array."""
-    decoded = base64.b64decode(data.encode('utf-8'))
-    decompressed = zlib.decompress(decoded)
-    return np.frombuffer(decompressed, dtype=dtype)
-
-def plot_baseline_dynamically(ax, spectrum):
-        """Evaluate and plot baseline points and line dynamically"""
-        if not spectrum.baseline.is_subtracted:
-            x_bl = spectrum.x
-            y_bl = spectrum.y if spectrum.baseline.attached else None
-            if len(spectrum.baseline.points[0]) == 0:
-                return
-            # Clear any existing baseline plot
-            for line in ax.lines:
-                if line.get_label() == "Baseline":
-                    line.remove()
-            # Evaluate the baseline
-            attached = spectrum.baseline.attached
-            baseline_values = spectrum.baseline.eval(x_bl, y_bl,
-                                                     attached=attached)
-            ax.plot(x_bl, baseline_values, 'r')
-
-            # Plot the attached baseline points
-            if spectrum.baseline.attached and y_bl is not None:
-                attached_points = spectrum.baseline.attached_points(x_bl, y_bl)
-                ax.plot(attached_points[0], attached_points[1], 'ko',
-                        mfc='none')
-            else:
-                ax.plot(spectrum.baseline.points[0],
-                        spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
-
-def populate_spectrum_listbox(spectrum, spectrum_name, checked_states):
-    """ Populate the listbox with spectrums with colors"""
-    item = QListWidgetItem(spectrum_name)            
-    item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-    item.setCheckState(checked_states.get(spectrum_name, Qt.Checked))
-    if hasattr(spectrum.result_fit,
-                'success') and spectrum.result_fit.success:
-        item.setBackground(QColor("green"))
-    elif hasattr(spectrum.result_fit,
-                    'success') and not spectrum.result_fit.success:
-        item.setBackground(QColor("orange"))
-    else:
-        item.setBackground(QColor(0, 0, 0, 0))
-        
-    return item
-
-def spectrum_to_dict(spectrums):
-    """Custom "save" method to save 'Spectrum' object in a dictionary"""
-    spectrums_data = spectrums.save()
-
-    # Iterate over the saved spectrums data and update x0 and y0
-    for i, spectrum in enumerate(spectrums):
-        spectrums_data[i].update({
-            "x0": compress(spectrum.x0),
-            "y0": compress(spectrum.y0)
-            })
-
-    return spectrums_data
-
-
-def dict_to_spectrum(spectrum, model_dict):
-    """Set attributes of Spectrum object from JSON dict"""
-    spectrum.set_attributes(model_dict)
-    if 'x0' in model_dict:
-        spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
-    if 'y0' in model_dict:
-        spectrum.y0 = decompress(model_dict['y0'], dtype=np.float64)
-
-def baseline_to_dict(spectrum):
-    dict_baseline = dict(vars(spectrum.baseline).items())
-    return dict_baseline
-
-def dict_to_baseline(dict_baseline, spectrums):
-    for spectrum in spectrums:
-        for key in vars(spectrum.baseline).keys():
-                    if key in dict_baseline.keys():
-                        setattr(spectrum.baseline, key, dict_baseline[key])
-
-def rgba_to_named_color(rgba):
-    """Convert RGBA tuple to a named color string."""
-    # Check if the exact RGBA tuple exists in the dictionary
-    rgba_tuple = tuple(rgba)
-    if rgba_tuple in rgba_to_named_color_dict:
-        return rgba_to_named_color_dict[rgba_tuple]
-    else:
-        # If exact match is not found, return the closest color name
-        return mcolors.to_hex(rgba)  # Use hex as fallback if needed
-
-
-def show_alert(message):
-    """Show alert"""
-    msg_box = QMessageBox()
-    msg_box.setIcon(QMessageBox.Warning)
-    msg_box.setWindowTitle("Alert")
-    msg_box.setText(message)
-    msg_box.exec_()
-
-
-def clear_layout(layout):
-    """To clear a given layout"""
-    if layout is not None:
-        while layout.count():
-            item = layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
-
-
-def view_df(tabWidget, df):
-    """View selected dataframe"""
-    df_viewer = QDialog(tabWidget.parent())
-    df_viewer.setWindowTitle("DataFrame Viewer")
-    df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
-    # Create a QTableWidget and populate it with data from the DataFrame
-    layout = QVBoxLayout(df_viewer)
-    dataframe_table = DataframeTable(df, layout)
-    df_viewer.setLayout(layout)
-    df_viewer.exec_()
 
 class SpectraViewWidget(QWidget):
-    """Class to manage the spectra view, including figure canvas, toolbar, and view options."""
+    """Class to manage the spectra view widget."""
 
     def __init__(self):
         super().__init__()
-        self.dpi = 100  
+        self.sel_spectrums =None
+        self.dpi = 100
+        self.figure = None
+        self.ax = None
+        self.canvas = None
+        self.toolbar = None
+        self.view_options = {}
+
         self.initUI()
 
     def initUI(self):
         """Initialize the UI components."""
-        self.create_view_options_widget()
-        self.create_spectra_plot_widget()
+        self.create_plot_widget()
+        self.setup_view_options()
 
+    def create_plot_widget(self):
+        """Create or update canvas and toolbar for plotting in the GUI."""
+        plt.style.use('ggplot')
 
-    def create_view_options_widget(self):
+        if not self.figure:
+            self.figure = plt.figure(dpi=self.dpi)
+            self.ax = self.figure.add_subplot(111)
+            self.canvas = FigureCanvas(self.figure)
+            self.toolbar = NavigationToolbar2QT(self.canvas, self)
+
+            # Set up the toolbar visibility and connect events
+            for action in self.toolbar.actions():
+                if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+                    action.setVisible(False)
+                if action.text() in ['Pan', 'Zoom']:
+                    action.toggled.connect(self.toggle_zoom_pan)
+
+            rescale = next((a for a in self.toolbar.actions() if a.text() == 'Home'), None)
+            if rescale:
+                rescale.triggered.connect(self.rescale)
+
+        self.update_plot_styles()
+
+    def update_plot_styles(self):
+        """Apply styles and settings to the plot."""
+        self.ax.set_xlabel("X-Axis Label")  # Default label
+        self.ax.set_ylabel("Intensity (a.u)")
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+
+    def toggle_zoom_pan(self, checked):
+        """Toggle zoom and pan functionality for spectra plot."""
+        self.zoom_pan_active = checked
+        if not checked:
+            self.zoom_pan_active = False
+    
+    def rescale(self):
+        """Rescale the spectra plot to fit within the axes."""
+        self.ax.autoscale()
+        self.canvas.draw()
+
+    def setup_view_options(self):
         """Create widget containing all view options."""
-        # Create the QToolButton
         self.view_options_button = QToolButton()
         self.view_options_button.setText("View Options")
         self.view_options_button.setPopupMode(QToolButton.MenuButtonPopup)
 
-        # Create a QMenu for the QToolButton
         self.view_options_menu = QMenu(self.view_options_button)
 
         view_options = [
@@ -233,105 +150,107 @@ class SpectraViewWidget(QWidget):
             ("Normalized", "Normalized"),
         ]
 
-        # Create a dictionary to store QAction references
-        self.display_options = {}  # Initialize the display_options attribute
-
         for option_name, option_label, *checked in view_options:
-            # Create a QAction for each option
             action = QAction(option_label, self)
             action.setCheckable(True)
             action.setChecked(checked[0] if checked else False)
-
-            # Add the action to the dictionary
-            self.display_options[option_name] = action
-
-            # Add the QAction to the QMenu
+            action.triggered.connect(self.refresh_plot)
+            self.view_options[option_name] = action
             self.view_options_menu.addAction(action)
 
-        # Create the QSpinBox
-        self.dpi_spinbox = QSpinBox()
-        self.dpi_spinbox.setMinimum(100)
-        self.dpi_spinbox.setMaximum(300)
-        self.dpi_spinbox.setValue(self.dpi)
-
-        # Create a QLabel for the text size
-        self.text_size_label = QLabel("Text size:")
-
-        # Create a QWidget to contain both QLabel and QSpinBox
-        spinbox_widget = QWidget()
-        spinbox_layout = QHBoxLayout(spinbox_widget)
-        spinbox_layout.addWidget(self.text_size_label)
-        spinbox_layout.addWidget(self.dpi_spinbox)
-        spinbox_layout.setContentsMargins(0, 0, 0, 0)
-        spinbox_layout.setSpacing(5)
-
-        # Create a QWidgetAction for the combined QLabel and QSpinBox widget
-        spinbox_action = QWidgetAction(self)
-        spinbox_action.setDefaultWidget(spinbox_widget)
-
-        # Add the QWidgetAction to the QMenu
-        self.view_options_menu.addAction(spinbox_action)
-
-        # Connect the QSpinBox valueChanged signal to update the dpi value
-        self.dpi_spinbox.valueChanged.connect(self.update_dpi_value)
-
-        # Set the QMenu to the QToolButton
         self.view_options_button.setMenu(self.view_options_menu)
 
-        self.get_view_options()
+    def plot(self, sel_spectrums):
+        """Plot spectra or fit results in figure canvas."""
+        if sel_spectrums:
+            self.sel_spectrums = sel_spectrums
 
-    def create_spectra_plot_widget(self):
-        """Create canvas and toolbar for plotting in the GUI."""
-        plt.style.use('ggplot')  
+        self.ax.clear()  # Properly clear the plot before redrawing
+        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
+        
+        if not xlim == ylim == (0.0, 1.0):
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
 
-        # Create figure and axis
-        self.figure = plt.figure(dpi=self.dpi)
-        self.ax = self.figure.add_subplot(111)
-        self.ax.set_xlabel("X-Axis Label")  # Default label
+        for spectrum in self.sel_spectrums :
+            fname = spectrum.fname
+            x_values = spectrum.x
+            y_values = spectrum.y
+
+            if self.view_options['Normalized'].isChecked():
+                max_intensity = max(spectrum.y)
+                y_values = y_values / max_intensity
+
+            self.ax.plot(x_values, y_values, label=f"{fname}", ms=3, lw=2)
+            plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
+
+            if self.view_options['Raw'].isChecked():
+                x0_values = spectrum.x0
+                y0_values = spectrum.y0
+                self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3, lw=1)
+
+            y_bkg = np.zeros_like(x_values)
+            if spectrum.bkg_model is not None:
+                y_bkg = spectrum.bkg_model.eval(
+                    spectrum.bkg_model.make_params(), x=x_values)
+
+            y_peaks = np.zeros_like(x_values)
+            if self.view_options['Bestfit'].isChecked():
+                peak_labels = spectrum.peak_labels
+                for i, peak_model in enumerate(spectrum.peak_models):
+                    peak_label = peak_labels[i]
+                    param_hints_orig = deepcopy(peak_model.param_hints)
+                    for key in peak_model.param_hints.keys():
+                        peak_model.param_hints[key]['expr'] = ''
+                    params = peak_model.make_params()
+                    peak_model.param_hints = param_hints_orig
+                    y_peak = peak_model.eval(params, x=x_values)
+                    y_peaks += y_peak
+                    if self.view_options['Filled'].isChecked():
+                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.5, label=f"{peak_label}")
+                        if self.view_options['Peaks'].isChecked():
+                            position = peak_model.param_hints['x0']['value']
+                            intensity = peak_model.param_hints['ampli']['value']
+                            position = round(position, 2)
+                            text = f"{peak_label}\n({position})"
+                            self.ax.text(position, intensity, text,
+                                         ha='center', va='bottom',
+                                         color='black', fontsize=12)
+                    else:
+                        self.ax.plot(x_values, y_peak, '--', label=f"{peak_label}")
+
+                if hasattr(spectrum.result_fit, 'success'):
+                    y_fit = y_bkg + y_peaks
+                    self.ax.plot(x_values, y_fit, label=f"bestfit")
+
+            if hasattr(spectrum.result_fit, 'residual') and self.view_options['Residual'].isChecked():
+                residual = spectrum.result_fit.residual
+                self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
+
+            if not self.view_options['Colors'].isChecked():
+                self.ax.set_prop_cycle(None)
+
+        self.ax.set_xlabel("Wavenumber (cm-1)")
         self.ax.set_ylabel("Intensity (a.u)")
+
+        if self.view_options['Legends'].isChecked():
+            self.ax.legend(loc='upper right')
+
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-
-        # Create canvas and toolbar
-        self.canvas = FigureCanvas(self.figure)
-        self.toolbar = NavigationToolbar2QT(self.canvas, self)
-
-        # Set up toolbar actions
-        for action in self.toolbar.actions():
-            if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
-                action.setVisible(False)
-            if action.text() == 'Pan' or action.text() == 'Zoom':
-                action.toggled.connect(self.toggle_zoom_pan)
-        rescale = next(a for a in self.toolbar.actions() if a.text() == 'Home')
-        rescale.triggered.connect(self.rescale)
-
-
-    def rescale(self):
-        """Rescale the spectra plot to fit within the axes"""
-        self.ax.autoscale()
+        self.figure.tight_layout()
         self.canvas.draw()
 
     def update_dpi_value(self, value):
-        """Update the dpi value for the plot."""
+        """Update the DPI value for the plot."""
         self.dpi = value
-        self.create_spectra_plot_widget()  # Re-create the plot widget with new DPI
-
-    def toggle_zoom_pan(self, toggled):
-        """Handle zoom and pan toggling."""
-        self.zoom_pan_active = toggled
-        if not toggled:
-            self.zoom_pan_active = False
-
-    def refresh_plot(self):
-        """Placeholder method for refreshing the plot."""
-        self.ax.clear()
-        self.ax.set_xlabel("X-Axis Label")  # Update with dynamic label if needed
-        self.ax.set_ylabel("Intensity (a.u)")
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        self.figure.set_dpi(self.dpi)
         self.canvas.draw()
 
-    def get_view_options(self):
-        """Return the current state of view options."""
-        return {key: action.isChecked() for key, action in self.display_options.items()}
+    def refresh_plot(self):
+        """Refresh the plot based on user view options."""
+        self.plot(self.sel_spectrums )  # Assuming sel_spectrums is defined elsewhere
+
+
 
 class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.
@@ -1800,3 +1719,131 @@ class CustomListWidget(QListWidget):
         """
         super().dropEvent(event)
         self.items_reordered.emit()
+
+def compress(array):
+    """Compress and encode a numpy array to a base64 string."""
+    compressed = zlib.compress(array.tobytes())
+    encoded = base64.b64encode(compressed).decode('utf-8')
+    return encoded
+
+
+def decompress(data, dtype):
+    """Decode and decompress a base64 string to a numpy array."""
+    decoded = base64.b64decode(data.encode('utf-8'))
+    decompressed = zlib.decompress(decoded)
+    return np.frombuffer(decompressed, dtype=dtype)
+
+def plot_baseline_dynamically(ax, spectrum):
+        """Evaluate and plot baseline points and line dynamically"""
+        if not spectrum.baseline.is_subtracted:
+            x_bl = spectrum.x
+            y_bl = spectrum.y if spectrum.baseline.attached else None
+            if len(spectrum.baseline.points[0]) == 0:
+                return
+            # Clear any existing baseline plot
+            for line in ax.lines:
+                if line.get_label() == "Baseline":
+                    line.remove()
+            # Evaluate the baseline
+            attached = spectrum.baseline.attached
+            baseline_values = spectrum.baseline.eval(x_bl, y_bl,
+                                                     attached=attached)
+            ax.plot(x_bl, baseline_values, 'r')
+
+            # Plot the attached baseline points
+            if spectrum.baseline.attached and y_bl is not None:
+                attached_points = spectrum.baseline.attached_points(x_bl, y_bl)
+                ax.plot(attached_points[0], attached_points[1], 'ko',
+                        mfc='none')
+            else:
+                ax.plot(spectrum.baseline.points[0],
+                        spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
+
+def populate_spectrum_listbox(spectrum, spectrum_name, checked_states):
+    """ Populate the listbox with spectrums with colors"""
+    item = QListWidgetItem(spectrum_name)            
+    item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+    item.setCheckState(checked_states.get(spectrum_name, Qt.Checked))
+    if hasattr(spectrum.result_fit,
+                'success') and spectrum.result_fit.success:
+        item.setBackground(QColor("green"))
+    elif hasattr(spectrum.result_fit,
+                    'success') and not spectrum.result_fit.success:
+        item.setBackground(QColor("orange"))
+    else:
+        item.setBackground(QColor(0, 0, 0, 0))
+        
+    return item
+
+def spectrum_to_dict(spectrums):
+    """Custom "save" method to save 'Spectrum' object in a dictionary"""
+    spectrums_data = spectrums.save()
+
+    # Iterate over the saved spectrums data and update x0 and y0
+    for i, spectrum in enumerate(spectrums):
+        spectrums_data[i].update({
+            "x0": compress(spectrum.x0),
+            "y0": compress(spectrum.y0)
+            })
+
+    return spectrums_data
+
+
+def dict_to_spectrum(spectrum, model_dict):
+    """Set attributes of Spectrum object from JSON dict"""
+    spectrum.set_attributes(model_dict)
+    if 'x0' in model_dict:
+        spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
+    if 'y0' in model_dict:
+        spectrum.y0 = decompress(model_dict['y0'], dtype=np.float64)
+
+def baseline_to_dict(spectrum):
+    dict_baseline = dict(vars(spectrum.baseline).items())
+    return dict_baseline
+
+def dict_to_baseline(dict_baseline, spectrums):
+    for spectrum in spectrums:
+        for key in vars(spectrum.baseline).keys():
+                    if key in dict_baseline.keys():
+                        setattr(spectrum.baseline, key, dict_baseline[key])
+
+def rgba_to_named_color(rgba):
+    """Convert RGBA tuple to a named color string."""
+    # Check if the exact RGBA tuple exists in the dictionary
+    rgba_tuple = tuple(rgba)
+    if rgba_tuple in rgba_to_named_color_dict:
+        return rgba_to_named_color_dict[rgba_tuple]
+    else:
+        # If exact match is not found, return the closest color name
+        return mcolors.to_hex(rgba)  # Use hex as fallback if needed
+
+
+def show_alert(message):
+    """Show alert"""
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Warning)
+    msg_box.setWindowTitle("Alert")
+    msg_box.setText(message)
+    msg_box.exec_()
+
+
+def clear_layout(layout):
+    """To clear a given layout"""
+    if layout is not None:
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+
+def view_df(tabWidget, df):
+    """View selected dataframe"""
+    df_viewer = QDialog(tabWidget.parent())
+    df_viewer.setWindowTitle("DataFrame Viewer")
+    df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
+    # Create a QTableWidget and populate it with data from the DataFrame
+    layout = QVBoxLayout(df_viewer)
+    dataframe_table = DataframeTable(df, layout)
+    df_viewer.setLayout(layout)
+    df_viewer.exec_()

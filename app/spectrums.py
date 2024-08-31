@@ -45,6 +45,7 @@ class Spectrums(QObject):
         self.current_fit_model = None
         self.spectrums = Spectra()
         self.df_fit_results = None
+        self.dpi=100
 
         # Create a customized QListWidget
         self.ui.spectrums_listbox = CustomListWidget()
@@ -70,7 +71,7 @@ class Spectrums(QObject):
         self.create_view_options_widget()
 
         self.ui.cbb_fit_methods_2.addItems(FIT_METHODS)
-        self.ui.sb_dpi_spectra_2.valueChanged.connect(
+        self.dpi_spinbox.valueChanged.connect(
             self.create_spectra_plot_widget)
         
         self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
@@ -117,7 +118,7 @@ class Spectrums(QObject):
 
         # Create a QMenu for the QToolButton
         self.view_options_menu = QMenu(self.view_options_button)
-
+       
         view_options = [
             ("Legends", "Legends"),
             ("Colors", "Colors", True),    
@@ -149,9 +150,9 @@ class Spectrums(QObject):
 
         # Create the QSpinBox
         self.dpi_spinbox = QSpinBox()
-        self.dpi_spinbox.setMinimum(1)  # Set minimum value
-        self.dpi_spinbox.setMaximum(300)  # Set maximum value
-        self.dpi_spinbox.setValue(self.ui.sb_dpi_spectra_2.value())  # Set current value
+        self.dpi_spinbox.setMinimum(100) 
+        self.dpi_spinbox.setMaximum(300) 
+        self.dpi_spinbox.setValue(100)
 
         # Create a QLabel for the text size
         self.text_size_label = QLabel("Text Size")
@@ -174,7 +175,7 @@ class Spectrums(QObject):
 
     def update_dpi_value(self, value):
         """Update the dpi value in the related QSpinBox"""
-        self.ui.sb_dpi_spectra_2.setValue(value)
+        self.dpi=value
 
     def create_spectra_plot_widget(self):
         """Create canvas and toolbar for plotting in the GUI."""
@@ -183,9 +184,8 @@ class Spectrums(QObject):
         self.common.clear_layout(self.ui.QVBoxlayout_2.layout())
         self.common.clear_layout(self.ui.toolbar_frame_3.layout())
         self.upd_spectra_list()
-        dpi = float(self.ui.sb_dpi_spectra_2.text())
 
-        fig1 = plt.figure(dpi=dpi)
+        fig1 = plt.figure(dpi=self.dpi)
         self.ax = fig1.add_subplot(111)
         txt = self.ui.cbb_xaxis_unit.currentText()
         self.ax.set_xlabel(txt)

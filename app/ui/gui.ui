@@ -99,221 +99,194 @@
              <number>3</number>
             </property>
             <item>
-             <layout class="QHBoxLayout" name="Upper_zone_3" stretch="0">
-              <property name="spacing">
-               <number>0</number>
+             <widget class="QWidget" name="spectra_view_widget" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
-              <item>
-               <widget class="QWidget" name="spectra_view_widget" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>50</width>
-                  <height>500</height>
-                 </size>
-                </property>
-                <layout class="QVBoxLayout" name="verticalLayout_64">
+              <property name="minimumSize">
+               <size>
+                <width>50</width>
+                <height>500</height>
+               </size>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_64">
+               <property name="leftMargin">
+                <number>2</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>2</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QFrame" name="spectre_view_frame_3">
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_63">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <layout class="QVBoxLayout" name="QVBoxlayout_2">
+                    <property name="spacing">
+                     <number>6</number>
+                    </property>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="bottom_frame_3" stretch="50,25,0,0,0,0,0,2">
+                 <property name="spacing">
+                  <number>10</number>
+                 </property>
+                 <property name="sizeConstraint">
+                  <enum>QLayout::SetMaximumSize</enum>
+                 </property>
                  <property name="leftMargin">
                   <number>2</number>
                  </property>
                  <property name="topMargin">
-                  <number>0</number>
+                  <number>2</number>
                  </property>
                  <property name="rightMargin">
                   <number>2</number>
                  </property>
                  <property name="bottomMargin">
-                  <number>0</number>
+                  <number>2</number>
                  </property>
                  <item>
-                  <widget class="QFrame" name="spectre_view_frame_3">
-                   <property name="frameShape">
-                    <enum>QFrame::StyledPanel</enum>
+                  <layout class="QHBoxLayout" name="toolbar_frame_3"/>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_24">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
                    </property>
-                   <property name="frameShadow">
-                    <enum>QFrame::Raised</enum>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
                    </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_63">
-                    <property name="leftMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
-                    </property>
-                    <item>
-                     <layout class="QVBoxLayout" name="QVBoxlayout_2">
-                      <property name="spacing">
-                       <number>6</number>
-                      </property>
-                     </layout>
-                    </item>
-                   </layout>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QRadioButton" name="rdbtn_baseline_2">
+                   <property name="text">
+                    <string>baseline</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
                   </widget>
                  </item>
                  <item>
-                  <layout class="QHBoxLayout" name="bottom_frame_3" stretch="50,25,0,0,0,0,0,0,0,2">
-                   <property name="spacing">
-                    <number>10</number>
+                  <widget class="QRadioButton" name="rdbtn_peak_2">
+                   <property name="text">
+                    <string>peaks</string>
                    </property>
-                   <property name="sizeConstraint">
-                    <enum>QLayout::SetMaximumSize</enum>
+                   <property name="checked">
+                    <bool>false</bool>
                    </property>
-                   <property name="leftMargin">
-                    <number>2</number>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_16">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
                    </property>
-                   <property name="topMargin">
-                    <number>2</number>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
                    </property>
-                   <property name="rightMargin">
-                    <number>2</number>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="rsquared_2">
+                   <property name="text">
+                    <string>R2</string>
                    </property>
-                   <property name="bottomMargin">
-                    <number>2</number>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_copy_fig_3">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
                    </property>
-                   <item>
-                    <layout class="QHBoxLayout" name="toolbar_frame_3"/>
-                   </item>
-                   <item>
-                    <spacer name="horizontalSpacer_24">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="QRadioButton" name="rdbtn_baseline_2">
-                     <property name="text">
-                      <string>baseline</string>
-                     </property>
-                     <property name="checked">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QRadioButton" name="rdbtn_peak_2">
-                     <property name="text">
-                      <string>peaks</string>
-                     </property>
-                     <property name="checked">
-                      <bool>false</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="horizontalSpacer_16">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="QLabel" name="rsquared_2">
-                     <property name="text">
-                      <string>R2</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="btn_copy_fig_3">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>0</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>16777215</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                     <property name="toolTip">
-                      <string>Copy Figure to clipboard</string>
-                     </property>
-                     <property name="text">
-                      <string/>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="resources.qrc">
-                       <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>24</width>
-                       <height>24</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QLabel" name="label_79">
-                     <property name="text">
-                      <string>DPI:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QSpinBox" name="sb_dpi_spectra_2">
-                     <property name="minimum">
-                      <number>100</number>
-                     </property>
-                     <property name="maximum">
-                      <number>200</number>
-                     </property>
-                     <property name="singleStep">
-                      <number>10</number>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="horizontalSpacer_25">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                  </layout>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="toolTip">
+                    <string>Copy Figure to clipboard</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="resources.qrc">
+                     <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>24</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_25">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
                  </item>
                 </layout>
-               </widget>
-              </item>
-             </layout>
+               </item>
+              </layout>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -417,7 +390,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>330</height>
+                          <height>332</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -940,7 +913,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>717</width>
-                               <height>171</height>
+                               <height>173</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -1314,7 +1287,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>334</height>
+                       <height>336</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -1697,7 +1670,7 @@
                   <x>20</x>
                   <y>50</y>
                   <width>381</width>
-                  <height>224</height>
+                  <height>225</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_48">
@@ -1777,6 +1750,9 @@
                     </widget>
                    </item>
                   </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_22"/>
                  </item>
                  <item>
                   <spacer name="verticalSpacer_17">
@@ -3623,7 +3599,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
+                       <width>428</width>
                        <height>243</height>
                       </rect>
                      </property>

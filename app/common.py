@@ -1504,6 +1504,8 @@ class CommonUtilities():
         dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
         dark_palette.setColor(QPalette.HighlightedText, Qt.white)
         dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
+        dark_palette.setColor(QPalette.Base, QColor(60, 60, 60))  # Background color for QMenu
+
         return dark_palette
 
     def light_palette(self):
@@ -1523,6 +1525,8 @@ class CommonUtilities():
         light_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
         light_palette.setColor(QPalette.HighlightedText, Qt.black)
         light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
+        light_palette.setColor(QPalette.Base, QColor(240, 240, 240))  # Menu background color
+
         return light_palette
 
 

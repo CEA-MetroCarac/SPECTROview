@@ -661,6 +661,10 @@ class Graph(QWidget):
         self.graph_layout = QVBoxLayout()  # Layout for store plot
         self.setLayout(self.graph_layout)
 
+        # Set layout margins to 0 to remove extra space
+        self.graph_layout.setContentsMargins(0, 0, 0, 0)
+        self.graph_layout.setSpacing(0)
+
     def clear_layout(self, layout):
         """Clears all widgets and layouts from the specified layout."""
         if layout is not None:
@@ -686,6 +690,8 @@ class Graph(QWidget):
         self.figure = plt.figure(dpi=self.dpi)
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
+        self.figure.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
         for action in self.toolbar.actions():
             if action.text() in ['Save', 'Subplots', 'Customize']:

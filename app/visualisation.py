@@ -212,8 +212,10 @@ class Visualization(QDialog):
             # Create new graph widget
             graph_dialog = QDialog(self)
             layout = QVBoxLayout()
+            layout.setContentsMargins(0, 0, 0, 0)
             layout.addWidget(graph)
             graph_dialog.setLayout(layout)
+            graph_dialog.setContentsMargins(2, 2, 2, 0)
 
             # Add the QDialog to a QMdiSubWindow
             sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize)
@@ -829,8 +831,10 @@ class Visualization(QDialog):
                         f"{graph.graph_id}-{graph.plot_style}_plot: [{graph.x}] - [{graph.y[0]}] - [{graph.z}]"
                     )
                     layout = QVBoxLayout()
+                    layout.setContentsMargins(0, 0, 0, 0)
                     layout.addWidget(graph)
                     graph_dialog.setLayout(layout)
+                    graph_dialog.setContentsMargins(2, 2, 2, 0)
 
                     # Add the QDialog to the mdiArea
                     sub_window = MdiSubWindow(graph.graph_id, self.ui.lbl_figsize)

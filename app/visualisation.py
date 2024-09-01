@@ -54,12 +54,12 @@ class Visualization(QDialog):
         self.ui.btn_save_df_2.clicked.connect(self.save_df_to_excel)
 
         # FILTER
-        self.filter = Filter(self.ui.filter_query, self.ui.listbox_filters,
+        self.filter = Filter(self.ui.ent_filter_query, self.ui.listbox_filters,
                              self.sel_df)
-        self.ui.filter_query.returnPressed.connect(self.filter.add_filter)
-        self.ui.btn_add_filter_4.clicked.connect(self.filter.add_filter)
-        self.ui.btn_remove_filters_4.clicked.connect(self.filter.remove_filter)
-        self.ui.btn_apply_filters_4.clicked.connect(self.apply_filters)
+        self.ui.ent_filter_query.returnPressed.connect(self.filter.add_filter)
+        self.ui.btn_add_filter.clicked.connect(self.filter.add_filter)
+        self.ui.btn_remove_filters.clicked.connect(self.filter.remove_filter)
+        self.ui.btn_apply_filters.clicked.connect(self.apply_filters)
         self.filtered_df = None
 
         # GRAPH

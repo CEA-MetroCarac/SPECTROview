@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -4956,14 +4956,14 @@
                  <number>5</number>
                 </property>
                 <item>
-                 <widget class="QLineEdit" name="filter_query">
+                 <widget class="QLineEdit" name="ent_filter_query">
                   <property name="placeholderText">
                    <string>Enter query expression (? : see Help menu)</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_add_filter_4">
+                 <widget class="QPushButton" name="btn_add_filter">
                   <property name="toolTip">
                    <string>Add filter(s) to dataframe</string>
                   </property>
@@ -4977,7 +4977,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_remove_filters_4">
+                 <widget class="QPushButton" name="btn_remove_filters">
                   <property name="toolTip">
                    <string>Remove filters from the list</string>
                   </property>
@@ -4991,7 +4991,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_apply_filters_4">
+                 <widget class="QPushButton" name="btn_apply_filters">
                   <property name="toolTip">
                    <string>Apply selected filters to selected dataframe</string>
                   </property>

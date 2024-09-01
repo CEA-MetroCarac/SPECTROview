@@ -55,7 +55,9 @@ class Maps(QObject):
         self.spectra_widget = SpectraViewWidget()
         self.ui.fig_canvas_layout_2.addWidget(self.spectra_widget.canvas)
         self.ui.toolbar_layout_2.addWidget(self.spectra_widget.control_widget) 
+        self.ui.cbb_fit_models.currentIndexChanged.connect(self.update_peak_model)
         
+
         # Update spectra_listbox when selecting maps via MAPS LIST
         self.ui.maps_listbox.itemSelectionChanged.connect(
             self.upd_spectra_list)
@@ -313,6 +315,11 @@ class Maps(QObject):
     def display_df_in_GUI(self, df):
         """Display a given df in the GUI via QTableWidget"""
         df_table = DataframeTable(df, self.ui.layout_df_table)
+
+    def update_peak_model(self):
+        """Update the peak model in the SpectraViewWidget based on combobox selection."""
+        selected_model = self.ui.cbb_fit_models.currentText()
+        self.spectra_widget.set_peak_model(selected_model)
 
     def set_default_model_folder(self, folder_path=None):
         """Define a default folder containing fit models."""

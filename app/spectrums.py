@@ -50,6 +50,7 @@ class Spectrums(QObject):
         self.spectra_widget = SpectraViewWidget()
         self.ui.fig_canvas_layout.addWidget(self.spectra_widget.canvas)
         self.ui.toolbar_layout.addWidget(self.spectra_widget.control_widget) 
+        self.ui.cbb_fit_models_2.currentIndexChanged.connect(self.update_peak_model)
         
         # Create a customized QListWidget
         self.ui.spectrums_listbox = CustomListWidget()
@@ -269,6 +270,10 @@ class Spectrums(QObject):
             self.ui.l_defaut_folder_model_3.setText(
                 self.fit_model_manager.default_model_folder)
             QTimer.singleShot(0, self.populate_available_models)
+    def update_peak_model(self):
+        """Update the peak model in the SpectraViewWidget based on combobox selection."""
+        selected_model = self.ui.cbb_fit_models_2.currentText()
+        self.spectra_widget.set_peak_model(selected_model)
 
     def upd_model_cbb_list(self):
         """Update and populate the model list in the UI combobox"""

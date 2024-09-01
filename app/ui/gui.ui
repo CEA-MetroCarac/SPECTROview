@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -350,16 +350,6 @@
                               </size>
                              </property>
                             </spacer>
-                           </item>
-                           <item>
-                            <widget class="QLabel" name="label_22">
-                             <property name="text">
-                              <string>X-axis unit:</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QComboBox" name="cbb_xaxis_unit"/>
                            </item>
                           </layout>
                          </item>
@@ -2444,16 +2434,6 @@
                               </size>
                              </property>
                             </spacer>
-                           </item>
-                           <item>
-                            <widget class="QLabel" name="label_99">
-                             <property name="text">
-                              <string>X-axis unit:</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QComboBox" name="cbb_xaxis_unit2"/>
                            </item>
                           </layout>
                          </item>

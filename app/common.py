@@ -74,6 +74,7 @@ class SpectraViewWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.sel_spectrums =None
+        self.peak_model = 'Lorentzian'
         self.dpi = 100
         self.figure = None
         self.ax = None
@@ -241,7 +242,7 @@ class SpectraViewWidget(QWidget):
                 return
             if self.rdbtn_peak.isChecked():
                 if event.button == 1:  # Left mouse button
-                    sel_spectrum.add_peak_model('Gaussian', x_click)
+                    sel_spectrum.add_peak_model(self.peak_model, x_click)
             elif self.rdbtn_baseline.isChecked():
                 if event.button == 1: 
                     if sel_spectrum.baseline.is_subtracted:
@@ -249,6 +250,10 @@ class SpectraViewWidget(QWidget):
                     else:
                         sel_spectrum.baseline.add_point(x_click, y_click)
         self.refresh_plot()  
+
+    def set_peak_model(self, model):
+        """Set the peak model to be used when clicking on the plot."""
+        self.peak_model = model
 
     def plot(self, sel_spectrums):
         """Plot spectra or fit results in the figure canvas."""

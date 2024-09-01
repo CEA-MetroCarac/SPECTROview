@@ -71,12 +71,6 @@ class Main:
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
         self.ui.actionAbout.triggered.connect(self.show_about)
         self.ui.actionHelps.triggered.connect(self.open_manual)
-
-        # Statusbar
-        self.ui.cbb_xaxis_unit.addItems(X_AXIS)
-        self.ui.cbb_xaxis_unit.setCurrentIndex(0)
-        self.ui.cbb_xaxis_unit2.addItems(X_AXIS)
-        self.ui.cbb_xaxis_unit2.setCurrentIndex(0)
         
         # Save GUI states to settings
         self.ui.ncpus.valueChanged.connect(self.save_settings)

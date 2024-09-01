@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -126,57 +126,69 @@
                 <number>0</number>
                </property>
                <item>
-                <widget class="QFrame" name="spectre_view_frame_3">
+                <layout class="QVBoxLayout" name="fig_canvas_layout">
+                 <property name="spacing">
+                  <number>6</number>
+                 </property>
+                </layout>
+               </item>
+               <item>
+                <widget class="QFrame" name="toolbar_frame">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>40</height>
+                  </size>
+                 </property>
                  <property name="frameShape">
                   <enum>QFrame::StyledPanel</enum>
                  </property>
                  <property name="frameShadow">
                   <enum>QFrame::Raised</enum>
                  </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_63">
+                 <layout class="QHBoxLayout" name="horizontalLayout_23">
                   <property name="leftMargin">
-                   <number>0</number>
+                   <number>2</number>
                   </property>
                   <property name="topMargin">
                    <number>0</number>
                   </property>
                   <property name="rightMargin">
-                   <number>0</number>
+                   <number>2</number>
                   </property>
                   <property name="bottomMargin">
                    <number>0</number>
                   </property>
                   <item>
-                   <layout class="QVBoxLayout" name="fig_canvas_layout">
+                   <layout class="QHBoxLayout" name="toolbar_layout" stretch="">
                     <property name="spacing">
-                     <number>6</number>
+                     <number>2</number>
+                    </property>
+                    <property name="sizeConstraint">
+                     <enum>QLayout::SetMaximumSize</enum>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
                     </property>
                    </layout>
                   </item>
                  </layout>
                 </widget>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="toolbar_layout" stretch="">
-                 <property name="spacing">
-                  <number>10</number>
-                 </property>
-                 <property name="sizeConstraint">
-                  <enum>QLayout::SetMaximumSize</enum>
-                 </property>
-                 <property name="leftMargin">
-                  <number>2</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>2</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>2</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>2</number>
-                 </property>
-                </layout>
                </item>
               </layout>
              </widget>
@@ -757,7 +769,7 @@
  Hold 'Ctrl' and press 'Clear peaks' button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Clear</string>
+                                 <string/>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -2010,75 +2022,101 @@
              <number>3</number>
             </property>
             <item>
-             <layout class="QHBoxLayout" name="Upper_zone" stretch="75,0">
+             <layout class="QHBoxLayout" name="Upper_zone" stretch="0,0">
               <property name="spacing">
                <number>0</number>
               </property>
               <item>
-               <layout class="QVBoxLayout" name="verticalLayout_26" stretch="75,25">
-                <property name="leftMargin">
-                 <number>0</number>
+               <widget class="QWidget" name="spectra_view_widget_2" native="true">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>500</height>
+                 </size>
                 </property>
-                <property name="rightMargin">
-                 <number>10</number>
-                </property>
-                <item>
-                 <widget class="QFrame" name="spectre_view_frame_">
-                  <property name="frameShape">
-                   <enum>QFrame::StyledPanel</enum>
-                  </property>
-                  <property name="frameShadow">
-                   <enum>QFrame::Raised</enum>
-                  </property>
-                  <layout class="QVBoxLayout" name="verticalLayout_16">
-                   <property name="leftMargin">
-                    <number>0</number>
+                <layout class="QVBoxLayout" name="verticalLayout_18">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <layout class="QVBoxLayout" name="fig_canvas_layout_2">
+                   <property name="spacing">
+                    <number>6</number>
                    </property>
-                   <property name="topMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>0</number>
-                   </property>
-                   <item>
-                    <layout class="QVBoxLayout" name="fig_canvas_layout_2">
-                     <property name="spacing">
-                      <number>6</number>
-                     </property>
-                    </layout>
-                   </item>
                   </layout>
-                 </widget>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="toolbar_layout_2" stretch="">
-                  <property name="spacing">
-                   <number>10</number>
-                  </property>
-                  <property name="sizeConstraint">
-                   <enum>QLayout::SetMaximumSize</enum>
-                  </property>
-                  <property name="leftMargin">
-                   <number>2</number>
-                  </property>
-                  <property name="topMargin">
-                   <number>2</number>
-                  </property>
-                  <property name="rightMargin">
-                   <number>2</number>
-                  </property>
-                  <property name="bottomMargin">
-                   <number>2</number>
-                  </property>
-                 </layout>
-                </item>
-               </layout>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="toolbar_frame_2">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>40</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>40</height>
+                    </size>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_24">
+                    <property name="leftMargin">
+                     <number>2</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>2</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <layout class="QHBoxLayout" name="toolbar_layout_2" stretch="">
+                      <property name="spacing">
+                       <number>2</number>
+                      </property>
+                      <property name="sizeConstraint">
+                       <enum>QLayout::SetMaximumSize</enum>
+                      </property>
+                      <property name="leftMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>0</number>
+                      </property>
+                     </layout>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
               </item>
               <item>
-               <widget class="QWidget" name="widget_7" native="true">
+               <widget class="QWidget" name="measurement_site_widget" native="true">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -2099,13 +2137,13 @@
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_13">
                  <property name="leftMargin">
-                  <number>2</number>
+                  <number>0</number>
                  </property>
                  <property name="topMargin">
                   <number>0</number>
                  </property>
                  <property name="rightMargin">
-                  <number>2</number>
+                  <number>0</number>
                  </property>
                  <property name="bottomMargin">
                   <number>0</number>
@@ -2159,13 +2197,13 @@
                        <number>5</number>
                       </property>
                       <property name="topMargin">
-                       <number>5</number>
+                       <number>0</number>
                       </property>
                       <property name="rightMargin">
-                       <number>5</number>
+                       <number>0</number>
                       </property>
                       <property name="bottomMargin">
-                       <number>5</number>
+                       <number>0</number>
                       </property>
                      </layout>
                     </widget>
@@ -2345,7 +2383,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>348</height>
+                          <height>330</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -2633,7 +2671,7 @@
                                  <string>Number of nearby points considered to smoothing the noise</string>
                                 </property>
                                 <property name="text">
-                                 <string>Correct Noise</string>
+                                 <string>Correct noise</string>
                                 </property>
                                </widget>
                               </item>
@@ -2868,7 +2906,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>682</width>
-                               <height>189</height>
+                               <height>171</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -3255,7 +3293,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
+                       <width>428</width>
                        <height>243</height>
                       </rect>
                      </property>

@@ -56,9 +56,8 @@ PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
 PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
 
-DEFAULT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-                  '#8c564b', '#e377c2','#7f7f7f', '#bcbd22', '#17becf', '#ffd500', '#008281',
-                  '#000086', '#c0c0c0','#808000', '#8d0000', '#6fd0ef']
+DEFAULT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd','#8c564b', '#e377c2','#7f7f7f', '#bcbd22', '#17becf', '#ffd500', '#008281','#000086', '#c0c0c0','#808000', '#8d0000', '#6fd0ef']
+
 MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>']
 DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
 LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
@@ -90,7 +89,7 @@ class SpectraViewWidget(QWidget):
 
     def create_plot_widget(self):
         """Create or update canvas and toolbar for plotting in the GUI."""
-        plt.style.use('ggplot')
+        plt.style.use("ggplot")
 
         if not self.figure:
             self.figure = plt.figure(dpi=self.dpi)

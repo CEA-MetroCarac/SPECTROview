@@ -52,7 +52,7 @@ class Maps(QObject):
         self.df_fit_results = None
 
         # Initialize SpectraViewWidget
-        self.spectra_widget = SpectraViewWidget()
+        self.spectra_widget = SpectraViewWidget(self)
         self.ui.fig_canvas_layout_2.addWidget(self.spectra_widget.canvas)
         self.ui.toolbar_layout_2.addWidget(self.spectra_widget.control_widget) 
         self.ui.cbb_fit_models.currentIndexChanged.connect(self.update_peak_model)

@@ -47,7 +47,7 @@ class Spectrums(QObject):
         self.df_fit_results = None
 
         # Initialize SpectraViewWidget
-        self.spectra_widget = SpectraViewWidget()
+        self.spectra_widget = SpectraViewWidget(self)
         self.ui.fig_canvas_layout.addWidget(self.spectra_widget.canvas)
         self.ui.toolbar_layout.addWidget(self.spectra_widget.control_widget) 
         self.ui.cbb_fit_models_2.currentIndexChanged.connect(self.update_peak_model)

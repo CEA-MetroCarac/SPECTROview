@@ -71,8 +71,9 @@ X_AXIS = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
 class SpectraViewWidget(QWidget):
     """Class to manage the spectra view widget."""
 
-    def __init__(self):
+    def __init__(self, main_app):
         super().__init__()
+        self.main_app = main_app # To connect to a method of main app (refresh gui)
         self.sel_spectrums =None
         self.peak_model = 'Lorentzian'
         self.dpi = 100
@@ -243,6 +244,7 @@ class SpectraViewWidget(QWidget):
             if self.rdbtn_peak.isChecked():
                 if event.button == 1:  # Left mouse button
                     sel_spectrum.add_peak_model(self.peak_model, x_click)
+                    self.refresh_gui() # update GUI in main application
             elif self.rdbtn_baseline.isChecked():
                 if event.button == 1: 
                     if sel_spectrum.baseline.is_subtracted:
@@ -250,10 +252,18 @@ class SpectraViewWidget(QWidget):
                     else:
                         sel_spectrum.baseline.add_point(x_click, y_click)
         self.refresh_plot()  
-
+        
     def set_peak_model(self, model):
         """Set the peak model to be used when clicking on the plot."""
         self.peak_model = model
+
+    def refresh_gui(self):
+        """Call the refresh_gui method of the main application."""
+        if hasattr(self.main_app, 'refresh_gui'):
+            self.main_app.refresh_gui()
+        else:
+            print("Main application does not have refresh_gui method.")
+
 
     def plot(self, sel_spectrums):
         """Plot spectra or fit results in the figure canvas."""

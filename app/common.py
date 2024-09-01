@@ -57,10 +57,8 @@ PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
 PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
 
 DEFAULT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-                  '#8c564b', '#e377c2',
-                  '#7f7f7f', '#bcbd22', '#17becf', '#ffd500', '#008281',
-                  '#000086', '#c0c0c0',
-                  '#808000', '#8d0000', '#6fd0ef']
+                  '#8c564b', '#e377c2','#7f7f7f', '#bcbd22', '#17becf', '#ffd500', '#008281',
+                  '#000086', '#c0c0c0','#808000', '#8d0000', '#6fd0ef']
 MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>']
 DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
 LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
@@ -132,6 +130,7 @@ class SpectraViewWidget(QWidget):
             #Add all items in a same layout
             self.control_widget = QWidget(self)
             self.control_layout = QHBoxLayout(self.control_widget)
+            self.control_layout.setContentsMargins(0, 0, 0, 0)
             
             # Add widgets to the horizontal layout
             self.control_layout.addWidget(self.view_options_button)

@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -157,7 +157,7 @@
                 </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="bottom_frame_3" stretch="50">
+                <layout class="QHBoxLayout" name="toolbar_layout" stretch="">
                  <property name="spacing">
                   <number>10</number>
                  </property>
@@ -176,9 +176,6 @@
                  <property name="bottomMargin">
                   <number>2</number>
                  </property>
-                 <item>
-                  <layout class="QHBoxLayout" name="toolbar_layout"/>
-                 </item>
                 </layout>
                </item>
               </layout>
@@ -2047,7 +2044,7 @@
                     <number>0</number>
                    </property>
                    <item>
-                    <layout class="QVBoxLayout" name="QVBoxlayout">
+                    <layout class="QVBoxLayout" name="fig_canvas_layout_2">
                      <property name="spacing">
                       <number>6</number>
                      </property>
@@ -2057,7 +2054,7 @@
                  </widget>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="bottom_frame" stretch="50,25,0,0,0,0,0,0,0,2">
+                 <layout class="QHBoxLayout" name="toolbar_layout_2" stretch="">
                   <property name="spacing">
                    <number>10</number>
                   </property>
@@ -2076,145 +2073,6 @@
                   <property name="bottomMargin">
                    <number>2</number>
                   </property>
-                  <item>
-                   <layout class="QHBoxLayout" name="toolbar_frame"/>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_7">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="rdbtn_baseline">
-                    <property name="text">
-                     <string>baseline</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="rdbtn_peak">
-                    <property name="text">
-                     <string>peaks</string>
-                    </property>
-                    <property name="checked">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_15">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="rsquared_1">
-                    <property name="minimumSize">
-                     <size>
-                      <width>80</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>80</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>R2=0 </string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="btn_copy_fig">
-                    <property name="toolTip">
-                     <string>Copy Figure to clipboard</string>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="resources.qrc">
-                      <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
-                    </property>
-                    <property name="iconSize">
-                     <size>
-                      <width>24</width>
-                      <height>24</height>
-                     </size>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_63">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>20</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>20</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>DPI:</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QSpinBox" name="sb_dpi_spectra">
-                    <property name="minimum">
-                     <number>100</number>
-                    </property>
-                    <property name="maximum">
-                     <number>200</number>
-                    </property>
-                    <property name="singleStep">
-                     <number>10</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_8">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
                  </layout>
                 </item>
                </layout>
@@ -2379,104 +2237,6 @@
                     </size>
                    </property>
                   </spacer>
-                 </item>
-                 <item>
-                  <widget class="QGroupBox" name="view_options_box">
-                   <property name="maximumSize">
-                    <size>
-                     <width>320</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="title">
-                    <string>View options:</string>
-                   </property>
-                   <layout class="QGridLayout" name="gridLayout_6">
-                    <item row="1" column="1">
-                     <widget class="QCheckBox" name="cb_residual">
-                      <property name="text">
-                       <string>residual</string>
-                      </property>
-                      <property name="checked">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="2">
-                     <widget class="QCheckBox" name="cb_filled">
-                      <property name="text">
-                       <string>filled</string>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="1">
-                     <widget class="QCheckBox" name="cb_bestfit">
-                      <property name="text">
-                       <string>best-fit</string>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="0">
-                     <widget class="QCheckBox" name="cb_legend">
-                      <property name="enabled">
-                       <bool>true</bool>
-                      </property>
-                      <property name="toolTip">
-                       <string>To display or remove the legend of the plot</string>
-                      </property>
-                      <property name="text">
-                       <string>legend</string>
-                      </property>
-                      <property name="checked">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="0">
-                     <widget class="QCheckBox" name="cb_raw">
-                      <property name="text">
-                       <string>raw</string>
-                      </property>
-                      <property name="checked">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="2">
-                     <widget class="QCheckBox" name="cb_colors">
-                      <property name="text">
-                       <string>colors</string>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="3">
-                     <widget class="QCheckBox" name="cb_peaks">
-                      <property name="text">
-                       <string>peaks</string>
-                      </property>
-                      <property name="checked">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="3">
-                     <widget class="QCheckBox" name="cb_normalize">
-                      <property name="text">
-                       <string>normalized</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
                  </item>
                 </layout>
                </widget>

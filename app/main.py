@@ -106,8 +106,6 @@ class Main:
         ########################################################
         self.ui.btn_remove_wafer.clicked.connect(self.maps.remove_map)
 
-        self.ui.btn_copy_fig.clicked.connect(self.maps.copy_fig)
-
         self.ui.btn_sel_all.clicked.connect(self.maps.select_all_spectra)
         self.ui.btn_sel_verti.clicked.connect(self.maps.select_verti)
         self.ui.btn_sel_horiz.clicked.connect(self.maps.select_horiz)

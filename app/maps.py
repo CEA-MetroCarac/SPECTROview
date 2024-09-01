@@ -9,7 +9,7 @@ from pathlib import Path
 from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, \
     clear_layout, compress, baseline_to_dict, dict_to_baseline, plot_baseline_dynamically
 from .common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
-    FitModelManager, CustomListWidget
+    FitModelManager, CustomListWidget, SpectraViewWidget
 from .common import FIT_METHODS, PLOT_POLICY
 
 from lmfit import fit_report
@@ -45,13 +45,17 @@ class Maps(QObject):
         self.spectrums_tab = spectrums
         self.common = common
 
-        self.maps = {}  # list of opened maps data
-        self.toolbar = None
         self.loaded_fit_model = None
         self.current_fit_model = None
+        self.maps = {}  # list of opened maps data
         self.spectrums = Spectra()
         self.df_fit_results = None
 
+        # Initialize SpectraViewWidget
+        self.spectra_widget = SpectraViewWidget()
+        self.ui.fig_canvas_layout_2.addWidget(self.spectra_widget.canvas)
+        self.ui.toolbar_layout_2.addWidget(self.spectra_widget.control_widget) 
+        
         # Update spectra_listbox when selecting maps via MAPS LIST
         self.ui.maps_listbox.itemSelectionChanged.connect(
             self.upd_spectra_list)
@@ -60,33 +64,10 @@ class Maps(QObject):
         self.ui.spectra_listbox = CustomListWidget()
         self.ui.spectra_listbox.setDragDropMode(QAbstractItemView.NoDragDrop)
         self.ui.listbox_layout2.addWidget(self.ui.spectra_listbox)
-
-        # Connect and plot_spectra of selected SPECTRUM LIST
-        self.ui.spectra_listbox.itemSelectionChanged.connect(
-            self.refresh_gui)
-        # Connect the checkbox signal to the method
-        self.ui.checkBox_2.stateChanged.connect(self.check_uncheck_all)
-        
-
-        # Connect and plot_spectra of selected SPECTRUM LIST
+        ## Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectra_listbox.itemSelectionChanged.connect(self.refresh_gui)
-
-        # Connect the stateChanged signal of the legend CHECKBOX
-        self.ui.cb_legend.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_raw.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_bestfit.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_colors.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_residual.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_filled.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_peaks.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_attached.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_normalize.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_limits.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_expr.stateChanged.connect(self.refresh_gui)
-
-        self.ui.cbb_wafer_size.currentIndexChanged.connect(self.refresh_gui)
-        self.ui.cbb_xaxis_unit2.currentIndexChanged.connect(self.refresh_gui)
-        self.ui.rdbt_show_wafer.toggled.connect(self.refresh_gui)
+        ## Connect the checkbox signal to the method
+        self.ui.checkBox_2.stateChanged.connect(self.check_uncheck_all)
         
         # Set a delay for the function "plot1"
         self.delay_timer = QTimer()
@@ -99,12 +80,31 @@ class Maps(QObject):
         self.zoom_pan_active = False
 
         self.ui.cbb_fit_methods.addItems(FIT_METHODS)
-        self.ui.sb_dpi_spectra.valueChanged.connect(
-            self.create_spectra_plot_widget)
-        
         self.ui.btn_send_to_viz2.clicked.connect(self.send_df_to_viz)
         
+        # Connect the stateChanged signal of the legend CHECKBOX
+        self.ui.cb_limits.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_expr.stateChanged.connect(self.refresh_gui)
+
+        self.ui.cbb_wafer_size.currentIndexChanged.connect(self.refresh_gui)
+        self.ui.cbb_xaxis_unit2.currentIndexChanged.connect(self.refresh_gui)
+        self.ui.rdbt_show_wafer.toggled.connect(self.refresh_gui)
+        
         # BASELINE
+        self.setup_baseline_controls()
+        
+        # Load default folder path from QSettings during application startup
+        self.fit_model_manager = FitModelManager(self.settings)
+        self.fit_model_manager.default_model_folder = self.settings.value(
+            "default_model_folder", "")
+        self.ui.l_defaut_folder_model.setText(
+            self.fit_model_manager.default_model_folder)
+        # Show available fit models
+        QTimer.singleShot(0, self.populate_available_models)
+        self.ui.btn_refresh_model_folder.clicked.connect(
+            self.populate_available_models)
+
+    def setup_baseline_controls(self):
         self.ui.cb_attached.clicked.connect(self.refresh_gui)
         self.ui.noise.valueChanged.connect(self.refresh_gui)
         self.ui.rbtn_linear.clicked.connect(self.refresh_gui)
@@ -119,19 +119,7 @@ class Maps(QObject):
         self.ui.btn_copy_bl.clicked.connect(self.copy_baseline)
         self.ui.btn_paste_bl.clicked.connect(self.paste_baseline_handler)
         self.ui.sub_baseline.clicked.connect(self.subtract_baseline_handler)
-        
-        
-        # Load default folder path from QSettings during application startup
-        self.fit_model_manager = FitModelManager(self.settings)
-        self.fit_model_manager.default_model_folder = self.settings.value(
-            "default_model_folder", "")
-        self.ui.l_defaut_folder_model.setText(
-            self.fit_model_manager.default_model_folder)
-        # Show available fit models
-        QTimer.singleShot(0, self.populate_available_models)
-        self.ui.btn_refresh_model_folder.clicked.connect(
-            self.populate_available_models)
-
+    
     def open_hyperspectra(self, maps=None, file_paths=None):
         """Open hyperspectral data"""
 
@@ -445,39 +433,13 @@ class Maps(QObject):
             spectrum.x = spectrum.x0[ind_min:ind_max + 1].copy()
             spectrum.y = spectrum.y0[ind_min:ind_max + 1].copy()
         QTimer.singleShot(50, self.upd_spectra_list)
-        QTimer.singleShot(300, self.rescale)
+        QTimer.singleShot(300, self.spectra_widget.rescale)
 
     def set_x_range_all(self):
         """Set new x range for all spectrum"""
         fnames = self.spectrums.fnames
         self.set_x_range(fnames=fnames)
 
-    def on_click(self, event):
-        """
-        On click action to add a "peak models" or "baseline points"
-        """
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        fit_model = self.ui.cbb_fit_models.currentText()
-        # Add a new peak_model 
-        if self.zoom_pan_active == False and self.ui.rdbtn_peak.isChecked():
-            if event.button == 1 and event.inaxes:
-                x = event.xdata
-                y = event.ydata
-            sel_spectrum.add_peak_model(fit_model, x)
-            self.upd_spectra_list()
-
-        # Add a new baseline point
-        if self.zoom_pan_active == False and self.ui.rdbtn_baseline.isChecked():
-            if event.button == 1 and event.inaxes:
-                x1 = event.xdata
-                y1 = event.ydata
-                if sel_spectrum.baseline.is_subtracted:
-                    show_alert(
-                        "Already subtracted before. Reinitialize spectrum to "
-                        "perform new baseline")
-                else:
-                    sel_spectrum.baseline.add_point(x1, y1)
-                    self.upd_spectra_list()
 
     def get_baseline_settings(self):
         """Get baseline settings from GUI and set to selected spectrum"""
@@ -520,7 +482,7 @@ class Maps(QObject):
             else: 
                 continue
         QTimer.singleShot(50, self.refresh_gui)
-        QTimer.singleShot(300, self.rescale)
+        QTimer.singleShot(300, self.spectra_widget.rescale)
 
     def subtract_baseline_all(self):
         """Subtracts baseline points for all spectra"""
@@ -671,7 +633,7 @@ class Maps(QObject):
     def fit_completed(self):
         """Update GUI after completing fitting process."""
         self.upd_spectra_list()
-        QTimer.singleShot(200, self.rescale)
+        QTimer.singleShot(200, self.spectra_widget.rescale)
         self.ui.progressBar.setValue(100)
         self.ui.centralwidget.setEnabled(True)
 
@@ -749,54 +711,20 @@ class Maps(QObject):
             fnames = [f"{map_name}_{coord}" for coord in coords]
         self.common.reinit_spectrum(fnames, self.spectrums)
         self.upd_spectra_list()
-        QTimer.singleShot(200, self.rescale)
+        QTimer.singleShot(200, self.spectra_widget.rescale)
 
     def reinit_all(self):
         """Reinitialize all spectra"""
         fnames = self.spectrums.fnames
         self.reinit(fnames)
 
-    def rescale(self):
-        """Rescale the spectra plot"""
-        self.ax.autoscale()
-        self.canvas1.draw()
 
     def create_spectra_plot_widget(self):
         """Create canvas and toolbar for plotting in the GUI."""
-        plt.style.use(PLOT_POLICY)
-        self.common.clear_layout(self.ui.QVBoxlayout.layout())
-        self.common.clear_layout(self.ui.toolbar_frame.layout())
-        self.upd_spectra_list()
-        dpi = float(self.ui.sb_dpi_spectra.text())
-
-        fig1 = plt.figure(dpi=dpi)
-        self.ax = fig1.add_subplot(111)
-        txt = self.ui.cbb_xaxis_unit2.currentText()
-        self.ax.set_xlabel(txt)
-        self.ax.set_ylabel("Intensity (a.u)")
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        self.canvas1 = FigureCanvas(fig1)
-        self.canvas1.mpl_connect('button_press_event', self.on_click)
-
-        # Toolbar
-        self.toolbar = NavigationToolbar2QT(self.canvas1)
-        for action in self.toolbar.actions():
-            if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
-                action.setVisible(False)
-            if action.text() == 'Pan' or action.text() == 'Zoom':
-                action.toggled.connect(self.toggle_zoom_pan)
-
-        rescale = next(
-            a for a in self.toolbar.actions() if a.text() == 'Home')
-        rescale.triggered.connect(self.rescale)
-
-        self.ui.QVBoxlayout.addWidget(self.canvas1)
-        self.ui.toolbar_frame.addWidget(self.toolbar)
-        self.canvas1.figure.tight_layout()
-        self.canvas1.draw()
+        pass
 
     def plot(self):
-        """Plot selected spectra"""
+        """Plot spectra or fit results in the main plot area."""
         map_name, coords = self.spectra_id()  # current selected spectra ID
         selected_spectrums = []
 
@@ -809,102 +737,15 @@ class Maps(QObject):
         selected_spectrums = selected_spectrums[:50]
         if len(selected_spectrums) == 0:
             return
+        
+        # Limit the number of spectra to avoid crashes
+        selected_spectrums = selected_spectrums[:50]
 
-        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
-        self.ax.clear()
+        if not selected_spectrums:
+            return
 
-        # reassign previous axis limits (related to zoom)
-        if not xlim == ylim == (0.0, 1.0):
-            self.ax.set_xlim(xlim)
-            self.ax.set_ylim(ylim)
-
-        for spectrum in selected_spectrums:
-            fname, coord = self.spectrum_object_id(spectrum)
-            x_values = spectrum.x
-            y_values = spectrum.y
-
-            # NORMALIZE
-            if self.ui.cb_normalize.isChecked():
-                max_intensity = 0.0
-                max_intensity = max(max_intensity, max(spectrum.y))
-                y_values = y_values / max_intensity
-            self.ax.plot(x_values, y_values, label=f"{coord}", ms=3, lw=2)
-
-            # BASELINE
-            plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
-
-            # RAW
-            if self.ui.cb_raw.isChecked():
-                x0_values = spectrum.x0
-                y0_values = spectrum.y0
-                self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3,
-                             lw=1)
-            # Background
-            y_bkg = np.zeros_like(x_values)
-            if spectrum.bkg_model is not None:
-                y_bkg = spectrum.bkg_model.eval(
-                    spectrum.bkg_model.make_params(), x=x_values)
-
-            # BEST-FIT and PEAK_MODELS
-            y_peaks = np.zeros_like(x_values)
-            if self.ui.cb_bestfit.isChecked():
-                peak_labels = spectrum.peak_labels
-                for i, peak_model in enumerate(spectrum.peak_models):
-                    peak_label = peak_labels[i]
-
-                    # remove temporarily 'expr'
-                    param_hints_orig = deepcopy(peak_model.param_hints)
-                    for key, _ in peak_model.param_hints.items():
-                        peak_model.param_hints[key]['expr'] = ''
-                    params = peak_model.make_params()
-                    # rassign 'expr'
-                    peak_model.param_hints = param_hints_orig
-                    y_peak = peak_model.eval(params, x=x_values)
-                    y_peaks += y_peak
-                    if self.ui.cb_filled.isChecked():
-                        self.ax.fill_between(x_values, 0, y_peak, alpha=0.5,
-                                             label=f"{peak_label}")
-                        if self.ui.cb_peaks.isChecked():
-                            position = peak_model.param_hints['x0']['value']
-                            intensity = peak_model.param_hints['ampli']['value']
-                            position = round(position, 2)
-                            text = f"{peak_label}\n({position})"
-                            self.ax.text(position, intensity, text,
-                                         ha='center', va='bottom',
-                                         color='black', fontsize=12)
-                    else:
-
-                        self.ax.plot(x_values, y_peak, '--',
-                                     label=f"{peak_label}")
-                if hasattr(spectrum.result_fit,
-                           'success') and self.ui.cb_bestfit.isChecked():
-                    y_fit = y_bkg + y_peaks
-                    self.ax.plot(x_values, y_fit, label=f"bestfit")
-            # RESIDUAL
-            if hasattr(spectrum.result_fit,
-                       'residual') and self.ui.cb_residual.isChecked():
-                residual = spectrum.result_fit.residual
-                self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
-
-            if self.ui.cb_colors.isChecked() is False:
-                self.ax.set_prop_cycle(None)
-            # R-SQUARED
-            if hasattr(spectrum.result_fit, 'rsquared'):
-                rsquared = round(spectrum.result_fit.rsquared, 4)
-                self.ui.rsquared_1.setText(f"R2={rsquared}")
-            else:
-                self.ui.rsquared_1.setText("R2=0")
-
-        # self.ax.set_xlabel("Raman shift (cm$^{-1}$)")
-        txt = self.ui.cbb_xaxis_unit2.currentText()
-        self.ax.set_xlabel(txt)
-        self.ax.set_ylabel("Intensity (a.u)")
-        if self.ui.cb_legend.isChecked():
-            self.ax.legend(loc='upper right')
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        self.ax.get_figure().tight_layout()
-
-        self.canvas1.draw()
+        self.spectra_widget.plot(selected_spectrums)
+        
         self.plot_measurement_sites()
         self.read_x_range()
         self.show_peak_table()
@@ -1140,10 +981,6 @@ class Maps(QObject):
         self.canvas1.draw()
         self.canvas2.draw()
 
-    def copy_fig(self):
-        """Copy figure to clipboard"""
-        self.common.copy_fig_to_clb(canvas=self.canvas1)
-
     def select_all_spectra(self):
         """Select all spectra listed in the spectra listbox"""
         item_count = self.ui.spectra_listbox.count()
@@ -1277,12 +1114,6 @@ class Maps(QObject):
     def cosmis_ray_detection(self):
         """Perform cosmic ray detection on the spectra data."""
         self.spectrums.outliers_limit_calculation()
-
-    def toggle_zoom_pan(self, checked):
-        """Toggle zoom and pan functionality for the application."""
-        self.zoom_pan_active = checked
-        if not checked:
-            self.zoom_pan_active = False
 
     def show_peak_table(self):
         """
@@ -1493,6 +1324,6 @@ class Maps(QObject):
             self.canvas2.draw()
 
         # Refresh the UI to reflect the cleared state
-        QTimer.singleShot(50, self.rescale)
+        QTimer.singleShot(50, self.spectra_widget.rescale)
         QTimer.singleShot(100, self.upd_maps_list)
         print("'Maps' Tab environment has been cleared and reset.")

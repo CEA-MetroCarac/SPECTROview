@@ -45,29 +45,23 @@ class Spectrums(QObject):
         self.current_fit_model = None
         self.spectrums = Spectra()
         self.df_fit_results = None
-        self.dpi=100
 
         # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget()
-        # Add canvas and toolbar to the layouts
         self.ui.fig_canvas_layout.addWidget(self.spectra_widget.canvas)
         self.ui.toolbar_layout.addWidget(self.spectra_widget.control_widget) 
         
-        self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
-
         # Create a customized QListWidget
         self.ui.spectrums_listbox = CustomListWidget()
         self.ui.listbox_layout.addWidget(self.ui.spectrums_listbox)
         self.ui.spectrums_listbox.items_reordered.connect(
             self.update_spectrums_order)
-
-        # Connect and plot_spectra of selected SPECTRUM LIST
+        ##Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectrums_listbox.itemSelectionChanged.connect(
             self.refresh_gui)
-        # Connect the checkbox signal to the method
+        ## Connect the checkbox signal to the method
         self.ui.checkBox.stateChanged.connect(self.check_uncheck_all)
 
-        
         # Set a delay for the function plot
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
@@ -75,7 +69,6 @@ class Spectrums(QObject):
         self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_gui)
 
         self.ui.cbb_fit_methods_2.addItems(FIT_METHODS)
-        
         self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
 
         # BASELINE
@@ -115,20 +108,13 @@ class Spectrums(QObject):
         self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
 
 
-    def recreate_spectra_widget(self):
-        """Delegate creation of the spectra widget to the SpectraViewWidget."""
-        print("Creating spectra plot widget")
-        self.spectra_widget.create_spectra_widget()
-
     def plot(self):
         """Plot spectra or fit results in the main plot area."""
         fnames = self.get_spectrum_fnames()
         selected_spectrums = Spectra()
         selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
-
         # Limit the number of spectra to avoid crashes
         selected_spectrums = selected_spectrums[:50]
-
         if not selected_spectrums:
             return
 
@@ -249,8 +235,6 @@ class Spectrums(QObject):
         for index in range(self.ui.spectrums_listbox.count()):
             item = self.ui.spectrums_listbox.item(index)
             item.setCheckState(check_state)
-
-    
 
     def update_spectrums_order(self):
         """
@@ -958,7 +942,6 @@ class Spectrums(QObject):
         if hasattr(self, 'canvas1'):
             self.canvas.draw()
         
-
         # Refresh the UI to reflect the cleared state
         QTimer.singleShot(50, self.spectra_widget.rescale)
         QTimer.singleShot(100, self.upd_spectra_list)

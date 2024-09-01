@@ -166,7 +166,7 @@
                    <number>0</number>
                   </property>
                   <item>
-                   <layout class="QHBoxLayout" name="toolbar_layout" stretch="">
+                   <layout class="QHBoxLayout" name="toolbar_layout">
                     <property name="spacing">
                      <number>2</number>
                     </property>
@@ -817,7 +817,7 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>717</width>
+                               <width>695</width>
                                <height>173</height>
                               </rect>
                              </property>
@@ -1747,6 +1747,12 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="minimumSize">
+           <size>
+            <width>320</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="frameShape">
            <enum>QFrame::StyledPanel</enum>
           </property>
@@ -1779,7 +1785,7 @@
              </property>
              <property name="minimumSize">
               <size>
-               <width>290</width>
+               <width>310</width>
                <height>0</height>
               </size>
              </property>
@@ -2088,7 +2094,7 @@
                      <number>0</number>
                     </property>
                     <item>
-                     <layout class="QHBoxLayout" name="toolbar_layout_2" stretch="">
+                     <layout class="QHBoxLayout" name="toolbar_layout_2">
                       <property name="spacing">
                        <number>2</number>
                       </property>
@@ -2905,7 +2911,7 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>682</width>
+                               <width>695</width>
                                <height>171</height>
                               </rect>
                              </property>
@@ -3293,7 +3299,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
+                       <width>283</width>
                        <height>243</height>
                       </rect>
                      </property>
@@ -4005,6 +4011,12 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="minimumSize">
+           <size>
+            <width>320</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="frameShape">
            <enum>QFrame::StyledPanel</enum>
           </property>
@@ -4037,7 +4049,7 @@
              </property>
              <property name="minimumSize">
               <size>
-               <width>290</width>
+               <width>310</width>
                <height>0</height>
               </size>
              </property>
@@ -4074,7 +4086,7 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>270</width>
+                  <width>300</width>
                   <height>0</height>
                  </size>
                 </property>
@@ -4179,7 +4191,7 @@
              </property>
              <property name="minimumSize">
               <size>
-               <width>290</width>
+               <width>310</width>
                <height>0</height>
               </size>
              </property>

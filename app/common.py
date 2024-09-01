@@ -169,7 +169,7 @@ class SpectraViewWidget(QWidget):
         axis_layout.addWidget(self.x_axis_combo)
 
         # Remove margins to make it look better inside the menu
-        axis_layout.setContentsMargins(0, 0, 0, 0)
+        axis_layout.setContentsMargins(5, 5, 5, 5)
 
         # Create a QWidgetAction to hold the combined QLabel and QComboBox
         combo_action = QWidgetAction(self.view_options_menu)

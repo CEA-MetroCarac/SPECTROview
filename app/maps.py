@@ -87,7 +87,6 @@ class Maps(QObject):
         self.ui.cb_expr.stateChanged.connect(self.refresh_gui)
 
         self.ui.cbb_wafer_size.currentIndexChanged.connect(self.refresh_gui)
-        self.ui.cbb_xaxis_unit2.currentIndexChanged.connect(self.refresh_gui)
         self.ui.rdbt_show_wafer.toggled.connect(self.refresh_gui)
         
         # BASELINE

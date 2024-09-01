@@ -115,6 +115,8 @@ class SpectraViewWidget(QWidget):
             self.rdbtn_peak = QRadioButton("Peak", self)
             self.rdbtn_baseline.setChecked(True) 
             self.R2 = QLabel("R2=0", self)
+            self.R2.setFixedWidth(80)
+
 
             # Create a QPushButton for Copy figure canvans
             self.btn_copy = QPushButton("", self)
@@ -152,6 +154,34 @@ class SpectraViewWidget(QWidget):
 
         self.view_options_menu = QMenu(self.view_options_button)
 
+        # Create a QWidget to hold the QLabel and QComboBox
+        axis_widget = QWidget(self.view_options_menu)
+        axis_layout = QHBoxLayout(axis_widget)
+
+        # Add QLabel for "X axis unit"
+        x_axis_label = QLabel("X axis unit:", axis_widget)
+        axis_layout.addWidget(x_axis_label)
+
+        # Add combobox for X-axis label options
+        self.x_axis_combo = QComboBox(axis_widget)
+        self.x_axis_combo.addItems(X_AXIS)
+        self.x_axis_combo.currentIndexChanged.connect(self.refresh_plot)
+        axis_layout.addWidget(self.x_axis_combo)
+
+        # Remove margins to make it look better inside the menu
+        axis_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Create a QWidgetAction to hold the combined QLabel and QComboBox
+        combo_action = QWidgetAction(self.view_options_menu)
+        combo_action.setDefaultWidget(axis_widget)
+
+        # Add the combobox action at the top of the menu
+        self.view_options_menu.addAction(combo_action)
+
+        # Add a separator to distinguish the combobox from checkable actions
+        self.view_options_menu.addSeparator()
+
+        # Define view options with checkable actions
         view_options = [
             ("Legends", "Legends"),
             ("Colors", "Colors", True),
@@ -163,6 +193,7 @@ class SpectraViewWidget(QWidget):
             ("Normalized", "Normalized"),
         ]
 
+        # Add actions to the menu
         for option_name, option_label, *checked in view_options:
             action = QAction(option_label, self)
             action.setCheckable(True)
@@ -171,11 +202,14 @@ class SpectraViewWidget(QWidget):
             self.view_options[option_name] = action
             self.view_options_menu.addAction(action)
 
+        # Set the menu to the button
         self.view_options_button.setMenu(self.view_options_menu)
+
 
     def update_plot_styles(self):
         """Apply styles and settings to the plot."""
-        self.ax.set_xlabel("Wavenumber (cm-1)")  # Default label
+        xlable = self.x_axis_combo.currentText()
+        self.ax.set_xlabel(xlable)
         self.ax.set_ylabel("Intensity (a.u)")
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
 
@@ -351,16 +385,18 @@ class SpectraViewWidget(QWidget):
 
     def finalize_plot(self):
         """Finalize plot settings and draw the canvas."""
-        self.ax.set_xlabel("Wavenumber (cm-1)")
+        # Use the selected x-axis label from the combobox
+        xlabel = self.x_axis_combo.currentText() if self.x_axis_combo else "Wavenumber (cm-1)"
+        self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel("Intensity (a.u)")
 
         if self.view_options['Legends'].isChecked():
             self.ax.legend(loc='upper right')
-        
 
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.figure.tight_layout()
         self.canvas.draw()
+
 
     def refresh_plot(self):
         """Refresh the plot based on user view options."""

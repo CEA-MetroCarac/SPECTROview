@@ -66,8 +66,7 @@ class Spectrums(QObject):
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot)
-        self.ui.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_gui)
-
+        
         self.ui.cbb_fit_methods_2.addItems(FIT_METHODS)
         self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
 

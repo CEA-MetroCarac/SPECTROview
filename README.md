@@ -31,6 +31,8 @@ ___
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/5.collecting-fit-results.gif">
 </p>
 
+- Dedicated module for effortless, fast, and easy data visualization. 
+
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/Visu_tab.png">
 </p>

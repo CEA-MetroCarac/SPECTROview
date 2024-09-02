@@ -78,7 +78,6 @@ class Maps(QObject):
 
         self.plot_styles = ["box plot", "point plot", "bar plot"]
         self.create_plot_widget()
-        self.create_spectra_plot_widget()
         self.zoom_pan_active = False
 
         self.ui.cbb_fit_methods.addItems(FIT_METHODS)
@@ -723,11 +722,6 @@ class Maps(QObject):
         """Reinitialize all spectra"""
         fnames = self.spectrums.fnames
         self.reinit(fnames)
-
-
-    def create_spectra_plot_widget(self):
-        """Create canvas and toolbar for plotting in the GUI."""
-        pass
 
     def plot(self):
         """Plot spectra or fit results in the main plot area."""

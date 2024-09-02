@@ -54,12 +54,8 @@ class Visualization(QDialog):
         self.ui.btn_save_df_2.clicked.connect(self.save_df_to_excel)
 
         # FILTER
-        self.filter = Filter(self.ui.ent_filter_query, self.ui.listbox_filters,
-                             self.sel_df)
-        self.ui.ent_filter_query.returnPressed.connect(self.filter.add_filter)
-        self.ui.btn_add_filter.clicked.connect(self.filter.add_filter)
-        self.ui.btn_remove_filters.clicked.connect(self.filter.remove_filter)
-        self.ui.btn_apply_filters.clicked.connect(self.apply_filters)
+        self.filter = Filter(self.sel_df)
+        self.ui.filter_widget_layout.addWidget(self.filter.gb_filter_widget)
         self.filtered_df = None
 
         # GRAPH
@@ -437,10 +433,10 @@ class Visualization(QDialog):
         """Reflect the state of filters associated with a graph to the GUI"""
 
         # Clear the existing items and uncheck them
-        for index in range(self.ui.listbox_filters.count()):
-            item = self.ui.listbox_filters.item(index)
+        for index in range(self.filter.filter_listbox.count()):
+            item = self.filter.filter_listbox.item(index)
             if isinstance(item, QListWidgetItem):
-                widget = self.ui.listbox_filters.itemWidget(item)
+                widget = self.filter.filter_listbox.itemWidget(item)
                 if isinstance(widget, QCheckBox):
                     widget.setChecked(False)
 
@@ -449,10 +445,10 @@ class Visualization(QDialog):
             filter_state = filter_info["state"]
             # Check if the filter expression already exists in the listbox
             existing_item = None
-            for index in range(self.ui.listbox_filters.count()):
-                item = self.ui.listbox_filters.item(index)
+            for index in range(self.filter.filter_listbox.count()):
+                item = self.filter.filter_listbox.item(index)
                 if isinstance(item, QListWidgetItem):
-                    widget = self.ui.listbox_filters.itemWidget(item)
+                    widget = self.filter.filter_listbox.itemWidget(item)
                     if isinstance(widget,
                                   QCheckBox) and widget.text() == \
                             filter_expression:
@@ -461,15 +457,15 @@ class Visualization(QDialog):
             # Update the state if the filter expression already exists,
             # otherwise add a new item
             if existing_item:
-                checkbox = self.ui.listbox_filters.itemWidget(existing_item)
+                checkbox = self.filter.filter_listbox.itemWidget(existing_item)
                 checkbox.setChecked(filter_state)
             else:
                 item = QListWidgetItem()
                 checkbox = QCheckBox(filter_expression)
                 checkbox.setChecked(filter_state)
                 item.setSizeHint(checkbox.sizeHint())
-                self.ui.listbox_filters.addItem(item)
-                self.ui.listbox_filters.setItemWidget(item, checkbox)
+                self.filter.filter_listbox.addItem(item)
+                self.filter.filter_listbox.setItemWidget(item, checkbox)
 
     def update_gui(self):
         """Update the GUI elements based on the selected dataframe"""
@@ -691,7 +687,7 @@ class Visualization(QDialog):
         self.ui.cbb_y2_2.clear()
         self.ui.cbb_y3_2.clear()
         self.ui.cbb_z_2.clear()
-        self.ui.listbox_filters.clear()
+        self.filter.filter_listbox.clear()
         self.ui.cbb_graph_list.clear()
 
     def add_y12(self):

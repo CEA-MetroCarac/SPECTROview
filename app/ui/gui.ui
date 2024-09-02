@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -1182,7 +1182,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>336</height>
+                       <height>243</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -3279,7 +3279,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
+                       <width>428</width>
                        <height>243</height>
                       </rect>
                      </property>
@@ -4657,6 +4657,9 @@
               <property name="text">
                <string>Grid</string>
               </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
             <item>
@@ -4694,7 +4697,7 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="10,10,5,74,1">
+          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="0,0,5,74,1">
            <property name="spacing">
             <number>5</number>
            </property>
@@ -4711,7 +4714,7 @@
             <number>2</number>
            </property>
            <item>
-            <widget class="QGroupBox" name="groupBox_loaded_df_2">
+            <widget class="QGroupBox" name="gb_df_listbox">
              <property name="title">
               <string>Loaded dataframe(s):</string>
              </property>
@@ -4904,115 +4907,40 @@
             </widget>
            </item>
            <item>
-            <widget class="QGroupBox" name="groupBox_df_manip_5">
+            <widget class="QWidget" name="filter_widget_holder" native="true">
              <property name="minimumSize">
               <size>
                <width>0</width>
+               <height>100</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
                <height>150</height>
               </size>
              </property>
-             <property name="title">
-              <string>Data filtering:</string>
-             </property>
-             <layout class="QVBoxLayout" name="verticalLayout_56">
-              <property name="spacing">
-               <number>5</number>
-              </property>
+             <layout class="QVBoxLayout" name="verticalLayout_5">
               <property name="leftMargin">
-               <number>2</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>2</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>2</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>2</number>
+               <number>0</number>
               </property>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_99">
-                <property name="spacing">
-                 <number>5</number>
-                </property>
-                <item>
-                 <widget class="QLineEdit" name="ent_filter_query">
-                  <property name="placeholderText">
-                   <string>Enter query expression (? : see Help menu)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="btn_add_filter">
-                  <property name="toolTip">
-                   <string>Add filter(s) to dataframe</string>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icon/iconpack/add.png</normaloff>:/icon/iconpack/add.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="btn_remove_filters">
-                  <property name="toolTip">
-                   <string>Remove filters from the list</string>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icon/iconpack/close.png</normaloff>:/icon/iconpack/close.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="btn_apply_filters">
-                  <property name="toolTip">
-                   <string>Apply selected filters to selected dataframe</string>
-                  </property>
-                  <property name="text">
-                   <string>Apply</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icon/iconpack/done.png</normaloff>:/icon/iconpack/done.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <widget class="QListWidget" name="listbox_filters">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>80</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>16777215</width>
-                  <height>100</height>
-                 </size>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="filter_widget_layout"/>
               </item>
              </layout>
             </widget>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_114">
+            <layout class="QHBoxLayout" name="btn_layout">
              <property name="leftMargin">
               <number>10</number>
              </property>
@@ -5172,7 +5100,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>395</width>
-                    <height>494</height>
+                    <height>538</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">

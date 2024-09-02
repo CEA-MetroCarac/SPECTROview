@@ -23,8 +23,8 @@ from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, \
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
     QLineEdit, QWidget, QPushButton,QToolButton, QSpinBox, QComboBox, QCheckBox, QListWidgetItem, \
-    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy, QRadioButton
-from PySide6.QtCore import Signal, QThread, Qt, QSize,QTimer
+    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy, QRadioButton, QGroupBox
+from PySide6.QtCore import Signal, QThread, Qt, QSize,QTimer, QCoreApplication
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
     QAction, Qt
 
@@ -65,6 +65,183 @@ LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
                    'upper center', 'center']
 
 X_AXIS = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
+
+class Filter:
+    """
+    Class for Handling "Filter Features" in Querying Pandas DataFrames
+
+    Attributes:
+    line_edit (QLineEdit): Input field for filter expressions.
+    listbox (QListWidget): List widget to display filter expressions as checkboxes.
+    df (pandas.DataFrame): DataFrame to be filtered.
+    filters (list): List to store filter expressions and their states.
+    """
+
+    def __init__(self, df):
+        """
+        Initialize the Filter class with a DataFrame and set up UI components.
+
+        Args:
+        df (pandas.DataFrame): The DataFrame to apply filters on.
+        """
+        self.df = df
+        self.filters = []
+        self.initUI()
+
+    def initUI(self):
+        """Initialize the UI components."""
+        self.create_filter_widget()
+
+    def create_filter_widget(self):
+        """Create filter UI components and organize them directly within the QGroupBox."""
+        # Create Group Box to hold all filter widgets
+        self.gb_filter_widget = QGroupBox()
+        self.gb_filter_widget.setTitle(QCoreApplication.translate("mainWindow", u"Data filtering:", None))
+        self.gb_filter_widget.setMinimumSize(QSize(0, 100))
+        self.gb_filter_widget.setMaximumHeight(150)
+
+        # Set the main layout for the group box
+        self.layout_main = QVBoxLayout(self.gb_filter_widget)
+
+        # Horizontal layout to hold the filter entry and buttons
+        self.layout_buttons = QHBoxLayout()
+        self.layout_buttons.setSpacing(2)
+
+        # Entry box for filter queries
+        self.filter_query = QLineEdit(self.gb_filter_widget)
+        self.filter_query.setPlaceholderText("Enter your filter expression here...") 
+        self.filter_query.returnPressed.connect(self.add_filter)
+        self.layout_buttons.addWidget(self.filter_query)
+
+        # Button to add a filter
+        self.btn_add_filter = QPushButton(self.gb_filter_widget)
+        icon_add = QIcon()
+        icon_add.addFile(u":/icon/iconpack/add.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.btn_add_filter.setIcon(icon_add)
+        self.btn_add_filter.clicked.connect(self.add_filter) 
+        self.layout_buttons.addWidget(self.btn_add_filter)
+
+        # Button to remove selected filters
+        self.btn_remove = QPushButton(self.gb_filter_widget)
+        icon_remove = QIcon()
+        icon_remove.addFile(u":/icon/iconpack/close.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.btn_remove.setIcon(icon_remove)
+        self.btn_remove.clicked.connect(self.remove_filter) 
+        self.layout_buttons.addWidget(self.btn_remove)
+
+        # Button to apply filters
+        self.btn_apply = QPushButton(self.gb_filter_widget)
+        icon_apply = QIcon()
+        icon_apply.addFile(u":/icon/iconpack/done.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.btn_apply.setIcon(icon_apply)
+        self.btn_apply.setText("Apply")  
+        self.btn_apply.setToolTip("Click to apply checked filters to the selected dataframe") 
+        self.btn_apply.clicked.connect(self.apply_filters)  
+        self.layout_buttons.addWidget(self.btn_apply)
+
+        # Add the horizontal layout to the main layout of the group box
+        self.layout_main.addLayout(self.layout_buttons)
+
+        # Create QListWidget to display filter expressions as checkboxes
+        self.filter_listbox = QListWidget(self.gb_filter_widget)
+        self.layout_main.addWidget(self.filter_listbox)
+
+    def set_dataframe(self, df):
+        """Set the DataFrame to be filtered."""
+        self.df = df
+
+    def add_filter(self):
+        """Add a filter expression to the filters list and update the UI."""
+        filter_expression = self.filter_query.text().strip()
+        if filter_expression:
+            filter = {"expression": filter_expression, "state": False}
+            self.filters.append(filter)
+        # Add the filter expression to QListWidget as a checkbox item
+        item = QListWidgetItem()
+        checkbox = QCheckBox(filter_expression)
+        item.setSizeHint(checkbox.sizeHint())
+        self.filter_listbox.addItem(item)
+        self.filter_listbox.setItemWidget(item, checkbox)
+
+    def remove_filter(self):
+        """Remove selected filter(s) from the filters list and UI."""
+        selected_items = [item for item in self.filter_listbox.selectedItems()]
+        for item in selected_items:
+            checkbox = self.filter_listbox.itemWidget(item)
+            filter_expression = checkbox.text()
+            for filter in self.filters[:]:
+                if filter.get("expression") == filter_expression:
+                    self.filters.remove(filter)
+            self.filter_listbox.takeItem(self.filter_listbox.row(item))
+
+    def get_current_filters(self):
+        """
+        Retrieve the current state of filters as displayed in the UI.
+
+        Returns:
+        list: List of dictionaries representing filter expressions and their states.
+        Each dictionary has keys 'expression' and 'state'.
+        """
+        checked_filters = []
+        for i in range(self.filter_listbox.count()):
+            item = self.filter_listbox.item(i)
+            checkbox = self.filter_listbox.itemWidget(item)
+            expression = checkbox.text()
+            state = checkbox.isChecked()
+            checked_filters.append({"expression": expression, "state": state})
+        return checked_filters
+
+    def apply_filters(self, filters=None):
+        """
+        Apply filters to the DataFrame (self.df) based on the current or provided filters.
+
+        Args:
+        filters (list, optional): List of dictionaries representing filter expressions and their states.
+                                  Defaults to None, meaning current UI filters are used.
+
+        Returns:
+        pandas.DataFrame or None: Filtered DataFrame based on applied filters or None if self.df is None.
+        """
+        if filters:
+            self.filters = filters
+        else:
+            checked_filters = self.get_current_filters()
+            self.filters = checked_filters
+
+        # Apply all filters at once
+        self.filtered_df = self.df.copy() if self.df is not None else None
+
+        if self.filtered_df is not None:  # Check if filtered_df is not None
+            for filter_data in self.filters:
+                filter_expr = filter_data["expression"]
+                is_checked = filter_data["state"]
+                if is_checked:
+                    try:
+                        filter_expr = str(filter_expr)
+                        print(f"Applying filter expression: {filter_expr}")
+                        # Apply the filter
+                        self.filtered_df = self.filtered_df.query(filter_expr)
+                    except Exception as e:
+                        print(f"Error applying filter: {str(e)}")
+
+        return self.filtered_df
+
+    def upd_filter_listbox(self):
+        """
+        Update the listbox UI to reflect changes in filters.
+
+        Clears the listbox and re-populates it with current filters.
+        Each filter is displayed as a checkbox item.
+        """
+        self.filter_listbox.clear()
+        for filter_data in self.filters:
+            filter_expression = filter_data["expression"]
+            item = QListWidgetItem()
+            checkbox = QCheckBox(filter_expression)
+            item.setSizeHint(checkbox.sizeHint())
+            self.filter_listbox.addItem(item)
+            self.filter_listbox.setItemWidget(item, checkbox)
+            checkbox.setChecked(filter_data["state"])
 
 
 
@@ -1342,140 +1519,6 @@ class ShowParameters:
 
     def update_param_hint_expr(self, pm, key, text):
         pm.param_hints[key]['expr'] = text
-
-
-class Filter:
-    """
-    Class for Handling "Filter Features" in Querying Pandas DataFrames
-
-    Attributes:
-    line_edit (QLineEdit): Input field for filter expressions.
-    listbox (QListWidget): List widget to display filter expressions as
-    checkboxes.
-    df (pandas.DataFrame): DataFrame to be filtered.
-    filters (list): List to store filter expressions and their states.
-    """
-
-    def __init__(self, line_edit, listbox, df):
-        self.line_edit = line_edit
-        self.listbox = listbox
-        self.df = df
-        self.filters = []
-
-    def set_dataframe(self, df):
-        """Set the dataframe to be filtered"""
-        self.df = df
-
-    def add_filter(self):
-        """
-        Add a filter expression to the filters list and update the UI.
-
-        Retrieves the filter expression from line_edit and adds it to filters.
-        Updates the listbox to display the new filter expression as a
-        checkbox item.
-        """
-        filter_expression = self.line_edit.text().strip()
-        if filter_expression:
-            filter = {"expression": filter_expression, "state": False}
-            self.filters.append(filter)
-        # Add the filter expression to QListWidget as a checkbox item
-        item = QListWidgetItem()
-        checkbox = QCheckBox(filter_expression)
-        item.setSizeHint(checkbox.sizeHint())
-        self.listbox.addItem(item)
-        self.listbox.setItemWidget(item, checkbox)
-
-    def remove_filter(self):
-        """
-        Remove selected filter(s) from the filters list and UI.
-
-        Retrieves selected items from listbox, identifies corresponding filters,
-        and removes them from filters list. Updates the listbox accordingly.
-        """
-        selected_items = [item for item in
-                          self.listbox.selectedItems()]
-        for item in selected_items:
-            checkbox = self.listbox.itemWidget(item)
-            filter_expression = checkbox.text()
-            for filter in self.filters[:]:
-                if filter.get("expression") == filter_expression:
-                    self.filters.remove(filter)
-            self.listbox.takeItem(self.listbox.row(item))
-
-    def get_current_filters(self):
-        """
-        Retrieve the current state of filters as displayed in the UI.
-
-        Returns:
-        list: List of dictionaries representing filter expressions and their
-        states.
-        Each dictionary has keys 'expression' and 'state'.
-        """
-        checked_filters = []
-        for i in range(self.listbox.count()):
-            item = self.listbox.item(i)
-            checkbox = self.listbox.itemWidget(item)
-            expression = checkbox.text()
-            state = checkbox.isChecked()
-            checked_filters.append({"expression": expression, "state": state})
-        return checked_filters
-
-    def apply_filters(self, filters=None):
-        """
-        Apply filters to the DataFrame (self.df) based on the current or
-        provided filters.
-
-        Args:
-        filters (list, optional): List of dictionaries representing filter
-        expressions and their states.
-                                  Defaults to None, meaning current UI
-                                  filters are used.
-
-        Returns:
-        pandas.DataFrame or None: Filtered DataFrame based on applied filters
-        or None if self.df is None.
-        """
-        if filters:
-            self.filters = filters
-        else:
-            checked_filters = self.get_current_filters()
-            self.filters = checked_filters
-        # Apply all filters at once
-        # Check if self.df is not None
-        self.filtered_df = self.df.copy() if self.df is not None else None
-
-        if self.filtered_df is not None:  # Check if filtered_df is not None
-            for filter_data in self.filters:
-                filter_expr = filter_data["expression"]
-                is_checked = filter_data["state"]
-                if is_checked:
-                    try:
-                        filter_expr = str(filter_expr)
-                        print(f"Applying filter expression: {filter_expr}")
-                        # Apply the filter
-                        self.filtered_df = self.filtered_df.query(filter_expr)
-                    except Exception as e:
-                        # show_alert(f"Filter error: {str(e)}")
-                        print(f"Error applying filter: {str(e)}")
-
-        return self.filtered_df
-
-    def upd_filter_listbox(self):
-        """
-        Update the listbox UI to reflect changes in filters.
-
-        Clears the listbox and re-populates it with current filters.
-        Each filter is displayed as a checkbox item.
-        """
-        self.listbox.clear()
-        for filter_data in self.filters:
-            filter_expression = filter_data["expression"]
-            item = QListWidgetItem()
-            checkbox = QCheckBox(filter_expression)
-            item.setSizeHint(checkbox.sizeHint())
-            self.listbox.addItem(item)
-            self.listbox.setItemWidget(item, checkbox)
-            checkbox.setChecked(filter_data["state"])
 
 
 class FitModelManager:

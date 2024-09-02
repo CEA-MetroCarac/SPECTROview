@@ -7,29 +7,30 @@
     <img width=100 src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/icon3.png">
 </p>
 
-### SPECTROview : A Tool for Spectroscopic Data Processing and Visualization.
+## SPECTROview : A Tool for Spectroscopic Data Processing and Visualization.
 
-Fitting features are powered by the [FITSPY](https://github.com/CEA-MetroCarac/fitspy) and [LMFIT](https://lmfit.github.io/lmfit-py/) open-source packages.
 ___
 
 ## Features:
 
-- **Cross-platform compatibility (Windows, macOS, Linux).**
-- **Optimized user inferface for easy and quick inspection and comparison of spectra.**
-- **Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps).**
-- **Ability to fit multiple spectra or 2Dmaps using predefined models or by creating custom fit models.**
+- Cross-platform compatibility (Windows, macOS, Linux).
+- Optimized user inferface for easy and quick inspection and comparison of spectra.
+- Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps)*. 
+- Ability to fit multiple spectra or 2Dmaps using predefined models or by creating custom fit models*.
+
+**Fitting features are powered by the [fitspy](https://github.com/CEA-MetroCarac/fitspy) and [LMfit](https://lmfit.github.io/lmfit-py/) open-source packages.*
+
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/3.%20fit_with_predefined_model.gif">
 </p>
 
-- **Collect all best-fit results with one click**.
+- Collect all best-fit results with one click.
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/5.collecting-fit-results.gif">
 </p>
 
-- **Dedicated module for effortless, fast, and easy data visualization.**
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/Visu_tab.png">
 </p>

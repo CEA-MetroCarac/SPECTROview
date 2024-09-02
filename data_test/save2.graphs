@@ -2,7 +2,16 @@
     "plots": {
         "1": {
             "df_name": "data_inline_Sheet1",
-            "filters": [],
+            "filters": [
+                {
+                    "expression": "Zone != \"Edge\"",
+                    "state": true
+                },
+                {
+                    "expression": "Quadrant != \"Q4\"",
+                    "state": true
+                }
+            ],
             "graph_id": 1,
             "plot_width": 600,
             "plot_height": 500,
@@ -12,25 +21,25 @@
                 "Position of peak A$_{1g}$ (cm\u207b\u00b9)"
             ],
             "z": "Zone",
-            "xmin": null,
-            "xmax": null,
-            "ymin": null,
-            "ymax": null,
-            "zmin": null,
-            "zmax": null,
+            "xmin": "",
+            "xmax": "",
+            "ymin": "",
+            "ymax": "",
+            "zmin": "",
+            "zmax": "",
             "plot_title": "",
-            "xlabel": null,
-            "ylabel": null,
-            "zlabel": null,
+            "xlabel": "",
+            "ylabel": "",
+            "zlabel": "",
             "y2": null,
             "y3": null,
             "y2min": null,
             "y2max": null,
             "y3min": null,
             "y3max": null,
-            "y2label": null,
-            "y3label": null,
-            "x_rot": 0,
+            "y2label": "",
+            "y3label": "",
+            "x_rot": 0.0,
             "grid": true,
             "legend_visible": true,
             "legend_location": "upper right",
@@ -45,11 +54,6 @@
                     "label": "Mid-Radius",
                     "marker": "o",
                     "color": "#ff7f0e"
-                },
-                {
-                    "label": "Edge",
-                    "marker": "o",
-                    "color": "#2ca02c"
                 }
             ],
             "color_palette": "jet",
@@ -65,7 +69,16 @@
         },
         "2": {
             "df_name": "data_inline_Sheet1",
-            "filters": [],
+            "filters": [
+                {
+                    "expression": "Zone != \"Edge\"",
+                    "state": true
+                },
+                {
+                    "expression": "Quadrant != \"Q4\"",
+                    "state": false
+                }
+            ],
             "graph_id": 2,
             "plot_width": 600,
             "plot_height": 500,
@@ -75,25 +88,25 @@
                 "Position of peak A$_{1g}$ (cm\u207b\u00b9)"
             ],
             "z": "Zone",
-            "xmin": null,
-            "xmax": null,
-            "ymin": null,
-            "ymax": null,
-            "zmin": null,
-            "zmax": null,
+            "xmin": "",
+            "xmax": "",
+            "ymin": "",
+            "ymax": "",
+            "zmin": "",
+            "zmax": "",
             "plot_title": "",
-            "xlabel": null,
-            "ylabel": null,
-            "zlabel": null,
+            "xlabel": "",
+            "ylabel": "",
+            "zlabel": "",
             "y2": null,
             "y3": null,
             "y2min": null,
             "y2max": null,
             "y3min": null,
             "y3max": null,
-            "y2label": null,
-            "y3label": null,
-            "x_rot": 0,
+            "y2label": "",
+            "y3label": "",
+            "x_rot": 0.0,
             "grid": true,
             "legend_visible": true,
             "legend_location": "upper right",
@@ -108,11 +121,6 @@
                     "label": "Mid-Radius",
                     "marker": "o",
                     "color": "#e1812c"
-                },
-                {
-                    "label": "Edge",
-                    "marker": "o",
-                    "color": "#3a923a"
                 }
             ],
             "color_palette": "jet",
@@ -252,6 +260,73 @@
                     "label": "Q1",
                     "marker": "o",
                     "color": "#3a923a"
+                }
+            ],
+            "color_palette": "jet",
+            "dpi": 110.0,
+            "wafer_size": 300.0,
+            "wafer_stats": true,
+            "trendline_order": 1.0,
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": true,
+            "join_for_point_plot": false,
+            "ax2": null,
+            "ax3": null
+        },
+        "5": {
+            "df_name": "data_inline_Sheet1",
+            "filters": [
+                {
+                    "expression": "Zone != \"Edge\"",
+                    "state": true
+                },
+                {
+                    "expression": "Quadrant != \"Q4\"",
+                    "state": true
+                }
+            ],
+            "graph_id": 5,
+            "plot_width": 600,
+            "plot_height": 500,
+            "plot_style": "point",
+            "x": "Slot",
+            "y": [
+                "Position of peak A$_{1g}$ (cm\u207b\u00b9)"
+            ],
+            "z": "Zone",
+            "xmin": "",
+            "xmax": "",
+            "ymin": "",
+            "ymax": "",
+            "zmin": "",
+            "zmax": "",
+            "plot_title": "",
+            "xlabel": "",
+            "ylabel": "",
+            "zlabel": "",
+            "y2": null,
+            "y3": null,
+            "y2min": null,
+            "y2max": null,
+            "y3min": null,
+            "y3max": null,
+            "y2label": "",
+            "y3label": "",
+            "x_rot": 0.0,
+            "grid": false,
+            "legend_visible": true,
+            "legend_location": "upper right",
+            "legend_outside": false,
+            "legend_properties": [
+                {
+                    "label": "Center",
+                    "marker": "o",
+                    "color": "#1f77b4"
+                },
+                {
+                    "label": "Mid-Radius",
+                    "marker": "o",
+                    "color": "#ff7f0e"
                 }
             ],
             "color_palette": "jet",

@@ -6,9 +6,11 @@
 
 *Version 0.1.5*
 
-Fitting features are powered
-by the [FITSPY](https://github.com/CEA-MetroCarac/fitspy)
-and [LMFIT](https://lmfit.github.io/lmfit-py/) open-source packages.
+### Features:
+- Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps). 
+- Ability to fit multiple spectra or 2Dmaps using predefined models or by creating custom fit models.
+- Collect all best-fit results with one click.
+- Dedicated module for effortless, fast, and easy data visualization.
 
 For any feedback,
 contact: [van-hoan.le@cea.fr](mailto:van-hoan.le@cea.fr)

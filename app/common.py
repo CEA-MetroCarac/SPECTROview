@@ -623,7 +623,7 @@ class DataframeTable(QWidget):
     to copy selected data to the clipboard using a context menu or a keyboard shortcut.
 
     Attributes:
-        layout (QVBoxLayout): The layout in your GUI where the QTableWidget will be placed.
+        layout (QVBoxLayout): The layout in the main_app where the QTableWidget will be placed.
     """
 
     def __init__(self, layout):
@@ -718,7 +718,6 @@ class DataframeTable(QWidget):
         
 class ColorDelegate(QStyledItemDelegate):
     """Show color in background of color selector comboboxes."""
-
     def paint(self, painter, option, index):
         painter.save()
         color = index.data(Qt.BackgroundRole)
@@ -2100,20 +2099,17 @@ def clear_layout(layout):
             if widget:
                 widget.deleteLater()
 
-
 def view_df(tabWidget, df):
     """View selected dataframe"""
     df_viewer = QDialog(tabWidget.parent())
     df_viewer.setWindowTitle("DataFrame Viewer")
-    df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
-    
+    df_viewer.setWindowFlags(df_viewer.windowFlags() | Qt.WindowCloseButtonHint)
+
     # Create a QTableWidget and populate it with data from the DataFrame
     layout = QVBoxLayout(df_viewer)
+    layout.setContentsMargins(0, 0, 0, 0)
     dataframe_table = DataframeTable(layout)
-    
-    # Show the DataFrame in the DataframeTable widget
-    dataframe_table.show(df)  # Pass the DataFrame to be displayed
-    
+    dataframe_table.show(df) 
     df_viewer.setLayout(layout)
     df_viewer.exec_()
 

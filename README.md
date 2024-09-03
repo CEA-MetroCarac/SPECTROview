@@ -22,19 +22,19 @@ ___
 
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/3.%20fit_with_predefined_model.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/maps_tab.gif">
 </p>
 
 - Collect all best-fit results with one click.
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/5.collecting-fit-results.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/collect_results.gif">
 </p>
 
 - Dedicated module for effortless, fast, and easy data visualization. 
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/Visu_tab.png">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/visu_tab.png">
 </p>
 
 

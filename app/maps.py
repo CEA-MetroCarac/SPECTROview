@@ -6,11 +6,10 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
-from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, \
-    clear_layout, compress, baseline_to_dict, dict_to_baseline, plot_baseline_dynamically
-from .common import FitThread, WaferPlot, PeakTable, DataframeTable, \
+from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline
+from .common import FitThread, PeakTable, DataframeTable, \
     FitModelManager, CustomListWidget, SpectraViewWidget
-from .common import FIT_METHODS, PLOT_POLICY
+from .common import FIT_METHODS
 
 from lmfit import fit_report
 from fitspy.spectra import Spectra
@@ -21,12 +20,10 @@ from fitspy.utils import closest_index
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,QAbstractItemView,
-                               QListWidgetItem, QCheckBox, QListWidget)
+from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,QAbstractItemView, QListWidgetItem)
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
+from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
 from tkinter import Tk, END
 
 
@@ -853,7 +850,7 @@ class Maps(QObject):
 
     def get_mes_sites_coord(self):
         """
-        Get all coordinates of measurement sites of selected maps.
+        Get all coordinates of measurement sites of the selected map.
 
         Returns:
         - all_x (list of float): List of x-coordinates of measurement sites.

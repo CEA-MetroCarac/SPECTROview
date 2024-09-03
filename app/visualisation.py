@@ -1,5 +1,3 @@
-import os
-import numpy as np
 import pandas as pd
 from copy import deepcopy
 from pathlib import Path
@@ -9,10 +7,9 @@ from .common import view_df, show_alert
 from .common import PLOT_STYLES, PALETTE, LEGEND_LOCATION
 from .common import Graph, Filter
 
-from PySide6.QtWidgets import QApplication, QFileDialog, QDialog, QVBoxLayout, \
-    QLineEdit, QListWidgetItem, QMdiSubWindow, QCheckBox, QMdiArea, QLabel, \
-    QSizePolicy, QMessageBox
-from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
+from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, \
+     QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox
+from PySide6.QtCore import Qt, QTimer, Signal
 
 
 class Visualization(QDialog):
@@ -20,22 +17,6 @@ class Visualization(QDialog):
     This class provides a GUI for plotting graphs based on selected dataframes,
     applying filters, customizing graph properties, and managing graph
     instances.
-
-    Attributes:
-        settings (QSettings): Object for managing application settings.
-        ui (Ui_MainWindow): User interface object.
-        common (Common): Object providing common functionalities.
-
-        original_dfs (dict): Dictionary holding original dataframes loaded
-        from files.
-        sel_df (pd.DataFrame or None): Currently selected dataframe for
-        visualization.
-        filtered_df (pd.DataFrame or None): Dataframe after applying current
-        filters.
-        plots (dict): Dictionary storing Graph instances.
-        graph_id (int): Identifier for the next graph to be created.
-
-        filter (Filter): Instance of Filter class managing filter operations.
     """
 
     def __init__(self, settings, ui, common):
@@ -92,7 +73,6 @@ class Visualization(QDialog):
 
     def open_dfs(self, dfs=None, file_paths=None):
         """Open and load dataframes from Excel files."""
-
         if self.original_dfs is None:
             self.original_dfs = {}
         if dfs:
@@ -113,7 +93,6 @@ class Visualization(QDialog):
                                 excel_file, sheet_name=sheet_name)
                     else:
                         show_alert(f"Unsupported file format: {extension}")
-
         self.update_dfs_list()
 
     def update_dfs_list(self):
@@ -316,6 +295,7 @@ class Visualization(QDialog):
         self.ui.xmax_2.clear()
         self.ui.ymin_2.clear()
         self.ui.ymax_2.clear()
+    
     def on_selected_graph(self, sub_window):
         """Update GUI elements based on the properties of the selected graph"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
@@ -431,7 +411,6 @@ class Visualization(QDialog):
 
     def reflect_filters_to_gui(self, sel_graph):
         """Reflect the state of filters associated with a graph to the GUI"""
-
         # Clear the existing items and uncheck them
         for index in range(self.filter.filter_listbox.count()):
             item = self.filter.filter_listbox.item(index)
@@ -529,9 +508,9 @@ class Visualization(QDialog):
             if sel_df_name in self.original_dfs:
                 self.sel_df = self.original_dfs[sel_df_name]
             else:
-                self.sel_df = None  # Return None if the dataframe doesn't exist
+                self.sel_df = None 
         else:
-            self.sel_df = None  # Return None if no item is selected
+            self.sel_df = None 
         return self.sel_df
 
     def remove_df(self):
@@ -609,9 +588,6 @@ class Visualization(QDialog):
     def add_graph_list_to_combobox(self):
         """
         Populate graph titles into the combobox for graph selection.
-
-        This method updates the combobox with current graph titles.
-
         """
         self.ui.cbb_graph_list.clear()
         for graph_id, graph in self.plots.items():
@@ -689,6 +665,7 @@ class Visualization(QDialog):
         self.ui.cbb_z_2.clear()
         self.filter.filter_listbox.clear()
         self.ui.cbb_graph_list.clear()
+        self.clear_limits()
         print("'Visualization' Tab environment has been cleared.")
 
     def add_y12(self):
@@ -842,7 +819,6 @@ class Visualization(QDialog):
                     sub_window.show()
 
                     self.plot_action()
-
                 self.filter.upd_filter_listbox()
                 self.add_graph_list_to_combobox()
 

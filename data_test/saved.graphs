@@ -13,8 +13,8 @@
                 }
             ],
             "graph_id": 5,
-            "plot_width": 543,
-            "plot_height": 428,
+            "plot_width": 446,
+            "plot_height": 389,
             "plot_style": "trendline",
             "x": "Position of peak A1g (cm\u207b\u00b9)",
             "y": [
@@ -69,8 +69,8 @@
                 }
             ],
             "graph_id": 1,
-            "plot_width": 607,
-            "plot_height": 454,
+            "plot_width": 472,
+            "plot_height": 402,
             "plot_style": "scatter",
             "x": "Position of peak A1g (cm\u207b\u00b9)",
             "y": [
@@ -98,7 +98,7 @@
             "x_rot": 0.0,
             "grid": true,
             "legend_visible": true,
-            "legend_location": "upper right",
+            "legend_location": "lower left",
             "legend_outside": false,
             "legend_properties": [
                 {
@@ -128,6 +128,139 @@
             "ax2": null,
             "ax3": null
         },
+        "3": {
+            "df_name": "WAFERS_best_fit",
+            "filters": [
+                {
+                    "expression": "Zone != 'Edge'",
+                    "state": false
+                },
+                {
+                    "expression": "Filename != 'wafer4'",
+                    "state": false
+                }
+            ],
+            "graph_id": 3,
+            "plot_width": 549,
+            "plot_height": 400,
+            "plot_style": "box",
+            "x": "Filename",
+            "y": [
+                "Position of peak A1g (cm\u207b\u00b9)"
+            ],
+            "z": "Quadrant",
+            "xmin": "",
+            "xmax": "",
+            "ymin": "",
+            "ymax": "",
+            "zmin": "",
+            "zmax": "",
+            "plot_title": "",
+            "xlabel": " ",
+            "ylabel": "",
+            "zlabel": "",
+            "y2": null,
+            "y3": null,
+            "y2min": null,
+            "y2max": null,
+            "y3min": null,
+            "y3max": null,
+            "y2label": "",
+            "y3label": "",
+            "x_rot": 0.0,
+            "grid": true,
+            "legend_visible": true,
+            "legend_location": "upper right",
+            "legend_outside": true,
+            "legend_properties": [
+                {
+                    "label": "Q3",
+                    "marker": "o",
+                    "color": "#2ca02c"
+                },
+                {
+                    "label": "Q2",
+                    "marker": "o",
+                    "color": "#d62728"
+                },
+                {
+                    "label": "Q1",
+                    "marker": "o",
+                    "color": "#9467bd"
+                },
+                {
+                    "label": "Q4",
+                    "marker": "o",
+                    "color": "#008281"
+                }
+            ],
+            "color_palette": "jet",
+            "dpi": 110.0,
+            "wafer_size": 300.0,
+            "wafer_stats": true,
+            "trendline_order": 1.0,
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": true,
+            "join_for_point_plot": false,
+            "ax2": null,
+            "ax3": null
+        },
+        "6": {
+            "df_name": "WAFERS_best_fit",
+            "filters": [
+                {
+                    "expression": "Zone != 'Edge'",
+                    "state": false
+                },
+                {
+                    "expression": "Filename != 'wafer4'",
+                    "state": false
+                }
+            ],
+            "graph_id": 6,
+            "plot_width": 600,
+            "plot_height": 500,
+            "plot_style": "wafer",
+            "x": "X",
+            "y": [
+                "Y"
+            ],
+            "z": "Position of peak E1_2g (cm\u207b\u00b9)",
+            "xmin": null,
+            "xmax": null,
+            "ymin": null,
+            "ymax": null,
+            "zmin": null,
+            "zmax": null,
+            "plot_title": "",
+            "xlabel": null,
+            "ylabel": null,
+            "zlabel": null,
+            "y2": null,
+            "y3": null,
+            "y2min": null,
+            "y2max": null,
+            "y3min": null,
+            "y3max": null,
+            "y2label": null,
+            "y3label": null,
+            "x_rot": 0,
+            "grid": true,
+            "legend_visible": true,
+            "legend_location": "lower left",
+            "legend_outside": false,
+            "legend_properties": [],
+            "color_palette": "jet",
+            "dpi": 110.0,
+            "wafer_size": 200.0,
+            "wafer_stats": true,
+            "trendline_order": 1.0,
+            "show_trendline_eq": true,
+            "show_bar_plot_error_bar": true,
+            "join_for_point_plot": false,
+            "ax2": null,
+            "ax3": null
+        },
         "2": {
             "df_name": "WAFERS_best_fit",
             "filters": [
@@ -141,18 +274,18 @@
                 }
             ],
             "graph_id": 2,
-            "plot_width": 593,
-            "plot_height": 436,
+            "plot_width": 536,
+            "plot_height": 398,
             "plot_style": "bar",
             "x": "Filename",
             "y": [
                 "FWHM of peak A1g (cm\u207b\u00b9)"
             ],
             "z": "Zone",
-            "xmin": "-0.469",
-            "xmax": "2.499",
-            "ymin": "4.929",
-            "ymax": "6.199",
+            "xmin": "-0.434",
+            "xmax": "2.474",
+            "ymin": "4.782",
+            "ymax": "6.254",
             "zmin": "",
             "zmax": "",
             "plot_title": "",
@@ -181,83 +314,11 @@
                 {
                     "label": "Mid-Radius",
                     "marker": "o",
-                    "color": "#2ca02c"
+                    "color": "#d62728"
                 },
                 {
                     "label": "Edge",
                     "marker": "o",
-                    "color": "#bcbd22"
-                }
-            ],
-            "color_palette": "jet",
-            "dpi": 110.0,
-            "wafer_size": 300.0,
-            "wafer_stats": true,
-            "trendline_order": 1.0,
-            "show_trendline_eq": true,
-            "show_bar_plot_error_bar": true,
-            "join_for_point_plot": false,
-            "ax2": null,
-            "ax3": null
-        },
-        "7": {
-            "df_name": "WAFERS_best_fit",
-            "filters": [
-                {
-                    "expression": "Zone != 'Edge'",
-                    "state": false
-                },
-                {
-                    "expression": "Filename != 'wafer4'",
-                    "state": false
-                }
-            ],
-            "graph_id": 7,
-            "plot_width": 600,
-            "plot_height": 430,
-            "plot_style": "line",
-            "x": "Filename",
-            "y": [
-                "FWHM of peak A1g (cm\u207b\u00b9)"
-            ],
-            "z": "Zone",
-            "xmin": "",
-            "xmax": "",
-            "ymin": "",
-            "ymax": "",
-            "zmin": "",
-            "zmax": "",
-            "plot_title": "",
-            "xlabel": "",
-            "ylabel": "",
-            "zlabel": "",
-            "y2": null,
-            "y3": null,
-            "y2min": null,
-            "y2max": null,
-            "y3min": null,
-            "y3max": null,
-            "y2label": "",
-            "y3label": "",
-            "x_rot": 0.0,
-            "grid": true,
-            "legend_visible": true,
-            "legend_location": "upper right",
-            "legend_outside": true,
-            "legend_properties": [
-                {
-                    "label": "Center",
-                    "marker": "None",
-                    "color": "#9467bd"
-                },
-                {
-                    "label": "Mid-Radius",
-                    "marker": "None",
-                    "color": "#ff7f0e"
-                },
-                {
-                    "label": "Edge",
-                    "marker": "None",
                     "color": "#2ca02c"
                 }
             ],

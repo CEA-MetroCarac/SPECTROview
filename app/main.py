@@ -19,7 +19,7 @@ from PySide6.QtCore import QFile, QSettings, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon
 
 from .common import CommonUtilities, FitModelManager
-from .common import PEAK_MODELS, PALETTE, WAFER_SIZE, X_AXIS
+from .common import PEAK_MODELS, WAFER_SIZE
 from .common import show_alert
     
 from .ui import resources 
@@ -412,7 +412,6 @@ def launcher():
 
 if __name__ == "__main__":
     import multiprocessing
-
     multiprocessing.freeze_support()
     launcher()
 

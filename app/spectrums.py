@@ -6,9 +6,9 @@ from copy import deepcopy
 from pathlib import Path
 import json
 
-from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox,plot_baseline_dynamically
+from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox
 from .common import FitThread, FitModelManager, PeakTable, DataframeTable, CustomListWidget, SpectraViewWidget
-from .common import PLOT_POLICY, FIT_METHODS
+from .common import FIT_METHODS
 
 from lmfit import fit_report
 from fitspy.spectra import Spectra
@@ -16,14 +16,9 @@ from fitspy.spectrum import Spectrum
 from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,QToolButton,
-                               QListWidgetItem, QCheckBox, QListWidget,QSizePolicy,
-                               QAbstractItemView, QMenu,QWidget, QHBoxLayout, QSpinBox, QWidgetAction, QLabel)
-from PySide6.QtGui import QColor, QAction
-from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, Signal
+from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication)
+from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
 from tkinter import Tk, END
 
 
@@ -740,7 +735,6 @@ class Spectrums(QObject):
             view_df(self.ui.tabWidget, df)
         else:
             show_alert("No fit dataframe to display")
-
 
     def save_fit_results(self):
         """Functon to save fitted results in an excel file"""

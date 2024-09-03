@@ -109,7 +109,7 @@ class Filter:
 
         # Entry box for filter queries
         self.filter_query = QLineEdit(self.gb_filter_widget)
-        self.filter_query.setPlaceholderText("Enter your filter expression here...") 
+        self.filter_query.setPlaceholderText("Enter your filter expression...") 
         self.filter_query.returnPressed.connect(self.add_filter)
         self.layout_buttons.addWidget(self.filter_query)
 

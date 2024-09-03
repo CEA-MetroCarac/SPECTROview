@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -109,7 +109,7 @@
               <property name="minimumSize">
                <size>
                 <width>50</width>
-                <height>500</height>
+                <height>200</height>
                </size>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_64">
@@ -273,7 +273,7 @@
                       <number>2</number>
                      </property>
                      <item>
-                      <widget class="QScrollArea" name="scrollArea_4">
+                      <widget class="QScrollArea" name="scrollArea_fitting">
                        <property name="minimumSize">
                         <size>
                          <width>430</width>
@@ -295,66 +295,27 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>332</height>
+                          <height>491</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
                          <property name="spacing">
-                          <number>10</number>
+                          <number>5</number>
                          </property>
                          <property name="leftMargin">
-                          <number>10</number>
+                          <number>5</number>
                          </property>
                          <property name="topMargin">
-                          <number>10</number>
+                          <number>5</number>
                          </property>
                          <property name="rightMargin">
-                          <number>10</number>
+                          <number>5</number>
                          </property>
                          <property name="bottomMargin">
-                          <number>10</number>
+                          <number>5</number>
                          </property>
                          <item>
-                          <layout class="QHBoxLayout" name="horizontalLayout_17">
-                           <item>
-                            <widget class="QPushButton" name="btn_cosmis_ray_3">
-                             <property name="minimumSize">
-                              <size>
-                               <width>80</width>
-                               <height>0</height>
-                              </size>
-                             </property>
-                             <property name="maximumSize">
-                              <size>
-                               <width>150</width>
-                               <height>16777215</height>
-                              </size>
-                             </property>
-                             <property name="toolTip">
-                              <string>Detect cosmis ray based on the loaded spectra</string>
-                             </property>
-                             <property name="text">
-                              <string>Spike removal</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <spacer name="horizontalSpacer_57">
-                             <property name="orientation">
-                              <enum>Qt::Horizontal</enum>
-                             </property>
-                             <property name="sizeHint" stdset="0">
-                              <size>
-                               <width>40</width>
-                               <height>20</height>
-                              </size>
-                             </property>
-                            </spacer>
-                           </item>
-                          </layout>
-                         </item>
-                         <item>
-                          <widget class="QGroupBox" name="groupBox_5">
+                          <widget class="QGroupBox" name="gb_range">
                            <property name="title">
                             <string/>
                            </property>
@@ -378,6 +339,7 @@
                              <widget class="QLabel" name="label_65">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -453,7 +415,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QGroupBox" name="baseline_2">
+                          <widget class="QGroupBox" name="gb_baseline">
                            <property name="title">
                             <string/>
                            </property>
@@ -477,6 +439,7 @@
                              <widget class="QLabel" name="label_69">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -680,7 +643,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QGroupBox" name="peaks_2">
+                          <widget class="QGroupBox" name="gb_peaks">
                            <property name="title">
                             <string/>
                            </property>
@@ -704,6 +667,7 @@
                              <widget class="QLabel" name="label_72">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -790,38 +754,89 @@
                       </widget>
                      </item>
                      <item>
-                      <layout class="QVBoxLayout" name="verticalLayout_43" stretch="85,15">
+                      <layout class="QVBoxLayout" name="Peak_table_main_layout" stretch="0,15">
                        <item>
-                        <widget class="QGroupBox" name="peak_table_2">
-                         <property name="title">
-                          <string>Peak table: </string>
-                         </property>
+                        <widget class="QWidget" name="groupbox_peak_table" native="true">
                          <layout class="QHBoxLayout" name="horizontalLayout_78">
+                          <property name="spacing">
+                           <number>0</number>
+                          </property>
+                          <property name="leftMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="topMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="rightMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="bottomMargin">
+                           <number>0</number>
+                          </property>
                           <item>
                            <widget class="QScrollArea" name="scrollArea_6">
                             <property name="widgetResizable">
                              <bool>true</bool>
                             </property>
-                            <widget class="QWidget" name="scrollAreaWidgetContents_6">
+                            <widget class="QWidget" name="scrollArea_peak_table">
                              <property name="geometry">
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>695</width>
-                               <height>173</height>
+                               <width>729</width>
+                               <height>69</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>5</number>
+                              </property>
                               <item>
-                               <layout class="QVBoxLayout" name="verticalLayout_312">
+                               <layout class="QVBoxLayout" name="scrollArea_peak_table_layout">
+                                <property name="spacing">
+                                 <number>2</number>
+                                </property>
+                                <property name="leftMargin">
+                                 <number>2</number>
+                                </property>
+                                <property name="topMargin">
+                                 <number>2</number>
+                                </property>
+                                <property name="rightMargin">
+                                 <number>2</number>
+                                </property>
+                                <property name="bottomMargin">
+                                 <number>2</number>
+                                </property>
                                 <item>
-                                 <layout class="QHBoxLayout" name="horizontalLayout_79">
-                                  <item>
-                                   <layout class="QHBoxLayout" name="peak_table1_2"/>
-                                  </item>
-                                  <item>
-                                   <layout class="QHBoxLayout" name="horizontalLayout_80"/>
-                                  </item>
+                                 <layout class="QHBoxLayout" name="peak_table1_2">
+                                  <property name="spacing">
+                                   <number>2</number>
+                                  </property>
+                                  <property name="leftMargin">
+                                   <number>5</number>
+                                  </property>
+                                  <property name="topMargin">
+                                   <number>2</number>
+                                  </property>
+                                  <property name="rightMargin">
+                                   <number>5</number>
+                                  </property>
+                                  <property name="bottomMargin">
+                                   <number>2</number>
+                                  </property>
                                  </layout>
                                 </item>
                                 <item>
@@ -847,7 +862,7 @@
                         </widget>
                        </item>
                        <item>
-                        <layout class="QHBoxLayout" name="horizontalLayout_81">
+                        <layout class="QHBoxLayout" name="lower_layout">
                          <property name="spacing">
                           <number>5</number>
                          </property>
@@ -1181,8 +1196,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>243</height>
+                       <width>318</width>
+                       <height>228</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -1223,6 +1238,7 @@
                         </property>
                         <property name="font">
                          <font>
+                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -1552,6 +1568,7 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
+                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -1720,6 +1737,34 @@
                 </property>
                 <property name="text">
                  <string>refresh</string>
+                </property>
+               </widget>
+               <widget class="QPushButton" name="btn_cosmis_ray_3">
+                <property name="geometry">
+                 <rect>
+                  <x>550</x>
+                  <y>50</y>
+                  <width>150</width>
+                  <height>23</height>
+                 </rect>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>80</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>150</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>Detect cosmis ray based on the loaded spectra</string>
+                </property>
+                <property name="text">
+                 <string>Spike removal</string>
                 </property>
                </widget>
               </widget>
@@ -2027,18 +2072,18 @@
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
-                  <height>500</height>
+                  <height>200</height>
                  </size>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_18">
                  <property name="leftMargin">
-                  <number>0</number>
+                  <number>2</number>
                  </property>
                  <property name="topMargin">
                   <number>0</number>
                  </property>
                  <property name="rightMargin">
-                  <number>0</number>
+                  <number>2</number>
                  </property>
                  <property name="bottomMargin">
                   <number>0</number>
@@ -2357,7 +2402,7 @@
                       <number>2</number>
                      </property>
                      <item>
-                      <widget class="QScrollArea" name="scrollArea_3">
+                      <widget class="QScrollArea" name="scrollArea_fitting_2">
                        <property name="minimumSize">
                         <size>
                          <width>430</width>
@@ -2379,66 +2424,27 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>330</height>
+                          <height>336</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
                          <property name="spacing">
-                          <number>10</number>
+                          <number>5</number>
                          </property>
                          <property name="leftMargin">
-                          <number>10</number>
+                          <number>5</number>
                          </property>
                          <property name="topMargin">
-                          <number>10</number>
+                          <number>5</number>
                          </property>
                          <property name="rightMargin">
-                          <number>10</number>
+                          <number>5</number>
                          </property>
                          <property name="bottomMargin">
-                          <number>10</number>
+                          <number>5</number>
                          </property>
                          <item>
-                          <layout class="QHBoxLayout" name="horizontalLayout_18">
-                           <item>
-                            <widget class="QPushButton" name="btn_cosmis_ray">
-                             <property name="minimumSize">
-                              <size>
-                               <width>80</width>
-                               <height>0</height>
-                              </size>
-                             </property>
-                             <property name="maximumSize">
-                              <size>
-                               <width>150</width>
-                               <height>16777215</height>
-                              </size>
-                             </property>
-                             <property name="toolTip">
-                              <string>Detect cosmis ray based on the loaded spectra</string>
-                             </property>
-                             <property name="text">
-                              <string>Spike removal</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <spacer name="horizontalSpacer_56">
-                             <property name="orientation">
-                              <enum>Qt::Horizontal</enum>
-                             </property>
-                             <property name="sizeHint" stdset="0">
-                              <size>
-                               <width>40</width>
-                               <height>20</height>
-                              </size>
-                             </property>
-                            </spacer>
-                           </item>
-                          </layout>
-                         </item>
-                         <item>
-                          <widget class="QGroupBox" name="groupBox_4">
+                          <widget class="QGroupBox" name="gb_range_2">
                            <property name="title">
                             <string/>
                            </property>
@@ -2462,6 +2468,7 @@
                              <widget class="QLabel" name="label_54">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2537,7 +2544,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QGroupBox" name="baseline">
+                          <widget class="QGroupBox" name="gb_baseline_2">
                            <property name="title">
                             <string/>
                            </property>
@@ -2561,6 +2568,7 @@
                              <widget class="QLabel" name="label_52">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2764,7 +2772,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QGroupBox" name="peaks">
+                          <widget class="QGroupBox" name="gb_peaks_2">
                            <property name="title">
                             <string/>
                            </property>
@@ -2788,6 +2796,7 @@
                              <widget class="QLabel" name="label_57">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2874,38 +2883,89 @@
                       </widget>
                      </item>
                      <item>
-                      <layout class="QVBoxLayout" name="verticalLayout_33" stretch="85,15">
+                      <layout class="QVBoxLayout" name="verticalLayout_33" stretch="0,15">
                        <item>
-                        <widget class="QGroupBox" name="peak_table">
-                         <property name="title">
-                          <string>Peak table: </string>
-                         </property>
+                        <widget class="QWidget" name="groupbox_peak_table_map" native="true">
                          <layout class="QHBoxLayout" name="horizontalLayout_26">
+                          <property name="spacing">
+                           <number>0</number>
+                          </property>
+                          <property name="leftMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="topMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="rightMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="bottomMargin">
+                           <number>0</number>
+                          </property>
                           <item>
                            <widget class="QScrollArea" name="scrollArea_5">
                             <property name="widgetResizable">
                              <bool>true</bool>
                             </property>
-                            <widget class="QWidget" name="scrollAreaWidgetContents_5">
+                            <widget class="QWidget" name="scrollArea_peak_table_map">
                              <property name="geometry">
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>695</width>
-                               <height>171</height>
+                               <width>729</width>
+                               <height>69</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>5</number>
+                              </property>
                               <item>
-                               <layout class="QVBoxLayout" name="verticalLayout_311">
+                               <layout class="QVBoxLayout" name="scrollArea_peak_table_layout_map">
+                                <property name="spacing">
+                                 <number>2</number>
+                                </property>
+                                <property name="leftMargin">
+                                 <number>2</number>
+                                </property>
+                                <property name="topMargin">
+                                 <number>2</number>
+                                </property>
+                                <property name="rightMargin">
+                                 <number>2</number>
+                                </property>
+                                <property name="bottomMargin">
+                                 <number>2</number>
+                                </property>
                                 <item>
-                                 <layout class="QHBoxLayout" name="horizontalLayout_53">
-                                  <item>
-                                   <layout class="QHBoxLayout" name="peak_table1"/>
-                                  </item>
-                                  <item>
-                                   <layout class="QHBoxLayout" name="horizontalLayout_54"/>
-                                  </item>
+                                 <layout class="QHBoxLayout" name="peak_table1">
+                                  <property name="spacing">
+                                   <number>2</number>
+                                  </property>
+                                  <property name="leftMargin">
+                                   <number>5</number>
+                                  </property>
+                                  <property name="topMargin">
+                                   <number>2</number>
+                                  </property>
+                                  <property name="rightMargin">
+                                   <number>5</number>
+                                  </property>
+                                  <property name="bottomMargin">
+                                   <number>2</number>
+                                  </property>
                                  </layout>
                                 </item>
                                 <item>
@@ -2931,7 +2991,10 @@
                         </widget>
                        </item>
                        <item>
-                        <layout class="QHBoxLayout" name="horizontalLayout_70">
+                        <layout class="QHBoxLayout" name="lower_layout_2">
+                         <property name="spacing">
+                          <number>5</number>
+                         </property>
                          <item>
                           <widget class="QPushButton" name="btn_fit">
                            <property name="minimumSize">
@@ -3279,8 +3342,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>243</height>
+                       <width>318</width>
+                       <height>228</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -3321,6 +3384,7 @@
                         </property>
                         <property name="font">
                          <font>
+                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -3914,6 +3978,7 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
+                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -3975,6 +4040,34 @@
                   </widget>
                  </item>
                 </layout>
+               </widget>
+               <widget class="QPushButton" name="btn_cosmis_ray">
+                <property name="geometry">
+                 <rect>
+                  <x>460</x>
+                  <y>50</y>
+                  <width>150</width>
+                  <height>23</height>
+                 </rect>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>80</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>150</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>Detect cosmis ray based on the loaded spectra</string>
+                </property>
+                <property name="text">
+                 <string>Spike removal</string>
+                </property>
                </widget>
               </widget>
              </widget>
@@ -5099,8 +5192,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>395</width>
-                    <height>538</height>
+                    <width>338</width>
+                    <height>391</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -5137,6 +5230,7 @@
                        </property>
                        <property name="font">
                         <font>
+                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5251,6 +5345,7 @@
                       <widget class="QLabel" name="label_91">
                        <property name="font">
                         <font>
+                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5310,6 +5405,7 @@
                       <widget class="QLabel" name="label_97">
                        <property name="font">
                         <font>
+                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5517,8 +5613,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>277</width>
-                    <height>298</height>
+                    <width>235</width>
+                    <height>249</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -5652,6 +5748,7 @@
                      <property name="font">
                       <font>
                        <pointsize>9</pointsize>
+                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -5739,8 +5836,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>364</width>
-                    <height>371</height>
+                    <width>362</width>
+                    <height>310</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_9">

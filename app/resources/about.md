@@ -11,6 +11,8 @@
 - Ability to fit multiple spectra or 2Dmaps using predefined models or by creating custom fit models.
 - Collect all best-fit results with one click.
 - Dedicated module for effortless, fast, and easy data visualization.
+____
+Check out the GitHub repository for more details : [SPECTROview github](https://github.com/CEA-MetroCarac/spectroview).
 
 For any feedback,
 contact: [van-hoan.le@cea.fr](mailto:van-hoan.le@cea.fr)

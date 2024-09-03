@@ -85,6 +85,9 @@
            <number>10</number>
           </property>
           <widget class="QFrame" name="upper_frame_3">
+           <property name="acceptDrops">
+            <bool>false</bool>
+           </property>
            <layout class="QHBoxLayout" name="horizontalLayout_105">
             <property name="leftMargin">
              <number>3</number>
@@ -1196,8 +1199,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
-                       <height>228</height>
+                       <width>428</width>
+                       <height>495</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -5192,8 +5195,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>338</width>
-                    <height>391</height>
+                    <width>372</width>
+                    <height>551</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -6300,6 +6303,9 @@
      <height>50</height>
     </size>
    </property>
+   <property name="acceptDrops">
+    <bool>true</bool>
+   </property>
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -6329,6 +6335,9 @@
    <addaction name="separator"/>
   </widget>
   <widget class="QToolBar" name="toolBar_2">
+   <property name="acceptDrops">
+    <bool>true</bool>
+   </property>
    <property name="windowTitle">
     <string>toolBar_2</string>
    </property>

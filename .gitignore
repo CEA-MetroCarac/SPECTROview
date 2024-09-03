@@ -3,8 +3,6 @@ build/
 dist/
 __pycache__/
 *.egg*
-test.py
-app/main.py
 app/.DS_Store
 .DS_Store
 app/.DS_Store

@@ -445,12 +445,7 @@ class SpectraViewWidget(QWidget):
     def plot(self, sel_spectrums):
         """Plot spectra or fit results in the figure canvas."""
         if not sel_spectrums:
-            # Clear the plot if no spectra are selected
-            self.ax.clear()
-            self.ax.set_title("No Data Available")
-            self.ax.set_xlabel("X-axis")
-            self.ax.set_ylabel("Y-axis")
-            self.canvas.draw_idle()  # Refresh the canvas
+            self.clear_plot()
             return
         self.sel_spectrums = sel_spectrums
 
@@ -588,12 +583,22 @@ class SpectraViewWidget(QWidget):
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.figure.tight_layout()
         self.canvas.draw()
-
-
+        
+    def clear_plot(self):
+        """Explicitly clear the spectra plot."""
+        if self.ax:
+            self.ax.clear()
+            self.ax.set_xlabel("X-axis")
+            self.ax.set_ylabel("Y-axis")
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+            self.canvas.draw_idle()  
+            
     def refresh_plot(self):
         """Refresh the plot based on user view options."""
-        self.plot(self.sel_spectrums )  
-    
+        if not self.sel_spectrums:
+            self.clear_plot() 
+        else:
+            self.plot(self.sel_spectrums)
     
     def copy_fig(self):
         """To copy figure canvas to clipboard"""
@@ -613,27 +618,21 @@ class SpectraViewWidget(QWidget):
 class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.
 
-    This class takes a pandas DataFrame and displays it within a
-    QTableWidget, which
-    is added to a specified layout in your GUI. It provides functionality to
-    copy
-    selected data to the clipboard using a context menu or a keyboard shortcut.
+    This class allows a pandas DataFrame to be displayed within a QTableWidget,
+    which is added to a specified layout in your GUI. It provides functionality
+    to copy selected data to the clipboard using a context menu or a keyboard shortcut.
 
     Attributes:
-        df (pd.DataFrame): The DataFrame to be displayed in the QTableWidget.
-        layout (QVBoxLayout): The layout in your GUI where the QTableWidget
-        will be placed.
+        layout (QVBoxLayout): The layout in your GUI where the QTableWidget will be placed.
     """
 
-    def __init__(self, df, layout):
+    def __init__(self, layout):
         super().__init__()
-        self.df = df
         self.external_layout = layout
         self.initUI()
 
     def initUI(self):
-        """Initializes the user interface by creating and configuring the
-        QTableWidget"""
+        """Initializes the user interface by creating and configuring the QTableWidget."""
         # Clear existing widgets from external layout
         while self.external_layout.count():
             item = self.external_layout.takeAt(0)
@@ -650,9 +649,6 @@ class DataframeTable(QWidget):
         self.table_widget.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
         layout.addWidget(self.table_widget)
 
-        # Display the DataFrame in the QTableWidget
-        self.display_df_in_table()
-
         # Enable copy action via context menu
         self.table_widget.setContextMenuPolicy(Qt.ActionsContextMenu)
         copy_action = QAction("Copy", self)
@@ -662,19 +658,33 @@ class DataframeTable(QWidget):
         # Add this widget to the external layout
         self.external_layout.addWidget(self)
 
-    def display_df_in_table(self):
-        """Populates the QTableWidget with data from the DataFrame"""
-        self.table_widget.setRowCount(self.df.shape[0])
-        self.table_widget.setColumnCount(self.df.shape[1])
-        self.table_widget.setHorizontalHeaderLabels(self.df.columns)
-        for row in range(self.df.shape[0]):
-            for col in range(self.df.shape[1]):
-                item = QTableWidgetItem(str(self.df.iat[row, col]))
-                self.table_widget.setItem(row, col, item)
-        self.table_widget.resizeColumnsToContents()
+    def show(self, df):
+        """Populates the QTableWidget with data from the given DataFrame.
+
+        Args:
+            df (pd.DataFrame): The DataFrame to be displayed in the QTableWidget.
+        """
+        if df is not None and not df.empty:
+            self.table_widget.setRowCount(df.shape[0])
+            self.table_widget.setColumnCount(df.shape[1])
+            self.table_widget.setHorizontalHeaderLabels(df.columns)
+            for row in range(df.shape[0]):
+                for col in range(df.shape[1]):
+                    item = QTableWidgetItem(str(df.iat[row, col]))
+                    self.table_widget.setItem(row, col, item)
+            self.table_widget.resizeColumnsToContents()
+        else:
+            self.clear()
+
+    def clear(self):
+        """Clears all data from the QTableWidget."""
+        self.table_widget.clearContents()
+        self.table_widget.setRowCount(0)
+        self.table_widget.setColumnCount(0)
+        self.table_widget.setHorizontalHeaderLabels([])
 
     def copy_data(self):
-        """Copies selected data from the QTableWidget to the clipboard"""
+        """Copies selected data from the QTableWidget to the clipboard."""
         selected_indexes = self.table_widget.selectedIndexes()
         if not selected_indexes:
             return
@@ -699,13 +709,13 @@ class DataframeTable(QWidget):
         clipboard.setText('\n'.join(data))
 
     def keyPressEvent(self, event):
-        """Handles key press events to enable copying with Ctrl+C"""
+        """Handles key press events to enable copying with Ctrl+C."""
         if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_C:
             self.copy_data()
         else:
             super().keyPressEvent(event)
 
-
+        
 class ColorDelegate(QStyledItemDelegate):
     """Show color in background of color selector comboboxes."""
 

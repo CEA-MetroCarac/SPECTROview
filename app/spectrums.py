@@ -44,7 +44,9 @@ class Spectrums(QObject):
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.spectrums = Spectra()
+        
         self.df_fit_results = None
+        self.df_table = DataframeTable(self.ui.layout_df_table2)
 
         # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget(self)
@@ -672,12 +674,9 @@ class Spectrums(QObject):
                 column
                 in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
-            self.display_df_in_GUI(self.df_fit_results)
+        
+        self.df_table.show(self.df_fit_results)
 
-
-    def display_df_in_GUI(self, df):
-        """Display a given DataFrame in the GUI via QTableWidget"""
-        df_table = DataframeTable(df, self.ui.layout_df_table2)
 
     def split_fname(self):
         """Split the filename and populate the combobox."""
@@ -713,7 +712,7 @@ class Spectrums(QObject):
             part) > selected_part_index else None for part in parts]
 
         self.df_fit_results = dfr
-        self.display_df_in_GUI(self.df_fit_results)
+        self.df_table.show(self.df_fit_results)
 
     def send_df_to_viz(self):
         """Send the collected spectral data to the visualization tab"""
@@ -723,7 +722,6 @@ class Spectrums(QObject):
         self.visu.open_dfs(dfs=dfs_new, file_paths=None)
 
 
-    
     def cosmis_ray_detection(self):
         self.spectrums.outliers_limit_calculation()
 
@@ -928,25 +926,23 @@ class Spectrums(QObject):
 
     def clear_env(self):
         """Clear the environment and reset the application state"""
-        # Clear loaded spectrums
         self.spectrums = Spectra()
         self.loaded_fit_model = None
         self.current_fit_model = None
-
-        # Clear DataFrames 
         self.df_fit_results = None
 
-        # Clear UI elements that display data
+        # Clear Listbox
         self.ui.spectrums_listbox.clear()
-        self.ui.rsquared_2.clear()
         self.ui.item_count_label_3.setText("0 points")
 
-        # Clear plot areas
-        self.ax.clear()
-        if hasattr(self, 'canvas1'):
-            self.canvas.draw()
+        # Clear spectra plot view and reset selected spectrums
+        self.spectra_widget.sel_spectrums = None  
+        self.spectra_widget.refresh_plot() 
         
+        self.df_table.clear()
+
         # Refresh the UI to reflect the cleared state
         QTimer.singleShot(50, self.spectra_widget.rescale)
         QTimer.singleShot(100, self.upd_spectra_list)
         print("'Spectrums' Tab environment has been cleared and reset.")
+

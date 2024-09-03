@@ -1160,16 +1160,16 @@
                    <number>5</number>
                   </property>
                   <property name="leftMargin">
-                   <number>5</number>
+                   <number>2</number>
                   </property>
                   <property name="topMargin">
-                   <number>5</number>
+                   <number>2</number>
                   </property>
                   <property name="rightMargin">
-                   <number>5</number>
+                   <number>2</number>
                   </property>
                   <property name="bottomMargin">
-                   <number>5</number>
+                   <number>2</number>
                   </property>
                   <item>
                    <widget class="QScrollArea" name="scrollArea_11">
@@ -1200,7 +1200,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>495</height>
+                       <height>501</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -1502,51 +1502,38 @@
                    </widget>
                   </item>
                   <item>
-                   <layout class="QVBoxLayout" name="verticalLayout_55">
-                    <property name="leftMargin">
-                     <number>15</number>
+                   <widget class="QWidget" name="Fit_results_Widget" native="true">
+                    <property name="minimumSize">
+                     <size>
+                      <width>600</width>
+                      <height>0</height>
+                     </size>
                     </property>
-                    <item>
-                     <layout class="QVBoxLayout" name="layout_df_table2"/>
-                    </item>
-                    <item>
-                     <widget class="QGroupBox" name="groupBox_6">
-                      <property name="title">
-                       <string/>
-                      </property>
-                      <layout class="QHBoxLayout" name="horizontalLayout_98">
+                    <layout class="QVBoxLayout" name="verticalLayout_55">
+                     <property name="spacing">
+                      <number>2</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                     <item>
+                      <layout class="QVBoxLayout" name="layout_df_table2">
                        <property name="spacing">
-                        <number>9</number>
+                        <number>2</number>
                        </property>
-                       <property name="leftMargin">
-                        <number>3</number>
-                       </property>
-                       <property name="topMargin">
-                        <number>3</number>
-                       </property>
-                       <property name="rightMargin">
-                        <number>3</number>
-                       </property>
-                       <property name="bottomMargin">
-                        <number>3</number>
-                       </property>
-                       <item>
-                        <spacer name="horizontalSpacer_46">
-                         <property name="orientation">
-                          <enum>Qt::Horizontal</enum>
-                         </property>
-                         <property name="sizeHint" stdset="0">
-                          <size>
-                           <width>40</width>
-                           <height>20</height>
-                          </size>
-                         </property>
-                        </spacer>
-                       </item>
                       </layout>
-                     </widget>
-                    </item>
-                   </layout>
+                     </item>
+                    </layout>
+                   </widget>
                   </item>
                  </layout>
                 </item>
@@ -3306,16 +3293,16 @@
                    <number>5</number>
                   </property>
                   <property name="leftMargin">
-                   <number>5</number>
+                   <number>2</number>
                   </property>
                   <property name="topMargin">
-                   <number>5</number>
+                   <number>2</number>
                   </property>
                   <property name="rightMargin">
-                   <number>5</number>
+                   <number>2</number>
                   </property>
                   <property name="bottomMargin">
-                   <number>5</number>
+                   <number>2</number>
                   </property>
                   <item>
                    <widget class="QScrollArea" name="scrollArea_9">
@@ -3345,8 +3332,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
-                       <height>228</height>
+                       <width>428</width>
+                       <height>346</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -3413,6 +3400,9 @@
                        <widget class="QLabel" name="label_56">
                         <property name="text">
                          <string>Add new column(s) from file name:</string>
+                        </property>
+                        <property name="buddy">
+                         <cstring>Fit_results_Widget</cstring>
                         </property>
                        </widget>
                       </item>
@@ -3648,38 +3638,32 @@
                    </widget>
                   </item>
                   <item>
-                   <layout class="QVBoxLayout" name="verticalLayout_37">
-                    <property name="leftMargin">
-                     <number>15</number>
-                    </property>
-                    <item>
-                     <layout class="QVBoxLayout" name="layout_df_table"/>
-                    </item>
-                    <item>
-                     <widget class="QGroupBox" name="groupBox_3">
-                      <property name="title">
-                       <string/>
-                      </property>
-                      <layout class="QHBoxLayout" name="horizontalLayout_36">
+                   <widget class="QWidget" name="Fit_results_widget" native="true">
+                    <layout class="QVBoxLayout" name="verticalLayout_37">
+                     <property name="spacing">
+                      <number>2</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                     <item>
+                      <layout class="QVBoxLayout" name="layout_df_table">
                        <property name="spacing">
-                        <number>9</number>
-                       </property>
-                       <property name="leftMargin">
-                        <number>3</number>
-                       </property>
-                       <property name="topMargin">
-                        <number>3</number>
-                       </property>
-                       <property name="rightMargin">
-                        <number>3</number>
-                       </property>
-                       <property name="bottomMargin">
-                        <number>3</number>
+                        <number>2</number>
                        </property>
                       </layout>
-                     </widget>
-                    </item>
-                   </layout>
+                     </item>
+                    </layout>
+                   </widget>
                   </item>
                  </layout>
                 </item>

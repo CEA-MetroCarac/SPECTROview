@@ -49,8 +49,10 @@ class Maps(QObject):
         self.current_fit_model = None
         self.maps = {}  # list of opened maps data
         self.spectrums = Spectra()
+        
         self.df_fit_results = None
-
+        self.df_table = DataframeTable(self.ui.layout_df_table)
+        
         # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget(self)
         self.ui.fig_canvas_layout_2.addWidget(self.spectra_widget.canvas)
@@ -307,13 +309,8 @@ class Maps(QObject):
                     lambda row: self.common.zone(row, diameter), axis=1)
             else: 
                 pass
+        self.df_table.show(self.df_fit_results)
 
-        self.display_df_in_GUI(self.df_fit_results)
-
-
-    def display_df_in_GUI(self, df):
-        """Display a given df in the GUI via QTableWidget"""
-        df_table = DataframeTable(df, self.ui.layout_df_table)
 
     def update_peak_model(self):
         """Update the peak model in the SpectraViewWidget based on combobox selection."""
@@ -706,7 +703,7 @@ class Maps(QObject):
             part) > selected_part_index else None for part in parts]
 
         self.df_fit_results = dfr
-        self.display_df_in_GUI(self.df_fit_results)
+        self.df_table.show(self.df_fit_results)
 
 
     def reinit(self, fnames=None):
@@ -751,11 +748,7 @@ class Maps(QObject):
         self.show_peak_table()
 
     def create_plot_widget(self):
-        """
-        Create plot widgets for other plots: measurement sites,
-        waferdataview, plotview.
-        """
-        # plot 2: Measurement sites view
+        """Create plot widgets measurement sites"""
         fig2 = plt.figure(dpi=100)
         self.ax2 = fig2.add_subplot(111)
         self.ax2.spines['right'].set_visible(False)
@@ -776,8 +769,6 @@ class Maps(QObject):
         layout = self.ui.measurement_sites.layout()
         layout.addWidget(self.canvas2)
         self.canvas2.draw()
-
-
 
     def on_click_sites_mesurements(self, event):
         """
@@ -976,10 +967,10 @@ class Maps(QObject):
                 not spectrum.fname.startswith(map_name))
             self.upd_maps_list()
         self.ui.spectra_listbox.clear()
-        self.ax.clear()
+        self.spectra_widget.sel_spectrums = None  
+        self.spectra_widget.refresh_plot() 
         self.ax2.clear()
-        self.canvas1.draw()
-        self.canvas2.draw()
+        self.canvas2.draw_idle()
 
     def select_all_spectra(self):
         """Select all spectra listed in the spectra listbox"""
@@ -1305,24 +1296,23 @@ class Maps(QObject):
         self.spectrums = Spectra()
         self.loaded_fit_model = None
         self.current_fit_model = None
-
-        # Clear DataFrames
         self.df_fit_results = None
 
         # Clear UI elements that display data
         self.ui.maps_listbox.clear()
         self.ui.spectra_listbox.clear()
-        self.ui.rsquared_1.clear()
         self.ui.item_count_label.setText("0 points")
 
-        # Clear plot areas
-        self.ax.clear()
-        self.ax2.clear()
-        if hasattr(self, 'canvas1'):
-            self.canvas1.draw()
+        # Clear spectra plot view and reset selected spectrums
+        self.spectra_widget.sel_spectrums = None 
+        self.spectra_widget.refresh_plot() 
+        # Clear plot ofmeasurement sites 
         if hasattr(self, 'canvas2'):
+            self.ax2.clear()
             self.canvas2.draw()
 
+        self.df_table.clear()
+        
         # Refresh the UI to reflect the cleared state
         QTimer.singleShot(50, self.spectra_widget.rescale)
         QTimer.singleShot(100, self.upd_maps_list)

@@ -7,7 +7,7 @@ from pathlib import Path
 import json
 
 from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox,plot_baseline_dynamically
-from .common import FitThread, FitModelManager, ShowParameters, DataframeTable, CustomListWidget, SpectraViewWidget
+from .common import FitThread, FitModelManager, PeakTable, DataframeTable, CustomListWidget, SpectraViewWidget
 from .common import PLOT_POLICY, FIT_METHODS
 
 from lmfit import fit_report
@@ -45,6 +45,10 @@ class Spectrums(QObject):
         self.current_fit_model = None
         self.spectrums = Spectra()
         
+        # Initialize Peak Table
+        self.peak_table = PeakTable(self, self.ui.peak_table1_2, self.ui.cbb_layout)
+        
+        # Initialize Dataframe table
         self.df_fit_results = None
         self.df_table = DataframeTable(self.ui.layout_df_table2)
 
@@ -87,8 +91,6 @@ class Spectrums(QObject):
             self.populate_available_models)
 
         # Connect checkboxes to refresh GUI
-        self.ui.cb_limits_2.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_expr_2.stateChanged.connect(self.refresh_gui)
         self.ui.cb_attached_2.stateChanged.connect(self.refresh_gui)
 
     def setup_baseline_controls(self):
@@ -108,27 +110,6 @@ class Spectrums(QObject):
         self.ui.btn_copy_bl_2.clicked.connect(self.copy_baseline)
         self.ui.btn_paste_bl_2.clicked.connect(self.paste_baseline_handler)
         self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
-
-
-    def plot(self):
-        """Plot spectra or fit results in the main plot area."""
-        fnames = self.get_spectrum_fnames()
-        selected_spectrums = Spectra()
-        selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
-        # Limit the number of spectra to avoid crashes
-        selected_spectrums = selected_spectrums[:50]
-        if not selected_spectrums:
-            return
-
-        self.spectra_widget.plot(selected_spectrums)
-        
-        self.read_x_range()
-        self.show_peak_table()
-
-    def refresh_gui(self):
-        """Trigger the fnc to plot spectra"""
-        self.delay_timer.start(100)
-
 
     def open_spectra(self, spectra=None, file_paths=None):
         """Open and load raw spectral data"""
@@ -212,6 +193,28 @@ class Spectrums(QObject):
             if item_count > 0:
                 self.ui.spectrums_listbox.setCurrentRow(0)
         QTimer.singleShot(50, self.refresh_gui)
+
+    def plot(self):
+        """Plot spectra or fit results in the main plot area."""
+        fnames = self.get_spectrum_fnames()
+        selected_spectrums = Spectra()
+        selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
+        # Limit the number of spectra to avoid crashes
+        selected_spectrums = selected_spectrums[:50]
+        if not selected_spectrums:
+            return
+
+        self.spectra_widget.plot(selected_spectrums)
+        
+        self.read_x_range()
+        self.peak_table.show(selected_spectrums[0])
+
+    def refresh_gui(self):
+        """Trigger the fnc to plot spectra"""
+        self.delay_timer.start(100)
+
+
+    
         
     def get_checked_spectra(self):
         """
@@ -272,6 +275,7 @@ class Spectrums(QObject):
             self.ui.l_defaut_folder_model_3.setText(
                 self.fit_model_manager.default_model_folder)
             QTimer.singleShot(0, self.populate_available_models)
+            
     def update_peak_model(self):
         """Update the peak model in the SpectraViewWidget based on combobox selection."""
         selected_model = self.ui.cbb_fit_models_2.currentText()
@@ -383,7 +387,6 @@ class Spectrums(QObject):
         else:
             return None, None
     
-
     def read_x_range(self):
         """Read the x range of the selected spectrum"""
         sel_spectrum, sel_spectra = self.get_spectrum_object()
@@ -615,17 +618,6 @@ class Spectrums(QObject):
         fnames = checked_spectra.fnames
         self.paste_fit_model(fnames)
 
-    def show_peak_table(self):
-        """Show all fitted parameters in the GUI."""
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        main_layout = self.ui.peak_table1_2
-        cb_limits = self.ui.cb_limits_2
-        cb_expr = self.ui.cb_expr_2
-        update = self.upd_spectra_list
-        show_params = ShowParameters(main_layout, sel_spectrum, cb_limits,
-                                     cb_expr, update)
-        show_params.show_peak_table(main_layout, sel_spectrum, cb_limits,
-                                    cb_expr)
 
     def collect_results(self):
         """Collect best-fit results and append them to a dataframe."""
@@ -918,6 +910,7 @@ class Spectrums(QObject):
                         self.spectrums.append(spectrum)
 
                     QTimer.singleShot(300, self.collect_results)
+                    
                     self.upd_spectra_list()
                 except Exception as e:
                     show_alert(f"Error loading work: {e}")
@@ -940,9 +933,10 @@ class Spectrums(QObject):
         self.spectra_widget.refresh_plot() 
         
         self.df_table.clear()
+        self.peak_table.clear()
 
         # Refresh the UI to reflect the cleared state
         QTimer.singleShot(50, self.spectra_widget.rescale)
         QTimer.singleShot(100, self.upd_spectra_list)
-        print("'Spectrums' Tab environment has been cleared and reset.")
+        print("'Spectrums' Tab environment has been cleared.")
 

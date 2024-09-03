@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, \
     clear_layout, compress, baseline_to_dict, dict_to_baseline, plot_baseline_dynamically
-from .common import FitThread, WaferPlot, ShowParameters, DataframeTable, \
+from .common import FitThread, WaferPlot, PeakTable, DataframeTable, \
     FitModelManager, CustomListWidget, SpectraViewWidget
 from .common import FIT_METHODS, PLOT_POLICY
 
@@ -50,16 +50,19 @@ class Maps(QObject):
         self.maps = {}  # list of opened maps data
         self.spectrums = Spectra()
         
-        self.df_fit_results = None
-        self.df_table = DataframeTable(self.ui.layout_df_table)
-        
-        # Initialize SpectraViewWidget
+         # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget(self)
         self.ui.fig_canvas_layout_2.addWidget(self.spectra_widget.canvas)
         self.ui.toolbar_layout_2.addWidget(self.spectra_widget.control_widget) 
         self.ui.cbb_fit_models.currentIndexChanged.connect(self.update_peak_model)
         
-
+         # Initialize PeakTable
+        self.peak_table = PeakTable(self, self.ui.peak_table1, self.ui.cbb_layout_2)
+        
+         # Initialize Dataframe table
+        self.df_fit_results = None
+        self.df_table = DataframeTable(self.ui.layout_df_table)
+        
         # Update spectra_listbox when selecting maps via MAPS LIST
         self.ui.maps_listbox.itemSelectionChanged.connect(
             self.upd_spectra_list)
@@ -86,9 +89,6 @@ class Maps(QObject):
         self.ui.btn_send_to_viz2.clicked.connect(self.send_df_to_viz)
         
         # Connect the stateChanged signal of the legend CHECKBOX
-        self.ui.cb_limits.stateChanged.connect(self.refresh_gui)
-        self.ui.cb_expr.stateChanged.connect(self.refresh_gui)
-
         self.ui.cbb_wafer_size.currentIndexChanged.connect(self.refresh_gui)
         self.ui.rdbt_show_wafer.toggled.connect(self.refresh_gui)
         
@@ -742,10 +742,10 @@ class Maps(QObject):
             return
 
         self.spectra_widget.plot(selected_spectrums)
-        
         self.plot_measurement_sites()
         self.read_x_range()
-        self.show_peak_table()
+        
+        self.peak_table.show(selected_spectrums[0])
 
     def create_plot_widget(self):
         """Create plot widgets measurement sites"""
@@ -1089,6 +1089,7 @@ class Maps(QObject):
         tab."""
         dfs_new = self.visu.original_dfs
         df_name = self.ui.ent_send_df_to_viz2.text()
+        
         dfs_new[df_name] = self.df_fit_results
         self.visu.open_dfs(dfs=dfs_new, file_paths=None)
 
@@ -1106,20 +1107,7 @@ class Maps(QObject):
         """Perform cosmic ray detection on the spectra data."""
         self.spectrums.outliers_limit_calculation()
 
-    def show_peak_table(self):
-        """
-        Show all fitted parameters of the selected spectrum in the GUI.
-        """
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        main_layout = self.ui.peak_table1
-        cb_limits = self.ui.cb_limits
-        cb_expr = self.ui.cb_expr
-        update = self.upd_spectra_list
-        show_params = ShowParameters(main_layout, sel_spectrum, cb_limits,
-                                     cb_expr, update)
-        show_params.show_peak_table(main_layout, sel_spectrum, cb_limits,
-                                    cb_expr)
-
+    
     def view_stats(self):
         """
         Show statistical fitting results of the selected spectrum.
@@ -1144,50 +1132,6 @@ class Maps(QObject):
             except:
                 return
 
-    def save_work(self):
-        """Save the current application states to a JSON file."""
-        try:
-            file_path, _ = QFileDialog.getSaveFileName(None,
-                                                    "Save work",
-                                                    "",
-                                                    "SPECTROview Files (*.maps)")
-            if file_path:
-                spectrums_data = spectrum_to_dict(self.spectrums)
-                data_to_save = {
-                    'spectrums': spectrums_data,
-                    'maps': {k: v.to_dict() for k, v in self.maps.items()},
-                }
-
-                with open(file_path, 'w') as f:
-                    json.dump(data_to_save, f, indent=4)
-                show_alert("Work saved successfully.")
-        except Exception as e:
-            show_alert(f"Error saving work: {e}")
-
-
-    def load_work(self, file_path):
-        """Load a previously saved application state from a JSON file."""
-        try:
-            with open(file_path, 'r') as f:
-                load = json.load(f)
-                try:
-                    self.spectrums = Spectra()
-                    for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
-                        spectrum = Spectrum()
-                        dict_to_spectrum(spectrum, spectrum_data)
-                        spectrum.preprocess()
-                        self.spectrums.append(spectrum)
-
-                    self.maps = {k: pd.DataFrame(v) for k, v in
-                                 load.get('maps', {}).items()}
-
-                    QTimer.singleShot(300, self.collect_results)
-                    self.upd_maps_list()
-
-                except Exception as e:
-                    show_alert(f"Error loading work: {e}")
-        except Exception as e:
-            show_alert(f"Error loading saved work (Maps Tab): {e}")
 
     def fitspy_launcher(self):
         """
@@ -1288,7 +1232,52 @@ class Maps(QObject):
             self.reinit_all()
         else:
             self.reinit()
+            
+    def save_work(self):
+        """Save the current application states to a JSON file."""
+        try:
+            file_path, _ = QFileDialog.getSaveFileName(None,
+                                                    "Save work",
+                                                    "",
+                                                    "SPECTROview Files (*.maps)")
+            if file_path:
+                spectrums_data = spectrum_to_dict(self.spectrums)
+                data_to_save = {
+                    'spectrums': spectrums_data,
+                    'maps': {k: v.to_dict() for k, v in self.maps.items()},
+                }
 
+                with open(file_path, 'w') as f:
+                    json.dump(data_to_save, f, indent=4)
+                show_alert("Work saved successfully.")
+        except Exception as e:
+            show_alert(f"Error saving work: {e}")
+
+
+    def load_work(self, file_path):
+        """Load a previously saved application state from a JSON file."""
+        try:
+            with open(file_path, 'r') as f:
+                load = json.load(f)
+                try:
+                    self.spectrums = Spectra()
+                    for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
+                        spectrum = Spectrum()
+                        dict_to_spectrum(spectrum, spectrum_data)
+                        spectrum.preprocess()
+                        self.spectrums.append(spectrum)
+
+                    self.maps = {k: pd.DataFrame(v) for k, v in
+                                 load.get('maps', {}).items()}
+
+                    QTimer.singleShot(300, self.collect_results)
+                    self.upd_maps_list()
+
+                except Exception as e:
+                    show_alert(f"Error loading work: {e}")
+        except Exception as e:
+            show_alert(f"Error loading saved work (Maps Tab): {e}")
+            
     def clear_env(self):
         """Clear the environment and reset the application state"""
         # Clear loaded maps and spectra
@@ -1312,8 +1301,9 @@ class Maps(QObject):
             self.canvas2.draw()
 
         self.df_table.clear()
+        self.peak_table.clear()
         
         # Refresh the UI to reflect the cleared state
         QTimer.singleShot(50, self.spectra_widget.rescale)
         QTimer.singleShot(100, self.upd_maps_list)
-        print("'Maps' Tab environment has been cleared and reset.")
+        print("'Maps' Tab environment has been cleared.")

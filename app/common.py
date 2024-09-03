@@ -1281,15 +1281,23 @@ class Graph(QWidget):
                 setattr(self, key, value)
 
 
-class ShowParameters:
-    """Class dedicated to show fit paramters of Spectrum objects in the GUI"""
+class PeakTable:
+    """Class dedicated to show fit parameters of Spectrum objects in the GUI"""
 
-    def __init__(self, main_layout, sel_spectrum, cb_limits, cb_expr, update):
-        self.main_layout = main_layout
-        self.sel_spectrum = sel_spectrum
-        self.cb_limits = cb_limits
-        self.cb_expr = cb_expr
-        self.update = update
+    def __init__(self, main_app, main_layout, cbb_layout):
+        # the main app where the PeakTable class is implemented, so we can connect to the method of main-map (upd_spectra_list)
+        self.main_app = main_app 
+        self.main_layout = main_layout # layout where the peak_table are placed
+        self.cbb_layout = cbb_layout  # layout where comboboxes are placed
+        self.sel_spectrum = None
+
+        # Initialize Checkboxes
+        self.cb_limits = QCheckBox("Limits")
+        self.cb_expr = QCheckBox("Expression")
+        self.cbb_layout.addWidget(self.cb_limits)
+        self.cbb_layout.addWidget(self.cb_expr)
+        self.cb_limits.stateChanged.connect(self.refresh_gui)
+        self.cb_expr.stateChanged.connect(self.refresh_gui)
 
     def clear_layout(self, layout):
         """To clear a given layout"""
@@ -1302,9 +1310,15 @@ class ShowParameters:
                 else:
                     self.clear_layout(item.layout())
 
-    def show_peak_table(self, main_layout, sel_spectrum, cb_limits, cb_expr):
-        """ To show all fitted parameters in GUI"""
-        self.clear_layout(main_layout)
+    def show(self, sel_spectrum=None):
+        """To show all fitted parameters in GUI"""
+        if sel_spectrum is None:
+            self.clear()
+            return
+        
+        self.sel_spectrum = sel_spectrum
+
+        self.clear_layout(self.main_layout)
 
         header_labels = ["  ", "Label", "Model"]
         param_hint_order = ['x0', 'fwhm', 'ampli', 'alpha', 'fwhm_l', 'fwhm_r']
@@ -1312,13 +1326,13 @@ class ShowParameters:
         # Create and add headers to list
         for param_hint_key in param_hint_order:
             if any(param_hint_key in peak_model.param_hints for peak_model in
-                   sel_spectrum.peak_models):
+                   self.sel_spectrum.peak_models):
                 header_labels.append(param_hint_key.title())
                 header_labels.append(f"fix {param_hint_key.title()}")
-                if cb_limits.isChecked():
+                if self.cb_limits.isChecked():
                     header_labels.append(f"min {param_hint_key.title()}")
                     header_labels.append(f"max {param_hint_key.title()}")
-                if cb_expr.isChecked():
+                if self.cb_expr.isChecked():
                     header_labels.append(f"expression {param_hint_key.title()}")
 
         # Create vertical layouts for each column type
@@ -1356,28 +1370,26 @@ class ShowParameters:
                 param_hint_key = header_label.lower()
                 param_hint_layouts[param_hint_key]['value'].addWidget(label)
 
-        for i, peak_model in enumerate(sel_spectrum.peak_models):
+        for i, peak_model in enumerate(self.sel_spectrum.peak_models):
             # Button to delete peak_model
-            #print(i, sel_spectrum.peak_labels[i], sel_spectrum.get_model_name(peak_model))
-            
             delete = QPushButton(peak_model.prefix)
             icon = QIcon()
             icon.addFile(os.path.join(ICON_DIR, "close.png"))
             delete.setIcon(icon)
             delete.setFixedWidth(50)
-            delete.clicked.connect(self.delete_helper(sel_spectrum, i))
+            delete.clicked.connect(self.delete_helper(self.sel_spectrum, i))
             delete_layout.addWidget(delete)
 
             # Peak_label
-            label = QLineEdit(sel_spectrum.peak_labels[i])
+            label = QLineEdit(self.sel_spectrum.peak_labels[i])
             label.setFixedWidth(80)
             label.textChanged.connect(
                 lambda text, idx=i,
-                       spectrum=sel_spectrum: self.update_peak_label(spectrum,
-                                                                     idx, text))
+                       spectrum=self.sel_spectrum: self.update_peak_label(spectrum,
+                                                                         idx, text))
             label_layout.addWidget(label)
 
-            # Peak model : Lorentizan, Gaussien, etc...
+            # Peak model : Lorentizan, Gaussian, etc...
             model = QComboBox()
             model.addItems(PEAK_MODELS)
             current_model_index = PEAK_MODELS.index(
@@ -1385,7 +1397,7 @@ class ShowParameters:
             model.setCurrentIndex(current_model_index)
             model.setFixedWidth(120)
             model.currentIndexChanged.connect(
-                lambda index, spectrum=sel_spectrum, idx=i,
+                lambda index, spectrum=self.sel_spectrum, idx=i,
                        combo=model: self.update_model_name(spectrum, index, idx,
                                                            combo.currentText()))
             model_layout.addWidget(model)
@@ -1420,7 +1432,7 @@ class ShowParameters:
                     param_hint_layouts[param_hint_key]['vary'].addWidget(vary)
 
                     # 4.3 MIN MAX
-                    if cb_limits.isChecked():
+                    if self.cb_limits.isChecked():
                         min_val = round(param_hint_value.get('min', 0.0), 2)
                         min_lineedit = QLineEdit(str(min_val))
                         min_lineedit.setFixedWidth(70)
@@ -1448,7 +1460,7 @@ class ShowParameters:
                             max_lineedit)
 
                     # 4.4 EXPRESSION
-                    if cb_expr.isChecked():
+                    if self.cb_expr.isChecked():
                         expr_val = str(param_hint_value.get('expr', ''))
                         expr = QLineEdit(expr_val)
                         expr.setFixedWidth(150)
@@ -1470,23 +1482,23 @@ class ShowParameters:
                         empty_label)
                     param_hint_layouts[param_hint_key]['vary'].addWidget(
                         empty_label)
-                    if cb_limits.isChecked():
+                    if self.cb_limits.isChecked():
                         param_hint_layouts[param_hint_key]['min'].addWidget(
                             empty_label)
                         param_hint_layouts[param_hint_key]['max'].addWidget(
                             empty_label)
-                    if cb_expr.isChecked():
+                    if self.cb_expr.isChecked():
                         param_hint_layouts[param_hint_key]['expr'].addWidget(
                             empty_label)
 
         # Add vertical layouts to main layout
-        main_layout.addLayout(delete_layout)
-        main_layout.addLayout(label_layout)
-        main_layout.addLayout(model_layout)
+        self.main_layout.addLayout(delete_layout)
+        self.main_layout.addLayout(label_layout)
+        self.main_layout.addLayout(model_layout)
 
         for param_hint_key, param_hint_layout in param_hint_layouts.items():
             for var_layout in param_hint_layout.values():
-                main_layout.addLayout(var_layout)
+                self.main_layout.addLayout(var_layout)
 
     def update_model_name(self, spectrum, index, idx, new_model):
         """ Update the model function (Lorentizan, Gaussian...) related to
@@ -1500,17 +1512,24 @@ class ShowParameters:
                                                     x0=x0, ampli=ampli)
             spectrum.peak_models[idx] = peak_model
             spectrum.result_fit = lambda: None
-            self.update()
+            self.refresh_gui()  # To update in GUI of main application.
+
     def delete_helper(self, spectrum, idx):
         """Helper method"""
         return lambda: self.delete_peak_model(spectrum, idx)
     
     def delete_peak_model(self, spectrum, idx):
-        """"To delete a peak model"""
-        
+        """To delete a peak model"""
         del spectrum.peak_models[idx]
         del spectrum.peak_labels[idx]
-        self.update()
+        self.refresh_gui()  # To update in GUI of main application.
+        
+    def refresh_gui(self):
+        """Call the refresh_gui method of the main application."""
+        if hasattr(self.main_app, 'refresh_gui'):
+            self.main_app.refresh_gui()
+        else:
+            print("Main application does not have upd_spectra_list method.")
 
     def update_peak_label(self, spectrum, idx, text):
         spectrum.peak_labels[idx] = text
@@ -1529,6 +1548,11 @@ class ShowParameters:
 
     def update_param_hint_expr(self, pm, key, text):
         pm.param_hints[key]['expr'] = text
+
+    def clear(self):
+        """Clears all data from the main layout."""
+        self.clear_layout(self.main_layout)
+
 
 
 class FitModelManager:
@@ -2082,8 +2106,14 @@ def view_df(tabWidget, df):
     df_viewer = QDialog(tabWidget.parent())
     df_viewer.setWindowTitle("DataFrame Viewer")
     df_viewer.setWindowFlags(df_viewer.windowFlags() & ~Qt.WindowStaysOnTopHint)
+    
     # Create a QTableWidget and populate it with data from the DataFrame
     layout = QVBoxLayout(df_viewer)
-    dataframe_table = DataframeTable(df, layout)
+    dataframe_table = DataframeTable(layout)
+    
+    # Show the DataFrame in the DataframeTable widget
+    dataframe_table.show(df)  # Pass the DataFrame to be displayed
+    
     df_viewer.setLayout(layout)
     df_viewer.exec_()
+

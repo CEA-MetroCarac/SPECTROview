@@ -689,6 +689,7 @@ class Visualization(QDialog):
         self.ui.cbb_z_2.clear()
         self.filter.filter_listbox.clear()
         self.ui.cbb_graph_list.clear()
+        print("'Visualization' Tab environment has been cleared.")
 
     def add_y12(self):
         """Add a second line in the current plot ax"""

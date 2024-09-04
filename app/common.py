@@ -268,7 +268,7 @@ class SpectraViewWidget(QWidget):
 
     def create_plot_widget(self):
         """Create or update canvas and toolbar for plotting in the GUI."""
-        plt.style.use("ggplot")
+        plt.style.use(PLOT_POLICY)
 
         if not self.figure:
             self.figure = plt.figure(dpi=self.dpi)

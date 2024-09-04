@@ -28,7 +28,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "fitspy",
+    "fitspy==2024.5",
     "numpy",
     "openpyxl",
     "pandas",

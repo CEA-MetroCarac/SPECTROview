@@ -34,9 +34,8 @@ ___
 - Dedicated module for effortless, fast, and easy data visualization. 
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/visu_tab.png">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/visualization_tab.png">
 </p>
-
 
 ## Installation from PyPI:
 

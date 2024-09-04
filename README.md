@@ -28,7 +28,7 @@ ___
 - Collect all best-fit results with one click.
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/collect_fit_results-.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/collect_fit_results.gif">
 </p>
 
 - Dedicated module for effortless, fast, and easy data visualization. 

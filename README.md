@@ -59,8 +59,5 @@ spectroview
 
 This work, carried out on the CEA - Platform for Nanocharacterisation (PFNC) was supported by the “Recherche Technologique de Base” program of the French National Research Agency (ANR).
 
-## Citation
-/In preparation/
-
 ---
 For any feedback, contact: [van-hoan.le@cea.fr](mailto:van-hoan.le@cea.fr)

@@ -28,7 +28,7 @@ ___
 - Collect all best-fit results with one click.
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/collect_fit_results.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/collect_fit_results-.gif">
 </p>
 
 - Dedicated module for effortless, fast, and easy data visualization. 
@@ -58,6 +58,9 @@ spectroview
 ## Acknowledgements
 
 This work, carried out on the CEA - Platform for Nanocharacterisation (PFNC) was supported by the “Recherche Technologique de Base” program of the French National Research Agency (ANR).
+
+## Citation
+/In preparation/
 
 ---
 For any feedback, contact: [van-hoan.le@cea.fr](mailto:van-hoan.le@cea.fr)

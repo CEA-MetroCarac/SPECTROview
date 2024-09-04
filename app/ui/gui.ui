@@ -784,7 +784,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>725</width>
-                               <height>72</height>
+                               <height>69</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -1013,13 +1013,13 @@
                               <widget class="QComboBox" name="cbb_fit_model_list_3">
                                <property name="minimumSize">
                                 <size>
-                                 <width>400</width>
+                                 <width>280</width>
                                  <height>0</height>
                                 </size>
                                </property>
                                <property name="maximumSize">
                                 <size>
-                                 <width>400</width>
+                                 <width>280</width>
                                  <height>16777215</height>
                                 </size>
                                </property>
@@ -1037,19 +1037,6 @@
                              </item>
                              <item>
                               <spacer name="horizontalSpacer_42">
-                               <property name="orientation">
-                                <enum>Qt::Horizontal</enum>
-                               </property>
-                               <property name="sizeHint" stdset="0">
-                                <size>
-                                 <width>40</width>
-                                 <height>20</height>
-                                </size>
-                               </property>
-                              </spacer>
-                             </item>
-                             <item>
-                              <spacer name="horizontalSpacer_26">
                                <property name="orientation">
                                 <enum>Qt::Horizontal</enum>
                                </property>
@@ -1154,8 +1141,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
-                       <height>243</height>
+                       <width>428</width>
+                       <height>519</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -2853,7 +2840,7 @@
                                <x>0</x>
                                <y>0</y>
                                <width>725</width>
-                               <height>72</height>
+                               <height>69</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -3082,13 +3069,13 @@
                               <widget class="QComboBox" name="cbb_fit_model_list">
                                <property name="minimumSize">
                                 <size>
-                                 <width>400</width>
+                                 <width>280</width>
                                  <height>0</height>
                                 </size>
                                </property>
                                <property name="maximumSize">
                                 <size>
-                                 <width>400</width>
+                                 <width>280</width>
                                  <height>16777215</height>
                                 </size>
                                </property>
@@ -5086,7 +5073,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>395</width>
-                    <height>454</height>
+                    <height>523</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">

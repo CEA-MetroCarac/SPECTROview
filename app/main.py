@@ -137,7 +137,7 @@ class Main:
             self.maps.paste_fit_model_fnc_handler)
         self.ui.cbb_fit_models.addItems(PEAK_MODELS)
         self.ui.cbb_wafer_size.addItems(WAFER_SIZE)
-        self.ui.cbb_wafer_size.setCurrentIndex(3)
+        self.ui.cbb_wafer_size.setCurrentIndex(2)
 
         self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range_handler)
 

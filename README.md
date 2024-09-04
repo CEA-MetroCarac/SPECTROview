@@ -22,7 +22,7 @@ ___
 
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/maps_tab2.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/maps_tab3.gif">
 </p>
 
 - Collect all best-fit results with one click.

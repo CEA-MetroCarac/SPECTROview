@@ -1,4 +1,4 @@
-[![PyPI version](https://badge.fury.io/py/spectroview.svg?cache=no)](https://badge.fury.io/py/spectroview)
+[![PyPI version](https://badge.fury.io/py/spectroview.svg)](https://badge.fury.io/py/spectroview)
 [![Github](https://img.shields.io/badge/GitHub-GPL--3.0-informational)](https://github.com/CEA-MetroCarac/spectroview)
 [![Downloads](https://img.shields.io/pypi/dm/spectroview.svg)](https://pypi.org/project/spectroview/)
 
@@ -57,7 +57,7 @@ spectroview
 
 ## Acknowledgements
 
-This work, carried out on the CEA - Platform for Nanocharacterisation (PFNC) was supported by the “Recherche Technologique de Base” program of the French National Research Agency (ANR).
+This work, carried out on the CEA - Platform for Nanocharacterisation (PFNC), was supported by the “Recherche Technologique de Base” program of the French National Research Agency (ANR).
 
 ---
 For any feedback, contact: [van-hoan.le@cea.fr](mailto:van-hoan.le@cea.fr)

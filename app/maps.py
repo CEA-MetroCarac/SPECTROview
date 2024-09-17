@@ -203,6 +203,8 @@ class Maps(QObject):
             if len(y_values) > 1:
                 y_values = y_values[:-1]
             fname = f"{map_name}_{coord}"
+            
+            print(fname)
             if not any(spectrum.fname == fname for spectrum in self.spectrums):
                 spectrum = Spectrum()
                 spectrum.fname = fname
@@ -218,7 +220,7 @@ class Maps(QObject):
         for i in range(0, len(map_df), 2):
             coord_row = map_df.iloc[i]
             intensity_row = map_df.iloc[i + 1]
-            coord = (coord_row.iloc[0], coord_row.iloc[1])
+            coord = (float(coord_row.iloc[0]), float(coord_row.iloc[1]))
             x_values = coord_row.iloc[2:].tolist()
             x_values = pd.to_numeric(x_values, errors='coerce').tolist()
             y_values = intensity_row.iloc[2:].tolist()

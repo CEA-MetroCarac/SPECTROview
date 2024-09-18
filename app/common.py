@@ -2,6 +2,7 @@
 Module contains all common methods/class different modules of SPECTROview application
 """
 import markdown
+import platform
 import os
 import json
 from copy import deepcopy
@@ -11,6 +12,9 @@ try:
     import win32clipboard
 except:
     pass
+
+import AppKit
+from PIL import Image
 
 from io import BytesIO
 import numpy as np
@@ -297,6 +301,7 @@ class SpectraViewWidget(QWidget):
             self.R2 = QLabel("R2=0", self)
             self.R2.setFixedWidth(80)
 
+
             # Create a QPushButton for Copy figure canvans
             self.btn_copy = QPushButton("", self)
             icon = QIcon()
@@ -324,10 +329,13 @@ class SpectraViewWidget(QWidget):
 
         self.update_plot_styles()
         
+    
+
     def create_view_options(self):
-        """Create QMenu containing all view options."""
+        """Create widget containing all view options."""
         
         self.view_options_menu = QMenu(self)
+
         # Create a QWidget to hold the QLabel and QComboBox
         axis_widget = QWidget(self.view_options_menu)
         axis_layout = QHBoxLayout(axis_widget)
@@ -345,6 +353,8 @@ class SpectraViewWidget(QWidget):
         combo_action = QWidgetAction(self)
         combo_action.setDefaultWidget(axis_widget)
         self.view_options_menu.addAction(combo_action)
+
+        # Add a separator to distinguish the combobox from checkable actions
         self.view_options_menu.addSeparator()
 
         # Define view options with checkable actions
@@ -358,6 +368,7 @@ class SpectraViewWidget(QWidget):
             ("Residual", "Residual"),
             ("Normalized", "Normalized"),
         ]
+
         # Add actions to the menu
         for option_name, option_label, *checked in view_options:
             action = QAction(option_label, self)
@@ -591,19 +602,9 @@ class SpectraViewWidget(QWidget):
             self.plot(self.sel_spectrums)
     
     def copy_fig(self):
-        """To copy figure canvas to clipboard"""
-        if self.canvas:
-            figure = self.canvas.figure
-            with BytesIO() as buf:
-                figure.savefig(buf, format='png', dpi=400)
-                data = buf.getvalue()
-            format_id = win32clipboard.RegisterClipboardFormat('PNG')
-            win32clipboard.OpenClipboard()
-            win32clipboard.EmptyClipboard()
-            win32clipboard.SetClipboardData(format_id, data)
-            win32clipboard.CloseClipboard()
-        else:
-            QMessageBox.critical(None, "Error", "No plot to copy.")
+        """Detect the current operating system and call the corresponding copy method."""
+        copy_fig(self.canvas)
+
     
 class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.
@@ -1572,66 +1573,6 @@ class FitModelManager:
 class CommonUtilities():
     """ Class contain all common methods or utility codes used other modules"""
 
-    def copy_fit_model(self, sel_spectrum, current_fit_model, label):
-        """ To copy the model dict of the selected spectrum. If several
-        spectrums are selected → copy the model dict of first spectrum in
-        list
-        sel_spectrum : FITSPY spectrum object
-        current_fit_model : FITSPY fit model object
-        label : QLabel to display the fname
-        """
-        if len(sel_spectrum.peak_models) == 0:
-            label.setText("")
-            show_alert(
-                "The selected spectrum does not have fit model to be copied!")
-            current_fit_model = None
-            return
-        else:
-            current_fit_model = None
-            current_fit_model = deepcopy(sel_spectrum.save())
-
-        fname = sel_spectrum.fname
-        label.setText(
-            f"The fit model of '{fname}' spectrum is copied to the clipboard.")
-
-        return current_fit_model
-
-    def plot_graph(self, ax, dfr, x, y, z, style, xmin, xmax, ymin, ymax, title,
-                   x_text,
-                   y_text, xlabel_rot):
-        """Plot graph """
-
-        ax.clear()
-        if style == "box plot":
-            sns.boxplot(data=dfr, x=x, y=y, hue=z, dodge=True, ax=ax)
-        elif style == "point plot":
-            sns.pointplot(data=dfr, x=x, y=y, hue=z, linestyle='none',
-                          dodge=True, capsize=0.00, ax=ax)
-        elif style == "scatter plot":
-            sns.scatterplot(data=dfr, x=x, y=y, hue=z, s=100, ax=ax)
-        elif style == "bar plot":
-            sns.barplot(data=dfr, x=x, y=y, hue=z, errorbar='sd', ax=ax)
-
-        if xmin and xmax:
-            ax.set_xlim(float(xmin), float(xmax))
-        if ymin and ymax:
-            ax.set_ylim(float(ymin), float(ymax))
-
-        xlabel = x if not x_text else x_text
-        ylabel = y if not y_text else y_text
-        if xlabel:
-            ax.set_xlabel(xlabel)
-        if ylabel:
-            ax.set_ylabel(ylabel)
-        if title:
-            ax.set_title(title)
-        ax.legend(loc='upper right')
-
-        if xlabel_rot != 0:
-            plt.setp(ax.get_xticklabels(), rotation=xlabel_rot, ha="right",
-                     rotation_mode="anchor")
-        return ax
-
     def reinit_spectrum(self, fnames, spectrums):
         """Reinitilize a FITSPY spectrum object"""
         for fname in fnames:
@@ -1701,21 +1642,6 @@ class CommonUtilities():
             return 'Edge'
         else:
             return np.nan
-
-    def copy_fig_to_clb(self, canvas):
-        """Function to copy canvas figure to clipboard"""
-        if canvas:
-            figure = canvas.figure
-            with BytesIO() as buf:
-                figure.savefig(buf, format='png', dpi=400)
-                data = buf.getvalue()
-            format_id = win32clipboard.RegisterClipboardFormat('PNG')
-            win32clipboard.OpenClipboard()
-            win32clipboard.EmptyClipboard()
-            win32clipboard.SetClipboardData(format_id, data)
-            win32clipboard.CloseClipboard()
-        else:
-            QMessageBox.critical(None, "Error", "No plot to copy.")
 
     def display_df_in_table(self, table_widget, df_results):
         """Display pandas DataFrame in QTableWidget in GUI"""
@@ -2073,4 +1999,50 @@ def view_df(tabWidget, df):
     dataframe_table.show(df) 
     df_viewer.setLayout(layout)
     df_viewer.exec_()
+
+def copy_fig(canvas):
+    """Detect the current operating system and call the corresponding copy method with canvas."""
+    current_os = platform.system()
+    if current_os == 'Darwin':  # macOS
+        copy_fig_macos(canvas)
+    elif current_os == 'Windows':
+        copy_fig_windows(canvas)
+    else:
+        QMessageBox.critical(None, "Error", f"Unsupported OS: {current_os}")
+
+def copy_fig_windows(canvas):
+    """To copy figure canvas to clipboard (Windows version)."""
+    if canvas:
+        figure = canvas.figure
+        with BytesIO() as buf:
+            figure.savefig(buf, format='png', dpi=400)
+            data = buf.getvalue()
+        format_id = win32clipboard.RegisterClipboardFormat('PNG')
+        win32clipboard.OpenClipboard()
+        win32clipboard.EmptyClipboard()
+        win32clipboard.SetClipboardData(format_id, data)
+        win32clipboard.CloseClipboard()
+    else:
+        QMessageBox.critical(None, "Error", "No plot to copy.")
+
+def copy_fig_macos(canvas):
+    """To copy figure canvas to clipboard (macOS version)."""
+    if canvas:
+        buf = BytesIO()
+        canvas.print_png(buf)
+        buf.seek(0)
+        image = Image.open(buf)
+        img_size = image.size
+        png_data = buf.getvalue()
+        image_rep = AppKit.NSBitmapImageRep.alloc().initWithData_(
+            AppKit.NSData.dataWithBytes_length_(png_data, len(png_data))
+        )
+        ns_image = AppKit.NSImage.alloc().initWithSize_((img_size[0], img_size[1]))
+        ns_image.addRepresentation_(image_rep)
+        pasteboard = AppKit.NSPasteboard.generalPasteboard()
+        pasteboard.clearContents()
+        pasteboard.writeObjects_([ns_image])
+
+    else:
+        QMessageBox.critical(None, "Error", "No plot to copy.")
 

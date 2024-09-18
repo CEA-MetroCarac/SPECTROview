@@ -260,7 +260,6 @@ class Visualization(QDialog):
         current_z = self.ui.cbb_z_2.currentText()
         if current_z != graph.z:
             graph.legend_properties = []
-            print("'z' values are changed, resets legends to default")
             return True
         return False
 

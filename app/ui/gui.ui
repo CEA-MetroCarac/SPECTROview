@@ -298,7 +298,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>509</height>
+                          <height>487</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -342,6 +342,7 @@
                              <widget class="QLabel" name="label_65">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -441,6 +442,7 @@
                              <widget class="QLabel" name="label_69">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -668,6 +670,7 @@
                              <widget class="QLabel" name="label_72">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -783,7 +786,7 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>725</width>
+                               <width>729</width>
                                <height>69</height>
                               </rect>
                              </property>
@@ -1142,7 +1145,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>519</height>
+                       <height>497</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -1183,6 +1186,7 @@
                         </property>
                         <property name="font">
                          <font>
+                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -1499,6 +1503,7 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
+                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -2354,7 +2359,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>345</height>
+                          <height>332</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -2398,6 +2403,7 @@
                              <widget class="QLabel" name="label_54">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2497,6 +2503,7 @@
                              <widget class="QLabel" name="label_52">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2724,6 +2731,7 @@
                              <widget class="QLabel" name="label_57">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2839,7 +2847,7 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>725</width>
+                               <width>729</width>
                                <height>69</height>
                               </rect>
                              </property>
@@ -3227,8 +3235,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
-                       <height>243</height>
+                       <width>428</width>
+                       <height>342</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -3269,6 +3277,7 @@
                         </property>
                         <property name="font">
                          <font>
+                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -3768,7 +3777,7 @@
                   </layout>
                  </item>
                  <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_68">
+                  <layout class="QHBoxLayout" name="horizontalLayout_68" stretch="50,50">
                    <item>
                     <widget class="QLabel" name="label_55">
                      <property name="text">
@@ -3777,23 +3786,10 @@
                     </widget>
                    </item>
                    <item>
-                    <spacer name="horizontalSpacer_41">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
                     <widget class="QLineEdit" name="xtol">
                      <property name="maximumSize">
                       <size>
-                       <width>60</width>
+                       <width>167777</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -3859,6 +3855,7 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
+                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -4626,6 +4623,16 @@
              </widget>
             </item>
             <item>
+             <widget class="QLabel" name="label_17">
+              <property name="text">
+               <string>Legend location: </string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cbb_legend_loc"/>
+            </item>
+            <item>
              <widget class="QCheckBox" name="cb_grid">
               <property name="text">
                <string>Grid</string>
@@ -5072,8 +5079,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>395</width>
-                    <height>523</height>
+                    <width>372</width>
+                    <height>551</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -5110,6 +5117,7 @@
                        </property>
                        <property name="font">
                         <font>
+                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5224,6 +5232,7 @@
                       <widget class="QLabel" name="label_91">
                        <property name="font">
                         <font>
+                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5283,6 +5292,7 @@
                       <widget class="QLabel" name="label_97">
                        <property name="font">
                         <font>
+                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5490,8 +5500,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>277</width>
-                    <height>298</height>
+                    <width>372</width>
+                    <height>551</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -5589,16 +5599,6 @@
                    <item>
                     <layout class="QHBoxLayout" name="legends_loc">
                      <item>
-                      <widget class="QLabel" name="label_17">
-                       <property name="text">
-                        <string>Legend location: </string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QComboBox" name="cbb_legend_loc"/>
-                     </item>
-                     <item>
                       <spacer name="horizontalSpacer_35">
                        <property name="orientation">
                         <enum>Qt::Horizontal</enum>
@@ -5625,6 +5625,7 @@
                      <property name="font">
                       <font>
                        <pointsize>9</pointsize>
+                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -5712,8 +5713,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>364</width>
-                    <height>371</height>
+                    <width>362</width>
+                    <height>310</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_9">

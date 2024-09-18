@@ -94,6 +94,8 @@ class Main:
             self.save_settings)
         self.ui.xtol_2.textChanged.connect(self.save_settings)
         self.ui.cb_attached_2.stateChanged.connect(self.save_settings)
+        
+        self.ui.cb_grid.stateChanged.connect(self.save_settings)
 
         ########################################################
         ############## GUI for Maps Processing tab #############
@@ -332,7 +334,10 @@ class Main:
             'max_ite2': self.ui.max_iteration_2.text(),
             'method2': self.ui.cbb_fit_methods_2.currentText(),
             'xtol2': float(self.ui.xtol_2.text()),
-            'attached2': self.ui.cb_attached_2.isChecked()
+            'attached2': self.ui.cb_attached_2.isChecked(),
+            
+            # Visualization module
+            'grid': self.ui.cb_grid.isChecked()
         }
         # Save the gui states to QSettings
         for key, value in gui_states.items():
@@ -366,6 +371,9 @@ class Main:
             'xtol2': self.settings.value('xtol2', defaultValue=1.e-4, type=float),
             'attached2': self.settings.value('attached2',
                                                 defaultValue=True, type=bool),
+            
+            # Visualization module
+            'grid': self.settings.value('grid', defaultValue=False, type=bool),
         }
 
         # Update GUI elements with the loaded values
@@ -381,6 +389,8 @@ class Main:
         self.ui.cbb_fit_methods_2.setCurrentText(gui_states['method2'])
         self.ui.xtol_2.setText(str(gui_states['xtol2']))
         self.ui.cb_attached_2.setChecked(gui_states['attached2'])
+        
+        self.ui.cb_grid.setChecked(gui_states['grid'])
         
 expiration_date = datetime.datetime(2024, 12, 31)
 

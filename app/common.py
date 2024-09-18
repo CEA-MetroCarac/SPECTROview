@@ -54,7 +54,7 @@ FIT_METHODS = {'Leastsq': 'leastsq', 'Least_squares': 'least_squares',
                'Nelder-Mead': 'nelder', 'SLSQP': 'slsqp'}
 PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
-PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer']
+PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer', '2Dmap']
 
 DEFAULT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd','#8c564b', '#e377c2','#7f7f7f', '#bcbd22', '#17becf', '#ffd500', '#008281','#000086', '#c0c0c0','#808000', '#8d0000', '#6fd0ef']
 
@@ -746,65 +746,7 @@ class Graph(QWidget):
     palettes, and more. It also supports multiple y-axis plotting and the
     option to show
     trendline equations.
-
-    Attributes:
-        df_name (str or None): Name of the DataFrame used for plotting.
-        filters (dict): Dictionary containing filter parameters.
-        graph_id: Identifier for the graph instance.
-        plot_width (int): Width of the plot in pixels.
-        plot_height (int): Height of the plot in pixels.
-        plot_style (str): Style of the plot (e.g., 'point', 'scatter',
-        'line', etc.).
-        x (str or None): Column name for the x-axis data.
-        y (list): List of column names for the primary y-axis data.
-        z (str or None): Column name for grouping data (used in hue).
-        xmin (float or None): Minimum limit for the x-axis.
-        xmax (float or None): Maximum limit for the x-axis.
-        ymin (float or None): Minimum limit for the primary y-axis.
-        ymax (float or None): Maximum limit for the primary y-axis.
-        zmin (float or None): Minimum limit for the secondary y-axis.
-        zmax (float or None): Maximum limit for the secondary y-axis.
-        plot_title (str or None): Title of the plot.
-        xlabel (str or None): Label for the x-axis.
-        ylabel (str or None): Label for the primary y-axis.
-        zlabel (str or None): Label for the secondary y-axis.
-        y2 (str or None): Column name for the secondary y-axis.
-        y3 (str or None): Column name for the tertiary y-axis.
-        y2min (float or None): Minimum limit for the secondary y-axis.
-        y2max (float or None): Maximum limit for the secondary y-axis.
-        y3min (float or None): Minimum limit for the tertiary y-axis.
-        y3max (float or None): Maximum limit for the tertiary y-axis.
-        y2label (str or None): Label for the secondary y-axis.
-        y3label (str or None): Label for the tertiary y-axis.
-        x_rot (int): Rotation angle for x-axis tick labels.
-        grid (bool): Flag indicating whether to display grid lines.
-        legend_visible (bool): Flag indicating whether the legend is visible.
-        legend_location (str): Location of the legend ('upper right', 'lower
-        left', etc.).
-        legend_outside (bool): Flag indicating whether the legend should be
-        outside the plot.
-        legend_properties (list): List of dictionaries containing properties
-        of legend items.
-        color_palette (str): Name of the color palette to use.
-        dpi (int): Dots per inch (resolution) of the plot.
-        wafer_size (int): Size of the wafer plot.
-        wafer_stats (bool): Flag indicating whether to display statistics on
-        the wafer plot.
-        trendline_order (int): Order of the polynomial for trendline fitting.
-        show_trendline_eq (bool): Flag indicating whether to show the
-        trendline equation.
-        show_bar_plot_error_bar (bool): Flag indicating whether to show error
-        bars on bar plots.
-        join_for_point_plot (bool): Flag indicating whether to join points in
-        point plots.
-
-        figure: Matplotlib figure object.
-        ax: Matplotlib axis object for the primary plot.
-        ax2: Matplotlib axis object for the secondary y-axis plot.
-        ax3: Matplotlib axis object for the tertiary y-axis plot.
-        canvas: Matplotlib FigureCanvasQTAgg object for displaying the plot.
-        graph_layout (QVBoxLayout): Layout for storing the plot widget.
-        """
+    """
 
     def __init__(self, graph_id=None):
         super().__init__()
@@ -1083,6 +1025,21 @@ class Graph(QWidget):
                     self._annotate_trendline_eq(df)
             elif self.plot_style == 'wafer':
                 self._plot_wafer(df)
+                
+            elif self.plot_style == '2Dmap':
+                x_col = self.x 
+                y_col = y if isinstance(self.y, list) else self.y  
+                z_col = self.z 
+                xmin = df[x_col].min()
+                xmax = df[x_col].max()
+                ymin = df[y_col].min()
+                ymax = df[y_col].max()
+                heatmap_data = df.pivot(index=y_col, columns=x_col, values=z_col)
+                vmin = self.zmin if self.zmin else heatmap_data.min().min()
+                vmax = self.zmax if self.zmax else heatmap_data.max().max()
+                
+                heatmap = self.ax.imshow(heatmap_data, aspect='equal', extent=[xmin, xmax, ymin, ymax], cmap=self.color_palette, origin='lower', vmin=vmin, vmax=vmax)
+                plt.colorbar(heatmap, orientation='vertical')
             else:
                 show_alert("Unsupported plot style")
 
@@ -1183,6 +1140,20 @@ class Graph(QWidget):
                 self.ax.set_title(self.plot_title)
             else:
                 self.ax.set_title(self.z)
+                
+        elif self.plot_style == '2Dmap':
+            if self.plot_title:
+                self.ax.set_title(self.plot_title)
+            else:
+                self.ax.set_title(self.z) 
+            if self.xlabel:
+                self.ax.set_xlabel(self.xlabel)
+            else:
+                self.ax.set_xlabel(self.x)
+            if self.ylabel:
+                self.ax.set_ylabel(self.ylabel)
+            else:
+                self.ax.set_ylabel(self.y[0])
         else:
             self.ax.set_title(self.plot_title)
             if self.xlabel:

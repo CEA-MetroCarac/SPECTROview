@@ -203,8 +203,6 @@ class Maps(QObject):
             if len(y_values) > 1:
                 y_values = y_values[:-1]
             fname = f"{map_name}_{coord}"
-            
-            print(fname)
             if not any(spectrum.fname == fname for spectrum in self.spectrums):
                 spectrum = Spectrum()
                 spectrum.fname = fname

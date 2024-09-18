@@ -24,9 +24,9 @@ from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, 
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
     QLineEdit, QWidget, QPushButton,QToolButton, QSpinBox, QComboBox, QCheckBox, QListWidgetItem, \
     QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy, QRadioButton, QGroupBox
-from PySide6.QtCore import Signal, QThread, Qt, QSize,QTimer, QCoreApplication
+from PySide6.QtCore import Signal, QThread, Qt, QSize,QTimer, QCoreApplication, QPoint 
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
-    QAction, Qt
+    QAction, Qt, QCursor
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -274,7 +274,8 @@ class SpectraViewWidget(QWidget):
             self.figure = plt.figure(dpi=self.dpi)
             self.ax = self.figure.add_subplot(111)
             self.canvas = FigureCanvas(self.figure)
-            self.canvas.mpl_connect('button_press_event', self.on_click)
+            self.canvas.mpl_connect('button_press_event', self.on_left_click)
+            self.canvas.mpl_connect('button_press_event', self.on_right_click)
 
             self.toolbar = NavigationToolbar2QT(self.canvas, self)
 
@@ -296,7 +297,6 @@ class SpectraViewWidget(QWidget):
             self.R2 = QLabel("R2=0", self)
             self.R2.setFixedWidth(80)
 
-
             # Create a QPushButton for Copy figure canvans
             self.btn_copy = QPushButton("", self)
             icon = QIcon()
@@ -313,7 +313,6 @@ class SpectraViewWidget(QWidget):
             self.control_layout.setContentsMargins(0, 0, 0, 0)
             
             # Add widgets to the horizontal layout
-            self.control_layout.addWidget(self.view_options_button)
             self.control_layout.addWidget(self.toolbar)
             self.control_layout.addWidget(self.rdbtn_baseline)
             self.control_layout.addWidget(self.rdbtn_peak)
@@ -324,20 +323,14 @@ class SpectraViewWidget(QWidget):
             self.control_widget.setLayout(self.control_layout)
 
         self.update_plot_styles()
-
+        
     def create_view_options(self):
-        """Create widget containing all view options."""
-        self.view_options_button = QToolButton()
-        self.view_options_button.setText("View Options")
-        self.view_options_button.setPopupMode(QToolButton.MenuButtonPopup)
-
-        self.view_options_menu = QMenu(self.view_options_button)
-
+        """Create QMenu containing all view options."""
+        
+        self.view_options_menu = QMenu(self)
         # Create a QWidget to hold the QLabel and QComboBox
         axis_widget = QWidget(self.view_options_menu)
         axis_layout = QHBoxLayout(axis_widget)
-
-        # Add QLabel for "X axis unit"
         x_axis_label = QLabel("X axis unit:", axis_widget)
         axis_layout.addWidget(x_axis_label)
 
@@ -346,18 +339,12 @@ class SpectraViewWidget(QWidget):
         self.x_axis_combo.addItems(X_AXIS)
         self.x_axis_combo.currentIndexChanged.connect(self.refresh_plot)
         axis_layout.addWidget(self.x_axis_combo)
-
-        # Remove margins to make it look better inside the menu
         axis_layout.setContentsMargins(5, 5, 5, 5)
 
         # Create a QWidgetAction to hold the combined QLabel and QComboBox
-        combo_action = QWidgetAction(self.view_options_menu)
+        combo_action = QWidgetAction(self)
         combo_action.setDefaultWidget(axis_widget)
-
-        # Add the combobox action at the top of the menu
         self.view_options_menu.addAction(combo_action)
-
-        # Add a separator to distinguish the combobox from checkable actions
         self.view_options_menu.addSeparator()
 
         # Define view options with checkable actions
@@ -371,7 +358,6 @@ class SpectraViewWidget(QWidget):
             ("Residual", "Residual"),
             ("Normalized", "Normalized"),
         ]
-
         # Add actions to the menu
         for option_name, option_label, *checked in view_options:
             action = QAction(option_label, self)
@@ -380,9 +366,6 @@ class SpectraViewWidget(QWidget):
             action.triggered.connect(self.refresh_plot)
             self.view_options[option_name] = action
             self.view_options_menu.addAction(action)
-
-        # Set the menu to the button
-        self.view_options_button.setMenu(self.view_options_menu)
 
 
     def update_plot_styles(self):
@@ -403,7 +386,14 @@ class SpectraViewWidget(QWidget):
         self.ax.autoscale()
         self.canvas.draw()
 
-    def on_click(self, event):
+    def on_right_click(self, event):
+        """Show view options menu on right-click."""
+        if event.button == 3:  # 3 is the right-click button
+            # Show the menu at the cursor position
+            cursor_pos = QCursor.pos()  
+            self.view_options_menu.exec_(cursor_pos)
+
+    def on_left_click(self, event):
         """
         Handle click events on spectra plot canvas for adding peak models or baseline points.
         """

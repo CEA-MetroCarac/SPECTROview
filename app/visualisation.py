@@ -3,7 +3,7 @@ from copy import deepcopy
 from pathlib import Path
 import json
 
-from .common import view_df, show_alert, copy_fig
+from .common import view_df, show_alert, copy_fig_to_clb
 from .common import PLOT_STYLES, PALETTE, LEGEND_LOCATION
 from .common import Graph, Filter
 
@@ -481,7 +481,7 @@ class Visualization(QDialog):
     def copy_fig_to_clb(self):
         """Copy the selected graph figure to the clipboard"""
         sel_graph, graph_dialog, sub_window = self.get_sel_graph()
-        copy_fig(sel_graph.canvas)
+        copy_fig_to_clb(sel_graph.canvas)
 
     def get_sel_graph(self):
         """Retrieve the currently selected graph object"""

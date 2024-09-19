@@ -8,12 +8,11 @@ import json
 from copy import deepcopy
 import pandas as pd
 
-try:
+if platform.system() == 'Darwin':
+    import AppKit 
+if platform.system() == 'Windows':
     import win32clipboard
-except:
-    pass
 
-import AppKit
 from PIL import Image
 
 from io import BytesIO
@@ -603,7 +602,7 @@ class SpectraViewWidget(QWidget):
     
     def copy_fig(self):
         """Detect the current operating system and call the corresponding copy method."""
-        copy_fig(self.canvas)
+        copy_fig_to_clb(self.canvas)
 
     
 class DataframeTable(QWidget):
@@ -2000,49 +1999,41 @@ def view_df(tabWidget, df):
     df_viewer.setLayout(layout)
     df_viewer.exec_()
 
-def copy_fig(canvas):
-    """Detect the current operating system and call the corresponding copy method with canvas."""
+def copy_fig_to_clb(canvas):
+    """Copy matplotlib figure canvas to clipboard"""
     current_os = platform.system()
     if current_os == 'Darwin':  # macOS
-        copy_fig_macos(canvas)
+        if canvas:
+            buf = BytesIO()
+            canvas.print_png(buf)
+            buf.seek(0)
+            image = Image.open(buf)
+            img_size = image.size
+            png_data = buf.getvalue()
+            image_rep = AppKit.NSBitmapImageRep.alloc().initWithData_(
+                AppKit.NSData.dataWithBytes_length_(png_data, len(png_data))
+            )
+            ns_image = AppKit.NSImage.alloc().initWithSize_((img_size[0], img_size[1]))
+            ns_image.addRepresentation_(image_rep)
+            pasteboard = AppKit.NSPasteboard.generalPasteboard()
+            pasteboard.clearContents()
+            pasteboard.writeObjects_([ns_image])
+        else:
+            QMessageBox.critical(None, "Error", "No plot to copy.")
     elif current_os == 'Windows':
-        copy_fig_windows(canvas)
+        if canvas:
+            figure = canvas.figure
+            with BytesIO() as buf:
+                figure.savefig(buf, format='png', dpi=400)
+                data = buf.getvalue()
+            format_id = win32clipboard.RegisterClipboardFormat('PNG')
+            win32clipboard.OpenClipboard()
+            win32clipboard.EmptyClipboard()
+            win32clipboard.SetClipboardData(format_id, data)
+            win32clipboard.CloseClipboard()
+        else:
+            QMessageBox.critical(None, "Error", "No plot to copy.")
+
     else:
         QMessageBox.critical(None, "Error", f"Unsupported OS: {current_os}")
-
-def copy_fig_windows(canvas):
-    """To copy figure canvas to clipboard (Windows version)."""
-    if canvas:
-        figure = canvas.figure
-        with BytesIO() as buf:
-            figure.savefig(buf, format='png', dpi=400)
-            data = buf.getvalue()
-        format_id = win32clipboard.RegisterClipboardFormat('PNG')
-        win32clipboard.OpenClipboard()
-        win32clipboard.EmptyClipboard()
-        win32clipboard.SetClipboardData(format_id, data)
-        win32clipboard.CloseClipboard()
-    else:
-        QMessageBox.critical(None, "Error", "No plot to copy.")
-
-def copy_fig_macos(canvas):
-    """To copy figure canvas to clipboard (macOS version)."""
-    if canvas:
-        buf = BytesIO()
-        canvas.print_png(buf)
-        buf.seek(0)
-        image = Image.open(buf)
-        img_size = image.size
-        png_data = buf.getvalue()
-        image_rep = AppKit.NSBitmapImageRep.alloc().initWithData_(
-            AppKit.NSData.dataWithBytes_length_(png_data, len(png_data))
-        )
-        ns_image = AppKit.NSImage.alloc().initWithSize_((img_size[0], img_size[1]))
-        ns_image.addRepresentation_(image_rep)
-        pasteboard = AppKit.NSPasteboard.generalPasteboard()
-        pasteboard.clearContents()
-        pasteboard.writeObjects_([ns_image])
-
-    else:
-        QMessageBox.critical(None, "Error", "No plot to copy.")
 

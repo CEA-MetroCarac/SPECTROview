@@ -9,7 +9,7 @@ from pathlib import Path
 from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline
 from .common import FitThread, PeakTable, DataframeTable, \
     FitModelManager, CustomListWidget, SpectraViewWidget
-from .common import FIT_METHODS
+from .common import FIT_METHODS,PALETTE
 
 from lmfit import fit_report
 from fitspy.spectra import Spectra
@@ -20,12 +20,14 @@ from fitspy.utils import closest_index
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication,QAbstractItemView, QListWidgetItem)
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication,QAbstractItemView, QListWidgetItem, QSlider, QHBoxLayout, QLabel
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
 from tkinter import Tk, END
 
+from superqt import QRangeSlider, QLabeledSlider , QLabeledRangeSlider
 
 class Maps(QObject):
     """
@@ -46,6 +48,7 @@ class Maps(QObject):
         self.current_fit_model = None
         self.maps = {}  # list of opened maps data
         self.spectrums = Spectra()
+        
         
          # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget(self)
@@ -88,6 +91,10 @@ class Maps(QObject):
         # Connect the stateChanged signal of the legend CHECKBOX
         self.ui.cbb_wafer_size.currentIndexChanged.connect(self.refresh_gui)
         self.ui.rdbt_show_wafer.toggled.connect(self.refresh_gui)
+        self.ui.cb_interpolation.stateChanged.connect(self.refresh_gui)
+        
+        self.ui.cbb_map_color.addItems(PALETTE)
+        self.ui.cbb_map_color.currentIndexChanged.connect(self.refresh_gui)
         
         # BASELINE
         self.setup_baseline_controls()
@@ -741,7 +748,7 @@ class Maps(QObject):
 
     def create_2Dmap_widget(self):
         """Create 2Dmap plot widgets"""
-        fig2 = plt.figure(dpi=100)
+        fig2 = plt.figure(dpi=70)
         self.ax2 = fig2.add_subplot(111)
         self.ax2.spines['right'].set_visible(False)
         self.ax2.spines['top'].set_visible(False)
@@ -749,19 +756,52 @@ class Maps(QObject):
         self.ax2.tick_params(axis='x', which='both', bottom=True, top=False)
         self.ax2.tick_params(axis='y', which='both', right=False, left=False)
         self.canvas2 = FigureCanvas(fig2)
-
+        self.toolbar2 =NavigationToolbar2QT(self.canvas2)
+        # Set up the toolbar visibility and connect events
+        for action in self.toolbar2.actions():
+            if action.text() in ['Zoom','Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+                action.setVisible(False)
+                
         # Variables to keep track of highlighted points and Ctrl key status
         self.selected_points = []
         self.ctrl_pressed = False
+        
         # Connect the mouse and key events to the handler functions
-        fig2.canvas.mpl_connect('button_press_event',
-                                self.on_click_2Dmap)
+        fig2.canvas.mpl_connect('button_press_event', self.on_click_2Dmap)
         fig2.canvas.mpl_connect('key_press_event', self.on_key_press)
         fig2.canvas.mpl_connect('key_release_event', self.on_key_release)
-        layout = self.ui.measurement_sites.layout()
-        layout.addWidget(self.canvas2)
+        
+        self.ui.map_layout.addWidget(self.canvas2)
+        self.ui.toolbar_layout_3.addWidget(self.toolbar2)
         self.canvas2.draw()
+        self.create_range_slider(0,100)
+        
+    def create_range_slider(self, min_value, max_value):
+        self.range_slider = QRangeSlider(Qt.Horizontal)
+        self.range_slider.setRange(min_value, max_value)  
+        self.range_slider.setValue((min_value, max_value)) 
+        self.range_slider.setTracking(True)
+
+        # Create a single QLabel for showing the range in the format [min; max]
+        self.range_label = QLabel(f'[{min_value}; {max_value}]')
+        
+        # Connect to update function
+        self.range_slider.valueChanged.connect(self.refresh_gui) 
+        self.range_slider.valueChanged.connect(self.update_range_label)
+        
+        self.ui.layout_slider.addWidget(self.range_slider)
+        self.ui.layout_slider.addWidget(self.range_label)
     
+    def update_slider_range(self, min_value, max_value):
+        """Update the range of the slider based on new min and max values."""
+        self.range_slider.setRange(min_value, max_value)
+        self.range_slider.setValue((min_value, max_value))
+        self.range_label.setText(f'[{min_value}; {max_value}]')
+    def update_range_label(self):
+        """Update the QLabel text with the current range slider values in the format [min; max]."""
+        min_val, max_val = self.range_slider.value()
+        self.range_label.setText(f'[{min_val}; {max_val}]')
+        
     def plot_2Dmap(self):
         """Plot 2D maps of measurement points"""
         r = int(self.ui.cbb_wafer_size.currentText()) / 2
@@ -769,47 +809,61 @@ class Maps(QObject):
         self.ax2.clear()
         if self.ui.rdbt_show_wafer.isChecked():
             wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
-                                          color='black', linewidth=1)
+                                        color='black', linewidth=1)
             self.ax2.add_patch(wafer_circle)
             self.ax2.set_yticklabels([])
 
             all_x, all_y = self.get_mes_sites_coord()
             self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
             self.ax2.grid(True, linestyle='--', linewidth=0.5, color='gray')
-            
-        # Plot heatmap
-        map_name, coords = self.spectra_id()
-        map_df = self.maps.get(map_name)
-        
-        if map_df is not None:
-            # Extract the X and Y coordinates
-            x_col = map_df['X'].values  # X coordinates
-            y_col = map_df['Y'].values  # Y coordinates
 
-            # Calculate the sum of intensity values across each row (excluding X and Y columns)
-            intensity_sums = map_df.iloc[:, 2:].sum(axis=1)  # Sum the spectrum intensities for each (x, y) point
+        # Plot heatmap for 2D map
+        if self.ui.rdbt_show_2Dmap.isChecked():    
+            map_name, coords = self.spectra_id()
+            map_df = self.maps.get(map_name)
 
-            # Create a pivot table to use in the heatmap
-            heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Intensity Sum': intensity_sums})
-            heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Intensity Sum')
-            
-            # Define the extent for the heatmap (using min/max X and Y coordinates)
-            xmin, xmax = x_col.min(), x_col.max()
-            ymin, ymax = y_col.min(), y_col.max()
+            # Get the current values from the range slider
+            min_range, max_range = self.range_slider.value()
 
-            # Plot the heatmap
-            self.ax2.imshow(heatmap_pivot, extent=[xmin, xmax, ymin, ymax],
-                            origin='lower', aspect='auto', cmap='jet', interpolation='bilinear')
-            
+            # Convert range values to strings for comparison with column names
+            min_range_str = str(min_range)
+            max_range_str = str(max_range)
+
+            # Filter the DataFrame based on the range slider values
+            filtered_map_df = map_df.loc[:, 'X':'Y'].copy()  # Start with X and Y columns
+            filtered_columns = map_df.columns[(map_df.columns >= min_range_str) & (map_df.columns <= max_range_str)]
+
+            # Include the relevant columns in the filtered DataFrame
+            filtered_map_df = filtered_map_df.join(map_df[filtered_columns])
+
+            if not filtered_map_df.empty and len(filtered_columns) > 2:  # Ensure there are results and intensity columns
+                x_col = filtered_map_df['X'].values 
+                y_col = filtered_map_df['Y'].values 
+                intensity_sums = 0
+                intensity_sums = filtered_map_df[filtered_columns].sum(axis=1)  # Calculate intensity sums from filtered columns
+                
+                
+                color= self.ui.cbb_map_color.currentText()
+                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Intensity Sum': intensity_sums})
+                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Intensity Sum')
+                xmin, xmax = x_col.min(), x_col.max()
+                ymin, ymax = y_col.min(), y_col.max()
+                interpolation_option = 'bilinear' if self.ui.cb_interpolation.isChecked() else 'none'
+                img= self.ax2.imshow(heatmap_pivot, extent=[xmin, xmax, ymin, ymax],
+                                origin='lower', aspect='auto', cmap=color, interpolation=interpolation_option)
+                
+                # cbar = self.ax2.figure.colorbar(img, ax=self.ax2)
+                
         # Highlighted measurement sites
         map_name, coords = self.spectra_id()
         if coords:
             x, y = zip(*coords)
             self.ax2.scatter(x, y, marker='o', color='red', s=20)
-        
+
         self.ax2.get_figure().tight_layout()
         self.canvas2.draw()
 
+        
     def on_click_2Dmap(self, event):
         """
         To select the measurement points directly in the plot.
@@ -908,7 +962,15 @@ class Maps(QObject):
     
     def upd_spectra_list(self):
         """Show spectrums in a listbox"""
-        
+        map_name, _ = self.spectra_id()
+        map_df = self.maps.get(map_name)
+            
+        if self.ui.rdbt_show_2Dmap.isChecked() and map_df is not None:
+            column_labels = map_df.columns[2:].astype(float)
+            min_value = float(column_labels.min())
+            max_value = float(column_labels.max())
+            self.update_slider_range(min_value, max_value)
+
         checked_states = {}
         for index in range(self.ui.spectra_listbox.count()):
             item = self.ui.spectra_listbox.item(index)

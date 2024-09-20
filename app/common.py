@@ -809,8 +809,7 @@ class Graph(QWidget):
 
     def create_plot_widget(self, dpi, layout=None):
         """Creates a new plot canvas with the specified DPI and adds it to
-        the specified
-            layout or the default graph_layout"""
+        the specified layout or the default graph_layout"""
         if dpi:
             self.dpi = dpi
         else:

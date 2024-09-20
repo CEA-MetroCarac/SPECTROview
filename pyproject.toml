@@ -38,7 +38,8 @@ dependencies = [
     "markdown",
     "scipy",
     "lmfit",
-    "pywin32; platform_system == 'Windows'"
+    "pywin32; platform_system == 'Windows'",
+    "superqt"
 ]
 
 [project.urls]

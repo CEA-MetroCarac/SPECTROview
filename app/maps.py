@@ -727,13 +727,8 @@ class Maps(QObject):
             if map_name_fs == map_name and coord_fs in coords:
                 selected_spectrums.append(spectrum)
 
-        # Only plot 10 first spectra to advoid crash
-        selected_spectrums = selected_spectrums[:50]
-        if len(selected_spectrums) == 0:
-            return
-        
         # Limit the number of spectra to avoid crashes
-        selected_spectrums = selected_spectrums[:50]
+        selected_spectrums = selected_spectrums[:30]
 
         if not selected_spectrums:
             return
@@ -765,6 +760,31 @@ class Maps(QObject):
         fig2.canvas.mpl_connect('key_release_event', self.on_key_release)
         layout = self.ui.measurement_sites.layout()
         layout.addWidget(self.canvas2)
+        self.canvas2.draw()
+    
+    def plot_measurement_sites(self):
+        """
+        Plot 2D maps of measurement points
+        """
+        r = int(self.ui.cbb_wafer_size.currentText()) / 2
+
+        self.ax2.clear()
+        if self.ui.rdbt_show_wafer.isChecked():
+            wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
+                                          color='black', linewidth=1)
+            self.ax2.add_patch(wafer_circle)
+            self.ax2.set_yticklabels([])
+
+        all_x, all_y = self.get_mes_sites_coord()
+        self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
+
+        map_name, coords = self.spectra_id()
+        if coords:
+            x, y = zip(*coords)
+            self.ax2.scatter(x, y, marker='o', color='red', s=40)
+
+        self.ax2.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        self.ax2.get_figure().tight_layout()
         self.canvas2.draw()
 
     def on_click_sites_mesurements(self, event):
@@ -822,30 +842,7 @@ class Maps(QObject):
         if event.key == 'ctrl':
             self.ctrl_pressed = False
 
-    def plot_measurement_sites(self):
-        """
-        Plot 2D maps of measurement points
-        """
-        r = int(self.ui.cbb_wafer_size.currentText()) / 2
-
-        self.ax2.clear()
-        if self.ui.rdbt_show_wafer.isChecked():
-            wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
-                                          color='black', linewidth=1)
-            self.ax2.add_patch(wafer_circle)
-            self.ax2.set_yticklabels([])
-
-        all_x, all_y = self.get_mes_sites_coord()
-        self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
-
-        map_name, coords = self.spectra_id()
-        if coords:
-            x, y = zip(*coords)
-            self.ax2.scatter(x, y, marker='o', color='red', s=40)
-
-        self.ax2.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        self.ax2.get_figure().tight_layout()
-        self.canvas2.draw()
+    
     
 
     def get_mes_sites_coord(self):

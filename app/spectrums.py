@@ -195,7 +195,7 @@ class Spectrums(QObject):
         selected_spectrums = Spectra()
         selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
         # Limit the number of spectra to avoid crashes
-        selected_spectrums = selected_spectrums[:50]
+        selected_spectrums = selected_spectrums[:30]
         if not selected_spectrums:
             return
 

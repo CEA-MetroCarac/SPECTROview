@@ -759,7 +759,7 @@ class Maps(QObject):
         self.toolbar2 =NavigationToolbar2QT(self.canvas2)
         # Set up the toolbar visibility and connect events
         for action in self.toolbar2.actions():
-            if action.text() in ['Zoom','Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+            if action.text() in ['Home','Zoom','Save', 'Pan', 'Back', 'Forward', 'Subplots']:
                 action.setVisible(False)
                 
         # Variables to keep track of highlighted points and Ctrl key status
@@ -776,31 +776,43 @@ class Maps(QObject):
         self.canvas2.draw()
         self.create_range_slider(0,100)
         
-    def create_range_slider(self, min_value, max_value):
-        self.range_slider = QRangeSlider(Qt.Horizontal)
-        self.range_slider.setRange(min_value, max_value)  
-        self.range_slider.setValue((min_value, max_value)) 
-        self.range_slider.setTracking(True)
-
-        # Create a single QLabel for showing the range in the format [min; max]
-        self.range_label = QLabel(f'[{min_value}; {max_value}]')
+    def create_range_slider(self, xmin, xmax):
+        self.xrange_slider = QRangeSlider(Qt.Horizontal)
+        self.xrange_slider.setRange(xmin, xmax)  
+        self.xrange_slider.setValue((xmin, xmax)) 
+        self.xrange_slider.setTracking(True)
+        self.xrange_slider_label = QLabel('X range:')
+        self.xrange_label = QLabel(f'[{xmin}; {xmax}]')
         
         # Connect to update function
-        self.range_slider.valueChanged.connect(self.refresh_gui) 
-        self.range_slider.valueChanged.connect(self.update_range_label)
+        self.xrange_slider.valueChanged.connect(self.refresh_gui) 
+        self.xrange_slider.valueChanged.connect(self.update_range_label)
         
-        self.ui.layout_slider.addWidget(self.range_slider)
-        self.ui.layout_slider.addWidget(self.range_label)
+        self.ui.xrange_slider_layout.addWidget(self.xrange_slider_label)
+        self.ui.xrange_slider_layout.addWidget(self.xrange_slider)
+        self.ui.xrange_slider_layout.addWidget(self.xrange_label)
+        
+        self.intensity_range_slider = QRangeSlider(Qt.Horizontal)
+        self.intensity_range_slider.setRange(xmin, xmax) 
+        self.intensity_range_slider.setValue((xmin, xmax)) 
+        self.intensity_range_slider.setTracking(True)
+        self.intensity_slider_label = QLabel('Intensity range:')
+        self.intensity_range_label = QLabel(f'[{xmin}; {xmax}]')
+        self.ui.intensity_slider_layout.addWidget(self.intensity_slider_label)
+        self.ui.intensity_slider_layout.addWidget(self.intensity_range_slider)
+        self.ui.intensity_slider_layout.addWidget(self.intensity_range_label)
+        
     
-    def update_slider_range(self, min_value, max_value):
+    def update_slider_range(self, xmin, xmax):
         """Update the range of the slider based on new min and max values."""
-        self.range_slider.setRange(min_value, max_value)
-        self.range_slider.setValue((min_value, max_value))
-        self.range_label.setText(f'[{min_value}; {max_value}]')
+        self.xrange_slider.setRange(xmin, xmax)
+        self.xrange_slider.setValue((xmin, xmax))
+        self.xrange_label.setText(f'[{xmin}; {xmax}]')
+    
     def update_range_label(self):
-        """Update the QLabel text with the current range slider values in the format [min; max]."""
-        min_val, max_val = self.range_slider.value()
-        self.range_label.setText(f'[{min_val}; {max_val}]')
+        """Update the QLabel text with the current values."""
+        xmin_val, max_val = self.xrange_slider.value()
+        self.xrange_label.setText(f'[{xmin_val}; {max_val}]')
         
     def plot_2Dmap(self):
         """Plot 2D maps of measurement points"""
@@ -823,7 +835,7 @@ class Maps(QObject):
             map_df = self.maps.get(map_name)
 
             # Get the current values from the range slider
-            min_range, max_range = self.range_slider.value()
+            min_range, max_range = self.xrange_slider.value()
 
             # Convert range values to strings for comparison with column names
             min_range_str = str(min_range)
@@ -966,7 +978,6 @@ class Maps(QObject):
         map_df = self.maps.get(map_name)
             
         if map_df is not None:
-            print(map_df)
             column_labels = map_df.columns[2:-1].astype(float)
             min_value = float(column_labels.min())
             max_value = float(column_labels.max())

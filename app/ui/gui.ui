@@ -2139,6 +2139,21 @@
                     </size>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_19">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>5</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
                     <item>
                      <layout class="QVBoxLayout" name="map_layout">
                       <property name="spacing">
@@ -2215,10 +2230,36 @@
                      </property>
                     </spacer>
                    </item>
+                   <item>
+                    <widget class="QCheckBox" name="cb_interpolation">
+                     <property name="text">
+                      <string>Smoothing</string>
+                     </property>
+                    </widget>
+                   </item>
                   </layout>
                  </item>
                  <item>
-                  <layout class="QHBoxLayout" name="layout_slider">
+                  <layout class="QHBoxLayout" name="xrange_slider_layout">
+                   <property name="spacing">
+                    <number>5</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>5</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>2</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>5</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>2</number>
+                   </property>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="intensity_slider_layout">
                    <property name="spacing">
                     <number>5</number>
                    </property>
@@ -2275,13 +2316,6 @@
                       </size>
                      </property>
                     </spacer>
-                   </item>
-                   <item>
-                    <widget class="QCheckBox" name="cb_interpolation">
-                     <property name="text">
-                      <string>Smoothing</string>
-                     </property>
-                    </widget>
                    </item>
                   </layout>
                  </item>

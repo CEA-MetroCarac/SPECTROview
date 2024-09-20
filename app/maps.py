@@ -799,17 +799,14 @@ class Maps(QObject):
         
     def create_2Dmap_widget(self):
         """Create 2Dmap plot widgets"""
-        fig2 = plt.figure(dpi=70)
-        self.ax2 = fig2.add_subplot(111)
-        self.ax2.spines['right'].set_visible(False)
-        self.ax2.spines['top'].set_visible(False)
-        self.ax2.spines['left'].set_visible(False)
-        self.ax2.tick_params(axis='x', which='both', bottom=True, top=False)
-        self.ax2.tick_params(axis='y', which='both', right=False, left=False)
-        self.canvas2 = FigureCanvas(fig2)
-        self.toolbar2 =NavigationToolbar2QT(self.canvas2)
-        # Set up the toolbar visibility and connect events
-        for action in self.toolbar2.actions():
+        fig = plt.figure(dpi=70)
+        self.ax = fig.add_subplot(111)
+        
+        self.ax.tick_params(axis='x', which='both')
+        self.ax.tick_params(axis='y', which='both')
+        self.canvas = FigureCanvas(fig)
+        self.toolbar =NavigationToolbar2QT(self.canvas)
+        for action in self.toolbar.actions():
             if action.text() in ['Home','Zoom','Save', 'Pan', 'Back', 'Forward', 'Subplots']:
                 action.setVisible(False)
                 
@@ -818,17 +815,17 @@ class Maps(QObject):
         self.ctrl_pressed = False
         
         # Connect the mouse and key events to the handler functions
-        fig2.canvas.mpl_connect('button_press_event', self.on_click_2Dmap)
-        fig2.canvas.mpl_connect('key_press_event', self.on_key_press)
-        fig2.canvas.mpl_connect('key_release_event', self.on_key_release)
+        fig.canvas.mpl_connect('button_press_event', self.on_click_2Dmap)
+        fig.canvas.mpl_connect('key_press_event', self.on_key_press)
+        fig.canvas.mpl_connect('key_release_event', self.on_key_release)
         
-        self.ui.map_layout.addWidget(self.canvas2)
-        self.ui.toolbar_layout_3.addWidget(self.toolbar2)
-        self.canvas2.draw()
-        self.create_range_slider(0,100)
+        self.ui.map_layout.addWidget(self.canvas)
+        self.ui.toolbar_layout_3.addWidget(self.toolbar)
+        self.canvas.draw()
+        self.create_range_sliders(0,100)
         
-    def create_range_slider(self, xmin, xmax):
-        """Create range sliders"""
+    def create_range_sliders(self, xmin, xmax):
+        """Create xrange and intensity-range sliders"""
         self.xrange_slider = QRangeSlider(Qt.Horizontal)
         self.xrange_slider.setRange(xmin, xmax)  
         self.xrange_slider.setValue((xmin, xmax)) 
@@ -884,6 +881,12 @@ class Maps(QObject):
         map_name, _ = self.spectra_id()
         map_df = self.maps.get(map_name)
 
+        # Default return values in case of no valid map_df or filtered columns
+        heatmap_pivot = pd.DataFrame()  # Empty DataFrame for heatmap
+        extent = [0, 0, 0, 0]  # Default extent values
+        min_intensity = 0
+        max_intensity = 0
+        
         if map_df is not None:
             min_range, max_range = self.xrange_slider.value()
             column_labels = map_df.columns[2:-1]  # Keep labels as strings
@@ -910,56 +913,55 @@ class Maps(QObject):
                 heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Intensity Sum')
                 xmin, xmax = x_col.min(), x_col.max()
                 ymin, ymax = y_col.min(), y_col.max()
-                
                 extent=[xmin, xmax, ymin, ymax]
+                
         return heatmap_pivot, extent, min_intensity, max_intensity
     
     def plot_2Dmap(self):
         """Plot 2D maps of measurement points"""
         r = int(self.ui.cbb_wafer_size.currentText()) / 2
 
-        self.ax2.clear()
+        self.ax.clear()
 
         if self.ui.rdbt_show_wafer.isChecked():
             wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
                                         color='black', linewidth=1)
-            self.ax2.add_patch(wafer_circle)
-            self.ax2.set_yticklabels([])
+            self.ax.add_patch(wafer_circle)
+            self.ax.set_yticklabels([])
 
             all_x, all_y = self.get_mes_sites_coord()
-            self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
-            self.ax2.grid(True, linestyle='--', linewidth=0.5, color='gray')
+            self.ax.scatter(all_x, all_y, marker='x', color='gray', s=10)
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
 
         # Plot heatmap for 2D map
         if self.ui.rdbt_show_2Dmap.isChecked():    
             heatmap_pivot, extent, _, _ = self.get_data_for_heatmap()
+            
             color = self.ui.cbb_map_color.currentText()
             interpolation_option = 'bilinear' if self.ui.cb_interpolation.isChecked() else 'none'
             vmin, vmax = self.intensity_range_slider.value()
 
-            self.img = self.ax2.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
+            self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
                                 origin='lower', aspect='auto', cmap=color, interpolation=interpolation_option)
             
             # Update or create the colorbar
             if hasattr(self, 'cbar') and self.cbar is not None:
                 self.cbar.update_normal(self.img)
             else:
-                self.cbar = self.ax2.figure.colorbar(self.img, ax=self.ax2)
+                self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
 
         # Highlighted measurement sites
         map_name, coords = self.spectra_id()
         if coords:
             x, y = zip(*coords)
-            self.ax2.scatter(x, y, marker='o', color='red', s=20)
+            self.ax.scatter(x, y, marker='o', color='red', s=20)
 
         # Adjust the layout to prevent the figure from shrinking
-        self.ax2.get_figure().tight_layout()
-        self.ax2.get_figure().subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+        self.ax.get_figure().tight_layout()
+        self.ax.get_figure().subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
 
         # Redraw the canvas
-        self.canvas2.draw()
-
-
+        self.canvas.draw()
         
     def on_click_2Dmap(self, event):
         """
@@ -967,7 +969,7 @@ class Maps(QObject):
         """
         all_x, all_y = self.get_mes_sites_coord()
         self.ui.spectra_listbox.clearSelection()
-        if event.inaxes == self.ax2:
+        if event.inaxes == self.ax:
             x_clicked, y_clicked = event.xdata, event.ydata
             if event.button == 1:  # Left mouse button
                 all_x = np.array(all_x)
@@ -1073,8 +1075,8 @@ class Maps(QObject):
         self.ui.spectra_listbox.clear()
         self.spectra_widget.sel_spectrums = None  
         self.spectra_widget.refresh_plot() 
-        self.ax2.clear()
-        self.canvas2.draw_idle()
+        self.ax.clear()
+        self.canvas.draw_idle()
 
     def select_all_spectra(self):
         """Select all spectra listed in the spectra listbox"""
@@ -1401,8 +1403,8 @@ class Maps(QObject):
         self.spectra_widget.refresh_plot() 
         # Clear plot ofmeasurement sites 
         if hasattr(self, 'canvas2'):
-            self.ax2.clear()
-            self.canvas2.draw()
+            self.ax.clear()
+            self.canvas.draw()
 
         self.df_table.clear()
         self.peak_table.clear()

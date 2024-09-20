@@ -2235,6 +2235,9 @@
                      <property name="text">
                       <string>Smoothing</string>
                      </property>
+                     <property name="checked">
+                      <bool>false</bool>
+                     </property>
                     </widget>
                    </item>
                    <item>

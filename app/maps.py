@@ -965,8 +965,9 @@ class Maps(QObject):
         map_name, _ = self.spectra_id()
         map_df = self.maps.get(map_name)
             
-        if self.ui.rdbt_show_2Dmap.isChecked() and map_df is not None:
-            column_labels = map_df.columns[2:].astype(float)
+        if map_df is not None:
+            print(map_df)
+            column_labels = map_df.columns[2:-1].astype(float)
             min_value = float(column_labels.min())
             max_value = float(column_labels.max())
             self.update_slider_range(min_value, max_value)

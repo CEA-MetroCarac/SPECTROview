@@ -6,7 +6,7 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
-from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline
+from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, clear_layout
 from .common import FitThread, PeakTable, DataframeTable, \
     FitModelManager, CustomListWidget, SpectraViewWidget
 from .common import FIT_METHODS,PALETTE
@@ -919,6 +919,7 @@ class Maps(QObject):
         r = int(self.ui.cbb_wafer_size.currentText()) / 2
 
         self.ax2.clear()
+
         if self.ui.rdbt_show_wafer.isChecked():
             wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
                                         color='black', linewidth=1)
@@ -931,14 +932,19 @@ class Maps(QObject):
 
         # Plot heatmap for 2D map
         if self.ui.rdbt_show_2Dmap.isChecked():    
-            heatmap_pivot,extent, _, _ = self.get_data_for_heatmap()
+            heatmap_pivot, extent, _, _ = self.get_data_for_heatmap()
             color = self.ui.cbb_map_color.currentText()
             interpolation_option = 'bilinear' if self.ui.cb_interpolation.isChecked() else 'none'
             vmin, vmax = self.intensity_range_slider.value()
-            
-            img = self.ax2.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
+
+            self.img = self.ax2.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
                                 origin='lower', aspect='auto', cmap=color, interpolation=interpolation_option)
-            # cbar = self.ax2.figure.colorbar(img, ax=self.ax2)
+            
+            # Update or create the colorbar
+            if hasattr(self, 'cbar') and self.cbar is not None:
+                self.cbar.update_normal(self.img)
+            else:
+                self.cbar = self.ax2.figure.colorbar(self.img, ax=self.ax2)
 
         # Highlighted measurement sites
         map_name, coords = self.spectra_id()
@@ -946,8 +952,14 @@ class Maps(QObject):
             x, y = zip(*coords)
             self.ax2.scatter(x, y, marker='o', color='red', s=20)
 
+        # Adjust the layout to prevent the figure from shrinking
         self.ax2.get_figure().tight_layout()
+        self.ax2.get_figure().subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+
+        # Redraw the canvas
         self.canvas2.draw()
+
+
         
     def on_click_2Dmap(self, event):
         """

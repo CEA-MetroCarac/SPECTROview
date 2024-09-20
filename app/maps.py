@@ -71,9 +71,7 @@ class Maps(QObject):
         self.ui.spectra_listbox = CustomListWidget()
         self.ui.spectra_listbox.setDragDropMode(QAbstractItemView.NoDragDrop)
         self.ui.listbox_layout2.addWidget(self.ui.spectra_listbox)
-        ## Connect and plot_spectra of selected SPECTRUM LIST
         self.ui.spectra_listbox.itemSelectionChanged.connect(self.refresh_gui)
-        ## Connect the checkbox signal to the method
         self.ui.checkBox_2.stateChanged.connect(self.check_uncheck_all)
         
         # Set a delay for the function "plot1"
@@ -761,7 +759,7 @@ class Maps(QObject):
             item = self.ui.spectra_listbox.item(index)
             checked_states[item.text()] = item.checkState()
           
-        current_row = self.ui.spectra_listbox.currentRow()
+        self.current_row = self.ui.spectra_listbox.currentRow()
         self.ui.spectra_listbox.clear()
         current_item = self.ui.maps_listbox.currentItem()
 
@@ -790,8 +788,8 @@ class Maps(QObject):
         self.ui.item_count_label.setText(f"{item_count} points")
 
         # Reselect the previously selected item
-        if current_row >= 0 and current_row < item_count:
-            self.ui.spectra_listbox.setCurrentRow(current_row)
+        if self.current_row >= 0 and self.current_row < item_count:
+            self.ui.spectra_listbox.setCurrentRow(self.current_row)
         else:
             if self.ui.spectra_listbox.count() > 0:
                 self.ui.spectra_listbox.setCurrentRow(0)
@@ -964,9 +962,7 @@ class Maps(QObject):
         self.canvas.draw()
         
     def on_click_2Dmap(self, event):
-        """
-        To select the measurement points directly in the plot.
-        """
+        """select the measurement points via 2Dmap plot"""
         all_x, all_y = self.get_mes_sites_coord()
         self.ui.spectra_listbox.clearSelection()
         if event.inaxes == self.ax:
@@ -995,9 +991,12 @@ class Maps(QObject):
             x, y = map(float, item_text.strip('()').split(','))
             if (x, y) in self.selected_points:
                 item.setSelected(True)
+                self.current_row= index
+                self.ui.spectra_listbox.setCurrentRow(self.current_row)
             else:
                 item.setSelected(False)
-
+            
+            
     def on_key_press(self, event):
         """Handler function for key press event"""
         if event.key == 'ctrl':

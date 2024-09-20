@@ -79,7 +79,7 @@ class Maps(QObject):
         self.delay_timer.timeout.connect(self.plot)
 
         self.plot_styles = ["box plot", "point plot", "bar plot"]
-        self.create_plot_widget()
+        self.create_2Dmap_widget()
         self.zoom_pan_active = False
 
         self.ui.cbb_fit_methods.addItems(FIT_METHODS)
@@ -734,13 +734,13 @@ class Maps(QObject):
             return
 
         self.spectra_widget.plot(selected_spectrums)
-        self.plot_measurement_sites()
+        self.plot_2Dmap()
         self.read_x_range()
         
         self.peak_table.show(selected_spectrums[0])
 
-    def create_plot_widget(self):
-        """Create plot widgets measurement sites"""
+    def create_2Dmap_widget(self):
+        """Create 2Dmap plot widgets"""
         fig2 = plt.figure(dpi=100)
         self.ax2 = fig2.add_subplot(111)
         self.ax2.spines['right'].set_visible(False)
@@ -755,17 +755,15 @@ class Maps(QObject):
         self.ctrl_pressed = False
         # Connect the mouse and key events to the handler functions
         fig2.canvas.mpl_connect('button_press_event',
-                                self.on_click_sites_mesurements)
+                                self.on_click_2Dmap)
         fig2.canvas.mpl_connect('key_press_event', self.on_key_press)
         fig2.canvas.mpl_connect('key_release_event', self.on_key_release)
         layout = self.ui.measurement_sites.layout()
         layout.addWidget(self.canvas2)
         self.canvas2.draw()
     
-    def plot_measurement_sites(self):
-        """
-        Plot 2D maps of measurement points
-        """
+    def plot_2Dmap(self):
+        """Plot 2D maps of measurement points"""
         r = int(self.ui.cbb_wafer_size.currentText()) / 2
 
         self.ax2.clear()
@@ -775,31 +773,46 @@ class Maps(QObject):
             self.ax2.add_patch(wafer_circle)
             self.ax2.set_yticklabels([])
 
-        all_x, all_y = self.get_mes_sites_coord()
-        self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
+            all_x, all_y = self.get_mes_sites_coord()
+            self.ax2.scatter(all_x, all_y, marker='x', color='gray', s=10)
+            self.ax2.grid(True, linestyle='--', linewidth=0.5, color='gray')
+            
+        # Plot heatmap
+        map_name, coords = self.spectra_id()
+        map_df = self.maps.get(map_name)
+        
+        if map_df is not None:
+            # Extract the X and Y coordinates
+            x_col = map_df['X'].values  # X coordinates
+            y_col = map_df['Y'].values  # Y coordinates
 
+            # Calculate the sum of intensity values across each row (excluding X and Y columns)
+            intensity_sums = map_df.iloc[:, 2:].sum(axis=1)  # Sum the spectrum intensities for each (x, y) point
+
+            # Create a pivot table to use in the heatmap
+            heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Intensity Sum': intensity_sums})
+            heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Intensity Sum')
+            
+            # Define the extent for the heatmap (using min/max X and Y coordinates)
+            xmin, xmax = x_col.min(), x_col.max()
+            ymin, ymax = y_col.min(), y_col.max()
+
+            # Plot the heatmap
+            self.ax2.imshow(heatmap_pivot, extent=[xmin, xmax, ymin, ymax],
+                            origin='lower', aspect='auto', cmap='jet', interpolation='bilinear')
+            
+        # Highlighted measurement sites
         map_name, coords = self.spectra_id()
         if coords:
             x, y = zip(*coords)
-            self.ax2.scatter(x, y, marker='o', color='red', s=40)
-
-        self.ax2.grid(True, linestyle='--', linewidth=0.5, color='gray')
+            self.ax2.scatter(x, y, marker='o', color='red', s=20)
+        
         self.ax2.get_figure().tight_layout()
         self.canvas2.draw()
 
-    def on_click_sites_mesurements(self, event):
+    def on_click_2Dmap(self, event):
         """
         To select the measurement points directly in the plot.
-
-        Parameters:
-        - event (MouseEvent): The mouse event object.
-
-        Action:
-        - Retrieves all measurement sites coordinates.
-        - Clears selection in the spectra listbox.
-        - Selects nearest measurement point based on mouse click.
-        - Handles Ctrl key to allow multi-selection of points.
-        - Updates selected points in the spectra listbox.
         """
         all_x, all_y = self.get_mes_sites_coord()
         self.ui.spectra_listbox.clearSelection()
@@ -842,21 +855,9 @@ class Maps(QObject):
         if event.key == 'ctrl':
             self.ctrl_pressed = False
 
-    
-    
-
     def get_mes_sites_coord(self):
         """
         Get all coordinates of measurement sites of the selected map.
-
-        Returns:
-        - all_x (list of float): List of x-coordinates of measurement sites.
-        - all_y (list of float): List of y-coordinates of measurement sites.
-
-        Action:
-        - Retrieves the map name and coordinates.
-        - Iterates through spectra to find measurement sites belonging to the
-        selected map.
         """
         map_name, coords = self.spectra_id()
         all_x = []

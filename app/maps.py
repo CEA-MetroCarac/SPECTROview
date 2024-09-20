@@ -834,38 +834,37 @@ class Maps(QObject):
             map_name, coords = self.spectra_id()
             map_df = self.maps.get(map_name)
 
-            # Get the current values from the range slider
-            min_range, max_range = self.xrange_slider.value()
+            if map_df is not None:
+                min_range, max_range = self.xrange_slider.value()
+                column_labels = map_df.columns[2:-1]  # Keep labels as strings
 
-            # Convert range values to strings for comparison with column names
-            min_range_str = str(min_range)
-            max_range_str = str(max_range)
+                # Convert slider range values to strings for comparison
+                filtered_columns = column_labels[(column_labels.astype(float) >= min_range) &
+                                                (column_labels.astype(float) <= max_range)]
+                
+                if len(filtered_columns) > 0:
+                    # Create a filtered DataFrame including X, Y, and the selected range of columns
+                    filtered_map_df = map_df[['X', 'Y'] + list(filtered_columns)]
+                    x_col = filtered_map_df['X'].values
+                    y_col = filtered_map_df['Y'].values
 
-            # Filter the DataFrame based on the range slider values
-            filtered_map_df = map_df.loc[:, 'X':'Y'].copy()  # Start with X and Y columns
-            filtered_columns = map_df.columns[(map_df.columns >= min_range_str) & (map_df.columns <= max_range_str)]
+                    # Calculate the intensity sums for the selected range
+                    intensity_sums = filtered_map_df[filtered_columns].sum(axis=1)
 
-            # Include the relevant columns in the filtered DataFrame
-            filtered_map_df = filtered_map_df.join(map_df[filtered_columns])
+                    # Prepare heatmap data and plot it
+                    color = self.ui.cbb_map_color.currentText()
+                    heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Intensity Sum': intensity_sums})
+                    heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Intensity Sum')
 
-            if not filtered_map_df.empty and len(filtered_columns) > 2:  # Ensure there are results and intensity columns
-                x_col = filtered_map_df['X'].values 
-                y_col = filtered_map_df['Y'].values 
-                intensity_sums = 0
-                intensity_sums = filtered_map_df[filtered_columns].sum(axis=1)  # Calculate intensity sums from filtered columns
-                
-                
-                color= self.ui.cbb_map_color.currentText()
-                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Intensity Sum': intensity_sums})
-                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Intensity Sum')
-                xmin, xmax = x_col.min(), x_col.max()
-                ymin, ymax = y_col.min(), y_col.max()
-                interpolation_option = 'bilinear' if self.ui.cb_interpolation.isChecked() else 'none'
-                img= self.ax2.imshow(heatmap_pivot, extent=[xmin, xmax, ymin, ymax],
-                                origin='lower', aspect='auto', cmap=color, interpolation=interpolation_option)
-                
-                # cbar = self.ax2.figure.colorbar(img, ax=self.ax2)
-                
+                    xmin, xmax = x_col.min(), x_col.max()
+                    ymin, ymax = y_col.min(), y_col.max()
+
+                    interpolation_option = 'bilinear' if self.ui.cb_interpolation.isChecked() else 'none'
+                    img = self.ax2.imshow(heatmap_pivot, extent=[xmin, xmax, ymin, ymax],
+                                        origin='lower', aspect='auto', cmap=color, interpolation=interpolation_option)
+
+                    # cbar = self.ax2.figure.colorbar(img, ax=self.ax2)
+
         # Highlighted measurement sites
         map_name, coords = self.spectra_id()
         if coords:
@@ -874,7 +873,6 @@ class Maps(QObject):
 
         self.ax2.get_figure().tight_layout()
         self.canvas2.draw()
-
         
     def on_click_2Dmap(self, event):
         """

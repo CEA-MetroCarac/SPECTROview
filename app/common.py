@@ -326,30 +326,46 @@ class SpectraViewWidget(QWidget):
 
         self.update_plot_styles()
         
-    
 
     def create_view_options(self):
         """Create widget containing all view options."""
         
         self.view_options_menu = QMenu(self)
 
-        # Create a QWidget to hold the QLabel and QComboBox
-        axis_widget = QWidget(self.view_options_menu)
-        axis_layout = QHBoxLayout(axis_widget)
-        x_axis_label = QLabel("X axis unit:", axis_widget)
-        axis_layout.addWidget(x_axis_label)
+        # X axis unit combobox
+        xaxis_unit_widget = QWidget(self.view_options_menu)
+        xaxis_unit_layout = QHBoxLayout(xaxis_unit_widget)
+        xaxis_unit_label = QLabel("X-axis unit:", xaxis_unit_widget)
+        xaxis_unit_layout.addWidget(xaxis_unit_label)
 
-        # Add combobox for X-axis label options
-        self.x_axis_combo = QComboBox(axis_widget)
-        self.x_axis_combo.addItems(X_AXIS)
-        self.x_axis_combo.currentIndexChanged.connect(self.refresh_plot)
-        axis_layout.addWidget(self.x_axis_combo)
-        axis_layout.setContentsMargins(5, 5, 5, 5)
-
+        self.cbb_xaxis_unit = QComboBox(xaxis_unit_widget)
+        self.cbb_xaxis_unit.addItems(X_AXIS)
+        self.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_plot)
+        xaxis_unit_layout.addWidget(self.cbb_xaxis_unit)
+        xaxis_unit_layout.setContentsMargins(5, 5, 5, 5)
+        
         # Create a QWidgetAction to hold the combined QLabel and QComboBox
         combo_action = QWidgetAction(self)
-        combo_action.setDefaultWidget(axis_widget)
+        combo_action.setDefaultWidget(xaxis_unit_widget)
         self.view_options_menu.addAction(combo_action)
+        
+        # Y axis scale
+        yaxis_scale_widget = QWidget(self.view_options_menu)
+        yaxis_scale_layout = QHBoxLayout(yaxis_scale_widget)
+        yaxis_scale_label = QLabel("Y-axis scale:", yaxis_scale_widget)
+        yaxis_scale_layout.addWidget(yaxis_scale_label)
+
+        self.cbb_yaxis_scale = QComboBox(yaxis_scale_widget)
+        self.cbb_yaxis_scale.addItems(['Linear scale', 'Log scale'])
+        self.cbb_yaxis_scale.currentIndexChanged.connect(self.refresh_plot)
+        yaxis_scale_layout.addWidget(self.cbb_yaxis_scale)
+        yaxis_scale_layout.setContentsMargins(5, 5, 5, 5)
+        
+         # Create a QWidgetAction to hold the combined QLabel and QComboBox
+        combo_action2 = QWidgetAction(self)
+        combo_action2.setDefaultWidget(yaxis_scale_widget)
+        self.view_options_menu.addAction(combo_action2)
+        
 
         # Add a separator to distinguish the combobox from checkable actions
         self.view_options_menu.addSeparator()
@@ -378,7 +394,7 @@ class SpectraViewWidget(QWidget):
 
     def update_plot_styles(self):
         """Apply styles and settings to the plot."""
-        xlable = self.x_axis_combo.currentText()
+        xlable = self.cbb_xaxis_unit.currentText()
         self.ax.set_xlabel(xlable)
         self.ax.set_ylabel("Intensity (a.u)")
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
@@ -571,9 +587,14 @@ class SpectraViewWidget(QWidget):
     def finalize_plot(self):
         """Finalize plot settings and draw the canvas."""
         # Use the selected x-axis label from the combobox
-        xlabel = self.x_axis_combo.currentText() if self.x_axis_combo else "Wavenumber (cm-1)"
+        xlabel = self.cbb_xaxis_unit.currentText() if self.cbb_xaxis_unit else "Wavenumber (cm-1)"
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel("Intensity (a.u)")
+        y_scale = self.cbb_yaxis_scale.currentText()
+        if y_scale == 'Log scale':
+            self.ax.set_yscale('log')
+        else:  # Default to linear scale
+            self.ax.set_yscale('linear')
 
         if self.view_options['Legends'].isChecked():
             self.ax.legend(loc='upper right')

@@ -100,8 +100,6 @@ class Filter:
         # Create Group Box to hold all filter widgets
         self.gb_filter_widget = QGroupBox()
         self.gb_filter_widget.setTitle(QCoreApplication.translate("mainWindow", u"Data filtering:", None))
-        self.gb_filter_widget.setMinimumSize(QSize(0, 100))
-        self.gb_filter_widget.setMaximumHeight(150)
 
         # Set the main layout for the group box
         self.layout_main = QVBoxLayout(self.gb_filter_widget)

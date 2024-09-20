@@ -743,9 +743,60 @@ class Maps(QObject):
         self.spectra_widget.plot(selected_spectrums)
         self.plot_2Dmap()
         self.read_x_range()
-        
         self.peak_table.show(selected_spectrums[0])
+        
+    def upd_spectra_list(self):
+        """Show spectrums in a listbox"""
+        map_name, _ = self.spectra_id()
+        map_df = self.maps.get(map_name)
+            
+        if map_df is not None:
+            column_labels = map_df.columns[2:-1].astype(float)
+            min_value = float(column_labels.min())
+            max_value = float(column_labels.max())
+            self.update_slider_range(min_value, max_value)
 
+        checked_states = {}
+        for index in range(self.ui.spectra_listbox.count()):
+            item = self.ui.spectra_listbox.item(index)
+            checked_states[item.text()] = item.checkState()
+          
+        current_row = self.ui.spectra_listbox.currentRow()
+        self.ui.spectra_listbox.clear()
+        current_item = self.ui.maps_listbox.currentItem()
+
+        if current_item is not None:
+            map_name = current_item.text()
+            
+            for spectrum in self.spectrums:
+                map_name_fs, coord_fs = self.spectrum_object_id(spectrum)
+                if map_name == map_name_fs:
+                    item = QListWidgetItem(str(coord_fs))
+                    item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+                    item.setCheckState(checked_states.get(coord_fs, Qt.Checked))
+                    if hasattr(spectrum.result_fit,
+                               'success') and spectrum.result_fit.success:
+                        item.setBackground(QColor("green"))
+                    elif hasattr(spectrum.result_fit,
+                                 'success') and not \
+                            spectrum.result_fit.success:
+                        item.setBackground(QColor("orange"))
+                    else:
+                        item.setBackground(QColor(0, 0, 0, 0))
+                    self.ui.spectra_listbox.addItem(item)
+
+        # Update the item count label
+        item_count = self.ui.spectra_listbox.count()
+        self.ui.item_count_label.setText(f"{item_count} points")
+
+        # Reselect the previously selected item
+        if current_row >= 0 and current_row < item_count:
+            self.ui.spectra_listbox.setCurrentRow(current_row)
+        else:
+            if self.ui.spectra_listbox.count() > 0:
+                self.ui.spectra_listbox.setCurrentRow(0)
+        QTimer.singleShot(50, self.refresh_gui)
+        
     def create_2Dmap_widget(self):
         """Create 2Dmap plot widgets"""
         fig2 = plt.figure(dpi=70)
@@ -784,10 +835,6 @@ class Maps(QObject):
         self.xrange_slider_label = QLabel('X range:')
         self.xrange_label = QLabel(f'[{xmin}; {xmax}]')
         
-        # Connect to update function
-        self.xrange_slider.valueChanged.connect(self.refresh_gui) 
-        self.xrange_slider.valueChanged.connect(self.update_range_label)
-        
         self.ui.xrange_slider_layout.addWidget(self.xrange_slider_label)
         self.ui.xrange_slider_layout.addWidget(self.xrange_slider)
         self.ui.xrange_slider_layout.addWidget(self.xrange_label)
@@ -802,17 +849,24 @@ class Maps(QObject):
         self.ui.intensity_slider_layout.addWidget(self.intensity_range_slider)
         self.ui.intensity_slider_layout.addWidget(self.intensity_range_label)
         
+        # Connect to update function
+        self.xrange_slider.valueChanged.connect(self.update_range_label)
+        self.xrange_slider.valueChanged.connect(self.refresh_gui) 
+        # self.intensity_range_slider.valueChanged.connect(self.refresh_gui)
     
     def update_slider_range(self, xmin, xmax):
         """Update the range of the slider based on new min and max values."""
+        xmin_label = round(xmin, 3)
+        xmax_label = round(xmax, 3)
         self.xrange_slider.setRange(xmin, xmax)
         self.xrange_slider.setValue((xmin, xmax))
-        self.xrange_label.setText(f'[{xmin}; {xmax}]')
+        self.xrange_label.setText(f'[{xmin_label}; {xmax_label}]')
     
     def update_range_label(self):
         """Update the QLabel text with the current values."""
         xmin_val, max_val = self.xrange_slider.value()
         self.xrange_label.setText(f'[{xmin_val}; {max_val}]')
+
         
     def plot_2Dmap(self):
         """Plot 2D maps of measurement points"""
@@ -850,8 +904,15 @@ class Maps(QObject):
 
                     # Calculate the intensity sums for the selected range
                     intensity_sums = filtered_map_df[filtered_columns].sum(axis=1)
+                    
+                    # # Update intensity range slider with min and max of intensity sums
+                    min_intensity = round(intensity_sums.min(), 2)
+                    max_intensity = round(intensity_sums.max(), 2)  
+                    self.intensity_range_slider.setRange(intensity_sums.min(), intensity_sums.max())
+                    self.intensity_range_slider.setValue((intensity_sums.min(), intensity_sums.max()))
+                    self.intensity_range_label.setText(f'[{min_intensity}; {max_intensity}]')
 
-                    # Prepare heatmap data and plot it
+                    # Heatmap data plotting
                     color = self.ui.cbb_map_color.currentText()
                     heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Intensity Sum': intensity_sums})
                     heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Intensity Sum')
@@ -970,57 +1031,7 @@ class Maps(QObject):
             item = self.ui.spectra_listbox.item(index)
             item.setCheckState(check_state)
     
-    def upd_spectra_list(self):
-        """Show spectrums in a listbox"""
-        map_name, _ = self.spectra_id()
-        map_df = self.maps.get(map_name)
-            
-        if map_df is not None:
-            column_labels = map_df.columns[2:-1].astype(float)
-            min_value = float(column_labels.min())
-            max_value = float(column_labels.max())
-            self.update_slider_range(min_value, max_value)
-
-        checked_states = {}
-        for index in range(self.ui.spectra_listbox.count()):
-            item = self.ui.spectra_listbox.item(index)
-            checked_states[item.text()] = item.checkState()
-          
-        current_row = self.ui.spectra_listbox.currentRow()
-        self.ui.spectra_listbox.clear()
-        current_item = self.ui.maps_listbox.currentItem()
-
-        if current_item is not None:
-            map_name = current_item.text()
-            
-            for spectrum in self.spectrums:
-                map_name_fs, coord_fs = self.spectrum_object_id(spectrum)
-                if map_name == map_name_fs:
-                    item = QListWidgetItem(str(coord_fs))
-                    item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-                    item.setCheckState(checked_states.get(coord_fs, Qt.Checked))
-                    if hasattr(spectrum.result_fit,
-                               'success') and spectrum.result_fit.success:
-                        item.setBackground(QColor("green"))
-                    elif hasattr(spectrum.result_fit,
-                                 'success') and not \
-                            spectrum.result_fit.success:
-                        item.setBackground(QColor("orange"))
-                    else:
-                        item.setBackground(QColor(0, 0, 0, 0))
-                    self.ui.spectra_listbox.addItem(item)
-
-        # Update the item count label
-        item_count = self.ui.spectra_listbox.count()
-        self.ui.item_count_label.setText(f"{item_count} points")
-
-        # Reselect the previously selected item
-        if current_row >= 0 and current_row < item_count:
-            self.ui.spectra_listbox.setCurrentRow(current_row)
-        else:
-            if self.ui.spectra_listbox.count() > 0:
-                self.ui.spectra_listbox.setCurrentRow(0)
-        QTimer.singleShot(50, self.refresh_gui)
+    
 
     def remove_map(self):
         """

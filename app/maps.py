@@ -90,6 +90,7 @@ class Maps(QObject):
         self.ui.cbb_wafer_size.currentIndexChanged.connect(self.refresh_gui)
         self.ui.rdbt_show_wafer.toggled.connect(self.refresh_gui)
         self.ui.cb_interpolation.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_remove_outliters.stateChanged.connect(self.update_z_range_slider)
         
         self.ui.cbb_map_color.addItems(PALETTE)
         self.ui.cbb_map_color.currentIndexChanged.connect(self.refresh_gui)
@@ -842,7 +843,7 @@ class Maps(QObject):
         self.z_range_slider.setValue((0, 100)) 
         self.z_range_slider.setTracking(True)
         self.z_slider_cbb = QComboBox()
-        self.z_slider_cbb.addItems(['Intensity Sum', 'Height'])
+        self.z_slider_cbb.addItems(['Area', 'Intensity'])
         self.z_slider_cbb.currentIndexChanged.connect(self.update_z_range_slider)
         
         self.intensity_range_label = QLabel(f'[{0}; {100}]')
@@ -899,32 +900,39 @@ class Maps(QObject):
             if len(filtered_columns) > 0:
                 # Create a filtered DataFrame including X, Y, and the selected range of columns
                 filtered_map_df = map_df[['X', 'Y'] + list(filtered_columns)]
-                print(filtered_map_df)
                 x_col = filtered_map_df['X'].values
                 y_col = filtered_map_df['Y'].values
-
+                final_z_col = []
                 parameter = self.z_slider_cbb.currentText()
-                if parameter == 'Intensity Sum':
+                if parameter == 'Area':
                     # Calculate the intensity sums for the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
-
-                    vmin = round(z_col.min(), 2)
-                    vmax = round(z_col.max(), 2)  
-                    print(f'sum= {z_col}')
-                    print(f'min_sum= {round(z_col.min(), 2)}')
-                    print(f'max_sum= {round(z_col.max(), 2)}')
-                if parameter == 'Height':
+                if parameter == 'Intensity':
                     # Min and max intensity values for each spectrum
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
+                
+                if self.ui.cb_remove_outliters.isChecked():
+                    # Remove outliers using IQR method and replace them with interpolated values
+                    Q1 = z_col.quantile(0.05)
+                    Q3 = z_col.quantile(0.95)
+                    IQR = Q3 - Q1
 
-                    vmin = round(z_col.min(), 2)
-                    vmax = round(z_col.max(), 2)
-                    print(f'height= {z_col}')
-                    print(f'min_intensity= {round(z_col.min(), 2)}')
-                    print(f'max_intensity= {round(z_col.max(), 2)}')
+                    # Identify the outliers
+                    outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
+
+                    # Interpolate values for the outliers using linear interpolation
+                    z_col_interpolated = z_col.copy()
+                    z_col_interpolated[outlier_mask] = np.nan  # Mark outliers as NaN for interpolation
+                    z_col_interpolated = z_col_interpolated.interpolate(method='linear', limit_direction='both')
+                    final_z_col=z_col_interpolated
+                else:
+                    final_z_col=z_col       
+                # Update vmin and vmax after interpolation
+                vmin = round(final_z_col.min(), 2)
+                vmax = round(final_z_col.max(), 2)
 
                 # Heatmap data 
-                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': z_col})
+                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
                 heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
                 xmin, xmax = x_col.min(), x_col.max()
                 ymin, ymax = y_col.min(), y_col.max()
@@ -971,11 +979,9 @@ class Maps(QObject):
             x, y = zip(*coords)
             self.ax.scatter(x, y, marker='o', color='red', s=20)
 
-        # Adjust the layout to prevent the figure from shrinking
+        title = self.z_slider_cbb.currentText()
+        self.ax.set_title(title, fontsize=13)
         self.ax.get_figure().tight_layout()
-        self.ax.get_figure().subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
-
-        # Redraw the canvas
         self.canvas.draw()
         
     def on_click_2Dmap(self, event):

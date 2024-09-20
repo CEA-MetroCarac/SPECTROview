@@ -22,7 +22,7 @@ import matplotlib.patches as patches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication,QAbstractItemView, QListWidgetItem, QSlider, QHBoxLayout, QLabel
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication,QAbstractItemView, QListWidgetItem, QSlider, QHBoxLayout, QLabel, QComboBox
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
 from tkinter import Tk, END
@@ -824,54 +824,57 @@ class Maps(QObject):
         
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
-        self.xrange_slider = QRangeSlider(Qt.Horizontal)
-        self.xrange_slider.setRange(xmin, xmax)  
-        self.xrange_slider.setValue((xmin, xmax)) 
-        self.xrange_slider.setTracking(True)
-        self.xrange_slider_label = QLabel('X range:')
-        self.xrange_label = QLabel(f'[{xmin}; {xmax}]')
-        self.ui.xrange_slider_layout.addWidget(self.xrange_slider_label)
-        self.ui.xrange_slider_layout.addWidget(self.xrange_slider)
-        self.ui.xrange_slider_layout.addWidget(self.xrange_label)
+        self.x_range_slider = QRangeSlider(Qt.Horizontal)
+        self.x_range_slider.setRange(xmin, xmax)  
+        self.x_range_slider.setValue((xmin, xmax)) 
+        self.x_range_slider.setTracking(True)
+        self.x_range_slider_label = QLabel('X range:')
+        self.x_range_label = QLabel(f'[{xmin}; {xmax}]')
+        self.ui.xrange_slider_layout.addWidget(self.x_range_slider_label)
+        self.ui.xrange_slider_layout.addWidget(self.x_range_slider)
+        self.ui.xrange_slider_layout.addWidget(self.x_range_label)
         # Connect to update function
-        self.xrange_slider.valueChanged.connect(self.update_xrange_slider_label)
-        self.xrange_slider.valueChanged.connect(self.update_itensity_range_slider)
+        self.x_range_slider.valueChanged.connect(self.update_xrange_slider_label)
+        self.x_range_slider.valueChanged.connect(self.update_z_range_slider)
         
-        self.intensity_range_slider = QRangeSlider(Qt.Horizontal)
-        self.intensity_range_slider.setRange(0, 100) 
-        self.intensity_range_slider.setValue((0, 100)) 
-        self.intensity_range_slider.setTracking(True)
-        self.intensity_slider_label = QLabel('Intensity range:')
+        self.z_range_slider = QRangeSlider(Qt.Horizontal)
+        self.z_range_slider.setRange(0, 100) 
+        self.z_range_slider.setValue((0, 100)) 
+        self.z_range_slider.setTracking(True)
+        self.z_slider_cbb = QComboBox()
+        self.z_slider_cbb.addItems(['Intensity Sum', 'Height'])
+        self.z_slider_cbb.currentIndexChanged.connect(self.update_z_range_slider)
+        
         self.intensity_range_label = QLabel(f'[{0}; {100}]')
-        self.ui.intensity_slider_layout.addWidget(self.intensity_slider_label)
-        self.ui.intensity_slider_layout.addWidget(self.intensity_range_slider)
+        self.ui.intensity_slider_layout.addWidget(self.z_slider_cbb)
+        self.ui.intensity_slider_layout.addWidget(self.z_range_slider)
         self.ui.intensity_slider_layout.addWidget(self.intensity_range_label)
         
-        self.intensity_range_slider.valueChanged.connect(self.update_itensity_range_label)
-        self.intensity_range_slider.valueChanged.connect(self.refresh_gui)
+        self.z_range_slider.valueChanged.connect(self.update_z_range_label)
+        self.z_range_slider.valueChanged.connect(self.refresh_gui)
     
     def update_xrange_slider(self, xmin, xmax):
         """Update the range of the slider based on new min and max values."""
         xmin_label = round(xmin, 3)
         xmax_label = round(xmax, 3)
-        self.xrange_slider.setRange(xmin, xmax)
-        self.xrange_slider.setValue((xmin, xmax))
-        self.xrange_label.setText(f'[{xmin_label}; {xmax_label}]')
+        self.x_range_slider.setRange(xmin, xmax)
+        self.x_range_slider.setValue((xmin, xmax))
+        self.x_range_label.setText(f'[{xmin_label}; {xmax_label}]')
     
     def update_xrange_slider_label(self):
         """Update the QLabel text with the current values."""
-        xmin_val, max_val = self.xrange_slider.value()
-        self.xrange_label.setText(f'[{xmin_val}; {max_val}]')
+        xmin_val, max_val = self.x_range_slider.value()
+        self.x_range_label.setText(f'[{xmin_val}; {max_val}]')
         
-    def update_itensity_range_slider(self):
-        _,_, min_intensity, max_intensity =self.get_data_for_heatmap()
-        self.intensity_range_slider.setRange(min_intensity, max_intensity)
-        self.intensity_range_slider.setValue((min_intensity, max_intensity))
-        self.intensity_range_label.setText(f'[{min_intensity}; {max_intensity}]')
-        
-    def update_itensity_range_label(self):
+    def update_z_range_slider(self):
+        _,_, vmin, vmax, =self.get_data_for_heatmap()
+        self.z_range_slider.setRange(vmin, vmax)
+        self.z_range_slider.setValue((vmin, vmax))
+        self.intensity_range_label.setText(f'[{vmin}; {vmax}]')
+
+    def update_z_range_label(self):
         """Update the QLabel text with the current values."""
-        imin_val, imax_val = self.intensity_range_slider.value()
+        imin_val, imax_val = self.z_range_slider.value()
         self.intensity_range_label.setText(f'[{imin_val}; {imax_val}]')
         
     def get_data_for_heatmap(self):
@@ -882,11 +885,11 @@ class Maps(QObject):
         # Default return values in case of no valid map_df or filtered columns
         heatmap_pivot = pd.DataFrame()  # Empty DataFrame for heatmap
         extent = [0, 0, 0, 0]  # Default extent values
-        min_intensity = 0
-        max_intensity = 0
+        vmin = 0
+        vmax = 0
         
         if map_df is not None:
-            min_range, max_range = self.xrange_slider.value()
+            min_range, max_range = self.x_range_slider.value()
             column_labels = map_df.columns[2:-1]  # Keep labels as strings
 
             # Convert slider range values to strings for comparison
@@ -896,24 +899,38 @@ class Maps(QObject):
             if len(filtered_columns) > 0:
                 # Create a filtered DataFrame including X, Y, and the selected range of columns
                 filtered_map_df = map_df[['X', 'Y'] + list(filtered_columns)]
+                print(filtered_map_df)
                 x_col = filtered_map_df['X'].values
                 y_col = filtered_map_df['Y'].values
 
-                # Calculate the intensity sums for the selected range
-                intensity_sums = filtered_map_df[filtered_columns].sum(axis=1)
-                
-                # # Update intensity range slider with min and max of intensity sums
-                min_intensity = round(intensity_sums.min(), 2)
-                max_intensity = round(intensity_sums.max(), 2)  
-               
+                parameter = self.z_slider_cbb.currentText()
+                if parameter == 'Intensity Sum':
+                    # Calculate the intensity sums for the selected range
+                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
+
+                    vmin = round(z_col.min(), 2)
+                    vmax = round(z_col.max(), 2)  
+                    print(f'sum= {z_col}')
+                    print(f'min_sum= {round(z_col.min(), 2)}')
+                    print(f'max_sum= {round(z_col.max(), 2)}')
+                if parameter == 'Height':
+                    # Min and max intensity values for each spectrum
+                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
+
+                    vmin = round(z_col.min(), 2)
+                    vmax = round(z_col.max(), 2)
+                    print(f'height= {z_col}')
+                    print(f'min_intensity= {round(z_col.min(), 2)}')
+                    print(f'max_intensity= {round(z_col.max(), 2)}')
+
                 # Heatmap data 
-                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Intensity Sum': intensity_sums})
-                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Intensity Sum')
+                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': z_col})
+                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
                 xmin, xmax = x_col.min(), x_col.max()
                 ymin, ymax = y_col.min(), y_col.max()
                 extent=[xmin, xmax, ymin, ymax]
                 
-        return heatmap_pivot, extent, min_intensity, max_intensity
+        return heatmap_pivot, extent, vmin, vmax
     
     def plot_2Dmap(self):
         """Plot 2D maps of measurement points"""
@@ -937,7 +954,7 @@ class Maps(QObject):
             
             color = self.ui.cbb_map_color.currentText()
             interpolation_option = 'bilinear' if self.ui.cb_interpolation.isChecked() else 'none'
-            vmin, vmax = self.intensity_range_slider.value()
+            vmin, vmax = self.z_range_slider.value()
 
             self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
                                 origin='lower', aspect='auto', cmap=color, interpolation=interpolation_option)

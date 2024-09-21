@@ -26,8 +26,8 @@ from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, \
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
     QLineEdit, QWidget, QPushButton,QToolButton, QSpinBox, QComboBox, QCheckBox, QListWidgetItem, \
-    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy, QRadioButton, QGroupBox, QFrame
-from PySide6.QtCore import Signal, QThread, Qt, QSize,QTimer, QCoreApplication, QPoint 
+    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy, QRadioButton, QGroupBox, QFrame, QSpacerItem
+from PySide6.QtCore import Signal, QThread, Qt, QSize,QTimer, QCoreApplication, QPoint
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
     QAction, Qt, QCursor
 from superqt import QRangeSlider
@@ -99,6 +99,7 @@ class MapViewWidget(QWidget):
         self.canvas_frame = QFrame(self.widget)
         self.canvas_frame.setFixedSize(400, 350)
         frame_layout = QVBoxLayout(self.canvas_frame)
+        frame_layout.setContentsMargins(5, 0, 5, 0)
 
         self.figure = plt.figure(dpi=70)
         self.ax = self.figure.add_subplot(111)
@@ -113,6 +114,7 @@ class MapViewWidget(QWidget):
 
         frame_layout.addWidget(self.canvas)
         toolbar_layout=QHBoxLayout()
+        toolbar_layout.setContentsMargins(5, 0, 5, 0)
         toolbar_layout.addWidget(self.toolbar)
         frame_layout.addLayout(toolbar_layout)
         # Add the map frame to the main layout
@@ -136,6 +138,8 @@ class MapViewWidget(QWidget):
         """Create other buttons/comboboxes/checkboxes"""
         # Create the first layout for radio buttons and checkboxes
         layout = QHBoxLayout()
+        layout.setContentsMargins(5, 0, 5, 0)
+
         self.rdbt_map = QRadioButton("2Dmap", self)
         self.rdbt_wafer = QRadioButton("Wafer", self)
         self.rdbt_map.setChecked(True) 
@@ -163,6 +167,7 @@ class MapViewWidget(QWidget):
 
         # Create the second layout for other buttons
         layout2 = QHBoxLayout()
+        layout2.setContentsMargins(5, 0, 5, 0)
         self.cb_remove_outliers = QCheckBox("Remove Outliers")
         self.cb_remove_outliers.stateChanged.connect(self.update_z_range_slider)
         self.btn_copy = QPushButton("", self)
@@ -171,7 +176,9 @@ class MapViewWidget(QWidget):
         self.btn_copy.setIcon(icon)
         self.btn_copy.setIconSize(QSize(24, 24))
         self.btn_copy.clicked.connect(self.copy_fig)
-
+        
+        spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        layout2.addItem(spacer)
         layout2.addWidget(self.cb_remove_outliers)
         layout2.addWidget(self.btn_copy)
 
@@ -195,7 +202,8 @@ class MapViewWidget(QWidget):
         x_slider_layout.addWidget(self.x_range_slider_label)
         x_slider_layout.addWidget(self.x_range_slider)
         x_slider_layout.addWidget(self.x_range_label)
-        
+        x_slider_layout.setContentsMargins(5, 0, 5, 0)
+
         # Create z-axis range slider
         self.z_range_slider = QRangeSlider(Qt.Horizontal)
         self.z_range_slider.setRange(0, 100) 
@@ -212,6 +220,7 @@ class MapViewWidget(QWidget):
         z_slider_layout.addWidget(self.z_slider_cbb)
         z_slider_layout.addWidget(self.z_range_slider)
         z_slider_layout.addWidget(self.intensity_range_label)
+        z_slider_layout.setContentsMargins(5, 0, 5, 0)
 
         self.map_widget_layout.addLayout(x_slider_layout)
         self.map_widget_layout.addLayout(z_slider_layout)

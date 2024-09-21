@@ -7,7 +7,7 @@ from pathlib import Path
 import json
 
 from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox
-from .common import FitThread, FitModelManager, PeakTable, DataframeTable, CustomListWidget, SpectraViewWidget
+from .common import FitThread, FitModelManager, PeakTableWidget, DataframeTableWidget, CustomListWidget, SpectraViewWidget
 from .common import FIT_METHODS
 
 from lmfit import fit_report
@@ -47,11 +47,11 @@ class Spectrums(QObject):
         self.ui.cbb_fit_models_2.currentIndexChanged.connect(self.update_peak_model)
         
         # Initialize Peak Table
-        self.peak_table = PeakTable(self, self.ui.peak_table1_2, self.ui.cbb_layout)
+        self.peak_table = PeakTableWidget(self, self.ui.peak_table1_2, self.ui.cbb_layout)
         
         # Initialize Dataframe Table
         self.df_fit_results = None
-        self.df_table = DataframeTable(self.ui.layout_df_table2)
+        self.df_table = DataframeTableWidget(self.ui.layout_df_table2)
 
         # Initialize QListWidget for spectra list
         self.ui.spectrums_listbox = CustomListWidget()

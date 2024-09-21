@@ -7,7 +7,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline
-from .common import FitThread, PeakTable, DataframeTable, \
+from .common import FitThread, PeakTableWidget, DataframeTableWidget, \
     FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget
 from .common import FIT_METHODS,PALETTE
 
@@ -18,16 +18,11 @@ from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication,QAbstractItemView, QListWidgetItem, QSlider, QHBoxLayout, QLabel, QComboBox
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication,QAbstractItemView, QListWidgetItem
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
 from tkinter import Tk, END
-
-from superqt import QRangeSlider
 
 class Maps(QObject):
     """
@@ -56,11 +51,11 @@ class Maps(QObject):
         self.ui.cbb_fit_models.currentIndexChanged.connect(self.update_peak_model)
         
          # Initialize PeakTable
-        self.peak_table = PeakTable(self, self.ui.peak_table1, self.ui.cbb_layout_2)
+        self.peak_table = PeakTableWidget(self, self.ui.peak_table1, self.ui.cbb_layout_2)
         
          # Initialize Dataframe Table
         self.df_fit_results = None
-        self.df_table = DataframeTable(self.ui.layout_df_table)
+        self.df_table = DataframeTableWidget(self.ui.layout_df_table)
         
         # Initialize QListWidget for spectra list
         self.ui.spectra_listbox = CustomListWidget()
@@ -290,9 +285,9 @@ class Maps(QObject):
             self.df_fit_results.columns = columns
 
             
-            if self.ui.rdbt_show_wafer.isChecked():
+            if self.map_plot.rdbt_wafer.isChecked():
                 # DIAMETER
-                diameter = float(self.ui.cbb_wafer_size.currentText())
+                diameter = float(self.map_plot.cbb_wafer_size.currentText())
                 # QUADRANT
                 self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
                     self.common.quadrant, axis=1)
@@ -741,7 +736,7 @@ class Maps(QObject):
         #Update the Xrange slider based on selected map
         map_name, _ = self.spectra_id()
         map_df = self.maps.get(map_name)
-        
+
         if map_df is not None:
             self.map_plot.map_df=map_df
             column_labels = map_df.columns[2:-1].astype(float)

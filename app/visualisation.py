@@ -1,11 +1,10 @@
 import pandas as pd
-from copy import deepcopy
 from pathlib import Path
 import json
 
 from .common import view_df, show_alert, copy_fig_to_clb
 from .common import PLOT_STYLES, PALETTE, LEGEND_LOCATION
-from .common import Graph, Filter
+from .common import Graph, FilterWidget
 
 from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, \
      QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox
@@ -35,7 +34,7 @@ class Visualization(QDialog):
         self.ui.btn_save_df_2.clicked.connect(self.save_df_to_excel)
 
         # FILTER
-        self.filter = Filter(self.sel_df)
+        self.filter = FilterWidget(self.sel_df)
         self.ui.filter_widget_layout.addWidget(self.filter.gb_filter_widget)
         self.filtered_df = None
 

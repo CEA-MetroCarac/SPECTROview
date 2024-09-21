@@ -83,6 +83,7 @@ class MapViewWidget(QWidget):
         self.ax = None
         self.canvas = None
         self.toolbar = None
+        self.spectra_listbox = None
         self.initUI()
 
     def initUI(self):
@@ -145,21 +146,19 @@ class MapViewWidget(QWidget):
         self.rdbt_map.setChecked(True) 
         self.cbb_wafer_size = QComboBox()
         self.cbb_wafer_size.addItems(['300', '200', '150'])
-        self.cb_smoothing = QCheckBox("Smoothing")
+        
         self.cbb_color = QComboBox()
         self.cbb_color.addItems(PALETTE)
 
         # Connect to refresh function
         self.rdbt_wafer.toggled.connect(self.refresh_plot)
         self.cbb_wafer_size.currentIndexChanged.connect(self.refresh_plot)
-        self.cb_smoothing.stateChanged.connect(self.refresh_plot)
         self.cbb_color.currentIndexChanged.connect(self.refresh_plot)
 
         # Add widgets to the layout
         layout.addWidget(self.rdbt_map)
         layout.addWidget(self.rdbt_wafer)
         layout.addWidget(self.cbb_wafer_size)
-        layout.addWidget(self.cb_smoothing)
         layout.addWidget(self.cbb_color)
 
         # Add the layout to the main layout
@@ -168,7 +167,9 @@ class MapViewWidget(QWidget):
         # Create the second layout for other buttons
         layout2 = QHBoxLayout()
         layout2.setContentsMargins(5, 0, 5, 0)
-        self.cb_remove_outliers = QCheckBox("Remove Outliers")
+        self.cb_smoothing = QCheckBox("Smoothing")
+        self.cb_smoothing.stateChanged.connect(self.refresh_plot)
+        self.cb_remove_outliers = QCheckBox("Auto scale")
         self.cb_remove_outliers.stateChanged.connect(self.update_z_range_slider)
         self.btn_copy = QPushButton("", self)
         icon = QIcon()
@@ -179,12 +180,12 @@ class MapViewWidget(QWidget):
         
         spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         layout2.addItem(spacer)
+        layout2.addWidget(self.cb_smoothing)
         layout2.addWidget(self.cb_remove_outliers)
         layout2.addWidget(self.btn_copy)
 
         # Add the second layout to the main layout
         self.map_widget_layout.addLayout(layout2)
-
 
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
@@ -256,7 +257,7 @@ class MapViewWidget(QWidget):
         imin_val, imax_val = self.z_range_slider.value()
         self.intensity_range_label.setText(f'[{imin_val}; {imax_val}]')
         
-    def get_data_for_heatmap(self, map_df):
+    def get_data_for_heatmap(self):
         """Prepare data for heatmap based on range sliders values"""
 
         # Default return values in case of no valid map_df or filtered columns
@@ -316,7 +317,7 @@ class MapViewWidget(QWidget):
                 
         return heatmap_pivot, extent, vmin, vmax
     
-    def plot_2Dmap(self):
+    def plot(self, coords):
         """Plot 2D maps of measurement points"""
         r = int(self.cbb_wafer_size.currentText()) / 2
 
@@ -350,7 +351,6 @@ class MapViewWidget(QWidget):
                 self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
 
         # Highlighted measurement sites
-        map_name, coords = self.spectra_id()
         if coords:
             x, y = zip(*coords)
             self.ax.scatter(x, y, marker='o', color='red', s=20)
@@ -363,7 +363,7 @@ class MapViewWidget(QWidget):
     def on_click_2Dmap(self, event):
         """select the measurement points via 2Dmap plot"""
         all_x, all_y = self.get_mes_sites_coord()
-        self.ui.spectra_listbox.clearSelection()
+        self.spectra_listbox.clearSelection()
         if event.inaxes == self.ax:
             x_clicked, y_clicked = event.xdata, event.ydata
             if event.button == 1:  # Left mouse button
@@ -384,14 +384,14 @@ class MapViewWidget(QWidget):
                     self.selected_points = [(nearest_x, nearest_y)]
 
         # Set the current selection in the spectra_listbox
-        for index in range(self.ui.spectra_listbox.count()):
-            item = self.ui.spectra_listbox.item(index)
+        for index in range(self.spectra_listbox.count()):
+            item = self.spectra_listbox.item(index)
             item_text = item.text()
             x, y = map(float, item_text.strip('()').split(','))
             if (x, y) in self.selected_points:
                 item.setSelected(True)
                 self.current_row= index
-                self.ui.spectra_listbox.setCurrentRow(self.current_row)
+                self.spectra_listbox.setCurrentRow(self.current_row)
             else:
                 item.setSelected(False)
             
@@ -410,15 +410,9 @@ class MapViewWidget(QWidget):
         """
         Get all coordinates of measurement sites of the selected map.
         """
-        map_name, coords = self.spectra_id()
-        all_x = []
-        all_y = []
-        for spectrum in self.spectrums:
-            map_name_fs, coord_fs = self.spectrum_object_id(spectrum)
-            if map_name == map_name_fs:
-                x, y = coord_fs
-                all_x.append(x)
-                all_y.append(y)
+        df = self.map_df
+        all_x = df['X']
+        all_y = df['Y']
         return all_x, all_y 
 
     def copy_fig(self):

@@ -68,9 +68,8 @@ class Maps(QObject):
         self.ui.listbox_layout2.addWidget(self.ui.spectra_listbox)
         self.ui.spectra_listbox.itemSelectionChanged.connect(self.refresh_gui)
         self.ui.checkBox_2.stateChanged.connect(self.check_uncheck_all)
-        # Update spectra_listbox when selecting maps via MAPS LIST
-        self.ui.maps_listbox.itemSelectionChanged.connect(
-            self.upd_spectra_list)
+        
+        
         
         # Set a delay for the function "plot action"
         self.delay_timer = QTimer()
@@ -80,8 +79,11 @@ class Maps(QObject):
         # 2DMAP VIEW WIDGET
         self.map_plot = MapViewWidget(self)
         self.map_plot.spectra_listbox= self.ui.spectra_listbox
-        self.ui.verticalLayout_7.addWidget(self.map_plot.widget)
+        self.ui.map_layout.addWidget(self.map_plot.widget)
 
+        ## Update spectra_listbox when selecting maps via MAPS LIST
+        self.ui.maps_listbox.itemSelectionChanged.connect(
+            self.upd_spectra_list)
         
         # BASELINE
         self.setup_baseline_controls()
@@ -728,11 +730,10 @@ class Maps(QObject):
 
         self.spectra_widget.plot(selected_spectrums)
         
-        map_name, coords = self.spectra_id()
-        map_df = self.maps.get(map_name)
-        self.map_plot.map_df=map_df
+        df = self.maps.get(map_name)
+        self.map_plot.map_df=df
         self.map_plot.plot(coords)
-         
+
         self.read_x_range()
         self.peak_table.show(selected_spectrums[0])
         
@@ -787,8 +788,6 @@ class Maps(QObject):
             if self.ui.spectra_listbox.count() > 0:
                 self.ui.spectra_listbox.setCurrentRow(0)
         QTimer.singleShot(50, self.refresh_gui)
-        
-    
 
     def get_mes_sites_coord(self):
         """

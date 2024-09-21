@@ -1141,7 +1141,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
+                       <width>283</width>
                        <height>243</height>
                       </rect>
                      </property>
@@ -2120,7 +2120,7 @@
                   <number>0</number>
                  </property>
                  <item>
-                  <layout class="QVBoxLayout" name="verticalLayout_7"/>
+                  <layout class="QVBoxLayout" name="map_layout"/>
                  </item>
                 </layout>
                </widget>
@@ -2229,7 +2229,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>314</height>
+                          <height>507</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -3102,8 +3102,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>249</height>
+                       <width>283</width>
+                       <height>243</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -3582,7 +3582,7 @@
                   <x>20</x>
                   <y>50</y>
                   <width>411</width>
-                  <height>131</height>
+                  <height>168</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_29">

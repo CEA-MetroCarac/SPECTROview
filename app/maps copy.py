@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline
 from .common import FitThread, PeakTable, DataframeTable, \
-    FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget
+    FitModelManager, CustomListWidget, SpectraViewWidget
 from .common import FIT_METHODS,PALETTE
 
 from lmfit import fit_report
@@ -78,10 +78,14 @@ class Maps(QObject):
         self.delay_timer.timeout.connect(self.plot)
 
         # 2DMAP VIEW WIDGET
-        self.map_widget = MapViewWidget(self)
-        self.ui.verticalLayout_7.addWidget(self.map_widget.widget)
-
-
+        self.create_2Dmap_widget()
+        self.ui.cbb_wafer_size.currentIndexChanged.connect(self.refresh_gui)
+        self.ui.rdbt_show_wafer.toggled.connect(self.refresh_gui)
+        self.ui.cb_interpolation.stateChanged.connect(self.refresh_gui)
+        self.ui.cb_remove_outliters.stateChanged.connect(self.update_z_range_slider)
+        
+        self.ui.cbb_map_color.addItems(PALETTE)
+        self.ui.cbb_map_color.currentIndexChanged.connect(self.refresh_gui)
         
         # BASELINE
         self.setup_baseline_controls()
@@ -783,7 +787,239 @@ class Maps(QObject):
                 self.ui.spectra_listbox.setCurrentRow(0)
         QTimer.singleShot(50, self.refresh_gui)
         
+    def create_2Dmap_widget(self):
+        """Create 2Dmap plot widgets"""
+        fig = plt.figure(dpi=70)
+        self.ax = fig.add_subplot(111)
+        
+        self.ax.tick_params(axis='x', which='both')
+        self.ax.tick_params(axis='y', which='both')
+        self.canvas = FigureCanvas(fig)
+        self.toolbar =NavigationToolbar2QT(self.canvas)
+        for action in self.toolbar.actions():
+            if action.text() in ['Home','Zoom','Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+                action.setVisible(False)
+                
+        # Variables to keep track of highlighted points and Ctrl key status
+        self.selected_points = []
+        self.ctrl_pressed = False
+        
+        # Connect the mouse and key events to the handler functions
+        fig.canvas.mpl_connect('button_press_event', self.on_click_2Dmap)
+        fig.canvas.mpl_connect('key_press_event', self.on_key_press)
+        fig.canvas.mpl_connect('key_release_event', self.on_key_release)
+        
+        self.ui.map_layout.addWidget(self.canvas)
+        self.ui.toolbar_layout_3.addWidget(self.toolbar)
+        self.canvas.draw()
+        self.create_range_sliders(0,100)
+        
+    def create_range_sliders(self, xmin, xmax):
+        """Create xrange and intensity-range sliders"""
+        self.x_range_slider = QRangeSlider(Qt.Horizontal)
+        self.x_range_slider.setRange(xmin, xmax)  
+        self.x_range_slider.setValue((xmin, xmax)) 
+        self.x_range_slider.setTracking(True)
+        self.x_range_slider_label = QLabel('X range:')
+        self.x_range_label = QLabel(f'[{xmin}; {xmax}]')
+        self.ui.xrange_slider_layout.addWidget(self.x_range_slider_label)
+        self.ui.xrange_slider_layout.addWidget(self.x_range_slider)
+        self.ui.xrange_slider_layout.addWidget(self.x_range_label)
+        # Connect to update function
+        self.x_range_slider.valueChanged.connect(self.update_xrange_slider_label)
+        self.x_range_slider.valueChanged.connect(self.update_z_range_slider)
+        
+        self.z_range_slider = QRangeSlider(Qt.Horizontal)
+        self.z_range_slider.setRange(0, 100) 
+        self.z_range_slider.setValue((0, 100)) 
+        self.z_range_slider.setTracking(True)
+        self.z_slider_cbb = QComboBox()
+        self.z_slider_cbb.addItems(['Area', 'Intensity'])
+        self.z_slider_cbb.currentIndexChanged.connect(self.update_z_range_slider)
+        
+        self.intensity_range_label = QLabel(f'[{0}; {100}]')
+        self.ui.intensity_slider_layout.addWidget(self.z_slider_cbb)
+        self.ui.intensity_slider_layout.addWidget(self.z_range_slider)
+        self.ui.intensity_slider_layout.addWidget(self.intensity_range_label)
+        
+        self.z_range_slider.valueChanged.connect(self.update_z_range_label)
+        self.z_range_slider.valueChanged.connect(self.refresh_gui)
     
+    def update_xrange_slider(self, xmin, xmax):
+        """Update the range of the slider based on new min and max values."""
+        xmin_label = round(xmin, 3)
+        xmax_label = round(xmax, 3)
+        self.x_range_slider.setRange(xmin, xmax)
+        self.x_range_slider.setValue((xmin, xmax))
+        self.x_range_label.setText(f'[{xmin_label}; {xmax_label}]')
+    
+    def update_xrange_slider_label(self):
+        """Update the QLabel text with the current values."""
+        xmin_val, max_val = self.x_range_slider.value()
+        self.x_range_label.setText(f'[{xmin_val}; {max_val}]')
+        
+    def update_z_range_slider(self):
+        _,_, vmin, vmax, =self.get_data_for_heatmap()
+        self.z_range_slider.setRange(vmin, vmax)
+        self.z_range_slider.setValue((vmin, vmax))
+        self.intensity_range_label.setText(f'[{vmin}; {vmax}]')
+
+    def update_z_range_label(self):
+        """Update the QLabel text with the current values."""
+        imin_val, imax_val = self.z_range_slider.value()
+        self.intensity_range_label.setText(f'[{imin_val}; {imax_val}]')
+        
+    def get_data_for_heatmap(self):
+        """Prepare data for heatmap based on range sliders values"""
+        map_name, _ = self.spectra_id()
+        map_df = self.maps.get(map_name)
+
+        # Default return values in case of no valid map_df or filtered columns
+        heatmap_pivot = pd.DataFrame()  # Empty DataFrame for heatmap
+        extent = [0, 0, 0, 0]  # Default extent values
+        vmin = 0
+        vmax = 0
+        
+        if map_df is not None:
+            min_range, max_range = self.x_range_slider.value()
+            column_labels = map_df.columns[2:-1]  # Keep labels as strings
+
+            # Convert slider range values to strings for comparison
+            filtered_columns = column_labels[(column_labels.astype(float) >= min_range) &
+                                            (column_labels.astype(float) <= max_range)]
+            
+            if len(filtered_columns) > 0:
+                # Create a filtered DataFrame including X, Y, and the selected range of columns
+                filtered_map_df = map_df[['X', 'Y'] + list(filtered_columns)]
+                x_col = filtered_map_df['X'].values
+                y_col = filtered_map_df['Y'].values
+                final_z_col = []
+                parameter = self.z_slider_cbb.currentText()
+                if parameter == 'Area':
+                    # Calculate the intensity sums for the selected range
+                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
+                if parameter == 'Intensity':
+                    # Min and max intensity values for each spectrum
+                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
+                
+                if self.ui.cb_remove_outliters.isChecked():
+                    # Remove outliers using IQR method and replace them with interpolated values
+                    Q1 = z_col.quantile(0.05)
+                    Q3 = z_col.quantile(0.95)
+                    IQR = Q3 - Q1
+
+                    # Identify the outliers
+                    outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
+
+                    # Interpolate values for the outliers using linear interpolation
+                    z_col_interpolated = z_col.copy()
+                    z_col_interpolated[outlier_mask] = np.nan  # Mark outliers as NaN for interpolation
+                    z_col_interpolated = z_col_interpolated.interpolate(method='linear', limit_direction='both')
+                    final_z_col=z_col_interpolated
+                else:
+                    final_z_col=z_col       
+                # Update vmin and vmax after interpolation
+                vmin = round(final_z_col.min(), 2)
+                vmax = round(final_z_col.max(), 2)
+
+                # Heatmap data 
+                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
+                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
+                xmin, xmax = x_col.min(), x_col.max()
+                ymin, ymax = y_col.min(), y_col.max()
+                extent=[xmin, xmax, ymin, ymax]
+                
+        return heatmap_pivot, extent, vmin, vmax
+    
+    def plot_2Dmap(self):
+        """Plot 2D maps of measurement points"""
+        r = int(self.ui.cbb_wafer_size.currentText()) / 2
+
+        self.ax.clear()
+
+        if self.ui.rdbt_show_wafer.isChecked():
+            wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
+                                        color='black', linewidth=1)
+            self.ax.add_patch(wafer_circle)
+            self.ax.set_yticklabels([])
+
+            all_x, all_y = self.get_mes_sites_coord()
+            self.ax.scatter(all_x, all_y, marker='x', color='gray', s=10)
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+
+        # Plot heatmap for 2D map
+        if self.ui.rdbt_show_2Dmap.isChecked():    
+            heatmap_pivot, extent, _, _ = self.get_data_for_heatmap()
+            
+            color = self.ui.cbb_map_color.currentText()
+            interpolation_option = 'bilinear' if self.ui.cb_interpolation.isChecked() else 'none'
+            vmin, vmax = self.z_range_slider.value()
+
+            self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
+                                origin='lower', aspect='auto', cmap=color, interpolation=interpolation_option)
+            
+            # Update or create the colorbar
+            if hasattr(self, 'cbar') and self.cbar is not None:
+                self.cbar.update_normal(self.img)
+            else:
+                self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
+
+        # Highlighted measurement sites
+        map_name, coords = self.spectra_id()
+        if coords:
+            x, y = zip(*coords)
+            self.ax.scatter(x, y, marker='o', color='red', s=20)
+
+        title = self.z_slider_cbb.currentText()
+        self.ax.set_title(title, fontsize=13)
+        self.ax.get_figure().tight_layout()
+        self.canvas.draw()
+        
+    def on_click_2Dmap(self, event):
+        """select the measurement points via 2Dmap plot"""
+        all_x, all_y = self.get_mes_sites_coord()
+        self.ui.spectra_listbox.clearSelection()
+        if event.inaxes == self.ax:
+            x_clicked, y_clicked = event.xdata, event.ydata
+            if event.button == 1:  # Left mouse button
+                all_x = np.array(all_x)
+                all_y = np.array(all_y)
+                distances = np.sqrt(
+                    (all_x - x_clicked) ** 2 + (all_y - y_clicked) ** 2)
+                nearest_index = np.argmin(distances)
+                nearest_x, nearest_y = all_x[nearest_index], all_y[
+                    nearest_index]
+
+                # Check if Ctrl key is pressed
+                modifiers = QApplication.keyboardModifiers()
+                if modifiers == Qt.ControlModifier:
+                    self.selected_points.append((nearest_x, nearest_y))
+                else:
+                    # Clear the selected points list and add the current one
+                    self.selected_points = [(nearest_x, nearest_y)]
+
+        # Set the current selection in the spectra_listbox
+        for index in range(self.ui.spectra_listbox.count()):
+            item = self.ui.spectra_listbox.item(index)
+            item_text = item.text()
+            x, y = map(float, item_text.strip('()').split(','))
+            if (x, y) in self.selected_points:
+                item.setSelected(True)
+                self.current_row= index
+                self.ui.spectra_listbox.setCurrentRow(self.current_row)
+            else:
+                item.setSelected(False)
+            
+            
+    def on_key_press(self, event):
+        """Handler function for key press event"""
+        if event.key == 'ctrl':
+            self.ctrl_pressed = True
+
+    def on_key_release(self, event):
+        """Handler function for key release event"""
+        if event.key == 'ctrl':
+            self.ctrl_pressed = False
 
     def get_mes_sites_coord(self):
         """

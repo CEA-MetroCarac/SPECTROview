@@ -39,13 +39,6 @@ class Spectrums(QObject):
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.spectrums = Spectra()
-        
-        # Initialize Peak Table
-        self.peak_table = PeakTable(self, self.ui.peak_table1_2, self.ui.cbb_layout)
-        
-        # Initialize Dataframe table
-        self.df_fit_results = None
-        self.df_table = DataframeTable(self.ui.layout_df_table2)
 
         # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget(self)
@@ -53,18 +46,21 @@ class Spectrums(QObject):
         self.ui.toolbar_layout.addWidget(self.spectra_widget.control_widget) 
         self.ui.cbb_fit_models_2.currentIndexChanged.connect(self.update_peak_model)
         
-        # Create a customized QListWidget
+        # Initialize Peak Table
+        self.peak_table = PeakTable(self, self.ui.peak_table1_2, self.ui.cbb_layout)
+        
+        # Initialize Dataframe Table
+        self.df_fit_results = None
+        self.df_table = DataframeTable(self.ui.layout_df_table2)
+
+        # Initialize QListWidget for spectra list
         self.ui.spectrums_listbox = CustomListWidget()
         self.ui.listbox_layout.addWidget(self.ui.spectrums_listbox)
-        self.ui.spectrums_listbox.items_reordered.connect(
-            self.update_spectrums_order)
-        ##Connect and plot_spectra of selected SPECTRUM LIST
-        self.ui.spectrums_listbox.itemSelectionChanged.connect(
-            self.refresh_gui)
-        ## Connect the checkbox signal to the method
+        self.ui.spectrums_listbox.items_reordered.connect(self.update_spectrums_order)
+        self.ui.spectrums_listbox.itemSelectionChanged.connect(self.refresh_gui)
         self.ui.checkBox.stateChanged.connect(self.check_uncheck_all)
 
-        # Set a delay for the function plot
+        # Set a delay for the function "plot action"
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot)
@@ -85,18 +81,16 @@ class Spectrums(QObject):
         self.ui.btn_refresh_model_folder_3.clicked.connect(
             self.populate_available_models)
 
-        # Connect checkboxes to refresh GUI
-        self.ui.cb_attached_2.stateChanged.connect(self.refresh_gui)
-
+        
     def setup_baseline_controls(self):
         """Set up baseline controls and their signal connections."""
-        self.ui.cb_attached_2.clicked.connect(self.refresh_gui)
+        self.ui.cb_attached_2.stateChanged.connect(self.refresh_gui)
         self.ui.noise_2.valueChanged.connect(self.refresh_gui)
         self.ui.rbtn_linear_2.clicked.connect(self.refresh_gui)
         self.ui.rbtn_polynomial_2.clicked.connect(self.refresh_gui)
         self.ui.degre_2.valueChanged.connect(self.refresh_gui)
 
-        self.ui.cb_attached_2.clicked.connect(self.get_baseline_settings)
+        self.ui.cb_attached_2.stateChanged.connect(self.get_baseline_settings)
         self.ui.noise_2.valueChanged.connect(self.get_baseline_settings)
         self.ui.rbtn_linear_2.clicked.connect(self.get_baseline_settings)
         self.ui.rbtn_polynomial_2.clicked.connect(self.get_baseline_settings)
@@ -208,9 +202,6 @@ class Spectrums(QObject):
         """Trigger the fnc to plot spectra"""
         self.delay_timer.start(100)
 
-
-    
-        
     def get_checked_spectra(self):
         """
         Get a list of selected spectra based on listbox's checkbox states.

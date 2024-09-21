@@ -26,10 +26,11 @@ from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, \
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
     QLineEdit, QWidget, QPushButton,QToolButton, QSpinBox, QComboBox, QCheckBox, QListWidgetItem, \
-    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy, QRadioButton, QGroupBox
+    QApplication, QMainWindow, QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QToolBox, QSizePolicy, QRadioButton, QGroupBox, QFrame
 from PySide6.QtCore import Signal, QThread, Qt, QSize,QTimer, QCoreApplication, QPoint 
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QResizeEvent, \
     QAction, Qt, QCursor
+from superqt import QRangeSlider
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -68,6 +69,353 @@ LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
                    'upper center', 'center']
 
 X_AXIS = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
+
+
+class MapViewWidget(QWidget):
+    """Class to manage the 2Dmap view widget"""
+
+    def __init__(self, main_app):
+        super().__init__()
+        self.main_app = main_app # To connect to a method of main app (refresh gui)
+        self.map_df =None
+        self.dpi = 70
+        self.figure = None
+        self.ax = None
+        self.canvas = None
+        self.toolbar = None
+        self.initUI()
+
+    def initUI(self):
+        """Initialize the UI components."""
+        self.widget = QWidget()
+        self.widget.setFixedWidth(400)
+        self.map_widget_layout = QVBoxLayout(self.widget)
+        self.map_widget_layout.setContentsMargins(0, 0, 0, 0) 
+        self.create_widget()
+
+    def create_widget(self):
+        """Create 2Dmap plot widgets"""
+        # Create a frame to hold the canvas with a fixed size
+        self.canvas_frame = QFrame(self.widget)
+        self.canvas_frame.setFixedSize(400, 350)
+        frame_layout = QVBoxLayout(self.canvas_frame)
+
+        self.figure = plt.figure(dpi=70)
+        self.ax = self.figure.add_subplot(111)
+        
+        self.ax.tick_params(axis='x', which='both')
+        self.ax.tick_params(axis='y', which='both')
+        self.canvas = FigureCanvas(self.figure)
+        self.toolbar =NavigationToolbar2QT(self.canvas)
+        for action in self.toolbar.actions():
+            if action.text() in ['Home','Zoom','Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+                action.setVisible(False)
+
+        frame_layout.addWidget(self.canvas)
+        toolbar_layout=QHBoxLayout()
+        toolbar_layout.addWidget(self.toolbar)
+        frame_layout.addLayout(toolbar_layout)
+        # Add the map frame to the main layout
+        self.map_widget_layout.addWidget(self.canvas_frame)
+
+        # Variables to keep track of highlighted points and Ctrl key status
+        self.selected_points = []
+        self.ctrl_pressed = False
+        
+        # Connect the mouse and key events to the handler functions
+        self.figure.canvas.mpl_connect('button_press_event', self.on_click_2Dmap)
+        self.figure.canvas.mpl_connect('key_press_event', self.on_key_press)
+        self.figure.canvas.mpl_connect('key_release_event', self.on_key_release)
+        
+        self.canvas.draw()
+
+        self.create_buttons()
+        self.create_range_sliders(0,100)
+
+    def create_buttons(self):
+        """Create other buttons/comboboxes/checkboxes"""
+        # Create the first layout for radio buttons and checkboxes
+        layout = QHBoxLayout()
+        self.rdbt_map = QRadioButton("2Dmap", self)
+        self.rdbt_wafer = QRadioButton("Wafer", self)
+        self.rdbt_map.setChecked(True) 
+        self.cbb_wafer_size = QComboBox()
+        self.cbb_wafer_size.addItems(['300', '200', '150'])
+        self.cb_smoothing = QCheckBox("Smoothing")
+        self.cbb_color = QComboBox()
+        self.cbb_color.addItems(PALETTE)
+
+        # Connect to refresh function
+        self.rdbt_wafer.toggled.connect(self.refresh_plot)
+        self.cbb_wafer_size.currentIndexChanged.connect(self.refresh_plot)
+        self.cb_smoothing.stateChanged.connect(self.refresh_plot)
+        self.cbb_color.currentIndexChanged.connect(self.refresh_plot)
+
+        # Add widgets to the layout
+        layout.addWidget(self.rdbt_map)
+        layout.addWidget(self.rdbt_wafer)
+        layout.addWidget(self.cbb_wafer_size)
+        layout.addWidget(self.cb_smoothing)
+        layout.addWidget(self.cbb_color)
+
+        # Add the layout to the main layout
+        self.map_widget_layout.addLayout(layout)
+
+        # Create the second layout for other buttons
+        layout2 = QHBoxLayout()
+        self.cb_remove_outliers = QCheckBox("Remove Outliers")
+        self.cb_remove_outliers.stateChanged.connect(self.update_z_range_slider)
+        self.btn_copy = QPushButton("", self)
+        icon = QIcon()
+        icon.addFile(u":/icon/iconpack/copy.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.btn_copy.setIcon(icon)
+        self.btn_copy.setIconSize(QSize(24, 24))
+        self.btn_copy.clicked.connect(self.copy_fig)
+
+        layout2.addWidget(self.cb_remove_outliers)
+        layout2.addWidget(self.btn_copy)
+
+        # Add the second layout to the main layout
+        self.map_widget_layout.addLayout(layout2)
+
+
+    def create_range_sliders(self, xmin, xmax):
+        """Create xrange and intensity-range sliders"""
+        # Create x-axis range slider
+        self.x_range_slider = QRangeSlider(Qt.Horizontal)
+        self.x_range_slider.setRange(xmin, xmax)  
+        self.x_range_slider.setValue((xmin, xmax)) 
+        self.x_range_slider.setTracking(True)
+        self.x_range_slider_label = QLabel('X range:')
+        self.x_range_label = QLabel(f'[{xmin}; {xmax}]')
+        self.x_range_slider.valueChanged.connect(self.update_xrange_slider_label)
+        self.x_range_slider.valueChanged.connect(self.update_z_range_slider)
+
+        x_slider_layout = QHBoxLayout()
+        x_slider_layout.addWidget(self.x_range_slider_label)
+        x_slider_layout.addWidget(self.x_range_slider)
+        x_slider_layout.addWidget(self.x_range_label)
+        
+        # Create z-axis range slider
+        self.z_range_slider = QRangeSlider(Qt.Horizontal)
+        self.z_range_slider.setRange(0, 100) 
+        self.z_range_slider.setValue((0, 100)) 
+        self.z_range_slider.setTracking(True)
+        self.z_slider_cbb = QComboBox()
+        self.z_slider_cbb.addItems(['Area', 'Intensity'])
+        self.z_slider_cbb.currentIndexChanged.connect(self.update_z_range_slider)
+        self.intensity_range_label = QLabel(f'[{0}; {100}]')
+        self.z_range_slider.valueChanged.connect(self.update_z_range_label)
+        self.z_range_slider.valueChanged.connect(self.refresh_plot)
+
+        z_slider_layout = QHBoxLayout()
+        z_slider_layout.addWidget(self.z_slider_cbb)
+        z_slider_layout.addWidget(self.z_range_slider)
+        z_slider_layout.addWidget(self.intensity_range_label)
+
+        self.map_widget_layout.addLayout(x_slider_layout)
+        self.map_widget_layout.addLayout(z_slider_layout)
+
+    def refresh_plot(self):
+        """Call the refresh_gui method of the main application."""
+        if hasattr(self.main_app, 'refresh_gui'):
+            self.main_app.refresh_gui()
+        else:
+            print("Main application does not have refresh_gui method.")
+    
+    def update_xrange_slider(self, xmin, xmax):
+        """Update the range of the slider based on new min and max values."""
+        xmin_label = round(xmin, 3)
+        xmax_label = round(xmax, 3)
+        self.x_range_slider.setRange(xmin, xmax)
+        self.x_range_slider.setValue((xmin, xmax))
+        self.x_range_label.setText(f'[{xmin_label}; {xmax_label}]')
+    
+    def update_xrange_slider_label(self):
+        """Update the QLabel text with the current values."""
+        xmin_val, max_val = self.x_range_slider.value()
+        self.x_range_label.setText(f'[{xmin_val}; {max_val}]')
+        
+    def update_z_range_slider(self):
+        _,_, vmin, vmax, =self.get_data_for_heatmap()
+        self.z_range_slider.setRange(vmin, vmax)
+        self.z_range_slider.setValue((vmin, vmax))
+        self.intensity_range_label.setText(f'[{vmin}; {vmax}]')
+
+    def update_z_range_label(self):
+        """Update the QLabel text with the current values."""
+        imin_val, imax_val = self.z_range_slider.value()
+        self.intensity_range_label.setText(f'[{imin_val}; {imax_val}]')
+        
+    def get_data_for_heatmap(self, map_df):
+        """Prepare data for heatmap based on range sliders values"""
+
+        # Default return values in case of no valid map_df or filtered columns
+        heatmap_pivot = pd.DataFrame()  # Empty DataFrame for heatmap
+        extent = [0, 0, 0, 0]  # Default extent values
+        vmin = 0
+        vmax = 0
+        
+        if self.map_df is not None:
+            min_range, max_range = self.x_range_slider.value()
+            column_labels = self.map_df.columns[2:-1]  # Keep labels as strings
+
+            # Convert slider range values to strings for comparison
+            filtered_columns = column_labels[(column_labels.astype(float) >= min_range) &
+                                            (column_labels.astype(float) <= max_range)]
+            
+            if len(filtered_columns) > 0:
+                # Create a filtered DataFrame including X, Y, and the selected range of columns
+                filtered_map_df = self.map_df[['X', 'Y'] + list(filtered_columns)]
+                x_col = filtered_map_df['X'].values
+                y_col = filtered_map_df['Y'].values
+                final_z_col = []
+                parameter = self.z_slider_cbb.currentText()
+                if parameter == 'Area':
+                    # Calculate the intensity sums for the selected range
+                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
+                if parameter == 'Intensity':
+                    # Min and max intensity values for each spectrum
+                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
+                
+                if self.cb_remove_outliers.isChecked():
+                    # Remove outliers using IQR method and replace them with interpolated values
+                    Q1 = z_col.quantile(0.05)
+                    Q3 = z_col.quantile(0.95)
+                    IQR = Q3 - Q1
+
+                    # Identify the outliers
+                    outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
+
+                    # Interpolate values for the outliers using linear interpolation
+                    z_col_interpolated = z_col.copy()
+                    z_col_interpolated[outlier_mask] = np.nan  # Mark outliers as NaN for interpolation
+                    z_col_interpolated = z_col_interpolated.interpolate(method='linear', limit_direction='both')
+                    final_z_col=z_col_interpolated
+                else:
+                    final_z_col=z_col       
+                # Update vmin and vmax after interpolation
+                vmin = round(final_z_col.min(), 2)
+                vmax = round(final_z_col.max(), 2)
+
+                # Heatmap data 
+                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
+                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
+                xmin, xmax = x_col.min(), x_col.max()
+                ymin, ymax = y_col.min(), y_col.max()
+                extent=[xmin, xmax, ymin, ymax]
+                
+        return heatmap_pivot, extent, vmin, vmax
+    
+    def plot_2Dmap(self):
+        """Plot 2D maps of measurement points"""
+        r = int(self.cbb_wafer_size.currentText()) / 2
+
+        self.ax.clear()
+
+        if self.rdbt_wafer.isChecked():
+            wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
+                                        color='black', linewidth=1)
+            self.ax.add_patch(wafer_circle)
+            self.ax.set_yticklabels([])
+
+            all_x, all_y = self.get_mes_sites_coord()
+            self.ax.scatter(all_x, all_y, marker='x', color='gray', s=10)
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+
+        # Plot heatmap for 2D map
+        if self.rdbt_map.isChecked():    
+            heatmap_pivot, extent, _, _ = self.get_data_for_heatmap()
+            
+            color = self.cbb_color.currentText()
+            interpolation_option = 'bilinear' if self.cb_smoothing.isChecked() else 'none'
+            vmin, vmax = self.z_range_slider.value()
+
+            self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
+                                origin='lower', aspect='auto', cmap=color, interpolation=interpolation_option)
+            
+            # Update or create the colorbar
+            if hasattr(self, 'cbar') and self.cbar is not None:
+                self.cbar.update_normal(self.img)
+            else:
+                self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
+
+        # Highlighted measurement sites
+        map_name, coords = self.spectra_id()
+        if coords:
+            x, y = zip(*coords)
+            self.ax.scatter(x, y, marker='o', color='red', s=20)
+
+        title = self.z_slider_cbb.currentText()
+        self.ax.set_title(title, fontsize=13)
+        self.ax.get_figure().tight_layout()
+        self.canvas.draw()
+        
+    def on_click_2Dmap(self, event):
+        """select the measurement points via 2Dmap plot"""
+        all_x, all_y = self.get_mes_sites_coord()
+        self.ui.spectra_listbox.clearSelection()
+        if event.inaxes == self.ax:
+            x_clicked, y_clicked = event.xdata, event.ydata
+            if event.button == 1:  # Left mouse button
+                all_x = np.array(all_x)
+                all_y = np.array(all_y)
+                distances = np.sqrt(
+                    (all_x - x_clicked) ** 2 + (all_y - y_clicked) ** 2)
+                nearest_index = np.argmin(distances)
+                nearest_x, nearest_y = all_x[nearest_index], all_y[
+                    nearest_index]
+
+                # Check if Ctrl key is pressed
+                modifiers = QApplication.keyboardModifiers()
+                if modifiers == Qt.ControlModifier:
+                    self.selected_points.append((nearest_x, nearest_y))
+                else:
+                    # Clear the selected points list and add the current one
+                    self.selected_points = [(nearest_x, nearest_y)]
+
+        # Set the current selection in the spectra_listbox
+        for index in range(self.ui.spectra_listbox.count()):
+            item = self.ui.spectra_listbox.item(index)
+            item_text = item.text()
+            x, y = map(float, item_text.strip('()').split(','))
+            if (x, y) in self.selected_points:
+                item.setSelected(True)
+                self.current_row= index
+                self.ui.spectra_listbox.setCurrentRow(self.current_row)
+            else:
+                item.setSelected(False)
+            
+            
+    def on_key_press(self, event):
+        """Handler function for key press event"""
+        if event.key == 'ctrl':
+            self.ctrl_pressed = True
+
+    def on_key_release(self, event):
+        """Handler function for key release event"""
+        if event.key == 'ctrl':
+            self.ctrl_pressed = False
+
+    def get_mes_sites_coord(self):
+        """
+        Get all coordinates of measurement sites of the selected map.
+        """
+        map_name, coords = self.spectra_id()
+        all_x = []
+        all_y = []
+        for spectrum in self.spectrums:
+            map_name_fs, coord_fs = self.spectrum_object_id(spectrum)
+            if map_name == map_name_fs:
+                x, y = coord_fs
+                all_x.append(x)
+                all_y.append(y)
+        return all_x, all_y 
+
+    def copy_fig(self):
+        """Copy figure canvas to clipboard"""
+        copy_fig_to_clb(self.canvas)
+
 
 class Filter:
     """
@@ -248,7 +596,6 @@ class Filter:
 
 class SpectraViewWidget(QWidget):
     """Class to manage the spectra view widget."""
-
     def __init__(self, main_app):
         super().__init__()
         self.main_app = main_app # To connect to a method of main app (refresh gui)
@@ -323,13 +670,10 @@ class SpectraViewWidget(QWidget):
 
             # Set the layout of control_widget
             self.control_widget.setLayout(self.control_layout)
-
         self.update_plot_styles()
-        
-
+    
     def create_view_options(self):
         """Create widget containing all view options."""
-        
         self.view_options_menu = QMenu(self)
 
         # X axis unit combobox
@@ -620,10 +964,12 @@ class SpectraViewWidget(QWidget):
             self.plot(self.sel_spectrums)
     
     def copy_fig(self):
-        """Detect the current operating system and call the corresponding copy method."""
+        """Copy figure canvas to clipboard"""
         copy_fig_to_clb(self.canvas)
 
     
+
+
 class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.
 

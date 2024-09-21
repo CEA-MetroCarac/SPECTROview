@@ -238,9 +238,9 @@ class MapViewWidget(QWidget):
         self.x_range_label.setText(f'[{xmin_label}; {xmax_label}]')
     
     def update_xrange_slider_label(self):
-        """Update the QLabel text with the current values."""
-        xmin_val, max_val = self.x_range_slider.value()
-        self.x_range_label.setText(f'[{xmin_val}; {max_val}]')
+        """Update the QLabel text on x range slider change."""
+        xmin, xmax = self.x_range_slider.value()
+        self.x_range_label.setText(f'[{xmin}; {xmax}]')
         
     def update_z_range_slider(self):
         _,_, vmin, vmax, =self.get_data_for_heatmap()
@@ -250,9 +250,9 @@ class MapViewWidget(QWidget):
 
     def update_z_range_label(self):
         """Update the QLabel text with the current values."""
-        imin_val, imax_val = self.z_range_slider.value()
-        self.z_range_label.setText(f'[{imin_val}; {imax_val}]')
-        
+        vmin, vmax = self.z_range_slider.value()
+        self.z_range_label.setText(f'[{vmin}; {vmax}]')
+
     def plot(self, coords):
         """Plot 2D maps of measurement points"""
         

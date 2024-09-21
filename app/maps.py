@@ -69,8 +69,6 @@ class Maps(QObject):
         self.ui.spectra_listbox.itemSelectionChanged.connect(self.refresh_gui)
         self.ui.checkBox_2.stateChanged.connect(self.check_uncheck_all)
         
-        
-        
         # Set a delay for the function "plot action"
         self.delay_timer = QTimer()
         self.delay_timer.setSingleShot(True)
@@ -739,10 +737,13 @@ class Maps(QObject):
         
     def upd_spectra_list(self):
         """Show spectrums in a listbox"""
+        
+        #Update the Xrange slider based on selected map
         map_name, _ = self.spectra_id()
         map_df = self.maps.get(map_name)
-            
+        
         if map_df is not None:
+            self.map_plot.map_df=map_df
             column_labels = map_df.columns[2:-1].astype(float)
             min_value = float(column_labels.min())
             max_value = float(column_labels.max())
@@ -788,21 +789,6 @@ class Maps(QObject):
             if self.ui.spectra_listbox.count() > 0:
                 self.ui.spectra_listbox.setCurrentRow(0)
         QTimer.singleShot(50, self.refresh_gui)
-
-    def get_mes_sites_coord(self):
-        """
-        Get all coordinates of measurement sites of the selected map.
-        """
-        map_name, coords = self.spectra_id()
-        all_x = []
-        all_y = []
-        for spectrum in self.spectrums:
-            map_name_fs, coord_fs = self.spectrum_object_id(spectrum)
-            if map_name == map_name_fs:
-                x, y = coord_fs
-                all_x.append(x)
-                all_y.append(y)
-        return all_x, all_y
 
     def upd_maps_list(self):
         """Update the Maps listbox"""

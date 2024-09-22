@@ -855,8 +855,8 @@ class Maps(QObject):
         self.ui.spectra_listbox.clear()
         self.spectra_widget.sel_spectrums = None  
         self.spectra_widget.refresh_plot() 
-        self.ax.clear()
-        self.canvas.draw_idle()
+        self.map_plot.ax.clear()
+        self.map_plot.canvas.draw_idle()
 
     def select_all_spectra(self):
         """Select all spectra listed in the spectra listbox"""
@@ -1228,11 +1228,11 @@ class Maps(QObject):
 
         # Clear spectra plot view and reset selected spectrums
         self.spectra_widget.sel_spectrums = None 
-        self.spectra_widget.refresh_plot() 
+        self.spectra_widget.refresh_plot()
+
         # Clear plot ofmeasurement sites 
-        if hasattr(self, 'canvas2'):
-            self.ax.clear()
-            self.canvas.draw()
+        self.map_plot.ax.clear()
+        self.map_plot.canvas.draw()
 
         self.df_table.clear()
         self.peak_table.clear()

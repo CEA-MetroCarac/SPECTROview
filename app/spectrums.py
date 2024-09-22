@@ -504,8 +504,7 @@ class Spectrums(QObject):
             _, sel_spectra = self.get_spectrum_object()
         for spectrum in sel_spectra:
             if not spectrum.baseline.is_subtracted:
-                spectrum.subtract_baseline()
-                
+                spectrum.subtract_baseline()       
             else: 
                 continue
         QTimer.singleShot(50, self.refresh_gui)

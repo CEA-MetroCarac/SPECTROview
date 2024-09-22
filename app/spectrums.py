@@ -84,47 +84,6 @@ class Spectrums(QObject):
         # Peak correction
         self.ui.btn_xrange_correction.clicked.connect(self.xrange_correction)
         self.ui.btn_undo_correction.clicked.connect(lambda: self.undo_xrange_correction())
-
-    def xrange_correction(self, ref_value=None, sel_spectra=None):
-        """Correct peak shift based on Si reference sample."""
-        try:
-            if ref_value is None:
-                ref_value = round(float(self.ui.ent_si_peak.text()), 3)
-            else:
-                ref_value = round(float(ref_value), 3)
-            if sel_spectra is None:
-                _, sel_spectra = self.get_spectrum_object()
-            # restore to orignal values
-            self.undo_xrange_correction(sel_spectra)
-            for  spectrum in sel_spectra:
-                # Correction action
-                correction = 520.7 - ref_value 
-                uncorrectted_x=deepcopy(spectrum.x)
-                uncorrectted_x0=deepcopy(spectrum.x0)
-                spectrum.x = uncorrectted_x + correction 
-                spectrum.x0 = uncorrectted_x0 + correction 
-                spectrum.correction_value = correction
-                spectrum.is_corrected = True
-                QTimer.singleShot(100, self.upd_spectra_list)
-
-        except ValueError:
-            QMessageBox.warning(self.ui.tabWidget, "Input Error", "Please enter a valid numeric Si peak reference.")
-    
-    def undo_xrange_correction(self, sel_spectra=None):
-        """Undo peak shift correction for the given spectra."""
-        if sel_spectra is None:
-            _, sel_spectra = self.get_spectrum_object()
-        for spectrum in sel_spectra:
-            if spectrum.is_corrected:
-                # Restore original X values
-                correctted_x=deepcopy(spectrum.x)
-                correctted_x0=deepcopy(spectrum.x0)
-                spectrum.x = correctted_x - spectrum.correction_value
-                spectrum.x0 = correctted_x0 - spectrum.correction_value
-                spectrum.correction_value = 0
-                spectrum.is_corrected = False
-
-        QTimer.singleShot(100, self.upd_spectra_list)
         
     def setup_baseline_controls(self):
         """Set up baseline controls and their signal connections."""
@@ -201,6 +160,46 @@ class Spectrums(QObject):
 
         QTimer.singleShot(100, self.upd_spectra_list)
         self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
+    def xrange_correction(self, ref_value=None, sel_spectra=None):
+        """Correct peak shift based on Si reference sample."""
+        try:
+            if ref_value is None:
+                ref_value = round(float(self.ui.ent_si_peak.text()), 3)
+            else:
+                ref_value = round(float(ref_value), 3)
+            if sel_spectra is None:
+                _, sel_spectra = self.get_spectrum_object()
+            # restore to orignal values
+            self.undo_xrange_correction(sel_spectra)
+            for  spectrum in sel_spectra:
+                # Correction action
+                correction = 520.7 - ref_value 
+                uncorrectted_x=deepcopy(spectrum.x)
+                uncorrectted_x0=deepcopy(spectrum.x0)
+                spectrum.x = uncorrectted_x + correction 
+                spectrum.x0 = uncorrectted_x0 + correction 
+                spectrum.correction_value = correction
+                spectrum.is_corrected = True
+                QTimer.singleShot(100, self.upd_spectra_list)
+
+        except ValueError:
+            QMessageBox.warning(self.ui.tabWidget, "Input Error", "Please enter a valid numeric Si peak reference.")
+    
+    def undo_xrange_correction(self, sel_spectra=None):
+        """Undo peak shift correction for the given spectra."""
+        if sel_spectra is None:
+            _, sel_spectra = self.get_spectrum_object()
+        for spectrum in sel_spectra:
+            if spectrum.is_corrected:
+                # Restore original X values
+                correctted_x=deepcopy(spectrum.x)
+                correctted_x0=deepcopy(spectrum.x0)
+                spectrum.x = correctted_x - spectrum.correction_value
+                spectrum.x0 = correctted_x0 - spectrum.correction_value
+                spectrum.correction_value = 0
+                spectrum.is_corrected = False
+
+        QTimer.singleShot(100, self.upd_spectra_list)
 
     def upd_spectra_list(self):
         """Show spectrums in a listbox"""
@@ -506,9 +505,11 @@ class Spectrums(QObject):
         for spectrum in sel_spectra:
             if not spectrum.baseline.is_subtracted:
                 spectrum.subtract_baseline()
+                
             else: 
                 continue
         QTimer.singleShot(50, self.refresh_gui)
+        QTimer.singleShot(100, self.upd_spectra_list)
         QTimer.singleShot(300, self.spectra_widget.rescale)
 
     def paste_baseline_all(self):
@@ -520,6 +521,7 @@ class Spectrums(QObject):
         """Subtract the baseline for all spectra"""
         checked_spectra = self.get_checked_spectra()
         self.subtract_baseline(checked_spectra)
+
 
     def clear_peaks(self, fnames=None):
         """Clear all existing peak models of the selected spectrum(s)"""

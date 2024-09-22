@@ -2350,16 +2350,19 @@ def populate_spectrum_listbox(spectrum, spectrum_name, checked_states):
     item = QListWidgetItem(spectrum_name)            
     item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
     item.setCheckState(checked_states.get(spectrum_name, Qt.Checked))
-    if hasattr(spectrum.result_fit,
-                'success') and spectrum.result_fit.success:
-        item.setBackground(QColor("green"))
-    elif hasattr(spectrum.result_fit,
-                    'success') and not spectrum.result_fit.success:
-        item.setBackground(QColor("orange"))
+
+    if spectrum.baseline.is_subtracted:
+        if not hasattr(spectrum.result_fit, 'success'):
+            item.setBackground(QColor("red"))
+        elif spectrum.result_fit.success:
+            item.setBackground(QColor("green"))
+        else:
+            item.setBackground(QColor("orange"))
     else:
         item.setBackground(QColor(0, 0, 0, 0))
         
     return item
+
 
 def spectrum_to_dict(spectrums):
     """Custom "save" method to save 'Spectrum' object in a dictionary"""

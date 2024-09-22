@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.colors as mcolors
 import seaborn as sns
+from scipy.interpolate import RegularGridInterpolator
 
 from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, \
@@ -182,19 +183,7 @@ class MapViewWidget(QWidget):
         # Add the layout to the main layout
         self.map_widget_layout.addLayout(layout)
 
-        layout2 = QHBoxLayout()
-        layout2.setContentsMargins(5, 0, 5, 0)
-        self.profil_name = QLineEdit(self)
-        self.profil_name.setText("Profil1")
-        self.profil_name.setPlaceholderText("Profil_name...")
-        self.btn_extract_profil = QPushButton("Extract profil", self)
-        self.btn_extract_profil.clicked.connect(self.extract_profil)
-        spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        layout2.addItem(spacer)
-        layout2.addWidget(self.profil_name)
-        layout2.addWidget(self.btn_extract_profil)
-        self.map_widget_layout.addLayout(layout2)
+        
 
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
@@ -404,75 +393,36 @@ class MapViewWidget(QWidget):
             else:
                 item.setSelected(False)
     
-    def extract_profil(self):
-        """Extract a profil from 2Dmap plot"""
-        # Step 1: Ensure exactly two points have been selected
+    def extract_profile(self):
+        """Extract a profile from 2D map plot via interpolation."""
+        # Ensure exactly two points have been selected
         if len(self.selected_points) != 2:
             print("Please select exactly two points.")
-            return
-        
+            return None
         (x1, y1), (x2, y2) = self.selected_points
+        heatmap_pivot, _, _, _ = self.get_data_for_heatmap()
+        # Extract X and Y coordinates of the heatmap grid
+        x_values = heatmap_pivot.columns.values
+        y_values = heatmap_pivot.index.values
+        z_values = heatmap_pivot.values
+        # Interpolate Z values at the sampled points along the profile
+        interpolator = RegularGridInterpolator((y_values, x_values), z_values)
+        num_samples = 100 
+        x_samples = np.linspace(x1, x2, num_samples)
+        y_samples = np.linspace(y1, y2, num_samples)
+        sample_points = np.vstack((y_samples, x_samples)).T 
+        z_samples = interpolator(sample_points)
+        # Calculate the distance from (x1, y1) to each sample point
+        dists_from_start = np.sqrt((x_samples - x1)**2 + (y_samples - y1)**2)
 
-        # Step 2: Fetch the heatmap data
-        heatmap_pivot, extent, vmin, vmax = self.get_data_for_heatmap()
-
-        # Extract the heatmap data (X, Y, and Z values)
-        heatmap_data = pd.DataFrame({
-            'X': heatmap_pivot.columns.values.repeat(heatmap_pivot.shape[0]),  # X values
-            'Y': np.tile(heatmap_pivot.index.values, heatmap_pivot.shape[1]),   # Y values
-            'Z': heatmap_pivot.values.flatten()                                # Z (intensity) values
-        })
-
-        # Step 3: Calculate the equation of the line between the two selected points
-        if x1 == x2:
-            slope = np.inf
-            intercept = None
-        else:
-            slope = (y2 - y1) / (x2 - x1)
-            intercept = y1 - slope * x1
-
-        # Step 4: Function to calculate the perpendicular distance from a point (x, y) to the line
-        def point_line_distance(x, y, slope, intercept):
-            if slope == np.inf:  # Vertical line
-                return abs(x - x1)
-            else:
-                return abs(slope * x - y + intercept) / np.sqrt(slope**2 + 1)
-
-        # Step 5: Calculate distances of each point in heatmap_data to the line
-        if slope == np.inf:  # Special case for vertical line
-            distances = np.abs(heatmap_data['X'] - x1)
-        else:
-            distances = np.abs(slope * heatmap_data['X'] - heatmap_data['Y'] + intercept) / np.sqrt(slope**2 + 1)
-
-        # Step 6: Define a threshold to select points near the line
-        threshold = 0.1  # Adjust this based on your map's scale
-        mask = distances <= threshold
-        selected_data_points = heatmap_data[mask].copy()
-
-        # Step 7: Calculate the distance from the first selected point (x1, y1) to each point on the line
-        dists_from_start = [distance.euclidean((x1, y1), (x, y)) for x, y in zip(selected_data_points['X'], selected_data_points['Y'])]
-        selected_data_points['distance'] = dists_from_start
-
-        # Step 8: Create the profil dataframe with X, Y, distance, and Z (intensity) values
-        profil_df = selected_data_points[['X', 'Y', 'distance', 'Z']].copy()
-        profil_df.columns = ['X', 'Y', 'distance', 'values']
-
-        # Step 9: Sort by distance to ensure order along the line
-        profil_df = profil_df.sort_values(by='distance').reset_index(drop=True)
-        profil_name = self.profil_name.text()
-
+        profile_df = pd.DataFrame({'X': x_samples, 'Y': y_samples, 'distance': dists_from_start,'values': z_samples})
+        # Plot the selected line on the 2D map (if needed)
         for line in self.ax.lines:
             line.remove()
-
-        # Plot the selected line
         self.ax.plot([x1, x2], [y1, y2], color='black', linestyle='-', linewidth=2)
 
-        # Redraw the canvas to show the updated plot
         self.canvas.draw()
-        print(profil_name)
-        print(profil_df)
-        return profil_df, profil_name
-                
+        return profile_df
             
     def on_key_press(self, event):
         """Handler function for key press event"""

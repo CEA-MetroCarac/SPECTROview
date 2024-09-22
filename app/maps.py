@@ -8,9 +8,9 @@ from pathlib import Path
 
 from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline
 from .common import FitThread, PeakTableWidget, DataframeTableWidget, \
-    FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget
+    FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget, Graph
 from .common import FIT_METHODS,PALETTE
-
+from .visualisation import MdiSubWindow
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -19,7 +19,7 @@ from fitspy.utils import closest_index
 
 import matplotlib.pyplot as plt
 
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication,QAbstractItemView, QListWidgetItem
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication,QAbstractItemView, QListWidgetItem, QHBoxLayout, QLineEdit, QSpacerItem, QPushButton, QSizePolicy, QDialog, QVBoxLayout
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
 from tkinter import Tk, END
@@ -69,10 +69,23 @@ class Maps(QObject):
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot)
 
-        # 2DMAP VIEW WIDGET
+        # Map_view_Widget
         self.map_plot = MapViewWidget(self)
         self.map_plot.spectra_listbox= self.ui.spectra_listbox
         self.ui.map_layout.addWidget(self.map_plot.widget)
+        ## Create button to extract profil
+        layout = QHBoxLayout()
+        layout.setContentsMargins(5, 0, 5, 0)
+        self.profil_name = QLineEdit()
+        self.profil_name.setText("Profil1")
+        self.profil_name.setPlaceholderText("Profil_name...")
+        self.btn_extract_profil = QPushButton("Extract profil")
+        self.btn_extract_profil.clicked.connect(self.plot_extracted_profile)
+        spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        layout.addItem(spacer)
+        layout.addWidget(self.profil_name)
+        layout.addWidget(self.btn_extract_profil)
+        self.map_plot.map_widget_layout.addLayout(layout)
 
         ## Update spectra_listbox when selecting maps via MAPS LIST
         self.ui.maps_listbox.itemSelectionChanged.connect(
@@ -953,6 +966,55 @@ class Maps(QObject):
         
         dfs_new[df_name] = self.df_fit_results
         self.visu.open_dfs(dfs=dfs_new, file_paths=None)
+    
+    def plot_extracted_profile(self):
+        """Extract profile from map plot and send to viz tab"""
+        
+        profile_name = self.profil_name.text()
+        profil_df = self.map_plot.extract_profile()
+        
+        if profil_df is not None and profile_name is not None:
+            dfs_new = self.visu.original_dfs
+            dfs_new[profile_name] = profil_df
+            self.visu.open_dfs(dfs=dfs_new, file_paths=None)
+
+            #Add a line plot
+            available_ids = [i for i in range(1, len(self.visu.plots) + 2) if i not in self.visu.plots]
+            graph_id = min(available_ids) if available_ids else len(self.visu.plots) + 1
+            graph = Graph(graph_id=graph_id)
+            self.visu.plots[graph.graph_id] = graph
+
+            graph.plot_style='line'
+            graph.df_name = profile_name
+            graph.x = 'distance'
+            graph.y = ['values']
+            graph.z = None
+            graph.create_plot_widget(100)
+            graph_dialog = QDialog(self.visu)
+            layout = QVBoxLayout()
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.addWidget(graph)
+            graph_dialog.setLayout(layout)
+            graph_dialog.setContentsMargins(2, 2, 2, 0)
+
+            # Add the QDialog to a QMdiSubWindow
+            sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize)
+            sub_window.setWidget(graph_dialog)
+            sub_window.closed.connect(self.visu.delete_graph)
+            sub_window.resize(graph.plot_width, graph.plot_height)
+            self.ui.mdiArea.addSubWindow(sub_window)
+            sub_window.show()
+            self.visu.add_graph_list_to_combobox()
+            text = f"{graph.graph_id}-{graph.plot_style}_plot: [{"distance"}] - [{"values"}] - [{"None"}]"
+            graph_dialog.setWindowTitle(text)
+            # Plot action
+            QTimer.singleShot(100, self.visu.plot_action)
+            QTimer.singleShot(200, self.visu.customize_legend)
+
+        else:
+            print("Profile extraction failed or insufficient points selected.")
+        
+        self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
 
     def send_spectrum_to_compare(self):
         """

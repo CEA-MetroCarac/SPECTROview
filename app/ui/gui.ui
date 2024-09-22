@@ -318,6 +318,118 @@
                           <number>5</number>
                          </property>
                          <item>
+                          <layout class="QHBoxLayout" name="horizontalLayout_17">
+                           <property name="spacing">
+                            <number>5</number>
+                           </property>
+                           <property name="leftMargin">
+                            <number>5</number>
+                           </property>
+                           <property name="topMargin">
+                            <number>10</number>
+                           </property>
+                           <property name="rightMargin">
+                            <number>5</number>
+                           </property>
+                           <property name="bottomMargin">
+                            <number>10</number>
+                           </property>
+                           <item>
+                            <widget class="QLabel" name="label_22">
+                             <property name="font">
+                              <font>
+                               <bold>true</bold>
+                              </font>
+                             </property>
+                             <property name="text">
+                              <string>Xaxis correct:</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QLineEdit" name="ent_si_peak">
+                             <property name="minimumSize">
+                              <size>
+                               <width>80</width>
+                               <height>0</height>
+                              </size>
+                             </property>
+                             <property name="maximumSize">
+                              <size>
+                               <width>80</width>
+                               <height>16777215</height>
+                              </size>
+                             </property>
+                             <property name="toolTip">
+                              <string>Type the measured Si-reference values</string>
+                             </property>
+                             <property name="placeholderText">
+                              <string>Si-Ref peak</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QLabel" name="lbl_correction_value">
+                             <property name="minimumSize">
+                              <size>
+                               <width>70</width>
+                               <height>0</height>
+                              </size>
+                             </property>
+                             <property name="maximumSize">
+                              <size>
+                               <width>70</width>
+                               <height>16777215</height>
+                              </size>
+                             </property>
+                             <property name="toolTip">
+                              <string>The corrected values of the selected spectrum.</string>
+                             </property>
+                             <property name="text">
+                              <string>[0]</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <spacer name="spacer">
+                             <property name="orientation">
+                              <enum>Qt::Horizontal</enum>
+                             </property>
+                             <property name="sizeHint" stdset="0">
+                              <size>
+                               <width>40</width>
+                               <height>20</height>
+                              </size>
+                             </property>
+                            </spacer>
+                           </item>
+                           <item>
+                            <widget class="QPushButton" name="btn_xrange_correction">
+                             <property name="toolTip">
+                              <string>Type the measured peak position of Si-reference sample then correct for selected spectra</string>
+                             </property>
+                             <property name="text">
+                              <string>Correct</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QPushButton" name="btn_undo_correction">
+                             <property name="toolTip">
+                              <string>Restore to the uncorrected x-range</string>
+                             </property>
+                             <property name="text">
+                              <string/>
+                             </property>
+                             <property name="icon">
+                              <iconset resource="resources.qrc">
+                               <normaloff>:/icon/iconpack/undo2.png</normaloff>:/icon/iconpack/undo2.png</iconset>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
+                         </item>
+                         <item>
                           <widget class="QGroupBox" name="gb_range">
                            <property name="title">
                             <string/>
@@ -338,80 +450,6 @@
                             <property name="bottomMargin">
                              <number>2</number>
                             </property>
-                            <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_17">
-                              <property name="spacing">
-                               <number>5</number>
-                              </property>
-                              <property name="leftMargin">
-                               <number>5</number>
-                              </property>
-                              <property name="topMargin">
-                               <number>10</number>
-                              </property>
-                              <property name="rightMargin">
-                               <number>5</number>
-                              </property>
-                              <property name="bottomMargin">
-                               <number>10</number>
-                              </property>
-                              <item>
-                               <widget class="QLabel" name="label_22">
-                                <property name="font">
-                                 <font>
-                                  <bold>true</bold>
-                                 </font>
-                                </property>
-                                <property name="text">
-                                 <string>Xrange correction:</string>
-                                </property>
-                               </widget>
-                              </item>
-                              <item>
-                               <widget class="QLineEdit" name="ent_si_peak">
-                                <property name="maximumSize">
-                                 <size>
-                                  <width>80</width>
-                                  <height>16777215</height>
-                                 </size>
-                                </property>
-                                <property name="placeholderText">
-                                 <string>Si-Ref peak</string>
-                                </property>
-                               </widget>
-                              </item>
-                              <item>
-                               <spacer name="spacer">
-                                <property name="orientation">
-                                 <enum>Qt::Horizontal</enum>
-                                </property>
-                                <property name="sizeHint" stdset="0">
-                                 <size>
-                                  <width>40</width>
-                                  <height>20</height>
-                                 </size>
-                                </property>
-                               </spacer>
-                              </item>
-                              <item>
-                               <widget class="QPushButton" name="btn_xrange_correction">
-                                <property name="toolTip">
-                                 <string>Type the measured peak position of Si-reference sample then correct for selected spectra</string>
-                                </property>
-                                <property name="text">
-                                 <string>Correct</string>
-                                </property>
-                               </widget>
-                              </item>
-                              <item>
-                               <widget class="QPushButton" name="btn_undo_correction">
-                                <property name="text">
-                                 <string>Restore</string>
-                                </property>
-                               </widget>
-                              </item>
-                             </layout>
-                            </item>
                             <item>
                              <widget class="QLabel" name="label_65">
                               <property name="font">

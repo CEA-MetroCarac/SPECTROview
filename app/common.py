@@ -2321,20 +2321,24 @@ def spectrum_to_dict(spectrums):
     # Iterate over the saved spectrums data and update x0 and y0
     for i, spectrum in enumerate(spectrums):
         spectrums_data[i].update({
+            "is_corrected": spectrum.is_corrected,
+            "correction_value": spectrum.correction_value,
             "x0": compress(spectrum.x0),
             "y0": compress(spectrum.y0)
             })
-
     return spectrums_data
 
 
 def dict_to_spectrum(spectrum, model_dict):
     """Set attributes of Spectrum object from JSON dict"""
     spectrum.set_attributes(model_dict)
+    spectrum.is_correct = model_dict['is_corrected']
+    spectrum.correction_value = model_dict['correction_value']
     if 'x0' in model_dict:
         spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
     if 'y0' in model_dict:
         spectrum.y0 = decompress(model_dict['y0'], dtype=np.float64)
+    
 
 def baseline_to_dict(spectrum):
     dict_baseline = dict(vars(spectrum.baseline).items())

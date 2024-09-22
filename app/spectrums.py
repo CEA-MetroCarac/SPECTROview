@@ -85,7 +85,6 @@ class Spectrums(QObject):
         self.ui.btn_xrange_correction.clicked.connect(self.xrange_correction)
         self.ui.btn_undo_correction.clicked.connect(lambda: self.undo_xrange_correction())
 
-    
     def xrange_correction(self, ref_value=None, sel_spectra=None):
         """Correct peak shift based on Si reference sample."""
         try:
@@ -124,6 +123,7 @@ class Spectrums(QObject):
                 spectrum.x0 = correctted_x0 - spectrum.correction_value
                 spectrum.correction_value = 0
                 spectrum.is_corrected = False
+
         QTimer.singleShot(100, self.upd_spectra_list)
         
     def setup_baseline_controls(self):
@@ -237,7 +237,7 @@ class Spectrums(QObject):
         else:
             if item_count > 0:
                 self.ui.spectrums_listbox.setCurrentRow(0)
-
+        
         QTimer.singleShot(50, self.refresh_gui)
 
     def plot(self):
@@ -249,8 +249,12 @@ class Spectrums(QObject):
         selected_spectrums = selected_spectrums[:30]
         if not selected_spectrums:
             return
-
         self.spectra_widget.plot(selected_spectrums)
+
+        # Show correction value of the last selected item
+        correction_value = round(selected_spectrums[-1].correction_value, 3)
+        text = f"[{correction_value}]"
+        self.ui.lbl_correction_value.setText(text)
         
         self.read_x_range()
         self.peak_table.show(selected_spectrums[0])

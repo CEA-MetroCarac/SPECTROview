@@ -58,6 +58,9 @@
     <file>iconpack/view.png</file>
     <file>iconpack/view-details.png</file>
     <file>iconpack/wafer_map.png</file>
+    <file>iconpack/undo2.png</file>
+    <file>iconpack/redo2.png</file>
     <file>logo.png</file>
   </qresource>
+  <qresource prefix="newPrefix"/>
 </RCC>

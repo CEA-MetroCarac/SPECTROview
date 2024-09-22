@@ -16,7 +16,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings, QFileInfo, QCoreApplication, Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 
 from .common import CommonUtilities, FitModelManager
 from .common import PEAK_MODELS
@@ -43,6 +43,7 @@ class Main:
         self.ui = loader.load(ui_file)
         ui_file.close()
 
+        self.setup_shortcuts()
         self.common = CommonUtilities()
 
         # Initialize QSettings
@@ -194,6 +195,23 @@ class Main:
         self.ui.btn_default_folder_model_3.clicked.connect(
             self.spectrums.set_default_model_folder)
 
+    def setup_shortcuts(self):
+        # Use MetaModifier for macOS and ControlModifier for other platforms
+        modifier = Qt.MetaModifier if sys.platform == "darwin" else Qt.ControlModifier
+
+        # Shortcut for Cmd+1 (or Ctrl+1 on other platforms) to switch to tab_spectra
+        shortcut_spectra = QShortcut(QKeySequence(modifier | Qt.Key_1), self.ui)
+        shortcut_spectra.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra))
+
+        # Shortcut for Cmd+2 (or Ctrl+2 on other platforms) to switch to tab_maps
+        shortcut_maps = QShortcut(QKeySequence(modifier | Qt.Key_2), self.ui)
+        shortcut_maps.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_maps))
+
+        # Shortcut for Cmd+3 (or Ctrl+3 on other platforms) to switch to tab_graphs
+        shortcut_graphs = QShortcut(QKeySequence(modifier | Qt.Key_3), self.ui)
+        shortcut_graphs.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs))
+
+
     def open(self, file_paths=None):
         """
         Universal action to open all supported files of SPECTROview:
@@ -272,6 +290,8 @@ class Main:
             if graphs_file:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
                 self.visu.load(graphs_file)
+
+
 
     def save(self):
         """Saves the current work depending on the active tab"""

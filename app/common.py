@@ -297,6 +297,27 @@ class MapViewWidget(QWidget):
             if len(coords) == 2:
                 self.ax.plot(x, y, color='black', linestyle='--', linewidth=2)
 
+                # Extract and plot profile if two points are selected
+                profile_df = self.extract_profile()
+                if profile_df is not None:
+                    # Normalize the distance to plot on the same axis
+                    distance = profile_df['distance'].values
+                    values = profile_df['values'].values
+                    
+                    # Map the distance to the x-coordinates
+                    x1, x2 = x
+                    y1, y2 = y
+                    # Calculate the slope
+                    slope = (y2 - y1) / (x2 - x1)
+                    intercept = y1 - slope * x1
+                    
+                    # Calculate the x-coordinates based on distance
+                    profile_x = (distance / distance.max()) * (x2 - x1) + x1
+                    profile_y = slope * profile_x + intercept
+                    
+                    # Plot the profile on the same axis
+                    self.ax.plot(profile_x, profile_y, color='blue', linestyle='-', linewidth=2, label='Profile')
+
         title = self.z_slider_cbb.currentText()
         self.ax.set_title(title, fontsize=13)
         self.ax.get_figure().tight_layout()

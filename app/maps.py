@@ -1034,6 +1034,8 @@ class Maps(QObject):
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         for spectrum in sel_spectra:
             sent_spectrum = deepcopy(spectrum)
+            sent_spectrum.is_corrected = False
+            sent_spectrum.correction_value = 0   
             self.spectrums_tab.spectrums.append(sent_spectrum)
             self.spectrums_tab.upd_spectra_list()
 

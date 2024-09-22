@@ -134,12 +134,8 @@ class Spectrums(QObject):
                         print(f"Spectrum '{fname}' is already opened.")
                         continue
 
-                    dfr = pd.read_csv(file_path, header=None, skiprows=1,
-                                      delimiter="\t")
+                    dfr = pd.read_csv(file_path, header=None, skiprows=1, delimiter="\t", dtype={0: float, 1: float})
                     dfr_sorted = dfr.sort_values(by=0)  # increasing order
-                    # Convert values to float
-                    dfr_sorted.iloc[:, 0] = dfr_sorted.iloc[:, 0].astype(float)
-                    dfr_sorted.iloc[:, 1] = dfr_sorted.iloc[:, 1].astype(float)
 
                     x_values = dfr_sorted.iloc[:, 0].tolist()
                     y_values = dfr_sorted.iloc[:, 1].tolist()
@@ -160,6 +156,7 @@ class Spectrums(QObject):
 
         QTimer.singleShot(100, self.upd_spectra_list)
         self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
+
     def xrange_correction(self, ref_value=None, sel_spectra=None):
         """Correct peak shift based on Si reference sample."""
         try:

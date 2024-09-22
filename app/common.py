@@ -293,6 +293,10 @@ class MapViewWidget(QWidget):
             x, y = zip(*coords)
             self.ax.scatter(x, y, marker='o', color='red', s=20)
 
+            # Plot line if there are exactly 2 points
+            if len(coords) == 2:
+                self.ax.plot(x, y, color='black', linestyle='--', linewidth=2)
+
         title = self.z_slider_cbb.currentText()
         self.ax.set_title(title, fontsize=13)
         self.ax.get_figure().tight_layout()
@@ -417,10 +421,6 @@ class MapViewWidget(QWidget):
         dists_from_start = np.sqrt((x_samples - x1)**2 + (y_samples - y1)**2)
 
         profile_df = pd.DataFrame({'X': x_samples, 'Y': y_samples, 'distance': dists_from_start,'values': z_samples})
-        # Plot the selected line on the 2D map (if needed)
-        for line in self.ax.lines:
-            line.remove()
-        self.ax.plot([x1, x2], [y1, y2], color='black', linestyle='-', linewidth=2)
 
         self.canvas.draw()
         return profile_df

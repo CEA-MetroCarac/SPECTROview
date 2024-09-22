@@ -81,6 +81,7 @@ class Maps(QObject):
         self.profil_name.setPlaceholderText("Profil_name...")
         self.btn_extract_profil = QPushButton("Extract profil")
         self.btn_extract_profil.clicked.connect(self.plot_extracted_profile)
+        self.btn_extract_profil.setToolTip("Extract and plot a profile 2Dmap")
         spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         layout.addItem(spacer)
         layout.addWidget(self.profil_name)
@@ -1010,11 +1011,10 @@ class Maps(QObject):
             # Plot action
             QTimer.singleShot(100, self.visu.plot_action)
             QTimer.singleShot(200, self.visu.customize_legend)
-
+            self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
         else:
-            print("Profile extraction failed or insufficient points selected.")
-        
-        self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
+            msg="Profile extraction failed or insufficient points selected."
+            show_alert(msg)
 
     def send_spectrum_to_compare(self):
         """

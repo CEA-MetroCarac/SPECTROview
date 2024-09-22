@@ -390,14 +390,12 @@ class Main:
         
         self.ui.cb_grid.setChecked(gui_states['grid'])
         
-expiration_date = datetime.datetime(2024, 12, 31)
+expiration_date = datetime.datetime(2025, 6, 1)
 
 def launcher():
     QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     if datetime.datetime.now() > expiration_date:
-        text = f"The current SPECTROview version has expired on " \
-               f"{expiration_date}. Please " \
-               f"contact the developer for a new version"
+        text = f"The current SPECTROview version has expired. Checkout the SPECTROview's Github page (cf. About) to update newest version."
         # If expired, disable the central widget
         app = QApplication(sys.argv)
         app.setWindowIcon(QIcon(ICON_APPLI))

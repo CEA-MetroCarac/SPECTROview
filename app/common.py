@@ -397,7 +397,8 @@ class MapViewWidget(QWidget):
         """Extract a profile from 2D map plot via interpolation."""
         # Ensure exactly two points have been selected
         if len(self.selected_points) != 2:
-            print("Please select exactly two points.")
+            msg="Select 2 points on map plot to define a profile"
+            show_alert(msg)
             return None
         (x1, y1), (x2, y2) = self.selected_points
         heatmap_pivot, _, _, _ = self.get_data_for_heatmap()

@@ -192,7 +192,7 @@ class Visualization(QDialog):
             graph_dialog.setContentsMargins(2, 2, 2, 0)
 
             # Add the QDialog to a QMdiSubWindow
-            sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize)
+            sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize, mdi_area=self.ui.mdiArea)
             sub_window.setWidget(graph_dialog)
             sub_window.closed.connect(self.delete_graph)
             sub_window.resize(graph.plot_width, graph.plot_height)
@@ -809,7 +809,7 @@ class Visualization(QDialog):
                     graph_dialog.setContentsMargins(2, 2, 2, 0)
 
                     # Add the QDialog to the mdiArea
-                    sub_window = MdiSubWindow(graph.graph_id, self.ui.lbl_figsize)
+                    sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize, mdi_area=self.ui.mdiArea)
                     sub_window.setWidget(graph_dialog)
                     sub_window.closed.connect(self.delete_graph)
                     self.ui.mdiArea.addSubWindow(sub_window)
@@ -826,7 +826,8 @@ class Visualization(QDialog):
 
 class MdiSubWindow(QMdiSubWindow):
     """
-    Custom class of QMdiSubWindow to get signal when closing subwindow.
+    Custom class of QMdiSubWindow to prevent automatic selection of other windows
+    when one subwindow is closed.
 
     Attributes:
     closed (Signal): Signal emitted when the subwindow is closing, carrying
@@ -836,14 +837,22 @@ class MdiSubWindow(QMdiSubWindow):
     """
     closed = Signal(int)
 
-    def __init__(self, graph_id, figsize_label, *args, **kwargs):
+    def __init__(self, graph_id, figsize_label, mdi_area, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.graph_id = graph_id
         self.figsize_label = figsize_label
+        self.mdi_area = mdi_area  # Reference to the parent QMdiArea
 
     def closeEvent(self, event):
-        """Override closeEvent to emit a signal when the subwindow is closing"""
+        """Override closeEvent to prevent automatic selection of another subwindow"""
+        # Clear focus to prevent any subwindow from being automatically selected
+        self.mdi_area.clearFocus()
+        self.mdi_area.setActiveSubWindow(None)
+
+        # Emit the signal when the window is closing
         self.closed.emit(self.graph_id)
+        
+        # Call the parent close event to actually close the window
         super().closeEvent(event)
 
     def resizeEvent(self, event):
@@ -853,3 +862,10 @@ class MdiSubWindow(QMdiSubWindow):
         # Update QLabel with the new size
         self.figsize_label.setText(f"({width}x{height})")
         super().resizeEvent(event)
+
+    def focusInEvent(self, event):
+        """Override focusInEvent to prevent automatic selection"""
+        # Prevent the window from being focused (optional)
+        if not self.mdi_area.activeSubWindow():
+            self.mdi_area.setActiveSubWindow(None)
+        super().focusInEvent(event)

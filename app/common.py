@@ -293,35 +293,61 @@ class MapViewWidget(QWidget):
             x, y = zip(*coords)
             self.ax.scatter(x, y, marker='o', color='red', s=20)
 
-            # Plot line if there are exactly 2 points
-            if len(coords) == 2:
-                self.ax.plot(x, y, color='black', linestyle='--', linewidth=2)
-
-                # Extract and plot profile if two points are selected
-                profile_df = self.extract_profile()
-                if profile_df is not None:
-                    # Normalize the distance to plot on the same axis
-                    distance = profile_df['distance'].values
-                    values = profile_df['values'].values
-                    
-                    # Map the distance to the x-coordinates
-                    x1, x2 = x
-                    y1, y2 = y
-                    # Calculate the slope
-                    slope = (y2 - y1) / (x2 - x1)
-                    intercept = y1 - slope * x1
-                    
-                    # Calculate the x-coordinates based on distance
-                    profile_x = (distance / distance.max()) * (x2 - x1) + x1
-                    profile_y = slope * profile_x + intercept
-                    
-                    # Plot the profile on the same axis
-                    self.ax.plot(profile_x, profile_y, color='blue', linestyle='-', linewidth=2, label='Profile')
+            if self.rdbt_map.isChecked():     #Only for 2Dmap plot
+                self.plot_height_profile_on_map(coords)
 
         title = self.z_slider_cbb.currentText()
         self.ax.set_title(title, fontsize=13)
         self.ax.get_figure().tight_layout()
         self.canvas.draw()
+
+    def plot_height_profile_on_map(self, coords):
+        """Plot height profile directly on heatmap"""
+        if len(coords) == 2:
+            x, y = zip(*coords)
+            self.ax.plot(x, y, color='black', linestyle='dotted', linewidth=2)
+
+            # Extract profile values from the heatmap
+            profile_df = self.extract_profile()
+            if profile_df is not None:
+                # Calculate the diagonal length of the heatmap
+                extent = self.get_data_for_heatmap()[1]
+                diagonal_length = np.sqrt((extent[1] - extent[0])**2 + (extent[3] - extent[2])**2)
+                max_normalized_value = 0.3 * diagonal_length
+                
+                # Calculate height values
+                profile_df['height'] = (profile_df['values'] / profile_df['values'].max()) * max_normalized_value
+                profile_df['height'] -= profile_df['height'].min()
+
+                x_vals = []
+                y_vals = []
+
+                # Calculate perpendicular points
+                for i, row in profile_df.iterrows():
+                    x_val = row['X']
+                    y_val = row['Y']
+                    normalized_distance = row['height']
+
+                    # Calculate the direction vector of the line connecting the two points
+                    dx = x[1] - x[0]
+                    dy = y[1] - y[0]
+                    length = np.sqrt(dx**2 + dy**2)
+
+                    # Normalize the direction vector
+                    if length > 0:
+                        dx /= length
+                        dy /= length
+
+                    # Calculate the perpendicular direction
+                    perp_dx = -dy
+                    perp_dy = dx
+
+                    # Calculate the new x and y values
+                    x_vals.append(x_val + perp_dx * normalized_distance)
+                    y_vals.append(y_val + perp_dy * normalized_distance)
+
+                # Plot the height profile 
+                self.ax.plot(x_vals, y_vals, color='black', linestyle='-', lw=2)
 
     def get_data_for_heatmap(self):
         """Prepare data for heatmap based on range sliders values"""

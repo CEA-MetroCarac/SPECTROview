@@ -80,7 +80,51 @@ class Spectrums(QObject):
         QTimer.singleShot(0, self.populate_available_models)
         self.ui.btn_refresh_model_folder_3.clicked.connect(
             self.populate_available_models)
+        
+        # Peak correction
+        self.ui.btn_xrange_correction.clicked.connect(self.xrange_correction)
+        self.ui.btn_undo_correction.clicked.connect(lambda: self.undo_xrange_correction())
 
+    
+    def xrange_correction(self, ref_value=None, sel_spectra=None):
+        """Correct peak shift based on Si reference sample."""
+        try:
+            if ref_value is None:
+                ref_value = round(float(self.ui.ent_si_peak.text()), 3)
+            else:
+                ref_value = round(float(ref_value), 3)
+            if sel_spectra is None:
+                _, sel_spectra = self.get_spectrum_object()
+            # restore to orignal values
+            self.undo_xrange_correction(sel_spectra)
+            for  spectrum in sel_spectra:
+                # Correction action
+                correction = 520.7 - ref_value 
+                uncorrectted_x=deepcopy(spectrum.x)
+                uncorrectted_x0=deepcopy(spectrum.x0)
+                spectrum.x = uncorrectted_x + correction 
+                spectrum.x0 = uncorrectted_x0 + correction 
+                spectrum.correction_value = correction
+                spectrum.is_corrected = True
+                QTimer.singleShot(100, self.upd_spectra_list)
+
+        except ValueError:
+            QMessageBox.warning(self.ui.tabWidget, "Input Error", "Please enter a valid numeric Si peak reference.")
+    
+    def undo_xrange_correction(self, sel_spectra=None):
+        """Undo peak shift correction for the given spectra."""
+        if sel_spectra is None:
+            _, sel_spectra = self.get_spectrum_object()
+        for spectrum in sel_spectra:
+            if spectrum.is_corrected:
+                # Restore original X values
+                correctted_x=deepcopy(spectrum.x)
+                correctted_x0=deepcopy(spectrum.x0)
+                spectrum.x = correctted_x - spectrum.correction_value
+                spectrum.x0 = correctted_x0 - spectrum.correction_value
+                spectrum.correction_value = 0
+                spectrum.is_corrected = False
+        QTimer.singleShot(100, self.upd_spectra_list)
         
     def setup_baseline_controls(self):
         """Set up baseline controls and their signal connections."""
@@ -148,6 +192,10 @@ class Spectrums(QObject):
                     spectrum.x0 = np.asarray(x_values)
                     spectrum.y = np.asarray(y_values)
                     spectrum.y0 = np.asarray(y_values)
+
+                    spectrum.is_corrected = False
+                    spectrum.correction_value = 0   
+
                     spectrum.baseline.mode = "Linear"
                     self.spectrums.append(spectrum)
 
@@ -355,6 +403,7 @@ class Spectrums(QObject):
             text = item.text()
             fnames.append(text)
         return fnames
+        
 
     def get_spectrum_object(self):
         """Get the Spectrum object of currently selected spectra"""
@@ -376,8 +425,10 @@ class Spectrums(QObject):
     def read_x_range(self):
         """Read the x range of the selected spectrum"""
         sel_spectrum, sel_spectra = self.get_spectrum_object()
-        self.ui.range_min_2.setText(str(sel_spectrum.x[0]))
-        self.ui.range_max_2.setText(str(sel_spectrum.x[-1]))
+        xmin = round(sel_spectrum.x[0], 3)
+        xmax = round(sel_spectrum.x[-1], 3)
+        self.ui.range_min_2.setText(str(xmin))
+        self.ui.range_max_2.setText(str(xmax))
 
     def set_x_range(self, fnames=None):
         """Set a new x range for the selected spectrum"""

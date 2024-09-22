@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -338,6 +338,80 @@
                             <property name="bottomMargin">
                              <number>2</number>
                             </property>
+                            <item>
+                             <layout class="QHBoxLayout" name="horizontalLayout_17">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="QLabel" name="label_22">
+                                <property name="font">
+                                 <font>
+                                  <bold>true</bold>
+                                 </font>
+                                </property>
+                                <property name="text">
+                                 <string>Xrange correction:</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QLineEdit" name="ent_si_peak">
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>80</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="placeholderText">
+                                 <string>Si-Ref peak</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <spacer name="spacer">
+                                <property name="orientation">
+                                 <enum>Qt::Horizontal</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>40</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                               </spacer>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="btn_xrange_correction">
+                                <property name="toolTip">
+                                 <string>Type the measured peak position of Si-reference sample then correct for selected spectra</string>
+                                </property>
+                                <property name="text">
+                                 <string>Correct</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="btn_undo_correction">
+                                <property name="text">
+                                 <string>Restore</string>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </item>
                             <item>
                              <widget class="QLabel" name="label_65">
                               <property name="font">
@@ -1141,8 +1215,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
-                       <height>243</height>
+                       <width>428</width>
+                       <height>519</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -3102,8 +3176,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
-                       <height>243</height>
+                       <width>428</width>
+                       <height>517</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -3445,137 +3519,6 @@
                <attribute name="title">
                 <string>More settings</string>
                </attribute>
-               <widget class="QGroupBox" name="groupBox_8">
-                <property name="geometry">
-                 <rect>
-                  <x>10</x>
-                  <y>190</y>
-                  <width>376</width>
-                  <height>110</height>
-                 </rect>
-                </property>
-                <property name="title">
-                 <string>Peak position correction :</string>
-                </property>
-                <layout class="QVBoxLayout" name="verticalLayout_28">
-                 <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_61" stretch="0,0,0">
-                   <item>
-                    <widget class="QRadioButton" name="radioButton_3">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string/>
-                     </property>
-                     <property name="checked">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QLabel" name="label_45">
-                     <property name="text">
-                      <string>No</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_60">
-                     <item>
-                      <widget class="QRadioButton" name="radioButton_2">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
-                       </property>
-                       <property name="text">
-                        <string/>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="label_44">
-                       <property name="text">
-                        <string>Peak  shift (cm-1) :</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLineEdit" name="lineEdit_32">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
-                       </property>
-                       <property name="minimumSize">
-                        <size>
-                         <width>20</width>
-                         <height>0</height>
-                        </size>
-                       </property>
-                       <property name="toolTip">
-                        <string>Type the different between experimental and theoretical values</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                  </layout>
-                 </item>
-                 <item>
-                  <spacer name="verticalSpacer_11">
-                   <property name="orientation">
-                    <enum>Qt::Vertical</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>20</width>
-                     <height>40</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_64">
-                   <item>
-                    <widget class="QLabel" name="label_47">
-                     <property name="text">
-                      <string>Reference peak :</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QComboBox" name="comboBox_14"/>
-                   </item>
-                   <item>
-                    <widget class="QLineEdit" name="lineEdit_34">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>20</width>
-                       <height>0</height>
-                      </size>
-                     </property>
-                     <property name="toolTip">
-                      <string>Type the theoretical values</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
-                </layout>
-               </widget>
                <widget class="QWidget" name="layoutWidget">
                 <property name="geometry">
                  <rect>

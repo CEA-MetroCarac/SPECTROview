@@ -39,6 +39,11 @@ ___
 <p align="center">(Collect data with one click)</p>
 
 <p align="center">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/2Dmap.png">
+</p>
+<p align="center">(2Dmap processing and visualization, extract and plot line profiles with ease, etc.)</p>
+
+<p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/visualization_tab.png">
 </p>
 <p align="center">(Support various plotting styles with automatic statistical calculations)</p>

@@ -211,16 +211,24 @@ class Spectrums(QObject):
             checked_states[item.text()] = item.checkState()
 
         current_row = self.ui.spectrums_listbox.currentRow()
+        current_selection = [self.ui.spectrums_listbox.item(i).text() for i in range(self.ui.spectrums_listbox.count()) if self.ui.spectrums_listbox.item(i).isSelected()]
+        
         self.ui.spectrums_listbox.clear()
         
         for spectrum in self.spectrums:
             fname = spectrum.fname
-            item = populate_spectrum_listbox(spectrum, fname,checked_states)
+            item = populate_spectrum_listbox(spectrum, fname, checked_states)
             self.ui.spectrums_listbox.addItem(item)
 
         item_count = self.ui.spectrums_listbox.count()
         self.ui.item_count_label_3.setText(f"{item_count} points")
         
+        # Restore selection states
+        for index in range(self.ui.spectrums_listbox.count()):
+            item = self.ui.spectrums_listbox.item(index)
+            if item.text() in current_selection:
+                item.setSelected(True)
+
         # Management of selecting item of listbox
         if current_row >= item_count:
             current_row = item_count - 1
@@ -229,6 +237,7 @@ class Spectrums(QObject):
         else:
             if item_count > 0:
                 self.ui.spectrums_listbox.setCurrentRow(0)
+
         QTimer.singleShot(50, self.refresh_gui)
 
     def plot(self):

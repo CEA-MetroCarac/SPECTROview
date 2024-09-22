@@ -764,6 +764,8 @@ class Maps(QObject):
             checked_states[item.text()] = item.checkState()
           
         self.current_row = self.ui.spectra_listbox.currentRow()
+        current_selection = [self.ui.spectra_listbox.item(i).text() for i in range(self.ui.spectra_listbox.count()) if self.ui.spectra_listbox.item(i).isSelected()]
+
         self.ui.spectra_listbox.clear()
         current_item = self.ui.maps_listbox.currentItem()
 
@@ -791,12 +793,19 @@ class Maps(QObject):
         item_count = self.ui.spectra_listbox.count()
         self.ui.item_count_label.setText(f"{item_count} points")
 
+        # Restore selection states
+        for index in range(self.ui.spectra_listbox.count()):
+            item = self.ui.spectra_listbox.item(index)
+            if item.text() in current_selection:
+                item.setSelected(True)
+
         # Reselect the previously selected item
         if self.current_row >= 0 and self.current_row < item_count:
             self.ui.spectra_listbox.setCurrentRow(self.current_row)
         else:
             if self.ui.spectra_listbox.count() > 0:
                 self.ui.spectra_listbox.setCurrentRow(0)
+
         QTimer.singleShot(50, self.refresh_gui)
 
     def upd_maps_list(self):

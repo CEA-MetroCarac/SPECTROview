@@ -483,6 +483,7 @@ class Maps(QObject):
             else: 
                 continue
         QTimer.singleShot(50, self.refresh_gui)
+        QTimer.singleShot(100, self.upd_spectra_list)
         QTimer.singleShot(300, self.spectra_widget.rescale)
 
     def subtract_baseline_all(self):
@@ -778,13 +779,14 @@ class Maps(QObject):
                     item = QListWidgetItem(str(coord_fs))
                     item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                     item.setCheckState(checked_states.get(coord_fs, Qt.Checked))
-                    if hasattr(spectrum.result_fit,
-                               'success') and spectrum.result_fit.success:
-                        item.setBackground(QColor("green"))
-                    elif hasattr(spectrum.result_fit,
-                                 'success') and not \
-                            spectrum.result_fit.success:
-                        item.setBackground(QColor("orange"))
+                    
+                    if spectrum.baseline.is_subtracted:
+                        if not hasattr(spectrum.result_fit, 'success'):
+                            item.setBackground(QColor("red"))
+                        elif spectrum.result_fit.success:
+                            item.setBackground(QColor("green"))
+                        else:
+                            item.setBackground(QColor("orange"))
                     else:
                         item.setBackground(QColor(0, 0, 0, 0))
                     self.ui.spectra_listbox.addItem(item)

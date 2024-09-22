@@ -2332,8 +2332,12 @@ def spectrum_to_dict(spectrums):
 def dict_to_spectrum(spectrum, model_dict):
     """Set attributes of Spectrum object from JSON dict"""
     spectrum.set_attributes(model_dict)
-    spectrum.is_correct = model_dict['is_corrected']
-    spectrum.correction_value = model_dict['correction_value']
+    try:
+        spectrum.is_correct = model_dict['is_corrected']
+        spectrum.correction_value = model_dict['correction_value']
+    except:
+        spectrum.is_correct = False
+        spectrum.correction_value = 0
     if 'x0' in model_dict:
         spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
     if 'y0' in model_dict:

@@ -1008,7 +1008,7 @@ class Maps(QObject):
             graph_dialog.setContentsMargins(2, 2, 2, 0)
 
             # Add the QDialog to a QMdiSubWindow
-            sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize)
+            sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize,mdi_area=self.ui.mdiArea)
             sub_window.setWidget(graph_dialog)
             sub_window.closed.connect(self.visu.delete_graph)
             sub_window.resize(graph.plot_width, graph.plot_height)

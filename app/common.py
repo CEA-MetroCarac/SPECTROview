@@ -2363,9 +2363,8 @@ def populate_spectrum_listbox(spectrum, spectrum_name, checked_states):
 
 
 def spectrum_to_dict(spectrums):
-    """Custom "save" method to save 'Spectrum' object in a dictionary"""
+    """Custom 'save' method to save 'Spectrum' object in a dictionary"""
     spectrums_data = spectrums.save()
-
     # Iterate over the saved spectrums data and update x0 and y0
     for i, spectrum in enumerate(spectrums):
         spectrums_data[i].update({
@@ -2376,16 +2375,11 @@ def spectrum_to_dict(spectrums):
             })
     return spectrums_data
 
-
 def dict_to_spectrum(spectrum, model_dict):
     """Set attributes of Spectrum object from JSON dict"""
     spectrum.set_attributes(model_dict)
-    try:
-        spectrum.is_correct = model_dict['is_corrected']
-        spectrum.correction_value = model_dict['correction_value']
-    except:
-        spectrum.is_correct = False
-        spectrum.correction_value = 0
+    spectrum.is_corrected = model_dict.get('is_corrected', False)
+    spectrum.correction_value = model_dict.get('correction_value', 0)
     if 'x0' in model_dict:
         spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
     if 'y0' in model_dict:

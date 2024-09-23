@@ -1,4 +1,4 @@
-"""This modules build the GUI and functionality of "MAPS" Tab"""
+"""This modules build the GUI and functionality of "MAPS" Tab""" 
 import os
 import time
 import numpy as np
@@ -189,7 +189,6 @@ class Maps(QObject):
     def extract_spectra(self):
         """Extract all spectra from each map dataframe."""
         for map_name, map_df in self.maps.items():
-            print(map_df)
             if len(map_df.columns) > 2 and 'X' in map_df.columns and 'Y' \
                     in map_df.columns:
                 self.process_old_format(map_df, map_name)
@@ -311,7 +310,10 @@ class Maps(QObject):
             else: 
                 pass
         self.df_table.show(self.df_fit_results)
-
+        
+        self.map_plot.df_fit_results = self.df_fit_results
+        self.map_plot.populate_z_values_cbb()
+        
     def update_peak_model(self):
         """Update the peak model in the SpectraViewWidget based on combobox selection."""
         selected_model = self.ui.cbb_fit_models.currentText()
@@ -730,6 +732,7 @@ class Maps(QObject):
         self.spectra_widget.plot(selected_spectrums)
         
         df = self.maps.get(map_name)
+        self.map_plot.map_df_name=map_name
         self.map_plot.map_df=df
         self.map_plot.plot(coords)
 
@@ -744,6 +747,7 @@ class Maps(QObject):
         map_df = self.maps.get(map_name)
 
         if map_df is not None:
+            self.map_plot.map_df_name=map_name
             self.map_plot.map_df=map_df
             column_labels = map_df.columns[2:-1].astype(float)
             min_value = float(column_labels.min())
@@ -971,7 +975,7 @@ class Maps(QObject):
         self.visu.open_dfs(dfs=dfs_new, file_paths=None)
     
     def plot_extracted_profile(self):
-        """Extract profile from map plot and send to viz tab"""
+        """Extract profile from map plot and Plot in VIS TAB"""
         
         profile_name = self.profil_name.text()
         profil_df = self.map_plot.extract_profile()

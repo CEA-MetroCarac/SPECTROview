@@ -78,7 +78,9 @@ class MapViewWidget(QWidget):
     def __init__(self, main_app):
         super().__init__()
         self.main_app = main_app # To connect to a method of main app (refresh gui)
+        self.map_df_name = None
         self.map_df =pd.DataFrame() 
+        self.df_fit_results =pd.DataFrame() 
         self.dpi = 70
         self.figure = None
         self.ax = None
@@ -183,8 +185,6 @@ class MapViewWidget(QWidget):
         # Add the layout to the main layout
         self.map_widget_layout.addLayout(layout)
 
-        
-
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
         # Create x-axis range slider
@@ -208,23 +208,33 @@ class MapViewWidget(QWidget):
         self.z_range_slider.setRange(0, 100) 
         self.z_range_slider.setValue((0, 100)) 
         self.z_range_slider.setTracking(True)
-        self.z_slider_cbb = QComboBox()
-        self.z_slider_cbb.addItems(['Area', 'Intensity'])
-        self.z_slider_cbb.currentIndexChanged.connect(self.update_z_range_slider)
+        self.z_values_cbb = QComboBox()
+        self.z_values_cbb.addItems(['Area', 'Intensity'])       
+        
+        self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
 
         self.z_range_label = QLabel(f'[{0}; {100}]')
         self.z_range_slider.valueChanged.connect(self.update_z_range_label)
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
 
         self.z_slider_layout = QHBoxLayout()
-        self.z_slider_layout.addWidget(self.z_slider_cbb)
+        self.z_slider_layout.addWidget(self.z_values_cbb)
         self.z_slider_layout.addWidget(self.z_range_slider)
         self.z_slider_layout.addWidget(self.z_range_label)
         self.z_slider_layout.setContentsMargins(5, 0, 5, 0)
 
         self.map_widget_layout.addLayout(self.x_slider_layout)
         self.map_widget_layout.addLayout(self.z_slider_layout)
+    
+    # After populating the combobox
+    def populate_z_values_cbb(self):
+        self.z_values_cbb.clear() 
+        self.z_values_cbb.addItems(['Area', 'Intensity'])
+        if not self.df_fit_results.empty:
+            fit_columns = [col for col in self.df_fit_results.columns if col not in ['Filename', 'X', 'Y']]
+            self.z_values_cbb.addItems(fit_columns)
 
+  
     def refresh_plot(self):
         """Call the refresh_gui method of the main application."""
         if hasattr(self.main_app, 'refresh_gui'):
@@ -272,7 +282,8 @@ class MapViewWidget(QWidget):
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
 
         # Plot heatmap for 2D map
-        if self.rdbt_map.isChecked():    
+        if self.rdbt_map.isChecked():
+                
             heatmap_pivot, extent, vmin, vmax = self.get_data_for_heatmap()
             
             color = self.cbb_color.currentText()
@@ -296,7 +307,7 @@ class MapViewWidget(QWidget):
             if self.rdbt_map.isChecked():     #Only for 2Dmap plot
                 self.plot_height_profile_on_map(coords)
 
-        title = self.z_slider_cbb.currentText()
+        title = self.z_values_cbb.currentText()
         self.ax.set_title(title, fontsize=13)
         self.ax.get_figure().tight_layout()
         self.canvas.draw()
@@ -373,7 +384,7 @@ class MapViewWidget(QWidget):
                 y_col = filtered_map_df['Y'].values
                 final_z_col = []
 
-                parameter = self.z_slider_cbb.currentText()
+                parameter = self.z_values_cbb.currentText()
                 if parameter == 'Area':
                     # Intensity sums of of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)

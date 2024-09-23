@@ -912,7 +912,7 @@ class Spectrums(QObject):
                                                        "*.spectra)")
             if file_path:
                 data_to_save = {
-                    'spectrums': spectrum_to_dict(self.spectrums)
+                    'spectrums': spectrum_to_dict(self.spectrums, is_map=False)
                 }
                 with open(file_path, 'w') as f:
                     json.dump(data_to_save, f, indent=4)

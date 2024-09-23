@@ -222,60 +222,6 @@ class Maps(QObject):
                 spectrum.correction_value = 0
                 spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
-    
-    def save_work(self):
-        """Save current results to a JSON file."""
-        try:
-            file_path, _ = QFileDialog.getSaveFileName(None,
-                                                    "Save work",
-                                                    "",
-                                                    "SPECTROview Files (*.maps)")
-            if file_path:
-                spectrums_data = spectrum_to_dict(self.spectrums)
-                
-                compressed_maps = {}
-                for k, v in self.maps.items():
-                    # Convert DataFrame to a CSV string and compress it
-                    compressed_data = v.to_csv(index=False).encode('utf-8')
-                    compressed_maps[k] = gzip.compress(compressed_data)
-
-                data_to_save = {
-                    'spectrums_data': spectrums_data,
-                    'maps': {k: v.hex() for k, v in compressed_maps.items()},
-                }
-                with open(file_path, 'w') as f:
-                    json.dump(data_to_save, f, indent=4)
-                show_alert("Work saved successfully.")
-        except Exception as e:
-            show_alert(f"Error saving work: {e}")
-
-    def load_work(self, file_path):
-        """Load a saved results from a JSON file with compressed DataFrames."""
-        try:
-            with open(file_path, 'r') as f:
-                load = json.load(f)
-                try:
-                    self.spectrums = Spectra()
-                    self.maps = {}
-                    # Decode hex and decompress the dataframe
-                    for k, v in load.get('maps', {}).items():
-                        compressed_data = bytes.fromhex(v)
-                        csv_data = gzip.decompress(compressed_data).decode('utf-8')
-                        self.maps[k] = pd.read_csv(StringIO(csv_data)) 
-                        
-                    for spectrum_id, spectrum_data in load.get('spectrums_data', {}).items():
-                        spectrum = Spectrum()
-                        dict_to_spectrum(spectrum=spectrum, spectrum_data=spectrum_data, maps=self.maps, is_map=True)
-                        spectrum.preprocess()
-                        self.spectrums.append(spectrum)
-
-                    QTimer.singleShot(300, self.collect_results)
-                    self.upd_maps_list()
-
-                except Exception as e:
-                    show_alert(f"Error loading work: {e}")
-        except Exception as e:
-            show_alert(f"Error loading saved work (Maps Tab): {e}")
 
     def process_new_format(self, map_df, map_name):
         """Process new format wafer dataframe."""
@@ -1219,7 +1165,59 @@ class Maps(QObject):
         else:
             self.reinit()
             
-    
+    def save_work(self):
+        """Save current results to a JSON file."""
+        try:
+            file_path, _ = QFileDialog.getSaveFileName(None,
+                                                    "Save work",
+                                                    "",
+                                                    "SPECTROview Files (*.maps)")
+            if file_path:
+                spectrums_data = spectrum_to_dict(self.spectrums, is_map=True)
+                
+                compressed_maps = {}
+                for k, v in self.maps.items():
+                    # Convert DataFrame to a CSV string and compress it
+                    compressed_data = v.to_csv(index=False).encode('utf-8')
+                    compressed_maps[k] = gzip.compress(compressed_data)
+
+                data_to_save = {
+                    'spectrums_data': spectrums_data,
+                    'maps': {k: v.hex() for k, v in compressed_maps.items()},
+                }
+                with open(file_path, 'w') as f:
+                    json.dump(data_to_save, f, indent=4)
+                show_alert("Work saved successfully.")
+        except Exception as e:
+            show_alert(f"Error saving work: {e}")
+
+    def load_work(self, file_path):
+        """Load a saved results from a JSON file with compressed DataFrames."""
+        try:
+            with open(file_path, 'r') as f:
+                load = json.load(f)
+                try:
+                    self.spectrums = Spectra()
+                    self.maps = {}
+                    # Decode hex and decompress the dataframe
+                    for k, v in load.get('maps', {}).items():
+                        compressed_data = bytes.fromhex(v)
+                        csv_data = gzip.decompress(compressed_data).decode('utf-8')
+                        self.maps[k] = pd.read_csv(StringIO(csv_data)) 
+                        
+                    for spectrum_id, spectrum_data in load.get('spectrums_data', {}).items():
+                        spectrum = Spectrum()
+                        dict_to_spectrum(spectrum=spectrum, spectrum_data=spectrum_data, maps=self.maps, is_map=True)
+                        spectrum.preprocess()
+                        self.spectrums.append(spectrum)
+
+                    QTimer.singleShot(300, self.collect_results)
+                    self.upd_maps_list()
+
+                except Exception as e:
+                    show_alert(f"Error loading work: {e}")
+        except Exception as e:
+            show_alert(f"Error loading saved work (Maps Tab): {e}")
             
             
     def clear_env(self):

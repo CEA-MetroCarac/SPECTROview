@@ -2391,15 +2391,25 @@ def populate_spectrum_listbox(spectrum, spectrum_name, checked_states):
         item.setBackground(QColor(0, 0, 0, 0))  
     return item
 
-def spectrum_to_dict(spectrums):
+def spectrum_to_dict(spectrums, is_map=False):
     """Custom 'save' method to save 'Spectrum' object in a dictionary"""
     spectrums_data = spectrums.save()
     # Iterate over the saved spectrums data and update x0 and y0
     for i, spectrum in enumerate(spectrums):
-        spectrums_data[i].update({
+        spectrum_dict = {
             "is_corrected": spectrum.is_corrected,
             "correction_value": spectrum.correction_value
+        }
+        
+        # Save x0 and y0 only if it's not a map
+        if not is_map:
+            spectrum_dict.update({
+                "x0": compress(spectrum.x0),
+                "y0": compress(spectrum.y0)
             })
+        
+        # Update the spectrums_data with the new dictionary values
+        spectrums_data[i].update(spectrum_dict)
     return spectrums_data
 
 def dict_to_spectrum(spectrum, spectrum_data, is_map=True, maps=None):

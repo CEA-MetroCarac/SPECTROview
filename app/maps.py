@@ -4,6 +4,9 @@ import time
 import numpy as np
 import pandas as pd
 import json
+import gzip
+from io import StringIO
+
 from copy import deepcopy
 from pathlib import Path
 
@@ -175,8 +178,7 @@ class Maps(QObject):
                         map_df = map_df[['X', 'Y'] + sorted_columns]
                     else:
                         show_alert(f"Unsupported file format: {extension}")
-                        continue
-
+                        continue          
                     map_name = fname
                     if map_name in self.maps:
                         msg = f"Map '{map_name}' is already opened"
@@ -1173,20 +1175,26 @@ class Maps(QObject):
                                                     "SPECTROview Files (*.maps)")
             if file_path:
                 spectrums_data = spectrum_to_dict(self.spectrums)
+
+                # Compress DataFrames in the maps dictionary
+                compressed_maps = {}
+                for k, v in self.maps.items():
+                    # Convert DataFrame to a CSV string and compress it
+                    compressed_data = v.to_csv(index=False).encode('utf-8')
+                    compressed_maps[k] = gzip.compress(compressed_data)
+
                 data_to_save = {
                     'spectrums': spectrums_data,
-                    'maps': {k: v.to_dict() for k, v in self.maps.items()},
+                    'maps': {k: v.hex() for k, v in compressed_maps.items()},
                 }
-
                 with open(file_path, 'w') as f:
                     json.dump(data_to_save, f, indent=4)
                 show_alert("Work saved successfully.")
         except Exception as e:
             show_alert(f"Error saving work: {e}")
 
-
     def load_work(self, file_path):
-        """Load a previously saved application state from a JSON file."""
+        """Load a previously saved application state from a JSON file with compressed DataFrames."""
         try:
             with open(file_path, 'r') as f:
                 load = json.load(f)
@@ -1198,8 +1206,13 @@ class Maps(QObject):
                         spectrum.preprocess()
                         self.spectrums.append(spectrum)
 
-                    self.maps = {k: pd.DataFrame(v) for k, v in
-                                 load.get('maps', {}).items()}
+                    self.maps = {}
+                    
+                    # Decode hex and decompress the dataframe
+                    for k, v in load.get('maps', {}).items():
+                        compressed_data = bytes.fromhex(v)
+                        csv_data = gzip.decompress(compressed_data).decode('utf-8')
+                        self.maps[k] = pd.read_csv(StringIO(csv_data)) 
 
                     QTimer.singleShot(300, self.collect_results)
                     self.upd_maps_list()
@@ -1208,6 +1221,7 @@ class Maps(QObject):
                     show_alert(f"Error loading work: {e}")
         except Exception as e:
             show_alert(f"Error loading saved work (Maps Tab): {e}")
+            
             
     def clear_env(self):
         """Clear the environment and reset the application state"""

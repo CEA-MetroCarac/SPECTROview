@@ -1,9 +1,12 @@
-"""This modules build the GUI and functionality of "MAPS" Tab"""
+"""This modules build the GUI and functionality of "MAPS" Tab""" 
 import os
 import time
 import numpy as np
 import pandas as pd
 import json
+import gzip
+from io import StringIO
+
 from copy import deepcopy
 from pathlib import Path
 
@@ -175,8 +178,7 @@ class Maps(QObject):
                         map_df = map_df[['X', 'Y'] + sorted_columns]
                     else:
                         show_alert(f"Unsupported file format: {extension}")
-                        continue
-
+                        continue          
                     map_name = fname
                     if map_name in self.maps:
                         msg = f"Map '{map_name}' is already opened"
@@ -189,7 +191,6 @@ class Maps(QObject):
     def extract_spectra(self):
         """Extract all spectra from each map dataframe."""
         for map_name, map_df in self.maps.items():
-            print(map_df)
             if len(map_df.columns) > 2 and 'X' in map_df.columns and 'Y' \
                     in map_df.columns:
                 self.process_old_format(map_df, map_name)
@@ -218,12 +219,13 @@ class Maps(QObject):
                 spectrum.y = np.asarray(y_values)
                 spectrum.y0 = np.asarray(y_values)
                 spectrum.is_corrected = False
-                spectrum.correction_value = 0   
+                spectrum.correction_value = 0
                 spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
 
     def process_new_format(self, map_df, map_name):
         """Process new format wafer dataframe."""
+        return
         for i in range(0, len(map_df), 2):
             coord_row = map_df.iloc[i]
             intensity_row = map_df.iloc[i + 1]
@@ -245,7 +247,7 @@ class Maps(QObject):
                 spectrum.y = np.asarray(y_values)
                 spectrum.y0 = np.asarray(y_values)
                 spectrum.is_corrected = False
-                spectrum.correction_value = 0   
+                spectrum.correction_value = 0 
                 spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
 
@@ -311,7 +313,10 @@ class Maps(QObject):
             else: 
                 pass
         self.df_table.show(self.df_fit_results)
-
+        
+        self.map_plot.df_fit_results = self.df_fit_results
+        self.map_plot.populate_z_values_cbb()
+        
     def update_peak_model(self):
         """Update the peak model in the SpectraViewWidget based on combobox selection."""
         selected_model = self.ui.cbb_fit_models.currentText()
@@ -730,6 +735,7 @@ class Maps(QObject):
         self.spectra_widget.plot(selected_spectrums)
         
         df = self.maps.get(map_name)
+        self.map_plot.map_df_name=map_name
         self.map_plot.map_df=df
         self.map_plot.plot(coords)
 
@@ -744,6 +750,7 @@ class Maps(QObject):
         map_df = self.maps.get(map_name)
 
         if map_df is not None:
+            self.map_plot.map_df_name=map_name
             self.map_plot.map_df=map_df
             column_labels = map_df.columns[2:-1].astype(float)
             min_value = float(column_labels.min())
@@ -956,7 +963,7 @@ class Maps(QObject):
         """Trigger a function to plot spectra after a delay"""
         self.delay_timer.start(100)
 
-    def view_map_data(self):
+    def view_map_df(self):
         """View data of the selected map in the map list"""
         map_name, coords = self.spectra_id()
         view_df(self.ui.tabWidget, self.maps[map_name])
@@ -971,7 +978,7 @@ class Maps(QObject):
         self.visu.open_dfs(dfs=dfs_new, file_paths=None)
     
     def plot_extracted_profile(self):
-        """Extract profile from map plot and send to viz tab"""
+        """Extract profile from map plot and Plot in VIS TAB"""
         
         profile_name = self.profil_name.text()
         profil_df = self.map_plot.extract_profile()
@@ -1024,9 +1031,7 @@ class Maps(QObject):
         """
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         for spectrum in sel_spectra:
-            sent_spectrum = deepcopy(spectrum)
-            sent_spectrum.is_corrected = False
-            sent_spectrum.correction_value = 0   
+            sent_spectrum = deepcopy(spectrum)  
             self.spectrums_tab.spectrums.append(sent_spectrum)
             self.spectrums_tab.upd_spectra_list()
 
@@ -1161,41 +1166,50 @@ class Maps(QObject):
             self.reinit()
             
     def save_work(self):
-        """Save the current application states to a JSON file."""
+        """Save current results to a JSON file."""
         try:
             file_path, _ = QFileDialog.getSaveFileName(None,
                                                     "Save work",
                                                     "",
                                                     "SPECTROview Files (*.maps)")
             if file_path:
-                spectrums_data = spectrum_to_dict(self.spectrums)
-                data_to_save = {
-                    'spectrums': spectrums_data,
-                    'maps': {k: v.to_dict() for k, v in self.maps.items()},
-                }
+                spectrums_data = spectrum_to_dict(self.spectrums, is_map=True)
+                
+                compressed_maps = {}
+                for k, v in self.maps.items():
+                    # Convert DataFrame to a CSV string and compress it
+                    compressed_data = v.to_csv(index=False).encode('utf-8')
+                    compressed_maps[k] = gzip.compress(compressed_data)
 
+                data_to_save = {
+                    'spectrums_data': spectrums_data,
+                    'maps': {k: v.hex() for k, v in compressed_maps.items()},
+                }
                 with open(file_path, 'w') as f:
                     json.dump(data_to_save, f, indent=4)
                 show_alert("Work saved successfully.")
         except Exception as e:
             show_alert(f"Error saving work: {e}")
 
-
     def load_work(self, file_path):
-        """Load a previously saved application state from a JSON file."""
+        """Load a saved results from a JSON file with compressed DataFrames."""
         try:
             with open(file_path, 'r') as f:
                 load = json.load(f)
                 try:
                     self.spectrums = Spectra()
-                    for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
+                    self.maps = {}
+                    # Decode hex and decompress the dataframe
+                    for k, v in load.get('maps', {}).items():
+                        compressed_data = bytes.fromhex(v)
+                        csv_data = gzip.decompress(compressed_data).decode('utf-8')
+                        self.maps[k] = pd.read_csv(StringIO(csv_data)) 
+                        
+                    for spectrum_id, spectrum_data in load.get('spectrums_data', {}).items():
                         spectrum = Spectrum()
-                        dict_to_spectrum(spectrum, spectrum_data)
+                        dict_to_spectrum(spectrum=spectrum, spectrum_data=spectrum_data, maps=self.maps, is_map=True)
                         spectrum.preprocess()
                         self.spectrums.append(spectrum)
-
-                    self.maps = {k: pd.DataFrame(v) for k, v in
-                                 load.get('maps', {}).items()}
 
                     QTimer.singleShot(300, self.collect_results)
                     self.upd_maps_list()
@@ -1204,6 +1218,7 @@ class Maps(QObject):
                     show_alert(f"Error loading work: {e}")
         except Exception as e:
             show_alert(f"Error loading saved work (Maps Tab): {e}")
+            
             
     def clear_env(self):
         """Clear the environment and reset the application state"""

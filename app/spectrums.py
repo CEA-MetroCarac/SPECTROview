@@ -912,7 +912,7 @@ class Spectrums(QObject):
                                                        "*.spectra)")
             if file_path:
                 data_to_save = {
-                    'spectrums': spectrum_to_dict(self.spectrums)
+                    'spectrums': spectrum_to_dict(self.spectrums, is_map=False)
                 }
                 with open(file_path, 'w') as f:
                     json.dump(data_to_save, f, indent=4)
@@ -931,7 +931,7 @@ class Spectrums(QObject):
                     self.spectrums = Spectra()
                     for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
                         spectrum = Spectrum()
-                        dict_to_spectrum(spectrum, spectrum_data)
+                        dict_to_spectrum(spectrum=spectrum, spectrum_data=spectrum_data, is_map=False)
                         spectrum.preprocess()
                         self.spectrums.append(spectrum)
 

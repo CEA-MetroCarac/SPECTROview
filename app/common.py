@@ -78,7 +78,9 @@ class MapViewWidget(QWidget):
     def __init__(self, main_app):
         super().__init__()
         self.main_app = main_app # To connect to a method of main app (refresh gui)
+        self.map_df_name = None
         self.map_df =pd.DataFrame() 
+        self.df_fit_results =pd.DataFrame() 
         self.dpi = 70
         self.figure = None
         self.ax = None
@@ -183,8 +185,6 @@ class MapViewWidget(QWidget):
         # Add the layout to the main layout
         self.map_widget_layout.addLayout(layout)
 
-        
-
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
         # Create x-axis range slider
@@ -208,23 +208,32 @@ class MapViewWidget(QWidget):
         self.z_range_slider.setRange(0, 100) 
         self.z_range_slider.setValue((0, 100)) 
         self.z_range_slider.setTracking(True)
-        self.z_slider_cbb = QComboBox()
-        self.z_slider_cbb.addItems(['Area', 'Intensity'])
-        self.z_slider_cbb.currentIndexChanged.connect(self.update_z_range_slider)
+        self.z_values_cbb = QComboBox()
+        self.z_values_cbb.addItems(['Area', 'Intensity'])       
+        
+        self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
 
         self.z_range_label = QLabel(f'[{0}; {100}]')
         self.z_range_slider.valueChanged.connect(self.update_z_range_label)
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
 
         self.z_slider_layout = QHBoxLayout()
-        self.z_slider_layout.addWidget(self.z_slider_cbb)
+        self.z_slider_layout.addWidget(self.z_values_cbb)
         self.z_slider_layout.addWidget(self.z_range_slider)
         self.z_slider_layout.addWidget(self.z_range_label)
         self.z_slider_layout.setContentsMargins(5, 0, 5, 0)
 
         self.map_widget_layout.addLayout(self.x_slider_layout)
         self.map_widget_layout.addLayout(self.z_slider_layout)
+    
+    def populate_z_values_cbb(self):
+        self.z_values_cbb.clear() 
+        self.z_values_cbb.addItems(['Area', 'Intensity'])
+        if not self.df_fit_results.empty:
+            fit_columns = [col for col in self.df_fit_results.columns if col not in ['Filename', 'X', 'Y']]
+            self.z_values_cbb.addItems(fit_columns)
 
+  
     def refresh_plot(self):
         """Call the refresh_gui method of the main application."""
         if hasattr(self.main_app, 'refresh_gui'):
@@ -246,10 +255,13 @@ class MapViewWidget(QWidget):
         self.x_range_label.setText(f'[{xmin}; {xmax}]')
         
     def update_z_range_slider(self):
-        _,_, vmin, vmax, =self.get_data_for_heatmap()
-        self.z_range_slider.setRange(vmin, vmax)
-        self.z_range_slider.setValue((vmin, vmax))
-        self.z_range_label.setText(f'[{vmin}; {vmax}]')
+        if self.z_values_cbb.count() > 0 and self.z_values_cbb.currentIndex() >= 0:
+            _,_, vmin, vmax, =self.get_data_for_heatmap()
+            self.z_range_slider.setRange(vmin, vmax)
+            self.z_range_slider.setValue((vmin, vmax))
+            self.z_range_label.setText(f'[{vmin}; {vmax}]')
+        else:
+            print("No valid Z value selected.")
 
     def update_z_range_label(self):
         """Update the QLabel text with the current values."""
@@ -272,7 +284,8 @@ class MapViewWidget(QWidget):
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
 
         # Plot heatmap for 2D map
-        if self.rdbt_map.isChecked():    
+        if self.rdbt_map.isChecked():
+                
             heatmap_pivot, extent, vmin, vmax = self.get_data_for_heatmap()
             
             color = self.cbb_color.currentText()
@@ -296,7 +309,7 @@ class MapViewWidget(QWidget):
             if self.rdbt_map.isChecked():     #Only for 2Dmap plot
                 self.plot_height_profile_on_map(coords)
 
-        title = self.z_slider_cbb.currentText()
+        title = self.z_values_cbb.currentText()
         self.ax.set_title(title, fontsize=13)
         self.ax.get_figure().tight_layout()
         self.canvas.draw()
@@ -373,13 +386,22 @@ class MapViewWidget(QWidget):
                 y_col = filtered_map_df['Y'].values
                 final_z_col = []
 
-                parameter = self.z_slider_cbb.currentText()
+                parameter = self.z_values_cbb.currentText()
                 if parameter == 'Area':
                     # Intensity sums of of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
-                if parameter == 'Intensity':
+                elif parameter == 'Intensity':
                     # Max intensity value of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
+                else:
+                    if not self.df_fit_results.empty:
+                        map_name = self.map_df_name
+                        filtered_df = self.df_fit_results.query('Filename == @map_name')
+                        
+                        if not filtered_df.empty and parameter in filtered_df.columns:
+                            z_col = filtered_df[parameter]
+                        else:
+                            z_col = None
                 
                 if self.cb_auto_scale.isChecked():
                     # Remove outliers using IQR method and replace them with interpolated values
@@ -2369,30 +2391,68 @@ def populate_spectrum_listbox(spectrum, spectrum_name, checked_states):
         item.setBackground(QColor(0, 0, 0, 0))  
     return item
 
-
-def spectrum_to_dict(spectrums):
+def spectrum_to_dict(spectrums, is_map=False):
     """Custom 'save' method to save 'Spectrum' object in a dictionary"""
     spectrums_data = spectrums.save()
     # Iterate over the saved spectrums data and update x0 and y0
     for i, spectrum in enumerate(spectrums):
-        spectrums_data[i].update({
+        spectrum_dict = {
             "is_corrected": spectrum.is_corrected,
-            "correction_value": spectrum.correction_value,
-            "x0": compress(spectrum.x0),
-            "y0": compress(spectrum.y0)
+            "correction_value": spectrum.correction_value
+        }
+        
+        # Save x0 and y0 only if it's not a map
+        if not is_map:
+            spectrum_dict.update({
+                "x0": compress(spectrum.x0),
+                "y0": compress(spectrum.y0)
             })
+        
+        # Update the spectrums_data with the new dictionary values
+        spectrums_data[i].update(spectrum_dict)
     return spectrums_data
 
-def dict_to_spectrum(spectrum, model_dict):
+def dict_to_spectrum(spectrum, spectrum_data, is_map=True, maps=None):
     """Set attributes of Spectrum object from JSON dict"""
-    spectrum.set_attributes(model_dict)
-    spectrum.is_corrected = model_dict.get('is_corrected', False)
-    spectrum.correction_value = model_dict.get('correction_value', 0)
-    if 'x0' in model_dict:
-        spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
-    if 'y0' in model_dict:
-        spectrum.y0 = decompress(model_dict['y0'], dtype=np.float64)
+    spectrum.set_attributes(spectrum_data)
     
+    # Set additional attributes
+    spectrum.is_corrected = spectrum_data.get('is_corrected', False)
+    spectrum.correction_value = spectrum_data.get('correction_value', 0)
+    
+    if is_map: 
+        if maps is None:
+            raise ValueError("maps must be provided when map=True.")
+        
+        # Retrieve map_name and coord from spectrum.fname
+        fname = spectrum.fname
+        map_name, coord_str = fname.rsplit('_', 1)
+        coord_str = coord_str.strip('()')  # Remove parentheses
+        coord = tuple(map(float, coord_str.split(',')))  # Convert to float tuple
+        
+        # Retrieve x0 and y0 from the corresponding map_df using map_name and coord
+        if map_name in maps:
+            map_df = maps[map_name]
+            map_df = map_df.iloc[:, :-1]  # Drop the last column from map_df (NaN)
+            coord_x, coord_y = coord
+
+            row = map_df[(map_df['X'] == coord_x) & (map_df['Y'] == coord_y)]
+            
+            if not row.empty:
+                spectrum.x0 = map_df.columns[2:].astype(float).values  
+                spectrum.y0 = row.iloc[0, 2:].values  
+            else:
+                spectrum.x0 = None
+                spectrum.y0 = None
+        else:
+            spectrum.x0 = None
+            spectrum.y0 = None
+    else:
+        # Handle single spectrum case
+        if 'x0' in spectrum_data:
+            spectrum.x0 = decompress(spectrum_data['x0'], dtype=np.float64)
+        if 'y0' in spectrum_data:
+            spectrum.y0 = decompress(spectrum_data['y0'], dtype=np.float64)
 
 def baseline_to_dict(spectrum):
     dict_baseline = dict(vars(spectrum.baseline).items())

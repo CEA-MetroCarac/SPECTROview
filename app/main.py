@@ -195,23 +195,6 @@ class Main:
         self.ui.btn_default_folder_model_3.clicked.connect(
             self.spectrums.set_default_model_folder)
 
-    def setup_shortcuts(self):
-        # Use MetaModifier for macOS and ControlModifier for other platforms
-        modifier = Qt.MetaModifier if sys.platform == "darwin" else Qt.ControlModifier
-
-        # Shortcut for Cmd+1 (or Ctrl+1 on other platforms) to switch to tab_spectra
-        shortcut_spectra = QShortcut(QKeySequence(modifier | Qt.Key_1), self.ui)
-        shortcut_spectra.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra))
-
-        # Shortcut for Cmd+2 (or Ctrl+2 on other platforms) to switch to tab_maps
-        shortcut_maps = QShortcut(QKeySequence(modifier | Qt.Key_2), self.ui)
-        shortcut_maps.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_maps))
-
-        # Shortcut for Cmd+3 (or Ctrl+3 on other platforms) to switch to tab_graphs
-        shortcut_graphs = QShortcut(QKeySequence(modifier | Qt.Key_3), self.ui)
-        shortcut_graphs.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs))
-
-
     def open(self, file_paths=None):
         """
         Universal action to open all supported files of SPECTROview:
@@ -291,7 +274,28 @@ class Main:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
                 self.visu.load(graphs_file)
 
+    def setup_shortcuts(self):
+        """Setup key shortcuts of the application"""
+        # Use MetaModifier for macOS and ControlModifier for other platforms
+        modifier = Qt.MetaModifier if sys.platform == "darwin" else Qt.ControlModifier
 
+        # Shortcut for Cmd+1 (or Ctrl+1 on other platforms) to switch to tab_spectra
+        shortcut_spectra = QShortcut(QKeySequence(modifier | Qt.Key_1), self.ui)
+        shortcut_spectra.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra))
+        shortcut_spectra_amp = QShortcut(QKeySequence(modifier | Qt.Key_Ampersand), self.ui)
+        shortcut_spectra_amp.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra))
+
+        # Shortcut for Cmd+2 (or Ctrl+2 on other platforms) to switch to tab_maps
+        shortcut_maps = QShortcut(QKeySequence(modifier | Qt.Key_2), self.ui)
+        shortcut_maps.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_maps))
+        shortcut_graphs_e = QShortcut(QKeySequence(modifier | Qt.Key_Eacute), self.ui)
+        shortcut_graphs_e.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_maps))
+
+        # Shortcut for Cmd+3 (or Ctrl+3 on other platforms) to switch to tab_graphs
+        shortcut_graphs = QShortcut(QKeySequence(modifier | Qt.Key_3), self.ui)
+        shortcut_graphs.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs))
+        shortcut_spectra_quote = QShortcut(QKeySequence(modifier | Qt.Key_QuoteDbl), self.ui)
+        shortcut_spectra_quote.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs))
 
     def save(self):
         """Saves the current work depending on the active tab"""

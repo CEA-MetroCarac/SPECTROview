@@ -8,7 +8,7 @@ import json
 from copy import deepcopy
 import pandas as pd
 import numpy as np
-from scipy.spatial import distance
+from openpyxl.styles import PatternFill
 
 if platform.system() == 'Darwin':
     import AppKit 
@@ -2447,8 +2447,36 @@ def view_df(tabWidget, df):
     df_viewer.setLayout(layout)
     df_viewer.exec_()
 
-def save_df_to_excel():
-    pass
+def save_df_to_excel(save_path, df):
+    """Saves a DataFrame to an Excel file with colored columns based on prefixes."""
+    if not save_path:
+        return False, "No save path provided."
+
+    try:
+        if df.empty:
+            return False, "DataFrame is empty. Nothing to save."
+        with pd.ExcelWriter(save_path, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Results')
+            workbook = writer.book
+            worksheet = writer.sheets['Results']
+            palette = ['#bda16d', '#a27ba0', '#cb5b12', '#23993b', '#008281', '#147ce4']
+            prefix_colors = {}
+
+            # Apply colors based on column prefixes
+            for col_idx, col_name in enumerate(df.columns, start=1):
+                prefix = col_name.split("_")[0] if "_" in col_name else col_name
+                if prefix not in prefix_colors:
+                    color_index = len(prefix_colors) % len(palette)
+                    prefix_colors[prefix] = PatternFill(start_color=palette[color_index][1:], 
+                                                        end_color=palette[color_index][1:], 
+                                                        fill_type='solid')
+                for row in range(2, len(df) + 2):  # Apply the fill color to the entire column
+                    worksheet.cell(row=row, column=col_idx).fill = prefix_colors[prefix]
+
+        return True, "DataFrame saved successfully."
+    
+    except Exception as e:
+        return False, f"Error when saving DataFrame: {str(e)}"
 
 def copy_fig_to_clb(canvas):
     """Copy matplotlib figure canvas to clipboard"""

@@ -1,3 +1,4 @@
+"""This modules build the GUI and functionality of "SPECTRA" Tab"""
 import os
 import time
 import numpy as np
@@ -8,9 +9,9 @@ import json
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 
-from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox
-from .common import FitThread, FitModelManager, PeakTableWidget, DataframeTableWidget, CustomListWidget, SpectraViewWidget
-from .common import FIT_METHODS
+from app.common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox
+from app.common import FitThread, FitModelManager, PeakTableWidget, DataframeTableWidget, CustomListWidget, SpectraViewWidget
+from app.common import FIT_METHODS
 
 from lmfit import fit_report
 from fitspy.spectra import Spectra

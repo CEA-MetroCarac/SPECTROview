@@ -1,3 +1,4 @@
+"""This modules build the GUI and functionality of "MAPS" Tab"""
 import os
 import time
 import numpy as np
@@ -8,11 +9,11 @@ from pathlib import Path
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 
-from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline
-from .common import FitThread, PeakTableWidget, DataframeTableWidget, \
+from app.common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline
+from app.common import FitThread, PeakTableWidget, DataframeTableWidget, \
     FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget, Graph
-from .common import FIT_METHODS,PALETTE
-from .visualisation import MdiSubWindow
+from app.common import FIT_METHODS,PALETTE
+from app.visualisation import MdiSubWindow
 from lmfit import fit_report
 from fitspy.spectra import Spectra
 from fitspy.spectrum import Spectrum
@@ -217,6 +218,8 @@ class Maps(QObject):
                 spectrum.x0 = np.asarray(x_values)
                 spectrum.y = np.asarray(y_values)
                 spectrum.y0 = np.asarray(y_values)
+                spectrum.is_corrected = False
+                spectrum.correction_value = 0   
                 spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
 
@@ -242,6 +245,8 @@ class Maps(QObject):
                 spectrum.x0 = np.asarray(x_values)
                 spectrum.y = np.asarray(y_values)
                 spectrum.y0 = np.asarray(y_values)
+                spectrum.is_corrected = False
+                spectrum.correction_value = 0   
                 spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
 
@@ -256,6 +261,7 @@ class Maps(QObject):
     def collect_results(self):
         """Collect fit results to create a consolidated dataframe"""
         # Add all dicts into a list, then convert to a dataframe.
+        
         self.copy_fit_model()
         fit_results_list = []
         self.df_fit_results = None
@@ -1035,7 +1041,7 @@ class Maps(QObject):
             self.ui.mdiArea.addSubWindow(sub_window)
             sub_window.show()
             self.visu.add_graph_list_to_combobox()
-            text = f"{graph.graph_id}-{graph.plot_style}_plot: [{"distance"}] - [{"values"}] - [{"None"}]"
+            text = f"{graph.graph_id}-{graph.plot_style}_plot: {{'distance'}} - {{'values'}} - {{'None'}}"
             graph_dialog.setWindowTitle(text)
             # Plot action
             QTimer.singleShot(100, self.visu.plot_action)

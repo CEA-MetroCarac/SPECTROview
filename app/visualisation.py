@@ -1,10 +1,11 @@
+"""This modules build the GUI and functionality of "Visualization" Tab"""
 import pandas as pd
 from pathlib import Path
 import json
 
-from .common import view_df, show_alert, copy_fig_to_clb
-from .common import PLOT_STYLES, PALETTE, LEGEND_LOCATION
-from .common import Graph, FilterWidget
+from app.common import view_df, show_alert, copy_fig_to_clb
+from app.common import PLOT_STYLES, PALETTE, LEGEND_LOCATION
+from app.common import Graph, FilterWidget
 
 from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, \
      QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox

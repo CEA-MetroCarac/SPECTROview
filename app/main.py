@@ -6,7 +6,6 @@ loads necessary UI components, connects GUI elements to backend methods,
 and manages application settings.
 
 """
-
 import sys
 import os
 import pandas as pd
@@ -18,14 +17,14 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 
-from .common import CommonUtilities, FitModelManager
-from .common import PEAK_MODELS
-from .common import show_alert
+from app.common import CommonUtilities, FitModelManager
+from app.common import PEAK_MODELS
+from app.common import show_alert
     
-from .ui import resources 
-from .maps import Maps
-from .spectrums import Spectrums
-from .visualisation import Visualization
+from app.ui import resources 
+from app.maps import Maps
+from app.spectrums import Spectrums
+from app.visualisation import Visualization
 
 DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")

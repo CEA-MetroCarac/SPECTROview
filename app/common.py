@@ -1,5 +1,5 @@
 """
-Module contains all common methods/class different modules of SPECTROview application
+This module contains all common methods or Class which are shared between 3 modules (Map, Spectra, Visualization).
 """
 import markdown
 import platform
@@ -2446,6 +2446,9 @@ def view_df(tabWidget, df):
     dataframe_table.show(df) 
     df_viewer.setLayout(layout)
     df_viewer.exec_()
+
+def save_df_to_excel():
+    pass
 
 def copy_fig_to_clb(canvas):
     """Copy matplotlib figure canvas to clipboard"""

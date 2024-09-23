@@ -2358,8 +2358,7 @@ def populate_spectrum_listbox(spectrum, spectrum_name, checked_states):
         else:
             item.setBackground(QColor("orange"))
     else:
-        item.setBackground(QColor(0, 0, 0, 0))
-        
+        item.setBackground(QColor(0, 0, 0, 0))  
     return item
 
 

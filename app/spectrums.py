@@ -461,7 +461,6 @@ class Spectrums(QObject):
 
     def set_x_range_all(self):
         """Set a new x range for all spectra"""
-
         checked_spectra = self.get_checked_spectra()
         fnames = checked_spectra.fnames
         self.set_x_range(fnames=fnames)
@@ -485,15 +484,18 @@ class Spectrums(QObject):
         """Copy baseline of the selected spectrum"""
         sel_spectrum, _ = self.get_spectrum_object()
         self.current_baseline = baseline_to_dict(sel_spectrum)
-
     
     def paste_baseline(self, sel_spectra=None):
         """Paste baseline to the selected spectrum(s)"""
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
         dict_to_baseline(self.current_baseline, sel_spectra)
-        
         QTimer.singleShot(50, self.refresh_gui)
+    
+    def paste_baseline_all(self):
+        """Paste baseline to the all spectrum(s)"""
+        checked_spectra = self.get_checked_spectra()
+        self.paste_baseline(checked_spectra)
 
     def subtract_baseline(self, sel_spectra=None):
         """Subtract baseline action for the selected spectrum(s)."""
@@ -507,17 +509,11 @@ class Spectrums(QObject):
         QTimer.singleShot(50, self.refresh_gui)
         QTimer.singleShot(100, self.upd_spectra_list)
         QTimer.singleShot(300, self.spectra_widget.rescale)
-
-    def paste_baseline_all(self):
-        """Paste baseline to the all spectrum(s)"""
-        checked_spectra = self.get_checked_spectra()
-        self.paste_baseline(checked_spectra)
         
     def subtract_baseline_all(self):
         """Subtract the baseline for all spectra"""
         checked_spectra = self.get_checked_spectra()
         self.subtract_baseline(checked_spectra)
-
 
     def clear_peaks(self, fnames=None):
         """Clear all existing peak models of the selected spectrum(s)"""

@@ -1382,7 +1382,7 @@ class DataframeTableWidget(QWidget):
         self.external_layout.addWidget(self)
 
     
-    def show(self, df):
+    def show(self, df, fill_colors=True):
         """Populates the QTableWidget with data from the given DataFrame, with colored columns."""
         if df is not None and not df.empty:
             self.table_widget.setRowCount(df.shape[0])
@@ -1395,7 +1395,8 @@ class DataframeTableWidget(QWidget):
             for row in range(df.shape[0]):
                 for col in range(df.shape[1]):
                     item = QTableWidgetItem(str(df.iat[row, col]))
-                    item.setBackground(column_colors[col])  # Set background color
+                    if fill_colors:
+                        item.setBackground(column_colors[col])  # Set background color
                     self.table_widget.setItem(row, col, item)
 
             self.table_widget.resizeColumnsToContents()
@@ -2493,17 +2494,29 @@ def clear_layout(layout):
             if widget:
                 widget.deleteLater()
 
-def view_df(tabWidget, df):
+def view_df(tabWidget, df, simplified_df=False, fill_colors=True):
     """View selected dataframe"""
     df_viewer = QDialog(tabWidget.parent())
     df_viewer.setWindowTitle("DataFrame Viewer")
     df_viewer.setWindowFlags(df_viewer.windowFlags() | Qt.WindowCloseButtonHint)
-
-    # Create a QTableWidget and populate it with data from the DataFrame
     layout = QVBoxLayout(df_viewer)
     layout.setContentsMargins(0, 0, 0, 0)
     dataframe_table = DataframeTableWidget(layout)
-    dataframe_table.show(df) 
+    
+    if simplified_df:
+        # Show a simplified version with first/last 50 rows and first/last 30 columns
+        row_subset = pd.concat([df.head(50), df.tail(50)])  # First 50 and last 50 rows
+        col_subset = pd.concat([row_subset.iloc[:, :30], row_subset.iloc[:, -30:]], axis=1)  # First 30 and last 30 columns
+        if fill_colors:
+            dataframe_table.show(col_subset)
+        else:
+            dataframe_table.show(col_subset, fill_colors=False)
+    else:
+        # Show the full dataframe
+        if fill_colors:
+            dataframe_table.show(df)
+        else:
+            dataframe_table.show(df, fill_colors=False)
     df_viewer.setLayout(layout)
     df_viewer.exec_()
 

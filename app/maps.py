@@ -966,7 +966,7 @@ class Maps(QObject):
     def view_map_df(self):
         """View data of the selected map in the map list"""
         map_name, coords = self.spectra_id()
-        view_df(self.ui.tabWidget, self.maps[map_name])
+        view_df(self.ui.tabWidget, self.maps[map_name], simplified_df=True, fill_colors=False)
 
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to the visualization

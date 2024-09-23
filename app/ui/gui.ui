@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -218,7 +218,7 @@
                <bool>true</bool>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="fit_model_editor_3">
                <property name="enabled">
@@ -560,7 +560,7 @@
                                </font>
                               </property>
                               <property name="text">
-                               <string>Baseline:</string>
+                               <string>Baseline (BL):</string>
                               </property>
                              </widget>
                             </item>
@@ -691,7 +691,7 @@
                                  <string>To remove all baseline points and undo the baseline subtraction</string>
                                 </property>
                                 <property name="text">
-                                 <string/>
+                                 <string>Remove BL</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -719,7 +719,7 @@
  Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string/>
+                                 <string>Copy BL points</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -734,7 +734,7 @@
  Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string/>
+                                 <string>Paste BL points</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -1257,8 +1257,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
-                       <height>228</height>
+                       <width>428</width>
+                       <height>523</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -2496,7 +2496,7 @@
                                </font>
                               </property>
                               <property name="text">
-                               <string>Baseline:</string>
+                               <string>Baseline (BL):</string>
                               </property>
                              </widget>
                             </item>
@@ -2627,7 +2627,7 @@
                                  <string>To remove all baseline points and undo the baseline subtraction</string>
                                 </property>
                                 <property name="text">
-                                 <string/>
+                                 <string>Remove BL</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -2655,7 +2655,7 @@
  Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string/>
+                                 <string>Copy BL points</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -2670,7 +2670,7 @@
  Hold 'Ctrl' and press button to apply to all spectra.</string>
                                 </property>
                                 <property name="text">
-                                 <string/>
+                                 <string>Paste BL points</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -4906,8 +4906,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>338</width>
-                    <height>391</height>
+                    <width>372</width>
+                    <height>477</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">

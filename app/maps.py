@@ -189,6 +189,7 @@ class Maps(QObject):
     def extract_spectra(self):
         """Extract all spectra from each map dataframe."""
         for map_name, map_df in self.maps.items():
+            print(map_df)
             if len(map_df.columns) > 2 and 'X' in map_df.columns and 'Y' \
                     in map_df.columns:
                 self.process_old_format(map_df, map_name)
@@ -652,7 +653,6 @@ class Maps(QObject):
         
         # Call save_df_to_excel and handle feedback
         success, message = save_df_to_excel(save_path, self.df_fit_results)
-        
         if success:
             QMessageBox.information(self.ui.tabWidget, "Success", message)
         else:

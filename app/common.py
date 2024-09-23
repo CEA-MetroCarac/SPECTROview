@@ -2391,7 +2391,6 @@ def populate_spectrum_listbox(spectrum, spectrum_name, checked_states):
         item.setBackground(QColor(0, 0, 0, 0))  
     return item
 
-
 def spectrum_to_dict(spectrums):
     """Custom 'save' method to save 'Spectrum' object in a dictionary"""
     spectrums_data = spectrums.save()
@@ -2399,20 +2398,41 @@ def spectrum_to_dict(spectrums):
     for i, spectrum in enumerate(spectrums):
         spectrums_data[i].update({
             "is_corrected": spectrum.is_corrected,
-            "correction_value": spectrum.correction_value
+            "correction_value": spectrum.correction_value,
+            "map_name": spectrum.map_name,
+            "coord": spectrum.coord,
             })
     return spectrums_data
 
-def dict_to_spectrum(spectrum, model_dict):
+def dict_to_spectrum(spectrum, model_dict, maps):
     """Set attributes of Spectrum object from JSON dict"""
     spectrum.set_attributes(model_dict)
+    
+    # Set basic attributes
     spectrum.is_corrected = model_dict.get('is_corrected', False)
     spectrum.correction_value = model_dict.get('correction_value', 0)
-    if 'x0' in model_dict:
-        spectrum.x0 = decompress(model_dict['x0'], dtype=np.float64)
-    if 'y0' in model_dict:
-        spectrum.y0 = decompress(model_dict['y0'], dtype=np.float64)
+    spectrum.coord = model_dict.get('coord', [0, 0])
+    spectrum.map_name = model_dict.get('map_name', 'fname')
     
+    # Retrieve x0 and y0 from the corresponding map dataframe using coord
+    if spectrum.map_name in maps:
+        map_df = maps[spectrum.map_name]
+        coord_x, coord_y = spectrum.coord
+        
+        row = map_df[(map_df['X'] == coord_x) & (map_df['Y'] == coord_y)]
+        
+        if not row.empty:
+            spectrum.x0 = row['X'].values[0]  
+            spectrum.y0 = row['Y'].values[0] 
+        else:
+            # Handle case when the coordinate is not found
+            spectrum.x0 = None
+            spectrum.y0 = None
+    else:
+        # Handle case where the map_name is not found in self.maps
+        spectrum.x0 = None
+        spectrum.y0 = None
+
 
 def baseline_to_dict(spectrum):
     dict_baseline = dict(vars(spectrum.baseline).items())

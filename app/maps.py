@@ -220,7 +220,8 @@ class Maps(QObject):
                 spectrum.y0 = np.asarray(y_values)
                 spectrum.is_corrected = False
                 spectrum.correction_value = 0
-                spectrum.coord = coord   
+                spectrum.map_name = map_name 
+                spectrum.coord = coord    
                 spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
 
@@ -248,6 +249,7 @@ class Maps(QObject):
                 spectrum.y0 = np.asarray(y_values)
                 spectrum.is_corrected = False
                 spectrum.correction_value = 0 
+                spectrum.map_name = map_name 
                 spectrum.coord = coord  
                 spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
@@ -1200,19 +1202,19 @@ class Maps(QObject):
                 load = json.load(f)
                 try:
                     self.spectrums = Spectra()
-                    for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
-                        spectrum = Spectrum()
-                        dict_to_spectrum(spectrum, spectrum_data)
-                        spectrum.preprocess()
-                        self.spectrums.append(spectrum)
-
                     self.maps = {}
-                    
                     # Decode hex and decompress the dataframe
                     for k, v in load.get('maps', {}).items():
                         compressed_data = bytes.fromhex(v)
                         csv_data = gzip.decompress(compressed_data).decode('utf-8')
                         self.maps[k] = pd.read_csv(StringIO(csv_data)) 
+                        
+                        
+                    for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
+                        spectrum = Spectrum()
+                        dict_to_spectrum(spectrum, spectrum_data, self.maps)
+                        spectrum.preprocess()
+                        self.spectrums.append(spectrum)
 
                     QTimer.singleShot(300, self.collect_results)
                     self.upd_maps_list()

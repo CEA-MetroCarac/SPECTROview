@@ -219,7 +219,8 @@ class Maps(QObject):
                 spectrum.y = np.asarray(y_values)
                 spectrum.y0 = np.asarray(y_values)
                 spectrum.is_corrected = False
-                spectrum.correction_value = 0   
+                spectrum.correction_value = 0
+                spectrum.coord = coord   
                 spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
 
@@ -246,7 +247,8 @@ class Maps(QObject):
                 spectrum.y = np.asarray(y_values)
                 spectrum.y0 = np.asarray(y_values)
                 spectrum.is_corrected = False
-                spectrum.correction_value = 0   
+                spectrum.correction_value = 0 
+                spectrum.coord = coord  
                 spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
 
@@ -1030,9 +1032,7 @@ class Maps(QObject):
         """
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         for spectrum in sel_spectra:
-            sent_spectrum = deepcopy(spectrum)
-            sent_spectrum.is_corrected = False
-            sent_spectrum.correction_value = 0   
+            sent_spectrum = deepcopy(spectrum)  
             self.spectrums_tab.spectrums.append(sent_spectrum)
             self.spectrums_tab.upd_spectra_list()
 

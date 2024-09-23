@@ -2399,9 +2399,7 @@ def spectrum_to_dict(spectrums):
     for i, spectrum in enumerate(spectrums):
         spectrums_data[i].update({
             "is_corrected": spectrum.is_corrected,
-            "correction_value": spectrum.correction_value,
-            "x0": compress(spectrum.x0),
-            "y0": compress(spectrum.y0)
+            "correction_value": spectrum.correction_value
             })
     return spectrums_data
 

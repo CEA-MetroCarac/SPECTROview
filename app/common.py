@@ -2398,41 +2398,51 @@ def spectrum_to_dict(spectrums):
     for i, spectrum in enumerate(spectrums):
         spectrums_data[i].update({
             "is_corrected": spectrum.is_corrected,
-            "correction_value": spectrum.correction_value,
-            "map_name": spectrum.map_name,
-            "coord": spectrum.coord,
+            "correction_value": spectrum.correction_value
             })
     return spectrums_data
 
-def dict_to_spectrum(spectrum, model_dict, maps):
+def dict_to_spectrum(spectrum, spectrum_data, is_map=True, maps=None):
     """Set attributes of Spectrum object from JSON dict"""
-    spectrum.set_attributes(model_dict)
+    spectrum.set_attributes(spectrum_data)
     
-    # Set basic attributes
-    spectrum.is_corrected = model_dict.get('is_corrected', False)
-    spectrum.correction_value = model_dict.get('correction_value', 0)
-    spectrum.coord = model_dict.get('coord', [0, 0])
-    spectrum.map_name = model_dict.get('map_name', 'fname')
+    # Set additional attributes
+    spectrum.is_corrected = spectrum_data.get('is_corrected', False)
+    spectrum.correction_value = spectrum_data.get('correction_value', 0)
     
-    # Retrieve x0 and y0 from the corresponding map dataframe using coord
-    if spectrum.map_name in maps:
-        map_df = maps[spectrum.map_name]
-        coord_x, coord_y = spectrum.coord
+    if is_map: 
+        if maps is None:
+            raise ValueError("maps must be provided when map=True.")
         
-        row = map_df[(map_df['X'] == coord_x) & (map_df['Y'] == coord_y)]
+        # Retrieve map_name and coord from spectrum.fname
+        fname = spectrum.fname
+        map_name, coord_str = fname.rsplit('_', 1)
+        coord_str = coord_str.strip('()')  # Remove parentheses
+        coord = tuple(map(float, coord_str.split(',')))  # Convert to float tuple
         
-        if not row.empty:
-            spectrum.x0 = row['X'].values[0]  
-            spectrum.y0 = row['Y'].values[0] 
+        # Retrieve x0 and y0 from the corresponding map_df using map_name and coord
+        if map_name in maps:
+            map_df = maps[map_name]
+            map_df = map_df.iloc[:, :-1]  # Drop the last column from map_df (NaN)
+            coord_x, coord_y = coord
+
+            row = map_df[(map_df['X'] == coord_x) & (map_df['Y'] == coord_y)]
+            
+            if not row.empty:
+                spectrum.x0 = map_df.columns[2:].astype(float).values  
+                spectrum.y0 = row.iloc[0, 2:].values  
+            else:
+                spectrum.x0 = None
+                spectrum.y0 = None
         else:
-            # Handle case when the coordinate is not found
             spectrum.x0 = None
             spectrum.y0 = None
     else:
-        # Handle case where the map_name is not found in self.maps
-        spectrum.x0 = None
-        spectrum.y0 = None
-
+        # Handle single spectrum case
+        if 'x0' in spectrum_data:
+            spectrum.x0 = decompress(spectrum_data['x0'], dtype=np.float64)
+        if 'y0' in spectrum_data:
+            spectrum.y0 = decompress(spectrum_data['y0'], dtype=np.float64)
 
 def baseline_to_dict(spectrum):
     dict_baseline = dict(vars(spectrum.baseline).items())

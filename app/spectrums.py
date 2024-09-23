@@ -931,7 +931,7 @@ class Spectrums(QObject):
                     self.spectrums = Spectra()
                     for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
                         spectrum = Spectrum()
-                        dict_to_spectrum(spectrum, spectrum_data)
+                        dict_to_spectrum(spectrum=spectrum, spectrum_data=spectrum_data, is_map=False)
                         spectrum.preprocess()
                         self.spectrums.append(spectrum)
 

@@ -119,7 +119,7 @@ class Main:
         self.ui.btn_show_stats.clicked.connect(self.maps.view_stats)
         self.ui.btn_save_fit_results.clicked.connect(
             self.maps.save_fit_results)
-        self.ui.btn_view_wafer.clicked.connect(self.maps.view_map_data)
+        self.ui.btn_view_wafer.clicked.connect(self.maps.view_map_df)
 
         self.ui.btn_open_fitspy.clicked.connect(self.maps.fitspy_launcher)
         self.ui.btn_cosmis_ray.clicked.connect(self.maps.cosmis_ray_detection)

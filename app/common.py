@@ -2026,27 +2026,16 @@ class CommonUtilities():
                     layout.removeWidget(widget)
                     widget.close()
 
-    def translate_param(self, fit_model, param):
-        """Translate parameter names to column headers: example x0 ->
-        Position, ampli ->  Intensity"""
+    def replace_peak_labels(self, fit_model, param):
+        """Replace prefix 'm01' of peak model by labels designed by user"""
         peak_labels = fit_model["peak_labels"]
-        param_unit_mapping = {"ampli": "Intensity", "fwhm": "FWHM",
-                              "fwhm_l": "FWHM_left", "fwhm_r": "FWHM_right",
-                              "alpha": "L/G ratio",
-                              "x0": "Position"}
         if "_" in param:
-            prefix, param = param.split("_", 1)
-            if param in param_unit_mapping:
-                if param == "alpha":
-                    unit = ""  # Set unit to empty string for "alpha"
-                else:
-                    unit = "(a.u)" if param == "ampli" else "(cm⁻¹)"
-                label = param_unit_mapping[param]
-                # Convert prefix to peak_label
-                peak_index = int(prefix[1:]) - 1
-                if 0 <= peak_index < len(peak_labels):
-                    peak_label = peak_labels[peak_index]
-                    return f"{label} of peak {peak_label} {unit}"
+            prefix, param = param.split("_", 1)  
+            # Convert prefix to peak_label
+            peak_index = int(prefix[1:]) - 1
+            if 0 <= peak_index < len(peak_labels):
+                peak_label = peak_labels[peak_index]
+                return f"{param}_{peak_label}"
         return param
 
     def quadrant(self, row):

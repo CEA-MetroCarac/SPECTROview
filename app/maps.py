@@ -265,14 +265,12 @@ class Maps(QObject):
                 fit_result = {'Filename': map_name, 'X': x, 'Y': y}
 
                 for model in spectrum.peak_models:
-                    if hasattr(model, 'param_names') and hasattr(model,
-                                                                 'param_hints'):
+                    if hasattr(model, 'param_names') and hasattr(model,'param_hints'):
                         for param_name in model.param_names:
                             key = param_name.split('_')[1]
                             if key in model.param_hints and 'value' in \
                                     model.param_hints[key]:
-                                fit_result[param_name] = model.param_hints[key][
-                                    'value']
+                                fit_result[param_name] = model.param_hints[key]['value']
 
                 if len(fit_result) > 3:
                     fit_results_list.append(fit_result)
@@ -280,23 +278,18 @@ class Maps(QObject):
 
         if self.df_fit_results is not None and not self.df_fit_results.empty:
             # reindex columns according to the parameters names
-            self.df_fit_results = self.df_fit_results.reindex(
-                sorted(self.df_fit_results.columns), axis=1)
+            self.df_fit_results = self.df_fit_results.reindex(sorted(self.df_fit_results.columns), axis=1)
             names = []
             for name in self.df_fit_results.columns:
-                if name in ["Filename", "X", 'Y', "success"]:
-                    # to be in the 3 first columns
+                if name in ["Filename", "X", 'Y']:
                     name = '0' + name
                 elif '_' in name:
-                    # model peak parameters to be at the end
                     name = 'z' + name[5:]
                 names.append(name)
-            self.df_fit_results = self.df_fit_results.iloc[:,
-                                  list(np.argsort(names, kind='stable'))]
-            # columns = [
-            #     self.common.translate_param(self.current_fit_model, column) for
-            #     column in self.df_fit_results.columns]
-            # self.df_fit_results.columns = columns
+            self.df_fit_results = self.df_fit_results.iloc[:,list(np.argsort(names, kind='stable'))]
+            # Replace peak_label
+            columns = [self.common.replace_peak_labels(self.current_fit_model, column) for column in self.df_fit_results.columns]
+            self.df_fit_results.columns = columns
 
             
             if self.map_plot.rdbt_wafer.isChecked():
@@ -311,7 +304,6 @@ class Maps(QObject):
             else: 
                 pass
         self.df_table.show(self.df_fit_results)
-
 
     def update_peak_model(self):
         """Update the peak model in the SpectraViewWidget based on combobox selection."""

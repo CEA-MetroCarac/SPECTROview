@@ -678,41 +678,32 @@ class Spectrums(QObject):
             if hasattr(spectrum, 'peak_models'):
                 fit_result = {'Filename': spectrum.fname}
                 for model in spectrum.peak_models:
-                    if hasattr(model, 'param_names') and hasattr(model,
-                                                                 'param_hints'):
+                    if hasattr(model, 'param_names') and hasattr(model,'param_hints'):
                         for param_name in model.param_names:
                             key = param_name.split('_')[1]
                             if key in model.param_hints and 'value' in \
                                     model.param_hints[key]:
-                                fit_result[param_name] = model.param_hints[key][
-                                    'value']
-
+                                fit_result[param_name] = model.param_hints[key]['value']
                 if len(fit_result) > 1:
                     fit_results_list.append(fit_result)
         self.df_fit_results = (pd.DataFrame(fit_results_list)).round(3)
 
-        # if self.df_fit_results is not None and not self.df_fit_results.empty:
-        #     # reindex columns according to the parameters names
-        #     self.df_fit_results = self.df_fit_results.reindex(
-        #         sorted(self.df_fit_results.columns),
-        #         axis=1)
-        #     names = []
-        #     for name in self.df_fit_results.columns:
-        #         if name in ["Filename", "success"]:
-        #             name = '0' + name
-        #         elif '_' in name:
-        #             name = 'z' + name[5:]
-        #         names.append(name)
-        #     self.df_fit_results = self.df_fit_results.iloc[:,
-        #                           list(np.argsort(names, kind='stable'))]
-            # columns = [
-            #     self.common.translate_param(self.current_fit_model, column) for
-            #     column
-            #     in self.df_fit_results.columns]
-            # self.df_fit_results.columns = columns
+        if self.df_fit_results is not None and not self.df_fit_results.empty:
+            # reindex columns according to the parameters names
+            self.df_fit_results = self.df_fit_results.reindex(sorted(self.df_fit_results.columns), axis=1)
+            names = []
+            for name in self.df_fit_results.columns:
+                if name in ["Filename"]:
+                    name = '0' + name
+                elif '_' in name:
+                    name = 'z' + name[5:]
+                names.append(name)
+            self.df_fit_results = self.df_fit_results.iloc[:,list(np.argsort(names, kind='stable'))]
+            # Replace peak_label
+            columns = [self.common.replace_peak_labels(self.current_fit_model, column) for column in self.df_fit_results.columns]
+            self.df_fit_results.columns = columns
         
         self.df_table.show(self.df_fit_results)
-
 
     def split_fname(self):
         """Split the filename and populate the combobox."""

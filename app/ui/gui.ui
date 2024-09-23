@@ -298,7 +298,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>513</height>
+                          <height>534</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -338,7 +338,6 @@
                             <widget class="QLabel" name="label_22">
                              <property name="font">
                               <font>
-                               <weight>75</weight>
                                <bold>true</bold>
                               </font>
                              </property>
@@ -455,7 +454,6 @@
                              <widget class="QLabel" name="label_65">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -555,7 +553,6 @@
                              <widget class="QLabel" name="label_69">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -691,7 +688,7 @@
                                  <string>To remove all baseline points and undo the baseline subtraction</string>
                                 </property>
                                 <property name="text">
-                                 <string>Remove BL</string>
+                                 <string>Remove</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -719,7 +716,7 @@
  Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Copy BL points</string>
+                                 <string>Copy BL</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -734,7 +731,7 @@
  Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Paste BL points</string>
+                                 <string>Paste BL</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -783,7 +780,6 @@
                              <widget class="QLabel" name="label_72">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -899,8 +895,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>729</width>
-                               <height>69</height>
+                               <width>725</width>
+                               <height>72</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -1257,8 +1253,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
-                       <height>228</height>
+                       <width>283</width>
+                       <height>243</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -1299,7 +1295,6 @@
                         </property>
                         <property name="font">
                          <font>
-                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -1616,7 +1611,6 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -2347,7 +2341,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>485</height>
+                          <height>507</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -2391,7 +2385,6 @@
                              <widget class="QLabel" name="label_54">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2491,7 +2484,6 @@
                              <widget class="QLabel" name="label_52">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2627,7 +2619,7 @@
                                  <string>To remove all baseline points and undo the baseline subtraction</string>
                                 </property>
                                 <property name="text">
-                                 <string>Remove BL</string>
+                                 <string>Remove</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -2655,7 +2647,7 @@
  Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Copy BL points</string>
+                                 <string>Copy BL</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -2670,7 +2662,7 @@
  Hold 'Ctrl' and press button to apply to all spectra.</string>
                                 </property>
                                 <property name="text">
-                                 <string>Paste BL points</string>
+                                 <string>Paste BL</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -2719,7 +2711,6 @@
                              <widget class="QLabel" name="label_57">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2835,8 +2826,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>729</width>
-                               <height>69</height>
+                               <width>712</width>
+                               <height>72</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -3223,8 +3214,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>495</height>
+                       <width>283</width>
+                       <height>243</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -3265,7 +3256,6 @@
                         </property>
                         <property name="font">
                          <font>
-                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -3699,7 +3689,6 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -4883,8 +4872,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>372</width>
-                    <height>477</height>
+                    <width>395</width>
+                    <height>474</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -4921,7 +4910,6 @@
                        </property>
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5036,7 +5024,6 @@
                       <widget class="QLabel" name="label_91">
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5096,7 +5083,6 @@
                       <widget class="QLabel" name="label_97">
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5304,8 +5290,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>235</width>
-                    <height>249</height>
+                    <width>277</width>
+                    <height>288</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -5429,7 +5415,6 @@
                      <property name="font">
                       <font>
                        <pointsize>9</pointsize>
-                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -5517,8 +5502,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>362</width>
-                    <height>310</height>
+                    <width>364</width>
+                    <height>371</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_9">

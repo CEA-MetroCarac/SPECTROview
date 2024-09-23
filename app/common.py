@@ -1359,24 +1359,43 @@ class DataframeTableWidget(QWidget):
         # Add this widget to the external layout
         self.external_layout.addWidget(self)
 
+    
     def show(self, df):
-        """Populates the QTableWidget with data from the given DataFrame.
-
-        Args:
-            df (pd.DataFrame): The DataFrame to be displayed in the QTableWidget.
-        """
+        """Populates the QTableWidget with data from the given DataFrame, with colored columns."""
         if df is not None and not df.empty:
             self.table_widget.setRowCount(df.shape[0])
             self.table_widget.setColumnCount(df.shape[1])
             self.table_widget.setHorizontalHeaderLabels(df.columns)
+
+            # Assign colors based on the column prefix
+            column_colors = self.get_column_colors(df.columns)
+
             for row in range(df.shape[0]):
                 for col in range(df.shape[1]):
                     item = QTableWidgetItem(str(df.iat[row, col]))
+                    item.setBackground(column_colors[col])  # Set background color
                     self.table_widget.setItem(row, col, item)
+
             self.table_widget.resizeColumnsToContents()
         else:
             self.clear()
+            
+    def get_column_colors(self, columns):
+        """Generates a color for each column """
+        palette = ['#bda16d', '#6c4177', '#cb5b12', '#23993b', '#008281', '#147ce4']
+        prefix_colors = {}
+        column_colors = []
 
+        for col_name in columns:
+            prefix = col_name.split("_")[0] if "_" in col_name else col_name
+            # Assign the next available color from the palette
+            if prefix not in prefix_colors:
+                color_index = len(prefix_colors) % len(palette)
+                prefix_colors[prefix] = QColor(palette[color_index])
+            column_colors.append(prefix_colors[prefix])
+        return column_colors
+
+    
     def clear(self):
         """Clears all data from the QTableWidget."""
         self.table_widget.clearContents()

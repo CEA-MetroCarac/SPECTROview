@@ -1382,7 +1382,7 @@ class DataframeTableWidget(QWidget):
             
     def get_column_colors(self, columns):
         """Generates a color for each column """
-        palette = ['#bda16d', '#6c4177', '#cb5b12', '#23993b', '#008281', '#147ce4']
+        palette = ['#bda16d', '#a27ba0', '#cb5b12', '#23993b', '#008281', '#147ce4']
         prefix_colors = {}
         column_colors = []
 

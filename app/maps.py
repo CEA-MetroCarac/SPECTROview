@@ -5,6 +5,8 @@ import pandas as pd
 import json
 from copy import deepcopy
 from pathlib import Path
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill
 
 from .common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline
 from .common import FitThread, PeakTableWidget, DataframeTableWidget, \
@@ -637,27 +639,51 @@ class Maps(QObject):
         self.apply_loaded_fit_model(fnames=fnames)
 
     def save_fit_results(self):
-        """Save fitted results in an Excel file"""
-
+        """Function to save fitted results in an Excel file with colored columns."""
         last_dir = self.settings.value("last_directory", "/")
         save_path, _ = QFileDialog.getSaveFileName(
             self.ui.tabWidget, "Save DF fit results", last_dir,
-            "Excel Files (*.xlsx)")
+            "Excel Files (*.xlsx)"
+        )
         if save_path:
             try:
                 if not self.df_fit_results.empty:
-                    self.df_fit_results.to_excel(save_path, index=False)
+                    # Save DataFrame to Excel
+                    with pd.ExcelWriter(save_path, engine='openpyxl') as writer:
+                        self.df_fit_results.to_excel(writer, index=False, sheet_name='Results')
+                        workbook = writer.book
+                        worksheet = writer.sheets['Results']
+
+                        # Define the color palette
+                        palette = ['#bda16d', '#a27ba0', '#cb5b12', '#23993b', '#008281', '#147ce4']
+                        prefix_colors = {}
+                        max_columns = len(self.df_fit_results.columns)
+
+                        # Apply colors based on column prefixes
+                        for col_idx, col_name in enumerate(self.df_fit_results.columns, start=1):
+                            prefix = col_name.split("_")[0] if "_" in col_name else col_name
+                            if prefix not in prefix_colors:
+                                color_index = len(prefix_colors) % len(palette)
+                                prefix_colors[prefix] = PatternFill(start_color=palette[color_index][1:], end_color=palette[color_index][1:], fill_type='solid')
+                            
+                            # Apply the fill color to the entire column
+                            for row in range(2, len(self.df_fit_results) + 2):  # Start from row 2 to skip header
+                                worksheet.cell(row=row, column=col_idx).fill = prefix_colors[prefix]
+
                     QMessageBox.information(
                         self.ui.tabWidget, "Success",
-                        "DataFrame saved successfully.")
+                        "DataFrame saved successfully."
+                    )
                 else:
                     QMessageBox.warning(
                         self.ui.tabWidget, "Warning",
-                        "DataFrame is empty. Nothing to save.")
+                        "DataFrame is empty. Nothing to save."
+                    )
             except Exception as e:
                 QMessageBox.critical(
                     self.ui.tabWidget, "Error",
-                    f"Error saving DataFrame: {str(e)}")
+                    f"Error saving DataFrame: {str(e)}"
+                )
     
     def split_fname(self):
         """Split 'Filename' column and populate the combobox"""

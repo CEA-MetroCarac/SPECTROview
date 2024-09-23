@@ -380,8 +380,8 @@ class Main:
             'method': self.settings.value('method', defaultValue='leastsq',
                                           type=str),
             'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float), 
-            'attached': self.settings.value('attached',
-                                                defaultValue=True, type=bool),
+            # 'attached': self.settings.value('attached',
+            #                                     defaultValue=True, type=bool),
             
             # Spectra module
             'fit_negative2': self.settings.value('fit_negative2',
@@ -391,8 +391,8 @@ class Main:
             'method2': self.settings.value('method2', defaultValue='leastsq',
                                           type=str),
             'xtol2': self.settings.value('xtol2', defaultValue=1.e-4, type=float),
-            'attached2': self.settings.value('attached2',
-                                                defaultValue=True, type=bool),
+            # 'attached2': self.settings.value('attached2',
+            #                                     defaultValue=True, type=bool),
             
             # Visualization module
             'grid': self.settings.value('grid', defaultValue=False, type=bool),
@@ -404,13 +404,13 @@ class Main:
         self.ui.max_iteration.setValue(gui_states['max_ite'])
         self.ui.cbb_fit_methods.setCurrentText(gui_states['method'])
         self.ui.xtol.setText(str(gui_states['xtol']))
-        self.ui.cb_attached.setChecked(gui_states['attached'])
+        # self.ui.cb_attached.setChecked(gui_states['attached'])
         
         self.ui.cb_fit_negative_2.setChecked(gui_states['fit_negative2'])
         self.ui.max_iteration_2.setValue(gui_states['max_ite2'])
         self.ui.cbb_fit_methods_2.setCurrentText(gui_states['method2'])
         self.ui.xtol_2.setText(str(gui_states['xtol2']))
-        self.ui.cb_attached_2.setChecked(gui_states['attached2'])
+        # self.ui.cb_attached_2.setChecked(gui_states['attached2'])
         
         self.ui.cb_grid.setChecked(gui_states['grid'])
         

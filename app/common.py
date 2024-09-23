@@ -226,7 +226,6 @@ class MapViewWidget(QWidget):
         self.map_widget_layout.addLayout(self.x_slider_layout)
         self.map_widget_layout.addLayout(self.z_slider_layout)
     
-    # After populating the combobox
     def populate_z_values_cbb(self):
         self.z_values_cbb.clear() 
         self.z_values_cbb.addItems(['Area', 'Intensity'])
@@ -256,10 +255,13 @@ class MapViewWidget(QWidget):
         self.x_range_label.setText(f'[{xmin}; {xmax}]')
         
     def update_z_range_slider(self):
-        _,_, vmin, vmax, =self.get_data_for_heatmap()
-        self.z_range_slider.setRange(vmin, vmax)
-        self.z_range_slider.setValue((vmin, vmax))
-        self.z_range_label.setText(f'[{vmin}; {vmax}]')
+        if self.z_values_cbb.count() > 0 and self.z_values_cbb.currentIndex() >= 0:
+            _,_, vmin, vmax, =self.get_data_for_heatmap()
+            self.z_range_slider.setRange(vmin, vmax)
+            self.z_range_slider.setValue((vmin, vmax))
+            self.z_range_label.setText(f'[{vmin}; {vmax}]')
+        else:
+            print("No valid Z value selected.")
 
     def update_z_range_label(self):
         """Update the QLabel text with the current values."""
@@ -388,9 +390,18 @@ class MapViewWidget(QWidget):
                 if parameter == 'Area':
                     # Intensity sums of of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
-                if parameter == 'Intensity':
+                elif parameter == 'Intensity':
                     # Max intensity value of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
+                else:
+                    if not self.df_fit_results.empty:
+                        map_name = self.map_df_name
+                        filtered_df = self.df_fit_results.query('Filename == @map_name')
+                        
+                        if not filtered_df.empty and parameter in filtered_df.columns:
+                            z_col = filtered_df[parameter]
+                        else:
+                            z_col = None
                 
                 if self.cb_auto_scale.isChecked():
                     # Remove outliers using IQR method and replace them with interpolated values

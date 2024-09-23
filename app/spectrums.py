@@ -705,11 +705,11 @@ class Spectrums(QObject):
                 names.append(name)
             self.df_fit_results = self.df_fit_results.iloc[:,
                                   list(np.argsort(names, kind='stable'))]
-            columns = [
-                self.common.translate_param(self.current_fit_model, column) for
-                column
-                in self.df_fit_results.columns]
-            self.df_fit_results.columns = columns
+            # columns = [
+            #     self.common.translate_param(self.current_fit_model, column) for
+            #     column
+            #     in self.df_fit_results.columns]
+            # self.df_fit_results.columns = columns
         
         self.df_table.show(self.df_fit_results)
 

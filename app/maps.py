@@ -293,10 +293,10 @@ class Maps(QObject):
                 names.append(name)
             self.df_fit_results = self.df_fit_results.iloc[:,
                                   list(np.argsort(names, kind='stable'))]
-            columns = [
-                self.common.translate_param(self.current_fit_model, column) for
-                column in self.df_fit_results.columns]
-            self.df_fit_results.columns = columns
+            # columns = [
+            #     self.common.translate_param(self.current_fit_model, column) for
+            #     column in self.df_fit_results.columns]
+            # self.df_fit_results.columns = columns
 
             
             if self.map_plot.rdbt_wafer.isChecked():

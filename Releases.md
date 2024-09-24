@@ -8,9 +8,12 @@
     - Plot heatmap from `Area`, `Intensity` or fitted parameters directly in Maps TAB.
     - `Auto scale` feature to filter out the outliers values of the heatmap.
     - Adjust `x-rang` and the heatmap color range via QRangSliders
-    - Plot a line profile directly in the heatmap plot whenever 2 points is selected.
+    - Plot a line profile (height profile) directly in the heatmap plot whenever 2 points are selected.
     - Extract data of the line profile, send and plot it directly in Visualization TAB.
     - Copy the heatmap canvas in Clipboard. 
+<p align="center">
+    <img width=300 src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/doc\figures_release_notes\heatmap_widget.png">
+</p>
 
 - **Calibration of x-range for Spectrums TAB:**
     - Added new attributes `spectrum.is_corrected` and `spectrum.correction_value` for to track the calibration state of the `spectrum` object.

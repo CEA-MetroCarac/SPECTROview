@@ -2,7 +2,8 @@
 import pandas as pd
 from pathlib import Path
 import json
-
+import gzip
+from io import StringIO
 from app.common import view_df, show_alert, copy_fig_to_clb
 from app.common import PLOT_STYLES, PALETTE, LEGEND_LOCATION
 from app.common import Graph, FilterWidget
@@ -752,16 +753,23 @@ class Visualization(QDialog):
                                                        "*.graphs)")
             if file_path:
                 # Convert Graph objects to serializable format
+                
+                
                 plots_data = {}
                 for graph_id, graph in self.plots.items():
                     graph_data = graph.save(fname=None)
                     plots_data[graph_id] = graph_data
+                
+                compressed_dfs = {}
+                for k, v in self.original_dfs.items():
+                    # Convert DataFrame to a CSV string and compress it
+                    compressed_df = v.to_csv(index=False).encode('utf-8')
+                    compressed_dfs[k] = gzip.compress(compressed_df)
 
                 # Prepare data to save
                 data_to_save = {
                     'plots': plots_data,
-                    'original_dfs': {key: df.to_dict() for key, df in
-                                     self.original_dfs.items()},
+                    'original_dfs': {k: v.hex() for k, v in compressed_dfs.items()},
                 }
                 # Save to JSON file
                 with open(file_path, 'w') as f:
@@ -777,7 +785,13 @@ class Visualization(QDialog):
             self.clear_env()
             with open(file_path, 'r') as f:
                 load = json.load(f)
-                self.original_dfs = {key: pd.DataFrame(value) for key, value in load.get('original_dfs', {}).items()}
+
+                self.original_dfs = {}
+                for k, v in load.get('original_dfs', {}).items():
+                        compressed_data = bytes.fromhex(v)
+                        csv_data = gzip.decompress(compressed_data).decode('utf-8')
+                        self.original_dfs[k] = pd.read_csv(StringIO(csv_data)) 
+                
                 self.update_dfs_list()
 
                 # Load plots

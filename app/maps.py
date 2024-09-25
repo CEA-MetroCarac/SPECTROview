@@ -87,6 +87,11 @@ class Maps(QObject):
         self.ui.cbb_fit_methods.addItems(FIT_METHODS)
         self.ui.btn_send_to_viz2.clicked.connect(self.send_df_to_viz)
 
+        # Peak correction
+        self.ui.btn_xrange_correction_2.clicked.connect(self.xrange_correction)
+        self.ui.btn_undo_correction_2.clicked.connect(lambda: self.undo_xrange_correction())
+        
+
         # FITMODEL FOLDER
         self.fit_model_manager = FitModelManager(self.settings)
         self.fit_model_manager.default_model_folder = self.settings.value(
@@ -236,6 +241,47 @@ class Maps(QObject):
                 spectrum.correction_value = 0 
                 spectrum.baseline.mode = "Linear"
                 self.spectrums.append(spectrum)
+
+    def xrange_correction(self, ref_value=None, sel_spectra=None):
+        """Correct peak shift based on Si reference sample."""
+        try:
+            text = self.ui.ent_si_peak_2.text()
+            ref_value = round(float(text), 3)                
+            if sel_spectra is None:
+                _, sel_spectra = self.get_spectrum_object()
+            
+            # Restore to original values
+            self.undo_xrange_correction(sel_spectra)
+            for spectrum in sel_spectra:
+                # Correction action
+                correction_value = (520.7 - ref_value)
+                uncorrectted_x = deepcopy(spectrum.x)
+                uncorrectted_x0 = deepcopy(spectrum.x0)
+                spectrum.x = uncorrectted_x + correction_value
+                spectrum.x0 = uncorrectted_x0 + correction_value
+                spectrum.correction_value = correction_value
+                spectrum.is_corrected = True
+
+            QTimer.singleShot(100, self.upd_spectra_list)
+
+        except ValueError:
+            QMessageBox.warning(self.ui.tabWidget, "Input Error", "Please enter a valid numeric Si peak reference.")
+
+    
+    def undo_xrange_correction(self, sel_spectra=None):
+        """Undo peak shift correction for the given spectra."""
+        if sel_spectra is None:
+            _, sel_spectra = self.get_spectrum_object()
+        for spectrum in sel_spectra:
+            if spectrum.is_corrected:
+                # Restore original X values
+                correctted_x=deepcopy(spectrum.x)
+                correctted_x0=deepcopy(spectrum.x0)
+                spectrum.x = correctted_x - spectrum.correction_value
+                spectrum.x0 = correctted_x0 - spectrum.correction_value
+                spectrum.correction_value = 0
+                spectrum.is_corrected = False
+        QTimer.singleShot(100, self.upd_spectra_list)
 
     def view_fit_results_df(self):
         """To view selected dataframe in GUI"""
@@ -693,12 +739,23 @@ class Maps(QObject):
         if fnames is None:
             map_name, coords = self.spectra_id()
             fnames = [f"{map_name}_{coord}" for coord in coords]
+        
+        selected_spectrums = []
+        for spectrum in self.spectrums:
+            map_name_fs, coord_fs = self.spectrum_object_id(spectrum)
+            if map_name_fs == map_name and coord_fs in coords:
+                selected_spectrums.append(spectrum)
+
+        # Restore spectrums if they were x-range corrected
+        self.undo_xrange_correction(selected_spectrums)
+
         self.common.reinit_spectrum(fnames, self.spectrums)
         self.upd_spectra_list()
         QTimer.singleShot(200, self.spectra_widget.rescale)
 
     def reinit_all(self):
         """Reinitialize all spectra"""
+        self.undo_xrange_correction(self.spectrums)
         fnames = self.spectrums.fnames
         self.reinit(fnames)
 
@@ -724,6 +781,11 @@ class Maps(QObject):
         self.map_plot.map_df_name=map_name
         self.map_plot.map_df=df
         self.map_plot.plot(coords)
+
+        # Show correction value of the last selected item
+        correction_value = round(selected_spectrums[-1].correction_value, 3)
+        text = f"[{correction_value}]"
+        self.ui.lbl_correction_value_2.setText(text)
 
         self.read_x_range()
         self.peak_table.show(selected_spectrums[0])
@@ -887,14 +949,7 @@ class Maps(QObject):
                 item.setSelected(True)
 
     def get_spectrum_object(self):
-        """
-        Get the selected spectrum object from the UI.-
-
-        Returns:
-        - sel_spectrum: The primary selected spectrum object.
-        - sel_spectra: List of all selected spectrum objects.
-
-        """
+        """Get the selected spectrum(s) object"""
         map_name, coords = self.spectra_id()
         sel_spectra = []
         for spectrum in self.spectrums:
@@ -904,7 +959,10 @@ class Maps(QObject):
         if len(sel_spectra) == 0:
             return
         sel_spectrum = sel_spectra[0]
-        return sel_spectrum, sel_spectra
+        if sel_spectrum is not None and sel_spectra:
+            return sel_spectrum, sel_spectra
+        else:
+            return None, None
 
     def spectra_id(self):
         """

@@ -1253,7 +1253,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
+                       <width>428</width>
                        <height>243</height>
                       </rect>
                      </property>
@@ -2382,6 +2382,118 @@
                              <number>2</number>
                             </property>
                             <item>
+                             <layout class="QHBoxLayout" name="horizontalLayout_18">
+                              <property name="spacing">
+                               <number>5</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="QLabel" name="label_26">
+                                <property name="font">
+                                 <font>
+                                  <bold>true</bold>
+                                 </font>
+                                </property>
+                                <property name="text">
+                                 <string>Xaxis correct:</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QLineEdit" name="ent_si_peak_2">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>80</width>
+                                  <height>0</height>
+                                 </size>
+                                </property>
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>80</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="toolTip">
+                                 <string>Type the measured Si-reference values</string>
+                                </property>
+                                <property name="placeholderText">
+                                 <string>Si-Ref peak</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QLabel" name="lbl_correction_value_2">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>70</width>
+                                  <height>0</height>
+                                 </size>
+                                </property>
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>70</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="toolTip">
+                                 <string>The corrected values of the selected spectrum.</string>
+                                </property>
+                                <property name="text">
+                                 <string>[0]</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <spacer name="spacer_2">
+                                <property name="orientation">
+                                 <enum>Qt::Horizontal</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>40</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                               </spacer>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="btn_xrange_correction_2">
+                                <property name="toolTip">
+                                 <string>Type the measured peak position of Si-reference sample then correct for selected spectra</string>
+                                </property>
+                                <property name="text">
+                                 <string>Correct</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="btn_undo_correction_2">
+                                <property name="toolTip">
+                                 <string>Restore to the uncorrected x-range</string>
+                                </property>
+                                <property name="text">
+                                 <string/>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/undo2.png</normaloff>:/icon/iconpack/undo2.png</iconset>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </item>
+                            <item>
                              <widget class="QLabel" name="label_54">
                               <property name="font">
                                <font>
@@ -3214,8 +3326,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
-                       <height>243</height>
+                       <width>428</width>
+                       <height>517</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -4873,7 +4985,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>395</width>
-                    <height>454</height>
+                    <height>474</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">

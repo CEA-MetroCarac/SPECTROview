@@ -240,6 +240,7 @@ class Spectrums(QObject):
     def plot(self):
         """Plot spectra or fit results in the main plot area."""
         fnames = self.get_spectrum_fnames()
+        
         selected_spectrums = Spectra()
         selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
         # Limit the number of spectra to avoid crashes
@@ -414,10 +415,8 @@ class Spectrums(QObject):
             fnames.append(text)
         return fnames
         
-
     def get_spectrum_object(self):
-        """Get the Spectrum object of currently selected spectra"""
-        
+        """Get the selected spectrum(s) object"""
         fnames = self.get_spectrum_fnames()
         sel_spectra = []
         for spectrum in self.spectrums:
@@ -757,8 +756,14 @@ class Spectrums(QObject):
         """Reinitialize the selected spectrum(s)"""
         if fnames is None:
             fnames = self.get_spectrum_fnames()
+        selected_spectrums = Spectra()
+        selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
+        
+        # Restore spectrums if they were x-range corrected
+        self.undo_xrange_correction(selected_spectrums)
+
+        # Reinit spectrum
         self.common.reinit_spectrum(fnames, self.spectrums)
-        self.refresh_gui()
         self.upd_spectra_list()
         QTimer.singleShot(200, self.spectra_widget.rescale)
 
@@ -771,7 +776,6 @@ class Spectrums(QObject):
     def view_fit_results_df(self):
         """To view selected dataframe in GUI"""
         df = getattr(self, 'df_fit_results', None)  
-        
         if df is not None and not df.empty: 
             view_df(self.ui.tabWidget, df)
         else:

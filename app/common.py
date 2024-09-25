@@ -277,6 +277,8 @@ class MapViewWidget(QWidget):
 
         self.map_widget_layout.addLayout(self.x_slider_layout)
         self.map_widget_layout.addLayout(self.z_slider_layout)
+        vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.map_widget_layout.addItem(vspacer)
     
     def populate_z_values_cbb(self):
         self.z_values_cbb.clear() 

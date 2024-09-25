@@ -81,6 +81,7 @@ class MapViewWidget(QWidget):
         self.map_df_name = None
         self.map_df =pd.DataFrame() 
         self.df_fit_results =pd.DataFrame() 
+        self.map_type = '2Dmap'
         self.dpi = 70
         self.figure = None
         self.ax = None
@@ -131,6 +132,7 @@ class MapViewWidget(QWidget):
         self.cb_auto_scale = QCheckBox("Auto scale")
         self.cb_auto_scale.stateChanged.connect(self.update_z_range_slider)
         
+        
         toolbar_layout.addWidget(self.toolbar)
         toolbar_layout.addItem(spacer)
         toolbar_layout.addWidget(self.cb_auto_scale)
@@ -157,9 +159,10 @@ class MapViewWidget(QWidget):
         self.create_range_sliders(0,100)
         
     def create_options_menu(self):
-        """Create option on right_click_menu"""
+        """Create option menu on right click on 2Dmap plot"""
+        self.options_menu = QMenu(self)
         options = [
-            ("Smoothing", "Smoothing", True),
+            ("Smoothing", "Smoothing", False),
         ]
         for option_name, option_label, *checked in options:
             action = QAction(option_label, self)
@@ -168,8 +171,7 @@ class MapViewWidget(QWidget):
             action.triggered.connect(self.refresh_plot)
             self.menu_actions[option_name] = action
             self.options_menu.addAction(action)  
-            
-        self.options_menu = QMenu(self)
+        
         # COLOR_PALETTE combobox
         palette = QWidget(self.options_menu)
         palette_layout = QHBoxLayout(palette)
@@ -214,7 +216,27 @@ class MapViewWidget(QWidget):
         wafer_size_action = QWidgetAction(self)
         wafer_size_action.setDefaultWidget(wafer_size)
         self.options_menu.addAction(wafer_size_action)
+        
+        # Profile Name QLineEdit and Extract Button
+        profile_widget = QWidget(self.options_menu)
+        profile_layout = QHBoxLayout(profile_widget)
+        self.profil_name = QLineEdit(profile_widget)
+        self.profil_name.setText("Profile_1")
+        self.profil_name.setPlaceholderText("Profile_name...")
+        self.profil_name.setFixedWidth(100)
 
+        self.btn_extract_profil = QPushButton("Extract", profile_widget)
+        self.btn_extract_profil.setToolTip("Extract profile data and plot it in Visu tab")
+
+        profile_layout.addWidget(self.profil_name)
+        profile_layout.addWidget(self.btn_extract_profil)
+        profile_layout.setContentsMargins(5, 5, 5, 5)
+
+        # Create a QWidgetAction to hold the QLineEdit and QPushButton
+        profile_action = QWidgetAction(self)
+        profile_action.setDefaultWidget(profile_widget)
+        self.options_menu.addAction(profile_action)
+        
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
         # Create x-axis range slider
@@ -255,6 +277,23 @@ class MapViewWidget(QWidget):
 
         self.map_widget_layout.addLayout(self.x_slider_layout)
         self.map_widget_layout.addLayout(self.z_slider_layout)
+        
+        # ## Create button to extract profil
+        # layout = QHBoxLayout()
+        # layout.setContentsMargins(5, 0, 5, 0)
+        # self.profil_name = QLineEdit()
+        # self.profil_name.setText("Profile_1")
+        # self.profil_name.setPlaceholderText("Profile_name...")
+        # self.profil_name.setFixedWidth(100) 
+        
+        # self.btn_extract_profil = QPushButton("Extract ")
+        # self.btn_extract_profil.setToolTip("Extract profile data and plot it in Visu tab")
+        
+        # spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        # layout.addItem(spacer)
+        # layout.addWidget(self.profil_name)
+        # layout.addWidget(self.btn_extract_profil)
+        # self.map_widget_layout.addLayout(layout)
     
     def populate_z_values_cbb(self):
         self.z_values_cbb.clear() 
@@ -313,13 +352,10 @@ class MapViewWidget(QWidget):
             all_x, all_y = self.get_mes_sites_coord()
             self.ax.scatter(all_x, all_y, marker='x', color='gray', s=10)
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-
-        
+            
         # Plot heatmap for 2D map
         if map_type == '2Dmap':
-                
             heatmap_pivot, extent, vmin, vmax = self.get_data_for_heatmap()
-            
             color = self.cbb_palette.currentText()
             interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
             vmin, vmax = self.z_range_slider.value()

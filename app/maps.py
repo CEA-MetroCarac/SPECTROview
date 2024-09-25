@@ -77,26 +77,10 @@ class Maps(QObject):
         self.map_plot = MapViewWidget(self)
         self.map_plot.spectra_listbox= self.ui.spectra_listbox
         self.ui.map_layout.addWidget(self.map_plot.widget)
+        self.map_plot.btn_extract_profil.clicked.connect(self.plot_extracted_profile)
         
-        ## Create button to extract profil
-        layout = QHBoxLayout()
-        layout.setContentsMargins(5, 0, 5, 0)
-        self.profil_name = QLineEdit()
-        self.profil_name.setText("Profile_1")
-        self.profil_name.setPlaceholderText("Profile_name...")
-        self.profil_name.setFixedWidth(100) 
-        self.btn_extract_profil = QPushButton("Extract ")
-        self.btn_extract_profil.clicked.connect(self.plot_extracted_profile)
-        self.btn_extract_profil.setToolTip("Extract profile data and plot it in Visu tab")
-        spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        layout.addItem(spacer)
-        layout.addWidget(self.profil_name)
-        layout.addWidget(self.btn_extract_profil)
-        self.map_plot.map_widget_layout.addLayout(layout)
-
         ## Update spectra_listbox when selecting maps via MAPS LIST
-        self.ui.maps_listbox.itemSelectionChanged.connect(
-            self.upd_spectra_list)
+        self.ui.maps_listbox.itemSelectionChanged.connect(self.upd_spectra_list)
         
         # BASELINE
         self.setup_baseline_controls()
@@ -302,8 +286,8 @@ class Maps(QObject):
             columns = [self.common.replace_peak_labels(self.current_fit_model, column) for column in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
 
-            
-            if self.map_plot.rdbt_wafer.isChecked():
+            map_type = self.map_plot.cbb_map_type.currentText()
+            if map_type == 'Wafer':
                 # DIAMETER
                 diameter = float(self.map_plot.cbb_wafer_size.currentText())
                 # QUADRANT
@@ -982,7 +966,7 @@ class Maps(QObject):
     def plot_extracted_profile(self):
         """Extract profile from map plot and Plot in VIS TAB"""
         
-        profile_name = self.profil_name.text()
+        profile_name = self.map_plot.profil_name.text()
         profil_df = self.map_plot.extract_profile()
         
         if profil_df is not None and profile_name is not None:

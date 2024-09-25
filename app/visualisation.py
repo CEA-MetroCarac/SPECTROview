@@ -81,19 +81,22 @@ class Visualization(QDialog):
             if file_paths:
                 for file_path in file_paths:
                     file_path = Path(file_path)
-                    fname = file_path.stem  # get fname w/o extension
+                    fname = file_path.stem  # get fname without extension
                     extension = file_path.suffix.lower()
                     if extension == '.xlsx':
-                        excel_file = pd.ExcelFile(file_path)
-                        sheet_names = excel_file.sheet_names
-                        for sheet_name in sheet_names:
-                            sheet_name_cleaned = sheet_name.replace(" ", "")
-                            df_name = f"{fname}_{sheet_name_cleaned}"
-                            self.original_dfs[df_name] = pd.read_excel(
-                                excel_file, sheet_name=sheet_name)
+                        # Open and read all sheets into memory, then close the file
+                        with pd.ExcelFile(file_path) as excel_file:
+                            sheet_names = excel_file.sheet_names
+                            for sheet_name in sheet_names:
+                                sheet_name_cleaned = sheet_name.replace(" ", "")
+                                df_name = f"{fname}_{sheet_name_cleaned}"
+                                # Read each sheet and store in self.original_dfs
+                                self.original_dfs[df_name] = pd.read_excel(
+                                    excel_file, sheet_name=sheet_name)
                     else:
                         show_alert(f"Unsupported file format: {extension}")
         self.update_dfs_list()
+
 
     def update_dfs_list(self):
         """

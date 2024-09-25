@@ -103,6 +103,7 @@ class Spectrums(QObject):
         self.ui.btn_copy_bl_2.clicked.connect(self.copy_baseline)
         self.ui.btn_paste_bl_2.clicked.connect(self.paste_baseline_handler)
         self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
+        self.get_baseline_settings()
 
     def open_spectra(self, spectra=None, file_paths=None):
         """Open and load raw spectral data"""
@@ -153,6 +154,7 @@ class Spectrums(QObject):
                     spectrum.correction_value = 0   
 
                     spectrum.baseline.mode = "Linear"
+                    spectrum.baseline.sigma = 5
                     self.spectrums.append(spectrum)
 
         QTimer.singleShot(100, self.upd_spectra_list)

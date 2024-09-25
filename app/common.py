@@ -2411,30 +2411,30 @@ def decompress(data, dtype):
     return np.frombuffer(decompressed, dtype=dtype)
 
 def plot_baseline_dynamically(ax, spectrum):
-        """Evaluate and plot baseline points and line dynamically"""
-        if not spectrum.baseline.is_subtracted:
-            x_bl = spectrum.x
-            y_bl = spectrum.y if spectrum.baseline.attached else None
-            if len(spectrum.baseline.points[0]) == 0:
-                return
-            # Clear any existing baseline plot
-            for line in ax.lines:
-                if line.get_label() == "Baseline":
-                    line.remove()
-            # Evaluate the baseline
-            attached = spectrum.baseline.attached
-            baseline_values = spectrum.baseline.eval(x_bl, y_bl,
-                                                     attached=attached)
-            ax.plot(x_bl, baseline_values, 'r')
+    """Evaluate and plot baseline points and line dynamically"""
+    if not spectrum.baseline.is_subtracted:
+        x_bl = spectrum.x
+        y_bl = spectrum.y if spectrum.baseline.attached else None
+        if len(spectrum.baseline.points[0]) == 0:
+            return
+        # Clear any existing baseline plot
+        for line in ax.lines:
+            if line.get_label() == "Baseline":
+                line.remove()
+        # Evaluate the baseline
+        attached = spectrum.baseline.attached
+        baseline_values = spectrum.baseline.eval(x_bl, y_bl,
+                                                    attached=attached)
+        ax.plot(x_bl, baseline_values, 'r')
 
-            # Plot the attached baseline points
-            if spectrum.baseline.attached and y_bl is not None:
-                attached_points = spectrum.baseline.attached_points(x_bl, y_bl)
-                ax.plot(attached_points[0], attached_points[1], 'ko',
-                        mfc='none')
-            else:
-                ax.plot(spectrum.baseline.points[0],
-                        spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
+        # Plot the attached baseline points
+        if spectrum.baseline.attached and y_bl is not None:
+            attached_points = spectrum.baseline.attached_points(x_bl, y_bl)
+            ax.plot(attached_points[0], attached_points[1], 'ko',
+                    mfc='none')
+        else:
+            ax.plot(spectrum.baseline.points[0],
+                    spectrum.baseline.points[1], 'ko', mfc='none', ms=5)
 
 def populate_spectrum_listbox(spectrum, spectrum_name, checked_states):
     """ Populate the listbox with spectrums with colors"""

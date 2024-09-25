@@ -113,6 +113,7 @@ class Maps(QObject):
         self.ui.cb_attached.stateChanged.connect(self.get_baseline_settings)
         self.ui.noise.valueChanged.connect(self.get_baseline_settings)
         self.ui.rbtn_linear.toggled.connect(self.get_baseline_settings)
+        self.ui.rbtn_polynomial.clicked.connect(self.get_baseline_settings)
         self.ui.degre.valueChanged.connect(self.get_baseline_settings)
         
         self.ui.btn_copy_bl.clicked.connect(self.copy_baseline)

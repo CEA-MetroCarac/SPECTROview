@@ -9,3 +9,4 @@ app/.DS_Store
 .DS_Store
 .exe
 env_spectroview/
+*.spec*

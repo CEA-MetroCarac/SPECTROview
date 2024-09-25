@@ -9,7 +9,7 @@
     - `Auto scale` feature to filter out the outliers values of the heatmap.
     - Adjust `x-rang` and the heatmap color range via QRangSliders
     - Plot a line profile (height profile) directly in the heatmap plot whenever 2 points are selected.
-    - Extract data of the line profile, send and plot it directly in Visualization TAB.
+    - Extract data of the line profile, send them (data and plot) to Visualization TAB.
     - Copy the heatmap canvas in Clipboard. 
 <p align="center">
     <img width=300 src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/doc\figures_release_notes\heatmap_widget.png">
@@ -27,3 +27,5 @@
     - Implemented  keyboard shortcuts for switching between tabs (Hold Ctrl + 1, 2, or 3).
 - **Bug Fixes:**
     - Fixed an error related to the new attributes when saving **old_saved_work** files.
+
+**Full Changelog**: https://github.com/CEA-MetroCarac/SPECTROview/commits/v0.2.9

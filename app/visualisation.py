@@ -198,7 +198,9 @@ class Visualization(QDialog):
             # Add the QDialog to a QMdiSubWindow
             sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize, mdi_area=self.ui.mdiArea)
             sub_window.setWidget(graph_dialog)
-            sub_window.closed.connect(self.delete_graph)
+            # When creating a new graph dialog
+            sub_window.closed.connect(lambda graph_id=graph.graph_id: self.delete_graph(graph_id))
+
             sub_window.resize(graph.plot_width, graph.plot_height)
             self.ui.mdiArea.addSubWindow(sub_window)
             sub_window.show()
@@ -621,19 +623,7 @@ class Visualization(QDialog):
                     self.ui.mdiArea.setActiveSubWindow(sub_window)
                     return
 
-    def delete_graph(self, graph_id):
-        """Delete the specified graph from the plots dictionary"""
-        graph, graph_dialog, sub_window = self.get_sel_graph()
-        if graph is None:
-            return
-        graph_id = graph.graph_id
-        if graph_id:
-            self.plots.pop(graph_id, None)
-            if sub_window:
-                self.ui.mdiArea.removeSubWindow(sub_window)
-                sub_window.close()
-                self.add_graph_list_to_combobox()
-            print(f"Plot {graph_id} is deleted")
+    
 
     def minimize_all_graph(self):
         """
@@ -815,7 +805,10 @@ class Visualization(QDialog):
                     # Add the QDialog to the mdiArea
                     sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize, mdi_area=self.ui.mdiArea)
                     sub_window.setWidget(graph_dialog)
-                    sub_window.closed.connect(self.delete_graph)
+                    
+                    # Connect the closed signal to delete_graph with a lambda to pass graph_id
+                    sub_window.closed.connect(lambda _, graph_id=graph.graph_id: self.delete_graph(graph_id))
+
                     self.ui.mdiArea.addSubWindow(sub_window)
                     sub_window.resize(graph.plot_width, graph.plot_height)
                     sub_window.show()
@@ -827,7 +820,29 @@ class Visualization(QDialog):
         except Exception as e:
             show_alert(f"Error loading work: {e}")
 
+    def delete_graph(self, graph_id):
+        """Delete the specified graph from the plots dictionary by graph_id"""
+        graph = self.plots.get(graph_id)
+        if graph is None:
+            return
 
+        sub_window = None
+        # Find the subwindow related to the graph
+        for window in self.ui.mdiArea.subWindowList():
+            if isinstance(window, MdiSubWindow) and window.graph_id == graph_id:
+                sub_window = window
+                break
+
+        # Remove the graph and close the subwindow
+        if graph_id in self.plots:
+            self.plots.pop(graph_id, None)
+            if sub_window:
+                self.ui.mdiArea.removeSubWindow(sub_window)
+                sub_window.close()
+            self.add_graph_list_to_combobox()
+            print(f"Plot {graph_id} deleted")
+
+            
 class MdiSubWindow(QMdiSubWindow):
     """
     Custom class of QMdiSubWindow to prevent automatic selection of other windows

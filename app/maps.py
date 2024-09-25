@@ -77,15 +77,17 @@ class Maps(QObject):
         self.map_plot = MapViewWidget(self)
         self.map_plot.spectra_listbox= self.ui.spectra_listbox
         self.ui.map_layout.addWidget(self.map_plot.widget)
+        
         ## Create button to extract profil
         layout = QHBoxLayout()
         layout.setContentsMargins(5, 0, 5, 0)
         self.profil_name = QLineEdit()
-        self.profil_name.setText("Profil1")
-        self.profil_name.setPlaceholderText("Profil_name...")
-        self.btn_extract_profil = QPushButton("Extract profil")
+        self.profil_name.setText("Profile_1")
+        self.profil_name.setPlaceholderText("Profile_name...")
+        self.profil_name.setFixedWidth(100) 
+        self.btn_extract_profil = QPushButton("Extract ")
         self.btn_extract_profil.clicked.connect(self.plot_extracted_profile)
-        self.btn_extract_profil.setToolTip("Extract and plot a profile 2Dmap")
+        self.btn_extract_profil.setToolTip("Extract profile data and plot it in Visu tab")
         spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         layout.addItem(spacer)
         layout.addWidget(self.profil_name)

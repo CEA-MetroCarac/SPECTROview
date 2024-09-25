@@ -87,6 +87,7 @@ class MapViewWidget(QWidget):
         self.canvas = None
         self.toolbar = None
         self.spectra_listbox = None
+        self.menu_actions = {}
         self.initUI()
 
     def initUI(self):
@@ -127,13 +128,12 @@ class MapViewWidget(QWidget):
         self.btn_copy.setIcon(icon)
         self.btn_copy.setIconSize(QSize(24, 24))
         self.btn_copy.clicked.connect(self.copy_fig)
-        self.cb_smoothing = QCheckBox("Smoothing")
-        self.cb_smoothing.stateChanged.connect(self.refresh_plot)
+        self.cb_auto_scale = QCheckBox("Auto scale")
+        self.cb_auto_scale.stateChanged.connect(self.update_z_range_slider)
         
-
         toolbar_layout.addWidget(self.toolbar)
         toolbar_layout.addItem(spacer)
-        toolbar_layout.addWidget(self.cb_smoothing)
+        toolbar_layout.addWidget(self.cb_auto_scale)
         toolbar_layout.addWidget(self.btn_copy)
 
         frame_layout.addLayout(toolbar_layout)
@@ -146,44 +146,74 @@ class MapViewWidget(QWidget):
         self.ctrl_pressed = False
         
         # Connect the mouse and key events to the handler functions
-        self.figure.canvas.mpl_connect('button_press_event', self.on_click_2Dmap)
+        self.figure.canvas.mpl_connect('button_press_event', self.on_left_click_2Dmap)
+        self.figure.canvas.mpl_connect('button_press_event', self.on_right_click_2Dmap)
         self.figure.canvas.mpl_connect('key_press_event', self.on_key_press)
         self.figure.canvas.mpl_connect('key_release_event', self.on_key_release)
         
         self.canvas.draw()
 
-        self.create_buttons()
+        self.create_options_menu()
         self.create_range_sliders(0,100)
-
-    def create_buttons(self):
-        """Create other buttons/comboboxes/checkboxes"""
-        # Create the first layout for radio buttons and checkboxes
-        layout = QHBoxLayout()
-        layout.setContentsMargins(5, 0, 5, 0)
-
-        self.rdbt_map = QRadioButton("2Dmap", self)
-        self.rdbt_wafer = QRadioButton("Wafer", self)
-        self.rdbt_map.setChecked(True) 
-        self.cbb_wafer_size = QComboBox()
-        self.cbb_wafer_size.addItems(['300', '200', '150'])
-        self.cbb_color = QComboBox()
-        self.cbb_color.addItems(PALETTE)
-        self.cb_auto_scale = QCheckBox("Auto scale")
-
-        # Connect to refresh function
-        self.rdbt_wafer.toggled.connect(self.refresh_plot)
-        self.cbb_wafer_size.currentIndexChanged.connect(self.refresh_plot)
-        self.cbb_color.currentIndexChanged.connect(self.refresh_plot)
-        self.cb_auto_scale.stateChanged.connect(self.update_z_range_slider)
         
-        # Add widgets to the layout
-        layout.addWidget(self.rdbt_map)
-        layout.addWidget(self.rdbt_wafer)
-        layout.addWidget(self.cbb_wafer_size)
-        layout.addWidget(self.cbb_color)
-        layout.addWidget(self.cb_auto_scale)
-        # Add the layout to the main layout
-        self.map_widget_layout.addLayout(layout)
+    def create_options_menu(self):
+        """Create option on right_click_menu"""
+        options = [
+            ("Smoothing", "Smoothing", True),
+        ]
+        for option_name, option_label, *checked in options:
+            action = QAction(option_label, self)
+            action.setCheckable(True)
+            action.setChecked(checked[0] if checked else False)
+            action.triggered.connect(self.refresh_plot)
+            self.menu_actions[option_name] = action
+            self.options_menu.addAction(action)  
+            
+        self.options_menu = QMenu(self)
+        # COLOR_PALETTE combobox
+        palette = QWidget(self.options_menu)
+        palette_layout = QHBoxLayout(palette)
+        palette_label = QLabel("Color palette:", palette)
+        palette_layout.addWidget(palette_label)
+        self.cbb_palette = QComboBox(palette)
+        self.cbb_palette.addItems(PALETTE)
+        self.cbb_palette.currentIndexChanged.connect(self.refresh_plot)
+        palette_layout.addWidget(self.cbb_palette)
+        palette_layout.setContentsMargins(5, 5, 5, 5)
+        # Create a QWidgetAction to hold the combined QLabel and QComboBox
+        palette_action = QWidgetAction(self)
+        palette_action.setDefaultWidget(palette)
+        self.options_menu.addAction(palette_action)
+        
+        # MAP_TYPE combobox (wafer or 2Dmap)
+        map_type = QWidget(self.options_menu)
+        map_type_layout = QHBoxLayout(map_type)
+        map_type_label = QLabel("Wafer size (mm):", map_type)
+        map_type_layout.addWidget(map_type_label)
+        self.cbb_map_type = QComboBox(map_type)
+        self.cbb_map_type.addItems(['2Dmap', 'Wafer'])
+        self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
+        map_type_layout.addWidget(self.cbb_map_type)
+        map_type_layout.setContentsMargins(5, 5, 5, 5)
+        # Create a QWidgetAction to hold the combined QLabel and QComboBox
+        map_type_action = QWidgetAction(self)
+        map_type_action.setDefaultWidget(map_type)
+        self.options_menu.addAction(map_type_action)
+        
+        # WAFER_SIZE combobox
+        wafer_size = QWidget(self.options_menu)
+        wafer_size_layout = QHBoxLayout(wafer_size)
+        wafer_size_label = QLabel("Wafer size (mm):", wafer_size)
+        wafer_size_layout.addWidget(wafer_size_label)
+        self.cbb_wafer_size = QComboBox(wafer_size)
+        self.cbb_wafer_size.addItems(['300', '200', '150', '100'])
+        self.cbb_wafer_size.currentIndexChanged.connect(self.refresh_plot)
+        wafer_size_layout.addWidget(self.cbb_wafer_size)
+        wafer_size_layout.setContentsMargins(5, 5, 5, 5)
+        # Create a QWidgetAction to hold the combined QLabel and QComboBox
+        wafer_size_action = QWidgetAction(self)
+        wafer_size_action.setDefaultWidget(wafer_size)
+        self.options_menu.addAction(wafer_size_action)
 
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
@@ -272,8 +302,9 @@ class MapViewWidget(QWidget):
         """Plot 2D maps of measurement points"""
         
         r = int(self.cbb_wafer_size.currentText()) / 2
+        map_type = self.cbb_map_type.currentText()
         self.ax.clear()
-        if self.rdbt_wafer.isChecked():
+        if map_type == 'Wafer':
             wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
                                         color='black', linewidth=1)
             self.ax.add_patch(wafer_circle)
@@ -283,13 +314,14 @@ class MapViewWidget(QWidget):
             self.ax.scatter(all_x, all_y, marker='x', color='gray', s=10)
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
 
+        
         # Plot heatmap for 2D map
-        if self.rdbt_map.isChecked():
+        if map_type == '2Dmap':
                 
             heatmap_pivot, extent, vmin, vmax = self.get_data_for_heatmap()
             
-            color = self.cbb_color.currentText()
-            interpolation_option = 'bilinear' if self.cb_smoothing.isChecked() else 'none'
+            color = self.cbb_palette.currentText()
+            interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
             vmin, vmax = self.z_range_slider.value()
 
             self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
@@ -306,7 +338,7 @@ class MapViewWidget(QWidget):
             x, y = zip(*coords)
             self.ax.scatter(x, y, marker='o', color='red', s=20)
 
-            if self.rdbt_map.isChecked():     #Only for 2Dmap plot
+            if map_type == '2Dmap':   #Only for 2Dmap plot
                 self.plot_height_profile_on_map(coords)
 
         title = self.z_values_cbb.currentText()
@@ -431,7 +463,7 @@ class MapViewWidget(QWidget):
                 
         return heatmap_pivot, extent, vmin, vmax
         
-    def on_click_2Dmap(self, event):
+    def on_left_click_2Dmap(self, event):
         """select the measurement points via 2Dmap plot"""
         all_x, all_y = self.get_mes_sites_coord()
         self.spectra_listbox.clearSelection()
@@ -466,6 +498,13 @@ class MapViewWidget(QWidget):
             else:
                 item.setSelected(False)
     
+    def on_right_click_2Dmap(self, event):
+        """Show view options menu on right-click."""
+        if event.button == 3:  # 3 is the right-click button
+            # Show the menu at the cursor position
+            cursor_pos = QCursor.pos()  
+            self.options_menu.exec_(cursor_pos)    
+            
     def extract_profile(self):
         """Extract a profile from 2D map plot via interpolation."""
         # Ensure exactly two points have been selected
@@ -517,6 +556,382 @@ class MapViewWidget(QWidget):
         copy_fig_to_clb(self.canvas)
 
 
+
+
+
+class SpectraViewWidget(QWidget):
+    """Class to manage the spectra view widget."""
+    def __init__(self, main_app):
+        super().__init__()
+        self.main_app = main_app # To connect to a method of main app (refresh gui)
+        self.sel_spectrums =None
+        self.peak_model = 'Lorentzian'
+        self.dpi = 90
+        self.figure = None
+        self.ax = None
+        self.canvas = None
+        self.toolbar = None
+        self.zoom_pan_active = False
+        self.menu_actions = {}
+        self.initUI()
+
+    def initUI(self):
+        """Initialize the UI components."""
+        self.create_plot_widget()
+
+    def create_plot_widget(self):
+        """Create or update canvas and toolbar for plotting in the GUI."""
+        plt.style.use(PLOT_POLICY)
+
+        if not self.figure:
+            self.figure = plt.figure(dpi=self.dpi)
+            self.ax = self.figure.add_subplot(111)
+            self.canvas = FigureCanvas(self.figure)
+            self.canvas.mpl_connect('button_press_event', self.on_left_click)
+            self.canvas.mpl_connect('button_press_event', self.on_right_click)
+
+            self.toolbar = NavigationToolbar2QT(self.canvas, self)
+
+            # Set up the toolbar visibility and connect events
+            for action in self.toolbar.actions():
+                if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+                    action.setVisible(False)
+                if action.text() in ['Pan', 'Zoom']:
+                    action.toggled.connect(self.toggle_zoom_pan)
+
+            rescale = next((a for a in self.toolbar.actions() if a.text() == 'Home'), None)
+            if rescale:
+                rescale.triggered.connect(self.rescale)
+
+            # Create radio buttons for Peak and Baseline
+            self.rdbtn_baseline = QRadioButton("Baseline", self)
+            self.rdbtn_peak = QRadioButton("Peak", self)
+            self.rdbtn_baseline.setChecked(True) 
+            self.R2 = QLabel("R2=0", self)
+            self.R2.setFixedWidth(80)
+
+
+            # Create a QPushButton for Copy figure canvans
+            self.btn_copy = QPushButton("", self)
+            icon = QIcon()
+            icon.addFile(u":/icon/iconpack/copy.png", QSize(), QIcon.Normal, QIcon.Off)
+            self.btn_copy.setIcon(icon)
+            self.btn_copy.setIconSize(QSize(24, 24))
+            self.btn_copy.clicked.connect(self.copy_fig)
+
+            self.create_options_menu()
+
+            #Add all items in a same layout
+            self.control_widget = QWidget(self)
+            self.control_layout = QHBoxLayout(self.control_widget)
+            self.control_layout.setContentsMargins(0, 0, 0, 0)
+            
+            # Add widgets to the horizontal layout
+            self.control_layout.addWidget(self.toolbar)
+            self.control_layout.addWidget(self.rdbtn_baseline)
+            self.control_layout.addWidget(self.rdbtn_peak)
+            self.control_layout.addWidget(self.R2)
+            self.control_layout.addWidget(self.btn_copy)
+
+            # Set the layout of control_widget
+            self.control_widget.setLayout(self.control_layout)
+        self.update_plot_styles()
+    
+    def create_options_menu(self):
+        """Create widget containing all view options."""
+        self.options_menu = QMenu(self)
+        
+        # X axis unit combobox
+        xaxis_unit_widget = QWidget(self.options_menu)
+        xaxis_unit_layout = QHBoxLayout(xaxis_unit_widget)
+        xaxis_unit_label = QLabel("X-axis unit:", xaxis_unit_widget)
+        xaxis_unit_layout.addWidget(xaxis_unit_label)
+
+        self.cbb_xaxis_unit = QComboBox(xaxis_unit_widget)
+        self.cbb_xaxis_unit.addItems(X_AXIS_UNIT)
+        self.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_plot)
+        xaxis_unit_layout.addWidget(self.cbb_xaxis_unit)
+        xaxis_unit_layout.setContentsMargins(5, 5, 5, 5)
+        
+        # Create a QWidgetAction to hold the combined QLabel and QComboBox
+        combo_action = QWidgetAction(self)
+        combo_action.setDefaultWidget(xaxis_unit_widget)
+        self.options_menu.addAction(combo_action)
+        
+        # Y axis scale
+        yaxis_scale_widget = QWidget(self.options_menu)
+        yaxis_scale_layout = QHBoxLayout(yaxis_scale_widget)
+        yaxis_scale_label = QLabel("Y-axis scale:", yaxis_scale_widget)
+        yaxis_scale_layout.addWidget(yaxis_scale_label)
+
+        self.cbb_yaxis_scale = QComboBox(yaxis_scale_widget)
+        self.cbb_yaxis_scale.addItems(['Linear scale', 'Log scale'])
+        self.cbb_yaxis_scale.currentIndexChanged.connect(self.refresh_plot)
+        yaxis_scale_layout.addWidget(self.cbb_yaxis_scale)
+        yaxis_scale_layout.setContentsMargins(5, 5, 5, 5)
+        
+         # Create a QWidgetAction to hold the combined QLabel and QComboBox
+        combo_action2 = QWidgetAction(self)
+        combo_action2.setDefaultWidget(yaxis_scale_widget)
+        self.options_menu.addAction(combo_action2)
+        
+
+        # Add a separator to distinguish the combobox from checkable actions
+        self.options_menu.addSeparator()
+
+        # Define view options with checkable actions
+        options = [
+            ("Legends", "Legends"),
+            ("Colors", "Colors", True),
+            ("Peaks", "Show Peaks"),
+            ("Filled", "Filled", True),
+            ("Bestfit", "Best Fit", True),
+            ("Raw", "Raw data"),
+            ("Residual", "Residual"),
+            ("Normalized", "Normalized"),
+        ]
+
+        # Add actions to the menu
+        for option_name, option_label, *checked in options:
+            action = QAction(option_label, self)
+            action.setCheckable(True)
+            action.setChecked(checked[0] if checked else False)
+            action.triggered.connect(self.refresh_plot)
+            self.menu_actions[option_name] = action
+            self.options_menu.addAction(action)
+
+
+    def update_plot_styles(self):
+        """Apply styles and settings to the plot."""
+        xlable = self.cbb_xaxis_unit.currentText()
+        self.ax.set_xlabel(xlable)
+        self.ax.set_ylabel("Intensity (a.u)")
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+
+    def toggle_zoom_pan(self, checked):
+        """Toggle zoom and pan functionality for spectra plot."""
+        self.zoom_pan_active = checked
+        if not checked:
+            self.zoom_pan_active = False
+    
+    def rescale(self):
+        """Rescale the spectra plot to fit within the axes."""
+        self.ax.autoscale()
+        self.canvas.draw()
+
+    def on_right_click(self, event):
+        """Show view options menu on right-click."""
+        if event.button == 3:  # 3 is the right-click button
+            # Show the menu at the cursor position
+            cursor_pos = QCursor.pos()  
+            self.options_menu.exec_(cursor_pos)
+
+    def on_left_click(self, event):
+        """
+        Handle click events on spectra plot canvas for adding peak models or baseline points.
+        """
+        if event.inaxes != self.ax: # Ignore clicks outside the plot area
+            return
+
+        x_click = event.xdata
+        y_click = event.ydata
+
+        if self.sel_spectrums:
+            sel_spectrum = self.sel_spectrums[0]
+            if self.zoom_pan_active:
+                # Do nothing if zoom or pan is active
+                return
+            if self.rdbtn_peak.isChecked():
+                if event.button == 1:  # Left mouse button
+                    sel_spectrum.add_peak_model(self.peak_model, x_click)
+                    self.refresh_gui() # update GUI in main application
+            elif self.rdbtn_baseline.isChecked():
+                if event.button == 1: 
+                    if sel_spectrum.baseline.is_subtracted:
+                        show_alert("Already subtracted before. Reinitialize spectrum to perform new baseline")
+                    else:
+                        sel_spectrum.baseline.add_point(x_click, y_click)
+        self.refresh_plot()  
+        
+    def set_peak_model(self, model):
+        """Set the peak model to be used when clicking on the plot."""
+        self.peak_model = model
+
+    def refresh_gui(self):
+        """Call the refresh_gui method of the main application."""
+        if hasattr(self.main_app, 'refresh_gui'):
+            self.main_app.refresh_gui()
+        else:
+            print("Main application does not have refresh_gui method.")
+
+
+    def plot(self, sel_spectrums):
+        """Plot spectra or fit results in the figure canvas."""
+        if not sel_spectrums:
+            self.clear_plot()
+            return
+        self.sel_spectrums = sel_spectrums
+
+        self.prepare_plot()
+
+        for spectrum in self.sel_spectrums:
+            self.plot_spectrum(spectrum)
+
+        self.finalize_plot()
+
+    def prepare_plot(self):
+        """Prepare the plot area before plotting spectra."""
+        # Save current xlim and ylim to maintain zoom/pan state
+        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
+        self.ax.clear() 
+
+        # Restore xlim and ylim if they were changed
+        if not xlim == ylim == (0.0, 1.0):
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
+
+    def plot_spectrum(self, spectrum):
+        """Plot a single spectrum on the canvas."""
+        x_values = spectrum.x
+        y_values = self.get_y_values(spectrum)
+
+        self.ax.plot(x_values, y_values, label=f"{spectrum.fname}", ms=3, lw=2)
+        plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
+
+        if self.menu_actions['Raw'].isChecked():
+            self.plot_raw_data(spectrum)
+
+        if self.menu_actions['Bestfit'].isChecked():
+            self.plot_peaks_and_bestfit(spectrum)
+
+        if self.menu_actions['Residual'].isChecked() and hasattr(spectrum.result_fit, 'residual'):
+            self.plot_residual(spectrum)
+        
+        if hasattr(spectrum.result_fit, 'rsquared'):
+            self.show_R2(spectrum)
+        else:
+            self.show_R2(None)
+
+        # Reset color cycle if Colors option is not checked
+        if not self.menu_actions['Colors'].isChecked():
+            self.ax.set_prop_cycle(None)
+
+    def get_y_values(self, spectrum):
+        """Get y-values for a spectrum, applying normalization if needed."""
+        y_values = spectrum.y
+        if self.menu_actions['Normalized'].isChecked():
+            max_intensity = max(spectrum.y)
+            y_values = y_values / max_intensity
+        return y_values
+
+    def plot_raw_data(self, spectrum):
+        """Plot raw data points if the option is checked."""
+        x0_values = spectrum.x0
+        y0_values = spectrum.y0
+        self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3, lw=1)
+
+    def plot_peaks_and_bestfit(self, spectrum):
+        """Plot peaks and best-fit line if the option is checked."""
+        x_values = spectrum.x
+        y_peaks = np.zeros_like(x_values)
+        y_bkg = self.get_background_y_values(spectrum)
+
+        peak_labels = spectrum.peak_labels
+        for i, peak_model in enumerate(spectrum.peak_models):
+            y_peak = self.evaluate_peak_model(peak_model, x_values)
+            y_peaks += y_peak
+            self.plot_peak(y_peak, x_values, peak_labels[i], peak_model)
+
+        if hasattr(spectrum.result_fit, 'success'):
+            y_fit = y_bkg + y_peaks
+            self.ax.plot(x_values, y_fit, label="bestfit")
+
+    def get_background_y_values(self, spectrum):
+        """Get y-values for the background model."""
+        x_values = spectrum.x
+        if spectrum.bkg_model is not None:
+            return spectrum.bkg_model.eval(spectrum.bkg_model.make_params(), x=x_values)
+        return np.zeros_like(x_values)
+
+    def evaluate_peak_model(self, peak_model, x_values):
+        """Evaluate the peak model to get y-values."""
+        param_hints_orig = deepcopy(peak_model.param_hints)
+        for key in peak_model.param_hints.keys():
+            peak_model.param_hints[key]['expr'] = ''
+        params = peak_model.make_params()
+        peak_model.param_hints = param_hints_orig
+        return peak_model.eval(params, x=x_values)
+
+    def plot_peak(self, y_peak, x_values, peak_label, peak_model):
+        """Plot individual peak with or without filling."""
+        if self.menu_actions['Filled'].isChecked():
+            self.ax.fill_between(x_values, 0, y_peak, alpha=0.5, label=f"{peak_label}")
+            if self.menu_actions['Peaks'].isChecked():
+                self.annotate_peak(peak_model, peak_label)
+        else:
+            self.ax.plot(x_values, y_peak, '--', label=f"{peak_label}")
+
+    def annotate_peak(self, peak_model, peak_label):
+        """Annotate peaks on the plot with labels."""
+        position = peak_model.param_hints['x0']['value']
+        intensity = peak_model.param_hints['ampli']['value']
+        position = round(position, 2)
+        text = f"{peak_label}\n({position})"
+        self.ax.text(position, intensity, text, ha='center', va='bottom', color='black', fontsize=12)
+
+    def plot_residual(self, spectrum):
+        """Plot the residuals if available."""
+        x_values = spectrum.x
+        residual = spectrum.result_fit.residual
+        self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
+
+    def show_R2(self, spectrum):
+        """Display R² value in the GUI."""
+        if spectrum is not None and hasattr(spectrum.result_fit, 'rsquared'):
+            rsquared = round(spectrum.result_fit.rsquared, 4)
+            self.R2.setText(f"R²={rsquared}")
+        else:
+            self.R2.setText("R²=0")
+
+    def finalize_plot(self):
+        """Finalize plot settings and draw the canvas."""
+        # Use the selected x-axis label from the combobox
+        xlabel = self.cbb_xaxis_unit.currentText() if self.cbb_xaxis_unit else "Wavenumber (cm-1)"
+        self.ax.set_xlabel(xlabel)
+        self.ax.set_ylabel("Intensity (a.u)")
+        y_scale = self.cbb_yaxis_scale.currentText()
+        if y_scale == 'Log scale':
+            self.ax.set_yscale('log')
+        else:  # Default to linear scale
+            self.ax.set_yscale('linear')
+
+        if self.menu_actions['Legends'].isChecked():
+            self.ax.legend(loc='upper right')
+
+        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        self.figure.tight_layout()
+        self.canvas.draw()
+        
+    def clear_plot(self):
+        """Explicitly clear the spectra plot."""
+        if self.ax:
+            self.ax.clear()
+            self.ax.set_xlabel("X-axis")
+            self.ax.set_ylabel("Y-axis")
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+            self.canvas.draw_idle()  
+            
+    def refresh_plot(self):
+        """Refresh the plot based on user view options."""
+        if not self.sel_spectrums:
+            self.clear_plot() 
+        else:
+            self.plot(self.sel_spectrums)
+    
+    def copy_fig(self):
+        """Copy figure canvas to clipboard"""
+        copy_fig_to_clb(self.canvas)
+        
 class FilterWidget:
     """
     Class for Handling "Filter Features" in Querying Pandas DataFrames
@@ -691,381 +1106,6 @@ class FilterWidget:
             self.filter_listbox.addItem(item)
             self.filter_listbox.setItemWidget(item, checkbox)
             checkbox.setChecked(filter_data["state"])
-
-
-class SpectraViewWidget(QWidget):
-    """Class to manage the spectra view widget."""
-    def __init__(self, main_app):
-        super().__init__()
-        self.main_app = main_app # To connect to a method of main app (refresh gui)
-        self.sel_spectrums =None
-        self.peak_model = 'Lorentzian'
-        self.dpi = 90
-        self.figure = None
-        self.ax = None
-        self.canvas = None
-        self.toolbar = None
-        self.zoom_pan_active = False
-        self.view_options = {}
-        self.initUI()
-
-    def initUI(self):
-        """Initialize the UI components."""
-        self.create_plot_widget()
-
-    def create_plot_widget(self):
-        """Create or update canvas and toolbar for plotting in the GUI."""
-        plt.style.use(PLOT_POLICY)
-
-        if not self.figure:
-            self.figure = plt.figure(dpi=self.dpi)
-            self.ax = self.figure.add_subplot(111)
-            self.canvas = FigureCanvas(self.figure)
-            self.canvas.mpl_connect('button_press_event', self.on_left_click)
-            self.canvas.mpl_connect('button_press_event', self.on_right_click)
-
-            self.toolbar = NavigationToolbar2QT(self.canvas, self)
-
-            # Set up the toolbar visibility and connect events
-            for action in self.toolbar.actions():
-                if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
-                    action.setVisible(False)
-                if action.text() in ['Pan', 'Zoom']:
-                    action.toggled.connect(self.toggle_zoom_pan)
-
-            rescale = next((a for a in self.toolbar.actions() if a.text() == 'Home'), None)
-            if rescale:
-                rescale.triggered.connect(self.rescale)
-
-            # Create radio buttons for Peak and Baseline
-            self.rdbtn_baseline = QRadioButton("Baseline", self)
-            self.rdbtn_peak = QRadioButton("Peak", self)
-            self.rdbtn_baseline.setChecked(True) 
-            self.R2 = QLabel("R2=0", self)
-            self.R2.setFixedWidth(80)
-
-
-            # Create a QPushButton for Copy figure canvans
-            self.btn_copy = QPushButton("", self)
-            icon = QIcon()
-            icon.addFile(u":/icon/iconpack/copy.png", QSize(), QIcon.Normal, QIcon.Off)
-            self.btn_copy.setIcon(icon)
-            self.btn_copy.setIconSize(QSize(24, 24))
-            self.btn_copy.clicked.connect(self.copy_fig)
-
-            self.create_view_options()
-
-            #Add all items in a same layout
-            self.control_widget = QWidget(self)
-            self.control_layout = QHBoxLayout(self.control_widget)
-            self.control_layout.setContentsMargins(0, 0, 0, 0)
-            
-            # Add widgets to the horizontal layout
-            self.control_layout.addWidget(self.toolbar)
-            self.control_layout.addWidget(self.rdbtn_baseline)
-            self.control_layout.addWidget(self.rdbtn_peak)
-            self.control_layout.addWidget(self.R2)
-            self.control_layout.addWidget(self.btn_copy)
-
-            # Set the layout of control_widget
-            self.control_widget.setLayout(self.control_layout)
-        self.update_plot_styles()
-    
-    def create_view_options(self):
-        """Create widget containing all view options."""
-        self.view_options_menu = QMenu(self)
-
-        # X axis unit combobox
-        xaxis_unit_widget = QWidget(self.view_options_menu)
-        xaxis_unit_layout = QHBoxLayout(xaxis_unit_widget)
-        xaxis_unit_label = QLabel("X-axis unit:", xaxis_unit_widget)
-        xaxis_unit_layout.addWidget(xaxis_unit_label)
-
-        self.cbb_xaxis_unit = QComboBox(xaxis_unit_widget)
-        self.cbb_xaxis_unit.addItems(X_AXIS_UNIT)
-        self.cbb_xaxis_unit.currentIndexChanged.connect(self.refresh_plot)
-        xaxis_unit_layout.addWidget(self.cbb_xaxis_unit)
-        xaxis_unit_layout.setContentsMargins(5, 5, 5, 5)
-        
-        # Create a QWidgetAction to hold the combined QLabel and QComboBox
-        combo_action = QWidgetAction(self)
-        combo_action.setDefaultWidget(xaxis_unit_widget)
-        self.view_options_menu.addAction(combo_action)
-        
-        # Y axis scale
-        yaxis_scale_widget = QWidget(self.view_options_menu)
-        yaxis_scale_layout = QHBoxLayout(yaxis_scale_widget)
-        yaxis_scale_label = QLabel("Y-axis scale:", yaxis_scale_widget)
-        yaxis_scale_layout.addWidget(yaxis_scale_label)
-
-        self.cbb_yaxis_scale = QComboBox(yaxis_scale_widget)
-        self.cbb_yaxis_scale.addItems(['Linear scale', 'Log scale'])
-        self.cbb_yaxis_scale.currentIndexChanged.connect(self.refresh_plot)
-        yaxis_scale_layout.addWidget(self.cbb_yaxis_scale)
-        yaxis_scale_layout.setContentsMargins(5, 5, 5, 5)
-        
-         # Create a QWidgetAction to hold the combined QLabel and QComboBox
-        combo_action2 = QWidgetAction(self)
-        combo_action2.setDefaultWidget(yaxis_scale_widget)
-        self.view_options_menu.addAction(combo_action2)
-        
-
-        # Add a separator to distinguish the combobox from checkable actions
-        self.view_options_menu.addSeparator()
-
-        # Define view options with checkable actions
-        view_options = [
-            ("Legends", "Legends"),
-            ("Colors", "Colors", True),
-            ("Peaks", "Show Peaks"),
-            ("Filled", "Filled", True),
-            ("Bestfit", "Best Fit", True),
-            ("Raw", "Raw data"),
-            ("Residual", "Residual"),
-            ("Normalized", "Normalized"),
-        ]
-
-        # Add actions to the menu
-        for option_name, option_label, *checked in view_options:
-            action = QAction(option_label, self)
-            action.setCheckable(True)
-            action.setChecked(checked[0] if checked else False)
-            action.triggered.connect(self.refresh_plot)
-            self.view_options[option_name] = action
-            self.view_options_menu.addAction(action)
-
-
-    def update_plot_styles(self):
-        """Apply styles and settings to the plot."""
-        xlable = self.cbb_xaxis_unit.currentText()
-        self.ax.set_xlabel(xlable)
-        self.ax.set_ylabel("Intensity (a.u)")
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-
-    def toggle_zoom_pan(self, checked):
-        """Toggle zoom and pan functionality for spectra plot."""
-        self.zoom_pan_active = checked
-        if not checked:
-            self.zoom_pan_active = False
-    
-    def rescale(self):
-        """Rescale the spectra plot to fit within the axes."""
-        self.ax.autoscale()
-        self.canvas.draw()
-
-    def on_right_click(self, event):
-        """Show view options menu on right-click."""
-        if event.button == 3:  # 3 is the right-click button
-            # Show the menu at the cursor position
-            cursor_pos = QCursor.pos()  
-            self.view_options_menu.exec_(cursor_pos)
-
-    def on_left_click(self, event):
-        """
-        Handle click events on spectra plot canvas for adding peak models or baseline points.
-        """
-        if event.inaxes != self.ax: # Ignore clicks outside the plot area
-            return
-
-        x_click = event.xdata
-        y_click = event.ydata
-
-        if self.sel_spectrums:
-            sel_spectrum = self.sel_spectrums[0]
-            if self.zoom_pan_active:
-                # Do nothing if zoom or pan is active
-                return
-            if self.rdbtn_peak.isChecked():
-                if event.button == 1:  # Left mouse button
-                    sel_spectrum.add_peak_model(self.peak_model, x_click)
-                    self.refresh_gui() # update GUI in main application
-            elif self.rdbtn_baseline.isChecked():
-                if event.button == 1: 
-                    if sel_spectrum.baseline.is_subtracted:
-                        show_alert("Already subtracted before. Reinitialize spectrum to perform new baseline")
-                    else:
-                        sel_spectrum.baseline.add_point(x_click, y_click)
-        self.refresh_plot()  
-        
-    def set_peak_model(self, model):
-        """Set the peak model to be used when clicking on the plot."""
-        self.peak_model = model
-
-    def refresh_gui(self):
-        """Call the refresh_gui method of the main application."""
-        if hasattr(self.main_app, 'refresh_gui'):
-            self.main_app.refresh_gui()
-        else:
-            print("Main application does not have refresh_gui method.")
-
-
-    def plot(self, sel_spectrums):
-        """Plot spectra or fit results in the figure canvas."""
-        if not sel_spectrums:
-            self.clear_plot()
-            return
-        self.sel_spectrums = sel_spectrums
-
-        self.prepare_plot()
-
-        for spectrum in self.sel_spectrums:
-            self.plot_spectrum(spectrum)
-
-        self.finalize_plot()
-
-    def prepare_plot(self):
-        """Prepare the plot area before plotting spectra."""
-        # Save current xlim and ylim to maintain zoom/pan state
-        xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
-        self.ax.clear() 
-
-        # Restore xlim and ylim if they were changed
-        if not xlim == ylim == (0.0, 1.0):
-            self.ax.set_xlim(xlim)
-            self.ax.set_ylim(ylim)
-
-    def plot_spectrum(self, spectrum):
-        """Plot a single spectrum on the canvas."""
-        x_values = spectrum.x
-        y_values = self.get_y_values(spectrum)
-
-        self.ax.plot(x_values, y_values, label=f"{spectrum.fname}", ms=3, lw=2)
-        plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
-
-        if self.view_options['Raw'].isChecked():
-            self.plot_raw_data(spectrum)
-
-        if self.view_options['Bestfit'].isChecked():
-            self.plot_peaks_and_bestfit(spectrum)
-
-        if self.view_options['Residual'].isChecked() and hasattr(spectrum.result_fit, 'residual'):
-            self.plot_residual(spectrum)
-        
-        if hasattr(spectrum.result_fit, 'rsquared'):
-            self.show_R2(spectrum)
-        else:
-            self.show_R2(None)
-
-        # Reset color cycle if Colors option is not checked
-        if not self.view_options['Colors'].isChecked():
-            self.ax.set_prop_cycle(None)
-
-    def get_y_values(self, spectrum):
-        """Get y-values for a spectrum, applying normalization if needed."""
-        y_values = spectrum.y
-        if self.view_options['Normalized'].isChecked():
-            max_intensity = max(spectrum.y)
-            y_values = y_values / max_intensity
-        return y_values
-
-    def plot_raw_data(self, spectrum):
-        """Plot raw data points if the option is checked."""
-        x0_values = spectrum.x0
-        y0_values = spectrum.y0
-        self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3, lw=1)
-
-    def plot_peaks_and_bestfit(self, spectrum):
-        """Plot peaks and best-fit line if the option is checked."""
-        x_values = spectrum.x
-        y_peaks = np.zeros_like(x_values)
-        y_bkg = self.get_background_y_values(spectrum)
-
-        peak_labels = spectrum.peak_labels
-        for i, peak_model in enumerate(spectrum.peak_models):
-            y_peak = self.evaluate_peak_model(peak_model, x_values)
-            y_peaks += y_peak
-            self.plot_peak(y_peak, x_values, peak_labels[i], peak_model)
-
-        if hasattr(spectrum.result_fit, 'success'):
-            y_fit = y_bkg + y_peaks
-            self.ax.plot(x_values, y_fit, label="bestfit")
-
-    def get_background_y_values(self, spectrum):
-        """Get y-values for the background model."""
-        x_values = spectrum.x
-        if spectrum.bkg_model is not None:
-            return spectrum.bkg_model.eval(spectrum.bkg_model.make_params(), x=x_values)
-        return np.zeros_like(x_values)
-
-    def evaluate_peak_model(self, peak_model, x_values):
-        """Evaluate the peak model to get y-values."""
-        param_hints_orig = deepcopy(peak_model.param_hints)
-        for key in peak_model.param_hints.keys():
-            peak_model.param_hints[key]['expr'] = ''
-        params = peak_model.make_params()
-        peak_model.param_hints = param_hints_orig
-        return peak_model.eval(params, x=x_values)
-
-    def plot_peak(self, y_peak, x_values, peak_label, peak_model):
-        """Plot individual peak with or without filling."""
-        if self.view_options['Filled'].isChecked():
-            self.ax.fill_between(x_values, 0, y_peak, alpha=0.5, label=f"{peak_label}")
-            if self.view_options['Peaks'].isChecked():
-                self.annotate_peak(peak_model, peak_label)
-        else:
-            self.ax.plot(x_values, y_peak, '--', label=f"{peak_label}")
-
-    def annotate_peak(self, peak_model, peak_label):
-        """Annotate peaks on the plot with labels."""
-        position = peak_model.param_hints['x0']['value']
-        intensity = peak_model.param_hints['ampli']['value']
-        position = round(position, 2)
-        text = f"{peak_label}\n({position})"
-        self.ax.text(position, intensity, text, ha='center', va='bottom', color='black', fontsize=12)
-
-    def plot_residual(self, spectrum):
-        """Plot the residuals if available."""
-        x_values = spectrum.x
-        residual = spectrum.result_fit.residual
-        self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
-
-    def show_R2(self, spectrum):
-        """Display R² value in the GUI."""
-        if spectrum is not None and hasattr(spectrum.result_fit, 'rsquared'):
-            rsquared = round(spectrum.result_fit.rsquared, 4)
-            self.R2.setText(f"R²={rsquared}")
-        else:
-            self.R2.setText("R²=0")
-
-    def finalize_plot(self):
-        """Finalize plot settings and draw the canvas."""
-        # Use the selected x-axis label from the combobox
-        xlabel = self.cbb_xaxis_unit.currentText() if self.cbb_xaxis_unit else "Wavenumber (cm-1)"
-        self.ax.set_xlabel(xlabel)
-        self.ax.set_ylabel("Intensity (a.u)")
-        y_scale = self.cbb_yaxis_scale.currentText()
-        if y_scale == 'Log scale':
-            self.ax.set_yscale('log')
-        else:  # Default to linear scale
-            self.ax.set_yscale('linear')
-
-        if self.view_options['Legends'].isChecked():
-            self.ax.legend(loc='upper right')
-
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        self.figure.tight_layout()
-        self.canvas.draw()
-        
-    def clear_plot(self):
-        """Explicitly clear the spectra plot."""
-        if self.ax:
-            self.ax.clear()
-            self.ax.set_xlabel("X-axis")
-            self.ax.set_ylabel("Y-axis")
-            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-            self.canvas.draw_idle()  
-            
-    def refresh_plot(self):
-        """Refresh the plot based on user view options."""
-        if not self.sel_spectrums:
-            self.clear_plot() 
-        else:
-            self.plot(self.sel_spectrums)
-    
-    def copy_fig(self):
-        """Copy figure canvas to clipboard"""
-        copy_fig_to_clb(self.canvas)
-
 class PeakTableWidget:
     """Class dedicated to show fit parameters of Spectrum objects in the GUI"""
 

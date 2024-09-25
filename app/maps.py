@@ -77,7 +77,7 @@ class Maps(QObject):
         self.map_plot = MapViewWidget(self)
         self.map_plot.spectra_listbox= self.ui.spectra_listbox
         self.ui.map_layout.addWidget(self.map_plot.widget)
-        self.map_plot.btn_extract_profil.clicked.connect(self.plot_extracted_profile)
+        self.map_plot.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
         
         ## Update spectra_listbox when selecting maps via MAPS LIST
         self.ui.maps_listbox.itemSelectionChanged.connect(self.upd_spectra_list)
@@ -966,7 +966,7 @@ class Maps(QObject):
     def plot_extracted_profile(self):
         """Extract profile from map plot and Plot in VIS TAB"""
         
-        profile_name = self.map_plot.profil_name.text()
+        profile_name = self.map_plot.profile_name.text()
         profil_df = self.map_plot.extract_profile()
         
         if profil_df is not None and profile_name is not None:
@@ -1007,6 +1007,8 @@ class Maps(QObject):
             QTimer.singleShot(100, self.visu.plot_action)
             QTimer.singleShot(200, self.visu.customize_legend)
             self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
+
+            self.map_plot.options_menu.close() #Close option menu
         else:
             msg="Profile extraction failed or insufficient points selected."
             show_alert(msg)

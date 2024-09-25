@@ -190,7 +190,7 @@ class MapViewWidget(QWidget):
         # MAP_TYPE combobox (wafer or 2Dmap)
         map_type = QWidget(self.options_menu)
         map_type_layout = QHBoxLayout(map_type)
-        map_type_label = QLabel("Wafer size (mm):", map_type)
+        map_type_label = QLabel("Map type:", map_type)
         map_type_layout.addWidget(map_type_label)
         self.cbb_map_type = QComboBox(map_type)
         self.cbb_map_type.addItems(['2Dmap', 'Wafer'])
@@ -220,16 +220,16 @@ class MapViewWidget(QWidget):
         # Profile Name QLineEdit and Extract Button
         profile_widget = QWidget(self.options_menu)
         profile_layout = QHBoxLayout(profile_widget)
-        self.profil_name = QLineEdit(profile_widget)
-        self.profil_name.setText("Profile_1")
-        self.profil_name.setPlaceholderText("Profile_name...")
-        self.profil_name.setFixedWidth(100)
+        self.profile_name = QLineEdit(profile_widget)
+        self.profile_name.setText("Profile_1")
+        self.profile_name.setPlaceholderText("Profile_name...")
+        self.profile_name.setFixedWidth(100)
 
-        self.btn_extract_profil = QPushButton("Extract", profile_widget)
-        self.btn_extract_profil.setToolTip("Extract profile data and plot it in Visu tab")
+        self.btn_extract_profile = QPushButton("Extract", profile_widget)
+        self.btn_extract_profile.setToolTip("Extract profile data and plot it in Visu tab")
 
-        profile_layout.addWidget(self.profil_name)
-        profile_layout.addWidget(self.btn_extract_profil)
+        profile_layout.addWidget(self.profile_name)
+        profile_layout.addWidget(self.btn_extract_profile)
         profile_layout.setContentsMargins(5, 5, 5, 5)
 
         # Create a QWidgetAction to hold the QLineEdit and QPushButton
@@ -277,23 +277,6 @@ class MapViewWidget(QWidget):
 
         self.map_widget_layout.addLayout(self.x_slider_layout)
         self.map_widget_layout.addLayout(self.z_slider_layout)
-        
-        # ## Create button to extract profil
-        # layout = QHBoxLayout()
-        # layout.setContentsMargins(5, 0, 5, 0)
-        # self.profil_name = QLineEdit()
-        # self.profil_name.setText("Profile_1")
-        # self.profil_name.setPlaceholderText("Profile_name...")
-        # self.profil_name.setFixedWidth(100) 
-        
-        # self.btn_extract_profil = QPushButton("Extract ")
-        # self.btn_extract_profil.setToolTip("Extract profile data and plot it in Visu tab")
-        
-        # spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        # layout.addItem(spacer)
-        # layout.addWidget(self.profil_name)
-        # layout.addWidget(self.btn_extract_profil)
-        # self.map_widget_layout.addLayout(layout)
     
     def populate_z_values_cbb(self):
         self.z_values_cbb.clear() 

@@ -160,6 +160,7 @@ class MapViewWidget(QWidget):
         
     def create_options_menu(self):
         """Create option menu on right click on 2Dmap plot"""
+        
         self.options_menu = QMenu(self)
         options = [
             ("Smoothing", "Smoothing", False),
@@ -522,7 +523,6 @@ class MapViewWidget(QWidget):
     def on_right_click_2Dmap(self, event):
         """Show view options menu on right-click."""
         if event.button == 3:  # 3 is the right-click button
-            # Show the menu at the cursor position
             cursor_pos = QCursor.pos()  
             self.options_menu.exec_(cursor_pos)    
             
@@ -575,10 +575,6 @@ class MapViewWidget(QWidget):
     def copy_fig(self):
         """Copy figure canvas to clipboard"""
         copy_fig_to_clb(self.canvas)
-
-
-
-
 
 class SpectraViewWidget(QWidget):
     """Class to manage the spectra view widget."""

@@ -213,6 +213,7 @@ class Maps(QObject):
                 spectrum.is_corrected = False
                 spectrum.correction_value = 0
                 spectrum.baseline.mode = "Linear"
+                spectrum.baseline.sigma = 5
                 self.spectrums.append(spectrum)
 
     def process_new_format(self, map_df, map_name):
@@ -242,6 +243,7 @@ class Maps(QObject):
                 spectrum.is_corrected = False
                 spectrum.correction_value = 0 
                 spectrum.baseline.mode = "Linear"
+                spectrum.baseline.sigma = 5
                 self.spectrums.append(spectrum)
 
     def xrange_correction(self, ref_value=None, sel_spectra=None):

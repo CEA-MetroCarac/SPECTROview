@@ -793,7 +793,7 @@ class Visualization(QDialog):
                         self.original_dfs[k] = pd.read_csv(StringIO(csv_data)) 
                 
                 self.update_dfs_list()
-
+                
                 # Load plots
                 plots_data = load.get('plots', {})
                 for graph_id, graph_data in plots_data.items():

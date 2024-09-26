@@ -16,7 +16,10 @@ from PySide6.QtWidgets import QApplication
 
 @pytest.fixture(scope="module", autouse=True)
 def app(qtbot):
+    # This is how you create a QApplication instance for testing
     app = QApplication([])
+
+    # Ensure QApplication is quit after tests
     yield app
     app.quit()
 

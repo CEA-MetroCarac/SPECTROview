@@ -3,14 +3,12 @@ name: Python Tests
 # Trigger the workflow on push or pull request
 on: 
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     strategy:

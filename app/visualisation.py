@@ -828,11 +828,12 @@ class Visualization(QDialog):
                     sub_window.show()
 
                     self.plot_action()
+                    
                 self.filter.upd_filter_listbox()
                 self.add_graph_list_to_combobox()
 
         except Exception as e:
-            show_alert(f"Error loading work: {e}")
+            print(f"Error loading work: {e}")
 
     def delete_graph(self, graph_id):
         """Delete the specified graph from the plots dictionary by graph_id"""

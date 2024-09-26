@@ -201,6 +201,7 @@ class Main:
          - dataframes (Excel)
          - saved work of SPECTROview (.maps, .spectra, .graphs)
         """
+        
         if file_paths is None:
             # Initialize the last used directory from QSettings
             last_dir = self.settings.value("last_directory", "/")

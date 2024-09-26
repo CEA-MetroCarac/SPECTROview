@@ -1,0 +1,43 @@
+import sys
+import os
+from pathlib import Path
+
+from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QIcon
+
+from app.main import Main
+
+# DATA = Path(__file__).parent / "data"
+
+def ex_reading_all_supported_data(file_paths=None):
+    """Example of reading different supported .CSV and .txt data formats"""
+    app = QApplication()
+    window = Main()
+    app.setStyle("Fusion")
+    
+    if file_paths is not None:
+        window.open(file_paths=file_paths)
+    window.ui.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    # DIRNAME = os.path.dirname(__file__)
+    # DATA = os.path.join(DIRNAME, "data_test", "example", "spectroscopic_data")
+    # file_path_1 = os.path.join(DATA, 'spectrum1_1ML.txt')
+    # file_path_2 = os.path.join(DATA, 'spectrum4_3ML.txt')
+    # file_path_3 = os.path.join(DATA, '2Dmap_MoS2.txt')
+    # file_paths = ['file_path_1', 'file_path_2', 'file_path_3']
+    # ex_reading_all_supported_data()
+    
+    DATA_DIR = Path(__file__).parent / "spectroscopic_data"
+    # DATA_DIR = DIRNAME / "data_test" / "example" / "spectroscopic_data"
+    file_paths = [str(file) for file in DATA_DIR.glob("*.txt")]
+    if file_paths:
+        ex_reading_all_supported_data(file_paths=file_paths)
+    else:
+        print(f"No supported data files found in {DATA_DIR}")
+    
+    
+    
+   

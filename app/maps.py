@@ -217,6 +217,7 @@ class Maps(QObject):
 
     def process_new_format(self, map_df, map_name):
         """Process new format wafer dataframe."""
+        print('The support of new data format of SEMILAB is deactivated in this SPECTROview version')
         return
         for i in range(0, len(map_df), 2):
             coord_row = map_df.iloc[i]

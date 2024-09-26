@@ -799,6 +799,7 @@ class Visualization(QDialog):
                 for graph_id, graph_data in plots_data.items():
                     # Recreate graph instance
                     graph = Graph(graph_id=graph_id)
+                    graph.filters = graph_data.get('filters', [])
                     graph.set_attributes(graph_data)
 
                     # Plot the graph
@@ -833,7 +834,8 @@ class Visualization(QDialog):
                 self.add_graph_list_to_combobox()
 
         except Exception as e:
-            print(f"Error loading work: {e}")
+            show_alert(f"Error loading saved work (Visulization Tab): {e}")
+            # print(f"Error loading work: {e}")
 
     def delete_graph(self, graph_id):
         """Delete the specified graph from the plots dictionary by graph_id"""

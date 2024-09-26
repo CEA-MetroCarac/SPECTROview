@@ -1635,6 +1635,7 @@ class Graph(QWidget):
 
     def set_attributes(self, attributes_dict):
         """Set attributes of the Graph object from a given dictionary."""
+        
         for key, value in attributes_dict.items():
             if hasattr(self, key):
                 setattr(self, key, value)

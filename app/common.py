@@ -2098,8 +2098,8 @@ class FitModelManager:
 
         if self.default_model_folder:
             if not os.path.exists(self.default_model_folder):
-                # Folder is specified but does not exist
-                msg= f"Default 'Fit_models' folder '{self.default_model_folder}' not found. Please specify another one."
+                # Folder is specified but does not exist anymore (deleted or renamed)
+                msg= f"Default 'Fit_models' folder '{self.default_model_folder}' not found. Please specify another one in the 'More Settings' tab."
                 show_alert(msg)
                 # Reset the default model folder to empty
                 self.default_model_folder = ""

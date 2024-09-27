@@ -13,7 +13,7 @@
         - Copy the heatmap canvas in Clipboard. 
 
 <p align="center">
-    <img width=300 src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/doc\figures_release_notes\heatmap_widget.png">
+    <img width=600 src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/doc\figures_release_notes\heatmap_widget.png">
 </p>
 
 - **Optimization:**

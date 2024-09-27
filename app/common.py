@@ -26,7 +26,7 @@ from scipy.interpolate import RegularGridInterpolator
 
 from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, \
-    QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, \
+    QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, QToolButton, \
     QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, \
     QApplication,  QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QSizePolicy, QRadioButton, QGroupBox, QFrame, QSpacerItem
 from PySide6.QtCore import Signal, QThread, Qt, QSize, QCoreApplication
@@ -132,11 +132,18 @@ class MapViewWidget(QWidget):
         self.cb_auto_scale = QCheckBox("Auto scale")
         self.cb_auto_scale.stateChanged.connect(self.update_z_range_slider)
         
+        # Create Options Menu
+        self.create_options_menu()
+        self.tool_btn_options = QToolButton(self)
+        self.tool_btn_options.setText("... ")
+        self.tool_btn_options.setPopupMode(QToolButton.InstantPopup) 
+        self.tool_btn_options.setMenu(self.options_menu) 
         
         toolbar_layout.addWidget(self.toolbar)
         toolbar_layout.addItem(spacer)
         toolbar_layout.addWidget(self.cb_auto_scale)
         toolbar_layout.addWidget(self.btn_copy)
+        toolbar_layout.addWidget(self.tool_btn_options)
 
         frame_layout.addLayout(toolbar_layout)
 
@@ -149,13 +156,12 @@ class MapViewWidget(QWidget):
         
         # Connect the mouse and key events to the handler functions
         self.figure.canvas.mpl_connect('button_press_event', self.on_left_click_2Dmap)
-        self.figure.canvas.mpl_connect('button_press_event', self.on_right_click_2Dmap)
+        # self.figure.canvas.mpl_connect('button_press_event', self.on_right_click_2Dmap) # disable rightclick for now
         self.figure.canvas.mpl_connect('key_press_event', self.on_key_press)
         self.figure.canvas.mpl_connect('key_release_event', self.on_key_release)
         
         self.canvas.draw()
 
-        self.create_options_menu()
         self.create_range_sliders(0,100)
         
     def create_options_menu(self):
@@ -520,11 +526,11 @@ class MapViewWidget(QWidget):
             else:
                 item.setSelected(False)
     
-    def on_right_click_2Dmap(self, event):
-        """Show view options menu on right-click."""
-        if event.button == 3:  # 3 is the right-click button
-            cursor_pos = QCursor.pos()  
-            self.options_menu.exec_(cursor_pos)    
+    # def on_right_click_2Dmap(self, event):
+    #     """Show view options menu on right-click."""
+    #     if event.button == 3:  # 3 is the right-click button
+    #         cursor_pos = QCursor.pos()  
+    #         self.options_menu.exec_(cursor_pos)    
             
     def extract_profile(self):
         """Extract a profile from 2D map plot via interpolation."""

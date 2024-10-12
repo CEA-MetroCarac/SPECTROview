@@ -953,7 +953,7 @@ class SpectraViewWidget(QWidget):
     
     def copy_fig(self):
         """Copy figure canvas to clipboard"""
-        copy_fig_to_clb(self.canvas)
+        copy_fig_to_clb(self.canvas, size_ratio=(5.5, 4))
         
 class FilterWidget:
     """
@@ -2629,11 +2629,21 @@ def save_df_to_excel(save_path, df):
     except Exception as e:
         return False, f"Error when saving DataFrame: {str(e)}"
 
-def copy_fig_to_clb(canvas):
-    """Copy matplotlib figure canvas to clipboard"""
+def copy_fig_to_clb(canvas, size_ratio=None):
+    """Copy matplotlib figure canvas to clipboard with optional resizing."""
     current_os = platform.system()
-    if current_os == 'Darwin':  # macOS
-        if canvas:
+
+    if canvas:
+        figure = canvas.figure
+        # Resize the figure if a size_ratio is provided
+        if size_ratio:
+            # Save the original size to restore later
+            original_size = figure.get_size_inches()
+            figure.set_size_inches(size_ratio, forward=True)  
+            canvas.draw()  
+            figure.tight_layout()
+
+        if current_os == 'Darwin':  # macOS
             buf = BytesIO()
             canvas.print_png(buf)
             buf.seek(0)
@@ -2648,22 +2658,29 @@ def copy_fig_to_clb(canvas):
             pasteboard = AppKit.NSPasteboard.generalPasteboard()
             pasteboard.clearContents()
             pasteboard.writeObjects_([ns_image])
-        else:
-            QMessageBox.critical(None, "Error", "No plot to copy.")
-    elif current_os == 'Windows':
-        if canvas:
-            figure = canvas.figure
+
+        elif current_os == 'Windows':
             with BytesIO() as buf:
-                figure.savefig(buf, format='png', dpi=400)
+                figure.savefig(buf, format='png', dpi=400) 
                 data = buf.getvalue()
             format_id = win32clipboard.RegisterClipboardFormat('PNG')
             win32clipboard.OpenClipboard()
             win32clipboard.EmptyClipboard()
             win32clipboard.SetClipboardData(format_id, data)
             win32clipboard.CloseClipboard()
-        else:
-            QMessageBox.critical(None, "Error", "No plot to copy.")
 
+        else:
+            QMessageBox.critical(None, "Error", f"Unsupported OS: {current_os}")
+
+        # Restore the original figure size if resized
+        if size_ratio:
+            figure.set_size_inches(original_size, forward=True)
+            canvas.draw()  
     else:
-        QMessageBox.critical(None, "Error", f"Unsupported OS: {current_os}")
+        QMessageBox.critical(None, "Error", "No plot to copy.")
+
+
+
+
+
 

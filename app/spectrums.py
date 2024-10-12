@@ -154,7 +154,7 @@ class Spectrums(QObject):
                     spectrum.correction_value = 0   
 
                     spectrum.baseline.mode = "Linear"
-                    spectrum.baseline.sigma = 5
+                    spectrum.baseline.sigma = 10
                     self.spectrums.append(spectrum)
 
         QTimer.singleShot(100, self.upd_spectra_list)

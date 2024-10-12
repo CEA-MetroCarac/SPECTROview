@@ -161,11 +161,8 @@ class Maps(QObject):
                         else:
                             df = pd.read_csv(file_path, skiprows=2,
                                                  delimiter=";")
-                            print(df)
                             map_df = df.iloc[::2].reset_index(drop=True)
                             map_df.rename(columns={map_df.columns[0]: "X", map_df.columns[1]: "Y"}, inplace=True)
-
-                            print(map_df)
 
                     elif extension == '.txt':
                         map_df = pd.read_csv(file_path, delimiter="\t")

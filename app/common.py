@@ -178,7 +178,22 @@ class MapViewWidget(QWidget):
             action.triggered.connect(self.refresh_plot)
             self.menu_actions[option_name] = action
             self.options_menu.addAction(action)  
+        # MAP_TYPE combobox (wafer or 2Dmap)
+        map_type = QWidget(self.options_menu)
+        map_type_layout = QHBoxLayout(map_type)
+        map_type_label = QLabel("Map type:", map_type)
+        map_type_layout.addWidget(map_type_label)
+        self.cbb_map_type = QComboBox(map_type)
+        self.cbb_map_type.addItems(['2Dmap', 'Wafer'])
+        self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
+        map_type_layout.addWidget(self.cbb_map_type)
+        map_type_layout.setContentsMargins(5, 5, 5, 5)
         
+        # Create a QWidgetAction to hold the combined QLabel and QComboBox
+        map_type_action = QWidgetAction(self)
+        map_type_action.setDefaultWidget(map_type)
+        self.options_menu.addAction(map_type_action)
+
         # COLOR_PALETTE combobox
         palette = QWidget(self.options_menu)
         palette_layout = QHBoxLayout(palette)
@@ -193,21 +208,6 @@ class MapViewWidget(QWidget):
         palette_action = QWidgetAction(self)
         palette_action.setDefaultWidget(palette)
         self.options_menu.addAction(palette_action)
-        
-        # MAP_TYPE combobox (wafer or 2Dmap)
-        map_type = QWidget(self.options_menu)
-        map_type_layout = QHBoxLayout(map_type)
-        map_type_label = QLabel("Map type:", map_type)
-        map_type_layout.addWidget(map_type_label)
-        self.cbb_map_type = QComboBox(map_type)
-        self.cbb_map_type.addItems(['2Dmap', 'Wafer'])
-        self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
-        map_type_layout.addWidget(self.cbb_map_type)
-        map_type_layout.setContentsMargins(5, 5, 5, 5)
-        # Create a QWidgetAction to hold the combined QLabel and QComboBox
-        map_type_action = QWidgetAction(self)
-        map_type_action.setDefaultWidget(map_type)
-        self.options_menu.addAction(map_type_action)
         
         # WAFER_SIZE combobox
         wafer_size = QWidget(self.options_menu)

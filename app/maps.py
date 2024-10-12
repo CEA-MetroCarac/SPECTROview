@@ -157,10 +157,16 @@ class Maps(QObject):
                             # If contains more than 3 columns
                             map_df = pd.read_csv(file_path, skiprows=1,
                                                  delimiter=";")
+                            print(map_df)
                         else:
-                            map_df = pd.read_csv(file_path, header=None,
-                                                 skiprows=2,
+                            df = pd.read_csv(file_path, skiprows=2,
                                                  delimiter=";")
+                            print(df)
+                            map_df = df.iloc[::2].reset_index(drop=True)
+                            map_df.rename(columns={map_df.columns[0]: "X", map_df.columns[1]: "Y"}, inplace=True)
+
+                            print(map_df)
+
                     elif extension == '.txt':
                         map_df = pd.read_csv(file_path, delimiter="\t")
                         map_df.columns = ['Y', 'X'] + list(
@@ -183,14 +189,10 @@ class Maps(QObject):
     def extract_spectra(self):
         """Extract all spectra from each map dataframe."""
         for map_name, map_df in self.maps.items():
-            if len(map_df.columns) > 2 and 'X' in map_df.columns and 'Y' \
-                    in map_df.columns:
-                self.process_old_format(map_df, map_name)
-            else:
-                self.process_new_format(map_df, map_name)
+            self.create_spectrum_objects(map_df, map_name)
         self.upd_maps_list()
 
-    def process_old_format(self, map_df, map_name):
+    def create_spectrum_objects(self, map_df, map_name):
         """Process old format wafer dataframe"""
         for _, row in map_df.iterrows():
             coord = tuple(row[['X', 'Y']])
@@ -212,36 +214,6 @@ class Maps(QObject):
                 spectrum.y0 = np.asarray(y_values)
                 spectrum.is_corrected = False
                 spectrum.correction_value = 0
-                spectrum.baseline.mode = "Linear"
-                spectrum.baseline.sigma = 5
-                self.spectrums.append(spectrum)
-
-    def process_new_format(self, map_df, map_name):
-        """Process new format wafer dataframe."""
-        print('The support of new data format of SEMILAB is deactivated in this SPECTROview version')
-        return
-        for i in range(0, len(map_df), 2):
-            coord_row = map_df.iloc[i]
-            intensity_row = map_df.iloc[i + 1]
-            coord = (float(coord_row.iloc[0]), float(coord_row.iloc[1]))
-            x_values = coord_row.iloc[2:].tolist()
-            x_values = pd.to_numeric(x_values, errors='coerce').tolist()
-            y_values = intensity_row.iloc[2:].tolist()
-            # Skip the last value
-            if len(x_values) > 1:
-                x_values = x_values[:-1]
-            if len(y_values) > 1:
-                y_values = y_values[:-1]
-            fname = f"{map_name}_{coord}"
-            if not any(spectrum.fname == fname for spectrum in self.spectrums):
-                spectrum = Spectrum()
-                spectrum.fname = fname
-                spectrum.x = np.asarray(x_values)
-                spectrum.x0 = np.asarray(x_values)
-                spectrum.y = np.asarray(y_values)
-                spectrum.y0 = np.asarray(y_values)
-                spectrum.is_corrected = False
-                spectrum.correction_value = 0 
                 spectrum.baseline.mode = "Linear"
                 spectrum.baseline.sigma = 5
                 self.spectrums.append(spectrum)

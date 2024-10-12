@@ -157,7 +157,6 @@ class Maps(QObject):
                             # If contains more than 3 columns
                             map_df = pd.read_csv(file_path, skiprows=1,
                                                  delimiter=";")
-                            print(map_df)
                         else:
                             df = pd.read_csv(file_path, skiprows=2,
                                                  delimiter=";")

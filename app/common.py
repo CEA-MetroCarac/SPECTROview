@@ -723,6 +723,28 @@ class SpectraViewWidget(QWidget):
             self.menu_actions[option_name] = action
             self.options_menu.addAction(action)
 
+        # Entry boxes for figure ratio
+        ratio_widget = QWidget(self.options_menu)
+        ratio_layout = QHBoxLayout(ratio_widget)
+
+        fig_size_label = QLabel("Copied figure size:", ratio_widget)
+        self.width_entry = QLineEdit(ratio_widget)
+        self.width_entry.setFixedWidth(30)
+        self.width_entry.setText("5.5")
+
+        self.height_entry = QLineEdit(ratio_widget)
+        self.height_entry.setFixedWidth(30)
+        self.height_entry.setText("4")
+
+        ratio_layout.addWidget(fig_size_label)
+        ratio_layout.addWidget(self.width_entry)
+        ratio_layout.addWidget(self.height_entry)
+        ratio_layout.setContentsMargins(5, 5, 5, 5)
+
+        # Create a QWidgetAction to hold the ratio input fields
+        ratio_action = QWidgetAction(self)
+        ratio_action.setDefaultWidget(ratio_widget)
+        self.options_menu.addAction(ratio_action)
 
     def update_plot_styles(self):
         """Apply styles and settings to the plot."""
@@ -950,10 +972,16 @@ class SpectraViewWidget(QWidget):
             self.clear_plot() 
         else:
             self.plot(self.sel_spectrums)
-    
+
     def copy_fig(self):
         """Copy figure canvas to clipboard"""
-        copy_fig_to_clb(self.canvas, size_ratio=(5.5, 4))
+        width_text = self.width_entry.text().strip()
+        height_text = self.height_entry.text().strip()
+
+        # Set default values if the entry boxes are empty
+        width = float(width_text) if width_text else 5.5  # Default width
+        height = float(height_text) if height_text else 4.0
+        copy_fig_to_clb(self.canvas, size_ratio=(width, height))
         
 class FilterWidget:
     """

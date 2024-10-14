@@ -20,10 +20,9 @@
     - Visualization tab: User can now modify/update the openned Excel file while it is opened.
     - Visualization tab: Dataframes will be compressed (gzip) before saving : update `save/load()` method
     - Maps tab: Reorganize the button, checkbox, comboxes of 2Dmap plot widget into a QToolbutton.
-    - dataframe
 
 - **Bug Fixes:**
-    - Bug related to malfunction of the graph do not effectively deleted when sub_window is closed.
+    - Bug related to malfunction of the graph do not effectively deleted when a `sub_window` is closed.
     - Fix bug arised when user delete or rename the default folder contaning all `fit_models`. A pop up message showed up to tell user to redefine the default folder for locking for `fit_models`.
     - Fix bug related to the noise correction not automatically applied : set `spectrum.baseline.noise=5` by default.
 

@@ -411,8 +411,7 @@ class Main:
         
         self.ui.cb_grid.setChecked(gui_states['grid'])
         
-expiration_date = datetime.datetime(2025, 6, 1)
-
+expiration_date = datetime.datetime(2050, 6, 1)
 def launcher():
     QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     if datetime.datetime.now() > expiration_date:

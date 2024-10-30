@@ -636,8 +636,10 @@ class Spectrums(QObject):
     def paste_fit_model(self, fnames=None):
         """Apply the copied fit model to the selected spectra"""
         self.ui.centralwidget.setEnabled(False)  # Disable GUI
+        
         if fnames is None:
             fnames = self.get_spectrum_fnames()
+            
         self.common.reinit_spectrum(fnames, self.spectrums)
         self.ntot = len(fnames)
         fit_model = deepcopy(self.current_fit_model)

@@ -1,7 +1,7 @@
 [![PyPI version](https://badge.fury.io/py/spectroview.svg)](https://badge.fury.io/py/spectroview)
 [![Github](https://img.shields.io/badge/GitHub-GPL--3.0-informational)](https://github.com/CEA-MetroCarac/spectroview)
 [![Downloads](https://img.shields.io/pypi/dm/spectroview.svg)](https://pypi.org/project/spectroview/)
-
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14148070.svg)](https://doi.org/10.5281/zenodo.14148070)
 
 <p align="center">
     <img width=100 src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/icon3.png">
@@ -51,7 +51,7 @@ ___
 
 ## Installation from PyPI:
 
-Ensure that Python is already installed on your computer.
+Make sure that Python (> 3.8) is already installed on your computer.
 
 ```bash
 pip install spectroview

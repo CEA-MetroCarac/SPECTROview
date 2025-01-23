@@ -721,15 +721,15 @@ class Maps(QObject):
                     map_name = parts[0]  # Assume map_name is the first part
                 coords.append('_'.join(parts[1:]))
             
-        selected_spectrums = []
-        for spectrum in self.spectrums:
-            map_name_fs, coord_fs = self.spectrum_object_id(spectrum)
+        # selected_spectrums = []
+        # for spectrum in self.spectrums:
+        #     map_name_fs, coord_fs = self.spectrum_object_id(spectrum)
             
-            if map_name_fs == map_name and coord_fs in coords:
-                selected_spectrums.append(spectrum)
+        #     if map_name_fs == map_name and coord_fs in coords:
+        #         selected_spectrums.append(spectrum)
 
-        # Restore spectrums if they were x-range corrected
-        self.undo_xrange_correction(selected_spectrums)
+        # # Restore spectrums if they were x-range corrected
+        # self.undo_xrange_correction(selected_spectrums)
 
         self.common.reinit_spectrum(fnames, self.spectrums)
         self.upd_spectra_list()
@@ -737,7 +737,7 @@ class Maps(QObject):
 
     def reinit_all(self):
         """Reinitialize all spectra"""
-        self.undo_xrange_correction(self.spectrums)
+        # self.undo_xrange_correction(self.spectrums)
         fnames = self.spectrums.fnames
         self.reinit(fnames)
 

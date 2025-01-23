@@ -767,11 +767,11 @@ class Spectrums(QObject):
         """Reinitialize the selected spectrum(s)"""
         if fnames is None:
             fnames = self.get_spectrum_fnames()
-        selected_spectrums = CustomSpectra()
-        selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
-        
+            
+        # selected_spectrums = CustomSpectra()
+        # selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
         # Restore spectrums if they were x-range corrected
-        self.undo_xrange_correction(selected_spectrums)
+        # self.undo_xrange_correction(selected_spectrums)
 
         # Reinit spectrum
         self.common.reinit_spectrum(fnames, self.spectrums)

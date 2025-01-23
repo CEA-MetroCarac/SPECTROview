@@ -1,4 +1,7 @@
 
+### **Version v0.3.2 (23/01/2024)
+- **Bug fixes and Optimization:**
+    - Complete the features peak position correct with Si-ref peak (520.7cm-1) .
 
 ### **Version v0.3.0 (27/09/2024)
 

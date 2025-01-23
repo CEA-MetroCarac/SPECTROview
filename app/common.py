@@ -328,7 +328,7 @@ class MapViewWidget(QWidget):
             self.z_range_slider.setValue((vmin, vmax))
             self.z_range_label.setText(f'[{vmin}; {vmax}]')
         else:
-            print("No valid Z value selected.")
+            return
 
     def update_z_range_label(self):
         """Update the QLabel text with the current values."""

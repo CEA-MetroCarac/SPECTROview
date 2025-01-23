@@ -711,10 +711,20 @@ class Maps(QObject):
         if fnames is None:
             map_name, coords = self.spectra_id()
             fnames = [f"{map_name}_{coord}" for coord in coords]
-        
+        else:
+            # Extract map_name and coords from fnames
+            map_name = None
+            coords = []
+            for fname in fnames:
+                parts = fname.split('_')
+                if map_name is None:
+                    map_name = parts[0]  # Assume map_name is the first part
+                coords.append('_'.join(parts[1:]))
+            
         selected_spectrums = []
         for spectrum in self.spectrums:
             map_name_fs, coord_fs = self.spectrum_object_id(spectrum)
+            
             if map_name_fs == map_name and coord_fs in coords:
                 selected_spectrums.append(spectrum)
 

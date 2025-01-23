@@ -8,7 +8,7 @@ from pathlib import Path
 import json
 
 from app.common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel
-from app.common import FitThread, FitModelManager, PeakTableWidget, DataframeTableWidget, CustomListWidget, SpectraViewWidget
+from app.common import FitThread, FitModelManager, PeakTableWidget, DataframeTableWidget, CustomListWidget, SpectraViewWidget, CustomSpectra
 from app.common import FIT_METHODS
 
 from lmfit import fit_report
@@ -39,7 +39,7 @@ class Spectrums(QObject):
 
         self.loaded_fit_model = None
         self.current_fit_model = None
-        self.spectrums = Spectra()
+        self.spectrums = CustomSpectra()
 
         # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget(self)
@@ -109,7 +109,7 @@ class Spectrums(QObject):
         """Open and load raw spectral data"""
 
         if self.spectrums is None:
-            self.spectrums = Spectra()
+            self.spectrums = CustomSpectra()
         if spectra:
             self.spectrums = spectra
         else:
@@ -200,6 +200,125 @@ class Spectrums(QObject):
                 spectrum.correction_value = 0
                 spectrum.is_corrected = False
         QTimer.singleShot(100, self.upd_spectra_list)
+        
+        
+    def copy_fit_model(self):
+        """Copy the model dictionary of the selected spectrum"""
+        # Get only 1 spectrum among several selected spectrum:
+        self.get_fit_settings()
+        sel_spectrum, _ = self.get_spectrum_object()
+        if len(sel_spectrum.peak_models) == 0:
+            self.ui.lbl_copied_fit_model_2.setText("")
+            msg = ("Select spectrum is not fitted or No fit results to collect")
+            show_alert(msg)
+            self.current_fit_model = None
+            return
+        else:
+            self.current_fit_model = None
+            self.current_fit_model = deepcopy(sel_spectrum.save())
+        self.ui.lbl_copied_fit_model_2.setText("copied")
+
+    def paste_fit_model(self, fnames=None):
+        """Apply the copied fit model to the selected spectra"""
+        self.ui.centralwidget.setEnabled(False)  # Disable GUI
+        
+        if fnames is None:
+            fnames = self.get_spectrum_fnames()
+            
+        self.common.reinit_spectrum(fnames, self.spectrums)
+        self.ntot = len(fnames)
+        fit_model = deepcopy(self.current_fit_model)
+        ncpus = int(self.ui.ncpus.text())
+
+        if fit_model is not None:
+            self.spectrums.pbar_index = 0
+            
+            
+            self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
+            self.thread.finished.connect(self.fit_completed)
+            self.thread.start()
+        else:
+            show_alert("Nothing to paste")
+            self.ui.centralwidget.setEnabled(True)
+
+        # Update progress bar & text
+        self.start_time = time.time()
+        self.progress_timer = QTimer(self)
+        self.progress_timer.timeout.connect(self.update_progress_bar)
+        self.progress_timer.start(100)
+        
+    def fit(self, fnames=None):
+        """Fit the selected spectrum(s) with current parameters"""
+        self.get_fit_settings()
+        if fnames is None:
+            fnames = self.get_spectrum_fnames()
+        for fname in fnames:
+            spectrum, _ = self.spectrums.get_objects(fname)
+            if len(spectrum.peak_models) != 0:
+                spectrum.fit()
+            else:
+                continue
+        QTimer.singleShot(100, self.upd_spectra_list)
+
+    def fit_all(self):
+        """Apply all fit parameters to all spectrum(s)"""
+        checked_spectra = self.get_checked_spectra()
+        fnames = checked_spectra.fnames
+        self.fit(fnames)
+
+    def apply_loaded_fit_model(self, fnames=None):
+        """Apply the loaded fit model to selected spectra"""
+        self.get_loaded_fit_model()
+        self.ui.centralwidget.setEnabled(False)  # Disable GUI
+        if self.loaded_fit_model is None:
+            show_alert("Select from the list or load a fit model.")
+            self.ui.centralwidget.setEnabled(True)
+            return
+
+        if fnames is None:
+            fnames = self.get_spectrum_fnames()
+
+        self.ntot = len(fnames)
+        ncpus = int(self.ui.ncpus.text())
+        fit_model = self.loaded_fit_model
+        self.spectrums.pbar_index = 0
+
+        self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
+        self.thread.finished.connect(self.fit_completed)
+        self.thread.start()
+
+        # Update progress bar & text
+        self.start_time = time.time()
+        self.progress_timer = QTimer(self)
+        self.progress_timer.timeout.connect(self.update_progress_bar)
+        self.progress_timer.start(100)
+
+    def update_progress_bar(self):
+        """Update fitting progress in GUI"""
+        index = self.spectrums.pbar_index
+        percent = 100 * (index + 1) / self.ntot
+        elapsed_time = time.time() - self.start_time
+        text = f"{index}/{self.ntot} ({elapsed_time:.2f}s)"
+        self.ui.progressBar.setValue(percent)
+        self.ui.progressText.setText(text)
+        if self.spectrums.pbar_index >= self.ntot - 1:
+            self.progress_timer.stop()
+
+    def fit_completed(self):
+        """Update GUI after completing fitting process."""
+        self.upd_spectra_list()
+        QTimer.singleShot(200,  self.spectra_widget.rescale)
+        self.ui.progressBar.setValue(100)
+        self.ui.centralwidget.setEnabled(True)
+
+    def apply_loaded_fit_model_all(self):
+        """Apply the loaded fit model to all spectra"""
+
+        checked_spectra = self.get_checked_spectra()
+        fnames = checked_spectra.fnames
+        self.apply_loaded_fit_model(fnames=fnames)
+
+    
 
     def upd_spectra_list(self):
         """Show spectrums in a listbox"""
@@ -243,7 +362,7 @@ class Spectrums(QObject):
         """Plot spectra or fit results in the main plot area."""
         fnames = self.get_spectrum_fnames()
         
-        selected_spectrums = Spectra()
+        selected_spectrums = CustomSpectra()
         selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
         # Limit the number of spectra to avoid crashes
         selected_spectrums = selected_spectrums[:30]
@@ -267,7 +386,7 @@ class Spectrums(QObject):
         """
         Get a list of selected spectra based on listbox's checkbox states.
         """
-        checked_spectra = Spectra()
+        checked_spectra = CustomSpectra()
         for index in range(self.ui.spectrums_listbox.count()):
             item = self.ui.spectrums_listbox.item(index)
             if item.checkState() == Qt.Checked:
@@ -546,119 +665,7 @@ class Spectrums(QObject):
         fit_params['xtol'] = float(self.ui.xtol_2.text())
         sel_spectrum.fit_params = fit_params
 
-    def fit(self, fnames=None):
-        """Fit the selected spectrum(s) with current parameters"""
-        self.get_fit_settings()
-        if fnames is None:
-            fnames = self.get_spectrum_fnames()
-        for fname in fnames:
-            spectrum, _ = self.spectrums.get_objects(fname)
-            if len(spectrum.peak_models) != 0:
-                spectrum.fit()
-            else:
-                continue
-        QTimer.singleShot(100, self.upd_spectra_list)
-
-    def fit_all(self):
-        """Apply all fit parameters to all spectrum(s)"""
-        checked_spectra = self.get_checked_spectra()
-        fnames = checked_spectra.fnames
-        self.fit(fnames)
-
-    def apply_loaded_fit_model(self, fnames=None):
-        """Apply the loaded fit model to selected spectra"""
-        self.get_loaded_fit_model()
-        self.ui.centralwidget.setEnabled(False)  # Disable GUI
-        if self.loaded_fit_model is None:
-            show_alert("Select from the list or load a fit model.")
-            self.ui.centralwidget.setEnabled(True)
-            return
-
-        if fnames is None:
-            fnames = self.get_spectrum_fnames()
-
-        self.ntot = len(fnames)
-        ncpus = int(self.ui.ncpus.text())
-        fit_model = self.loaded_fit_model
-        self.spectrums.pbar_index = 0
-
-        self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
-        self.thread.finished.connect(self.fit_completed)
-        self.thread.start()
-
-        # Update progress bar & text
-        self.start_time = time.time()
-        self.progress_timer = QTimer(self)
-        self.progress_timer.timeout.connect(self.update_progress_bar)
-        self.progress_timer.start(100)
-
-    def update_progress_bar(self):
-        """Update fitting progress in GUI"""
-        index = self.spectrums.pbar_index
-        percent = 100 * (index + 1) / self.ntot
-        elapsed_time = time.time() - self.start_time
-        text = f"{index}/{self.ntot} ({elapsed_time:.2f}s)"
-        self.ui.progressBar.setValue(percent)
-        self.ui.progressText.setText(text)
-        if self.spectrums.pbar_index >= self.ntot - 1:
-            self.progress_timer.stop()
-
-    def fit_completed(self):
-        """Update GUI after completing fitting process."""
-        self.upd_spectra_list()
-        QTimer.singleShot(200,  self.spectra_widget.rescale)
-        self.ui.progressBar.setValue(100)
-        self.ui.centralwidget.setEnabled(True)
-
-    def apply_loaded_fit_model_all(self):
-        """Apply the loaded fit model to all spectra"""
-
-        checked_spectra = self.get_checked_spectra()
-        fnames = checked_spectra.fnames
-        self.apply_loaded_fit_model(fnames=fnames)
-
-    def copy_fit_model(self):
-        """Copy the model dictionary of the selected spectrum"""
-        # Get only 1 spectrum among several selected spectrum:
-        self.get_fit_settings()
-        sel_spectrum, _ = self.get_spectrum_object()
-        if len(sel_spectrum.peak_models) == 0:
-            self.ui.lbl_copied_fit_model_2.setText("")
-            msg = ("Select spectrum is not fitted or No fit results to collect")
-            show_alert(msg)
-            self.current_fit_model = None
-            return
-        else:
-            self.current_fit_model = None
-            self.current_fit_model = deepcopy(sel_spectrum.save())
-        self.ui.lbl_copied_fit_model_2.setText("copied")
-
-    def paste_fit_model(self, fnames=None):
-        """Apply the copied fit model to the selected spectra"""
-        self.ui.centralwidget.setEnabled(False)  # Disable GUI
-        
-        if fnames is None:
-            fnames = self.get_spectrum_fnames()
-            
-        self.common.reinit_spectrum(fnames, self.spectrums)
-        self.ntot = len(fnames)
-        fit_model = deepcopy(self.current_fit_model)
-        ncpus = int(self.ui.ncpus.text())
-
-        if fit_model is not None:
-            self.spectrums.pbar_index = 0
-            self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
-            self.thread.finished.connect(self.fit_completed)
-            self.thread.start()
-        else:
-            show_alert("Nothing to paste")
-            self.ui.centralwidget.setEnabled(True)
-
-        # Update progress bar & text
-        self.start_time = time.time()
-        self.progress_timer = QTimer(self)
-        self.progress_timer.timeout.connect(self.update_progress_bar)
-        self.progress_timer.start(100)
+    
 
     def paste_fit_model_all(self):
         """Apply the copied fit model to selected spectrum(s)"""
@@ -760,7 +767,7 @@ class Spectrums(QObject):
         """Reinitialize the selected spectrum(s)"""
         if fnames is None:
             fnames = self.get_spectrum_fnames()
-        selected_spectrums = Spectra()
+        selected_spectrums = CustomSpectra()
         selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
         
         # Restore spectrums if they were x-range corrected
@@ -825,7 +832,7 @@ class Spectrums(QObject):
 
     def remove_spectrum(self):
         fnames = self.get_spectrum_fnames()
-        self.spectrums = Spectra(
+        self.spectrums = CustomSpectra(
             spectrum for spectrum in self.spectrums if
             spectrum.fname not in fnames)
         self.upd_spectra_list()
@@ -936,7 +943,7 @@ class Spectrums(QObject):
                 load = json.load(f)
                 try:
                     # Load all spectra
-                    self.spectrums = Spectra()
+                    self.spectrums = CustomSpectra()
                     for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
                         spectrum = Spectrum()
                         dict_to_spectrum(spectrum=spectrum, spectrum_data=spectrum_data, is_map=False)
@@ -953,7 +960,7 @@ class Spectrums(QObject):
 
     def clear_env(self):
         """Clear the environment and reset the application state"""
-        self.spectrums = Spectra()
+        self.spectrums = CustomSpectra()
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.df_fit_results = None

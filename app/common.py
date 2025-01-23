@@ -8,6 +8,12 @@ import json
 from copy import deepcopy
 import pandas as pd
 import numpy as np
+
+from fitspy.utils_mp import fit_mp
+from fitspy.spectra import Spectra
+from multiprocessing import Queue
+from threading import Thread
+
 from openpyxl.styles import PatternFill
 
 if platform.system() == 'Darwin':
@@ -581,6 +587,52 @@ class MapViewWidget(QWidget):
     def copy_fig(self):
         """Copy figure canvas to clipboard"""
         copy_fig_to_clb(self.canvas)
+
+class CustomSpectra(Spectra):
+    """
+    Customized Spectra class of the fitspy package to override some methods.
+    """
+    def apply_model(self, model_dict, fnames=None, ncpus=1,
+                    show_progressbar=True):
+        """
+        Apply 'model' to all or part of the spectra
+
+        """
+        if fnames is None:
+            fnames = self.fnames
+
+        spectra = []
+        for fname in fnames:
+            spectrum, _ = self.get_objects(fname)
+            
+            # Customize the model_dict for this spectrum
+            custom_model = deepcopy(model_dict)
+            if hasattr(spectrum, "correction_value"):
+                custom_model["correction_value"] = spectrum.correction_value
+            if hasattr(spectrum, "is_corrected"):
+                custom_model["is_corrected"] = spectrum.is_corrected
+
+            spectrum.set_attributes(custom_model)
+            spectrum.fname = fname  # reassign the correct fname
+            spectra.append(spectrum)
+
+        self.pbar_index = 0
+
+        queue_incr = Queue()
+        args = (queue_incr, len(fnames), ncpus, show_progressbar)
+        thread = Thread(target=self.progressbar, args=args)
+        thread.start()
+
+        if ncpus == 1:
+            for spectrum in spectra:
+                spectrum.preprocess()
+                spectrum.fit()
+                queue_incr.put(1)
+        else:
+            fit_mp(spectra, ncpus, queue_incr)
+
+        thread.join()
+
 
 class SpectraViewWidget(QWidget):
     """Class to manage the spectra view widget."""

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from app.common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
 from app.common import FitThread, PeakTableWidget, DataframeTableWidget, \
-    FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget, Graph
+    FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget, Graph, CustomSpectra
 from app.common import FIT_METHODS,PALETTE
 from app.visualisation import MdiSubWindow
 from lmfit import fit_report
@@ -46,7 +46,7 @@ class Maps(QObject):
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.maps = {}  # list of opened maps data
-        self.spectrums = Spectra()
+        self.spectrums = CustomSpectra()
         
          # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget(self)
@@ -876,7 +876,7 @@ class Maps(QObject):
         map_name, coords = self.spectra_id()
         if map_name in self.maps:
             del self.maps[map_name]
-            self.spectrums = Spectra(
+            self.spectrums = CustomSpectra(
                 spectrum for spectrum in self.spectrums if
                 not spectrum.fname.startswith(map_name))
             self.upd_maps_list()
@@ -1225,7 +1225,7 @@ class Maps(QObject):
             with open(file_path, 'r') as f:
                 load = json.load(f)
                 try:
-                    self.spectrums = Spectra()
+                    self.spectrums = CustomSpectra()
                     self.maps = {}
                     # Decode hex and decompress the dataframe
                     for k, v in load.get('maps', {}).items():
@@ -1252,7 +1252,7 @@ class Maps(QObject):
         """Clear the environment and reset the application state"""
         # Clear loaded maps and spectra
         self.maps.clear()
-        self.spectrums = Spectra()
+        self.spectrums = CustomSpectra()
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.df_fit_results = None

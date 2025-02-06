@@ -1,3 +1,7 @@
+### **Version v0.3.3 (06/02/2024)
+- **Bug fixes and Optimization:**
+    - New customized toolbar for the spectra view plot to fix the bug related to the click mode (rescale, zoom, baseline, peak).
+
 
 ### **Version v0.3.2 (23/01/2024)
 - **Bug fixes and Optimization:**

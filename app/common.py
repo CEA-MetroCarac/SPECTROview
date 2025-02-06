@@ -666,52 +666,121 @@ class SpectraViewWidget(QWidget):
             self.canvas.mpl_connect('button_press_event', self.on_right_click)
 
             self.toolbar = NavigationToolbar2QT(self.canvas, self)
+            self.toolbar.zoom()  # Activate the zoom feature by default at startup
 
             # Set up the toolbar visibility and connect events
             for action in self.toolbar.actions():
-                if action.text() in ['Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+                if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
                     action.setVisible(False)
-                if action.text() in ['Pan', 'Zoom']:
-                    action.toggled.connect(self.toggle_zoom_pan)
 
-            rescale = next((a for a in self.toolbar.actions() if a.text() == 'Home'), None)
-            if rescale:
-                rescale.triggered.connect(self.rescale)
+            # Create a QPushButton for Rescale
+            self.btn_rescale = QPushButton("", self)
+            self.btn_rescale.clicked.connect(self.rescale)
+            self.btn_rescale.setToolTip("Rescale")
+            icon_rescale = QIcon()
+            icon_rescale.addFile(os.path.join(ICON_DIR, "rescale.png"))
+            self.btn_rescale.setIcon(icon_rescale)
+            self.btn_rescale.setIconSize(QSize(24, 24))
 
-            # Create radio buttons for Peak and Baseline
-            self.rdbtn_baseline = QRadioButton("Baseline", self)
-            self.rdbtn_peak = QRadioButton("Peak", self)
-            self.rdbtn_baseline.setChecked(True) 
+            # Create QToolButtons for Zoom, Baseline, and Peak
+            self.btn_zoom = QToolButton(self)
+            self.btn_zoom.setCheckable(True)
+            self.btn_zoom.setAutoExclusive(True)
+            self.btn_zoom.setToolTip("Zoom")
+            icon_zoom = QIcon()
+            icon_zoom.addFile(os.path.join(ICON_DIR, "zoom.png"))
+            self.btn_zoom.setIcon(icon_zoom)
+            self.btn_zoom.setIconSize(QSize(24, 24))
+            self.btn_zoom.setChecked(True)  # Default selection
+            self.btn_zoom.toggled.connect(self.toggle_zoom_pan)
+
+            self.btn_baseline = QToolButton(self)
+            self.btn_baseline.setCheckable(True)
+            self.btn_baseline.setAutoExclusive(True)
+            self.btn_baseline.setToolTip("Baseline")
+            icon_baseline = QIcon()
+            icon_baseline.addFile(os.path.join(ICON_DIR, "baseline.png"))
+            self.btn_baseline.setIcon(icon_baseline)
+            self.btn_baseline.setIconSize(QSize(24, 24))
+
+            self.btn_peak = QToolButton(self)
+            self.btn_peak.setCheckable(True)
+            self.btn_peak.setAutoExclusive(True)
+            self.btn_peak.setToolTip("Peak")
+            icon_peak = QIcon()
+            icon_peak.addFile(os.path.join(ICON_DIR, "peak.png"))
+            self.btn_peak.setIcon(icon_peak)
+            self.btn_peak.setIconSize(QSize(24, 24))
+
             self.R2 = QLabel("R2=0", self)
             self.R2.setFixedWidth(80)
 
-
-            # Create a QPushButton for Copy figure canvans
+            # Create a QPushButton for Copy Figure Canvas
             self.btn_copy = QPushButton("", self)
-            icon = QIcon()
-            icon.addFile(u":/icon/iconpack/copy.png", QSize(), QIcon.Normal, QIcon.Off)
-            self.btn_copy.setIcon(icon)
+            icon_copy = QIcon()
+            icon_copy.addFile(os.path.join(ICON_DIR, "copy.png"))
+            self.btn_copy.setIcon(icon_copy)
             self.btn_copy.setIconSize(QSize(24, 24))
             self.btn_copy.clicked.connect(self.copy_fig)
 
             self.create_options_menu()
 
-            #Add all items in a same layout
+            # Add all items in the same layout
             self.control_widget = QWidget(self)
             self.control_layout = QHBoxLayout(self.control_widget)
             self.control_layout.setContentsMargins(0, 0, 0, 0)
-            
+
             # Add widgets to the horizontal layout
+            self.control_layout.addWidget(self.btn_rescale)
+            self.control_layout.addWidget(self.btn_zoom)
+            self.control_layout.addWidget(self.btn_baseline)
+            self.control_layout.addWidget(self.btn_peak)
             self.control_layout.addWidget(self.toolbar)
-            self.control_layout.addWidget(self.rdbtn_baseline)
-            self.control_layout.addWidget(self.rdbtn_peak)
             self.control_layout.addWidget(self.R2)
             self.control_layout.addWidget(self.btn_copy)
 
             # Set the layout of control_widget
             self.control_widget.setLayout(self.control_layout)
         self.update_plot_styles()
+
+    def toggle_zoom_pan(self, checked):
+        """Toggle zoom and pan functionality for spectra plot based on tool button selection."""
+        if self.btn_zoom.isChecked():
+            self.zoom_pan_active = True
+            self.toolbar.zoom()  # Activate the zoom feature
+        else:
+            self.zoom_pan_active = False
+            self.toolbar.zoom()  # Deactivate the zoom feature
+
     
+    def on_left_click(self, event):
+        """
+        Handle click events on spectra plot canvas for adding peak models or baseline points.
+        """
+        if event.inaxes != self.ax: # Ignore clicks outside the plot area
+            return
+
+        x_click = event.xdata
+        y_click = event.ydata
+
+        if self.sel_spectrums:
+            sel_spectrum = self.sel_spectrums[0]
+            if self.zoom_pan_active:
+                # Do nothing if zoom or pan is active
+                return
+            if self.btn_peak.isChecked():
+                if event.button == 1:  # Left mouse button
+                    sel_spectrum.add_peak_model(self.peak_model, x_click)
+                    self.refresh_gui() # update GUI in main app to update peak tables.
+            elif self.btn_baseline.isChecked():
+                if event.button == 1: 
+                    if sel_spectrum.baseline.is_subtracted:
+                        show_alert("Already subtracted before. Reinitialize spectrum to perform new baseline")
+                    else:
+                        sel_spectrum.baseline.add_point(x_click, y_click)
+        self.refresh_plot()  
+        
+
     def create_options_menu(self):
         """Create widget containing all view options."""
         self.options_menu = QMenu(self)
@@ -805,11 +874,6 @@ class SpectraViewWidget(QWidget):
         self.ax.set_ylabel("Intensity (a.u)")
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
 
-    def toggle_zoom_pan(self, checked):
-        """Toggle zoom and pan functionality for spectra plot."""
-        self.zoom_pan_active = checked
-        if not checked:
-            self.zoom_pan_active = False
     
     def rescale(self):
         """Rescale the spectra plot to fit within the axes."""
@@ -823,33 +887,7 @@ class SpectraViewWidget(QWidget):
             cursor_pos = QCursor.pos()  
             self.options_menu.exec_(cursor_pos)
 
-    def on_left_click(self, event):
-        """
-        Handle click events on spectra plot canvas for adding peak models or baseline points.
-        """
-        if event.inaxes != self.ax: # Ignore clicks outside the plot area
-            return
-
-        x_click = event.xdata
-        y_click = event.ydata
-
-        if self.sel_spectrums:
-            sel_spectrum = self.sel_spectrums[0]
-            if self.zoom_pan_active:
-                # Do nothing if zoom or pan is active
-                return
-            if self.rdbtn_peak.isChecked():
-                if event.button == 1:  # Left mouse button
-                    sel_spectrum.add_peak_model(self.peak_model, x_click)
-                    self.refresh_gui() # update GUI in main application
-            elif self.rdbtn_baseline.isChecked():
-                if event.button == 1: 
-                    if sel_spectrum.baseline.is_subtracted:
-                        show_alert("Already subtracted before. Reinitialize spectrum to perform new baseline")
-                    else:
-                        sel_spectrum.baseline.add_point(x_click, y_click)
-        self.refresh_plot()  
-        
+    
     def set_peak_model(self, model):
         """Set the peak model to be used when clicking on the plot."""
         self.peak_model = model

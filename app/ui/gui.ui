@@ -298,12 +298,12 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>513</height>
+                          <height>519</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
                          <property name="spacing">
-                          <number>5</number>
+                          <number>10</number>
                          </property>
                          <property name="leftMargin">
                           <number>5</number>
@@ -772,6 +772,15 @@
                          </item>
                          <item>
                           <widget class="QGroupBox" name="gb_peaks">
+                           <property name="whatsThis">
+                            <string/>
+                           </property>
+                           <property name="accessibleName">
+                            <string/>
+                           </property>
+                           <property name="styleSheet">
+                            <string notr="true"/>
+                           </property>
                            <property name="title">
                             <string/>
                            </property>
@@ -805,7 +814,7 @@
                              </widget>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_77" stretch="0,0,65,0,0,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_77" stretch="0,65,0,0,0">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -824,22 +833,9 @@
                               <item>
                                <widget class="QLabel" name="label_73">
                                 <property name="text">
-                                 <string>Peak model:</string>
+                                 <string>Peak shape:</string>
                                 </property>
                                </widget>
-                              </item>
-                              <item>
-                               <spacer name="horizontalSpacer_38">
-                                <property name="orientation">
-                                 <enum>Qt::Horizontal</enum>
-                                </property>
-                                <property name="sizeHint" stdset="0">
-                                 <size>
-                                  <width>40</width>
-                                  <height>20</height>
-                                 </size>
-                                </property>
-                               </spacer>
                               </item>
                               <item>
                                <widget class="QComboBox" name="cbb_fit_models_2"/>
@@ -900,23 +896,6 @@
                                   <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
                                 </property>
                                </widget>
-                              </item>
-                             </layout>
-                            </item>
-                            <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_28">
-                              <item>
-                               <spacer name="horizontalSpacer_7">
-                                <property name="orientation">
-                                 <enum>Qt::Horizontal</enum>
-                                </property>
-                                <property name="sizeHint" stdset="0">
-                                 <size>
-                                  <width>40</width>
-                                  <height>20</height>
-                                 </size>
-                                </property>
-                               </spacer>
                               </item>
                              </layout>
                             </item>
@@ -1329,7 +1308,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>523</height>
+                       <height>529</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -2418,12 +2397,12 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>511</height>
+                          <height>517</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
                          <property name="spacing">
-                          <number>5</number>
+                          <number>10</number>
                          </property>
                          <property name="leftMargin">
                           <number>5</number>
@@ -2925,7 +2904,7 @@
                              </widget>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="0,0,65,0,0,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="0,65,0,0,0">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -2944,22 +2923,9 @@
                               <item>
                                <widget class="QLabel" name="label_41">
                                 <property name="text">
-                                 <string>Peak model:</string>
+                                 <string>Peak shape:</string>
                                 </property>
                                </widget>
-                              </item>
-                              <item>
-                               <spacer name="horizontalSpacer_31">
-                                <property name="orientation">
-                                 <enum>Qt::Horizontal</enum>
-                                </property>
-                                <property name="sizeHint" stdset="0">
-                                 <size>
-                                  <width>40</width>
-                                  <height>20</height>
-                                 </size>
-                                </property>
-                               </spacer>
                               </item>
                               <item>
                                <widget class="QComboBox" name="cbb_fit_models"/>
@@ -3020,23 +2986,6 @@
                                   <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
                                 </property>
                                </widget>
-                              </item>
-                             </layout>
-                            </item>
-                            <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_25">
-                              <item>
-                               <spacer name="horizontalSpacer_8">
-                                <property name="orientation">
-                                 <enum>Qt::Horizontal</enum>
-                                </property>
-                                <property name="sizeHint" stdset="0">
-                                 <size>
-                                  <width>40</width>
-                                  <height>20</height>
-                                 </size>
-                                </property>
-                               </spacer>
                               </item>
                              </layout>
                             </item>
@@ -3478,8 +3427,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>521</height>
+                       <width>411</width>
+                       <height>228</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">

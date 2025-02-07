@@ -190,7 +190,7 @@ class MapViewWidget(QWidget):
         map_type_label = QLabel("Map type:", map_type)
         map_type_layout.addWidget(map_type_label)
         self.cbb_map_type = QComboBox(map_type)
-        self.cbb_map_type.addItems(['2Dmap', 'Wafer'])
+        self.cbb_map_type.addItems(['Wafer', '2Dmap'])
         self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
         map_type_layout.addWidget(self.cbb_map_type)
         map_type_layout.setContentsMargins(5, 5, 5, 5)
@@ -2370,7 +2370,7 @@ class CommonUtilities():
         dark_palette.setColor(QPalette.HighlightedText, Qt.white)
         dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
         dark_palette.setColor(QPalette.Base, QColor(60, 60, 60))  # Background color for QMenu
-
+        
         return dark_palette
 
     def light_palette(self):

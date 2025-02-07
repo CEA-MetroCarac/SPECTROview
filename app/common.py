@@ -131,7 +131,7 @@ class MapViewWidget(QWidget):
         spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.btn_copy = QPushButton("", self)
         icon = QIcon()
-        icon.addFile(u":/icon/iconpack/copy.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(os.path.join(ICON_DIR, "copy.png"))
         self.btn_copy.setIcon(icon)
         self.btn_copy.setIconSize(QSize(24, 24))
         self.btn_copy.clicked.connect(self.copy_fig)
@@ -140,6 +140,7 @@ class MapViewWidget(QWidget):
         
         # Create Options Menu
         self.create_options_menu()
+        
         self.tool_btn_options = QToolButton(self)
         self.tool_btn_options.setText("... ")
         self.tool_btn_options.setPopupMode(QToolButton.InstantPopup) 
@@ -170,10 +171,62 @@ class MapViewWidget(QWidget):
 
         self.create_range_sliders(0,100)
         
+        
+        # Move MAP_TYPE and WAFER_SIZE Comboboxes here
+        combobox_layout = QHBoxLayout()
+
+        # MAP_TYPE ComboBox (wafer or 2Dmap)
+        self.map_type_label = QLabel("Select map type:")
+        self.cbb_map_type = QComboBox(self)
+        self.cbb_map_type.addItems(['Wafer', '2Dmap'])
+        self.cbb_map_type.setCurrentIndex(0)
+        self.cbb_map_type.setFixedWidth(80)
+        self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
+
+        # WAFER_SIZE ComboBox
+        self.wafer_size_label = QLabel("Wafer Size (mm):")
+        self.cbb_wafer_size = QComboBox(self)
+        self.cbb_wafer_size.addItems(['300', '200', '150', '100'])
+        self.cbb_wafer_size.setCurrentIndex(0)
+        self.cbb_wafer_size.setFixedWidth(50)
+        self.cbb_wafer_size.currentIndexChanged.connect(self.refresh_plot)
+        # Add to the layout
+        spacer1 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        
+        combobox_layout.addWidget(self.map_type_label)
+        combobox_layout.addWidget(self.cbb_map_type)
+        combobox_layout.addItem(spacer1)
+        combobox_layout.addWidget(self.wafer_size_label)
+        combobox_layout.addWidget(self.cbb_wafer_size)
+        combobox_layout.setContentsMargins(5, 5, 5, 5)
+        # Add the combobox layout below the profile layout
+        self.map_widget_layout.addLayout(combobox_layout)
+        
+        
+        # EXTRACT profil from 2Dmap
+        profile_layout = QHBoxLayout()
+        self.profile_name = QLineEdit(self)
+        self.profile_name.setText("Profile_1")
+        self.profile_name.setPlaceholderText("Profile_name...")
+        self.profile_name.setFixedWidth(150)
+
+        self.btn_extract_profile = QPushButton("Extract profil", self)
+        self.btn_extract_profile.setToolTip("Extract profile data and plot it in Visu tab")
+        self.btn_extract_profile.setFixedWidth(100)
+        spacer2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        profile_layout.addItem(spacer2)
+        profile_layout.addWidget(self.profile_name)
+        profile_layout.addWidget(self.btn_extract_profile)
+        # Add the profile layout below the range sliders
+        self.map_widget_layout.addLayout(profile_layout)
+        profile_layout.setContentsMargins(5, 5, 5, 5)
+        
+        
     def create_options_menu(self):
         """Create option menu on right click on 2Dmap plot"""
         
         self.options_menu = QMenu(self)
+        # Smoothing option
         options = [
             ("Smoothing", "Smoothing", False),
         ]
@@ -184,21 +237,6 @@ class MapViewWidget(QWidget):
             action.triggered.connect(self.refresh_plot)
             self.menu_actions[option_name] = action
             self.options_menu.addAction(action)  
-        # MAP_TYPE combobox (wafer or 2Dmap)
-        map_type = QWidget(self.options_menu)
-        map_type_layout = QHBoxLayout(map_type)
-        map_type_label = QLabel("Map type:", map_type)
-        map_type_layout.addWidget(map_type_label)
-        self.cbb_map_type = QComboBox(map_type)
-        self.cbb_map_type.addItems(['2Dmap', 'Wafer'])
-        self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
-        map_type_layout.addWidget(self.cbb_map_type)
-        map_type_layout.setContentsMargins(5, 5, 5, 5)
-        
-        # Create a QWidgetAction to hold the combined QLabel and QComboBox
-        map_type_action = QWidgetAction(self)
-        map_type_action.setDefaultWidget(map_type)
-        self.options_menu.addAction(map_type_action)
 
         # COLOR_PALETTE combobox
         palette = QWidget(self.options_menu)
@@ -215,40 +253,53 @@ class MapViewWidget(QWidget):
         palette_action.setDefaultWidget(palette)
         self.options_menu.addAction(palette_action)
         
-        # WAFER_SIZE combobox
-        wafer_size = QWidget(self.options_menu)
-        wafer_size_layout = QHBoxLayout(wafer_size)
-        wafer_size_label = QLabel("Wafer size (mm):", wafer_size)
-        wafer_size_layout.addWidget(wafer_size_label)
-        self.cbb_wafer_size = QComboBox(wafer_size)
-        self.cbb_wafer_size.addItems(['300', '200', '150', '100'])
-        self.cbb_wafer_size.currentIndexChanged.connect(self.refresh_plot)
-        wafer_size_layout.addWidget(self.cbb_wafer_size)
-        wafer_size_layout.setContentsMargins(5, 5, 5, 5)
-        # Create a QWidgetAction to hold the combined QLabel and QComboBox
-        wafer_size_action = QWidgetAction(self)
-        wafer_size_action.setDefaultWidget(wafer_size)
-        self.options_menu.addAction(wafer_size_action)
+        # # MAP_TYPE combobox (wafer or 2Dmap)
+        # map_type = QWidget(self.options_menu)
+        # map_type_layout = QHBoxLayout(map_type)
+        # map_type_label = QLabel("Map type:", map_type)
+        # map_type_layout.addWidget(map_type_label)
+        # self.cbb_map_type = QComboBox(map_type)
+        # self.cbb_map_type.addItems(['Wafer', '2Dmap'])
+        # self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
+        # map_type_layout.addWidget(self.cbb_map_type)
+        # map_type_layout.setContentsMargins(5, 5, 5, 5)
+        # # Create a QWidgetAction to hold the combined QLabel and QComboBox
+        # map_type_action = QWidgetAction(self)
+        # map_type_action.setDefaultWidget(map_type)
+        # self.options_menu.addAction(map_type_action)
         
-        # Profile Name QLineEdit and Extract Button
-        profile_widget = QWidget(self.options_menu)
-        profile_layout = QHBoxLayout(profile_widget)
-        self.profile_name = QLineEdit(profile_widget)
-        self.profile_name.setText("Profile_1")
-        self.profile_name.setPlaceholderText("Profile_name...")
-        self.profile_name.setFixedWidth(100)
-
-        self.btn_extract_profile = QPushButton("Extract", profile_widget)
-        self.btn_extract_profile.setToolTip("Extract profile data and plot it in Visu tab")
-
-        profile_layout.addWidget(self.profile_name)
-        profile_layout.addWidget(self.btn_extract_profile)
-        profile_layout.setContentsMargins(5, 5, 5, 5)
-
-        # Create a QWidgetAction to hold the QLineEdit and QPushButton
-        profile_action = QWidgetAction(self)
-        profile_action.setDefaultWidget(profile_widget)
-        self.options_menu.addAction(profile_action)
+        # # WAFER_SIZE combobox
+        # wafer_size = QWidget(self.options_menu)
+        # wafer_size_layout = QHBoxLayout(wafer_size)
+        # wafer_size_label = QLabel("Wafer size (mm):", wafer_size)
+        # wafer_size_layout.addWidget(wafer_size_label)
+        # self.cbb_wafer_size = QComboBox(wafer_size)
+        # self.cbb_wafer_size.addItems(['300', '200', '150', '100'])
+        # self.cbb_wafer_size.currentIndexChanged.connect(self.refresh_plot)
+        # wafer_size_layout.addWidget(self.cbb_wafer_size)
+        # wafer_size_layout.setContentsMargins(5, 5, 5, 5)
+        # # Create a QWidgetAction to hold the combined QLabel and QComboBox
+        # wafer_size_action = QWidgetAction(self)
+        # wafer_size_action.setDefaultWidget(wafer_size)
+        # self.options_menu.addAction(wafer_size_action)
+        
+        
+        # # EXTRACT Profile from map
+        # profile_widget = QWidget(self.options_menu)
+        # profile_layout = QHBoxLayout(profile_widget)
+        # self.profile_name = QLineEdit(profile_widget)
+        # self.profile_name.setText("Profile_1")
+        # self.profile_name.setPlaceholderText("Profile_name...")
+        # self.profile_name.setFixedWidth(100)
+        # self.btn_extract_profile = QPushButton("Extract", profile_widget)
+        # self.btn_extract_profile.setToolTip("Extract profile data and plot it in Visu tab")
+        # profile_layout.addWidget(self.profile_name)
+        # profile_layout.addWidget(self.btn_extract_profile)
+        # profile_layout.setContentsMargins(5, 5, 5, 5)
+        # # Create a QWidgetAction to hold the QLineEdit and QPushButton
+        # profile_action = QWidgetAction(self)
+        # profile_action.setDefaultWidget(profile_widget)
+        # self.options_menu.addAction(profile_action)
         
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
@@ -295,7 +346,7 @@ class MapViewWidget(QWidget):
     
     def populate_z_values_cbb(self):
         self.z_values_cbb.clear() 
-        self.z_values_cbb.addItems(['Area', 'Intensity'])
+        self.z_values_cbb.addItems(['Intensity', 'Area'])
         if not self.df_fit_results.empty:
             fit_columns = [col for col in self.df_fit_results.columns if col not in ['Filename', 'X', 'Y']]
             self.z_values_cbb.addItems(fit_columns)
@@ -341,6 +392,8 @@ class MapViewWidget(QWidget):
         r = int(self.cbb_wafer_size.currentText()) / 2
         map_type = self.cbb_map_type.currentText()
         self.ax.clear()
+        
+        # Plot wafer map
         if map_type == 'Wafer':
             wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
                                         color='black', linewidth=1)
@@ -350,6 +403,7 @@ class MapViewWidget(QWidget):
             all_x, all_y = self.get_mes_sites_coord()
             self.ax.scatter(all_x, all_y, marker='x', color='gray', s=10)
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+                       
             
         # Plot heatmap for 2D map
         if map_type == '2Dmap':
@@ -713,12 +767,13 @@ class SpectraViewWidget(QWidget):
             self.btn_peak.setIconSize(QSize(24, 24))
 
             self.R2 = QLabel("R2=0", self)
-            self.R2.setFixedWidth(80)
+            #self.R2.setFixedWidth(80)
 
             # Create a QPushButton for Copy Figure Canvas
             self.btn_copy = QPushButton("", self)
             icon_copy = QIcon()
             icon_copy.addFile(os.path.join(ICON_DIR, "copy.png"))
+            self.btn_copy.setToolTip("Copy figure. Right click on the plot to adjust plotting options")
             self.btn_copy.setIcon(icon_copy)
             self.btn_copy.setIconSize(QSize(24, 24))
             self.btn_copy.clicked.connect(self.copy_fig)
@@ -735,9 +790,10 @@ class SpectraViewWidget(QWidget):
             self.control_layout.addWidget(self.btn_zoom)
             self.control_layout.addWidget(self.btn_baseline)
             self.control_layout.addWidget(self.btn_peak)
+            
+            self.control_layout.addWidget(self.btn_copy)
             self.control_layout.addWidget(self.toolbar)
             self.control_layout.addWidget(self.R2)
-            self.control_layout.addWidget(self.btn_copy)
 
             # Set the layout of control_widget
             self.control_widget.setLayout(self.control_layout)
@@ -2370,7 +2426,7 @@ class CommonUtilities():
         dark_palette.setColor(QPalette.HighlightedText, Qt.white)
         dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
         dark_palette.setColor(QPalette.Base, QColor(60, 60, 60))  # Background color for QMenu
-
+        
         return dark_palette
 
     def light_palette(self):
@@ -2796,9 +2852,3 @@ def copy_fig_to_clb(canvas, size_ratio=None):
             canvas.draw()  
     else:
         QMessageBox.critical(None, "Error", "No plot to copy.")
-
-
-
-
-
-

@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -177,13 +177,13 @@
                      <enum>QLayout::SetMaximumSize</enum>
                     </property>
                     <property name="leftMargin">
-                     <number>0</number>
+                     <number>5</number>
                     </property>
                     <property name="topMargin">
                      <number>0</number>
                     </property>
                     <property name="rightMargin">
-                     <number>0</number>
+                     <number>5</number>
                     </property>
                     <property name="bottomMargin">
                      <number>0</number>
@@ -298,12 +298,12 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>534</height>
+                          <height>519</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
                          <property name="spacing">
-                          <number>5</number>
+                          <number>10</number>
                          </property>
                          <property name="leftMargin">
                           <number>5</number>
@@ -338,6 +338,7 @@
                             <widget class="QLabel" name="label_22">
                              <property name="font">
                               <font>
+                               <weight>75</weight>
                                <bold>true</bold>
                               </font>
                              </property>
@@ -454,6 +455,7 @@
                              <widget class="QLabel" name="label_65">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -553,6 +555,7 @@
                              <widget class="QLabel" name="label_69">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -683,16 +686,13 @@
                                <number>2</number>
                               </property>
                               <item>
-                               <widget class="QPushButton" name="btn_undo_baseline_2">
+                               <widget class="QPushButton" name="sub_baseline_2">
                                 <property name="toolTip">
-                                 <string>To remove all baseline points and undo the baseline subtraction</string>
+                                 <string>Subtract baseline for selected spectrum(s). 
+ Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Remove</string>
-                                </property>
-                                <property name="icon">
-                                 <iconset resource="resources.qrc">
-                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
+                                 <string>Subtract</string>
                                 </property>
                                </widget>
                               </item>
@@ -710,13 +710,33 @@
                                </spacer>
                               </item>
                               <item>
+                               <widget class="QPushButton" name="btn_undo_baseline_2">
+                                <property name="toolTip">
+                                 <string>Remove all baseline points and undo the baseline subtraction</string>
+                                </property>
+                                <property name="text">
+                                 <string/>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
                                <widget class="QPushButton" name="btn_copy_bl_2">
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
                                 <property name="toolTip">
                                  <string>Copy the baseline of the selected spectrum.  
  Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Copy BL</string>
+                                 <string>Copy</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -726,27 +746,22 @@
                               </item>
                               <item>
                                <widget class="QPushButton" name="btn_paste_bl_2">
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
                                 <property name="toolTip">
                                  <string>Paste the copied baseline to the selected spectrum(s).  
  Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Paste BL</string>
+                                 <string>Paste</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
                                   <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
-                                </property>
-                               </widget>
-                              </item>
-                              <item>
-                               <widget class="QPushButton" name="sub_baseline_2">
-                                <property name="toolTip">
-                                 <string>Subtract baseline for selected spectrum(s). 
- Hold 'Ctrl' and press button to apply to all spectra</string>
-                                </property>
-                                <property name="text">
-                                 <string>Subtract</string>
                                 </property>
                                </widget>
                               </item>
@@ -757,6 +772,15 @@
                          </item>
                          <item>
                           <widget class="QGroupBox" name="gb_peaks">
+                           <property name="whatsThis">
+                            <string/>
+                           </property>
+                           <property name="accessibleName">
+                            <string/>
+                           </property>
+                           <property name="styleSheet">
+                            <string notr="true"/>
+                           </property>
                            <property name="title">
                             <string/>
                            </property>
@@ -780,6 +804,7 @@
                              <widget class="QLabel" name="label_72">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -789,7 +814,7 @@
                              </widget>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_77" stretch="0,0,65,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_77" stretch="0,65,0,0,0">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -808,22 +833,9 @@
                               <item>
                                <widget class="QLabel" name="label_73">
                                 <property name="text">
-                                 <string>Peak model:</string>
+                                 <string>Peak shape:</string>
                                 </property>
                                </widget>
-                              </item>
-                              <item>
-                               <spacer name="horizontalSpacer_38">
-                                <property name="orientation">
-                                 <enum>Qt::Horizontal</enum>
-                                </property>
-                                <property name="sizeHint" stdset="0">
-                                 <size>
-                                  <width>40</width>
-                                  <height>20</height>
-                                 </size>
-                                </property>
-                               </spacer>
                               </item>
                               <item>
                                <widget class="QComboBox" name="cbb_fit_models_2"/>
@@ -835,11 +847,53 @@
  Hold 'Ctrl' and press 'Clear peaks' button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Remove peaks</string>
+                                 <string/>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
                                   <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="btn_copy_peaks_2">
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="toolTip">
+                                 <string>Copy peaks of the selected spectrum.  
+ Hold 'Ctrl' and press button to apply to all spectra</string>
+                                </property>
+                                <property name="text">
+                                 <string>Copy</string>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="btn_paste_peaks_2">
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="toolTip">
+                                 <string>Paste copied peaks to the selected spectrum.  
+ Hold 'Ctrl' and press button to apply to all spectra</string>
+                                </property>
+                                <property name="text">
+                                 <string>Paste</string>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
                                 </property>
                                </widget>
                               </item>
@@ -895,8 +949,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>725</width>
-                               <height>72</height>
+                               <width>729</width>
+                               <height>69</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -1004,6 +1058,81 @@
                          <item>
                           <layout class="QVBoxLayout" name="verticalLayout_45">
                            <item>
+                            <layout class="QHBoxLayout" name="horizontalLayout_106">
+                             <property name="spacing">
+                              <number>5</number>
+                             </property>
+                             <property name="leftMargin">
+                              <number>5</number>
+                             </property>
+                             <property name="topMargin">
+                              <number>2</number>
+                             </property>
+                             <property name="rightMargin">
+                              <number>5</number>
+                             </property>
+                             <property name="bottomMargin">
+                              <number>2</number>
+                             </property>
+                             <item>
+                              <widget class="QLabel" name="label_81">
+                               <property name="text">
+                                <string>Select a model:</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QComboBox" name="cbb_fit_model_list_3">
+                               <property name="minimumSize">
+                                <size>
+                                 <width>280</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                               <property name="maximumSize">
+                                <size>
+                                 <width>280</width>
+                                 <height>16777215</height>
+                                </size>
+                               </property>
+                               <property name="placeholderText">
+                                <string>Select a model for fitting</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="btn_apply_model_3">
+                               <property name="text">
+                                <string>Apply model</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <spacer name="horizontalSpacer_42">
+                               <property name="orientation">
+                                <enum>Qt::Horizontal</enum>
+                               </property>
+                               <property name="sizeHint" stdset="0">
+                                <size>
+                                 <width>40</width>
+                                 <height>20</height>
+                                </size>
+                               </property>
+                              </spacer>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="btn_load_model_3">
+                               <property name="toolTip">
+                                <string>Load a fit model if it is not in the default folder</string>
+                               </property>
+                               <property name="text">
+                                <string>Load model</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </item>
+                           <item>
                             <layout class="QHBoxLayout" name="horizontalLayout_82">
                              <property name="spacing">
                               <number>5</number>
@@ -1097,81 +1226,6 @@
                              </item>
                             </layout>
                            </item>
-                           <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_106">
-                             <property name="spacing">
-                              <number>5</number>
-                             </property>
-                             <property name="leftMargin">
-                              <number>5</number>
-                             </property>
-                             <property name="topMargin">
-                              <number>2</number>
-                             </property>
-                             <property name="rightMargin">
-                              <number>5</number>
-                             </property>
-                             <property name="bottomMargin">
-                              <number>2</number>
-                             </property>
-                             <item>
-                              <widget class="QLabel" name="label_81">
-                               <property name="text">
-                                <string>Select a model:</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QComboBox" name="cbb_fit_model_list_3">
-                               <property name="minimumSize">
-                                <size>
-                                 <width>280</width>
-                                 <height>0</height>
-                                </size>
-                               </property>
-                               <property name="maximumSize">
-                                <size>
-                                 <width>280</width>
-                                 <height>16777215</height>
-                                </size>
-                               </property>
-                               <property name="placeholderText">
-                                <string>Select a model for fitting</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QPushButton" name="btn_apply_model_3">
-                               <property name="text">
-                                <string>Apply model</string>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <spacer name="horizontalSpacer_42">
-                               <property name="orientation">
-                                <enum>Qt::Horizontal</enum>
-                               </property>
-                               <property name="sizeHint" stdset="0">
-                                <size>
-                                 <width>40</width>
-                                 <height>20</height>
-                                </size>
-                               </property>
-                              </spacer>
-                             </item>
-                             <item>
-                              <widget class="QPushButton" name="btn_load_model_3">
-                               <property name="toolTip">
-                                <string>Load a fit model if it is not in the default folder</string>
-                               </property>
-                               <property name="text">
-                                <string>Load model</string>
-                               </property>
-                              </widget>
-                             </item>
-                            </layout>
-                           </item>
                           </layout>
                          </item>
                          <item>
@@ -1254,7 +1308,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>243</height>
+                       <height>529</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -1295,6 +1349,7 @@
                         </property>
                         <property name="font">
                          <font>
+                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -1611,6 +1666,7 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
+                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -2179,13 +2235,13 @@
                        <enum>QLayout::SetMaximumSize</enum>
                       </property>
                       <property name="leftMargin">
-                       <number>0</number>
+                       <number>5</number>
                       </property>
                       <property name="topMargin">
                        <number>0</number>
                       </property>
                       <property name="rightMargin">
-                       <number>0</number>
+                       <number>5</number>
                       </property>
                       <property name="bottomMargin">
                        <number>0</number>
@@ -2341,12 +2397,12 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>507</height>
+                          <height>517</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
                          <property name="spacing">
-                          <number>5</number>
+                          <number>10</number>
                          </property>
                          <property name="leftMargin">
                           <number>5</number>
@@ -2402,6 +2458,7 @@
                                <widget class="QLabel" name="label_26">
                                 <property name="font">
                                  <font>
+                                  <weight>75</weight>
                                   <bold>true</bold>
                                  </font>
                                 </property>
@@ -2497,6 +2554,7 @@
                              <widget class="QLabel" name="label_54">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2596,6 +2654,7 @@
                              <widget class="QLabel" name="label_52">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2726,16 +2785,13 @@
                                <number>2</number>
                               </property>
                               <item>
-                               <widget class="QPushButton" name="btn_undo_baseline">
+                               <widget class="QPushButton" name="sub_baseline">
                                 <property name="toolTip">
-                                 <string>To remove all baseline points and undo the baseline subtraction</string>
+                                 <string>Subtract baseline for selected spectrum(s). 
+ Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Remove</string>
-                                </property>
-                                <property name="icon">
-                                 <iconset resource="resources.qrc">
-                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
+                                 <string>Subtract</string>
                                 </property>
                                </widget>
                               </item>
@@ -2753,13 +2809,33 @@
                                </spacer>
                               </item>
                               <item>
+                               <widget class="QPushButton" name="btn_undo_baseline">
+                                <property name="toolTip">
+                                 <string>To remove all baseline points and undo the baseline subtraction</string>
+                                </property>
+                                <property name="text">
+                                 <string/>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
                                <widget class="QPushButton" name="btn_copy_bl">
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
                                 <property name="toolTip">
                                  <string>Copy the baseline of the selected spectrum.  
  Hold 'Ctrl' and press button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Copy BL</string>
+                                 <string>Copy</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
@@ -2769,27 +2845,22 @@
                               </item>
                               <item>
                                <widget class="QPushButton" name="btn_paste_bl">
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
                                 <property name="toolTip">
                                  <string>Paste the copied baseline to the selected spectrum(s).  
  Hold 'Ctrl' and press button to apply to all spectra.</string>
                                 </property>
                                 <property name="text">
-                                 <string>Paste BL</string>
+                                 <string>Paste</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
                                   <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
-                                </property>
-                               </widget>
-                              </item>
-                              <item>
-                               <widget class="QPushButton" name="sub_baseline">
-                                <property name="toolTip">
-                                 <string>Subtract baseline for selected spectrum(s). 
- Hold 'Ctrl' and press button to apply to all spectra</string>
-                                </property>
-                                <property name="text">
-                                 <string>Subtract</string>
                                 </property>
                                </widget>
                               </item>
@@ -2820,9 +2891,10 @@
                              <number>2</number>
                             </property>
                             <item>
-                             <widget class="QLabel" name="label_57">
+                             <widget class="QLabel" name="lbl_Peaks">
                               <property name="font">
                                <font>
+                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2832,7 +2904,7 @@
                              </widget>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="0,0,65,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="0,65,0,0,0">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -2851,22 +2923,9 @@
                               <item>
                                <widget class="QLabel" name="label_41">
                                 <property name="text">
-                                 <string>Peak model:</string>
+                                 <string>Peak shape:</string>
                                 </property>
                                </widget>
-                              </item>
-                              <item>
-                               <spacer name="horizontalSpacer_31">
-                                <property name="orientation">
-                                 <enum>Qt::Horizontal</enum>
-                                </property>
-                                <property name="sizeHint" stdset="0">
-                                 <size>
-                                  <width>40</width>
-                                  <height>20</height>
-                                 </size>
-                                </property>
-                               </spacer>
                               </item>
                               <item>
                                <widget class="QComboBox" name="cbb_fit_models"/>
@@ -2878,11 +2937,53 @@
  Hold 'Ctrl' and press 'Clear peaks' button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string>Remove peaks</string>
+                                 <string/>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
                                   <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="btn_copy_peaks">
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="toolTip">
+                                 <string>Copy peaks of the selected spectrum.  
+ Hold 'Ctrl' and press button to apply to all spectra</string>
+                                </property>
+                                <property name="text">
+                                 <string>Copy</string>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="btn_paste_peaks">
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="toolTip">
+                                 <string>Paste peaks to the selected spectrum.  
+ Hold 'Ctrl' and press button to apply to all spectra</string>
+                                </property>
+                                <property name="text">
+                                 <string>Paste</string>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
                                 </property>
                                </widget>
                               </item>
@@ -2938,8 +3039,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>712</width>
-                               <height>72</height>
+                               <width>729</width>
+                               <height>69</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -3047,100 +3148,6 @@
                          <item>
                           <layout class="QVBoxLayout" name="verticalLayout_22">
                            <item>
-                            <layout class="QHBoxLayout" name="horizontalLayout_51">
-                             <property name="spacing">
-                              <number>5</number>
-                             </property>
-                             <property name="leftMargin">
-                              <number>5</number>
-                             </property>
-                             <property name="topMargin">
-                              <number>2</number>
-                             </property>
-                             <property name="rightMargin">
-                              <number>5</number>
-                             </property>
-                             <property name="bottomMargin">
-                              <number>2</number>
-                             </property>
-                             <item>
-                              <widget class="QPushButton" name="btn_copy_fit_model">
-                               <property name="toolTip">
-                                <string>Copy current fit parameters (range, baseline, peaks) of selected spectrum to Clipboard</string>
-                               </property>
-                               <property name="text">
-                                <string>Copy model</string>
-                               </property>
-                               <property name="icon">
-                                <iconset resource="resources.qrc">
-                                 <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QLabel" name="lbl_copied_fit_model">
-                               <property name="sizePolicy">
-                                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                                 <horstretch>0</horstretch>
-                                 <verstretch>0</verstretch>
-                                </sizepolicy>
-                               </property>
-                               <property name="minimumSize">
-                                <size>
-                                 <width>50</width>
-                                 <height>0</height>
-                                </size>
-                               </property>
-                               <property name="text">
-                                <string/>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QPushButton" name="btn_paste_fit_model">
-                               <property name="toolTip">
-                                <string>Paste the copied fit model to the selected spectrum(s).
- Hold 'Ctrl' and press 'Paste' button to paste fit model to all spectra, including spectra within different wafers</string>
-                               </property>
-                               <property name="text">
-                                <string>Paste model</string>
-                               </property>
-                               <property name="icon">
-                                <iconset resource="resources.qrc">
-                                 <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QPushButton" name="save_model">
-                               <property name="toolTip">
-                                <string>Save the fit model as a JSON file</string>
-                               </property>
-                               <property name="text">
-                                <string>Save model</string>
-                               </property>
-                               <property name="icon">
-                                <iconset resource="resources.qrc">
-                                 <normaloff>:/icon/iconpack/save11.png</normaloff>:/icon/iconpack/save11.png</iconset>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <spacer name="horizontalSpacer_17">
-                               <property name="orientation">
-                                <enum>Qt::Horizontal</enum>
-                               </property>
-                               <property name="sizeHint" stdset="0">
-                                <size>
-                                 <width>40</width>
-                                 <height>20</height>
-                                </size>
-                               </property>
-                              </spacer>
-                             </item>
-                            </layout>
-                           </item>
-                           <item>
                             <layout class="QHBoxLayout" name="horizontalLayout_52">
                              <property name="spacing">
                               <number>5</number>
@@ -3245,6 +3252,100 @@
                              </item>
                             </layout>
                            </item>
+                           <item>
+                            <layout class="QHBoxLayout" name="horizontalLayout_51">
+                             <property name="spacing">
+                              <number>5</number>
+                             </property>
+                             <property name="leftMargin">
+                              <number>5</number>
+                             </property>
+                             <property name="topMargin">
+                              <number>2</number>
+                             </property>
+                             <property name="rightMargin">
+                              <number>5</number>
+                             </property>
+                             <property name="bottomMargin">
+                              <number>2</number>
+                             </property>
+                             <item>
+                              <widget class="QPushButton" name="btn_copy_fit_model">
+                               <property name="toolTip">
+                                <string>Copy current fit parameters (range, baseline, peaks) of selected spectrum to Clipboard</string>
+                               </property>
+                               <property name="text">
+                                <string>Copy model</string>
+                               </property>
+                               <property name="icon">
+                                <iconset resource="resources.qrc">
+                                 <normaloff>:/icon/iconpack/copy.png</normaloff>:/icon/iconpack/copy.png</iconset>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLabel" name="lbl_copied_fit_model">
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                               <property name="minimumSize">
+                                <size>
+                                 <width>50</width>
+                                 <height>0</height>
+                                </size>
+                               </property>
+                               <property name="text">
+                                <string/>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="btn_paste_fit_model">
+                               <property name="toolTip">
+                                <string>Paste the copied fit model to the selected spectrum(s).
+ Hold 'Ctrl' and press 'Paste' button to paste fit model to all spectra, including spectra within different wafers</string>
+                               </property>
+                               <property name="text">
+                                <string>Paste model</string>
+                               </property>
+                               <property name="icon">
+                                <iconset resource="resources.qrc">
+                                 <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QPushButton" name="save_model">
+                               <property name="toolTip">
+                                <string>Save the fit model as a JSON file</string>
+                               </property>
+                               <property name="text">
+                                <string>Save model</string>
+                               </property>
+                               <property name="icon">
+                                <iconset resource="resources.qrc">
+                                 <normaloff>:/icon/iconpack/save11.png</normaloff>:/icon/iconpack/save11.png</iconset>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <spacer name="horizontalSpacer_17">
+                               <property name="orientation">
+                                <enum>Qt::Horizontal</enum>
+                               </property>
+                               <property name="sizeHint" stdset="0">
+                                <size>
+                                 <width>40</width>
+                                 <height>20</height>
+                                </size>
+                               </property>
+                              </spacer>
+                             </item>
+                            </layout>
+                           </item>
                           </layout>
                          </item>
                          <item>
@@ -3326,8 +3427,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>517</height>
+                       <width>411</width>
+                       <height>228</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -3368,6 +3469,7 @@
                         </property>
                         <property name="font">
                          <font>
+                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -3801,6 +3903,7 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
+                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -4984,8 +5087,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>395</width>
-                    <height>474</height>
+                    <width>372</width>
+                    <height>477</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -5022,6 +5125,7 @@
                        </property>
                        <property name="font">
                         <font>
+                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5136,6 +5240,7 @@
                       <widget class="QLabel" name="label_91">
                        <property name="font">
                         <font>
+                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5195,6 +5300,7 @@
                       <widget class="QLabel" name="label_97">
                        <property name="font">
                         <font>
+                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5402,8 +5508,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>277</width>
-                    <height>288</height>
+                    <width>235</width>
+                    <height>249</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -5527,6 +5633,7 @@
                      <property name="font">
                       <font>
                        <pointsize>9</pointsize>
+                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -5614,8 +5721,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>364</width>
-                    <height>371</height>
+                    <width>362</width>
+                    <height>310</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_9">

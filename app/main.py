@@ -135,8 +135,11 @@ class Main:
         self.ui.save_model.clicked.connect(self.maps.save_fit_model)
         self.ui.clear_peaks.clicked.connect(self.maps.clear_peaks_handler)
         self.ui.btn_copy_fit_model.clicked.connect(self.maps.copy_fit_model)
+        self.ui.btn_copy_peaks.clicked.connect(self.maps.copy_fit_model)
         self.ui.btn_paste_fit_model.clicked.connect(
             self.maps.paste_fit_model_fnc_handler)
+        self.ui.btn_paste_peaks.clicked.connect(
+            self.maps.paste_peaks_fnc_handler)
         self.ui.cbb_fit_models.addItems(PEAK_MODELS)
 
         self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range_handler)
@@ -165,8 +168,12 @@ class Main:
             self.spectrums.fit_fnc_handler)
         self.ui.btn_copy_fit_model_2.clicked.connect(
             self.spectrums.copy_fit_model)
+        self.ui.btn_copy_peaks_2.clicked.connect(
+            self.spectrums.copy_fit_model)
         self.ui.btn_paste_fit_model_2.clicked.connect(
             self.spectrums.paste_fit_model_fnc_handler)
+        self.ui.btn_paste_peaks_2.clicked.connect(
+            self.spectrums.paste_peaks_fnc_handler)
         self.ui.save_model_2.clicked.connect(self.spectrums.save_fit_model)
 
         self.ui.btn_load_model_3.clicked.connect(self.spectrums.load_fit_model)

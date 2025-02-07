@@ -599,6 +599,37 @@ class Maps(QObject):
         """Apply the copied fit model to all spectra"""
         fnames = self.spectrums.fnames
         self.paste_fit_model(fnames)
+        
+    def paste_peaks(self, sel_spectra=None):
+        """Copy and paste only peak labels and peak models to the selected spectra."""
+        if not self.current_fit_model:
+            show_alert("No fit model copied")
+            return
+        # Extract data from the correct location
+        fit_data = self.current_fit_model
+        
+        self.current_peaks = {
+            "peak_labels": fit_data.get("peak_labels", []),
+            "peak_models": deepcopy(fit_data.get("peak_models", {}))  
+        }
+        
+        if not self.current_peaks["peak_labels"] and not self.current_peaks["peak_models"]:
+            show_alert("No peak data to paste")
+            return
+
+        if sel_spectra is None:
+            _, sel_spectra = self.get_spectrum_object()
+
+        # Assign peak labels and models to selected spectra
+        for spectrum in sel_spectra:
+            spectrum.set_attributes(self.current_peaks)
+
+        QTimer.singleShot(50, self.refresh_gui)
+        
+    def paste_peaks_all(self):
+        self.paste_peaks(self.spectrums)
+        
+    
 
     def apply_loaded_fit_model(self, fnames=None):
         """Fit selected spectrum(s) with the loaded fit model."""
@@ -1182,6 +1213,14 @@ class Maps(QObject):
             self.paste_fit_model_all()
         else:
             self.paste_fit_model()
+            
+    def paste_peaks_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.paste_peaks_all()
+        else:
+            self.paste_peaks()
 
     def reinit_fnc_handler(self):
         """

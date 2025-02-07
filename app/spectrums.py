@@ -39,6 +39,7 @@ class Spectrums(QObject):
 
         self.loaded_fit_model = None
         self.current_fit_model = None
+        self.current_peaks = None
         self.spectrums = CustomSpectra()
 
         # Initialize SpectraViewWidget
@@ -199,8 +200,7 @@ class Spectrums(QObject):
                 spectrum.x0 = correctted_x0 - spectrum.correction_value
                 spectrum.correction_value = 0
                 spectrum.is_corrected = False
-        QTimer.singleShot(100, self.upd_spectra_list)
-        
+        QTimer.singleShot(100, self.upd_spectra_list)       
         
     def copy_fit_model(self):
         """Copy the model dictionary of the selected spectrum"""
@@ -209,14 +209,14 @@ class Spectrums(QObject):
         sel_spectrum, _ = self.get_spectrum_object()
         if len(sel_spectrum.peak_models) == 0:
             self.ui.lbl_copied_fit_model_2.setText("")
-            msg = ("Select spectrum is not fitted or No fit results to collect")
+            msg = ("There are no fitted peaks")
             show_alert(msg)
             self.current_fit_model = None
             return
         else:
             self.current_fit_model = None
             self.current_fit_model = deepcopy(sel_spectrum.save())
-        self.ui.lbl_copied_fit_model_2.setText("copied")
+        self.ui.lbl_copied_fit_model_2.setText("copied")     
 
     def paste_fit_model(self, fnames=None):
         """Apply the copied fit model to the selected spectra"""
@@ -232,8 +232,6 @@ class Spectrums(QObject):
 
         if fit_model is not None:
             self.spectrums.pbar_index = 0
-            
-            
             self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
             self.thread.finished.connect(self.fit_completed)
             self.thread.start()
@@ -246,6 +244,36 @@ class Spectrums(QObject):
         self.progress_timer = QTimer(self)
         self.progress_timer.timeout.connect(self.update_progress_bar)
         self.progress_timer.start(100)
+        
+    def paste_peaks(self, sel_spectra=None):
+        """Copy and paste only peak labels and peak models to the selected spectra."""
+        if not self.current_fit_model:
+            show_alert("No fit model copied")
+            return
+        # Extract data from the correct location
+        fit_data = self.current_fit_model
+        
+        self.current_peaks = {
+            "peak_labels": fit_data.get("peak_labels", []),
+            "peak_models": deepcopy(fit_data.get("peak_models", {}))  
+        }
+        
+        if not self.current_peaks["peak_labels"] and not self.current_peaks["peak_models"]:
+            show_alert("No peak data to paste")
+            return
+
+        if sel_spectra is None:
+            _, sel_spectra = self.get_spectrum_object()
+
+        # Assign peak labels and models to selected spectra
+        for spectrum in sel_spectra:
+            spectrum.set_attributes(self.current_peaks)
+
+        QTimer.singleShot(50, self.refresh_gui)
+        
+    def paste_peaks_all(self):
+        checked_spectra = self.get_checked_spectra()
+        self.paste_peaks(checked_spectra)
         
     def fit(self, fnames=None):
         """Fit the selected spectrum(s) with current parameters"""
@@ -894,6 +922,14 @@ class Spectrums(QObject):
             self.paste_fit_model_all()
         else:
             self.paste_fit_model()
+            
+    def paste_peaks_fnc_handler(self):
+        """Switch between 2 save fit fnc with the Ctrl key"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.paste_peaks_all()
+        else:
+            self.paste_peaks()
 
     def set_x_range_handler(self):
         modifiers = QApplication.keyboardModifiers()

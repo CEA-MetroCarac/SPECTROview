@@ -346,7 +346,7 @@ class MapViewWidget(QWidget):
     
     def populate_z_values_cbb(self):
         self.z_values_cbb.clear() 
-        self.z_values_cbb.addItems(['Area', 'Intensity'])
+        self.z_values_cbb.addItems(['Intensity', 'Area'])
         if not self.df_fit_results.empty:
             fit_columns = [col for col in self.df_fit_results.columns if col not in ['Filename', 'X', 'Y']]
             self.z_values_cbb.addItems(fit_columns)
@@ -392,6 +392,8 @@ class MapViewWidget(QWidget):
         r = int(self.cbb_wafer_size.currentText()) / 2
         map_type = self.cbb_map_type.currentText()
         self.ax.clear()
+        
+        # Plot wafer map
         if map_type == 'Wafer':
             wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
                                         color='black', linewidth=1)
@@ -401,6 +403,7 @@ class MapViewWidget(QWidget):
             all_x, all_y = self.get_mes_sites_coord()
             self.ax.scatter(all_x, all_y, marker='x', color='gray', s=10)
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+                       
             
         # Plot heatmap for 2D map
         if map_type == '2Dmap':

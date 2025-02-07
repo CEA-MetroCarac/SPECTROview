@@ -713,12 +713,13 @@ class SpectraViewWidget(QWidget):
             self.btn_peak.setIconSize(QSize(24, 24))
 
             self.R2 = QLabel("R2=0", self)
-            self.R2.setFixedWidth(80)
+            #self.R2.setFixedWidth(80)
 
             # Create a QPushButton for Copy Figure Canvas
             self.btn_copy = QPushButton("", self)
             icon_copy = QIcon()
             icon_copy.addFile(os.path.join(ICON_DIR, "copy.png"))
+            self.btn_copy.setToolTip("Copy spectrum(s). Right click on the plot to adjust plotting options")
             self.btn_copy.setIcon(icon_copy)
             self.btn_copy.setIconSize(QSize(24, 24))
             self.btn_copy.clicked.connect(self.copy_fig)
@@ -735,9 +736,10 @@ class SpectraViewWidget(QWidget):
             self.control_layout.addWidget(self.btn_zoom)
             self.control_layout.addWidget(self.btn_baseline)
             self.control_layout.addWidget(self.btn_peak)
+            
+            self.control_layout.addWidget(self.btn_copy)
             self.control_layout.addWidget(self.toolbar)
             self.control_layout.addWidget(self.R2)
-            self.control_layout.addWidget(self.btn_copy)
 
             # Set the layout of control_widget
             self.control_widget.setLayout(self.control_layout)

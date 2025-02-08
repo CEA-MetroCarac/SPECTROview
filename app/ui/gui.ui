@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -1303,7 +1303,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
+                       <width>283</width>
                        <height>243</height>
                       </rect>
                      </property>
@@ -2391,7 +2391,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>428</width>
-                          <height>539</height>
+                          <height>542</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -3417,8 +3417,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>249</height>
+                       <width>283</width>
+                       <height>243</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -4180,7 +4180,7 @@
               <item>
                <widget class="QLabel" name="label_58">
                 <property name="text">
-                 <string>Quick selection :</string>
+                 <string>Quick selection (for Wafer map) :</string>
                 </property>
                </widget>
               </item>
@@ -5076,7 +5076,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>395</width>
-                    <height>454</height>
+                    <height>474</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">

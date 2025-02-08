@@ -74,7 +74,7 @@ class Maps(QObject):
         self.delay_timer.timeout.connect(self.plot)
 
         # Map_view_Widget
-        self.map_plot = MapViewWidget(self)
+        self.map_plot = MapViewWidget(self, self.settings)
         self.map_plot.spectra_listbox= self.ui.spectra_listbox
         self.ui.map_layout.addWidget(self.map_plot.widget)
         self.map_plot.btn_extract_profile.clicked.connect(self.plot_extracted_profile)

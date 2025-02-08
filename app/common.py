@@ -81,9 +81,10 @@ X_AXIS_UNIT = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
 class MapViewWidget(QWidget):
     """Class to manage the 2Dmap view widget"""
 
-    def __init__(self, main_app):
+    def __init__(self, main_app, settings):
         super().__init__()
         self.main_app = main_app # To connect to a method of main app (refresh gui)
+        self.settings = settings
         self.map_df_name = None
         self.map_df =pd.DataFrame() 
         self.df_fit_results =pd.DataFrame() 
@@ -179,7 +180,7 @@ class MapViewWidget(QWidget):
         self.map_type_label = QLabel("Select map type:")
         self.cbb_map_type = QComboBox(self)
         self.cbb_map_type.addItems(['Wafer', '2Dmap'])
-        self.cbb_map_type.setCurrentIndex(0)
+        
         self.cbb_map_type.setFixedWidth(80)
         self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
 
@@ -187,12 +188,25 @@ class MapViewWidget(QWidget):
         self.wafer_size_label = QLabel("Wafer Size (mm):")
         self.cbb_wafer_size = QComboBox(self)
         self.cbb_wafer_size.addItems(['300', '200', '150', '100'])
-        self.cbb_wafer_size.setCurrentIndex(0)
+        
         self.cbb_wafer_size.setFixedWidth(50)
         self.cbb_wafer_size.currentIndexChanged.connect(self.refresh_plot)
+
+        # Load last saved settings
+        self.cbb_wafer_size.currentIndexChanged.connect(self.update_settings)
+        self.cbb_map_type.currentIndexChanged.connect(self.update_settings)
+        
+        saved_wafer_size = self.settings.value("wafer_size", "300")  # Default to 300 if not found
+        saved_map_type = self.settings.value("map_type", "Wafer")  # Default to Wafer if not found
+        # Set the saved values in the combo boxes
+        if saved_wafer_size in ['300', '200', '150', '100']:
+            self.cbb_wafer_size.setCurrentText(saved_wafer_size)
+
+        if saved_map_type in ['Wafer', '2Dmap']:
+            self.cbb_map_type.setCurrentText(saved_map_type)
+
         # Add to the layout
         spacer1 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        
         combobox_layout.addWidget(self.map_type_label)
         combobox_layout.addWidget(self.cbb_map_type)
         combobox_layout.addItem(spacer1)
@@ -201,7 +215,6 @@ class MapViewWidget(QWidget):
         combobox_layout.setContentsMargins(5, 5, 5, 5)
         # Add the combobox layout below the profile layout
         self.map_widget_layout.addLayout(combobox_layout)
-        
         
         # EXTRACT profil from 2Dmap
         profile_layout = QHBoxLayout()
@@ -220,8 +233,15 @@ class MapViewWidget(QWidget):
         # Add the profile layout below the range sliders
         self.map_widget_layout.addLayout(profile_layout)
         profile_layout.setContentsMargins(5, 5, 5, 5)
+
+    def update_settings(self):
+        """Save selected wafer size to settings"""
+        wafer_size = self.cbb_wafer_size.currentText()
+        map_type = self.cbb_map_type.currentText()
         
-        
+        self.settings.setValue("wafer_size", wafer_size)
+        self.settings.setValue("map_type", map_type)
+            
     def create_options_menu(self):
         """Create option menu on right click on 2Dmap plot"""
         
@@ -308,7 +328,8 @@ class MapViewWidget(QWidget):
         self.x_range_slider.setRange(xmin, xmax)  
         self.x_range_slider.setValue((xmin, xmax)) 
         self.x_range_slider.setTracking(True)
-        self.x_range_slider_label = QLabel('X-range:')
+        self.x_range_slider_label = QLabel('X-range :')
+        self.x_range_slider_label.setFixedWidth(100)  
         self.x_range_label = QLabel(f'[{xmin}; {xmax}]')
         self.x_range_slider.valueChanged.connect(self.update_xrange_slider_label)
         self.x_range_slider.valueChanged.connect(self.update_z_range_slider)
@@ -316,7 +337,7 @@ class MapViewWidget(QWidget):
         self.x_slider_layout = QHBoxLayout()
         self.x_slider_layout.addWidget(self.x_range_slider_label)
         self.x_slider_layout.addWidget(self.x_range_slider)
-        self.x_slider_layout.addWidget(self.x_range_label)
+        
         self.x_slider_layout.setContentsMargins(5, 0, 5, 0)
 
         # Create z-axis range slider
@@ -325,7 +346,8 @@ class MapViewWidget(QWidget):
         self.z_range_slider.setValue((0, 100)) 
         self.z_range_slider.setTracking(True)
         self.z_values_cbb = QComboBox()
-        self.z_values_cbb.addItems(['Area', 'Intensity'])       
+        self.z_values_cbb.addItems(['Area', 'Intensity']) 
+        self.z_values_cbb.setFixedWidth(100)      
         
         self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
 
@@ -336,11 +358,23 @@ class MapViewWidget(QWidget):
         self.z_slider_layout = QHBoxLayout()
         self.z_slider_layout.addWidget(self.z_values_cbb)
         self.z_slider_layout.addWidget(self.z_range_slider)
-        self.z_slider_layout.addWidget(self.z_range_label)
         self.z_slider_layout.setContentsMargins(5, 0, 5, 0)
+       
+        self.label1 = QLabel('Xmin;max :')
+        self.label2 = QLabel('Zmin;max :')
+        self.slider_labels_layout = QHBoxLayout()
 
+        self.slider_labels_layout.addWidget(self.label1)
+        self.slider_labels_layout.addWidget(self.x_range_label)
+        self.slider_labels_layout.addWidget(self.label2)
+        self.slider_labels_layout.addWidget(self.z_range_label)
+        self.slider_labels_layout.setContentsMargins(5, 0, 5, 0)
+
+        
         self.map_widget_layout.addLayout(self.x_slider_layout)
         self.map_widget_layout.addLayout(self.z_slider_layout)
+        self.map_widget_layout.addLayout(self.slider_labels_layout)
+
         vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.map_widget_layout.addItem(vspacer)
     
@@ -386,6 +420,76 @@ class MapViewWidget(QWidget):
         vmin, vmax = self.z_range_slider.value()
         self.z_range_label.setText(f'[{vmin}; {vmax}]')
 
+    
+    def get_data_for_heatmap(self):
+        """Prepare data for heatmap based on range sliders values"""
+
+        # Default return values in case of no valid map_df or filtered columns
+        heatmap_pivot = pd.DataFrame()  # Empty DataFrame for heatmap
+        extent = [0, 0, 0, 0]  # Default extent values
+        vmin = 0
+        vmax = 0
+        
+        if self.map_df is not None:
+            xmin, xmax = self.x_range_slider.value()
+            column_labels = self.map_df.columns[2:-1]  # Keep labels as strings
+
+            # Convert slider range values to strings for comparison
+            filtered_columns = column_labels[(column_labels.astype(float) >= xmin) &
+                                            (column_labels.astype(float) <= xmax)]
+            
+            if len(filtered_columns) > 0:
+                # Create a filtered DataFrame including X, Y, and the selected range of columns
+                filtered_map_df = self.map_df[['X', 'Y'] + list(filtered_columns)]
+                x_col = filtered_map_df['X'].values
+                y_col = filtered_map_df['Y'].values
+                final_z_col = []
+
+                parameter = self.z_values_cbb.currentText()
+                if parameter == 'Area':
+                    # Intensity sums of of each spectrum over the selected range
+                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
+                elif parameter == 'Intensity':
+                    # Max intensity value of each spectrum over the selected range
+                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
+                else:
+                    if not self.df_fit_results.empty:
+                        map_name = self.map_df_name
+                        filtered_df = self.df_fit_results.query('Filename == @map_name')
+                        
+                        if not filtered_df.empty and parameter in filtered_df.columns:
+                            z_col = filtered_df[parameter]
+                        else:
+                            z_col = None
+                
+                if self.cb_auto_scale.isChecked():
+                    # Remove outliers using IQR method and replace them with interpolated values
+                    Q1 = z_col.quantile(0.05)
+                    Q3 = z_col.quantile(0.95)
+                    IQR = Q3 - Q1
+                    # Identify the outliers
+                    outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
+                    # Interpolate values for the outliers using linear interpolation
+                    z_col_interpolated = z_col.copy()
+                    z_col_interpolated[outlier_mask] = np.nan  # Mark outliers as NaN for interpolation
+                    z_col_interpolated = z_col_interpolated.interpolate(method='linear', limit_direction='both')
+                    final_z_col=z_col_interpolated
+                else:
+                    final_z_col=z_col  
+
+                # Update vmin and vmax after interpolation
+                vmin = round(final_z_col.min(), 0)
+                vmax = round(final_z_col.max(), 0)
+
+                # Heatmap data 
+                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
+                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
+                xmin, xmax = x_col.min(), x_col.max()
+                ymin, ymax = y_col.min(), y_col.max()
+                extent=[xmin, xmax, ymin, ymax]
+                
+        return heatmap_pivot, extent, vmin, vmax
+    
     def plot(self, coords):
         """Plot 2D maps of measurement points"""
         
@@ -482,74 +586,7 @@ class MapViewWidget(QWidget):
                 # Plot the height profile 
                 self.ax.plot(x_vals, y_vals, color='black', linestyle='-', lw=2)
 
-    def get_data_for_heatmap(self):
-        """Prepare data for heatmap based on range sliders values"""
-
-        # Default return values in case of no valid map_df or filtered columns
-        heatmap_pivot = pd.DataFrame()  # Empty DataFrame for heatmap
-        extent = [0, 0, 0, 0]  # Default extent values
-        vmin = 0
-        vmax = 0
-        
-        if self.map_df is not None:
-            xmin, xmax = self.x_range_slider.value()
-            column_labels = self.map_df.columns[2:-1]  # Keep labels as strings
-
-            # Convert slider range values to strings for comparison
-            filtered_columns = column_labels[(column_labels.astype(float) >= xmin) &
-                                            (column_labels.astype(float) <= xmax)]
-            
-            if len(filtered_columns) > 0:
-                # Create a filtered DataFrame including X, Y, and the selected range of columns
-                filtered_map_df = self.map_df[['X', 'Y'] + list(filtered_columns)]
-                x_col = filtered_map_df['X'].values
-                y_col = filtered_map_df['Y'].values
-                final_z_col = []
-
-                parameter = self.z_values_cbb.currentText()
-                if parameter == 'Area':
-                    # Intensity sums of of each spectrum over the selected range
-                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
-                elif parameter == 'Intensity':
-                    # Max intensity value of each spectrum over the selected range
-                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
-                else:
-                    if not self.df_fit_results.empty:
-                        map_name = self.map_df_name
-                        filtered_df = self.df_fit_results.query('Filename == @map_name')
-                        
-                        if not filtered_df.empty and parameter in filtered_df.columns:
-                            z_col = filtered_df[parameter]
-                        else:
-                            z_col = None
-                
-                if self.cb_auto_scale.isChecked():
-                    # Remove outliers using IQR method and replace them with interpolated values
-                    Q1 = z_col.quantile(0.05)
-                    Q3 = z_col.quantile(0.95)
-                    IQR = Q3 - Q1
-                    # Identify the outliers
-                    outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
-                    # Interpolate values for the outliers using linear interpolation
-                    z_col_interpolated = z_col.copy()
-                    z_col_interpolated[outlier_mask] = np.nan  # Mark outliers as NaN for interpolation
-                    z_col_interpolated = z_col_interpolated.interpolate(method='linear', limit_direction='both')
-                    final_z_col=z_col_interpolated
-                else:
-                    final_z_col=z_col  
-
-                # Update vmin and vmax after interpolation
-                vmin = round(final_z_col.min(), 0)
-                vmax = round(final_z_col.max(), 0)
-
-                # Heatmap data 
-                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
-                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
-                xmin, xmax = x_col.min(), x_col.max()
-                ymin, ymax = y_col.min(), y_col.max()
-                extent=[xmin, xmax, ymin, ymax]
-                
-        return heatmap_pivot, extent, vmin, vmax
+    
         
     def on_left_click_2Dmap(self, event):
         """select the measurement points via 2Dmap plot"""

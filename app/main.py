@@ -17,7 +17,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 
-from app.common import CommonUtilities, FitModelManager
+from app.common import CommonUtilities, FitModelManager, MapViewWidget
 from app.common import PEAK_MODELS
 from app.common import show_alert
     
@@ -61,6 +61,7 @@ class Main:
         self.maps = Maps(self.settings, self.ui, self.spectrums, self.common,
                          self.visu)
         self.fitmodel_manager = FitModelManager(self.settings)
+        self.mapview_widget = MapViewWidget(self, self.settings)
 
         # TOOLBAR
         self.ui.actionOpen.triggered.connect(lambda: self.open())
@@ -74,18 +75,18 @@ class Main:
         
         # Save GUI states to settings
         self.ui.ncpus.valueChanged.connect(self.save_settings)
+        
         ## Maps module:
         self.load_settings()
         self.ui.cb_fit_negative.stateChanged.connect(self.save_settings)
         self.ui.max_iteration.valueChanged.connect(self.save_settings)
-        self.ui.cbb_fit_methods.currentIndexChanged.connect(
-            self.save_settings)
+        self.ui.cbb_fit_methods.currentIndexChanged.connect(self.save_settings)
         self.ui.xtol.textChanged.connect(self.save_settings)
         self.ui.cb_attached.stateChanged.connect(self.save_settings)
         
         self.ui.noise.valueChanged.connect(self.save_settings)
         self.ui.rbtn_linear.toggled.connect(self.save_settings)
-        self.ui.degre.valueChanged.connect(self.save_settings)
+        self.ui.degre.valueChanged.connect(self.save_settings)        
         
         ## Spectra module:
         self.ui.cb_fit_negative_2.stateChanged.connect(self.save_settings)
@@ -200,6 +201,83 @@ class Main:
 
         self.ui.btn_default_folder_model_3.clicked.connect(
             self.spectrums.set_default_model_folder)
+    def save_settings(self):
+        """
+        Save all settings to persistent storage (QSettings).
+        """        
+        gui_states = {
+            'ncpu': self.ui.ncpus.text(),
+            # Maps module
+            'fit_negative': self.ui.cb_fit_negative.isChecked(),
+            'max_ite': self.ui.max_iteration.text(),
+            'method': self.ui.cbb_fit_methods.currentText(),
+            'xtol': float(self.ui.xtol.text()),
+            'attached': self.ui.cb_attached.isChecked(),
+            
+            # Spectra module
+            'fit_negative2': self.ui.cb_fit_negative_2.isChecked(),
+            'max_ite2': self.ui.max_iteration_2.text(),
+            'method2': self.ui.cbb_fit_methods_2.currentText(),
+            'xtol2': float(self.ui.xtol_2.text()),
+            'attached2': self.ui.cb_attached_2.isChecked(),
+            
+            # Visualization module
+            'grid': self.ui.cb_grid.isChecked()
+        }
+        # Save the gui states to QSettings
+        for key, value in gui_states.items():
+            self.settings.setValue(key, value)
+        print('save settings')
+
+    def load_settings(self):
+        """
+        Load last used fitting settings from persistent storage (QSettings).
+        """
+        gui_states = {
+            'ncpu': self.settings.value('ncpu', defaultValue=1,
+                                           type=int),
+            # Maps module
+            'fit_negative': self.settings.value('fit_negative',
+                                                defaultValue=False, type=bool),
+            'max_ite': self.settings.value('max_ite', defaultValue=500,
+                                           type=int),
+            'method': self.settings.value('method', defaultValue='leastsq',
+                                          type=str),
+            'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float), 
+            'map_type': self.settings.value('map_type', defaultValue='Wafer', type=str),
+            'wafer_size': self.settings.value('wafer_size', defaultValue='300', type=str),
+                                          
+            # 'attached': self.settings.value('attached', defaultValue=True, type=bool),
+
+            # Spectra module
+            'fit_negative2': self.settings.value('fit_negative2',
+                                                defaultValue=False, type=bool),
+            'max_ite2': self.settings.value('max_ite2', defaultValue=500,
+                                           type=int),
+            'method2': self.settings.value('method2', defaultValue='leastsq',
+                                          type=str),
+            'xtol2': self.settings.value('xtol2', defaultValue=1.e-4, type=float),
+            # 'attached2': self.settings.value('attached2', defaultValue=True, type=bool),
+            
+            # Visualization module
+            'grid': self.settings.value('grid', defaultValue=False, type=bool),
+        }
+
+        # Update GUI elements with the loaded values
+        self.ui.ncpus.setValue(gui_states['ncpu'])
+        self.ui.cb_fit_negative.setChecked(gui_states['fit_negative'])
+        self.ui.max_iteration.setValue(gui_states['max_ite'])
+        self.ui.cbb_fit_methods.setCurrentText(gui_states['method'])
+        self.ui.xtol.setText(str(gui_states['xtol']))
+        # self.ui.cb_attached.setChecked(gui_states['attached'])
+        
+        self.ui.cb_fit_negative_2.setChecked(gui_states['fit_negative2'])
+        self.ui.max_iteration_2.setValue(gui_states['max_ite2'])
+        self.ui.cbb_fit_methods_2.setCurrentText(gui_states['method2'])
+        self.ui.xtol_2.setText(str(gui_states['xtol2']))
+        # self.ui.cb_attached_2.setChecked(gui_states['attached2'])
+        
+        self.ui.cb_grid.setChecked(gui_states['grid'])
 
     def open(self, file_paths=None):
         """
@@ -342,81 +420,7 @@ class Main:
         """Show about dialog """
         self.common.view_markdown(self.ui, "About", ABOUT, 650, 440, "resources/")
         
-    def save_settings(self):
-        """
-        Save all settings to persistent storage (QSettings).
-        """        
-        gui_states = {
-            'ncpu': self.ui.ncpus.text(),
-            # Maps module
-            'fit_negative': self.ui.cb_fit_negative.isChecked(),
-            'max_ite': self.ui.max_iteration.text(),
-            'method': self.ui.cbb_fit_methods.currentText(),
-            'xtol': float(self.ui.xtol.text()),
-            'attached': self.ui.cb_attached.isChecked(),
-            
-            # Spectra module
-            'fit_negative2': self.ui.cb_fit_negative_2.isChecked(),
-            'max_ite2': self.ui.max_iteration_2.text(),
-            'method2': self.ui.cbb_fit_methods_2.currentText(),
-            'xtol2': float(self.ui.xtol_2.text()),
-            'attached2': self.ui.cb_attached_2.isChecked(),
-            
-            # Visualization module
-            'grid': self.ui.cb_grid.isChecked()
-        }
-        # Save the gui states to QSettings
-        for key, value in gui_states.items():
-            self.settings.setValue(key, value)
-
-    def load_settings(self):
-        """
-        Load last used fitting settings from persistent storage (QSettings).
-        """
-        gui_states = {
-            'ncpu': self.settings.value('ncpu', defaultValue=1,
-                                           type=int),
-            # Maps module
-            'fit_negative': self.settings.value('fit_negative',
-                                                defaultValue=False, type=bool),
-            'max_ite': self.settings.value('max_ite', defaultValue=500,
-                                           type=int),
-            'method': self.settings.value('method', defaultValue='leastsq',
-                                          type=str),
-            'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float), 
-            # 'attached': self.settings.value('attached',
-            #                                     defaultValue=True, type=bool),
-            
-            # Spectra module
-            'fit_negative2': self.settings.value('fit_negative2',
-                                                defaultValue=False, type=bool),
-            'max_ite2': self.settings.value('max_ite2', defaultValue=500,
-                                           type=int),
-            'method2': self.settings.value('method2', defaultValue='leastsq',
-                                          type=str),
-            'xtol2': self.settings.value('xtol2', defaultValue=1.e-4, type=float),
-            # 'attached2': self.settings.value('attached2',
-            #                                     defaultValue=True, type=bool),
-            
-            # Visualization module
-            'grid': self.settings.value('grid', defaultValue=False, type=bool),
-        }
-
-        # Update GUI elements with the loaded values
-        self.ui.ncpus.setValue(gui_states['ncpu'])
-        self.ui.cb_fit_negative.setChecked(gui_states['fit_negative'])
-        self.ui.max_iteration.setValue(gui_states['max_ite'])
-        self.ui.cbb_fit_methods.setCurrentText(gui_states['method'])
-        self.ui.xtol.setText(str(gui_states['xtol']))
-        # self.ui.cb_attached.setChecked(gui_states['attached'])
-        
-        self.ui.cb_fit_negative_2.setChecked(gui_states['fit_negative2'])
-        self.ui.max_iteration_2.setValue(gui_states['max_ite2'])
-        self.ui.cbb_fit_methods_2.setCurrentText(gui_states['method2'])
-        self.ui.xtol_2.setText(str(gui_states['xtol2']))
-        # self.ui.cb_attached_2.setChecked(gui_states['attached2'])
-        
-        self.ui.cb_grid.setChecked(gui_states['grid'])
+    
         
 expiration_date = datetime.datetime(2050, 6, 1)
 def launcher():

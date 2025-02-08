@@ -84,7 +84,7 @@ class MapViewWidget(QWidget):
     def __init__(self, main_app, settings):
         super().__init__()
         self.main_app = main_app # To connect to a method of main app (refresh gui)
-        self.settings = settings
+        self.settings = settings # To connect to Qsettings
         self.map_df_name = None
         self.map_df =pd.DataFrame() 
         self.df_fit_results =pd.DataFrame() 

@@ -54,12 +54,10 @@ class Main:
         else:
             self.toggle_dark_mode()
 
-        # Create an instance of Dataframe and pass the self.ui object
+        # Create an instance Classes and pass the necessary object (ui, settings...)
         self.visu = Visualization(self.settings, self.ui, self.common)
-        self.spectrums = Spectrums(self.settings, self.ui, self.common,
-                                   self.visu)
-        self.maps = Maps(self.settings, self.ui, self.spectrums, self.common,
-                         self.visu)
+        self.spectrums = Spectrums(self.settings, self.ui, self.common, self.visu)
+        self.maps = Maps(self.settings, self.ui, self.spectrums, self.common, self.visu)
         self.fitmodel_manager = FitModelManager(self.settings)
         self.mapview_widget = MapViewWidget(self, self.settings)
 

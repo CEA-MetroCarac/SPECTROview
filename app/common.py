@@ -172,11 +172,8 @@ class MapViewWidget(QWidget):
 
         self.create_range_sliders(0,100)
         
-        
-        # Move MAP_TYPE and WAFER_SIZE Comboboxes here
-        combobox_layout = QHBoxLayout()
-
         # MAP_TYPE ComboBox (wafer or 2Dmap)
+        combobox_layout = QHBoxLayout()
         self.map_type_label = QLabel("Select map type:")
         self.cbb_map_type = QComboBox(self)
         self.cbb_map_type.addItems(['Wafer', '2Dmap'])

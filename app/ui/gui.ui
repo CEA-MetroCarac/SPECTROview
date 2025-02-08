@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_spectra">
        <attribute name="title">
@@ -5076,7 +5076,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>395</width>
-                    <height>474</height>
+                    <height>454</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">

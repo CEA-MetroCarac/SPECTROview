@@ -99,6 +99,10 @@ class Main:
         ########################################################
         ############## GUI for Maps Processing tab #############
         ########################################################
+
+        # self.mapview_widget.cbb_wafer_size.currentIndexChanged.connect(self.save_settings)
+        # self.mapview_widget.cbb_map_type.currentIndexChanged.connect(self.save_settings)
+        
         self.ui.btn_remove_wafer.clicked.connect(self.maps.remove_map)
 
         self.ui.btn_sel_all.clicked.connect(self.maps.select_all_spectra)
@@ -211,6 +215,8 @@ class Main:
             'method': self.ui.cbb_fit_methods.currentText(),
             'xtol': float(self.ui.xtol.text()),
             'attached': self.ui.cb_attached.isChecked(),
+            # 'wafer_size': self.mapview_widget.cbb_wafer_size.currentText(),
+            # 'map_type': self.mapview_widget.cbb_map_type.currentText(),
             
             # Spectra module
             'fit_negative2': self.ui.cb_fit_negative_2.isChecked(),
@@ -232,28 +238,22 @@ class Main:
         Load last used fitting settings from persistent storage (QSettings).
         """
         gui_states = {
-            'ncpu': self.settings.value('ncpu', defaultValue=1,
-                                           type=int),
+            'ncpu': self.settings.value('ncpu', defaultValue=1,type=int),
             # Maps module
-            'fit_negative': self.settings.value('fit_negative',
-                                                defaultValue=False, type=bool),
-            'max_ite': self.settings.value('max_ite', defaultValue=500,
-                                           type=int),
-            'method': self.settings.value('method', defaultValue='leastsq',
-                                          type=str),
+            'fit_negative': self.settings.value('fit_negative',defaultValue=False, type=bool),
+            'max_ite': self.settings.value('max_ite', defaultValue=500, type=int),
+            'method': self.settings.value('method', defaultValue='leastsq',type=str),
             'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float), 
-            'map_type': self.settings.value('map_type', defaultValue='Wafer', type=str),
-            'wafer_size': self.settings.value('wafer_size', defaultValue='300', type=str),
+            
+            # 'map_type': self.settings.value('map_type', defaultValue='Wafer', type=str),
+            # 'wafer_size': self.settings.value('wafer_size', defaultValue='300', type=str),
                                           
             # 'attached': self.settings.value('attached', defaultValue=True, type=bool),
 
             # Spectra module
-            'fit_negative2': self.settings.value('fit_negative2',
-                                                defaultValue=False, type=bool),
-            'max_ite2': self.settings.value('max_ite2', defaultValue=500,
-                                           type=int),
-            'method2': self.settings.value('method2', defaultValue='leastsq',
-                                          type=str),
+            'fit_negative2': self.settings.value('fit_negative2', defaultValue=False, type=bool),
+            'max_ite2': self.settings.value('max_ite2', defaultValue=500,type=int),
+            'method2': self.settings.value('method2', defaultValue='leastsq',type=str),
             'xtol2': self.settings.value('xtol2', defaultValue=1.e-4, type=float),
             # 'attached2': self.settings.value('attached2', defaultValue=True, type=bool),
             
@@ -267,6 +267,8 @@ class Main:
         self.ui.max_iteration.setValue(gui_states['max_ite'])
         self.ui.cbb_fit_methods.setCurrentText(gui_states['method'])
         self.ui.xtol.setText(str(gui_states['xtol']))
+        # self.mapview_widget.cbb_wafer_size.setCurrentText(gui_states['wafer_size'])
+        # self.mapview_widget.cbb_map_type.setCurrentText(gui_states['map_type'])
         # self.ui.cb_attached.setChecked(gui_states['attached'])
         
         self.ui.cb_fit_negative_2.setChecked(gui_states['fit_negative2'])

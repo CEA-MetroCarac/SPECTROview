@@ -809,9 +809,13 @@ class SpectraViewWidget(QWidget):
             icon_norm.addFile(os.path.join(ICON_DIR, "norm.png"))
             self.btn_norm.setIcon(icon_norm)
             self.btn_norm.setIconSize(QSize(24, 24))
+            
+            self.norm_x_entry = QLineEdit(self)
+            self.norm_x_entry.setFixedWidth(60)
+            self.norm_x_entry.setPlaceholderText("X value")
+            self.norm_x_entry.setToolTip("Type the X value at which normalization is performed. Leave it empty to normalize to the highest peak.")
 
             self.R2 = QLabel("R2=0", self)
-            #self.R2.setFixedWidth(80)
 
             # Create a QPushButton for Copy Figure Canvas
             self.btn_copy = QPushButton("", self)
@@ -835,6 +839,7 @@ class SpectraViewWidget(QWidget):
             self.control_layout.addWidget(self.btn_baseline)
             self.control_layout.addWidget(self.btn_peak)
             self.control_layout.addWidget(self.btn_norm)
+            self.control_layout.addWidget(self.norm_x_entry)
             
             self.control_layout.addWidget(self.btn_copy)
             self.control_layout.addWidget(self.toolbar)

@@ -800,6 +800,16 @@ class SpectraViewWidget(QWidget):
             self.btn_peak.setIcon(icon_peak)
             self.btn_peak.setIconSize(QSize(24, 24))
 
+            self.btn_norm = QToolButton(self)
+            self.btn_norm.setCheckable(True)
+            self.btn_norm.setAutoExclusive(False)
+            self.btn_norm.setToolTip("Normalization")
+            self.btn_norm.clicked.connect(self.refresh_plot) 
+            icon_norm = QIcon()
+            icon_norm.addFile(os.path.join(ICON_DIR, "norm.png"))
+            self.btn_norm.setIcon(icon_norm)
+            self.btn_norm.setIconSize(QSize(24, 24))
+
             self.R2 = QLabel("R2=0", self)
             #self.R2.setFixedWidth(80)
 
@@ -824,6 +834,7 @@ class SpectraViewWidget(QWidget):
             self.control_layout.addWidget(self.btn_zoom)
             self.control_layout.addWidget(self.btn_baseline)
             self.control_layout.addWidget(self.btn_peak)
+            self.control_layout.addWidget(self.btn_norm)
             
             self.control_layout.addWidget(self.btn_copy)
             self.control_layout.addWidget(self.toolbar)
@@ -922,7 +933,6 @@ class SpectraViewWidget(QWidget):
             ("Bestfit", "Best Fit", True),
             ("Raw", "Raw data"),
             ("Residual", "Residual"),
-            ("Normalized", "Normalized"),
         ]
 
         # Add actions to the menu
@@ -1044,7 +1054,7 @@ class SpectraViewWidget(QWidget):
     def get_y_values(self, spectrum):
         """Get y-values for a spectrum, applying normalization if needed."""
         y_values = spectrum.y
-        if self.menu_actions['Normalized'].isChecked():
+        if self.btn_norm.isChecked():
             max_intensity = max(spectrum.y)
             y_values = y_values / max_intensity
         return y_values

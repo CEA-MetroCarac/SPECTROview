@@ -419,7 +419,7 @@ class MapViewWidget(QWidget):
         self.z_range_label.setText(f'[{vmin}; {vmax}]')
 
     
-    def get_data_for_heatmap(self):
+    def get_data_for_heatmap(self, map_type='2Dmap'):
         """Prepare data for heatmap based on range sliders values"""
 
         # Default return values in case of no valid map_df or filtered columns
@@ -479,12 +479,22 @@ class MapViewWidget(QWidget):
                 vmin = round(final_z_col.min(), 0)
                 vmax = round(final_z_col.max(), 0)
 
-                # Heatmap data 
-                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
-                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
-                xmin, xmax = x_col.min(), x_col.max()
-                ymin, ymax = y_col.min(), y_col.max()
-                extent=[xmin, xmax, ymin, ymax]
+                if map_type == 'Wafer':
+                    # Create meshgrid for WaferPlot
+                    grid_x, grid_y = np.meshgrid(
+                        np.linspace(x_col.min(), x_col.max(), 300),
+                        np.linspace(y_col.min(), y_col.max(), 300)
+                    )
+                    grid_z = griddata((x_col, y_col), z_col, (grid_x, grid_y), method='linear')
+                    heatmap_pivot = pd.DataFrame(grid_z, index=grid_y[:, 0], columns=grid_x[0, :])
+                    extent = [grid_x.min(), grid_x.max(), grid_y.min(), grid_y.max()]
+                else:
+                    # Regular 2D map
+                    heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': z_col})
+                    heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
+                    xmin, xmax = x_col.min(), x_col.max()
+                    ymin, ymax = y_col.min(), y_col.max()
+                    extent = [xmin, xmax, ymin, ymax]
                 
         return heatmap_pivot, extent, vmin, vmax
     
@@ -507,21 +517,20 @@ class MapViewWidget(QWidget):
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
                        
             
-        # Plot heatmap for 2D map
-        if map_type == '2Dmap':
-            heatmap_pivot, extent, vmin, vmax = self.get_data_for_heatmap()
-            color = self.cbb_palette.currentText()
-            interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
-            vmin, vmax = self.z_range_slider.value()
+        
+        heatmap_pivot, extent, vmin, vmax = self.get_data_for_heatmap()
+        color = self.cbb_palette.currentText()
+        interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
+        vmin, vmax = self.z_range_slider.value()
 
-            self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
-                                origin='lower', aspect='auto', cmap=color, interpolation=interpolation_option)
-            
-            # Update or create the colorbar
-            if hasattr(self, 'cbar') and self.cbar is not None:
-                self.cbar.update_normal(self.img)
-            else:
-                self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
+        self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
+                            origin='lower', aspect='auto', cmap=color, interpolation=interpolation_option)
+        
+        # Update or create the colorbar
+        if hasattr(self, 'cbar') and self.cbar is not None:
+            self.cbar.update_normal(self.img)
+        else:
+            self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
 
         # Highlighted measurement sites
         if coords:

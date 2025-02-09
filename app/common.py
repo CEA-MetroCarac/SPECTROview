@@ -1064,11 +1064,28 @@ class SpectraViewWidget(QWidget):
 
     def get_y_values(self, spectrum):
         """Get y-values for a spectrum, applying normalization if needed."""
+        x_values = spectrum.x
         y_values = spectrum.y
+
         if self.btn_norm.isChecked():
-            max_intensity = max(spectrum.y)
-            y_values = y_values / max_intensity
+            norm_x_value = self.norm_x_entry.text().strip() 
+
+            if norm_x_value:  # If user provided an X value
+                try:
+                    norm_x_value = float(norm_x_value)  
+                    # Find the closest x value in spectrum.x and get corresponding y
+                    closest_index = (np.abs(x_values - norm_x_value)).argmin()
+                    norm_y_value = y_values[closest_index] 
+                except ValueError:
+                    print("Invalid X value. Normalizing to max intensity instead.")
+                    norm_y_value = max(y_values) 
+            else:
+                norm_y_value = max(y_values)  
+
+            if norm_y_value != 0:
+                y_values = y_values / norm_y_value 
         return y_values
+
 
     def plot_raw_data(self, spectrum):
         """Plot raw data points if the option is checked."""

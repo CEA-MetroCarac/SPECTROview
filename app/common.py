@@ -481,13 +481,21 @@ class MapViewWidget(QWidget):
 
                 if map_type == 'Wafer':
                     # Create meshgrid for WaferPlot
-                    grid_x, grid_y = np.meshgrid(
-                        np.linspace(x_col.min(), x_col.max(), 300),
-                        np.linspace(y_col.min(), y_col.max(), 300)
-                    )
-                    grid_z = griddata((x_col, y_col), z_col, (grid_x, grid_y), method='linear')
+                    r = int(self.cbb_wafer_size.currentText()) / 2
+                    grid_x, grid_y = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
+
+                    # Use 'linear' interpolation; fill NaN values using 'nearest'
+                    grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
+
+                    if np.isnan(grid_z).any():
+                        grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='nearest')
+
+                    # Ensure grid_z values are within vmin and vmax range
+                    grid_z = np.clip(grid_z, vmin, vmax)
+
                     heatmap_pivot = pd.DataFrame(grid_z, index=grid_y[:, 0], columns=grid_x[0, :])
                     extent = [grid_x.min(), grid_x.max(), grid_y.min(), grid_y.max()]
+
                 else:
                     # Regular 2D map
                     heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': z_col})
@@ -520,11 +528,11 @@ class MapViewWidget(QWidget):
         
         heatmap_pivot, extent, vmin, vmax = self.get_data_for_heatmap()
         color = self.cbb_palette.currentText()
-        interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
+        interpolation_option = 'nearest' if self.menu_actions['Smoothing'].isChecked() else 'none'
         vmin, vmax = self.z_range_slider.value()
 
         self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
-                            origin='lower', aspect='auto', cmap=color, interpolation=interpolation_option)
+                            origin='lower', aspect='equal', cmap=color, interpolation=interpolation_option)
         
         # Update or create the colorbar
         if hasattr(self, 'cbar') and self.cbar is not None:

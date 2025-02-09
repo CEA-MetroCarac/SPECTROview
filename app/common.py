@@ -363,6 +363,7 @@ class MapViewWidget(QWidget):
 
         self.slider_labels_layout.addWidget(self.label1)
         self.slider_labels_layout.addWidget(self.x_range_label)
+        self.slider_labels_layout.addSpacing(20)
         self.slider_labels_layout.addWidget(self.label2)
         self.slider_labels_layout.addWidget(self.z_range_label)
         self.slider_labels_layout.setContentsMargins(5, 0, 5, 0)
@@ -841,11 +842,14 @@ class SpectraViewWidget(QWidget):
 
             # Add widgets to the horizontal layout
             self.control_layout.addWidget(self.btn_rescale)
+            self.control_layout.addSpacing(10)
             self.control_layout.addWidget(self.btn_zoom)
             self.control_layout.addWidget(self.btn_baseline)
             self.control_layout.addWidget(self.btn_peak)
+            self.control_layout.addSpacing(20)
             self.control_layout.addWidget(self.btn_norm)
             self.control_layout.addWidget(self.norm_x_entry)
+            self.control_layout.addSpacing(20)
             self.control_layout.addWidget(self.tool_btn_options)
                
             self.control_layout.addWidget(self.btn_copy)

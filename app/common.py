@@ -810,11 +810,17 @@ class SpectraViewWidget(QWidget):
             icon_norm.addFile(os.path.join(ICON_DIR, "norm.png"))
             self.btn_norm.setIcon(icon_norm)
             self.btn_norm.setIconSize(QSize(24, 24))
+            self.btn_norm.clicked.connect(self.rescale)
             
-            self.norm_x_entry = QLineEdit(self)
-            self.norm_x_entry.setFixedWidth(60)
-            self.norm_x_entry.setPlaceholderText("X value")
-            self.norm_x_entry.setToolTip("Type the X value at which normalization is performed. Leave it empty to normalize to the highest peak.")
+            self.norm_x_min = QLineEdit(self)
+            self.norm_x_min.setFixedWidth(40)
+            self.norm_x_min.setPlaceholderText("Xmin")
+            self.norm_x_min.setToolTip("Type the Xmin-max to normalize at specific region. Leave it empty to normalize to the highest peak.")
+            self.norm_x_max = QLineEdit(self)
+            self.norm_x_max.setFixedWidth(40)
+            self.norm_x_max.setPlaceholderText("Xmax")
+            self.norm_x_max.setToolTip("Type the Xmin-max to normalize at specific region. Leave it empty to normalize to the highest peak.")
+
 
             self.R2 = QLabel("R2=0", self)
 
@@ -848,7 +854,8 @@ class SpectraViewWidget(QWidget):
             self.control_layout.addWidget(self.btn_peak)
             self.control_layout.addSpacing(20)
             self.control_layout.addWidget(self.btn_norm)
-            self.control_layout.addWidget(self.norm_x_entry)
+            self.control_layout.addWidget(self.norm_x_min)
+            self.control_layout.addWidget(self.norm_x_max)
             self.control_layout.addSpacing(20)
             self.control_layout.addWidget(self.tool_btn_options)
                
@@ -1072,14 +1079,23 @@ class SpectraViewWidget(QWidget):
         y_values = spectrum.y
 
         if self.btn_norm.isChecked():
-            norm_x_value = self.norm_x_entry.text().strip() 
+            norm_x_min = self.norm_x_min.text().strip()
+            norm_x_max = self.norm_x_max.text().strip() 
 
-            if norm_x_value:  # If user provided an X value
+            if norm_x_min and norm_x_max:  # If user provided both X min and X max values
                 try:
-                    norm_x_value = float(norm_x_value)  
-                    # Find the closest x value in spectrum.x and get corresponding y
-                    closest_index = (np.abs(x_values - norm_x_value)).argmin()
-                    norm_y_value = y_values[closest_index] 
+                    norm_x_min = float(norm_x_min)
+                    norm_x_max = float(norm_x_max)
+                    # Ensure min is less than max
+                    if norm_x_min > norm_x_max:
+                        norm_x_min, norm_x_max = norm_x_max, norm_x_min 
+                    
+                    # Find the closest indices in x_values
+                    min_index = (np.abs(x_values - norm_x_min)).argmin()
+                    max_index = (np.abs(x_values - norm_x_max)).argmin()
+
+                    # Get max Y value within the range
+                    norm_y_value = max(y_values[min_index:max_index + 1])
                 except ValueError:
                     print("Invalid X value. Normalizing to max intensity instead.")
                     norm_y_value = max(y_values) 

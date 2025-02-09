@@ -751,7 +751,7 @@ class SpectraViewWidget(QWidget):
             self.ax = self.figure.add_subplot(111)
             self.canvas = FigureCanvas(self.figure)
             self.canvas.mpl_connect('button_press_event', self.on_left_click)
-            self.canvas.mpl_connect('button_press_event', self.on_right_click)
+            #self.canvas.mpl_connect('button_press_event', self.on_right_click)
 
             self.toolbar = NavigationToolbar2QT(self.canvas, self)
             self.toolbar.zoom()  # Activate the zoom feature by default at startup
@@ -826,8 +826,14 @@ class SpectraViewWidget(QWidget):
             self.btn_copy.setIconSize(QSize(24, 24))
             self.btn_copy.clicked.connect(self.copy_fig)
 
+            # Create More-options button:
             self.create_options_menu()
 
+            self.tool_btn_options = QToolButton(self)
+            self.tool_btn_options.setText("More options ")
+            self.tool_btn_options.setPopupMode(QToolButton.InstantPopup) 
+            self.tool_btn_options.setMenu(self.options_menu) 
+            
             # Add all items in the same layout
             self.control_widget = QWidget(self)
             self.control_layout = QHBoxLayout(self.control_widget)
@@ -840,7 +846,8 @@ class SpectraViewWidget(QWidget):
             self.control_layout.addWidget(self.btn_peak)
             self.control_layout.addWidget(self.btn_norm)
             self.control_layout.addWidget(self.norm_x_entry)
-            
+            self.control_layout.addWidget(self.tool_btn_options)
+               
             self.control_layout.addWidget(self.btn_copy)
             self.control_layout.addWidget(self.toolbar)
             self.control_layout.addWidget(self.R2)
@@ -857,7 +864,6 @@ class SpectraViewWidget(QWidget):
         else:
             self.zoom_pan_active = False
             self.toolbar.zoom()  # Deactivate the zoom feature
-
     
     def on_left_click(self, event):
         """
@@ -985,12 +991,12 @@ class SpectraViewWidget(QWidget):
         self.ax.autoscale()
         self.canvas.draw()
 
-    def on_right_click(self, event):
-        """Show view options menu on right-click."""
-        if event.button == 3:  # 3 is the right-click button
-            # Show the menu at the cursor position
-            cursor_pos = QCursor.pos()  
-            self.options_menu.exec_(cursor_pos)
+    # def on_right_click(self, event):
+    #     """Show view options menu on right-click."""
+    #     if event.button == 3:  # 3 is the right-click button
+    #         # Show the menu at the cursor position
+    #         cursor_pos = QCursor.pos()  
+    #         self.options_menu.exec_(cursor_pos)
 
     
     def set_peak_model(self, model):

@@ -4,7 +4,7 @@
 
 ### SPECTROview (Spectroscopic Data Processing and Visualization)
 
-*Version 0.3.4 (07-02-2025)*
+*Version 0.4.0 (09-02-2025)*
 
 ### Features:
 - Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps). 

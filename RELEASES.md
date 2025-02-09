@@ -1,3 +1,12 @@
+### **Version v0.4.0 (09/02/2024)
+- **New features:**
+    - New customized toolbar : complete and add more view option on toolbar.
+    - Normalization feature: allows normalization either to the maximum intensity or to a user-specified X value via a QlineEdit.
+
+- **Bug fixes and Optimization:**
+    - Minor GUI adjustement for more convenient usages.
+    - Fix some bug related to the spectra view plot.
+
 ### **Version v0.3.3 (06/02/2024)
 - **Bug fixes and Optimization:**
     - New customized toolbar for the spectra view plot to fix the bug related to the click mode (rescale, zoom, baseline, peak).

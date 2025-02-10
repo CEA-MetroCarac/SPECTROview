@@ -486,10 +486,10 @@ class MapViewWidget(QWidget):
                     grid_x, grid_y = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
 
                     # Use 'linear' interpolation; fill NaN values using 'nearest'
-                    grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
+                    #grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
 
-                    if np.isnan(grid_z).any():
-                        grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='nearest')
+                    
+                    grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
 
                     # Ensure grid_z values are within vmin and vmax range
                     grid_z = np.clip(grid_z, vmin, vmax)
@@ -526,15 +526,19 @@ class MapViewWidget(QWidget):
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
                        
             
-        
         heatmap_pivot, extent, vmin, vmax = self.get_data_for_heatmap()
         color = self.cbb_palette.currentText()
         interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
         vmin, vmax = self.z_range_slider.value()
 
-        self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
+        if map_type == 'Wafer':
+            self.img = self.ax.imshow(heatmap_pivot, extent=[-r - 1, r + 1, -r - 0.5, r + 0.5],
+                            origin='lower', aspect='equal', cmap=color, interpolation='nearest')
+            print(f'Wafer: {heatmap_pivot}')
+        else: 
+            self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
                             origin='lower', aspect='equal', cmap=color, interpolation=interpolation_option)
-        
+            print(f'2Dmap: {heatmap_pivot}')
         # Update or create the colorbar
         if hasattr(self, 'cbar') and self.cbar is not None:
             self.cbar.update_normal(self.img)
@@ -2604,7 +2608,7 @@ class WaferPlot:
         """
         # Generate a meshgrid for the wafer and Interpolate z onto the meshgrid
         xi, yi = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
-        zi = self.interpolate_data(x, y, z, xi, yi)
+        zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
 
         # Plot the wafer map
         im = ax.imshow(zi, extent=[-r - 1, r + 1, -r - 0.5, r + 0.5],
@@ -2660,14 +2664,6 @@ class WaferPlot:
                 horizontalalignment='right')
         ax.text(0.05, -0.05, f"Mean: {mean_value:.2f}",
                 transform=ax.transAxes, fontsize=10, verticalalignment='bottom')
-
-    def interpolate_data(self, x, y, z, xi, yi):
-        """
-        Interpolate data onto a regular grid using the specified
-        interpolation method.
-        """
-        zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
-        return zi
 
 
 class CustomListWidget(QListWidget):

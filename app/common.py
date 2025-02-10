@@ -520,7 +520,7 @@ class MapViewWidget(QWidget):
             self.ax.set_yticklabels([])
 
             all_x, all_y = self.get_mes_sites_coord()
-            self.ax.scatter(all_x, all_y, marker='x', color='gray', s=10)
+            self.ax.scatter(all_x, all_y, marker='x', color='gray', s=15)
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
                        
             
@@ -604,7 +604,6 @@ class MapViewWidget(QWidget):
                 # Plot the height profile 
                 self.ax.plot(x_vals, y_vals, color='black', linestyle='-', lw=2)
 
-    
         
     def on_left_click_2Dmap(self, event):
         """select the measurement points via 2Dmap plot"""

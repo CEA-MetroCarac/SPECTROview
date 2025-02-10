@@ -2152,6 +2152,13 @@
                   </property>
                  </spacer>
                 </item>
+                <item>
+                 <widget class="QLabel" name="progressText_2">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
                </layout>
               </item>
               <item>
@@ -2166,19 +2173,12 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>200</width>
+                    <width>2000</width>
                     <height>10</height>
                    </size>
                   </property>
                   <property name="value">
                    <number>24</number>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="progressText_2">
-                  <property name="text">
-                   <string/>
                   </property>
                  </widget>
                 </item>
@@ -4565,6 +4565,16 @@
                <layout class="QVBoxLayout" name="listbox_layout2"/>
               </item>
               <item>
+               <widget class="QPushButton" name="btn_send_to_compare">
+                <property name="toolTip">
+                 <string>Send selected spectra to 'Spectra' Tab for visualization</string>
+                </property>
+                <property name="text">
+                 <string>Send selected spectra to 'Spectra' Tab</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <layout class="QHBoxLayout" name="horizontalLayout">
                 <item>
                  <widget class="QLabel" name="item_count_label">
@@ -4587,12 +4597,9 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_send_to_compare">
-                  <property name="toolTip">
-                   <string>Send selected spectra to 'Spectra' Tab for visualization</string>
-                  </property>
+                 <widget class="QLabel" name="progressText">
                   <property name="text">
-                   <string>Send to 'Spectra' Tab</string>
+                   <string/>
                   </property>
                  </widget>
                 </item>
@@ -4616,7 +4623,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>200</width>
+                    <width>2000</width>
                     <height>10</height>
                    </size>
                   </property>
@@ -4637,13 +4644,6 @@
                   </property>
                   <property name="format">
                    <string>%p%</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="progressText">
-                  <property name="text">
-                   <string/>
                   </property>
                  </widget>
                 </item>

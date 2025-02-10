@@ -387,6 +387,7 @@ class MapViewWidget(QWidget):
     def refresh_plot(self):
         """Call the refresh_gui method of the main application."""
         if hasattr(self.main_app, 'refresh_gui'):
+            
             self.main_app.refresh_gui()
         else:
             print("Main application does not have refresh_gui method.")
@@ -528,7 +529,7 @@ class MapViewWidget(QWidget):
         
         heatmap_pivot, extent, vmin, vmax = self.get_data_for_heatmap()
         color = self.cbb_palette.currentText()
-        interpolation_option = 'nearest' if self.menu_actions['Smoothing'].isChecked() else 'none'
+        interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
         vmin, vmax = self.z_range_slider.value()
 
         self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,

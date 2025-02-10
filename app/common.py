@@ -491,7 +491,7 @@ class MapViewWidget(QWidget):
                 if map_type == 'Wafer':
                     # Create meshgrid for WaferPlot
                     r = int(self.cbb_wafer_size.currentText()) / 2
-                    grid_x, grid_y = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
+                    grid_x, grid_y = np.meshgrid(np.linspace(-r, r, 200), np.linspace(-r, r, 200))
                     grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
                     extent = [-r - 1, r + 1, -r - 0.5, r + 0.5]
 
@@ -521,8 +521,6 @@ class MapViewWidget(QWidget):
 
             all_x, all_y = self.get_mes_sites_coord()
             self.ax.scatter(all_x, all_y, marker='x', color='gray', s=15)
-            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-                       
             
         heatmap_pivot, extent, vmin, vmax, grid_z  = self.get_data_for_heatmap(map_type)
         color = self.cbb_palette.currentText()
@@ -554,6 +552,7 @@ class MapViewWidget(QWidget):
         title = self.z_values_cbb.currentText()
         self.ax.set_title(title, fontsize=13)
         self.ax.get_figure().tight_layout()
+        self.ax.grid(False)
         self.canvas.draw()
 
     def plot_height_profile_on_map(self, coords):
@@ -2604,7 +2603,7 @@ class WaferPlot:
         stats (bool, optional): Display statistical values on the plot.
         """
         # Generate a meshgrid for the wafer and Interpolate z onto the meshgrid
-        xi, yi = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
+        xi, yi = np.meshgrid(np.linspace(-r, r, 200), np.linspace(-r, r, 200))
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
 
         # Plot the wafer map

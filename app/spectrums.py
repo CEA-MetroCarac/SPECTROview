@@ -228,7 +228,7 @@ class Spectrums(QObject):
         self.common.reinit_spectrum(fnames, self.spectrums)
         self.ntot = len(fnames)
         fit_model = deepcopy(self.current_fit_model)
-        ncpus = int(self.ui.ncpus.text())
+        ncpus = int(self.ui.ncpus_2.text())
 
         if fit_model is not None:
             self.spectrums.pbar_index = 0
@@ -307,7 +307,7 @@ class Spectrums(QObject):
             fnames = self.get_spectrum_fnames()
 
         self.ntot = len(fnames)
-        ncpus = int(self.ui.ncpus.text())
+        ncpus = int(self.ui.ncpus_2.text())
         fit_model = self.loaded_fit_model
         self.spectrums.pbar_index = 0
 
@@ -327,8 +327,8 @@ class Spectrums(QObject):
         percent = 100 * (index + 1) / self.ntot
         elapsed_time = time.time() - self.start_time
         text = f"{index}/{self.ntot} ({elapsed_time:.2f}s)"
-        self.ui.progressBar.setValue(percent)
-        self.ui.progressText.setText(text)
+        self.ui.progressBar_2.setValue(percent)
+        self.ui.progressText_2.setText(text)
         if self.spectrums.pbar_index >= self.ntot - 1:
             self.progress_timer.stop()
 
@@ -336,7 +336,7 @@ class Spectrums(QObject):
         """Update GUI after completing fitting process."""
         self.upd_spectra_list()
         QTimer.singleShot(200,  self.spectra_widget.rescale)
-        self.ui.progressBar.setValue(100)
+        self.ui.progressBar_2.setValue(100)
         self.ui.centralwidget.setEnabled(True)
 
     def apply_loaded_fit_model_all(self):
@@ -689,7 +689,7 @@ class Spectrums(QObject):
         fit_params['fit_negative'] = self.ui.cb_fit_negative_2.isChecked()
         fit_params['max_ite'] = self.ui.max_iteration_2.value()
         fit_params['method'] = self.ui.cbb_fit_methods_2.currentText()
-        fit_params['ncpus'] = self.ui.ncpus.value()
+        fit_params['ncpus'] = self.ui.ncpus_2.value()
         fit_params['xtol'] = float(self.ui.xtol_2.text())
         sel_spectrum.fit_params = fit_params
 

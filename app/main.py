@@ -231,7 +231,7 @@ class Main:
         # Save the gui states to QSettings
         for key, value in gui_states.items():
             self.settings.setValue(key, value)
-        print('save settings')
+        print('Settings are saved')
 
     def load_settings(self):
         """

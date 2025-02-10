@@ -378,7 +378,7 @@ class MapViewWidget(QWidget):
     
     def populate_z_values_cbb(self):
         self.z_values_cbb.clear() 
-        self.z_values_cbb.addItems(['Intensity', 'Area'])
+        self.z_values_cbb.addItems(['Area', 'Intensity'])
         if not self.df_fit_results.empty:
             fit_columns = [col for col in self.df_fit_results.columns if col not in ['Filename', 'X', 'Y']]
             self.z_values_cbb.addItems(fit_columns)
@@ -407,7 +407,7 @@ class MapViewWidget(QWidget):
         
     def update_z_range_slider(self):
         if self.z_values_cbb.count() > 0 and self.z_values_cbb.currentIndex() >= 0:
-            _,_, vmin, vmax, =self.get_data_for_heatmap()
+            _,_, vmin, vmax, _ =self.get_data_for_heatmap()
             self.z_range_slider.setRange(vmin, vmax)
             self.z_range_slider.setValue((vmin, vmax))
             self.z_range_label.setText(f'[{vmin}; {vmax}]')
@@ -428,6 +428,7 @@ class MapViewWidget(QWidget):
         extent = [0, 0, 0, 0]  # Default extent values
         vmin = 0
         vmax = 0
+        grid_z = None # for waferplot
         
         if self.map_df is not None:
             xmin, xmax = self.x_range_slider.value()
@@ -454,13 +455,14 @@ class MapViewWidget(QWidget):
                 else:
                     if not self.df_fit_results.empty:
                         map_name = self.map_df_name
+                        # Plot only selected wafer/2Dmap
                         filtered_df = self.df_fit_results.query('Filename == @map_name')
-                        
                         if not filtered_df.empty and parameter in filtered_df.columns:
                             z_col = filtered_df[parameter]
                         else:
                             z_col = None
                 
+                # Auto scale 
                 if self.cb_auto_scale.isChecked():
                     # Remove outliers using IQR method and replace them with interpolated values
                     Q1 = z_col.quantile(0.05)
@@ -476,26 +478,22 @@ class MapViewWidget(QWidget):
                 else:
                     final_z_col=z_col  
 
-                # Update vmin and vmax after interpolation
-                vmin = round(final_z_col.min(), 0)
-                vmax = round(final_z_col.max(), 0)
+                try:
+                    vmin = round(final_z_col.min(), 0)
+                    vmax = round(final_z_col.max(), 0)
+                except Exception as e:
+                    #When the selected 'parameters' does not exist for selected wafer.
+                    self.z_values_cbb.setCurrentIndex(0)
+
+                    vmin = round(final_z_col.min(), 0)
+                    vmax = round(final_z_col.max(), 0)
 
                 if map_type == 'Wafer':
                     # Create meshgrid for WaferPlot
                     r = int(self.cbb_wafer_size.currentText()) / 2
                     grid_x, grid_y = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
-
-                    # Use 'linear' interpolation; fill NaN values using 'nearest'
-                    #grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
-
-                    
                     grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
-
-                    # Ensure grid_z values are within vmin and vmax range
-                    grid_z = np.clip(grid_z, vmin, vmax)
-
-                    heatmap_pivot = pd.DataFrame(grid_z, index=grid_y[:, 0], columns=grid_x[0, :])
-                    extent = [grid_x.min(), grid_x.max(), grid_y.min(), grid_y.max()]
+                    extent = [-r - 1, r + 1, -r - 0.5, r + 0.5]
 
                 else:
                     # Regular 2D map
@@ -505,7 +503,7 @@ class MapViewWidget(QWidget):
                     ymin, ymax = y_col.min(), y_col.max()
                     extent = [xmin, xmax, ymin, ymax]
                 
-        return heatmap_pivot, extent, vmin, vmax
+        return heatmap_pivot, extent, vmin, vmax, grid_z
     
     def plot(self, coords):
         """Plot 2D maps of measurement points"""
@@ -526,19 +524,19 @@ class MapViewWidget(QWidget):
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
                        
             
-        heatmap_pivot, extent, vmin, vmax = self.get_data_for_heatmap()
+        heatmap_pivot, extent, vmin, vmax, grid_z  = self.get_data_for_heatmap(map_type)
         color = self.cbb_palette.currentText()
         interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
         vmin, vmax = self.z_range_slider.value()
 
         if map_type == 'Wafer':
-            self.img = self.ax.imshow(heatmap_pivot, extent=[-r - 1, r + 1, -r - 0.5, r + 0.5],
+            self.img = self.ax.imshow(grid_z, extent=[-r - 0.5, r + 0.5, -r - 0.5, r + 0.5],
                             origin='lower', aspect='equal', cmap=color, interpolation='nearest')
-            print(f'Wafer: {heatmap_pivot}')
+            
         else: 
             self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
                             origin='lower', aspect='equal', cmap=color, interpolation=interpolation_option)
-            print(f'2Dmap: {heatmap_pivot}')
+            #print(f'2Dmap: {heatmap_pivot}')
         # Update or create the colorbar
         if hasattr(self, 'cbar') and self.cbar is not None:
             self.cbar.update_normal(self.img)
@@ -656,7 +654,7 @@ class MapViewWidget(QWidget):
             print("Select 2 points on map plot to define a profile")
             return None
         (x1, y1), (x2, y2) = self.selected_points
-        heatmap_pivot, _, _, _ = self.get_data_for_heatmap()
+        heatmap_pivot, _, _, _, _ = self.get_data_for_heatmap()
         # Extract X and Y coordinates of the heatmap grid
         x_values = heatmap_pivot.columns.values
         y_values = heatmap_pivot.index.values
@@ -752,7 +750,7 @@ class SpectraViewWidget(QWidget):
         self.main_app = main_app # To connect to a method of main app (refresh gui)
         self.sel_spectrums =None
         self.peak_model = 'Lorentzian'
-        self.dpi = 90
+        self.dpi = 80
         self.figure = None
         self.ax = None
         self.canvas = None
@@ -1174,7 +1172,7 @@ class SpectraViewWidget(QWidget):
             if self.menu_actions['Peaks'].isChecked():
                 self.annotate_peak(peak_model, peak_label)
         else:
-            self.ax.plot(x_values, y_peak, '--', label=f"{peak_label}")
+            self.ax.plot(x_values, y_peak, '-', label=f"{peak_label}", lw=1.5)
 
     def annotate_peak(self, peak_model, peak_label):
         """Annotate peaks on the plot with labels."""
@@ -2941,7 +2939,7 @@ def copy_fig_to_clb(canvas, size_ratio=None):
 
         elif current_os == 'Windows':
             with BytesIO() as buf:
-                figure.savefig(buf, format='png', dpi=400) 
+                figure.savefig(buf, format='png', dpi=300) 
                 data = buf.getvalue()
             format_id = win32clipboard.RegisterClipboardFormat('PNG')
             win32clipboard.OpenClipboard()

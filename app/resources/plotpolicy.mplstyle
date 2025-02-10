@@ -55,7 +55,7 @@ ytick.labelsize : 12
 axes.titlesize : 12
 axes.labelsize : 12
 
-figure.dpi       : 100      # figure dots per inch
+figure.dpi       : 90      # figure dots per inch
 
 # Use sans-serif fonts
 font.family : sans-serif

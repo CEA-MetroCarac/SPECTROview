@@ -488,7 +488,9 @@ class MapViewWidget(QWidget):
                     vmin = round(final_z_col.min(), 0)
                     vmax = round(final_z_col.max(), 0)
 
-                if map_type == 'Wafer':
+                self.number_of_points = len(set(zip(x_col, y_col)))
+                
+                if map_type == 'Wafer' and self.number_of_points >= 4:
                     # Create meshgrid for WaferPlot
                     r = int(self.cbb_wafer_size.currentText()) / 2
                     grid_x, grid_y = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
@@ -522,14 +524,15 @@ class MapViewWidget(QWidget):
             all_x, all_y = self.get_mes_sites_coord()
             self.ax.scatter(all_x, all_y, marker='x', color='gray', s=15)
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-                       
+            
             
         heatmap_pivot, extent, vmin, vmax, grid_z  = self.get_data_for_heatmap(map_type)
         color = self.cbb_palette.currentText()
         interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
         vmin, vmax = self.z_range_slider.value()
+    
 
-        if map_type == 'Wafer':
+        if map_type == 'Wafer' and self.number_of_points >= 4:
             self.img = self.ax.imshow(grid_z, extent=[-r - 0.5, r + 0.5, -r - 0.5, r + 0.5],
                             origin='lower', aspect='equal', cmap=color, interpolation='nearest')
             

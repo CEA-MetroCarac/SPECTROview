@@ -540,19 +540,20 @@ class MapViewWidget(QWidget):
             self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
                             origin='lower', aspect='equal', cmap=color, interpolation=interpolation_option)
             #print(f'2Dmap: {heatmap_pivot}')
-        # Update or create the colorbar
+        
+        # COLORBAR
         if hasattr(self, 'cbar') and self.cbar is not None:
             self.cbar.update_normal(self.img)
         else:
             self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
 
-        # Highlighted measurement sites
+        # MEASUREMENT SITES
         if coords:
             x, y = zip(*coords)
             self.ax.scatter(x, y, marker='o', color='red', s=20)
 
-            if map_type == '2Dmap':   #Only for 2Dmap plot
-                self.plot_height_profile_on_map(coords)
+            #if map_type == '2Dmap':   
+            self.plot_height_profile_on_map(coords)
 
         title = self.z_values_cbb.currentText()
         self.ax.set_title(title, fontsize=13)

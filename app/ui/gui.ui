@@ -343,7 +343,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>Xaxis correct:</string>
+                              <string>Xaxis correct :</string>
                              </property>
                             </widget>
                            </item>
@@ -460,7 +460,7 @@
                                </font>
                               </property>
                               <property name="text">
-                               <string>Spectral range:</string>
+                               <string>Spectral range :</string>
                               </property>
                              </widget>
                             </item>
@@ -560,7 +560,7 @@
                                </font>
                               </property>
                               <property name="text">
-                               <string>Baseline (BL):</string>
+                               <string>Baseline :</string>
                               </property>
                              </widget>
                             </item>
@@ -686,13 +686,16 @@
                                <number>2</number>
                               </property>
                               <item>
-                               <widget class="QPushButton" name="sub_baseline_2">
+                               <widget class="QPushButton" name="btn_undo_baseline_2">
                                 <property name="toolTip">
-                                 <string>Subtract baseline for selected spectrum(s). 
- Hold 'Ctrl' and press button to apply to all spectra</string>
+                                 <string>Remove all baseline points and undo the baseline subtraction</string>
                                 </property>
                                 <property name="text">
-                                 <string>Subtract</string>
+                                 <string>Delete</string>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
                                 </property>
                                </widget>
                               </item>
@@ -708,20 +711,6 @@
                                  </size>
                                 </property>
                                </spacer>
-                              </item>
-                              <item>
-                               <widget class="QPushButton" name="btn_undo_baseline_2">
-                                <property name="toolTip">
-                                 <string>Remove all baseline points and undo the baseline subtraction</string>
-                                </property>
-                                <property name="text">
-                                 <string/>
-                                </property>
-                                <property name="icon">
-                                 <iconset resource="resources.qrc">
-                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
-                                </property>
-                               </widget>
                               </item>
                               <item>
                                <widget class="QPushButton" name="btn_copy_bl_2">
@@ -762,6 +751,17 @@
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
                                   <normaloff>:/icon/iconpack/paste10.png</normaloff>:/icon/iconpack/paste10.png</iconset>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QPushButton" name="sub_baseline_2">
+                                <property name="toolTip">
+                                 <string>Subtract baseline for selected spectrum(s). 
+ Hold 'Ctrl' and press button to apply to all spectra</string>
+                                </property>
+                                <property name="text">
+                                 <string>Subtract</string>
                                 </property>
                                </widget>
                               </item>
@@ -809,12 +809,12 @@
                                </font>
                               </property>
                               <property name="text">
-                               <string>Peaks:</string>
+                               <string>Peaks :</string>
                               </property>
                              </widget>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_77" stretch="0,65,0,0,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_77" stretch="0,65">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -840,6 +840,10 @@
                               <item>
                                <widget class="QComboBox" name="cbb_fit_models_2"/>
                               </item>
+                             </layout>
+                            </item>
+                            <item>
+                             <layout class="QHBoxLayout" name="horizontalLayout_30">
                               <item>
                                <widget class="QPushButton" name="clear_peaks_2">
                                 <property name="toolTip">
@@ -847,13 +851,26 @@
  Hold 'Ctrl' and press 'Clear peaks' button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string/>
+                                 <string>Delete</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
                                   <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
                                 </property>
                                </widget>
+                              </item>
+                              <item>
+                               <spacer name="horizontalSpacer_7">
+                                <property name="orientation">
+                                 <enum>Qt::Horizontal</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>40</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                               </spacer>
                               </item>
                               <item>
                                <widget class="QPushButton" name="btn_copy_peaks_2">
@@ -2513,7 +2530,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>Xaxis correct:</string>
+                              <string>Xaxis correct :</string>
                              </property>
                             </widget>
                            </item>
@@ -2630,7 +2647,7 @@
                                </font>
                               </property>
                               <property name="text">
-                               <string>Spectral range:</string>
+                               <string>Spectral range :</string>
                               </property>
                              </widget>
                             </item>
@@ -2730,7 +2747,7 @@
                                </font>
                               </property>
                               <property name="text">
-                               <string>Baseline (BL):</string>
+                               <string>Baseline :</string>
                               </property>
                              </widget>
                             </item>
@@ -2856,13 +2873,16 @@
                                <number>2</number>
                               </property>
                               <item>
-                               <widget class="QPushButton" name="sub_baseline">
+                               <widget class="QPushButton" name="btn_undo_baseline">
                                 <property name="toolTip">
-                                 <string>Subtract baseline for selected spectrum(s). 
- Hold 'Ctrl' and press button to apply to all spectra</string>
+                                 <string>To remove all baseline points and undo the baseline subtraction</string>
                                 </property>
                                 <property name="text">
-                                 <string>Subtract</string>
+                                 <string>Delete</string>
+                                </property>
+                                <property name="icon">
+                                 <iconset resource="resources.qrc">
+                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
                                 </property>
                                </widget>
                               </item>
@@ -2878,20 +2898,6 @@
                                  </size>
                                 </property>
                                </spacer>
-                              </item>
-                              <item>
-                               <widget class="QPushButton" name="btn_undo_baseline">
-                                <property name="toolTip">
-                                 <string>To remove all baseline points and undo the baseline subtraction</string>
-                                </property>
-                                <property name="text">
-                                 <string/>
-                                </property>
-                                <property name="icon">
-                                 <iconset resource="resources.qrc">
-                                  <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
-                                </property>
-                               </widget>
                               </item>
                               <item>
                                <widget class="QPushButton" name="btn_copy_bl">
@@ -2935,6 +2941,17 @@
                                 </property>
                                </widget>
                               </item>
+                              <item>
+                               <widget class="QPushButton" name="sub_baseline">
+                                <property name="toolTip">
+                                 <string>Subtract baseline for selected spectrum(s). 
+ Hold 'Ctrl' and press button to apply to all spectra</string>
+                                </property>
+                                <property name="text">
+                                 <string>Subtract</string>
+                                </property>
+                               </widget>
+                              </item>
                              </layout>
                             </item>
                            </layout>
@@ -2975,7 +2992,7 @@
                              </widget>
                             </item>
                             <item>
-                             <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="0,65,0,0,0">
+                             <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="0,65">
                               <property name="spacing">
                                <number>5</number>
                               </property>
@@ -2994,13 +3011,17 @@
                               <item>
                                <widget class="QLabel" name="label_41">
                                 <property name="text">
-                                 <string>Peak shape:</string>
+                                 <string>Peak shape :</string>
                                 </property>
                                </widget>
                               </item>
                               <item>
                                <widget class="QComboBox" name="cbb_fit_models"/>
                               </item>
+                             </layout>
+                            </item>
+                            <item>
+                             <layout class="QHBoxLayout" name="horizontalLayout_31">
                               <item>
                                <widget class="QPushButton" name="clear_peaks">
                                 <property name="toolTip">
@@ -3008,13 +3029,26 @@
  Hold 'Ctrl' and press 'Clear peaks' button to apply to all spectra</string>
                                 </property>
                                 <property name="text">
-                                 <string/>
+                                 <string>Delete</string>
                                 </property>
                                 <property name="icon">
                                  <iconset resource="resources.qrc">
                                   <normaloff>:/icon/iconpack/remove.png</normaloff>:/icon/iconpack/remove.png</iconset>
                                 </property>
                                </widget>
+                              </item>
+                              <item>
+                               <spacer name="horizontalSpacer_8">
+                                <property name="orientation">
+                                 <enum>Qt::Horizontal</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                 <size>
+                                  <width>40</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                               </spacer>
                               </item>
                               <item>
                                <widget class="QPushButton" name="btn_copy_peaks">
@@ -3539,8 +3573,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>411</width>
-                       <height>228</height>
+                       <width>428</width>
+                       <height>547</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">

@@ -2127,15 +2127,14 @@ class Graph(QWidget):
                               linestyles='-' if self.join_for_point_plot
                               else 'none', marker=markers, palette=colors,
                               markeredgecolor='black', markeredgewidth=1,
-                              dodge=True,
                               err_kws={'linewidth': 1, 'color': 'black'},
                               capsize=0.02)
             elif self.plot_style == 'scatter':
                 sns.scatterplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
                                 s=100, edgecolor='black', palette=colors)
             elif self.plot_style == 'box':
-                sns.boxplot(data=df, x=self.x, y=y, hue=self.z, dodge=True,
-                            ax=self.ax, palette=colors)
+                sns.boxplot(data=df, x=self.x, y=y, hue=self.z, 
+                            ax=self.ax, palette=colors, width=0.4)
             elif self.plot_style == 'line':
                 sns.lineplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
                              palette=colors)

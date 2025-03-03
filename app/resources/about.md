@@ -12,11 +12,10 @@
 - Collect all best-fit results with one click.
 - Dedicated module for effortless, fast, and easy data visualization.
 ____
-Check out the GitHub repository for more details : [SPECTROview github](https://github.com/CEA-MetroCarac/spectroview).
+Check out the GitHub repository for lastest version & more details : [SPECTROview github](https://github.com/CEA-MetroCarac/spectroview).
 
-For any feedback,
-contact: [van-hoan.le@cea.fr](mailto:van-hoan.le@cea.fr)
 
-<div style="text-align: right;">
-    <img src="logo.png" alt="icon3.png" width="100" height="35">
-</div>
+### Citation: 
+Le, V.-H., & Quéméré, P. (2025). SPECTROview : A Tool for Spectroscopic Data Processing and Visualization (0.4.6). Zenodo. https://doi.org/10.5281/zenodo.14147172
+
+

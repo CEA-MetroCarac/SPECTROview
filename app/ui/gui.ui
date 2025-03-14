@@ -47,7 +47,7 @@
       <property name="minimumSize">
        <size>
         <width>900</width>
-        <height>900</height>
+        <height>600</height>
        </size>
       </property>
       <property name="maximumSize">
@@ -3573,8 +3573,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>547</height>
+                       <width>318</width>
+                       <height>228</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">

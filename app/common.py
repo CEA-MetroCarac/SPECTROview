@@ -849,7 +849,16 @@ class SpectraViewWidget(QWidget):
             self.norm_x_max.setPlaceholderText("Xmax")
             self.norm_x_max.setToolTip("Type the Xmin-max to normalize at specific region. Leave it empty to normalize to the highest peak.")
 
-
+            self.btn_legend = QToolButton(self)
+            self.btn_legend.setCheckable(True)
+            self.btn_legend.setAutoExclusive(False)
+            self.btn_legend.setToolTip("Show legend")
+            self.btn_legend.clicked.connect(self.refresh_plot) 
+            icon_norm = QIcon()
+            icon_norm.addFile(os.path.join(ICON_DIR, "legend.png"))
+            self.btn_legend.setIcon(icon_norm)
+            self.btn_legend.setIconSize(QSize(24, 24))       
+            
             self.R2 = QLabel("R2=0", self)
 
             # Create a QPushButton for Copy Figure Canvas
@@ -884,6 +893,9 @@ class SpectraViewWidget(QWidget):
             self.control_layout.addWidget(self.btn_norm)
             self.control_layout.addWidget(self.norm_x_min)
             self.control_layout.addWidget(self.norm_x_max)
+            
+            self.control_layout.addSpacing(20)
+            self.control_layout.addWidget(self.btn_legend)
             self.control_layout.addSpacing(20)
             self.control_layout.addWidget(self.tool_btn_options)
                
@@ -976,7 +988,6 @@ class SpectraViewWidget(QWidget):
 
         # Define view options with checkable actions
         options = [
-            ("Legends", "Legends"),
             ("Colors", "Colors", True),
             ("Peaks", "Show Peaks"),
             ("Filled", "Filled", True),
@@ -1216,7 +1227,7 @@ class SpectraViewWidget(QWidget):
         else:  # Default to linear scale
             self.ax.set_yscale('linear')
 
-        if self.menu_actions['Legends'].isChecked():
+        if self.btn_legend.isChecked():
             self.ax.legend(loc='upper right')
 
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')

@@ -780,6 +780,7 @@ class SpectraViewWidget(QWidget):
             self.ax = self.figure.add_subplot(111)
             self.canvas = FigureCanvas(self.figure)
             self.canvas.mpl_connect('button_press_event', self.on_left_click)
+            self.canvas.mpl_connect("scroll_event", self.on_scroll)
             #self.canvas.mpl_connect('button_press_event', self.on_right_click)
 
             self.toolbar = NavigationToolbar2QT(self.canvas, self)
@@ -915,7 +916,26 @@ class SpectraViewWidget(QWidget):
         else:
             self.zoom_pan_active = False
             self.toolbar.zoom()  # Deactivate the zoom feature
-    
+            
+    def on_scroll(self, event):
+        ax = event.inaxes
+        if ax is None:
+            return  # Ignore scrolls outside the plot area
+
+        y_min, y_max = ax.get_ylim()
+        dy = (y_max - y_min) * 0.1  # 10% zoom step
+
+        if event.step < 0:
+            # Scroll up: increase max Y
+            y_max = y_max + dy
+        elif event.step > 0:
+            # Scroll down: decrease max Y
+            y_max = max(y_min + 1e-6, y_max - dy)  # prevent collapse
+
+        ax.set_ylim(y_min, y_max)
+        self.canvas.draw_idle()
+        self.refresh_plot()
+
     def on_left_click(self, event):
         """
         Handle click events on spectra plot canvas for adding peak models or baseline points.

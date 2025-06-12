@@ -2716,19 +2716,40 @@ class CustomListWidget(QListWidget):
             using drag-and-drop.
     """
     items_reordered = Signal()
+    files_dropped = Signal(list) 
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAcceptDrops(True)  # Enable external drag-drop
         self.setDragDropMode(QListWidget.InternalMove)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragEnterEvent(event)
+            
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragMoveEvent(event)
+            
     def dropEvent(self, event):
         """
         Overrides the dropEvent method to emit the items_reordered signal
             after an item is dropped into a new position.
         """
-        super().dropEvent(event)
-        self.items_reordered.emit()
+        if event.mimeData().hasUrls():
+            file_paths = [url.toLocalFile() for url in event.mimeData().urls()]
+            self.files_dropped.emit(file_paths)  # emit signal with file list
+            event.acceptProposedAction()
+        else:
+            super().dropEvent(event)
+            self.items_reordered.emit()
+        
+    
 
 def compress(array):
     """Compress and encode a numpy array to a base64 string."""

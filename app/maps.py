@@ -63,7 +63,7 @@ class Maps(QObject):
         
         # Initialize QListWidget for spectra list
         self.ui.spectra_listbox = CustomListWidget()
-        self.ui.spectra_listbox.setDragDropMode(QAbstractItemView.NoDragDrop)
+        #self.ui.spectra_listbox.setDragDropMode(QAbstractItemView.NoDragDrop)
         self.ui.listbox_layout2.addWidget(self.ui.spectra_listbox)
         self.ui.spectra_listbox.itemSelectionChanged.connect(self.refresh_gui)
         self.ui.checkBox_2.stateChanged.connect(self.check_uncheck_all)

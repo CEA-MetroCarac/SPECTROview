@@ -155,6 +155,9 @@ class Main:
         ########################################################
         ############## GUI for Spectrums Processing tab #############
         ########################################################
+        self.ui.spectrums_listbox.files_dropped.connect(self.open)
+        self.ui.spectra_listbox.files_dropped.connect(self.open)
+        
         self.ui.cbb_fit_models_2.addItems(PEAK_MODELS)
         self.ui.range_apply_2.clicked.connect(
             self.spectrums.set_x_range_handler)

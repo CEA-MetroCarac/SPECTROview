@@ -4234,6 +4234,9 @@
                   <height>0</height>
                  </size>
                 </property>
+                <property name="dragDropMode">
+                 <enum>QAbstractItemView::NoDragDrop</enum>
+                </property>
                </widget>
               </item>
               <item>

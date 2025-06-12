@@ -173,7 +173,7 @@ class MapViewWidget(QWidget):
         self.figure.canvas.mpl_connect('key_press_event', self.on_key_press)
         self.figure.canvas.mpl_connect('key_release_event', self.on_key_release)
         
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
         self.create_range_sliders(0,100)
         
@@ -563,7 +563,7 @@ class MapViewWidget(QWidget):
         title = self.z_values_cbb.currentText()
         self.ax.set_title(title, fontsize=13)
         self.ax.get_figure().tight_layout()
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def plot_height_profile_on_map(self, coords):
         """Plot height profile directly on heatmap"""
@@ -679,7 +679,7 @@ class MapViewWidget(QWidget):
 
         profile_df = pd.DataFrame({'X': x_samples, 'Y': y_samples, 'distance': dists_from_start,'values': z_samples})
 
-        self.canvas.draw()
+        self.canvas.draw_idle()
         return profile_df
             
     def on_key_press(self, event):
@@ -1252,7 +1252,7 @@ class SpectraViewWidget(QWidget):
 
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.figure.tight_layout()
-        self.canvas.draw()
+        self.canvas.draw_idle()
         
     def clear_plot(self):
         """Explicitly clear the spectra plot."""
@@ -2006,7 +2006,7 @@ class Graph(QWidget):
             self.graph_layout.addWidget(self.toolbar)
 
         self.canvas.figure.tight_layout()
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def plot(self, df):
         """Updates the plot based on the provided DataFrame and plot
@@ -2033,7 +2033,7 @@ class Graph(QWidget):
 
         self.get_legend_properties()
         self.ax.get_figure().tight_layout()
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def get_legend_properties(self):
         """Retrieves properties of each existing legend item."""

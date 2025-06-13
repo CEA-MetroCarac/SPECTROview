@@ -395,7 +395,7 @@ class MapViewWidget(QWidget):
             
             self.main_app.refresh_gui()
         else:
-            print("Main application does not have refresh_gui method.")
+            return
     
     def update_xrange_slider(self, xmin, xmax):
         """Update the range of the slider based on new min and max values."""
@@ -1078,7 +1078,7 @@ class SpectraViewWidget(QWidget):
         if hasattr(self.main_app, 'refresh_gui'):
             self.main_app.refresh_gui()
         else:
-            print("Main application does not have refresh_gui method.")
+            return
 
 
     def plot(self, sel_spectrums):

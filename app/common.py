@@ -1494,7 +1494,7 @@ class PeakTableWidget:
         self.clear_layout(self.main_layout)
 
         header_labels = ["  ", "Label", "Model"]
-        param_hint_order = ['x0', 'fwhm', 'ampli', 'alpha', 'fwhm_l', 'fwhm_r']
+        param_hint_order = ['x0', 'fwhm','fwhm_l', 'fwhm_r', 'ampli', 'alpha']
 
         # Create and add headers to list
         for param_hint_key in param_hint_order:
@@ -1557,9 +1557,7 @@ class PeakTableWidget:
             label = QLineEdit(self.sel_spectrum.peak_labels[i])
             label.setFixedWidth(80)
             label.textChanged.connect(
-                lambda text, idx=i,
-                       spectrum=self.sel_spectrum: self.update_peak_label(spectrum,
-                                                                         idx, text))
+                lambda text, idx=i, spectrum=self.sel_spectrum: self.update_peak_label(spectrum,idx, text))
             label_layout.addWidget(label)
 
             # Peak model : Lorentizan, Gaussian, etc...
@@ -1571,8 +1569,7 @@ class PeakTableWidget:
             model.setFixedWidth(120)
             model.currentIndexChanged.connect(
                 lambda index, spectrum=self.sel_spectrum, idx=i,
-                       combo=model: self.update_model_name(spectrum, index, idx,
-                                                           combo.currentText()))
+                       combo=model: self.update_model_name(spectrum, index, idx, combo.currentText()))
             model_layout.addWidget(model)
 
             # variables of peak_model
@@ -1589,8 +1586,7 @@ class PeakTableWidget:
                     value.setAlignment(Qt.AlignRight)
                     value.textChanged.connect(
                         lambda text, pm=peak_model,
-                               key=param_hint_key: self.update_param_hint_value(
-                            pm, key, text))
+                               key=param_hint_key: self.update_param_hint_value(pm, key, text))
                     param_hint_layouts[param_hint_key]['value'].addWidget(value)
 
                     # 4.2 FIXED or NOT
@@ -1600,9 +1596,7 @@ class PeakTableWidget:
                     vary.setFixedWidth(30)
                     vary.stateChanged.connect(
                         lambda state, pm=peak_model,
-                               key=param_hint_key: self.update_param_hint_vary(
-                            pm, key,
-                            not state))
+                               key=param_hint_key: self.update_param_hint_vary(pm, key, not state))
                     param_hint_layouts[param_hint_key]['vary'].addWidget(vary)
 
                     # 4.3 MIN MAX
@@ -1613,12 +1607,9 @@ class PeakTableWidget:
                         min_lineedit.setFixedHeight(24)
                         min_lineedit.setAlignment(Qt.AlignRight)
                         min_lineedit.textChanged.connect(
-                            lambda text, pm=peak_model,
-                                   key=param_hint_key:
-                            self.update_param_hint_min(
-                                pm, key, text))
-                        param_hint_layouts[param_hint_key]['min'].addWidget(
-                            min_lineedit)
+                            lambda text, pm=peak_model,key=param_hint_key:
+                            self.update_param_hint_min(pm, key, text))
+                        param_hint_layouts[param_hint_key]['min'].addWidget(min_lineedit)
 
                         max_val = round(param_hint_value.get('max', 0.0), 2)
                         max_lineedit = QLineEdit(str(max_val))
@@ -1626,12 +1617,9 @@ class PeakTableWidget:
                         max_lineedit.setFixedHeight(24)
                         max_lineedit.setAlignment(Qt.AlignRight)
                         max_lineedit.textChanged.connect(
-                            lambda text, pm=peak_model,
-                                   key=param_hint_key:
-                            self.update_param_hint_max(
-                                pm, key, text))
-                        param_hint_layouts[param_hint_key]['max'].addWidget(
-                            max_lineedit)
+                            lambda text, pm=peak_model, key=param_hint_key:
+                            self.update_param_hint_max(pm, key, text))
+                        param_hint_layouts[param_hint_key]['max'].addWidget(max_lineedit)
 
                     # 4.4 EXPRESSION
                     if self.cb_expr.isChecked():
@@ -1646,24 +1634,18 @@ class PeakTableWidget:
                                    key=param_hint_key:
                             self.update_param_hint_expr(
                                 pm, key, text))
-                        param_hint_layouts[param_hint_key]['expr'].addWidget(
-                            expr)
+                        param_hint_layouts[param_hint_key]['expr'].addWidget(expr)
                 else:
                     # Add empty labels for alignment
                     empty_label = QLabel()
                     empty_label.setFixedHeight(24)
-                    param_hint_layouts[param_hint_key]['value'].addWidget(
-                        empty_label)
-                    param_hint_layouts[param_hint_key]['vary'].addWidget(
-                        empty_label)
+                    param_hint_layouts[param_hint_key]['value'].addWidget(empty_label)
+                    param_hint_layouts[param_hint_key]['vary'].addWidget(empty_label)
                     if self.cb_limits.isChecked():
-                        param_hint_layouts[param_hint_key]['min'].addWidget(
-                            empty_label)
-                        param_hint_layouts[param_hint_key]['max'].addWidget(
-                            empty_label)
+                        param_hint_layouts[param_hint_key]['min'].addWidget(empty_label)
+                        param_hint_layouts[param_hint_key]['max'].addWidget(empty_label)
                     if self.cb_expr.isChecked():
-                        param_hint_layouts[param_hint_key]['expr'].addWidget(
-                            empty_label)
+                        param_hint_layouts[param_hint_key]['expr'].addWidget(empty_label)
 
         # Add vertical layouts to main layout
         self.main_layout.addLayout(delete_layout)

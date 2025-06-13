@@ -1597,6 +1597,7 @@ class PeakTableWidget:
                     vary = QCheckBox()
                     vary.setChecked(not param_hint_value.get('vary', False))
                     vary.setFixedHeight(24)
+                    vary.setFixedWidth(30)
                     vary.stateChanged.connect(
                         lambda state, pm=peak_model,
                                key=param_hint_key: self.update_param_hint_vary(

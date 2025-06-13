@@ -175,8 +175,8 @@ class Maps(QObject):
                         continue          
                     map_name = fname
                     if map_name in self.maps:
-                        msg = f"Map '{map_name}' is already opened"
-                        show_alert(msg)
+                        print(f"Map '{map_name}' is already opened")
+                        continue
                     else:
                         self.maps[map_name] = map_df
         self.extract_spectra()

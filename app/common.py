@@ -1510,9 +1510,7 @@ class PeakTableWidget:
         delete_layout = QVBoxLayout()
         label_layout = QVBoxLayout()
         model_layout = QVBoxLayout()
-        param_hint_layouts = {param_hint: {var: QVBoxLayout() for var in
-                                           ['value', 'min', 'max', 'expr',
-                                            'vary']} for
+        param_hint_layouts = {param_hint: {var: QVBoxLayout() for var in ['value', 'min', 'max', 'expr','vary']} for
                               param_hint in param_hint_order}
 
         # Add header labels to each layout
@@ -1577,7 +1575,7 @@ class PeakTableWidget:
                     param_hint_value = param_hints[param_hint_key]
 
                     # 4.1 VALUE
-                    value_val = round(param_hint_value.get('value', 0.0), 2)
+                    value_val = round(param_hint_value.get('value', 0.0), 3)
                     value = QLineEdit(str(value_val))
                     value.setFixedWidth(70)
                     value.setFixedHeight(24)

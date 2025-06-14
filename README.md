@@ -19,10 +19,10 @@ ___
 ## Features:
 
 - Cross-platform compatibility (Windows, macOS, Linux).
-- Optimized user inferface for easy and quick inspection and comparison of spectra.
 - Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps)*. 
 - Ability to fit multiple spectra or 2Dmaps using predefined models or by creating custom fit models*.
 - Collect all best-fit results with one click.
+- Optimized user inferface for easy and quick inspection and comparison of spectra.
 - Dedicated module for effortless, fast, and easy data visualization. 
 
 **Fitting features are powered by the *fitspy* and *lmfit* open-source packages.*

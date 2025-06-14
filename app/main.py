@@ -124,7 +124,6 @@ class Main:
             self.maps.save_fit_results)
         self.ui.btn_view_wafer.clicked.connect(self.maps.view_map_df)
 
-        self.ui.btn_open_fitspy.clicked.connect(self.maps.fitspy_launcher)
         self.ui.btn_cosmis_ray.clicked.connect(self.maps.cosmis_ray_detection)
         
         self.ui.btn_split_fname_2.clicked.connect(self.maps.split_fname)
@@ -185,8 +184,6 @@ class Main:
         self.ui.btn_load_model_3.clicked.connect(self.spectrums.load_fit_model)
         self.ui.btn_apply_model_3.clicked.connect(
             self.spectrums.apply_model_fnc_handler)
-        self.ui.btn_open_fitspy_3.clicked.connect(
-            self.spectrums.fitspy_launcher)
         self.ui.btn_cosmis_ray_3.clicked.connect(
             self.spectrums.cosmis_ray_detection)
         self.ui.btn_init_3.clicked.connect(self.spectrums.reinit_fnc_handler)

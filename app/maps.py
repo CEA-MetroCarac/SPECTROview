@@ -1124,26 +1124,7 @@ class Maps(QObject):
                 return
 
 
-    def fitspy_launcher(self):
-        """
-        Launch FITSPY with selected spectra from the application.
-        """
-        if self.spectrums:
-            plt.style.use('default')
-            root = Tk()
-            appli = Appli(root, force_terminal_exit=False)
-
-            appli.spectra = self.spectrums
-            for spectrum in appli.spectra:
-                fname = spectrum.fname
-                appli.fileselector.filenames.append(fname)
-                appli.fileselector.lbox.insert(END, os.path.basename(fname))
-            appli.fileselector.select_item(0)
-            appli.update()
-            root.mainloop()
-        else:
-            show_alert("No spectrum is loaded; FITSPY cannot open")
-            return
+    
 
     
 

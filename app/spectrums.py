@@ -867,24 +867,6 @@ class Spectrums(QObject):
         self.spectra_widget.ax.clear()
         self.spectra_widget.canvas.draw()
 
-    def fitspy_launcher(self):
-        """To Open FITSPY with selected spectra"""
-        if self.spectrums:
-            plt.style.use('default')
-            root = Tk()
-            appli = Appli(root, force_terminal_exit=False)
-
-            appli.spectra = self.spectrums
-            for spectrum in appli.spectra:
-                fname = spectrum.fname
-                appli.fileselector.filenames.append(fname)
-                appli.fileselector.lbox.insert(END, os.path.basename(fname))
-            appli.fileselector.select_item(0)
-            appli.update()
-            root.mainloop()
-        else:
-            show_alert("No spectrum is loaded, FITSPY cannot open")
-            return
 
     def fit_fnc_handler(self):
         modifiers = QApplication.keyboardModifiers()

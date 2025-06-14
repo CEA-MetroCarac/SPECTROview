@@ -4,6 +4,7 @@ This module contains all common methods or Class which are shared between 3 modu
 import markdown
 import platform
 import os
+import re
 import json
 from copy import deepcopy
 import pandas as pd
@@ -145,7 +146,6 @@ class MapViewWidget(QWidget):
         
         # Connect the mouse and key events to the handler functions
         self.figure.canvas.mpl_connect('button_press_event', self.on_left_click_2Dmap)
-        # self.figure.canvas.mpl_connect('button_press_event', self.on_right_click_2Dmap) # disable rightclick for now
         self.figure.canvas.mpl_connect('key_press_event', self.on_key_press)
         self.figure.canvas.mpl_connect('key_release_event', self.on_key_release)
         
@@ -155,42 +155,34 @@ class MapViewWidget(QWidget):
         
         # MAP_TYPE ComboBox (wafer or 2Dmap)
         combobox_layout = QHBoxLayout()
-        self.map_type_label = QLabel("Select map type:")
+        self.map_type_label = QLabel("Map type:")
         self.cbb_map_type = QComboBox(self)
-        self.cbb_map_type.addItems(['Wafer', '2Dmap'])
+        self.cbb_map_type.addItems(['2Dmap', 'Wafer_300mm', 'Wafer_200mm', 'Wafer_100mm'])
         
-        self.cbb_map_type.setFixedWidth(80)
+        self.cbb_map_type.setFixedWidth(110)
         self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
 
-        # WAFER_SIZE ComboBox
-        self.wafer_size_label = QLabel("Wafer Size (mm):")
-        self.cbb_wafer_size = QComboBox(self)
-        self.cbb_wafer_size.addItems(['300', '200', '150', '100'])
-        
-        self.cbb_wafer_size.setFixedWidth(50)
-        self.cbb_wafer_size.currentIndexChanged.connect(self.refresh_plot)
-
         # Load last saved settings
-        self.cbb_wafer_size.currentIndexChanged.connect(self.update_settings)
         self.cbb_map_type.currentIndexChanged.connect(self.update_settings)
+        saved_map_type = self.settings.value("map_type", "Wafer_300mm")  # Default to Wafer if not found
         
-        saved_wafer_size = self.settings.value("wafer_size", "300")  # Default to 300 if not found
-        saved_map_type = self.settings.value("map_type", "Wafer")  # Default to Wafer if not found
         # Set the saved values in the combo boxes
-        if saved_wafer_size in ['300', '200', '150', '100']:
-            self.cbb_wafer_size.setCurrentText(saved_wafer_size)
-
-        if saved_map_type in ['Wafer', '2Dmap']:
+        if saved_map_type in ['2Dmap', 'Wafer_300mm', 'Wafer_200mm', 'Wafer_100mm']:
             self.cbb_map_type.setCurrentText(saved_map_type)
-
+        
+        # Palette selector with preview 
+        self.cbb_palette = CustomizedPalette()
+        self.cbb_palette.currentIndexChanged.connect(self.refresh_plot)
+        
         # Add to the layout
         spacer1 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         combobox_layout.addWidget(self.map_type_label)
         combobox_layout.addWidget(self.cbb_map_type)
         combobox_layout.addItem(spacer1)
-        combobox_layout.addWidget(self.wafer_size_label)
-        combobox_layout.addWidget(self.cbb_wafer_size)
+        combobox_layout.addWidget(self.cbb_palette)
         combobox_layout.setContentsMargins(5, 5, 5, 5)
+
+
         # Add the combobox layout below the profile layout
         self.map_widget_layout.addLayout(combobox_layout)
         
@@ -214,12 +206,8 @@ class MapViewWidget(QWidget):
 
     def update_settings(self):
         """Save selected wafer size to settings"""
-        wafer_size = self.cbb_wafer_size.currentText()
         map_type = self.cbb_map_type.currentText()
-        
-        self.settings.setValue("wafer_size", wafer_size)
         self.settings.setValue("map_type", map_type)
-        
     
     def create_options_menu(self):
         """Create option menu on right click on 2Dmap plot"""
@@ -234,21 +222,6 @@ class MapViewWidget(QWidget):
             action.triggered.connect(self.refresh_plot)
             self.menu_actions[option_name] = action
             self.options_menu.addAction(action)  
-
-        # --- Palette selector with preview ---
-        palette = QWidget(self.options_menu)
-        palette_layout = QHBoxLayout(palette)
-        palette_layout.setContentsMargins(5, 5, 5, 5)
-        palette_label = QLabel("Color palette:", palette)
-        palette_layout.addWidget(palette_label)
-
-        self.cbb_palette = CustomizedPalette()
-        self.cbb_palette.currentIndexChanged.connect(self.refresh_plot)
-        palette_layout.addWidget(self.cbb_palette)
-
-        palette_action = QWidgetAction(self)
-        palette_action.setDefaultWidget(palette)
-        self.options_menu.addAction(palette_action)
         
         # # MAP_TYPE combobox (wafer or 2Dmap)
         # map_type = QWidget(self.options_menu)
@@ -470,9 +443,9 @@ class MapViewWidget(QWidget):
 
                 self.number_of_points = len(set(zip(x_col, y_col)))
                 
-                if map_type == 'Wafer' and self.number_of_points >= 4:
+                if map_type != '2Dmap' and self.number_of_points >= 4:
                     # Create meshgrid for WaferPlot
-                    r = int(self.cbb_wafer_size.currentText()) / 2
+                    r = self.get_wafer_radius(map_type)
                     grid_x, grid_y = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
                     grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
                     extent = [-r - 1, r + 1, -r - 0.5, r + 0.5]
@@ -486,16 +459,25 @@ class MapViewWidget(QWidget):
                     extent = [xmin, xmax, ymin, ymax]
                 
         return heatmap_pivot, extent, vmin, vmax, grid_z
+    def get_wafer_radius(self, map_type_text):
+        """
+        Extract wafer diameter from the map type string and return radius.
+        Returns None if not a wafer type.
+        """
+        match = re.search(r'Wafer_(\d+)mm', map_type_text)
+        if match:
+            diameter = int(match.group(1))
+            return diameter / 2
+        return None
     
     def plot(self, coords):
         """Plot 2D maps of measurement points"""
-        
-        r = int(self.cbb_wafer_size.currentText()) / 2
         map_type = self.cbb_map_type.currentText()
+        r = self.get_wafer_radius(map_type)
         self.ax.clear()
         
         # Plot wafer map
-        if map_type == 'Wafer':
+        if map_type != '2Dmap':
             wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
                                         color='black', linewidth=1)
             self.ax.add_patch(wafer_circle)
@@ -512,7 +494,7 @@ class MapViewWidget(QWidget):
         vmin, vmax = self.z_range_slider.value()
     
 
-        if map_type == 'Wafer' and self.number_of_points >= 4:
+        if map_type != '2Dmap' and self.number_of_points >= 4:
             self.img = self.ax.imshow(grid_z, extent=[-r - 0.5, r + 0.5, -r - 0.5, r + 0.5],
                             origin='lower', aspect='equal', cmap=color, interpolation='nearest')
             

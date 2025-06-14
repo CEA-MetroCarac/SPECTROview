@@ -418,7 +418,7 @@ class Main:
 
     def show_about(self):
         """Show about dialog """
-        self.common.view_markdown(self.ui, "About", ABOUT, 650, 440, "resources/")
+        self.common.view_markdown(self.ui, "About", ABOUT, 650, 480, "resources/")
         
     
         

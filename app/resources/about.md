@@ -4,18 +4,18 @@
 
 ### SPECTROview (Spectroscopic Data Processing and Visualization)
 
-*Version 0.5.0 (15-06-2025)*
+*Version 0.5.1 (15-06-2025)*
 
 ### Features:
 - Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps). 
 - Ability to fit multiple spectra or 2Dmaps using predefined models or by creating custom fit models.
 - Collect all best-fit results with one click.
 - Dedicated module for effortless, fast, and easy data visualization.
-____
-Check out the GitHub repository for lastest version & more details : [SPECTROview github](https://github.com/CEA-MetroCarac/spectroview).
 
+Check out [SPECTROview GitHub repository](https://github.com/CEA-MetroCarac/spectroview) for lastest version & more details.
+____
 
 ### Citation: 
-Le, V.-H., & Quéméré, P. (2025). SPECTROview : A Tool for Spectroscopic Data Processing and Visualization (0.4.6). Zenodo. https://doi.org/10.5281/zenodo.14147172
+Le, V.-H., & Quéméré, P. (2025). SPECTROview : A Tool for Spectroscopic Data Processing and Visualization (0.4.6). Zenodo.  [https://doi.org/10.5281/zenodo.14147172](https://doi.org/10.5281/zenodo.14147172)
 
 

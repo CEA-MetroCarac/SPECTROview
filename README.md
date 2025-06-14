@@ -25,7 +25,7 @@ ___
 - Collect all best-fit results with one click.
 - Dedicated module for effortless, fast, and easy data visualization. 
 
-**Fitting features are powered by the [fitspy](https://github.com/CEA-MetroCarac/fitspy) and [LMfit](https://lmfit.github.io/lmfit-py/) open-source packages.*
+**Fitting features are powered by the *fitspy* and *lmfit* open-source packages.*
 
 
 <p align="center">

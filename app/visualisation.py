@@ -4,9 +4,11 @@ from pathlib import Path
 import json
 import gzip
 from io import StringIO
+
+
+from app import PLOT_STYLES, PALETTE, LEGEND_LOCATION
 from app.common import view_df, show_alert, copy_fig_to_clb
-from app.common import PLOT_STYLES, PALETTE, LEGEND_LOCATION
-from app.common import Graph, FilterWidget
+from app.common import Graph, FilterWidget, CustomizedPalette
 
 from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, \
      QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox
@@ -48,8 +50,7 @@ class Visualization(QDialog):
         self.ui.btn_get_limits.clicked.connect(self.set_current_limits)
         self.ui.btn_clear_limits.clicked.connect(self.clear_limits)
         # Update an existing graph
-        self.ui.btn_upd_graph.clicked.connect(
-            lambda: self.plotting(update_graph=True))
+        self.ui.btn_upd_graph.clicked.connect(lambda: self.plotting(update_graph=True))
 
         # GRAPH: add 2nd and 3rd lines for the current ax
         self.ui.btn_add_y12.clicked.connect(self.add_y12)
@@ -61,7 +62,11 @@ class Visualization(QDialog):
         self.ui.btn_remove_y3.clicked.connect(self.remove_y3)
 
         self.ui.btn_copy_graph.clicked.connect(self.copy_fig_to_clb)
-        self.ui.cbb_palette.addItems(PALETTE)
+
+        self.cbb_palette = CustomizedPalette()
+        self.cbb_palette.currentIndexChanged.connect(lambda: self.plotting(update_graph=True))
+        self.ui.horizontalLayout_115.addWidget(self.cbb_palette)
+
         self.ui.cbb_plotstyle.addItems(PLOT_STYLES)
         self.ui.cbb_legend_loc.addItems(LEGEND_LOCATION)
 
@@ -167,7 +172,7 @@ class Visualization(QDialog):
             graph.y[0] = y
         graph.z = z if z != "None" else None
 
-        graph.color_palette = self.ui.cbb_palette.currentText()
+        graph.color_palette = self.cbb_palette.currentText()
         graph.wafer_size = float(self.ui.lbl_wafersize.text())
 
         graph.wafer_size = float(self.ui.lbl_wafersize.text())
@@ -393,10 +398,10 @@ class Visualization(QDialog):
 
             # Reflect Color palette
             color_palette = graph.color_palette
-            combo_items = [self.ui.cbb_palette.itemText(i) for i in
-                           range(self.ui.cbb_palette.count())]
+            combo_items = [self.cbb_palette.itemText(i) for i in
+                           range(self.cbb_palette.count())]
             if color_palette in combo_items:
-                self.ui.cbb_palette.setCurrentText(color_palette)
+                self.cbb_palette.setCurrentText(color_palette)
 
             # Reflect DPI
             self.ui.spb_dpi.setValue(graph.dpi)

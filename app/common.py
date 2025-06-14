@@ -9,6 +9,7 @@ from copy import deepcopy
 import pandas as pd
 import numpy as np
 
+from app import PEAK_MODELS, PALETTE, DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS, X_AXIS_UNIT
 from fitspy.utils_mp import fit_mp
 from fitspy.spectra import Spectra
 from multiprocessing import Queue
@@ -27,6 +28,8 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.colors as mcolors
+from matplotlib.figure import Figure
+import matplotlib.cm as cm
 import seaborn as sns
 from scipy.interpolate import RegularGridInterpolator
 
@@ -34,10 +37,9 @@ from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, \
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, QToolButton, \
     QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, \
-    QApplication,  QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QSizePolicy, QRadioButton, QGroupBox, QFrame, QSpacerItem
+    QApplication,  QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QSizePolicy, QRadioButton, QGroupBox, QFrame, QSpacerItem, QStyledItemDelegate
 from PySide6.QtCore import Signal, QThread, Qt, QSize, QCoreApplication
-from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, \
-    QAction, Qt, QCursor
+from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QAction, Qt,  QStandardItemModel, QStandardItem, QPixmap, QImage
 from superqt import QRangeSlider
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -55,33 +57,6 @@ RELPATH = os.path.join(DIRNAME, "resources")
 ICON_DIR = os.path.join(DIRNAME, "ui", "iconpack")
 
 PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy.mplstyle")
-
-PEAK_MODELS = ["Lorentzian", "Gaussian", "PseudoVoigt", "GaussianAsym",
-               "LorentzianAsym"]
-
-FIT_PARAMS = {'method': 'leastsq', 'fit_negative': False, 'fit_outliers': False,
-              'max_ite': 200, 'coef_noise': 1, 'xtol': 1.e-4, 'ncpus': 'auto'}
-FIT_METHODS = {'Leastsq': 'leastsq', 'Least_squares': 'least_squares',
-               'Nelder-Mead': 'nelder', 'SLSQP': 'slsqp'}
-PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
-           'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
-PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer', '2Dmap']
-
-DEFAULT_COLORS = [
-    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
-    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', 
-    '#ffd500', '#008281', '#000086', '#c0c0c0', '#808000', 
-    '#8d0000', '#6fd0ef', '#ff1493', '#00ff7f', '#ff4500', 
-    '#191970', '#ffdab9', '#228b22', '#dda0dd', '#ff6347', 
-]
-MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>', 'p', 'h', 'H', '|', '_', 'P', 'X', '1', '2', '3', '4','5','6','7','8']
-DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o','o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
-LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
-                   'center left', 'center right', 'lower center',
-                   'upper center', 'center']
-
-X_AXIS_UNIT = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
-
 
 class MapViewWidget(QWidget):
     """Class to manage the 2Dmap view widget"""
@@ -110,6 +85,7 @@ class MapViewWidget(QWidget):
         self.map_widget_layout = QVBoxLayout(self.widget)
         self.map_widget_layout.setContentsMargins(0, 0, 0, 0) 
         self.create_widget()
+    
 
     def create_widget(self):
         """Create 2Dmap plot widgets"""
@@ -243,15 +219,14 @@ class MapViewWidget(QWidget):
         
         self.settings.setValue("wafer_size", wafer_size)
         self.settings.setValue("map_type", map_type)
-            
+        
+    
     def create_options_menu(self):
         """Create option menu on right click on 2Dmap plot"""
         
         self.options_menu = QMenu(self)
         # Smoothing option
-        options = [
-            ("Smoothing", "Smoothing", False),
-        ]
+        options = [ ("Smoothing", "Smoothing", False),]
         for option_name, option_label, *checked in options:
             action = QAction(option_label, self)
             action.setCheckable(True)
@@ -260,17 +235,17 @@ class MapViewWidget(QWidget):
             self.menu_actions[option_name] = action
             self.options_menu.addAction(action)  
 
-        # COLOR_PALETTE combobox
+        # --- Palette selector with preview ---
         palette = QWidget(self.options_menu)
         palette_layout = QHBoxLayout(palette)
+        palette_layout.setContentsMargins(5, 5, 5, 5)
         palette_label = QLabel("Color palette:", palette)
         palette_layout.addWidget(palette_label)
-        self.cbb_palette = QComboBox(palette)
-        self.cbb_palette.addItems(PALETTE)
+
+        self.cbb_palette = CustomizedPalette()
         self.cbb_palette.currentIndexChanged.connect(self.refresh_plot)
         palette_layout.addWidget(self.cbb_palette)
-        palette_layout.setContentsMargins(5, 5, 5, 5)
-        # Create a QWidgetAction to hold the combined QLabel and QComboBox
+
         palette_action = QWidgetAction(self)
         palette_action.setDefaultWidget(palette)
         self.options_menu.addAction(palette_action)
@@ -707,7 +682,7 @@ class MapViewWidget(QWidget):
 
 class CustomSpectra(Spectra):
     """
-    Customized Spectra class of the fitspy package to override some methods.
+    Customized Spectra class of the fitspy package for addtional features (peak position correction, selected a part of spectra to work with).
     """
     def apply_model(self, model_dict, fnames=None, ncpus=1,
                     show_progressbar=True):
@@ -2728,7 +2703,44 @@ class CustomListWidget(QListWidget):
             super().dropEvent(event)
             self.items_reordered.emit()
         
-    
+class CustomizedPalette(QComboBox):
+    """Custom QComboBox to show color palette previews along with their names."""
+
+    def __init__(self, palette_list=None, parent=None, icon_size=(100, 12)):
+        super().__init__(parent)
+        self.icon_width, self.icon_height = icon_size
+        self.setIconSize(QSize(*icon_size))
+        self.setMinimumWidth(150)
+
+        self.palette_list = palette_list or ['jet', 'viridis', 'plasma', 'inferno',
+                                             'magma', 'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
+        self._populate_with_previews()
+
+    def _populate_with_previews(self):
+        self.clear()
+        for cmap_name in self.palette_list:
+            icon = QIcon(self._create_colormap_preview(cmap_name))
+            self.addItem(icon, cmap_name)
+
+    def _create_colormap_preview(self, cmap_name):
+        """Generate a horizontal gradient preview image for the colormap."""
+        width, height = self.icon_width, self.icon_height
+        gradient = np.linspace(0, 1, 20).reshape(1, -1)
+
+        fig = Figure(figsize=(width / 100, height / 100), dpi=100)
+        canvas = FigureCanvas(fig)
+        ax = fig.add_axes([0, 0, 1, 1], frameon=False)
+        ax.imshow(gradient, aspect='auto', cmap=cm.get_cmap(cmap_name))
+        ax.set_axis_off()
+        canvas.draw()
+
+        image = np.array(canvas.buffer_rgba())
+        qimage = QImage(image.data, image.shape[1], image.shape[0],
+                        QImage.Format_RGBA8888)
+        return QPixmap.fromImage(qimage)
+
+    def get_selected_palette(self):
+        return self.currentText()
 
 def compress(array):
     """Compress and encode a numpy array to a base64 string."""

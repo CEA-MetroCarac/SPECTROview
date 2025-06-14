@@ -13,7 +13,7 @@ from pathlib import Path
 from app.common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
 from app.common import FitThread, PeakTableWidget, DataframeTableWidget, \
     FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget, Graph, CustomSpectra
-from app.common import FIT_METHODS,PALETTE
+from app import FIT_METHODS
 from app.visualisation import MdiSubWindow
 from lmfit import fit_report
 from fitspy.spectra import Spectra

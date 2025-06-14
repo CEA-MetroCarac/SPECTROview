@@ -1361,8 +1361,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
-                       <height>243</height>
+                       <width>428</width>
+                       <height>585</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -5231,8 +5231,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>395</width>
-                    <height>454</height>
+                    <width>372</width>
+                    <height>505</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -5279,16 +5279,6 @@
                      </item>
                      <item>
                       <widget class="QComboBox" name="cbb_plotstyle"/>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="label_93">
-                       <property name="text">
-                        <string>Color palette:</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QComboBox" name="cbb_palette"/>
                      </item>
                     </layout>
                    </item>

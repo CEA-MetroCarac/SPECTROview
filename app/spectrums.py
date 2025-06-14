@@ -9,7 +9,7 @@ import json
 
 from app.common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel
 from app.common import FitThread, FitModelManager, PeakTableWidget, DataframeTableWidget, CustomListWidget, SpectraViewWidget, CustomSpectra
-from app.common import FIT_METHODS
+from app import FIT_METHODS
 
 from lmfit import fit_report
 from fitspy.spectra import Spectra

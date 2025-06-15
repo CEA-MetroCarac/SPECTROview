@@ -119,6 +119,7 @@ class MapViewWidget(QWidget):
         self.btn_copy.setIconSize(QSize(24, 24))
         self.btn_copy.clicked.connect(self.copy_fig)
         self.cb_auto_scale = QCheckBox("Auto scale")
+        self.cb_auto_scale.setChecked(True)
         self.cb_auto_scale.stateChanged.connect(self.update_z_range_slider)
         
         # Create Options Menu
@@ -151,9 +152,7 @@ class MapViewWidget(QWidget):
         
         self.canvas.draw_idle()
 
-        self.create_range_sliders(0,100)
-        
-        # MAP_TYPE ComboBox (wafer or 2Dmap)
+        #### MAP_TYPE ComboBox (wafer or 2Dmap)
         combobox_layout = QHBoxLayout()
         self.map_type_label = QLabel("Map type:")
         self.cbb_map_type = QComboBox(self)
@@ -186,7 +185,10 @@ class MapViewWidget(QWidget):
         # Add the combobox layout below the profile layout
         self.map_widget_layout.addLayout(combobox_layout)
         
-        # EXTRACT profil from 2Dmap
+        #### CREATE range sliders
+        self.create_range_sliders(0,100)
+
+        #### EXTRACT profil from 2Dmap
         profile_layout = QHBoxLayout()
         self.profile_name = QLineEdit(self)
         self.profile_name.setText("Profile_1")

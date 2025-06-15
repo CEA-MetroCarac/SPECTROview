@@ -41,7 +41,7 @@ from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, 
     QApplication,  QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QSizePolicy, QRadioButton, QGroupBox, QFrame, QSpacerItem, QStyledItemDelegate
 from PySide6.QtCore import Signal, QThread, Qt, QSize, QCoreApplication
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QAction, Qt,  QStandardItemModel, QStandardItem, QPixmap, QImage
-from superqt import QRangeSlider
+from superqt import QLabeledDoubleRangeSlider as QRangeSlider
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -163,7 +163,7 @@ class MapViewWidget(QWidget):
 
         # Load last saved settings
         self.cbb_map_type.currentIndexChanged.connect(self.update_settings)
-        saved_map_type = self.settings.value("map_type", "Wafer_300mm")  # Default to Wafer if not found
+        saved_map_type = self.settings.value("map_type", "2Dmap")  # Default value
         
         # Set the saved values in the combo boxes
         if saved_map_type in ['2Dmap', 'Wafer_300mm', 'Wafer_200mm', 'Wafer_100mm']:
@@ -180,7 +180,6 @@ class MapViewWidget(QWidget):
         combobox_layout.addItem(spacer1)
         combobox_layout.addWidget(self.cbb_palette)
         combobox_layout.setContentsMargins(5, 5, 5, 5)
-
 
         # Add the combobox layout below the profile layout
         self.map_widget_layout.addLayout(combobox_layout)
@@ -202,7 +201,8 @@ class MapViewWidget(QWidget):
         profile_layout.addItem(spacer2)
         profile_layout.addWidget(self.profile_name)
         profile_layout.addWidget(self.btn_extract_profile)
-        # Add the profile layout below the range sliders
+
+        #### ADD PROFIL
         self.map_widget_layout.addLayout(profile_layout)
         profile_layout.setContentsMargins(5, 5, 5, 5)
 
@@ -225,65 +225,17 @@ class MapViewWidget(QWidget):
             self.menu_actions[option_name] = action
             self.options_menu.addAction(action)  
         
-        # # MAP_TYPE combobox (wafer or 2Dmap)
-        # map_type = QWidget(self.options_menu)
-        # map_type_layout = QHBoxLayout(map_type)
-        # map_type_label = QLabel("Map type:", map_type)
-        # map_type_layout.addWidget(map_type_label)
-        # self.cbb_map_type = QComboBox(map_type)
-        # self.cbb_map_type.addItems(['Wafer', '2Dmap'])
-        # self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
-        # map_type_layout.addWidget(self.cbb_map_type)
-        # map_type_layout.setContentsMargins(5, 5, 5, 5)
-        # # Create a QWidgetAction to hold the combined QLabel and QComboBox
-        # map_type_action = QWidgetAction(self)
-        # map_type_action.setDefaultWidget(map_type)
-        # self.options_menu.addAction(map_type_action)
-        
-        # # WAFER_SIZE combobox
-        # wafer_size = QWidget(self.options_menu)
-        # wafer_size_layout = QHBoxLayout(wafer_size)
-        # wafer_size_label = QLabel("Wafer size (mm):", wafer_size)
-        # wafer_size_layout.addWidget(wafer_size_label)
-        # self.cbb_wafer_size = QComboBox(wafer_size)
-        # self.cbb_wafer_size.addItems(['300', '200', '150', '100'])
-        # self.cbb_wafer_size.currentIndexChanged.connect(self.refresh_plot)
-        # wafer_size_layout.addWidget(self.cbb_wafer_size)
-        # wafer_size_layout.setContentsMargins(5, 5, 5, 5)
-        # # Create a QWidgetAction to hold the combined QLabel and QComboBox
-        # wafer_size_action = QWidgetAction(self)
-        # wafer_size_action.setDefaultWidget(wafer_size)
-        # self.options_menu.addAction(wafer_size_action)
-        
-        
-        # # EXTRACT Profile from map
-        # profile_widget = QWidget(self.options_menu)
-        # profile_layout = QHBoxLayout(profile_widget)
-        # self.profile_name = QLineEdit(profile_widget)
-        # self.profile_name.setText("Profile_1")
-        # self.profile_name.setPlaceholderText("Profile_name...")
-        # self.profile_name.setFixedWidth(100)
-        # self.btn_extract_profile = QPushButton("Extract", profile_widget)
-        # self.btn_extract_profile.setToolTip("Extract profile data and plot it in Visu tab")
-        # profile_layout.addWidget(self.profile_name)
-        # profile_layout.addWidget(self.btn_extract_profile)
-        # profile_layout.setContentsMargins(5, 5, 5, 5)
-        # # Create a QWidgetAction to hold the QLineEdit and QPushButton
-        # profile_action = QWidgetAction(self)
-        # profile_action.setDefaultWidget(profile_widget)
-        # self.options_menu.addAction(profile_action)
-        
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
         # Create x-axis range slider
         self.x_range_slider = QRangeSlider(Qt.Horizontal)
+        self.x_range_slider.setSingleStep(0.01)
         self.x_range_slider.setRange(xmin, xmax)  
         self.x_range_slider.setValue((xmin, xmax)) 
         self.x_range_slider.setTracking(True)
         self.x_range_slider_label = QLabel('X-range :')
         self.x_range_slider_label.setFixedWidth(100)  
         self.x_range_label = QLabel(f'[{xmin}; {xmax}]')
-        self.x_range_slider.valueChanged.connect(self.update_xrange_slider_label)
         self.x_range_slider.valueChanged.connect(self.update_z_range_slider)
 
         self.x_slider_layout = QHBoxLayout()
@@ -294,50 +246,36 @@ class MapViewWidget(QWidget):
 
         # Create z-axis range slider
         self.z_range_slider = QRangeSlider(Qt.Horizontal)
+        self.z_range_slider.setSingleStep(0.01)
         self.z_range_slider.setRange(0, 100) 
         self.z_range_slider.setValue((0, 100)) 
         self.z_range_slider.setTracking(True)
         self.z_values_cbb = QComboBox()
-        self.z_values_cbb.addItems(['Area', 'Intensity']) 
+        self.z_values_cbb.addItems(['Area', 'Max intensity']) 
         self.z_values_cbb.setFixedWidth(100)      
         
         self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
 
         self.z_range_label = QLabel(f'[{0}; {100}]')
-        self.z_range_slider.valueChanged.connect(self.update_z_range_label)
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
 
         self.z_slider_layout = QHBoxLayout()
         self.z_slider_layout.addWidget(self.z_values_cbb)
         self.z_slider_layout.addWidget(self.z_range_slider)
         self.z_slider_layout.setContentsMargins(5, 0, 5, 0)
-       
-        self.label1 = QLabel('X-range :')
-        self.label2 = QLabel('Zmin;max :')
-        self.slider_labels_layout = QHBoxLayout()
-
-        self.slider_labels_layout.addWidget(self.label1)
-        self.slider_labels_layout.addWidget(self.x_range_label)
-        self.slider_labels_layout.addSpacing(20)
-        self.slider_labels_layout.addWidget(self.label2)
-        self.slider_labels_layout.addWidget(self.z_range_label)
-        self.slider_labels_layout.setContentsMargins(5, 0, 5, 0)
-
         
         self.map_widget_layout.addLayout(self.x_slider_layout)
         self.map_widget_layout.addLayout(self.z_slider_layout)
-        self.map_widget_layout.addLayout(self.slider_labels_layout)
 
         vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.map_widget_layout.addItem(vspacer)
     
     def populate_z_values_cbb(self):
         self.z_values_cbb.clear() 
-        self.z_values_cbb.addItems(['Area', 'Intensity'])
+        self.z_values_cbb.addItems(['Area', 'Max Intensity'])
         if not self.df_fit_results.empty:
             fit_columns = [col for col in self.df_fit_results.columns if col not in ['Filename', 'X', 'Y']]
             self.z_values_cbb.addItems(fit_columns)
-
   
     def refresh_plot(self):
         """Call the refresh_gui method of the main application."""
@@ -355,14 +293,7 @@ class MapViewWidget(QWidget):
         self.x_range_slider.setValue((xmin, xmax))
         self.x_range_label.setText(f'[{xmin_label}; {xmax_label}]')
     
-    def update_xrange_slider_label(self):
-        """Update the QLabel text on x range slider change."""
-        xmin, xmax = self.x_range_slider.value()
-        self.x_range_label.setText(f'[{xmin}; {xmax}]')
-        
     def update_z_range_slider(self):
-        selected = self.z_values_cbb.currentText()
-        self.label2.setText(f'{selected} range:')
         if self.z_values_cbb.count() > 0 and self.z_values_cbb.currentIndex() >= 0:
             _,_, vmin, vmax, _ =self.get_data_for_heatmap()
             self.z_range_slider.setRange(vmin, vmax)
@@ -370,12 +301,6 @@ class MapViewWidget(QWidget):
             self.z_range_label.setText(f'[{vmin}; {vmax}]')
         else:
             return
-
-    def update_z_range_label(self):
-        """Update the QLabel text with the current values."""
-        vmin, vmax = self.z_range_slider.value()
-        self.z_range_label.setText(f'[{vmin}; {vmax}]')
-
     
     def get_data_for_heatmap(self, map_type='2Dmap'):
         """Prepare data for heatmap based on range sliders values"""
@@ -406,7 +331,7 @@ class MapViewWidget(QWidget):
                 if parameter == 'Area':
                     # Intensity sums of of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
-                elif parameter == 'Intensity':
+                elif parameter == 'Max Intensity':
                     # Max intensity value of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
                 else:
@@ -463,6 +388,7 @@ class MapViewWidget(QWidget):
                     extent = [xmin, xmax, ymin, ymax]
                 
         return heatmap_pivot, extent, vmin, vmax, grid_z
+    
     def get_wafer_radius(self, map_type_text):
         """
         Extract wafer diameter from the map type string and return radius.
@@ -608,13 +534,7 @@ class MapViewWidget(QWidget):
                 self.current_row= index
                 self.spectra_listbox.setCurrentRow(self.current_row)
             else:
-                item.setSelected(False)
-    
-    # def on_right_click_2Dmap(self, event):
-    #     """Show view options menu on right-click."""
-    #     if event.button == 3:  # 3 is the right-click button
-    #         cursor_pos = QCursor.pos()  
-    #         self.options_menu.exec_(cursor_pos)    
+                item.setSelected(False) 
             
     def extract_profile(self):
         """Extract a profile from 2D map plot via interpolation."""
@@ -667,15 +587,10 @@ class MapViewWidget(QWidget):
         copy_fig_to_clb(self.canvas)
 
 class CustomSpectra(Spectra):
-    """
-    Customized Spectra class of the fitspy package for addtional features (peak position correction, selected a part of spectra to work with).
-    """
+    """Customized Spectra class of the fitspy package."""
     def apply_model(self, model_dict, fnames=None, ncpus=1,
                     show_progressbar=True):
-        """
-        Apply 'model' to all or part of the spectra
-
-        """
+        """ Apply 'model' to all or part of the spectra."""
         if fnames is None:
             fnames = self.fnames
 

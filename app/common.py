@@ -119,19 +119,12 @@ class MapViewWidget(QWidget):
         self.btn_copy.setIconSize(QSize(24, 24))
         self.btn_copy.clicked.connect(self.copy_fig)
         
-        # Create Options Menu
-        self.create_options_menu()
         
-        self.tool_btn_options = QToolButton(self)
-        self.tool_btn_options.setText("... ")
-        self.tool_btn_options.setPopupMode(QToolButton.InstantPopup) 
-        self.tool_btn_options.setMenu(self.options_menu) 
         
         toolbar_layout.addWidget(self.toolbar)
         toolbar_layout.addItem(spacer)
         
         toolbar_layout.addWidget(self.btn_copy)
-        toolbar_layout.addWidget(self.tool_btn_options)
 
         frame_layout.addLayout(toolbar_layout)
 
@@ -174,7 +167,7 @@ class MapViewWidget(QWidget):
         self.cb_auto_scale = QCheckBox("Auto Scale")
         self.cb_auto_scale.setChecked(True)
         self.cb_auto_scale.stateChanged.connect(self.update_z_range_slider)
-        
+        self.cb_auto_scale.setToolTip("Automatically adjust the scale by removing outliter data points.")
         
         # Add to the layout
         spacer1 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -200,10 +193,20 @@ class MapViewWidget(QWidget):
         self.btn_extract_profile = QPushButton("Extract profil", self)
         self.btn_extract_profile.setToolTip("Extract profile data and plot it in Visu tab")
         self.btn_extract_profile.setFixedWidth(100)
-        spacer2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        profile_layout.addItem(spacer2)
+        
         profile_layout.addWidget(self.profile_name)
         profile_layout.addWidget(self.btn_extract_profile)
+
+        # Create Options Menu
+        self.create_options_menu()
+        
+        self.tool_btn_options = QToolButton(self)
+        self.tool_btn_options.setText("... ")
+        self.tool_btn_options.setPopupMode(QToolButton.InstantPopup) 
+        self.tool_btn_options.setMenu(self.options_menu) 
+        spacer2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        profile_layout.addItem(spacer2)
+        profile_layout.addWidget(self.tool_btn_options)
 
         #### ADD PROFIL
         self.map_widget_layout.addLayout(profile_layout)
@@ -242,6 +245,7 @@ class MapViewWidget(QWidget):
 
         self.x_range_slider_label = QLabel('X-range :')
         self.x_range_slider_label.setFixedWidth(80)  
+        self.x_range_slider_label.setToolTip("Define the spectral range (X-range) for 'Area' and 'Maximum Intensity' calculation.")
 
         self.x_slider_layout = QHBoxLayout()
         self.x_slider_layout.addWidget(self.x_range_slider_label)
@@ -261,6 +265,7 @@ class MapViewWidget(QWidget):
         self.z_values_cbb = QComboBox()
         self.z_values_cbb.addItems(['Area', 'Max intensity']) 
         self.z_values_cbb.setFixedWidth(80)  
+        self.z_values_cbb.setToolTip("Select parameter to plot 2Dmap")
         self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
 

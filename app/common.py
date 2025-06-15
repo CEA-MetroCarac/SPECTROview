@@ -228,16 +228,17 @@ class MapViewWidget(QWidget):
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
         # Create x-axis range slider
-        self.x_range_slider = QLabeledDoubleRangeSlider(Qt.Horizontal)
+        self.x_range_slider = QLabeledDoubleRangeSlider(Qt.Orientation.Horizontal)
+        self.x_range_slider.setEdgeLabelMode(QLabeledDoubleRangeSlider.EdgeLabelMode.LabelIsValue)
+        self.x_range_slider.setHandleLabelPosition(QLabeledDoubleRangeSlider.LabelPosition.NoLabel)
         self.x_range_slider.setSingleStep(0.01)
-        self.x_range_slider.EdgeLabelMode.NoLabel
         self.x_range_slider.setRange(xmin, xmax)  
         self.x_range_slider.setValue((xmin, xmax)) 
         self.x_range_slider.setTracking(True)
         self.x_range_slider.valueChanged.connect(self.update_z_range_slider)
 
         self.x_range_slider_label = QLabel('X-range :')
-        self.x_range_slider_label.setFixedWidth(100)  
+        self.x_range_slider_label.setFixedWidth(60)  
 
         self.x_slider_layout = QHBoxLayout()
         self.x_slider_layout.addWidget(self.x_range_slider_label)
@@ -246,8 +247,9 @@ class MapViewWidget(QWidget):
         self.x_slider_layout.setContentsMargins(5, 0, 5, 0)
 
         # Create z-axis range slider
-        self.z_range_slider = QLabeledDoubleRangeSlider(Qt.Horizontal)
-        self.x_range_slider.EdgeLabelMode.NoLabel
+        self.z_range_slider = QLabeledDoubleRangeSlider(Qt.Orientation.Horizontal)  
+        self.z_range_slider.setEdgeLabelMode(QLabeledDoubleRangeSlider.EdgeLabelMode.LabelIsValue)
+        self.z_range_slider.setHandleLabelPosition(QLabeledDoubleRangeSlider.LabelPosition.NoLabel)
         self.z_range_slider.setSingleStep(0.01)
         self.z_range_slider.setRange(0, 100) 
         self.z_range_slider.setValue((0, 100)) 
@@ -255,7 +257,7 @@ class MapViewWidget(QWidget):
 
         self.z_values_cbb = QComboBox()
         self.z_values_cbb.addItems(['Area', 'Max intensity']) 
-        self.z_values_cbb.setFixedWidth(100)  
+        self.z_values_cbb.setFixedWidth(60)  
         self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
 
@@ -264,8 +266,8 @@ class MapViewWidget(QWidget):
         self.z_slider_layout.addWidget(self.z_range_slider)
         self.z_slider_layout.setContentsMargins(5, 0, 5, 0)
         
-        self.map_widget_layout.addLayout(self.x_slider_layout)
         self.map_widget_layout.addLayout(self.z_slider_layout)
+        self.map_widget_layout.addLayout(self.x_slider_layout)
 
         vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.map_widget_layout.addItem(vspacer)

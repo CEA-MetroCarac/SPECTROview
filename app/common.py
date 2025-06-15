@@ -247,15 +247,16 @@ class MapViewWidget(QWidget):
 
         # Create z-axis range slider
         self.z_range_slider = QLabeledDoubleRangeSlider(Qt.Horizontal)
+        self.x_range_slider.EdgeLabelMode.NoLabel
         self.z_range_slider.setSingleStep(0.01)
         self.z_range_slider.setRange(0, 100) 
         self.z_range_slider.setValue((0, 100)) 
         self.z_range_slider.setTracking(True)    
-        self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
 
         self.z_values_cbb = QComboBox()
         self.z_values_cbb.addItems(['Area', 'Max intensity']) 
         self.z_values_cbb.setFixedWidth(100)  
+        self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
 
         self.z_slider_layout = QHBoxLayout()

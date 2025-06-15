@@ -210,7 +210,7 @@ class MapViewWidget(QWidget):
         self.settings.setValue("map_type", map_type)
     
     def create_options_menu(self):
-        """Create option menu on right click on 2Dmap plot"""
+        """Create more view options for 2Dmap plot"""
         
         self.options_menu = QMenu(self)
         # Smoothing option

@@ -118,9 +118,6 @@ class MapViewWidget(QWidget):
         self.btn_copy.setIcon(icon)
         self.btn_copy.setIconSize(QSize(24, 24))
         self.btn_copy.clicked.connect(self.copy_fig)
-        self.cb_auto_scale = QCheckBox("Auto scale")
-        self.cb_auto_scale.setChecked(True)
-        self.cb_auto_scale.stateChanged.connect(self.update_z_range_slider)
         
         # Create Options Menu
         self.create_options_menu()
@@ -132,7 +129,7 @@ class MapViewWidget(QWidget):
         
         toolbar_layout.addWidget(self.toolbar)
         toolbar_layout.addItem(spacer)
-        toolbar_layout.addWidget(self.cb_auto_scale)
+        
         toolbar_layout.addWidget(self.btn_copy)
         toolbar_layout.addWidget(self.tool_btn_options)
 
@@ -154,11 +151,12 @@ class MapViewWidget(QWidget):
 
         #### MAP_TYPE ComboBox (wafer or 2Dmap)
         combobox_layout = QHBoxLayout()
-        self.map_type_label = QLabel("Map type:")
+        self.map_type_label = QLabel("Map Type:")
         self.cbb_map_type = QComboBox(self)
+        self.cbb_map_type.setFixedWidth(93)
         self.cbb_map_type.addItems(['2Dmap', 'Wafer_300mm', 'Wafer_200mm', 'Wafer_100mm'])
         
-        self.cbb_map_type.setFixedWidth(110)
+        
         self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
 
         # Load last saved settings
@@ -172,13 +170,18 @@ class MapViewWidget(QWidget):
         # Palette selector with preview 
         self.cbb_palette = CustomizedPalette()
         self.cbb_palette.currentIndexChanged.connect(self.refresh_plot)
+
+        self.cb_auto_scale = QCheckBox("Auto Scale")
+        self.cb_auto_scale.setChecked(True)
+        self.cb_auto_scale.stateChanged.connect(self.update_z_range_slider)
+        
         
         # Add to the layout
         spacer1 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         combobox_layout.addWidget(self.map_type_label)
         combobox_layout.addWidget(self.cbb_map_type)
-        combobox_layout.addItem(spacer1)
         combobox_layout.addWidget(self.cbb_palette)
+        combobox_layout.addWidget(self.cb_auto_scale)
         combobox_layout.setContentsMargins(5, 5, 5, 5)
 
         # Add the combobox layout below the profile layout
@@ -238,7 +241,7 @@ class MapViewWidget(QWidget):
         self.x_range_slider.valueChanged.connect(self.update_z_range_slider)
 
         self.x_range_slider_label = QLabel('X-range :')
-        self.x_range_slider_label.setFixedWidth(60)  
+        self.x_range_slider_label.setFixedWidth(80)  
 
         self.x_slider_layout = QHBoxLayout()
         self.x_slider_layout.addWidget(self.x_range_slider_label)
@@ -257,7 +260,7 @@ class MapViewWidget(QWidget):
 
         self.z_values_cbb = QComboBox()
         self.z_values_cbb.addItems(['Area', 'Max intensity']) 
-        self.z_values_cbb.setFixedWidth(60)  
+        self.z_values_cbb.setFixedWidth(80)  
         self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
 
@@ -2608,11 +2611,11 @@ class CustomListWidget(QListWidget):
 class CustomizedPalette(QComboBox):
     """Custom QComboBox to show color palette previews along with their names."""
 
-    def __init__(self, palette_list=None, parent=None, icon_size=(100, 12)):
+    def __init__(self, palette_list=None, parent=None, icon_size=(99, 12)):
         super().__init__(parent)
         self.icon_width, self.icon_height = icon_size
         self.setIconSize(QSize(*icon_size))
-        self.setMinimumWidth(150)
+        self.setMinimumWidth(100)
 
         self.palette_list = palette_list or ['jet', 'viridis', 'plasma', 'inferno',
                                              'magma', 'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']

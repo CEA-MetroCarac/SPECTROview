@@ -3,25 +3,21 @@ import os
 import time
 import numpy as np
 import pandas as pd
-from copy import deepcopy
-from pathlib import Path
 import json
 
 from app.common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel
 from app.common import FitThread, FitModelManager, PeakTableWidget, DataframeTableWidget, CustomListWidget, SpectraViewWidget, CustomSpectra
 from app import FIT_METHODS
 
+from copy import deepcopy
+from pathlib import Path
 from lmfit import fit_report
-from fitspy.spectra import Spectra
+
 from fitspy.spectrum import Spectrum
-from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
-import matplotlib.pyplot as plt
 
-from PySide6.QtWidgets import (QFileDialog, QMessageBox, QApplication)
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
-from tkinter import Tk, END
-
 
 class Spectrums(QObject):
     """

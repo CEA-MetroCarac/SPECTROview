@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import json
 import gzip
-from io import StringIO
 
+from io import StringIO
 from copy import deepcopy
 from pathlib import Path
 
@@ -16,17 +16,13 @@ from app.common import FitThread, PeakTableWidget, DataframeTableWidget, \
 from app import FIT_METHODS
 from app.visualisation import MdiSubWindow
 from lmfit import fit_report
-from fitspy.spectra import Spectra
+
 from fitspy.spectrum import Spectrum
-from fitspy.app.gui import Appli
 from fitspy.utils import closest_index
 
-import matplotlib.pyplot as plt
-
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication,QAbstractItemView, QListWidgetItem, QHBoxLayout, QLineEdit, QSpacerItem, QPushButton, QSizePolicy, QDialog, QVBoxLayout
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication, QListWidgetItem, QDialog, QVBoxLayout
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
-from tkinter import Tk, END
 
 class Maps(QObject):
     """
@@ -63,7 +59,6 @@ class Maps(QObject):
         
         # Initialize QListWidget for spectra list
         self.ui.spectra_listbox = CustomListWidget()
-        #self.ui.spectra_listbox.setDragDropMode(QAbstractItemView.NoDragDrop)
         self.ui.listbox_layout2.addWidget(self.ui.spectra_listbox)
         self.ui.spectra_listbox.itemSelectionChanged.connect(self.refresh_gui)
         self.ui.checkBox_2.stateChanged.connect(self.check_uncheck_all)

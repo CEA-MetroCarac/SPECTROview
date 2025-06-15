@@ -1,10 +1,10 @@
 """This modules build the GUI and functionality of "Visualization" Tab"""
 import pandas as pd
-from pathlib import Path
 import json
 import gzip
-from io import StringIO
 
+from pathlib import Path
+from io import StringIO
 
 from app import PLOT_STYLES, PALETTE, LEGEND_LOCATION
 from app.common import view_df, show_alert, copy_fig_to_clb

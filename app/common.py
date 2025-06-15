@@ -6,48 +6,44 @@ import platform
 import os
 import re
 import json
-from copy import deepcopy
+import base64
+import zlib
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+
+from io import BytesIO
+from PIL import Image
+from copy import deepcopy
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+from threading import Thread
+from openpyxl.styles import PatternFill
+from scipy.interpolate import RegularGridInterpolator
+from scipy.interpolate import griddata
+from superqt import QLabeledDoubleRangeSlider 
 
 from app import PEAK_MODELS, PALETTE, DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS, X_AXIS_UNIT
 from fitspy.utils_mp import fit_mp
 from fitspy.spectra import Spectra
 from multiprocessing import Queue
-from threading import Thread
-
-from openpyxl.styles import PatternFill
 
 if platform.system() == 'Darwin':
     import AppKit 
 if platform.system() == 'Windows':
     import win32clipboard
 
-from PIL import Image
-
-from io import BytesIO
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import matplotlib.colors as mcolors
-from matplotlib.figure import Figure
-import matplotlib.cm as cm
-import seaborn as sns
-from scipy.interpolate import RegularGridInterpolator
-
-from scipy.interpolate import griddata
 from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, \
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, QToolButton, \
     QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, \
-    QApplication,  QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QSizePolicy, QRadioButton, QGroupBox, QFrame, QSpacerItem, QStyledItemDelegate
+    QApplication,  QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QSizePolicy, QGroupBox, QFrame, QSpacerItem, QStyledItemDelegate
 from PySide6.QtCore import Signal, QThread, Qt, QSize, QCoreApplication
-from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QAction, Qt,  QStandardItemModel, QStandardItem, QPixmap, QImage
-from superqt import QLabeledDoubleRangeSlider 
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-
-import base64
-import zlib
+from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QAction, Qt, QPixmap, QImage
 
 # Define a dictionary mapping RGBA tuples to named colors
 rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for

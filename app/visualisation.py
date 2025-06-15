@@ -242,8 +242,7 @@ class Visualization(QDialog):
             graph.y3label = y3label
             graph.zlabel = zlabel
 
-        text = f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - [" \
-               f"{z}]"
+        text = f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - [{z}]"
         graph_dialog.setWindowTitle(text)
 
         # Plot action

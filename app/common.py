@@ -310,7 +310,7 @@ class MapViewWidget(QWidget):
         self.z_slider_layout.addWidget(self.z_range_slider)
         self.z_slider_layout.setContentsMargins(5, 0, 5, 0)
        
-        self.label1 = QLabel('Xmin;max :')
+        self.label1 = QLabel('X-range :')
         self.label2 = QLabel('Zmin;max :')
         self.slider_labels_layout = QHBoxLayout()
 
@@ -359,6 +359,8 @@ class MapViewWidget(QWidget):
         self.x_range_label.setText(f'[{xmin}; {xmax}]')
         
     def update_z_range_slider(self):
+        selected = self.z_values_cbb.currentText()
+        self.label2.setText(f'{selected} range:')
         if self.z_values_cbb.count() > 0 and self.z_values_cbb.currentIndex() >= 0:
             _,_, vmin, vmax, _ =self.get_data_for_heatmap()
             self.z_range_slider.setRange(vmin, vmax)

@@ -7,7 +7,7 @@ FIT_PARAMS = {'method': 'leastsq', 'fit_negative': False, 'fit_outliers': False,
               'max_ite': 200, 'coef_noise': 1, 'xtol': 1.e-4, 'ncpus': 'auto'}
 FIT_METHODS = {'Leastsq': 'leastsq', 'Least_squares': 'least_squares',
                'Nelder-Mead': 'nelder', 'SLSQP': 'slsqp'}
-PALETTE = ['jet', 'viridis', 'plasma', 'inferno', 'magma',
+PALETTE = ['jet', 'viridis', 'plasma',  'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
 PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer', '2Dmap']
 

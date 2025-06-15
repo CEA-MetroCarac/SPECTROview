@@ -2622,8 +2622,7 @@ class CustomizedPalette(QComboBox):
         self.setIconSize(QSize(*icon_size))
         self.setMinimumWidth(100)
 
-        self.palette_list = palette_list or ['jet', 'viridis', 'plasma', 'inferno',
-                                             'magma', 'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
+        self.palette_list = palette_list or PALETTE
         self._populate_with_previews()
 
     def _populate_with_previews(self):

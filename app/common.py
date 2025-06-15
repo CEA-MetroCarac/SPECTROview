@@ -41,7 +41,7 @@ from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, 
     QApplication,  QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QSizePolicy, QRadioButton, QGroupBox, QFrame, QSpacerItem, QStyledItemDelegate
 from PySide6.QtCore import Signal, QThread, Qt, QSize, QCoreApplication
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QAction, Qt,  QStandardItemModel, QStandardItem, QPixmap, QImage
-from superqt import QLabeledDoubleRangeSlider as QRangeSlider
+from superqt import QLabeledDoubleRangeSlider 
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -228,15 +228,16 @@ class MapViewWidget(QWidget):
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
         # Create x-axis range slider
-        self.x_range_slider = QRangeSlider(Qt.Horizontal)
+        self.x_range_slider = QLabeledDoubleRangeSlider(Qt.Horizontal)
         self.x_range_slider.setSingleStep(0.01)
+        self.x_range_slider.EdgeLabelMode.NoLabel
         self.x_range_slider.setRange(xmin, xmax)  
         self.x_range_slider.setValue((xmin, xmax)) 
         self.x_range_slider.setTracking(True)
+        self.x_range_slider.valueChanged.connect(self.update_z_range_slider)
+
         self.x_range_slider_label = QLabel('X-range :')
         self.x_range_slider_label.setFixedWidth(100)  
-        self.x_range_label = QLabel(f'[{xmin}; {xmax}]')
-        self.x_range_slider.valueChanged.connect(self.update_z_range_slider)
 
         self.x_slider_layout = QHBoxLayout()
         self.x_slider_layout.addWidget(self.x_range_slider_label)
@@ -245,18 +246,16 @@ class MapViewWidget(QWidget):
         self.x_slider_layout.setContentsMargins(5, 0, 5, 0)
 
         # Create z-axis range slider
-        self.z_range_slider = QRangeSlider(Qt.Horizontal)
+        self.z_range_slider = QLabeledDoubleRangeSlider(Qt.Horizontal)
         self.z_range_slider.setSingleStep(0.01)
         self.z_range_slider.setRange(0, 100) 
         self.z_range_slider.setValue((0, 100)) 
-        self.z_range_slider.setTracking(True)
-        self.z_values_cbb = QComboBox()
-        self.z_values_cbb.addItems(['Area', 'Max intensity']) 
-        self.z_values_cbb.setFixedWidth(100)      
-        
+        self.z_range_slider.setTracking(True)    
         self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
 
-        self.z_range_label = QLabel(f'[{0}; {100}]')
+        self.z_values_cbb = QComboBox()
+        self.z_values_cbb.addItems(['Area', 'Max intensity']) 
+        self.z_values_cbb.setFixedWidth(100)  
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
 
         self.z_slider_layout = QHBoxLayout()
@@ -291,14 +290,13 @@ class MapViewWidget(QWidget):
         xmax_label = round(xmax, 0)
         self.x_range_slider.setRange(xmin, xmax)
         self.x_range_slider.setValue((xmin, xmax))
-        self.x_range_label.setText(f'[{xmin_label}; {xmax_label}]')
+        #self.x_range_label.setText(f'[{xmin_label}; {xmax_label}]')
     
     def update_z_range_slider(self):
         if self.z_values_cbb.count() > 0 and self.z_values_cbb.currentIndex() >= 0:
             _,_, vmin, vmax, _ =self.get_data_for_heatmap()
             self.z_range_slider.setRange(vmin, vmax)
             self.z_range_slider.setValue((vmin, vmax))
-            self.z_range_label.setText(f'[{vmin}; {vmax}]')
         else:
             return
     

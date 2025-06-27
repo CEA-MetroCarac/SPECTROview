@@ -300,15 +300,15 @@ class Maps(QObject):
             self.df_fit_results.columns = columns
 
             map_type = self.map_plot.cbb_map_type.currentText()
-            if map_type == 'Wafer':
+            if map_type !='2Dmap':
                 # DIAMETER
-                diameter = float(self.map_plot.cbb_wafer_size.currentText())
+                radius = self.map_plot.get_wafer_radius(map_type)
                 # QUADRANT
                 self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
                     self.common.quadrant, axis=1)
                 # ZONE
                 self.df_fit_results['Zone'] = self.df_fit_results.apply(
-                    lambda row: self.common.zone(row, diameter), axis=1)
+                    lambda row: self.common.zone(row, radius), axis=1)
             else: 
                 pass
         self.df_table.show(self.df_fit_results)

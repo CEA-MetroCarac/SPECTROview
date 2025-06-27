@@ -2356,18 +2356,18 @@ class CommonUtilities():
         else:
             return np.nan
 
-    def zone(self, row, diameter):
+    def zone(self, row, radius):
         """Define 3 zones (Center, Mid-Radius, Edge) based on X and Y
         coordinates."""
-        rad = diameter / 2
+        r = radius
         x = row['X']
         y = row['Y']
         distance_to_center = np.sqrt(x ** 2 + y ** 2)
-        if distance_to_center <= rad * 0.35:
+        if distance_to_center <= r * 0.35:
             return 'Center'
-        elif distance_to_center > rad * 0.35 and distance_to_center < rad * 0.8:
+        elif distance_to_center > r * 0.35 and distance_to_center < r * 0.8:
             return 'Mid-Radius'
-        elif distance_to_center >= 0.8 * rad:
+        elif distance_to_center >= 0.8 * r:
             return 'Edge'
         else:
             return np.nan

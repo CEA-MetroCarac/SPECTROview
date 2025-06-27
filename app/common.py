@@ -16,12 +16,13 @@ import matplotlib.patches as patches
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 
-from io import BytesIO
-from PIL import Image
-from copy import deepcopy
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+
+from io import BytesIO
+from PIL import Image
+from copy import deepcopy
 from threading import Thread
 from openpyxl.styles import PatternFill
 from scipy.interpolate import RegularGridInterpolator

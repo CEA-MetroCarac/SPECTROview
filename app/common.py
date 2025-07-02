@@ -1374,7 +1374,7 @@ class PeakTableWidget:
         self.sel_spectrum = sel_spectrum
         self.clear_layout(self.main_layout)
         header_labels = ["  ", "Label", "Model"]
-        param_hint_order = ['x0', 'fwhm', 'fwhm_l', 'fwhm_r','ampli', 'alpha' ]
+        param_hint_order = ['x0', 'fwhm', 'ampli', 'alpha', 'fwhm_l', 'fwhm_r']
 
         # Create and add headers to list
         for param_hint_key in param_hint_order:

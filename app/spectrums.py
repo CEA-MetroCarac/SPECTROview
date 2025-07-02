@@ -715,7 +715,7 @@ class Spectrums(QObject):
                 for model in spectrum.peak_models:
                     if hasattr(model, 'param_names') and hasattr(model,'param_hints'):
                         for param_name in model.param_names:
-                            key = param_name.split('_')[1]
+                            key = param_name.split('_', 1)[1]
                             if key in model.param_hints and 'value' in \
                                     model.param_hints[key]:
                                 fit_result[param_name] = model.param_hints[key]['value']

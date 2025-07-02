@@ -16,7 +16,7 @@ SPECTROview addresses these gap by offering free, open-source software that is c
 
 ___
 
-## Features:
+## Features: 
 
 - Cross-platform compatibility (Windows, macOS, Linux).
 - Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps)*. 
@@ -51,7 +51,7 @@ ___
 
 ## Installation from PyPI:
 
-Make sure that Python (> 3.8) is already installed on your computer.
+Make sure that Python (> 3.8) is already installed.
 
 ```bash
 pip install spectroview

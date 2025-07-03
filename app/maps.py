@@ -10,7 +10,7 @@ from io import StringIO
 from copy import deepcopy
 from pathlib import Path
 
-from app.common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
+from app.common import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
 from app.common import FitThread, PeakTableWidget, DataframeTableWidget, \
     FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget, Graph, CustomSpectra
 from app import FIT_METHODS
@@ -268,6 +268,7 @@ class Maps(QObject):
 
         for spectrum in self.spectrums:
             if hasattr(spectrum, 'peak_models'):
+                params = {}
                 map_name, coord = self.spectrum_object_id(spectrum)
                 x, y = coord
                 fit_result = {'Filename': map_name, 'X': x, 'Y': y}
@@ -275,13 +276,23 @@ class Maps(QObject):
                 for model in spectrum.peak_models:
                     if hasattr(model, 'param_names') and hasattr(model,'param_hints'):
                         for param_name in model.param_names:
+                            peak_id = param_name.split('_', 1)[0]
                             key = param_name.split('_', 1)[1]
-                            if key in model.param_hints and 'value' in \
-                                    model.param_hints[key]:
-                                fit_result[param_name] = model.param_hints[key]['value']
+                            
+                            if key in model.param_hints and 'value' in model.param_hints[key]:
+                                val = model.param_hints[key]['value']        
+                                fit_result[param_name] = val
+                                params[key] = val
+                         # Calculate peak area
+                        model_type = model.name2  # Get the type of peak model : Lorentizan, Gaussian, etc...
+                        area = calc_area(model_type, params)
+                        if area is not None:
+                            area_key = f"{peak_id}_area"
+                            fit_result[area_key] = area
 
                 if len(fit_result) > 3:
                     fit_results_list.append(fit_result)
+                    
         self.df_fit_results = pd.DataFrame(fit_results_list).round(3)
 
         if self.df_fit_results is not None and not self.df_fit_results.empty:

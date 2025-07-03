@@ -1374,7 +1374,7 @@ class PeakTableWidget:
         self.sel_spectrum = sel_spectrum
         self.clear_layout(self.main_layout)
         header_labels = ["  ", "Label", "Model"]
-        param_hint_order = ['x0', 'fwhm', 'ampli', 'alpha', 'fwhm_l', 'fwhm_r']
+        param_hint_order = ['x0', 'fwhm', 'fwhm_l', 'fwhm_r', 'ampli', 'alpha']
 
         # Create and add headers to list
         for param_hint_key in param_hint_order:
@@ -1471,11 +1471,20 @@ class PeakTableWidget:
                     vary = QCheckBox()
                     vary.setChecked(not param_hint_value.get('vary', False))
                     vary.setFixedHeight(24)
-                    vary.setFixedWidth(30)
+
+                    # Create container widget with horizontal layout to center the checkbox
+                    checkbox_container = QWidget()
+                    checkbox_layout = QHBoxLayout()
+                    checkbox_layout.setContentsMargins(0, 0, 0, 0)
+                    checkbox_layout.setAlignment(Qt.AlignCenter)
+                    checkbox_layout.addWidget(vary)
+                    checkbox_container.setLayout(checkbox_layout)
+
                     vary.stateChanged.connect(
                         lambda state, pm=peak_model,
-                               key=param_hint_key: self.update_param_hint_vary(pm, key, not state))
-                    param_hint_layouts[param_hint_key]['vary'].addWidget(vary)
+                            key=param_hint_key: self.update_param_hint_vary(pm, key, not state))
+
+                    param_hint_layouts[param_hint_key]['vary'].addWidget(checkbox_container)
 
                     # 4.3 MIN MAX
                     if self.cb_limits.isChecked():
@@ -1526,13 +1535,17 @@ class PeakTableWidget:
                         param_hint_layouts[param_hint_key]['expr'].addWidget(empty_label)
 
         # Add vertical layouts to main layout
-        self.main_layout.addLayout(delete_layout, stretch=0)
-        self.main_layout.addLayout(label_layout, stretch=0)
-        self.main_layout.addLayout(model_layout, stretch=0)
+        self.main_layout.addLayout(delete_layout)
+        self.main_layout.addLayout(label_layout)
+        self.main_layout.addLayout(model_layout)
 
         for param_hint_key, param_hint_layout in param_hint_layouts.items():
             for var_layout in param_hint_layout.values():
-                self.main_layout.addLayout(var_layout, stretch=0)
+                self.main_layout.addLayout(var_layout)
+                
+        # Add a horizontal spacer to absorb any remaining space
+        spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.main_layout.addItem(spacer)
 
     def update_model_name(self, spectrum, index, idx, new_model):
         """ Update the model function (Lorentizan, Gaussian...) related to

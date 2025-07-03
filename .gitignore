@@ -10,3 +10,5 @@ app/.DS_Store
 .exe
 env_spectroview/
 *.spec*
+.vscode/
+.github/workflows/

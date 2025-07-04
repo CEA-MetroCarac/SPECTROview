@@ -13,8 +13,8 @@ from copy import deepcopy
 from pathlib import Path
 from lmfit import fit_report
 
-from fitspy.spectrum import Spectrum
-from fitspy.utils import closest_index
+from fitspy.core.spectrum import Spectrum
+from fitspy.core.utils import closest_index
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
@@ -545,7 +545,7 @@ class Spectrums(QObject):
             self.spectrums.save(save_path, [sel_spectrum.fname])
             show_alert("Fit model is saved (JSON file)")
         else:
-            show_alert("No fit model to save.")
+            print("Nothing is saved.")
 
         self.upd_model_cbb_list()
 

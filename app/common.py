@@ -30,7 +30,7 @@ from scipy.interpolate import griddata
 from superqt import QLabeledDoubleRangeSlider 
 
 from app import PEAK_MODELS, PALETTE, DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS, X_AXIS_UNIT
-from fitspy.utils_mp import fit_mp
+from fitspy.core.utils_mp import fit_mp
 from fitspy.spectra import Spectra
 from multiprocessing import Queue
 
@@ -1462,9 +1462,7 @@ class PeakTableWidget:
                     value.setFixedWidth(70)
                     value.setFixedHeight(24)
                     value.setAlignment(Qt.AlignRight)
-                    value.textChanged.connect(
-                        lambda text, pm=peak_model,
-                               key=param_hint_key: self.update_param_hint_value(pm, key, text))
+                    value.textChanged.connect(lambda text, pm=peak_model, key=param_hint_key: self.update_param_hint_value(pm, key, text))
                     param_hint_layouts[param_hint_key]['value'].addWidget(value)
 
                     # 4.2 FIXED or NOT

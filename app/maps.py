@@ -18,7 +18,7 @@ from app.visualisation import MdiSubWindow
 from lmfit import fit_report
 
 from fitspy.spectrum import Spectrum
-from fitspy.utils import closest_index
+from fitspy.core.utils import closest_index
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication, QListWidgetItem, QDialog, QVBoxLayout
 from PySide6.QtGui import QColor
@@ -423,7 +423,7 @@ class Maps(QObject):
             self.spectrums.save(save_path, [sel_spectrum.fname])
             show_alert("Fit model is saved (JSON file)")
         else:
-            show_alert("No fit model to save.")
+            print("Nothing is saved.")
         self.upd_model_cbb_list()
 
     def read_x_range(self):

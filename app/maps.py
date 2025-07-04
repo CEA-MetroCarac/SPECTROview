@@ -79,6 +79,7 @@ class Maps(QObject):
         
         # BASELINE
         self.setup_baseline_controls()
+        
         self.ui.cbb_fit_methods.addItems(FIT_METHODS)
         self.ui.btn_send_to_viz2.clicked.connect(self.send_df_to_viz)
 
@@ -114,6 +115,7 @@ class Maps(QObject):
         self.ui.btn_copy_bl.clicked.connect(self.copy_baseline)
         self.ui.btn_paste_bl.clicked.connect(self.paste_baseline_handler)
         self.ui.sub_baseline.clicked.connect(self.subtract_baseline_handler)
+        self.get_baseline_settings()
     
     def open_hyperspectra(self, maps=None, file_paths=None):
         """Open hyperspectral data"""

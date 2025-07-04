@@ -17,7 +17,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 
-from app.common import CommonUtilities, FitModelManager, MapViewWidget
+from app.common import CommonUtilities, FitModelManager, MapViewWidget, ConvertFile
 from app.common import PEAK_MODELS
 from app.common import show_alert
     
@@ -60,6 +60,7 @@ class Main:
         self.maps = Maps(self.settings, self.ui, self.spectrums, self.common, self.visu)
         self.fitmodel_manager = FitModelManager(self.settings)
         self.mapview_widget = MapViewWidget(self, self.settings)
+        self.convertfile= ConvertFile(self.ui, self.settings)
 
         # TOOLBAR
         self.ui.actionOpen.triggered.connect(lambda: self.open())
@@ -231,7 +232,6 @@ class Main:
         # Save the gui states to QSettings
         for key, value in gui_states.items():
             self.settings.setValue(key, value)
-        print('Settings are saved')
 
     def load_settings(self):
         """

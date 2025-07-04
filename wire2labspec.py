@@ -75,57 +75,6 @@ class Wire2LabspecGUI:
         self.listbox = tk.Listbox(listbox_frame)
         self.listbox.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        # Create the menu bar
-        self.menu_bar = tk.Menu(self.master)
-        self.master.config(menu=self.menu_bar)
-
-        # Create the "Help" menu
-        help_menu = tk.Menu(self.menu_bar, tearoff=False)
-        self.menu_bar.add_cascade(label="Help", menu=help_menu)
-        help_menu.add_command(label="About", command=self.show_about)
-        help_menu.add_command(label="Change log", command=self.show_changelog)
-
-    def show_about(self):
-        """ Display version and Developers information """
-        # Create the about dialog
-        about_dialog = tk.Toplevel(self.master)
-        about_dialog.title("About")
-        about_dialog.geometry("200x220")
-        about_dialog.resizable(width=False, height=False)
-
-        # Create the text label
-        about_text = "Wire2Labspec\nVersion 2\n\nCreated by: \n" \
-                     " Van-Hoan Le \n(van-hoan.le@cea.fr)\n\n " \
-                     "Patrick Quemere \n(patrick.quemere@cea.fr)"
-
-        about_label = tk.Label(about_dialog, text=about_text)
-        about_label.pack(padx=10, pady=10)
-
-        # Create the OK button
-        ok_button = tk.Button(about_dialog, text="OK",
-                              command=about_dialog.destroy)
-        ok_button.pack(pady=5)
-
-    def show_changelog(self):
-        """ Show changes, modifications in new versions... """
-        # Create the about dialog
-        about_dialog = tk.Toplevel(self.master)
-        about_dialog.title("About")
-        about_dialog.geometry("450x150")
-        about_dialog.resizable(width=False, height=False)
-
-        # Create the text label
-        about_text = " Version v2\n\n- GUI windows are now resizable, " \
-                     "long file names are thus more readable. \n- Multiple " \
-                     "files conversion\n- Automatically copy the working " \
-                     "folder to clipboard"
-        about_label = tk.Label(about_dialog, text=about_text)
-        about_label.pack(padx=10, pady=10)
-
-        # Create the OK button
-        ok_button = tk.Button(about_dialog, text="Okay",
-                              command=about_dialog.destroy)
-        ok_button.pack(pady=5)
 
     def browse_files(self, file_paths=None):
         """

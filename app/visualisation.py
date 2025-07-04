@@ -1,4 +1,4 @@
-"""This modules build the GUI and functionality of "Visualization" Tab"""
+import os
 import pandas as pd
 import json
 import gzip
@@ -6,13 +6,14 @@ import gzip
 from pathlib import Path
 from io import StringIO
 
-from app import PLOT_STYLES, PALETTE, LEGEND_LOCATION
+from app import PLOT_STYLES, PALETTE, LEGEND_LOCATION, ICON_DIR
 from app.common import view_df, show_alert, copy_fig_to_clb
 from app.common import Graph, FilterWidget, CustomizedPalette
 
 from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, \
      QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import Qt, QTimer, Signal, QSize
+from PySide6.QtGui import  QIcon,  Qt
 
 
 class Visualization(QDialog):
@@ -67,7 +68,21 @@ class Visualization(QDialog):
         self.cbb_palette.currentIndexChanged.connect(lambda: self.plotting(update_graph=True))
         self.ui.horizontalLayout_115.addWidget(self.cbb_palette)
 
-        self.ui.cbb_plotstyle.addItems(PLOT_STYLES)
+        #self.ui.cbb_plotstyle.addItems(PLOT_STYLES)
+
+
+        # Plot_style comboboxes
+        
+        self.ui.cbb_plotstyle.setIconSize(QSize(40, 40))
+        for style in PLOT_STYLES:
+            icon_path = os.path.join(ICON_DIR, f"{style}.png")
+            if os.path.exists(icon_path):
+                icon = QIcon(icon_path)
+            else:
+                icon = QIcon()  # Fallback in case the icon is missing
+            self.ui.cbb_plotstyle.addItem(icon, style)
+
+
         self.ui.cbb_legend_loc.addItems(LEGEND_LOCATION)
 
         # Track selected sub-window

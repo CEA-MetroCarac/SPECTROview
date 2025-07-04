@@ -1,3 +1,5 @@
+import os
+
 VERSION = "0.4.9"
 
 PEAK_MODELS = ["Lorentzian", "Gaussian", "PseudoVoigt", "GaussianAsym",
@@ -25,3 +27,10 @@ LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
                    'upper center', 'center']
 
 X_AXIS_UNIT = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
+
+
+DIRNAME = os.path.dirname(__file__)
+RELPATH = os.path.join(DIRNAME, "resources")
+ICON_DIR = os.path.join(DIRNAME, "ui", "iconpack")
+
+PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy.mplstyle")

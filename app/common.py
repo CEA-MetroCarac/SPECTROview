@@ -31,7 +31,7 @@ from scipy.interpolate import RegularGridInterpolator
 from scipy.interpolate import griddata
 from superqt import QLabeledDoubleRangeSlider 
 
-from app import PEAK_MODELS, PALETTE, DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS, X_AXIS_UNIT
+from app import PEAK_MODELS, PALETTE, DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS, X_AXIS_UNIT, ICON_DIR, PLOT_POLICY
 from fitspy.core.utils_mp import fit_mp
 from fitspy.spectra import Spectra
 from multiprocessing import Queue
@@ -52,11 +52,6 @@ from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QAction, Qt, QPi
 rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for
                             color_name in mcolors.CSS4_COLORS}
 
-DIRNAME = os.path.dirname(__file__)
-RELPATH = os.path.join(DIRNAME, "resources")
-ICON_DIR = os.path.join(DIRNAME, "ui", "iconpack")
-
-PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy.mplstyle")
 
 class MapViewWidget(QWidget):
     """Class to manage the 2Dmap view widget"""

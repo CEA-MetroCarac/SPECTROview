@@ -845,7 +845,7 @@ class SpectraViewWidget(QWidget):
                     del sel_spectrum.peak_models[closest_idx]
                     del sel_spectrum.peak_labels[closest_idx]
 
-                    self.refresh_gui()
+                self.refresh_gui()
 
         elif self.btn_baseline.isChecked():
             if event.button == 1:
@@ -854,19 +854,27 @@ class SpectraViewWidget(QWidget):
                     show_alert("Baseline is already subtracted. Reinitialize spectrum to perform new baseline")
                 else:
                     sel_spectrum.baseline.add_point(x_click, y_click)
+                self.refresh_gui()
+                    
             elif event.button == 3:
                 # Right click: Remove closest baseline point
-                if hasattr(sel_spectrum.baseline, "points") and sel_spectrum.baseline.points:
-                    closest_idx = min(
-                        range(len(sel_spectrum.baseline.points)),
-                        key=lambda i: abs(sel_spectrum.baseline.points[i][0] - x_click)
-                    )
-                    point = sel_spectrum.baseline.points[closest_idx]
-                    if abs(point[0] - x_click) < 5:
-                        sel_spectrum.baseline.points.pop(closest_idx)
+                if (hasattr(sel_spectrum.baseline, "points") and
+                    isinstance(sel_spectrum.baseline.points, list) and
+                    len(sel_spectrum.baseline.points) == 2 and
+                    len(sel_spectrum.baseline.points[0]) > 0):
 
-        self.refresh_plot() 
-    
+                    x_points = sel_spectrum.baseline.points[0]
+                    y_points = sel_spectrum.baseline.points[1]
+
+                    # Find the closest x value index
+                    closest_idx = min(
+                        range(len(x_points)),
+                        key=lambda i: abs(x_points[i] - x_click)
+                    )
+                    x_points.pop(closest_idx)
+                    y_points.pop(closest_idx)
+                self.refresh_gui()
+                
 
     def create_options_menu(self):
         """Create widget containing all view options."""

@@ -45,8 +45,8 @@ from PySide6.QtWidgets import QMessageBox, QDialog, QTableWidget,QWidgetAction, 
     QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextBrowser, QLabel, QToolButton, \
     QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QListWidgetItem, QFileDialog,\
     QApplication,  QWidget, QMenu, QStyledItemDelegate, QListWidget, QAbstractItemView, QSizePolicy, QGroupBox, QFrame, QSpacerItem, QStyledItemDelegate
-from PySide6.QtCore import Signal, QThread, Qt, QSize, QCoreApplication, QFileInfo
-from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QAction, Qt, QPixmap, QImage
+from PySide6.QtCore import Signal, QThread, Qt, QSize, QCoreApplication, QFileInfo,QPoint
+from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, QAction, Qt, QPixmap, QImage,QCursor
 
 # Define a dictionary mapping RGBA tuples to named colors
 rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for
@@ -645,6 +645,7 @@ class SpectraViewWidget(QWidget):
         self.zoom_pan_active = False
         self.menu_actions = {}
         self.initUI()
+        QApplication.instance().focusChanged.connect(self.on_focus_changed)
 
     def initUI(self):
         """Initialize the UI components."""
@@ -889,7 +890,6 @@ class SpectraViewWidget(QWidget):
         options = [
             ("Colors", "Colors", True),
             ("Peaks", "Show Peaks"),
-            ("Filled", "Filled", True),
             ("Bestfit", "Best Fit", True),
             ("Raw", "Raw data"),
             ("Residual", "Residual"),
@@ -939,13 +939,6 @@ class SpectraViewWidget(QWidget):
         """Rescale the spectra plot to fit within the axes."""
         self.ax.autoscale()
         self.canvas.draw()
-
-    # def on_right_click(self, event):
-    #     """Show view options menu on right-click."""
-    #     if event.button == 3:  # 3 is the right-click button
-    #         # Show the menu at the cursor position
-    #         cursor_pos = QCursor.pos()  
-    #         self.options_menu.exec_(cursor_pos)
 
     
     def set_peak_model(self, model):
@@ -1051,21 +1044,115 @@ class SpectraViewWidget(QWidget):
         y0_values = spectrum.y0
         self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3, lw=1)
 
+    def plot_peak(self, y_peak, x_values, peak_label, peak_model):
+        """Plot individual peak, optionally filled, and return line and peak info."""
+        try:
+            line, = self.ax.plot(x_values, y_peak, '-', label=peak_label, lw=1.5)
+            
+            # Annotate if enabled
+            if self.menu_actions['Peaks'].isChecked():
+                self.annotate_peak(peak_model, peak_label)
+
+            # Extract peak info for hover
+            peak_info = {}
+            peak_info["peak_label"] = peak_label
+
+            if hasattr(peak_model, 'param_names') and hasattr(peak_model,'param_hints'):
+                        for param_name in peak_model.param_names:
+                            peak_id = param_name.split('_', 1)[0]
+                            key = param_name.split('_', 1)[1]
+                            
+                            if key in peak_model.param_hints and 'value' in peak_model.param_hints[key]:
+                                val = peak_model.param_hints[key]['value']     
+                                peak_info[key] = val
+
+            return line, peak_info
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return None, None
+
     def plot_peaks_and_bestfit(self, spectrum):
-        """Plot peaks and best-fit line if the option is checked."""
         x_values = spectrum.x
         y_peaks = np.zeros_like(x_values)
         y_bkg = self.get_background_y_values(spectrum)
 
         peak_labels = spectrum.peak_labels
+        self.fitted_lines = []  # Store line and info for hover
+
         for i, peak_model in enumerate(spectrum.peak_models):
             y_peak = self.evaluate_peak_model(peak_model, x_values)
             y_peaks += y_peak
-            self.plot_peak(y_peak, x_values, peak_labels[i], peak_model)
+            result = self.plot_peak(y_peak, x_values, peak_labels[i], peak_model)
+
+            if result is not None:
+                line, peak_info = result
+                if line is not None:
+                    self.fitted_lines.append((line, peak_info))
+                else:
+                    print(f"[plot_peaks_and_bestfit] Line is None for peak {peak_labels[i]}")
+            else:
+                print(f"[plot_peaks_and_bestfit] result is None for peak {peak_labels[i]}")
+
 
         if hasattr(spectrum.result_fit, 'success'):
             y_fit = y_bkg + y_peaks
             self.ax.plot(x_values, y_fit, label="bestfit")
+
+        self.enable_hover_highlight()  # connect hover after drawing lines
+    
+    def enable_hover_highlight(self):
+        if not hasattr(self, 'hover_connection'):
+            self.hover_connection = self.canvas.mpl_connect('motion_notify_event', self.on_hover)
+
+    def on_hover(self, event):
+        if event.inaxes != self.ax or not self.canvas.isActiveWindow():
+            
+            self.hide_tooltip()
+            return
+
+        for line, info in self.fitted_lines:
+            if line.contains(event)[0]:
+                # Display hover text
+                text = (
+                    f"label: {info.get('peak_label')}\n"
+                    f"center: {info.get('x0', float('nan')):.3f}\n"
+                    f"fwhm: {info.get('fwhm', float('nan')):.3f}\n"
+                    f"intensity: {info.get('ampli', float('nan')):.3f}"
+                )
+                self.show_tooltip(event, text)
+                return
+        self.hide_tooltip()
+
+
+    def show_tooltip(self, event, text):
+        if not hasattr(self, 'tooltip'):
+            from PySide6.QtWidgets import QLabel
+            self.tooltip = QLabel(self.canvas)
+
+            self.tooltip.setStyleSheet("""
+                background-color: rgba(255, 255, 255, 0.3);
+                color: black;
+                border: 0.1px gray;
+                padding: 2px;
+            """)
+            self.tooltip.setWindowFlags(Qt.ToolTip)
+
+        self.tooltip.setText(text)
+
+        cursor_pos = QCursor.pos()
+        offset = QPoint(5, -75)
+        self.tooltip.move(cursor_pos + offset)
+        self.tooltip.show()
+
+    def on_focus_changed(self, old, new):
+        if not self.canvas.isActiveWindow():
+            self.hide_tooltip()
+        
+    def hide_tooltip(self):
+        if hasattr(self, 'tooltip'):
+            self.tooltip.hide()
 
     def get_background_y_values(self, spectrum):
         """Get y-values for the background model."""
@@ -1081,16 +1168,7 @@ class SpectraViewWidget(QWidget):
             peak_model.param_hints[key]['expr'] = ''
         params = peak_model.make_params()
         peak_model.param_hints = param_hints_orig
-        return peak_model.eval(params, x=x_values)
-
-    def plot_peak(self, y_peak, x_values, peak_label, peak_model):
-        """Plot individual peak with or without filling."""
-        if self.menu_actions['Filled'].isChecked():
-            self.ax.fill_between(x_values, 0, y_peak, alpha=0.5, label=f"{peak_label}")
-            if self.menu_actions['Peaks'].isChecked():
-                self.annotate_peak(peak_model, peak_label)
-        else:
-            self.ax.plot(x_values, y_peak, '-', label=f"{peak_label}", lw=1.5)
+        return peak_model.eval(params, x=x_values) 
 
     def annotate_peak(self, peak_model, peak_label):
         """Annotate peaks on the plot with labels."""

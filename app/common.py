@@ -912,7 +912,7 @@ class SpectraViewWidget(QWidget):
 
         # Define view options with checkable actions
         options = [
-            ("Colors", "Colors", True),
+            ("Colors", "Colors"),
             ("Peaks", "Show Peaks"),
             ("Bestfit", "Best Fit", True),
             ("Raw", "Raw data"),

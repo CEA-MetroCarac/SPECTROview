@@ -33,7 +33,9 @@ from superqt import QLabeledDoubleRangeSlider
 
 from app import PEAK_MODELS, PALETTE, DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS, X_AXIS_UNIT, ICON_DIR, PLOT_POLICY
 from fitspy.core.utils_mp import fit_mp
-from fitspy.spectra import Spectra
+from fitspy.core.spectrum import Spectrum
+from fitspy.core.spectra import Spectra
+
 from multiprocessing import Queue
 
 if platform.system() == 'Darwin':
@@ -983,10 +985,11 @@ class SpectraViewWidget(QWidget):
             self.plot_peaks_and_bestfit(spectrum)
 
         if self.menu_actions['Residual'].isChecked() and hasattr(spectrum.result_fit, 'residual'):
-            try: 
+            try:
                 self.plot_residual(spectrum)
             except:
-                pass
+                print("plot residual is not succesful")
+            
         
         if hasattr(spectrum.result_fit, 'rsquared'):
             self.show_R2(spectrum)

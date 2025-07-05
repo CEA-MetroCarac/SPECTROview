@@ -672,7 +672,8 @@ class SpectraViewWidget(QWidget):
         self.figure = plt.figure(dpi=self.dpi)
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
-        self.canvas.mpl_connect('button_press_event', self.on_left_click)
+        self.canvas.mpl_connect('button_press_event', self.on_mouse_click)
+
         self.canvas.mpl_connect("scroll_event", self.on_scroll)
 
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
@@ -808,33 +809,64 @@ class SpectraViewWidget(QWidget):
         ax.set_ylim(y_min, y_max)
         self.refresh_plot()
 
-    def on_left_click(self, event):
+    def on_mouse_click(self, event):
         """
-        Handle click events on spectra plot canvas for adding peak models or baseline points.
+        Handle mouse click events:
+        - Left click (button=1) to add peak models or baseline points.
+        - Right click (button=3) to remove nearest peak model or baseline point.
         """
-        if event.inaxes != self.ax: # Ignore clicks outside the plot area
+        if event.inaxes != self.ax:
             return
 
         x_click = event.xdata
         y_click = event.ydata
 
-        if self.sel_spectrums:
-            sel_spectrum = self.sel_spectrums[0]
-            if self.zoom_pan_active:
-                # Do nothing if zoom or pan is active
-                return
-            if self.btn_peak.isChecked():
-                if event.button == 1:  # Left mouse button
-                    sel_spectrum.add_peak_model(self.peak_model, x_click)
-                    self.refresh_gui() # update GUI in main app to update peak tables.
-            elif self.btn_baseline.isChecked():
-                if event.button == 1: 
-                    if sel_spectrum.baseline.is_subtracted:
-                        show_alert("Already subtracted before. Reinitialize spectrum to perform new baseline")
-                    else:
-                        sel_spectrum.baseline.add_point(x_click, y_click)
-        self.refresh_plot()  
-        
+        if not self.sel_spectrums:
+            return
+
+        sel_spectrum = self.sel_spectrums[0]
+
+        if self.zoom_pan_active:
+            return
+
+        if self.btn_peak.isChecked():
+            if event.button == 1:
+                # Left click: Add peak
+                sel_spectrum.add_peak_model(self.peak_model, x_click)
+                self.refresh_gui()
+            
+            elif event.button == 3:
+                # Right click: Remove closest peak model
+                if hasattr(sel_spectrum, "peak_models") and sel_spectrum.peak_models:
+                    closest_idx = min(
+                        range(len(sel_spectrum.peak_models)),
+                        key=lambda i: abs(sel_spectrum.peak_models[i].param_hints['x0']['value'] - x_click)
+                    )
+                    del sel_spectrum.peak_models[closest_idx]
+                    del sel_spectrum.peak_labels[closest_idx]
+
+                    self.refresh_gui()
+
+        elif self.btn_baseline.isChecked():
+            if event.button == 1:
+                # Left click: Add baseline point
+                if sel_spectrum.baseline.is_subtracted:
+                    show_alert("Baseline is already subtracted. Reinitialize spectrum to perform new baseline")
+                else:
+                    sel_spectrum.baseline.add_point(x_click, y_click)
+            elif event.button == 3:
+                # Right click: Remove closest baseline point
+                if hasattr(sel_spectrum.baseline, "points") and sel_spectrum.baseline.points:
+                    closest_idx = min(
+                        range(len(sel_spectrum.baseline.points)),
+                        key=lambda i: abs(sel_spectrum.baseline.points[i][0] - x_click)
+                    )
+                    point = sel_spectrum.baseline.points[closest_idx]
+                    if abs(point[0] - x_click) < 5:
+                        sel_spectrum.baseline.points.pop(closest_idx)
+
+        self.refresh_plot() 
+    
 
     def create_options_menu(self):
         """Create widget containing all view options."""

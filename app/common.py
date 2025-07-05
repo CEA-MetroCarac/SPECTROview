@@ -853,6 +853,7 @@ class SpectraViewWidget(QWidget):
                 if sel_spectrum.baseline.is_subtracted:
                     show_alert("Baseline is already subtracted. Reinitialize spectrum to perform new baseline")
                 else:
+                    
                     sel_spectrum.baseline.add_point(x_click, y_click)
                 self.refresh_gui()
                     

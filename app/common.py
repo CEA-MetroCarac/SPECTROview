@@ -656,137 +656,128 @@ class SpectraViewWidget(QWidget):
         plt.style.use(PLOT_POLICY)
 
         if not self.figure:
-            self.figure = plt.figure(dpi=self.dpi)
-            self.ax = self.figure.add_subplot(111)
-            self.canvas = FigureCanvas(self.figure)
-            self.canvas.mpl_connect('button_press_event', self.on_left_click)
-            self.canvas.mpl_connect("scroll_event", self.on_scroll)
-            #self.canvas.mpl_connect('button_press_event', self.on_right_click)
+            self.create_figure_canvas_and_toolbar()
+            self.create_tool_buttons()
 
-            self.toolbar = NavigationToolbar2QT(self.canvas, self)
-            self.toolbar.zoom()  # Activate the zoom feature by default at startup
-
-            # Set up the toolbar visibility and connect events
-            for action in self.toolbar.actions():
-                if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
-                    action.setVisible(False)
-
-            # Create a QPushButton for Rescale
-            self.btn_rescale = QPushButton("", self)
-            self.btn_rescale.clicked.connect(self.rescale)
-            self.btn_rescale.setToolTip("Rescale")
-            icon_rescale = QIcon()
-            icon_rescale.addFile(os.path.join(ICON_DIR, "rescale.png"))
-            self.btn_rescale.setIcon(icon_rescale)
-            self.btn_rescale.setIconSize(QSize(24, 24))
-
-            # Create QToolButtons for Zoom, Baseline, and Peak
-            self.btn_zoom = QToolButton(self)
-            self.btn_zoom.setCheckable(True)
-            self.btn_zoom.setAutoExclusive(True)
-            self.btn_zoom.setToolTip("Zoom")
-            icon_zoom = QIcon()
-            icon_zoom.addFile(os.path.join(ICON_DIR, "zoom.png"))
-            self.btn_zoom.setIcon(icon_zoom)
-            self.btn_zoom.setIconSize(QSize(24, 24))
-            self.btn_zoom.setChecked(True)  # Default selection
-            self.btn_zoom.toggled.connect(self.toggle_zoom_pan)
-
-            self.btn_baseline = QToolButton(self)
-            self.btn_baseline.setCheckable(True)
-            self.btn_baseline.setAutoExclusive(True)
-            self.btn_baseline.setToolTip("Baseline")
-            icon_baseline = QIcon()
-            icon_baseline.addFile(os.path.join(ICON_DIR, "baseline.png"))
-            self.btn_baseline.setIcon(icon_baseline)
-            self.btn_baseline.setIconSize(QSize(24, 24))
-
-            self.btn_peak = QToolButton(self)
-            self.btn_peak.setCheckable(True)
-            self.btn_peak.setAutoExclusive(True)
-            self.btn_peak.setToolTip("Peak")
-            icon_peak = QIcon()
-            icon_peak.addFile(os.path.join(ICON_DIR, "peak.png"))
-            self.btn_peak.setIcon(icon_peak)
-            self.btn_peak.setIconSize(QSize(24, 24))
-
-            self.btn_norm = QToolButton(self)
-            self.btn_norm.setCheckable(True)
-            self.btn_norm.setAutoExclusive(False)
-            self.btn_norm.setToolTip("Normalization")
-            self.btn_norm.clicked.connect(self.refresh_plot) 
-            icon_norm = QIcon()
-            icon_norm.addFile(os.path.join(ICON_DIR, "norm.png"))
-            self.btn_norm.setIcon(icon_norm)
-            self.btn_norm.setIconSize(QSize(24, 24))
-            self.btn_norm.clicked.connect(self.rescale)
-            
-            self.norm_x_min = QLineEdit(self)
-            self.norm_x_min.setFixedWidth(40)
-            self.norm_x_min.setPlaceholderText("Xmin")
-            self.norm_x_min.setToolTip("Type the Xmin-max to normalize at specific region. Leave it empty to normalize to the highest peak.")
-            self.norm_x_max = QLineEdit(self)
-            self.norm_x_max.setFixedWidth(40)
-            self.norm_x_max.setPlaceholderText("Xmax")
-            self.norm_x_max.setToolTip("Type the Xmin-max to normalize at specific region. Leave it empty to normalize to the highest peak.")
-
-            self.btn_legend = QToolButton(self)
-            self.btn_legend.setCheckable(True)
-            self.btn_legend.setAutoExclusive(False)
-            self.btn_legend.setToolTip("Show legend")
-            self.btn_legend.clicked.connect(self.refresh_plot) 
-            icon_norm = QIcon()
-            icon_norm.addFile(os.path.join(ICON_DIR, "legend.png"))
-            self.btn_legend.setIcon(icon_norm)
-            self.btn_legend.setIconSize(QSize(24, 24))       
-            
-            self.R2 = QLabel("R2=0", self)
-
-            # Create a QPushButton for Copy Figure Canvas
-            self.btn_copy = QPushButton("", self)
-            icon_copy = QIcon()
-            icon_copy.addFile(os.path.join(ICON_DIR, "copy.png"))
-            self.btn_copy.setToolTip("Copy figure to clipboard")
-            self.btn_copy.setIcon(icon_copy)
-            self.btn_copy.setIconSize(QSize(24, 24))
-            self.btn_copy.clicked.connect(self.copy_fig)
-
-            # Create More-options button:
             self.create_options_menu()
+            self.create_normalization_widgets()
+            self.create_copy_and_legend_buttons()
+            self.create_control_layout()
 
-            self.tool_btn_options = QToolButton(self)
-            self.tool_btn_options.setText("More options ")
-            self.tool_btn_options.setPopupMode(QToolButton.InstantPopup) 
-            self.tool_btn_options.setMenu(self.options_menu) 
-            
-            # Add all items in the same layout
-            self.control_widget = QWidget(self)
-            self.control_layout = QHBoxLayout(self.control_widget)
-            self.control_layout.setContentsMargins(0, 0, 0, 0)
-
-            # Add widgets to the horizontal layout
-            self.control_layout.addWidget(self.btn_rescale)
-            self.control_layout.addSpacing(10)
-            self.control_layout.addWidget(self.btn_zoom)
-            self.control_layout.addWidget(self.btn_baseline)
-            self.control_layout.addWidget(self.btn_peak)
-            self.control_layout.addSpacing(20)
-            self.control_layout.addWidget(self.btn_norm)
-            self.control_layout.addWidget(self.norm_x_min)
-            self.control_layout.addWidget(self.norm_x_max)
-            
-            self.control_layout.addSpacing(20)
-            self.control_layout.addWidget(self.btn_legend)
-            self.control_layout.addSpacing(20)
-            self.control_layout.addWidget(self.tool_btn_options)
-               
-            self.control_layout.addWidget(self.btn_copy)
-            self.control_layout.addWidget(self.toolbar)
-            self.control_layout.addWidget(self.R2)
-
-            # Set the layout of control_widget
-            self.control_widget.setLayout(self.control_layout)
         self.update_plot_styles()
+
+    def create_figure_canvas_and_toolbar(self):
+        self.figure = plt.figure(dpi=self.dpi)
+        self.ax = self.figure.add_subplot(111)
+        self.canvas = FigureCanvas(self.figure)
+        self.canvas.mpl_connect('button_press_event', self.on_left_click)
+        self.canvas.mpl_connect("scroll_event", self.on_scroll)
+
+        self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        self.toolbar.zoom()  # Default zoom active
+
+        for action in self.toolbar.actions():
+            if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
+                action.setVisible(False)
+    
+    def create_tool_buttons(self):
+        self.btn_rescale = QPushButton("", self)
+        self.btn_rescale.setToolTip("Rescale")
+        self.btn_rescale.setIcon(QIcon(os.path.join(ICON_DIR, "rescale.png")))
+        self.btn_rescale.setIconSize(QSize(24, 24))
+        self.btn_rescale.clicked.connect(self.rescale)
+
+        self.btn_zoom = QToolButton(self)
+        self.btn_zoom.setCheckable(True)
+        self.btn_zoom.setAutoExclusive(True)
+        self.btn_zoom.setToolTip("Zoom")
+        self.btn_zoom.setIcon(QIcon(os.path.join(ICON_DIR, "zoom.png")))
+        self.btn_zoom.setIconSize(QSize(24, 24))
+        self.btn_zoom.setChecked(True)
+        self.btn_zoom.toggled.connect(self.toggle_zoom_pan)
+
+        self.btn_baseline = QToolButton(self)
+        self.btn_baseline.setCheckable(True)
+        self.btn_baseline.setAutoExclusive(True)
+        self.btn_baseline.setToolTip("Baseline")
+        self.btn_baseline.setIcon(QIcon(os.path.join(ICON_DIR, "baseline.png")))
+        self.btn_baseline.setIconSize(QSize(24, 24))
+
+        self.btn_peak = QToolButton(self)
+        self.btn_peak.setCheckable(True)
+        self.btn_peak.setAutoExclusive(True)
+        self.btn_peak.setToolTip("Peak")
+        self.btn_peak.setIcon(QIcon(os.path.join(ICON_DIR, "peak.png")))
+        self.btn_peak.setIconSize(QSize(24, 24))
+
+    def create_normalization_widgets(self):
+        self.btn_norm = QToolButton(self)
+        self.btn_norm.setCheckable(True)
+        self.btn_norm.setAutoExclusive(False)
+        self.btn_norm.setToolTip("Normalization")
+        self.btn_norm.setIcon(QIcon(os.path.join(ICON_DIR, "norm.png")))
+        self.btn_norm.setIconSize(QSize(24, 24))
+        self.btn_norm.clicked.connect(self.refresh_plot)
+        self.btn_norm.clicked.connect(self.rescale)
+
+        self.norm_x_min = QLineEdit(self)
+        self.norm_x_min.setFixedWidth(40)
+        self.norm_x_min.setPlaceholderText("Xmin")
+        self.norm_x_min.setToolTip("Type Xmin for normalization")
+
+        self.norm_x_max = QLineEdit(self)
+        self.norm_x_max.setFixedWidth(40)
+        self.norm_x_max.setPlaceholderText("Xmax")
+        self.norm_x_max.setToolTip("Type Xmax for normalization")
+
+    def create_copy_and_legend_buttons(self):
+        self.btn_legend = QToolButton(self)
+        self.btn_legend.setCheckable(True)
+        self.btn_legend.setAutoExclusive(False)
+        self.btn_legend.setToolTip("Show legend")
+        self.btn_legend.setIcon(QIcon(os.path.join(ICON_DIR, "legend.png")))
+        self.btn_legend.setIconSize(QSize(24, 24))
+        self.btn_legend.clicked.connect(self.refresh_plot)
+
+        self.btn_copy = QPushButton("", self)
+        self.btn_copy.setToolTip("Copy figure to clipboard")
+        self.btn_copy.setIcon(QIcon(os.path.join(ICON_DIR, "copy.png")))
+        self.btn_copy.setIconSize(QSize(24, 24))
+        self.btn_copy.clicked.connect(self.copy_fig)
+
+        self.R2 = QLabel("R2=0", self)
+
+        self.tool_btn_options = QToolButton(self)
+        self.tool_btn_options.setText("More options ")
+        self.tool_btn_options.setPopupMode(QToolButton.InstantPopup)
+        self.tool_btn_options.setMenu(self.options_menu)
+
+    def create_control_layout(self):
+        self.control_widget = QWidget(self)
+        self.control_layout = QHBoxLayout(self.control_widget)
+        self.control_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.control_layout.addWidget(self.btn_rescale)
+        self.control_layout.addSpacing(10)
+        self.control_layout.addWidget(self.btn_zoom)
+        self.control_layout.addWidget(self.btn_baseline)
+        self.control_layout.addWidget(self.btn_peak)
+        self.control_layout.addSpacing(20)
+
+        self.control_layout.addWidget(self.btn_norm)
+        self.control_layout.addWidget(self.norm_x_min)
+        self.control_layout.addWidget(self.norm_x_max)
+        self.control_layout.addSpacing(20)
+
+        self.control_layout.addWidget(self.btn_legend)
+        self.control_layout.addSpacing(20)
+        self.control_layout.addWidget(self.tool_btn_options)
+        self.control_layout.addWidget(self.btn_copy)
+        self.control_layout.addWidget(self.toolbar)
+        self.control_layout.addWidget(self.R2)
+
+        self.control_widget.setLayout(self.control_layout)
+
 
     def toggle_zoom_pan(self, checked):
         """Toggle zoom and pan functionality for spectra plot based on tool button selection."""
@@ -813,7 +804,6 @@ class SpectraViewWidget(QWidget):
             y_max = max(y_min + 1e-6, y_max - dy)  # prevent collapse
 
         ax.set_ylim(y_min, y_max)
-        self.canvas.draw_idle()
         self.refresh_plot()
 
     def on_left_click(self, event):
@@ -993,7 +983,10 @@ class SpectraViewWidget(QWidget):
             self.plot_peaks_and_bestfit(spectrum)
 
         if self.menu_actions['Residual'].isChecked() and hasattr(spectrum.result_fit, 'residual'):
-            self.plot_residual(spectrum)
+            try: 
+                self.plot_residual(spectrum)
+            except:
+                pass
         
         if hasattr(spectrum.result_fit, 'rsquared'):
             self.show_R2(spectrum)
@@ -1053,19 +1046,17 @@ class SpectraViewWidget(QWidget):
             if self.menu_actions['Peaks'].isChecked():
                 self.annotate_peak(peak_model, peak_label)
 
-            # Extract peak info for hover
+            # Extract peak info for hover features:
             peak_info = {}
             peak_info["peak_label"] = peak_label
 
             if hasattr(peak_model, 'param_names') and hasattr(peak_model,'param_hints'):
                         for param_name in peak_model.param_names:
-                            peak_id = param_name.split('_', 1)[0]
                             key = param_name.split('_', 1)[1]
                             
                             if key in peak_model.param_hints and 'value' in peak_model.param_hints[key]:
                                 val = peak_model.param_hints[key]['value']     
                                 peak_info[key] = val
-
             return line, peak_info
 
         except Exception as e:
@@ -1091,10 +1082,9 @@ class SpectraViewWidget(QWidget):
                 if line is not None:
                     self.fitted_lines.append((line, peak_info))
                 else:
-                    print(f"[plot_peaks_and_bestfit] Line is None for peak {peak_labels[i]}")
+                    pass
             else:
-                print(f"[plot_peaks_and_bestfit] result is None for peak {peak_labels[i]}")
-
+                pass
 
         if hasattr(spectrum.result_fit, 'success'):
             y_fit = y_bkg + y_peaks
@@ -1122,9 +1112,12 @@ class SpectraViewWidget(QWidget):
                     f"intensity: {info.get('ampli', float('nan')):.3f}"
                 )
                 self.show_tooltip(event, text)
+                # Highlight this line by increasing linewidth
+                self._highlight_line(line)
                 return
+        # If no line hovered
         self.hide_tooltip()
-
+        self._reset_highlight()
 
     def show_tooltip(self, event, text):
         if not hasattr(self, 'tooltip'):
@@ -1154,6 +1147,33 @@ class SpectraViewWidget(QWidget):
         if hasattr(self, 'tooltip'):
             self.tooltip.hide()
 
+    def _highlight_line(self, line_to_highlight):
+        """Highlight the peak upon hover mouse cursor"""
+        # If already highlighted this line, do nothing
+        if getattr(self, 'highlighted_line', None) == line_to_highlight:
+            return
+        self._reset_highlight()
+
+        # Save current linewidth to restore later
+        line_to_highlight._orig_lw = line_to_highlight.get_linewidth()
+
+        # Increase linewidth
+        line_to_highlight.set_linewidth(3)
+        self.highlighted_line = line_to_highlight
+
+        # Redraw canvas to reflect changes
+        self.canvas.draw_idle()
+
+    def _reset_highlight(self):
+        """Un-Highlight the peak upon hover mouse cursor"""
+        if hasattr(self, 'highlighted_line') and self.highlighted_line is not None:
+            # Restore original linewidth
+            orig_lw = getattr(self.highlighted_line, '_orig_lw', 1.5)
+            self.highlighted_line.set_linewidth(orig_lw)
+
+            self.highlighted_line = None
+            self.canvas.draw_idle()
+
     def get_background_y_values(self, spectrum):
         """Get y-values for the background model."""
         x_values = spectrum.x
@@ -1166,8 +1186,10 @@ class SpectraViewWidget(QWidget):
         param_hints_orig = deepcopy(peak_model.param_hints)
         for key in peak_model.param_hints.keys():
             peak_model.param_hints[key]['expr'] = ''
+        
         params = peak_model.make_params()
         peak_model.param_hints = param_hints_orig
+        
         return peak_model.eval(params, x=x_values) 
 
     def annotate_peak(self, peak_model, peak_label):

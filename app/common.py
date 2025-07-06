@@ -646,6 +646,12 @@ class SpectraViewWidget(QWidget):
         self.toolbar = None
         self.zoom_pan_active = False
         self.menu_actions = {}
+
+        self.dragging_peak = None
+        self.drag_event_connection = None
+        self.release_event_connection = None
+
+
         self.initUI()
         QApplication.instance().focusChanged.connect(self.on_focus_changed)
 
@@ -809,73 +815,7 @@ class SpectraViewWidget(QWidget):
         ax.set_ylim(y_min, y_max)
         self.refresh_plot()
 
-    def on_mouse_click(self, event):
-        """
-        Handle mouse click events:
-        - Left click (button=1) to add peak models or baseline points.
-        - Right click (button=3) to remove nearest peak model or baseline point.
-        """
-        if event.inaxes != self.ax:
-            return
-
-        x_click = event.xdata
-        y_click = event.ydata
-
-        if not self.sel_spectrums:
-            return
-
-        sel_spectrum = self.sel_spectrums[0]
-
-        if self.zoom_pan_active:
-            return
-
-        if self.btn_peak.isChecked():
-            if event.button == 1:
-                # Left click: Add peak
-                sel_spectrum.add_peak_model(self.peak_model, x_click)
-                self.refresh_gui()
-            
-            elif event.button == 3:
-                # Right click: Remove closest peak model
-                if hasattr(sel_spectrum, "peak_models") and sel_spectrum.peak_models:
-                    closest_idx = min(
-                        range(len(sel_spectrum.peak_models)),
-                        key=lambda i: abs(sel_spectrum.peak_models[i].param_hints['x0']['value'] - x_click)
-                    )
-                    del sel_spectrum.peak_models[closest_idx]
-                    del sel_spectrum.peak_labels[closest_idx]
-
-                self.refresh_gui()
-
-        elif self.btn_baseline.isChecked():
-            if event.button == 1:
-                # Left click: Add baseline point
-                if sel_spectrum.baseline.is_subtracted:
-                    show_alert("Baseline is already subtracted. Reinitialize spectrum to perform new baseline")
-                else:
-                    
-                    sel_spectrum.baseline.add_point(x_click, y_click)
-                self.refresh_gui()
-                    
-            elif event.button == 3:
-                # Right click: Remove closest baseline point
-                if (hasattr(sel_spectrum.baseline, "points") and
-                    isinstance(sel_spectrum.baseline.points, list) and
-                    len(sel_spectrum.baseline.points) == 2 and
-                    len(sel_spectrum.baseline.points[0]) > 0):
-
-                    x_points = sel_spectrum.baseline.points[0]
-                    y_points = sel_spectrum.baseline.points[1]
-
-                    # Find the closest x value index
-                    closest_idx = min(
-                        range(len(x_points)),
-                        key=lambda i: abs(x_points[i] - x_click)
-                    )
-                    x_points.pop(closest_idx)
-                    y_points.pop(closest_idx)
-                self.refresh_gui()
-                
+    
 
     def create_options_menu(self):
         """Create widget containing all view options."""
@@ -1090,23 +1030,27 @@ class SpectraViewWidget(QWidget):
             if self.menu_actions['Peaks'].isChecked():
                 self.annotate_peak(peak_model, peak_label)
 
-            # Extract peak info for hover features:
-            peak_info = {}
-            peak_info["peak_label"] = peak_label
+            # Extract peak info for hover and interaction
+            peak_info = {
+                "peak_label": peak_label,
+                "peak_model": peak_model  # ✅ store model reference for dragging
+            }
 
-            if hasattr(peak_model, 'param_names') and hasattr(peak_model,'param_hints'):
-                        for param_name in peak_model.param_names:
-                            key = param_name.split('_', 1)[1]
-                            
-                            if key in peak_model.param_hints and 'value' in peak_model.param_hints[key]:
-                                val = peak_model.param_hints[key]['value']     
-                                peak_info[key] = val
+            # Extract parameter values (x0, fwhm, amplitude, etc.)
+            if hasattr(peak_model, 'param_names') and hasattr(peak_model, 'param_hints'):
+                for param_name in peak_model.param_names:
+                    key = param_name.split('_', 1)[1]  # e.g., x0, amplitude
+                    if key in peak_model.param_hints and 'value' in peak_model.param_hints[key]:
+                        val = peak_model.param_hints[key]['value']
+                        peak_info[key] = val
+
             return line, peak_info
 
         except Exception as e:
             import traceback
             traceback.print_exc()
             return None, None
+
 
     def plot_peaks_and_bestfit(self, spectrum):
         x_values = spectrum.x
@@ -1142,13 +1086,11 @@ class SpectraViewWidget(QWidget):
 
     def on_hover(self, event):
         if event.inaxes != self.ax or not self.canvas.isActiveWindow():
-            
             self.hide_tooltip()
             return
 
         for line, info in self.fitted_lines:
             if line.contains(event)[0]:
-                # Display hover text
                 text = (
                     f"label: {info.get('peak_label')}\n"
                     f"center: {info.get('x0', float('nan')):.3f}\n"
@@ -1156,13 +1098,97 @@ class SpectraViewWidget(QWidget):
                     f"intensity: {info.get('ampli', float('nan')):.3f}"
                 )
                 self.show_tooltip(event, text)
-                # Highlight this line by increasing linewidth
                 self._highlight_line(line)
+
+                # Connect mouse press for dragging
+                self.canvas.mpl_disconnect(getattr(self, 'click_connection', None))
+                self.click_connection = self.canvas.mpl_connect('button_press_event', self.on_mouse_click)
                 return
-        # If no line hovered
+
         self.hide_tooltip()
         self._reset_highlight()
 
+    def on_mouse_click(self, event):
+        if event.inaxes != self.ax or not self.sel_spectrums:
+            return
+
+        if self.zoom_pan_active:
+            return
+
+        x_click = event.xdata
+        y_click = event.ydata
+        sel_spectrum = self.sel_spectrums[0]
+
+        if self.btn_peak.isChecked():
+            if event.button == 1:
+                # Try to drag peak if hovered over a line
+                for line, info in self.fitted_lines:
+                    if line.contains(event)[0]:
+                        self.dragging_peak = (line, info)
+                        self.drag_event_connection = self.canvas.mpl_connect('motion_notify_event', self.on_drag_peak)
+                        self.release_event_connection = self.canvas.mpl_connect('button_release_event', self.on_release_drag)
+                        return  # do not add a new peak if we start dragging
+
+                # Else, normal left-click to add peak
+                sel_spectrum.add_peak_model(self.peak_model, x_click)
+                self.refresh_gui()
+
+            elif event.button == 3:
+                # Right-click: remove closest peak
+                if hasattr(sel_spectrum, "peak_models") and sel_spectrum.peak_models:
+                    closest_idx = min(
+                        range(len(sel_spectrum.peak_models)),
+                        key=lambda i: abs(sel_spectrum.peak_models[i].param_hints['x0']['value'] - x_click)
+                    )
+                    del sel_spectrum.peak_models[closest_idx]
+                    del sel_spectrum.peak_labels[closest_idx]
+                    self.refresh_gui()
+
+        elif self.btn_baseline.isChecked():
+            if event.button == 1:
+                if sel_spectrum.baseline.is_subtracted:
+                    show_alert("Baseline is already subtracted. Reinitialize spectrum to perform new baseline")
+                else:
+                    sel_spectrum.baseline.add_point(x_click, y_click)
+                self.refresh_gui()
+
+            elif event.button == 3:
+                if (hasattr(sel_spectrum.baseline, "points") and
+                    isinstance(sel_spectrum.baseline.points, list) and
+                    len(sel_spectrum.baseline.points[0]) > 0):
+                    x_points = sel_spectrum.baseline.points[0]
+                    y_points = sel_spectrum.baseline.points[1]
+                    closest_idx = min(range(len(x_points)), key=lambda i: abs(x_points[i] - x_click))
+                    x_points.pop(closest_idx)
+                    y_points.pop(closest_idx)
+                    self.refresh_gui()
+    
+    def on_drag_peak(self, event):
+        if self.dragging_peak is None or event.xdata is None:
+            return
+
+        line, info = self.dragging_peak
+        peak_model = info.get('peak_model')
+        if not peak_model:
+            return
+
+        # Update x0 in the model
+        peak_model.param_hints['x0']['value'] = event.xdata
+
+        # Re-plot this spectrum
+        self.plot(self.sel_spectrums)  # you may optimize this to only redraw affected parts
+
+    def on_release_drag(self, event):
+        self.dragging_peak = None
+        if hasattr(self, 'drag_event_connection'):
+            self.canvas.mpl_disconnect(self.drag_event_connection)
+            self.drag_event_connection = None
+        if hasattr(self, 'release_event_connection'):
+            self.canvas.mpl_disconnect(self.release_event_connection)
+            self.release_event_connection = None
+
+                
+    
     def show_tooltip(self, event, text):
         if not hasattr(self, 'tooltip'):
             from PySide6.QtWidgets import QLabel

@@ -2140,7 +2140,7 @@
                 <item>
                  <widget class="QCheckBox" name="checkBox">
                   <property name="text">
-                   <string>Check/Uncheck all</string>
+                   <string>Check all</string>
                   </property>
                   <property name="checked">
                    <bool>true</bool>
@@ -3157,7 +3157,7 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>711</width>
+                               <width>724</width>
                                <height>72</height>
                               </rect>
                              </property>
@@ -4552,7 +4552,7 @@
                 <item>
                  <widget class="QCheckBox" name="checkBox_2">
                   <property name="text">
-                   <string>Check/Uncheck all</string>
+                   <string>Check all</string>
                   </property>
                   <property name="checked">
                    <bool>true</bool>
@@ -5316,8 +5316,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>340</width>
-                    <height>454</height>
+                    <width>372</width>
+                    <height>505</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -6266,7 +6266,7 @@
          <rect>
           <x>310</x>
           <y>10</y>
-          <width>1011</width>
+          <width>1021</width>
           <height>351</height>
          </rect>
         </property>
@@ -6319,7 +6319,7 @@
           <rect>
            <x>20</x>
            <y>10</y>
-           <width>961</width>
+           <width>991</width>
            <height>21</height>
           </rect>
          </property>
@@ -6345,7 +6345,7 @@
           <rect>
            <x>20</x>
            <y>140</y>
-           <width>971</width>
+           <width>981</width>
            <height>192</height>
           </rect>
          </property>

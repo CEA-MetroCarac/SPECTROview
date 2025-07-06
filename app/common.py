@@ -1130,7 +1130,7 @@ class SpectraViewWidget(QWidget):
                         return  # do not add a new peak if we start dragging
 
                 # Else, normal left-click to add peak
-                sel_spectrum.add_peak_model(self.peak_model, x_click)
+                sel_spectrum.add_peak_model(self.peak_model, x_click, dfwhm=200)
                 self.refresh_gui()
 
             elif event.button == 3:
@@ -1176,7 +1176,8 @@ class SpectraViewWidget(QWidget):
         peak_model.param_hints['x0']['value'] = event.xdata
 
         # Re-plot this spectrum
-        self.plot(self.sel_spectrums)  # you may optimize this to only redraw affected parts
+        self.plot(self.sel_spectrums)
+        
 
     def on_release_drag(self, event):
         self.dragging_peak = None
@@ -1186,7 +1187,7 @@ class SpectraViewWidget(QWidget):
         if hasattr(self, 'release_event_connection'):
             self.canvas.mpl_disconnect(self.release_event_connection)
             self.release_event_connection = None
-
+        self.refresh_gui() 
                 
     
     def show_tooltip(self, event, text):

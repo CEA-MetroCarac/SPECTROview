@@ -1694,8 +1694,7 @@ class PeakTableWidget:
         if new_model_name != old_model_name:
             ampli = spectrum.peak_models[idx].param_hints['ampli']['value']
             x0 = spectrum.peak_models[idx].param_hints['x0']['value']
-            peak_model = spectrum.create_peak_model(idx + 1, new_model_name,
-                                                    x0=x0, ampli=ampli)
+            peak_model = spectrum.create_peak_model(idx + 1, new_model_name, x0=x0, ampli=ampli, dx0=(20., 20.))
             spectrum.peak_models[idx] = peak_model
             spectrum.result_fit = lambda: None
             self.refresh_gui()  # To update in GUI of main application.

@@ -628,7 +628,7 @@ class Spectrums(QObject):
     def copy_baseline(self):
         """Copy baseline of the selected spectrum"""
         sel_spectrum, _ = self.get_spectrum_object()
-        self.current_baseline = baseline_to_dict(sel_spectrum)
+        self.current_baseline = deepcopy(baseline_to_dict(sel_spectrum))
     
     def paste_baseline(self, sel_spectra=None):
         """Paste baseline to the selected spectrum(s)"""

@@ -1023,34 +1023,27 @@ class SpectraViewWidget(QWidget):
 
     def plot_peak(self, y_peak, x_values, peak_label, peak_model):
         """Plot individual peak, optionally filled, and return line and peak info."""
-        try:
-            line, = self.ax.plot(x_values, y_peak, '-', label=peak_label, lw=1.5)
-            
-            # Annotate if enabled
-            if self.menu_actions['Peaks'].isChecked():
-                self.annotate_peak(peak_model, peak_label)
+        
+        line, = self.ax.plot(x_values, y_peak, '-', label=peak_label, lw=1.5)
+        
+        # Annotate if enabled
+        if self.menu_actions['Peaks'].isChecked():
+            self.annotate_peak(peak_model, peak_label)
 
-            # Extract peak info for hover and interaction
-            peak_info = {
-                "peak_label": peak_label,
-                "peak_model": peak_model  # ✅ store model reference for dragging
-            }
+        # Extract peak info for hover and interaction
+        peak_info = {
+            "peak_label": peak_label,
+            "peak_model": peak_model, # For peak dragging features.
+        }
 
-            # Extract parameter values (x0, fwhm, amplitude, etc.)
-            if hasattr(peak_model, 'param_names') and hasattr(peak_model, 'param_hints'):
-                for param_name in peak_model.param_names:
-                    key = param_name.split('_', 1)[1]  # e.g., x0, amplitude
-                    if key in peak_model.param_hints and 'value' in peak_model.param_hints[key]:
-                        val = peak_model.param_hints[key]['value']
-                        peak_info[key] = val
-
-            return line, peak_info
-
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return None, None
-
+        # Extract parameter values (x0, fwhm, amplitude, etc.)
+        if hasattr(peak_model, 'param_names') and hasattr(peak_model, 'param_hints'):
+            for param_name in peak_model.param_names:
+                key = param_name.split('_', 1)[1]  # e.g., x0, amplitude
+                if key in peak_model.param_hints and 'value' in peak_model.param_hints[key]:
+                    val = peak_model.param_hints[key]['value']
+                    peak_info[key] = val
+        return line, peak_info
 
     def plot_peaks_and_bestfit(self, spectrum):
         x_values = spectrum.x
@@ -1091,12 +1084,28 @@ class SpectraViewWidget(QWidget):
 
         for line, info in self.fitted_lines:
             if line.contains(event)[0]:
-                text = (
-                    f"label: {info.get('peak_label')}\n"
-                    f"center: {info.get('x0', float('nan')):.3f}\n"
-                    f"fwhm: {info.get('fwhm', float('nan')):.3f}\n"
-                    f"intensity: {info.get('ampli', float('nan')):.3f}"
-                )
+                # Define the keys we want to show, in order
+                fields = [
+                    ('label', info.get('peak_label')),
+                    ('center', info.get('x0')),
+                    ('intensity', info.get('ampli')),
+                    ('fwhm', info.get('fwhm')),
+                    ('fwhm_l', info.get('fwhm_l')),
+                    ('fwhm_r', info.get('fwhm_r')),
+                    ('alpha', info.get('alpha')),
+                ]
+
+                # Build the tooltip string dynamically
+                lines = []
+                for label, val in fields:
+                    if val is not None:
+                        try:
+                            val_str = f"{val:.3f}" if isinstance(val, (float, int)) else str(val)
+                        except Exception:
+                            val_str = str(val)
+                        lines.append(f"{label}: {val_str}")
+
+                text = "\n".join(lines)
                 self.show_tooltip(event, text)
                 self._highlight_line(line)
 
@@ -1109,6 +1118,7 @@ class SpectraViewWidget(QWidget):
         self._reset_highlight()
 
     def on_mouse_click(self, event):
+        """interaction with peak model and background via left-right mouse click"""
         if event.inaxes != self.ax or not self.sel_spectrums:
             return
 
@@ -1161,34 +1171,7 @@ class SpectraViewWidget(QWidget):
                     closest_idx = min(range(len(x_points)), key=lambda i: abs(x_points[i] - x_click))
                     x_points.pop(closest_idx)
                     y_points.pop(closest_idx)
-                    self.refresh_gui()
-    
-    def on_drag_peak(self, event):
-        if self.dragging_peak is None or event.xdata is None:
-            return
-
-        line, info = self.dragging_peak
-        peak_model = info.get('peak_model')
-        if not peak_model:
-            return
-
-        # Update x0 in the model
-        peak_model.param_hints['x0']['value'] = event.xdata
-
-        # Re-plot this spectrum
-        self.plot(self.sel_spectrums)
-        
-
-    def on_release_drag(self, event):
-        self.dragging_peak = None
-        if hasattr(self, 'drag_event_connection'):
-            self.canvas.mpl_disconnect(self.drag_event_connection)
-            self.drag_event_connection = None
-        if hasattr(self, 'release_event_connection'):
-            self.canvas.mpl_disconnect(self.release_event_connection)
-            self.release_event_connection = None
-        self.refresh_gui() 
-                
+                    self.refresh_gui()                
     
     def show_tooltip(self, event, text):
         if not hasattr(self, 'tooltip'):
@@ -1244,6 +1227,34 @@ class SpectraViewWidget(QWidget):
 
             self.highlighted_line = None
             self.canvas.draw_idle()
+
+    def on_drag_peak(self, event):
+        """Dragging peak to adjust x0 of peak_model in real-time"""
+        if self.dragging_peak is None or event.xdata is None:
+            return
+
+        line, info = self.dragging_peak
+        peak_model = info.get('peak_model')
+        if not peak_model:
+            return
+
+        # Update x0 in the model
+        peak_model.param_hints['x0']['value'] = event.xdata
+
+        # Re-plot this spectrum
+        self.plot(self.sel_spectrums)
+        
+
+    def on_release_drag(self, event):
+        self.dragging_peak = None
+        if hasattr(self, 'drag_event_connection'):
+            self.canvas.mpl_disconnect(self.drag_event_connection)
+            self.drag_event_connection = None
+        if hasattr(self, 'release_event_connection'):
+            self.canvas.mpl_disconnect(self.release_event_connection)
+            self.release_event_connection = None
+        self.refresh_gui() 
+
 
     def get_background_y_values(self, spectrum):
         """Get y-values for the background model."""

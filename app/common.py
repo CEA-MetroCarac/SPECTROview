@@ -35,6 +35,7 @@ from app import PEAK_MODELS, PALETTE, DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS, 
 from fitspy.core.utils_mp import fit_mp
 from fitspy.core.spectrum import Spectrum
 from fitspy.core.spectra import Spectra
+from fitspy.core.baseline import BaseLine
 
 from multiprocessing import Queue
 
@@ -3086,9 +3087,11 @@ def baseline_to_dict(spectrum):
 
 def dict_to_baseline(dict_baseline, spectrums):
     for spectrum in spectrums:
-        for key in vars(spectrum.baseline).keys():
-                    if key in dict_baseline.keys():
-                        setattr(spectrum.baseline, key, dict_baseline[key])
+        # Create a fresh BaselineModel instance
+        new_baseline = BaseLine()  
+        for key, value in dict_baseline.items():
+            setattr(new_baseline, key, deepcopy(value))
+        spectrum.baseline = new_baseline
 
 def rgba_to_named_color(rgba):
     """Convert RGBA tuple to a named color string."""

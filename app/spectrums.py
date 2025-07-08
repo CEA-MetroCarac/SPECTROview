@@ -634,7 +634,8 @@ class Spectrums(QObject):
         """Paste baseline to the selected spectrum(s)"""
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
-        dict_to_baseline(self.current_baseline, sel_spectra)
+        baseline_data = deepcopy(self.current_baseline)    
+        dict_to_baseline(baseline_data, sel_spectra)
         QTimer.singleShot(50, self.refresh_gui)
     
     def paste_baseline_all(self):

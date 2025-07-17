@@ -753,7 +753,7 @@ class SpectraViewWidget(QWidget):
         self.btn_copy.setToolTip("Copy figure to clipboard")
         self.btn_copy.setIcon(QIcon(os.path.join(ICON_DIR, "copy.png")))
         self.btn_copy.setIconSize(QSize(24, 24))
-        self.btn_copy.clicked.connect(self.copy_fig)
+        self.btn_copy.clicked.connect(self.copy_fnc)
 
         self.R2 = QLabel("R2=0", self)
 
@@ -1115,6 +1115,9 @@ class SpectraViewWidget(QWidget):
 
         self.hide_tooltip()
         self._reset_highlight()
+    
+    
+
 
     def on_mouse_click(self, event):
         """interaction with peak model and background via left-right mouse click"""
@@ -1339,6 +1342,47 @@ class SpectraViewWidget(QWidget):
         width = float(width_text) if width_text else 5.5  # Default width
         height = float(height_text) if height_text else 4.0
         copy_fig_to_clb(self.canvas, size_ratio=(width, height))
+        
+    def copy_spectra_data(self):
+        """Copy X, Y, and peak model data of the first selected spectrum to clipboard as a DataFrame."""
+        import pandas as pd
+
+        if not self.sel_spectrums or len(self.sel_spectrums) == 0:
+            print("No spectrum selected.")
+            return
+
+        spectrum = self.sel_spectrums[0]
+        x_values = spectrum.x
+        y_values = spectrum.y
+
+        # Create a dictionary for the DataFrame
+        data = {
+            "X values": x_values,
+            "Y values": y_values
+        }
+
+        # Add each peak model’s evaluated Y values as a new column
+        for i, peak_model in enumerate(spectrum.peak_models):
+            y_peak = self.evaluate_peak_model(peak_model, x_values)
+
+            if hasattr(spectrum, 'peak_labels') and i < len(spectrum.peak_labels):
+                label = spectrum.peak_labels[i]
+            else:
+                label = f"Peak {i + 1}"
+
+            data[label] = y_peak
+
+        df = pd.DataFrame(data)
+        df.to_clipboard(index=False)
+        print("Spectrum data copied to clipboard.")
+        
+    def copy_fnc(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.copy_spectra_data()
+        else:
+            self.copy_fig()
+        
         
 class FilterWidget:
     """

@@ -750,7 +750,8 @@ class SpectraViewWidget(QWidget):
         self.btn_legend.clicked.connect(self.refresh_plot)
 
         self.btn_copy = QPushButton("", self)
-        self.btn_copy.setToolTip("Copy figure to clipboard")
+        text = "Copy figure to clipboard.\nHold Ctrl & click to copy RAW & fitted curves to clipboard"
+        self.btn_copy.setToolTip(text)
         self.btn_copy.setIcon(QIcon(os.path.join(ICON_DIR, "copy.png")))
         self.btn_copy.setIconSize(QSize(24, 24))
         self.btn_copy.clicked.connect(self.copy_fnc)

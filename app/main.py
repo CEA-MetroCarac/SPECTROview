@@ -42,7 +42,6 @@ class Main:
         self.ui = loader.load(ui_file)
         ui_file.close()
 
-        self.setup_shortcuts()
         self.common = CommonUtilities()
 
         # Initialize QSettings
@@ -62,6 +61,8 @@ class Main:
         self.mapview_widget = MapViewWidget(self, self.settings)
         self.convertfile= ConvertFile(self.ui, self.settings)
 
+        self.setup_shortcuts()
+        
         # TOOLBAR
         self.ui.actionOpen.triggered.connect(lambda: self.open())
         self.ui.actionSave.triggered.connect(self.save)
@@ -384,6 +385,21 @@ class Main:
         shortcut_fileconvert.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_fileconvert))
         shortcut_fileconvert_apos = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Apostrophe), self.ui)
         shortcut_fileconvert_apos.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_fileconvert))
+        
+        # Create a single Ctrl+R shortcut
+        shortcut_rescale = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_R), self.ui)
+        shortcut_rescale.setContext(Qt.ShortcutContext.ApplicationShortcut)
+        shortcut_rescale.activated.connect(self.handle_rescale)
+        
+    def handle_rescale(self):
+        """Dispatch Ctrl+R rescale based on current tab."""
+        current_tab = self.ui.tabWidget.currentWidget()
+        
+        if current_tab == self.ui.tab_spectra:
+            self.spectrums.spectra_widget.rescale()
+        elif current_tab == self.ui.tab_maps:
+            self.maps.spectra_widget.rescale()
+        
 
     def save(self):
         """Saves the current work depending on the active tab"""

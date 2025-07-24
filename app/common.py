@@ -652,7 +652,6 @@ class SpectraViewWidget(QWidget):
         self.drag_event_connection = None
         self.release_event_connection = None
 
-
         self.initUI()
         QApplication.instance().focusChanged.connect(self.on_focus_changed)
 

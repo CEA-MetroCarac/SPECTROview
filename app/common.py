@@ -1299,12 +1299,9 @@ class SpectraViewWidget(QWidget):
 
     def plot_residual(self, spectrum):
         """Plot the residuals if available."""
-        
         x_values, residual = self.compute_residual(spectrum)
-        print(x_values)
-        print(residual)
         # x_values = spectrum.x
-        # residual = spectrum.result_fit.residual
+        # residual = spectrum.result_fit.residual  # Bug of fitspy 2025.6 version
         self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
 
     def show_R2(self, spectrum):

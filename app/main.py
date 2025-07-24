@@ -378,6 +378,12 @@ class Main:
         shortcut_graphs.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs))
         shortcut_spectra_quote = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_QuoteDbl), self.ui)
         shortcut_spectra_quote.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs))
+        
+        # Shortcut for Cmd+4 (or Ctrl+4 on other platforms) to switch to tab_fileconvert
+        shortcut_fileconvert = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_4), self.ui)
+        shortcut_fileconvert.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_fileconvert))
+        shortcut_fileconvert_apos = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Apostrophe), self.ui)
+        shortcut_fileconvert_apos.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_fileconvert))
 
     def save(self):
         """Saves the current work depending on the active tab"""

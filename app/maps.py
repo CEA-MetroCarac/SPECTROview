@@ -719,15 +719,23 @@ class Maps(QObject):
         for part in fname_parts:
             self.ui.cbb_split_fname_2.addItem(part)
 
+    def is_number(self, s):
+        try:
+            float(s)
+            return True
+        except (ValueError, TypeError):
+            return False
+
     def add_column(self):
         """Add a column to `df_fit_results` based on split_fname method"""
-
         dfr = self.df_fit_results
         col_name = self.ui.ent_col_name_2.text()
         selected_part_index = self.ui.cbb_split_fname_2.currentIndex()
+
         if selected_part_index < 0 or not col_name:
             show_alert("Select a part and enter a column name.")
             return
+
         # Check if column with the same name already exists
         if col_name in dfr.columns:
             text = (
@@ -735,16 +743,27 @@ class Maps(QObject):
                 f"different name")
             show_alert(text)
             return
+
         try:
             parts = dfr['Filename'].str.split('_')
+            # Convert each selected part to float if it's a number, else keep as string
+            new_col = [
+                float(part[selected_part_index]) if len(part) > selected_part_index and self.is_number(part[selected_part_index])
+                else (part[selected_part_index] if len(part) > selected_part_index else None)
+                for part in parts
+            ]
+            dfr[col_name] = new_col
+
+            # Optional: force pandas to infer dtype again (helpful if all values are numeric)
+            dfr[col_name] = pd.to_numeric(dfr[col_name], errors='ignore')
+
         except Exception as e:
             print(f"Error adding new column to fit results dataframe: {e}")
-
-        dfr[col_name] = [part[selected_part_index] if len(
-            part) > selected_part_index else None for part in parts]
+            return
 
         self.df_fit_results = dfr
         self.df_table.show(self.df_fit_results)
+
 
 
     def reinit(self, fnames=None):

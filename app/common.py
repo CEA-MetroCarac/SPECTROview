@@ -1116,9 +1116,6 @@ class SpectraViewWidget(QWidget):
         self.hide_tooltip()
         self._reset_highlight()
     
-    
-
-
     def on_mouse_click(self, event):
         """interaction with peak model and background via left-right mouse click"""
         if event.inaxes != self.ax or not self.sel_spectrums:
@@ -1284,10 +1281,30 @@ class SpectraViewWidget(QWidget):
         text = f"{peak_label}\n({position})"
         self.ax.text(position, intensity, text, ha='center', va='bottom', color='black', fontsize=12)
 
+    def compute_residual(self, spectrum):
+        """Compute residual = raw data - (background + sum of peaks)."""
+        x_values = spectrum.x
+        y_values = spectrum.y
+        y_bkg = self.get_background_y_values(spectrum)
+
+        # Sum all peak models
+        y_peaks = np.zeros_like(x_values)
+        for peak_model in spectrum.peak_models:
+            y_peak = self.evaluate_peak_model(peak_model, x_values)
+            y_peaks += y_peak
+
+        y_fit = y_bkg + y_peaks
+        residual = y_values - y_fit
+        return x_values, residual
+
     def plot_residual(self, spectrum):
         """Plot the residuals if available."""
-        x_values = spectrum.x
-        residual = spectrum.result_fit.residual
+        
+        x_values, residual = self.compute_residual(spectrum)
+        print(x_values)
+        print(residual)
+        # x_values = spectrum.x
+        # residual = spectrum.result_fit.residual
         self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
 
     def show_R2(self, spectrum):

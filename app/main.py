@@ -11,26 +11,34 @@ import os
 import pandas as pd
 import datetime
 from pathlib import Path
+import logging
 
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QSettings, QFileInfo, QCoreApplication, Qt
-from PySide6.QtGui import QIcon, QKeySequence, QShortcut
+from PySide6.QtGui import QIcon
 
 from app.common import CommonUtilities, FitModelManager, MapViewWidget, ConvertFile
 from app.common import PEAK_MODELS
 from app.common import show_alert
-    
+
 from app.ui import resources 
 from app.maps import Maps
 from app.spectrums import Spectrums
 from app.visualisation import Visualization
 
+from app.app_settings import AppSettings
+from app.app_shortcuts import setup_shortcuts
+
+# --- constants ---
 DIRNAME = os.path.dirname(__file__)
 UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")
 ICON_APPLI = os.path.join(DIRNAME, "ui", "iconpack", "icon3.png")
 USER_MANUAL = os.path.join(DIRNAME, "doc", "user_manual.md")
 ABOUT = os.path.join(DIRNAME, "resources", "about.md")
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class Main:
@@ -44,24 +52,28 @@ class Main:
 
         self.common = CommonUtilities()
 
-        # Initialize QSettings
+        # Initialize QSettings and structured settings
         QSettings.setDefaultFormat(QSettings.IniFormat)
         self.settings = QSettings("CEA-Leti", "SPECTROview")
+        self.app_settings = AppSettings()
+        self.app_settings.load_from_qsettings(self.settings)
 
+        # Theme (legacy "mode" key preserved)
         if self.settings.value("mode") == "light":
             self.toggle_light_mode()
         else:
             self.toggle_dark_mode()
 
-        # Create an instance Classes and pass the necessary object (ui, settings...)
+        # Create instances of subsystems
         self.visu = Visualization(self.settings, self.ui, self.common)
         self.spectrums = Spectrums(self.settings, self.ui, self.common, self.visu)
         self.maps = Maps(self.settings, self.ui, self.spectrums, self.common, self.visu)
         self.fitmodel_manager = FitModelManager(self.settings)
         self.mapview_widget = MapViewWidget(self, self.settings)
-        self.convertfile= ConvertFile(self.ui, self.settings)
+        self.convertfile = ConvertFile(self.ui, self.settings)
 
-        self.setup_shortcuts()
+        # Shortcuts (externalized)
+        setup_shortcuts(self)
         
         # TOOLBAR
         self.ui.actionOpen.triggered.connect(lambda: self.open())
@@ -205,80 +217,51 @@ class Main:
 
         self.ui.btn_default_folder_model_3.clicked.connect(
             self.spectrums.set_default_model_folder)
+
     def save_settings(self):
         """
         Save all settings to persistent storage (QSettings).
         """        
-        gui_states = {
-            'ncpu': self.ui.ncpus.text(),
-            # Maps module
-            'fit_negative': self.ui.cb_fit_negative.isChecked(),
-            'max_ite': self.ui.max_iteration.text(),
-            'method': self.ui.cbb_fit_methods.currentText(),
-            'xtol': float(self.ui.xtol.text()),
-            'attached': self.ui.cb_attached.isChecked(),
-            # 'wafer_size': self.mapview_widget.cbb_wafer_size.currentText(),
-            # 'map_type': self.mapview_widget.cbb_map_type.currentText(),
-            
-            # Spectra module
-            'fit_negative2': self.ui.cb_fit_negative_2.isChecked(),
-            'max_ite2': self.ui.max_iteration_2.text(),
-            'method2': self.ui.cbb_fit_methods_2.currentText(),
-            'xtol2': float(self.ui.xtol_2.text()),
-            'attached2': self.ui.cb_attached_2.isChecked(),
-            
-            # Visualization module
-            'grid': self.ui.cb_grid.isChecked()
-        }
-        # Save the gui states to QSettings
-        for key, value in gui_states.items():
-            self.settings.setValue(key, value)
+        try:
+            # sync UI -> structured app_settings
+            self.app_settings.ncpu = self.ui.ncpus.value()
+            self.app_settings.maps.fit_negative = self.ui.cb_fit_negative.isChecked()
+            self.app_settings.maps.max_iteration = self.ui.max_iteration.value()
+            self.app_settings.maps.method = self.ui.cbb_fit_methods.currentText()
+            self.app_settings.maps.xtol = float(self.ui.xtol.text() or 1e-4)
+            self.app_settings.maps.attached = self.ui.cb_attached.isChecked()
+
+            self.app_settings.spectra.fit_negative = self.ui.cb_fit_negative_2.isChecked()
+            self.app_settings.spectra.max_iteration = self.ui.max_iteration_2.value()
+            self.app_settings.spectra.method = self.ui.cbb_fit_methods_2.currentText()
+            self.app_settings.spectra.xtol = float(self.ui.xtol_2.text() or 1e-4)
+            self.app_settings.spectra.attached = self.ui.cb_attached_2.isChecked()
+
+            self.app_settings.visualization.grid = self.ui.cb_grid.isChecked()
+
+            self.app_settings.save_to_qsettings(self.settings)
+        except Exception:
+            logger.exception("Failed to save settings")
 
     def load_settings(self):
         """
-        Load last used fitting settings from persistent storage (QSettings).
+        Load last used fitting settings from persistent storage (QSettings) into UI.
         """
-        gui_states = {
-            'ncpu': self.settings.value('ncpu', defaultValue=1,type=int),
-            # Maps module
-            'fit_negative': self.settings.value('fit_negative',defaultValue=False, type=bool),
-            'max_ite': self.settings.value('max_ite', defaultValue=500, type=int),
-            'method': self.settings.value('method', defaultValue='leastsq',type=str),
-            'xtol': self.settings.value('xtol', defaultValue=1.e-4, type=float), 
-            
-            # 'map_type': self.settings.value('map_type', defaultValue='Wafer', type=str),
-            # 'wafer_size': self.settings.value('wafer_size', defaultValue='300', type=str),
-                                          
-            # 'attached': self.settings.value('attached', defaultValue=True, type=bool),
+        # push structured settings into UI
+        self.ui.ncpus.setValue(self.app_settings.ncpu)
+        self.ui.cb_fit_negative.setChecked(self.app_settings.maps.fit_negative)
+        self.ui.max_iteration.setValue(self.app_settings.maps.max_iteration)
+        self.ui.cbb_fit_methods.setCurrentText(self.app_settings.maps.method)
+        self.ui.xtol.setText(str(self.app_settings.maps.xtol))
+        # self.ui.cb_attached.setChecked(self.app_settings.maps.attached)
 
-            # Spectra module
-            'fit_negative2': self.settings.value('fit_negative2', defaultValue=False, type=bool),
-            'max_ite2': self.settings.value('max_ite2', defaultValue=500,type=int),
-            'method2': self.settings.value('method2', defaultValue='leastsq',type=str),
-            'xtol2': self.settings.value('xtol2', defaultValue=1.e-4, type=float),
-            # 'attached2': self.settings.value('attached2', defaultValue=True, type=bool),
-            
-            # Visualization module
-            'grid': self.settings.value('grid', defaultValue=False, type=bool),
-        }
+        self.ui.cb_fit_negative_2.setChecked(self.app_settings.spectra.fit_negative)
+        self.ui.max_iteration_2.setValue(self.app_settings.spectra.max_iteration)
+        self.ui.cbb_fit_methods_2.setCurrentText(self.app_settings.spectra.method)
+        self.ui.xtol_2.setText(str(self.app_settings.spectra.xtol))
+        # self.ui.cb_attached_2.setChecked(self.app_settings.spectra.attached)
 
-        # Update GUI elements with the loaded values
-        self.ui.ncpus.setValue(gui_states['ncpu'])
-        self.ui.cb_fit_negative.setChecked(gui_states['fit_negative'])
-        self.ui.max_iteration.setValue(gui_states['max_ite'])
-        self.ui.cbb_fit_methods.setCurrentText(gui_states['method'])
-        self.ui.xtol.setText(str(gui_states['xtol']))
-        # self.mapview_widget.cbb_wafer_size.setCurrentText(gui_states['wafer_size'])
-        # self.mapview_widget.cbb_map_type.setCurrentText(gui_states['map_type'])
-        # self.ui.cb_attached.setChecked(gui_states['attached'])
-        
-        self.ui.cb_fit_negative_2.setChecked(gui_states['fit_negative2'])
-        self.ui.max_iteration_2.setValue(gui_states['max_ite2'])
-        self.ui.cbb_fit_methods_2.setCurrentText(gui_states['method2'])
-        self.ui.xtol_2.setText(str(gui_states['xtol2']))
-        # self.ui.cb_attached_2.setChecked(gui_states['attached2'])
-        
-        self.ui.cb_grid.setChecked(gui_states['grid'])
+        self.ui.cb_grid.setChecked(self.app_settings.visualization.grid)
 
     def open(self, file_paths=None):
         """
@@ -324,14 +307,21 @@ class Main:
                     dataframes.append(str(file_path))
 
                 elif extension == '.csv':
-                    df = pd.read_csv(file_path, delimiter=";", header=None,
-                                     skiprows=3)
+                    try:
+                        df = pd.read_csv(file_path, delimiter=";", header=None, skiprows=3)
+                    except Exception as e:
+                        show_alert(f"Failed to read CSV {file_path}: {e}")
+                        df = None
                 elif extension == '.txt':
-                    df = pd.read_csv(file_path, delimiter="\t", header=None,
-                                     skiprows=3)
+                    try:
+                        df = pd.read_csv(file_path, delimiter="\t", header=None, skiprows=3)
+                    except Exception as e:
+                        show_alert(f"Failed to read TXT {file_path}: {e}")
+                        df = None
                 else:
                     show_alert(f"Unsupported file format: {extension}")
                     continue
+
                 if df is not None:
                     if df.shape[1] == 2:
                         spectra_files.append(str(file_path))
@@ -339,7 +329,8 @@ class Main:
                         hyperspectral_files.append(str(file_path))
                     else:
                         show_alert(
-                            f"Invalid number of columns in file: {file_path}")
+                            f"Invalid number of columns in file: {file_path}"
+                        )
 
             # Open files with corresponding method
             if spectra_files:
@@ -360,38 +351,7 @@ class Main:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
                 self.visu.load(graphs_file)
 
-    def setup_shortcuts(self):
-        """Setup key shortcuts of the application"""
-        # Shortcut for Cmd+1 (or Ctrl+1 on other platforms) to switch to tab_spectra
-        shortcut_spectra = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_1), self.ui)
-        shortcut_spectra.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra))
-        shortcut_spectra_amp = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Ampersand), self.ui)
-        shortcut_spectra_amp.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra))
-
-        # Shortcut for Cmd+2 (or Ctrl+2 on other platforms) to switch to tab_maps
-        shortcut_maps = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_2), self.ui)
-        shortcut_maps.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_maps))
-        shortcut_graphs_e = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Eacute), self.ui)
-        shortcut_graphs_e.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_maps))
-
-        # Shortcut for Cmd+3 (or Ctrl+3 on other platforms) to switch to tab_graphs
-        shortcut_graphs = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_3), self.ui)
-        shortcut_graphs.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs))
-        shortcut_spectra_quote = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_QuoteDbl), self.ui)
-        shortcut_spectra_quote.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs))
-        
-        # Shortcut for Cmd+4 (or Ctrl+4 on other platforms) to switch to tab_fileconvert
-        shortcut_fileconvert = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_4), self.ui)
-        shortcut_fileconvert.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_fileconvert))
-        shortcut_fileconvert_apos = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Apostrophe), self.ui)
-        shortcut_fileconvert_apos.activated.connect(lambda: self.ui.tabWidget.setCurrentWidget(self.ui.tab_fileconvert))
-        
-        # Create a single Ctrl+R shortcut
-        shortcut_rescale = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_R), self.ui)
-        shortcut_rescale.setContext(Qt.ShortcutContext.ApplicationShortcut)
-        shortcut_rescale.activated.connect(self.handle_rescale)
-        
-    def handle_rescale(self):
+    def handle_rescale_shortcut(self):
         """Dispatch Ctrl+R rescale based on current tab."""
         current_tab = self.ui.tabWidget.currentWidget()
         
@@ -400,7 +360,6 @@ class Main:
         elif current_tab == self.ui.tab_maps:
             self.maps.spectra_widget.rescale()
         
-
     def save(self):
         """Saves the current work depending on the active tab"""
         current_tab = self.ui.tabWidget.currentWidget()
@@ -441,10 +400,11 @@ class Main:
     def show_about(self):
         """Show about dialog """
         self.common.view_markdown(self.ui, "About", ABOUT, 650, 480, "resources/")
-        
-    
-        
+
+
 expiration_date = datetime.datetime(2050, 6, 1)
+
+
 def launcher():
     QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     if datetime.datetime.now() > expiration_date:
@@ -473,4 +433,3 @@ if __name__ == "__main__":
     import multiprocessing
     multiprocessing.freeze_support()
     launcher()
-

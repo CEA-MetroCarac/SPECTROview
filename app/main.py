@@ -13,7 +13,6 @@ from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon
 
 from app.common import CommonUtilities, FitModelManager, MapViewWidget, ConvertFile
-from app.common import PEAK_MODELS
 from app.common import show_alert
 
 from app.ui import resources 

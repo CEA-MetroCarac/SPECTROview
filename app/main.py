@@ -15,7 +15,7 @@ import logging
 
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile, QSettings, QFileInfo, QCoreApplication, Qt
+from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon
 
 from app.common import CommonUtilities, FitModelManager, MapViewWidget, ConvertFile
@@ -52,25 +52,26 @@ class Main:
 
         self.common = CommonUtilities()
 
-        # Initialize QSettings and structured settings
-        QSettings.setDefaultFormat(QSettings.IniFormat)
-        self.settings = QSettings("CEA-Leti", "SPECTROview")
+        # Structured settings owning QSettings internally
         self.app_settings = AppSettings()
-        self.app_settings.load_from_qsettings(self.settings)
+        self.app_settings.load()
 
-        # Theme (legacy "mode" key preserved)
-        if self.settings.value("mode") == "light":
+        # Theme selection based on stored mode
+        if self.app_settings.mode == "light":
             self.toggle_light_mode()
         else:
             self.toggle_dark_mode()
 
-        # Create instances of subsystems
-        self.visu = Visualization(self.settings, self.ui, self.common)
-        self.spectrums = Spectrums(self.settings, self.ui, self.common, self.visu)
-        self.maps = Maps(self.settings, self.ui, self.spectrums, self.common, self.visu)
-        self.fitmodel_manager = FitModelManager(self.settings)
-        self.mapview_widget = MapViewWidget(self, self.settings)
-        self.convertfile = ConvertFile(self.ui, self.settings)
+        # Retrieve raw QSettings to pass to legacy consumers
+        qsettings = self.app_settings.qsettings
+
+        # Create subsystem instances (still expect a QSettings for backward compat)
+        self.visu = Visualization(qsettings, self.ui, self.common)
+        self.spectrums = Spectrums(qsettings, self.ui, self.common, self.visu)
+        self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.visu)
+        self.fitmodel_manager = FitModelManager(qsettings)
+        self.mapview_widget = MapViewWidget(self, qsettings)
+        self.convertfile = ConvertFile(self.ui, qsettings)
 
         # Shortcuts (externalized)
         setup_shortcuts(self)
@@ -85,11 +86,13 @@ class Main:
         self.ui.actionAbout.triggered.connect(self.show_about)
         self.ui.actionHelps.triggered.connect(self.open_manual)
         
-        # Save GUI states to settings
+        # Save GUI states to settings on change
         self.ui.ncpus.valueChanged.connect(self.save_settings)
-        
+
+        # Apply stored settings to UI
+        self.app_settings.apply_to_ui(self.ui)
+
         ## Maps module:
-        self.load_settings()
         self.ui.cb_fit_negative.stateChanged.connect(self.save_settings)
         self.ui.max_iteration.valueChanged.connect(self.save_settings)
         self.ui.cbb_fit_methods.currentIndexChanged.connect(self.save_settings)
@@ -103,8 +106,7 @@ class Main:
         ## Spectra module:
         self.ui.cb_fit_negative_2.stateChanged.connect(self.save_settings)
         self.ui.max_iteration_2.valueChanged.connect(self.save_settings)
-        self.ui.cbb_fit_methods_2.currentIndexChanged.connect(
-            self.save_settings)
+        self.ui.cbb_fit_methods_2.currentIndexChanged.connect(self.save_settings)
         self.ui.xtol_2.textChanged.connect(self.save_settings)
         self.ui.cb_attached_2.stateChanged.connect(self.save_settings)
         
@@ -113,10 +115,6 @@ class Main:
         ########################################################
         ############## GUI for Maps Processing tab #############
         ########################################################
-
-        # self.mapview_widget.cbb_wafer_size.currentIndexChanged.connect(self.save_settings)
-        # self.mapview_widget.cbb_map_type.currentIndexChanged.connect(self.save_settings)
-        
         self.ui.btn_remove_wafer.clicked.connect(self.maps.remove_map)
 
         self.ui.btn_sel_all.clicked.connect(self.maps.select_all_spectra)
@@ -128,14 +126,12 @@ class Main:
         self.ui.btn_sel_q4.clicked.connect(self.maps.select_Q4)
 
         self.ui.btn_load_model.clicked.connect(self.maps.load_fit_model)
-        self.ui.btn_apply_model.clicked.connect(
-            self.maps.apply_model_fnc_handler)
+        self.ui.btn_apply_model.clicked.connect(self.maps.apply_model_fnc_handler)
         self.ui.btn_init.clicked.connect(self.maps.reinit_fnc_handler)
         self.ui.btn_collect_results.clicked.connect(self.maps.collect_results)
         self.ui.btn_view_df_2.clicked.connect(self.maps.view_fit_results_df)
         self.ui.btn_show_stats.clicked.connect(self.maps.view_stats)
-        self.ui.btn_save_fit_results.clicked.connect(
-            self.maps.save_fit_results)
+        self.ui.btn_save_fit_results.clicked.connect(self.maps.save_fit_results)
         self.ui.btn_view_wafer.clicked.connect(self.maps.view_map_df)
 
         self.ui.btn_cosmis_ray.clicked.connect(self.maps.cosmis_ray_detection)
@@ -152,18 +148,14 @@ class Main:
         self.ui.clear_peaks.clicked.connect(self.maps.clear_peaks_handler)
         self.ui.btn_copy_fit_model.clicked.connect(self.maps.copy_fit_model)
         self.ui.btn_copy_peaks.clicked.connect(self.maps.copy_fit_model)
-        self.ui.btn_paste_fit_model.clicked.connect(
-            self.maps.paste_fit_model_fnc_handler)
-        self.ui.btn_paste_peaks.clicked.connect(
-            self.maps.paste_peaks_fnc_handler)
+        self.ui.btn_paste_fit_model.clicked.connect(self.maps.paste_fit_model_fnc_handler)
+        self.ui.btn_paste_peaks.clicked.connect(self.maps.paste_peaks_fnc_handler)
         self.ui.cbb_fit_models.addItems(PEAK_MODELS)
 
         self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range_handler)
 
-        self.ui.btn_send_to_compare.clicked.connect(
-            self.maps.send_spectrum_to_compare)
-        self.ui.btn_default_folder_model.clicked.connect(
-            self.maps.set_default_model_folder)
+        self.ui.btn_send_to_compare.clicked.connect(self.maps.send_spectrum_to_compare)
+        self.ui.btn_default_folder_model.clicked.connect(self.maps.set_default_model_folder)
 
         ########################################################
         ############## GUI for Spectrums Processing tab #############
@@ -172,96 +164,45 @@ class Main:
         self.ui.spectra_listbox.files_dropped.connect(self.open)
         
         self.ui.cbb_fit_models_2.addItems(PEAK_MODELS)
-        self.ui.range_apply_2.clicked.connect(
-            self.spectrums.set_x_range_handler)
+        self.ui.range_apply_2.clicked.connect(self.spectrums.set_x_range_handler)
         self.ui.range_max_2.returnPressed.connect(self.spectrums.set_x_range)
         self.ui.range_min_2.returnPressed.connect(self.spectrums.set_x_range)
 
-        self.ui.sub_baseline_2.clicked.connect(
-            self.spectrums.subtract_baseline_handler)
-        self.ui.btn_undo_baseline_2.clicked.connect(
-            self.spectrums.set_x_range_handler)
-        self.ui.clear_peaks_2.clicked.connect(
-            self.spectrums.clear_peaks_handler)
-        self.ui.btn_fit_3.clicked.connect(
-            self.spectrums.fit_fnc_handler)
-        self.ui.btn_copy_fit_model_2.clicked.connect(
-            self.spectrums.copy_fit_model)
-        self.ui.btn_copy_peaks_2.clicked.connect(
-            self.spectrums.copy_fit_model)
-        self.ui.btn_paste_fit_model_2.clicked.connect(
-            self.spectrums.paste_fit_model_fnc_handler)
-        self.ui.btn_paste_peaks_2.clicked.connect(
-            self.spectrums.paste_peaks_fnc_handler)
+        self.ui.sub_baseline_2.clicked.connect(self.spectrums.subtract_baseline_handler)
+        self.ui.btn_undo_baseline_2.clicked.connect(self.spectrums.set_x_range_handler)
+        self.ui.clear_peaks_2.clicked.connect(self.spectrums.clear_peaks_handler)
+        self.ui.btn_fit_3.clicked.connect(self.spectrums.fit_fnc_handler)
+        self.ui.btn_copy_fit_model_2.clicked.connect(self.spectrums.copy_fit_model)
+        self.ui.btn_copy_peaks_2.clicked.connect(self.spectrums.copy_fit_model)
+        self.ui.btn_paste_fit_model_2.clicked.connect(self.spectrums.paste_fit_model_fnc_handler)
+        self.ui.btn_paste_peaks_2.clicked.connect(self.spectrums.paste_peaks_fnc_handler)
         self.ui.save_model_2.clicked.connect(self.spectrums.save_fit_model)
 
         self.ui.btn_load_model_3.clicked.connect(self.spectrums.load_fit_model)
-        self.ui.btn_apply_model_3.clicked.connect(
-            self.spectrums.apply_model_fnc_handler)
-        self.ui.btn_cosmis_ray_3.clicked.connect(
-            self.spectrums.cosmis_ray_detection)
+        self.ui.btn_apply_model_3.clicked.connect(self.spectrums.apply_model_fnc_handler)
+        self.ui.btn_cosmis_ray_3.clicked.connect(self.spectrums.cosmis_ray_detection)
         self.ui.btn_init_3.clicked.connect(self.spectrums.reinit_fnc_handler)
         self.ui.btn_show_stats_3.clicked.connect(self.spectrums.view_stats)
         self.ui.btn_sel_all_3.clicked.connect(self.spectrums.select_all_spectra)
-        self.ui.btn_remove_spectrum.clicked.connect(
-            self.spectrums.remove_spectrum)
-        self.ui.btn_collect_results_3.clicked.connect(
-            self.spectrums.collect_results)
-        self.ui.btn_view_df_5.clicked.connect(
-            self.spectrums.view_fit_results_df)
-        self.ui.btn_save_fit_results_3.clicked.connect(
-            self.spectrums.save_fit_results)
+        self.ui.btn_remove_spectrum.clicked.connect(self.spectrums.remove_spectrum)
+        self.ui.btn_collect_results_3.clicked.connect(self.spectrums.collect_results)
+        self.ui.btn_view_df_5.clicked.connect(self.spectrums.view_fit_results_df)
+        self.ui.btn_save_fit_results_3.clicked.connect(self.spectrums.save_fit_results)
 
         self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
         self.ui.btn_add_col.clicked.connect(self.spectrums.add_column)
 
-        self.ui.btn_default_folder_model_3.clicked.connect(
-            self.spectrums.set_default_model_folder)
+        self.ui.btn_default_folder_model_3.clicked.connect(self.spectrums.set_default_model_folder)
 
     def save_settings(self):
         """
-        Save all settings to persistent storage (QSettings).
-        """        
+        Save all settings to persistent storage.
+        """
         try:
-            # sync UI -> structured app_settings
-            self.app_settings.ncpu = self.ui.ncpus.value()
-            self.app_settings.maps.fit_negative = self.ui.cb_fit_negative.isChecked()
-            self.app_settings.maps.max_iteration = self.ui.max_iteration.value()
-            self.app_settings.maps.method = self.ui.cbb_fit_methods.currentText()
-            self.app_settings.maps.xtol = float(self.ui.xtol.text() or 1e-4)
-            self.app_settings.maps.attached = self.ui.cb_attached.isChecked()
-
-            self.app_settings.spectra.fit_negative = self.ui.cb_fit_negative_2.isChecked()
-            self.app_settings.spectra.max_iteration = self.ui.max_iteration_2.value()
-            self.app_settings.spectra.method = self.ui.cbb_fit_methods_2.currentText()
-            self.app_settings.spectra.xtol = float(self.ui.xtol_2.text() or 1e-4)
-            self.app_settings.spectra.attached = self.ui.cb_attached_2.isChecked()
-
-            self.app_settings.visualization.grid = self.ui.cb_grid.isChecked()
-
-            self.app_settings.save_to_qsettings(self.settings)
+            self.app_settings.update_from_ui(self.ui)
+            self.app_settings.save()
         except Exception:
             logger.exception("Failed to save settings")
-
-    def load_settings(self):
-        """
-        Load last used fitting settings from persistent storage (QSettings) into UI.
-        """
-        # push structured settings into UI
-        self.ui.ncpus.setValue(self.app_settings.ncpu)
-        self.ui.cb_fit_negative.setChecked(self.app_settings.maps.fit_negative)
-        self.ui.max_iteration.setValue(self.app_settings.maps.max_iteration)
-        self.ui.cbb_fit_methods.setCurrentText(self.app_settings.maps.method)
-        self.ui.xtol.setText(str(self.app_settings.maps.xtol))
-        # self.ui.cb_attached.setChecked(self.app_settings.maps.attached)
-
-        self.ui.cb_fit_negative_2.setChecked(self.app_settings.spectra.fit_negative)
-        self.ui.max_iteration_2.setValue(self.app_settings.spectra.max_iteration)
-        self.ui.cbb_fit_methods_2.setCurrentText(self.app_settings.spectra.method)
-        self.ui.xtol_2.setText(str(self.app_settings.spectra.xtol))
-        # self.ui.cb_attached_2.setChecked(self.app_settings.spectra.attached)
-
-        self.ui.cb_grid.setChecked(self.app_settings.visualization.grid)
 
     def open(self, file_paths=None):
         """
@@ -270,10 +211,8 @@ class Main:
          - dataframes (Excel)
          - saved work of SPECTROview (.maps, .spectra, .graphs)
         """
-        
         if file_paths is None:
-            # Initialize the last used directory from QSettings
-            last_dir = self.settings.value("last_directory", "/")
+            last_dir = self.app_settings.qsettings.value("last_directory", "/")
             options = QFileDialog.Options()
             options |= QFileDialog.ReadOnly
             file_paths, _ = QFileDialog.getOpenFileNames(
@@ -283,7 +222,7 @@ class Main:
 
         if file_paths:
             last_dir = QFileInfo(file_paths[0]).absolutePath()
-            self.settings.setValue("last_directory", last_dir)
+            self.app_settings.qsettings.setValue("last_directory", last_dir)
 
             spectra_files = []
             hyperspectral_files = []
@@ -295,7 +234,7 @@ class Main:
 
             for file_path in file_paths:
                 file_path = Path(file_path)
-                extension = file_path.suffix.lower()  # get file extension
+                extension = file_path.suffix.lower()
                 if extension == '.spectra':
                     spectra_file = str(file_path)
                 elif extension == '.maps':
@@ -328,11 +267,8 @@ class Main:
                     elif df.shape[1] > 3:
                         hyperspectral_files.append(str(file_path))
                     else:
-                        show_alert(
-                            f"Invalid number of columns in file: {file_path}"
-                        )
+                        show_alert(f"Invalid number of columns in file: {file_path}")
 
-            # Open files with corresponding method
             if spectra_files:
                 self.spectrums.open_spectra(file_paths=spectra_files)
             if hyperspectral_files:
@@ -350,7 +286,7 @@ class Main:
             if graphs_file:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
                 self.visu.load(graphs_file)
-        
+
     def save(self):
         """Saves the current work depending on the active tab"""
         current_tab = self.ui.tabWidget.currentWidget()
@@ -377,11 +313,13 @@ class Main:
 
     def toggle_dark_mode(self):
         self.ui.setPalette(self.common.dark_palette())
-        self.settings.setValue("mode", "dark")  # Save to settings
+        self.app_settings.mode = "dark"
+        self.app_settings.save()
 
     def toggle_light_mode(self):
         self.ui.setPalette(self.common.light_palette())
-        self.settings.setValue("mode", "light")  # Save to settings
+        self.app_settings.mode = "light"
+        self.app_settings.save()
 
     def open_manual(self):
         """Open doc detail about query function of pandas dataframe"""
@@ -399,8 +337,10 @@ expiration_date = datetime.datetime(2050, 6, 1)
 def launcher():
     QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     if datetime.datetime.now() > expiration_date:
-        text = f"The current SPECTROview version has expired. Checkout the SPECTROview's Github page (cf. About) to update newest version."
-        # If expired, disable the central widget
+        text = (
+            "The current SPECTROview version has expired. Checkout the SPECTROview's "
+            "Github page (cf. About) to update newest version."
+        )
         app = QApplication(sys.argv)
         app.setWindowIcon(QIcon(ICON_APPLI))
         window = Main()
@@ -410,7 +350,6 @@ def launcher():
         show_alert(text)
         sys.exit(app.exec())
 
-    # If not expired, continue launching the application as usual
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(ICON_APPLI))
     window = Main()
@@ -422,5 +361,6 @@ def launcher():
 
 if __name__ == "__main__":
     import multiprocessing
+
     multiprocessing.freeze_support()
     launcher()

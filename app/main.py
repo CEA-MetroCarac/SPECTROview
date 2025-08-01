@@ -58,7 +58,7 @@ class Main:
         else:
             self.toggle_dark_mode()
 
-        # Create subsystem instances (still expect a QSettings for backward compat)
+        # Create subsystem instances
         self.visu = Visualization(qsettings, self.ui, self.common)
         self.spectrums = Spectrums(qsettings, self.ui, self.common, self.visu)
         self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.visu)
@@ -79,18 +79,16 @@ class Main:
         self.ui.actionAbout.triggered.connect(self.show_about)
         self.ui.actionHelps.triggered.connect(self.open_manual)
 
-        
-
         # Apply stored settings to UI
         self.app_settings.apply_to_ui(self.ui)
         
+        # Save GUI states to settings on change
         def watch(widget):
             for sig_name in ("valueChanged", "stateChanged", "textChanged", "currentIndexChanged"):
                 sig = getattr(widget, sig_name, None)
                 if sig:
                     sig.connect(sync)
 
-        # Save GUI states to settings on change
         watch(self.ui.ncpus)
         watch(self.ui.ncpus_2)
         
@@ -114,89 +112,9 @@ class Main:
         
         watch(self.ui.cb_grid)
 
-        ########################################################
-        ############## GUI for Maps Processing tab #############
-        ########################################################
-        self.ui.btn_remove_wafer.clicked.connect(self.maps.remove_map)
 
-        self.ui.btn_sel_all.clicked.connect(self.maps.select_all_spectra)
-        self.ui.btn_sel_verti.clicked.connect(self.maps.select_verti)
-        self.ui.btn_sel_horiz.clicked.connect(self.maps.select_horiz)
-        self.ui.btn_sel_q1.clicked.connect(self.maps.select_Q1)
-        self.ui.btn_sel_q2.clicked.connect(self.maps.select_Q2)
-        self.ui.btn_sel_q3.clicked.connect(self.maps.select_Q3)
-        self.ui.btn_sel_q4.clicked.connect(self.maps.select_Q4)
-
-        self.ui.btn_load_model.clicked.connect(self.maps.load_fit_model)
-        self.ui.btn_apply_model.clicked.connect(self.maps.apply_model_fnc_handler)
-        self.ui.btn_init.clicked.connect(self.maps.reinit_fnc_handler)
-        self.ui.btn_collect_results.clicked.connect(self.maps.collect_results)
-        self.ui.btn_view_df_2.clicked.connect(self.maps.view_fit_results_df)
-        self.ui.btn_show_stats.clicked.connect(self.maps.view_stats)
-        self.ui.btn_save_fit_results.clicked.connect(self.maps.save_fit_results)
-        self.ui.btn_view_wafer.clicked.connect(self.maps.view_map_df)
-
-        self.ui.btn_cosmis_ray.clicked.connect(self.maps.cosmis_ray_detection)
-        
-        self.ui.btn_split_fname_2.clicked.connect(self.maps.split_fname)
-        self.ui.btn_add_col_2.clicked.connect(self.maps.add_column)
-
-        self.ui.range_max.returnPressed.connect(self.maps.set_x_range)
-        self.ui.range_min.returnPressed.connect(self.maps.set_x_range)
-        self.ui.range_apply.clicked.connect(self.maps.set_x_range_handler)
-        
-        self.ui.btn_fit.clicked.connect(self.maps.fit_fnc_handler)
-        self.ui.save_model.clicked.connect(self.maps.save_fit_model)
-        self.ui.clear_peaks.clicked.connect(self.maps.clear_peaks_handler)
-        self.ui.btn_copy_fit_model.clicked.connect(self.maps.copy_fit_model)
-        self.ui.btn_copy_peaks.clicked.connect(self.maps.copy_fit_model)
-        self.ui.btn_paste_fit_model.clicked.connect(self.maps.paste_fit_model_fnc_handler)
-        self.ui.btn_paste_peaks.clicked.connect(self.maps.paste_peaks_fnc_handler)
-        self.ui.cbb_fit_models.addItems(PEAK_MODELS)
-
-        self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range_handler)
-
-        self.ui.btn_send_to_compare.clicked.connect(self.maps.send_spectrum_to_compare)
-        self.ui.btn_default_folder_model.clicked.connect(self.maps.set_default_model_folder)
-
-        ########################################################
-        ############## GUI for Spectrums Processing tab #############
-        ########################################################
         self.ui.spectrums_listbox.files_dropped.connect(self.open)
         self.ui.spectra_listbox.files_dropped.connect(self.open)
-        
-        self.ui.cbb_fit_models_2.addItems(PEAK_MODELS)
-        self.ui.range_apply_2.clicked.connect(self.spectrums.set_x_range_handler)
-        self.ui.range_max_2.returnPressed.connect(self.spectrums.set_x_range)
-        self.ui.range_min_2.returnPressed.connect(self.spectrums.set_x_range)
-
-        self.ui.sub_baseline_2.clicked.connect(self.spectrums.subtract_baseline_handler)
-        self.ui.btn_undo_baseline_2.clicked.connect(self.spectrums.set_x_range_handler)
-        self.ui.clear_peaks_2.clicked.connect(self.spectrums.clear_peaks_handler)
-        self.ui.btn_fit_3.clicked.connect(self.spectrums.fit_fnc_handler)
-        self.ui.btn_copy_fit_model_2.clicked.connect(self.spectrums.copy_fit_model)
-        self.ui.btn_copy_peaks_2.clicked.connect(self.spectrums.copy_fit_model)
-        self.ui.btn_paste_fit_model_2.clicked.connect(self.spectrums.paste_fit_model_fnc_handler)
-        self.ui.btn_paste_peaks_2.clicked.connect(self.spectrums.paste_peaks_fnc_handler)
-        self.ui.save_model_2.clicked.connect(self.spectrums.save_fit_model)
-
-        self.ui.btn_load_model_3.clicked.connect(self.spectrums.load_fit_model)
-        self.ui.btn_apply_model_3.clicked.connect(self.spectrums.apply_model_fnc_handler)
-        self.ui.btn_cosmis_ray_3.clicked.connect(self.spectrums.cosmis_ray_detection)
-        self.ui.btn_init_3.clicked.connect(self.spectrums.reinit_fnc_handler)
-        self.ui.btn_show_stats_3.clicked.connect(self.spectrums.view_stats)
-        self.ui.btn_sel_all_3.clicked.connect(self.spectrums.select_all_spectra)
-        self.ui.btn_remove_spectrum.clicked.connect(self.spectrums.remove_spectrum)
-        self.ui.btn_collect_results_3.clicked.connect(self.spectrums.collect_results)
-        self.ui.btn_view_df_5.clicked.connect(self.spectrums.view_fit_results_df)
-        self.ui.btn_save_fit_results_3.clicked.connect(self.spectrums.save_fit_results)
-
-        self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
-        self.ui.btn_add_col.clicked.connect(self.spectrums.add_column)
-
-        self.ui.btn_default_folder_model_3.clicked.connect(self.spectrums.set_default_model_folder)
-
-    
 
     def open(self, file_paths=None):
         """

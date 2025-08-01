@@ -7,7 +7,7 @@ import json
 
 from app.common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area
 from app.common import FitThread, FitModelManager, PeakTableWidget, DataframeTableWidget, CustomListWidget, SpectraViewWidget, CustomSpectra
-from app import FIT_METHODS
+from app import FIT_METHODS, PEAK_MODELS
 
 from copy import deepcopy
 from pathlib import Path
@@ -82,6 +82,9 @@ class Spectrums(QObject):
         # Peak correction
         self.ui.btn_xrange_correction.clicked.connect(self.xrange_correction)
         self.ui.btn_undo_correction.clicked.connect(lambda: self.undo_xrange_correction())
+
+        #Setup ui
+        self.setup_ui()
         
     def setup_baseline_controls(self):
         """Set up baseline controls and their signal connections."""
@@ -1026,4 +1029,37 @@ class Spectrums(QObject):
         QTimer.singleShot(50, self.spectra_widget.rescale)
         QTimer.singleShot(100, self.upd_spectra_list)
         print("'Spectrums' Tab environment has been cleared.")
+
+    def setup_ui(self):
+        """Connect GUI to methods"""
+        self.ui.cbb_fit_models_2.addItems(PEAK_MODELS)
+        self.ui.range_apply_2.clicked.connect(self.set_x_range_handler)
+        self.ui.range_max_2.returnPressed.connect(self.set_x_range)
+        self.ui.range_min_2.returnPressed.connect(self.set_x_range)
+
+        self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
+        self.ui.btn_undo_baseline_2.clicked.connect(self.set_x_range_handler)
+        self.ui.clear_peaks_2.clicked.connect(self.clear_peaks_handler)
+        self.ui.btn_fit_3.clicked.connect(self.fit_fnc_handler)
+        self.ui.btn_copy_fit_model_2.clicked.connect(self.copy_fit_model)
+        self.ui.btn_copy_peaks_2.clicked.connect(self.copy_fit_model)
+        self.ui.btn_paste_fit_model_2.clicked.connect(self.paste_fit_model_fnc_handler)
+        self.ui.btn_paste_peaks_2.clicked.connect(self.paste_peaks_fnc_handler)
+        self.ui.save_model_2.clicked.connect(self.save_fit_model)
+
+        self.ui.btn_load_model_3.clicked.connect(self.load_fit_model)
+        self.ui.btn_apply_model_3.clicked.connect(self.apply_model_fnc_handler)
+        self.ui.btn_cosmis_ray_3.clicked.connect(self.cosmis_ray_detection)
+        self.ui.btn_init_3.clicked.connect(self.reinit_fnc_handler)
+        self.ui.btn_show_stats_3.clicked.connect(self.view_stats)
+        self.ui.btn_sel_all_3.clicked.connect(self.select_all_spectra)
+        self.ui.btn_remove_spectrum.clicked.connect(self.remove_spectrum)
+        self.ui.btn_collect_results_3.clicked.connect(self.collect_results)
+        self.ui.btn_view_df_5.clicked.connect(self.view_fit_results_df)
+        self.ui.btn_save_fit_results_3.clicked.connect(self.save_fit_results)
+
+        self.ui.btn_split_fname.clicked.connect(self.split_fname)
+        self.ui.btn_add_col.clicked.connect(self.add_column)
+
+        self.ui.btn_default_folder_model_3.clicked.connect(self.set_default_model_folder)
 

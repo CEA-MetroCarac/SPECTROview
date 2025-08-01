@@ -1,16 +1,10 @@
-"""
-Main module for SPECTROview application.
-
-This module initializes the main window of the SPECTROview application,
-loads necessary UI components, connects GUI elements to backend methods,
-and manages application settings.
-
-"""
+# app/main.py
 import sys
 import os
 import pandas as pd
 import datetime
 from pathlib import Path
+from functools import partial
 import logging
 
 from PySide6.QtWidgets import QApplication, QFileDialog
@@ -52,18 +46,17 @@ class Main:
 
         self.common = CommonUtilities()
 
-        # Structured settings owning QSettings internally
+        # App_Settings
         self.app_settings = AppSettings()
         self.app_settings.load()
-
+        sync = partial(self.app_settings.sync_app_settings, self.ui)
+        qsettings = self.app_settings.qsettings # Retrieve raw QSettings to pass to legacy consumers
+        
         # Theme selection based on stored mode
         if self.app_settings.mode == "light":
             self.toggle_light_mode()
         else:
             self.toggle_dark_mode()
-
-        # Retrieve raw QSettings to pass to legacy consumers
-        qsettings = self.app_settings.qsettings
 
         # Create subsystem instances (still expect a QSettings for backward compat)
         self.visu = Visualization(qsettings, self.ui, self.common)
@@ -85,32 +78,41 @@ class Main:
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
         self.ui.actionAbout.triggered.connect(self.show_about)
         self.ui.actionHelps.triggered.connect(self.open_manual)
+
         
-        # Save GUI states to settings on change
-        self.ui.ncpus.valueChanged.connect(self.save_settings)
 
         # Apply stored settings to UI
         self.app_settings.apply_to_ui(self.ui)
-
-        ## Maps module:
-        self.ui.cb_fit_negative.stateChanged.connect(self.save_settings)
-        self.ui.max_iteration.valueChanged.connect(self.save_settings)
-        self.ui.cbb_fit_methods.currentIndexChanged.connect(self.save_settings)
-        self.ui.xtol.textChanged.connect(self.save_settings)
-        self.ui.cb_attached.stateChanged.connect(self.save_settings)
         
-        self.ui.noise.valueChanged.connect(self.save_settings)
-        self.ui.rbtn_linear.toggled.connect(self.save_settings)
-        self.ui.degre.valueChanged.connect(self.save_settings)        
+        def watch(widget):
+            for sig_name in ("valueChanged", "stateChanged", "textChanged", "currentIndexChanged"):
+                sig = getattr(widget, sig_name, None)
+                if sig:
+                    sig.connect(sync)
+
+        # Save GUI states to settings on change
+        watch(self.ui.ncpus)
+        watch(self.ui.ncpus_2)
+        
+        ## Maps module:
+        watch(self.ui.cb_fit_negative)
+        watch(self.ui.max_iteration)
+        watch(self.ui.cbb_fit_methods)
+        watch(self.ui.xtol)
+        watch(self.ui.cb_attached)
+        
+        watch(self.ui.noise)
+        watch(self.ui.rbtn_linear)
+        watch(self.ui.degre)
         
         ## Spectra module:
-        self.ui.cb_fit_negative_2.stateChanged.connect(self.save_settings)
-        self.ui.max_iteration_2.valueChanged.connect(self.save_settings)
-        self.ui.cbb_fit_methods_2.currentIndexChanged.connect(self.save_settings)
-        self.ui.xtol_2.textChanged.connect(self.save_settings)
-        self.ui.cb_attached_2.stateChanged.connect(self.save_settings)
+        watch(self.ui.cb_fit_negative_2)
+        watch(self.ui.max_iteration_2)
+        watch(self.ui.cbb_fit_methods_2)
+        watch(self.ui.xtol_2)
+        watch(self.ui.cb_attached_2)
         
-        self.ui.cb_grid.stateChanged.connect(self.save_settings)
+        watch(self.ui.cb_grid)
 
         ########################################################
         ############## GUI for Maps Processing tab #############
@@ -194,15 +196,7 @@ class Main:
 
         self.ui.btn_default_folder_model_3.clicked.connect(self.spectrums.set_default_model_folder)
 
-    def save_settings(self):
-        """
-        Save all settings to persistent storage.
-        """
-        try:
-            self.app_settings.update_from_ui(self.ui)
-            self.app_settings.save()
-        except Exception:
-            logger.exception("Failed to save settings")
+    
 
     def open(self, file_paths=None):
         """

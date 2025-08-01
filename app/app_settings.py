@@ -37,6 +37,7 @@ class VisualizationSettings:
 @dataclass
 class AppSettings:
     ncpu: int = 1
+    ncpu_2: int = 1
     maps: FitSettings = field(default_factory=FitSettings)
     spectra: FitSettings = field(default_factory=FitSettings)
     visualization: VisualizationSettings = field(default_factory=VisualizationSettings)
@@ -47,6 +48,7 @@ class AppSettings:
     # mapping between QSettings keys and attribute paths + expected types
     SETTINGS_KEY_MAPPING = {
         "ncpu": ("ncpu", int),
+        "ncpu_2": ("ncpu_2", int),
         "fit_negative": ("maps.fit_negative", bool),
         "max_ite": ("maps.max_iteration", int),
         "method": ("maps.method", str),
@@ -100,6 +102,7 @@ class AppSettings:
         """
         try:
             self.ncpu = ui.ncpus.value()
+            self.ncpu_2 = ui.ncpus_2.value()
             self.maps.fit_negative = ui.cb_fit_negative.isChecked()
             self.maps.max_iteration = ui.max_iteration.value()
             self.maps.method = ui.cbb_fit_methods.currentText()
@@ -128,6 +131,7 @@ class AppSettings:
         """
         try:
             ui.ncpus.setValue(self.ncpu)
+            ui.ncpus_2.setValue(self.ncpu_2)
             ui.cb_fit_negative.setChecked(self.maps.fit_negative)
             ui.max_iteration.setValue(self.maps.max_iteration)
             ui.cbb_fit_methods.setCurrentText(self.maps.method)
@@ -143,3 +147,15 @@ class AppSettings:
             ui.cb_grid.setChecked(self.visualization.grid)
         except Exception:  # pragma: no cover
             logger.exception("Failed to apply AppSettings to UI")
+
+
+    def sync_app_settings(self, ui: Any, *args, **kwargs):
+        """
+        Update settings from the UI and immediately persist them.
+        Extra args are tolerated so it can be hooked directly to Qt signals.
+        """
+        try:
+            self.update_from_ui(ui)
+            self.save()
+        except Exception:  # pragma: no cover
+            logger.exception("Failed to sync settings from UI and persist")

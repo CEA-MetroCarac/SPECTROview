@@ -350,15 +350,6 @@ class Main:
             if graphs_file:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
                 self.visu.load(graphs_file)
-
-    def handle_rescale_shortcut(self):
-        """Dispatch Ctrl+R rescale based on current tab."""
-        current_tab = self.ui.tabWidget.currentWidget()
-        
-        if current_tab == self.ui.tab_spectra:
-            self.spectrums.spectra_widget.rescale()
-        elif current_tab == self.ui.tab_maps:
-            self.maps.spectra_widget.rescale()
         
     def save(self):
         """Saves the current work depending on the active tab"""

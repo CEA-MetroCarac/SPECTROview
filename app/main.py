@@ -45,7 +45,7 @@ class Main:
 
         self.common = CommonUtilities()
 
-        # App_Settings
+        #### APP SETTINGS
         self.app_settings = AppSettings()
         self.app_settings.load()
         sync_settings = partial(self.app_settings.sync_app_settings, self.ui)
@@ -75,7 +75,7 @@ class Main:
         # Apply stored settings to UI
         self.app_settings.apply_to_ui(self.ui)
 
-        # Shortcuts (externalized)
+        ### SETUP SHORTCUTS 
         setup_shortcuts(self)
         
         # TOOLBAR
@@ -87,10 +87,6 @@ class Main:
         self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
         self.ui.actionAbout.triggered.connect(self.show_about)
         self.ui.actionHelps.triggered.connect(self.open_manual)
-
-        
-       
-
 
         ## MAPS module:
         watch(self.ui.ncpu)

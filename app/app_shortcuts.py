@@ -4,20 +4,39 @@ from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtCore import Qt
 
 
-def switch_to(main_obj, widget):
-    main_obj.ui.tabWidget.setCurrentWidget(widget)
+def switch_to(main_app, widget):
+    main_app.ui.tabWidget.setCurrentWidget(widget)
 
 
-def handle_rescale_shortcut(main_obj):
-    """Dispatch Ctrl+R rescale based on current tab."""
-    current_tab = main_obj.ui.tabWidget.currentWidget()
-    if current_tab == main_obj.ui.tab_spectra:
-        main_obj.spectrums.spectra_widget.rescale()
-    elif current_tab == main_obj.ui.tab_maps:
-        main_obj.maps.spectra_widget.rescale()
+def rescale_shortcut(main_app):
+    """Dispatch Ctrl+R based on current tab."""
+    current_tab = main_app.ui.tabWidget.currentWidget()
+    if current_tab == main_app.ui.tab_spectra:
+        main_app.spectrums.spectra_widget.rescale()
+    elif current_tab == main_app.ui.tab_maps:
+        main_app.maps.spectra_widget.rescale()
+
+def fitting_shortcut(main_app):
+    """Dispatch Ctrl+F based on current tab."""
+    current_tab = main_app.ui.tabWidget.currentWidget()
+    if current_tab == main_app.ui.tab_spectra:
+        main_app.spectrums.fit()
+    elif current_tab == main_app.ui.tab_maps:
+        main_app.maps.fit()
 
 
-def setup_shortcuts(main_obj):
+def copy_shortcut(main_app):
+    """Dispatch Ctrl+F based on current tab."""
+    current_tab = main_app.ui.tabWidget.currentWidget()
+    if current_tab == main_app.ui.tab_spectra:
+        main_app.spectrums.spectra_widget.copy_fig()
+    elif current_tab == main_app.ui.tab_maps:
+        main_app.maps.spectra_widget.copy_fig()
+    elif current_tab == main_app.ui.tab_graphs:
+        main_app.visu.copy_fig_to_clb()
+
+
+def setup_shortcuts(main_app):
     """
     Wire keyboard shortcuts for the main application.
     Expects main_obj to have:
@@ -26,35 +45,47 @@ def setup_shortcuts(main_obj):
       - maps.spectra_widget
     """
     # Tab switching shortcuts
-    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_1), main_obj.ui).activated.connect(
-        partial(switch_to, main_obj, main_obj.ui.tab_spectra)
+    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_1), main_app.ui).activated.connect(
+        partial(switch_to, main_app, main_app.ui.tab_spectra)
     )
-    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Ampersand), main_obj.ui).activated.connect(
-        partial(switch_to, main_obj, main_obj.ui.tab_spectra)
-    )
-
-    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_2), main_obj.ui).activated.connect(
-        partial(switch_to, main_obj, main_obj.ui.tab_maps)
-    )
-    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Eacute), main_obj.ui).activated.connect(
-        partial(switch_to, main_obj, main_obj.ui.tab_maps)
+    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Ampersand), main_app.ui).activated.connect(
+        partial(switch_to, main_app, main_app.ui.tab_spectra)
     )
 
-    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_3), main_obj.ui).activated.connect(
-        partial(switch_to, main_obj, main_obj.ui.tab_graphs)
+    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_2), main_app.ui).activated.connect(
+        partial(switch_to, main_app, main_app.ui.tab_maps)
     )
-    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_QuoteDbl), main_obj.ui).activated.connect(
-        partial(switch_to, main_obj, main_obj.ui.tab_graphs)
+    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Eacute), main_app.ui).activated.connect(
+        partial(switch_to, main_app, main_app.ui.tab_maps)
     )
 
-    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_4), main_obj.ui).activated.connect(
-        partial(switch_to, main_obj, main_obj.ui.tab_fileconvert)
+    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_3), main_app.ui).activated.connect(
+        partial(switch_to, main_app, main_app.ui.tab_graphs)
     )
-    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Apostrophe), main_obj.ui).activated.connect(
-        partial(switch_to, main_obj, main_obj.ui.tab_fileconvert)
+    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_QuoteDbl), main_app.ui).activated.connect(
+        partial(switch_to, main_app, main_app.ui.tab_graphs)
+    )
+
+    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_4), main_app.ui).activated.connect(
+        partial(switch_to, main_app, main_app.ui.tab_fileconvert)
+    )
+    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Apostrophe), main_app.ui).activated.connect(
+        partial(switch_to, main_app, main_app.ui.tab_fileconvert)
     )
 
     # Global rescale (Ctrl+R)
-    shortcut_rescale = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_R), main_obj.ui)
+    shortcut_rescale = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_R), main_app.ui)
     shortcut_rescale.setContext(Qt.ShortcutContext.ApplicationShortcut)
-    shortcut_rescale.activated.connect(lambda: handle_rescale_shortcut(main_obj))
+    shortcut_rescale.activated.connect(lambda: rescale_shortcut(main_app))
+
+
+    # FITTING action (Ctrl+F)
+    shortcut_rescale = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_F), main_app.ui)
+    shortcut_rescale.setContext(Qt.ShortcutContext.ApplicationShortcut)
+    shortcut_rescale.activated.connect(lambda: fitting_shortcut(main_app))
+
+
+    # COPY action (Ctrl+C)
+    shortcut_rescale = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_C), main_app.ui)
+    shortcut_rescale.setContext(Qt.ShortcutContext.ApplicationShortcut)
+    shortcut_rescale.activated.connect(lambda: copy_shortcut(main_app))

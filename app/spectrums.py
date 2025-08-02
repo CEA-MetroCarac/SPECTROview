@@ -26,9 +26,10 @@ class Spectrums(QObject):
     and visualization of fitted data within "SPACTRA" TAB of the application.
     """
 
-    def __init__(self, settings, ui, common, visu):
+    def __init__(self, settings, ui, common, visu, app_settings):
         super().__init__()
         self.settings = settings
+        self.app_settings=app_settings
         self.ui = ui
         self.common = common
         self.visu = visu
@@ -66,9 +67,6 @@ class Spectrums(QObject):
         self.ui.cbb_fit_methods_2.addItems(FIT_METHODS)
         self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
 
-        # BASELINE
-        self.setup_baseline_controls()
-
         # Load default folder path
         self.fit_model_manager = FitModelManager(self.settings)
         self.fit_model_manager.default_model_folder = self.settings.value(
@@ -85,25 +83,11 @@ class Spectrums(QObject):
 
         #Setup ui
         self.setup_ui()
+
+        # BASELINE
+        self.setup_baseline_controls()
         
-    def setup_baseline_controls(self):
-        """Set up baseline controls and their signal connections."""
-        self.ui.cb_attached_2.stateChanged.connect(self.refresh_gui)
-        self.ui.noise_2.valueChanged.connect(self.refresh_gui)
-        self.ui.rbtn_linear_2.clicked.connect(self.refresh_gui)
-        self.ui.rbtn_polynomial_2.clicked.connect(self.refresh_gui)
-        self.ui.degre_2.valueChanged.connect(self.refresh_gui)
-
-        self.ui.cb_attached_2.stateChanged.connect(self.get_baseline_settings)
-        self.ui.noise_2.valueChanged.connect(self.get_baseline_settings)
-        self.ui.rbtn_linear_2.clicked.connect(self.get_baseline_settings)
-        self.ui.rbtn_polynomial_2.clicked.connect(self.get_baseline_settings)
-        self.ui.degre_2.valueChanged.connect(self.get_baseline_settings)
-
-        self.ui.btn_copy_bl_2.clicked.connect(self.copy_baseline)
-        self.ui.btn_paste_bl_2.clicked.connect(self.paste_baseline_handler)
-        self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
-        self.get_baseline_settings()
+    
 
     def open_spectra(self, spectra=None, file_paths=None):
         """Open and load raw spectral data"""
@@ -613,6 +597,25 @@ class Spectrums(QObject):
         fnames = checked_spectra.fnames
         self.set_x_range(fnames=fnames)
 
+    def setup_baseline_controls(self):
+        """Set up baseline controls and their signal connections."""
+        self.ui.cb_attached_2.stateChanged.connect(self.refresh_gui)
+        self.ui.noise_2.valueChanged.connect(self.refresh_gui)
+        self.ui.rbtn_linear_2.clicked.connect(self.refresh_gui)
+        self.ui.rbtn_polynomial_2.clicked.connect(self.refresh_gui)
+        self.ui.degre_2.valueChanged.connect(self.refresh_gui)
+
+        self.ui.cb_attached_2.stateChanged.connect(self.get_baseline_settings)
+        self.ui.noise_2.valueChanged.connect(self.get_baseline_settings)
+        self.ui.rbtn_linear_2.clicked.connect(self.get_baseline_settings)
+        self.ui.rbtn_polynomial_2.clicked.connect(self.get_baseline_settings)
+        self.ui.degre_2.valueChanged.connect(self.get_baseline_settings)
+
+        self.ui.btn_copy_bl_2.clicked.connect(self.copy_baseline)
+        self.ui.btn_paste_bl_2.clicked.connect(self.paste_baseline_handler)
+        self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
+        self.get_baseline_settings()
+        
     def get_baseline_settings(self):
         """Get baseline settings from GUI and set to selected spectrum"""
         spectrum_object = self.get_spectrum_object()

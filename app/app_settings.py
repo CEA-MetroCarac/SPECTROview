@@ -88,8 +88,8 @@ class AppSettings:
 
         #MAIN GUI
         "mode": ("mode", str),
-        "last_directory": ("last_directory", str),
-        "default_model_folder": ("default_model_folder", str),
+        #"last_directory": ("last_directory", str),
+        #"default_model_folder": ("default_model_folder", str),
 
     }
 

@@ -66,7 +66,7 @@ class Main:
 
         # Create subsystem instances
         self.visu = Visualization(qsettings, self.ui, self.common)
-        self.spectrums = Spectrums(qsettings, self.ui, self.common, self.visu)
+        self.spectrums = Spectrums(qsettings, self.ui, self.common, self.visu, self.app_settings)
         self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.visu, self.app_settings)
         self.fitmodel_manager = FitModelManager(qsettings)
         self.mapview_widget = MapViewWidget(self, self.app_settings)

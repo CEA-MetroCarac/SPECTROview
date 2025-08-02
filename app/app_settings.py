@@ -37,6 +37,7 @@ class FitSettings:
     baseline_noise: int = 4
 
 
+
 @dataclass
 class GraphSettings:
     grid: bool = False
@@ -44,12 +45,15 @@ class GraphSettings:
 
 @dataclass
 class AppSettings:
+    qsettings: QSettings = field(init=False)
+
+    last_directory: str = ""
+    default_model_folder: str = ""
+    mode: str = "dark"  # "light" or "dark"
+
     maps: FitSettings = field(default_factory=FitSettings)
     spectra: FitSettings = field(default_factory=FitSettings)
     graph: GraphSettings = field(default_factory=GraphSettings)
-    mode: str = "dark"  # "light" or "dark"
-
-    qsettings: QSettings = field(init=False)
 
     SETTINGS_KEY_MAPPING = {
         #MAPS TAB
@@ -82,6 +86,9 @@ class AppSettings:
 
         #MAIN GUI
         "mode": ("mode", str),
+        "last_directory": ("last_directory", str),
+        "default_model_folder": ("default_model_folder", str),
+
     }
 
     def __post_init__(self):
@@ -181,6 +188,9 @@ class AppSettings:
 
     def load(self):
         """Load all mapped settings from persistent storage into this object."""
+        self.last_directory = self.qsettings.value("last_directory", "", str)
+        self.default_model_folder = self.qsettings.value("default_model_folder", "", str)
+
         for key, (attr_path, expected_type) in self.SETTINGS_KEY_MAPPING.items():
             try:
                 default_val = _getattr_by_path(self, attr_path)
@@ -199,6 +209,9 @@ class AppSettings:
 
     def save(self):
         """Persist all mapped settings from this object into storage."""
+        self.qsettings.setValue("last_directory", self.last_directory)
+        self.qsettings.setValue("default_model_folder", self.default_model_folder)
+
         for key, (attr_path, _) in self.SETTINGS_KEY_MAPPING.items():
             try:
                 value = _getattr_by_path(self, attr_path)

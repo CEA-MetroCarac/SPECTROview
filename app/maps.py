@@ -33,9 +33,10 @@ class Maps(QObject):
     and visualization of fitted data within 'Maps' TAB of the application.
     """
 
-    def __init__(self, settings, ui, spectrums, common, visu):
+    def __init__(self, settings, ui, spectrums, common, visu, app_settings):
         super().__init__()
         self.settings = settings
+        self.app_settings = app_settings
         self.ui = ui
         self.visu = visu
         self.spectrums_tab = spectrums
@@ -72,7 +73,7 @@ class Maps(QObject):
         self.delay_timer.timeout.connect(self.plot)
 
         # Map_view_Widget
-        self.map_plot = MapViewWidget(self, self.settings)
+        self.map_plot = MapViewWidget(self, self.app_settings)
         self.map_plot.spectra_listbox= self.ui.spectra_listbox
         self.ui.map_layout.addWidget(self.map_plot.widget)
         self.map_plot.btn_extract_profile.clicked.connect(self.plot_extracted_profile)

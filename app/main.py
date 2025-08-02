@@ -49,8 +49,15 @@ class Main:
         self.app_settings = AppSettings()
         self.app_settings.load()
         sync_settings = partial(self.app_settings.sync_app_settings, self.ui)
-        qsettings = self.app_settings.qsettings # Retrieve raw QSettings to pass to legacy consumers
-        
+
+        def watch(widget):
+            for sig_name in ("valueChanged", "stateChanged", "textChanged", "currentIndexChanged", "toggled"):
+                sig = getattr(widget, sig_name, None)
+                if sig:
+                    sig.connect(sync_settings)
+
+        qsettings = self.app_settings.qsettings
+
         # Theme selection based on stored mode
         if self.app_settings.mode == "light":
             self.toggle_light_mode()
@@ -60,9 +67,9 @@ class Main:
         # Create subsystem instances
         self.visu = Visualization(qsettings, self.ui, self.common)
         self.spectrums = Spectrums(qsettings, self.ui, self.common, self.visu)
-        self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.visu)
+        self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.visu, self.app_settings)
         self.fitmodel_manager = FitModelManager(qsettings)
-        self.mapview_widget = MapViewWidget(self, qsettings)
+        self.mapview_widget = MapViewWidget(self, self.app_settings)
         self.convertfile = ConvertFile(self.ui, qsettings)
 
         # Apply stored settings to UI
@@ -82,12 +89,7 @@ class Main:
         self.ui.actionHelps.triggered.connect(self.open_manual)
 
         
-        # Save GUI states to settings on change
-        def watch(widget):
-            for sig_name in ("valueChanged", "stateChanged", "textChanged", "currentIndexChanged", "toggled"):
-                sig = getattr(widget, sig_name, None)
-                if sig:
-                    sig.connect(sync_settings)
+       
 
 
         ## MAPS module:

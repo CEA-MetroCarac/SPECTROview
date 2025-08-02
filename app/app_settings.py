@@ -47,9 +47,11 @@ class GraphSettings:
 class AppSettings:
     qsettings: QSettings = field(init=False)
 
-    last_directory: str = ""
-    default_model_folder: str = ""
+    # last_directory: str = ""
+    # default_model_folder: str = ""
     mode: str = "dark"  # "light" or "dark"
+
+    map_type: str = "2Dmap"
 
     maps: FitSettings = field(default_factory=FitSettings)
     spectra: FitSettings = field(default_factory=FitSettings)
@@ -67,8 +69,8 @@ class AppSettings:
         "baseline_type": ("maps.baseline_type", str),
         "baseline_degre": ("maps.baseline_degre", int),
         "baseline_noise": ("maps.baseline_noise", int),
-
-
+         "map_type": ("map_type", str),
+        
         #SPECTRA TAB
         "ncpu_2": ("spectra.ncpu", int),
         "fit_negative2": ("spectra.fit_negative", bool),
@@ -188,8 +190,8 @@ class AppSettings:
 
     def load(self):
         """Load all mapped settings from persistent storage into this object."""
-        self.last_directory = self.qsettings.value("last_directory", "", str)
-        self.default_model_folder = self.qsettings.value("default_model_folder", "", str)
+        # self.last_directory = self.qsettings.value("last_directory", "", str)
+        # self.default_model_folder = self.qsettings.value("default_model_folder", "", str)
 
         for key, (attr_path, expected_type) in self.SETTINGS_KEY_MAPPING.items():
             try:
@@ -209,8 +211,8 @@ class AppSettings:
 
     def save(self):
         """Persist all mapped settings from this object into storage."""
-        self.qsettings.setValue("last_directory", self.last_directory)
-        self.qsettings.setValue("default_model_folder", self.default_model_folder)
+        # self.qsettings.setValue("last_directory", self.last_directory)
+        # self.qsettings.setValue("default_model_folder", self.default_model_folder)
 
         for key, (attr_path, _) in self.SETTINGS_KEY_MAPPING.items():
             try:

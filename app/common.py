@@ -59,14 +59,17 @@ rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for
 class MapViewWidget(QWidget):
     """Class to manage the 2Dmap view widget"""
 
-    def __init__(self, main_app, settings):
+    def __init__(self, main_app, app_settings):
         super().__init__()
-        self.main_app = main_app # To connect to a method of main app (refresh gui)
-        self.settings = settings # To connect to Qsettings
+        self.main_app = main_app
+        self.app_settings = app_settings  
+
         self.map_df_name = None
         self.map_df =pd.DataFrame() 
         self.df_fit_results =pd.DataFrame() 
         self.map_type = '2Dmap'
+        # self.map_type = getattr(self.app_settings, "map_type", None)
+
         self.dpi = 70
         self.figure = None
         self.ax = None
@@ -151,7 +154,7 @@ class MapViewWidget(QWidget):
 
         # Load last saved settings
         self.cbb_map_type.currentIndexChanged.connect(self.update_settings)
-        saved_map_type = self.settings.value("map_type", "2Dmap")  # Default value
+        saved_map_type = self.app_settings.map_type
         
         # Set the saved values in the combo boxes
         if saved_map_type in ['2Dmap', 'Wafer_300mm', 'Wafer_200mm', 'Wafer_100mm']:
@@ -212,7 +215,10 @@ class MapViewWidget(QWidget):
     def update_settings(self):
         """Save selected wafer size to settings"""
         map_type = self.cbb_map_type.currentText()
-        self.settings.setValue("map_type", map_type)
+        self.app_settings.map_type = map_type
+        self.app_settings.save()
+
+        #self.settings.setValue("map_type", map_type)
     
     def create_options_menu(self):
         """Create more view options for 2Dmap plot"""

@@ -88,40 +88,13 @@ class AppSettings:
         QSettings.setDefaultFormat(QSettings.IniFormat)
         self.qsettings = QSettings("CEA-Leti", "SPECTROview")
 
-    def load(self):
-        """Load all mapped settings from persistent storage into this object."""
-        for key, (attr_path, expected_type) in self.SETTINGS_KEY_MAPPING.items():
-            try:
-                default_val = _getattr_by_path(self, attr_path)
-                raw = self.qsettings.value(key, defaultValue=default_val, type=expected_type)
-                if expected_type is bool:
-                    val = bool(raw)
-                elif expected_type is int:
-                    val = int(raw)
-                elif expected_type is float:
-                    val = float(raw)
-                else:
-                    val = raw
-                _set_by_path(self, attr_path, val)
-            except Exception: 
-                logger.exception("Failed to load setting %s", key)
-
-    def save(self):
-        """Persist all mapped settings from this object into storage."""
-        for key, (attr_path, _) in self.SETTINGS_KEY_MAPPING.items():
-            try:
-                value = _getattr_by_path(self, attr_path)
-                self.qsettings.setValue(key, value)
-            except Exception:  
-                logger.exception("Failed to save setting %s", key)
-
     def update_from_ui(self, ui: Any):
         """
         Pull current values from UI widgets into this structured settings object.
         """
         try:
             #MAPS TAB
-            self.ncpu = ui.ncpu.value()
+            self.maps.ncpu = ui.ncpu.value()
             self.maps.fit_negative = ui.cb_fit_negative.isChecked()
             self.maps.max_iteration = ui.max_iteration.value()
             self.maps.method = ui.cbb_fit_methods.currentText()
@@ -136,7 +109,7 @@ class AppSettings:
             self.maps.baseline_noise= ui.noise.value()
 
             #SPECTRA TAB
-            self.ncpu_2 = ui.ncpu_2.value()
+            self.spectra.ncpu = ui.ncpu_2.value()
             self.spectra.fit_negative = ui.cb_fit_negative_2.isChecked()
             self.spectra.max_iteration = ui.max_iteration_2.value()
             self.spectra.method = ui.cbb_fit_methods_2.currentText()
@@ -205,3 +178,30 @@ class AppSettings:
             self.save()
         except Exception:  
             logger.exception("Failed to sync settings from UI and persist")
+
+    def load(self):
+        """Load all mapped settings from persistent storage into this object."""
+        for key, (attr_path, expected_type) in self.SETTINGS_KEY_MAPPING.items():
+            try:
+                default_val = _getattr_by_path(self, attr_path)
+                raw = self.qsettings.value(key, defaultValue=default_val, type=expected_type)
+                if expected_type is bool:
+                    val = bool(raw)
+                elif expected_type is int:
+                    val = int(raw)
+                elif expected_type is float:
+                    val = float(raw)
+                else:
+                    val = raw
+                _set_by_path(self, attr_path, val)
+            except Exception: 
+                logger.exception("Failed to load setting %s", key)
+
+    def save(self):
+        """Persist all mapped settings from this object into storage."""
+        for key, (attr_path, _) in self.SETTINGS_KEY_MAPPING.items():
+            try:
+                value = _getattr_by_path(self, attr_path)
+                self.qsettings.setValue(key, value)
+            except Exception:  
+                logger.exception("Failed to save setting %s", key)

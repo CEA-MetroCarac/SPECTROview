@@ -48,7 +48,7 @@ class Main:
         # App_Settings
         self.app_settings = AppSettings()
         self.app_settings.load()
-        sync = partial(self.app_settings.sync_app_settings, self.ui)
+        sync_settings = partial(self.app_settings.sync_app_settings, self.ui)
         qsettings = self.app_settings.qsettings # Retrieve raw QSettings to pass to legacy consumers
         
         # Theme selection based on stored mode
@@ -65,6 +65,9 @@ class Main:
         self.mapview_widget = MapViewWidget(self, qsettings)
         self.convertfile = ConvertFile(self.ui, qsettings)
 
+        # Apply stored settings to UI
+        self.app_settings.apply_to_ui(self.ui)
+
         # Shortcuts (externalized)
         setup_shortcuts(self)
         
@@ -78,37 +81,43 @@ class Main:
         self.ui.actionAbout.triggered.connect(self.show_about)
         self.ui.actionHelps.triggered.connect(self.open_manual)
 
-        # Apply stored settings to UI
-        self.app_settings.apply_to_ui(self.ui)
         
         # Save GUI states to settings on change
         def watch(widget):
-            for sig_name in ("valueChanged", "stateChanged", "textChanged", "currentIndexChanged"):
+            for sig_name in ("valueChanged", "stateChanged", "textChanged", "currentIndexChanged", "toggled"):
                 sig = getattr(widget, sig_name, None)
                 if sig:
-                    sig.connect(sync)
+                    sig.connect(sync_settings)
 
-        watch(self.ui.ncpus)
-        watch(self.ui.ncpus_2)
-        
-        ## Maps module:
+
+        ## MAPS module:
+        watch(self.ui.ncpu)
         watch(self.ui.cb_fit_negative)
         watch(self.ui.max_iteration)
         watch(self.ui.cbb_fit_methods)
         watch(self.ui.xtol)
+
         watch(self.ui.cb_attached)
-        
-        watch(self.ui.noise)
         watch(self.ui.rbtn_linear)
+        watch(self.ui.rbtn_polynomial)
+        watch(self.ui.noise)
         watch(self.ui.degre)
         
-        ## Spectra module:
+        ## SPECTRA module:
+        watch(self.ui.ncpu_2)
         watch(self.ui.cb_fit_negative_2)
         watch(self.ui.max_iteration_2)
         watch(self.ui.cbb_fit_methods_2)
         watch(self.ui.xtol_2)
+
         watch(self.ui.cb_attached_2)
+        watch(self.ui.rbtn_linear_2)
+
+        watch(self.ui.rbtn_polynomial_2)
+        watch(self.ui.noise_2)
+        watch(self.ui.degre_2)
         
+        ## GRAPH module:
         watch(self.ui.cb_grid)
 
 

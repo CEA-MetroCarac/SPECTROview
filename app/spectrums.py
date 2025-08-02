@@ -227,11 +227,11 @@ class Spectrums(QObject):
         self.common.reinit_spectrum(fnames, self.spectrums)
         self.ntot = len(fnames)
         fit_model = deepcopy(self.current_fit_model)
-        ncpus = int(self.ui.ncpus_2.text())
+        ncpu = int(self.ui.ncpu_2.text())
 
         if fit_model is not None:
             self.spectrums.pbar_index = 0
-            self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
+            self.thread = FitThread(self.spectrums, fit_model, fnames, ncpu)
             self.thread.finished.connect(self.fit_completed)
             self.thread.start()
         else:
@@ -306,11 +306,11 @@ class Spectrums(QObject):
             fnames = self.get_spectrum_fnames()
 
         self.ntot = len(fnames)
-        ncpus = int(self.ui.ncpus_2.text())
+        ncpu = int(self.ui.ncpu_2.text())
         fit_model = self.loaded_fit_model
         self.spectrums.pbar_index = 0
 
-        self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
+        self.thread = FitThread(self.spectrums, fit_model, fnames, ncpu)
         self.thread.finished.connect(self.fit_completed)
         self.thread.start()
 
@@ -689,7 +689,7 @@ class Spectrums(QObject):
         fit_params['fit_negative'] = self.ui.cb_fit_negative_2.isChecked()
         fit_params['max_ite'] = self.ui.max_iteration_2.value()
         fit_params['method'] = self.ui.cbb_fit_methods_2.currentText()
-        fit_params['ncpus'] = self.ui.ncpus_2.value()
+        fit_params['ncpu'] = self.ui.ncpu_2.value()
         fit_params['xtol'] = float(self.ui.xtol_2.text())
         sel_spectrum.fit_params = fit_params
 

@@ -526,7 +526,7 @@ class Maps(QObject):
         fit_params['fit_negative'] = self.ui.cb_fit_negative.isChecked()
         fit_params['max_ite'] = self.ui.max_iteration.value()
         fit_params['method'] = self.ui.cbb_fit_methods.currentText()
-        fit_params['ncpus'] = self.ui.ncpus.value()
+        fit_params['ncpu'] = self.ui.ncpu.value()
         fit_params['xtol'] = float(self.ui.xtol.text())
         sel_spectrum.fit_params = fit_params
 
@@ -595,11 +595,11 @@ class Maps(QObject):
         fit_model = deepcopy(self.current_fit_model)
 
         self.ntot = len(fnames)
-        ncpus = int(self.ui.ncpus.text())
+        ncpu = int(self.ui.ncpu.text())
 
         if fit_model is not None:
             self.spectrums.pbar_index = 0
-            self.thread = FitThread(self.spectrums, fit_model, fnames, ncpus)
+            self.thread = FitThread(self.spectrums, fit_model, fnames, ncpu)
             self.thread.finished.connect(self.fit_completed)
             self.thread.start()
         else:
@@ -662,12 +662,12 @@ class Maps(QObject):
             fnames = [f"{map_name}_{coord}" for coord in coords]
 
         self.ntot = len(fnames)
-        ncpus = int(self.ui.ncpus.text())
+        ncpu = int(self.ui.ncpu.text())
         fit_model = self.loaded_fit_model
         spectra = self.spectrums
         self.spectrums.pbar_index = 0
 
-        self.thread = FitThread(spectra, fit_model, fnames, ncpus)
+        self.thread = FitThread(spectra, fit_model, fnames, ncpu)
         self.thread.finished.connect(self.fit_completed)
         self.thread.start()
 

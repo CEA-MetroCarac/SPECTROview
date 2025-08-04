@@ -13,6 +13,12 @@ class Gui:
         self.app_settings = app_settings
         self.ui = ui
         self.main_app = main_app
+        
+        # DARK or LIGHT mode?
+        if self.app_settings.mode == "light":
+            self.toggle_light_mode()
+        else:
+            self.toggle_dark_mode()
 
         # sync helper
         self.sync_settings = partial(self.app_settings.sync_app_settings, self.ui)
@@ -31,8 +37,8 @@ class Gui:
         self.ui.actionOpen.triggered.connect(lambda: self.main_app.open())
         self.ui.actionSave.triggered.connect(self.main_app.save)
         self.ui.actionClear_env.triggered.connect(self.main_app.clear_env)
-        self.ui.actionDarkMode.triggered.connect(self.main_app.toggle_dark_mode)
-        self.ui.actionLightMode.triggered.connect(self.main_app.toggle_light_mode)
+        self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
+        self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
         self.ui.actionAbout.triggered.connect(self.main_app.show_about)
         self.ui.actionHelps.triggered.connect(self.main_app.open_manual)
         
@@ -95,3 +101,20 @@ class Gui:
         self.connect_ui_maps_tab()
         self.connect_ui_spectra_tab()
         self.connect_ui_visu_tab()
+        
+        
+    def toggle_dark_mode(self):
+        """Switch to dark mode and persist."""
+        # Use main_app.common for palettes
+        if hasattr(self.main_app, "common"):
+            self.ui.setPalette(self.main_app.common.dark_palette())
+        self.app_settings.mode = "dark"
+        self.app_settings.save()
+
+    def toggle_light_mode(self):
+        """Switch to light mode and persist."""
+        if hasattr(self.main_app, "common"):
+            self.ui.setPalette(self.main_app.common.light_palette())
+        self.app_settings.mode = "light"
+        self.app_settings.save()
+

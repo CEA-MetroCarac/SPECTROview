@@ -51,12 +51,6 @@ class Main:
         self.app_settings.load()
         qsettings = self.app_settings.qsettings
 
-        # Theme : Dark or Light mode
-        if self.app_settings.mode == "light":
-            self.toggle_light_mode()
-        else:
-            self.toggle_dark_mode()
-
         # Create subsystem instances
         self.visu = Visualization(qsettings, self.ui, self.common)
         self.spectrums = Spectrums(qsettings, self.ui, self.common, self.visu, self.app_settings)
@@ -180,16 +174,6 @@ class Main:
             self.spectrums.clear_env()
         else:
             show_alert("No thing to clear.")
-
-    def toggle_dark_mode(self):
-        self.ui.setPalette(self.common.dark_palette())
-        self.app_settings.mode = "dark"
-        self.app_settings.save()
-
-    def toggle_light_mode(self):
-        self.ui.setPalette(self.common.light_palette())
-        self.app_settings.mode = "light"
-        self.app_settings.save()
 
     def open_manual(self):
         """Open doc detail about query function of pandas dataframe"""

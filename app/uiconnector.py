@@ -9,7 +9,6 @@ class UiConnector:
     def __init__(self, app_settings, ui, main_app, maps_tab, spectrums_tab, visu_tab):
         """
         Centralize all signal wiring / UI connections here.
-        main_app is the instance of Main so that callbacks that live there can be used.
         """
         self.app_settings = app_settings
         self.ui = ui

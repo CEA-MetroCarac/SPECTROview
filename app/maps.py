@@ -47,7 +47,6 @@ class Maps(QObject):
         self.maps = {}  # list of opened maps data
         self.spectrums = CustomSpectra()
         
-        
          # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget(self)
         self.ui.fig_canvas_layout_2.addWidget(self.spectra_widget.canvas)
@@ -101,11 +100,7 @@ class Maps(QObject):
         ## Show available fit models
         QTimer.singleShot(0, self.populate_available_models)
         self.ui.btn_refresh_model_folder.clicked.connect(
-            self.populate_available_models)
-        
-        #Setup ui
-        self.setup_ui()
-        
+            self.populate_available_models)      
 
     def setup_baseline_controls(self):
         self.ui.cb_attached.stateChanged.connect(self.refresh_gui)
@@ -646,8 +641,6 @@ class Maps(QObject):
         
     def paste_peaks_all(self):
         self.paste_peaks(self.spectrums)
-        
-    
 
     def apply_loaded_fit_model(self, fnames=None):
         """Fit selected spectrum(s) with the loaded fit model."""
@@ -934,8 +927,6 @@ class Maps(QObject):
         for index in range(self.ui.spectra_listbox.count()):
             item = self.ui.spectra_listbox.item(index)
             item.setCheckState(check_state)
-    
-    
 
     def remove_map(self):
         """
@@ -1160,11 +1151,6 @@ class Maps(QObject):
             except:
                 return
 
-
-    
-
-    
-
     def set_x_range_handler(self):
         """
         Handler for setting X range based on keyboard modifiers.
@@ -1334,52 +1320,3 @@ class Maps(QObject):
         QTimer.singleShot(50, self.spectra_widget.rescale)
         QTimer.singleShot(100, self.upd_maps_list)
         print("'Maps' Tab environment has been cleared.")
-
-    def setup_ui(self):
-        """Connect GUI to methods"""
-        # Remove wafer
-        self.ui.btn_remove_wafer.clicked.connect(self.remove_map)
-
-        # Selection shortcuts
-        self.ui.btn_sel_all.clicked.connect(self.select_all_spectra)
-        self.ui.btn_sel_verti.clicked.connect(self.select_verti)
-        self.ui.btn_sel_horiz.clicked.connect(self.select_horiz)
-        self.ui.btn_sel_q1.clicked.connect(self.select_Q1)
-        self.ui.btn_sel_q2.clicked.connect(self.select_Q2)
-        self.ui.btn_sel_q3.clicked.connect(self.select_Q3)
-        self.ui.btn_sel_q4.clicked.connect(self.select_Q4)
-
-        # Model & fit actions
-        self.ui.btn_load_model.clicked.connect(self.load_fit_model)
-        self.ui.btn_apply_model.clicked.connect(self.apply_model_fnc_handler)
-        self.ui.btn_init.clicked.connect(self.reinit_fnc_handler)
-        self.ui.btn_collect_results.clicked.connect(self.collect_results)
-        self.ui.btn_view_df_2.clicked.connect(self.view_fit_results_df)
-        self.ui.btn_show_stats.clicked.connect(self.view_stats)
-        self.ui.btn_save_fit_results.clicked.connect(self.save_fit_results)
-        self.ui.btn_view_wafer.clicked.connect(self.view_map_df)
-
-        self.ui.btn_cosmis_ray.clicked.connect(self.cosmis_ray_detection)
-
-        self.ui.btn_split_fname_2.clicked.connect(self.split_fname)
-        self.ui.btn_add_col_2.clicked.connect(self.add_column)
-
-        # Range / baseline
-        self.ui.range_max.returnPressed.connect(self.set_x_range)
-        self.ui.range_min.returnPressed.connect(self.set_x_range)
-        self.ui.range_apply.clicked.connect(self.set_x_range_handler)
-
-        # Fit / models / peaks
-        self.ui.btn_fit.clicked.connect(self.fit_fnc_handler)
-        self.ui.save_model.clicked.connect(self.save_fit_model)
-        self.ui.clear_peaks.clicked.connect(self.clear_peaks_handler)
-        self.ui.btn_copy_fit_model.clicked.connect(self.copy_fit_model)
-        self.ui.btn_copy_peaks.clicked.connect(self.copy_fit_model)
-        self.ui.btn_paste_fit_model.clicked.connect(self.paste_fit_model_fnc_handler)
-        self.ui.btn_paste_peaks.clicked.connect(self.paste_peaks_fnc_handler)
-        self.ui.cbb_fit_models.addItems(PEAK_MODELS)
-
-        self.ui.btn_undo_baseline.clicked.connect(self.set_x_range_handler)
-
-        self.ui.btn_send_to_compare.clicked.connect(self.send_spectrum_to_compare)
-        self.ui.btn_default_folder_model.clicked.connect(self.set_default_model_folder)

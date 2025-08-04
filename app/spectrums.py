@@ -81,14 +81,28 @@ class Spectrums(QObject):
         self.ui.btn_xrange_correction.clicked.connect(self.xrange_correction)
         self.ui.btn_undo_correction.clicked.connect(lambda: self.undo_xrange_correction())
 
-        #Setup ui
-        self.setup_ui()
-
         # BASELINE
         self.setup_baseline_controls()
-        
-    
 
+    def setup_baseline_controls(self):
+        """Set up baseline controls and their signal connections."""
+        self.ui.cb_attached_2.stateChanged.connect(self.refresh_gui)
+        self.ui.noise_2.valueChanged.connect(self.refresh_gui)
+        self.ui.rbtn_linear_2.clicked.connect(self.refresh_gui)
+        self.ui.rbtn_polynomial_2.clicked.connect(self.refresh_gui)
+        self.ui.degre_2.valueChanged.connect(self.refresh_gui)
+
+        self.ui.cb_attached_2.stateChanged.connect(self.get_baseline_settings)
+        self.ui.noise_2.valueChanged.connect(self.get_baseline_settings)
+        self.ui.rbtn_linear_2.clicked.connect(self.get_baseline_settings)
+        self.ui.rbtn_polynomial_2.clicked.connect(self.get_baseline_settings)
+        self.ui.degre_2.valueChanged.connect(self.get_baseline_settings)
+
+        self.ui.btn_copy_bl_2.clicked.connect(self.copy_baseline)
+        self.ui.btn_paste_bl_2.clicked.connect(self.paste_baseline_handler)
+        self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
+        self.get_baseline_settings()
+        
     def open_spectra(self, spectra=None, file_paths=None):
         """Open and load raw spectral data"""
 
@@ -597,24 +611,6 @@ class Spectrums(QObject):
         fnames = checked_spectra.fnames
         self.set_x_range(fnames=fnames)
 
-    def setup_baseline_controls(self):
-        """Set up baseline controls and their signal connections."""
-        self.ui.cb_attached_2.stateChanged.connect(self.refresh_gui)
-        self.ui.noise_2.valueChanged.connect(self.refresh_gui)
-        self.ui.rbtn_linear_2.clicked.connect(self.refresh_gui)
-        self.ui.rbtn_polynomial_2.clicked.connect(self.refresh_gui)
-        self.ui.degre_2.valueChanged.connect(self.refresh_gui)
-
-        self.ui.cb_attached_2.stateChanged.connect(self.get_baseline_settings)
-        self.ui.noise_2.valueChanged.connect(self.get_baseline_settings)
-        self.ui.rbtn_linear_2.clicked.connect(self.get_baseline_settings)
-        self.ui.rbtn_polynomial_2.clicked.connect(self.get_baseline_settings)
-        self.ui.degre_2.valueChanged.connect(self.get_baseline_settings)
-
-        self.ui.btn_copy_bl_2.clicked.connect(self.copy_baseline)
-        self.ui.btn_paste_bl_2.clicked.connect(self.paste_baseline_handler)
-        self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
-        self.get_baseline_settings()
         
     def get_baseline_settings(self):
         """Get baseline settings from GUI and set to selected spectrum"""
@@ -696,18 +692,14 @@ class Spectrums(QObject):
         fit_params['xtol'] = float(self.ui.xtol_2.text())
         sel_spectrum.fit_params = fit_params
 
-    
-
     def paste_fit_model_all(self):
         """Apply the copied fit model to selected spectrum(s)"""
         checked_spectra = self.get_checked_spectra()
         fnames = checked_spectra.fnames
         self.paste_fit_model(fnames)
 
-
     def collect_results(self):
         """Collect best-fit results and append them to a dataframe."""
-
         # Add all dict into a list, then convert to a dataframe.
         self.copy_fit_model()
         fit_results_list = []
@@ -1032,37 +1024,4 @@ class Spectrums(QObject):
         QTimer.singleShot(50, self.spectra_widget.rescale)
         QTimer.singleShot(100, self.upd_spectra_list)
         print("'Spectrums' Tab environment has been cleared.")
-
-    def setup_ui(self):
-        """Connect GUI to methods"""
-        self.ui.cbb_fit_models_2.addItems(PEAK_MODELS)
-        self.ui.range_apply_2.clicked.connect(self.set_x_range_handler)
-        self.ui.range_max_2.returnPressed.connect(self.set_x_range)
-        self.ui.range_min_2.returnPressed.connect(self.set_x_range)
-
-        self.ui.sub_baseline_2.clicked.connect(self.subtract_baseline_handler)
-        self.ui.btn_undo_baseline_2.clicked.connect(self.set_x_range_handler)
-        self.ui.clear_peaks_2.clicked.connect(self.clear_peaks_handler)
-        self.ui.btn_fit_3.clicked.connect(self.fit_fnc_handler)
-        self.ui.btn_copy_fit_model_2.clicked.connect(self.copy_fit_model)
-        self.ui.btn_copy_peaks_2.clicked.connect(self.copy_fit_model)
-        self.ui.btn_paste_fit_model_2.clicked.connect(self.paste_fit_model_fnc_handler)
-        self.ui.btn_paste_peaks_2.clicked.connect(self.paste_peaks_fnc_handler)
-        self.ui.save_model_2.clicked.connect(self.save_fit_model)
-
-        self.ui.btn_load_model_3.clicked.connect(self.load_fit_model)
-        self.ui.btn_apply_model_3.clicked.connect(self.apply_model_fnc_handler)
-        self.ui.btn_cosmis_ray_3.clicked.connect(self.cosmis_ray_detection)
-        self.ui.btn_init_3.clicked.connect(self.reinit_fnc_handler)
-        self.ui.btn_show_stats_3.clicked.connect(self.view_stats)
-        self.ui.btn_sel_all_3.clicked.connect(self.select_all_spectra)
-        self.ui.btn_remove_spectrum.clicked.connect(self.remove_spectrum)
-        self.ui.btn_collect_results_3.clicked.connect(self.collect_results)
-        self.ui.btn_view_df_5.clicked.connect(self.view_fit_results_df)
-        self.ui.btn_save_fit_results_3.clicked.connect(self.save_fit_results)
-
-        self.ui.btn_split_fname.clicked.connect(self.split_fname)
-        self.ui.btn_add_col.clicked.connect(self.add_column)
-
-        self.ui.btn_default_folder_model_3.clicked.connect(self.set_default_model_folder)
 

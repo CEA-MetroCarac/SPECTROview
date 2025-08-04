@@ -15,8 +15,8 @@ from PySide6.QtGui import QIcon
 from app.common import CommonUtilities, FitModelManager, MapViewWidget, ConvertFile
 from app.common import show_alert
 
-from app.gui import Gui
 from app.ui import resources 
+from app.uiconnector import UiConnector
 from app.maps import Maps
 from app.spectrums import Spectrums
 from app.visualisation import Visualization
@@ -63,7 +63,7 @@ class Main:
         self.app_settings.apply_to_ui(self.ui)
         
         # Centralize GUI wiring
-        self.gui = Gui(self.app_settings, self.ui, self)
+        self.gui = UiConnector(self.app_settings, self.ui, self, self.maps, self.spectrums, self.visu)
 
         ### SETUP SHORTCUTS 
         setup_shortcuts(self)
@@ -184,9 +184,7 @@ class Main:
         """Show about dialog """
         self.common.view_markdown(self.ui, "About", ABOUT, 650, 480, "resources/")
 
-
 expiration_date = datetime.datetime(2050, 6, 1)
-
 
 def launcher():
     QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
@@ -212,9 +210,7 @@ def launcher():
     window.ui.show()
     sys.exit(app.exec())
 
-
 if __name__ == "__main__":
     import multiprocessing
-
     multiprocessing.freeze_support()
     launcher()

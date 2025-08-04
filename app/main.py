@@ -15,6 +15,7 @@ from PySide6.QtGui import QIcon
 from app.common import CommonUtilities, FitModelManager, MapViewWidget, ConvertFile
 from app.common import show_alert
 
+from app.gui import Gui
 from app.ui import resources 
 from app.maps import Maps
 from app.spectrums import Spectrums
@@ -48,17 +49,9 @@ class Main:
         #### APP SETTINGS
         self.app_settings = AppSettings()
         self.app_settings.load()
-        sync_settings = partial(self.app_settings.sync_app_settings, self.ui)
-
-        def watch(widget):
-            for sig_name in ("valueChanged", "stateChanged", "textChanged", "currentIndexChanged", "toggled"):
-                sig = getattr(widget, sig_name, None)
-                if sig:
-                    sig.connect(sync_settings)
-
         qsettings = self.app_settings.qsettings
 
-        # Theme selection based on stored mode
+        # Theme : Dark or Light mode
         if self.app_settings.mode == "light":
             self.toggle_light_mode()
         else:
@@ -74,54 +67,13 @@ class Main:
 
         # Apply stored settings to UI
         self.app_settings.apply_to_ui(self.ui)
+        
+        # Centralize GUI wiring
+        self.gui = Gui(self.app_settings, self.ui, self)
 
         ### SETUP SHORTCUTS 
         setup_shortcuts(self)
-        
-        # TOOLBAR
-        self.ui.actionOpen.triggered.connect(lambda: self.open())
-        self.ui.actionSave.triggered.connect(self.save)
-        self.ui.actionClear_env.triggered.connect(self.clear_env)
-
-        self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
-        self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
-        self.ui.actionAbout.triggered.connect(self.show_about)
-        self.ui.actionHelps.triggered.connect(self.open_manual)
-
-        ## MAPS module:
-        watch(self.ui.ncpu)
-        watch(self.ui.cb_fit_negative)
-        watch(self.ui.max_iteration)
-        watch(self.ui.cbb_fit_methods)
-        watch(self.ui.xtol)
-
-        watch(self.ui.cb_attached)
-        watch(self.ui.rbtn_linear)
-        watch(self.ui.rbtn_polynomial)
-        watch(self.ui.noise)
-        watch(self.ui.degre)
-        
-        ## SPECTRA module:
-        watch(self.ui.ncpu_2)
-        watch(self.ui.cb_fit_negative_2)
-        watch(self.ui.max_iteration_2)
-        watch(self.ui.cbb_fit_methods_2)
-        watch(self.ui.xtol_2)
-
-        watch(self.ui.cb_attached_2)
-        watch(self.ui.rbtn_linear_2)
-
-        watch(self.ui.rbtn_polynomial_2)
-        watch(self.ui.noise_2)
-        watch(self.ui.degre_2)
-        
-        ## GRAPH module:
-        watch(self.ui.cb_grid)
-
-
-        self.ui.spectrums_listbox.files_dropped.connect(self.open)
-        self.ui.spectra_listbox.files_dropped.connect(self.open)
-
+    
     def open(self, file_paths=None):
         """
         Universal action to open all supported files of SPECTROview:

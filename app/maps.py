@@ -844,9 +844,12 @@ class Maps(QObject):
             self.map_plot.map_df_name=map_name
             self.map_plot.map_df=map_df
             column_labels = map_df.columns[2:-1].astype(float)
+            
+            current_min, current_max = self.map_plot.x_range_slider.value()
             min_value = float(column_labels.min())
             max_value = float(column_labels.max())
-            self.map_plot.update_xrange_slider(min_value, max_value)
+            
+            self.map_plot.update_xrange_slider(min_value, max_value, current_min, current_max)
 
         checked_states = {}
         for index in range(self.ui.spectra_listbox.count()):

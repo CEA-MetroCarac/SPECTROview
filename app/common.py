@@ -247,8 +247,13 @@ class MapViewWidget(QWidget):
         self.x_range_slider.valueChanged.connect(self.update_z_range_slider)
 
         self.x_range_slider_label = QLabel('X-range :')
-        self.x_range_slider_label.setFixedWidth(80)  
+        self.x_range_slider_label.setFixedWidth(50)  
         self.x_range_slider_label.setToolTip("Define the spectral range (X-range) for 'Area' and 'Maximum Intensity' calculation.")
+
+        # --- Fix checkbox ---
+        self.fix_x_checkbox = QCheckBox("Fix")
+        self.fix_x_checkbox.setToolTip("If checked, the X-range will not reset when refreshing the plot.")
+        self.fix_x_checkbox.stateChanged.connect(self.refresh_plot)
 
         # Entry boxes for X-range
         self.x_min_edit = QLineEdit(str(xmin))
@@ -266,6 +271,7 @@ class MapViewWidget(QWidget):
     
         self.x_slider_layout = QHBoxLayout()
         self.x_slider_layout.addWidget(self.x_range_slider_label)
+        self.x_slider_layout.addWidget(self.fix_x_checkbox)
         self.x_slider_layout.addWidget(self.x_min_edit)
         self.x_slider_layout.addWidget(self.x_range_slider)
         self.x_slider_layout.addWidget(self.x_max_edit)
@@ -282,7 +288,7 @@ class MapViewWidget(QWidget):
 
         self.z_values_cbb = QComboBox()
         self.z_values_cbb.addItems(['Area', 'Max Intensity']) 
-        self.z_values_cbb.setFixedWidth(80)  
+        self.z_values_cbb.setFixedWidth(96) 
         self.z_values_cbb.setToolTip("Select parameter to plot 2Dmap")
         self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
@@ -316,7 +322,7 @@ class MapViewWidget(QWidget):
     def _update_slider_from_edit(self, slider, edit, index):
         """Update slider value when user edits text boxes"""
         try:
-            value = float(edit.text())
+            value = max(slider.minimum(), min(slider.maximum(), float(edit.text())))
             current = list(slider.value())
             current[index] = value
             # Ensure min <= max
@@ -340,18 +346,17 @@ class MapViewWidget(QWidget):
     def refresh_plot(self):
         """Call the refresh_gui method of the main application."""
         if hasattr(self.main_app, 'refresh_gui'):
-            
             self.main_app.refresh_gui()
         else:
             return
     
-    def update_xrange_slider(self, xmin, xmax):
-        """Update the range of the slider based on new min and max values."""
-        xmin_label = round(xmin, 0)
-        xmax_label = round(xmax, 0)
+    def update_xrange_slider(self, xmin, xmax,current_min, current_max):
+        """Update the range of the slider based on new min and max values."""        
         self.x_range_slider.setRange(xmin, xmax)
-        self.x_range_slider.setValue((xmin, xmax))
-        #self.x_range_label.setText(f'[{xmin_label}; {xmax_label}]')
+        if self.fix_x_checkbox.isChecked():
+            self.x_range_slider.setValue((current_min, current_max))
+        else: 
+            self.x_range_slider.setValue((xmin, xmax))
     
     def update_z_range_slider(self):
         if self.z_values_cbb.count() > 0 and self.z_values_cbb.currentIndex() >= 0:

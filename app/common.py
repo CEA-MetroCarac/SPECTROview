@@ -238,7 +238,7 @@ class MapViewWidget(QWidget):
         """Create xrange and intensity-range sliders"""
         # Create x-axis range slider
         self.x_range_slider = QLabeledDoubleRangeSlider(Qt.Orientation.Horizontal)
-        self.x_range_slider.setEdgeLabelMode(QLabeledDoubleRangeSlider.EdgeLabelMode.LabelIsValue)
+        self.x_range_slider.setEdgeLabelMode(QLabeledDoubleRangeSlider.EdgeLabelMode.NoLabel)
         self.x_range_slider.setHandleLabelPosition(QLabeledDoubleRangeSlider.LabelPosition.NoLabel)
         self.x_range_slider.setSingleStep(0.01)
         self.x_range_slider.setRange(xmin, xmax)  
@@ -250,15 +250,30 @@ class MapViewWidget(QWidget):
         self.x_range_slider_label.setFixedWidth(80)  
         self.x_range_slider_label.setToolTip("Define the spectral range (X-range) for 'Area' and 'Maximum Intensity' calculation.")
 
+        # Entry boxes for X-range
+        self.x_min_edit = QLineEdit(str(xmin))
+        self.x_max_edit = QLineEdit(str(xmax))
+        self.x_min_edit.setFixedWidth(60)
+        self.x_max_edit.setFixedWidth(60)
+        
+          # Connect entry boxes → slider
+        self.x_min_edit.editingFinished.connect(lambda: self._update_slider_from_edit(self.x_range_slider, self.x_min_edit, 0))
+        self.x_max_edit.editingFinished.connect(lambda: self._update_slider_from_edit(self.x_range_slider, self.x_max_edit, 1))
+
+        # Connect slider → entry boxes
+        self.x_range_slider.valueChanged.connect(lambda v: self._update_edit_from_slider(v, self.x_min_edit, self.x_max_edit))
+
+    
         self.x_slider_layout = QHBoxLayout()
         self.x_slider_layout.addWidget(self.x_range_slider_label)
+        self.x_slider_layout.addWidget(self.x_min_edit)
         self.x_slider_layout.addWidget(self.x_range_slider)
-        
+        self.x_slider_layout.addWidget(self.x_max_edit)
         self.x_slider_layout.setContentsMargins(5, 0, 5, 0)
 
         # Create z-axis range slider
         self.z_range_slider = QLabeledDoubleRangeSlider(Qt.Orientation.Horizontal)  
-        self.z_range_slider.setEdgeLabelMode(QLabeledDoubleRangeSlider.EdgeLabelMode.LabelIsValue)
+        self.z_range_slider.setEdgeLabelMode(QLabeledDoubleRangeSlider.EdgeLabelMode.NoLabel)
         self.z_range_slider.setHandleLabelPosition(QLabeledDoubleRangeSlider.LabelPosition.NoLabel)
         self.z_range_slider.setSingleStep(0.01)
         self.z_range_slider.setRange(0, 100) 
@@ -272,16 +287,48 @@ class MapViewWidget(QWidget):
         self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
 
+        # Entry boxes for Z-range
+        self.z_min_edit = QLineEdit("0")
+        self.z_max_edit = QLineEdit("100")
+        self.z_min_edit.setFixedWidth(60)
+        self.z_max_edit.setFixedWidth(60)
+
+        # Connect entry boxes → slider
+        self.z_min_edit.editingFinished.connect(lambda: self._update_slider_from_edit(self.z_range_slider, self.z_min_edit, 0))
+        self.z_max_edit.editingFinished.connect(lambda: self._update_slider_from_edit(self.z_range_slider, self.z_max_edit, 1))
+
+        # Connect slider → entry boxes
+        self.z_range_slider.valueChanged.connect(lambda v: self._update_edit_from_slider(v, self.z_min_edit, self.z_max_edit))
+
         self.z_slider_layout = QHBoxLayout()
         self.z_slider_layout.addWidget(self.z_values_cbb)
+        self.z_slider_layout.addWidget(self.z_min_edit)
         self.z_slider_layout.addWidget(self.z_range_slider)
+        self.z_slider_layout.addWidget(self.z_max_edit)
         self.z_slider_layout.setContentsMargins(5, 0, 5, 0)
-        
+            
         self.map_widget_layout.addLayout(self.z_slider_layout)
         self.map_widget_layout.addLayout(self.x_slider_layout)
 
         vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.map_widget_layout.addItem(vspacer)
+    
+    def _update_slider_from_edit(self, slider, edit, index):
+        """Update slider value when user edits text boxes"""
+        try:
+            value = float(edit.text())
+            current = list(slider.value())
+            current[index] = value
+            # Ensure min <= max
+            if current[0] <= current[1]:
+                slider.setValue(tuple(current))
+        except ValueError:
+            pass  # ignore invalid input
+
+    def _update_edit_from_slider(self, values, min_edit, max_edit):
+        """Update entry boxes when slider moves"""
+        min_edit.setText(f"{values[0]:.2f}")
+        max_edit.setText(f"{values[1]:.2f}")
     
     def populate_z_values_cbb(self):
         self.z_values_cbb.clear() 

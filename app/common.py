@@ -266,7 +266,7 @@ class MapViewWidget(QWidget):
         self.z_range_slider.setTracking(True)    
 
         self.z_values_cbb = QComboBox()
-        self.z_values_cbb.addItems(['Area', 'Max intensity']) 
+        self.z_values_cbb.addItems(['Area', 'Max Intensity']) 
         self.z_values_cbb.setFixedWidth(80)  
         self.z_values_cbb.setToolTip("Select parameter to plot 2Dmap")
         self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
@@ -343,6 +343,7 @@ class MapViewWidget(QWidget):
                 if parameter == 'Area':
                     # Intensity sums of of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
+                    
                 elif parameter == 'Max Intensity':
                     # Max intensity value of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)

@@ -287,8 +287,8 @@ class MapViewWidget(QWidget):
         self.z_range_slider.setTracking(True)    
 
         self.z_values_cbb = QComboBox()
-        self.z_values_cbb.addItems(['Area', 'Max Intensity']) 
-        self.z_values_cbb.setFixedWidth(96) 
+        self.z_values_cbb.addItems(['Max Intensity', 'Area']) 
+        self.z_values_cbb.setFixedWidth(97) 
         self.z_values_cbb.setToolTip("Select parameter to plot 2Dmap")
         self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
@@ -338,7 +338,7 @@ class MapViewWidget(QWidget):
     
     def populate_z_values_cbb(self):
         self.z_values_cbb.clear() 
-        self.z_values_cbb.addItems(['Area', 'Max Intensity'])
+        self.z_values_cbb.addItems(['Max Intensity', 'Area'])
         if not self.df_fit_results.empty:
             fit_columns = [col for col in self.df_fit_results.columns if col not in ['Filename', 'X', 'Y']]
             self.z_values_cbb.addItems(fit_columns)

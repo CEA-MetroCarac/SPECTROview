@@ -152,8 +152,7 @@ class Visualization(QDialog):
             # Get available graph IDs considering vacancies in the list
             available_ids = [i for i in range(1, len(self.plots) + 2) if
                              i not in self.plots]
-            graph_id = min(available_ids) if available_ids else len(
-                self.plots) + 1
+            graph_id = min(available_ids) if available_ids else len(self.plots) + 1
             # Create new graph
             graph = Graph(graph_id=graph_id)
             self.plots[graph.graph_id] = graph

@@ -29,7 +29,7 @@ class About(QDialog):
         info = f"""
         <div style="text-align: center;">
             <h2>SPECTROview</h2>
-            <p><i>(Spectroscopic Data Processing and Visualization)</i></p>
+            <p><i>(Tool for Spectroscopic Data Processing and Visualization)</i></p>
             <p><b>Version {VERSION}</b></p>
         </div>
         <hr>

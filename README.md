@@ -4,7 +4,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14148070.svg)](https://doi.org/10.5281/zenodo.14147172) 
 
 <p align="center">
-    <img width=100 src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/icon3.png">
+    <img width=100 src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/icons/logo_spectroview.png">
 </p>
 
 ## SPECTROview : A Tool for Spectroscopic Data Processing and Visualization.
@@ -29,23 +29,23 @@ ___
 
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/tab_maps.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/tab_maps.gif">
 </p>
 
 <p align="center">(Fitting multiple spectra / wafers / 2D-maps with predefined models)</p>
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/collect_fit_results.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/collect_fit_results.gif">
 </p>
 <p align="center">(Collect data with one click)</p>
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/2Dmap.png">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/2Dmap.png">
 </p>
 <p align="center">(2Dmap processing and visualization, extract and plot line profiles with ease, etc.)</p>
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/resources/GIF/visualization_tab.png">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/visualization_tab.png">
 </p>
 <p align="center">(Support various plotting styles with automatic statistical calculations)</p>
 

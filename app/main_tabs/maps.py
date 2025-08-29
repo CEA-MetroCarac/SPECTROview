@@ -15,7 +15,7 @@ from app.common import FitThread, PeakTableWidget, DataframeTableWidget, \
     FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget, Graph, CustomSpectra
 
 from app import FIT_METHODS
-from app.visualisation import MdiSubWindow
+from app.main_tabs.graphs import MdiSubWindow
 from lmfit import fit_report
 
 from fitspy.spectrum import Spectrum

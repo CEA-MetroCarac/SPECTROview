@@ -19,9 +19,9 @@ from app.common import CommonUtilities, FitModelManager, MapViewWidget, ConvertF
 from app.common import show_alert
 
 from app.uiconnector import UiConnector
-from app.maps import Maps
-from app.spectrums import Spectrums
-from app.visualisation import Visualization
+from app.main_tabs.maps import Maps
+from app.main_tabs.spectrums import Spectrums
+from app.main_tabs.graphs import Visualization
 from app.app_settings import AppSettings
 from app.app_shortcuts import setup_shortcuts
 
@@ -172,7 +172,7 @@ class Main:
     def open_manual(self):
         """Open doc detail about query function of pandas dataframe"""
         title = "SPECTROview User Manual"
-        self.common.view_markdown(self.ui, title, USER_MANUAL, 1200, 900, "doc/")
+        self.common.view_markdown(self.ui, title, USER_MANUAL, 1200, 900, "resources/doc/")
 
     def show_about(self):
         """Show about dialog """

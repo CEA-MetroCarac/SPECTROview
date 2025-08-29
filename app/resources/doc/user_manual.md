@@ -70,8 +70,9 @@ The 'Spectra' and 'Maps' tab sharing almost the same feature and GUI except
 some specific GUi element for 2Dmaps/hyperspectral data navigation.
 
 <p align="center">
-    <img width=1100 src="figures/fig1.png">
+    <img width=1100 src="figures/fig1.png" alt="figures/fig1.png">
 </p>
+
 
 # 3. "Data Visualization" TAB
 

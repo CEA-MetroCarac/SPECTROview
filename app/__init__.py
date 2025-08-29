@@ -32,11 +32,11 @@ X_AXIS_UNIT = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
 DIR = os.path.dirname(__file__)
 RESOURCES_DIR = os.path.join(DIR, "resources")
 
-ICON_DIR = os.path.join(DIR, "resources", "icons")
-PLOT_POLICY = os.path.join(DIR, "resources", "plotpolicy.mplstyle")
+ICON_DIR = os.path.join(RESOURCES_DIR, "icons")
+PLOT_POLICY = os.path.join(RESOURCES_DIR, "plotpolicy.mplstyle")
 
-UI_FILE = os.path.join(DIR, "resources", "ui", "gui.ui")
-LOGO_APPLI = os.path.join(DIR, "resources", "icons", "logo_spectroview.png")
+UI_FILE = os.path.join(RESOURCES_DIR, "ui", "gui.ui")
+LOGO_APPLI = os.path.join(RESOURCES_DIR, "icons", "logo_spectroview.png")
 
-ABOUT = os.path.join(DIR, "doc", "about.md")
-USER_MANUAL = os.path.join(DIR, "doc", "user_manual.md")
+ABOUT = os.path.join(RESOURCES_DIR, "doc", "about.md")
+USER_MANUAL = os.path.join(RESOURCES_DIR, "doc", "user_manual.md")

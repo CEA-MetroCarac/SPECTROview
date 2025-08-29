@@ -12,7 +12,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon
 
-from spectroview import UI_FILE, LOGO_APPLI, ABOUT, USER_MANUAL
+from spectroview import UI_FILE, LOGO_APPLI, USER_MANUAL
 from spectroview.config.gui import resources
 
 from spectroview.components.utils import show_alert

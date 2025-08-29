@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spectroview"
-version = "0.8.1"
-description = "A Tool for Spectroscopic Data Processing and Visualization."
+dynamic = ["version"]
+description = "SPECTROView: A Tool for Spectroscopic Data Processing and Visualization."
 readme = "README.md"
 requires-python = ">=3.8"
 keywords = ["SPECTROview", "fit", "fitting", "spectra", "spectrum", "spectroscopic", "visualization",
@@ -31,7 +31,7 @@ dependencies = [
     "fitspy==2025.6",
     "numpy",
     "openpyxl",
-    "pandas==2.2.0",
+    "pandas",
     "matplotlib==3.8.4",
     "seaborn==0.13.2",
     "pyside6",
@@ -49,15 +49,18 @@ Homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
 dev = ["pytest", "black"]
 
 [project.scripts]
-spectroview = "app.main:launcher"
+spectroview = "spectroview.main:launcher"
+
+[tool.setuptools.dynamic]
+version = { attr = "spectroview.VERSION" }
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["app*"]
+include = ["spectroview*"]
 namespaces = false
 
 [tool.setuptools.package-data]
-app = [
+spectroview = [
     "resources/*.mplstyle", 
     "resources/*.png", 
     "resources/doc/*.md",

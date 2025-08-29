@@ -65,8 +65,8 @@ spectroview = [
     "resources/*.png", 
     "resources/doc/*.md",
     "resources/doc/figures/*.png",
-    "resources/ui/*.ui",
-    "resources/ui/*.qrc",
+    "config/gui/*.ui",
+    "config/gui/*.qrc",
     "resources/icons/*.png",
     "resources/icons/*.ico",
 ]

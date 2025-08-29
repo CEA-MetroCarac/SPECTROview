@@ -1,4 +1,3 @@
-# app/app_settings.py
 from dataclasses import dataclass, field
 from typing import Any
 from PySide6.QtCore import QSettings

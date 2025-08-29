@@ -1,8 +1,8 @@
 
 
-from PySide6.QtWidgets import QVBoxLayout, QTableWidget, QWidget, QTableWidgetItem
+from PySide6.QtWidgets import QVBoxLayout, QTableWidget, QWidget, QTableWidgetItem, QApplication
 from PySide6.QtGui import QAction, QColor
-from PySide6.QtCore import Qt, QCoreApplication
+from PySide6.QtCore import Qt
 
 class DataframeTableWidget(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.

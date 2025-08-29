@@ -10,22 +10,19 @@ from spectroview import PLOT_STYLES, LEGEND_LOCATION, ICON_DIR
 
 from spectroview.components.utils import view_df, show_alert, copy_fig_to_clb
 from spectroview.components.widget_filter import FilterWidget
+from spectroview.components.graph import Graph
+from spectroview.components.utils import CustomizedPalette
 
-from spectroview.common import Graph, CustomizedPalette
-
-from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, \
-     QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox
 from PySide6.QtCore import Qt, QTimer, Signal, QSize
-from PySide6.QtGui import  QIcon,  Qt
+from PySide6.QtGui import  QIcon, Qt
 
-
-class Visualization(QDialog):
+class Graphs(QDialog):
     """
     This class provides a GUI for plotting graphs based on selected dataframes,
     applying filters, customizing graph properties, and managing graph
     instances.
     """
-
     def __init__(self, settings, ui, common):
         super().__init__()
         self.ui = ui
@@ -71,11 +68,7 @@ class Visualization(QDialog):
         self.cbb_palette.currentIndexChanged.connect(lambda: self.plotting(update_graph=True))
         self.ui.horizontalLayout_115.addWidget(self.cbb_palette)
 
-        #self.ui.cbb_plotstyle.addItems(PLOT_STYLES)
-
-
         # Plot_style comboboxes
-        
         self.ui.cbb_plotstyle.setIconSize(QSize(40, 40))
         for style in PLOT_STYLES:
             icon_path = os.path.join(ICON_DIR, f"{style}.png")
@@ -84,7 +77,6 @@ class Visualization(QDialog):
             else:
                 icon = QIcon()  # Fallback in case the icon is missing
             self.ui.cbb_plotstyle.addItem(icon, style)
-
 
         self.ui.cbb_legend_loc.addItems(LEGEND_LOCATION)
 
@@ -120,7 +112,6 @@ class Visualization(QDialog):
                     else:
                         show_alert(f"Unsupported file format: {extension}")
         self.update_dfs_list()
-
 
     def update_dfs_list(self):
         """
@@ -680,7 +671,7 @@ class Visualization(QDialog):
         self.filter.filter_listbox.clear()
         self.ui.cbb_graph_list.clear()
         self.clear_limits()
-        print("'Visualization' Tab environment has been cleared.")
+        print("'Graphs' Tab environment has been cleared.")
 
     def add_y12(self):
         """Add a second line in the current plot ax"""
@@ -926,3 +917,4 @@ class MdiSubWindow(QMdiSubWindow):
         if not self.mdi_area.activeSubWindow():
             self.mdi_area.setActiveSubWindow(None)
         super().focusInEvent(event)
+

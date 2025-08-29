@@ -10,18 +10,21 @@ from io import StringIO
 from copy import deepcopy
 from pathlib import Path
 
-from spectroview.components.utils import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
-from spectroview.components.widget_dataframetable import DataframeTableWidget
-from spectroview.common import FitThread, PeakTableWidget, FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget, Graph, CustomSpectra
 from spectroview import FIT_METHODS
-from spectroview.main_tabs.graphs import MdiSubWindow
+from spectroview.components.utils import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
+from spectroview.components.utils import FitThread, FitModelManager, CustomizedListWidget, CustomizedSpectra
+from spectroview.components.widget_df_table import DataframeTableWidget
+from spectroview.components.widget_mapview import MapViewWidget
+from spectroview.components.widget_spectraview import SpectraViewWidget
+from spectroview.components.widget_peaktable import PeakTableWidget
+from spectroview.components.graph import Graph
 
+from spectroview.main_tabs.graphs import MdiSubWindow
 
 from lmfit import fit_report
 
 from fitspy.spectrum import Spectrum
 from fitspy.core.utils import closest_index
-
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication, QListWidgetItem, QDialog, QVBoxLayout
 from PySide6.QtGui import QColor
@@ -46,7 +49,7 @@ class Maps(QObject):
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.maps = {}  # list of opened maps data
-        self.spectrums = CustomSpectra()
+        self.spectrums = CustomizedSpectra()
         
          # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget(self)
@@ -62,7 +65,7 @@ class Maps(QObject):
         self.df_table = DataframeTableWidget(self.ui.layout_df_table)
         
         # Initialize QListWidget for spectra list
-        self.ui.spectra_listbox = CustomListWidget()
+        self.ui.spectra_listbox = CustomizedListWidget()
         self.ui.listbox_layout2.addWidget(self.ui.spectra_listbox)
         self.ui.spectra_listbox.itemSelectionChanged.connect(self.refresh_gui)
         self.ui.checkBox_2.stateChanged.connect(self.check_uncheck_all)
@@ -939,7 +942,7 @@ class Maps(QObject):
         map_name, coords = self.spectra_id()
         if map_name in self.maps:
             del self.maps[map_name]
-            self.spectrums = CustomSpectra(
+            self.spectrums = CustomizedSpectra(
                 spectrum for spectrum in self.spectrums if
                 not spectrum.fname.startswith(map_name))
             self.upd_maps_list()
@@ -1272,7 +1275,7 @@ class Maps(QObject):
             with open(file_path, 'r') as f:
                 load = json.load(f)
                 try:
-                    self.spectrums = CustomSpectra()
+                    self.spectrums = CustomizedSpectra()
                     self.maps = {}
                     # Decode hex and decompress the dataframe
                     for k, v in load.get('maps', {}).items():
@@ -1299,7 +1302,7 @@ class Maps(QObject):
         """Clear the environment and reset the application state"""
         # Clear loaded maps and spectra
         self.maps.clear()
-        self.spectrums = CustomSpectra()
+        self.spectrums = CustomizedSpectra()
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.df_fit_results = None

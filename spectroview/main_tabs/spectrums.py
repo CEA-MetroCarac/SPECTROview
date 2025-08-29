@@ -6,8 +6,11 @@ import pandas as pd
 import json
 
 from spectroview.components.utils import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area
-from spectroview.components.widget_dataframetable import DataframeTableWidget
-from spectroview.common import FitThread, FitModelManager, PeakTableWidget, CustomListWidget, SpectraViewWidget, CustomSpectra
+from spectroview.components.utils import FitThread, FitModelManager, CustomizedListWidget, CustomizedSpectra
+from spectroview.components.widget_df_table import DataframeTableWidget
+from spectroview.components.widget_peaktable import PeakTableWidget
+from spectroview.components.widget_spectraview import SpectraViewWidget
+
 from spectroview import FIT_METHODS
 
 from copy import deepcopy
@@ -38,7 +41,7 @@ class Spectrums(QObject):
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.current_peaks = None
-        self.spectrums = CustomSpectra()
+        self.spectrums = CustomizedSpectra()
 
         # Initialize SpectraViewWidget
         self.spectra_widget = SpectraViewWidget(self)
@@ -54,7 +57,7 @@ class Spectrums(QObject):
         self.df_table = DataframeTableWidget(self.ui.layout_df_table2)
 
         # Initialize QListWidget for spectra list
-        self.ui.spectrums_listbox = CustomListWidget()
+        self.ui.spectrums_listbox = CustomizedListWidget()
         self.ui.listbox_layout.addWidget(self.ui.spectrums_listbox)
         self.ui.spectrums_listbox.items_reordered.connect(self.update_spectrums_order)
         self.ui.spectrums_listbox.itemSelectionChanged.connect(self.refresh_gui)
@@ -108,7 +111,7 @@ class Spectrums(QObject):
         """Open and load raw spectral data"""
 
         if self.spectrums is None:
-            self.spectrums = CustomSpectra()
+            self.spectrums = CustomizedSpectra()
         if spectra:
             self.spectrums = spectra
         else:
@@ -388,7 +391,7 @@ class Spectrums(QObject):
         """Plot spectra or fit results in the main plot area."""
         fnames = self.get_spectrum_fnames()
         
-        selected_spectrums = CustomSpectra()
+        selected_spectrums = CustomizedSpectra()
         selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
         # Limit the number of spectra to avoid crashes
         selected_spectrums = selected_spectrums[:30]
@@ -412,7 +415,7 @@ class Spectrums(QObject):
         """
         Get a list of selected spectra based on listbox's checkbox states.
         """
-        checked_spectra = CustomSpectra()
+        checked_spectra = CustomizedSpectra()
         for index in range(self.ui.spectrums_listbox.count()):
             item = self.ui.spectrums_listbox.item(index)
             if item.checkState() == Qt.Checked:
@@ -887,7 +890,7 @@ class Spectrums(QObject):
 
     def remove_spectrum(self):
         fnames = self.get_spectrum_fnames()
-        self.spectrums = CustomSpectra(
+        self.spectrums = CustomizedSpectra(
             spectrum for spectrum in self.spectrums if
             spectrum.fname not in fnames)
         self.upd_spectra_list()
@@ -988,7 +991,7 @@ class Spectrums(QObject):
                 load = json.load(f)
                 try:
                     # Load all spectra
-                    self.spectrums = CustomSpectra()
+                    self.spectrums = CustomizedSpectra()
                     for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
                         spectrum = Spectrum()
                         dict_to_spectrum(spectrum=spectrum, spectrum_data=spectrum_data, is_map=False)
@@ -1005,7 +1008,7 @@ class Spectrums(QObject):
 
     def clear_env(self):
         """Clear the environment and reset the application state"""
-        self.spectrums = CustomSpectra()
+        self.spectrums = CustomizedSpectra()
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.df_fit_results = None

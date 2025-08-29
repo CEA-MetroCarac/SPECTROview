@@ -7,7 +7,6 @@ import pandas as pd
 from PySide6.QtWidgets import QMessageBox,  QFileDialog
 from PySide6.QtCore import QFileInfo
 
-
 class FileConverter():
     def __init__(self, ui, settings):
         super().__init__()
@@ -17,8 +16,7 @@ class FileConverter():
         
         self.ui.btn_browse.clicked.connect(lambda: self.browse_files())
         self.ui.btn_convert.clicked.connect(lambda: self.convert())
-
-        
+      
     def browse_files(self, file_paths=None):
         """
         Browse and select files to convert. Populates listbox with file names.

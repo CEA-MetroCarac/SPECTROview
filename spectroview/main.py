@@ -3,9 +3,9 @@ import sys
 import os
 import pandas as pd
 import datetime
-from pathlib import Path
-from functools import partial
 import logging
+
+from pathlib import Path
 
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
@@ -15,23 +15,21 @@ from PySide6.QtGui import QIcon
 from spectroview import UI_FILE, LOGO_APPLI, ABOUT, USER_MANUAL
 from spectroview.resources.ui import resources 
 
-
-from spectroview.common import CommonUtilities, FitModelManager, MapViewWidget
 from spectroview.components.utils import show_alert
-
-from spectroview.uiconnector import UiConnector
+from spectroview.components.utils import CommonUtilities, FitModelManager
+from spectroview.components.widget_mapview import MapViewWidget
+from spectroview.components.ui_connector import UiConnector
 
 from spectroview.main_tabs.maps import Maps
 from spectroview.main_tabs.spectrums import Spectrums
-from spectroview.main_tabs.graphs import Visualization
+from spectroview.main_tabs.graphs import Graphs
 from spectroview.main_tabs.file_converter import FileConverter
 
-from spectroview.app_settings import AppSettings
-from spectroview.app_shortcuts import setup_shortcuts
+from spectroview.config.app_settings import AppSettings
+from spectroview.config.app_shortcuts import setup_shortcuts
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-
 
 class Main:
     def __init__(self):
@@ -50,7 +48,7 @@ class Main:
         qsettings = self.app_settings.qsettings
 
         # Create subsystem instances
-        self.visu = Visualization(qsettings, self.ui, self.common)
+        self.visu = Graphs(qsettings, self.ui, self.common)
         self.spectrums = Spectrums(qsettings, self.ui, self.common, self.visu, self.app_settings)
         self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.visu, self.app_settings)
         self.fitmodel_manager = FitModelManager(qsettings)

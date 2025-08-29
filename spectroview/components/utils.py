@@ -1,28 +1,405 @@
 # module to contain all common utilites / methodes used across the app
-
+import os
 import base64
+import markdown
 import zlib
 import numpy as np
 import pandas as pd
-import matplotlib.colors as mcolors
 import platform
+
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+
 from io import BytesIO
 from PIL import Image
-
+from threading import Thread
+from multiprocessing import Queue
 from copy import deepcopy
 from openpyxl.styles import PatternFill
 
-from PySide6.QtWidgets import QListWidgetItem, QMessageBox, QDialog, QVBoxLayout
-from PySide6.QtGui import Qt, QColor
-
+from fitspy.core.spectra import Spectra
 from fitspy.core.baseline import BaseLine
+from fitspy.core.utils_mp import fit_mp
 
-from spectroview.components.widget_dataframetable import DataframeTableWidget
+from spectroview import PALETTE
+from spectroview.components.widget_df_table import DataframeTableWidget
+
+from PySide6.QtWidgets import QDialog, QTableWidgetItem, QVBoxLayout,  QTextBrowser, \
+    QComboBox, QListWidgetItem, QMessageBox, QDialog, QVBoxLayout, QListWidget, QAbstractItemView
+    
+from PySide6.QtCore import Signal, QThread, Qt, QSize
+from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, Qt, QPixmap, QImage
 
 if platform.system() == 'Darwin':
     import AppKit 
 if platform.system() == 'Windows':
     import win32clipboard
+    
+    
+class CustomizedPalette(QComboBox):
+    """Custom QComboBox to show color palette previews along with their names."""
+
+    def __init__(self, palette_list=None, parent=None, icon_size=(99, 12)):
+        super().__init__(parent)
+        self.icon_width, self.icon_height = icon_size
+        self.setIconSize(QSize(*icon_size))
+        self.setMinimumWidth(100)
+
+        self.palette_list = palette_list or PALETTE
+        self._populate_with_previews()
+
+    def _populate_with_previews(self):
+        self.clear()
+        for cmap_name in self.palette_list:
+            icon = QIcon(self._create_colormap_preview(cmap_name))
+            self.addItem(icon, cmap_name)
+
+    def _create_colormap_preview(self, cmap_name):
+        """Generate a horizontal gradient preview image for the colormap."""
+        width, height = self.icon_width, self.icon_height
+        gradient = np.linspace(0, 1, 20).reshape(1, -1)
+
+        fig = Figure(figsize=(width / 100, height / 100), dpi=100)
+        canvas = FigureCanvas(fig)
+        ax = fig.add_axes([0, 0, 1, 1], frameon=False)
+        ax.imshow(gradient, aspect='auto', cmap=cm.get_cmap(cmap_name))
+        ax.set_axis_off()
+        canvas.draw()
+
+        image = np.array(canvas.buffer_rgba())
+        qimage = QImage(image.data, image.shape[1], image.shape[0],
+                        QImage.Format_RGBA8888)
+        return QPixmap.fromImage(qimage)
+
+    def get_selected_palette(self):
+        return self.currentText()
+
+class CustomizedSpectra(Spectra):
+    """Customized Spectra class of the fitspy package."""
+    def apply_model(self, model_dict, fnames=None, ncpus=1,
+                    show_progressbar=True):
+        """ Apply 'model' to all or part of the spectra."""
+        if fnames is None:
+            fnames = self.fnames
+
+        spectra = []
+        for fname in fnames:
+            spectrum, _ = self.get_objects(fname)
+            
+            # Customize the model_dict for this spectrum
+            custom_model = deepcopy(model_dict)
+            if hasattr(spectrum, "correction_value"):
+                custom_model["correction_value"] = spectrum.correction_value
+            if hasattr(spectrum, "is_corrected"):
+                custom_model["is_corrected"] = spectrum.is_corrected
+
+            spectrum.set_attributes(custom_model)
+            spectrum.fname = fname  # reassign the correct fname
+            spectra.append(spectrum)
+
+        self.pbar_index = 0
+
+        queue_incr = Queue()
+        args = (queue_incr, len(fnames), ncpus, show_progressbar)
+        thread = Thread(target=self.progressbar, args=args)
+        thread.start()
+
+        if ncpus == 1:
+            for spectrum in spectra:
+                spectrum.preprocess()
+                spectrum.fit()
+                queue_incr.put(1)
+        else:
+            fit_mp(spectra, ncpus, queue_incr)
+
+        thread.join()     
+        
+class FitModelManager:
+    """
+    Class to manage fit models created by USERS.
+
+    Attributes:
+    settings (QSettings): QSettings object to store and retrieve settings.
+    default_model_folder (str): Default folder path where fit models are stored.
+    available_models (list): List of available fit model filenames in the
+    default folder.
+    """
+
+    def __init__(self, settings):
+        self.settings = settings
+        self.default_model_folder = self.settings.value("default_model_folder","")
+        self.available_models = []
+        if self.default_model_folder:
+            self.scan_models()
+
+    def set_default_model_folder(self, folder_path):
+        """
+        Set the default folder path where fit models will be stored.
+
+        Args:
+        folder_path (str): Path to the default folder.
+        """
+        self.default_model_folder = folder_path
+        self.settings.setValue("default_model_folder", folder_path)
+        self.scan_models()
+
+    def scan_models(self):
+        """
+        Scan the default folder and populate the available_models list.
+
+        This method scans the default_model_folder for files with the '.json'
+        extension and updates the available_models list accordingly.
+        """
+        self.available_models = []
+
+        if self.default_model_folder:
+            if not os.path.exists(self.default_model_folder):
+                # Folder is specified but does not exist anymore (deleted or renamed)
+                msg= f"Default 'Fit_models' folder '{self.default_model_folder}' not found. Please specify another one in the 'More Settings' tab."
+                show_alert(msg)
+                # Reset the default model folder to empty
+                self.default_model_folder = ""
+                self.settings.setValue("default_model_folder", "")
+                return  # Exit the method since the folder is missing
+            
+            # Scan the folder for JSON files if it exists
+            try:
+                for file_name in os.listdir(self.default_model_folder):
+                    if file_name.endswith('.json'):
+                        self.available_models.append(file_name)
+            except Exception as e:
+                print(f"Error scanning the folder '{self.default_model_folder}': {e}")
+
+
+    def get_available_models(self):
+        """
+        Retrieve the list of available fit model filenames.
+
+        Returns:
+        list: List of available fit model filenames in the default folder.
+        """
+        return self.available_models
+
+
+class CommonUtilities():
+    """ Class contain all common methods or utility codes used other modules"""
+    def reinit_spectrum(self, fnames, spectrums):
+        """Reinitilize a FITSPY spectrum object"""
+        for fname in fnames:
+            spectrum, _ = spectrums.get_objects(fname)
+            spectrum.reinit()
+            spectrum.baseline.mode = "Linear"
+
+    def clear_layout(self, layout):
+        """Clear everything in a given Qlayout"""
+        if layout is not None:
+            for i in reversed(range(layout.count())):
+                item = layout.itemAt(i)
+                if isinstance(item.widget(),
+                              (FigureCanvas, NavigationToolbar2QT)):
+                    widget = item.widget()
+                    layout.removeWidget(widget)
+                    widget.close()
+
+    def replace_peak_labels(self, fit_model, param):
+        """Replace prefix 'm01' of peak model by labels designed by user"""
+        peak_labels = fit_model["peak_labels"]
+        if "_" in param:
+            prefix, param = param.split("_", 1)  
+            # Convert prefix to peak_label
+            peak_index = int(prefix[1:]) - 1
+            if 0 <= peak_index < len(peak_labels):
+                peak_label = peak_labels[peak_index]
+                return f"{param}_{peak_label}"
+        return param
+
+    def quadrant(self, row):
+        """Define 4 quadrant of a wafer"""
+        if row['X'] < 0 and row['Y'] < 0:
+            return 'Q1'
+        elif row['X'] < 0 and row['Y'] > 0:
+            return 'Q2'
+        elif row['X'] > 0 and row['Y'] > 0:
+            return 'Q3'
+        elif row['X'] > 0 and row['Y'] < 0:
+            return 'Q4'
+        else:
+            return np.nan
+
+    def zone(self, row, radius):
+        """Define 3 zones (Center, Mid-Radius, Edge) based on X and Y
+        coordinates."""
+        r = radius
+        x = row['X']
+        y = row['Y']
+        distance_to_center = np.sqrt(x ** 2 + y ** 2)
+        if distance_to_center <= r * 0.35:
+            return 'Center'
+        elif distance_to_center > r * 0.35 and distance_to_center < r * 0.8:
+            return 'Mid-Radius'
+        elif distance_to_center >= 0.8 * r:
+            return 'Edge'
+        else:
+            return np.nan
+
+    def display_df_in_table(self, table_widget, df_results):
+        """Display pandas DataFrame in QTableWidget in GUI"""
+        table_widget.setRowCount(df_results.shape[0])
+        table_widget.setColumnCount(df_results.shape[1])
+        table_widget.setHorizontalHeaderLabels(df_results.columns)
+        for row in range(df_results.shape[0]):
+            for col in range(df_results.shape[1]):
+                item = QTableWidgetItem(str(df_results.iat[row, col]))
+                table_widget.setItem(row, col, item)
+        table_widget.resizeColumnsToContents()
+
+    def view_text(self, ui, title, text):
+        """ Create a QTextBrowser to display a text content"""
+        report_viewer = QDialog(ui)
+        report_viewer.setWindowTitle(title)
+        report_viewer.setGeometry(100, 100, 800, 600)
+        text_browser = QTextBrowser(report_viewer)
+        text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        text_browser.setOpenExternalLinks(True)
+        text_browser.setPlainText(text)
+        text_browser.moveCursor(QTextCursor.Start)
+        layout = QVBoxLayout(report_viewer)
+        layout.addWidget(text_browser)
+        report_viewer.show()
+
+    def view_markdown(self, ui, title, fname, x, y, working_folder):
+        """To convert MD file to html format and display them in GUI"""
+        with open(fname, 'r', encoding='utf-8') as f:
+            markdown_content = f.read()
+        html_content = markdown.markdown(markdown_content)
+        DIRNAME = os.path.dirname(__file__)
+        html_content = html_content.replace('src="',
+                                            f'src="'
+                                            f'{os.path.join(DIRNAME, working_folder)}')
+        about_dialog = QDialog(ui)
+        about_dialog.setWindowTitle(title)
+        about_dialog.resize(x, y)
+        text_browser = QTextBrowser(about_dialog)
+        text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        text_browser.setOpenExternalLinks(True)
+        text_browser.setHtml(html_content)
+        layout = QVBoxLayout(about_dialog)
+        layout.addWidget(text_browser)
+        about_dialog.setLayout(layout)
+        about_dialog.show()
+
+    def dark_palette(self):
+        """Palette color for dark mode of the appli's GUI"""
+        dark_palette = QPalette()
+        dark_palette.setColor(QPalette.Window, QColor(70, 70, 70))
+        dark_palette.setColor(QPalette.WindowText, Qt.white)
+        dark_palette.setColor(QPalette.Base,
+                              QColor(65, 65, 65))  # QlineEdit Listbox bg
+        dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
+        dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
+        dark_palette.setColor(QPalette.ToolTipText, Qt.white)
+        dark_palette.setColor(QPalette.Text, Qt.white)
+        dark_palette.setColor(QPalette.Button, QColor(64, 64, 64))
+        dark_palette.setColor(QPalette.ButtonText, Qt.white)
+        dark_palette.setColor(QPalette.BrightText, Qt.red)
+        dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+        dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+        dark_palette.setColor(QPalette.HighlightedText, Qt.white)
+        dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
+        dark_palette.setColor(QPalette.Base, QColor(60, 60, 60))  # Background color for QMenu
+        
+        return dark_palette
+
+    def light_palette(self):
+        """Palette color for light mode of the appli's GUI"""
+        light_palette = QPalette()
+        light_palette.setColor(QPalette.Window, QColor(225, 225, 225))
+        light_palette.setColor(QPalette.WindowText, Qt.black)
+        light_palette.setColor(QPalette.Base, QColor(215, 215, 215))
+        light_palette.setColor(QPalette.AlternateBase, QColor(230, 230, 230))
+        light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
+        light_palette.setColor(QPalette.ToolTipText, Qt.black)
+        light_palette.setColor(QPalette.Text, Qt.black)
+        light_palette.setColor(QPalette.Button, QColor(230, 230, 230))
+        light_palette.setColor(QPalette.ButtonText, Qt.black)
+        light_palette.setColor(QPalette.BrightText, Qt.red)
+        light_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+        light_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+        light_palette.setColor(QPalette.HighlightedText, Qt.black)
+        light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
+        light_palette.setColor(QPalette.Base, QColor(240, 240, 240))  # Menu background color
+
+        return light_palette
+
+
+class FitThread(QThread):
+    """ Class to perform fitting in a separate Thread """
+    progress_changed = Signal(int)
+
+    def __init__(self, spectrums, fit_model, fnames, ncpus=1):
+        super().__init__()
+        self.spectrums = spectrums
+        self.fit_model = fit_model
+        self.fnames = fnames
+        self.ncpus = ncpus
+
+    def run(self):
+        fit_model = deepcopy(self.fit_model)
+        self.spectrums.apply_model(fit_model, fnames=self.fnames,
+                                   ncpus=self.ncpus, show_progressbar=False)
+
+        self.progress_changed.emit(100)
+
+class CustomizedListWidget(QListWidget):
+    """
+    Customized QListWidget with drag-and-drop functionality for rearranging
+    items.
+
+    This class inherits from QListWidget and provides extended functionality
+    for reordering items via drag-and-drop operations.
+
+    Signals:
+        items_reordered:
+            Emitted when items in the list widget are reordered by the user
+            using drag-and-drop.
+    """
+    items_reordered = Signal()
+    files_dropped = Signal(list) 
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAcceptDrops(True)  # Enable external drag-drop
+        self.setDragDropMode(QListWidget.InternalMove)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragEnterEvent(event)
+            
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragMoveEvent(event)
+            
+    def dropEvent(self, event):
+        """
+        Overrides the dropEvent method to emit the items_reordered signal
+            after an item is dropped into a new position.
+        """
+        if event.mimeData().hasUrls():
+            file_paths = [url.toLocalFile() for url in event.mimeData().urls()]
+            self.files_dropped.emit(file_paths)  # emit signal with file list
+            event.acceptProposedAction()
+        else:
+            super().dropEvent(event)
+            self.items_reordered.emit()
+    
 
 def compress(array):
     """Compress and encode a numpy array to a base64 string."""

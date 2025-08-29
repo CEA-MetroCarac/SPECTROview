@@ -3,10 +3,8 @@ from functools import partial
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtCore import Qt
 
-
 def switch_to(main_app, widget):
     main_app.ui.tabWidget.setCurrentWidget(widget)
-
 
 def rescale_shortcut(main_app):
     """Dispatch Ctrl+R based on current tab."""
@@ -24,7 +22,6 @@ def fitting_shortcut(main_app):
     elif current_tab == main_app.ui.tab_maps:
         main_app.maps.fit()
 
-
 def copy_shortcut(main_app):
     """Dispatch Ctrl+F based on current tab."""
     current_tab = main_app.ui.tabWidget.currentWidget()
@@ -34,7 +31,6 @@ def copy_shortcut(main_app):
         main_app.maps.spectra_widget.copy_fig()
     elif current_tab == main_app.ui.tab_graphs:
         main_app.visu.copy_fig_to_clb()
-
 
 def setup_shortcuts(main_app):
     """

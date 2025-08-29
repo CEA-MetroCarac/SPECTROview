@@ -15,13 +15,17 @@ from PySide6.QtGui import QIcon
 from app import UI_FILE, LOGO_APPLI, ABOUT, USER_MANUAL
 from app.resources.ui import resources 
 
-from app.common import CommonUtilities, FitModelManager, MapViewWidget, ConvertFile
+
+from app.common import CommonUtilities, FitModelManager, MapViewWidget
 from app.common import show_alert
 
 from app.uiconnector import UiConnector
+
 from app.main_tabs.maps import Maps
 from app.main_tabs.spectrums import Spectrums
 from app.main_tabs.graphs import Visualization
+from app.main_tabs.file_converter import FileConverter
+
 from app.app_settings import AppSettings
 from app.app_shortcuts import setup_shortcuts
 
@@ -51,7 +55,7 @@ class Main:
         self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.visu, self.app_settings)
         self.fitmodel_manager = FitModelManager(qsettings)
         self.mapview_widget = MapViewWidget(self, self.app_settings)
-        self.convertfile = ConvertFile(self.ui, qsettings)
+        self.convertfile = FileConverter(self.ui, qsettings)
 
         # Apply stored settings to UI
         self.app_settings.apply_to_ui(self.ui)

@@ -38,5 +38,5 @@ PLOT_POLICY = os.path.join(DIR, "resources", "plotpolicy.mplstyle")
 UI_FILE = os.path.join(DIR, "resources", "ui", "gui.ui")
 LOGO_APPLI = os.path.join(DIR, "resources", "icons", "logo_spectroview.png")
 
-ABOUT = os.path.join(DIR, "resources", "about.md")
+ABOUT = os.path.join(DIR, "doc", "about.md")
 USER_MANUAL = os.path.join(DIR, "doc", "user_manual.md")

@@ -759,9 +759,6 @@ class Maps(QObject):
             ]
             dfr[col_name] = new_col
 
-            # Optional: force pandas to infer dtype again (helpful if all values are numeric)
-            dfr[col_name] = pd.to_numeric(dfr[col_name], errors='ignore')
-
         except Exception as e:
             print(f"Error adding new column to fit results dataframe: {e}")
             return

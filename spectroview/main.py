@@ -18,13 +18,14 @@ from spectroview.resources.ui import resources
 from spectroview.components.utils import show_alert
 from spectroview.components.utils import CommonUtilities, FitModelManager
 from spectroview.components.widget_mapview import MapViewWidget
-from spectroview.components.ui_connector import UiConnector
+from spectroview.config.ui_connector import UiConnector
 
 from spectroview.main_tabs.maps import Maps
 from spectroview.main_tabs.spectrums import Spectrums
 from spectroview.main_tabs.graphs import Graphs
 from spectroview.main_tabs.file_converter import FileConverter
 
+from spectroview.config.about import About
 from spectroview.config.app_settings import AppSettings
 from spectroview.config.app_shortcuts import setup_shortcuts
 
@@ -63,7 +64,12 @@ class Main:
 
         ### SETUP SHORTCUTS 
         setup_shortcuts(self)
-    
+        
+    def show_about(self):
+        """Show about dialog """
+        show_about = About(self.ui)
+        show_about.exec_()
+        
     def open(self, file_paths=None):
         """
         Universal action to open all supported files of SPECTROview:
@@ -175,10 +181,6 @@ class Main:
         """Open doc detail about query function of pandas dataframe"""
         title = "SPECTROview User Manual"
         self.common.view_markdown(self.ui, title, USER_MANUAL, 1200, 900, "resources/doc/")
-
-    def show_about(self):
-        """Show about dialog """
-        self.common.view_markdown(self.ui, "About", ABOUT, 650, 480, "resources/")
 
 expiration_date = datetime.datetime(2050, 6, 1)
 

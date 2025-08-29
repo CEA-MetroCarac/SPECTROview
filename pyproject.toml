@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spectroview"
-version = "0.8.0"
+version = "0.8.1"
 description = "A Tool for Spectroscopic Data Processing and Visualization."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -58,14 +58,12 @@ namespaces = false
 
 [tool.setuptools.package-data]
 app = [
-    "doc/*.md",
-    "doc/figures/*.png",
     "resources/*.mplstyle", 
     "resources/*.png", 
-    "resources/*.md",
-    "ui/*.ui",
-    "ui/*.qrc",
-    "ui/iconpack/*.png",
-    "ui/iconpack/*.ico",
-    
+    "resources/doc/*.md",
+    "resources/doc/figures/*.png",
+    "resources/ui/*.ui",
+    "resources/ui/*.qrc",
+    "resources/icons/*.png",
+    "resources/icons/*.ico",
 ]

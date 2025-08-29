@@ -1,6 +1,6 @@
 import os
 
-VERSION = "0.4.9"
+VERSION = "0.8.1"
 
 PEAK_MODELS = ["Lorentzian", "Gaussian", "PseudoVoigt", "GaussianAsym",
                "LorentzianAsym"]

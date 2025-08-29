@@ -1505,7 +1505,8 @@ class FilterWidget:
         # Button to add a filter
         self.btn_add_filter = QPushButton(self.gb_filter_widget)
         icon_add = QIcon()
-        icon_add.addFile(u":/icon/iconpack/add.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon_add.addFile(os.path.join(ICON_DIR, "add.png"))
+        
         self.btn_add_filter.setIcon(icon_add)
         self.btn_add_filter.clicked.connect(self.add_filter) 
         self.layout_buttons.addWidget(self.btn_add_filter)
@@ -1513,7 +1514,7 @@ class FilterWidget:
         # Button to remove selected filters
         self.btn_remove = QPushButton(self.gb_filter_widget)
         icon_remove = QIcon()
-        icon_remove.addFile(u":/icon/iconpack/close.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon_remove.addFile(os.path.join(ICON_DIR, "close.png"))
         self.btn_remove.setIcon(icon_remove)
         self.btn_remove.clicked.connect(self.remove_filter) 
         self.layout_buttons.addWidget(self.btn_remove)
@@ -1521,7 +1522,7 @@ class FilterWidget:
         # Button to apply filters
         self.btn_apply = QPushButton(self.gb_filter_widget)
         icon_apply = QIcon()
-        icon_apply.addFile(u":/icon/iconpack/done.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon_apply.addFile(os.path.join(ICON_DIR, "done.png"))
         self.btn_apply.setIcon(icon_apply)
         self.btn_apply.setText("Apply")  
         self.btn_apply.setToolTip("Click to apply checked filters to the selected dataframe") 

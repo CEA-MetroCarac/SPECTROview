@@ -29,8 +29,14 @@ LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
 X_AXIS_UNIT = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
 
 
-DIRNAME = os.path.dirname(__file__)
-RELPATH = os.path.join(DIRNAME, "resources")
-ICON_DIR = os.path.join(DIRNAME, "ui", "iconpack")
+DIR = os.path.dirname(__file__)
+RESOURCES_DIR = os.path.join(DIR, "resources")
 
-PLOT_POLICY = os.path.join(DIRNAME, "resources", "plotpolicy.mplstyle")
+ICON_DIR = os.path.join(DIR, "resources", "icons")
+PLOT_POLICY = os.path.join(DIR, "resources", "plotpolicy.mplstyle")
+
+UI_FILE = os.path.join(DIR, "resources", "ui", "gui.ui")
+LOGO_APPLI = os.path.join(DIR, "resources", "icons", "logo_spectroview.png")
+
+ABOUT = os.path.join(DIR, "resources", "about.md")
+USER_MANUAL = os.path.join(DIR, "doc", "user_manual.md")

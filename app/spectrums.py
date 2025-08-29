@@ -7,7 +7,7 @@ import json
 
 from app.common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area
 from app.common import FitThread, FitModelManager, PeakTableWidget, DataframeTableWidget, CustomListWidget, SpectraViewWidget, CustomSpectra
-from app import FIT_METHODS, PEAK_MODELS
+from app import FIT_METHODS
 
 from copy import deepcopy
 from pathlib import Path

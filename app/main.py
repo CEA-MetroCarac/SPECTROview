@@ -12,24 +12,18 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon
 
+from app import UI_FILE, LOGO_APPLI, ABOUT, USER_MANUAL
+from app.resources.ui import resources 
+
 from app.common import CommonUtilities, FitModelManager, MapViewWidget, ConvertFile
 from app.common import show_alert
 
-from app.ui import resources 
 from app.uiconnector import UiConnector
 from app.maps import Maps
 from app.spectrums import Spectrums
 from app.visualisation import Visualization
-
 from app.app_settings import AppSettings
 from app.app_shortcuts import setup_shortcuts
-
-# --- constants ---
-DIRNAME = os.path.dirname(__file__)
-UI_FILE = os.path.join(DIRNAME, "ui", "gui.ui")
-ICON_APPLI = os.path.join(DIRNAME, "ui", "iconpack", "icon3.png")
-USER_MANUAL = os.path.join(DIRNAME, "doc", "user_manual.md")
-ABOUT = os.path.join(DIRNAME, "resources", "about.md")
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -194,7 +188,7 @@ def launcher():
             "Github page (cf. About) to update newest version."
         )
         app = QApplication(sys.argv)
-        app.setWindowIcon(QIcon(ICON_APPLI))
+        app.setWindowIcon(QIcon(LOGO_APPLI))
         window = Main()
         window.ui.centralwidget.setEnabled(False)
         app.setStyle("Fusion")
@@ -203,7 +197,7 @@ def launcher():
         sys.exit(app.exec())
 
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon(ICON_APPLI))
+    app.setWindowIcon(QIcon(LOGO_APPLI))
     window = Main()
     window.ui.centralwidget.setEnabled(True)
     app.setStyle("Fusion")

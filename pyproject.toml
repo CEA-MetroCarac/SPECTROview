@@ -50,7 +50,6 @@ spectroview = [
     "resources/doc/figures/*.png",
     "config/gui/*.ui",
     "config/gui/*.qrc",
-    "config/gui/*.py",
     "resources/icons/*.png",
     "resources/icons/*.ico",
 ]

@@ -42,14 +42,27 @@ dependencies = [
     "superqt"
 ]
 
+[tool.setuptools.package-data]
+spectroview = [
+    "resources/*.mplstyle", 
+    "resources/*.png", 
+    "resources/doc/*.md",
+    "resources/doc/figures/*.png",
+    "config/gui/*.ui",
+    "config/gui/*.qrc",
+    "resources/icons/*.png",
+    "resources/icons/*.ico",
+]
+
+[project.scripts]
+spectroview = "spectroview.main:launcher"
+
 [project.urls]
 Homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
 
 [project.optional-dependencies]
 dev = ["pytest", "black"]
 
-[project.scripts]
-spectroview = "spectroview.main:launcher"
 
 [tool.setuptools.dynamic]
 version = { attr = "spectroview.VERSION" }
@@ -59,15 +72,4 @@ where = ["."]
 include = ["spectroview*"]
 namespaces = false
 
-[tool.setuptools.package-data]
-spectroview = [
-    "resources/*.mplstyle", 
-    "resources/*.png", 
-    "resources/doc/*.md",
-    "resources/doc/figures/*.png",
-    "config/gui/*.ui",
-    "config/gui/*.qrc",
-    "config/gui/*.py",
-    "resources/icons/*.png",
-    "resources/icons/*.ico",
-]
+

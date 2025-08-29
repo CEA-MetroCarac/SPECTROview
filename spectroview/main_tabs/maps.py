@@ -10,12 +10,13 @@ from io import StringIO
 from copy import deepcopy
 from pathlib import Path
 
-from app.common import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
-from app.common import FitThread, PeakTableWidget, DataframeTableWidget, \
-    FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget, Graph, CustomSpectra
+from spectroview.components.utils import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
+from spectroview.components.widget_dataframetable import DataframeTableWidget
+from spectroview.common import FitThread, PeakTableWidget, FitModelManager, CustomListWidget, SpectraViewWidget, MapViewWidget, Graph, CustomSpectra
+from spectroview import FIT_METHODS
+from spectroview.main_tabs.graphs import MdiSubWindow
 
-from app import FIT_METHODS
-from app.main_tabs.graphs import MdiSubWindow
+
 from lmfit import fit_report
 
 from fitspy.spectrum import Spectrum

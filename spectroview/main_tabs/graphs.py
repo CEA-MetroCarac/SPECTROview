@@ -6,9 +6,12 @@ import gzip
 from pathlib import Path
 from io import StringIO
 
-from app import PLOT_STYLES, PALETTE, LEGEND_LOCATION, ICON_DIR
-from app.common import view_df, show_alert, copy_fig_to_clb
-from app.common import Graph, FilterWidget, CustomizedPalette
+from spectroview import PLOT_STYLES, LEGEND_LOCATION, ICON_DIR
+
+from spectroview.components.utils import view_df, show_alert, copy_fig_to_clb
+from spectroview.components.widget_filter import FilterWidget
+
+from spectroview.common import Graph, CustomizedPalette
 
 from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, \
      QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox

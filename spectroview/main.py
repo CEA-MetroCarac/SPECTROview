@@ -12,22 +12,22 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon
 
-from app import UI_FILE, LOGO_APPLI, ABOUT, USER_MANUAL
-from app.resources.ui import resources 
+from spectroview import UI_FILE, LOGO_APPLI, ABOUT, USER_MANUAL
+from spectroview.resources.ui import resources 
 
 
-from app.common import CommonUtilities, FitModelManager, MapViewWidget
-from app.common import show_alert
+from spectroview.common import CommonUtilities, FitModelManager, MapViewWidget
+from spectroview.components.utils import show_alert
 
-from app.uiconnector import UiConnector
+from spectroview.uiconnector import UiConnector
 
-from app.main_tabs.maps import Maps
-from app.main_tabs.spectrums import Spectrums
-from app.main_tabs.graphs import Visualization
-from app.main_tabs.file_converter import FileConverter
+from spectroview.main_tabs.maps import Maps
+from spectroview.main_tabs.spectrums import Spectrums
+from spectroview.main_tabs.graphs import Visualization
+from spectroview.main_tabs.file_converter import FileConverter
 
-from app.app_settings import AppSettings
-from app.app_shortcuts import setup_shortcuts
+from spectroview.app_settings import AppSettings
+from spectroview.app_shortcuts import setup_shortcuts
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

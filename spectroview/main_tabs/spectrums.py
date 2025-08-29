@@ -5,9 +5,10 @@ import numpy as np
 import pandas as pd
 import json
 
-from app.common import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area
-from app.common import FitThread, FitModelManager, PeakTableWidget, DataframeTableWidget, CustomListWidget, SpectraViewWidget, CustomSpectra
-from app import FIT_METHODS
+from spectroview.components.utils import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area
+from spectroview.components.widget_dataframetable import DataframeTableWidget
+from spectroview.common import FitThread, FitModelManager, PeakTableWidget, CustomListWidget, SpectraViewWidget, CustomSpectra
+from spectroview import FIT_METHODS
 
 from copy import deepcopy
 from pathlib import Path

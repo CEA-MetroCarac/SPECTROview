@@ -1,7 +1,7 @@
 # app/gui.py
 from functools import partial
 import logging
-from app import FIT_METHODS, PEAK_MODELS
+from spectroview import PEAK_MODELS
 
 logger = logging.getLogger(__name__)
 

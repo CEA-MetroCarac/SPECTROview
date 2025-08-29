@@ -2,6 +2,7 @@ import sys
 import pandas as pd
 import datetime
 import logging
+import webbrowser
 
 from pathlib import Path
 
@@ -175,8 +176,8 @@ class Main:
         show_about.exec_()
 
     def open_manual(self):
-        """Open doc detail about query function of pandas dataframe"""
-        pass
+        url = "https://github.com/CEA-MetroCarac/SPECTROview/blob/main/doc/user_manual.md"
+        webbrowser.open(url)
 
 expiration_date = datetime.datetime(2050, 6, 1)
 

@@ -49,7 +49,7 @@ Homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
 dev = ["pytest", "black"]
 
 [project.scripts]
-spectroview = "spectroview.main:launcher"
+spectroview2 = "spectroview.main:launcher"
 
 [tool.setuptools.dynamic]
 version = { attr = "spectroview.VERSION" }

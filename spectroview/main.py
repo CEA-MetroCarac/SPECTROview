@@ -10,7 +10,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon
 
-from spectroview import UI_FILE, LOGO_APPLI, USER_MANUAL
+from spectroview import UI_FILE, LOGO_APPLI
 from spectroview.config.gui import resources
 
 from spectroview.components.utils import show_alert
@@ -176,8 +176,7 @@ class Main:
 
     def open_manual(self):
         """Open doc detail about query function of pandas dataframe"""
-        title = "SPECTROview User Manual"
-        self.common.view_markdown(self.ui, title, USER_MANUAL, 1200, 900, "/resources/doc/")
+        pass
 
 expiration_date = datetime.datetime(2050, 6, 1)
 

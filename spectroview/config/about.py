@@ -40,9 +40,8 @@ class About(QDialog):
             <li>Collect all best-fit results with one click.</li>
             <li>Dedicated module for effortless, fast, and easy data visualization.</li>
         </ul>
-        <p style="text-align:center;">
-            Check out the <a href="https://github.com/CEA-MetroCarac/spectroview">SPECTROview GitHub repository</a><br>
-            for the latest version & more details.
+        <p style="text-align:left;">
+            Check out the <a href="https://github.com/CEA-MetroCarac/spectroview">SPECTROview GitHub repository</a> for the latest version & more details.
         </p>
         <hr>
         <h3>Citation:</h3>

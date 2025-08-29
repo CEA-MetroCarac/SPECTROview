@@ -65,11 +65,6 @@ class Main:
         ### SETUP SHORTCUTS 
         setup_shortcuts(self)
         
-    def show_about(self):
-        """Show about dialog """
-        show_about = About(self.ui)
-        show_about.exec_()
-        
     def open(self, file_paths=None):
         """
         Universal action to open all supported files of SPECTROview:
@@ -176,11 +171,15 @@ class Main:
             self.spectrums.clear_env()
         else:
             show_alert("No thing to clear.")
+    def show_about(self):
+        """Show about dialog """
+        show_about = About(self.ui)
+        show_about.exec_()
 
     def open_manual(self):
         """Open doc detail about query function of pandas dataframe"""
         title = "SPECTROview User Manual"
-        self.common.view_markdown(self.ui, title, USER_MANUAL, 1200, 900, "resources/doc/")
+        self.common.view_markdown(self.ui, title, USER_MANUAL, 1200, 900, "/resources/doc/")
 
 expiration_date = datetime.datetime(2050, 6, 1)
 

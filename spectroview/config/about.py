@@ -17,7 +17,7 @@ class About(QDialog):
     def initUI(self):
         layout = QVBoxLayout(self)
 
-        # Logo
+        # Application Logo
         logo_label = QLabel()
         logo_pixmap = QPixmap(os.path.join(ICON_DIR, "logo_spectroview.png"))
         scaled_pixmap = logo_pixmap.scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -25,7 +25,7 @@ class About(QDialog):
         logo_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(logo_label)
 
-        # Rich Text Info (Title, Features, Citation)
+        # About text
         info = f"""
         <div style="text-align: center;">
             <h2>SPECTROview</h2>

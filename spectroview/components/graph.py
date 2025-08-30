@@ -521,26 +521,11 @@ class Graph(QWidget):
 
 class WaferPlot:
     """Class to plot wafer map"""
-
     def __init__(self, inter_method='linear'):
         self.inter_method = inter_method  # Interpolation method
 
     def plot(self, ax, x, y, z, cmap="jet", r=100, vmax=None, vmin=None,
              stats=True):
-        """
-        Plot a wafer map on the provided axes.
-
-        Args:
-        ax (matplotlib.axes.Axes): Axes object to plot the wafer map.
-        x (array-like): X-coordinates of measurement points.
-        y (array-like): Y-coordinates of measurement points.
-        z (array-like): measurement data corresponding to (x,y) points.
-        cmap (str, optional): Colormap for the plot. Defaults to "jet".
-        r (float, optional): Radius of the wafer in millimeters.
-        vmax (float, optional): Maximum value for the color scale.
-        vmin (float, optional): Minimum value for the color scale.
-        stats (bool, optional): Display statistical values on the plot.
-        """
         # Generate a meshgrid for the wafer and Interpolate z onto the meshgrid
         xi, yi = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
@@ -575,10 +560,7 @@ class WaferPlot:
             self.stats(z, ax)
 
     def stats(self, z, ax):
-        """
-        Calculate and display statistical values in the wafer plot.
-        """
-        # Calculate statistical values
+        """Calculate and display statistical values in the wafer plot."""
         mean_value = z.mean()
         max_value = z.max()
         min_value = z.min()

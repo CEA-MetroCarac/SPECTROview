@@ -9,21 +9,9 @@ from PySide6.QtCore import QCoreApplication
 class DataframeFilter:
     """
     Class for Handling "Filter Features" in Querying Pandas DataFrames
-
-    Attributes:
-    line_edit (QLineEdit): Input field for filter expressions.
-    listbox (QListWidget): List widget to display filter expressions as checkboxes.
-    df (pandas.DataFrame): DataFrame to be filtered.
-    filters (list): List to store filter expressions and their states.
     """
 
     def __init__(self, df):
-        """
-        Initialize the Filter class with a DataFrame and set up UI components.
-
-        Args:
-        df (pandas.DataFrame): The DataFrame to apply filters on.
-        """
         self.df = df
         self.filters = []
         self.initUI()
@@ -116,10 +104,6 @@ class DataframeFilter:
     def get_current_filters(self):
         """
         Retrieve the current state of filters as displayed in the UI.
-
-        Returns:
-        list: List of dictionaries representing filter expressions and their states.
-        Each dictionary has keys 'expression' and 'state'.
         """
         checked_filters = []
         for i in range(self.filter_listbox.count()):
@@ -132,14 +116,7 @@ class DataframeFilter:
 
     def apply_filters(self, filters=None):
         """
-        Apply filters to the DataFrame (self.df) based on the current or provided filters.
-
-        Args:
-        filters (list, optional): List of dictionaries representing filter expressions and their states.
-                                  Defaults to None, meaning current UI filters are used.
-
-        Returns:
-        pandas.DataFrame or None: Filtered DataFrame based on applied filters or None if self.df is None.
+        Apply filters to the DataFrame based on the current or provided filters.
         """
         if filters:
             self.filters = filters
@@ -168,9 +145,6 @@ class DataframeFilter:
     def upd_filter_listbox(self):
         """
         Update the listbox UI to reflect changes in filters.
-
-        Clears the listbox and re-populates it with current filters.
-        Each filter is displayed as a checkbox item.
         """
         self.filter_listbox.clear()
         for filter_data in self.filters:

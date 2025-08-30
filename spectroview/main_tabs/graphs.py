@@ -17,9 +17,7 @@ from PySide6.QtCore import Qt, QTimer, Signal, QSize
 from PySide6.QtGui import  QIcon, Qt
 
 class Graphs(QDialog):
-    """
-    This class provides a GUI for plotting graphs/figures.
-    """
+    """This class provides a GUI for plotting graphs/figures."""
     def __init__(self, settings, ui, common):
         super().__init__()
         self.ui = ui

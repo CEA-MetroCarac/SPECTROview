@@ -24,7 +24,6 @@ from PySide6.QtGui import  QIcon, QAction, Qt
 
 class MapViewer(QWidget):
     """Class to manage the 2Dmap view widget"""
-
     def __init__(self, main_app, app_settings):
         super().__init__()
         self.main_app = main_app
@@ -421,10 +420,6 @@ class MapViewer(QWidget):
         return heatmap_pivot, extent, vmin, vmax, grid_z
     
     def get_wafer_radius(self, map_type_text):
-        """
-        Extract wafer diameter from the map type string and return radius.
-        Returns None if not a wafer type.
-        """
         match = re.search(r'Wafer_(\d+)mm', map_type_text)
         if match:
             diameter = int(match.group(1))

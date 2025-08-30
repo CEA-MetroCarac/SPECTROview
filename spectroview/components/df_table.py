@@ -6,13 +6,6 @@ from PySide6.QtCore import Qt
 
 class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.
-
-    This class allows a pandas DataFrame to be displayed within a QTableWidget,
-    which is added to a specified layout in your GUI. It provides functionality
-    to copy selected data to the clipboard using a context menu or a keyboard shortcut.
-
-    Attributes:
-        layout (QVBoxLayout): The layout in the main_app where the QTableWidget will be placed.
     """
 
     def __init__(self, layout):
@@ -21,7 +14,6 @@ class DataframeTable(QWidget):
         self.initUI()
 
     def initUI(self):
-        """Initializes the user interface by creating and configuring the QTableWidget."""
         # Clear existing widgets from external layout
         while self.external_layout.count():
             item = self.external_layout.takeAt(0)

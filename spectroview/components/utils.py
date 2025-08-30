@@ -118,16 +118,7 @@ class CustomizedSpectra(Spectra):
         thread.join()     
         
 class FitModelManager:
-    """
-    Class to manage fit models created by USERS.
-
-    Attributes:
-    settings (QSettings): QSettings object to store and retrieve settings.
-    default_model_folder (str): Default folder path where fit models are stored.
-    available_models (list): List of available fit model filenames in the
-    default folder.
-    """
-
+    """Class to manage the folder storing all fit models"""
     def __init__(self, settings):
         self.settings = settings
         self.default_model_folder = self.settings.value("default_model_folder","")
@@ -136,25 +127,12 @@ class FitModelManager:
             self.scan_models()
 
     def set_default_model_folder(self, folder_path):
-        """
-        Set the default folder path where fit models will be stored.
-
-        Args:
-        folder_path (str): Path to the default folder.
-        """
         self.default_model_folder = folder_path
         self.settings.setValue("default_model_folder", folder_path)
         self.scan_models()
 
     def scan_models(self):
-        """
-        Scan the default folder and populate the available_models list.
-
-        This method scans the default_model_folder for files with the '.json'
-        extension and updates the available_models list accordingly.
-        """
         self.available_models = []
-
         if self.default_model_folder:
             if not os.path.exists(self.default_model_folder):
                 # Folder is specified but does not exist anymore (deleted or renamed)
@@ -175,26 +153,18 @@ class FitModelManager:
 
 
     def get_available_models(self):
-        """
-        Retrieve the list of available fit model filenames.
-
-        Returns:
-        list: List of available fit model filenames in the default folder.
-        """
         return self.available_models
 
 
 class CommonUtilities():
     """ Class contain all common methods or utility codes used other modules"""
     def reinit_spectrum(self, fnames, spectrums):
-        """Reinitilize a FITSPY spectrum object"""
         for fname in fnames:
             spectrum, _ = spectrums.get_objects(fname)
             spectrum.reinit()
             spectrum.baseline.mode = "Linear"
 
     def clear_layout(self, layout):
-        """Clear everything in a given Qlayout"""
         if layout is not None:
             for i in reversed(range(layout.count())):
                 item = layout.itemAt(i)
@@ -230,8 +200,7 @@ class CommonUtilities():
             return np.nan
 
     def zone(self, row, radius):
-        """Define 3 zones (Center, Mid-Radius, Edge) based on X and Y
-        coordinates."""
+        """Define 3 zones (Center, Mid-Radius, Edge)"""
         r = radius
         x = row['X']
         y = row['Y']
@@ -338,7 +307,6 @@ class CommonUtilities():
 class FitThread(QThread):
     """ Class to perform fitting in a separate Thread """
     progress_changed = Signal(int)
-
     def __init__(self, spectrums, fit_model, fnames, ncpus=1):
         super().__init__()
         self.spectrums = spectrums
@@ -357,14 +325,6 @@ class CustomizedListWidget(QListWidget):
     """
     Customized QListWidget with drag-and-drop functionality for rearranging
     items.
-
-    This class inherits from QListWidget and provides extended functionality
-    for reordering items via drag-and-drop operations.
-
-    Signals:
-        items_reordered:
-            Emitted when items in the list widget are reordered by the user
-            using drag-and-drop.
     """
     items_reordered = Signal()
     files_dropped = Signal(list) 
@@ -388,10 +348,7 @@ class CustomizedListWidget(QListWidget):
             super().dragMoveEvent(event)
             
     def dropEvent(self, event):
-        """
-        Overrides the dropEvent method to emit the items_reordered signal
-            after an item is dropped into a new position.
-        """
+        """Overrides the dropEvent method to emit the items_reordered signal"""
         if event.mimeData().hasUrls():
             file_paths = [url.toLocalFile() for url in event.mimeData().urls()]
             self.files_dropped.emit(file_paths)  # emit signal with file list

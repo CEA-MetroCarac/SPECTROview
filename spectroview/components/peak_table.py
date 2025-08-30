@@ -10,7 +10,6 @@ from PySide6.QtGui import  QIcon, Qt
 
 class PeakTable:
     """Class dedicated to show fit parameters of Spectrum objects in the GUI"""
-
     def __init__(self, main_app, main_layout, cbb_layout):
         # the main app where the PeakTable class is implemented, so we can connect to the method of main-map (upd_spectra_list)
         self.main_app = main_app 
@@ -218,8 +217,7 @@ class PeakTable:
         self.main_layout.addItem(spacer)
 
     def update_model_name(self, spectrum, index, idx, new_model):
-        """ Update the model function (Lorentizan, Gaussian...) related to
-        the ith-model """
+        """ Update the model function (Lorentizan, Gaussian...) related to the ith-model """
         old_model_name = spectrum.peak_models[idx].name2
         new_model_name = new_model
         if new_model_name != old_model_name:

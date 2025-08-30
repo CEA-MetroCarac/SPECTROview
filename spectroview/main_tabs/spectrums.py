@@ -25,7 +25,6 @@ class Spectrums(QObject):
     """
     Class manages the GUI interactions and operations related to process spectra.
     """
-
     def __init__(self, settings, ui, common, visu, app_settings):
         super().__init__()
         self.settings = settings

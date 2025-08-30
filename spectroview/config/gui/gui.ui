@@ -297,8 +297,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>428</width>
-                          <height>539</height>
+                          <width>453</width>
+                          <height>588</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -338,7 +338,6 @@
                             <widget class="QLabel" name="label_22">
                              <property name="font">
                               <font>
-                               <weight>75</weight>
                                <bold>true</bold>
                               </font>
                              </property>
@@ -459,7 +458,6 @@
                              <widget class="QLabel" name="label_65">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -563,7 +561,6 @@
                              <widget class="QLabel" name="label_69">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -816,7 +813,6 @@
                              <widget class="QLabel" name="label_72">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -978,8 +974,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>728</width>
-                               <height>69</height>
+                               <width>724</width>
+                               <height>72</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -1398,8 +1394,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
-                       <height>228</height>
+                       <width>428</width>
+                       <height>243</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -1440,7 +1436,6 @@
                         </property>
                         <property name="font">
                          <font>
-                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -1757,7 +1752,6 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -2495,8 +2489,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>428</width>
-                          <height>537</height>
+                          <width>453</width>
+                          <height>586</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -2536,7 +2530,6 @@
                             <widget class="QLabel" name="label_26">
                              <property name="font">
                               <font>
-                               <weight>75</weight>
                                <bold>true</bold>
                               </font>
                              </property>
@@ -2657,7 +2650,6 @@
                              <widget class="QLabel" name="label_54">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2761,7 +2753,6 @@
                              <widget class="QLabel" name="label_52">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -3005,7 +2996,6 @@
                              <widget class="QLabel" name="lbl_Peaks">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -3167,8 +3157,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>728</width>
-                               <height>69</height>
+                               <width>724</width>
+                               <height>72</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -3623,8 +3613,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>318</width>
-                       <height>228</height>
+                       <width>428</width>
+                       <height>243</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -3665,7 +3655,6 @@
                         </property>
                         <property name="font">
                          <font>
-                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -4087,7 +4076,6 @@
                 <property name="font">
                  <font>
                   <pointsize>13</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -4943,7 +4931,7 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="10,20,5,65">
+          <layout class="QVBoxLayout" name="verticalLayout_23" stretch="10,20,65,0">
            <property name="spacing">
             <number>5</number>
            </property>
@@ -5169,125 +5157,6 @@
             </widget>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="btn_layout">
-             <property name="leftMargin">
-              <number>10</number>
-             </property>
-             <property name="topMargin">
-              <number>5</number>
-             </property>
-             <property name="rightMargin">
-              <number>10</number>
-             </property>
-             <property name="bottomMargin">
-              <number>5</number>
-             </property>
-             <item>
-              <widget class="QPushButton" name="btn_add_graph">
-               <property name="minimumSize">
-                <size>
-                 <width>100</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>100</width>
-                 <height>100</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Add plot</string>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/icon/iconpack/icons8-graph-96.png</normaloff>:/icon/iconpack/icons8-graph-96.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>30</width>
-                 <height>30</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_49">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btn_upd_graph">
-               <property name="minimumSize">
-                <size>
-                 <width>110</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>110</width>
-                 <height>100</height>
-                </size>
-               </property>
-               <property name="text">
-                <string> Update plot</string>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/icon/iconpack/icons8-update-100.png</normaloff>:/icon/iconpack/icons8-update-100.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>20</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btn_add_line">
-               <property name="minimumSize">
-                <size>
-                 <width>70</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>70</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>RECIPE</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
             <widget class="QTabWidget" name="tabWidget_4">
              <property name="minimumSize">
               <size>
@@ -5300,7 +5169,7 @@
              </property>
              <widget class="QWidget" name="tab_plot_settings">
               <attribute name="title">
-               <string>Plot Settings</string>
+               <string>Plot</string>
               </attribute>
               <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
                <property name="spacing">
@@ -5329,7 +5198,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>372</width>
-                    <height>507</height>
+                    <height>539</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -5366,7 +5235,6 @@
                        </property>
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5471,7 +5339,6 @@
                       <widget class="QLabel" name="label_91">
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5531,7 +5398,6 @@
                       <widget class="QLabel" name="label_97">
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5739,8 +5605,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>235</width>
-                    <height>249</height>
+                    <width>372</width>
+                    <height>529</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -5864,7 +5730,6 @@
                      <property name="font">
                       <font>
                        <pointsize>9</pointsize>
-                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -5952,8 +5817,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>362</width>
-                    <height>310</height>
+                    <width>364</width>
+                    <height>371</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_9">
@@ -6267,6 +6132,106 @@
               </layout>
              </widget>
             </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="btn_layout">
+             <property name="leftMargin">
+              <number>10</number>
+             </property>
+             <property name="topMargin">
+              <number>5</number>
+             </property>
+             <property name="rightMargin">
+              <number>10</number>
+             </property>
+             <property name="bottomMargin">
+              <number>5</number>
+             </property>
+             <item>
+              <widget class="QPushButton" name="btn_add_graph">
+               <property name="minimumSize">
+                <size>
+                 <width>100</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>100</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Add plot</string>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>:/icon/iconpack/icons8-graph-96.png</normaloff>:/icon/iconpack/icons8-graph-96.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>30</width>
+                 <height>30</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_49">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_upd_graph">
+               <property name="minimumSize">
+                <size>
+                 <width>110</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>110</width>
+                 <height>100</height>
+                </size>
+               </property>
+               <property name="text">
+                <string> Update plot</string>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>:/icon/iconpack/icons8-update-100.png</normaloff>:/icon/iconpack/icons8-update-100.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>20</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>

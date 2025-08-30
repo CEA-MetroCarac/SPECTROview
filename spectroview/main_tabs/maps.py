@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import json
 import gzip
-
 from io import StringIO
 from copy import deepcopy
 from pathlib import Path
@@ -13,10 +12,10 @@ from pathlib import Path
 from spectroview import FIT_METHODS
 from spectroview.components.utils import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
 from spectroview.components.utils import FitThread, FitModelManager, CustomizedListWidget, CustomizedSpectra
-from spectroview.components.widget_df_table import DataframeTableWidget
-from spectroview.components.widget_mapview import MapViewWidget
-from spectroview.components.widget_spectraview import SpectraViewWidget
-from spectroview.components.widget_peaktable import PeakTableWidget
+from spectroview.components.df_table import DataframeTable
+from spectroview.components.map_viewer import MapViewer
+from spectroview.components.spectra_viewer import SpectraViewer
+from spectroview.components.peak_table import PeakTable
 from spectroview.components.graph import Graph
 
 from spectroview.main_tabs.graphs import MdiSubWindow
@@ -32,9 +31,7 @@ from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
 
 class Maps(QObject):
     """
-    Class manages the GUI interactions and operations related to spectra
-    fittings,
-    and visualization of fitted data within 'Maps' TAB of the application.
+    Class manages the GUI interactions and operations related to process 2Dmaps.
     """
 
     def __init__(self, settings, ui, spectrums, common, visu, app_settings):
@@ -52,17 +49,17 @@ class Maps(QObject):
         self.spectrums = CustomizedSpectra()
         
          # Initialize SpectraViewWidget
-        self.spectra_widget = SpectraViewWidget(self)
+        self.spectra_widget = SpectraViewer(self)
         self.ui.fig_canvas_layout_2.addWidget(self.spectra_widget.canvas)
         self.ui.toolbar_layout_2.addWidget(self.spectra_widget.control_widget) 
         self.ui.cbb_fit_models.currentIndexChanged.connect(self.update_peak_model)
         
          # Initialize PeakTable
-        self.peak_table = PeakTableWidget(self, self.ui.peak_table1, self.ui.cbb_layout_2)
+        self.peak_table = PeakTable(self, self.ui.peak_table1, self.ui.cbb_layout_2)
         
          # Initialize Dataframe Table
         self.df_fit_results = None
-        self.df_table = DataframeTableWidget(self.ui.layout_df_table)
+        self.df_table = DataframeTable(self.ui.layout_df_table)
         
         # Initialize QListWidget for spectra list
         self.ui.spectra_listbox = CustomizedListWidget()
@@ -76,7 +73,7 @@ class Maps(QObject):
         self.delay_timer.timeout.connect(self.plot)
 
         # Map_view_Widget
-        self.map_plot = MapViewWidget(self, self.app_settings)
+        self.map_plot = MapViewer(self, self.app_settings)
         self.map_plot.spectra_listbox= self.ui.spectra_listbox
         self.ui.map_layout.addWidget(self.map_plot.widget)
         self.map_plot.btn_extract_profile.clicked.connect(self.plot_extracted_profile)

@@ -25,7 +25,7 @@ from fitspy.core.baseline import BaseLine
 from fitspy.core.utils_mp import fit_mp
 
 from spectroview import PALETTE
-from spectroview.components.widget_df_table import DataframeTableWidget
+from spectroview.components.df_table import DataframeTable
 
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QVBoxLayout,  QTextBrowser, \
     QComboBox, QListWidgetItem, QMessageBox, QDialog, QVBoxLayout, QListWidget, QAbstractItemView
@@ -573,7 +573,7 @@ def view_df(tabWidget, df, simplified_df=False, fill_colors=True):
     df_viewer.setWindowFlags(df_viewer.windowFlags() | Qt.WindowCloseButtonHint)
     layout = QVBoxLayout(df_viewer)
     layout.setContentsMargins(0, 0, 0, 0)
-    dataframe_table = DataframeTableWidget(layout)
+    dataframe_table = DataframeTable(layout)
     
     if simplified_df:
         # Show a simplified version with first/last 50 rows and first/last 30 columns

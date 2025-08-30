@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QVBoxLayout, QTableWidget, QWidget, QTableWidgetIt
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Qt
 
-class DataframeTableWidget(QWidget):
+class DataframeTable(QWidget):
     """Class to display a given dataframe in GUI via QTableWidget.
 
     This class allows a pandas DataFrame to be displayed within a QTableWidget,

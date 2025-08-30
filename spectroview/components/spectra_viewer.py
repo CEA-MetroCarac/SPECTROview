@@ -16,7 +16,7 @@ from PySide6.QtWidgets import  QWidgetAction, QHBoxLayout, QLabel, QToolButton, 
 from PySide6.QtCore import Qt, QSize, QPoint
 from PySide6.QtGui import  QIcon, QAction, Qt, QCursor
 
-class SpectraViewWidget(QWidget):
+class SpectraViewer(QWidget):
     """Class to manage the spectra view widget."""
     def __init__(self, main_app):
         super().__init__()

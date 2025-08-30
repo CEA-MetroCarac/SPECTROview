@@ -1,4 +1,3 @@
-# app/app_shortcuts.py
 from functools import partial
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtCore import Qt

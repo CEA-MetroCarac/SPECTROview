@@ -1,9 +1,7 @@
 import os
 import tempfile
 import shutil
-
 import pandas as pd
- 
 from PySide6.QtWidgets import QMessageBox,  QFileDialog
 from PySide6.QtCore import QFileInfo
 
@@ -18,9 +16,6 @@ class FileConverter():
         self.ui.btn_convert.clicked.connect(lambda: self.convert())
       
     def browse_files(self, file_paths=None):
-        """
-        Browse and select files to convert. Populates listbox with file names.
-        """
         # Ensure file_paths is None or a list
         if file_paths is not None and not isinstance(file_paths, list):
             print(f"Warning: Invalid file_paths type: {type(file_paths)}. Expected list or None.")
@@ -55,9 +50,6 @@ class FileConverter():
 
 
     def convert(self, output_dir=None):
-        """
-        Convert selected files and add output file names to listbox.
-        """
         if not self.selected_file_paths:
             QMessageBox.warning(self.ui.tabWidget, "No Files", "Please select files first.")
             return

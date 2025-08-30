@@ -6,7 +6,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtCore import QCoreApplication
 
 
-class FilterWidget:
+class DataframeFilter:
     """
     Class for Handling "Filter Features" in Querying Pandas DataFrames
 

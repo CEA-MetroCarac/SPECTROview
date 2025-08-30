@@ -2,14 +2,13 @@ import os
 import pandas as pd
 import json
 import gzip
-
 from pathlib import Path
 from io import StringIO
 
 from spectroview import PLOT_STYLES, LEGEND_LOCATION, ICON_DIR
 
 from spectroview.components.utils import view_df, show_alert, copy_fig_to_clb
-from spectroview.components.widget_filter import FilterWidget
+from spectroview.components.df_filter import DataframeFilter
 from spectroview.components.graph import Graph
 from spectroview.components.utils import CustomizedPalette
 
@@ -19,9 +18,7 @@ from PySide6.QtGui import  QIcon, Qt
 
 class Graphs(QDialog):
     """
-    This class provides a GUI for plotting graphs based on selected dataframes,
-    applying filters, customizing graph properties, and managing graph
-    instances.
+    This class provides a GUI for plotting graphs/figures.
     """
     def __init__(self, settings, ui, common):
         super().__init__()
@@ -39,7 +36,7 @@ class Graphs(QDialog):
         self.ui.btn_save_df_2.clicked.connect(self.save_df_to_excel)
 
         # FILTER
-        self.filter = FilterWidget(self.sel_df)
+        self.filter = DataframeFilter(self.sel_df)
         self.ui.filter_widget_layout.addWidget(self.filter.gb_filter_widget)
         self.filtered_df = None
 

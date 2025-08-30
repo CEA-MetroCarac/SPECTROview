@@ -22,7 +22,7 @@ from PySide6.QtWidgets import  QVBoxLayout, QHBoxLayout,  QLabel, QToolButton, \
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import  QIcon, QAction, Qt
 
-class MapViewWidget(QWidget):
+class MapViewer(QWidget):
     """Class to manage the 2Dmap view widget"""
 
     def __init__(self, main_app, app_settings):

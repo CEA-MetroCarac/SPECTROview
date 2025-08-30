@@ -1,4 +1,3 @@
-# app/gui.py
 from functools import partial
 import logging
 from spectroview import PEAK_MODELS
@@ -36,7 +35,6 @@ class UiConnector:
                
 
     def connect_main_tab_signals(self):
-        """Wiring for toolbar / global actions."""
         self.ui.actionOpen.triggered.connect(lambda: self.main_app.open())
         self.ui.actionSave.triggered.connect(self.main_app.save)
         self.ui.actionClear_env.triggered.connect(self.main_app.clear_env)
@@ -119,7 +117,6 @@ class UiConnector:
 
 
     def connect_spectra_tab_signals(self):
-        
         self.ui.cbb_fit_models_2.addItems(PEAK_MODELS)
         self.ui.range_apply_2.clicked.connect(self.spectrums.set_x_range_handler)
         self.ui.range_max_2.returnPressed.connect(self.spectrums.set_x_range)
@@ -170,7 +167,6 @@ class UiConnector:
 
     def connect_visu_tab_signals(self):
         """Visualization/graph watchers."""
-        
         #For sync settings
         for widget_name in (
             "cb_grid",

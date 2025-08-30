@@ -8,7 +8,7 @@ from PySide6.QtCore import  Qt
 from PySide6.QtGui import  QIcon, Qt 
 
 
-class PeakTableWidget:
+class PeakTable:
     """Class dedicated to show fit parameters of Spectrum objects in the GUI"""
 
     def __init__(self, main_app, main_layout, cbb_layout):

@@ -11,7 +11,7 @@ class About(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("About SPECTROview")
-        self.setMinimumSize(500, 600)
+        self.setMinimumSize(600, 600)
         self.initUI()
 
     def initUI(self):

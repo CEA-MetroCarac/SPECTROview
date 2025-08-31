@@ -183,26 +183,22 @@ expiration_date = datetime.datetime(2050, 6, 1)
 
 def launcher():
     QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
+    app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(LOGO_APPLI))
+    app.setStyle("Fusion")
+    window = Main()
+
     if datetime.datetime.now() > expiration_date:
         text = (
             "The current SPECTROview version has expired. Checkout the SPECTROview's "
             "Github page (cf. About) to update newest version."
         )
-        app = QApplication(sys.argv)
-        app.setWindowIcon(QIcon(LOGO_APPLI))
-        window = Main()
         window.ui.centralwidget.setEnabled(False)
-        app.setStyle("Fusion")
         window.ui.show()
         show_alert(text)
-        sys.exit(app.exec())
-
-    app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon(LOGO_APPLI))
-    window = Main()
-    window.ui.centralwidget.setEnabled(True)
-    app.setStyle("Fusion")
-    window.ui.show()
+    else:
+        window.ui.centralwidget.setEnabled(True)
+        window.ui.show()
     sys.exit(app.exec())
 
 if __name__ == "__main__":

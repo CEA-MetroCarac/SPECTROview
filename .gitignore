@@ -9,6 +9,6 @@ app/.DS_Store
 .DS_Store
 .exe
 env_spectroview/
-*.spec*
+*.spec
 .vscode/
 .github/workflows/

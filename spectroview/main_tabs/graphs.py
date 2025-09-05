@@ -7,10 +7,10 @@ from io import StringIO
 
 from spectroview import PLOT_STYLES, LEGEND_LOCATION, ICON_DIR
 
-from spectroview.components.utils import view_df, show_alert, copy_fig_to_clb
-from spectroview.components.df_filter import DataframeFilter
-from spectroview.components.graph import Graph
-from spectroview.components.utils import CustomizedPalette
+from spectroview.modules.utils import view_df, show_alert, copy_fig_to_clb
+from spectroview.modules.df_filter import DataframeFilter
+from spectroview.modules.graph import Graph
+from spectroview.modules.utils import CustomizedPalette
 
 from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox
 from PySide6.QtCore import Qt, QTimer, Signal, QSize

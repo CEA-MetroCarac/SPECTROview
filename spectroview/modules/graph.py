@@ -10,7 +10,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from spectroview import  DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS
-from spectroview.components.utils import  rgba_to_named_color, show_alert
+from spectroview.modules.utils import  rgba_to_named_color, show_alert
 
 from PySide6.QtWidgets import  QVBoxLayout,  QLabel, QLineEdit, QWidget, QComboBox, QWidget, QStyledItemDelegate
 from PySide6.QtCore import Qt, QSize

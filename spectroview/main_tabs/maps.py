@@ -10,13 +10,13 @@ from copy import deepcopy
 from pathlib import Path
 
 from spectroview import FIT_METHODS
-from spectroview.components.utils import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
-from spectroview.components.utils import FitThread, FitModelManager, CustomizedListWidget, CustomizedSpectra
-from spectroview.components.df_table import DataframeTable
-from spectroview.components.map_viewer import MapViewer
-from spectroview.components.spectra_viewer import SpectraViewer
-from spectroview.components.peak_table import PeakTable
-from spectroview.components.graph import Graph
+from spectroview.modules.utils import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
+from spectroview.modules.utils import FitThread, FitModelManager, CustomizedListWidget, CustomizedSpectra
+from spectroview.modules.df_table import DataframeTable
+from spectroview.modules.map_viewer import MapViewer
+from spectroview.modules.spectra_viewer import SpectraViewer
+from spectroview.modules.peak_table import PeakTable
+from spectroview.modules.graph import Graph
 
 from spectroview.main_tabs.graphs import MdiSubWindow
 

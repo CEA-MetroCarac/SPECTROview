@@ -25,7 +25,7 @@ from fitspy.core.baseline import BaseLine
 from fitspy.core.utils_mp import fit_mp
 
 from spectroview import PALETTE
-from spectroview.components.df_table import DataframeTable
+from spectroview.modules.df_table import DataframeTable
 
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QVBoxLayout,  QTextBrowser, \
     QComboBox, QListWidgetItem, QMessageBox, QDialog, QVBoxLayout, QListWidget, QAbstractItemView

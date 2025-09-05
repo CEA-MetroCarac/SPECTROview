@@ -8,11 +8,11 @@ from copy import deepcopy
 from pathlib import Path
 
 from spectroview import FIT_METHODS
-from spectroview.components.utils import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area
-from spectroview.components.utils import FitThread, FitModelManager, CustomizedListWidget, CustomizedSpectra
-from spectroview.components.df_table import DataframeTable
-from spectroview.components.peak_table import PeakTable
-from spectroview.components.spectra_viewer import SpectraViewer
+from spectroview.modules.utils import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area
+from spectroview.modules.utils import FitThread, FitModelManager, CustomizedListWidget, CustomizedSpectra
+from spectroview.modules.df_table import DataframeTable
+from spectroview.modules.peak_table import PeakTable
+from spectroview.modules.spectra_viewer import SpectraViewer
 
 from lmfit import fit_report
 from fitspy.core.spectrum import Spectrum

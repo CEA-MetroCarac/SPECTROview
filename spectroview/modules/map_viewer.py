@@ -13,8 +13,8 @@ from scipy.interpolate import griddata
 from superqt import QLabeledDoubleRangeSlider 
 
 from spectroview import  ICON_DIR
-from spectroview.components.utils import copy_fig_to_clb
-from spectroview.components.utils import CustomizedPalette
+from spectroview.modules.utils import copy_fig_to_clb
+from spectroview.modules.utils import CustomizedPalette
 
 from PySide6.QtWidgets import  QVBoxLayout, QHBoxLayout,  QLabel, QToolButton, \
     QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, \

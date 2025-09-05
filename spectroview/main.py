@@ -14,9 +14,9 @@ from PySide6.QtGui import QIcon
 from spectroview import UI_FILE, LOGO_APPLI
 from spectroview.config.gui import resources
 
-from spectroview.components.utils import show_alert
-from spectroview.components.utils import CommonUtilities, FitModelManager
-from spectroview.components.map_viewer import MapViewer
+from spectroview.modules.utils import show_alert
+from spectroview.modules.utils import CommonUtilities, FitModelManager
+from spectroview.modules.map_viewer import MapViewer
 from spectroview.config.ui_connector import UiConnector
 
 from spectroview.main_tabs.maps import Maps

@@ -1458,8 +1458,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
-                       <height>243</height>
+                       <width>428</width>
+                       <height>583</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -5189,8 +5189,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>340</width>
-                    <height>454</height>
+                    <width>372</width>
+                    <height>505</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -6257,7 +6257,7 @@
    <property name="maximumSize">
     <size>
      <width>16777215</width>
-     <height>50</height>
+     <height>16777215</height>
     </size>
    </property>
    <property name="acceptDrops">

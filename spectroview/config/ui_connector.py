@@ -34,8 +34,7 @@ class UiConnector:
         self.ui.actionOpen.triggered.connect(lambda: self.main_app.open())
         self.ui.actionSave.triggered.connect(self.main_app.save)
         self.ui.actionClear_env.triggered.connect(self.main_app.clear_env)
-        self.ui.actionDarkMode.triggered.connect(self.main_app.toggle_dark_mode)
-        self.ui.actionLightMode.triggered.connect(self.main_app.toggle_light_mode)
+        self.ui.actionDarkLight.triggered.connect(lambda: self.main_app.toggle_dark_light_mode())
         self.ui.actionAbout.triggered.connect(self.main_app.show_about)
         self.ui.actionHelps.triggered.connect(self.main_app.open_manual)
         
@@ -178,7 +177,7 @@ class UiConnector:
         #Create button
         icon_path = os.path.join(ICON_DIR, "FileConvert.png")
         action = QAction(self.ui.toolBar, icon = QIcon(icon_path))
-        action.setToolTip("To open File Converter Tool")
+        action.setToolTip("Open File Converter Tool")
         action.setStatusTip("File Converter")
 
         #Connect

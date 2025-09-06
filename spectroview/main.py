@@ -65,12 +65,9 @@ class Main:
         setup_shortcuts(self)
 
         # Initialize dark/light mode
-        if self.app_settings.mode == "light":
-            self.toggle_light_mode()
-        else:
-            self.toggle_dark_mode()
+        mode = self.app_settings.mode 
+        self.toggle_dark_light_mode(mode)
 
-        
     def open(self, file_paths=None):
         """
         Universal action to open all supported files of SPECTROview:
@@ -187,22 +184,24 @@ class Main:
         url = "https://github.com/CEA-MetroCarac/SPECTROview/blob/main/doc/user_manual.md"
         webbrowser.open(url)
 
-    def toggle_dark_mode(self):
-        """Switch to dark mode and persist (global for all windows)."""
+    def toggle_dark_light_mode(self, mode=None):
+        """Set dark or light mode for app"""
         app = QApplication.instance()
-        if hasattr(self.common, "dark_palette"):
-            app.setPalette(self.common.dark_palette())
-        app.setStyleSheet("")  # reset any inline stylesheets
-        self.app_settings.mode = "dark"
-        self.app_settings.save()
+        if mode is None:
+            # No mode given => toggle current mode
+            mode = "light" if self.app_settings.mode == "dark" else "dark"
 
-    def toggle_light_mode(self):
-        """Switch to light mode and persist (global for all windows)."""
-        app = QApplication.instance()
-        if hasattr(self.common, "light_palette"):
-            app.setPalette(self.common.light_palette())
-        app.setStyleSheet("")
-        self.app_settings.mode = "light"
+        if mode == "dark":
+            if hasattr(self.common, "dark_palette"):
+                app.setPalette(self.common.dark_palette())
+            self.ui.actionDarkLight.setText("Switch to Light Mode")
+        else:
+            if hasattr(self.common, "light_palette"):
+                app.setPalette(self.common.light_palette())
+            self.ui.actionDarkLight.setText("Switch to Dark Mode")
+
+        app.setStyleSheet("")  # Reset inline styles
+        self.app_settings.mode = mode
         self.app_settings.save()
 
 expiration_date = datetime.datetime(2050, 6, 1)

@@ -1459,7 +1459,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>579</height>
+                       <height>583</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -2804,7 +2804,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>458</width>
-                          <height>367</height>
+                          <height>373</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -3900,8 +3900,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>383</height>
+                       <width>283</width>
+                       <height>243</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -5198,7 +5198,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>372</width>
-                    <height>499</height>
+                    <height>505</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -6325,8 +6325,7 @@
    <addaction name="separator"/>
    <addaction name="actionHelps"/>
    <addaction name="separator"/>
-   <addaction name="actionDarkMode"/>
-   <addaction name="actionLightMode"/>
+   <addaction name="actionDarkLight"/>
    <addaction name="separator"/>
   </widget>
   <action name="actionabout">
@@ -6378,7 +6377,7 @@
     <string>Manual</string>
    </property>
   </action>
-  <action name="actionDarkMode">
+  <action name="actionDarkLight">
    <property name="icon">
     <iconset resource="resources.qrc">
      <normaloff>:/icons/resources/icons/dark-light.png</normaloff>:/icons/resources/icons/dark-light.png</iconset>
@@ -6493,6 +6492,9 @@
    </property>
    <property name="text">
     <string>Clear env</string>
+   </property>
+   <property name="toolTip">
+    <string>Clear the interface of the current tab</string>
    </property>
   </action>
   <action name="actionLogo">

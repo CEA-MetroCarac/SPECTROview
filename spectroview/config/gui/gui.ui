@@ -6385,6 +6385,9 @@
    <property name="text">
     <string>Dark Mode</string>
    </property>
+   <property name="toolTip">
+    <string>Switch to dark or light mode</string>
+   </property>
   </action>
   <action name="actionLightMode">
    <property name="checkable">

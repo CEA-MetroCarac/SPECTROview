@@ -31,8 +31,8 @@ class FileConverter(QDialog):
 
         # Instruction text
         instruction_label = QLabel(
-            "This tool is used to convert hyperspectral data obtained by Invia Raman spectrometer (Renishaw) to a format compatible with SPECTROview or Labspec6 (HORIBA).\n\n"
-            "(Open hyperspectral data (.wdf) in WIRE software and save as .txt before using this tool.)"
+            "This tool converts hyperspectral data obtained with a Renishaw InVia Raman spectrometer into a format compatible with SPECTROview or LabSpec6 (HORIBA).\n\n"
+            "(If you have *.wdf files, convert them to *.txt format before using this tool (use the 'Save As' function in WIRE software)."
         )
         instruction_label.setWordWrap(True)
         main_layout.addWidget(instruction_label)

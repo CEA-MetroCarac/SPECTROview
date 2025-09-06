@@ -1458,8 +1458,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>583</height>
+                       <width>283</width>
+                       <height>243</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -2274,11 +2274,7 @@
                    <string>Select vertical</string>
                   </property>
                   <property name="text">
-                   <string/>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icons/resources/icons/vertical-line.png</normaloff>:/icons/resources/icons/vertical-line.png</iconset>
+                   <string>V</string>
                   </property>
                   <property name="iconSize">
                    <size>
@@ -2312,11 +2308,7 @@
                    <string>Select horizontal</string>
                   </property>
                   <property name="text">
-                   <string/>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icons/resources/icons/vertical-line.png</normaloff>:/icons/resources/icons/vertical-line.png</iconset>
+                   <string>H</string>
                   </property>
                   <property name="iconSize">
                    <size>
@@ -5197,8 +5189,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>372</width>
-                    <height>505</height>
+                    <width>340</width>
+                    <height>454</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">

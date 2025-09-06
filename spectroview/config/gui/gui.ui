@@ -1986,8 +1986,8 @@
                <widget class="QPushButton" name="btn_cosmis_ray">
                 <property name="geometry">
                  <rect>
-                  <x>460</x>
-                  <y>50</y>
+                  <x>20</x>
+                  <y>250</y>
                   <width>150</width>
                   <height>23</height>
                  </rect>
@@ -3900,7 +3900,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>283</width>
+                       <width>428</width>
                        <height>243</height>
                       </rect>
                      </property>
@@ -4409,8 +4409,8 @@
                <widget class="QPushButton" name="btn_cosmis_ray_3">
                 <property name="geometry">
                  <rect>
-                  <x>550</x>
-                  <y>50</y>
+                  <x>20</x>
+                  <y>290</y>
                   <width>150</width>
                   <height>23</height>
                  </rect>
@@ -5605,8 +5605,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>277</width>
-                    <height>288</height>
+                    <width>372</width>
+                    <height>539</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -6147,6 +6147,19 @@
              <property name="bottomMargin">
               <number>5</number>
              </property>
+             <item>
+              <spacer name="horizontalSpacer_12">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
              <item>
               <widget class="QPushButton" name="btn_add_graph">
                <property name="minimumSize">

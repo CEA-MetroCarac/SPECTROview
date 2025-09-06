@@ -463,7 +463,10 @@ class SpectraViewer(QWidget):
         if event.inaxes != self.ax or not self.canvas.isActiveWindow():
             self.hide_tooltip()
             return
-
+        if not hasattr(self, 'fitted_lines') or not self.fitted_lines:
+            self.hide_tooltip()
+            return
+        
         for line, info in self.fitted_lines:
             if line.contains(event)[0]:
                 # Define the keys we want to show, in order
@@ -722,6 +725,11 @@ class SpectraViewer(QWidget):
             self.ax.set_ylabel("Y-axis")
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
             self.canvas.draw_idle()  
+        
+        # Clear hover-related data to prevent warnings
+        self.fitted_lines = []
+        self.highlighted_line = None
+        self.hide_tooltip()
             
     def refresh_plot(self):
         """Refresh the plot based on user view options."""

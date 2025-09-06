@@ -50,10 +50,6 @@ class FileConverter(QDialog):
         # Assemble layout
         main_layout.addLayout(button_layout)
         main_layout.addWidget(self.listbox)
-    
-    def launch(self):
-        """Show the converter window."""
-        self.exec()
       
     def browse_files(self, file_paths=None):
         # Ensure file_paths is None or a list
@@ -152,3 +148,7 @@ class FileConverter(QDialog):
 
         # Export
         dfr_spectrum.to_csv(output_path, sep='\t', encoding='utf-8', index=False)
+
+    def launch(self):
+        """Show the converter window."""
+        self.exec()

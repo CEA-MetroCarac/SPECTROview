@@ -25,13 +25,13 @@ class Spectrums(QObject):
     """
     Class manages the GUI interactions and operations related to process spectra.
     """
-    def __init__(self, settings, ui, common, visu, app_settings):
+    def __init__(self, settings, ui, common, graphs, app_settings):
         super().__init__()
         self.settings = settings
         self.app_settings=app_settings
         self.ui = ui
         self.common = common
-        self.visu = visu
+        self.graphs = graphs
 
         self.loaded_fit_model = None
         self.current_fit_model = None
@@ -804,10 +804,10 @@ class Spectrums(QObject):
 
     def send_df_to_viz(self):
         """Send the collected spectral data to the visualization tab"""
-        dfs_new = self.visu.original_dfs
+        dfs_new = self.graphs.original_dfs
         df_name = self.ui.ent_send_df_to_viz.text()
         dfs_new[df_name] = self.df_fit_results
-        self.visu.open_dfs(dfs=dfs_new, file_paths=None)
+        self.graphs.open_dfs(dfs=dfs_new, file_paths=None)
 
 
     def cosmis_ray_detection(self):

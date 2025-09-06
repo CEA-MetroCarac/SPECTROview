@@ -34,12 +34,12 @@ class Maps(QObject):
     Class manages the GUI interactions and operations related to process 2Dmaps.
     """
 
-    def __init__(self, settings, ui, spectrums, common, visu, app_settings):
+    def __init__(self, settings, ui, spectrums, common, graphs, app_settings):
         super().__init__()
         self.settings = settings
         self.app_settings = app_settings
         self.ui = ui
-        self.visu = visu
+        self.graphs = graphs
         self.spectrums_tab = spectrums
         self.common = common
 
@@ -1057,11 +1057,11 @@ class Maps(QObject):
     def send_df_to_viz(self):
         """Send the collected spectral data dataframe to the visualization
         tab."""
-        dfs_new = self.visu.original_dfs
+        dfs_new = self.graphs.original_dfs
         df_name = self.ui.ent_send_df_to_viz2.text()
         
         dfs_new[df_name] = self.df_fit_results
-        self.visu.open_dfs(dfs=dfs_new, file_paths=None)
+        self.graphs.open_dfs(dfs=dfs_new, file_paths=None)
     
     def plot_extracted_profile(self):
         """Extract profile from map plot and Plot in VIS TAB"""
@@ -1070,15 +1070,15 @@ class Maps(QObject):
         profil_df = self.map_plot.extract_profile()
         
         if profil_df is not None and profile_name is not None:
-            dfs_new = self.visu.original_dfs
+            dfs_new = self.graphs.original_dfs
             dfs_new[profile_name] = profil_df
-            self.visu.open_dfs(dfs=dfs_new, file_paths=None)
+            self.graphs.open_dfs(dfs=dfs_new, file_paths=None)
 
             #Add a line plot
-            available_ids = [i for i in range(1, len(self.visu.plots) + 2) if i not in self.visu.plots]
-            graph_id = min(available_ids) if available_ids else len(self.visu.plots) + 1
+            available_ids = [i for i in range(1, len(self.graphs.plots) + 2) if i not in self.graphs.plots]
+            graph_id = min(available_ids) if available_ids else len(self.graphs.plots) + 1
             graph = Graph(graph_id=graph_id)
-            self.visu.plots[graph.graph_id] = graph
+            self.graphs.plots[graph.graph_id] = graph
 
             graph.plot_style='line'
             graph.df_name = profile_name
@@ -1086,7 +1086,7 @@ class Maps(QObject):
             graph.y = ['values']
             graph.z = None
             graph.create_plot_widget(100)
-            graph_dialog = QDialog(self.visu)
+            graph_dialog = QDialog(self.graphs)
             layout = QVBoxLayout()
             layout.setContentsMargins(0, 0, 0, 0)
             layout.addWidget(graph)
@@ -1096,16 +1096,16 @@ class Maps(QObject):
             # Add the QDialog to a QMdiSubWindow
             sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize,mdi_area=self.ui.mdiArea)
             sub_window.setWidget(graph_dialog)
-            sub_window.closed.connect(self.visu.delete_graph)
+            sub_window.closed.connect(self.graphs.delete_graph)
             sub_window.resize(graph.plot_width, graph.plot_height)
             self.ui.mdiArea.addSubWindow(sub_window)
             sub_window.show()
-            self.visu.add_graph_list_to_combobox()
+            self.graphs.add_graph_list_to_combobox()
             text = f"{graph.graph_id}-{graph.plot_style}_plot: {{'distance'}} - {{'values'}} - {{'None'}}"
             graph_dialog.setWindowTitle(text)
             # Plot action
-            QTimer.singleShot(100, self.visu.plot_action)
-            QTimer.singleShot(200, self.visu.customize_legend)
+            QTimer.singleShot(100, self.graphs.plot_action)
+            QTimer.singleShot(200, self.graphs.customize_legend)
             self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
 
             self.map_plot.options_menu.close() #Close option menu

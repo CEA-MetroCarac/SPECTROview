@@ -48,9 +48,9 @@ class Main:
         qsettings = self.app_settings.qsettings
 
         # Create subsystem instances
-        self.visu = Graphs(qsettings, self.ui, self.common)
-        self.spectrums = Spectrums(qsettings, self.ui, self.common, self.visu, self.app_settings)
-        self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.visu, self.app_settings)
+        self.graphs = Graphs(qsettings, self.ui, self.common)
+        self.spectrums = Spectrums(qsettings, self.ui, self.common, self.graphs, self.app_settings)
+        self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.graphs, self.app_settings)
         self.fitmodel_manager = FitModelManager(qsettings)
         self.mapview_widget = MapViewer(self, self.app_settings)
         self.convertfile = FileConverter(self.ui, qsettings)
@@ -59,7 +59,7 @@ class Main:
         self.app_settings.apply_to_ui(self.ui)
         
         # Centralize GUI wiring
-        self.gui = UiConnector(self.app_settings, self.ui, self, self.maps, self.spectrums, self.visu)
+        self.gui = UiConnector(self.app_settings, self.ui, self, self.maps, self.spectrums, self.graphs)
 
         ### SETUP SHORTCUTS 
         setup_shortcuts(self)
@@ -135,7 +135,7 @@ class Main:
                 self.maps.open_hyperspectra(file_paths=hyperspectral_files)
             if dataframes:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
-                self.visu.open_dfs(file_paths=dataframes)
+                self.graphs.open_dfs(file_paths=dataframes)
 
             if spectra_file:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_spectra)
@@ -145,7 +145,7 @@ class Main:
                 self.maps.load_work(maps_file)
             if graphs_file:
                 self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
-                self.visu.load(graphs_file)
+                self.graphs.load(graphs_file)
 
     def save(self):
         """Saves the current work depending on the active tab"""
@@ -155,7 +155,7 @@ class Main:
         elif current_tab == self.ui.tab_maps:
             self.maps.save_work()
         elif current_tab == self.ui.tab_graphs:
-            self.visu.save()
+            self.graphs.save()
         else:
             show_alert("No valid tab is selected for saving.")
 
@@ -163,13 +163,14 @@ class Main:
         """Clear working enviroments"""
         current_tab = self.ui.tabWidget.currentWidget()
         if current_tab == self.ui.tab_graphs:
-            self.visu.clear_env()
+            self.graphs.clear_env()
         elif current_tab == self.ui.tab_maps:
             self.maps.clear_env()
         elif current_tab == self.ui.tab_spectra:
             self.spectrums.clear_env()
         else:
             show_alert("No thing to clear.")
+            
     def show_about(self):
         """Show about dialog """
         show_about = About(self.ui)

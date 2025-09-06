@@ -183,7 +183,7 @@ class UiConnector:
 
         #Connect
         action.triggered.connect(self.file_converter.launch)
-
+        
         # Add the action to the toolbar
         self.ui.toolBar.addSeparator()
         self.ui.toolBar.addAction(action)

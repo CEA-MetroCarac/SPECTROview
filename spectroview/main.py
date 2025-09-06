@@ -3,15 +3,16 @@ import pandas as pd
 import datetime
 import logging
 import webbrowser
+import os
 
 from pathlib import Path
 
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QAction
 
-from spectroview import UI_FILE, LOGO_APPLI
+from spectroview import UI_FILE, LOGO_APPLI, TEXT_EXPIRE, ICON_DIR
 from spectroview.config.gui import resources
 
 from spectroview.modules.utils import show_alert
@@ -22,7 +23,7 @@ from spectroview.config.ui_connector import UiConnector
 from spectroview.main_tabs.maps import Maps
 from spectroview.main_tabs.spectrums import Spectrums
 from spectroview.main_tabs.graphs import Graphs
-from spectroview.main_tabs.file_converter import FileConverter
+from spectroview.modules.file_converter import FileConverter
 
 from spectroview.config.about import About
 from spectroview.config.app_settings import AppSettings
@@ -53,16 +54,22 @@ class Main:
         self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.graphs, self.app_settings)
         self.fitmodel_manager = FitModelManager(qsettings)
         self.mapview_widget = MapViewer(self, self.app_settings)
-        self.convertfile = FileConverter(self.ui, qsettings)
 
         # Apply stored settings to UI
-        self.app_settings.apply_to_ui(self.ui)
-        
+        self.app_settings.apply_to_ui(self.ui) 
+
         # Centralize GUI wiring
         self.gui = UiConnector(self.app_settings, self.ui, self, self.maps, self.spectrums, self.graphs)
 
         ### SETUP SHORTCUTS 
         setup_shortcuts(self)
+
+        # Initialize dark/light mode
+        if self.app_settings.mode == "light":
+            self.toggle_light_mode()
+        else:
+            self.toggle_dark_mode()
+
         
     def open(self, file_paths=None):
         """
@@ -180,6 +187,24 @@ class Main:
         url = "https://github.com/CEA-MetroCarac/SPECTROview/blob/main/doc/user_manual.md"
         webbrowser.open(url)
 
+    def toggle_dark_mode(self):
+        """Switch to dark mode and persist (global for all windows)."""
+        app = QApplication.instance()
+        if hasattr(self.common, "dark_palette"):
+            app.setPalette(self.common.dark_palette())
+        app.setStyleSheet("")  # reset any inline stylesheets
+        self.app_settings.mode = "dark"
+        self.app_settings.save()
+
+    def toggle_light_mode(self):
+        """Switch to light mode and persist (global for all windows)."""
+        app = QApplication.instance()
+        if hasattr(self.common, "light_palette"):
+            app.setPalette(self.common.light_palette())
+        app.setStyleSheet("")
+        self.app_settings.mode = "light"
+        self.app_settings.save()
+
 expiration_date = datetime.datetime(2050, 6, 1)
 
 def launcher():
@@ -190,13 +215,9 @@ def launcher():
     window = Main()
 
     if datetime.datetime.now() > expiration_date:
-        text = (
-            "The current SPECTROview version has expired. Checkout the SPECTROview's "
-            "Github page (cf. About) to update newest version."
-        )
         window.ui.centralwidget.setEnabled(False)
         window.ui.show()
-        show_alert(text)
+        show_alert(TEXT_EXPIRE)
     else:
         window.ui.centralwidget.setEnabled(True)
         window.ui.show()

@@ -269,7 +269,7 @@ class CommonUtilities():
                               QColor(65, 65, 65))  # QlineEdit Listbox bg
         dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
         dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
-        dark_palette.setColor(QPalette.ToolTipText, Qt.white)
+        dark_palette.setColor(QPalette.ToolTipText, Qt.black)
         dark_palette.setColor(QPalette.Text, Qt.white)
         dark_palette.setColor(QPalette.Button, QColor(64, 64, 64))
         dark_palette.setColor(QPalette.ButtonText, Qt.white)

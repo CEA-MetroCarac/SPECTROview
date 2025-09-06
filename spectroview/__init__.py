@@ -2,6 +2,11 @@ import os
 
 VERSION = "0.8.4"
 
+TEXT_EXPIRE = (
+    "The current SPECTROview version has expired. Checkout the SPECTROview's "
+    "Github page (cf. About) to update newest version."
+)
+
 PEAK_MODELS = ["Lorentzian", "Gaussian", "PseudoVoigt", "GaussianAsym",
                "LorentzianAsym"]
 

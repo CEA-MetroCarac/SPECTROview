@@ -61,12 +61,7 @@ def setup_shortcuts(main_app):
         partial(switch_to, main_app, main_app.ui.tab_graphs)
     )
 
-    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_4), main_app.ui).activated.connect(
-        partial(switch_to, main_app, main_app.ui.tab_fileconvert)
-    )
-    QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_Apostrophe), main_app.ui).activated.connect(
-        partial(switch_to, main_app, main_app.ui.tab_fileconvert)
-    )
+   
 
     # Global rescale (Ctrl+R)
     shortcut_rescale = QShortcut(QKeySequence(Qt.ControlModifier | Qt.Key_R), main_app.ui)

@@ -1,11 +1,14 @@
+import os
 from functools import partial
 import logging
-from spectroview import PEAK_MODELS
+from spectroview import PEAK_MODELS, ICON_DIR
+from spectroview.modules.file_converter import FileConverter
+from PySide6.QtGui import QIcon, QAction
 
 logger = logging.getLogger(__name__)
 
 class UiConnector:
-    def __init__(self, app_settings, ui, main_app, maps_tab, spectrums_tab, visu_tab):
+    def __init__(self, app_settings, ui, main_app, maps_tab, spectrums_tab, graphs_tab):
         """
         Centralize all signal wiring / UI connections here.
         """
@@ -14,13 +17,7 @@ class UiConnector:
         self.main_app = main_app
         self.maps = maps_tab
         self.spectrums = spectrums_tab
-        self.visu = visu_tab
-        
-        # DARK or LIGHT mode?
-        if self.app_settings.mode == "light":
-            self.toggle_light_mode()
-        else:
-            self.toggle_dark_mode()
+        self.graphs = graphs_tab
 
         # sync helper
         self.sync_settings = partial(self.app_settings.sync_app_settings, self.ui)
@@ -32,14 +29,13 @@ class UiConnector:
             sig = getattr(widget, sig_name, None)
             if sig:
                 sig.connect(self.sync_settings)
-               
 
     def connect_main_tab_signals(self):
         self.ui.actionOpen.triggered.connect(lambda: self.main_app.open())
         self.ui.actionSave.triggered.connect(self.main_app.save)
         self.ui.actionClear_env.triggered.connect(self.main_app.clear_env)
-        self.ui.actionDarkMode.triggered.connect(self.toggle_dark_mode)
-        self.ui.actionLightMode.triggered.connect(self.toggle_light_mode)
+        self.ui.actionDarkMode.triggered.connect(self.main_app.toggle_dark_mode)
+        self.ui.actionLightMode.triggered.connect(self.main_app.toggle_light_mode)
         self.ui.actionAbout.triggered.connect(self.main_app.show_about)
         self.ui.actionHelps.triggered.connect(self.main_app.open_manual)
         
@@ -175,26 +171,28 @@ class UiConnector:
             if widget is not None:
                 self._attach_sync_to_widget(widget)
 
+    def connect_file_converter(self):
+        """To launch the FilConverter Tool"""
+        self.file_converter = FileConverter(self.app_settings.qsettings, parent=self.ui)
+            
+        #Create button
+        icon_path = os.path.join(ICON_DIR, "FileConvert.png")
+        action = QAction(self.ui.toolBar, icon = QIcon(icon_path))
+        action.setToolTip("To open File Converter Tool")
+        action.setStatusTip("File Converter")
+
+        #Connect
+        action.triggered.connect(self.file_converter.launch)
+
+        # Add the action to the toolbar
+        self.ui.toolBar.addSeparator()
+        self.ui.toolBar.addAction(action)
+
     def connect_all_signals(self):
         """Convenience to hook everything in one call."""
         self.connect_main_tab_signals()
         self.connect_maps_tab_signals()
         self.connect_spectra_tab_signals()
         self.connect_visu_tab_signals()
+        self.connect_file_converter()
         
-        
-    def toggle_dark_mode(self):
-        """Switch to dark mode and persist."""
-        # Use main_app.common for palettes
-        if hasattr(self.main_app, "common"):
-            self.ui.setPalette(self.main_app.common.dark_palette())
-        self.app_settings.mode = "dark"
-        self.app_settings.save()
-
-    def toggle_light_mode(self):
-        """Switch to light mode and persist."""
-        if hasattr(self.main_app, "common"):
-            self.ui.setPalette(self.main_app.common.light_palette())
-        self.app_settings.mode = "light"
-        self.app_settings.save()
-

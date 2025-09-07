@@ -4,13 +4,13 @@ import datetime
 import logging
 import webbrowser
 import os
-
 from pathlib import Path
 
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt
 from PySide6.QtGui import QIcon, QAction
+
 
 from spectroview import UI_FILE, LOGO_APPLI, TEXT_EXPIRE, ICON_DIR
 from spectroview.config.gui import resources
@@ -185,22 +185,13 @@ class Main:
         webbrowser.open(url)
 
     def toggle_dark_light_mode(self, mode=None):
-        """Set dark or light mode for app"""
         app = QApplication.instance()
         if mode is None:
-            # No mode given => toggle current mode
             mode = "light" if self.app_settings.mode == "dark" else "dark"
-
         if mode == "dark":
-            if hasattr(self.common, "dark_palette"):
-                app.setPalette(self.common.dark_palette())
-            self.ui.actionDarkLight.setText("Switch to Light Mode")
+            app.setPalette(self.common.dark_palette())
         else:
-            if hasattr(self.common, "light_palette"):
-                app.setPalette(self.common.light_palette())
-            self.ui.actionDarkLight.setText("Switch to Dark Mode")
-
-        app.setStyleSheet("")  # Reset inline styles
+            app.setPalette(self.common.light_palette())
         self.app_settings.mode = mode
         self.app_settings.save()
 

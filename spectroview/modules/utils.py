@@ -265,8 +265,6 @@ class CommonUtilities():
         dark_palette = QPalette()
         dark_palette.setColor(QPalette.Window, QColor(70, 70, 70))
         dark_palette.setColor(QPalette.WindowText, Qt.white)
-        dark_palette.setColor(QPalette.Base,
-                              QColor(65, 65, 65))  # QlineEdit Listbox bg
         dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
         dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
         dark_palette.setColor(QPalette.ToolTipText, Qt.black)
@@ -287,7 +285,6 @@ class CommonUtilities():
         light_palette = QPalette()
         light_palette.setColor(QPalette.Window, QColor(225, 225, 225))
         light_palette.setColor(QPalette.WindowText, Qt.black)
-        light_palette.setColor(QPalette.Base, QColor(215, 215, 215))
         light_palette.setColor(QPalette.AlternateBase, QColor(230, 230, 230))
         light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
         light_palette.setColor(QPalette.ToolTipText, Qt.black)

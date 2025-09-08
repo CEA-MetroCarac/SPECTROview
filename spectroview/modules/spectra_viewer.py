@@ -145,7 +145,7 @@ class SpectraViewer(QWidget):
         self.tool_btn_options.setPopupMode(QToolButton.InstantPopup)
         self.tool_btn_options.setIcon(QIcon(os.path.join(ICON_DIR, "options.png")))
         self.tool_btn_options.setToolTip("More view options")
-        self.tool_btn_options.setIconSize(QSize(28, 28))
+        self.tool_btn_options.setIconSize(QSize(24, 24))
         self.tool_btn_options.setMenu(self.options_menu)
 
     def create_control_layout(self):

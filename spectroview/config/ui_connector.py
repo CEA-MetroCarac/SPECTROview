@@ -4,6 +4,7 @@ import logging
 from spectroview import PEAK_MODELS, ICON_DIR
 from spectroview.modules.file_converter import FileConverter
 from PySide6.QtGui import QIcon, QAction
+from PySide6.QtWidgets  import QWidget
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +185,9 @@ class UiConnector:
         action.triggered.connect(self.file_converter.launch)
         
         # Add the action to the toolbar
+        spacer = QWidget()
+        spacer.setFixedWidth(50)
+        self.ui.toolBar.addWidget(spacer)        
         self.ui.toolBar.addSeparator()
         self.ui.toolBar.addAction(action)
 

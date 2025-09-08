@@ -141,8 +141,11 @@ class SpectraViewer(QWidget):
         self.R2 = QLabel("R2=0", self)
 
         self.tool_btn_options = QToolButton(self)
-        self.tool_btn_options.setText("More options ")
+        self.tool_btn_options.setText("More options")
         self.tool_btn_options.setPopupMode(QToolButton.InstantPopup)
+        self.tool_btn_options.setIcon(QIcon(os.path.join(ICON_DIR, "options.png")))
+        self.tool_btn_options.setToolTip("More view options")
+        self.tool_btn_options.setIconSize(QSize(28, 28))
         self.tool_btn_options.setMenu(self.options_menu)
 
     def create_control_layout(self):
@@ -163,9 +166,11 @@ class SpectraViewer(QWidget):
         self.control_layout.addSpacing(20)
 
         self.control_layout.addWidget(self.btn_legend)
+        
+        
+        self.control_layout.addWidget(self.btn_copy)
         self.control_layout.addSpacing(20)
         self.control_layout.addWidget(self.tool_btn_options)
-        self.control_layout.addWidget(self.btn_copy)
         self.control_layout.addWidget(self.toolbar)
         self.control_layout.addWidget(self.R2)
 

@@ -31,28 +31,27 @@ ______
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/ThreeTabs.gif">
 </p>
 
+### Fitting and create a fit model:
+
+<p align="center">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/ThreeTabs.gif">
+</p>
 
 ### Fitting multiple spectra, wafers data, 2D-maps with predefined models:
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/MapTab.gif">
 </p>
 
-<p align="center">(Fitting multiple spectra / wafers / 2D-maps with predefined models)</p>
 
-<p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/collect_fit_results.gif">
-</p>
-<p align="center">(Collect data with one click)</p>
+### Collect fitted data with one click:
 
-<p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/2Dmap.png">
-</p>
-<p align="center">(2Dmap processing and visualization, extract and plot line profiles with ease, etc.)</p>
 
-<p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/visualization_tab.png">
-</p>
+
+### Collect fitted data with one click:
 <p align="center">(Support various plotting styles with automatic statistical calculations)</p>
+
+
+____
 
 ## Installation from PyPI:
 

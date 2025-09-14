@@ -13,9 +13,7 @@ Spectroscopy techniques such as Raman Spectroscopy and Photoluminescence (PL) ar
 
 SPECTROview addresses these gap by offering free, open-source software that is compataible with both in-line data (wafer-map) as well as standard spectroscopic data (discret spectra, 2D maps). It also features a built-in visualization tool, enabling users to streamline both data processing and visualization in a single application, making the workflow more efficient. 
 
-
 ___
-
 ## Features: 
 
 - Cross-platform compatibility (Windows, macOS, Linux).
@@ -26,6 +24,9 @@ ___
 - Dedicated module for effortless, fast, and easy data visualization. 
 
 **Fitting features are powered by the *fitspy* and *lmfit* open-source packages.*
+
+______
+### Three tabs dedicated for processing discret spectra, hyperspactral data and for data visualization:
 
 
 <p align="center">

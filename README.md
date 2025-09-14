@@ -26,29 +26,28 @@ ___
 **Fitting features are powered by the *fitspy* and *lmfit* open-source packages.*
 
 ______
-### Three seperated tabs for processing discret spectra, hyperspactral data and for data visualization:
+### Three separate tabs for processing discrete spectra, hyperspectral data, and data visualization:
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/ThreeTabs.gif">
 </p>
 
-### Fitting and create a fit model:
+### Fitting and create/save a fit model:
 
-<p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/ThreeTabs.gif">
-</p>
-
-### Fitting multiple spectra, wafers data, 2D-maps with predefined models:
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/Fitting.gif">
 </p>
 
+### Fit multiple spectra, wafer data, and 2D maps with predefined models:
+<p align="center">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/MapTab.gif">
+</p>
 
-### Collect fitted data with one click:
 
+### Plot and visualize data with ease:
 
-
-### Collect fitted data with one click:
-<p align="center">(Support various plotting styles with automatic statistical calculations)</p>
+<p align="center">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/Plotting.gif">
+</p>
 
 
 ____

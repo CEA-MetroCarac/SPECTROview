@@ -27,7 +27,9 @@ ___
 
 ______
 ### Three tabs dedicated for processing discret spectra, hyperspactral data and for data visualization:
-
+<p align="center">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/ThreeTabs.gif">
+</p>
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/tab_maps.gif">

@@ -26,13 +26,15 @@ ___
 **Fitting features are powered by the *fitspy* and *lmfit* open-source packages.*
 
 ______
-### Three tabs dedicated for processing discret spectra, hyperspactral data and for data visualization:
+### Three seperated tabs for processing discret spectra, hyperspactral data and for data visualization:
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/ThreeTabs.gif">
 </p>
 
+
+### Fitting multiple spectra, wafers data, 2D-maps with predefined models:
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/tab_maps.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/MapTab.gif">
 </p>
 
 <p align="center">(Fitting multiple spectra / wafers / 2D-maps with predefined models)</p>

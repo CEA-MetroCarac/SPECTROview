@@ -31,7 +31,7 @@ ______
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/ThreeTabs.gif">
 </p>
 
-### Fitting and create/save a fit model:
+### Fit a spectrum; create/save and apply a fit models; collect fitted data with single click:
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/Fitting.gif">

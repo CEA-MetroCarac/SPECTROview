@@ -39,7 +39,7 @@ ______
 
 ### Fitting multiple spectra, wafers data, 2D-maps with predefined models:
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/MapTab.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/Fitting.gif">
 </p>
 
 

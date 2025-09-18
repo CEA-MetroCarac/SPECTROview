@@ -134,7 +134,7 @@ class Graph(QWidget):
 
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
         for action in self.toolbar.actions():
-            if action.text() in ['Save', 'Subplots', 'Customize']:
+            if action.text() in ['Save', 'Subplots']:
                 action.setVisible(False)
 
         if layout:

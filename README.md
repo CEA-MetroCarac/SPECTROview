@@ -11,11 +11,9 @@
 
 Spectroscopy techniques such as Raman Spectroscopy and Photoluminescence (PL) are widely used in various fields, including materials science, chemistry, biology, and geology. In recent years, these techniques have increasingly found their place in cleanroom environments, particularly within the microelectronics industry, where they serve as critical metrology tools for wafer-scale measurements. The data collected from these in-line measurements (wafer data) require specific processing, but existing software solutions are often not optimized for this type of data and typically lack advanced plotting and visualization capabilities. Additionally, the licensing requirements of these software solutions can restrict access for a broader community of users.
 
-SPECTROview addresses these gap by offering free, open-source software that is compataible with both in-line data (wafer-map) as well as standard spectroscopic data (discret spectra, 2D maps). It also features a built-in visualization tool, enabling users to streamline both data processing and visualization in a single application, making the workflow more efficient. 
-
+SPECTROview addresses these gap by offering free, open-source software that is compatible with both in-line data (wafer-map) as well as standard spectroscopic data (discret spectra, 2D maps). It also features a built-in visualization tool, enabling users to streamline both data processing and visualization in a single application, making the workflow more efficient. 
 
 ___
-
 ## Features: 
 
 - Cross-platform compatibility (Windows, macOS, Linux).
@@ -27,27 +25,32 @@ ___
 
 **Fitting features are powered by the *fitspy* and *lmfit* open-source packages.*
 
-
+______
+### Three separate tabs for processing discrete spectra, hyperspectral data, and data visualization:
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/tab_maps.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/ThreeTabs.gif">
 </p>
 
-<p align="center">(Fitting multiple spectra / wafers / 2D-maps with predefined models)</p>
+### Fit a spectrum; create/save and apply a fit models; collect fitted data with single click:
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/collect_fit_results.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/Fitting.gif">
 </p>
-<p align="center">(Collect data with one click)</p>
+
+### Fit multiple spectra, wafer data, and 2D maps with predefined models:
+<p align="center">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/MapTab.gif">
+</p>
+
+
+### Plot and visualize data with ease:
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/2Dmap.png">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/Plotting.gif">
 </p>
-<p align="center">(2Dmap processing and visualization, extract and plot line profiles with ease, etc.)</p>
 
-<p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/spectroview/resources/GIF/visualization_tab.png">
-</p>
-<p align="center">(Support various plotting styles with automatic statistical calculations)</p>
+
+____
 
 ## Installation from PyPI:
 

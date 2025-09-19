@@ -376,12 +376,13 @@ class Graph(QWidget):
                 self.legend_properties = self.get_legend_properties()
 
             if self.legend_visible:
-                self.ax.legend(handles, legend_labels, loc=self.legend_location)
+                legend = self.ax.legend(handles, legend_labels, loc=self.legend_location)
+                legend.set_draggable(True)
             else:
                 self.ax.legend().remove()
             if self.legend_outside:
-                self.ax.legend(handles, legend_labels, loc='center left',
-                               bbox_to_anchor=(1, 0.5))
+                legend = self.ax.legend(handles, legend_labels, loc='center left',bbox_to_anchor=(1, 0.5))
+                legend.set_draggable(True)
 
     def _set_grid(self):
         """Add grid for the plot"""

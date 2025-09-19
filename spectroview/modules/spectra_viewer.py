@@ -12,7 +12,7 @@ from spectroview import X_AXIS_UNIT, ICON_DIR, PLOT_POLICY
 from spectroview.modules.utils import plot_baseline_dynamically, copy_fig_to_clb, show_alert
 
 from PySide6.QtWidgets import  QWidgetAction, QHBoxLayout, QLabel, QToolButton, \
-    QLineEdit, QWidget, QPushButton, QComboBox, QApplication,  QWidget, QMenu
+    QLineEdit, QWidget, QPushButton, QComboBox, QApplication,  QWidget, QMenu, QColorDialog, QInputDialog
 from PySide6.QtCore import Qt, QSize, QPoint
 from PySide6.QtGui import  QIcon, QAction, Qt, QCursor
 
@@ -298,7 +298,7 @@ class SpectraViewer(QWidget):
     def rescale(self):
         """Rescale the spectra plot to fit within the axes."""
         self.ax.autoscale()
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     
     def set_peak_model(self, model):
@@ -512,6 +512,11 @@ class SpectraViewer(QWidget):
         if event.inaxes != self.ax or not self.sel_spectrums:
             return
 
+        # Skip clicks inside cached legend bbox
+        if getattr(self, 'legend_bbox', None) is not None:
+            if self.legend_bbox.contains(event.x, event.y):
+                return
+            
         if self.zoom_pan_active:
             return
 
@@ -709,19 +714,61 @@ class SpectraViewer(QWidget):
         xlabel = self.cbb_xaxis_unit.currentText() if self.cbb_xaxis_unit else "Wavenumber (cm-1)"
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel("Intensity (a.u)")
+        
         y_scale = self.cbb_yaxis_scale.currentText()
-        if y_scale == 'Log scale':
-            self.ax.set_yscale('log')
-        else:  # Default to linear scale
-            self.ax.set_yscale('linear')
+        self.ax.set_yscale('log' if y_scale == 'Log scale' else 'linear')
 
+        # Handle legend
         if self.btn_legend.isChecked():
-            self.ax.legend(loc='upper right')
+            legend = self.ax.legend(loc='upper right')
+            
+            # Make legend items pickable
+            for text in legend.get_texts():
+                text.set_picker(True)
+            for handle in legend.legendHandles:
+                handle.set_picker(True)
+
+            # Cache legend bbox to skip mouse clicks inside it
+            self.legend_bbox = legend.get_window_extent(self.canvas.renderer)
+
+            # Connect pick-event once
+            if not hasattr(self, "_legend_pick_connected"):
+                self.canvas.mpl_connect("pick_event", self.on_legend_pick)
+                self._legend_pick_connected = True
+        else:
+            self.legend_bbox = None
 
         self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
         self.figure.tight_layout()
         self.canvas.draw_idle()
         
+    def on_legend_pick(self, event):
+        """Handle clicks on legend items (text or marker)."""
+        artist = event.artist
+
+        # --- If user clicked a legend text (label) ---
+        if isinstance(artist, plt.Text):
+            current_label = artist.get_text()
+            new_label, ok = QInputDialog.getText(self, "Edit Legend Label",
+                                                "Enter new label:", text=current_label)
+            if ok and new_label.strip():
+                artist.set_text(new_label)
+                self.canvas.draw_idle()  # optimized redraw
+
+        # --- If user clicked a legend line/marker ---
+        elif isinstance(artist, plt.Line2D):
+            new_color = QColorDialog.getColor()
+            if new_color.isValid():
+                color_hex = new_color.name()
+                artist.set_color(color_hex)
+
+                # Also change corresponding plotted line(s) in the Axes
+                for line in self.ax.get_lines():
+                    if line.get_label() == artist.get_label():
+                        line.set_color(color_hex)
+
+                self.canvas.draw_idle()
+            
     def clear_plot(self):
         """Explicitly clear the spectra plot."""
         if self.ax:

@@ -570,8 +570,8 @@ class Maps(QObject):
         sel_spectrum, _ = self.get_spectrum_object()
         if len(sel_spectrum.peak_models) == 0:
             self.ui.lbl_copied_fit_model.setText("")
-            msg = ("Select spectrum is not fitted or No fit results to collect")
-            show_alert(msg)
+            msg = ("No fit results to collect or copy")
+            print(msg)
             self.current_fit_model = None
             return
         else:

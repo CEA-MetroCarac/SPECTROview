@@ -72,10 +72,10 @@ class Maps(QObject):
         self.delay_timer.timeout.connect(self.plot)
 
         # Map_view_Widget
-        self.map_plot = MapViewer(self, self.app_settings)
-        self.map_plot.spectra_listbox= self.ui.spectra_listbox
-        self.ui.map_layout.addWidget(self.map_plot.widget)
-        self.map_plot.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
+        self.map_viewer = MapViewer(self, self.app_settings)
+        self.map_viewer.spectra_listbox= self.ui.spectra_listbox
+        self.ui.map_layout.addWidget(self.map_viewer.widget)
+        self.map_viewer.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
         
         ## Update spectra_listbox when selecting maps via MAPS LIST
         self.ui.maps_listbox.itemSelectionChanged.connect(self.upd_spectra_list)
@@ -315,10 +315,10 @@ class Maps(QObject):
             columns = [self.common.replace_peak_labels(self.current_fit_model, column) for column in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
 
-            map_type = self.map_plot.cbb_map_type.currentText()
+            map_type = self.map_viewer.cbb_map_type.currentText()
             if map_type !='2Dmap':
                 # DIAMETER
-                radius = self.map_plot.get_wafer_radius(map_type)
+                radius = self.map_viewer.get_wafer_radius(map_type)
                 # QUADRANT
                 self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
                     self.common.quadrant, axis=1)
@@ -329,8 +329,8 @@ class Maps(QObject):
                 pass
         self.df_table.show(self.df_fit_results)
         
-        self.map_plot.df_fit_results = self.df_fit_results
-        self.map_plot.populate_z_values_cbb()
+        self.map_viewer.df_fit_results = self.df_fit_results
+        self.map_viewer.populate_z_values_cbb()
         
     def update_peak_model(self):
         """Update the peak model in the SpectraViewWidget based on combobox selection."""
@@ -818,9 +818,10 @@ class Maps(QObject):
         self.spectra_viewer.plot(selected_spectrums)
         
         df = self.maps.get(map_name)
-        self.map_plot.map_df_name=map_name
-        self.map_plot.map_df=df
-        self.map_plot.plot(coords)
+        
+        self.map_viewer.map_df_name=map_name
+        self.map_viewer.map_df=df
+        self.map_viewer.plot(coords)
 
         # Show correction value of the last selected item
         correction_value = round(selected_spectrums[-1].correction_value, 3)
@@ -838,15 +839,15 @@ class Maps(QObject):
         map_df = self.maps.get(map_name)
 
         if map_df is not None:
-            self.map_plot.map_df_name=map_name
-            self.map_plot.map_df=map_df
+            self.map_viewer.map_df_name=map_name
+            self.map_viewer.map_df=map_df
             column_labels = map_df.columns[2:-1].astype(float)
             
-            current_min, current_max = self.map_plot.x_range_slider.value()
+            current_min, current_max = self.map_viewer.x_range_slider.value()
             min_value = float(column_labels.min())
             max_value = float(column_labels.max())
             
-            self.map_plot.update_xrange_slider(min_value, max_value, current_min, current_max)
+            self.map_viewer.update_xrange_slider(min_value, max_value, current_min, current_max)
 
         checked_states = {}
         for index in range(self.ui.spectra_listbox.count()):
@@ -942,8 +943,8 @@ class Maps(QObject):
         self.ui.spectra_listbox.clear()
         self.spectra_viewer.sel_spectrums = None  
         self.spectra_viewer.refresh_plot() 
-        self.map_plot.ax.clear()
-        self.map_plot.canvas.draw_idle()
+        self.map_viewer.ax.clear()
+        self.map_viewer.canvas.draw_idle()
 
     def select_all_spectra(self):
         """Select all spectra listed in the spectra listbox"""
@@ -1065,8 +1066,8 @@ class Maps(QObject):
     def plot_extracted_profile(self):
         """Extract profile from map plot and Plot in VIS TAB"""
         
-        profile_name = self.map_plot.profile_name.text()
-        profil_df = self.map_plot.extract_profile()
+        profile_name = self.map_viewer.profile_name.text()
+        profil_df = self.map_viewer.extract_profile()
         
         if profil_df is not None and profile_name is not None:
             dfs_new = self.graphs.original_dfs
@@ -1107,7 +1108,7 @@ class Maps(QObject):
             QTimer.singleShot(200, self.graphs.customize_legend)
             self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
 
-            self.map_plot.options_menu.close() #Close option menu
+            self.map_viewer.options_menu.close() #Close option menu
         else:
             msg="Profile extraction failed or insufficient points selected."
             show_alert(msg)
@@ -1310,8 +1311,8 @@ class Maps(QObject):
         self.spectra_viewer.refresh_plot()
 
         # Clear plot ofmeasurement sites 
-        self.map_plot.ax.clear()
-        self.map_plot.canvas.draw()
+        self.map_viewer.ax.clear()
+        self.map_viewer.canvas.draw()
 
         self.df_table.clear()
         self.peak_table.clear()

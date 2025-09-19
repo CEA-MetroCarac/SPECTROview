@@ -81,7 +81,7 @@ class SpectraViewer(QWidget):
 
         self.btn_zoom = QToolButton(self)
         self.btn_zoom.setCheckable(True)
-        self.btn_zoom.setAutoExclusive(True)
+        self.btn_zoom.setAutoExclusive(False)
         self.btn_zoom.setToolTip("Zoom")
         self.btn_zoom.setIcon(QIcon(os.path.join(ICON_DIR, "zoom.png")))
         self.btn_zoom.setIconSize(QSize(24, 24))
@@ -90,17 +90,29 @@ class SpectraViewer(QWidget):
 
         self.btn_baseline = QToolButton(self)
         self.btn_baseline.setCheckable(True)
-        self.btn_baseline.setAutoExclusive(True)
+        self.btn_baseline.setAutoExclusive(False)
         self.btn_baseline.setToolTip("Baseline")
         self.btn_baseline.setIcon(QIcon(os.path.join(ICON_DIR, "baseline.png")))
         self.btn_baseline.setIconSize(QSize(24, 24))
 
         self.btn_peak = QToolButton(self)
         self.btn_peak.setCheckable(True)
-        self.btn_peak.setAutoExclusive(True)
+        self.btn_peak.setAutoExclusive(False)
         self.btn_peak.setToolTip("Peak")
         self.btn_peak.setIcon(QIcon(os.path.join(ICON_DIR, "peak.png")))
         self.btn_peak.setIconSize(QSize(24, 24))
+        
+        # Connect toggled signals
+        self.btn_zoom.toggled.connect(lambda checked: self._toggle_tool_buttons(self.btn_zoom, checked))
+        self.btn_baseline.toggled.connect(lambda checked: self._toggle_tool_buttons(self.btn_baseline, checked))
+        self.btn_peak.toggled.connect(lambda checked: self._toggle_tool_buttons(self.btn_peak, checked))
+        
+    def _toggle_tool_buttons(self, btn, checked):
+        if checked:
+            # Uncheck all other buttons
+            for other in [self.btn_zoom, self.btn_baseline, self.btn_peak]:
+                if other != btn:
+                    other.setChecked(False)
 
     def create_normalization_widgets(self):
         self.btn_norm = QToolButton(self)

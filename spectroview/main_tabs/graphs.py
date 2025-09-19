@@ -912,4 +912,3 @@ class MdiSubWindow(QMdiSubWindow):
         if not self.mdi_area.activeSubWindow():
             self.mdi_area.setActiveSubWindow(None)
         super().focusInEvent(event)
-

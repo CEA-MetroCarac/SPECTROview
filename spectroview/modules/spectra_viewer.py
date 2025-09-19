@@ -11,7 +11,7 @@ from copy import deepcopy
 from spectroview import X_AXIS_UNIT, ICON_DIR, PLOT_POLICY
 from spectroview.modules.utils import plot_baseline_dynamically, copy_fig_to_clb, show_alert
 
-from PySide6.QtWidgets import  QWidgetAction, QHBoxLayout, QLabel, QToolButton, \
+from PySide6.QtWidgets import  QWidgetAction, QHBoxLayout, QLabel, QToolButton, QDoubleSpinBox,\
     QLineEdit, QWidget, QPushButton, QComboBox, QApplication,  QWidget, QMenu, QColorDialog, QInputDialog
 from PySide6.QtCore import Qt, QSize, QPoint
 from PySide6.QtGui import  QIcon, QAction, Qt, QCursor
@@ -36,7 +36,7 @@ class SpectraViewer(QWidget):
         self.release_event_connection = None
 
         self.initUI()
-        QApplication.instance().focusChanged.connect(self.on_focus_changed)
+        QApplication.instance().focusChanged.connect(self.on_focus_changed) # To hide tooltip when focus is lost
 
     def initUI(self):
         """Initialize the UI components."""
@@ -286,6 +286,25 @@ class SpectraViewer(QWidget):
         ratio_action = QWidgetAction(self)
         ratio_action.setDefaultWidget(ratio_widget)
         self.options_menu.addAction(ratio_action)
+        
+        # --- Line width adjustment ---
+        lw_widget = QWidget(self.options_menu)
+        lw_layout = QHBoxLayout(lw_widget)
+        lw_label = QLabel("Line width:", lw_widget)
+        lw_layout.addWidget(lw_label)
+        
+        self.spin_lw = QDoubleSpinBox(lw_widget)
+        self.spin_lw.setRange(0.1, 5.0) 
+        self.spin_lw.setSingleStep(0.5)
+        self.spin_lw.setValue(1.5)  # default
+        self.spin_lw.valueChanged.connect(self.refresh_plot)  
+        lw_layout.addWidget(self.spin_lw)
+        lw_layout.setContentsMargins(5, 5, 5, 5)
+
+        lw_action = QWidgetAction(self)
+        lw_action.setDefaultWidget(lw_widget)
+        self.options_menu.addAction(lw_action)
+
 
     def update_plot_styles(self):
         """Apply styles and settings to the plot."""
@@ -343,7 +362,9 @@ class SpectraViewer(QWidget):
         x_values = spectrum.x
         y_values = self.get_y_values(spectrum)
 
-        self.ax.plot(x_values, y_values, label=f"{spectrum.fname}", ms=3, lw=2)
+        lw = self.spin_lw.value()
+        self.ax.plot(x_values, y_values, label=f"{spectrum.fname}", ms=3, lw=lw)
+
         plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
 
         if self.menu_actions['Raw'].isChecked():
@@ -406,12 +427,13 @@ class SpectraViewer(QWidget):
         """Plot raw data points if the option is checked."""
         x0_values = spectrum.x0
         y0_values = spectrum.y0
-        self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3, lw=1)
+        lw = self.spin_lw.value()
+        self.ax.plot(x0_values, y0_values, 'ko-', label='raw', ms=3, lw=lw)
 
     def plot_peak(self, y_peak, x_values, peak_label, peak_model):
         """Plot individual peak, optionally filled, and return line and peak info."""
-        
-        line, = self.ax.plot(x_values, y_peak, '-', label=peak_label, lw=1.5)
+        lw = self.spin_lw.value()
+        line, = self.ax.plot(x_values, y_peak, '-', label=peak_label, lw=lw)
         
         # Annotate if enabled
         if self.menu_actions['Peaks'].isChecked():
@@ -456,7 +478,8 @@ class SpectraViewer(QWidget):
 
         if hasattr(spectrum.result_fit, 'success'):
             y_fit = y_bkg + y_peaks
-            self.ax.plot(x_values, y_fit, label="bestfit")
+            lw = self.spin_lw.value()
+            self.ax.plot(x_values, y_fit, label="bestfit", lw=lw)
 
         self.enable_hover_highlight()  # connect hover after drawing lines
     
@@ -516,7 +539,7 @@ class SpectraViewer(QWidget):
         if getattr(self, 'legend_bbox', None) is not None:
             if self.legend_bbox.contains(event.x, event.y):
                 return
-            
+    
         if self.zoom_pan_active:
             return
 

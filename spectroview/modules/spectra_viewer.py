@@ -21,7 +21,7 @@ class SpectraViewer(QWidget):
     def __init__(self, main_app):
         super().__init__()
         self.main_app = main_app # To connect to a method of main app (refresh gui)
-        self.sel_spectrums =None
+         
         self.peak_model = 'Lorentzian'
         self.dpi = 80
         self.figure = None
@@ -363,7 +363,11 @@ class SpectraViewer(QWidget):
         y_values = self.get_y_values(spectrum)
 
         lw = self.spin_lw.value()
-        self.ax.plot(x_values, y_values, label=f"{spectrum.fname}", ms=3, lw=lw)
+        line, = self.ax.plot(x_values, y_values, label=spectrum.label or spectrum.fname, ms=3, lw=lw, color=spectrum.color if spectrum.color else None)
+        
+        # Attach spectrum reference to line for later use in legend editing
+        line.spectrum_fname = spectrum.fname
+        line._spectrum_ref = spectrum
 
         plot_baseline_dynamically(ax=self.ax, spectrum=spectrum)
 
@@ -389,6 +393,46 @@ class SpectraViewer(QWidget):
         if not self.menu_actions['Colors'].isChecked():
             self.ax.set_prop_cycle(None)
 
+    def on_legend_pick(self, event):
+        """Handle clicks on legend items (text or marker)."""
+        artist = event.artist
+
+        # --- If user clicked a legend text (label) ---
+        if isinstance(artist, plt.Text):
+            current_label = artist.get_text()
+            new_label, ok = QInputDialog.getText(
+                self, "Edit Legend Label", "Enter new label:", text=current_label
+            )
+            if ok and new_label.strip():
+                artist.set_text(new_label)
+
+                # Find corresponding plotted line and update its label + spectrum.label
+                for line in self.ax.get_lines():
+                    if line.get_label() == current_label:
+                        line.set_label(new_label)
+                        if hasattr(line, "_spectrum_ref"):
+                            line._spectrum_ref.label = new_label
+                        break
+
+                self.canvas.draw_idle()
+
+        # --- If user clicked a legend line/marker (color) ---
+        elif isinstance(artist, plt.Line2D):
+            new_color = QColorDialog.getColor()
+            if new_color.isValid():
+                color_hex = new_color.name()
+                artist.set_color(color_hex)
+
+                # Update corresponding plotted line(s) + spectrum.color
+                for line in self.ax.get_lines():
+                    if line.get_label() == artist.get_label():
+                        line.set_color(color_hex)
+                        if hasattr(line, "_spectrum_ref"):
+                            line._spectrum_ref.color = color_hex
+                        break
+
+                self.canvas.draw_idle()
+                
     def get_y_values(self, spectrum):
         """Get y-values for a spectrum, applying normalization if needed."""
         x_values = spectrum.x
@@ -765,32 +809,7 @@ class SpectraViewer(QWidget):
         self.figure.tight_layout()
         self.canvas.draw_idle()
         
-    def on_legend_pick(self, event):
-        """Handle clicks on legend items (text or marker)."""
-        artist = event.artist
-
-        # --- If user clicked a legend text (label) ---
-        if isinstance(artist, plt.Text):
-            current_label = artist.get_text()
-            new_label, ok = QInputDialog.getText(self, "Edit Legend Label",
-                                                "Enter new label:", text=current_label)
-            if ok and new_label.strip():
-                artist.set_text(new_label)
-                self.canvas.draw_idle()  # optimized redraw
-
-        # --- If user clicked a legend line/marker ---
-        elif isinstance(artist, plt.Line2D):
-            new_color = QColorDialog.getColor()
-            if new_color.isValid():
-                color_hex = new_color.name()
-                artist.set_color(color_hex)
-
-                # Also change corresponding plotted line(s) in the Axes
-                for line in self.ax.get_lines():
-                    if line.get_label() == artist.get_label():
-                        line.set_color(color_hex)
-
-                self.canvas.draw_idle()
+    
             
     def clear_plot(self):
         """Explicitly clear the spectra plot."""

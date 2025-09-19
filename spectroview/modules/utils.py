@@ -20,7 +20,8 @@ from multiprocessing import Queue
 from copy import deepcopy
 from openpyxl.styles import PatternFill
 
-from fitspy.core.spectra import Spectra
+from fitspy.core.spectrum import Spectrum as FitspySpectrum
+from fitspy.core.spectra import Spectra as FitspySpectra
 from fitspy.core.baseline import BaseLine
 from fitspy.core.utils_mp import fit_mp
 
@@ -77,7 +78,33 @@ class CustomizedPalette(QComboBox):
     def get_selected_palette(self):
         return self.currentText()
 
-class CustomizedSpectra(Spectra):
+class Spectrum(FitspySpectrum):
+    """Extended Spectrum with user-defined style attributes."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.label = None   # user-defined legend label
+        self.color = None   # user-defined color
+        
+    def reinit(self):
+        """ Reinitialize the main attributes """
+        self.range_min = None
+        self.range_max = None
+        self.x = self.x0.copy()
+        self.y = self.y0.copy()
+        self.weights = self.weights0.copy() if self.weights0 is not None else None
+        self.outliers_limit = None
+        self.normalize = False
+        self.normalize_range_min = None
+        self.normalize_range_max = None
+        self.remove_models()
+        self.result_fit = lambda: None
+        self.color = None
+        self.label = None
+        self.baseline.reinit()
+        self.baseline.mode = "Linear"
+
+class Spectra(FitspySpectra):
     """Customized Spectra class of the fitspy package."""
     def apply_model(self, model_dict, fnames=None, ncpus=1,
                     show_progressbar=True):
@@ -163,7 +190,10 @@ class CommonUtilities():
             spectrum, _ = spectrums.get_objects(fname)
             spectrum.reinit()
             spectrum.baseline.mode = "Linear"
-
+            spectrum.color = None
+            spectrum.label = None
+            
+  
     def clear_layout(self, layout):
         if layout is not None:
             for i in reversed(range(layout.count())):

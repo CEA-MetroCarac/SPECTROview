@@ -9,13 +9,12 @@ from pathlib import Path
 
 from spectroview import FIT_METHODS
 from spectroview.modules.utils import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area
-from spectroview.modules.utils import FitThread, FitModelManager, CustomizedListWidget, CustomizedSpectra
+from spectroview.modules.utils import FitThread, FitModelManager, CustomizedListWidget, Spectra, Spectrum
 from spectroview.modules.df_table import DataframeTable
 from spectroview.modules.peak_table import PeakTable
 from spectroview.modules.spectra_viewer import SpectraViewer
 
 from lmfit import fit_report
-from fitspy.core.spectrum import Spectrum
 from fitspy.core.utils import closest_index
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
@@ -36,12 +35,12 @@ class Spectrums(QObject):
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.current_peaks = None
-        self.spectrums = CustomizedSpectra()
+        self.spectrums = Spectra()
 
         # Initialize SpectraViewWidget
-        self.spectra_widget = SpectraViewer(self)
-        self.ui.fig_canvas_layout.addWidget(self.spectra_widget.canvas)
-        self.ui.toolbar_layout.addWidget(self.spectra_widget.control_widget) 
+        self.spectra_viewer = SpectraViewer(self)
+        self.ui.fig_canvas_layout.addWidget(self.spectra_viewer.canvas)
+        self.ui.toolbar_layout.addWidget(self.spectra_viewer.control_widget) 
         self.ui.cbb_fit_models_2.currentIndexChanged.connect(self.update_peak_model)
         
         # Initialize Peak Table
@@ -106,7 +105,7 @@ class Spectrums(QObject):
         """Open and load raw spectral data"""
 
         if self.spectrums is None:
-            self.spectrums = CustomizedSpectra()
+            self.spectrums = Spectra()
         if spectra:
             self.spectrums = spectra
         else:
@@ -331,7 +330,7 @@ class Spectrums(QObject):
     def fit_completed(self):
         """Update GUI after completing fitting process."""
         self.upd_spectra_list()
-        QTimer.singleShot(200,  self.spectra_widget.rescale)
+        QTimer.singleShot(200,  self.spectra_viewer.rescale)
         self.ui.progressBar_2.setValue(100)
         self.ui.centralwidget.setEnabled(True)
 
@@ -386,13 +385,13 @@ class Spectrums(QObject):
         """Plot spectra or fit results in the main plot area."""
         fnames = self.get_spectrum_fnames()
         
-        selected_spectrums = CustomizedSpectra()
+        selected_spectrums = Spectra()
         selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
         # Limit the number of spectra to avoid crashes
         selected_spectrums = selected_spectrums[:30]
         if not selected_spectrums:
             return
-        self.spectra_widget.plot(selected_spectrums)
+        self.spectra_viewer.plot(selected_spectrums)
 
         # Show correction value of the last selected item
         correction_value = round(selected_spectrums[-1].correction_value, 3)
@@ -410,7 +409,7 @@ class Spectrums(QObject):
         """
         Get a list of selected spectra based on listbox's checkbox states.
         """
-        checked_spectra = CustomizedSpectra()
+        checked_spectra = Spectra()
         for index in range(self.ui.spectrums_listbox.count()):
             item = self.ui.spectrums_listbox.item(index)
             if item.checkState() == Qt.Checked:
@@ -469,7 +468,7 @@ class Spectrums(QObject):
     def update_peak_model(self):
         """Update the peak model in the SpectraViewWidget based on combobox selection."""
         selected_model = self.ui.cbb_fit_models_2.currentText()
-        self.spectra_widget.set_peak_model(selected_model)
+        self.spectra_viewer.set_peak_model(selected_model)
 
     def upd_model_cbb_list(self):
         """Update and populate the model list in the UI combobox"""
@@ -602,7 +601,7 @@ class Spectrums(QObject):
             spectrum.y = spectrum.y0[ind_min:ind_max + 1].copy()
             
         QTimer.singleShot(50, self.upd_spectra_list)
-        QTimer.singleShot(300, self.spectra_widget.rescale)
+        QTimer.singleShot(300, self.spectra_viewer.rescale)
 
     def set_x_range_all(self):
         """Set a new x range for all spectra"""
@@ -655,7 +654,7 @@ class Spectrums(QObject):
                 continue
         QTimer.singleShot(50, self.refresh_gui)
         QTimer.singleShot(100, self.upd_spectra_list)
-        QTimer.singleShot(300, self.spectra_widget.rescale)
+        QTimer.singleShot(300, self.spectra_viewer.rescale)
         
     def subtract_baseline_all(self):
         """Subtract the baseline for all spectra"""
@@ -826,7 +825,7 @@ class Spectrums(QObject):
         # Reinit spectrum
         self.common.reinit_spectrum(fnames, self.spectrums)
         self.upd_spectra_list()
-        QTimer.singleShot(200, self.spectra_widget.rescale)
+        QTimer.singleShot(200, self.spectra_viewer.rescale)
 
     def reinit_all(self):
         """Reinitialize all spectra"""
@@ -882,12 +881,12 @@ class Spectrums(QObject):
 
     def remove_spectrum(self):
         fnames = self.get_spectrum_fnames()
-        self.spectrums = CustomizedSpectra(
+        self.spectrums = Spectra(
             spectrum for spectrum in self.spectrums if
             spectrum.fname not in fnames)
         self.upd_spectra_list()
-        self.spectra_widget.ax.clear()
-        self.spectra_widget.canvas.draw()
+        self.spectra_viewer.ax.clear()
+        self.spectra_viewer.canvas.draw()
 
 
     def fit_fnc_handler(self):
@@ -983,7 +982,7 @@ class Spectrums(QObject):
                 load = json.load(f)
                 try:
                     # Load all spectra
-                    self.spectrums = CustomizedSpectra()
+                    self.spectrums = Spectra()
                     for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
                         spectrum = Spectrum()
                         dict_to_spectrum(spectrum=spectrum, spectrum_data=spectrum_data, is_map=False)
@@ -1000,7 +999,7 @@ class Spectrums(QObject):
 
     def clear_env(self):
         """Clear the environment and reset the application state"""
-        self.spectrums = CustomizedSpectra()
+        self.spectrums = Spectra()
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.df_fit_results = None
@@ -1010,14 +1009,14 @@ class Spectrums(QObject):
         self.ui.item_count_label_3.setText("0 points")
 
         # Clear spectra plot view and reset selected spectrums
-        self.spectra_widget.sel_spectrums = None  
-        self.spectra_widget.refresh_plot() 
+        self.spectra_viewer.sel_spectrums = None  
+        self.spectra_viewer.refresh_plot() 
         
         self.df_table.clear()
         self.peak_table.clear()
 
         # Refresh the UI to reflect the cleared state
-        QTimer.singleShot(50, self.spectra_widget.rescale)
+        QTimer.singleShot(50, self.spectra_viewer.rescale)
         QTimer.singleShot(100, self.upd_spectra_list)
         print("'Spectrums' Tab environment has been cleared.")
 

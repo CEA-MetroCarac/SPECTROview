@@ -11,7 +11,7 @@ from pathlib import Path
 
 from spectroview import FIT_METHODS
 from spectroview.modules.utils import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
-from spectroview.modules.utils import FitThread, FitModelManager, CustomizedListWidget, CustomizedSpectra
+from spectroview.modules.utils import FitThread, FitModelManager, CustomizedListWidget, Spectra, Spectrum
 from spectroview.modules.df_table import DataframeTable
 from spectroview.modules.map_viewer import MapViewer
 from spectroview.modules.spectra_viewer import SpectraViewer
@@ -22,7 +22,6 @@ from spectroview.main_tabs.graphs import MdiSubWindow
 
 from lmfit import fit_report
 
-from fitspy.spectrum import Spectrum
 from fitspy.core.utils import closest_index
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication, QListWidgetItem, QDialog, QVBoxLayout
@@ -46,12 +45,12 @@ class Maps(QObject):
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.maps = {}  # list of opened maps data
-        self.spectrums = CustomizedSpectra()
+        self.spectrums = Spectra()
         
          # Initialize SpectraViewWidget
-        self.spectra_widget = SpectraViewer(self)
-        self.ui.fig_canvas_layout_2.addWidget(self.spectra_widget.canvas)
-        self.ui.toolbar_layout_2.addWidget(self.spectra_widget.control_widget) 
+        self.spectra_viewer = SpectraViewer(self)
+        self.ui.fig_canvas_layout_2.addWidget(self.spectra_viewer.canvas)
+        self.ui.toolbar_layout_2.addWidget(self.spectra_viewer.control_widget) 
         self.ui.cbb_fit_models.currentIndexChanged.connect(self.update_peak_model)
         
          # Initialize PeakTable
@@ -336,7 +335,7 @@ class Maps(QObject):
     def update_peak_model(self):
         """Update the peak model in the SpectraViewWidget based on combobox selection."""
         selected_model = self.ui.cbb_fit_models.currentText()
-        self.spectra_widget.set_peak_model(selected_model)
+        self.spectra_viewer.set_peak_model(selected_model)
 
     def set_default_model_folder(self, folder_path=None):
         """Define a default folder containing fit models."""
@@ -456,7 +455,7 @@ class Maps(QObject):
             spectrum.x = spectrum.x0[ind_min:ind_max + 1].copy()
             spectrum.y = spectrum.y0[ind_min:ind_max + 1].copy()
         QTimer.singleShot(50, self.upd_spectra_list)
-        QTimer.singleShot(300, self.spectra_widget.rescale)
+        QTimer.singleShot(300, self.spectra_viewer.rescale)
 
     def set_x_range_all(self):
         """Set new x range for all spectrum"""
@@ -506,7 +505,7 @@ class Maps(QObject):
                 continue
         QTimer.singleShot(50, self.refresh_gui)
         QTimer.singleShot(100, self.upd_spectra_list)
-        QTimer.singleShot(300, self.spectra_widget.rescale)
+        QTimer.singleShot(300, self.spectra_viewer.rescale)
 
     def subtract_baseline_all(self):
         """Subtracts baseline points for all spectra"""
@@ -686,7 +685,7 @@ class Maps(QObject):
     def fit_completed(self):
         """Update GUI after completing fitting process."""
         self.upd_spectra_list()
-        QTimer.singleShot(200, self.spectra_widget.rescale)
+        QTimer.singleShot(200, self.spectra_viewer.rescale)
         self.ui.progressBar.setValue(100)
         self.ui.centralwidget.setEnabled(True)
 
@@ -792,7 +791,7 @@ class Maps(QObject):
 
         self.common.reinit_spectrum(fnames, self.spectrums)
         self.upd_spectra_list()
-        QTimer.singleShot(200, self.spectra_widget.rescale)
+        QTimer.singleShot(200, self.spectra_viewer.rescale)
 
     def reinit_all(self):
         """Reinitialize all spectra"""
@@ -816,7 +815,7 @@ class Maps(QObject):
         if not selected_spectrums:
             return
 
-        self.spectra_widget.plot(selected_spectrums)
+        self.spectra_viewer.plot(selected_spectrums)
         
         df = self.maps.get(map_name)
         self.map_plot.map_df_name=map_name
@@ -936,13 +935,13 @@ class Maps(QObject):
         map_name, coords = self.spectra_id()
         if map_name in self.maps:
             del self.maps[map_name]
-            self.spectrums = CustomizedSpectra(
+            self.spectrums = Spectra(
                 spectrum for spectrum in self.spectrums if
                 not spectrum.fname.startswith(map_name))
             self.upd_maps_list()
         self.ui.spectra_listbox.clear()
-        self.spectra_widget.sel_spectrums = None  
-        self.spectra_widget.refresh_plot() 
+        self.spectra_viewer.sel_spectrums = None  
+        self.spectra_viewer.refresh_plot() 
         self.map_plot.ax.clear()
         self.map_plot.canvas.draw_idle()
 
@@ -1269,7 +1268,7 @@ class Maps(QObject):
             with open(file_path, 'r') as f:
                 load = json.load(f)
                 try:
-                    self.spectrums = CustomizedSpectra()
+                    self.spectrums = Spectra()
                     self.maps = {}
                     # Decode hex and decompress the dataframe
                     for k, v in load.get('maps', {}).items():
@@ -1296,7 +1295,7 @@ class Maps(QObject):
         """Clear the environment and reset the application state"""
         # Clear loaded maps and spectra
         self.maps.clear()
-        self.spectrums = CustomizedSpectra()
+        self.spectrums = Spectra()
         self.loaded_fit_model = None
         self.current_fit_model = None
         self.df_fit_results = None
@@ -1307,8 +1306,8 @@ class Maps(QObject):
         self.ui.item_count_label.setText("0 points")
 
         # Clear spectra plot view and reset selected spectrums
-        self.spectra_widget.sel_spectrums = None 
-        self.spectra_widget.refresh_plot()
+        self.spectra_viewer.sel_spectrums = None 
+        self.spectra_viewer.refresh_plot()
 
         # Clear plot ofmeasurement sites 
         self.map_plot.ax.clear()
@@ -1318,6 +1317,6 @@ class Maps(QObject):
         self.peak_table.clear()
         
         # Refresh the UI to reflect the cleared state
-        QTimer.singleShot(50, self.spectra_widget.rescale)
+        QTimer.singleShot(50, self.spectra_viewer.rescale)
         QTimer.singleShot(100, self.upd_maps_list)
         print("'Maps' Tab environment has been cleared.")

@@ -45,7 +45,6 @@ class SpectraViewer(QWidget):
     def create_plot_widget(self):
         """Create or update canvas and toolbar for plotting in the GUI."""
         plt.style.use(PLOT_POLICY)
-
         if not self.figure:
             self.create_figure_canvas_and_toolbar()
             self.create_tool_buttons()

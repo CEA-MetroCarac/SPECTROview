@@ -18,13 +18,21 @@ PALETTE = ['jet', 'viridis', 'plasma',  'magma',
            'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd']
 PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer', '2Dmap']
 
+# DEFAULT_COLORS = [
+#     '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
+#     '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', "#17b8ca", 
+#     '#ffd500', '#008281', '#000086', '#c0c0c0', '#808000', 
+#     '#8d0000', '#6fd0ef', '#ff1493', '#00ff7f', '#ff4500', 
+#     '#191970', '#ffdab9', '#228b22', '#dda0dd', '#ff6347', 
+# ]
+
 DEFAULT_COLORS = [
-    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
-    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', "#17b8ca", 
-    '#ffd500', '#008281', '#000086', '#c0c0c0', '#808000', 
-    '#8d0000', '#6fd0ef', '#ff1493', '#00ff7f', '#ff4500', 
-    '#191970', '#ffdab9', '#228b22', '#dda0dd', '#ff6347', 
+    '#515151', '#f14040', '#1a6fdf', '#37ad6b', '#b177de', 
+    '#cc9900', '#00cbcc', '#7d4e4e', '#8e8e00', "#fb6501", 
+    '#6699cc', '#6fb802', '#515151', '#f14040', '#1a6fdf',
 ]
+
+
 MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>', 'p', 'h', 'H', '|', '_', 'P', 'X', '1', '2', '3', '4','5','6','7','8']
 DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o','o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
 LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',

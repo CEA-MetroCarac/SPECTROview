@@ -32,7 +32,6 @@ DEFAULT_COLORS = [
     '#6699cc', '#6fb802', '#515151', '#f14040', '#1a6fdf',
 ]
 
-
 MARKERS = ['o', 's', 'D', '^', '*', 'x', '+', 'v', '<', '>', 'p', 'h', 'H', '|', '_', 'P', 'X', '1', '2', '3', '4','5','6','7','8']
 DEFAULT_MARKERS = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o','o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
 LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',

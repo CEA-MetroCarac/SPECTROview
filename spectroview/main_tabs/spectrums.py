@@ -823,7 +823,11 @@ class Spectrums(QObject):
         # self.undo_xrange_correction(selected_spectrums)
 
         # Reinit spectrum
-        self.common.reinit_spectrum(fnames, self.spectrums)
+        for fname in fnames:
+            spectrum, _ = self.spectrums.get_objects(fname)
+            spectrum.reinit()
+            
+        #self.common.reinit_spectrum(fnames, self.spectrums)
         self.upd_spectra_list()
         QTimer.singleShot(200, self.spectra_viewer.rescale)
 

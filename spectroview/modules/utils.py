@@ -86,6 +86,9 @@ class Spectrum(FitspySpectrum):
         self.label = None   # user-defined legend label
         self.color = None   # user-defined color
         
+        self.is_corrected = False # peak position correction using reference value
+        self.correction_value = 0   
+                    
     def reinit(self):
         """ Reinitialize the main attributes """
         self.range_min = None
@@ -189,9 +192,6 @@ class CommonUtilities():
         for fname in fnames:
             spectrum, _ = spectrums.get_objects(fname)
             spectrum.reinit()
-            spectrum.baseline.mode = "Linear"
-            spectrum.color = None
-            spectrum.label = None
             
   
     def clear_layout(self, layout):

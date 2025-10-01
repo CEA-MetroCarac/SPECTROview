@@ -445,6 +445,7 @@ class Maps(QObject):
             map_name, coords = self.spectra_id()
             fnames = [f"{map_name}_{coord}" for coord in coords]
         self.common.reinit_spectrum(fnames, self.spectrums)
+        
         for fname in fnames:
             spectrum, _ = self.spectrums.get_objects(fname)
             spectrum.range_min = float(self.ui.range_min.text())

@@ -146,8 +146,6 @@ class Spectrums(QObject):
                     spectrum.y = np.asarray(y_values)
                     spectrum.y0 = np.asarray(y_values)
 
-                    spectrum.is_corrected = False
-                    spectrum.correction_value = 0   
 
                     spectrum.baseline.mode = "Linear"
                     spectrum.baseline.sigma = 10
@@ -217,10 +215,12 @@ class Spectrums(QObject):
         """Apply the copied fit model to the selected spectra"""
         self.ui.centralwidget.setEnabled(False)  # Disable GUI
         
-        if fnames is None:
-            fnames = self.get_spectrum_fnames()
+        fnames = fnames or self.get_spectrum_fnames()
             
-        self.common.reinit_spectrum(fnames, self.spectrums)
+        for fname in fnames:
+            spectrum, _ = self.spectrums.get_objects(fname)
+            spectrum.reinit()
+            
         self.ntot = len(fnames)
         fit_model = deepcopy(self.current_fit_model)
         ncpu = int(self.ui.ncpu_2.text())
@@ -273,8 +273,8 @@ class Spectrums(QObject):
     def fit(self, fnames=None):
         """Fit the selected spectrum(s) with current parameters"""
         self.get_fit_settings()
-        if fnames is None:
-            fnames = self.get_spectrum_fnames()
+        fnames = fnames or self.get_spectrum_fnames()
+            
         for fname in fnames:
             spectrum, _ = self.spectrums.get_objects(fname)
             if len(spectrum.peak_models) != 0:
@@ -587,9 +587,11 @@ class Spectrums(QObject):
         """Set a new x range for the selected spectrum"""
         new_x_min = float(self.ui.range_min_2.text())
         new_x_max = float(self.ui.range_max_2.text())
-        if fnames is None:
-            fnames = self.get_spectrum_fnames()
-        self.common.reinit_spectrum(fnames, self.spectrums)
+        
+        fnames = fnames or self.get_spectrum_fnames()
+        for fname in fnames:
+            self.spectrums.get_objects(fname)[0].reinit()
+
         for fname in fnames:
             spectrum, _ = self.spectrums.get_objects(fname)
             spectrum.range_min = float(self.ui.range_min_2.text())
@@ -663,8 +665,8 @@ class Spectrums(QObject):
 
     def clear_peaks(self, fnames=None):
         """Clear all existing peak models of the selected spectrum(s)"""
-        if fnames is None:
-            fnames = self.get_spectrum_fnames()
+        fnames = fnames or self.get_spectrum_fnames()
+                    
         for fname in fnames:
             spectrum, _ = self.spectrums.get_objects(fname)
             if len(spectrum.peak_models) != 0:
@@ -814,20 +816,11 @@ class Spectrums(QObject):
 
     def reinit(self, fnames=None):
         """Reinitialize the selected spectrum(s)"""
-        if fnames is None:
-            fnames = self.get_spectrum_fnames()
-            
-        # selected_spectrums = CustomSpectra()
-        # selected_spectrums = [spectrum for spectrum in self.spectrums if spectrum.fname in fnames]
-        # Restore spectrums if they were x-range corrected
-        # self.undo_xrange_correction(selected_spectrums)
-
-        # Reinit spectrum
+        fnames = fnames or self.get_spectrum_fnames()
+        
         for fname in fnames:
-            spectrum, _ = self.spectrums.get_objects(fname)
-            spectrum.reinit()
+            self.spectrums.get_objects(fname)[0].reinit()
             
-        #self.common.reinit_spectrum(fnames, self.spectrums)
         self.upd_spectra_list()
         QTimer.singleShot(200, self.spectra_viewer.rescale)
 

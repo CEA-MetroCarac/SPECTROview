@@ -107,6 +107,7 @@ class Spectrum(FitspySpectrum):
         self.baseline.reinit()
         self.baseline.mode = "Linear"
 
+
 class Spectra(FitspySpectra):
     """Customized Spectra class of the fitspy package."""
     def apply_model(self, model_dict, fnames=None, ncpus=1,
@@ -188,12 +189,6 @@ class FitModelManager:
 
 class CommonUtilities():
     """ Class contain all common methods or utility codes used other modules"""
-    def reinit_spectrum(self, fnames, spectrums):
-        for fname in fnames:
-            spectrum, _ = spectrums.get_objects(fname)
-            spectrum.reinit()
-            
-  
     def clear_layout(self, layout):
         if layout is not None:
             for i in reversed(range(layout.count())):

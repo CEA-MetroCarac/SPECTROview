@@ -208,8 +208,6 @@ class Maps(QObject):
                 spectrum.x0 = np.asarray(x_values)
                 spectrum.y = np.asarray(y_values)
                 spectrum.y0 = np.asarray(y_values)
-                spectrum.is_corrected = False
-                spectrum.correction_value = 0
                 spectrum.baseline.mode = "Linear"
                 spectrum.baseline.sigma = 5
                 self.spectrums.append(spectrum)
@@ -444,7 +442,9 @@ class Maps(QObject):
         if fnames is None:
             map_name, coords = self.spectra_id()
             fnames = [f"{map_name}_{coord}" for coord in coords]
-        self.common.reinit_spectrum(fnames, self.spectrums)
+        
+        for fname in fnames:
+            self.spectrums.get_objects(fname)[0].reinit()
         
         for fname in fnames:
             spectrum, _ = self.spectrums.get_objects(fname)
@@ -582,13 +582,14 @@ class Maps(QObject):
 
     def paste_fit_model(self, fnames=None):
         """Apply the copied fit model to selected spectra."""
-
         self.ui.centralwidget.setEnabled(False)  # Disable GUI
         if fnames is None:
             map_name, coords = self.spectra_id()
             fnames = [f"{map_name}_{coord}" for coord in coords]
 
-        self.common.reinit_spectrum(fnames, self.spectrums)
+        for fname in fnames:
+            self.spectrums.get_objects(fname)[0].reinit()
+            
         fit_model = deepcopy(self.current_fit_model)
 
         self.ntot = len(fnames)
@@ -763,13 +764,12 @@ class Maps(QObject):
         self.df_fit_results = dfr
         self.df_table.show(self.df_fit_results)
 
-
-
     def reinit(self, fnames=None):
         """Reinitialize the selected spectrum(s)."""
         if fnames is None:
             map_name, coords = self.spectra_id()
             fnames = [f"{map_name}_{coord}" for coord in coords]
+       
         else:
             # Extract map_name and coords from fnames
             map_name = None
@@ -779,18 +779,10 @@ class Maps(QObject):
                 if map_name is None:
                     map_name = parts[0]  # Assume map_name is the first part
                 coords.append('_'.join(parts[1:]))
-            
-        # selected_spectrums = []
-        # for spectrum in self.spectrums:
-        #     map_name_fs, coord_fs = self.spectrum_object_id(spectrum)
-            
-        #     if map_name_fs == map_name and coord_fs in coords:
-        #         selected_spectrums.append(spectrum)
+    
+        for fname in fnames:
+            self.spectrums.get_objects(fname)[0].reinit()
 
-        # # Restore spectrums if they were x-range corrected
-        # self.undo_xrange_correction(selected_spectrums)
-
-        self.common.reinit_spectrum(fnames, self.spectrums)
         self.upd_spectra_list()
         QTimer.singleShot(200, self.spectra_viewer.rescale)
 

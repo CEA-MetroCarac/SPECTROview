@@ -164,7 +164,7 @@ class Spectrums(QObject):
                
             for spectrum in sel_spectra:
                 new_xcorrection_value = 520.7 - ref_value
-                print(f"Applying new_xcorrection_value={new_xcorrection_value} for spectrum {spectrum.fname}")
+                print(f"Applying x range correction of {new_xcorrection_value} for spectrum {spectrum.fname}")
                 spectrum.apply_xcorrection(new_xcorrection_value)
                 
 
@@ -329,8 +329,6 @@ class Spectrums(QObject):
         fnames = checked_spectra.fnames
         self.apply_loaded_fit_model(fnames=fnames)
 
-    
-
     def upd_spectra_list(self):
         """Show spectrums in a listbox"""
         # Store the checked state of each item
@@ -340,8 +338,9 @@ class Spectrums(QObject):
             checked_states[item.text()] = item.checkState()
 
         current_row = self.ui.spectrums_listbox.currentRow()
-        current_selection = [self.ui.spectrums_listbox.item(i).text() for i in range(self.ui.spectrums_listbox.count()) if self.ui.spectrums_listbox.item(i).isSelected()]
-        
+        #current_selection = [self.ui.spectrums_listbox.item(i).text() for i in range(self.ui.spectrums_listbox.count()) if self.ui.spectrums_listbox.item(i).isSelected()]
+        current_selection = {item.text() for item in self.ui.spectrums_listbox.selectedItems()}
+
         self.ui.spectrums_listbox.clear()
         
         for spectrum in self.spectrums:

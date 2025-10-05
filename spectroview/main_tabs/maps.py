@@ -222,7 +222,7 @@ class Maps(QObject):
             
             for spectrum in sel_spectra:
                 new_xcorrection_value = 520.7 - ref_value
-                print(f"Applying new_xcorrection_value={new_xcorrection_value} for spectrum {spectrum.fname}")
+                print(f"Applying x range correction of {new_xcorrection_value} for spectrum {spectrum.fname}")
                 spectrum.apply_xcorrection(new_xcorrection_value)
 
             QTimer.singleShot(100, self.upd_spectra_list)

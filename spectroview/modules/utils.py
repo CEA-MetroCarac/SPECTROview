@@ -107,27 +107,24 @@ class Spectrum(FitspySpectrum):
         self.baseline.mode = "Linear"
 
     def preprocess(self):
-        """ Preprocess the spectrum: call successively load_profile(),
-            apply_range(), eval_baseline(), subtract_baseline() and
-            normalization() """
+        """ Preprocess the spectrum """
         self.load_profile(self.fname)
         self.apply_range()
-        #self.apply_xcorrection()
         self.eval_baseline()
         self.subtract_baseline()
         self.normalization()
 
     def apply_xcorrection(self, new_xcorr_value=None):
         """ Apply peak position correction """
-        # Step 1: Undo existing correction if needed
+        # Undo existing correction if needed
         if self.xcorrection_value != 0:
             self.undo_xcorrection()
 
-        # Step 2: If user provides a new correction, update the value
+        # If user provides a new correction, update the value
         if new_xcorr_value is not None:
             self.xcorrection_value = new_xcorr_value
 
-        # Step 3: Apply correction
+        # Apply correction
         if self.xcorrection_value != 0:
             self.x0 = self.x0 + self.xcorrection_value
             self.x = self.x + self.xcorrection_value
@@ -475,7 +472,7 @@ def spectrum_to_dict(spectrums, is_map=False):
             "xcorrection_value": spectrum.xcorrection_value
         }
         
-        # Save x0 and y0 only if it's not a map
+        # Save x0 and y0 only if it's not a 2DMAP
         if not is_map:
             spectrum_dict.update({
                 "x0": compress(spectrum.x0),
@@ -489,9 +486,6 @@ def spectrum_to_dict(spectrums, is_map=False):
 def dict_to_spectrum(spectrum, spectrum_data, is_map=True, maps=None):
     """Set attributes of Spectrum object from JSON dict"""
     spectrum.set_attributes(spectrum_data)
-    
-    # Set additional attributes
-    spectrum.xcorrection_value = spectrum_data.get('xcorrection_value', 0)
     
     if is_map: 
         if maps is None:
@@ -512,7 +506,8 @@ def dict_to_spectrum(spectrum, spectrum_data, is_map=True, maps=None):
             row = map_df[(map_df['X'] == coord_x) & (map_df['Y'] == coord_y)]
             
             if not row.empty:
-                spectrum.x0 = map_df.columns[2:].astype(float).values  
+                x0 = map_df.columns[2:].astype(float).values  # retreive original x0
+                spectrum.x0 = x0 + spectrum.xcorrection_value # apply xcorrection_value
                 spectrum.y0 = row.iloc[0, 2:].values  
             else:
                 spectrum.x0 = None

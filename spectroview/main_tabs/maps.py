@@ -220,17 +220,10 @@ class Maps(QObject):
             if sel_spectra is None:
                 _, sel_spectra = self.get_spectrum_object()
             
-            # Restore to original values
-            self.undo_xrange_correction(sel_spectra)
             for spectrum in sel_spectra:
-                # Correction action
-                correction_value = (520.7 - ref_value)
-                uncorrectted_x = deepcopy(spectrum.x)
-                uncorrectted_x0 = deepcopy(spectrum.x0)
-                spectrum.x = uncorrectted_x + correction_value
-                spectrum.x0 = uncorrectted_x0 + correction_value
-                spectrum.correction_value = correction_value
-                spectrum.is_corrected = True
+                new_xcorrection_value = 520.7 - ref_value
+                print(f"Applying new_xcorrection_value={new_xcorrection_value} for spectrum {spectrum.fname}")
+                spectrum.apply_xcorrection(new_xcorrection_value)
 
             QTimer.singleShot(100, self.upd_spectra_list)
 
@@ -243,14 +236,8 @@ class Maps(QObject):
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
         for spectrum in sel_spectra:
-            if spectrum.is_corrected:
-                # Restore original X values
-                correctted_x=deepcopy(spectrum.x)
-                correctted_x0=deepcopy(spectrum.x0)
-                spectrum.x = correctted_x - spectrum.correction_value
-                spectrum.x0 = correctted_x0 - spectrum.correction_value
-                spectrum.correction_value = 0
-                spectrum.is_corrected = False
+            spectrum.undo_xcorrection()
+
         QTimer.singleShot(100, self.upd_spectra_list)
 
     def view_fit_results_df(self):
@@ -432,8 +419,10 @@ class Maps(QObject):
     def read_x_range(self):
         """Read x range of selected spectrum"""
         sel_spectrum, sel_spectra = self.get_spectrum_object()
-        self.ui.range_min.setText(str(sel_spectrum.x[0]))
-        self.ui.range_max.setText(str(sel_spectrum.x[-1]))
+        xmin = round(sel_spectrum.x[0], 3)
+        xmax = round(sel_spectrum.x[-1], 3)
+        self.ui.range_min.setText(str(xmin))
+        self.ui.range_max.setText(str(xmax))
 
     def set_x_range(self, fnames=None):
         """Sets a new x-axis range for the selected spectrum(s)"""
@@ -816,8 +805,8 @@ class Maps(QObject):
         self.map_viewer.plot(coords)
 
         # Show correction value of the last selected item
-        correction_value = round(selected_spectrums[-1].correction_value, 3)
-        text = f"[{correction_value}]"
+        xcorrection_value = round(selected_spectrums[-1].xcorrection_value, 3)
+        text = f"[{xcorrection_value}]"
         self.ui.lbl_correction_value_2.setText(text)
 
         self.read_x_range()

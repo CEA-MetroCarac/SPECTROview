@@ -161,18 +161,11 @@ class Spectrums(QObject):
             ref_value = round(float(text), 3)                
             if sel_spectra is None:
                 _, sel_spectra = self.get_spectrum_object()
-            
-            # Restore to original values
-            self.undo_xrange_correction(sel_spectra)
+               
             for spectrum in sel_spectra:
-                # Correction action
-                correction_value = (520.7 - ref_value)
-                uncorrectted_x = deepcopy(spectrum.x)
-                uncorrectted_x0 = deepcopy(spectrum.x0)
-                spectrum.x = uncorrectted_x + correction_value
-                spectrum.x0 = uncorrectted_x0 + correction_value
-                spectrum.correction_value = correction_value
-                spectrum.is_corrected = True
+                new_xcorrection_value = 520.7 - ref_value
+                spectrum.apply_xcorrection(new_xcorrection_value)
+                
 
             QTimer.singleShot(100, self.upd_spectra_list)
 
@@ -185,14 +178,8 @@ class Spectrums(QObject):
         if sel_spectra is None:
             _, sel_spectra = self.get_spectrum_object()
         for spectrum in sel_spectra:
-            if spectrum.is_corrected:
-                # Restore original X values
-                correctted_x=deepcopy(spectrum.x)
-                correctted_x0=deepcopy(spectrum.x0)
-                spectrum.x = correctted_x - spectrum.correction_value
-                spectrum.x0 = correctted_x0 - spectrum.correction_value
-                spectrum.correction_value = 0
-                spectrum.is_corrected = False
+            spectrum.undo_xcorrection()
+
         QTimer.singleShot(100, self.upd_spectra_list)       
         
     def copy_fit_model(self):
@@ -394,8 +381,8 @@ class Spectrums(QObject):
         self.spectra_viewer.plot(selected_spectrums)
 
         # Show correction value of the last selected item
-        correction_value = round(selected_spectrums[-1].correction_value, 3)
-        text = f"[{correction_value}]"
+        xcorrection_value = round(selected_spectrums[-1].xcorrection_value, 3)
+        text = f"[{xcorrection_value}]"
         self.ui.lbl_correction_value.setText(text)
         
         self.read_x_range()

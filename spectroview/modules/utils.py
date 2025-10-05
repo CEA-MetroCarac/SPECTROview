@@ -86,8 +86,7 @@ class Spectrum(FitspySpectrum):
         self.label = None   # user-defined legend label
         self.color = None   # user-defined color
         
-        self.is_corrected = False # peak position correction using reference value
-        self.correction_value = 0   
+        self.xcorrection_value = 0   # peak position correction using reference value
                     
     def reinit(self):
         """ Reinitialize the main attributes """
@@ -107,9 +106,42 @@ class Spectrum(FitspySpectrum):
         self.baseline.reinit()
         self.baseline.mode = "Linear"
 
+    def preprocess(self):
+        """ Preprocess the spectrum: call successively load_profile(),
+            apply_range(), eval_baseline(), subtract_baseline() and
+            normalization() """
+        self.load_profile(self.fname)
+        self.apply_range()
+        #self.apply_xcorrection()
+        self.eval_baseline()
+        self.subtract_baseline()
+        self.normalization()
+
+    def apply_xcorrection(self, new_xcorr_value=None):
+        """ Apply peak position correction """
+        # Step 1: Undo existing correction if needed
+        if self.xcorrection_value != 0:
+            self.undo_xcorrection()
+
+        # Step 2: If user provides a new correction, update the value
+        if new_xcorr_value is not None:
+            self.xcorrection_value = new_xcorr_value
+
+        # Step 3: Apply correction
+        if self.xcorrection_value != 0:
+            self.x0 = self.x0 + self.xcorrection_value
+            self.x = self.x + self.xcorrection_value
+
+    def undo_xcorrection(self):
+        """Undo peak position correction (restore original x and x0)."""
+        if self.xcorrection_value != 0:
+            self.x0 = self.x0 - self.xcorrection_value
+            self.x = self.x - self.xcorrection_value
+            self.xcorrection_value = 0
 
 class Spectra(FitspySpectra):
     """Customized Spectra class of the fitspy package."""
+    
     def apply_model(self, model_dict, fnames=None, ncpus=1,
                     show_progressbar=True):
         """ Apply 'model' to all or part of the spectra."""
@@ -122,10 +154,8 @@ class Spectra(FitspySpectra):
             
             # Customize the model_dict for this spectrum
             custom_model = deepcopy(model_dict)
-            if hasattr(spectrum, "correction_value"):
-                custom_model["correction_value"] = spectrum.correction_value
-            if hasattr(spectrum, "is_corrected"):
-                custom_model["is_corrected"] = spectrum.is_corrected
+            if hasattr(spectrum, "xcorrection_value"):  # reassign current xcorrection_value
+                custom_model["xcorrection_value"] = spectrum.xcorrection_value
 
             spectrum.set_attributes(custom_model)
             spectrum.fname = fname  # reassign the correct fname
@@ -442,8 +472,7 @@ def spectrum_to_dict(spectrums, is_map=False):
     # Iterate over the saved spectrums data and update x0 and y0
     for i, spectrum in enumerate(spectrums):
         spectrum_dict = {
-            "is_corrected": spectrum.is_corrected,
-            "correction_value": spectrum.correction_value
+            "xcorrection_value": spectrum.xcorrection_value
         }
         
         # Save x0 and y0 only if it's not a map
@@ -462,8 +491,7 @@ def dict_to_spectrum(spectrum, spectrum_data, is_map=True, maps=None):
     spectrum.set_attributes(spectrum_data)
     
     # Set additional attributes
-    spectrum.is_corrected = spectrum_data.get('is_corrected', False)
-    spectrum.correction_value = spectrum_data.get('correction_value', 0)
+    spectrum.xcorrection_value = spectrum_data.get('xcorrection_value', 0)
     
     if is_map: 
         if maps is None:

@@ -788,7 +788,6 @@ class Maps(QObject):
 
     def reinit_all(self):
         """Reinitialize all spectra"""
-        # self.undo_xrange_correction(self.spectrums)
         fnames = self.spectrums.fnames
         self.reinit(fnames)
 

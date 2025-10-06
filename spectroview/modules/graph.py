@@ -301,7 +301,7 @@ class Graph(QWidget):
                               capsize=0.02)
             elif self.plot_style == 'scatter':
                 sns.scatterplot(data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                                s=100, edgecolor='black', palette=colors)
+                                s=70, edgecolor='black', palette=colors)
             elif self.plot_style == 'box':
                 sns.boxplot(data=df, x=self.x, y=y, hue=self.z, 
                             ax=self.ax, palette=colors, width=0.4)

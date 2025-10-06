@@ -10,7 +10,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from spectroview import  DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS
-from spectroview.modules.utils import  rgba_to_named_color, show_alert
+from spectroview.modules.utils import  rgba_to_default_color, show_alert
 
 from PySide6.QtWidgets import  QVBoxLayout,  QLabel, QLineEdit, QWidget, QComboBox, QWidget, QStyledItemDelegate
 from PySide6.QtCore import Qt, QSize
@@ -191,7 +191,7 @@ class Graph(QWidget):
                         
                     # Box & bar plots do not use markers → set defautl values
                     elif self.plot_style in ['box', 'bar']:
-                        color = rgba_to_named_color(handle.get_facecolor())
+                        color = rgba_to_default_color(handle.get_facecolor())
                         marker = 'o'
                     else:
                         color = 'blue'
@@ -352,6 +352,8 @@ class Graph(QWidget):
             handles += handles3
             labels += labels3
             self.ax3.legend().remove()  # Turn off legend for ax3
+        
+        
         if handles:
             legend_labels = []
             if self.legend_properties:

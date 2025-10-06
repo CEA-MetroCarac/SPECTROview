@@ -25,7 +25,7 @@ from fitspy.core.spectra import Spectra as FitspySpectra
 from fitspy.core.baseline import BaseLine
 from fitspy.core.utils_mp import fit_mp
 
-from spectroview import PALETTE
+from spectroview import PALETTE, DEFAULT_COLORS
 from spectroview.modules.df_table import DataframeTable
 
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QVBoxLayout,  QTextBrowser, \
@@ -535,20 +535,25 @@ def dict_to_baseline(dict_baseline, spectrums):
         spectrum.baseline = new_baseline
 
 
-# Define a dictionary mapping RGBA tuples to named colors
-rgba_to_named_color_dict = {mcolors.to_rgba(color_name): color_name for
-                            color_name in mcolors.CSS4_COLORS}
+def rgba_to_default_color(rgba, default_colors=DEFAULT_COLORS):
+    """
+    Convert an RGBA tuple to the closest color in DEFAULT_COLORS.
+    If no DEFAULT_COLORS are given, falls back to hex.
+    """
+    # Convert input to RGB array
+    rgb = np.array(mcolors.to_rgb(rgba)) # drops alpha
 
-def rgba_to_named_color(rgba):
-    """Convert RGBA tuple to a named color string."""
-    # Check if the exact RGBA tuple exists in the dictionary
-    rgba_tuple = tuple(rgba)
-    if rgba_tuple in rgba_to_named_color_dict:
-        return rgba_to_named_color_dict[rgba_tuple]
-    else:
-        # If exact match is not found, return the closest color name
-        return mcolors.to_hex(rgba)  # Use hex as fallback if needed
+    # Compute distance to each default color
+    best_color = None
+    best_dist = float("inf")
+    for dc in default_colors:
+        dc_rgb = np.array(mcolors.to_rgb(dc))
+        dist = np.linalg.norm(rgb - dc_rgb)  # Euclidean distance in RGB
+        if dist < best_dist:
+            best_dist = dist
+            best_color = dc
 
+    return best_color if best_color else mcolors.to_hex(rgba)
 
 def show_alert(message):
     """Show alert"""

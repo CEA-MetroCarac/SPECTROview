@@ -404,8 +404,8 @@ class Graph(QWidget):
         coefficients = np.polyfit(x_data, y_data, self.trendline_order)
         equation = 'y = '
         for i, coeff in enumerate(coefficients[::-1]):
-            equation += (f'{coeff:.2f}x^{self.trendline_order - i} + '
-                         if i < self.trendline_order else f'{coeff:.2f}')
+            equation += (f'{coeff:.4f}x^{self.trendline_order - i} + '
+                         if i < self.trendline_order else f'{coeff:.4f}')
         self.ax.annotate(equation, xy=(0.02, 0.95), xycoords='axes fraction',
                          fontsize=10, color='blue')
 

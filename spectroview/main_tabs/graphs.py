@@ -280,7 +280,7 @@ class Graphs(QDialog):
         """ Show all legend's properties in GUI for customization"""
         graph, graph_dialog, sub_window = self.get_sel_graph()
         main_layout = self.ui.main_layout
-        graph.customize_legend_via_gui(main_layout)
+        graph.customize_legend_widget(main_layout)
 
     def set_current_limits(self):
         """Get and set current scales for selected plot"""

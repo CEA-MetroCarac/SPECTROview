@@ -118,12 +118,12 @@ class Graph(QWidget):
                     self.clear_layout(item.layout())
 
     def create_plot_widget(self, dpi, layout=None):
-        """Creates a new plot canvas with the specified DPI and adds it to
-        the specified layout or the default graph_layout"""
+        """Creates a new canvas and adds it to a specified layout or the default graph_layout"""
         if dpi:
             self.dpi = dpi
         else:
             self.dpi = 100
+            
         self.clear_layout(self.graph_layout)
         plt.close('all')
 
@@ -156,8 +156,7 @@ class Graph(QWidget):
         if self.ax3:
             self.ax3.clear()
 
-        if self.df_name is not None and self.x is not None and self.y is not \
-                None:
+        if self.df_name is not None and self.x is not None and self.y is not None:
             self._plot_primary_axis(df)
             self._plot_secondary_axis(df)
             self._plot_tertiary_axis(df)
@@ -175,7 +174,7 @@ class Graph(QWidget):
         self.canvas.draw_idle()
 
     def get_legend_properties(self):
-        """Retrieves properties of each existing legend item."""
+        """Retrieves properties of each legends within legend box"""
         legend_properties = []
         if self.ax:
             legend = self.ax.get_legend()
@@ -189,6 +188,7 @@ class Graph(QWidget):
                     if self.plot_style in ['point', 'scatter', 'line']:
                         color = handle.get_markerfacecolor()
                         marker = handle.get_marker()
+                        
                     # Box & bar plots do not use markers → set defautl values
                     elif self.plot_style in ['box', 'bar']:
                         color = rgba_to_named_color(handle.get_facecolor())
@@ -198,13 +198,15 @@ class Graph(QWidget):
                         marker = 'o'
                     legend_properties.append(
                         {'label': label, 'marker': marker, 'color': color})
+                    
         self.legend_properties = legend_properties
         return self.legend_properties
 
-    def customize_legend_via_gui(self, main_layout):
+    def customize_legend_widget(self, main_layout):
         """Displays legend properties in the GUI for user modifications."""
         self.clear_layout(main_layout)
         headers = ['Label', 'Marker', 'Color']
+        
         # Create vertical layouts for each property type
         label_layout = QVBoxLayout()
         marker_layout = QVBoxLayout()
@@ -226,8 +228,7 @@ class Graph(QWidget):
             # LABEL
             label = QLineEdit(prop['label'])
             label.setFixedWidth(200)
-            label.textChanged.connect(
-                lambda text, idx=idx: self.udp_legend(idx, 'label', text))
+            label.textChanged.connect(lambda text, idx=idx: self.udp_legend(idx, 'label', text))
             label_layout.addWidget(label)
 
             if self.plot_style == 'point':
@@ -235,8 +236,7 @@ class Graph(QWidget):
                 marker = QComboBox()
                 marker.addItems(MARKERS)  # Add more markers as needed
                 marker.setCurrentText(prop['marker'])
-                marker.currentTextChanged.connect(
-                    lambda text, idx=idx: self.udp_legend(idx, 'marker', text))
+                marker.currentTextChanged.connect(lambda text, idx=idx: self.udp_legend(idx, 'marker', text))
                 marker_layout.addWidget(marker)
             else:
                 pass
@@ -380,6 +380,7 @@ class Graph(QWidget):
                 legend.set_draggable(True)
             else:
                 self.ax.legend().remove()
+                
             if self.legend_outside:
                 legend = self.ax.legend(handles, legend_labels, loc='center left',bbox_to_anchor=(1, 0.5))
                 legend.set_draggable(True)

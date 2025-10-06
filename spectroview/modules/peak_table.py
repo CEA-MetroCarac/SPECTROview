@@ -4,14 +4,16 @@ from spectroview import PEAK_MODELS, ICON_DIR
 
 from PySide6.QtWidgets import  QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy,\
     QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QWidget, QSpacerItem
-from PySide6.QtCore import  Qt
+from PySide6.QtCore import  Qt, QTimer
 from PySide6.QtGui import  QIcon, Qt 
 
 
 class PeakTable:
     """Class dedicated to show fit parameters of Spectrum objects in the GUI"""
     def __init__(self, main_app, main_layout, cbb_layout):
+        
         # the main app where the PeakTable class is implemented, so we can connect to the method of main-map (upd_spectra_list)
+        
         self.main_app = main_app 
         self.main_layout = main_layout # layout where the peak_table are placed
         self.cbb_layout = cbb_layout  # layout where comboboxes are placed
@@ -250,6 +252,8 @@ class PeakTable:
 
     def update_param_hint_value(self, pm, key, text):
         pm.param_hints[key]['value'] = float(text)
+        # Update GUI / spectraviewer after changing a parameter value
+        QTimer.singleShot(1000, self.refresh_gui)
 
     def update_param_hint_min(self, pm, key, text):
         pm.param_hints[key]['min'] = float(text)

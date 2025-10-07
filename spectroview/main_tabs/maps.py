@@ -43,7 +43,7 @@ class Maps(QObject):
         self.common = common
 
         self.loaded_fit_model = None
-        self.current_fit_model = None
+        self.copied_fit_model = None
         self.maps = {}  # list of opened maps data
         self.spectrums = Spectra()
         
@@ -297,7 +297,7 @@ class Maps(QObject):
                 names.append(name)
             self.df_fit_results = self.df_fit_results.iloc[:,list(np.argsort(names, kind='stable'))]
             # Replace peak_label
-            columns = [self.common.replace_peak_labels(self.current_fit_model, column) for column in self.df_fit_results.columns]
+            columns = [self.common.replace_peak_labels(self.copied_fit_model, column) for column in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
 
             map_type = self.map_viewer.cbb_map_type.currentText()
@@ -562,11 +562,11 @@ class Maps(QObject):
             self.ui.lbl_copied_fit_model.setText("")
             msg = ("No fit results to collect or copy")
             print(msg)
-            self.current_fit_model = None
+            self.copied_fit_model = None
             return
         else:
-            self.current_fit_model = None
-            self.current_fit_model = deepcopy(sel_spectrum.save())
+            self.copied_fit_model = None
+            self.copied_fit_model = deepcopy(sel_spectrum.save())
         self.ui.lbl_copied_fit_model.setText("copied")
 
     def paste_fit_model(self, fnames=None):
@@ -579,7 +579,7 @@ class Maps(QObject):
         for fname in fnames:
             self.spectrums.get_objects(fname)[0].reinit()
             
-        fit_model = deepcopy(self.current_fit_model)
+        fit_model = deepcopy(self.copied_fit_model)
 
         self.ntot = len(fnames)
         ncpu = int(self.ui.ncpu.text())
@@ -606,11 +606,11 @@ class Maps(QObject):
         
     def paste_peaks(self, sel_spectra=None):
         """Copy and paste only peak labels and peak models to the selected spectra."""
-        if not self.current_fit_model:
+        if not self.copied_fit_model:
             show_alert("No fit model copied")
             return
         # Extract data from the correct location
-        fit_data = self.current_fit_model
+        fit_data = self.copied_fit_model
         
         self.current_peaks = {
             "peak_labels": fit_data.get("peak_labels", []),
@@ -1279,7 +1279,7 @@ class Maps(QObject):
         self.maps.clear()
         self.spectrums = Spectra()
         self.loaded_fit_model = None
-        self.current_fit_model = None
+        self.copied_fit_model = None
         self.df_fit_results = None
 
         # Clear UI elements that display data

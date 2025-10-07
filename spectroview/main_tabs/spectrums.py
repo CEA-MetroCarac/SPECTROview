@@ -34,7 +34,7 @@ class Spectrums(QObject):
 
         self.loaded_fit_model = None
         self.current_fit_model = None
-        self.current_peaks = None
+        self.current_peaks = None #Current peaks available of a given spectrum
         self.spectrums = Spectra()
 
         # Initialize SpectraViewWidget
@@ -688,7 +688,7 @@ class Spectrums(QObject):
     def collect_results(self):
         """Collect best-fit results and append them to a dataframe."""
         # Add all dict into a list, then convert to a dataframe.
-        self.copy_fit_model()
+        self.copy_ficopy_fit_model()
         fit_results_list = []
         self.df_fit_results = None
 

@@ -101,10 +101,11 @@ class Spectrum(FitspySpectrum):
         self.normalize_range_max = None
         self.remove_models()
         self.result_fit = lambda: None
-        self.color = None
-        self.label = None
         self.baseline.reinit()
         self.baseline.mode = "Linear"
+        
+        self.color = None
+        self.label = None
 
     def preprocess(self):
         """ Preprocess the spectrum """
@@ -135,6 +136,7 @@ class Spectrum(FitspySpectrum):
             self.x0 = self.x0 - self.xcorrection_value
             self.x = self.x - self.xcorrection_value
             self.xcorrection_value = 0
+        
 
 class Spectra(FitspySpectra):
     """Customized Spectra class of the fitspy package."""
@@ -150,9 +152,14 @@ class Spectra(FitspySpectra):
             spectrum, _ = self.get_objects(fname)
             
             # Customize the model_dict for this spectrum
+            
             custom_model = deepcopy(model_dict)
             if hasattr(spectrum, "xcorrection_value"):  # reassign current xcorrection_value
                 custom_model["xcorrection_value"] = spectrum.xcorrection_value
+            if hasattr(spectrum, "label"):  
+                custom_model["label"] = spectrum.label
+            if hasattr(spectrum, "color"):  
+                custom_model["color"] = spectrum.color
 
             spectrum.set_attributes(custom_model)
             spectrum.fname = fname  # reassign the correct fname
@@ -468,9 +475,7 @@ def spectrum_to_dict(spectrums, is_map=False):
     spectrums_data = spectrums.save()
     # Iterate over the saved spectrums data and update x0 and y0
     for i, spectrum in enumerate(spectrums):
-        spectrum_dict = {
-            "xcorrection_value": spectrum.xcorrection_value
-        }
+        spectrum_dict = {}
         
         # Save x0 and y0 only if it's not a 2DMAP
         if not is_map:

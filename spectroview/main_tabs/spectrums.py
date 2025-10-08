@@ -9,24 +9,28 @@ from pathlib import Path
 
 from spectroview import FIT_METHODS
 from spectroview.modules.utils import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area
-from spectroview.modules.utils import FitThread, FitModelManager, CustomizedListWidget, Spectra, Spectrum
+from spectroview.modules.utils import FitThread, CustomizedListWidget, Spectra, Spectrum
 from spectroview.modules.df_table import DataframeTable
 from spectroview.modules.peak_table import PeakTable
 from spectroview.modules.spectra_viewer import SpectraViewer
+from spectroview.modules.fit_model_manager import FitModelManager
 
 from lmfit import fit_report
 from fitspy.core.utils import closest_index
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
-from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
+from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, QSettings
 
 class Spectrums(QObject):
     """
     Class manages the GUI interactions and operations related to process spectra.
     """
-    def __init__(self, settings, ui, common, graphs, app_settings):
+    def __init__(self, settings, ui, common, graphs, app_settings, settings_dialog):
         super().__init__()
         self.settings = settings
+        self.settings2 = QSettings("CEA-Leti", "SPECTROview")
+        self.settings_dialog = settings_dialog
+        
         self.app_settings=app_settings
         self.ui = ui
         self.common = common
@@ -62,25 +66,21 @@ class Spectrums(QObject):
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot)
         
-        self.ui.cbb_fit_methods_2.addItems(FIT_METHODS)
         self.ui.btn_send_to_viz.clicked.connect(self.send_df_to_viz)
 
-        # Load default folder path
-        self.fit_model_manager = FitModelManager(self.settings)
-        self.fit_model_manager.default_model_folder = self.settings.value(
-            "default_model_folder", "")
-        self.ui.l_defaut_folder_model_3.setText(
-            self.fit_model_manager.default_model_folder)
-        QTimer.singleShot(0, self.populate_available_models)
-        self.ui.btn_refresh_model_folder_3.clicked.connect(
-            self.populate_available_models)
-        
         # Peak correction
         self.ui.btn_xrange_correction.clicked.connect(self.xrange_correction)
         self.ui.btn_undo_correction.clicked.connect(lambda: self.undo_xrange_correction())
 
         # BASELINE
         self.setup_baseline_controls()
+        
+        # FIT MODEL MANAGER
+        self.fit_model_manager = FitModelManager()
+        self.ui.horizontalLayout_106.addWidget(self.fit_model_manager)
+        
+        self.fit_model_manager.connect_apply(self.apply_model_fnc_handler)
+        self.fit_model_manager.connect_load(self.load_fit_model)
 
     def setup_baseline_controls(self):
         """Set up baseline controls and their signal connections."""
@@ -211,7 +211,8 @@ class Spectrums(QObject):
             
         self.ntot = len(fnames)
         fit_model = deepcopy(self.copied_fit_model)
-        ncpu = int(self.ui.ncpu_2.text())
+        
+        ncpu = self.settings2.value("fit_settings/ncpu", 1, type=int)
 
         if fit_model is not None:
             self.spectrums.pbar_index = 0
@@ -290,7 +291,7 @@ class Spectrums(QObject):
             fnames = self.get_spectrum_fnames()
 
         self.ntot = len(fnames)
-        ncpu = int(self.ui.ncpu_2.text())
+        ncpu = self.settings2.value("fit_settings/ncpu", 1, type=int)
         fit_model = self.loaded_fit_model
         self.spectrums.pbar_index = 0
 
@@ -434,40 +435,21 @@ class Spectrums(QObject):
         self.spectrums.clear()
         self.spectrums.extend(new_order)
 
-
-    def set_default_model_folder(self, folder_path=None):
-        """
-        Set the default folder where contain fit_models.
-        """
-        if not folder_path:
-            folder_path = QFileDialog.getExistingDirectory(None,
-                                                           "Select Default "
-                                                           "Folder",
-                                                           options=QFileDialog.ShowDirsOnly)
-        if folder_path:
-            self.fit_model_manager.set_default_model_folder(folder_path)
-            # Save selected folder path back to QSettings
-            self.settings.setValue("default_model_folder", folder_path)
-            self.ui.l_defaut_folder_model_3.setText(
-                self.fit_model_manager.default_model_folder)
-            QTimer.singleShot(0, self.populate_available_models)
-            
     def update_peak_model(self):
-        """Update the peak model in the SpectraViewWidget based on combobox selection."""
+        """Update the peak model in the Spectra viewer based on combobox selection."""
         selected_model = self.ui.cbb_fit_models_2.currentText()
         self.spectra_viewer.set_peak_model(selected_model)
 
     def upd_model_cbb_list(self):
         """Update and populate the model list in the UI combobox"""
-        current_path = self.fit_model_manager.default_model_folder
-        self.set_default_model_folder(current_path)
+        self.fit_model_manager.scan_models()
+        self.populate_available_models()
 
     def populate_available_models(self):
         """Populate the available fit models in the UI combobox"""
-        self.fit_model_manager.scan_models()
-        self.available_models = self.fit_model_manager.get_available_models()
-        self.ui.cbb_fit_model_list_3.clear()
-        self.ui.cbb_fit_model_list_3.addItems(self.available_models)
+        models = self.fit_model_manager.available_models
+        self.fit_model_manager.combo_models.clear()
+        self.fit_model_manager.combo_models.addItems(models)
 
     def load_fit_model(self, fname_json=None):
         """
@@ -491,24 +473,24 @@ class Spectrums(QObject):
             self.fname_json = selected_file
         display_name = QFileInfo(self.fname_json).fileName()
         # Add the display name to the combobox only if it doesn't already exist
-        if display_name not in [self.ui.cbb_fit_model_list_3.itemText(i) for i
+        if display_name not in [self.fit_model_manager.combo_models.itemText(i) for i
                                 in
-                                range(self.ui.cbb_fit_model_list_3.count())]:
-            self.ui.cbb_fit_model_list_3.addItem(display_name)
-            self.ui.cbb_fit_model_list_3.setCurrentText(display_name)
+                                range(self.fit_model_manager.combo_models.count())]:
+            self.fit_model_manager.combo_models.addItem(display_name)
+            self.fit_model_manager.combo_models.setCurrentText(display_name)
         else:
             show_alert('Fit model is already available in the model list')
 
     def get_loaded_fit_model(self):
         """Retrieve the currently loaded fit model from the UI"""
-        if self.ui.cbb_fit_model_list_3.currentIndex() == -1:
+        if self.fit_model_manager.combo_models.currentIndex() == -1:
             self.loaded_fit_model = None
             return
         try:
             # If the file is not found in the selected path, try finding it
             # in the default folder
             folder_path = self.fit_model_manager.default_model_folder
-            model_name = self.ui.cbb_fit_model_list_3.currentText()
+            model_name = self.fit_model_manager.combo_models.currentText()
             path = os.path.join(folder_path, model_name)
             self.loaded_fit_model = self.spectrums.load_model(path, ind=0)
         except FileNotFoundError:
@@ -519,14 +501,13 @@ class Spectrums(QObject):
                 show_alert('Fit model file not found in the default folder')
 
     def save_fit_model(self):
-        """
-        Save the fit model of the currently selected spectrum to a JSON file.
-        """
+        """Save the fit model of the currently selected spectrum to a JSON file."""
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         path = self.fit_model_manager.default_model_folder
         save_path, _ = QFileDialog.getSaveFileName(
             self.ui.tabWidget, "Save fit model", path,
             "JSON Files (*.json)")
+        
         if save_path and sel_spectrum:
             self.spectrums.save(save_path, [sel_spectrum.fname])
             show_alert("Fit model is saved (JSON file)")
@@ -672,11 +653,13 @@ class Spectrums(QObject):
         """Retrieve all settings for the fitting action from the GUI"""
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         fit_params = sel_spectrum.fit_params.copy()
-        fit_params['fit_negative'] = self.ui.cb_fit_negative_2.isChecked()
-        fit_params['max_ite'] = self.ui.max_iteration_2.value()
-        fit_params['method'] = self.ui.cbb_fit_methods_2.currentText()
-        fit_params['ncpu'] = self.ui.ncpu_2.value()
-        fit_params['xtol'] = float(self.ui.xtol_2.text())
+        
+        fit_params['fit_negative'] = self.settings2.value("fit_settings/fit_negative", False, type=bool)
+        fit_params['max_ite'] = self.settings2.value("fit_settings/max_ite", 200, type=int)
+        fit_params['method'] = self.settings2.value("fit_settings/method", "Leastsq")
+        fit_params['ncpu'] = self.settings2.value("fit_settings/ncpu", 1, type=int)
+        fit_params['xtol'] = self.settings2.value("fit_settings/xtol", 1e-4, type=float)
+        
         sel_spectrum.fit_params = fit_params
 
     def paste_fit_model_all(self):
@@ -688,7 +671,7 @@ class Spectrums(QObject):
     def collect_results(self):
         """Collect best-fit results and append them to a dataframe."""
         # Add all dict into a list, then convert to a dataframe.
-        self.copy_ficopy_fit_model()
+        self.copy_fit_model()
         fit_results_list = []
         self.df_fit_results = None
 

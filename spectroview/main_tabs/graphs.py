@@ -22,6 +22,7 @@ class Graphs(QDialog):
         super().__init__()
         self.ui = ui
         self.settings = settings
+        
         self.common = common
         self.setWindowTitle("Graph Plot")
 

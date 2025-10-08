@@ -3,17 +3,21 @@ from functools import partial
 import logging
 from spectroview import PEAK_MODELS, ICON_DIR
 from spectroview.modules.file_converter import FileConverter
+from spectroview.config.app_settings import Settings_Dialog
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets  import QWidget
+
 
 logger = logging.getLogger(__name__)
 
 class UiConnector:
-    def __init__(self, app_settings, ui, main_app, maps_tab, spectrums_tab, graphs_tab):
+    def __init__(self, app_settings, ui, main_app, maps_tab, spectrums_tab, graphs_tab, settings_dialog):
         """
         Centralize all signal wiring / UI connections here.
         """
         self.app_settings = app_settings
+        self.settings_dialog = settings_dialog
+        
         self.ui = ui
         self.main_app = main_app
         self.maps = maps_tab
@@ -58,8 +62,8 @@ class UiConnector:
         self.ui.btn_sel_q4.clicked.connect(self.maps.select_Q4)
 
         # Model & fit actions
-        self.ui.btn_load_model.clicked.connect(self.maps.load_fit_model)
-        self.ui.btn_apply_model.clicked.connect(self.maps.apply_model_fnc_handler)
+        # self.ui.btn_load_model.clicked.connect(self.maps.load_fit_model)
+        # self.ui.btn_apply_model.clicked.connect(self.maps.apply_model_fnc_handler)
         self.ui.btn_init.clicked.connect(self.maps.reinit_fnc_handler)
         self.ui.btn_collect_results.clicked.connect(self.maps.collect_results)
         self.ui.btn_view_df_2.clicked.connect(self.maps.view_fit_results_df)
@@ -67,7 +71,7 @@ class UiConnector:
         self.ui.btn_save_fit_results.clicked.connect(self.maps.save_fit_results)
         self.ui.btn_view_wafer.clicked.connect(self.maps.view_map_df)
 
-        self.ui.btn_cosmis_ray.clicked.connect(self.maps.cosmis_ray_detection)
+        # self.ui.btn_cosmis_ray.clicked.connect(self.maps.cosmis_ray_detection)
 
         self.ui.btn_split_fname_2.clicked.connect(self.maps.split_fname)
         self.ui.btn_add_col_2.clicked.connect(self.maps.add_column)
@@ -90,15 +94,12 @@ class UiConnector:
         self.ui.btn_undo_baseline.clicked.connect(self.maps.set_x_range_handler)
 
         self.ui.btn_send_to_compare.clicked.connect(self.maps.send_spectrum_to_compare)
-        self.ui.btn_default_folder_model.clicked.connect(self.maps.set_default_model_folder)
+        
+        # self.settings_dialog.btn_model_folder.clicked.connect(self.maps.set_default_model_folder)
+       
 
         # For sync settings
         for widget_name in (
-            "ncpu",
-            "cb_fit_negative",
-            "max_iteration",
-            "cbb_fit_methods",
-            "xtol",
             "cb_attached",
             "rbtn_linear",
             "rbtn_polynomial",
@@ -128,9 +129,9 @@ class UiConnector:
         self.ui.btn_paste_peaks_2.clicked.connect(self.spectrums.paste_peaks_fnc_handler)
         self.ui.save_model_2.clicked.connect(self.spectrums.save_fit_model)
 
-        self.ui.btn_load_model_3.clicked.connect(self.spectrums.load_fit_model)
-        self.ui.btn_apply_model_3.clicked.connect(self.spectrums.apply_model_fnc_handler)
-        self.ui.btn_cosmis_ray_3.clicked.connect(self.spectrums.cosmis_ray_detection)
+        # self.ui.btn_load_model_3.clicked.connect(self.spectrums.load_fit_model)
+        # self.ui.btn_apply_model_3.clicked.connect(self.spectrums.apply_model_fnc_handler)
+        # self.ui.btn_cosmis_ray_3.clicked.connect(self.spectrums.cosmis_ray_detection)
         self.ui.btn_init_3.clicked.connect(self.spectrums.reinit_fnc_handler)
         self.ui.btn_show_stats_3.clicked.connect(self.spectrums.view_stats)
         self.ui.btn_sel_all_3.clicked.connect(self.spectrums.select_all_spectra)
@@ -142,15 +143,11 @@ class UiConnector:
         self.ui.btn_split_fname.clicked.connect(self.spectrums.split_fname)
         self.ui.btn_add_col.clicked.connect(self.spectrums.add_column)
 
-        self.ui.btn_default_folder_model_3.clicked.connect(self.spectrums.set_default_model_folder)
+        # self.settings_dialog.btn_model_folder.clicked.connect(self.spectrums.set_default_model_folder)
         
         #For sync settings
         for widget_name in (
-            "ncpu_2",
-            "cb_fit_negative_2",
-            "max_iteration_2",
-            "cbb_fit_methods_2",
-            "xtol_2",
+            
             "cb_attached_2",
             "rbtn_linear_2",
             "rbtn_polynomial_2",
@@ -190,6 +187,25 @@ class UiConnector:
         self.ui.toolBar.addWidget(spacer)        
         self.ui.toolBar.addSeparator()
         self.ui.toolBar.addAction(action)
+        
+    def connect_settings_dialog(self):
+        """To launch the FilConverter Tool"""
+            
+        #Create button
+        icon_path = os.path.join(ICON_DIR, "settings.png")
+        action = QAction(self.ui.toolBar, icon = QIcon(icon_path))
+        action.setToolTip("Settings")
+        action.setStatusTip("Settings")
+
+        #Connect
+        action.triggered.connect(self.settings_dialog.launch)
+        
+        # Add the action to the toolbar
+        spacer = QWidget()
+        spacer.setFixedWidth(50)
+        self.ui.toolBar.addWidget(spacer)        
+        self.ui.toolBar.addSeparator()
+        self.ui.toolBar.addAction(action)
 
     def connect_all_signals(self):
         """Convenience to hook everything in one call."""
@@ -198,4 +214,4 @@ class UiConnector:
         self.connect_spectra_tab_signals()
         self.connect_visu_tab_signals()
         self.connect_file_converter()
-        
+        self.connect_settings_dialog()

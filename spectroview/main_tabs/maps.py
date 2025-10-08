@@ -11,12 +11,13 @@ from pathlib import Path
 
 from spectroview import FIT_METHODS
 from spectroview.modules.utils import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel
-from spectroview.modules.utils import FitThread, FitModelManager, CustomizedListWidget, Spectra, Spectrum
+from spectroview.modules.utils import FitThread, CustomizedListWidget, Spectra, Spectrum
 from spectroview.modules.df_table import DataframeTable
 from spectroview.modules.map_viewer import MapViewer
 from spectroview.modules.spectra_viewer import SpectraViewer
 from spectroview.modules.peak_table import PeakTable
 from spectroview.modules.graph import Graph
+from spectroview.modules.fit_model_manager import FitModelManager
 
 from spectroview.main_tabs.graphs import MdiSubWindow
 
@@ -26,17 +27,20 @@ from fitspy.core.utils import closest_index
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication, QListWidgetItem, QDialog, QVBoxLayout
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
+from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, QSettings
 
 class Maps(QObject):
     """
     Class manages the GUI interactions and operations related to process 2Dmaps.
     """
 
-    def __init__(self, settings, ui, spectrums, common, graphs, app_settings):
+    def __init__(self, settings, ui, spectrums, common, graphs, app_settings, settings_dialog):
         super().__init__()
         self.settings = settings
+        self.settings2 = QSettings("CEA-Leti", "SPECTROview")
         self.app_settings = app_settings
+        self.settings_dialog = settings_dialog
+        
         self.ui = ui
         self.graphs = graphs
         self.spectrums_tab = spectrums
@@ -80,27 +84,22 @@ class Maps(QObject):
         ## Update spectra_listbox when selecting maps via MAPS LIST
         self.ui.maps_listbox.itemSelectionChanged.connect(self.upd_spectra_list)
         
-        # BASELINE
-        self.setup_baseline_controls()
-        
-        self.ui.cbb_fit_methods.addItems(FIT_METHODS)
-        self.ui.btn_send_to_viz2.clicked.connect(self.send_df_to_viz)
-
         # Peak correction
         self.ui.btn_xrange_correction_2.clicked.connect(self.xrange_correction)
         self.ui.btn_undo_correction_2.clicked.connect(lambda: self.undo_xrange_correction())
         
+        # BASELINE
+        self.setup_baseline_controls()
+        
+        self.ui.btn_send_to_viz2.clicked.connect(self.send_df_to_viz)
 
-        # FITMODEL FOLDER
-        self.fit_model_manager = FitModelManager(self.settings)
-        self.fit_model_manager.default_model_folder = self.settings.value(
-            "default_model_folder", "")
-        self.ui.l_defaut_folder_model.setText(
-            self.fit_model_manager.default_model_folder)
-        ## Show available fit models
-        QTimer.singleShot(0, self.populate_available_models)
-        self.ui.btn_refresh_model_folder.clicked.connect(
-            self.populate_available_models)      
+        # FIT MODEL MANAGER
+        self.fit_model_manager = FitModelManager()
+        self.ui.horizontalLayout_52.addWidget(self.fit_model_manager)
+        
+        self.fit_model_manager.connect_apply(self.apply_model_fnc_handler)
+        self.fit_model_manager.connect_load(self.load_fit_model)
+         
 
     def setup_baseline_controls(self):
         self.ui.cb_attached.stateChanged.connect(self.refresh_gui)
@@ -331,30 +330,25 @@ class Maps(QObject):
                                                            options=QFileDialog.ShowDirsOnly)
 
         if folder_path:
-            self.fit_model_manager.set_default_model_folder(folder_path)
+            self.settings_dialog.model_manager.set_default_model_folder(folder_path)
             # Save selected folder path back to QSettings
-            self.settings.setValue("default_model_folder", folder_path)
+            self.settings.setValue("model_folder", folder_path)
             self.ui.l_defaut_folder_model.setText(
-                self.fit_model_manager.default_model_folder)
+                self.settings_dialog.model_manager.default_model_folder)
             QTimer.singleShot(0, self.populate_available_models)
 
+    
+    def upd_model_cbb_list(self):
+        """Update and populate the model list in the UI combobox"""
+        self.fit_model_manager.scan_models()
+        self.populate_available_models()
+        
     def populate_available_models(self):
         """Populate available fit models in the combobox"""
         # Scan default folder and populate available models in the combobox
-        self.fit_model_manager.scan_models()
-        self.available_models = self.fit_model_manager.get_available_models()
-        self.ui.cbb_fit_model_list.clear()
-        self.ui.cbb_fit_model_list.addItems(self.available_models)
-
-    def upd_model_cbb_list(self):
-        """
-        Update and populate the model list in the combobox.
-
-        Updates the list of models in the combobox based on the default model
-        folder.
-        """
-        current_path = self.fit_model_manager.default_model_folder
-        self.set_default_model_folder(current_path)
+        models = self.fit_model_manager.available_models
+        self.fit_model_manager.combo_models.clear()
+        self.fit_model_manager.combo_models.addItems(models)
 
     def load_fit_model(self, fname_json=None):
         """Load a pre-created fit model"""
@@ -385,14 +379,14 @@ class Maps(QObject):
 
     def get_loaded_fit_model(self):
         """Define loaded fit model"""
-        if self.ui.cbb_fit_model_list.currentIndex() == -1:
+        if self.fit_model_manager.combo_models.currentIndex() == -1:
             self.loaded_fit_model = None
             return
         try:
             # If the file is not found in the selected path, try finding it
             # in the default folder
             folder_path = self.fit_model_manager.default_model_folder
-            model_name = self.ui.cbb_fit_model_list.currentText()
+            model_name = self.fit_model_manager.combo_models.currentText()
             path = os.path.join(folder_path, model_name)
             self.loaded_fit_model = self.spectrums.load_model(path, ind=0)
         except FileNotFoundError:
@@ -405,7 +399,7 @@ class Maps(QObject):
     def save_fit_model(self):
         """Save the fit model of the selected spectrum."""
         sel_spectrum, sel_spectra = self.get_spectrum_object()
-        path = self.fit_model_manager.default_model_folder
+        path = self.settings_dialog.model_manager.default_model_folder
         save_path, _ = QFileDialog.getSaveFileName(
             self.ui.tabWidget, "Save fit model", path,
             "JSON Files (*.json)")
@@ -509,11 +503,13 @@ class Maps(QObject):
         """Get all settings for the fitting action."""
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         fit_params = sel_spectrum.fit_params.copy()
-        fit_params['fit_negative'] = self.ui.cb_fit_negative.isChecked()
-        fit_params['max_ite'] = self.ui.max_iteration.value()
-        fit_params['method'] = self.ui.cbb_fit_methods.currentText()
-        fit_params['ncpu'] = self.ui.ncpu.value()
-        fit_params['xtol'] = float(self.ui.xtol.text())
+        
+        fit_params['fit_negative'] = self.settings2.value("fit_settings/fit_negative", False, type=bool)
+        fit_params['max_ite'] = self.settings2.value("fit_settings/max_ite", 200, type=int)
+        fit_params['method'] = self.settings2.value("fit_settings/method", "Leastsq")
+        fit_params['ncpu'] = self.settings2.value("fit_settings/ncpu", 1, type=int)
+        fit_params['xtol'] = self.settings2.value("fit_settings/xtol", 1e-4, type=float)
+        
         sel_spectrum.fit_params = fit_params
 
     def fit(self, fnames=None):
@@ -582,7 +578,7 @@ class Maps(QObject):
         fit_model = deepcopy(self.copied_fit_model)
 
         self.ntot = len(fnames)
-        ncpu = int(self.ui.ncpu.text())
+        ncpu = self.settings2.value("fit_settings/ncpu", 1, type=int)
 
         if fit_model is not None:
             self.spectrums.pbar_index = 0
@@ -647,7 +643,7 @@ class Maps(QObject):
             fnames = [f"{map_name}_{coord}" for coord in coords]
 
         self.ntot = len(fnames)
-        ncpu = int(self.ui.ncpu.text())
+        ncpu = self.settings2.value("fit_settings/ncpu", 1, type=int)
         fit_model = self.loaded_fit_model
         spectra = self.spectrums
         self.spectrums.pbar_index = 0

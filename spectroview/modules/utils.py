@@ -183,41 +183,41 @@ class Spectra(FitspySpectra):
         thread.join()     
         
 class FitModelManager:
-    """Class to manage the folder storing all fit models"""
-    def __init__(self, settings):
-        self.settings = settings
-        self.default_model_folder = self.settings.value("default_model_folder","")
+    """Manage the folder storing all fit models."""
+    def __init__(self):
+        self.default_model_folder = ""
         self.available_models = []
-        if self.default_model_folder:
-            self.scan_models()
 
-    def set_default_model_folder(self, folder_path):
+    def set_default_model_folder(self, folder_path: str):
+        """Set the default folder for fit models."""
+        if not folder_path or not os.path.exists(folder_path):
+            show_alert(f"Invalid folder path: {folder_path}")
+            return
+
         self.default_model_folder = folder_path
-        self.settings.setValue("default_model_folder", folder_path)
         self.scan_models()
 
     def scan_models(self):
-        self.available_models = []
-        if self.default_model_folder:
-            if not os.path.exists(self.default_model_folder):
-                # Folder is specified but does not exist anymore (deleted or renamed)
-                msg= f"Default 'Fit_models' folder '{self.default_model_folder}' not found. Please specify another one in the 'More Settings' tab."
-                show_alert(msg)
-                # Reset the default model folder to empty
-                self.default_model_folder = ""
-                self.settings.setValue("default_model_folder", "")
-                return  # Exit the method since the folder is missing
-            
-            # Scan the folder for JSON files if it exists
-            try:
-                for file_name in os.listdir(self.default_model_folder):
-                    if file_name.endswith('.json'):
-                        self.available_models.append(file_name)
-            except Exception as e:
-                print(f"Error scanning the folder '{self.default_model_folder}': {e}")
-
+        self.available_models.clear()
+        if not self.default_model_folder:
+            return
+        if not os.path.exists(self.default_model_folder):
+            msg = (
+                f"Default 'Fit_models' folder '{self.default_model_folder}' "
+                f"not found. Please specify another one in the Settings dialog."
+            )
+            show_alert(msg)
+            self.default_model_folder = ""
+            return
+        try:
+            for file_name in os.listdir(self.default_model_folder):
+                if file_name.endswith('.json'):
+                    self.available_models.append(file_name)
+        except Exception as e:
+            print(f"Error scanning folder '{self.default_model_folder}': {e}")
 
     def get_available_models(self):
+        """Return list of available model filenames."""
         return self.available_models
 
 

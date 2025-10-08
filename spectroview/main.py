@@ -23,10 +23,10 @@ from spectroview.config.ui_connector import UiConnector
 from spectroview.main_tabs.maps import Maps
 from spectroview.main_tabs.spectrums import Spectrums
 from spectroview.main_tabs.graphs import Graphs
-from spectroview.modules.file_converter import FileConverter
 
 from spectroview.config.about import About
 from spectroview.config.app_settings import AppSettings
+from spectroview.config.app_settings import Settings_Dialog
 from spectroview.config.app_shortcuts import setup_shortcuts
 
 logger = logging.getLogger(__name__)
@@ -47,19 +47,21 @@ class Main:
         self.app_settings = AppSettings()
         self.app_settings.load()
         qsettings = self.app_settings.qsettings
+        
+        ### Universal Settings
+        self.settings_dialog = Settings_Dialog()
 
         # Create subsystem instances
         self.graphs = Graphs(qsettings, self.ui, self.common)
-        self.spectrums = Spectrums(qsettings, self.ui, self.common, self.graphs, self.app_settings)
-        self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.graphs, self.app_settings)
-        self.fitmodel_manager = FitModelManager(qsettings)
+        self.spectrums = Spectrums(qsettings, self.ui, self.common, self.graphs, self.app_settings, self.settings_dialog)
+        self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.graphs, self.app_settings, self.settings_dialog)
         self.mapview_widget = MapViewer(self, self.app_settings)
 
         # Apply stored settings to UI
         self.app_settings.apply_to_ui(self.ui) 
 
         # Centralize GUI wiring
-        self.gui = UiConnector(self.app_settings, self.ui, self, self.maps, self.spectrums, self.graphs)
+        self.gui = UiConnector(self.app_settings, self.ui, self, self.maps, self.spectrums, self.graphs, self.settings_dialog)
 
         ### SETUP SHORTCUTS 
         setup_shortcuts(self)

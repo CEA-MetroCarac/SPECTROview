@@ -647,6 +647,7 @@ class SpectraViewer(QWidget):
                     self.refresh_gui()                
     
     def show_tooltip(self, event, text):
+        """Show tooltip near the cursor with peak info."""
         if not hasattr(self, 'tooltip'):
             from PySide6.QtWidgets import QLabel
             self.tooltip = QLabel(self.canvas)
@@ -711,8 +712,9 @@ class SpectraViewer(QWidget):
         if not peak_model:
             return
 
-        # Update x0 in the model
+        # Update x0, ampli in the model
         peak_model.param_hints['x0']['value'] = event.xdata
+        peak_model.param_hints['ampli']['value'] = event.ydata
 
         # Re-plot this spectrum
         self.plot(self.sel_spectrums)

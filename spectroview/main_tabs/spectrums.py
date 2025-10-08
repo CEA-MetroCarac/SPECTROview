@@ -29,9 +29,7 @@ class Spectrums(QObject):
         super().__init__()
         self.settings = settings
         self.settings2 = QSettings("CEA-Leti", "SPECTROview")
-        self.settings_dialog = settings_dialog
-        
-        self.app_settings=app_settings
+
         self.ui = ui
         self.common = common
         self.graphs = graphs
@@ -78,9 +76,7 @@ class Spectrums(QObject):
         # FIT MODEL MANAGER
         self.fit_model_manager = FitModelManager()
         self.ui.horizontalLayout_106.addWidget(self.fit_model_manager)
-        
         self.fit_model_manager.connect_apply(self.apply_model_fnc_handler)
-        self.fit_model_manager.connect_load(self.load_fit_model)
 
     def setup_baseline_controls(self):
         """Set up baseline controls and their signal connections."""
@@ -279,8 +275,10 @@ class Spectrums(QObject):
         self.fit(fnames)
 
     def apply_loaded_fit_model(self, fnames=None):
+        
         """Apply the loaded fit model to selected spectra"""
-        self.get_loaded_fit_model()
+        self.get_fit_model()
+
         self.ui.centralwidget.setEnabled(False)  # Disable GUI
         if self.loaded_fit_model is None:
             show_alert("Select from the list or load a fit model.")
@@ -440,68 +438,35 @@ class Spectrums(QObject):
         selected_model = self.ui.cbb_fit_models_2.currentText()
         self.spectra_viewer.set_peak_model(selected_model)
 
-    def upd_model_cbb_list(self):
-        """Update and populate the model list in the UI combobox"""
-        self.fit_model_manager.scan_models()
-        self.populate_available_models()
 
-    def populate_available_models(self):
-        """Populate the available fit models in the UI combobox"""
-        models = self.fit_model_manager.available_models
-        self.fit_model_manager.combo_models.clear()
-        self.fit_model_manager.combo_models.addItems(models)
-
-    def load_fit_model(self, fname_json=None):
-        """
-        Load a fit model from a JSON file or from the UI selection.
-        """
-        self.fname_json = fname_json
-        self.upd_model_cbb_list()
-        if not fname_json:
-            options = QFileDialog.Options()
-            options |= QFileDialog.ReadOnly
-            selected_file, _ = QFileDialog.getOpenFileName(self.ui,
-                                                           "Select JSON Model "
-                                                           "File",
-                                                           "",
-                                                           "JSON Files ("
-                                                           "*.json);;All "
-                                                           "Files (*)",
-                                                           options=options)
-            if not selected_file:
-                return
-            self.fname_json = selected_file
-        display_name = QFileInfo(self.fname_json).fileName()
-        # Add the display name to the combobox only if it doesn't already exist
-        if display_name not in [self.fit_model_manager.combo_models.itemText(i) for i
-                                in
-                                range(self.fit_model_manager.combo_models.count())]:
-            self.fit_model_manager.combo_models.addItem(display_name)
-            self.fit_model_manager.combo_models.setCurrentText(display_name)
-        else:
-            show_alert('Fit model is already available in the model list')
-
-    def get_loaded_fit_model(self):
-        """Retrieve the currently loaded fit model from the UI"""
+    def get_fit_model(self):
+        """Get the selected fit model from the combobox or last loaded file."""
         if self.fit_model_manager.combo_models.currentIndex() == -1:
             self.loaded_fit_model = None
             return
-        try:
-            # If the file is not found in the selected path, try finding it
-            # in the default folder
-            folder_path = self.fit_model_manager.default_model_folder
-            model_name = self.fit_model_manager.combo_models.currentText()
-            path = os.path.join(folder_path, model_name)
-            self.loaded_fit_model = self.spectrums.load_model(path, ind=0)
-        except FileNotFoundError:
-            try:
-                self.loaded_fit_model = self.spectrums.load_model(
-                    self.fname_json, ind=0)
-            except FileNotFoundError:
-                show_alert('Fit model file not found in the default folder')
+        
+        model_name = self.fit_model_manager.combo_models.currentText()
+        folder_path = self.fit_model_manager.default_model_folder
+        path_in_folder = os.path.join(folder_path, model_name)
+    
+        # Try default folder first
+        if os.path.exists(path_in_folder):
+            self.loaded_fit_model = self.spectrums.load_model(path_in_folder, ind=0)
+            return
+
+        # Fallback: ask user to load a file if not found in default folder
+        loaded_model_path = self.fit_model_manager.loaded_fit_model
+        if loaded_model_path and os.path.exists(loaded_model_path):
+            self.loaded_fit_model = self.spectrums.load_model(loaded_model_path, ind=0)
+            return
+        
+        # If all fails
+        show_alert('Fit model file not found')
+        self.loaded_fit_model = None
 
     def save_fit_model(self):
         """Save the fit model of the currently selected spectrum to a JSON file."""
+
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         path = self.fit_model_manager.default_model_folder
         save_path, _ = QFileDialog.getSaveFileName(
@@ -513,8 +478,7 @@ class Spectrums(QObject):
             show_alert("Fit model is saved (JSON file)")
         else:
             print("Nothing is saved.")
-
-        self.upd_model_cbb_list()
+        self.fit_model_manager.scan_and_udp_model_cbb() # Update model list in combobox
 
     def get_spectrum_fnames(self):
         """Get the filenames of currently selected spectra in the UI"""

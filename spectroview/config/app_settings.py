@@ -5,14 +5,12 @@ from PySide6.QtCore import QSettings
 from typing import Literal
 import logging
 
-from spectroview.modules.utils import FitModelManager
-
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton,QDialogButtonBox,
-     QMessageBox, QFileDialog, QLabel, QLineEdit, QCheckBox, QSpinBox, QComboBox,QSpacerItem, QSizePolicy,QDoubleSpinBox
+     QFileDialog, QLabel, QLineEdit, QCheckBox, QSpinBox, QComboBox,QSpacerItem, QSizePolicy,QDoubleSpinBox
 )
-from PySide6.QtCore import QFileInfo
 from PySide6.QtGui import QFont
+from PySide6.QtCore import Signal, Qt
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +23,14 @@ class Settings_Dialog(QDialog):
         
         self.settings = QSettings("CEA-Leti", "SPECTROview")
         
-        
         self.setWindowTitle("Settings")
         self.resize(400, 400)
 
-        # Create GUI
-        self._create_setting_dialog_ui()
+        self._create_ui()
                 
         # --- Connect model folder button ---
         self.btn_model_folder.clicked.connect(self.specify_fit_model_folder)
+
         self.btn_spike_removal.clicked.connect(self.spike_removal)
                 
     def spike_removal(self):
@@ -47,8 +44,7 @@ class Settings_Dialog(QDialog):
             self.le_model_folder.setText(folder)
             self.settings.setValue("model_folder", folder)
             self.settings.sync()
-            print(f"✅ Default model folder set to: {folder}")
-                
+            print(f"✅ Default model folder set to: {folder}")    
 
     def get_fit_settings(self):
         """Return current fit settings as a dictionary."""
@@ -98,7 +94,7 @@ class Settings_Dialog(QDialog):
         model_folder = self.settings.value("model_folder", "")
         self.le_model_folder.setText(model_folder)
         
-    def _create_setting_dialog_ui(self):
+    def _create_ui(self):
         """Builds the UI layout for the settings window."""
         main_layout = QVBoxLayout(self)
 

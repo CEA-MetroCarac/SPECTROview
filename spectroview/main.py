@@ -16,8 +16,10 @@ from spectroview import UI_FILE, LOGO_APPLI, TEXT_EXPIRE, ICON_DIR
 from spectroview.config.gui import resources
 
 from spectroview.modules.utils import show_alert
-from spectroview.modules.utils import CommonUtilities, FitModelManager
+from spectroview.modules.utils import CommonUtilities
 from spectroview.modules.map_viewer import MapViewer
+from spectroview.modules.fit_model_manager import FitModelManager
+
 from spectroview.config.ui_connector import UiConnector
 
 from spectroview.main_tabs.maps import Maps
@@ -56,6 +58,7 @@ class Main:
         self.spectrums = Spectrums(qsettings, self.ui, self.common, self.graphs, self.app_settings, self.settings_dialog)
         self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.graphs, self.app_settings, self.settings_dialog)
         self.mapview_widget = MapViewer(self, self.app_settings)
+
 
         # Apply stored settings to UI
         self.app_settings.apply_to_ui(self.ui) 

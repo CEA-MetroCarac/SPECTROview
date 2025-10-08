@@ -16,7 +16,7 @@ class FileConverter(QDialog):
         self.settings = settings
         self.selected_file_paths = []
 
-        self.setWindowTitle("Hyperspectral File Converter")
+        self.setWindowTitle("Hyperspectral Data Converter")
 
         # Create GUI
         self._create_ui()

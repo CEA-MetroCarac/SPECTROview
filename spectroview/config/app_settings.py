@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class Settings_Dialog(QDialog):
-    """Open dialog to set application settings."""
+    """Open dialog to set general application settings."""
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -129,7 +129,6 @@ class Settings_Dialog(QDialog):
         iter_layout.addWidget(self.spin_max_iter)
         main_layout.addLayout(iter_layout)
 
-       
         # X-tolerance line edit
         tol_layout = QHBoxLayout()
         tol_label = QLabel("x-tolerance")
@@ -214,11 +213,11 @@ def _set_by_path(obj: Any, path: str, value):
 @dataclass
 class FitSettings:
     #Fitting
-    ncpu: int = 1
-    fit_negative: bool = False
-    max_iteration: int = 500
-    method: str = "leastsq"
-    xtol: float = 1e-4
+    # ncpu: int = 1
+    # fit_negative: bool = False
+    # max_iteration: int = 500
+    # method: str = "leastsq"
+    # xtol: float = 1e-4
     
     #Baseline settings
     baseline_attached: bool = True
@@ -236,9 +235,6 @@ class GraphSettings:
 @dataclass
 class AppSettings:
     qsettings: QSettings = field(init=False)
-
-    # last_directory: str = ""
-    # default_model_folder: str = ""
     mode: str = "dark"  # "light" or "dark"
 
     map_type: str = "2Dmap"
@@ -249,24 +245,11 @@ class AppSettings:
 
     SETTINGS_KEY_MAPPING = {
         #MAPS TAB
-        "ncpu": ("maps.ncpu", int),
-        "fit_negative": ("maps.fit_negative", bool),
-        "max_ite": ("maps.max_iteration", int),
-        "method": ("maps.method", str),
-        "xtol": ("maps.xtol", float),
-
         "baseline_attached": ("maps.baseline_attached", bool),
         "baseline_type": ("maps.baseline_type", str),
         "baseline_degre": ("maps.baseline_degre", int),
         "baseline_noise": ("maps.baseline_noise", int),
-         "map_type": ("map_type", str),
-        
-        #SPECTRA TAB
-        # "ncpu_2": ("spectra.ncpu", int),
-        # "fit_negative2": ("spectra.fit_negative", bool),
-        # "max_ite2": ("spectra.max_iteration", int),
-        # "method2": ("spectra.method", str),
-        # "xtol2": ("spectra.xtol", float),
+        "map_type": ("map_type", str),
 
         "baseline_attached2": ("spectra.baseline_attached", bool),
         "baseline_type2": ("spectra.baseline_type", str),
@@ -278,9 +261,6 @@ class AppSettings:
 
         #MAIN GUI
         "mode": ("mode", str),
-        #"last_directory": ("last_directory", str),
-        #"default_model_folder": ("default_model_folder", str),
-
     }
 
     def __post_init__(self):
@@ -288,35 +268,15 @@ class AppSettings:
         self.qsettings = QSettings("CEA-Leti", "SPECTROview")
 
     def update_from_ui(self, ui: Any):
-        """
-        Pull current values from UI widgets into this structured settings object.
-        """
+        """Pull current values from UI widgets into this structured settings object."""
         try:
             #MAPS TAB
-            # self.maps.ncpu = ui.ncpu.value()
-            # self.maps.fit_negative = ui.cb_fit_negative.isChecked()
-            # self.maps.max_iteration = ui.max_iteration.value()
-            # self.maps.method = ui.cbb_fit_methods.currentText()
-            # try:
-            #     self.maps.xtol = float(ui.xtol.text())
-            # except (ValueError, TypeError):
-            #     pass
-
             self.maps.baseline_attached = ui.cb_attached.isChecked()
             self.maps.baseline_type = "polynomial" if ui.rbtn_polynomial.isChecked() else "linear"
             self.maps.baseline_degre = ui.degre.value()
             self.maps.baseline_noise= ui.noise.value()
 
             #SPECTRA TAB
-            # self.spectra.ncpu = ui.ncpu_2.value()
-            # self.spectra.fit_negative = ui.cb_fit_negative_2.isChecked()
-            # self.spectra.max_iteration = ui.max_iteration_2.value()
-            # self.spectra.method = ui.cbb_fit_methods_2.currentText()
-            # try:
-            #     self.spectra.xtol = float(ui.xtol_2.text())
-            # except (ValueError, TypeError):
-            #     pass
-
             self.spectra.baseline_attached = ui.cb_attached_2.isChecked()
             self.spectra.baseline_type = "polynomial" if ui.rbtn_polynomial_2.isChecked() else "linear"
             self.spectra.baseline_degre = ui.degre_2.value()
@@ -335,12 +295,6 @@ class AppSettings:
         """Push stored settings into UI widgets."""
         try:
             #MAPS TAB
-            # ui.ncpu.setValue(self.maps.ncpu)
-            # ui.cb_fit_negative.setChecked(self.maps.fit_negative)
-            # ui.max_iteration.setValue(self.maps.max_iteration)
-            # ui.cbb_fit_methods.setCurrentText(self.maps.method)
-            # ui.xtol.setText(str(self.maps.xtol))
-
             ui.cb_attached.setChecked(self.maps.baseline_attached)
             ui.rbtn_linear.setChecked(self.maps.baseline_type == "linear")
             ui.rbtn_polynomial.setChecked(self.maps.baseline_type == "polynomial")
@@ -348,12 +302,6 @@ class AppSettings:
             ui.noise.setValue(self.maps.baseline_noise)
             
             #SPECTRA TAB
-            # ui.ncpu_2.setValue(self.spectra.ncpu)
-            # ui.cb_fit_negative_2.setChecked(self.spectra.fit_negative)
-            # ui.max_iteration_2.setValue(self.spectra.max_iteration)
-            # ui.cbb_fit_methods_2.setCurrentText(self.spectra.method)
-            # ui.xtol_2.setText(str(self.spectra.xtol))
-
             ui.cb_attached_2.setChecked(self.spectra.baseline_attached) 
             ui.rbtn_linear_2.setChecked(self.spectra.baseline_type == "linear")
             ui.rbtn_polynomial_2.setChecked(self.spectra.baseline_type == "polynomial")
@@ -380,9 +328,6 @@ class AppSettings:
 
     def load(self):
         """Load all mapped settings from persistent storage into this object."""
-        # self.last_directory = self.qsettings.value("last_directory", "", str)
-        # self.default_model_folder = self.qsettings.value("default_model_folder", "", str)
-
         for key, (attr_path, expected_type) in self.SETTINGS_KEY_MAPPING.items():
             try:
                 default_val = _getattr_by_path(self, attr_path)
@@ -401,9 +346,6 @@ class AppSettings:
 
     def save(self):
         """Persist all mapped settings from this object into storage."""
-        # self.qsettings.setValue("last_directory", self.last_directory)
-        # self.qsettings.setValue("default_model_folder", self.default_model_folder)
-
         for key, (attr_path, _) in self.SETTINGS_KEY_MAPPING.items():
             try:
                 value = _getattr_by_path(self, attr_path)

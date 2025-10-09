@@ -55,8 +55,8 @@ class Main:
 
         # Create subsystem instances
         self.graphs = Graphs(qsettings, self.ui, self.common)
-        self.spectrums = Spectrums(qsettings, self.ui, self.common, self.graphs, self.app_settings, self.settings_dialog)
-        self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.graphs, self.app_settings, self.settings_dialog)
+        self.spectrums = Spectrums(qsettings, self.ui, self.common, self.graphs)
+        self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.graphs, self.app_settings)
         self.mapview_widget = MapViewer(self, self.app_settings)
 
 

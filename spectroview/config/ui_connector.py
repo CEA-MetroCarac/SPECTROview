@@ -3,7 +3,6 @@ from functools import partial
 import logging
 from spectroview import PEAK_MODELS, ICON_DIR
 from spectroview.modules.file_converter import FileConverter
-from spectroview.config.app_settings import Settings_Dialog
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets  import QWidget
 
@@ -11,12 +10,11 @@ from PySide6.QtWidgets  import QWidget
 logger = logging.getLogger(__name__)
 
 class UiConnector:
-    def __init__(self, app_settings, ui, main_app, maps_tab, spectrums_tab, graphs_tab, settings_dialog):
-        """
-        Centralize all signal wiring / UI connections here.
-        """
+    """Centralize all signal wiring / UI connections here. """
+    def __init__(self, app_settings, ui, main_app, maps_tab, spectrums_tab, graphs_tab, setting_dialog):
+        
         self.app_settings = app_settings
-        self.settings_dialog = settings_dialog
+        self.settings_dialog = setting_dialog
         
         self.ui = ui
         self.main_app = main_app
@@ -190,7 +188,6 @@ class UiConnector:
         
     def connect_settings_dialog(self):
         """To launch the FilConverter Tool"""
-            
         #Create button
         icon_path = os.path.join(ICON_DIR, "settings.png")
         action = QAction(self.ui.toolBar, icon = QIcon(icon_path))

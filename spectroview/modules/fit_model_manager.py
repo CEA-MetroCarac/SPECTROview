@@ -1,5 +1,4 @@
 import os
-
 from PySide6.QtWidgets import (
     QWidget, QLabel, QComboBox, QPushButton, QHBoxLayout, QFileDialog, QMessageBox
 )
@@ -39,7 +38,6 @@ class FitModelManager(QWidget):
         except Exception as e:
             print(f"Error scanning folder '{self.default_model_folder}': {e}")
             return
-
         if self.available_models:
             self.combo_models.addItems(self.available_models)
     
@@ -55,20 +53,14 @@ class FitModelManager(QWidget):
         selected_file, _ = QFileDialog.getOpenFileName(
             self, "Select JSON Model File", "",
             "JSON Files (*.json);;All Files (*)", options=options)
-        
         if not selected_file:
             return None
-
         display_name = QFileInfo(selected_file).fileName()
         if display_name not in [self.combo_models.itemText(i) for i in range(self.combo_models.count())]:
             self.combo_models.addItem(display_name)
-
         self.combo_models.setCurrentText(display_name)
-
         self.loaded_fit_model = selected_file
-
         return self.loaded_fit_model
-
 
     def connect_apply(self, callback):
         """Connect the Apply button to a custom function"""

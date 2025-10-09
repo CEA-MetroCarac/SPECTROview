@@ -25,7 +25,7 @@ class Spectrums(QObject):
     """
     Class manages the GUI interactions and operations related to process spectra.
     """
-    def __init__(self, settings, ui, common, graphs, app_settings, settings_dialog):
+    def __init__(self, settings, ui, common, graphs):
         super().__init__()
         self.settings = settings
         self.settings2 = QSettings("CEA-Leti", "SPECTROview")

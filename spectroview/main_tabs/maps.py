@@ -34,7 +34,7 @@ class Maps(QObject):
     Class manages the GUI interactions and operations related to process 2Dmaps.
     """
 
-    def __init__(self, settings, ui, spectrums, common, graphs, app_settings, settings_dialog):
+    def __init__(self, settings, ui, spectrums, common, graphs, app_settings):
         super().__init__()
         self.settings = settings
         self.settings2 = QSettings("CEA-Leti", "SPECTROview")

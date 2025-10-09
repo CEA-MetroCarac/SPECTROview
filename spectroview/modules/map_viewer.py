@@ -50,10 +50,9 @@ class MapViewer(QWidget):
         self.widget.setFixedWidth(400)
         self.map_widget_layout = QVBoxLayout(self.widget)
         self.map_widget_layout.setContentsMargins(0, 0, 0, 0) 
-        self.create_widget()
+        self._create_ui()
     
-
-    def create_widget(self):
+    def _create_ui(self):
         """Create 2Dmap plot widgets"""
         # Create a frame to hold the canvas with a fixed size
         self.canvas_frame = QFrame(self.widget)
@@ -115,10 +114,8 @@ class MapViewer(QWidget):
         self.cbb_map_type.addItems(['2Dmap', 'Wafer_300mm', 'Wafer_200mm', 'Wafer_100mm'])
         
         
-        self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot)
-
-        # Load last saved settings
-        self.cbb_map_type.currentIndexChanged.connect(self.update_settings)
+        self.cbb_map_type.currentIndexChanged.connect(self.refresh_plot) 
+        self.cbb_map_type.currentIndexChanged.connect(self.update_settings) # syc to app_settings
         saved_map_type = self.app_settings.map_type
         
         # Set the saved values in the combo boxes
@@ -183,8 +180,6 @@ class MapViewer(QWidget):
         self.app_settings.map_type = map_type
         self.app_settings.save()
 
-        #self.settings.setValue("map_type", map_type)
-    
     def create_options_menu(self):
         """Create more view options for 2Dmap plot"""
         

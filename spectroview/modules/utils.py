@@ -42,7 +42,6 @@ if platform.system() == 'Windows':
     
 class CustomizedPalette(QComboBox):
     """Custom QComboBox to show color palette previews along with their names."""
-
     def __init__(self, palette_list=None, parent=None, icon_size=(99, 12)):
         super().__init__(parent)
         self.icon_width, self.icon_height = icon_size
@@ -79,8 +78,7 @@ class CustomizedPalette(QComboBox):
         return self.currentText()
 
 class Spectrum(FitspySpectrum):
-    """Extended Spectrum with user-defined style attributes."""
-
+    """Customized of Spectrum class."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.label = None   # user-defined legend label
@@ -137,10 +135,8 @@ class Spectrum(FitspySpectrum):
             self.x = self.x - self.xcorrection_value
             self.xcorrection_value = 0
         
-
 class Spectra(FitspySpectra):
-    """Customized Spectra class of the fitspy package."""
-    
+    """Customized Spectra class"""
     def apply_model(self, model_dict, fnames=None, ncpus=1,
                     show_progressbar=True):
         """ Apply 'model' to all or part of the spectra."""
@@ -179,96 +175,8 @@ class Spectra(FitspySpectra):
                 queue_incr.put(1)
         else:
             fit_mp(spectra, ncpus, queue_incr)
-
         thread.join()     
         
-class FitModelManager:
-    """Manage the folder storing all fit models."""
-    def __init__(self):
-        self.default_model_folder = ""
-        self.available_models = []
-
-    def set_default_model_folder(self, folder_path: str):
-        """Set the default folder for fit models."""
-        if not folder_path or not os.path.exists(folder_path):
-            show_alert(f"Invalid folder path: {folder_path}")
-            return
-
-        self.default_model_folder = folder_path
-        self.scan_models()
-
-    def scan_models(self):
-        self.available_models.clear()
-        if not self.default_model_folder:
-            return
-        if not os.path.exists(self.default_model_folder):
-            msg = (
-                f"Default 'Fit_models' folder '{self.default_model_folder}' "
-                f"not found. Please specify another one in the Settings dialog."
-            )
-            show_alert(msg)
-            self.default_model_folder = ""
-            return
-        try:
-            for file_name in os.listdir(self.default_model_folder):
-                if file_name.endswith('.json'):
-                    self.available_models.append(file_name)
-        except Exception as e:
-            print(f"Error scanning folder '{self.default_model_folder}': {e}")
-
-    def get_available_models(self):
-        """Return list of available model filenames."""
-        return self.available_models
-
-
-class CommonUtilities():
-    """ Class contain all common methods or utility codes used other modules"""
-    def clear_layout(self, layout):
-        if layout is not None:
-            for i in reversed(range(layout.count())):
-                item = layout.itemAt(i)
-                if isinstance(item.widget(),
-                              (FigureCanvas, NavigationToolbar2QT)):
-                    widget = item.widget()
-                    layout.removeWidget(widget)
-                    widget.close()
-
-    
-    def display_df_in_table(self, table_widget, df_results):
-        """Display pandas DataFrame in QTableWidget in GUI"""
-        table_widget.setRowCount(df_results.shape[0])
-        table_widget.setColumnCount(df_results.shape[1])
-        table_widget.setHorizontalHeaderLabels(df_results.columns)
-        for row in range(df_results.shape[0]):
-            for col in range(df_results.shape[1]):
-                item = QTableWidgetItem(str(df_results.iat[row, col]))
-                table_widget.setItem(row, col, item)
-        table_widget.resizeColumnsToContents()
-
-    def view_markdown(self, ui, title, fname, x, y, working_folder):
-        """To convert MD file to html format and display them in GUI"""
-        with open(fname, 'r', encoding='utf-8') as f:
-            markdown_content = f.read()
-        html_content = markdown.markdown(markdown_content)
-        DIRNAME = os.path.dirname(__file__)
-        html_content = html_content.replace('src="',
-                                            f'src="'
-                                            f'{os.path.join(DIRNAME, working_folder)}')
-        about_dialog = QDialog(ui)
-        about_dialog.setWindowTitle(title)
-        about_dialog.resize(x, y)
-        text_browser = QTextBrowser(about_dialog)
-        text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        text_browser.setOpenExternalLinks(True)
-        text_browser.setHtml(html_content)
-        layout = QVBoxLayout(about_dialog)
-        layout.addWidget(text_browser)
-        about_dialog.setLayout(layout)
-        about_dialog.show()
-
-    
-
-
 class FitThread(QThread):
     """ Class to perform fitting in a separate Thread """
     progress_changed = Signal(int)
@@ -321,7 +229,28 @@ class CustomizedListWidget(QListWidget):
         else:
             super().dropEvent(event)
             self.items_reordered.emit()
-            
+
+def view_markdown(ui, title, fname, x, y, working_folder):
+    """To convert MD file to html format and display them in GUI"""
+    with open(fname, 'r', encoding='utf-8') as f:
+        markdown_content = f.read()
+    html_content = markdown.markdown(markdown_content)
+    DIRNAME = os.path.dirname(__file__)
+    html_content = html_content.replace('src="',
+                                        f'src="'
+                                        f'{os.path.join(DIRNAME, working_folder)}')
+    about_dialog = QDialog(ui)
+    about_dialog.setWindowTitle(title)
+    about_dialog.resize(x, y)
+    text_browser = QTextBrowser(about_dialog)
+    text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+    text_browser.setOpenExternalLinks(True)
+    text_browser.setHtml(html_content)
+    layout = QVBoxLayout(about_dialog)
+    layout.addWidget(text_browser)
+    about_dialog.setLayout(layout)
+    about_dialog.show()
+                    
 def dark_palette():
         """Palette color for dark mode of the appli's GUI"""
         dark_palette = QPalette()

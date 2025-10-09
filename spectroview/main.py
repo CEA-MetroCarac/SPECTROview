@@ -9,16 +9,15 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt, QSettings
-from PySide6.QtGui import QIcon, QAction
+from PySide6.QtGui import QIcon
 
 
 from spectroview import UI_FILE, LOGO_APPLI, TEXT_EXPIRE, ICON_DIR
 from spectroview.config.gui import resources
 
 from spectroview.modules.utils import show_alert, dark_palette, light_palette
-from spectroview.modules.utils import CommonUtilities
 from spectroview.modules.map_viewer import MapViewer
-from spectroview.modules.fit_model_manager import FitModelManager
+from spectroview.modules.settings_panel import SettingsPanel
 
 from spectroview.config.ui_connector import UiConnector
 
@@ -28,7 +27,6 @@ from spectroview.main_tabs.graphs import Graphs
 
 from spectroview.config.about import About
 from spectroview.config.app_settings import AppSettings
-from spectroview.config.app_settings import Panel_Settings
 from spectroview.config.app_shortcuts import setup_shortcuts
 
 logger = logging.getLogger(__name__)
@@ -49,7 +47,7 @@ class Main:
         self.app_settings.load()
         
         ### Settings Penel for general parameters of application
-        self.panel_settings = Panel_Settings()
+        self.setting_panel = SettingsPanel()
 
         # Create subsystem instances
         self.graphs = Graphs(self.settings, self.ui)
@@ -62,7 +60,7 @@ class Main:
         self.app_settings.apply_to_ui(self.ui) 
 
         # Centralize GUI wiring
-        self.gui = UiConnector(self.app_settings, self.ui, self, self.maps, self.spectrums, self.graphs, self.panel_settings)
+        self.gui = UiConnector(self.app_settings, self.ui, self, self.maps, self.spectrums, self.graphs, self.setting_panel)
 
         ### SETUP SHORTCUTS 
         setup_shortcuts(self)

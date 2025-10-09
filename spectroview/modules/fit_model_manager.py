@@ -1,6 +1,6 @@
 import os
 from PySide6.QtWidgets import (
-    QWidget, QLabel, QComboBox, QPushButton, QHBoxLayout, QFileDialog, QMessageBox
+    QWidget, QLabel, QComboBox, QPushButton, QHBoxLayout, QFileDialog
 )
 from PySide6.QtCore import QSettings, QFileInfo
 from PySide6.QtGui import  QIcon, Qt 
@@ -107,4 +107,5 @@ class FitModelManager(QWidget):
         layout.addWidget(self.btn_load)
         layout.addWidget(self.btn_refresh)
         layout.setContentsMargins(0, 0, 0, 0)
+        
         self.setLayout(layout)

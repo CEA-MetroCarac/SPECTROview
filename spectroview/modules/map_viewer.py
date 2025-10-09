@@ -82,8 +82,6 @@ class MapViewer(QWidget):
         self.btn_copy.setIconSize(QSize(24, 24))
         self.btn_copy.clicked.connect(self.copy_fig)
         
-        
-        
         toolbar_layout.addWidget(self.toolbar)
         toolbar_layout.addItem(spacer)
         
@@ -451,7 +449,6 @@ class MapViewer(QWidget):
         else: 
             self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
                             origin='lower', aspect='equal', cmap=color, interpolation=interpolation_option)
-            #print(f'2Dmap: {heatmap_pivot}')
         
         # COLORBAR
         if hasattr(self, 'cbar') and self.cbar is not None:

@@ -109,9 +109,7 @@ class Graphs(QDialog):
         self.update_dfs_list()
 
     def update_dfs_list(self):
-        """
-        This method updates the dataframe listbox with current dataframes.
-        """
+        """Update the listbox showing available dataframes."""
         current_row = self.ui.dfs_listbox.currentRow()
         self.ui.dfs_listbox.clear()
         df_names = list(self.original_dfs.keys())
@@ -253,11 +251,7 @@ class Graphs(QDialog):
         QTimer.singleShot(200, self.customize_legend)
 
     def plot_action(self):
-        """
-        Perform the plot action for the selected graph.
-        This method fetches the selected graph, applies filters, and triggers
-        the actual plotting.
-        """
+        """Perform the actual plotting of the graph."""
         graph, graph_dialog, sub_window = self.get_sel_graph()
         self.filtered_df = self.apply_filters(self.sel_df, graph.filters)
         # print(f"self.sel_df {self.sel_df}")
@@ -571,18 +565,7 @@ class Graphs(QDialog):
             show_alert("No fit dataframe to display")
 
     def apply_filters(self, df=None, filters=None):
-        """
-        Apply filters to the specified dataframe or the currently selected
-        dataframe.
-
-        Args:
-            df (pd.DataFrame, optional): Dataframe to apply filters to.
-            filters (list, optional): List of filters to apply.
-
-        Returns:
-            pd.DataFrame: Filtered dataframe.
-
-        """
+        """Apply filters to the selected dataframe and return the filtered dataframe."""
         if df is None:
             sel_df = self.get_sel_df()
         else:
@@ -613,10 +596,6 @@ class Graphs(QDialog):
                 self.ui.cbb_graph_list.count() - 1)
 
     def select_sub_window_from_combo_box(self):
-        """
-        This method selects and displays a graph based on the user selection
-        in the combobox.
-        """
         graph_title = self.ui.cbb_graph_list.currentText()
         for sub_window in self.ui.mdiArea.subWindowList():
             graph_dialog = sub_window.widget()
@@ -631,19 +610,11 @@ class Graphs(QDialog):
                     self.ui.mdiArea.setActiveSubWindow(sub_window)
                     return
 
-    
-
     def minimize_all_graph(self):
-        """
-        This method minimizes all open graph sub-windows.
-        """
         for sub_window in self.ui.mdiArea.subWindowList():
             sub_window.showMinimized()
 
     def clear_env(self):
-        """
-        This method reinit all attributes.
-        """
         # Clear original dataframes
         self.original_dfs = {}
         self.sel_df = None
@@ -871,12 +842,6 @@ class MdiSubWindow(QMdiSubWindow):
     """
     Custom class of QMdiSubWindow to prevent automatic selection of other windows
     when one subwindow is closed.
-
-    Attributes:
-    closed (Signal): Signal emitted when the subwindow is closing, carrying
-    the graph ID.
-    graph_id (int): ID associated with the graph in the subwindow.
-    figsize_label (QLabel): QLabel used to display the size of the subwindow.
     """
     closed = Signal(int)
 

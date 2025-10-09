@@ -7,10 +7,9 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
-from spectroview import FIT_METHODS
 from spectroview.modules.utils import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area, replace_peak_labels
 
-from spectroview.modules.utils import FitThread, CustomizedListWidget, Spectra, Spectrum, CommonUtilities
+from spectroview.modules.utils import FitThread, CustomizedListWidget, Spectra, Spectrum
 from spectroview.modules.df_table import DataframeTable
 from spectroview.modules.peak_table import PeakTable
 from spectroview.modules.spectra_viewer import SpectraViewer
@@ -20,7 +19,7 @@ from lmfit import fit_report
 from fitspy.core.utils import closest_index
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
-from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, QSettings
+from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
 
 class Spectrums(QObject):
     """Class manages the GUI interactions of Spectra Tab"""
@@ -139,7 +138,6 @@ class Spectrums(QObject):
                     spectrum.y = np.asarray(y_values)
                     spectrum.y0 = np.asarray(y_values)
 
-
                     spectrum.baseline.mode = "Linear"
                     spectrum.baseline.sigma = 10
                     self.spectrums.append(spectrum)
@@ -159,13 +157,10 @@ class Spectrums(QObject):
                 new_xcorrection_value = 520.7 - ref_value
                 print(f"Applying x range correction of {new_xcorrection_value} for spectrum {spectrum.fname}")
                 spectrum.apply_xcorrection(new_xcorrection_value)
-                
-
             QTimer.singleShot(100, self.upd_spectra_list)
 
         except ValueError:
             QMessageBox.warning(self.ui.tabWidget, "Input Error", "Please enter a valid numeric Si peak reference.")
-
     
     def undo_xrange_correction(self, sel_spectra=None):
         """Undo peak shift correction for the given spectra."""
@@ -334,7 +329,6 @@ class Spectrums(QObject):
             checked_states[item.text()] = item.checkState()
 
         current_row = self.ui.spectrums_listbox.currentRow()
-        #current_selection = [self.ui.spectrums_listbox.item(i).text() for i in range(self.ui.spectrums_listbox.count()) if self.ui.spectrums_listbox.item(i).isSelected()]
         current_selection = {item.text() for item in self.ui.spectrums_listbox.selectedItems()}
 
         self.ui.spectrums_listbox.clear()

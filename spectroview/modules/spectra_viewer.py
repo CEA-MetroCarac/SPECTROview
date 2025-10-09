@@ -822,8 +822,6 @@ class SpectraViewer(QWidget):
         self.figure.tight_layout()
         self.canvas.draw_idle()
         
-    
-            
     def clear_plot(self):
         """Explicitly clear the spectra plot."""
         if self.ax:

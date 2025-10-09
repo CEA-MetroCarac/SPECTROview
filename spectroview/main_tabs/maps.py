@@ -9,7 +9,6 @@ from io import StringIO
 from copy import deepcopy
 from pathlib import Path
 
-from spectroview import FIT_METHODS
 from spectroview.modules.utils import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel, replace_peak_labels, quadrant, zone, view_text
 from spectroview.modules.utils import FitThread, CustomizedListWidget, Spectra, Spectrum
 from spectroview.modules.df_table import DataframeTable
@@ -27,7 +26,7 @@ from fitspy.core.utils import closest_index
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication, QListWidgetItem, QDialog, QVBoxLayout
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, QSettings
+from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
 
 class Maps(QObject):
     """Class manages the GUI interactions of Maps Tab."""
@@ -113,7 +112,6 @@ class Maps(QObject):
     
     def open_hyperspectra(self, maps=None, file_paths=None):
         """Open hyperspectral data"""
-
         if self.maps is None:
             self.maps = {}
         if maps:
@@ -296,11 +294,9 @@ class Maps(QObject):
                 # DIAMETER
                 radius = self.map_viewer.get_wafer_radius(map_type)
                 # QUADRANT
-                self.df_fit_results['Quadrant'] = self.df_fit_results.apply(
-                    quadrant, axis=1)
+                self.df_fit_results['Quadrant'] = self.df_fit_results.apply(quadrant, axis=1)
                 # ZONE
-                self.df_fit_results['Zone'] = self.df_fit_results.apply(
-                    lambda row: zone(row, radius), axis=1)
+                self.df_fit_results['Zone'] = self.df_fit_results.apply(lambda row: zone(row, radius), axis=1)
             else: 
                 pass
         self.df_table.show(self.df_fit_results)
@@ -930,14 +926,7 @@ class Maps(QObject):
             return None, None
 
     def spectra_id(self):
-        """
-        Get selected spectra IDs from the GUI Maps and spectra listboxes.
-
-        Returns:
-        - map_name: Name of the selected maps.
-        - coords: List of selected spectrum coordinates.
-
-        """
+        """Get selected spectra IDs from the GUI Maps and spectra listboxes"""
         map_item = self.ui.maps_listbox.currentItem()
         if map_item is not None:
             map_name = map_item.text()
@@ -953,14 +942,7 @@ class Maps(QObject):
         return None, None
 
     def spectrum_object_id(self, spectrum=None):
-        """
-        Get the ID of a selected spectrum from a fitspy spectra object.
-
-        Returns:
-        - map_name_fs: Map name extracted from the spectrum object.
-        - coord_fs: Coordinates extracted from the spectrum object.
-
-        """
+        """Get the ID of a selected spectrum from a fitspy spectra object."""
         fname_parts = spectrum.fname.split("_")
         map_name_fs = "_".join(fname_parts[:-1])
         coord_str = fname_parts[-1]  # Last part contains the coordinates

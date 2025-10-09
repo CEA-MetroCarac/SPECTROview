@@ -353,7 +353,6 @@ class Graph(QWidget):
             labels += labels3
             self.ax3.legend().remove()  # Turn off legend for ax3
         
-        
         if handles:
             legend_labels = []
             if self.legend_properties:

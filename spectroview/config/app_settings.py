@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass, field
 from typing import Any
-from PySide6.QtCore import QSettings
+
 from typing import Literal
 import logging
 
@@ -10,13 +10,13 @@ from PySide6.QtWidgets import (
      QFileDialog, QLabel, QLineEdit, QCheckBox, QSpinBox, QComboBox,QSpacerItem, QSizePolicy,QDoubleSpinBox
 )
 from PySide6.QtGui import QFont
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal, Qt, QSettings
 
 logger = logging.getLogger(__name__)
 
 
-class Settings_Dialog(QDialog):
-    """Open dialog to set general application settings."""
+class Panel_Settings(QDialog):
+    """Open dialog to set general settings of the application."""
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -47,7 +47,7 @@ class Settings_Dialog(QDialog):
             print(f"✅ Default model folder set to: {folder}")    
 
     def get_fit_settings(self):
-        """Return current fit settings as a dictionary."""
+        """Return current fit settings from setting panel as a dictionary."""
         return {
             "fit_negative": self.chk_fit_negative.isChecked(),
             "method": self.cbb_fit_method.currentText(),
@@ -57,7 +57,7 @@ class Settings_Dialog(QDialog):
         }
 
     def accept(self):
-        """Save all settings when dialog is accepted."""
+        """Save all settings to QSetting when dialog is accepted."""
         fit_settings = self.get_fit_settings()
 
         # Save each setting properly
@@ -209,7 +209,6 @@ def _set_by_path(obj: Any, path: str, value):
         obj = getattr(obj, part)
     setattr(obj, parts[-1], value)
 
-
 @dataclass
 class FitSettings:
     #Fitting
@@ -225,12 +224,9 @@ class FitSettings:
     baseline_degre: int = 1
     baseline_noise: int = 4
 
-
-
 @dataclass
 class GraphSettings:
     grid: bool = False
-
 
 @dataclass
 class AppSettings:

@@ -8,14 +8,14 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt
+from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt, QSettings
 from PySide6.QtGui import QIcon, QAction
 
 
 from spectroview import UI_FILE, LOGO_APPLI, TEXT_EXPIRE, ICON_DIR
 from spectroview.config.gui import resources
 
-from spectroview.modules.utils import show_alert
+from spectroview.modules.utils import show_alert, dark_palette, light_palette
 from spectroview.modules.utils import CommonUtilities
 from spectroview.modules.map_viewer import MapViewer
 from spectroview.modules.fit_model_manager import FitModelManager
@@ -28,7 +28,7 @@ from spectroview.main_tabs.graphs import Graphs
 
 from spectroview.config.about import About
 from spectroview.config.app_settings import AppSettings
-from spectroview.config.app_settings import Settings_Dialog
+from spectroview.config.app_settings import Panel_Settings
 from spectroview.config.app_shortcuts import setup_shortcuts
 
 logger = logging.getLogger(__name__)
@@ -42,29 +42,27 @@ class Main:
         ui_file.open(QFile.ReadOnly)
         self.ui = loader.load(ui_file)
         ui_file.close()
-
-        self.common = CommonUtilities()
-
+        self.settings = QSettings("CEA-Leti", "SPECTROview")
+        
         #### APP SETTINGS
         self.app_settings = AppSettings()
         self.app_settings.load()
-        qsettings = self.app_settings.qsettings
         
-        ### Universal Settings
-        self.settings_dialog = Settings_Dialog()
+        ### Settings Penel for general parameters of application
+        self.panel_settings = Panel_Settings()
 
         # Create subsystem instances
-        self.graphs = Graphs(qsettings, self.ui, self.common)
-        self.spectrums = Spectrums(qsettings, self.ui, self.common, self.graphs)
-        self.maps = Maps(qsettings, self.ui, self.spectrums, self.common, self.graphs, self.app_settings)
-        self.mapview_widget = MapViewer(self, self.app_settings)
-
+        self.graphs = Graphs(self.settings, self.ui)
+        self.spectrums = Spectrums(self.settings, self.ui, self.graphs)
+        self.maps = Maps(self.settings, self.ui, self.spectrums, self.graphs, self.app_settings)
+        
+        self.map_viewer = MapViewer(self, self.app_settings)
 
         # Apply stored settings to UI
         self.app_settings.apply_to_ui(self.ui) 
 
         # Centralize GUI wiring
-        self.gui = UiConnector(self.app_settings, self.ui, self, self.maps, self.spectrums, self.graphs, self.settings_dialog)
+        self.gui = UiConnector(self.app_settings, self.ui, self, self.maps, self.spectrums, self.graphs, self.panel_settings)
 
         ### SETUP SHORTCUTS 
         setup_shortcuts(self)
@@ -194,9 +192,9 @@ class Main:
         if mode is None:
             mode = "light" if self.app_settings.mode == "dark" else "dark"
         if mode == "dark":
-            app.setPalette(self.common.dark_palette())
+            app.setPalette(dark_palette())
         else:
-            app.setPalette(self.common.light_palette())
+            app.setPalette(light_palette())
         self.app_settings.mode = mode
         self.app_settings.save()
 

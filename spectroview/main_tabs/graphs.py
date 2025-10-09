@@ -18,12 +18,11 @@ from PySide6.QtGui import  QIcon, Qt
 
 class Graphs(QDialog):
     """This class provides a GUI for plotting graphs/figures."""
-    def __init__(self, settings, ui, common):
+    def __init__(self, settings, ui):
         super().__init__()
         self.ui = ui
         self.settings = settings
         
-        self.common = common
         self.setWindowTitle("Graph Plot")
 
         # DATAFRAME

@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 
 class UiConnector:
     """Centralize all signal wiring / UI connections here. """
-    def __init__(self, app_settings, ui, main_app, maps_tab, spectrums_tab, graphs_tab, setting_dialog):
+    def __init__(self, app_settings, ui, main_app, maps_tab, spectrums_tab, graphs_tab, panel_settings):
         
         self.app_settings = app_settings
-        self.settings_dialog = setting_dialog
+        self.panel_settings = panel_settings
         
         self.ui = ui
         self.main_app = main_app
@@ -195,7 +195,7 @@ class UiConnector:
         action.setStatusTip("Settings")
 
         #Connect
-        action.triggered.connect(self.settings_dialog.launch)
+        action.triggered.connect(self.panel_settings.launch)
         
         # Add the action to the toolbar
         spacer = QWidget()

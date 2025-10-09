@@ -8,8 +8,9 @@ from copy import deepcopy
 from pathlib import Path
 
 from spectroview import FIT_METHODS
-from spectroview.modules.utils import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area
-from spectroview.modules.utils import FitThread, CustomizedListWidget, Spectra, Spectrum
+from spectroview.modules.utils import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area, replace_peak_labels
+
+from spectroview.modules.utils import FitThread, CustomizedListWidget, Spectra, Spectrum, CommonUtilities
 from spectroview.modules.df_table import DataframeTable
 from spectroview.modules.peak_table import PeakTable
 from spectroview.modules.spectra_viewer import SpectraViewer
@@ -22,16 +23,12 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject, QSettings
 
 class Spectrums(QObject):
-    """
-    Class manages the GUI interactions and operations related to process spectra.
-    """
-    def __init__(self, settings, ui, common, graphs):
+    """Class manages the GUI interactions of Spectra Tab"""
+    def __init__(self, settings, ui, graphs):
         super().__init__()
         self.settings = settings
-        self.settings2 = QSettings("CEA-Leti", "SPECTROview")
 
         self.ui = ui
-        self.common = common
         self.graphs = graphs
 
         self.loaded_fit_model = None
@@ -208,7 +205,7 @@ class Spectrums(QObject):
         self.ntot = len(fnames)
         fit_model = deepcopy(self.copied_fit_model)
         
-        ncpu = self.settings2.value("fit_settings/ncpu", 1, type=int)
+        ncpu = self.settings.value("fit_settings/ncpu", 1, type=int)
 
         if fit_model is not None:
             self.spectrums.pbar_index = 0
@@ -289,7 +286,7 @@ class Spectrums(QObject):
             fnames = self.get_spectrum_fnames()
 
         self.ntot = len(fnames)
-        ncpu = self.settings2.value("fit_settings/ncpu", 1, type=int)
+        ncpu = self.settings.value("fit_settings/ncpu", 1, type=int)
         fit_model = self.loaded_fit_model
         self.spectrums.pbar_index = 0
 
@@ -618,11 +615,11 @@ class Spectrums(QObject):
         sel_spectrum, sel_spectra = self.get_spectrum_object()
         fit_params = sel_spectrum.fit_params.copy()
         
-        fit_params['fit_negative'] = self.settings2.value("fit_settings/fit_negative", False, type=bool)
-        fit_params['max_ite'] = self.settings2.value("fit_settings/max_ite", 200, type=int)
-        fit_params['method'] = self.settings2.value("fit_settings/method", "Leastsq")
-        fit_params['ncpu'] = self.settings2.value("fit_settings/ncpu", 1, type=int)
-        fit_params['xtol'] = self.settings2.value("fit_settings/xtol", 1e-4, type=float)
+        fit_params['fit_negative'] = self.settings.value("fit_settings/fit_negative", False, type=bool)
+        fit_params['max_ite'] = self.settings.value("fit_settings/max_ite", 200, type=int)
+        fit_params['method'] = self.settings.value("fit_settings/method", "Leastsq")
+        fit_params['ncpu'] = self.settings.value("fit_settings/ncpu", 1, type=int)
+        fit_params['xtol'] = self.settings.value("fit_settings/xtol", 1e-4, type=float)
         
         sel_spectrum.fit_params = fit_params
 
@@ -681,7 +678,7 @@ class Spectrums(QObject):
                 names.append(name)
             self.df_fit_results = self.df_fit_results.iloc[:,list(np.argsort(names, kind='stable'))]
             # Replace peak_label
-            columns = [self.common.replace_peak_labels(self.copied_fit_model, column) for column in self.df_fit_results.columns]
+            columns = [replace_peak_labels(self.copied_fit_model, column) for column in self.df_fit_results.columns]
             self.df_fit_results.columns = columns
         
         self.df_table.show(self.df_fit_results)

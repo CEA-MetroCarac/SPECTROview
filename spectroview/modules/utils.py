@@ -233,46 +233,7 @@ class CommonUtilities():
                     layout.removeWidget(widget)
                     widget.close()
 
-    def replace_peak_labels(self, fit_model, param):
-        """Replace prefix 'm01' of peak model by labels designed by user"""
-        peak_labels = fit_model["peak_labels"]
-        if "_" in param:
-            prefix, param = param.split("_", 1)  
-            # Convert prefix to peak_label
-            peak_index = int(prefix[1:]) - 1
-            if 0 <= peak_index < len(peak_labels):
-                peak_label = peak_labels[peak_index]
-                return f"{param}_{peak_label}"
-        return param
-
-    def quadrant(self, row):
-        """Define 4 quadrant of a wafer"""
-        if row['X'] < 0 and row['Y'] < 0:
-            return 'Q1'
-        elif row['X'] < 0 and row['Y'] > 0:
-            return 'Q2'
-        elif row['X'] > 0 and row['Y'] > 0:
-            return 'Q3'
-        elif row['X'] > 0 and row['Y'] < 0:
-            return 'Q4'
-        else:
-            return np.nan
-
-    def zone(self, row, radius):
-        """Define 3 zones (Center, Mid-Radius, Edge)"""
-        r = radius
-        x = row['X']
-        y = row['Y']
-        distance_to_center = np.sqrt(x ** 2 + y ** 2)
-        if distance_to_center <= r * 0.35:
-            return 'Center'
-        elif distance_to_center > r * 0.35 and distance_to_center < r * 0.8:
-            return 'Mid-Radius'
-        elif distance_to_center >= 0.8 * r:
-            return 'Edge'
-        else:
-            return np.nan
-
+    
     def display_df_in_table(self, table_widget, df_results):
         """Display pandas DataFrame in QTableWidget in GUI"""
         table_widget.setRowCount(df_results.shape[0])
@@ -283,20 +244,6 @@ class CommonUtilities():
                 item = QTableWidgetItem(str(df_results.iat[row, col]))
                 table_widget.setItem(row, col, item)
         table_widget.resizeColumnsToContents()
-
-    def view_text(self, ui, title, text):
-        """ Create a QTextBrowser to display a text content"""
-        report_viewer = QDialog(ui)
-        report_viewer.setWindowTitle(title)
-        report_viewer.setGeometry(100, 100, 800, 600)
-        text_browser = QTextBrowser(report_viewer)
-        text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        text_browser.setOpenExternalLinks(True)
-        text_browser.setPlainText(text)
-        text_browser.moveCursor(QTextCursor.Start)
-        layout = QVBoxLayout(report_viewer)
-        layout.addWidget(text_browser)
-        report_viewer.show()
 
     def view_markdown(self, ui, title, fname, x, y, working_folder):
         """To convert MD file to html format and display them in GUI"""
@@ -319,45 +266,7 @@ class CommonUtilities():
         about_dialog.setLayout(layout)
         about_dialog.show()
 
-    def dark_palette(self):
-        """Palette color for dark mode of the appli's GUI"""
-        dark_palette = QPalette()
-        dark_palette.setColor(QPalette.Window, QColor(70, 70, 70))
-        dark_palette.setColor(QPalette.WindowText, Qt.white)
-        dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
-        dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
-        dark_palette.setColor(QPalette.ToolTipText, Qt.black)
-        dark_palette.setColor(QPalette.Text, Qt.white)
-        dark_palette.setColor(QPalette.Button, QColor(64, 64, 64))
-        dark_palette.setColor(QPalette.ButtonText, Qt.white)
-        dark_palette.setColor(QPalette.BrightText, Qt.red)
-        dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-        dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-        dark_palette.setColor(QPalette.HighlightedText, Qt.white)
-        dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
-        dark_palette.setColor(QPalette.Base, QColor(60, 60, 60))  # Background color for QMenu
-        
-        return dark_palette
-
-    def light_palette(self):
-        """Palette color for light mode of the appli's GUI"""
-        light_palette = QPalette()
-        light_palette.setColor(QPalette.Window, QColor(225, 225, 225))
-        light_palette.setColor(QPalette.WindowText, Qt.black)
-        light_palette.setColor(QPalette.AlternateBase, QColor(230, 230, 230))
-        light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
-        light_palette.setColor(QPalette.ToolTipText, Qt.black)
-        light_palette.setColor(QPalette.Text, Qt.black)
-        light_palette.setColor(QPalette.Button, QColor(230, 230, 230))
-        light_palette.setColor(QPalette.ButtonText, Qt.black)
-        light_palette.setColor(QPalette.BrightText, Qt.red)
-        light_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-        light_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-        light_palette.setColor(QPalette.HighlightedText, Qt.black)
-        light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
-        light_palette.setColor(QPalette.Base, QColor(240, 240, 240))  # Menu background color
-
-        return light_palette
+    
 
 
 class FitThread(QThread):
@@ -412,8 +321,101 @@ class CustomizedListWidget(QListWidget):
         else:
             super().dropEvent(event)
             self.items_reordered.emit()
-    
+            
+def dark_palette():
+        """Palette color for dark mode of the appli's GUI"""
+        dark_palette = QPalette()
+        dark_palette.setColor(QPalette.Window, QColor(70, 70, 70))
+        dark_palette.setColor(QPalette.WindowText, Qt.white)
+        dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
+        dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
+        dark_palette.setColor(QPalette.ToolTipText, Qt.black)
+        dark_palette.setColor(QPalette.Text, Qt.white)
+        dark_palette.setColor(QPalette.Button, QColor(64, 64, 64))
+        dark_palette.setColor(QPalette.ButtonText, Qt.white)
+        dark_palette.setColor(QPalette.BrightText, Qt.red)
+        dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+        dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+        dark_palette.setColor(QPalette.HighlightedText, Qt.white)
+        dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
+        dark_palette.setColor(QPalette.Base, QColor(60, 60, 60))  # Background color for QMenu
+        
+        return dark_palette
 
+def light_palette():
+    """Palette color for light mode of the appli's GUI"""
+    light_palette = QPalette()
+    light_palette.setColor(QPalette.Window, QColor(225, 225, 225))
+    light_palette.setColor(QPalette.WindowText, Qt.black)
+    light_palette.setColor(QPalette.AlternateBase, QColor(230, 230, 230))
+    light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
+    light_palette.setColor(QPalette.ToolTipText, Qt.black)
+    light_palette.setColor(QPalette.Text, Qt.black)
+    light_palette.setColor(QPalette.Button, QColor(230, 230, 230))
+    light_palette.setColor(QPalette.ButtonText, Qt.black)
+    light_palette.setColor(QPalette.BrightText, Qt.red)
+    light_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    light_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    light_palette.setColor(QPalette.HighlightedText, Qt.black)
+    light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
+    light_palette.setColor(QPalette.Base, QColor(240, 240, 240))  # Menu background color
+
+    return light_palette
+                
+def view_text(ui, title, text):
+        """ Create a QTextBrowser to display a text content"""
+        report_viewer = QDialog(ui)
+        report_viewer.setWindowTitle(title)
+        report_viewer.setGeometry(100, 100, 800, 600)
+        text_browser = QTextBrowser(report_viewer)
+        text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        text_browser.setOpenExternalLinks(True)
+        text_browser.setPlainText(text)
+        text_browser.moveCursor(QTextCursor.Start)
+        layout = QVBoxLayout(report_viewer)
+        layout.addWidget(text_browser)
+        report_viewer.show()            
+            
+def quadrant(row):
+        """Define 4 quadrant of a wafer"""
+        if row['X'] < 0 and row['Y'] < 0:
+            return 'Q1'
+        elif row['X'] < 0 and row['Y'] > 0:
+            return 'Q2'
+        elif row['X'] > 0 and row['Y'] > 0:
+            return 'Q3'
+        elif row['X'] > 0 and row['Y'] < 0:
+            return 'Q4'
+        else:
+            return np.nan
+
+def zone(row, radius):
+    """Define 3 zones (Center, Mid-Radius, Edge)"""
+    r = radius
+    x = row['X']
+    y = row['Y']
+    distance_to_center = np.sqrt(x ** 2 + y ** 2)
+    if distance_to_center <= r * 0.35:
+        return 'Center'
+    elif distance_to_center > r * 0.35 and distance_to_center < r * 0.8:
+        return 'Mid-Radius'
+    elif distance_to_center >= 0.8 * r:
+        return 'Edge'
+    else:
+        return np.nan
+    
+def replace_peak_labels(fit_model, param):
+        """Replace prefix 'm01' of peak model by labels designed by user"""
+        peak_labels = fit_model["peak_labels"]
+        if "_" in param:
+            prefix, param = param.split("_", 1)  
+            # Convert prefix to peak_label
+            peak_index = int(prefix[1:]) - 1
+            if 0 <= peak_index < len(peak_labels):
+                peak_label = peak_labels[peak_index]
+                return f"{param}_{peak_label}"
+        return param
+    
 def compress(array):
     """Compress and encode a numpy array to a base64 string."""
     compressed = zlib.compress(array.tobytes())

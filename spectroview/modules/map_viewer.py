@@ -23,7 +23,7 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import  QIcon, QAction, Qt
 
 class MapViewer(QWidget):
-    """Class to manage the 2Dmap view widget"""
+    """Class to manage the 2Dmap viewer widget"""
     def __init__(self, main_app, app_settings):
         super().__init__()
         self.main_app = main_app
@@ -33,7 +33,6 @@ class MapViewer(QWidget):
         self.map_df =pd.DataFrame() 
         self.df_fit_results =pd.DataFrame() 
         self.map_type = '2Dmap'
-        # self.map_type = getattr(self.app_settings, "map_type", None)
 
         self.dpi = 70
         self.figure = None

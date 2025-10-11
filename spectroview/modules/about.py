@@ -6,7 +6,6 @@ from PySide6.QtGui import QPixmap
 
 from spectroview import VERSION, ICON_DIR
 
-
 class About(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)

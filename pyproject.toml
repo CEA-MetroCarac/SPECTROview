@@ -46,12 +46,11 @@ dependencies = [
 spectroview = [
     "resources/*.mplstyle", 
     "resources/*.png", 
-    "resources/doc/*.md",
-    "resources/doc/figures/*.png",
-    "config/gui/*.ui",
-    "config/gui/*.qrc",
     "resources/icons/*.png",
     "resources/icons/*.ico",
+
+    "config/gui/*.ui",
+    "config/gui/*.qrc",
 ]
 
 [project.scripts]

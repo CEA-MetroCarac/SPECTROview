@@ -334,8 +334,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>428</width>
-                          <height>535</height>
+                          <width>458</width>
+                          <height>573</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -375,7 +375,6 @@
                             <widget class="QLabel" name="label_26">
                              <property name="font">
                               <font>
-                               <weight>75</weight>
                                <bold>true</bold>
                               </font>
                              </property>
@@ -496,7 +495,6 @@
                              <widget class="QLabel" name="label_54">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -600,7 +598,6 @@
                              <widget class="QLabel" name="label_52">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -844,7 +841,6 @@
                              <widget class="QLabel" name="lbl_Peaks">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -1006,8 +1002,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>728</width>
-                               <height>69</height>
+                               <width>724</width>
+                               <height>72</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -1286,9 +1282,9 @@
                 </item>
                </layout>
               </widget>
-              <widget class="QWidget" name="collect_fit_data">
+              <widget class="QWidget" name="collect_fit_results">
                <attribute name="title">
-                <string>Collect fit data</string>
+                <string>Collect fit results</string>
                </attribute>
                <layout class="QVBoxLayout" name="verticalLayout_32">
                 <property name="spacing">
@@ -1352,7 +1348,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>428</width>
-                       <height>545</height>
+                       <height>583</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_80" stretch="0,0,0,0,0,0,0">
@@ -1393,7 +1389,6 @@
                         </property>
                         <property name="font">
                          <font>
-                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -1517,7 +1512,7 @@
                       <item>
                        <widget class="QLabel" name="label_29">
                         <property name="text">
-                         <string>Send fit data to 'Visualization' tab:</string>
+                         <string>Send fit results to 'Graph' Tab:</string>
                         </property>
                        </widget>
                       </item>
@@ -2471,8 +2466,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>428</width>
-                          <height>337</height>
+                          <width>458</width>
+                          <height>373</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -2512,7 +2507,6 @@
                             <widget class="QLabel" name="label_22">
                              <property name="font">
                               <font>
-                               <weight>75</weight>
                                <bold>true</bold>
                               </font>
                              </property>
@@ -2633,7 +2627,6 @@
                              <widget class="QLabel" name="label_65">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2737,7 +2730,6 @@
                              <widget class="QLabel" name="label_69">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -2990,7 +2982,6 @@
                              <widget class="QLabel" name="label_72">
                               <property name="font">
                                <font>
-                                <weight>75</weight>
                                 <bold>true</bold>
                                </font>
                               </property>
@@ -3152,8 +3143,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>728</width>
-                               <height>69</height>
+                               <width>724</width>
+                               <height>72</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -3426,9 +3417,9 @@
                 </item>
                </layout>
               </widget>
-              <widget class="QWidget" name="collect_fit_data_2">
+              <widget class="QWidget" name="collect_fit_results_2">
                <attribute name="title">
-                <string>Collect fit data</string>
+                <string>Collect fit results</string>
                </attribute>
                <layout class="QVBoxLayout" name="verticalLayout_47">
                 <property name="spacing">
@@ -3491,8 +3482,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>428</width>
-                       <height>347</height>
+                       <width>283</width>
+                       <height>243</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_81" stretch="0,0,0,0,0,0,0">
@@ -3533,7 +3524,6 @@
                         </property>
                         <property name="font">
                          <font>
-                          <weight>75</weight>
                           <bold>true</bold>
                          </font>
                         </property>
@@ -3654,7 +3644,7 @@
                       <item>
                        <widget class="QLabel" name="label_28">
                         <property name="text">
-                         <string>Send fit data to 'Visualization' tab:</string>
+                         <string>Send fit results to 'Graph' Tab:</string>
                         </property>
                        </widget>
                       </item>
@@ -4631,7 +4621,6 @@
                        </property>
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -4736,7 +4725,6 @@
                       <widget class="QLabel" name="label_91">
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -4796,7 +4784,6 @@
                       <widget class="QLabel" name="label_97">
                        <property name="font">
                         <font>
-                         <weight>75</weight>
                          <bold>true</bold>
                         </font>
                        </property>
@@ -5004,8 +4991,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>235</width>
-                    <height>249</height>
+                    <width>277</width>
+                    <height>288</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -5129,7 +5116,6 @@
                      <property name="font">
                       <font>
                        <pointsize>9</pointsize>
-                       <weight>75</weight>
                        <bold>true</bold>
                       </font>
                      </property>
@@ -5217,8 +5203,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>362</width>
-                    <height>310</height>
+                    <width>364</width>
+                    <height>371</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_9">

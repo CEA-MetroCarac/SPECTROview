@@ -1,6 +1,6 @@
 import os
 
-VERSION = "0.9.1"
+VERSION = "0.9.2"
 
 TEXT_EXPIRE = (
     "The current SPECTROview version has expired. Checkout the SPECTROview's "

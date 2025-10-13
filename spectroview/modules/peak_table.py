@@ -7,6 +7,7 @@ from PySide6.QtWidgets import  QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy,\
 from PySide6.QtCore import  Qt, QTimer
 from PySide6.QtGui import  QIcon, Qt 
 
+from PySide6.QtGui import QPalette, QColor
 
 class PeakTable:
     """Class dedicated to show fit parameters of Spectrum objects in the GUI"""
@@ -161,6 +162,11 @@ class PeakTable:
                         min_lineedit.setFixedWidth(70)
                         min_lineedit.setFixedHeight(24)
                         min_lineedit.setAlignment(Qt.AlignRight)
+                        
+                        palette = min_lineedit.palette()
+                        palette.setColor(QPalette.Text, QColor("red"))
+                        min_lineedit.setPalette(palette)
+                        
                         min_lineedit.textChanged.connect(
                             lambda text, pm=peak_model,key=param_hint_key:
                             self.update_param_hint_min(pm, key, text))
@@ -171,6 +177,11 @@ class PeakTable:
                         max_lineedit.setFixedWidth(70)
                         max_lineedit.setFixedHeight(24)
                         max_lineedit.setAlignment(Qt.AlignRight)
+                        
+                        palette = max_lineedit.palette()
+                        palette.setColor(QPalette.Text, QColor("red"))
+                        max_lineedit.setPalette(palette)
+                        
                         max_lineedit.textChanged.connect(
                             lambda text, pm=peak_model, key=param_hint_key:
                             self.update_param_hint_max(pm, key, text))

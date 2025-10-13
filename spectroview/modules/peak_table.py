@@ -62,7 +62,7 @@ class PeakTable:
         delete_layout = QVBoxLayout()
         label_layout = QVBoxLayout()
         model_layout = QVBoxLayout()
-        param_hint_layouts = {param_hint: {var: QVBoxLayout() for var in ['value', 'min', 'max', 'expr','vary']} for
+        param_hint_layouts = {param_hint: {var: QVBoxLayout() for var in [ 'min', 'value','max', 'expr','vary']} for
                               param_hint in param_hint_order}
 
         # Add header labels to each layout

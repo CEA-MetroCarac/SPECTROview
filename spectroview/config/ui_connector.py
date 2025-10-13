@@ -186,9 +186,9 @@ class UiConnector:
         self.ui.toolBar.addSeparator()
         self.ui.toolBar.addAction(action)
         
-    def connect_settings_dialog(self):
+    def connect_settings_panel(self):
         """To launch the FilConverter Tool"""
-        #Create button
+        #Create "Settings Panel" button
         icon_path = os.path.join(ICON_DIR, "settings.png")
         action = QAction(self.ui.toolBar, icon = QIcon(icon_path))
         action.setToolTip("Settings")
@@ -211,4 +211,4 @@ class UiConnector:
         self.connect_spectra_tab_signals()
         self.connect_visu_tab_signals()
         self.connect_file_converter()
-        self.connect_settings_dialog()
+        self.connect_settings_panel()

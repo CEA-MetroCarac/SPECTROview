@@ -16,6 +16,7 @@ from spectroview import UI_FILE, LOGO_APPLI, TEXT_EXPIRE, ICON_DIR
 from spectroview.config.gui import resources
 
 from spectroview.modules.utils import show_alert, dark_palette, light_palette
+
 from spectroview.modules.map_viewer import MapViewer
 from spectroview.modules.settings_panel import SettingsPanel
 from spectroview.modules.about import About
@@ -47,14 +48,12 @@ class Main:
         self.app_settings.load()
         
         ### Settings Penel for general parameters of application
-        self.setting_panel = SettingsPanel()
+        self.setting_panel = SettingsPanel(self.settings) #To pass it inside UiConnector for launching from menu
 
         # Create subsystem instances
         self.graphs = Graphs(self.settings, self.ui)
         self.spectrums = Spectrums(self.settings, self.ui, self.graphs)
         self.maps = Maps(self.settings, self.ui, self.spectrums, self.graphs, self.app_settings)
-        
-        self.map_viewer = MapViewer(self, self.app_settings)
 
         # Apply stored settings to UI
         self.app_settings.apply_to_ui(self.ui) 

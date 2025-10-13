@@ -197,23 +197,6 @@ class SpectraViewer(QWidget):
             self.zoom_pan_active = False
             self.toolbar.zoom()  # Deactivate the zoom feature
             
-    def on_scroll(self, event):
-        ax = event.inaxes
-        if ax is None:
-            return  # Ignore scrolls outside the plot area
-
-        y_min, y_max = ax.get_ylim()
-        dy = (y_max - y_min) * 0.1  # 10% zoom step
-
-        if event.step < 0:
-            # Scroll up: increase max Y
-            y_max = y_max + dy
-        elif event.step > 0:
-            # Scroll down: decrease max Y
-            y_max = max(y_min + 1e-6, y_max - dy)  # prevent collapse
-
-        ax.set_ylim(y_min, y_max)
-        self.refresh_plot()   
 
     def create_options_menu(self):
         """Create widget containing all view options."""
@@ -541,7 +524,25 @@ class SpectraViewer(QWidget):
     def enable_hover_highlight(self):
         if not hasattr(self, 'hover_connection'):
             self.hover_connection = self.canvas.mpl_connect('motion_notify_event', self.on_hover)
+            
+    def on_scroll(self, event):
+        ax = event.inaxes
+        if ax is None:
+            return  # Ignore scrolls outside the plot area
 
+        y_min, y_max = ax.get_ylim()
+        dy = (y_max - y_min) * 0.1  # 10% zoom step
+
+        if event.step < 0:
+            # Scroll up: increase max Y
+            y_max = y_max + dy
+        elif event.step > 0:
+            # Scroll down: decrease max Y
+            y_max = max(y_min + 1e-6, y_max - dy)  # prevent collapse
+
+        ax.set_ylim(y_min, y_max)
+        self.refresh_plot()   
+        
     def on_hover(self, event):
         if event.inaxes != self.ax or not self.canvas.isActiveWindow():
             self.hide_tooltip()
@@ -613,7 +614,7 @@ class SpectraViewer(QWidget):
                         return  # do not add a new peak if we start dragging
 
                 # Else, normal left-click to add peak
-                sel_spectrum.add_peak_model(self.peak_model, x_click, dfwhm=200)
+                sel_spectrum.add_peak_model(self.peak_model, x_click, dx0=(10,10), dfwhm=200)
                 self.refresh_gui()
 
             elif event.button == 3:

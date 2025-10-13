@@ -24,9 +24,9 @@ from PySide6.QtGui import  QIcon, QAction, Qt
 
 class MapViewer(QWidget):
     """Class to manage the 2Dmap viewer widget"""
-    def __init__(self, main_app, app_settings):
+    def __init__(self, parent, app_settings):
         super().__init__()
-        self.main_app = main_app
+        self.parent = parent
         self.app_settings = app_settings  
 
         self.map_df_name = None
@@ -302,8 +302,8 @@ class MapViewer(QWidget):
   
     def refresh_plot(self):
         """Call the refresh_gui method of the main application."""
-        if hasattr(self.main_app, 'refresh_gui'):
-            self.main_app.refresh_gui()
+        if hasattr(self.parent, 'refresh_gui'):
+            self.parent.refresh_gui()
         else:
             return
     

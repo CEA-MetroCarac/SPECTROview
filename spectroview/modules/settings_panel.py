@@ -9,10 +9,9 @@ from PySide6.QtCore import QSettings
 class SettingsPanel(QDialog):
     """Open dialog to set general settings of the application."""
     
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        
-        self.settings = QSettings("CEA-Leti", "SPECTROview")
+    def __init__(self, settings):
+        super().__init__()
+        self.settings = settings
         
         self.setWindowTitle("Settings")
         self.resize(400, 400)
@@ -44,6 +43,9 @@ class SettingsPanel(QDialog):
             "max_ite": self.spin_max_iter.value(),
             "xtol": self.spin_x_tol.value(),
             "ncpu": self.spin_cpu.value(),
+            "maxshift": self.spin_maxshift.value(),
+            "maxfwhm": self.spin_maxfwhm.value(),
+            
         }
 
     def accept(self):
@@ -54,7 +56,7 @@ class SettingsPanel(QDialog):
         for key, value in fit_settings.items():
             self.settings.setValue(f"fit_settings/{key}", value)
 
-        self.settings.sync()  # Ensure settings are written to disk
+        self.settings.sync()  
         print("All Settings are saved and applied")
         super().accept()
 
@@ -72,13 +74,17 @@ class SettingsPanel(QDialog):
         max_ite = self.settings.value("fit_settings/max_ite", 200, type=int)
         xtol = self.settings.value("fit_settings/xtol", 1e-4, type=float)
         ncpu = self.settings.value("fit_settings/ncpu", 1, type=int)
-
+        maxshift = self.settings.value("fit_settings/maxshift", 20, type=float)
+        maxfwhm = self.settings.value("fit_settings/maxfwhm", 200, type=float)
+    
         # Apply loaded values to widgets
         self.chk_fit_negative.setChecked(fit_negative)
         self.cbb_fit_method.setCurrentText(method)
         self.spin_max_iter.setValue(max_ite)
         self.spin_x_tol.setValue(xtol)
-        self.spin_cpu.setValue(ncpu)
+        self.spin_cpu.setValue(ncpu)    
+        self.spin_maxshift.setValue(maxshift)
+        self.spin_maxfwhm.setValue(maxfwhm) 
 
         # Remember model folder path if saved
         model_folder = self.settings.value("model_folder", "")
@@ -101,7 +107,7 @@ class SettingsPanel(QDialog):
 
          # Fit Method combobox
         method_layout = QHBoxLayout()
-        method_label = QLabel("Fit Method")
+        method_label = QLabel("Fit Method:")
         self.cbb_fit_method = QComboBox()
         self.cbb_fit_method.addItems(['Leastsq', 'Least_squares', 'Nelder-Mead', 'SLSQP'])
         method_layout.addWidget(method_label)
@@ -110,7 +116,7 @@ class SettingsPanel(QDialog):
         
         # Maximum iterations
         iter_layout = QHBoxLayout()
-        iter_label = QLabel("Maximum iterations")
+        iter_label = QLabel("Maximum iterations:")
         self.spin_max_iter = QSpinBox()
         self.spin_max_iter.setRange(1, 10000)
         self.spin_max_iter.setSingleStep(20)
@@ -121,7 +127,7 @@ class SettingsPanel(QDialog):
 
         # X-tolerance line edit
         tol_layout = QHBoxLayout()
-        tol_label = QLabel("x-tolerance")
+        tol_label = QLabel("x-tolerance:")
         self.spin_x_tol = QDoubleSpinBox()
         self.spin_x_tol.setRange(1e-5, 1e-3)
         self.spin_x_tol.setSingleStep(1e-5)
@@ -133,7 +139,7 @@ class SettingsPanel(QDialog):
         
         # Number of CPU cores
         cpu_layout = QHBoxLayout()
-        cpu_label = QLabel("Number of CPU cores")
+        cpu_label = QLabel("Number of CPU cores:")
         self.spin_cpu = QSpinBox()   
         self.spin_cpu.setRange(1, os.cpu_count() or 64)  # Default to 8 if os.cpu_count() is None
         self.spin_cpu.setValue(1)  # Default value
@@ -141,6 +147,31 @@ class SettingsPanel(QDialog):
         cpu_layout.addWidget(self.spin_cpu) 
         main_layout.addLayout(cpu_layout)
 
+        # Max peak shift
+        maxshift_layout = QHBoxLayout()
+        maxshift_lb = QLabel("Max peak shift:")
+        self.spin_maxshift = QDoubleSpinBox()
+        self.spin_maxshift.setRange(0, 100)
+        self.spin_maxshift.setSingleStep(5)
+        self.spin_maxshift.setDecimals(2) 
+        self.spin_maxshift.setValue(20)  # Default value
+        maxshift_layout.addWidget(maxshift_lb)
+        maxshift_layout.addWidget(self.spin_maxshift)
+        main_layout.addLayout(maxshift_layout)
+        
+        # Max peak fwhm
+        maxfwhm_layout = QHBoxLayout()
+        maxfwhm_lb = QLabel("Max peak fwhm:")
+        self.spin_maxfwhm = QDoubleSpinBox()
+        self.spin_maxfwhm.setRange(0, 500)
+        self.spin_maxfwhm.setSingleStep(20)
+        self.spin_maxfwhm.setDecimals(2) 
+        self.spin_maxfwhm.setValue(200)  # Default value
+        maxfwhm_layout.addWidget(maxfwhm_lb)
+        maxfwhm_layout.addWidget(self.spin_maxfwhm)
+        main_layout.addLayout(maxfwhm_layout)
+
+        ################################################################################
         main_layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
         
         # --- Fit model management label and Model folder line ---

@@ -4,7 +4,6 @@ from PySide6.QtWidgets import (
      QFileDialog, QLabel, QLineEdit, QCheckBox, QSpinBox, QComboBox,QSpacerItem, QSizePolicy,QDoubleSpinBox
 )
 from PySide6.QtGui import QFont
-from PySide6.QtCore import QSettings
 
 class SettingsPanel(QDialog):
     """Open dialog to set general settings of the application."""

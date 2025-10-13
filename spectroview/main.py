@@ -12,12 +12,11 @@ from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt, QSettings
 from PySide6.QtGui import QIcon
 
 
-from spectroview import UI_FILE, LOGO_APPLI, TEXT_EXPIRE, ICON_DIR
+from spectroview import UI_FILE, LOGO_APPLI, TEXT_EXPIRE
 from spectroview.config.gui import resources
 
 from spectroview.modules.utils import show_alert, dark_palette, light_palette
 
-from spectroview.modules.map_viewer import MapViewer
 from spectroview.modules.settings_panel import SettingsPanel
 from spectroview.modules.about import About
 
@@ -55,6 +54,7 @@ class Main:
         self.spectrums = Spectrums(self.settings, self.ui, self.graphs)
         self.maps = Maps(self.settings, self.ui, self.spectrums, self.graphs, self.app_settings)
 
+    
         # Apply stored settings to UI
         self.app_settings.apply_to_ui(self.ui) 
 

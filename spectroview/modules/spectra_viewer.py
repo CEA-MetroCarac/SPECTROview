@@ -15,12 +15,14 @@ from PySide6.QtWidgets import  QWidgetAction, QHBoxLayout, QLabel, QToolButton, 
     QLineEdit, QWidget, QPushButton, QComboBox, QApplication,  QWidget, QMenu, QColorDialog, QInputDialog
 from PySide6.QtCore import Qt, QSize, QPoint
 from PySide6.QtGui import  QIcon, QAction, Qt, QCursor
+from PySide6.QtCore import QSettings
 
 class SpectraViewer(QWidget):
     """Class to manage the spectra view widget."""
     def __init__(self, main_app):
         super().__init__()
-        self.main_app = main_app # To connect to a method of main app (refresh gui)
+        self.main_app = main_app
+        self.settings = QSettings("CEA-Leti", "SPECTROview") 
          
         self.peak_model = 'Lorentzian'
         self.dpi = 80
@@ -614,7 +616,10 @@ class SpectraViewer(QWidget):
                         return  # do not add a new peak if we start dragging
 
                 # Else, normal left-click to add peak
-                sel_spectrum.add_peak_model(self.peak_model, x_click, dx0=(10,10), dfwhm=200)
+                maxshift= self.settings.value("fit_settings/maxshift", 20, type=float)
+                maxfwhm= self.settings.value("fit_settings/maxfwhm", 200, type=float)
+                            
+                sel_spectrum.add_peak_model(self.peak_model, x_click, dx0=(maxshift,maxshift), dfwhm=maxfwhm)
                 self.refresh_gui()
 
             elif event.button == 3:

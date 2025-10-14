@@ -18,12 +18,7 @@ class SettingsPanel(QDialog):
         self._create_ui()
                 
         # --- Connect model folder button ---
-        self.btn_model_folder.clicked.connect(self.specify_fit_model_folder)
-        self.btn_spike_removal.clicked.connect(self.spike_removal) # Placeholder
-                
-    def spike_removal(self):
-        # Placeholder for spike removal functionality
-        print("Spike removal clicked")
+        self.btn_model_folder.clicked.connect(self.specify_fit_model_folder)                
         
     def specify_fit_model_folder(self):
         """Open folder dialog and save path."""
@@ -192,12 +187,7 @@ class SettingsPanel(QDialog):
         main_layout.addLayout(folder_layout)
 
         main_layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
-        # --- Spike removal button at the end ---
-        self.btn_spike_removal = QPushButton("Spike removal")
-        main_layout.addWidget(self.btn_spike_removal)
-        
-        main_layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
-        
+                
         # --- OK / Cancel buttons ---
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         ok_button = button_box.button(QDialogButtonBox.Ok)

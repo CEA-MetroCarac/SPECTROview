@@ -420,6 +420,27 @@ class Graph(QWidget):
                  cmap=self.color_palette,
                  vmin=vmin, vmax=vmax, stats=self.wafer_stats,
                  r=(self.wafer_size / 2))
+        
+        # Check if a Slot filter is active and annotate slot number
+        if hasattr(self, "filters") and isinstance(self.filters, (list, dict)):
+            filters_list = self.filters if isinstance(self.filters, list) else self.filters.get("filters", [])
+            for f in filters_list:
+                expr = f.get("expression", "")
+                state = f.get("state", False)
+                if state and "Slot ==" in expr:
+                    try:
+                        # Extract slot number from expression like "Slot == 2"
+                        slot_num = expr.split("==")[1].strip()
+                        self.ax.text(0.02, 0.98, f"Slot {slot_num}",
+                                transform=self.ax.transAxes,
+                                fontsize=12, color='black',
+                                fontweight='bold',
+                                verticalalignment='top',
+                                horizontalalignment='left')
+                    except Exception:
+                        pass
+                    break  # only show the first active slot filter
+
 
     def _set_limits(self):
         """Set the limits of axis"""

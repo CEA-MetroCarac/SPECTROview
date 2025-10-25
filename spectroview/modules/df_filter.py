@@ -1,9 +1,9 @@
 import os 
 from spectroview import ICON_DIR
 
-from PySide6.QtWidgets import QGroupBox, QVBoxLayout, QLineEdit, QHBoxLayout, QPushButton,  QListWidget, QListWidgetItem, QCheckBox
+from PySide6.QtWidgets import QGroupBox, QVBoxLayout, QLineEdit, QHBoxLayout, QPushButton,  QListWidget, QListWidgetItem, QCheckBox, QMenu, QApplication
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import QCoreApplication
+from PySide6.QtCore import QCoreApplication, Qt
 
 
 class DataframeFilter:
@@ -72,6 +72,26 @@ class DataframeFilter:
         # Create QListWidget to display filter expressions as checkboxes
         self.filter_listbox = QListWidget(self.gb_filter_widget)
         self.layout_main.addWidget(self.filter_listbox)
+        # Enable custom right-click menu
+        self.filter_listbox.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.filter_listbox.customContextMenuRequested.connect(self.show_context_menu)
+
+    def show_context_menu(self, pos):
+        """Show right-click menu to copy filter text."""
+        item = self.filter_listbox.itemAt(pos)
+        if not item:
+            return
+        checkbox = self.filter_listbox.itemWidget(item)
+        if not checkbox:
+            return
+
+        menu = QMenu(self.filter_listbox)
+        copy_action = menu.addAction("Copy filter text")
+        
+        action = menu.exec_(self.filter_listbox.mapToGlobal(pos))
+        if action == copy_action:
+            QApplication.clipboard().setText(checkbox.text())
+
 
     def set_dataframe(self, df):
         """Set the DataFrame to be filtered."""

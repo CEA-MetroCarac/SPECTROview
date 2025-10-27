@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_maps">
        <attribute name="title">
@@ -2471,8 +2471,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>400</width>
-                          <height>306</height>
+                          <width>428</width>
+                          <height>337</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -3152,8 +3152,8 @@
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>98</width>
-                               <height>28</height>
+                               <width>728</width>
+                               <height>69</height>
                               </rect>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_44">
@@ -4594,7 +4594,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>372</width>
-                    <height>505</height>
+                    <height>521</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -4722,13 +4722,6 @@
                       <widget class="QComboBox" name="cbb_z_2"/>
                      </item>
                     </layout>
-                   </item>
-                   <item>
-                    <widget class="QLabel" name="label">
-                     <property name="text">
-                      <string/>
-                     </property>
-                    </widget>
                    </item>
                    <item>
                     <layout class="QHBoxLayout" name="horizontalLayout_107">
@@ -4956,7 +4949,7 @@
                     </layout>
                    </item>
                    <item>
-                    <layout class="QVBoxLayout" name="layout_slotselector"/>
+                    <layout class="QGridLayout" name="layout_slotselector"/>
                    </item>
                    <item>
                     <spacer name="verticalSpacer_8">
@@ -5538,17 +5531,20 @@
            </item>
            <item>
             <layout class="QHBoxLayout" name="btn_layout">
+             <property name="spacing">
+              <number>2</number>
+             </property>
              <property name="leftMargin">
-              <number>10</number>
+              <number>2</number>
              </property>
              <property name="topMargin">
-              <number>5</number>
+              <number>2</number>
              </property>
              <property name="rightMargin">
-              <number>10</number>
+              <number>2</number>
              </property>
              <property name="bottomMargin">
-              <number>5</number>
+              <number>2</number>
              </property>
              <item>
               <spacer name="horizontalSpacer_12">
@@ -5586,8 +5582,8 @@
                </property>
                <property name="iconSize">
                 <size>
-                 <width>30</width>
-                 <height>30</height>
+                 <width>20</width>
+                 <height>20</height>
                 </size>
                </property>
               </widget>
@@ -5646,6 +5642,13 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_add_multi_wafer_plots">
+               <property name="text">
+                <string>Add multi wafer plots</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>

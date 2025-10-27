@@ -29,7 +29,7 @@ class Graphs(QDialog):
 
         # DATAFRAME
         self.original_dfs = {}
-        self.sel_df = None
+        self.selected_df = None
         self.ui.btn_view_df_3.clicked.connect(self.show_df)
         self.ui.dfs_listbox.itemSelectionChanged.connect(self.update_gui)
         
@@ -38,7 +38,7 @@ class Graphs(QDialog):
         self.ui.btn_save_df_2.clicked.connect(self.save_df_to_excel)
 
         # FILTER
-        self.filter = DataframeFilter(self.sel_df)
+        self.filter = DataframeFilter(self.selected_df)
         self.ui.filter_widget_layout.addWidget(self.filter.gb_filter_widget)
         self.filtered_df = None
 
@@ -47,6 +47,8 @@ class Graphs(QDialog):
         self.graph_id = 0  # Initialize graph number
         # Add a graph
         self.ui.btn_add_graph.clicked.connect(self.plotting)
+        self.ui.btn_add_multi_wafer_plots.clicked.connect(self.plot_multi_wafer_plots)
+
         self.ui.btn_get_limits.clicked.connect(self.set_current_limits)
         self.ui.btn_clear_limits.clicked.connect(self.clear_limits)
         # Update an existing graph
@@ -87,65 +89,13 @@ class Graphs(QDialog):
             self.select_sub_window_from_combo_box)
 
         self.ui.btn_minimize_all.clicked.connect(self.minimize_all_graph)
-        
-    def auto_select_XY_for_wafer_plot(self):
-         if self.ui.cbb_plotstyle.currentText().lower() == 'wafer':
-            # Auto select X and Y columns if 'X' and 'Y' exist in dataframe
-            sel_df = self.get_sel_df()
-            if sel_df is not None:
-                columns = sel_df.columns.tolist()
-                if 'X' in columns and 'Y' in columns:
-                    self.ui.cbb_x_2.setCurrentText('X')
-                    self.ui.cbb_y_2.setCurrentText('Y')
-
-    
-    def show_slot_selector(self):
-        """Show slot selector checkboxes if 'Slot' column exists in the selected dataframe."""
-        # Clear any existing widgets in the layout first
-        layout = self.ui.layout_slotselector  # <-- replace with the actual layout in your GUI
-        while layout.count():
-            child = layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-
-        sel_df = self.sel_df
-        if sel_df is not None and 'Slot' in sel_df.columns:
-            unique_slots = sorted(sel_df['Slot'].dropna().unique())
-            if not unique_slots:
-                return
-
-            # Add "Select All" checkbox
-            self.select_all_checkbox = QCheckBox("Select All")
-            self.select_all_checkbox.setChecked(True)
-            layout.addWidget(self.select_all_checkbox)
-
-            # Create individual checkboxes for each slot
-            self.slot_checkboxes = []
-            for slot in unique_slots:
-                cb = QCheckBox(str(slot))
-                cb.setChecked(True)
-                layout.addWidget(cb)
-                self.slot_checkboxes.append(cb)
-
-            # Connect the "Select All" checkbox to toggle all others
-            self.select_all_checkbox.stateChanged.connect(self.toggle_all_slots)
-
-            # Optional: connect each individual checkbox to update Select All status
-            for cb in self.slot_checkboxes:
-                cb.stateChanged.connect(self.update_select_all_status)
-
-    def toggle_all_slots(self, state):
-        """Toggle all slot checkboxes when Select All is changed."""
-        checked = state == Qt.Checked
-        for cb in getattr(self, 'slot_checkboxes', []):
-            cb.setChecked(checked)
-
-    def update_select_all_status(self):
-        """Update Select All checkbox if any individual slot checkbox is unchecked."""
-        all_checked = all(cb.isChecked() for cb in getattr(self, 'slot_checkboxes', []))
-        if hasattr(self, 'select_all_checkbox'):
-            self.select_all_checkbox.setChecked(all_checked)
-
+                 
+    def update_gui(self):
+        """Update the GUI elements based on the selected dataframe"""
+        self.update_cbb()
+        self.show_slot_selector()
+        self.auto_select_XY_for_wafer_plot()
+        self.selected_df = self.get_sel_df()
         
     
     def open_dfs(self, dfs=None, file_paths=None):
@@ -315,12 +265,143 @@ class Graphs(QDialog):
         # Plot action
         QTimer.singleShot(100, self.plot_action)
         QTimer.singleShot(200, self.customize_legend)
+        
+    def plot_multi_wafer_plots(self):
+        """ Plot multiple wafer plots based on selected slots (via checkboxes)."""
+        sel_df = self.selected_df
+        if sel_df is None:
+            show_alert("No dataframe selected.")
+            return
+
+        # Only relevant for wafer plots
+        if self.ui.cbb_plotstyle.currentText().lower() != "wafer":
+            show_alert("Please select the 'wafer' plot style to plot slots.")
+            return
+
+        # Collect checked slots from the slot selector
+        checked_slots = [cb.text() for cb in getattr(self, 'slot_checkboxes', []) if cb.isChecked()]
+        if not checked_slots:
+            show_alert("No slots selected for plotting.")
+            return
+
+        # Base filters from GUI
+        base_filters = self.filter.get_current_filters() or []
+
+        # Helper to produce a canonical expression string for a slot number
+        def slot_expression(n):
+            return f"Slot == {n}"
+
+        # Helper: merge base_filters with (Slot == n) ensuring only this slot is active
+        def merged_filters_with_slot(slot_num):
+            expr_to_activate = slot_expression(slot_num)
+            merged = []
+            slot_found = False
+            for f in base_filters:
+                f_copy = dict(f)
+                if "Slot" in f_copy.get("expression", ""):
+                    # deactivate all Slot filters first
+                    f_copy["state"] = False
+                    if f_copy["expression"] == expr_to_activate:
+                        f_copy["state"] = True
+                        slot_found = True
+                merged.append(f_copy)
+            if not slot_found:
+                # append the active Slot filter if not present
+                merged.append({"expression": expr_to_activate, "state": True})
+            return merged
+
+        # For each checked slot, create and plot a new Graph
+        for slot_text in checked_slots:
+            try:
+                slot_num = int(slot_text)
+            except Exception:
+                slot_num = slot_text
+
+            # Build filters for this slot plot
+            new_filters = merged_filters_with_slot(slot_num)
+
+            # Determine a new graph_id same way plotting() does
+            available_ids = [i for i in range(1, len(self.plots) + 2) if i not in self.plots]
+            graph_id = min(available_ids) if available_ids else len(self.plots) + 1
+
+            # Create and register the Graph object
+            graph = Graph(graph_id=graph_id)
+            self.plots[graph.graph_id] = graph
+
+            # Collect GUI properties
+            graph.plot_style = self.ui.cbb_plotstyle.currentText()
+            title = self.ui.lbl_plot_title.text()
+            graph.plot_title = title if title != "None" else None
+            current_df_name = self.ui.dfs_listbox.currentItem().text() if self.ui.dfs_listbox.currentItem() else None
+            graph.df_name = current_df_name
+            graph.filters = new_filters
+
+            x = self.ui.cbb_x_2.currentText()
+            y = self.ui.cbb_y_2.currentText()
+            z = self.ui.cbb_z_2.currentText()
+
+            if new_filters != graph.filters:
+                graph.legend_properties = []
+
+            graph.x = x
+            if len(graph.y) == 0:
+                graph.y.append(y)
+            else:
+                graph.y[0] = y
+            graph.z = z if z != "None" else None
+
+            graph.color_palette = self.cbb_palette.currentText()
+            graph.wafer_size = float(self.ui.lbl_wafersize.text())
+            graph.wafer_stats = self.ui.cb_wafer_stats.isChecked()
+            graph.dpi = float(self.ui.spb_dpi.text())
+            graph.legend_visible = self.ui.cb_legend_visible.isChecked()
+            graph.legend_location = self.ui.cbb_legend_loc.currentText()
+            graph.legend_outside = self.ui.cb_legend_outside.isChecked()
+            graph.grid = self.ui.cb_grid.isChecked()
+            graph.trendline_order = float(self.ui.spb_trendline_oder.text())
+            graph.show_trendline_eq = self.ui.cb_trendline_eq.isChecked()
+            graph.show_bar_plot_error_bar = self.ui.cb_show_err_bar_plot.isChecked()
+            graph.join_for_point_plot = self.ui.cb_join_for_point_plot.isChecked()
+
+            # Create the plotting widget and subwindow
+            graph.create_plot_widget(graph.dpi)
+            graph_dialog = QDialog(self)
+            layout = QVBoxLayout()
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.addWidget(graph)
+            graph_dialog.setLayout(layout)
+            graph_dialog.setContentsMargins(2, 2, 2, 0)
+
+            sub_window = MdiSubWindow(graph_id, self.ui.lbl_figsize, mdi_area=self.ui.mdiArea)
+            sub_window.setWidget(graph_dialog)
+            sub_window.closed.connect(lambda graph_id=graph.graph_id: self.delete_graph(graph_id))
+            sub_window.resize(graph.plot_width, graph.plot_height)
+            self.ui.mdiArea.addSubWindow(sub_window)
+            sub_window.show()
+
+            # Set window title and add to combobox
+            text = f"{graph.graph_id}-{graph.plot_style}_plot: [{x}] - [{y}] - [{z}]"
+            graph_dialog.setWindowTitle(text)
+            self.add_graph_list_to_combobox()
+
+            # Apply filters and plot
+            filtered_df = self.apply_filters(self.selected_df, graph.filters)
+            try:
+                if graph.plot_style == 'wafer':
+                    graph.create_plot_widget(graph.dpi, graph.graph_layout)
+                    graph.plot(filtered_df)
+                else:
+                    graph.plot(filtered_df)
+            except Exception as e:
+                show_alert(f"Failed plotting slot {slot_num}: {e}")
+
+        QTimer.singleShot(200, self.customize_legend)
 
     def plot_action(self):
         """Perform the actual plotting of the graph."""
         graph, graph_dialog, sub_window = self.get_sel_graph()
-        self.filtered_df = self.apply_filters(self.sel_df, graph.filters)
-        # print(f"self.sel_df {self.sel_df}")
+        self.filtered_df = self.apply_filters(self.selected_df, graph.filters)
+      
         if graph:
             if graph.plot_style == 'wafer':
                 graph.create_plot_widget(graph.dpi, graph.graph_layout)
@@ -518,12 +599,7 @@ class Graphs(QDialog):
                 self.filter.filter_listbox.addItem(item)
                 self.filter.filter_listbox.setItemWidget(item, checkbox)
 
-    def update_gui(self):
-        """Update the GUI elements based on the selected dataframe"""
-        self.update_cbb()
-        self.show_slot_selector()
-        self.auto_select_XY_for_wafer_plot()
-        self.sel_df = self.get_sel_df()
+    
 
     def update_cbb(self):
         """Populate columns of selected data to comboboxes"""
@@ -580,12 +656,12 @@ class Graphs(QDialog):
         if sel_item is not None:
             sel_df_name = sel_item.text()
             if sel_df_name in self.original_dfs:
-                self.sel_df = self.original_dfs[sel_df_name]
+                self.selected_df = self.original_dfs[sel_df_name]
             else:
-                self.sel_df = None 
+                self.selected_df = None 
         else:
-            self.sel_df = None 
-        return self.sel_df
+            self.selected_df = None 
+        return self.selected_df
 
     def remove_df(self):
         """
@@ -626,7 +702,7 @@ class Graphs(QDialog):
     def show_df(self):
         """This method displays the selected dataframe in a new window"""
         current_filters = self.filter.get_current_filters()
-        current_df = self.apply_filters(self.sel_df, current_filters)
+        current_df = self.apply_filters(self.selected_df, current_filters)
         if current_df is not None:
             view_df(self.ui.tabWidget, current_df)
         else:
@@ -678,6 +754,75 @@ class Graphs(QDialog):
                     self.ui.mdiArea.setActiveSubWindow(sub_window)
                     return
 
+    def auto_select_XY_for_wafer_plot(self):
+        """Auto select X and Y columns if 'wafer' plot style is selected."""
+        if self.ui.cbb_plotstyle.currentText().lower() == 'wafer':
+            # Auto select X and Y columns if 'X' and 'Y' exist in dataframe
+            sel_df = self.get_sel_df()
+            if sel_df is not None:
+                columns = sel_df.columns.tolist()
+                if 'X' in columns and 'Y' in columns:
+                    self.ui.cbb_x_2.setCurrentText('X')
+                    self.ui.cbb_y_2.setCurrentText('Y')
+    
+    def show_slot_selector(self):
+        """Show slot selector checkboxes if 'Slot' column exists in the selected dataframe."""
+        layout = self.ui.layout_slotselector 
+        # Clear existing widgets
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        sel_df = self.selected_df
+        if sel_df is not None and 'Slot' in sel_df.columns:
+            unique_slots = sorted(sel_df['Slot'].dropna().unique())
+            if not unique_slots:
+                return
+
+            # "Select All" checkbox (placed on first row)
+            self.select_all_checkbox = QCheckBox("Select All")
+            self.select_all_checkbox.setChecked(True)
+            layout.addWidget(self.select_all_checkbox, 0, 0, 1, 9) 
+
+            # Create individual slot checkboxes
+            self.slot_checkboxes = []
+            row, col = 1, 0
+            for slot in unique_slots:
+                cb = QCheckBox(str(slot))
+                cb.setChecked(True)
+                layout.addWidget(cb, row, col)
+                self.slot_checkboxes.append(cb)
+
+                col += 1
+                if col >= 9:  # wrap after 9 columns
+                    col = 0
+                    row += 1
+
+            # Connect signals
+            self.select_all_checkbox.stateChanged.connect(self.toggle_all_slots)
+            for cb in self.slot_checkboxes:
+                cb.stateChanged.connect(self.update_select_all_status)
+
+    def toggle_all_slots(self, checked: bool):
+        """Toggle all slot checkboxes when Select All is changed."""
+        for cb in getattr(self, 'slot_checkboxes', []):
+            cb.blockSignals(True)
+            cb.setChecked(checked)
+            cb.blockSignals(False)
+        if hasattr(self, 'select_all_checkbox'):
+            self.select_all_checkbox.setChecked(checked)
+
+    def update_select_all_status(self):
+        """Update Select All checkbox if any individual slot checkbox is unchecked."""
+        # compute new desired state
+        all_checked = all(cb.isChecked() for cb in getattr(self, 'slot_checkboxes', []))
+        if hasattr(self, 'select_all_checkbox'):
+            self.select_all_checkbox.blockSignals(True)
+            self.select_all_checkbox.setChecked(all_checked)
+            self.select_all_checkbox.blockSignals(False)
+            
+            
     def minimize_all_graph(self):
         for sub_window in self.ui.mdiArea.subWindowList():
             sub_window.showMinimized()
@@ -685,7 +830,7 @@ class Graphs(QDialog):
     def clear_env(self):
         # Clear original dataframes
         self.original_dfs = {}
-        self.sel_df = None
+        self.selected_df = None
         self.filtered_df = None
         self.filter.filters = []
 
@@ -880,8 +1025,8 @@ class Graphs(QDialog):
                 self.add_graph_list_to_combobox()
 
         except Exception as e:
-            show_alert(f"Error loading saved work (Visulization Tab): {e}")
-            # print(f"Error loading work: {e}")
+            show_alert(f"Error loading saved work (Graphs Tab): {e}")
+            print(f"Error loading work: {e}")
 
     def delete_graph(self, graph_id):
         """Delete the specified graph from the plots dictionary by graph_id"""

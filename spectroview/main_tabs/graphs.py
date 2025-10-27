@@ -11,10 +11,12 @@ from spectroview.modules.utils import view_df, show_alert, copy_fig_to_clb
 from spectroview.modules.df_filter import DataframeFilter
 from spectroview.modules.graph import Graph
 from spectroview.modules.utils import CustomizedPalette
+from spectroview.modules.slot_selector import SlotSelector
 
-from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox
+from PySide6.QtWidgets import QWidget, QFileDialog, QDialog, QVBoxLayout, QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox
 from PySide6.QtCore import Qt, QTimer, Signal, QSize
 from PySide6.QtGui import  QIcon, Qt
+
 
 class Graphs(QDialog):
     """This class provides a GUI for plotting graphs/figures."""
@@ -30,6 +32,8 @@ class Graphs(QDialog):
         self.sel_df = None
         self.ui.btn_view_df_3.clicked.connect(self.show_df)
         self.ui.dfs_listbox.itemSelectionChanged.connect(self.update_gui)
+        
+        
         self.ui.btn_remove_df_2.clicked.connect(self.remove_df)
         self.ui.btn_save_df_2.clicked.connect(self.save_df_to_excel)
 
@@ -72,16 +76,78 @@ class Graphs(QDialog):
             else:
                 icon = QIcon()  # Fallback in case the icon is missing
             self.ui.cbb_plotstyle.addItem(icon, style)
+        self.ui.cbb_plotstyle.setToolTip("Select Plot Style")
+        self.ui.cbb_plotstyle.currentIndexChanged.connect(self.auto_select_XY_for_wafer_plot)
 
         self.ui.cbb_legend_loc.addItems(LEGEND_LOCATION)
-
+        
         # Track selected sub-window
         self.ui.mdiArea.subWindowActivated.connect(self.on_selected_graph)
         self.ui.cbb_graph_list.currentIndexChanged.connect(
             self.select_sub_window_from_combo_box)
 
         self.ui.btn_minimize_all.clicked.connect(self.minimize_all_graph)
+        
+    def auto_select_XY_for_wafer_plot(self):
+         if self.ui.cbb_plotstyle.currentText().lower() == 'wafer':
+            # Auto select X and Y columns if 'X' and 'Y' exist in dataframe
+            sel_df = self.get_sel_df()
+            if sel_df is not None:
+                columns = sel_df.columns.tolist()
+                if 'X' in columns and 'Y' in columns:
+                    self.ui.cbb_x_2.setCurrentText('X')
+                    self.ui.cbb_y_2.setCurrentText('Y')
 
+    
+    def show_slot_selector(self):
+        """Show slot selector checkboxes if 'Slot' column exists in the selected dataframe."""
+        # Clear any existing widgets in the layout first
+        layout = self.ui.layout_slotselector  # <-- replace with the actual layout in your GUI
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        sel_df = self.sel_df
+        if sel_df is not None and 'Slot' in sel_df.columns:
+            unique_slots = sorted(sel_df['Slot'].dropna().unique())
+            if not unique_slots:
+                return
+
+            # Add "Select All" checkbox
+            self.select_all_checkbox = QCheckBox("Select All")
+            self.select_all_checkbox.setChecked(True)
+            layout.addWidget(self.select_all_checkbox)
+
+            # Create individual checkboxes for each slot
+            self.slot_checkboxes = []
+            for slot in unique_slots:
+                cb = QCheckBox(str(slot))
+                cb.setChecked(True)
+                layout.addWidget(cb)
+                self.slot_checkboxes.append(cb)
+
+            # Connect the "Select All" checkbox to toggle all others
+            self.select_all_checkbox.stateChanged.connect(self.toggle_all_slots)
+
+            # Optional: connect each individual checkbox to update Select All status
+            for cb in self.slot_checkboxes:
+                cb.stateChanged.connect(self.update_select_all_status)
+
+    def toggle_all_slots(self, state):
+        """Toggle all slot checkboxes when Select All is changed."""
+        checked = state == Qt.Checked
+        for cb in getattr(self, 'slot_checkboxes', []):
+            cb.setChecked(checked)
+
+    def update_select_all_status(self):
+        """Update Select All checkbox if any individual slot checkbox is unchecked."""
+        all_checked = all(cb.isChecked() for cb in getattr(self, 'slot_checkboxes', []))
+        if hasattr(self, 'select_all_checkbox'):
+            self.select_all_checkbox.setChecked(all_checked)
+
+        
+    
     def open_dfs(self, dfs=None, file_paths=None):
         """Open and load dataframes from Excel files."""
         if self.original_dfs is None:
@@ -455,6 +521,8 @@ class Graphs(QDialog):
     def update_gui(self):
         """Update the GUI elements based on the selected dataframe"""
         self.update_cbb()
+        self.show_slot_selector()
+        self.auto_select_XY_for_wafer_plot()
         self.sel_df = self.get_sel_df()
 
     def update_cbb(self):

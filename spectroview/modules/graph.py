@@ -12,6 +12,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from spectroview import  DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS
 from spectroview.modules.utils import  rgba_to_default_color, show_alert
 
+
 from PySide6.QtWidgets import  QVBoxLayout,  QLabel, QLineEdit, QWidget, QComboBox, QWidget, QStyledItemDelegate
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QPalette, QColor, Qt

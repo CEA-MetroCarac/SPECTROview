@@ -181,8 +181,7 @@ class Main:
         show_about.exec_()
 
     def open_manual(self):
-        url = USER_MANUAL
-        webbrowser.open(url)
+        webbrowser.open(USER_MANUAL)
 
     def toggle_dark_light_mode(self, mode=None):
         app = QApplication.instance()

@@ -47,4 +47,5 @@ UI_FILE = os.path.join(DIR, "config", "gui", "gui.ui")
 LOGO_APPLI = os.path.join(RESOURCES_DIR, "icons", "logo_spectroview.png")
 
 ABOUT = os.path.join(RESOURCES_DIR, "doc", "about.md")
-USER_MANUAL = os.path.join(RESOURCES_DIR, "doc", "user_manual.md")
+# USER_MANUAL = os.path.join("spectroview", "doc", "user_manual.md")
+USER_MANUAL = "https://github.com/CEA-MetroCarac/SPECTROview/blob/main/doc/user_manual.md"

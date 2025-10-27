@@ -13,7 +13,7 @@ from spectroview.modules.graph import Graph
 from spectroview.modules.utils import CustomizedPalette
 from spectroview.modules.slot_selector import SlotSelector
 
-from PySide6.QtWidgets import QWidget, QFileDialog, QDialog, QVBoxLayout, QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox
+from PySide6.QtWidgets import QWidget, QFileDialog, QDialog, QVBoxLayout, QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox,QLabel
 from PySide6.QtCore import Qt, QTimer, Signal, QSize
 from PySide6.QtGui import  QIcon, Qt
 
@@ -47,7 +47,7 @@ class Graphs(QDialog):
         self.graph_id = 0  # Initialize graph number
         # Add a graph
         self.ui.btn_add_graph.clicked.connect(self.plotting)
-        self.ui.btn_add_multi_wafer_plots.clicked.connect(self.plot_multi_wafer_plots)
+        self.ui.btn_add_multi_wafer_plots.clicked.connect(self.plotting_multi_wafer_plots)
 
         self.ui.btn_get_limits.clicked.connect(self.set_current_limits)
         self.ui.btn_clear_limits.clicked.connect(self.clear_limits)
@@ -266,22 +266,25 @@ class Graphs(QDialog):
         QTimer.singleShot(100, self.plot_action)
         QTimer.singleShot(200, self.customize_legend)
         
-    def plot_multi_wafer_plots(self):
+    def plotting_multi_wafer_plots(self):
         """ Plot multiple wafer plots based on selected slots (via checkboxes)."""
         sel_df = self.selected_df
         if sel_df is None:
-            show_alert("No dataframe selected.")
+            show_alert("No dataframe is selected. Please select a dataframe before plotting.")
             return
 
         # Only relevant for wafer plots
-        if self.ui.cbb_plotstyle.currentText().lower() != "wafer":
-            show_alert("Please select the 'wafer' plot style to plot slots.")
+        self.ui.cbb_plotstyle.setCurrentIndex(6)
+
+        if self.ui.cbb_z_2.currentText().strip().lower() == "none":
+            show_alert("No Z value selected. Please choose a data column for the wafer map.")
             return
 
+    
         # Collect checked slots from the slot selector
         checked_slots = [cb.text() for cb in getattr(self, 'slot_checkboxes', []) if cb.isChecked()]
         if not checked_slots:
-            show_alert("No slots selected for plotting.")
+            show_alert("No wafer slots are selected. Please check at least one slot before plotting.")
             return
 
         # Base filters from GUI
@@ -779,11 +782,15 @@ class Graphs(QDialog):
             unique_slots = sorted(sel_df['Slot'].dropna().unique())
             if not unique_slots:
                 return
+            # --- Add QLabel before the "Select All" checkbox ---
+            label = QLabel("Select wafer slot:")
+            label.setStyleSheet("font-weight: bold;")  
+            layout.addWidget(label, 0, 0, 1, 3)
 
             # "Select All" checkbox (placed on first row)
             self.select_all_checkbox = QCheckBox("Select All")
             self.select_all_checkbox.setChecked(True)
-            layout.addWidget(self.select_all_checkbox, 0, 0, 1, 9) 
+            layout.addWidget(self.select_all_checkbox, 0, 3, 1, 6)
 
             # Create individual slot checkboxes
             self.slot_checkboxes = []

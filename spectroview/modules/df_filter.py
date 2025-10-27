@@ -38,6 +38,8 @@ class DataframeFilter:
         self.filter_query.setPlaceholderText("Enter your filter expression...") 
         self.filter_query.returnPressed.connect(self.add_filter)
         self.layout_buttons.addWidget(self.filter_query)
+        
+
 
         # Button to add a filter
         self.btn_add_filter = QPushButton(self.gb_filter_widget)
@@ -75,7 +77,24 @@ class DataframeFilter:
         # Enable custom right-click menu
         self.filter_listbox.setContextMenuPolicy(Qt.CustomContextMenu)
         self.filter_listbox.customContextMenuRequested.connect(self.show_context_menu)
+        self.filter_listbox.itemSelectionChanged.connect(self.on_filter_selected)
+    
+    def on_filter_selected(self):
+        """
+        When an item in the filter list is selected,
+        display its text in the QLineEdit.
+        """
+        selected_items = self.filter_listbox.selectedItems()
+        if not selected_items:
+            return
 
+        # Only handle the first selected item (since multi-select is possible)
+        item = selected_items[0]
+        checkbox = self.filter_listbox.itemWidget(item)
+        if checkbox:
+            self.filter_query.setText(checkbox.text())
+
+    
     def show_context_menu(self, pos):
         """Show right-click menu to copy filter text."""
         item = self.filter_listbox.itemAt(pos)

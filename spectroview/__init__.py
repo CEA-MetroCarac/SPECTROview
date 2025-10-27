@@ -1,6 +1,6 @@
 import os
 
-VERSION = "0.9.2"
+VERSION = "0.9.3"
 USER_MANUAL= "https://github.com/CEA-MetroCarac/SPECTROview/blob/main/doc/user_manual.md"
 
 TEXT_EXPIRE = (

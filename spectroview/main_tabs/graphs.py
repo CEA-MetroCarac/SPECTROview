@@ -11,7 +11,6 @@ from spectroview.modules.utils import view_df, show_alert, copy_fig_to_clb
 from spectroview.modules.df_filter import DataframeFilter
 from spectroview.modules.graph import Graph
 from spectroview.modules.utils import CustomizedPalette
-from spectroview.modules.slot_selector import SlotSelector
 
 from PySide6.QtWidgets import QWidget, QFileDialog, QDialog, QVBoxLayout, QListWidgetItem, QMdiSubWindow, QCheckBox, QMessageBox,QLabel
 from PySide6.QtCore import Qt, QTimer, Signal, QSize
@@ -92,8 +91,8 @@ class Graphs(QDialog):
                  
     def update_gui(self):
         """Update the GUI elements based on the selected dataframe"""
-        self.update_cbb()
-        self.show_slot_selector()
+        self._update_cbb()
+        self.show_wafer_slot_selector()
         self.auto_select_XY_for_wafer_plot()
         self.selected_df = self.get_sel_df()
         
@@ -180,7 +179,7 @@ class Graphs(QDialog):
         z = self.ui.cbb_z_2.currentText()
 
         # Check if z has changed and reset legend_properties if needed
-        self.is_z_changed(graph)
+        self._is_z_changed(graph)
 
         graph.x = x
         if len(graph.y) == 0:
@@ -263,7 +262,7 @@ class Graphs(QDialog):
         graph_dialog.setWindowTitle(text)
 
         # Plot action
-        QTimer.singleShot(100, self.plot_action)
+        QTimer.singleShot(100, self._plot_action)
         QTimer.singleShot(200, self.customize_legend)
         
     def plotting_multi_wafer_plots(self):
@@ -400,7 +399,7 @@ class Graphs(QDialog):
 
         QTimer.singleShot(200, self.customize_legend)
 
-    def plot_action(self):
+    def _plot_action(self):
         """Perform the actual plotting of the graph."""
         graph, graph_dialog, sub_window = self.get_sel_graph()
         self.filtered_df = self.apply_filters(self.selected_df, graph.filters)
@@ -412,7 +411,7 @@ class Graphs(QDialog):
             else:
                 graph.plot(self.filtered_df)
 
-    def is_z_changed(self, graph):
+    def _is_z_changed(self, graph):
         """Check if z-axis value has changed from the current graph settings"""
         current_z = self.ui.cbb_z_2.currentText()
         if current_z != graph.z:
@@ -480,7 +479,7 @@ class Graphs(QDialog):
                 self.ui.dfs_listbox.setCurrentRow(index)
 
             # Reflect filter's states in the listbox
-            self.reflect_filters_to_gui(graph)
+            self._reflect_filters_to_gui(graph)
 
             # Update combobox selections
             x = self.ui.cbb_x_2.findText(graph.x)
@@ -565,7 +564,7 @@ class Graphs(QDialog):
             # Show legends on GUI for customization
             self.customize_legend()
 
-    def reflect_filters_to_gui(self, sel_graph):
+    def _reflect_filters_to_gui(self, sel_graph):
         """Reflect the state of filters associated with a graph to the GUI"""
         # Clear the existing items and uncheck them
         for index in range(self.filter.filter_listbox.count()):
@@ -602,9 +601,7 @@ class Graphs(QDialog):
                 self.filter.filter_listbox.addItem(item)
                 self.filter.filter_listbox.setItemWidget(item, checkbox)
 
-    
-
-    def update_cbb(self):
+    def _update_cbb(self):
         """Populate columns of selected data to comboboxes"""
         sel_df = self.get_sel_df()
         if sel_df is not None:
@@ -768,8 +765,8 @@ class Graphs(QDialog):
                     self.ui.cbb_x_2.setCurrentText('X')
                     self.ui.cbb_y_2.setCurrentText('Y')
     
-    def show_slot_selector(self):
-        """Show slot selector checkboxes if 'Slot' column exists in the selected dataframe."""
+    def show_wafer_slot_selector(self):
+        """Build UI for slot selector checkboxes if 'Slot' column exists in the selected dataframe."""
         layout = self.ui.layout_slotselector 
         # Clear existing widgets
         while layout.count():
@@ -828,7 +825,6 @@ class Graphs(QDialog):
             self.select_all_checkbox.blockSignals(True)
             self.select_all_checkbox.setChecked(all_checked)
             self.select_all_checkbox.blockSignals(False)
-            
             
     def minimize_all_graph(self):
         for sub_window in self.ui.mdiArea.subWindowList():
@@ -1026,7 +1022,7 @@ class Graphs(QDialog):
                     sub_window.resize(graph.plot_width, graph.plot_height)
                     sub_window.show()
 
-                    self.plot_action()
+                    self._plot_action()
                     
                 self.filter.upd_filter_listbox()
                 self.add_graph_list_to_combobox()

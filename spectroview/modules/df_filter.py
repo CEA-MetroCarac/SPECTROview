@@ -7,10 +7,7 @@ from PySide6.QtCore import QCoreApplication, Qt
 
 
 class DataframeFilter:
-    """
-    Class for Handling "Filter Features" in Querying Pandas DataFrames
-    """
-
+    """Class for Handling "Filter Features" in Querying Pandas DataFrames"""
     def __init__(self, df):
         self.df = df
         self.filters = []

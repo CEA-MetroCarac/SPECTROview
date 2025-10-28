@@ -3,10 +3,7 @@
 # Set default figure size
 
 # Set color cycle: red, blue, green, violet, gray, yellow,  
-#axes.prop_cycle : cycler('color', ['FF0000', '00FF00', '0000FF', 'FFFF00', 'FFA500', '00FFFF', 'FF00FF', 'b3d4ff', 'FFC0CB'])
-#axes.prop_cycle : cycler('color',['blue', 'red', 'green', 'orange', 'purple', 'cyan', 'magenta', 'lime', 'pink', 'brown', 'gold', 'teal', 'navy', 'silver', 'indigo', 'violet', 'olive', 'maroon', 'skyblue'])
-axes.prop_cycle : cycler('color', ['515151', 'f14040', '1a6fdf', '37ad6b', 'b177de', 'cc9900', 'e377c2', '7d4e4e', '8e8e00', 'fb6501', '6699cc', '6fb802', '515151', 'f14040', '1a6fdf', '8d0000', '6fd0ef'])
-
+axes.prop_cycle : cycler('color', ['1a6fdf','f14040', '37ad6b', '515151', 'b177de', 'cc9900', 'e377c2', '7d4e4e', '8e8e00', 'fb6501', '6699cc', '6fb802', '515151', 'f14040', '1a6fdf', '8d0000', '6fd0ef'])
 
 #xtick.major.size : 5
 #xtick.major.width : 0.8

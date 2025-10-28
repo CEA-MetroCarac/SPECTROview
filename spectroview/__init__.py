@@ -23,7 +23,7 @@ PLOT_STYLES = ['point', 'scatter', 'box', 'bar', 'line', 'trendline', 'wafer', '
 
 
 DEFAULT_COLORS = [
-    '#515151', '#f14040', '#1a6fdf', '#37ad6b', '#b177de', 
+     '#1a6fdf', '#f14040', '#37ad6b','#515151', '#b177de', 
     '#cc9900', '#00cbcc', '#7d4e4e', '#8e8e00', "#fb6501", 
     '#6699cc', '#6fb802', '#515151', '#f14040', '#1a6fdf',
 ]

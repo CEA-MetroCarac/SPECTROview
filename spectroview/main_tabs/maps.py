@@ -1009,7 +1009,7 @@ class Maps(QObject):
             text = f"{graph.graph_id}-{graph.plot_style}_plot: {{'distance'}} - {{'values'}} - {{'None'}}"
             graph_dialog.setWindowTitle(text)
             # Plot action
-            QTimer.singleShot(100, self.graphs.plot_action)
+            QTimer.singleShot(100, self.graphs._plot_action)
             QTimer.singleShot(200, self.graphs.customize_legend)
             self.ui.tabWidget.setCurrentWidget(self.ui.tab_graphs)
 

@@ -42,6 +42,11 @@ class Graph(QWidget):
         self.ylabel = None
         self.zlabel = None
 
+        self.xlogscale = False
+        self.ylogscale = False
+        self.y2logscale = False
+        self.y3logscale = False
+
         self.y2 = None  # Secondary y-axis
         self.y3 = None  # Tertiary y-axis
         self.y2min = None
@@ -165,6 +170,7 @@ class Graph(QWidget):
             self.ax.plot([], [])
 
         self._set_limits()
+        self._set_axis_scale()
         self._set_labels()
         self._set_grid()
         self._set_rotation()
@@ -453,6 +459,38 @@ class Graph(QWidget):
             self.ax2.set_ylim(float(self.y2min), float(self.y2max))
         if self.ax3 and self.y3min and self.y3max:
             self.ax3.set_ylim(float(self.y3min), float(self.y3max))
+
+    def _set_axis_scale(self):
+        """Apply linear or log scale to x and y axes."""
+        # X axis
+        if self.xlogscale:
+            try:
+                self.ax.set_xscale("log")
+            except Exception as e:
+                show_alert(f"Cannot apply log scale to X axis: {e}")
+        else:
+            self.ax.set_xscale("linear")
+
+        # Y axis
+        if self.ylogscale:
+            try:
+                self.ax.set_yscale("log")
+            except Exception as e:
+                show_alert(f"Cannot apply log scale to Y axis: {e}")
+        else:
+            self.ax.set_yscale("linear")
+
+        # Also update secondary axes if present
+        if self.ax2:
+            self.ax2.set_xscale(self.ax.get_xscale())  # must match primary
+            self.ax2.set_yscale("log" if self.y2logscale else "linear") \
+                if hasattr(self, "y2logscale") else None
+
+        if self.ax3:
+            self.ax3.set_xscale(self.ax.get_xscale())
+            self.ax3.set_yscale("log" if self.y3logscale else "linear") \
+                if hasattr(self, "y3logscale") else None
+
 
     def _set_labels(self):
         """Set titles and labels for axis and plot"""

@@ -178,6 +178,9 @@ class Graphs(QDialog):
         y = self.ui.cbb_y_2.currentText()
         z = self.ui.cbb_z_2.currentText()
 
+        graph.xlogscale = self.ui.xaxis_log_scale.isChecked()
+        graph.ylogscale = self.ui.yaxis_log_scale.isChecked()
+
         # Check if z has changed and reset legend_properties if needed
         self._is_z_changed(graph)
 
@@ -492,6 +495,10 @@ class Graphs(QDialog):
             self.ui.cbb_y2_2.setCurrentIndex(y2 if y2 != -1 else 0)
             self.ui.cbb_y3_2.setCurrentIndex(y3 if y3 != -1 else 0)
             self.ui.cbb_z_2.setCurrentIndex(z if z != -1 else 0)
+
+            self.ui.xaxis_log_scale.setChecked(graph.xlogscale)
+            self.ui.yaxis_log_scale.setChecked(graph.ylogscale)
+
 
             # WAFER
             self.ui.lbl_wafersize.setText(str(graph.wafer_size))

@@ -499,6 +499,7 @@ class Graph(QWidget):
                 self.ax.set_title(self.plot_title)
             else:
                 self.ax.set_title(self.z)
+            self.ax.tick_params(axis='x', labelbottom=False)
                 
         elif self.plot_style == '2Dmap':
             if self.plot_title:

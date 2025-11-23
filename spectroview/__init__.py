@@ -1,7 +1,7 @@
 import os
 
-VERSION = "0.9.3"
-USER_MANUAL= "https://github.com/CEA-MetroCarac/SPECTROview/blob/main/doc/user_manual.md"
+VERSION = "0.9.4"
+
 
 TEXT_EXPIRE = (
     "The current SPECTROview version has expired. Checkout the SPECTROview's "

@@ -394,11 +394,23 @@ class Graph(QWidget):
                 legend.set_draggable(True)
 
     def _set_grid(self):
-        """Add grid for the plot"""
-        if self.grid:
-            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-        else:
+        """Add grid for the plot (supports linear & log scale automatically)."""
+
+        if not self.grid:
             self.ax.grid(False)
+            return
+
+        # Always show major grid
+        self.ax.grid(True, which='major', linestyle='--', linewidth=0.6, alpha=1)
+
+        # If logscale → enable aligned minor grid lines
+        if self.xlogscale or self.ylogscale:
+            # Activate minor ticks
+            self.ax.minorticks_on()
+
+            # Minor grid with lighter style
+            self.ax.grid(True, which='minor', linestyle=':', linewidth=0.4, alpha=1)
+
 
     def _set_rotation(self):
         """Set rotation of the ticklabels of the x axis"""
@@ -494,8 +506,6 @@ class Graph(QWidget):
             y3_data = df[self.y3]
             if np.issubdtype(y3_data.dtype, np.number):
                 self.ax3.set_yscale('log')
-
-
 
 
     def _set_labels(self):

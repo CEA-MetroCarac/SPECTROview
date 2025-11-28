@@ -170,7 +170,7 @@ class Graph(QWidget):
             self.ax.plot([], [])
 
         self._set_limits()
-        self._set_axis_scale()
+        self._set_axis_scale(df)
         self._set_labels()
         self._set_grid()
         self._set_rotation()
@@ -460,36 +460,42 @@ class Graph(QWidget):
         if self.ax3 and self.y3min and self.y3max:
             self.ax3.set_ylim(float(self.y3min), float(self.y3max))
 
-    def _set_axis_scale(self):
-        """Apply linear or log scale to x and y axes."""
-        # X axis
+    def _set_axis_scale(self, df):
+        """Apply log scale only if the corresponding axis column is numeric."""
+
+        # ---------------------- X AXIS ----------------------
         if self.xlogscale:
-            try:
-                self.ax.set_xscale("log")
-            except Exception as e:
-                show_alert(f"Cannot apply log scale to X axis: {e}")
-        else:
-            self.ax.set_xscale("linear")
+            x_data = df[self.x]
 
-        # Y axis
-        if self.ylogscale:
-            try:
-                self.ax.set_yscale("log")
-            except Exception as e:
-                show_alert(f"Cannot apply log scale to Y axis: {e}")
-        else:
-            self.ax.set_yscale("linear")
+            # Check if numeric
+            if np.issubdtype(x_data.dtype, np.number):
+                # Safe for log scale
+                self.ax.set_xscale('log')
+            else:
+                # Categorical → we skip log scale silently
+                print(f"[INFO] Skipping x-logscale because '{self.x}' is categorical.")
 
-        # Also update secondary axes if present
-        if self.ax2:
-            self.ax2.set_xscale(self.ax.get_xscale())  # must match primary
-            self.ax2.set_yscale("log" if self.y2logscale else "linear") \
-                if hasattr(self, "y2logscale") else None
+        # ---------------------- Y AXIS ----------------------
+        if self.ylogscale and len(self.y) > 0:
+            y_data = df[self.y[0]]
 
-        if self.ax3:
-            self.ax3.set_xscale(self.ax.get_xscale())
-            self.ax3.set_yscale("log" if self.y3logscale else "linear") \
-                if hasattr(self, "y3logscale") else None
+            if np.issubdtype(y_data.dtype, np.number):
+                self.ax.set_yscale('log')
+            else:
+                print(f"[INFO] Skipping y-logscale because '{self.y[0]}' is categorical.")
+
+        # Secondary axes (optional)
+        if self.ax2 and self.y2 and self.ylogscale:
+            y2_data = df[self.y2]
+            if np.issubdtype(y2_data.dtype, np.number):
+                self.ax2.set_yscale('log')
+
+        if self.ax3 and self.y3 and self.ylogscale:
+            y3_data = df[self.y3]
+            if np.issubdtype(y3_data.dtype, np.number):
+                self.ax3.set_yscale('log')
+
+
 
 
     def _set_labels(self):

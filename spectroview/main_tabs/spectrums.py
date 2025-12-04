@@ -7,7 +7,7 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
-from spectroview.modules.utils import view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area, replace_peak_labels
+from spectroview.modules.utils import view_df, view_text, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, populate_spectrum_listbox, save_df_to_excel, calc_area, replace_peak_labels
 
 from spectroview.modules.utils import FitThread, CustomizedListWidget, Spectra, Spectrum
 from spectroview.modules.df_table import DataframeTable
@@ -792,7 +792,7 @@ class Spectrums(QObject):
         spectrum = selected_spectrums[0]
         if spectrum.result_fit:
             text = fit_report(spectrum.result_fit)
-            self.common.view_text(ui, title, text)
+            view_text(ui, title, text)
 
     def select_all_spectra(self):
         """To quickly select all spectra within the spectra listbox"""

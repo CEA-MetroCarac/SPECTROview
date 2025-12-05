@@ -198,9 +198,8 @@ class Spectrums(QObject):
             spectrum.reinit()
             
         self.ntot = len(fnames)
-        fit_model = deepcopy(self.copied_fit_model)
-        
         ncpu = self.settings.value("fit_settings/ncpu", 1, type=int)
+        fit_model = deepcopy(self.copied_fit_model)
 
         if fit_model is not None:
             self.spectrums.pbar_index = 0
@@ -247,6 +246,20 @@ class Spectrums(QObject):
         checked_spectra = self.get_checked_spectra()
         self.paste_peaks(checked_spectra)
         
+        
+    def get_fit_settings(self):
+        """Retrieve all settings for the fitting action from the GUI"""
+        sel_spectrum, sel_spectra = self.get_spectrum_object()
+        fit_params = sel_spectrum.fit_params.copy()
+        
+        fit_params['fit_negative'] = self.settings.value("fit_settings/fit_negative", False, type=bool)
+        fit_params['max_ite'] = self.settings.value("fit_settings/max_ite", 200, type=int)
+        fit_params['method'] = self.settings.value("fit_settings/method", "Leastsq")
+        fit_params['ncpu'] = self.settings.value("fit_settings/ncpu", 1, type=int)
+        fit_params['xtol'] = self.settings.value("fit_settings/xtol", 1e-4, type=float)
+        
+        sel_spectrum.fit_params = fit_params
+            
     def fit(self, fnames=None):
         """Fit the selected spectrum(s) with current parameters"""
         self.get_fit_settings()
@@ -267,24 +280,26 @@ class Spectrums(QObject):
         self.fit(fnames)
 
     def apply_loaded_fit_model(self, fnames=None):
-        
         """Apply the loaded fit model to selected spectra"""
         self.get_fit_model()
-
+        
         self.ui.centralwidget.setEnabled(False)  # Disable GUI
         if self.loaded_fit_model is None:
             show_alert("Select from the list or load a fit model.")
             self.ui.centralwidget.setEnabled(True)
             return
 
-        if fnames is None:
-            fnames = self.get_spectrum_fnames()
+        fnames = fnames or self.get_spectrum_fnames()
+            
+        for fname in fnames:
+            spectrum, _ = self.spectrums.get_objects(fname)
+            spectrum.reinit()
 
         self.ntot = len(fnames)
         ncpu = self.settings.value("fit_settings/ncpu", 1, type=int)
         fit_model = self.loaded_fit_model
+        
         self.spectrums.pbar_index = 0
-
         self.thread = FitThread(self.spectrums, fit_model, fnames, ncpu)
         self.thread.finished.connect(self.fit_completed)
         self.thread.start()
@@ -315,7 +330,6 @@ class Spectrums(QObject):
 
     def apply_loaded_fit_model_all(self):
         """Apply the loaded fit model to all spectra"""
-
         checked_spectra = self.get_checked_spectra()
         fnames = checked_spectra.fnames
         self.apply_loaded_fit_model(fnames=fnames)
@@ -604,18 +618,7 @@ class Spectrums(QObject):
         fnames = checked_spectra.fnames
         self.clear_peaks(fnames)
 
-    def get_fit_settings(self):
-        """Retrieve all settings for the fitting action from the GUI"""
-        sel_spectrum, sel_spectra = self.get_spectrum_object()
-        fit_params = sel_spectrum.fit_params.copy()
-        
-        fit_params['fit_negative'] = self.settings.value("fit_settings/fit_negative", False, type=bool)
-        fit_params['max_ite'] = self.settings.value("fit_settings/max_ite", 200, type=int)
-        fit_params['method'] = self.settings.value("fit_settings/method", "Leastsq")
-        fit_params['ncpu'] = self.settings.value("fit_settings/ncpu", 1, type=int)
-        fit_params['xtol'] = self.settings.value("fit_settings/xtol", 1e-4, type=float)
-        
-        sel_spectrum.fit_params = fit_params
+    
 
     def paste_fit_model_all(self):
         """Apply the copied fit model to selected spectrum(s)"""

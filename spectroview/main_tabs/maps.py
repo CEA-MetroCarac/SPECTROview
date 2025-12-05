@@ -510,6 +510,7 @@ class Maps(QObject):
     def paste_fit_model(self, fnames=None):
         """Apply the copied fit model to selected spectra."""
         self.ui.centralwidget.setEnabled(False)  # Disable GUI
+        
         if fnames is None:
             map_name, coords = self.spectra_id()
             fnames = [f"{map_name}_{coord}" for coord in coords]
@@ -517,10 +518,10 @@ class Maps(QObject):
         for fname in fnames:
             self.spectrums.get_objects(fname)[0].reinit()
             
-        fit_model = deepcopy(self.copied_fit_model)
 
         self.ntot = len(fnames)
         ncpu = self.settings.value("fit_settings/ncpu", 1, type=int)
+        fit_model = deepcopy(self.copied_fit_model)
 
         if fit_model is not None:
             self.spectrums.pbar_index = 0
@@ -583,14 +584,16 @@ class Maps(QObject):
         if fnames is None:
             map_name, coords = self.spectra_id()
             fnames = [f"{map_name}_{coord}" for coord in coords]
+            
+        for fname in fnames:
+            self.spectrums.get_objects(fname)[0].reinit()    
 
         self.ntot = len(fnames)
         ncpu = self.settings.value("fit_settings/ncpu", 1, type=int)
         fit_model = self.loaded_fit_model
-        spectra = self.spectrums
+        
         self.spectrums.pbar_index = 0
-
-        self.thread = FitThread(spectra, fit_model, fnames, ncpu)
+        self.thread = FitThread(self.spectrums, fit_model, fnames, ncpu)
         self.thread.finished.connect(self.fit_completed)
         self.thread.start()
 

@@ -137,8 +137,8 @@ class Spectrum(FitspySpectrum):
         
 class Spectra(FitspySpectra):
     """Customized Spectra class"""
-    def apply_model(self, model_dict, fnames=None, ncpus=1,
-                    show_progressbar=True):
+    
+    def apply_model(self, model_dict, fnames=None, ncpus=1,show_progressbar=True):
         """ Apply 'model' to all or part of the spectra."""
         if fnames is None:
             fnames = self.fnames
@@ -148,7 +148,6 @@ class Spectra(FitspySpectra):
             spectrum, _ = self.get_objects(fname)
             
             # Customize the model_dict for this spectrum
-            
             custom_model = deepcopy(model_dict)
             if hasattr(spectrum, "xcorrection_value"):  # reassign current xcorrection_value
                 custom_model["xcorrection_value"] = spectrum.xcorrection_value

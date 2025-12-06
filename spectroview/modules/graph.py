@@ -607,7 +607,7 @@ class WaferPlot:
     def plot(self, ax, x, y, z, cmap="jet", r=100, vmax=None, vmin=None,
              stats=True):
         # Generate a meshgrid for the wafer and Interpolate z onto the meshgrid
-        xi, yi = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
+        xi, yi = np.meshgrid(np.linspace(-r, r, 600), np.linspace(-r, r, 600))
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
 
         # Plot the wafer map

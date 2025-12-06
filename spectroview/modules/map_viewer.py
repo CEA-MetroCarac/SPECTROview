@@ -61,21 +61,28 @@ class MapViewer(QWidget):
         if map_type != '2Dmap':
             wafer_circle = patches.Circle((0, 0), radius=r, fill=False, color='black', linewidth=1)
             self.ax.add_patch(wafer_circle)
-            self.ax.set_yticklabels([])
+            # self.ax.set_yticklabels([])
 
             all_x, all_y = self.get_mes_sites_coord()
             self.ax.scatter(all_x, all_y, marker='x', color='gray', s=15)
-            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')    
+
+            self.ax.tick_params(axis='x', which='both',bottom=False, top=False, labelbottom=False)
+            self.ax.tick_params(axis='y', which='both', left=True, right=False, labelleft=True)
             
+        else:
+            self.ax.tick_params(axis='x', which='both', bottom=True, top=False, labelbottom=True)
+            self.ax.tick_params(axis='y', which='both', left=True, right=False, labelleft=True)
+
         heatmap_pivot, extent, vmin, vmax, grid_z  = self.get_data_for_heatmap(map_type)
         color = self.cbb_palette.currentText()
+
         interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
         vmin, vmax = self.z_range_slider.value()
     
         if map_type != '2Dmap' and self.number_of_points >= 4:
             self.img = self.ax.imshow(grid_z, extent=[-r - 0.5, r + 0.5, -r - 0.5, r + 0.5],
-                            origin='lower', aspect='equal', cmap=color, interpolation='nearest')
-            
+                            origin='lower', aspect='equal', cmap=color, interpolation = 'nearest')
+
         else: 
             self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
                             origin='lower', aspect='equal', cmap=color, interpolation=interpolation_option)
@@ -89,7 +96,7 @@ class MapViewer(QWidget):
         # Highlight selected points
         if selected_pts:
             x, y = zip(*selected_pts)
-            self.ax.scatter(x, y,facecolors='none',edgecolors='red', marker='s',s=60,linewidths=1.2,zorder=10 )
+            self.ax.scatter(x, y,facecolors='none', edgecolors='red', marker='s', s=60, linewidths=1, zorder=10)
 
             self.plot_height_profile_on_map(selected_pts)
 
@@ -218,7 +225,6 @@ class MapViewer(QWidget):
         self.rect_start = None
         self.update_spectra_selection()
         self.canvas.draw_idle()
-
 
 
     def update_spectra_selection(self):

@@ -249,6 +249,7 @@ class SpectraViewer(QWidget):
             ("Bestfit", "Best Fit", True),
             ("Raw", "Raw data"),
             ("Residual", "Residual"),
+            ("Grid", "Grid", False),
         ]
 
         # Add actions to the menu
@@ -307,8 +308,15 @@ class SpectraViewer(QWidget):
         xlable = self.cbb_xaxis_unit.currentText()
         self.ax.set_xlabel(xlable)
         self.ax.set_ylabel("Intensity (a.u)")
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-
+        #self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        
+        # Apply grid state based on the checkbox in the options menu
+       
+        if "Grid" in self.menu_actions:
+            if self.menu_actions["Grid"].isChecked():
+                self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+            else:
+                self.ax.grid(False)
     
     def rescale(self):
         """Rescale the spectra plot to fit within the axes."""
@@ -784,7 +792,7 @@ class SpectraViewer(QWidget):
         x_values, residual = self.compute_residual(spectrum)
         # x_values = spectrum.x
         # residual = spectrum.result_fit.residual  # Bug of fitspy 2025.6 version
-        self.ax.plot(x_values, residual, 'ko-', ms=3, label='residual')
+        self.ax.plot(x_values, residual, 'ro-', ms=3, label='residual')
 
     def show_R2(self, spectrum):
         """Display R² value in the GUI."""
@@ -824,7 +832,12 @@ class SpectraViewer(QWidget):
         else:
             self.legend_bbox = None
 
-        self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        # Make sure grid follows the checkbox after full redraw
+        if self.menu_actions["Grid"].isChecked():
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        else:
+            self.ax.grid(False)
+
         self.figure.tight_layout()
         self.canvas.draw_idle()
         

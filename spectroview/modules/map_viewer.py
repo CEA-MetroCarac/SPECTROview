@@ -1,4 +1,3 @@
-
 import os
 import re
 import pandas as pd
@@ -39,8 +38,16 @@ class MapViewer(QWidget):
         self.ax = None
         self.canvas = None
         self.toolbar = None
-        self.spectra_listbox = None
+        self.spectra_listbox = None # to be set from Maps module
         self.menu_actions = {}
+
+        # selection state
+        self.line_tmp_points = []          # stores 2 clicks for line mode
+        self.rect_start = None             # (x0, y0) when dragging starts
+        self.rect_patch = None             # matplotlib Rectangle patch
+        self.line_start = None
+        self.line_patch = None
+
         self.initUI()
 
     def initUI(self):
@@ -49,9 +56,9 @@ class MapViewer(QWidget):
         self.widget.setFixedWidth(400)
         self.map_widget_layout = QVBoxLayout(self.widget)
         self.map_widget_layout.setContentsMargins(0, 0, 0, 0) 
-        self._create_ui()
+        self._setup_ui()
     
-    def _create_ui(self):
+    def _setup_ui(self):
         """Create 2Dmap plot widgets"""
         # Create a frame to hold the canvas with a fixed size
         self.canvas_frame = QFrame(self.widget)
@@ -98,8 +105,13 @@ class MapViewer(QWidget):
         
         # Connect the mouse and key events to the handler functions
         self.figure.canvas.mpl_connect('button_press_event', self.on_left_click_2Dmap)
-        self.figure.canvas.mpl_connect('key_press_event', self.on_key_press)
-        self.figure.canvas.mpl_connect('key_release_event', self.on_key_release)
+        self.figure.canvas.mpl_connect('key_press_event', self.on_ctrl_press)
+        self.figure.canvas.mpl_connect('key_release_event', self.on_ctrl_release)
+
+        # For rectangle selection mode
+        self.cid_press = self.figure.canvas.mpl_connect('button_press_event', self.on_mouse_press)
+        self.cid_motion = self.figure.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
+        self.cid_release = self.figure.canvas.mpl_connect('button_release_event', self.on_mouse_release)
         
         self.canvas.draw_idle()
 
@@ -142,6 +154,13 @@ class MapViewer(QWidget):
         #### CREATE range sliders
         self.create_range_sliders(0,100)
 
+        #### SELECTION mode
+        self.cbb_selection_mode = QComboBox()
+        self.cbb_selection_mode.addItems(['Point', 'Line', 'Rectangular']) 
+        self.cbb_selection_mode.setFixedWidth(97) 
+        self.cbb_selection_mode.setToolTip("Selection mode on 2D map")
+        
+        
         #### EXTRACT profil from 2Dmap
         profile_layout = QHBoxLayout()
         self.profile_name = QLineEdit(self)
@@ -153,6 +172,7 @@ class MapViewer(QWidget):
         self.btn_extract_profile.setToolTip("Extract profile data and plot it in Visu tab")
         self.btn_extract_profile.setFixedWidth(100)
         
+        profile_layout.addWidget(self.cbb_selection_mode)
         profile_layout.addWidget(self.profile_name)
         profile_layout.addWidget(self.btn_extract_profile)
 
@@ -276,6 +296,7 @@ class MapViewer(QWidget):
         vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.map_widget_layout.addItem(vspacer)
     
+
     def _update_slider_from_edit(self, slider, edit, index):
         """Update slider value when user edits text boxes"""
         try:
@@ -516,43 +537,174 @@ class MapViewer(QWidget):
 
                 # Plot the height profile 
                 self.ax.plot(x_vals, y_vals, color='black', linestyle='-', lw=2)
+    def on_mouse_press(self, event):
+        if self.cbb_selection_mode.currentText() != 'Rectangular':
+            return
+        if event.inaxes != self.ax:
+            return
+
+        # Start point
+        self.rect_start = (event.xdata, event.ydata)
+
+        # Remove old rectangle if exists
+        if self.rect_patch is not None:
+            self.rect_patch.remove()
+            self.rect_patch = None
+
+        # Create new rectangle patch (0x0 size initially)
+        self.rect_patch = patches.Rectangle(
+            (self.rect_start[0], self.rect_start[1]),
+            0, 0,
+            linewidth=1.2,
+            edgecolor='black',
+            facecolor='none',
+            linestyle='--'
+        )
+        self.ax.add_patch(self.rect_patch)
+        self.canvas.draw_idle()
+
+ 
+    def on_mouse_move(self, event):
+        # Wrong mode? → ignore
+        if self.cbb_selection_mode.currentText() != "Rectangular":
+            return
+
+        # Not dragging any rectangle? → ignore
+        if self.rect_start is None:
+            return
+
+        # Cursor left the axes? → ignore
+        if event.inaxes != self.ax:
+            return
+
+        # Must hold LEFT mouse button during dragging
+        # event.button is None for move events → use event.buttons instead
+        if event.button != 1:
+            return
+
+        # --- SAFE: guaranteed rectangle exists ---
+        x0, y0 = self.rect_start
+        x1, y1 = event.xdata, event.ydata
+
+        # Update the displayed rectangle
+        self.rect_patch.set_x(min(x0, x1))
+        self.rect_patch.set_y(min(y0, y1))
+        self.rect_patch.set_width(abs(x1 - x0))
+        self.rect_patch.set_height(abs(y1 - y0))
+
+        self.canvas.draw_idle()
+
+
+    def on_mouse_release(self, event):
+        if self.cbb_selection_mode.currentText() != 'Rectangular':
+            return
+
+        if self.rect_start is None or event.inaxes != self.ax:
+            return
+
+        # finalize rectangle selection
+        x0, y0 = self.rect_start
+        x1, y1 = event.xdata, event.ydata
+        self.rect_start = None
+        
+
+        xmin, xmax = sorted([x0, x1])
+        ymin, ymax = sorted([y0, y1])
+
+        all_x, all_y = map(np.array, self.get_mes_sites_coord())
+        inside = (all_x >= xmin) & (all_x <= xmax) & (all_y >= ymin) & (all_y <= ymax)
+
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers != Qt.ControlModifier:
+            self.selected_points = []
+
+        for x,y in zip(all_x[inside], all_y[inside]):
+            self.selected_points.append((float(x), float(y)))
+
+   
+        self.update_spectra_selection()
+        self.figure.canvas.draw_idle()
 
         
     def on_left_click_2Dmap(self, event):
-        """select the measurement points via 2Dmap plot"""
-        all_x, all_y = self.get_mes_sites_coord()
+        """Handle selection of points according to current selection mode."""
+        if event.inaxes != self.ax or event.button != 1:
+            return
+
+        mode = self.cbb_selection_mode.currentText()
+        all_x, all_y = map(np.array, self.get_mes_sites_coord())
+
+        x_clicked, y_clicked = event.xdata, event.ydata
+        modifiers = QApplication.keyboardModifiers()
+
+        # ----- POINT MODE -----
+        if mode == 'Point':
+            distances = np.sqrt((all_x - x_clicked)**2 + (all_y - y_clicked)**2)
+            idx = np.argmin(distances)
+            pt = (float(all_x[idx]), float(all_y[idx]))
+
+            if modifiers == Qt.ControlModifier:
+                self.selected_points.append(pt)
+            else:
+                self.selected_points = [pt]
+
+            self.update_spectra_selection()
+            return
+
+        # ----- LINE MODE -----
+        if mode == 'Line':
+            # store the clicked point
+            distances = np.sqrt((all_x - x_clicked)**2 + (all_y - y_clicked)**2)
+            idx = np.argmin(distances)
+            pt = (float(all_x[idx]), float(all_y[idx]))
+            self.line_tmp_points.append(pt)
+
+            # need 2 points → perform line selection
+            if len(self.line_tmp_points) == 2:
+
+                p1 = np.array(self.line_tmp_points[0])
+                p2 = np.array(self.line_tmp_points[1])
+
+                # vectorized projection on line segment
+                v = p2 - p1
+                w = np.vstack([all_x, all_y]).T - p1
+
+                t = np.clip((w @ v) / (np.dot(v, v)), 0, 1)
+                proj = p1 + t[:, None] * v
+
+                # distance threshold (tunable)
+                dist = np.linalg.norm(np.vstack([all_x, all_y]).T - proj, axis=1)
+
+                threshold = 0.02 * np.linalg.norm(v)  # 2% of segment length
+
+                selected = dist < threshold
+
+                if modifiers != Qt.ControlModifier:
+                    self.selected_points = []
+
+                for x,y in zip(all_x[selected], all_y[selected]):
+                    self.selected_points.append((float(x), float(y)))
+
+                self.update_spectra_selection()
+                self.line_tmp_points = []  # reset
+
+            return
+        
+    def update_spectra_selection(self):
+        """Update listbox according to self.selected_points."""
         self.spectra_listbox.clearSelection()
-        if event.inaxes == self.ax:
-            x_clicked, y_clicked = event.xdata, event.ydata
-            if event.button == 1:  # Left mouse button
-                all_x = np.array(all_x)
-                all_y = np.array(all_y)
-                distances = np.sqrt(
-                    (all_x - x_clicked) ** 2 + (all_y - y_clicked) ** 2)
-                nearest_index = np.argmin(distances)
-                nearest_x, nearest_y = all_x[nearest_index], all_y[
-                    nearest_index]
 
-                # Check if Ctrl key is pressed
-                modifiers = QApplication.keyboardModifiers()
-                if modifiers == Qt.ControlModifier:
-                    self.selected_points.append((nearest_x, nearest_y))
-                else:
-                    # Clear the selected points list and add the current one
-                    self.selected_points = [(nearest_x, nearest_y)]
-
-        # Set the current selection in the spectra_listbox
         for index in range(self.spectra_listbox.count()):
             item = self.spectra_listbox.item(index)
-            item_text = item.text()
-            x, y = map(float, item_text.strip('()').split(','))
+            x, y = map(float, item.text().strip('()').split(','))
+
             if (x, y) in self.selected_points:
                 item.setSelected(True)
-                self.current_row= index
-                self.spectra_listbox.setCurrentRow(self.current_row)
+                self.spectra_listbox.setCurrentRow(index)
             else:
-                item.setSelected(False) 
-            
+                item.setSelected(False)
+
+
     def extract_profile(self):
         """Extract a profile from 2D map plot via interpolation."""
         # Ensure exactly two points have been selected
@@ -580,12 +732,12 @@ class MapViewer(QWidget):
         self.canvas.draw_idle()
         return profile_df
             
-    def on_key_press(self, event):
+    def on_ctrl_press(self, event):
         """Handler function for key press event"""
         if event.key == 'ctrl':
             self.ctrl_pressed = True
 
-    def on_key_release(self, event):
+    def on_ctrl_release(self, event):
         """Handler function for key release event"""
         if event.key == 'ctrl':
             self.ctrl_pressed = False

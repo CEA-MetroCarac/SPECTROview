@@ -126,7 +126,7 @@ class Maps(QObject):
                     self.ui.tabWidget, "Open spectra file(s)", last_dir,
                     "SPECTROview formats (*.csv *.txt)", options=options)
 
-            # Load RAW spectra data from CSV files
+            # Load RAW spectra data from CSV or TXT files
             if file_paths:
                 last_dir = QFileInfo(file_paths[0]).absolutePath()
                 self.settings.setValue("last_directory", last_dir)
@@ -144,13 +144,13 @@ class Maps(QObject):
                         # Check 2nd line to determine old and new format
                         if len(lines[1].split(';')) > 3:
                             # If contains more than 3 columns
-                            map_df = pd.read_csv(file_path, skiprows=1,
-                                                 delimiter=";")
+                            map_df = pd.read_csv(file_path, skiprows=1, delimiter=";")
                         else:
-                            df = pd.read_csv(file_path, skiprows=2,
-                                                 delimiter=";")
+                            df = pd.read_csv(file_path, skiprows=2, delimiter=";")
                             map_df = df.iloc[::2].reset_index(drop=True)
                             map_df.rename(columns={map_df.columns[0]: "X", map_df.columns[1]: "Y"}, inplace=True)
+
+                        self.map_viewer.cbb_map_type.setCurrentText('Wafer_300mm')
 
                     elif extension == '.txt':
                         map_df = pd.read_csv(file_path, delimiter="\t")
@@ -159,15 +159,20 @@ class Maps(QObject):
                         # Reorder df as increasing wavenumber
                         sorted_columns = sorted(map_df.columns[2:], key=float)
                         map_df = map_df[['X', 'Y'] + sorted_columns]
+
+                        #Auto set 2Dmap type:
+                        self.map_viewer.cbb_map_type.setCurrentText('2Dmap')
                     else:
                         show_alert(f"Unsupported file format: {extension}")
-                        continue          
+                        continue   
+
                     map_name = fname
                     if map_name in self.maps:
                         print(f"Map '{map_name}' is already opened")
                         continue
                     else:
                         self.maps[map_name] = map_df
+
         self.extract_spectra()
         self.ui.tabWidget.setCurrentWidget(self.ui.tab_maps)
 

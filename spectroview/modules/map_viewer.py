@@ -42,15 +42,15 @@ class MapViewer(QWidget):
         self.menu_actions = {}
 
         # SELECTION MODE:
-        self.line_tmp_points = []          # stores 2 clicks for line mode
-        self.rect_start = None             # (x0, y0) when dragging starts
-        self.rect_patch = None             # matplotlib Rectangle patch
+        self.line_tmp_points = [] # stores 2 clicks for line mode
+        self.rect_start = None  # (x0, y0) when dragging starts
+        self.rect_patch = None  # matplotlib Rectangle patch
         self.line_start = None
         self.line_patch = None
 
         self.initUI()
     
-    def plot(self, coords):
+    def plot(self, selected_pts):
         """Plot 2D maps of measurement points"""
 
         map_type = self.cbb_map_type.currentText()
@@ -86,24 +86,22 @@ class MapViewer(QWidget):
         else:
             self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
 
-        # Highlite  selected points
         # Highlight selected points
-        if coords:
-            x, y = zip(*coords)
+        if selected_pts:
+            x, y = zip(*selected_pts)
             self.ax.scatter(x, y,facecolors='none',edgecolors='red', marker='s',s=60,linewidths=1.2,zorder=10 )
 
-            self.plot_height_profile_on_map(coords)
-
+            self.plot_height_profile_on_map(selected_pts)
 
         title = self.z_values_cbb.currentText()
         self.ax.set_title(title, fontsize=13)
         self.ax.get_figure().tight_layout()
         self.canvas.draw_idle()
 
-    def plot_height_profile_on_map(self, coords):
+    def plot_height_profile_on_map(self, selected_pts):
         """Plot height profile directly on heatmap"""
-        if len(coords) == 2:
-            x, y = zip(*coords)
+        if len(selected_pts) == 2:
+            x, y = zip(*selected_pts)
             self.ax.plot(x, y, color='black', linestyle='dotted', linewidth=2)
 
             # Extract profile values from the heatmap
@@ -148,101 +146,78 @@ class MapViewer(QWidget):
                 # Plot the height profile 
                 self.ax.plot(x_vals, y_vals, color='black', linestyle='-', lw=2)
 
-        
     def on_mouse_click(self, event):
-        """Handle selection of points according to current selection mode."""
+        """Handle mouse click and start of drag for selection."""
         if event.inaxes != self.ax or event.button != 1:
             return
 
-        mode = self.cbb_selection_mode.currentText()
-        all_x, all_y = map(np.array, self.get_mes_sites_coord())
+        self.rect_start = (event.xdata, event.ydata)
+        self.rect_patch = None  # Reset rectangle patch for potential drag
 
-        x_clicked, y_clicked = event.xdata, event.ydata
+    def on_mouse_move(self, event):
+        """Handle drag for rectangle selection."""
+        if self.rect_start is None or event.inaxes != self.ax:
+            return
+
+        x0, y0 = self.rect_start
+        x1, y1 = event.xdata, event.ydata
+
+        # If movement detected, create/update rectangle patch
+        if self.rect_patch is None:
+            self.rect_patch = patches.Rectangle(
+                (min(x0, x1), min(y0, y1)),
+                abs(x1 - x0), abs(y1 - y0),
+                linewidth=1.2, edgecolor='black', facecolor='none', linestyle='--'
+            )
+            self.ax.add_patch(self.rect_patch)
+        else:
+            self.rect_patch.set_x(min(x0, x1))
+            self.rect_patch.set_y(min(y0, y1))
+            self.rect_patch.set_width(abs(x1 - x0))
+            self.rect_patch.set_height(abs(y1 - y0))
+
+        self.canvas.draw_idle()
+
+    def on_mouse_release(self, event):
+        """Finalize selection: single click → point, drag → rectangle."""
+        if self.rect_start is None or event.inaxes != self.ax:
+            return
+
+        x0, y0 = self.rect_start
+        x1, y1 = event.xdata, event.ydata
+        all_x, all_y = map(np.array, self.get_mes_sites_coord())
         modifiers = QApplication.keyboardModifiers()
 
-        # ----- POINT MODE -----
-        if mode == 'Point':
-            distances = np.sqrt((all_x - x_clicked)**2 + (all_y - y_clicked)**2)
-            idx = np.argmin(distances)
-            pt = (float(all_x[idx]), float(all_y[idx])) # nearest point
+        # If rectangle patch exists → rectangle selection
+        if self.rect_patch is not None:
+            xmin, xmax = sorted([x0, x1])
+            ymin, ymax = sorted([y0, y1])
+            inside = (all_x >= xmin) & (all_x <= xmax) & (all_y >= ymin) & (all_y <= ymax)
 
+            if modifiers != Qt.ControlModifier:
+                self.selected_points = []
+
+            for x, y in zip(all_x[inside], all_y[inside]):
+                self.selected_points.append((float(x), float(y)))
+
+            # Remove rectangle after selection
+            self.rect_patch.remove()
+            self.rect_patch = None
+
+        else:
+            # Single click → point selection
+            distances = np.sqrt((all_x - x1) ** 2 + (all_y - y1) ** 2)
+            idx = np.argmin(distances)
+            pt = (float(all_x[idx]), float(all_y[idx]))
             if modifiers == Qt.ControlModifier:
                 self.selected_points.append(pt)
             else:
                 self.selected_points = [pt]
 
-            self.update_spectra_selection()
-            return
-
-        # ----- RECTANGULAR MODE -----
-        if mode == 'Rectangular':
-            if event.inaxes != self.ax:
-                return
-            self.rect_start = (event.xdata, event.ydata) # Start point
-
-            # Remove old rectangle if exists
-            if self.rect_patch is not None:
-                self.rect_patch.remove()
-                self.rect_patch = None
-
-            # Create new rectangle patch (0x0 size initially)
-            self.rect_patch = patches.Rectangle((self.rect_start[0], self.rect_start[1]),0, 0, linewidth=1.2, edgecolor='black', facecolor='none', linestyle='--')
-            self.ax.add_patch(self.rect_patch)
-            self.canvas.draw_idle()
- 
-    def on_mouse_move(self, event):
-        if self.cbb_selection_mode.currentText() != "Rectangular":
-            return
-
-        if self.rect_start is None: # Not dragging any rectangle? → ignore
-            return
-
-        if event.inaxes != self.ax:
-            return
-
-        # Must hold LEFT mouse button during dragging
-        if event.button != 1:
-            return
-
-        # --- SAFE: guaranteed rectangle exists ---
-        x0, y0 = self.rect_start
-        x1, y1 = event.xdata, event.ydata
-
-        # Update the displayed rectangle
-        self.rect_patch.set_x(min(x0, x1))
-        self.rect_patch.set_y(min(y0, y1))
-        self.rect_patch.set_width(abs(x1 - x0))
-        self.rect_patch.set_height(abs(y1 - y0))
-
+        self.rect_start = None
+        self.update_spectra_selection()
         self.canvas.draw_idle()
 
-    def on_mouse_release(self, event):
-        if self.cbb_selection_mode.currentText() != 'Rectangular':
-            return
-
-        if self.rect_start is None or event.inaxes != self.ax:
-            return
-
-        # finalize rectangle selection
-        x0, y0 = self.rect_start
-        x1, y1 = event.xdata, event.ydata
-        self.rect_start = None
-
-        xmin, xmax = sorted([x0, x1])
-        ymin, ymax = sorted([y0, y1])
-
-        all_x, all_y = map(np.array, self.get_mes_sites_coord())
-        inside = (all_x >= xmin) & (all_x <= xmax) & (all_y >= ymin) & (all_y <= ymax)
-
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers != Qt.ControlModifier:
-            self.selected_points = []
-
-        for x,y in zip(all_x[inside], all_y[inside]):
-            self.selected_points.append((float(x), float(y)))
-
-        self.update_spectra_selection()
-        self.figure.canvas.draw_idle()
 
 
     def update_spectra_selection(self):
@@ -286,16 +261,7 @@ class MapViewer(QWidget):
 
         self.canvas.draw_idle()
         return profile_df
-            
-    def on_ctrl_press(self, event):
-        """Handler function for key press event"""
-        if event.key == 'ctrl':
-            self.ctrl_pressed = True
 
-    def on_ctrl_release(self, event):
-        """Handler function for key release event"""
-        if event.key == 'ctrl':
-            self.ctrl_pressed = False
 
     def get_mes_sites_coord(self):
         """
@@ -522,12 +488,9 @@ class MapViewer(QWidget):
         
         # Connect the mouse and key events to the handler functions
         self.figure.canvas.mpl_connect('button_press_event', self.on_mouse_click)
-        self.figure.canvas.mpl_connect('key_press_event', self.on_ctrl_press)
-        self.figure.canvas.mpl_connect('key_release_event', self.on_ctrl_release)
-
         self.figure.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
         self.figure.canvas.mpl_connect('button_release_event', self.on_mouse_release)
-        
+
         self.canvas.draw_idle()
 
         #### MAP_TYPE ComboBox (wafer or 2Dmap)
@@ -569,13 +532,6 @@ class MapViewer(QWidget):
         #### CREATE range sliders
         self.create_range_sliders(0,100)
 
-        #### SELECTION mode
-        self.cbb_selection_mode = QComboBox()
-        self.cbb_selection_mode.addItems(['Point', 'Rectangular']) 
-        self.cbb_selection_mode.setFixedWidth(97) 
-        self.cbb_selection_mode.setToolTip("Selection mode on 2D map")
-        
-        
         #### EXTRACT profil from 2Dmap
         profile_layout = QHBoxLayout()
         self.profile_name = QLineEdit(self)
@@ -587,7 +543,6 @@ class MapViewer(QWidget):
         self.btn_extract_profile.setToolTip("Extract profile data and plot it in Visu tab")
         self.btn_extract_profile.setFixedWidth(100)
         
-        profile_layout.addWidget(self.cbb_selection_mode)
         profile_layout.addWidget(self.profile_name)
         profile_layout.addWidget(self.btn_extract_profile)
 

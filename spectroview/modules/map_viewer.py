@@ -31,8 +31,8 @@ class MapViewer(QWidget):
         self.map_df_name = None
         self.map_df =pd.DataFrame() 
         self.df_fit_results =pd.DataFrame() 
-        self.map_type = '2Dmap'
 
+        self.map_type = '2Dmap' # default map type 2DMap or WaferMap
         self.dpi = 70
         self.figure = None
         self.ax = None
@@ -41,7 +41,7 @@ class MapViewer(QWidget):
         self.spectra_listbox = None # to be set from Maps module
         self.menu_actions = {}
 
-        # selection state
+        # SELECTION MODE:
         self.line_tmp_points = []          # stores 2 clicks for line mode
         self.rect_start = None             # (x0, y0) when dragging starts
         self.rect_patch = None             # matplotlib Rectangle patch
@@ -49,7 +49,424 @@ class MapViewer(QWidget):
         self.line_patch = None
 
         self.initUI()
+    
+    def plot(self, coords):
+        """Plot 2D maps of measurement points"""
 
+        map_type = self.cbb_map_type.currentText()
+        r = self.get_wafer_radius(map_type)
+        self.ax.clear()
+        
+        # Plot wafer map
+        if map_type != '2Dmap':
+            wafer_circle = patches.Circle((0, 0), radius=r, fill=False, color='black', linewidth=1)
+            self.ax.add_patch(wafer_circle)
+            self.ax.set_yticklabels([])
+
+            all_x, all_y = self.get_mes_sites_coord()
+            self.ax.scatter(all_x, all_y, marker='x', color='gray', s=15)
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')    
+            
+        heatmap_pivot, extent, vmin, vmax, grid_z  = self.get_data_for_heatmap(map_type)
+        color = self.cbb_palette.currentText()
+        interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
+        vmin, vmax = self.z_range_slider.value()
+    
+        if map_type != '2Dmap' and self.number_of_points >= 4:
+            self.img = self.ax.imshow(grid_z, extent=[-r - 0.5, r + 0.5, -r - 0.5, r + 0.5],
+                            origin='lower', aspect='equal', cmap=color, interpolation='nearest')
+            
+        else: 
+            self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
+                            origin='lower', aspect='equal', cmap=color, interpolation=interpolation_option)
+        
+        # COLORBAR
+        if hasattr(self, 'cbar') and self.cbar is not None:
+            self.cbar.update_normal(self.img)
+        else:
+            self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
+
+        # Highlite  selected points
+        # Highlight selected points
+        if coords:
+            x, y = zip(*coords)
+            self.ax.scatter(x, y,facecolors='none',edgecolors='red', marker='s',s=60,linewidths=1.2,zorder=10 )
+
+            self.plot_height_profile_on_map(coords)
+
+
+        title = self.z_values_cbb.currentText()
+        self.ax.set_title(title, fontsize=13)
+        self.ax.get_figure().tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_height_profile_on_map(self, coords):
+        """Plot height profile directly on heatmap"""
+        if len(coords) == 2:
+            x, y = zip(*coords)
+            self.ax.plot(x, y, color='black', linestyle='dotted', linewidth=2)
+
+            # Extract profile values from the heatmap
+            profile_df = self.extract_profile()
+            if profile_df is not None:
+                # Calculate the diagonal length of the heatmap
+                extent = self.get_data_for_heatmap()[1]
+                diagonal_length = np.sqrt((extent[1] - extent[0])**2 + (extent[3] - extent[2])**2)
+                max_normalized_value = 0.3 * diagonal_length
+                
+                # Calculate height values
+                profile_df['height'] = (profile_df['values'] / profile_df['values'].max()) * max_normalized_value
+                profile_df['height'] -= profile_df['height'].min()
+
+                x_vals = []
+                y_vals = []
+
+                # Calculate perpendicular points
+                for i, row in profile_df.iterrows():
+                    x_val = row['X']
+                    y_val = row['Y']
+                    normalized_distance = row['height']
+
+                    # Calculate the direction vector of the line connecting the two points
+                    dx = x[1] - x[0]
+                    dy = y[1] - y[0]
+                    length = np.sqrt(dx**2 + dy**2)
+
+                    # Normalize the direction vector
+                    if length > 0:
+                        dx /= length
+                        dy /= length
+
+                    # Calculate the perpendicular direction
+                    perp_dx = -dy
+                    perp_dy = dx
+
+                    # Calculate the new x and y values
+                    x_vals.append(x_val + perp_dx * normalized_distance)
+                    y_vals.append(y_val + perp_dy * normalized_distance)
+
+                # Plot the height profile 
+                self.ax.plot(x_vals, y_vals, color='black', linestyle='-', lw=2)
+
+        
+    def on_mouse_click(self, event):
+        """Handle selection of points according to current selection mode."""
+        if event.inaxes != self.ax or event.button != 1:
+            return
+
+        mode = self.cbb_selection_mode.currentText()
+        all_x, all_y = map(np.array, self.get_mes_sites_coord())
+
+        x_clicked, y_clicked = event.xdata, event.ydata
+        modifiers = QApplication.keyboardModifiers()
+
+        # ----- POINT MODE -----
+        if mode == 'Point':
+            distances = np.sqrt((all_x - x_clicked)**2 + (all_y - y_clicked)**2)
+            idx = np.argmin(distances)
+            pt = (float(all_x[idx]), float(all_y[idx])) # nearest point
+
+            if modifiers == Qt.ControlModifier:
+                self.selected_points.append(pt)
+            else:
+                self.selected_points = [pt]
+
+            self.update_spectra_selection()
+            return
+
+        # ----- RECTANGULAR MODE -----
+        if mode == 'Rectangular':
+            if event.inaxes != self.ax:
+                return
+            self.rect_start = (event.xdata, event.ydata) # Start point
+
+            # Remove old rectangle if exists
+            if self.rect_patch is not None:
+                self.rect_patch.remove()
+                self.rect_patch = None
+
+            # Create new rectangle patch (0x0 size initially)
+            self.rect_patch = patches.Rectangle((self.rect_start[0], self.rect_start[1]),0, 0, linewidth=1.2, edgecolor='black', facecolor='none', linestyle='--')
+            self.ax.add_patch(self.rect_patch)
+            self.canvas.draw_idle()
+ 
+    def on_mouse_move(self, event):
+        if self.cbb_selection_mode.currentText() != "Rectangular":
+            return
+
+        if self.rect_start is None: # Not dragging any rectangle? → ignore
+            return
+
+        if event.inaxes != self.ax:
+            return
+
+        # Must hold LEFT mouse button during dragging
+        if event.button != 1:
+            return
+
+        # --- SAFE: guaranteed rectangle exists ---
+        x0, y0 = self.rect_start
+        x1, y1 = event.xdata, event.ydata
+
+        # Update the displayed rectangle
+        self.rect_patch.set_x(min(x0, x1))
+        self.rect_patch.set_y(min(y0, y1))
+        self.rect_patch.set_width(abs(x1 - x0))
+        self.rect_patch.set_height(abs(y1 - y0))
+
+        self.canvas.draw_idle()
+
+    def on_mouse_release(self, event):
+        if self.cbb_selection_mode.currentText() != 'Rectangular':
+            return
+
+        if self.rect_start is None or event.inaxes != self.ax:
+            return
+
+        # finalize rectangle selection
+        x0, y0 = self.rect_start
+        x1, y1 = event.xdata, event.ydata
+        self.rect_start = None
+
+        xmin, xmax = sorted([x0, x1])
+        ymin, ymax = sorted([y0, y1])
+
+        all_x, all_y = map(np.array, self.get_mes_sites_coord())
+        inside = (all_x >= xmin) & (all_x <= xmax) & (all_y >= ymin) & (all_y <= ymax)
+
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers != Qt.ControlModifier:
+            self.selected_points = []
+
+        for x,y in zip(all_x[inside], all_y[inside]):
+            self.selected_points.append((float(x), float(y)))
+
+        self.update_spectra_selection()
+        self.figure.canvas.draw_idle()
+
+
+    def update_spectra_selection(self):
+        """Update listbox according to self.selected_points."""
+        self.spectra_listbox.clearSelection()
+
+        for index in range(self.spectra_listbox.count()):
+            item = self.spectra_listbox.item(index)
+            x, y = map(float, item.text().strip('()').split(','))
+
+            if (x, y) in self.selected_points:
+                item.setSelected(True)
+                self.spectra_listbox.setCurrentRow(index)
+            else:
+                item.setSelected(False)
+
+
+    def extract_profile(self):
+        """Extract a profile from 2D map plot via interpolation."""
+        # Ensure exactly two points have been selected
+        if len(self.selected_points) != 2:
+            print("Select 2 points on map plot to define a profile")
+            return None
+        (x1, y1), (x2, y2) = self.selected_points
+        heatmap_pivot, _, _, _, _ = self.get_data_for_heatmap()
+        # Extract X and Y coordinates of the heatmap grid
+        x_values = heatmap_pivot.columns.values
+        y_values = heatmap_pivot.index.values
+        z_values = heatmap_pivot.values
+        # Interpolate Z values at the sampled points along the profile
+        interpolator = RegularGridInterpolator((y_values, x_values), z_values)
+        num_samples = 100 
+        x_samples = np.linspace(x1, x2, num_samples)
+        y_samples = np.linspace(y1, y2, num_samples)
+        sample_points = np.vstack((y_samples, x_samples)).T 
+        z_samples = interpolator(sample_points)
+        # Calculate the distance from (x1, y1) to each sample point
+        dists_from_start = np.sqrt((x_samples - x1)**2 + (y_samples - y1)**2)
+
+        profile_df = pd.DataFrame({'X': x_samples, 'Y': y_samples, 'distance': dists_from_start,'values': z_samples})
+
+        self.canvas.draw_idle()
+        return profile_df
+            
+    def on_ctrl_press(self, event):
+        """Handler function for key press event"""
+        if event.key == 'ctrl':
+            self.ctrl_pressed = True
+
+    def on_ctrl_release(self, event):
+        """Handler function for key release event"""
+        if event.key == 'ctrl':
+            self.ctrl_pressed = False
+
+    def get_mes_sites_coord(self):
+        """
+        Get all coordinates of measurement sites of the selected map.
+        """
+        df = self.map_df
+        all_x = df['X']
+        all_y = df['Y']
+        return all_x, all_y 
+
+    def copy_fig(self):
+        """Copy figure canvas to clipboard"""
+        copy_fig_to_clb(self.canvas)
+    
+    def update_settings(self):
+        """Save selected wafer size to settings"""
+        map_type = self.cbb_map_type.currentText()
+        self.app_settings.map_type = map_type
+        self.app_settings.save()
+
+    def create_options_menu(self):
+        """Create more view options for 2Dmap plot"""
+        
+        self.options_menu = QMenu(self)
+        # Smoothing option
+        options = [ ("Smoothing", "Smoothing", False),]
+        for option_name, option_label, *checked in options:
+            action = QAction(option_label, self)
+            action.setCheckable(True)
+            action.setChecked(checked[0] if checked else False)
+            action.triggered.connect(self.refresh_plot)
+            self.menu_actions[option_name] = action
+            self.options_menu.addAction(action)  
+        
+    
+
+    def _update_slider_from_edit(self, slider, edit, index):
+        """Update slider value when user edits text boxes"""
+        try:
+            value = max(slider.minimum(), min(slider.maximum(), float(edit.text())))
+            current = list(slider.value())
+            current[index] = value
+            # Ensure min <= max
+            if current[0] <= current[1]:
+                slider.setValue(tuple(current))
+        except ValueError:
+            pass  # ignore invalid input
+
+    def _update_edit_from_slider(self, values, min_edit, max_edit):
+        """Update entry boxes when slider moves"""
+        min_edit.setText(f"{values[0]:.2f}")
+        max_edit.setText(f"{values[1]:.2f}")
+    
+    def populate_z_values_cbb(self):
+        """Populate the Z-values combo box with fit parameters"""
+        self.z_values_cbb.clear() 
+        self.z_values_cbb.addItems(['Max Intensity', 'Area'])
+        if not self.df_fit_results.empty:
+            fit_columns = [col for col in self.df_fit_results.columns if col not in ['Filename', 'X', 'Y']]
+            self.z_values_cbb.addItems(fit_columns)
+
+    
+    def update_xrange_slider(self, xmin, xmax,current_min, current_max):
+        """Update the range of the slider based on new min and max values."""        
+        self.x_range_slider.setRange(xmin, xmax)
+        if self.fix_x_checkbox.isChecked():
+            self.x_range_slider.setValue((current_min, current_max))
+        else: 
+            self.x_range_slider.setValue((xmin, xmax))
+    
+    def update_z_range_slider(self):
+        if self.z_values_cbb.count() > 0 and self.z_values_cbb.currentIndex() >= 0:
+            _,_, vmin, vmax, _ =self.get_data_for_heatmap()
+            self.z_range_slider.setRange(vmin, vmax)
+            self.z_range_slider.setValue((vmin, vmax))
+        else:
+            return
+    
+    def get_data_for_heatmap(self, map_type='2Dmap'):
+        """Prepare data for heatmap based on range sliders values"""
+        # Default return values in case of no valid map_df or filtered columns
+        heatmap_pivot = pd.DataFrame()  # Empty DataFrame for heatmap
+        extent = [0, 0, 0, 0]  # Default extent values
+        vmin = 0
+        vmax = 0
+        grid_z = None # for waferplot
+        
+        if self.map_df is not None:
+            xmin, xmax = self.x_range_slider.value()
+            column_labels = self.map_df.columns[2:-1]  # Keep labels as strings
+
+            # Convert slider range values to strings for comparison
+            filtered_columns = column_labels[(column_labels.astype(float) >= xmin) & (column_labels.astype(float) <= xmax)]
+            
+            if len(filtered_columns) > 0:
+                # Create a filtered DataFrame including X, Y, and the selected range of columns
+                filtered_map_df = self.map_df[['X', 'Y'] + list(filtered_columns)]
+                x_col = filtered_map_df['X'].values
+                y_col = filtered_map_df['Y'].values
+                final_z_col = []
+
+                parameter = self.z_values_cbb.currentText()
+                if parameter == 'Area':
+                    # Intensity sums of of each spectrum over the selected range
+                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
+                    
+                elif parameter == 'Max Intensity':
+                    # Max intensity value of each spectrum over the selected range
+                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
+                else:
+                    if not self.df_fit_results.empty:
+                        map_name = self.map_df_name
+                        # Plot only selected wafer/2Dmap
+                        filtered_df = self.df_fit_results.query('Filename == @map_name')
+                        if not filtered_df.empty and parameter in filtered_df.columns:
+                            z_col = filtered_df[parameter]
+                        else:
+                            z_col = None
+                
+                # Auto scale 
+                if self.cb_auto_scale.isChecked():
+                    # Remove outliers using IQR method and replace them with interpolated values
+                    Q1 = z_col.quantile(0.05)
+                    Q3 = z_col.quantile(0.95)
+                    IQR = Q3 - Q1
+                    # Identify the outliers
+                    outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
+                    # Interpolate values for the outliers using linear interpolation
+                    z_col_interpolated = z_col.copy()
+                    z_col_interpolated[outlier_mask] = np.nan  # Mark outliers as NaN for interpolation
+                    z_col_interpolated = z_col_interpolated.interpolate(method='linear', limit_direction='both')
+                    final_z_col=z_col_interpolated
+                else:
+                    final_z_col=z_col  
+
+                try:
+                    vmin = round(final_z_col.min(), 0)
+                    vmax = round(final_z_col.max(), 0)
+                except Exception as e:
+                    #When the selected 'parameters' does not exist for selected wafer.
+                    self.z_values_cbb.setCurrentIndex(0)
+
+                    vmin = round(final_z_col.min(), 0)
+                    vmax = round(final_z_col.max(), 0)
+
+                self.number_of_points = len(set(zip(x_col, y_col)))
+                
+                if map_type != '2Dmap' and self.number_of_points >= 4:
+                    # Create meshgrid for WaferPlot
+                    r = self.get_wafer_radius(map_type)
+                    grid_x, grid_y = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
+                    grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
+                    extent = [-r - 1, r + 1, -r - 0.5, r + 0.5]
+
+                else:
+                    # Regular 2D map
+                    heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': z_col})
+                    heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
+                    xmin, xmax = x_col.min(), x_col.max()
+                    ymin, ymax = y_col.min(), y_col.max()
+                    extent = [xmin, xmax, ymin, ymax]
+                
+        return heatmap_pivot, extent, vmin, vmax, grid_z
+    
+    def get_wafer_radius(self, map_type_text):
+        match = re.search(r'Wafer_(\d+)mm', map_type_text)
+        if match:
+            diameter = int(match.group(1))
+            return diameter / 2
+        return None
+    
     def initUI(self):
         """Initialize the UI components."""
         self.widget = QWidget()
@@ -104,14 +521,12 @@ class MapViewer(QWidget):
         self.ctrl_pressed = False
         
         # Connect the mouse and key events to the handler functions
-        self.figure.canvas.mpl_connect('button_press_event', self.on_left_click_2Dmap)
+        self.figure.canvas.mpl_connect('button_press_event', self.on_mouse_click)
         self.figure.canvas.mpl_connect('key_press_event', self.on_ctrl_press)
         self.figure.canvas.mpl_connect('key_release_event', self.on_ctrl_release)
 
-        # For rectangle selection mode
-        self.cid_press = self.figure.canvas.mpl_connect('button_press_event', self.on_mouse_press)
-        self.cid_motion = self.figure.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
-        self.cid_release = self.figure.canvas.mpl_connect('button_release_event', self.on_mouse_release)
+        self.figure.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
+        self.figure.canvas.mpl_connect('button_release_event', self.on_mouse_release)
         
         self.canvas.draw_idle()
 
@@ -156,7 +571,7 @@ class MapViewer(QWidget):
 
         #### SELECTION mode
         self.cbb_selection_mode = QComboBox()
-        self.cbb_selection_mode.addItems(['Point', 'Line', 'Rectangular']) 
+        self.cbb_selection_mode.addItems(['Point', 'Rectangular']) 
         self.cbb_selection_mode.setFixedWidth(97) 
         self.cbb_selection_mode.setToolTip("Selection mode on 2D map")
         
@@ -191,26 +606,6 @@ class MapViewer(QWidget):
         self.map_widget_layout.addLayout(profile_layout)
         profile_layout.setContentsMargins(5, 5, 5, 5)
 
-    def update_settings(self):
-        """Save selected wafer size to settings"""
-        map_type = self.cbb_map_type.currentText()
-        self.app_settings.map_type = map_type
-        self.app_settings.save()
-
-    def create_options_menu(self):
-        """Create more view options for 2Dmap plot"""
-        
-        self.options_menu = QMenu(self)
-        # Smoothing option
-        options = [ ("Smoothing", "Smoothing", False),]
-        for option_name, option_label, *checked in options:
-            action = QAction(option_label, self)
-            action.setCheckable(True)
-            action.setChecked(checked[0] if checked else False)
-            action.triggered.connect(self.refresh_plot)
-            self.menu_actions[option_name] = action
-            self.options_menu.addAction(action)  
-        
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
         # Create x-axis range slider
@@ -295,462 +690,13 @@ class MapViewer(QWidget):
 
         vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.map_widget_layout.addItem(vspacer)
-    
 
-    def _update_slider_from_edit(self, slider, edit, index):
-        """Update slider value when user edits text boxes"""
-        try:
-            value = max(slider.minimum(), min(slider.maximum(), float(edit.text())))
-            current = list(slider.value())
-            current[index] = value
-            # Ensure min <= max
-            if current[0] <= current[1]:
-                slider.setValue(tuple(current))
-        except ValueError:
-            pass  # ignore invalid input
 
-    def _update_edit_from_slider(self, values, min_edit, max_edit):
-        """Update entry boxes when slider moves"""
-        min_edit.setText(f"{values[0]:.2f}")
-        max_edit.setText(f"{values[1]:.2f}")
-    
-    def populate_z_values_cbb(self):
-        self.z_values_cbb.clear() 
-        self.z_values_cbb.addItems(['Max Intensity', 'Area'])
-        if not self.df_fit_results.empty:
-            fit_columns = [col for col in self.df_fit_results.columns if col not in ['Filename', 'X', 'Y']]
-            self.z_values_cbb.addItems(fit_columns)
-  
     def refresh_plot(self):
         """Call the refresh_gui method of the main application."""
         if hasattr(self.parent, 'refresh_gui'):
             self.parent.refresh_gui()
         else:
             return
-    
-    def update_xrange_slider(self, xmin, xmax,current_min, current_max):
-        """Update the range of the slider based on new min and max values."""        
-        self.x_range_slider.setRange(xmin, xmax)
-        if self.fix_x_checkbox.isChecked():
-            self.x_range_slider.setValue((current_min, current_max))
-        else: 
-            self.x_range_slider.setValue((xmin, xmax))
-    
-    def update_z_range_slider(self):
-        if self.z_values_cbb.count() > 0 and self.z_values_cbb.currentIndex() >= 0:
-            _,_, vmin, vmax, _ =self.get_data_for_heatmap()
-            self.z_range_slider.setRange(vmin, vmax)
-            self.z_range_slider.setValue((vmin, vmax))
-        else:
-            return
-    
-    def get_data_for_heatmap(self, map_type='2Dmap'):
-        """Prepare data for heatmap based on range sliders values"""
-
-        # Default return values in case of no valid map_df or filtered columns
-        heatmap_pivot = pd.DataFrame()  # Empty DataFrame for heatmap
-        extent = [0, 0, 0, 0]  # Default extent values
-        vmin = 0
-        vmax = 0
-        grid_z = None # for waferplot
         
-        if self.map_df is not None:
-            xmin, xmax = self.x_range_slider.value()
-            column_labels = self.map_df.columns[2:-1]  # Keep labels as strings
-
-            # Convert slider range values to strings for comparison
-            filtered_columns = column_labels[(column_labels.astype(float) >= xmin) &
-                                            (column_labels.astype(float) <= xmax)]
-            
-            if len(filtered_columns) > 0:
-                # Create a filtered DataFrame including X, Y, and the selected range of columns
-                filtered_map_df = self.map_df[['X', 'Y'] + list(filtered_columns)]
-                x_col = filtered_map_df['X'].values
-                y_col = filtered_map_df['Y'].values
-                final_z_col = []
-
-                parameter = self.z_values_cbb.currentText()
-                if parameter == 'Area':
-                    # Intensity sums of of each spectrum over the selected range
-                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
-                    
-                elif parameter == 'Max Intensity':
-                    # Max intensity value of each spectrum over the selected range
-                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
-                else:
-                    if not self.df_fit_results.empty:
-                        map_name = self.map_df_name
-                        # Plot only selected wafer/2Dmap
-                        filtered_df = self.df_fit_results.query('Filename == @map_name')
-                        if not filtered_df.empty and parameter in filtered_df.columns:
-                            z_col = filtered_df[parameter]
-                        else:
-                            z_col = None
-                
-                # Auto scale 
-                if self.cb_auto_scale.isChecked():
-                    # Remove outliers using IQR method and replace them with interpolated values
-                    Q1 = z_col.quantile(0.05)
-                    Q3 = z_col.quantile(0.95)
-                    IQR = Q3 - Q1
-                    # Identify the outliers
-                    outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
-                    # Interpolate values for the outliers using linear interpolation
-                    z_col_interpolated = z_col.copy()
-                    z_col_interpolated[outlier_mask] = np.nan  # Mark outliers as NaN for interpolation
-                    z_col_interpolated = z_col_interpolated.interpolate(method='linear', limit_direction='both')
-                    final_z_col=z_col_interpolated
-                else:
-                    final_z_col=z_col  
-
-                try:
-                    vmin = round(final_z_col.min(), 0)
-                    vmax = round(final_z_col.max(), 0)
-                except Exception as e:
-                    #When the selected 'parameters' does not exist for selected wafer.
-                    self.z_values_cbb.setCurrentIndex(0)
-
-                    vmin = round(final_z_col.min(), 0)
-                    vmax = round(final_z_col.max(), 0)
-
-                self.number_of_points = len(set(zip(x_col, y_col)))
-                
-                if map_type != '2Dmap' and self.number_of_points >= 4:
-                    # Create meshgrid for WaferPlot
-                    r = self.get_wafer_radius(map_type)
-                    grid_x, grid_y = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
-                    grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
-                    extent = [-r - 1, r + 1, -r - 0.5, r + 0.5]
-
-                else:
-                    # Regular 2D map
-                    heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': z_col})
-                    heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
-                    xmin, xmax = x_col.min(), x_col.max()
-                    ymin, ymax = y_col.min(), y_col.max()
-                    extent = [xmin, xmax, ymin, ymax]
-                
-        return heatmap_pivot, extent, vmin, vmax, grid_z
     
-    def get_wafer_radius(self, map_type_text):
-        match = re.search(r'Wafer_(\d+)mm', map_type_text)
-        if match:
-            diameter = int(match.group(1))
-            return diameter / 2
-        return None
-    
-    def plot(self, coords):
-        """Plot 2D maps of measurement points"""
-        map_type = self.cbb_map_type.currentText()
-        r = self.get_wafer_radius(map_type)
-        self.ax.clear()
-        
-        # Plot wafer map
-        if map_type != '2Dmap':
-            wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
-                                        color='black', linewidth=1)
-            self.ax.add_patch(wafer_circle)
-            self.ax.set_yticklabels([])
-
-            all_x, all_y = self.get_mes_sites_coord()
-            self.ax.scatter(all_x, all_y, marker='x', color='gray', s=15)
-            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
-            
-            
-        heatmap_pivot, extent, vmin, vmax, grid_z  = self.get_data_for_heatmap(map_type)
-        color = self.cbb_palette.currentText()
-        interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
-        vmin, vmax = self.z_range_slider.value()
-    
-
-        if map_type != '2Dmap' and self.number_of_points >= 4:
-            self.img = self.ax.imshow(grid_z, extent=[-r - 0.5, r + 0.5, -r - 0.5, r + 0.5],
-                            origin='lower', aspect='equal', cmap=color, interpolation='nearest')
-            
-        else: 
-            self.img = self.ax.imshow(heatmap_pivot, extent=extent, vmin=vmin, vmax=vmax,
-                            origin='lower', aspect='equal', cmap=color, interpolation=interpolation_option)
-        
-        # COLORBAR
-        if hasattr(self, 'cbar') and self.cbar is not None:
-            self.cbar.update_normal(self.img)
-        else:
-            self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
-
-        # MEASUREMENT SITES
-        if coords:
-            x, y = zip(*coords)
-            self.ax.scatter(x, y, marker='o', color='red', s=20)
-
-            #if map_type == '2Dmap':   
-            self.plot_height_profile_on_map(coords)
-
-        title = self.z_values_cbb.currentText()
-        self.ax.set_title(title, fontsize=13)
-        self.ax.get_figure().tight_layout()
-        self.canvas.draw_idle()
-
-    def plot_height_profile_on_map(self, coords):
-        """Plot height profile directly on heatmap"""
-        if len(coords) == 2:
-            x, y = zip(*coords)
-            self.ax.plot(x, y, color='black', linestyle='dotted', linewidth=2)
-
-            # Extract profile values from the heatmap
-            profile_df = self.extract_profile()
-            if profile_df is not None:
-                # Calculate the diagonal length of the heatmap
-                extent = self.get_data_for_heatmap()[1]
-                diagonal_length = np.sqrt((extent[1] - extent[0])**2 + (extent[3] - extent[2])**2)
-                max_normalized_value = 0.3 * diagonal_length
-                
-                # Calculate height values
-                profile_df['height'] = (profile_df['values'] / profile_df['values'].max()) * max_normalized_value
-                profile_df['height'] -= profile_df['height'].min()
-
-                x_vals = []
-                y_vals = []
-
-                # Calculate perpendicular points
-                for i, row in profile_df.iterrows():
-                    x_val = row['X']
-                    y_val = row['Y']
-                    normalized_distance = row['height']
-
-                    # Calculate the direction vector of the line connecting the two points
-                    dx = x[1] - x[0]
-                    dy = y[1] - y[0]
-                    length = np.sqrt(dx**2 + dy**2)
-
-                    # Normalize the direction vector
-                    if length > 0:
-                        dx /= length
-                        dy /= length
-
-                    # Calculate the perpendicular direction
-                    perp_dx = -dy
-                    perp_dy = dx
-
-                    # Calculate the new x and y values
-                    x_vals.append(x_val + perp_dx * normalized_distance)
-                    y_vals.append(y_val + perp_dy * normalized_distance)
-
-                # Plot the height profile 
-                self.ax.plot(x_vals, y_vals, color='black', linestyle='-', lw=2)
-    def on_mouse_press(self, event):
-        if self.cbb_selection_mode.currentText() != 'Rectangular':
-            return
-        if event.inaxes != self.ax:
-            return
-
-        # Start point
-        self.rect_start = (event.xdata, event.ydata)
-
-        # Remove old rectangle if exists
-        if self.rect_patch is not None:
-            self.rect_patch.remove()
-            self.rect_patch = None
-
-        # Create new rectangle patch (0x0 size initially)
-        self.rect_patch = patches.Rectangle(
-            (self.rect_start[0], self.rect_start[1]),
-            0, 0,
-            linewidth=1.2,
-            edgecolor='black',
-            facecolor='none',
-            linestyle='--'
-        )
-        self.ax.add_patch(self.rect_patch)
-        self.canvas.draw_idle()
-
- 
-    def on_mouse_move(self, event):
-        # Wrong mode? → ignore
-        if self.cbb_selection_mode.currentText() != "Rectangular":
-            return
-
-        # Not dragging any rectangle? → ignore
-        if self.rect_start is None:
-            return
-
-        # Cursor left the axes? → ignore
-        if event.inaxes != self.ax:
-            return
-
-        # Must hold LEFT mouse button during dragging
-        # event.button is None for move events → use event.buttons instead
-        if event.button != 1:
-            return
-
-        # --- SAFE: guaranteed rectangle exists ---
-        x0, y0 = self.rect_start
-        x1, y1 = event.xdata, event.ydata
-
-        # Update the displayed rectangle
-        self.rect_patch.set_x(min(x0, x1))
-        self.rect_patch.set_y(min(y0, y1))
-        self.rect_patch.set_width(abs(x1 - x0))
-        self.rect_patch.set_height(abs(y1 - y0))
-
-        self.canvas.draw_idle()
-
-
-    def on_mouse_release(self, event):
-        if self.cbb_selection_mode.currentText() != 'Rectangular':
-            return
-
-        if self.rect_start is None or event.inaxes != self.ax:
-            return
-
-        # finalize rectangle selection
-        x0, y0 = self.rect_start
-        x1, y1 = event.xdata, event.ydata
-        self.rect_start = None
-        
-
-        xmin, xmax = sorted([x0, x1])
-        ymin, ymax = sorted([y0, y1])
-
-        all_x, all_y = map(np.array, self.get_mes_sites_coord())
-        inside = (all_x >= xmin) & (all_x <= xmax) & (all_y >= ymin) & (all_y <= ymax)
-
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers != Qt.ControlModifier:
-            self.selected_points = []
-
-        for x,y in zip(all_x[inside], all_y[inside]):
-            self.selected_points.append((float(x), float(y)))
-
-   
-        self.update_spectra_selection()
-        self.figure.canvas.draw_idle()
-
-        
-    def on_left_click_2Dmap(self, event):
-        """Handle selection of points according to current selection mode."""
-        if event.inaxes != self.ax or event.button != 1:
-            return
-
-        mode = self.cbb_selection_mode.currentText()
-        all_x, all_y = map(np.array, self.get_mes_sites_coord())
-
-        x_clicked, y_clicked = event.xdata, event.ydata
-        modifiers = QApplication.keyboardModifiers()
-
-        # ----- POINT MODE -----
-        if mode == 'Point':
-            distances = np.sqrt((all_x - x_clicked)**2 + (all_y - y_clicked)**2)
-            idx = np.argmin(distances)
-            pt = (float(all_x[idx]), float(all_y[idx]))
-
-            if modifiers == Qt.ControlModifier:
-                self.selected_points.append(pt)
-            else:
-                self.selected_points = [pt]
-
-            self.update_spectra_selection()
-            return
-
-        # ----- LINE MODE -----
-        if mode == 'Line':
-            # store the clicked point
-            distances = np.sqrt((all_x - x_clicked)**2 + (all_y - y_clicked)**2)
-            idx = np.argmin(distances)
-            pt = (float(all_x[idx]), float(all_y[idx]))
-            self.line_tmp_points.append(pt)
-
-            # need 2 points → perform line selection
-            if len(self.line_tmp_points) == 2:
-
-                p1 = np.array(self.line_tmp_points[0])
-                p2 = np.array(self.line_tmp_points[1])
-
-                # vectorized projection on line segment
-                v = p2 - p1
-                w = np.vstack([all_x, all_y]).T - p1
-
-                t = np.clip((w @ v) / (np.dot(v, v)), 0, 1)
-                proj = p1 + t[:, None] * v
-
-                # distance threshold (tunable)
-                dist = np.linalg.norm(np.vstack([all_x, all_y]).T - proj, axis=1)
-
-                threshold = 0.02 * np.linalg.norm(v)  # 2% of segment length
-
-                selected = dist < threshold
-
-                if modifiers != Qt.ControlModifier:
-                    self.selected_points = []
-
-                for x,y in zip(all_x[selected], all_y[selected]):
-                    self.selected_points.append((float(x), float(y)))
-
-                self.update_spectra_selection()
-                self.line_tmp_points = []  # reset
-
-            return
-        
-    def update_spectra_selection(self):
-        """Update listbox according to self.selected_points."""
-        self.spectra_listbox.clearSelection()
-
-        for index in range(self.spectra_listbox.count()):
-            item = self.spectra_listbox.item(index)
-            x, y = map(float, item.text().strip('()').split(','))
-
-            if (x, y) in self.selected_points:
-                item.setSelected(True)
-                self.spectra_listbox.setCurrentRow(index)
-            else:
-                item.setSelected(False)
-
-
-    def extract_profile(self):
-        """Extract a profile from 2D map plot via interpolation."""
-        # Ensure exactly two points have been selected
-        if len(self.selected_points) != 2:
-            print("Select 2 points on map plot to define a profile")
-            return None
-        (x1, y1), (x2, y2) = self.selected_points
-        heatmap_pivot, _, _, _, _ = self.get_data_for_heatmap()
-        # Extract X and Y coordinates of the heatmap grid
-        x_values = heatmap_pivot.columns.values
-        y_values = heatmap_pivot.index.values
-        z_values = heatmap_pivot.values
-        # Interpolate Z values at the sampled points along the profile
-        interpolator = RegularGridInterpolator((y_values, x_values), z_values)
-        num_samples = 100 
-        x_samples = np.linspace(x1, x2, num_samples)
-        y_samples = np.linspace(y1, y2, num_samples)
-        sample_points = np.vstack((y_samples, x_samples)).T 
-        z_samples = interpolator(sample_points)
-        # Calculate the distance from (x1, y1) to each sample point
-        dists_from_start = np.sqrt((x_samples - x1)**2 + (y_samples - y1)**2)
-
-        profile_df = pd.DataFrame({'X': x_samples, 'Y': y_samples, 'distance': dists_from_start,'values': z_samples})
-
-        self.canvas.draw_idle()
-        return profile_df
-            
-    def on_ctrl_press(self, event):
-        """Handler function for key press event"""
-        if event.key == 'ctrl':
-            self.ctrl_pressed = True
-
-    def on_ctrl_release(self, event):
-        """Handler function for key release event"""
-        if event.key == 'ctrl':
-            self.ctrl_pressed = False
-
-    def get_mes_sites_coord(self):
-        """
-        Get all coordinates of measurement sites of the selected map.
-        """
-        df = self.map_df
-        all_x = df['X']
-        all_y = df['Y']
-        return all_x, all_y 
-
-    def copy_fig(self):
-        """Copy figure canvas to clipboard"""
-        copy_fig_to_clb(self.canvas)

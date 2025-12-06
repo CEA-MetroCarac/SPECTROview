@@ -95,6 +95,7 @@ class MapViewer(QWidget):
 
         title = self.z_values_cbb.currentText()
         self.ax.set_title(title, fontsize=13)
+        self.ax.grid(False)
         self.ax.get_figure().tight_layout()
         self.canvas.draw_idle()
 

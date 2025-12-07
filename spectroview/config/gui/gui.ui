@@ -335,7 +335,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>458</width>
-                          <height>573</height>
+                          <height>558</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_38">
@@ -1683,6 +1683,35 @@
                 </item>
                </layout>
               </widget>
+              <widget class="QWidget" name="more_mapview">
+               <attribute name="title">
+                <string>More MapView</string>
+               </attribute>
+               <layout class="QHBoxLayout" name="horizontalLayout_22">
+                <item>
+                 <widget class="QScrollArea" name="scrollArea_3">
+                  <property name="widgetResizable">
+                   <bool>true</bool>
+                  </property>
+                  <widget class="QWidget" name="scrollAreaWidgetContents_7">
+                   <property name="geometry">
+                    <rect>
+                     <x>0</x>
+                     <y>0</y>
+                     <width>1142</width>
+                     <height>565</height>
+                    </rect>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_32">
+                    <item>
+                     <layout class="QHBoxLayout" name="map_layout1"/>
+                    </item>
+                   </layout>
+                  </widget>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
              </widget>
             </item>
            </layout>
@@ -2467,7 +2496,7 @@
                           <x>0</x>
                           <y>0</y>
                           <width>458</width>
-                          <height>373</height>
+                          <height>358</height>
                          </rect>
                         </property>
                         <layout class="QVBoxLayout" name="verticalLayout_39">

@@ -12,7 +12,7 @@ from pathlib import Path
 from spectroview.modules.utils import calc_area, view_df, show_alert, spectrum_to_dict, dict_to_spectrum, baseline_to_dict, dict_to_baseline, save_df_to_excel, replace_peak_labels, quadrant, zone, view_text
 from spectroview.modules.utils import FitThread, CustomizedListWidget, Spectra, Spectrum
 from spectroview.modules.df_table import DataframeTable
-from spectroview.modules.map_viewer import MapViewer
+from spectroview.modules.map_viewer import MapViewer, MapViewerManager
 from spectroview.modules.spectra_viewer import SpectraViewer
 from spectroview.modules.peak_table import PeakTable
 from spectroview.modules.graph import Graph
@@ -68,10 +68,33 @@ class Maps(QObject):
         self.delay_timer.setSingleShot(True)
         self.delay_timer.timeout.connect(self.plot)
 
-        # MAP VIEWERS
-        self.setup_map_viewers()
-        self.synchronize_mapviewer_options()
 
+        self.map_viewer_manager = MapViewerManager()
+
+        # Map_view_Widget
+        self.map_viewer = MapViewer(self, self.app_settings)
+        self.map_viewer.spectra_listbox= self.ui.spectra_listbox
+        self.ui.map_layout.addWidget(self.map_viewer.widget)
+        self.map_viewer.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
+
+        # Map_view_Widget 1
+        self.map_viewer1 = MapViewer(self, self.app_settings)
+        self.map_viewer1.spectra_listbox= self.ui.spectra_listbox
+        self.ui.map_layout1.addWidget(self.map_viewer1.widget)
+        self.map_viewer1.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
+
+        # Map_view_Widget 2
+        self.map_viewer2 = MapViewer(self, self.app_settings)
+        self.map_viewer2.spectra_listbox= self.ui.spectra_listbox
+        self.ui.map_layout2.addWidget(self.map_viewer2.widget)
+        self.map_viewer2.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
+
+        # Map_view_Widget 3
+        self.map_viewer3 = MapViewer(self, self.app_settings)
+        self.map_viewer3.spectra_listbox= self.ui.spectra_listbox
+        self.ui.map_layout3.addWidget(self.map_viewer3.widget)
+        self.map_viewer3.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
+        
         ## Update spectra_listbox when selecting maps via MAPS LIST
         self.ui.maps_listbox.itemSelectionChanged.connect(self.upd_spectra_list)
         
@@ -89,103 +112,6 @@ class Maps(QObject):
         self.ui.horizontalLayout_52.addWidget(self.fit_model_manager)
         self.fit_model_manager.connect_apply(self.apply_model_fnc_handler)
          
-    def setup_map_viewers(self):
-        # Map_view_Widget
-        self.map_viewer = MapViewer(self, self.app_settings)
-        self.map_viewer.spectra_listbox= self.ui.spectra_listbox
-        self.ui.map_layout.addWidget(self.map_viewer.widget)
-        self.map_viewer.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
-
-        # Map_view_Widget 1
-        self.map_viewer1 = MapViewer(self, self.app_settings)
-        self.map_viewer1.spectra_listbox= self.ui.spectra_listbox
-        self.ui.map_layout1.addWidget(self.map_viewer1.widget)
-        self.map_viewer1.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
-
-
-        # Map_view_Widget 2
-        self.map_viewer2 = MapViewer(self, self.app_settings)
-        self.map_viewer2.spectra_listbox= self.ui.spectra_listbox
-        self.ui.map_layout1.addWidget(self.map_viewer2.widget)
-        self.map_viewer2.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
-
-        # Map_view_Widget 3
-        self.map_viewer3 = MapViewer(self, self.app_settings)
-        self.map_viewer3.spectra_listbox= self.ui.spectra_listbox
-        self.ui.map_layout1.addWidget(self.map_viewer3.widget)
-        self.map_viewer3.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
-
-        self.map_viewers = [
-            self.map_viewer,
-            self.map_viewer1,
-            self.map_viewer2,
-            self.map_viewer3
-        ]
-
-    def synchronize_mapviewer_options(self):
-        """
-        Connects the signals for both map type combo boxes and all synchronizable 
-        menu options across all MapViewer instances to the unified update slot.
-        """
-        SYNCHRONIZABLE_ACTIONS = ['RemoveOutliers', 'Smoothing', 'Grid', 'ShowStats']
-
-        for viewer in self.map_viewers:
-            # --- 1. Synchronize Map Type ComboBox (Index Change) ---
-            cbb = viewer.cbb_map_type
-            cbb.currentIndexChanged.connect(
-                lambda index, source_cbb=cbb: self.update_mapviewer_options(
-                    'map_type', index, source_cbb
-                )
-            )
-
-            # --- 2. Synchronize Menu Actions (Toggled State) ---
-            for action_name in SYNCHRONIZABLE_ACTIONS:
-                if action_name in viewer.menu_actions:
-                    action = viewer.menu_actions[action_name]
-                    action.toggled.connect(
-                        lambda state, name=action_name, source_viewer=viewer: 
-                            self.update_mapviewer_options(
-                                name, state, source_viewer
-                            )
-                    )
-
-    def update_mapviewer_options(self, option_key, new_value, source_widget):
-        """
-        Updates the state of a specific option (ComboBox index or menu action state) 
-        across all MapViewer instances, skipping the source widget.
-        """
-        if option_key == 'map_type':
-            # --- Handle Map Type ComboBox Synchronization ---
-            new_index = new_value
-            source_cbb = source_widget
-            
-            for viewer in self.map_viewers:
-                target_cbb = viewer.cbb_map_type
-                if target_cbb is not source_cbb:
-                    target_cbb.blockSignals(True) 
-                    target_cbb.setCurrentIndex(new_index)
-                    target_cbb.blockSignals(False)
-        
-        else:
-            # --- Handle Menu Action Synchronization (option_key is the action name) ---
-            action_name = option_key
-            new_state = new_value
-            source_viewer = source_widget # The source widget is the MapViewer instance for actions
-            
-            for target_viewer in self.map_viewers:
-                if target_viewer is not source_viewer:
-                    
-                    if action_name in target_viewer.menu_actions:
-                        target_action = target_viewer.menu_actions[action_name]
-                        
-                        target_action.blockSignals(True)
-                        target_action.setChecked(new_state)
-                        target_action.blockSignals(False)
-
-                        if action_name == 'RemoveOutliers':
-                            target_viewer.update_z_range_slider()
-                        else:
-                            target_viewer.refresh_plot()
 
     def setup_baseline_controls(self):
         self.ui.cb_attached.stateChanged.connect(self.refresh_gui)
@@ -390,9 +316,6 @@ class Maps(QObject):
             self.df_fit_results.columns = columns
 
             map_type = self.map_viewer.cbb_map_type.currentText()
-
-
-
             if map_type !='2Dmap':
                 # DIAMETER
                 radius = self.map_viewer.get_wafer_radius(map_type)
@@ -405,15 +328,7 @@ class Maps(QObject):
         self.df_table.show(self.df_fit_results)
         
         self.map_viewer.df_fit_results = self.df_fit_results
-        self.map_viewer1.df_fit_results = self.df_fit_results
-        self.map_viewer2.df_fit_results = self.df_fit_results
-        self.map_viewer3.df_fit_results = self.df_fit_results
-
         self.map_viewer.populate_z_values_cbb()
-        self.map_viewer1.populate_z_values_cbb()
-        self.map_viewer2.populate_z_values_cbb()
-        self.map_viewer3.populate_z_values_cbb()
-
         
     def update_peak_model(self):
         """Update the peak model in the SpectraViewWidget based on combobox selection."""
@@ -856,18 +771,6 @@ class Maps(QObject):
         self.map_viewer.map_df=df
         self.map_viewer.plot(coords)
 
-        self.map_viewer1.map_df_name=map_name
-        self.map_viewer1.map_df=df
-        self.map_viewer1.plot(coords)
-
-        self.map_viewer2.map_df_name=map_name
-        self.map_viewer2.map_df=df
-        self.map_viewer2.plot(coords)
-
-        self.map_viewer3.map_df_name=map_name
-        self.map_viewer3.map_df=df
-        self.map_viewer3.plot(coords)
-
         # Show correction value of the last selected item
         xcorrection_value = round(selected_spectrums[-1].xcorrection_value, 3)
         text = f"[{xcorrection_value}]"
@@ -886,33 +789,13 @@ class Maps(QObject):
         if map_df is not None:
             self.map_viewer.map_df_name=map_name
             self.map_viewer.map_df=map_df
-
-            self.map_viewer1.map_df_name=map_name
-            self.map_viewer1.map_df=map_df
-
-            self.map_viewer2.map_df_name=map_name
-            self.map_viewer2.map_df=map_df
-
-            self.map_viewer3.map_df_name=map_name
-            self.map_viewer3.map_df=map_df
-
-
             column_labels = map_df.columns[2:-1].astype(float)
             
             current_min, current_max = self.map_viewer.x_range_slider.value()
-            current_min1, current_max1 = self.map_viewer1.x_range_slider.value()
-            current_min2, current_max2 = self.map_viewer2.x_range_slider.value()
-            current_min3, current_max3 = self.map_viewer3.x_range_slider.value()
-
-
             min_value = float(column_labels.min())
             max_value = float(column_labels.max())
             
             self.map_viewer.update_xrange_slider(min_value, max_value, current_min, current_max)
-            self.map_viewer1.update_xrange_slider(min_value, max_value, current_min1, current_max1)
-            self.map_viewer2.update_xrange_slider(min_value, max_value, current_min2, current_max2)
-            self.map_viewer3.update_xrange_slider(min_value, max_value, current_min3, current_max3)
-
 
         checked_states = {}
         for index in range(self.ui.spectra_listbox.count()):
@@ -1008,18 +891,8 @@ class Maps(QObject):
         self.ui.spectra_listbox.clear()
         self.spectra_viewer.sel_spectrums = None  
         self.spectra_viewer.refresh_plot() 
-
-
         self.map_viewer.ax.clear()
-        self.map_viewer1.ax.clear()
-        self.map_viewer2.ax.clear()
-        self.map_viewer3.ax.clear()
-
         self.map_viewer.canvas.draw_idle()
-        self.map_viewer1.canvas.draw_idle()
-        self.map_viewer2.canvas.draw_idle()
-        self.map_viewer3.canvas.draw_idle()
-
 
     def select_all_spectra(self):
         """Select all spectra listed in the spectra listbox"""
@@ -1373,14 +1246,7 @@ class Maps(QObject):
 
         # Clear plot ofmeasurement sites 
         self.map_viewer.ax.clear()
-        self.map_viewer1.ax.clear()
-        self.map_viewer2.ax.clear()
-        self.map_viewer3.ax.clear()
-
         self.map_viewer.canvas.draw()
-        self.map_viewer1.canvas.draw()
-        self.map_viewer2.canvas.draw()
-        self.map_viewer3.canvas.draw()
 
         self.df_table.clear()
         self.peak_table.clear()

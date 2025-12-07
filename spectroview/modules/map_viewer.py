@@ -608,6 +608,7 @@ class MapViewer(QWidget):
         self.tool_btn_options = QToolButton(self)
         self.tool_btn_options.setText("... ")
         self.tool_btn_options.setPopupMode(QToolButton.InstantPopup)
+        self.tool_btn_options.setIcon(QIcon(os.path.join(ICON_DIR, "options.png")))
         self.tool_btn_options.setMenu(self.options_menu)
 
         spacer2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)

@@ -423,7 +423,7 @@ class MapViewer(QWidget):
             return diameter / 2
         return None
     
-    def plot(self, coords):
+    def plot(self, selected_pts):
         """Plot 2D maps of measurement points"""
         map_type = self.cbb_map_type.currentText()
         r = self.get_wafer_radius(map_type)
@@ -462,22 +462,22 @@ class MapViewer(QWidget):
             self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
 
         # Highlight selected points
-        if coords:
-            x, y = zip(*coords)
+        if selected_pts:
+            x, y = zip(*selected_pts)
             self.ax.scatter(x, y,facecolors='none', edgecolors='red', marker='s', s=60, linewidths=1, zorder=10)
 
             #if map_type == '2Dmap':   
-            self.plot_height_profile_on_map(coords)
+            self.plot_height_profile_on_map(selected_pts)
 
         title = self.z_values_cbb.currentText()
         self.ax.set_title(title, fontsize=13)
         self.ax.get_figure().tight_layout()
         self.canvas.draw_idle()
 
-    def plot_height_profile_on_map(self, coords):
+    def plot_height_profile_on_map(self, selected_pts):
         """Plot height profile directly on heatmap"""
-        if len(coords) == 2:
-            x, y = zip(*coords)
+        if len(selected_pts) == 2:
+            x, y = zip(*selected_pts)
             self.ax.plot(x, y, color='black', linestyle='dotted', linewidth=2)
 
             # Extract profile values from the heatmap

@@ -24,7 +24,7 @@ from lmfit import fit_report
 
 from fitspy.core.utils import closest_index
 
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication, QListWidgetItem, QDialog, QVBoxLayout
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication, QListWidgetItem, QDialog, QVBoxLayout, QHBoxLayout, QCheckBox
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
 
@@ -69,10 +69,6 @@ class Maps(QObject):
         self.delay_timer.timeout.connect(self.plot)
 
         # MAP VIEWERS
-        # self.map_viewer = MapViewer(self, self.app_settings)
-        # self.map_viewer.spectra_listbox= self.ui.spectra_listbox
-        # self.ui.map_layout.addWidget(self.map_viewer.widget)
-        # self.map_viewer.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
         self.setup_map_viewers()
         self.synchronize_mapviewer_options()
         
@@ -95,30 +91,39 @@ class Maps(QObject):
          
 
     def setup_map_viewers(self):
-        # Map_view_Widget
+        # --- 1. Viewer Controls (Checkboxes) ---
+        self.viewer_controls_layout = QHBoxLayout()
+        # Add controls to the main layout (or wherever appropriate in your UI)
+        self.ui.map_layout.addLayout(self.viewer_controls_layout)
+
+        # --- 2. Create Main Viewer (Always Visible) ---
         self.map_viewer = MapViewer(self, self.app_settings)
-        self.map_viewer.spectra_listbox= self.ui.spectra_listbox
+        self.map_viewer.spectra_listbox = self.ui.spectra_listbox
         self.ui.map_layout.addWidget(self.map_viewer.widget)
         self.map_viewer.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
 
-        # Map_view_Widget 1
+        # --- 3. Create Additional Viewers (Initially Hidden) ---
+        
+        # Viewer 1
         self.map_viewer1 = MapViewer(self, self.app_settings)
-        self.map_viewer1.spectra_listbox= self.ui.spectra_listbox
+        self.map_viewer1.spectra_listbox = self.ui.spectra_listbox
         self.ui.map_layout1.addWidget(self.map_viewer1.widget)
         self.map_viewer1.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
+        self.map_viewer1.widget.setVisible(False) # Use setVisible for clarity
 
-
-        # Map_view_Widget 2
+        # Viewer 2
         self.map_viewer2 = MapViewer(self, self.app_settings)
-        self.map_viewer2.spectra_listbox= self.ui.spectra_listbox
+        self.map_viewer2.spectra_listbox = self.ui.spectra_listbox
         self.ui.map_layout1.addWidget(self.map_viewer2.widget)
         self.map_viewer2.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
+        self.map_viewer2.widget.setVisible(False)
 
-        # Map_view_Widget 3
+        # Viewer 3
         self.map_viewer3 = MapViewer(self, self.app_settings)
-        self.map_viewer3.spectra_listbox= self.ui.spectra_listbox
+        self.map_viewer3.spectra_listbox = self.ui.spectra_listbox
         self.ui.map_layout1.addWidget(self.map_viewer3.widget)
         self.map_viewer3.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
+        self.map_viewer3.widget.setVisible(False)
 
         self.map_viewers = [
             self.map_viewer,
@@ -126,6 +131,52 @@ class Maps(QObject):
             self.map_viewer2,
             self.map_viewer3
         ]
+
+        # --- 4. Create Checkboxes ---
+        self.cb_view1 = QCheckBox("Show Map 2")
+        self.cb_view1.stateChanged.connect(lambda s: self.toggle_map_viewer(self.map_viewer1, s))
+        self.viewer_controls_layout.addWidget(self.cb_view1)
+
+        self.cb_view2 = QCheckBox("Show Map 3")
+        self.cb_view2.stateChanged.connect(lambda s: self.toggle_map_viewer(self.map_viewer2, s))
+        self.viewer_controls_layout.addWidget(self.cb_view2)
+
+        self.cb_view3 = QCheckBox("Show Map 4")
+        self.cb_view3.stateChanged.connect(lambda s: self.toggle_map_viewer(self.map_viewer3, s))
+        self.viewer_controls_layout.addWidget(self.cb_view3)
+        
+        self.viewer_controls_layout.addStretch()
+        
+    def toggle_map_viewer(self, viewer, state):
+        """Show/Hide viewer and trigger a plot if showing."""
+        if state == Qt.Checked:
+            viewer.widget.setVisible(True)
+            
+            # --- FORCE UPDATE DATA ---
+            # When showing for the first time, the viewer has NO data.
+            # We must populate it immediately.
+            map_name, coords = self.spectra_id()
+            if map_name and map_name in self.maps:
+                viewer.map_df_name = map_name
+                
+                # This triggers the MapViewer internal update (sliders, limits)
+                # assuming you implemented the @property setter we discussed previously
+                viewer.map_df = self.maps[map_name] 
+                
+                # Update X-range to match the main viewer so they look consistent
+                current_min, current_max = self.map_viewer.x_range_slider.value()
+                viewer.update_xrange_slider() # Ensure internal state is ready
+                viewer.x_range_slider.setValue((current_min, current_max))
+
+                # If specific points are selected, plot them
+                if coords:
+                    viewer.plot(coords)
+                else:
+                    # Plot empty map if no points selected
+                    viewer.plot([]) 
+            
+        else:
+            viewer.widget.setVisible(False)
 
     def synchronize_mapviewer_options(self):
         """
@@ -846,21 +897,13 @@ class Maps(QObject):
         
         df = self.maps.get(map_name)
         
-        self.map_viewer.map_df_name=map_name
-        self.map_viewer.map_df=df
-        self.map_viewer.plot(coords)
-
-        self.map_viewer1.map_df_name=map_name
-        self.map_viewer1.map_df=df
-        self.map_viewer1.plot(coords)
-
-        self.map_viewer2.map_df_name=map_name
-        self.map_viewer2.map_df=df
-        self.map_viewer2.plot(coords)
-
-        self.map_viewer3.map_df_name=map_name
-        self.map_viewer3.map_df=df
-        self.map_viewer3.plot(coords)
+        # --- PERFORMANCE OPTIMIZATION ---
+        # Loop through viewers and only plot if visible
+        for viewer in self.map_viewers:
+            if viewer.widget.isVisible():
+                viewer.map_df_name = map_name
+                viewer.map_df = df 
+                viewer.plot(coords)
 
         # Show correction value of the last selected item
         xcorrection_value = round(selected_spectrums[-1].xcorrection_value, 3)
@@ -878,35 +921,18 @@ class Maps(QObject):
         map_df = self.maps.get(map_name)
 
         if map_df is not None:
-            self.map_viewer.map_df_name=map_name
-            self.map_viewer.map_df=map_df
-
-            self.map_viewer1.map_df_name=map_name
-            self.map_viewer1.map_df=map_df
-
-            self.map_viewer2.map_df_name=map_name
-            self.map_viewer2.map_df=map_df
-
-            self.map_viewer3.map_df_name=map_name
-            self.map_viewer3.map_df=map_df
-            
             column_labels = map_df.columns[2:-1].astype(float)
-            
-            current_min, current_max = self.map_viewer.x_range_slider.value()
-            current_min1, current_max1 = self.map_viewer1.x_range_slider.value()
-            current_min2, current_max2 = self.map_viewer2.x_range_slider.value()
-            current_min3, current_max3 = self.map_viewer3.x_range_slider.value()
-            
-            
-            
             min_value = float(column_labels.min())
             max_value = float(column_labels.max())
             
-            self.map_viewer.update_xrange_slider(min_value, max_value, current_min, current_max)
-            self.map_viewer1.update_xrange_slider(min_value, max_value, current_min1, current_max1)
-            self.map_viewer2.update_xrange_slider(min_value, max_value, current_min2, current_max2)
-            self.map_viewer3.update_xrange_slider(min_value, max_value, current_min3, current_max3)
-
+            for viewer in self.map_viewers:
+                # Only update data/sliders if the viewer is actually visible
+                if viewer.widget.isVisible():
+                    viewer.map_df_name = map_name
+                    viewer.map_df = map_df
+                    current_min, current_max = viewer.x_range_slider.value()
+                    viewer.update_xrange_slider(min_value, max_value, current_min, current_max)
+            
         checked_states = {}
         for index in range(self.ui.spectra_listbox.count()):
             item = self.ui.spectra_listbox.item(index)

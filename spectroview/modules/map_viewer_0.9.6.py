@@ -94,7 +94,6 @@ class MapViewer(QWidget):
 
         # Variables to keep track of highlighted points and Ctrl key status
         self.selected_points = []
-        self.ctrl_pressed = False
         
         # Connect the mouse and key events to the handler functions
         self.figure.canvas.mpl_connect('button_press_event', self.on_left_click_2Dmap)

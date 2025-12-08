@@ -100,7 +100,6 @@ class MapViewer(QWidget):
 
         # Variables to keep track of highlighted points and Ctrl key status
         self.selected_points = []
-        self.ctrl_pressed = False
         
         # Connect the mouse and key events to the handler functions
         self.figure.canvas.mpl_connect('button_press_event', self.on_mouse_click)
@@ -462,10 +461,10 @@ class MapViewer(QWidget):
         else:
             self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
 
-        # MEASUREMENT SITES
+        # Highlight selected points
         if coords:
             x, y = zip(*coords)
-            self.ax.scatter(x, y, marker='o', color='red', s=20)
+            self.ax.scatter(x, y,facecolors='none', edgecolors='red', marker='s', s=60, linewidths=1, zorder=10)
 
             #if map_type == '2Dmap':   
             self.plot_height_profile_on_map(coords)

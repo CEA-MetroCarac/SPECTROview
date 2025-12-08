@@ -1371,7 +1371,7 @@ class Maps(QObject):
         self.spectra_viewer.sel_spectrums = None 
         self.spectra_viewer.refresh_plot()
 
-        # Clear plot ofmeasurement sites 
+        # Clear plot of measurement sites 
         self.map_viewer.ax.clear()
         self.map_viewer1.ax.clear()
         self.map_viewer2.ax.clear()

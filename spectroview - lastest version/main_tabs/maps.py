@@ -852,20 +852,20 @@ class Maps(QObject):
         
         df = self.maps.get(map_name)
         
-        self.map_viewer.map_df_name=map_name
-        self.map_viewer.map_df=df
+        self.map_viewer._map_df_name=map_name
+        self.map_viewer._map_df=df
         self.map_viewer.plot(coords)
 
-        self.map_viewer1.map_df_name=map_name
-        self.map_viewer1.map_df=df
+        self.map_viewer1._map_df_name=map_name
+        self.map_viewer1._map_df=df
         self.map_viewer1.plot(coords)
 
-        self.map_viewer2.map_df_name=map_name
-        self.map_viewer2.map_df=df
+        self.map_viewer2._map_df_name=map_name
+        self.map_viewer2._map_df=df
         self.map_viewer2.plot(coords)
 
-        self.map_viewer3.map_df_name=map_name
-        self.map_viewer3.map_df=df
+        self.map_viewer3._map_df_name=map_name
+        self.map_viewer3._map_df=df
         self.map_viewer3.plot(coords)
 
         # Show correction value of the last selected item
@@ -884,17 +884,17 @@ class Maps(QObject):
         map_df = self.maps.get(map_name)
 
         if map_df is not None:
-            self.map_viewer.map_df_name=map_name
-            self.map_viewer.map_df=map_df
+            self.map_viewer._map_df_name=map_name
+            self.map_viewer._map_df=map_df
 
-            self.map_viewer1.map_df_name=map_name
-            self.map_viewer1.map_df=map_df
+            self.map_viewer1._map_df_name=map_name
+            self.map_viewer1._map_df=map_df
 
-            self.map_viewer2.map_df_name=map_name
-            self.map_viewer2.map_df=map_df
+            self.map_viewer2._map_df_name=map_name
+            self.map_viewer2._map_df=map_df
 
-            self.map_viewer3.map_df_name=map_name
-            self.map_viewer3.map_df=map_df
+            self.map_viewer3._map_df_name=map_name
+            self.map_viewer3._map_df=map_df
 
 
             column_labels = map_df.columns[2:-1].astype(float)

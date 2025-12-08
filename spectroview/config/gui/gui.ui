@@ -1685,7 +1685,7 @@
               </widget>
               <widget class="QWidget" name="more_mapview">
                <attribute name="title">
-                <string>More MapView</string>
+                <string>+MapViewer</string>
                </attribute>
                <layout class="QHBoxLayout" name="horizontalLayout_22">
                 <item>

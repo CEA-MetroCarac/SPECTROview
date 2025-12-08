@@ -183,6 +183,11 @@ class MapViewer(QWidget):
         self.map_widget_layout.addLayout(profile_layout)
         profile_layout.setContentsMargins(5, 5, 5, 5)
 
+        vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.map_widget_layout.addItem(vspacer)
+        vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.map_widget_layout.addItem(vspacer)
+
     def update_settings(self):
         """Save selected wafer size to settings"""
         map_type = self.cbb_map_type.currentText()
@@ -297,9 +302,6 @@ class MapViewer(QWidget):
             
         self.map_widget_layout.addLayout(self.z_slider_layout)
         self.map_widget_layout.addLayout(self.x_slider_layout)
-
-        vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self.map_widget_layout.addItem(vspacer)
     
     def _update_slider_from_edit(self, slider, edit, index):
         """Update slider value when user edits text boxes"""

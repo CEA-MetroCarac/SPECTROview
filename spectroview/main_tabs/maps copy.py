@@ -131,17 +131,14 @@ class Maps(QObject):
         # Checkbox for Viewer 1
         self.cb_view1 = QCheckBox("Viewer 2")
         self.cb_view1.stateChanged.connect(self.refresh_gui)
-        self.viewer_controls_layout.addWidget(self.cb_view1)
 
         # Checkbox for Viewer 2
         self.cb_view2 = QCheckBox("Viewer 3")
         self.cb_view2.stateChanged.connect(self.refresh_gui)
-        self.viewer_controls_layout.addWidget(self.cb_view2)
 
         # Checkbox for Viewer 3
         self.cb_view3 = QCheckBox("Viewer 4")
         self.cb_view3.stateChanged.connect(self.refresh_gui)
-        self.viewer_controls_layout.addWidget(self.cb_view3)
         
         # Add a spacer to push checkboxes to the left
         self.viewer_controls_layout.addStretch()
@@ -865,25 +862,12 @@ class Maps(QObject):
         df = self.maps.get(map_name)
         
         # --- PERFORMANCE OPTIMIZATION ---
-        self.map_viewer.map_df_name=map_name
-        self.map_viewer.map_df=df
-        self.map_viewer.plot(coords)
-        
-        if self.cb_view1.isChecked():
-            self.map_viewer1.map_df_name=map_name
-            self.map_viewer1.map_df=df
-            self.map_viewer1.plot(coords)
-        
-        if self.cb_view2.isChecked():
-            self.map_viewer2.map_df_name=map_name
-            self.map_viewer2.map_df=df
-            self.map_viewer2.plot(coords)
-
-        if self.cb_view3.isChecked():
-            self.map_viewer3.map_df_name=map_name
-            self.map_viewer3.map_df=df
-            self.map_viewer3.plot(coords)
-
+        # Loop through viewers and only plot if visible
+        for viewer in self.map_viewers:
+            if viewer.widget.isVisible():
+                viewer.map_df_name = map_name
+                viewer.map_df = df 
+                viewer.plot(coords)
 
         # Show correction value of the last selected item
         xcorrection_value = round(selected_spectrums[-1].xcorrection_value, 3)
@@ -905,23 +889,14 @@ class Maps(QObject):
             min_value = float(column_labels.min())
             max_value = float(column_labels.max())
             
-            self.map_viewer.map_df_name=map_name
-            self.map_viewer.map_df=map_df
-            current_min, current_max = self.map_viewer.x_range_slider.value()
-            self.map_viewer.update_xrange_slider(min_value, max_value, current_min, current_max)
-
-            self.map_viewer1.map_df_name=map_name
-            self.map_viewer1.map_df=map_df
-            self.map_viewer1.update_xrange_slider(min_value, max_value, current_min, current_max)
-        
-            self.map_viewer2.map_df_name=map_name
-            self.map_viewer2.map_df=map_df
-            self.map_viewer2.update_xrange_slider(min_value, max_value, current_min, current_max)
-        
-            self.map_viewer3.map_df_name=map_name
-            self.map_viewer3.map_df=map_df
-            self.map_viewer3.update_xrange_slider(min_value, max_value, current_min, current_max)
-        
+            for viewer in self.map_viewers:
+                # Only update data/sliders if the viewer is actually visible
+                if viewer.widget.isVisible():
+                    viewer.map_df_name = map_name
+                    viewer.map_df = map_df
+                    current_min, current_max = viewer.x_range_slider.value()
+                    viewer.update_xrange_slider(min_value, max_value, current_min, current_max)
+            
         checked_states = {}
         for index in range(self.ui.spectra_listbox.count()):
             item = self.ui.spectra_listbox.item(index)

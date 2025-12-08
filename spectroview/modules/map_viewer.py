@@ -559,10 +559,10 @@ class MapViewer(QWidget):
         std = float(arr_clean.std())
         sigma3 = 3 * std
 
-        txt = (f"mean: {mean:.3f}\n"
-               f"min: {mn:.3f}\n"
-               f"max: {mx:.3f}\n"
-               f"3σ: {sigma3:.3f}")
+        txt = (f"mean: {mean:.2f}\n"
+               f"min: {mn:.2f}\n"
+               f"max: {mx:.2f}\n"
+               f"3σ: {sigma3:.2f}")
 
         # place on top-left inside axes
         self._last_stats_text_artist = self.ax.text(0.02, 0.98, txt,

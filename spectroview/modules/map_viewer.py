@@ -47,6 +47,12 @@ class MapViewer(QWidget):
         self.rect_start = None
         self.rect_patch = None
         
+        # last computed arrays (for stats & profile)
+        self._last_final_z_col = None
+        self._last_grid_z = None
+        self._last_extent = [0,0,0,0]
+        self._last_stats_text_artist = None
+        
         self.initUI()
 
     def initUI(self):
@@ -187,8 +193,12 @@ class MapViewer(QWidget):
         """Create more view options for 2Dmap plot"""
         
         self.options_menu = QMenu(self)
-        # Smoothing option
-        options = [ ("Smoothing", "Smoothing", False),]
+        options = [
+            ("Smoothing", "Smoothing", False),
+            ("Grid", "Grid", False),
+            ("ShowStats", "Show stats", True),
+        ]
+        
         for option_name, option_label, *checked in options:
             action = QAction(option_label, self)
             action.setCheckable(True)
@@ -323,36 +333,40 @@ class MapViewer(QWidget):
     
     def update_z_range_slider(self):
         if self.z_values_cbb.count() > 0 and self.z_values_cbb.currentIndex() >= 0:
-            _,_, vmin, vmax, _ =self.get_data_for_heatmap()
+            _,_, vmin, vmax, _ , _ =self.get_data_for_heatmap()
             self.z_range_slider.setRange(vmin, vmax)
             self.z_range_slider.setValue((vmin, vmax))
         else:
             return
     
     def get_data_for_heatmap(self, map_type='2Dmap'):
-        """Prepare data for heatmap based on range sliders values"""
+        """
+        Returns: heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
+        final_z_col is the 1D array of z-values corresponding to each site (used for stats).
+        """
 
         # Default return values in case of no valid map_df or filtered columns
-        heatmap_pivot = pd.DataFrame()  # Empty DataFrame for heatmap
-        extent = [0, 0, 0, 0]  # Default extent values
+        heatmap_pivot = pd.DataFrame()  
+        extent = [0, 0, 0, 0]  
         vmin = 0
         vmax = 0
         grid_z = None # for waferplot
+        final_z_col = None
         
         if self.map_df is not None:
             xmin, xmax = self.x_range_slider.value()
             column_labels = self.map_df.columns[2:-1]  # Keep labels as strings
 
             # Convert slider range values to strings for comparison
-            filtered_columns = column_labels[(column_labels.astype(float) >= xmin) &
-                                            (column_labels.astype(float) <= xmax)]
+            filtered_columns = column_labels[(column_labels.astype(float) >= xmin) & (column_labels.astype(float) <= xmax)]
             
             if len(filtered_columns) > 0:
                 # Create a filtered DataFrame including X, Y, and the selected range of columns
                 filtered_map_df = self.map_df[['X', 'Y'] + list(filtered_columns)]
                 x_col = filtered_map_df['X'].values
                 y_col = filtered_map_df['Y'].values
-                final_z_col = []
+               
+                z_col = None
 
                 parameter = self.z_values_cbb.currentText()
                 if parameter == 'Area':
@@ -363,28 +377,37 @@ class MapViewer(QWidget):
                     # Max intensity value of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
                 else:
+                    # Fit parameter from df_fit_results
                     if not self.df_fit_results.empty:
                         map_name = self.map_df_name
-                        # Plot only selected wafer/2Dmap
-                        filtered_df = self.df_fit_results.query('Filename == @map_name')
+                        filtered_df = self.df_fit_results.query('Filename == @map_name') # Plot only selected wafer/2Dmap
                         if not filtered_df.empty and parameter in filtered_df.columns:
                             z_col = filtered_df[parameter]
                         else:
                             z_col = None
+                            
+                # --- SAFETY CHECK: If z_col is invalid, return defaults ---
+                if z_col is None or len(z_col) == 0:
+                    return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
                 
                 # Auto scale 
                 if self.cb_auto_scale.isChecked():
-                    # Remove outliers using IQR method and replace them with interpolated values
-                    Q1 = z_col.quantile(0.05)
-                    Q3 = z_col.quantile(0.95)
-                    IQR = Q3 - Q1
-                    # Identify the outliers
-                    outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
-                    # Interpolate values for the outliers using linear interpolation
-                    z_col_interpolated = z_col.copy()
-                    z_col_interpolated[outlier_mask] = np.nan  # Mark outliers as NaN for interpolation
-                    z_col_interpolated = z_col_interpolated.interpolate(method='linear', limit_direction='both')
-                    final_z_col=z_col_interpolated
+                    try:
+                        # Remove outliers using IQR method and replace them with interpolated values
+                        Q1 = z_col.quantile(0.05)
+                        Q3 = z_col.quantile(0.95)
+                        IQR = Q3 - Q1
+                        # Identify the outliers
+                        outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
+                        # Interpolate values for the outliers using linear interpolation
+                        z_col_interpolated = z_col.copy()
+                        z_col_interpolated[outlier_mask] = np.nan  # Mark outliers as NaN for interpolation
+                        z_col_interpolated = z_col_interpolated.interpolate(method='linear', limit_direction='both')
+                        final_z_col=z_col_interpolated
+                    except Exception as e:
+                        print(f"Auto scale interpolation error: {e}")
+                        final_z_col = z_col
+                        
                 else:
                     final_z_col=z_col  
 
@@ -394,10 +417,9 @@ class MapViewer(QWidget):
                 except Exception as e:
                     #When the selected 'parameters' does not exist for selected wafer.
                     self.z_values_cbb.setCurrentIndex(0)
+                    vmin, vmax = 0, 0
 
-                    vmin = round(final_z_col.min(), 0)
-                    vmax = round(final_z_col.max(), 0)
-
+                # store number of unique sites
                 self.number_of_points = len(set(zip(x_col, y_col)))
                 
                 if map_type != '2Dmap' and self.number_of_points >= 4:
@@ -415,7 +437,7 @@ class MapViewer(QWidget):
                     ymin, ymax = y_col.min(), y_col.max()
                     extent = [xmin, xmax, ymin, ymax]
                 
-        return heatmap_pivot, extent, vmin, vmax, grid_z
+        return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
     
     def get_wafer_radius(self, map_type_text):
         match = re.search(r'Wafer_(\d+)mm', map_type_text)
@@ -426,23 +448,36 @@ class MapViewer(QWidget):
     
     def plot(self, selected_pts):
         """Plot 2D maps of measurement points"""
+        if selected_pts is None:
+            selected_pts = []
+       
         map_type = self.cbb_map_type.currentText()
         r = self.get_wafer_radius(map_type)
         self.ax.clear()
         
-        # Plot wafer map
+        # Plot wafer circle for wafer maps
         if map_type != '2Dmap':
-            wafer_circle = patches.Circle((0, 0), radius=r, fill=False,
-                                        color='black', linewidth=1)
+            wafer_circle = patches.Circle((0, 0), radius=r, fill=False, color='black', linewidth=1)
             self.ax.add_patch(wafer_circle)
-            self.ax.set_yticklabels([])
 
             all_x, all_y = self.get_mes_sites_coord()
             self.ax.scatter(all_x, all_y, marker='x', color='gray', s=15)
-            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
             
+            # X labels removed for wafer map, Y kept
+            self.ax.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+            self.ax.tick_params(axis='y', which='both', left=True, right=False, labelleft=True)
+        
+        else:
+            # 2D map: show both axes labels
+            self.ax.tick_params(axis='x', which='both', bottom=True, top=False, labelbottom=True)
+            self.ax.tick_params(axis='y', which='both', left=True, right=False, labelleft=True)
             
-        heatmap_pivot, extent, vmin, vmax, grid_z  = self.get_data_for_heatmap(map_type)
+        # Data preparation    
+        heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col  = self.get_data_for_heatmap(map_type)
+        self._last_final_z_col = final_z_col
+        self._last_grid_z = grid_z
+        self._last_extent = extent
+        
         color = self.cbb_palette.currentText()
         interpolation_option = 'bilinear' if self.menu_actions['Smoothing'].isChecked() else 'none'
         vmin, vmax = self.z_range_slider.value()
@@ -461,7 +496,18 @@ class MapViewer(QWidget):
             self.cbar.update_normal(self.img)
         else:
             self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
+       
+        # Grid
+        if self.menu_actions.get('Grid') and self.menu_actions['Grid'].isChecked():
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        else:
+            self.ax.grid(False)
 
+        # Show stats when requested (wafer only)
+        # Stats computed from final_z_col (the one used for values)
+        if map_type != '2Dmap' and self.menu_actions.get('ShowStats') and self.menu_actions['ShowStats'].isChecked():
+            self._draw_stats_box()
+            
         # Highlight selected points
         if selected_pts:
             x, y = zip(*selected_pts)
@@ -474,6 +520,42 @@ class MapViewer(QWidget):
         self.ax.set_title(title, fontsize=13)
         self.ax.get_figure().tight_layout()
         self.canvas.draw_idle()
+    
+    def _draw_stats_box(self):
+        """Draw mean/min/max/3sigma box on the axes (wafer mode)."""
+        # remove old text
+        if hasattr(self, '_last_stats_text_artist') and self._last_stats_text_artist is not None:
+            try:
+                self._last_stats_text_artist.remove()
+            except Exception:
+                pass
+            self._last_stats_text_artist = None
+
+        arr = self._last_final_z_col
+        if arr is None:
+            return
+        # drop NA
+        arr_clean = pd.Series(arr).dropna()
+        if arr_clean.empty:
+            return
+
+        mean = float(arr_clean.mean())
+        mn = float(arr_clean.min())
+        mx = float(arr_clean.max())
+        std = float(arr_clean.std())
+        sigma3 = 3 * std
+
+        txt = (f"mean: {mean:.3f}\n"
+               f"min: {mn:.3f}\n"
+               f"max: {mx:.3f}\n"
+               f"3σ: {sigma3:.3f}")
+
+        # place on top-left inside axes
+        self._last_stats_text_artist = self.ax.text(0.02, 0.98, txt,
+                                                    transform=self.ax.transAxes,
+                                                    fontsize=9, va='top', ha='left',
+                                                    bbox=dict(boxstyle="round,pad=0.3", fc="white", alpha=0.8, ec="black"))
+
 
     def plot_height_profile_on_map(self, selected_pts):
         """Plot height profile directly on heatmap"""
@@ -628,7 +710,7 @@ class MapViewer(QWidget):
             print("Select 2 points on map plot to define a profile")
             return None
         (x1, y1), (x2, y2) = self.selected_points
-        heatmap_pivot, _, _, _, _ = self.get_data_for_heatmap()
+        heatmap_pivot, _, _, _, _, _ = self.get_data_for_heatmap()
         # Extract X and Y coordinates of the heatmap grid
         x_values = heatmap_pivot.columns.values
         y_values = heatmap_pivot.index.values

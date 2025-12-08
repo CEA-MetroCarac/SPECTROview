@@ -209,7 +209,9 @@ class MapViewer(QWidget):
         
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
-        # Create x-axis range slider
+        # ---------------------------------------------------------
+        # X-AXIS SLIDER SETUP
+        # ---------------------------------------------------------
         self.x_range_slider = QLabeledDoubleRangeSlider(Qt.Orientation.Horizontal)
         self.x_range_slider.setEdgeLabelMode(QLabeledDoubleRangeSlider.EdgeLabelMode.NoLabel)
         self.x_range_slider.setHandleLabelPosition(QLabeledDoubleRangeSlider.LabelPosition.NoLabel)
@@ -241,7 +243,6 @@ class MapViewer(QWidget):
         # Connect slider → entry boxes
         self.x_range_slider.valueChanged.connect(lambda v: self._update_edit_from_slider(v, self.x_min_edit, self.x_max_edit))
 
-    
         self.x_slider_layout = QHBoxLayout()
         self.x_slider_layout.addWidget(self.x_range_slider_label)
         self.x_slider_layout.addWidget(self.fix_x_checkbox)
@@ -250,7 +251,9 @@ class MapViewer(QWidget):
         self.x_slider_layout.addWidget(self.x_max_edit)
         self.x_slider_layout.setContentsMargins(5, 0, 5, 0)
 
-        # Create z-axis range slider
+        # ---------------------------------------------------------
+        # Z-AXIS SLIDER SETUP
+        # ---------------------------------------------------------
         self.z_range_slider = QLabeledDoubleRangeSlider(Qt.Orientation.Horizontal)  
         self.z_range_slider.setEdgeLabelMode(QLabeledDoubleRangeSlider.EdgeLabelMode.NoLabel)
         self.z_range_slider.setHandleLabelPosition(QLabeledDoubleRangeSlider.LabelPosition.NoLabel)
@@ -260,12 +263,17 @@ class MapViewer(QWidget):
         self.z_range_slider.setTracking(True)    
 
         self.z_values_cbb = QComboBox()
-        self.z_values_cbb.addItems(['Max Intensity', 'Area']) 
-        self.z_values_cbb.setFixedWidth(97) 
+        self.z_values_cbb.addItems(['Intensity', 'Area']) 
+        self.z_values_cbb.setFixedWidth(50) 
         self.z_values_cbb.setToolTip("Select parameter to plot 2Dmap")
         self.z_values_cbb.currentIndexChanged.connect(self.update_z_range_slider)
         self.z_range_slider.valueChanged.connect(self.refresh_plot)
 
+        self.fix_z_checkbox = QCheckBox("Fix")
+        self.fix_z_checkbox.setToolTip("If checked, the Z-range (Intensity/Area) will not reset when changing maps.")
+        # Connect to refresh_plot so the user sees the effect immediately if they toggle it
+        self.fix_z_checkbox.stateChanged.connect(self.refresh_plot)
+        
         # Entry boxes for Z-range
         self.z_min_edit = QLineEdit("0")
         self.z_max_edit = QLineEdit("100")
@@ -281,6 +289,7 @@ class MapViewer(QWidget):
 
         self.z_slider_layout = QHBoxLayout()
         self.z_slider_layout.addWidget(self.z_values_cbb)
+        self.z_slider_layout.addWidget(self.fix_z_checkbox)
         self.z_slider_layout.addWidget(self.z_min_edit)
         self.z_slider_layout.addWidget(self.z_range_slider)
         self.z_slider_layout.addWidget(self.z_max_edit)
@@ -311,7 +320,7 @@ class MapViewer(QWidget):
     
     def populate_z_values_cbb(self):
         self.z_values_cbb.clear() 
-        self.z_values_cbb.addItems(['Max Intensity', 'Area'])
+        self.z_values_cbb.addItems(['Intensity', 'Area'])
         if not self.df_fit_results.empty:
             fit_columns = [col for col in self.df_fit_results.columns if col not in ['Filename', 'X', 'Y']]
             self.z_values_cbb.addItems(fit_columns)
@@ -334,8 +343,13 @@ class MapViewer(QWidget):
     def update_z_range_slider(self):
         if self.z_values_cbb.count() > 0 and self.z_values_cbb.currentIndex() >= 0:
             _,_, vmin, vmax, _ , _ =self.get_data_for_heatmap()
+            current_handle_min, current_handle_max = self.z_range_slider.value()
             self.z_range_slider.setRange(vmin, vmax)
-            self.z_range_slider.setValue((vmin, vmax))
+            
+            if self.fix_z_checkbox.isChecked():
+                self.z_range_slider.setValue((current_handle_min, current_handle_max))
+            else: 
+                self.z_range_slider.setValue((vmin, vmax))
         else:
             return
     
@@ -373,7 +387,7 @@ class MapViewer(QWidget):
                     # Intensity sums of of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
                     
-                elif parameter == 'Max Intensity':
+                elif parameter == 'Intensity':
                     # Max intensity value of each spectrum over the selected range
                     z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
                 else:

@@ -1,0 +1,65 @@
+# Matplotlib style for Jupyter notebooks
+
+# Set default figure size
+
+# Set color cycle: red, blue, green, violet, gray, yellow,  
+axes.prop_cycle : cycler('color', ['1a6fdf','f14040', '37ad6b', '515151', 'b177de', 'cc9900', 'e377c2', '7d4e4e', '8e8e00', 'fb6501', '6699cc', '6fb802', '515151', 'f14040', '1a6fdf', '8d0000', '6fd0ef'])
+
+#xtick.major.size : 5
+#xtick.major.width : 0.8
+#xtick.minor.size : 0
+#xtick.minor.width : 0.8
+
+#xtick.direction: out
+#xtick.minor.visible : True
+#xtick.top : False
+
+# Set y axis
+#ytick.major.size : 5
+##ytick.major.width : 0.8
+#ytick.minor.size : 0
+#ytick.minor.width : 00
+
+#ytick.direction: out
+#ytick.minor.visible : True
+#ytick.right : False
+
+# Set line widths
+axes.linewidth : 1.
+lines.linewidth : 2.
+
+# Grid option
+axes.grid           : False   # display grid or not
+axes.grid.which     : major
+axes.grid.axis      : both
+grid.linestyle: --
+grid.linewidth : 1
+
+### Legend
+legend.frameon       : True
+legend.numpoints     : 1      # the number of points in the legend line
+legend.fontsize : 10
+legend.borderpad     : 0.4    # border whitespace in fontsize units
+legend.markerscale   : 0.6    # relative size of legend markers vs.original
+legend.title_fontsize : 12
+legend.edgecolor     : black  # set the edge color of the legend box to black
+legend.framealpha    : 0.7      # transparency (1 = opaque, 0 = transparent)
+legend.fancybox      : False   # True =rounded box, False=square.
+
+# Fontsizes
+xtick.labelsize : 12
+ytick.labelsize : 12
+axes.titlesize : 12
+axes.labelsize : 12
+
+figure.dpi       : 90      # figure dots per inch
+
+# Use sans-serif fonts
+font.family : sans-serif
+mathtext.fontset : dejavusans
+
+# Use LaTeX for math formatting
+text.usetex : False
+
+# errorbar props
+errorbar.capsize: 0.02

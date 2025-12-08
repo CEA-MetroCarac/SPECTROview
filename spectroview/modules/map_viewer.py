@@ -134,7 +134,7 @@ class MapViewer(QWidget):
         self.cbb_palette = CustomizedPalette()
         self.cbb_palette.currentIndexChanged.connect(self.refresh_plot)
 
-        self.cb_auto_scale = QCheckBox("Auto Scale")
+        self.cb_auto_scale = QCheckBox("Remove Outlier")
         self.cb_auto_scale.setChecked(True)
         self.cb_auto_scale.stateChanged.connect(self.update_z_range_slider)
         self.cb_auto_scale.setToolTip("Automatically adjust the scale by removing outliter data points.")

@@ -16,7 +16,7 @@ from spectroview import  ICON_DIR
 from spectroview.modules.utils import copy_fig_to_clb
 from spectroview.modules.utils import CustomizedPalette
 
-from PySide6.QtWidgets import  QVBoxLayout, QHBoxLayout,  QLabel, QToolButton, \
+from PySide6.QtWidgets import  QVBoxLayout, QHBoxLayout,  QLabel, QToolButton, QWidgetAction, \
     QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, \
     QApplication,  QWidget, QMenu, QSizePolicy,QFrame, QSpacerItem
 from PySide6.QtCore import Qt, QSize
@@ -153,21 +153,8 @@ class MapViewer(QWidget):
         #### CREATE range sliders
         self.create_range_sliders(0,100)
 
-        #### EXTRACT profil from 2Dmap
-        profile_layout = QHBoxLayout()
-        self.profile_name = QLineEdit(self)
-        self.profile_name.setText("Profile_1")
-        self.profile_name.setPlaceholderText("Profile_name...")
-        self.profile_name.setFixedWidth(150)
-
-        self.btn_extract_profile = QPushButton("Extract profil", self)
-        self.btn_extract_profile.setToolTip("Extract profile data and plot it in Visu tab")
-        self.btn_extract_profile.setFixedWidth(100)
-        
-        profile_layout.addWidget(self.profile_name)
-        profile_layout.addWidget(self.btn_extract_profile)
-
         # Create Options Menu
+        option_menu_layout = QHBoxLayout()
         self.create_options_menu()
         
         self.tool_btn_options = QToolButton(self)
@@ -176,15 +163,13 @@ class MapViewer(QWidget):
         self.tool_btn_options.setIcon(QIcon(os.path.join(ICON_DIR, "options.png")))
         self.tool_btn_options.setMenu(self.options_menu) 
         spacer2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        profile_layout.addItem(spacer2)
-        profile_layout.addWidget(self.tool_btn_options)
+        
+        option_menu_layout.addItem(spacer2)
+        option_menu_layout.addWidget(self.tool_btn_options)
 
-        #### ADD PROFIL
-        self.map_widget_layout.addLayout(profile_layout)
-        profile_layout.setContentsMargins(5, 5, 5, 5)
+        self.map_widget_layout.addLayout(option_menu_layout)
+        option_menu_layout.setContentsMargins(5, 5, 5, 5)
 
-        vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self.map_widget_layout.addItem(vspacer)
         vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.map_widget_layout.addItem(vspacer)
 
@@ -198,6 +183,7 @@ class MapViewer(QWidget):
         """Create more view options for 2Dmap plot"""
         
         self.options_menu = QMenu(self)
+        # --- ALL MENU OPTIONs ---  
         options = [
             ("Smoothing", "Smoothing", False),
             ("Grid", "Grid", False),
@@ -211,6 +197,32 @@ class MapViewer(QWidget):
             action.triggered.connect(self.refresh_plot)
             self.menu_actions[option_name] = action
             self.options_menu.addAction(action)  
+            
+        # --- PROFILE EXTRACTION WIDGET ---  
+        profile_widget = QWidget(self)
+        profile_widget_layout = QHBoxLayout(profile_widget)
+        profile_widget_layout.setContentsMargins(5, 5, 5, 5)
+        
+        self.profile_name = QLineEdit(self)
+        self.profile_name.setText("Profile_1")
+        self.profile_name.setPlaceholderText("Profile_name...")
+        self.profile_name.setFixedWidth(150)
+
+        self.btn_extract_profile = QPushButton("Extract profil", self)
+        self.btn_extract_profile.setToolTip("Extract profile data and plot it in Visu tab")
+        self.btn_extract_profile.setFixedWidth(100)
+        
+
+        profile_widget_layout.addWidget(self.profile_name)
+        profile_widget_layout.addWidget(self.btn_extract_profile)
+
+        # Convert the widget into a menu action
+        profile_action = QWidgetAction(self)
+        profile_action.setDefaultWidget(profile_widget)
+
+        # Add it at the top of the options menu
+        self.options_menu.insertAction(self.options_menu.actions()[0], profile_action)
+        self.options_menu.insertSeparator(self.options_menu.actions()[1])
         
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""

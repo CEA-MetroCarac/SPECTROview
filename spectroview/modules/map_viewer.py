@@ -17,7 +17,7 @@ from spectroview.modules.utils import copy_fig_to_clb
 from spectroview.modules.utils import CustomizedPalette
 
 from PySide6.QtWidgets import  QVBoxLayout, QHBoxLayout,  QLabel, QToolButton, QWidgetAction, \
-    QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, \
+    QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QDoubleSpinBox,\
     QApplication,  QWidget, QMenu, QSizePolicy,QFrame, QSpacerItem
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import  QIcon, QAction, Qt
@@ -153,8 +153,25 @@ class MapViewer(QWidget):
         #### CREATE range sliders
         self.create_range_sliders(0,100)
 
-        # Create Options Menu
+        # Create a new layout
         option_menu_layout = QHBoxLayout()
+        
+        # MAP ONLY PEAK whose intensity higher than: 
+        # self.it_cb = QCheckBox("Map intensity threeshould:")
+        # self.it_cb.setToolTip("Map only peaks whose intensity is higher than the defined threshold.")
+        # self.it_cb.stateChanged.connect(self.refresh_plot)
+        self.it_cb = QLabel("Map only peaks whose intensity higher than:")
+        self.it_cb.setToolTip("Map only peaks whose intensity is higher than the defined threshold.")
+    
+        self.intensity_threshold = QDoubleSpinBox()
+        self.intensity_threshold.setRange(00, 10000000000) 
+        self.intensity_threshold.setSingleStep(5)
+        self.intensity_threshold.setValue(0)  # default
+        self.intensity_threshold.valueChanged.connect(self.refresh_plot)  
+        option_menu_layout.addWidget(self.it_cb)
+        option_menu_layout.addWidget(self.intensity_threshold)
+        
+        # Create Options Menu
         self.create_options_menu()
         
         self.tool_btn_options = QToolButton(self)
@@ -172,7 +189,8 @@ class MapViewer(QWidget):
 
         vspacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.map_widget_layout.addItem(vspacer)
-
+        
+       
     def update_settings(self):
         """Save selected wafer size to settings"""
         map_type = self.cbb_map_type.currentText()

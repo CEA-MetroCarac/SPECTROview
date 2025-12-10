@@ -24,7 +24,7 @@ from lmfit import fit_report
 
 from fitspy.core.utils import closest_index
 
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication, QListWidgetItem, QDialog, QVBoxLayout, QHBoxLayout, QCheckBox
+from PySide6.QtWidgets import QFileDialog, QLabel, QMessageBox, QApplication, QListWidgetItem, QDialog, QVBoxLayout, QHBoxLayout, QCheckBox
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, QFileInfo, QTimer, QObject
 
@@ -126,25 +126,28 @@ class Maps(QObject):
 
         # --- 3. Create Checkboxes for Visibility ---
         self.viewer_controls_layout = QHBoxLayout()
+        self.viewer_controls_layout.addStretch()
+        
+        
         self.ui.map_layout.addLayout(self.viewer_controls_layout)
-
+        label = QLabel('Add more map viewer:')
+        self.viewer_controls_layout.addWidget(label)
+        
         # Checkbox for Viewer 1
-        self.cb_view1 = QCheckBox("Viewer 2")
+        self.cb_view1 = QCheckBox("2")
         self.cb_view1.stateChanged.connect(self.refresh_gui)
         self.viewer_controls_layout.addWidget(self.cb_view1)
 
         # Checkbox for Viewer 2
-        self.cb_view2 = QCheckBox("Viewer 3")
+        self.cb_view2 = QCheckBox("3")
         self.cb_view2.stateChanged.connect(self.refresh_gui)
         self.viewer_controls_layout.addWidget(self.cb_view2)
 
         # Checkbox for Viewer 3
-        self.cb_view3 = QCheckBox("Viewer 4")
+        self.cb_view3 = QCheckBox("4")
         self.cb_view3.stateChanged.connect(self.refresh_gui)
         self.viewer_controls_layout.addWidget(self.cb_view3)
         
-        # Add a spacer to push checkboxes to the left
-        self.viewer_controls_layout.addStretch()
 
 
     def synchronize_mapviewer_options(self):

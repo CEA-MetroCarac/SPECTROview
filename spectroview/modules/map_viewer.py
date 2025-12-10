@@ -169,9 +169,10 @@ class MapViewer(QWidget):
         self.mask_operator_cb.setToolTip("Condition to apply.")
 
         self.mask_threshold_edit = QDoubleSpinBox()
-        self.mask_threshold_edit.setRange(-1e12, 1e12)
-        self.mask_threshold_edit.setDecimals(4)
+        self.mask_threshold_edit.setRange(0, 1e12)
+        self.mask_threshold_edit.setDecimals(2)
         self.mask_threshold_edit.setValue(0)
+        self.mask_threshold_edit.setFixedWidth(100)
         self.mask_threshold_edit.valueChanged.connect(self.refresh_plot)
 
         # Add to option_menu_layout

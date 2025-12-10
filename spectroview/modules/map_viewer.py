@@ -156,25 +156,9 @@ class MapViewer(QWidget):
         # Create a new layout
         option_menu_layout = QHBoxLayout()
         
-        # MAP ONLY PEAK whose intensity higher than: 
-        # self.it_cb = QCheckBox("Map intensity threeshould:")
-        # self.it_cb.setToolTip("Map only peaks whose intensity is higher than the defined threshold.")
-        # self.it_cb.stateChanged.connect(self.refresh_plot)
-        # self.it_cb = QLabel("Map only peaks whose intensity higher than:")
-        # self.it_cb.setToolTip("Map only peaks whose intensity is higher than the defined threshold.")
-    
-        # self.intensity_threshold = QDoubleSpinBox()
-        # self.intensity_threshold.setRange(00, 10000000000) 
-        # self.intensity_threshold.setSingleStep(5)
-        # self.intensity_threshold.setValue(0)  # default
-        # self.intensity_threshold.valueChanged.connect(self.refresh_plot)  
-        # option_menu_layout.addWidget(self.it_cb)
-        # option_menu_layout.addWidget(self.intensity_threshold)
-        
-        
         # --- MAP MASKING ELEMENTS ---
         self.mask_cb = QCheckBox("Enable mask:")
-        self.mask_cb.setToolTip("Apply mask on heatmap using another parameter.")
+        self.mask_cb.setToolTip("Apply mask on heatmap based on another parameter.")
         self.mask_cb.stateChanged.connect(self.refresh_plot)
 
         self.mask_param_cb = QComboBox()
@@ -386,8 +370,9 @@ class MapViewer(QWidget):
             
     def populate_mask_parameters(self):
         """Fill the mask parameter combobox with dataframe column names."""
-        if self.map_df is not None:
-            cols = [c for c in self.map_df.columns if c not in ("X", "Y")]
+        self.mask_param_cb.clear() 
+        if self.df_fit_results is not None:
+            cols = [c for c in self.df_fit_results.columns if c not in ("Filename", "X", "Y")]
             self.mask_param_cb.clear()
             self.mask_param_cb.addItems(cols)
   
@@ -425,99 +410,178 @@ class MapViewer(QWidget):
         final_z_col is the 1D array of z-values corresponding to each site (used for stats).
         """
 
-        # Default return values in case of no valid map_df or filtered columns
-        heatmap_pivot = pd.DataFrame()  
-        extent = [0, 0, 0, 0]  
+        # Default return values
+        heatmap_pivot = pd.DataFrame()
+        extent = [0, 0, 0, 0]
         vmin = 0
         vmax = 0
-        grid_z = None # for waferplot
+        grid_z = None
         final_z_col = None
-        
+
         if self.map_df is not None:
+
+            # ------------------------------
+            # SLIDER RANGE AND COLUMN FILTER
+            # ------------------------------
             xmin, xmax = self.x_range_slider.value()
-            column_labels = self.map_df.columns[2:-1]  # Keep labels as strings
+            column_labels = self.map_df.columns[2:-1]  # keep as strings
 
-            # Convert slider range values to strings for comparison
-            filtered_columns = column_labels[(column_labels.astype(float) >= xmin) & (column_labels.astype(float) <= xmax)]
-            
-            if len(filtered_columns) > 0:
-                # Create a filtered DataFrame including X, Y, and the selected range of columns
-                filtered_map_df = self.map_df[['X', 'Y'] + list(filtered_columns)]
-                x_col = filtered_map_df['X'].values
-                y_col = filtered_map_df['Y'].values
-               
-                z_col = None
+            filtered_columns = column_labels[
+                (column_labels.astype(float) >= xmin) &
+                (column_labels.astype(float) <= xmax)
+            ]
 
-                parameter = self.z_values_cbb.currentText()
-                if parameter == 'Area':
-                    # Intensity sums of of each spectrum over the selected range
-                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).sum(axis=1)
-                    
-                elif parameter == 'Intensity':
-                    # Max intensity value of each spectrum over the selected range
-                    z_col = filtered_map_df[filtered_columns].replace([np.inf, -np.inf], np.nan).fillna(0).clip(lower=0).max(axis=1)
+            if len(filtered_columns) == 0:
+                return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
+
+            # Slice X, Y and selected columns
+            filtered_map_df = self.map_df[['X', 'Y'] + list(filtered_columns)]
+            x_col = filtered_map_df['X'].values
+            y_col = filtered_map_df['Y'].values
+
+            # ------------------------------
+            # COMPUTE z_col (parameter)
+            # ------------------------------
+            z_col = None
+            parameter = self.z_values_cbb.currentText()
+
+            if parameter == 'Area':
+                z_col = (
+                    filtered_map_df[filtered_columns]
+                    .replace([np.inf, -np.inf], np.nan)
+                    .fillna(0)
+                    .clip(lower=0)
+                    .sum(axis=1)
+                )
+
+            elif parameter == 'Intensity':
+                z_col = (
+                    filtered_map_df[filtered_columns]
+                    .replace([np.inf, -np.inf], np.nan)
+                    .fillna(0)
+                    .clip(lower=0)
+                    .max(axis=1)
+                )
+
+            else:
+                # Fit parameter from results DataFrame
+                if not self.df_fit_results.empty:
+                    map_name = self.map_df_name
+                    filtered_df = self.df_fit_results.query("Filename == @map_name")
+
+                    if not filtered_df.empty and parameter in filtered_df.columns:
+                        z_col = filtered_df[parameter]
+                    else:
+                        z_col = None
+
+            # Safety return
+            if z_col is None or len(z_col) == 0:
+                return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
+
+            # ------------------------------------------------------
+            # APPLY MASK (ONLY FOR 2D MAP)
+            # ------------------------------------------------------
+            if map_type == '2Dmap' and self.mask_cb.isChecked():
+
+                mask_param = self.mask_param_cb.currentText()
+                mask_operator = self.mask_operator_cb.currentText()
+                threshold = self.mask_threshold_edit.value()
+
+                if mask_param in filtered_map_df.columns:   # raw intensities case
+                    mask_values = filtered_map_df[mask_param].astype(float).values
+
+                elif not self.df_fit_results.empty and mask_param in self.df_fit_results.columns:
+                    map_name = self.map_df_name
+                    df_mask = self.df_fit_results.query("Filename == @map_name")
+                    if not df_mask.empty:
+                        mask_values = df_mask[mask_param].astype(float).values
+                    else:
+                        mask_values = None
                 else:
-                    # Fit parameter from df_fit_results
-                    if not self.df_fit_results.empty:
-                        map_name = self.map_df_name
-                        filtered_df = self.df_fit_results.query('Filename == @map_name') # Plot only selected wafer/2Dmap
-                        if not filtered_df.empty and parameter in filtered_df.columns:
-                            z_col = filtered_df[parameter]
-                        else:
-                            z_col = None
-                            
-                # --- SAFETY CHECK: If z_col is invalid, return defaults ---
-                if z_col is None or len(z_col) == 0:
-                    return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
-                
-                # Auto scale 
-                if self.cb_auto_scale.isChecked():
-                    try:
-                        # Remove outliers using IQR method and replace them with interpolated values
-                        Q1 = z_col.quantile(0.05)
-                        Q3 = z_col.quantile(0.95)
-                        IQR = Q3 - Q1
-                        # Identify the outliers
-                        outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
-                        # Interpolate values for the outliers using linear interpolation
-                        z_col_interpolated = z_col.copy()
-                        z_col_interpolated[outlier_mask] = np.nan  # Mark outliers as NaN for interpolation
-                        z_col_interpolated = z_col_interpolated.interpolate(method='linear', limit_direction='both')
-                        final_z_col=z_col_interpolated
-                    except Exception as e:
-                        print(f"Auto scale interpolation error: {e}")
-                        final_z_col = z_col
-                        
-                else:
-                    final_z_col=z_col  
+                    mask_values = None
 
+                # If mask available → apply it
+                if mask_values is not None:
+
+                    # Build boolean mask condition
+                    if mask_operator == ">":
+                        valid = mask_values > threshold
+                    elif mask_operator == "<":
+                        valid = mask_values < threshold
+                    elif mask_operator == ">=":
+                        valid = mask_values >= threshold
+                    elif mask_operator == "<=":
+                        valid = mask_values <= threshold
+                    elif mask_operator == "==":
+                        valid = mask_values == threshold
+                    else:
+                        valid = np.ones_like(mask_values, dtype=bool)
+
+                    # Apply mask: failing points become NaN → blank on heatmap
+                    z_col = np.where(valid, z_col, np.nan)
+
+            # ------------------------------------------------------
+            # OUTLIER REMOVAL / AUTO SCALE
+            # ------------------------------------------------------
+            if self.cb_auto_scale.isChecked():
                 try:
-                    vmin = round(final_z_col.min(), 0)
-                    vmax = round(final_z_col.max(), 0)
+                    Q1 = z_col.quantile(0.05)
+                    Q3 = z_col.quantile(0.95)
+                    IQR = Q3 - Q1
+
+                    outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
+
+                    z_col_interpolated = z_col.copy()
+                    z_col_interpolated[outlier_mask] = np.nan
+                    z_col_interpolated = z_col_interpolated.interpolate(
+                        method='linear', limit_direction='both'
+                    )
+
+                    final_z_col = z_col_interpolated
+
                 except Exception as e:
-                    #When the selected 'parameters' does not exist for selected wafer.
-                    self.z_values_cbb.setCurrentIndex(0)
-                    vmin, vmax = 0, 0
+                    print(f"Auto scale interpolation error: {e}")
+                    final_z_col = z_col
 
-                # store number of unique sites
-                self.number_of_points = len(set(zip(x_col, y_col)))
-                
-                if map_type != '2Dmap' and self.number_of_points >= 4:
-                    # Create meshgrid for WaferPlot
-                    r = self.get_wafer_radius(map_type)
-                    grid_x, grid_y = np.meshgrid(np.linspace(-r, r, 300), np.linspace(-r, r, 300))
-                    grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
-                    extent = [-r - 1, r + 1, -r - 0.5, r + 0.5]
+            else:
+                final_z_col = z_col
 
-                else:
-                    # Regular 2D map
-                    heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': z_col})
-                    heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
-                    xmin, xmax = x_col.min(), x_col.max()
-                    ymin, ymax = y_col.min(), y_col.max()
-                    extent = [xmin, xmax, ymin, ymax]
-                
+            # Determine vmin / vmax
+            try:
+                vmin = round(final_z_col.min(), 0)
+                vmax = round(final_z_col.max(), 0)
+            except Exception:
+                self.z_values_cbb.setCurrentIndex(0)
+                vmin, vmax = 0, 0
+
+            # Count unique sites
+            self.number_of_points = len(set(zip(x_col, y_col)))
+
+            # ------------------------------------------------------
+            # WAFFER MAP → GRID INTERPOLATION
+            # ------------------------------------------------------
+            if map_type != '2Dmap' and self.number_of_points >= 4:
+                r = self.get_wafer_radius(map_type)
+                grid_x, grid_y = np.meshgrid(
+                    np.linspace(-r, r, 300),
+                    np.linspace(-r, r, 300)
+                )
+                grid_z = griddata((x_col, y_col), final_z_col, (grid_x, grid_y), method='linear')
+                extent = [-r - 1, r + 1, -r - 0.5, r + 0.5]
+
+            else:
+                # ------------------------------------------------------
+                # 2D MAP PIVOT TABLE
+                # ------------------------------------------------------
+                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
+                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
+
+                xmin, xmax = x_col.min(), x_col.max()
+                ymin, ymax = y_col.min(), y_col.max()
+                extent = [xmin, xmax, ymin, ymax]
+
         return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
+
     
     def get_wafer_radius(self, map_type_text):
         match = re.search(r'Wafer_(\d+)mm', map_type_text)

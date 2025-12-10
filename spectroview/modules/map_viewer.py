@@ -1,4 +1,3 @@
-
 import os
 import re
 import pandas as pd
@@ -15,6 +14,7 @@ from superqt import QLabeledDoubleRangeSlider
 from spectroview import  ICON_DIR
 from spectroview.modules.utils import copy_fig_to_clb
 from spectroview.modules.utils import CustomizedPalette
+from spectroview.modules.histogram import HistogramWidget
 
 from PySide6.QtWidgets import  QVBoxLayout, QHBoxLayout,  QLabel, QToolButton, QWidgetAction, \
     QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QDoubleSpinBox,\
@@ -252,6 +252,11 @@ class MapViewer(QWidget):
         self.options_menu.insertAction(self.options_menu.actions()[0], profile_action)
         self.options_menu.insertSeparator(self.options_menu.actions()[1])
         
+        
+    def on_histogram_range_changed(self, vmin, vmax):
+        self.z_range_slider.setValue((vmin, vmax))
+        self.refresh_plot()    
+    
     def create_range_sliders(self, xmin, xmax):
         """Create xrange and intensity-range sliders"""
         # ---------------------------------------------------------
@@ -295,6 +300,15 @@ class MapViewer(QWidget):
         self.x_slider_layout.addWidget(self.x_range_slider)
         self.x_slider_layout.addWidget(self.x_max_edit)
         self.x_slider_layout.setContentsMargins(5, 0, 5, 0)
+
+        
+        # # HISTOGRAM
+        # self.histogram_widget = HistogramWidget()
+        # self.histogram_widget.setFixedHeight(80)  
+        # self.histogram_widget.rangeChanged.connect(self.on_histogram_range_changed)
+
+        # # Add after all layouts and spacers
+        # self.map_widget_layout.addWidget(self.histogram_widget)
 
         # ---------------------------------------------------------
         # Z-AXIS SLIDER SETUP
@@ -341,6 +355,7 @@ class MapViewer(QWidget):
         self.z_slider_layout.setContentsMargins(5, 0, 5, 0)
             
         self.map_widget_layout.addLayout(self.z_slider_layout)
+        # self.map_widget_layout.addWidget(self.histogram_widget)
         self.map_widget_layout.addLayout(self.x_slider_layout)
     
     def _update_slider_from_edit(self, slider, edit, index):
@@ -383,7 +398,7 @@ class MapViewer(QWidget):
             self.parent.refresh_gui()
         else:
             return
-    
+        
     def update_xrange_slider(self, xmin, xmax,current_min, current_max):
         """Update the range of the slider based on new min and max values."""        
         self.x_range_slider.setRange(xmin, xmax)
@@ -404,6 +419,11 @@ class MapViewer(QWidget):
                 self.z_range_slider.setValue((vmin, vmax))
         else:
             return
+        
+        # # Later, after loading the map or computing Z-values:
+        # if self._last_final_z_col is not None:
+        #     self.histogram_widget.set_data(self._last_final_z_col, vmin, vmax)
+        
     
     def get_data_for_heatmap(self, map_type='2Dmap'):
         """

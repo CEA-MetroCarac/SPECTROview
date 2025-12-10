@@ -160,16 +160,41 @@ class MapViewer(QWidget):
         # self.it_cb = QCheckBox("Map intensity threeshould:")
         # self.it_cb.setToolTip("Map only peaks whose intensity is higher than the defined threshold.")
         # self.it_cb.stateChanged.connect(self.refresh_plot)
-        self.it_cb = QLabel("Map only peaks whose intensity higher than:")
-        self.it_cb.setToolTip("Map only peaks whose intensity is higher than the defined threshold.")
+        # self.it_cb = QLabel("Map only peaks whose intensity higher than:")
+        # self.it_cb.setToolTip("Map only peaks whose intensity is higher than the defined threshold.")
     
-        self.intensity_threshold = QDoubleSpinBox()
-        self.intensity_threshold.setRange(00, 10000000000) 
-        self.intensity_threshold.setSingleStep(5)
-        self.intensity_threshold.setValue(0)  # default
-        self.intensity_threshold.valueChanged.connect(self.refresh_plot)  
-        option_menu_layout.addWidget(self.it_cb)
-        option_menu_layout.addWidget(self.intensity_threshold)
+        # self.intensity_threshold = QDoubleSpinBox()
+        # self.intensity_threshold.setRange(00, 10000000000) 
+        # self.intensity_threshold.setSingleStep(5)
+        # self.intensity_threshold.setValue(0)  # default
+        # self.intensity_threshold.valueChanged.connect(self.refresh_plot)  
+        # option_menu_layout.addWidget(self.it_cb)
+        # option_menu_layout.addWidget(self.intensity_threshold)
+        
+        
+        # --- MAP MASKING ELEMENTS ---
+        self.mask_cb = QCheckBox("Enable mask:")
+        self.mask_cb.setToolTip("Apply mask on heatmap using another parameter.")
+        self.mask_cb.stateChanged.connect(self.refresh_plot)
+
+        self.mask_param_cb = QComboBox()
+        self.mask_param_cb.setToolTip("Select the parameter used as mask.")
+
+        self.mask_operator_cb = QComboBox()
+        self.mask_operator_cb.addItems([">", "<", ">=", "<=", "=="])
+        self.mask_operator_cb.setToolTip("Condition to apply.")
+
+        self.mask_threshold_edit = QDoubleSpinBox()
+        self.mask_threshold_edit.setRange(-1e12, 1e12)
+        self.mask_threshold_edit.setDecimals(4)
+        self.mask_threshold_edit.setValue(0)
+        self.mask_threshold_edit.valueChanged.connect(self.refresh_plot)
+
+        # Add to option_menu_layout
+        option_menu_layout.addWidget(self.mask_cb)
+        option_menu_layout.addWidget(self.mask_param_cb)
+        option_menu_layout.addWidget(self.mask_operator_cb)
+        option_menu_layout.addWidget(self.mask_threshold_edit)
         
         # Create Options Menu
         self.create_options_menu()
@@ -356,6 +381,15 @@ class MapViewer(QWidget):
         if not self.df_fit_results.empty:
             fit_columns = [col for col in self.df_fit_results.columns if col not in ['Filename', 'X', 'Y']]
             self.z_values_cbb.addItems(fit_columns)
+            
+        self.populate_mask_parameters()
+            
+    def populate_mask_parameters(self):
+        """Fill the mask parameter combobox with dataframe column names."""
+        if self.map_df is not None:
+            cols = [c for c in self.map_df.columns if c not in ("X", "Y")]
+            self.mask_param_cb.clear()
+            self.mask_param_cb.addItems(cols)
   
     def refresh_plot(self):
         """Call the refresh_gui method of the main application."""

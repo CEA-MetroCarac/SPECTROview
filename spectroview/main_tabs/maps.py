@@ -102,19 +102,19 @@ class Maps(QObject):
         self.map_viewer1 = MapViewer(self, self.app_settings)
         self.map_viewer1.spectra_listbox = self.ui.spectra_listbox
         self.ui.map_layout1.addWidget(self.map_viewer1.widget)
-        self.map_viewer1.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
+        self.map_viewer1.btn_extract_profile.clicked.connect(self.plot_extracted_profile1)
         
         # Viewer 2
         self.map_viewer2 = MapViewer(self, self.app_settings)
         self.map_viewer2.spectra_listbox = self.ui.spectra_listbox
         self.ui.map_layout1.addWidget(self.map_viewer2.widget)
-        self.map_viewer2.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
+        self.map_viewer2.btn_extract_profile.clicked.connect(self.plot_extracted_profile2)
      
         # Viewer 3
         self.map_viewer3 = MapViewer(self, self.app_settings)
         self.map_viewer3.spectra_listbox = self.ui.spectra_listbox
         self.ui.map_layout1.addWidget(self.map_viewer3.widget)
-        self.map_viewer3.btn_extract_profile.clicked.connect(self.plot_extracted_profile)
+        self.map_viewer3.btn_extract_profile.clicked.connect(self.plot_extracted_profile3)
       
 
         self.map_viewers = [
@@ -1136,9 +1136,29 @@ class Maps(QObject):
     
     def plot_extracted_profile(self):
         """Extract profile from map plot and Plot in VIS TAB"""
-        
         profile_name = self.map_viewer.profile_name.text()
         profil_df = self.map_viewer.extract_profile()
+        self.extract_profile_and_plot(profil_df, profile_name) 
+        
+    def plot_extracted_profile1(self):
+        """Extract profile from map plot and Plot in VIS TAB"""
+        profile_name = self.map_viewer1.profile_name.text()
+        profil_df = self.map_viewer1.extract_profile()
+        self.extract_profile_and_plot(profil_df, profile_name) 
+        
+    def plot_extracted_profile2(self):
+        """Extract profile from map plot and Plot in VIS TAB"""
+        profile_name = self.map_viewer2.profile_name.text()
+        profil_df = self.map_viewer2.extract_profile()
+        self.extract_profile_and_plot(profil_df, profile_name) 
+        
+    def plot_extracted_profile3(self):
+        """Extract profile from map plot and Plot in VIS TAB"""
+        profile_name = self.map_viewer3.profile_name.text()
+        profil_df = self.map_viewer3.extract_profile()
+        self.extract_profile_and_plot(profil_df, profile_name) 
+    
+    def extract_profile_and_plot(self, profil_df, profile_name):
         
         if profil_df is not None and profile_name is not None:
             dfs_new = self.graphs.original_dfs

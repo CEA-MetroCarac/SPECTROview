@@ -51,6 +51,7 @@ spectroview = [
 
     "config/gui/*.ui",
     "config/gui/*.qrc",
+    "doc/*.pdf"
 ]
 
 [project.scripts]

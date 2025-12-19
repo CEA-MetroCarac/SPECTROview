@@ -12,7 +12,7 @@ from PySide6.QtCore import QFile, QFileInfo, QCoreApplication, Qt, QSettings
 from PySide6.QtGui import QIcon
 
 
-from spectroview import UI_FILE, LOGO_APPLI, TEXT_EXPIRE, USER_MANUAL
+from spectroview import UI_FILE, LOGO_APPLI, TEXT_EXPIRE, USER_MANUAL_PDF
 from spectroview.config.gui import resources
 
 from spectroview.modules.utils import show_alert, dark_palette, light_palette
@@ -181,7 +181,7 @@ class Main:
         show_about.exec_()
 
     def open_manual(self):
-        webbrowser.open(USER_MANUAL)
+         os.startfile(USER_MANUAL_PDF)
 
     def toggle_dark_light_mode(self, mode=None):
         app = QApplication.instance()

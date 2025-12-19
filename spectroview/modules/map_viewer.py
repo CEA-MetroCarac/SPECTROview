@@ -14,7 +14,6 @@ from superqt import QLabeledDoubleRangeSlider
 from spectroview import  ICON_DIR
 from spectroview.modules.utils import copy_fig_to_clb
 from spectroview.modules.utils import CustomizedPalette
-from spectroview.modules.histogram import HistogramWidget
 
 from PySide6.QtWidgets import  QVBoxLayout, QHBoxLayout,  QLabel, QToolButton, QWidgetAction, \
     QLineEdit, QWidget, QPushButton, QComboBox, QCheckBox, QDoubleSpinBox,\

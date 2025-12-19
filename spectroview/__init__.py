@@ -46,7 +46,6 @@ PLOT_POLICY = os.path.join(RESOURCES_DIR, "plotpolicy.mplstyle")
 UI_FILE = os.path.join(DIR, "config", "gui", "gui.ui")
 LOGO_APPLI = os.path.join(RESOURCES_DIR, "icons", "logo_spectroview.png")
 
-ABOUT = os.path.join(RESOURCES_DIR, "doc", "about.md")
-# USER_MANUAL = os.path.join("spectroview", "doc", "user_manual.md")
+#ABOUT = os.path.join(RESOURCES_DIR, "doc", "about.md")
 USER_MANUAL_MD = "https://github.com/CEA-MetroCarac/SPECTROview/blob/main/doc/user_manual.md"
-USER_MANUAL_PDF = "https://github.com/CEA-MetroCarac/SPECTROview/blob/main/doc/SPECTROview_User Manual.pdf"
+USER_MANUAL_PDF = os.path.join(DIR, "doc", "SPECTROview_User Manual.pdf")

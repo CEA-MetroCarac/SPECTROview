@@ -37,6 +37,7 @@ LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
 X_AXIS_UNIT = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)']
 
 
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIR = os.path.dirname(__file__)
 RESOURCES_DIR = os.path.join(DIR, "resources")
 
@@ -48,4 +49,4 @@ LOGO_APPLI = os.path.join(RESOURCES_DIR, "icons", "logo_spectroview.png")
 
 #ABOUT = os.path.join(RESOURCES_DIR, "doc", "about.md")
 USER_MANUAL_MD = "https://github.com/CEA-MetroCarac/SPECTROview/blob/main/doc/user_manual.md"
-USER_MANUAL_PDF = os.path.join(DIR, "doc", "SPECTROview_User Manual.pdf")
+USER_MANUAL_PDF = os.path.join(PROJECT_ROOT, "doc", "SPECTROview_UserManual.pdf")

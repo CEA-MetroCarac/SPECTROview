@@ -49,4 +49,4 @@ LOGO_APPLI = os.path.join(RESOURCES_DIR, "icons", "logo_spectroview.png")
 
 #ABOUT = os.path.join(RESOURCES_DIR, "doc", "about.md")
 USER_MANUAL_MD = "https://github.com/CEA-MetroCarac/SPECTROview/blob/main/doc/user_manual.md"
-USER_MANUAL_PDF = os.path.join(PROJECT_ROOT, "doc", "SPECTROview_UserManual.pdf")
+USER_MANUAL_PDF = os.path.join(RESOURCES_DIR, "SPECTROview_UserManual.pdf")

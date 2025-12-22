@@ -20,9 +20,9 @@ from spectroview.modules.utils import show_alert, dark_palette, light_palette
 from spectroview.modules.settings_panel import SettingsPanel
 from spectroview.modules.about import About
 
-from spectroview.main_tabs.maps import Maps
-from spectroview.main_tabs.spectrums import Spectrums
-from spectroview.main_tabs.graphs import Graphs
+from spectroview.workspaces.maps import Maps
+from spectroview.workspaces.spectrums import Spectrums
+from spectroview.workspaces.graphs import Graphs
 
 from spectroview.config.ui_connector import UiConnector
 

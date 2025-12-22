@@ -58,6 +58,7 @@ class MapViewer(QWidget):
         """Initialize the UI components."""
         self.widget = QWidget()
         self.widget.setFixedWidth(400)
+        
         self.map_widget_layout = QVBoxLayout(self.widget)
         self.map_widget_layout.setContentsMargins(0, 0, 0, 0) 
         self._create_ui()

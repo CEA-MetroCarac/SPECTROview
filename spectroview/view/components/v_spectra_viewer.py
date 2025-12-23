@@ -245,6 +245,12 @@ class VSpectraViewer(QWidget):
         self._redraw()
 
     def _redraw(self):
+        # --- Save current view (zoom/pan state) ---
+        old_xlim = self.ax.get_xlim()
+        old_ylim = self.ax.get_ylim()
+
+        had_data = len(self.ax.lines) > 0
+
         self.ax.clear()
 
         for line in self._current_lines:
@@ -265,6 +271,11 @@ class VSpectraViewer(QWidget):
         self.ax.set_yscale(
             "log" if self.cbb_yscale.currentText() == "Log" else "linear"
         )
+
+        # --- Restore zoom/pan ONLY if user already zoomed ---
+        if had_data:
+            self.ax.set_xlim(old_xlim)
+            self.ax.set_ylim(old_ylim)
 
         self.canvas.draw_idle()
 

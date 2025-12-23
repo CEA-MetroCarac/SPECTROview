@@ -15,7 +15,7 @@ from spectroview.view.v_graphs_workspace import VGraphsWorkspace
 
 from spectroview import LOGO_APPLI
 
-class Main(QMainWindow):
+class VMain(QMainWindow):
     def __init__(self):
         super().__init__()
         self.init_ui()
@@ -59,7 +59,7 @@ def launcher():
     app.setWindowIcon(QIcon(LOGO_APPLI))
     app.setStyle("Fusion")
 
-    window = Main()
+    window = VMain()
     window.show()
     sys.exit(app.exec())
 

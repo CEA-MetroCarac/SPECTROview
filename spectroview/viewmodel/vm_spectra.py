@@ -4,11 +4,11 @@ from pathlib import Path
 from PySide6.QtWidgets import QFileDialog
 
 
-from spectroview.model.m_spectra import SpectraM
+from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_io import load_spectrum_file
 
 
-class SpectraVM(QObject):
+class VMSpectra(QObject):
     # ───── ViewModel → View signals ─────
     spectra_list_changed = Signal(list)      # list[str]
     spectra_selection_changed = Signal(list) # list[dict] → plot data
@@ -18,7 +18,7 @@ class SpectraVM(QObject):
     
     def __init__(self):
         super().__init__()
-        self.spectra = SpectraM()
+        self.spectra = MSpectra()
         self.selected_indices = []
 
     # View → ViewModel slots

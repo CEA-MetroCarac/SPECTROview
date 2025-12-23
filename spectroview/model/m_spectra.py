@@ -5,7 +5,7 @@ from multiprocessing import Queue
 
 from fitspy.core.spectra import Spectra as FitspySpectra
 
-class SpectraM(FitspySpectra):
+class MSpectra(FitspySpectra):
     """Model: container for SpectrumM"""
 
     def add(self, spectrum):

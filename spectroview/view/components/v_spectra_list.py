@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt, Signal
 
 
-class SpectraList(QListWidget):
+class VSpectraList(QListWidget):
     selection_changed = Signal(list)     # list of selected row indices
     order_changed = Signal(list)          # new order of row indices
     files_dropped = Signal(list)          # list of file paths

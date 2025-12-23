@@ -8,10 +8,10 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, Q
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
-from spectroview.view.v_menubar import MenuBar
-from spectroview.view.v_spectra_workspace import SpectraWorkspace
-from spectroview.view.v_maps_workspace import MapsWorkspace
-from spectroview.view.v_graphs_workspace import GraphsWorkspace
+from spectroview.view.v_menubar import VMenuBar
+from spectroview.view.v_spectra_workspace import VSpectraWorkspace
+from spectroview.view.v_maps_workspace import VMapsWorkspace
+from spectroview.view.v_graphs_workspace import VGraphsWorkspace
 
 from spectroview import LOGO_APPLI
 
@@ -35,9 +35,9 @@ class Main(QMainWindow):
         # Main Tab Widget
         self.tabWidget = QTabWidget(central)
 
-        self.v_spectra_workspace = SpectraWorkspace()
-        self.v_graphs_workspace = GraphsWorkspace()
-        self.v_maps_workspace = MapsWorkspace()
+        self.v_spectra_workspace = VSpectraWorkspace()
+        self.v_graphs_workspace = VGraphsWorkspace()
+        self.v_maps_workspace = VMapsWorkspace()
 
         self.tabWidget.addTab(self.v_spectra_workspace, "Spectra")
         self.tabWidget.addTab(self.v_maps_workspace, "Maps")
@@ -47,7 +47,7 @@ class Main(QMainWindow):
         self.setCentralWidget(central)
 
         # Toolbar
-        self.menu_bar = MenuBar()
+        self.menu_bar = VMenuBar()
         self.addToolBar(Qt.TopToolBarArea, self.menu_bar)
         
     def setup_connections(self):

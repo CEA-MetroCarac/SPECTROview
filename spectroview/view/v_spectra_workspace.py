@@ -6,18 +6,18 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout,QHBoxLayout, QLabel,
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
-from spectroview.view.components.v_spectra_list import SpectraList
-from spectroview.view.components.v_spectra_viewer import SpectraViewer
+from spectroview.view.components.v_spectra_list import VSpectraList
+from spectroview.view.components.v_spectra_viewer import VSpectraViewer
 
-from spectroview.viewmodel.vm_spectra import SpectraVM
+from spectroview.viewmodel.vm_spectra import VMSpectra
 
 from spectroview import ICON_DIR
 
 
-class SpectraWorkspace(QWidget):
+class VSpectraWorkspace(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.vm = SpectraVM()
+        self.vm = VMSpectra()
 
         self.init_ui()
         self.connect_vm()
@@ -39,7 +39,7 @@ class SpectraWorkspace(QWidget):
         left_layout.addWidget(left_splitter)
 
         # --- Upper: SpectraViewer (placeholder for now)
-        self.spectra_viewer = SpectraViewer(parent=self)
+        self.spectra_viewer = VSpectraViewer(parent=self)
         self.spectra_viewer.setMinimumHeight(200)
         
         # --- Lower: TabWidget
@@ -80,7 +80,7 @@ class SpectraWorkspace(QWidget):
         right_layout.addWidget(self.cb_check_all)
 
         # --- Spectra list
-        self.spectra_list = SpectraList()
+        self.spectra_list = VSpectraList()
         right_layout.addWidget(self.spectra_list, stretch=1)
 
         # --- Footer: count + progress

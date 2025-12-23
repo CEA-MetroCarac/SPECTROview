@@ -18,7 +18,7 @@ from matplotlib.backends.backend_qtagg import (
 from spectroview import ICON_DIR, X_AXIS_UNIT, PLOT_POLICY
 
 
-class SpectraViewer(QWidget):
+class VSpectraViewer(QWidget):
     mouseClicked = Signal(float, float, int)
     zoomToggled = Signal(bool)
     rescaleRequested = Signal()
@@ -190,7 +190,7 @@ class SpectraViewer(QWidget):
         self.spin_lw = QDoubleSpinBox()
         self.spin_lw.setRange(0.1, 5)
         self.spin_lw.setSingleStep(0.5)
-        self.spin_lw.setValue(2)
+        self.spin_lw.setValue(1.5)
         self.spin_lw.valueChanged.connect(self._emit_view_options)
         menu.addAction(self._wrap("Line width:", self.spin_lw))
         

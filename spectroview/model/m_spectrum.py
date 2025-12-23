@@ -3,7 +3,7 @@ import numpy as np
 from fitspy.core.spectrum import Spectrum as FitspySpectrum
 
 
-class SpectrumM(FitspySpectrum):
+class MSpectrum(FitspySpectrum):
     """Customized of Spectrum class."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

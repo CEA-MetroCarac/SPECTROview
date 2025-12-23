@@ -11,7 +11,7 @@ from PySide6.QtGui import  QIcon, QAction, Qt, QCursor
 from spectroview import ICON_DIR
 
 
-class MenuBar(QToolBar):
+class VMenuBar(QToolBar):
     open_requested = Signal()
     save_requested = Signal()
     clear_requested = Signal()

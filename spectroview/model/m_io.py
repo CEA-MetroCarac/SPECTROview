@@ -3,10 +3,10 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from spectroview.model.m_spectrum import SpectrumM
+from spectroview.model.m_spectrum import MSpectrum
 
 
-def load_spectrum_file(path: Path) -> SpectrumM:
+def load_spectrum_file(path: Path) -> MSpectrum:
     """Load TXT or CSV spectrum file."""
     ext = path.suffix.lower()
 
@@ -19,7 +19,7 @@ def load_spectrum_file(path: Path) -> SpectrumM:
 
     df = df.sort_values(df.columns[0])
 
-    s = SpectrumM()
+    s = MSpectrum()
     s.source_path = str(path.resolve()) 
     s.fname = path.stem
     s.x0 = df.iloc[:, 0].to_numpy()
@@ -31,6 +31,6 @@ def load_spectrum_file(path: Path) -> SpectrumM:
     return s
 
 
-def load_map_file(path: Path) -> SpectrumM:
+def load_map_file(path: Path) -> MSpectrum:
     """Load TXT or CSV spectrum file."""
     pass

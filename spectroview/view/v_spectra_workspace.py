@@ -1,7 +1,7 @@
 # view/v_spectra_workspace.py
 import os
 from PySide6.QtWidgets import (QWidget, QVBoxLayout,QHBoxLayout, QLabel,
-    QPushButton, QCheckBox,QProgressBar,QSplitter,QTabWidget, QMessageBox
+    QPushButton, QCheckBox,QProgressBar,QSplitter,QTabWidget, QMessageBox, QFrame
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
@@ -62,9 +62,10 @@ class SpectraWorkspace(QWidget):
         # ======================================================
         # RIGHT SIDE (Sidebar)
         # ======================================================
-        right_widget = QWidget()
+        right_widget = QFrame()
         right_layout = QVBoxLayout(right_widget)
-        right_layout.setContentsMargins(4, 4, 4, 4)
+        right_widget.setFrameShape(QFrame.StyledPanel)
+        right_layout.setContentsMargins(6, 6, 6, 6)
         right_layout.setSpacing(6)
 
         # --- Top buttons row
@@ -94,8 +95,8 @@ class SpectraWorkspace(QWidget):
         # --- Footer: count + progress
         self.lbl_count = QLabel("Loaded spectra: 0")
         self.progress_bar = QProgressBar()
-        self.progress_bar.setValue(0)
-        self.progress_bar.setFixedHeight(15)
+        self.progress_bar.setValue(100)
+        self.progress_bar.setFixedHeight(12)
 
         right_layout.addWidget(self.lbl_count)
         right_layout.addWidget(self.progress_bar)

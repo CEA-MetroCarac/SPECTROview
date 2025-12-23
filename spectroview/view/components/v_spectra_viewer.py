@@ -71,7 +71,7 @@ class SpectraViewer(QWidget):
         # Rescale
         self.btn_rescale = QPushButton()
         self.btn_rescale.setIcon(QIcon(f"{ICON_DIR}/rescale.png"))
-        self.btn_rescale.setIconSize(QSize(24, 24))
+        self.btn_rescale.setIconSize(QSize(22, 22))
         self.btn_rescale.clicked.connect(self.rescaleRequested)
         self.btn_rescale.clicked.connect(self._rescale)
         
@@ -99,7 +99,7 @@ class SpectraViewer(QWidget):
         self.btn_norm = QToolButton()
         self.btn_norm.setCheckable(True)
         self.btn_norm.setIcon(QIcon(f"{ICON_DIR}/norm.png"))
-        self.btn_norm.setIconSize(QSize(24, 24))
+        self.btn_norm.setIconSize(QSize(22, 22))
         self.btn_norm.toggled.connect(self._emit_norm)
         self.btn_norm.clicked.connect(self._rescale)
         layout.addWidget(self.btn_norm)
@@ -118,14 +118,14 @@ class SpectraViewer(QWidget):
         self.btn_legend = QToolButton()
         self.btn_legend.setCheckable(True)
         self.btn_legend.setIcon(QIcon(f"{ICON_DIR}/legend.png"))
-        self.btn_legend.setIconSize(QSize(24, 24))
+        self.btn_legend.setIconSize(QSize(22, 22))
         self.btn_legend.toggled.connect(self._emit_view_options)
         layout.addWidget(self.btn_legend)
 
         # Copy
         self.btn_copy = QPushButton()
         self.btn_copy.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
-        self.btn_copy.setIconSize(QSize(24, 24))
+        self.btn_copy.setIconSize(QSize(22, 22))
         self.btn_copy.clicked.connect(self._emit_copy)
         layout.addWidget(self.btn_copy)
 
@@ -133,7 +133,7 @@ class SpectraViewer(QWidget):
         self.options_menu = self._create_options_menu()
         self.btn_options = QToolButton()
         self.btn_options.setIcon(QIcon(f"{ICON_DIR}/options.png"))
-        self.btn_options.setIconSize(QSize(24, 24))
+        self.btn_options.setIconSize(QSize(22, 22))
         self.btn_options.setPopupMode(QToolButton.InstantPopup)
         self.btn_options.setMenu(self.options_menu)
         layout.addWidget(self.btn_options)
@@ -152,7 +152,7 @@ class SpectraViewer(QWidget):
         btn.setChecked(checked)
         btn.setAutoExclusive(True)
         btn.setIcon(QIcon(f"{ICON_DIR}/{icon}"))
-        btn.setIconSize(QSize(24, 24))
+        btn.setIconSize(QSize(22, 22))
         btn.setToolTip(tooltip)
         return btn
 

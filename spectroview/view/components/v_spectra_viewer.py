@@ -1,5 +1,4 @@
 # view/components/spectra_viewer.py
-
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QToolButton, QLabel,
@@ -234,7 +233,9 @@ class SpectraViewer(QWidget):
     def set_plot_data(self, lines):
         self.ax.clear()
         for line in lines:
-            self.ax.plot(**line)
+            x = line.pop("x")
+            y = line.pop("y")
+            self.ax.plot(x, y, **line)
 
         if self.btn_legend.isChecked():
             self.ax.legend()

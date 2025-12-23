@@ -1,17 +1,9 @@
+# spectroview/view/components/v_spectra_list.py
 from PySide6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt, Signal
 
 
 class SpectraList(QListWidget):
-    """
-    View component: list of spectra.
-    - Supports multi-selection
-    - Internal drag & drop reordering
-    - External file drop
-    - Emits MVVM-friendly signals
-    """
-
-    # ───── MVVM signals ──────────────────────────────────────────
     selection_changed = Signal(list)     # list of selected row indices
     order_changed = Signal(list)          # new order of row indices
     files_dropped = Signal(list)          # list of file paths
@@ -41,11 +33,19 @@ class SpectraList(QListWidget):
 
     def selected_rows(self) -> list[int]:
         return [self.row(i) for i in self.selectedItems()]
-
+    
     # ───── Drag & Drop handling ──────────────────────────────────
-    def startDrag(self, supportedActions):
-        self._order_before_drag = self._current_order()
-        super().startDrag(supportedActions)
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragMoveEvent(event)
 
     def dropEvent(self, event):
         # External files dropped
@@ -61,6 +61,10 @@ class SpectraList(QListWidget):
         order_after = self._current_order()
         if order_after != self._order_before_drag:
             self.order_changed.emit(order_after)
+            
+    def startDrag(self, supportedActions):
+        self._order_before_drag = self._current_order()
+        super().startDrag(supportedActions)
 
     # ───── Helpers ───────────────────────────────────────────────
     def _current_order(self) -> list[int]:

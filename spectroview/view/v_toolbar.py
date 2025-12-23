@@ -5,13 +5,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from PySide6.QtWidgets import QToolBar, QWidget, QSizePolicy
-from PySide6.QtCore import Qt, QSize, QPoint
+from PySide6.QtCore import Qt, QSize, QPoint, Signal
 from PySide6.QtGui import  QIcon, QAction, Qt, QCursor
 
 from spectroview import ICON_DIR
 
 
 class MenuBar(QToolBar):
+    open_requested = Signal()
+    
+    
     def __init__(self):
         super().__init__()
         self.init_ui()
@@ -23,6 +26,10 @@ class MenuBar(QToolBar):
         
         # Example: Add a sample action with an icon
         self.actionOpen = self.addAction(QIcon(os.path.join(ICON_DIR, "open.png")), "Open")
+        self.actionOpen.triggered.connect(self.open_requested.emit)
+
+        
+        
         self.actionSave = self.addAction(QIcon(os.path.join(ICON_DIR, "save.png")), "Save")
         self.actionClearWS= self.addAction(QIcon(os.path.join(ICON_DIR, "clear.png")), "Clear current workspace")
         self.addSeparator()

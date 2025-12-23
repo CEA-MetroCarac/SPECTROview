@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtGui import QIcon
 
 from spectroview import LOGO_APPLI
-from spectroview.view.main_view import MainView
+from spectroview.view.v_main_view import MainView
 
 
 def launcher():

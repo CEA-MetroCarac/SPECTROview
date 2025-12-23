@@ -1,14 +1,15 @@
 # view/spectra_workspace.py
-
 import os
 from PySide6.QtWidgets import (QWidget, QVBoxLayout,QHBoxLayout, QLabel,
-    QPushButton, QCheckBox,QProgressBar,QSplitter,QTabWidget,
+    QPushButton, QCheckBox,QProgressBar,QSplitter,QTabWidget, QMessageBox
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
-from spectroview.view.components.spectra_list import SpectraList
-from spectroview.view.components.spectra_viewer import SpectraViewer
+from spectroview.view.components.v_spectra_list import SpectraList
+from spectroview.view.components.v_spectra_viewer import SpectraViewer
+
+from spectroview.viewmodel.vm_spectra import SpectraVM
 
 from spectroview import ICON_DIR
 
@@ -16,7 +17,13 @@ from spectroview import ICON_DIR
 class SpectraWorkspace(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+       
+        
+        # ✅ Single ViewModel
+        self.vm = SpectraVM()
+
         self.init_ui()
+        self.connect_vm()
 
     def init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -101,3 +108,27 @@ class SpectraWorkspace(QWidget):
         main_splitter.setSizes([900, 200])
         # main_splitter.setStretchFactor(0, 2)
         # main_splitter.setStretchFactor(1, 1)
+
+
+    def connect_vm(self):
+        # View → ViewModel
+        self.spectra_list.selection_changed.connect(
+            self.vm.set_selected_indices
+        )
+      
+        self.spectra_list.files_dropped.connect(self.vm.load_files)
+        
+        self.vm.notify.connect(lambda msg: QMessageBox.information(self, "Spectra already loaded", msg))
+        
+        # ViewModel → View
+        self.vm.spectra_list_changed.connect(
+            self.spectra_list.set_spectra_names
+        )
+        self.vm.spectra_selection_changed.connect(
+            self.spectra_viewer.set_plot_data
+        )
+        self.vm.count_changed.connect(
+            lambda n: self.lbl_count.setText(f"Loaded spectra: {n}")
+        )
+
+

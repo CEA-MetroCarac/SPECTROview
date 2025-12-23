@@ -17,9 +17,6 @@ from spectroview import ICON_DIR
 class SpectraWorkspace(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-       
-        
-        # ✅ Single ViewModel
         self.vm = SpectraVM()
 
         self.init_ui()
@@ -29,15 +26,11 @@ class SpectraWorkspace(QWidget):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(4, 4, 4, 4)
 
-        # =========================
         # Main vertical splitter
-        # =========================
         main_splitter = QSplitter(Qt.Horizontal, self)
         main_layout.addWidget(main_splitter)
 
-        # ======================================================
         # LEFT SIDE (Viewer + Tabs)
-        # ======================================================
         left_widget = QWidget()
         left_layout = QVBoxLayout(left_widget)
         left_layout.setContentsMargins(0, 0, 0, 0)
@@ -59,9 +52,7 @@ class SpectraWorkspace(QWidget):
         left_splitter.addWidget(self.bottom_tabs)
         left_splitter.setSizes([600, 500])
 
-        # ======================================================
         # RIGHT SIDE (Sidebar)
-        # ======================================================
         right_widget = QFrame()
         right_layout = QVBoxLayout(right_widget)
         right_widget.setFrameShape(QFrame.StyledPanel)
@@ -101,31 +92,23 @@ class SpectraWorkspace(QWidget):
         right_layout.addWidget(self.lbl_count)
         right_layout.addWidget(self.progress_bar)
 
-        # ======================================================
         # Assemble main splitter
-        # ======================================================
         main_splitter.addWidget(left_widget)
         main_splitter.addWidget(right_widget)
         main_splitter.setSizes([900, 200])
-        # main_splitter.setStretchFactor(0, 2)
-        # main_splitter.setStretchFactor(1, 1)
-
 
     def connect_vm(self):
+        """Connect ViewModel signals and slots to the View components."""
         # View → ViewModel
         self.spectra_list.selection_changed.connect(self.vm.set_selected_indices)
-
-        # NEW: buttons
         self.btn_select_all.clicked.connect(self.spectra_list.select_all)
         self.btn_remove.clicked.connect(self.vm.remove_selected)
-        
-    
         self.spectra_list.files_dropped.connect(self.vm.load_files)
-        self.vm.notify.connect(lambda msg: QMessageBox.information(self, "Spectra already loaded", msg))
         
         # ViewModel → View
         self.vm.spectra_list_changed.connect(self.spectra_list.set_spectra_names)
         self.vm.spectra_selection_changed.connect(self.spectra_viewer.set_plot_data)
         self.vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
-
+        self.vm.notify.connect(lambda msg: QMessageBox.information(self, "Spectra already loaded", msg))
+        
 

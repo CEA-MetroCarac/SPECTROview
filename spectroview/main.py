@@ -13,11 +13,9 @@ from spectroview.view.v_spectra_workspace import SpectraWorkspace
 from spectroview.view.v_maps_workspace import MapsWorkspace
 from spectroview.view.v_graphs_workspace import GraphsWorkspace
 
-
 from spectroview import LOGO_APPLI
 
-
-class MainView(QMainWindow):
+class Main(QMainWindow):
     def __init__(self):
         super().__init__()
         self.init_ui()
@@ -61,7 +59,7 @@ def launcher():
     app.setWindowIcon(QIcon(LOGO_APPLI))
     app.setStyle("Fusion")
 
-    window = MainView()
+    window = Main()
     window.show()
     sys.exit(app.exec())
 

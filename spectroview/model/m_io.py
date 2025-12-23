@@ -29,3 +29,8 @@ def load_spectrum_file(path: Path) -> SpectrumM:
     s.baseline.mode = "Linear"
 
     return s
+
+
+def load_map_file(path: Path) -> SpectrumM:
+    """Load TXT or CSV spectrum file."""
+    pass

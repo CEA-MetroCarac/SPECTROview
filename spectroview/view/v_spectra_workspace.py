@@ -1,4 +1,4 @@
-# view/spectra_workspace.py
+# view/v_spectra_workspace.py
 import os
 from PySide6.QtWidgets import (QWidget, QVBoxLayout,QHBoxLayout, QLabel,
     QPushButton, QCheckBox,QProgressBar,QSplitter,QTabWidget, QMessageBox
@@ -112,9 +112,7 @@ class SpectraWorkspace(QWidget):
 
     def connect_vm(self):
         # View → ViewModel
-        self.spectra_list.selection_changed.connect(
-            self.vm.set_selected_indices
-        )
+        self.spectra_list.selection_changed.connect(self.vm.set_selected_indices)
 
         # NEW: buttons
         self.btn_select_all.clicked.connect(self.spectra_list.select_all)
@@ -122,18 +120,11 @@ class SpectraWorkspace(QWidget):
         
     
         self.spectra_list.files_dropped.connect(self.vm.load_files)
-        
         self.vm.notify.connect(lambda msg: QMessageBox.information(self, "Spectra already loaded", msg))
         
         # ViewModel → View
-        self.vm.spectra_list_changed.connect(
-            self.spectra_list.set_spectra_names
-        )
-        self.vm.spectra_selection_changed.connect(
-            self.spectra_viewer.set_plot_data
-        )
-        self.vm.count_changed.connect(
-            lambda n: self.lbl_count.setText(f"{n} spectra loaded")
-        )
+        self.vm.spectra_list_changed.connect(self.spectra_list.set_spectra_names)
+        self.vm.spectra_selection_changed.connect(self.spectra_viewer.set_plot_data)
+        self.vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
 
 

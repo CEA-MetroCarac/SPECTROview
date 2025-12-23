@@ -30,6 +30,8 @@ class SpectraViewer(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._init_ui()
+        self._current_lines = []
+
         
     def _init_ui(self):
         plt.style.use(PLOT_POLICY)
@@ -187,7 +189,8 @@ class SpectraViewer(QWidget):
         # Line width
         self.spin_lw = QDoubleSpinBox()
         self.spin_lw.setRange(0.1, 5)
-        self.spin_lw.setValue(1.5)
+        self.spin_lw.setSingleStep(0.5)
+        self.spin_lw.setValue(2)
         self.spin_lw.valueChanged.connect(self._emit_view_options)
         menu.addAction(self._wrap("Line width:", self.spin_lw))
         
@@ -238,11 +241,18 @@ class SpectraViewer(QWidget):
     # Public API
     # ─────────────────────────────────────────
     def set_plot_data(self, lines):
+        self._current_lines = lines or []
+        self._redraw()
+
+    def _redraw(self):
         self.ax.clear()
-        for line in lines:
-            x = line.pop("x")
-            y = line.pop("y")
-            self.ax.plot(x, y, **line)
+
+        for line in self._current_lines:
+            x = line["x"]
+            y = line["y"]
+            lw = self.spin_lw.value()
+            kwargs = {k: v for k, v in line.items() if k not in ("x", "y")}
+            self.ax.plot(x, y, lw=lw, **kwargs)
 
         if self.btn_legend.isChecked():
             self.ax.legend()
@@ -252,8 +262,10 @@ class SpectraViewer(QWidget):
 
         self.ax.set_xlabel(self.cbb_xaxis.currentText())
         self.ax.set_ylabel("Intensity (a.u.)")
-        self.ax.set_yscale("log" if self.cbb_yscale.currentText() == "Log" else "linear")
-        
+        self.ax.set_yscale(
+            "log" if self.cbb_yscale.currentText() == "Log" else "linear"
+        )
+
         self.canvas.draw_idle()
 
     def set_r2(self, value):
@@ -282,6 +294,8 @@ class SpectraViewer(QWidget):
             "copy_width": _to_float(self.width_entry.text(), 5.5),
             "copy_height": _to_float(self.height_entry.text(), 4.0),
         })
+        # Update plot immediately whenever an view option changes
+        self._redraw() 
 
 
     def _emit_copy(self):

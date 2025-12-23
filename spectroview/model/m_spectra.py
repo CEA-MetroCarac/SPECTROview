@@ -1,9 +1,9 @@
 #spectroview/model/spectra.py
-
 from copy import deepcopy
+from threading import Thread
+from multiprocessing import Queue
 
 from fitspy.core.spectra import Spectra as FitspySpectra
-
 
 class SpectraM(FitspySpectra):
     """Model: container for SpectrumM"""

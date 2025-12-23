@@ -83,8 +83,6 @@ class SpectraVM(QObject):
         self.selected_indices = [new_index]
         self._emit_selection_plot()
         
-             
-    
     # Internal helpers
     def _emit_list_update(self):
         names = [s.fname for s in self.spectra]

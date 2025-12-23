@@ -14,7 +14,6 @@ from spectroview import ICON_DIR
 class MenuBar(QToolBar):
     open_requested = Signal()
     
-    
     def __init__(self):
         super().__init__()
         self.init_ui()
@@ -22,14 +21,12 @@ class MenuBar(QToolBar):
     def init_ui(self):
         self.setWindowTitle("SPECTROview Toolbar")
         self.setMovable(False)
-        self.setIconSize(QSize(24, 24))
+        self.setIconSize(QSize(30, 30))
         
         # Example: Add a sample action with an icon
         self.actionOpen = self.addAction(QIcon(os.path.join(ICON_DIR, "open.png")), "Open")
         self.actionOpen.triggered.connect(self.open_requested.emit)
 
-        
-        
         self.actionSave = self.addAction(QIcon(os.path.join(ICON_DIR, "save.png")), "Save")
         self.actionClearWS= self.addAction(QIcon(os.path.join(ICON_DIR, "clear.png")), "Clear current workspace")
         self.addSeparator()

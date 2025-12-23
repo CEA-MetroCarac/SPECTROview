@@ -65,9 +65,8 @@ class MapViewer(QWidget):
     
     def _create_ui(self):
         """Create 2Dmap plot widgets"""
-        # Create a frame to hold the canvas with a fixed size
+        # Create a frame to hold the canvas with a fixed siz
         self.canvas_frame = QFrame(self.widget)
-        self.canvas_frame.setFixedSize(400, 350)
         frame_layout = QVBoxLayout(self.canvas_frame)
         frame_layout.setContentsMargins(5, 0, 5, 0)
 

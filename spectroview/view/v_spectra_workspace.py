@@ -115,7 +115,12 @@ class SpectraWorkspace(QWidget):
         self.spectra_list.selection_changed.connect(
             self.vm.set_selected_indices
         )
-      
+
+        # NEW: buttons
+        self.btn_select_all.clicked.connect(self.spectra_list.select_all)
+        self.btn_remove.clicked.connect(self.vm.remove_selected)
+        
+    
         self.spectra_list.files_dropped.connect(self.vm.load_files)
         
         self.vm.notify.connect(lambda msg: QMessageBox.information(self, "Spectra already loaded", msg))
@@ -128,7 +133,7 @@ class SpectraWorkspace(QWidget):
             self.spectra_viewer.set_plot_data
         )
         self.vm.count_changed.connect(
-            lambda n: self.lbl_count.setText(f"Loaded spectra: {n}")
+            lambda n: self.lbl_count.setText(f"{n} spectra loaded")
         )
 
 

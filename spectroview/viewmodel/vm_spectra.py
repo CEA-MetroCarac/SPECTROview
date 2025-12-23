@@ -56,7 +56,34 @@ class SpectraVM(QObject):
             "Data (*.txt *.csv)"
         )
         if paths:
-            self.load_files(paths)    
+            self.load_files(paths)   
+            
+            
+    def remove_selected(self):
+        """Remove currently selected spectra."""
+        if not self.selected_indices:
+            self.notify.emit("No spectra selected.")
+            return
+        old_selection = set(self.selected_indices)
+        old_count = len(self.spectra)
+        # Remove from model
+        self.spectra.remove(self.selected_indices)
+        
+        new_count = len(self.spectra)
+        self._emit_list_update()
+
+        if new_count == 0:
+            self.selected_indices = []
+            self.spectra_selection_changed.emit([])
+            return
+        # Find closest valid index
+        min_removed = min(old_selection)
+        new_index = min(min_removed, new_count - 1)
+
+        self.selected_indices = [new_index]
+        self._emit_selection_plot()
+        
+             
     
     # Internal helpers
     def _emit_list_update(self):
@@ -67,6 +94,10 @@ class SpectraVM(QObject):
     def _emit_selection_plot(self):
         spectra = self.spectra.get(self.selected_indices)
 
+        if not spectra:
+            self.spectra_selection_changed.emit([])
+            return
+        
         lines = []
         for s in spectra:
             lines.append({

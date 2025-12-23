@@ -22,7 +22,11 @@ class SpectraM(FitspySpectra):
         return [s.fname for s in self]
 
     def get(self, indices):
-        return [self[i] for i in indices]
+        if not indices:
+            return []
+        n = len(self)
+        return [self[i] for i in indices if 0 <= i < n]
+
 
     def __len__(self):
         return super().__len__()

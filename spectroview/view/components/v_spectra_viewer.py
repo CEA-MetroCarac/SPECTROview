@@ -45,6 +45,7 @@ class SpectraViewer(QWidget):
         self.canvas.mpl_connect("button_press_event", self._on_mouse_click)
 
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        self.toolbar.zoom() # Start with zoom enabled
         for action in self.toolbar.actions():
             if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
                 action.setVisible(False)
@@ -70,10 +71,15 @@ class SpectraViewer(QWidget):
         self.btn_rescale.setIcon(QIcon(f"{ICON_DIR}/rescale.png"))
         self.btn_rescale.setIconSize(QSize(24, 24))
         self.btn_rescale.clicked.connect(self.rescaleRequested)
+        self.btn_rescale.clicked.connect(self._rescale)
+        
         layout.addWidget(self.btn_rescale)
 
         # Tool buttons
         self.btn_zoom = self._tool_btn("zoom.png", "Zoom", True)
+        self.btn_zoom.setCheckable(True)
+        self.btn_zoom.setChecked(True)
+        self.btn_zoom.toggled.connect(self._toggle_zoom_pan)
         self.btn_baseline = self._tool_btn("baseline.png", "Baseline")
         self.btn_peak = self._tool_btn("peak.png", "Peak")
 
@@ -93,6 +99,7 @@ class SpectraViewer(QWidget):
         self.btn_norm.setIcon(QIcon(f"{ICON_DIR}/norm.png"))
         self.btn_norm.setIconSize(QSize(24, 24))
         self.btn_norm.toggled.connect(self._emit_norm)
+        self.btn_norm.clicked.connect(self._rescale)
         layout.addWidget(self.btn_norm)
 
         self.norm_xmin = QLineEdit()
@@ -246,7 +253,7 @@ class SpectraViewer(QWidget):
         self.ax.set_xlabel(self.cbb_xaxis.currentText())
         self.ax.set_ylabel("Intensity (a.u.)")
         self.ax.set_yscale("log" if self.cbb_yscale.currentText() == "Log" else "linear")
-        self.figure.tight_layout()
+        
         self.canvas.draw_idle()
 
     def set_r2(self, value):
@@ -293,3 +300,18 @@ class SpectraViewer(QWidget):
     def _on_mouse_click(self, event):
         if event.inaxes == self.ax:
             self.mouseClicked.emit(event.xdata, event.ydata, event.button)
+
+
+    def _rescale(self):
+        """Rescale the spectra plot to fit within the axes."""
+        self.ax.autoscale()
+        self.canvas.draw_idle()
+        
+    def _toggle_zoom_pan(self):
+        """Zoom feature for button Zoom"""
+        if self.btn_zoom.isChecked():
+            self.zoom_pan_active = True
+            self.toolbar.zoom() 
+        else:
+            self.zoom_pan_active = False
+            self.toolbar.zoom() 

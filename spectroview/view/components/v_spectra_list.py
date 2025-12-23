@@ -34,6 +34,10 @@ class SpectraList(QListWidget):
     def selected_rows(self) -> list[int]:
         return [self.row(i) for i in self.selectedItems()]
     
+    def select_all(self):
+        """Select all items in the list."""
+        self.selectAll()
+    
     # ───── Drag & Drop handling ──────────────────────────────────
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():

@@ -193,9 +193,11 @@ class SpectraViewer(QWidget):
     def toggle_zoom_pan(self, checked):
         """Toggle zoom and pan functionality for spectra plot based on tool button selection."""
         if self.btn_zoom.isChecked():
+            print("Zoom activated")
             self.zoom_pan_active = True
             self.toolbar.zoom()  # Activate the zoom feature
         else:
+            print("Zoom desactivated")
             self.zoom_pan_active = False
             self.toolbar.zoom()  # Deactivate the zoom feature
             

@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QToolButton, QLabel,
     QComboBox, QMenu, QWidgetAction,
-    QLineEdit, QDoubleSpinBox
+    QLineEdit, QDoubleSpinBox, QColorDialog, QInputDialog
 )
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QIcon
@@ -14,6 +14,9 @@ from matplotlib.backends.backend_qtagg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT
 )
+
+import matplotlib.lines as mlines
+import matplotlib.text as mtext
 
 from spectroview import ICON_DIR, X_AXIS_UNIT, PLOT_POLICY
 
@@ -245,23 +248,36 @@ class VSpectraViewer(QWidget):
         self._redraw()
 
     def _redraw(self):
-        # --- Save current view (zoom/pan state) ---
-        old_xlim = self.ax.get_xlim()
-        old_ylim = self.ax.get_ylim()
+        # Preserve zoom / pan state
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
 
-        had_data = len(self.ax.lines) > 0
+        # Detect default (fresh) axes limits
+        is_default_limits = (
+            xlim == (0.0, 1.0) and
+            ylim == (0.0, 1.0)
+        )
 
         self.ax.clear()
 
-        for line in self._current_lines:
-            x = line["x"]
-            y = line["y"]
+        for line_data in self._current_lines:
+            spectrum = line_data.get("_spectrum_ref")
+
+            x = line_data["x"]
+            y = line_data["y"]
             lw = self.spin_lw.value()
-            kwargs = {k: v for k, v in line.items() if k not in ("x", "y")}
-            self.ax.plot(x, y, lw=lw, **kwargs)
+
+            kwargs = {k: v for k, v in line_data.items()
+                    if k not in ("x", "y", "_spectrum_ref")}
+
+            line, = self.ax.plot(x, y, lw=lw, **kwargs)
+
+            # 🔑 Attach model reference
+            line._spectrum_ref = spectrum
 
         if self.btn_legend.isChecked():
-            self.ax.legend()
+            legend = self.ax.legend(loc="best")
+            self._make_legend_pickable(legend)
 
         if self.act_grid.isChecked():
             self.ax.grid(True, linestyle="--", alpha=0.4)
@@ -272,15 +288,87 @@ class VSpectraViewer(QWidget):
             "log" if self.cbb_yscale.currentText() == "Log" else "linear"
         )
 
-        # --- Restore zoom/pan ONLY if user already zoomed ---
-        if had_data:
-            self.ax.set_xlim(old_xlim)
-            self.ax.set_ylim(old_ylim)
+        # Restore zoom
+        if not is_default_limits:
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
 
         self.canvas.draw_idle()
+    
+    def _make_legend_pickable(self, legend):
+        # Legend text (labels)
+        for text in legend.get_texts():
+            text.set_picker(True)
+
+        # Legend handles (color / line)
+        for handle in legend.legendHandles:
+            handle.set_picker(True)
+
+        # Cache bbox to avoid conflicts with plot clicks
+        self._legend_bbox = legend.get_window_extent(self.canvas.renderer)
+
+        # Connect pick event once
+        if not hasattr(self, "_legend_pick_connected"):
+            self.canvas.mpl_connect("pick_event", self._on_legend_pick)
+            self._legend_pick_connected = True
+
 
     def set_r2(self, value):
         self.lbl_r2.setText(f"R²={value:.4f}")
+
+    def _on_legend_pick(self, event):
+        artist = event.artist
+
+        # ─────────────────────────────────────
+        # Legend TEXT → rename spectrum
+        # ─────────────────────────────────────
+        if isinstance(artist, mtext.Text):
+            old_label = artist.get_text()
+
+            new_label, ok = QInputDialog.getText(
+                self,
+                "Edit legend label",
+                "New label:",
+                text=old_label
+            )
+
+            if not ok or not new_label.strip():
+                return
+
+            artist.set_text(new_label)
+
+            for line in self.ax.get_lines():
+                if line.get_label() == old_label:
+                    line.set_label(new_label)
+
+                    if hasattr(line, "_spectrum_ref"):
+                        line._spectrum_ref.label = new_label
+                    break
+
+            self.canvas.draw_idle()
+
+        # ─────────────────────────────────────
+        # Legend LINE → change color
+        # ─────────────────────────────────────
+        elif isinstance(artist, mlines.Line2D):
+            color = QColorDialog.getColor()
+
+            if not color.isValid():
+                return
+
+            hex_color = color.name()
+            artist.set_color(hex_color)
+
+            for line in self.ax.get_lines():
+                if line.get_label() == artist.get_label():
+                    line.set_color(hex_color)
+
+                    if hasattr(line, "_spectrum_ref"):
+                        line._spectrum_ref.color = hex_color
+                    break
+
+            self.canvas.draw_idle()
+
 
     # ─────────────────────────────────────────
     # Signal emitters

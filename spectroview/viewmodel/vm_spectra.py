@@ -103,6 +103,7 @@ class VMSpectra(QObject):
                 "y": s.y,
                 "label": s.label or s.fname,
                 "color": s.color,
+                "_spectrum_ref": s, 
             })
 
         self.spectra_selection_changed.emit(lines)

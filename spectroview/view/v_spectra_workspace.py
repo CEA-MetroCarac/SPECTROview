@@ -100,7 +100,7 @@ class VSpectraWorkspace(QWidget):
     def connect_vm(self):
         """Connect ViewModel signals and slots to the View components."""
         # View → ViewModel
-        self.spectra_list.selection_changed.connect(self.vm.set_selected_indices)
+        self.spectra_list.selection_changed.connect(self.vm.set_selected_indices) # Notify VM of selection change
         self.btn_select_all.clicked.connect(self.spectra_list.select_all)
         self.btn_remove.clicked.connect(self.vm.remove_selected)
         self.spectra_list.files_dropped.connect(self.vm.load_files)

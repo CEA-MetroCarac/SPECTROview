@@ -45,6 +45,7 @@ class VMSpectra(QObject):
 
 
     def set_selected_indices(self, indices: list[int]):
+        """Set currently selected spectra (via Listwidget) by their indices."""
         self.selected_indices = indices
         self._emit_selection_plot()
         
@@ -90,6 +91,7 @@ class VMSpectra(QObject):
         self.count_changed.emit(len(self.spectra))
 
     def _emit_selection_plot(self):
+        """Prepare and emit data for plotting the selected spectra."""
         spectra = self.spectra.get(self.selected_indices)
 
         if not spectra:

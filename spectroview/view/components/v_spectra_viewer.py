@@ -1,4 +1,6 @@
 # view/components/spectra_viewer.py
+import numpy as np
+
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QToolButton, QLabel,
@@ -102,7 +104,9 @@ class VSpectraViewer(QWidget):
         self.btn_norm.setIcon(QIcon(f"{ICON_DIR}/norm.png"))
         self.btn_norm.setIconSize(QSize(22, 22))
         self.btn_norm.toggled.connect(self._emit_norm)
+        self.btn_norm.toggled.connect(self._redraw)
         self.btn_norm.clicked.connect(self._rescale)
+
         layout.addWidget(self.btn_norm)
 
         self.norm_xmin = QLineEdit()
@@ -114,6 +118,11 @@ class VSpectraViewer(QWidget):
         self.norm_xmax.setFixedWidth(45)
         self.norm_xmax.setPlaceholderText("Xmax")
         layout.addWidget(self.norm_xmax)
+
+        self.norm_xmin.editingFinished.connect(self._redraw)
+        self.norm_xmax.editingFinished.connect(self._redraw)
+        self.norm_xmin.editingFinished.connect(self._rescale)
+        self.norm_xmax.editingFinished.connect(self._rescale)
 
         # Legend
         self.btn_legend = QToolButton()
@@ -261,7 +270,8 @@ class VSpectraViewer(QWidget):
             spectrum = line_data.get("_spectrum_ref")
 
             x = line_data["x"]
-            y = line_data["y"]
+            y_raw = line_data["y"]
+            y = self._get_normalized_y(x, y_raw)
             lw = self.spin_lw.value()
 
             kwargs = {k: v for k, v in line_data.items()
@@ -289,6 +299,34 @@ class VSpectraViewer(QWidget):
             self.ax.set_ylim(ylim)
 
         self.canvas.draw_idle()
+    
+
+    def _get_normalized_y(self, x, y):
+        """Apply normalization if enabled (VIEW-ONLY)."""
+        if not self.btn_norm.isChecked():
+            return y
+
+        try:
+            xmin = float(self.norm_xmin.text()) if self.norm_xmin.text() else None
+            xmax = float(self.norm_xmax.text()) if self.norm_xmax.text() else None
+        except ValueError:
+            xmin = xmax = None
+
+        if xmin is not None and xmax is not None:
+            if xmin > xmax:
+                xmin, xmax = xmax, xmin
+
+            imin = np.abs(x - xmin).argmin()
+            imax = np.abs(x - xmax).argmin()
+            norm_val = np.max(y[min(imin, imax):max(imin, imax) + 1])
+        else:
+            norm_val = np.max(y)
+
+        if norm_val != 0:
+            return y / norm_val
+
+        return y
+
     
     def _make_legend_pickable(self, legend):
         """Make legend texts and handles pickable for interaction."""

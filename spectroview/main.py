@@ -8,6 +8,9 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, Q
 from PySide6.QtCore import Qt, QSettings
 from PySide6.QtGui import QIcon
 
+from spectroview.viewmodel.vm_settings import VMSettings
+from spectroview.view.components.v_settings import VSettingsDialog
+
 from spectroview.view.components.v_menubar import VMenuBar
 from spectroview.view.workspace_spectra import WorkspaceSpectra
 from spectroview.view.workspace_maps import WorkspaceMaps
@@ -59,6 +62,7 @@ class VMain(QMainWindow):
         self.menu_bar.open_requested.connect(self.open_files)
         self.menu_bar.save_requested.connect(self.save)
         self.menu_bar.clear_requested.connect(self.clear_workspace)
+        self.menu_bar.settings_requested.connect(self._open_settings)
         self.menu_bar.convert_requested.connect(self.file_converter)
 
         self.menu_bar.about_requested.connect(self.about)
@@ -81,6 +85,11 @@ class VMain(QMainWindow):
 
     def clear_workspace(self):
         pass  # Implement clear functionality as needed
+
+    def _open_settings(self):
+        vm = VMSettings()
+        dlg = VSettingsDialog(vm, self)
+        dlg.exec()
 
     def file_converter(self):
         pass  # Implement file conversion functionality as needed

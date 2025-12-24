@@ -101,19 +101,23 @@ class VSpectraWorkspace(QWidget):
 
     def connect_vm(self):
         """Connect ViewModel signals and slots to the View components."""
-        # View → ViewModel
+        # SpectraList connection: View → ViewModel
         self.spectra_list.selection_changed.connect(self.vm.set_selected_indices) # V Notify VM of selection change
         self.btn_select_all.clicked.connect(self.spectra_list.select_all)
         self.btn_remove.clicked.connect(self.vm.remove_selected)
         self.spectra_list.files_dropped.connect(self.vm.load_files)
 
-        self.fit_model_builder.btn_correct.clicked.connect(self.vm.apply_x_correction)
+        # Fit Model Builder connections : view → viewmodel
+        
+        self.fit_model_builder.btn_correct.clicked.connect(lambda: self.vm.apply_x_correction(self.fit_model_builder.spin_xcorr.value()))
         self.fit_model_builder.btn_undo_corr.clicked.connect(self.vm.undo_x_correction)
         
-        # ViewModel → View
+        
+        # SpectraList connection: ViewModel → View
         self.vm.spectra_list_changed.connect(self.spectra_list.set_spectra_names)
         self.vm.spectra_selection_changed.connect(self.spectra_viewer.set_plot_data)
         self.vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
         self.vm.notify.connect(lambda msg: QMessageBox.information(self, "Spectra already loaded", msg))
-        
+
+        self.vm.x_correction_changed.connect(self.fit_model_builder.set_xcorrection_value)        
 

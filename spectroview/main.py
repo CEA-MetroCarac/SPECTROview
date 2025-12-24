@@ -25,7 +25,6 @@ class VMain(QMainWindow):
         self.toggle_theme(self.settings.value("theme"))
         self.setup_connections()
 
-
     def init_ui(self):
         self.setWindowTitle(
             "SPECTROview (Tool for Spectroscopic Data Processing and Visualization)"
@@ -63,7 +62,7 @@ class VMain(QMainWindow):
     def toggle_theme(self, theme=None):
         app = QApplication.instance()
         if theme is None:
-            theme = "light" if self.settings.value("theme", "dark") == "dark" else "dark"
+            theme = "light" if self.settings.value("theme") == "dark" else "dark"
         if theme == "dark":
             app.setPalette(dark_palette())
             self.settings.setValue("theme", "dark")

@@ -13,6 +13,7 @@ class VMSpectra(QObject):
     spectra_list_changed = Signal(list)      # list[str]
     spectra_selection_changed = Signal(list) # list[dict] → plot data
     count_changed = Signal(int)
+    x_correction_changed = Signal(float)  # ΔX of first selected spectrum
 
     notify = Signal(str)  # general notifications
     
@@ -98,6 +99,10 @@ class VMSpectra(QObject):
             self.spectra_selection_changed.emit([])
             return
         
+        # 🔑 emit x-correction of first spectrum to show in GUI
+        first = spectra[0]
+        self.x_correction_changed.emit(first.xcorrection_value)
+
         lines = []
         for s in spectra:
             lines.append({
@@ -110,7 +115,39 @@ class VMSpectra(QObject):
 
         self.spectra_selection_changed.emit(lines)
 
-    def apply_x_correction(self):
-        pass
+    def apply_x_correction(self, measured_peak: float):
+        """
+        Apply X-axis correction to selected spectra.
+        delta_x: user-entered correction value
+        """
+        if not self.selected_indices:
+            self.notify.emit("No spectrum selected.")
+            return
+
+        spectra = self.spectra.get(self.selected_indices)
+
+        SI_REF = 520.7
+        delta_x = SI_REF - measured_peak 
+
+        for s in spectra:
+            s.apply_xcorrection(delta_x)
+
+        # Trigger plot refresh
+        self.x_correction_changed.emit(spectra[0].xcorrection_value)
+        self._emit_selection_plot()
+
+
     def undo_x_correction(self):
-        pass
+        """Undo X-axis correction for selected spectra."""
+        if not self.selected_indices:
+            self.notify.emit("No spectrum selected.")
+            return
+
+        spectra = self.spectra.get(self.selected_indices)
+
+        for spectrum in spectra:
+            spectrum.undo_xcorrection()
+
+        self.x_correction_changed.emit(spectra[0].xcorrection_value)
+        self._emit_selection_plot()
+

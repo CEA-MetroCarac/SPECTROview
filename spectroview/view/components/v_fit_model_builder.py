@@ -56,7 +56,7 @@ class VFitModelBuilder(QWidget):
         # --- Fit controls
         right_splitter.addWidget(self._fit_control_panel())
 
-        splitter.setSizes([350, 650])
+        splitter.setSizes([370, 650])
         right_splitter.setSizes([500, 100])
 
     # ======================================================
@@ -76,7 +76,7 @@ class VFitModelBuilder(QWidget):
         self.spin_xcorr = QSpinBox()
         self.spin_xcorr.setRange(-100000, 100000)
         self.spin_xcorr.setValue(0)
-        self.spin_xcorr.setToolTip("X correction value")
+        self.spin_xcorr.setToolTip("Type measured reference peak position")
 
         # Label showing corrected value
         self.lbl_xcorr_value = QLabel("(0)")
@@ -85,7 +85,6 @@ class VFitModelBuilder(QWidget):
         self.btn_correct = QPushButton("Correct")
         self.btn_correct.setIcon(QIcon(f"{ICON_DIR}/done.png"))
         
-
 
         self.btn_undo_corr = QPushButton()
         self.btn_undo_corr.setIcon(QIcon(f"{ICON_DIR}/undo.png"))
@@ -100,17 +99,15 @@ class VFitModelBuilder(QWidget):
         l.addWidget(self.btn_correct)
         l.addWidget(self.btn_undo_corr)
 
-        # --- UI-only behavior ---
-        self.spin_xcorr.valueChanged.connect(self._update_xcorr_label)
-
         return gb
 
-    def _update_xcorr_label(self, value: int):
-        """Update corrected X value label (UI only)."""
-        if value == 0:
-            self.lbl_xcorr_value.setText("ΔX = 0")
+    def set_xcorrection_value(self, value: float):
+        """Update label from Model state (xcorrection_value)"""
+        if abs(value) < 1e-9:
+            self.lbl_xcorr_value.setText("Δx = 0")
         else:
-            self.lbl_xcorr_value.setText(f"ΔX = {value:+d}")
+            self.lbl_xcorr_value.setText(f"Δx = {value:+.2f}")
+
 
 
     def _spectral_range_group(self):

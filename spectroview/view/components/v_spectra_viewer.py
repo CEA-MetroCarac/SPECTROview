@@ -44,7 +44,7 @@ class VSpectraViewer(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._init_ui()
-        self._current_lines = []
+        self._current_spectra = []
 
         self.zoom_pan_active = True
 
@@ -114,7 +114,7 @@ class VSpectraViewer(QWidget):
         self.btn_norm.setIcon(QIcon(f"{ICON_DIR}/norm.png"))
         self.btn_norm.setIconSize(QSize(22, 22))
         self.btn_norm.toggled.connect(self._emit_norm)
-        self.btn_norm.toggled.connect(self._redraw)
+        self.btn_norm.toggled.connect(self._plot)
         self.btn_norm.clicked.connect(self._rescale)
 
         layout.addWidget(self.btn_norm)
@@ -129,8 +129,8 @@ class VSpectraViewer(QWidget):
         self.norm_xmax.setPlaceholderText("Xmax")
         layout.addWidget(self.norm_xmax)
 
-        self.norm_xmin.editingFinished.connect(self._redraw)
-        self.norm_xmax.editingFinished.connect(self._redraw)
+        self.norm_xmin.editingFinished.connect(self._plot)
+        self.norm_xmax.editingFinished.connect(self._plot)
         self.norm_xmin.editingFinished.connect(self._rescale)
         self.norm_xmax.editingFinished.connect(self._rescale)
 
@@ -259,66 +259,67 @@ class VSpectraViewer(QWidget):
     # ─────────────────────────────────────────
     # Public API
     # ─────────────────────────────────────────
-    def set_plot_data(self, lines):
-        self._current_lines = lines or []
-        self._redraw()
+    def set_plot_data(self, selected_spectra):
+        self._current_spectra = selected_spectra or []
+        self._plot()
 
-    def _redraw(self):
-        """Redraw the spectra plot based on current lines and view options."""
-        # Preserve zoom / pan state
+    def _plot(self):
+        """Redraw spectra based purely on Spectrum model objects."""
+        if not self._current_spectra:
+            self.ax.clear()
+            self.canvas.draw_idle()
+            return
+
+        # Preserve zoom / pan
         xlim = self.ax.get_xlim()
         ylim = self.ax.get_ylim()
-        is_default_limits = (xlim == (0.0, 1.0) and ylim == (0.0, 1.0))
+        is_default = (xlim == (0.0, 1.0) and ylim == (0.0, 1.0))
 
         self.ax.clear()
 
-        for line_data in self._current_lines:
-            spectrum = line_data.get("_spectrum_ref")
-            if spectrum is None:
-                continue
-
-            x = line_data["x"]
-            y_raw = line_data["y"]
+        for spectrum in self._current_spectra:
+            x = spectrum.x
+            y_raw = spectrum.y
             y = self._get_normalized_y(x, y_raw)
             lw = self.spin_lw.value()
 
-            kwargs = {
-                k: v for k, v in line_data.items()
-                if k not in ("x", "y", "_spectrum_ref")
-            }
-
             # ── Main spectrum
-            line, = self.ax.plot(x, y, lw=lw, **kwargs)
+            line, = self.ax.plot(
+                x,
+                y,
+                lw=lw,
+                label=spectrum.label or spectrum.fname,
+                color=spectrum.color
+            )
             line._spectrum_ref = spectrum
 
-            # =====================================================
+            # ─────────────────────────────────
             # BASELINE POINTS
-            # =====================================================
-            if hasattr(spectrum.baseline, "points"):
-                xs, ys = spectrum.baseline.points
-                if xs and ys:
+            # ─────────────────────────────────
+            baseline = spectrum.baseline
+            if hasattr(baseline, "points"):
+                xs, ys = baseline.points
+                if xs:
                     self.ax.plot(xs, ys, "ro", ms=4, zorder=5)
 
-            # =====================================================
-            # BASELINE CURVE (SAFE)
-            # =====================================================
+            # ─────────────────────────────────
+            # BASELINE CURVE
+            # ─────────────────────────────────
             y_base = None
-            if spectrum.baseline.mode is not None:
+            if baseline.mode is not None:
                 try:
-                    params = spectrum.baseline.mode.make_params()
-                    y_base = spectrum.baseline.mode.eval(params, x=x)
-                    self.ax.plot(
-                        x, y_base, "--", color="gray", lw=1.2, label="baseline"
-                    )
+                    params = baseline.mode.make_params()
+                    y_base = baseline.mode.eval(params, x=x)
+                    self.ax.plot(x, y_base, "--", color="gray", lw=1.2)
                 except Exception:
                     y_base = None
 
-            # =====================================================
-            # PEAKS + BEST FIT (SAFE)
-            # =====================================================
+            # ─────────────────────────────────
+            # PEAKS
+            # ─────────────────────────────────
             y_peaks = None
-            if hasattr(spectrum, "peak_models") and spectrum.peak_models:
-                y_peaks = 0.0
+            if getattr(spectrum, "peak_models", None):
+                y_peaks = np.zeros_like(x)
                 for peak_model in spectrum.peak_models:
                     try:
                         params = peak_model.make_params()
@@ -328,18 +329,16 @@ class VSpectraViewer(QWidget):
                     except Exception:
                         pass
 
-            # ── Best-fit = baseline + peaks
+            # ─────────────────────────────────
+            # BEST FIT
+            # ─────────────────────────────────
             if y_peaks is not None:
-                if y_base is not None:
-                    y_fit = y_base + y_peaks
-                else:
-                    y_fit = y_peaks
+                y_fit = y_peaks + y_base if y_base is not None else y_peaks
+                self.ax.plot(x, y_fit, lw=lw, color="black", label="bestfit")
 
-                self.ax.plot(
-                    x, y_fit, lw=lw,  label="bestfit"
-                )
-
-        # ── Legend / grid / axes
+        # ─────────────────────────────────
+        # AXES / GRID / LEGEND
+        # ─────────────────────────────────
         if self.btn_legend.isChecked():
             legend = self.ax.legend(loc="best")
             self._make_legend_pickable(legend)
@@ -353,15 +352,12 @@ class VSpectraViewer(QWidget):
             "log" if self.cbb_yscale.currentText() == "Log" else "linear"
         )
 
-        # Restore zoom
-        if not is_default_limits:
+        if not is_default:
             self.ax.set_xlim(xlim)
             self.ax.set_ylim(ylim)
 
         self.canvas.draw_idle()
 
-
-    
 
     def _get_normalized_y(self, x, y):
         """Apply normalization if enabled (VIEW-ONLY)."""
@@ -484,7 +480,7 @@ class VSpectraViewer(QWidget):
             "copy_height": _to_float(self.height_entry.text(), 4.0),
         })
         # Update plot immediately whenever an view option changes
-        self._redraw() 
+        self._plot() 
 
 
     def _emit_copy(self):

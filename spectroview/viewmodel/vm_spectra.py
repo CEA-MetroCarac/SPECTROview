@@ -48,7 +48,7 @@ class VMSpectra(QObject):
     def set_selected_indices(self, indices: list[int]):
         """Set currently selected spectra (via Listwidget) by their indices."""
         self.selected_indices = indices
-        self._emit_selection_plot()
+        self._emit_selected_spectra()
         
     def file_open_dialog(self):
         paths, _ = QFileDialog.getOpenFileNames(
@@ -83,7 +83,7 @@ class VMSpectra(QObject):
         new_index = min(min_removed, new_count - 1)
 
         self.selected_indices = [new_index]
-        self._emit_selection_plot()
+        self._emit_selected_spectra()
         
     # Internal helpers
     def _emit_list_update(self):
@@ -91,29 +91,19 @@ class VMSpectra(QObject):
         self.spectra_list_changed.emit(names)
         self.count_changed.emit(len(self.spectra))
 
-    def _emit_selection_plot(self):
+    def _emit_selected_spectra(self):
         """Prepare and emit data for plotting the selected spectra."""
-        spectra = self.spectra.get(self.selected_indices)
+        selected_spectra = self.spectra.get(self.selected_indices)
 
-        if not spectra:
+        if not selected_spectra:
             self.spectra_selection_changed.emit([])
             return
         
-        # 🔑 emit x-correction of first spectrum to show in GUI
-        first = spectra[0]
-        self.show_xcorrection_value.emit(first.xcorrection_value)
+        # emit x-correction of first spectrum to show in GUI
+        self.show_xcorrection_value.emit(selected_spectra[0].xcorrection_value)
 
-        lines = []
-        for s in spectra:
-            lines.append({
-                "x": s.x,
-                "y": s.y,
-                "label": s.label or s.fname,
-                "color": s.color,
-                "_spectrum_ref": s, 
-            })
-
-        self.spectra_selection_changed.emit(lines)
+        # emit list of the elected spectra to plot in View
+        self.spectra_selection_changed.emit(selected_spectra)
 
 
     def apply_x_correction(self, measured_peak: float):
@@ -135,7 +125,7 @@ class VMSpectra(QObject):
 
         # Trigger plot refresh
         self.show_xcorrection_value.emit(spectra[0].xcorrection_value)
-        self._emit_selection_plot()
+        self._emit_selected_spectra()
 
 
     def undo_x_correction(self):
@@ -150,7 +140,7 @@ class VMSpectra(QObject):
             spectrum.undo_xcorrection()
 
         self.show_xcorrection_value.emit(spectra[0].xcorrection_value)
-        self._emit_selection_plot()
+        self._emit_selected_spectra()
 
 
     def add_peak_at(self, x: float):
@@ -168,7 +158,7 @@ class VMSpectra(QObject):
             dx0=(maxshift, maxshift),
             dfwhm=maxfwhm,
         )
-        self._emit_selection_plot()
+        self._emit_selected_spectra()
 
     def remove_peak_at(self, x: float):
         if not self.selected_indices:
@@ -188,7 +178,7 @@ class VMSpectra(QObject):
 
         del spectrum.peak_models[idx]
         del spectrum.peak_labels[idx]
-        self._emit_selection_plot()
+        self._emit_selected_spectra()
 
     
     def add_baseline_point(self, x: float, y: float):
@@ -202,7 +192,7 @@ class VMSpectra(QObject):
             return
 
         spectrum.baseline.add_point(x, y)
-        self._emit_selection_plot()
+        self._emit_selected_spectra()
 
 
     def remove_baseline_point(self, x: float):
@@ -222,4 +212,4 @@ class VMSpectra(QObject):
         xs.pop(idx)
         ys.pop(idx)
 
-        self._emit_selection_plot()
+        self._emit_selected_spectra()

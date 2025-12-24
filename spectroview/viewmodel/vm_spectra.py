@@ -13,7 +13,7 @@ class VMSpectra(QObject):
     spectra_list_changed = Signal(list)      # list[str]
     spectra_selection_changed = Signal(list) # list[dict] → plot data
     count_changed = Signal(int)
-    x_correction_changed = Signal(float)  # ΔX of first selected spectrum
+    show_xcorrection_value = Signal(float)  # ΔX of first selected spectrum
 
     notify = Signal(str)  # general notifications
     
@@ -61,7 +61,7 @@ class VMSpectra(QObject):
             self.load_files(paths)   
             
             
-    def remove_selected(self):
+    def remove_selected_spectra(self):
         """Remove currently selected spectra."""
         if not self.selected_indices:
             self.notify.emit("No spectra selected.")
@@ -101,7 +101,7 @@ class VMSpectra(QObject):
         
         # 🔑 emit x-correction of first spectrum to show in GUI
         first = spectra[0]
-        self.x_correction_changed.emit(first.xcorrection_value)
+        self.show_xcorrection_value.emit(first.xcorrection_value)
 
         lines = []
         for s in spectra:
@@ -114,6 +114,58 @@ class VMSpectra(QObject):
             })
 
         self.spectra_selection_changed.emit(lines)
+
+    def _plot_baseline(self, spectrum):
+        baseline = spectrum.baseline
+        if not baseline or not baseline.points:
+            return
+
+        xs, ys = baseline.points
+        if not xs:
+            return
+
+        self.ax.plot(
+            xs, ys,
+            "o--",
+            color="orange",
+            ms=5,
+            lw=1,
+            label="_baseline_points"
+        )
+
+    def _plot_peaks(self, spectrum):
+        if not hasattr(spectrum, "peak_models"):
+            return
+
+        self._fitted_lines = []
+
+        x = spectrum.x
+
+        for peak_model, label in zip(spectrum.peak_models, spectrum.peak_labels):
+            y = self._evaluate_peak_model(peak_model, x)
+
+            line, = self.ax.plot(
+                x, y,
+                lw=self.spin_lw.value(),
+                label=label,
+                alpha=0.9
+            )
+
+            self._fitted_lines.append((line, peak_model))
+
+    def _evaluate_peak_model(self, peak_model, x):
+        param_hints_orig = peak_model.param_hints.copy()
+
+        for key in peak_model.param_hints:
+            peak_model.param_hints[key]["expr"] = ""
+
+        params = peak_model.make_params()
+        y = peak_model.eval(params, x=x)
+
+        peak_model.param_hints = param_hints_orig
+        return y
+
+
 
     def apply_x_correction(self, measured_peak: float):
         """
@@ -133,7 +185,7 @@ class VMSpectra(QObject):
             s.apply_xcorrection(delta_x)
 
         # Trigger plot refresh
-        self.x_correction_changed.emit(spectra[0].xcorrection_value)
+        self.show_xcorrection_value.emit(spectra[0].xcorrection_value)
         self._emit_selection_plot()
 
 
@@ -148,6 +200,77 @@ class VMSpectra(QObject):
         for spectrum in spectra:
             spectrum.undo_xcorrection()
 
-        self.x_correction_changed.emit(spectra[0].xcorrection_value)
+        self.show_xcorrection_value.emit(spectra[0].xcorrection_value)
         self._emit_selection_plot()
 
+
+    def add_peak_at(self, x: float):
+        if not self.selected_indices:
+            return
+
+        spectrum = self.spectra.get(self.selected_indices)[0]
+
+        maxshift = 20
+        maxfwhm = 200
+
+        spectrum.add_peak_model(
+            spectrum.peak_model if hasattr(spectrum, "peak_model") else "Lorentzian",
+            x,
+            dx0=(maxshift, maxshift),
+            dfwhm=maxfwhm,
+        )
+        self._emit_selection_plot()
+
+    def remove_peak_at(self, x: float):
+        if not self.selected_indices:
+            return
+
+        spectrum = self.spectra.get(self.selected_indices)[0]
+
+        if not spectrum.peak_models:
+            return
+
+        idx = min(
+            range(len(spectrum.peak_models)),
+            key=lambda i: abs(
+                spectrum.peak_models[i].param_hints["x0"]["value"] - x
+            )
+        )
+
+        del spectrum.peak_models[idx]
+        del spectrum.peak_labels[idx]
+        self._emit_selection_plot()
+
+    
+    def add_baseline_point(self, x: float, y: float):
+        if not self.selected_indices:
+            return
+
+        spectrum = self.spectra.get(self.selected_indices)[0]
+
+        if spectrum.baseline.is_subtracted:
+            self.notify.emit("Baseline already subtracted.")
+            return
+
+        spectrum.baseline.add_point(x, y)
+        self._emit_selection_plot()
+
+
+    def remove_baseline_point(self, x: float):
+        if not self.selected_indices:
+            return
+
+        spectrum = self.spectra.get(self.selected_indices)[0]
+
+        if not spectrum.baseline.points:
+            return
+
+        xs, ys = spectrum.baseline.points
+        if not xs:
+            return
+
+        idx = min(range(len(xs)), key=lambda i: abs(xs[i] - x))
+        xs.pop(idx)
+        ys.pop(idx)
+
+        self._emit_selection_plot()

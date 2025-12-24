@@ -101,23 +101,32 @@ class VSpectraWorkspace(QWidget):
 
     def connect_vm(self):
         """Connect ViewModel signals and slots to the View components."""
+        v = self.spectra_viewer
+        vm = self.vm 
+        
         # SpectraList connection: View → ViewModel
-        self.spectra_list.selection_changed.connect(self.vm.set_selected_indices) # V Notify VM of selection change
+        self.spectra_list.selection_changed.connect(vm.set_selected_indices) # V Notify VM of selection change
         self.btn_select_all.clicked.connect(self.spectra_list.select_all)
-        self.btn_remove.clicked.connect(self.vm.remove_selected)
-        self.spectra_list.files_dropped.connect(self.vm.load_files)
+        self.btn_remove.clicked.connect(vm.remove_selected_spectra)
+        self.spectra_list.files_dropped.connect(vm.load_files)
+
+        # SpectraViewer connections: View → ViewModel
+        v.peak_add_requested.connect(vm.add_peak_at)
+        v.peak_remove_requested.connect(vm.remove_peak_at)
+        v.baseline_add_requested.connect(vm.add_baseline_point)
+        v.baseline_remove_requested.connect(vm.remove_baseline_point)
 
         # Fit Model Builder connections : view → viewmodel
         
-        self.fit_model_builder.btn_correct.clicked.connect(lambda: self.vm.apply_x_correction(self.fit_model_builder.spin_xcorr.value()))
-        self.fit_model_builder.btn_undo_corr.clicked.connect(self.vm.undo_x_correction)
+        self.fit_model_builder.btn_correct.clicked.connect(lambda: vm.apply_x_correction(self.fit_model_builder.spin_xcorr.value()))
+        self.fit_model_builder.btn_undo_corr.clicked.connect(vm.undo_x_correction)
         
         
         # SpectraList connection: ViewModel → View
-        self.vm.spectra_list_changed.connect(self.spectra_list.set_spectra_names)
-        self.vm.spectra_selection_changed.connect(self.spectra_viewer.set_plot_data)
-        self.vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
-        self.vm.notify.connect(lambda msg: QMessageBox.information(self, "Spectra already loaded", msg))
+        vm.spectra_list_changed.connect(self.spectra_list.set_spectra_names)
+        vm.spectra_selection_changed.connect(self.spectra_viewer.set_plot_data)
+        vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
+        vm.notify.connect(lambda msg: QMessageBox.information(self, "Spectra already loaded", msg))
 
-        self.vm.x_correction_changed.connect(self.fit_model_builder.set_xcorrection_value)        
+        vm.show_xcorrection_value.connect(self.fit_model_builder.set_xcorrection_value)        
 

@@ -108,8 +108,6 @@ class VFitModelBuilder(QWidget):
         else:
             self.lbl_xcorr_value.setText(f"Δx = {value:+.2f}")
 
-
-
     def _spectral_range_group(self):
         gb = QGroupBox("Spectral range")
         l = QHBoxLayout(gb)

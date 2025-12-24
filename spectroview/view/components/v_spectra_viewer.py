@@ -32,10 +32,21 @@ class VSpectraViewer(QWidget):
     toolModeChanged = Signal(str)  # zoom / baseline / peak
     normalizationChanged = Signal(bool, float, float)
 
+    peak_add_requested = Signal(float)
+    peak_remove_requested = Signal(float)
+    baseline_add_requested = Signal(float, float)
+    baseline_remove_requested = Signal(float)
+    peak_drag_started = Signal(object)   # optional (advanced)
+    peak_dragged = Signal(float, float)
+    peak_drag_finished = Signal()
+
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._init_ui()
         self._current_lines = []
+
+        self.zoom_pan_active = True
 
         
     def _init_ui(self):
@@ -59,7 +70,6 @@ class VSpectraViewer(QWidget):
 
         # ─── Control bar ───
         self.control_bar = self._create_control_bar()
-
         
         main_layout.addWidget(self.canvas)
         main_layout.addWidget(self.control_bar)
@@ -254,34 +264,82 @@ class VSpectraViewer(QWidget):
         self._redraw()
 
     def _redraw(self):
+        """Redraw the spectra plot based on current lines and view options."""
         # Preserve zoom / pan state
         xlim = self.ax.get_xlim()
         ylim = self.ax.get_ylim()
-
-        # Detect default (fresh) axes limits
-        is_default_limits = (
-            xlim == (0.0, 1.0) and
-            ylim == (0.0, 1.0)
-        )
+        is_default_limits = (xlim == (0.0, 1.0) and ylim == (0.0, 1.0))
 
         self.ax.clear()
 
         for line_data in self._current_lines:
             spectrum = line_data.get("_spectrum_ref")
+            if spectrum is None:
+                continue
 
             x = line_data["x"]
             y_raw = line_data["y"]
             y = self._get_normalized_y(x, y_raw)
             lw = self.spin_lw.value()
 
-            kwargs = {k: v for k, v in line_data.items()
-                    if k not in ("x", "y", "_spectrum_ref")}
+            kwargs = {
+                k: v for k, v in line_data.items()
+                if k not in ("x", "y", "_spectrum_ref")
+            }
 
+            # ── Main spectrum
             line, = self.ax.plot(x, y, lw=lw, **kwargs)
-
-            # 🔑 Attach model reference
             line._spectrum_ref = spectrum
 
+            # =====================================================
+            # BASELINE POINTS
+            # =====================================================
+            if hasattr(spectrum.baseline, "points"):
+                xs, ys = spectrum.baseline.points
+                if xs and ys:
+                    self.ax.plot(xs, ys, "ro", ms=4, zorder=5)
+
+            # =====================================================
+            # BASELINE CURVE (SAFE)
+            # =====================================================
+            y_base = None
+            if spectrum.baseline.mode is not None:
+                try:
+                    params = spectrum.baseline.mode.make_params()
+                    y_base = spectrum.baseline.mode.eval(params, x=x)
+                    self.ax.plot(
+                        x, y_base, "--", color="gray", lw=1.2, label="baseline"
+                    )
+                except Exception:
+                    y_base = None
+
+            # =====================================================
+            # PEAKS + BEST FIT (SAFE)
+            # =====================================================
+            y_peaks = None
+            if hasattr(spectrum, "peak_models") and spectrum.peak_models:
+                y_peaks = 0.0
+                for peak_model in spectrum.peak_models:
+                    try:
+                        params = peak_model.make_params()
+                        y_peak = peak_model.eval(params, x=x)
+                        y_peaks += y_peak
+                        self.ax.plot(x, y_peak, lw=lw, alpha=0.8)
+                    except Exception:
+                        pass
+
+            # ── Best-fit = baseline + peaks
+            if y_peaks is not None:
+                if y_base is not None:
+                    y_fit = y_base + y_peaks
+                else:
+                    y_fit = y_peaks
+
+                self.ax.plot(
+                    x, y_fit, lw=lw, color="black", label="bestfit"
+                )
+
+        # ── Legend / grid / axes
         if self.btn_legend.isChecked():
             legend = self.ax.legend(loc="best")
             self._make_legend_pickable(legend)
@@ -291,7 +349,9 @@ class VSpectraViewer(QWidget):
 
         self.ax.set_xlabel(self.cbb_xaxis.currentText())
         self.ax.set_ylabel("Intensity (a.u.)")
-        self.ax.set_yscale("log" if self.cbb_yscale.currentText() == "Log" else "linear")
+        self.ax.set_yscale(
+            "log" if self.cbb_yscale.currentText() == "Log" else "linear"
+        )
 
         # Restore zoom
         if not is_default_limits:
@@ -299,6 +359,8 @@ class VSpectraViewer(QWidget):
             self.ax.set_ylim(ylim)
 
         self.canvas.draw_idle()
+
+
     
 
     def _get_normalized_y(self, x, y):
@@ -439,8 +501,34 @@ class VSpectraViewer(QWidget):
         self.normalizationChanged.emit(self.btn_norm.isChecked(), xmin, xmax)
 
     def _on_mouse_click(self, event):
-        if event.inaxes == self.ax:
-            self.mouseClicked.emit(event.xdata, event.ydata, event.button)
+        if event.inaxes != self.ax:
+            return
+
+        if self.zoom_pan_active:
+            return
+
+        # Skip legend clicks
+        if getattr(self, "legend_bbox", None) is not None:
+            if self.legend_bbox.contains(event.x, event.y):
+                return
+
+        x = event.xdata
+        y = event.ydata
+
+        # ─── Peak tool ─────────────────────────
+        if self.btn_peak.isChecked():
+            if event.button == 1:      # left click
+                self.peak_add_requested.emit(x)
+            elif event.button == 3:    # right click
+                self.peak_remove_requested.emit(x)
+
+        # ─── Baseline tool ─────────────────────
+        elif self.btn_baseline.isChecked():
+            if event.button == 1:
+                self.baseline_add_requested.emit(x, y)
+            elif event.button == 3:
+                self.baseline_remove_requested.emit(x)
+
 
 
     def _rescale(self):

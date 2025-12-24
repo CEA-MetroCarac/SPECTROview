@@ -18,7 +18,7 @@ from spectroview import ICON_DIR
 class WorkspaceSpectra(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.vm = VMSpectra()
+        self.vm = VMSpectra() # To bind View to ViewModel
 
         self.init_ui()
         self.connect_vm()
@@ -119,7 +119,6 @@ class WorkspaceSpectra(QWidget):
         v.baseline_remove_requested.connect(vm.remove_baseline_point)
 
         # Fit Model Builder connections : view → viewmodel
-        
         self.fit_model_builder.btn_correct.clicked.connect(lambda: vm.apply_x_correction(self.fit_model_builder.spin_xcorr.value()))
         self.fit_model_builder.btn_undo_corr.clicked.connect(vm.undo_x_correction)
         

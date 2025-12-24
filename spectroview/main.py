@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, Q
 from PySide6.QtCore import Qt, QSettings
 from PySide6.QtGui import QIcon
 
-from spectroview.view.v_menubar import VMenuBar
+from spectroview.view.components.v_menubar import VMenuBar
 from spectroview.view.workspace_spectra import WorkspaceSpectra
 from spectroview.view.workspace_maps import WorkspaceMaps
 from spectroview.view.workspace_graphs import WorkspaceGraphs

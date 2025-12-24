@@ -86,6 +86,7 @@ class VMSpectra(QObject):
         
     # Internal helpers
     def _emit_list_update(self):
+        """Emit updated list of spectra names and count."""
         names = [s.fname for s in self.spectra]
         self.spectra_list_changed.emit(names)
         self.count_changed.emit(len(self.spectra))

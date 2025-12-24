@@ -504,8 +504,8 @@ class VSpectraViewer(QWidget):
             return
 
         # Skip legend clicks
-        if getattr(self, "legend_bbox", None) is not None:
-            if self.legend_bbox.contains(event.x, event.y):
+        if getattr(self, "_legend_bbox", None) is not None:
+            if self._legend_bbox.contains(event.x, event.y):
                 return
 
         x = event.xdata

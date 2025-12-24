@@ -62,9 +62,7 @@ class VSpectraViewer(QWidget):
         main_layout.addWidget(self.canvas)
         main_layout.addWidget(self.control_bar)
 
-    # ─────────────────────────────────────────
     # Control bar
-    # ─────────────────────────────────────────
     def _create_control_bar(self):
         bar = QWidget(self)
         bar.setFixedHeight(50)
@@ -159,9 +157,7 @@ class VSpectraViewer(QWidget):
         btn.setToolTip(tooltip)
         return btn
 
-    # ─────────────────────────────────────────
     # Options menu
-    # ─────────────────────────────────────────
     def _create_options_menu(self):
         menu = QMenu(self)
 
@@ -180,12 +176,12 @@ class VSpectraViewer(QWidget):
         menu.addSeparator()
 
         # Toggles
-        self._add_check(menu, "Colors")
-        self._add_check(menu, "Peaks")
-        self._add_check(menu, "Raw")
-        self._add_check(menu, "Bestfit", True)
-        self._add_check(menu, "Residual")
-        self._add_check(menu, "Grid")
+        self._add_checkbox(menu, "Colors")
+        self._add_checkbox(menu, "Peaks")
+        self._add_checkbox(menu, "Raw")
+        self._add_checkbox(menu, "Bestfit", True)
+        self._add_checkbox(menu, "Residual")
+        self._add_checkbox(menu, "Grid")
 
         menu.addSeparator()
 
@@ -220,10 +216,10 @@ class VSpectraViewer(QWidget):
         ratio_action.setDefaultWidget(ratio_widget)
         menu.addAction(ratio_action)
 
-
         return menu
 
-    def _add_check(self, menu, name, checked=False):
+    def _add_checkbox(self, menu, name, checked=False):
+        """Helper to add a checkable action to the options menu."""
         act = menu.addAction(name)
         act.setCheckable(True)
         act.setChecked(checked)
@@ -231,6 +227,7 @@ class VSpectraViewer(QWidget):
         setattr(self, f"act_{name.lower()}", act)
 
     def _wrap(self, label, widget):
+        """Helper to wrap a widget with a label into a QWidgetAction."""
         w = QWidget()
         l = QHBoxLayout(w)
         l.setContentsMargins(5, 5, 5, 5)
@@ -284,9 +281,7 @@ class VSpectraViewer(QWidget):
 
         self.ax.set_xlabel(self.cbb_xaxis.currentText())
         self.ax.set_ylabel("Intensity (a.u.)")
-        self.ax.set_yscale(
-            "log" if self.cbb_yscale.currentText() == "Log" else "linear"
-        )
+        self.ax.set_yscale("log" if self.cbb_yscale.currentText() == "Log" else "linear")
 
         # Restore zoom
         if not is_default_limits:
@@ -296,11 +291,10 @@ class VSpectraViewer(QWidget):
         self.canvas.draw_idle()
     
     def _make_legend_pickable(self, legend):
-        # Legend text (labels)
+        """Make legend texts and handles pickable for interaction."""
         for text in legend.get_texts():
             text.set_picker(True)
 
-        # Legend handles (color / line)
         for handle in legend.legendHandles:
             handle.set_picker(True)
 
@@ -319,9 +313,7 @@ class VSpectraViewer(QWidget):
     def _on_legend_pick(self, event):
         artist = event.artist
 
-        # ─────────────────────────────────────
         # Legend TEXT → rename spectrum
-        # ─────────────────────────────────────
         if isinstance(artist, mtext.Text):
             old_label = artist.get_text()
 
@@ -347,9 +339,7 @@ class VSpectraViewer(QWidget):
 
             self.canvas.draw_idle()
 
-        # ─────────────────────────────────────
         # Legend LINE → change color
-        # ─────────────────────────────────────
         elif isinstance(artist, mlines.Line2D):
             color = QColorDialog.getColor()
 

@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout,QHBoxLayout, QLabel,
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
+from spectroview.model.m_settings import MSettings
 from spectroview.view.components.v_spectra_list import VSpectraList
 from spectroview.view.components.v_spectra_viewer import VSpectraViewer
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
@@ -18,7 +19,8 @@ from spectroview import ICON_DIR
 class WorkspaceSpectra(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.vm = VMSpectra() # To bind View to ViewModel
+        self.m_settings = MSettings()
+        self.vm = VMSpectra(self.m_settings) # To bind View to ViewModel
 
         self.init_ui()
         self.connect_vm()

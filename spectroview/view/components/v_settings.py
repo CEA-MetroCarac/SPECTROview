@@ -19,7 +19,7 @@ class VSettingsDialog(QDialog):
         self.setWindowTitle("Settings")
         self.resize(400, 400)
 
-        self._create_ui()
+        self._init_ui()
         self._connect_vm()
 
         # Load settings from VM
@@ -28,7 +28,7 @@ class VSettingsDialog(QDialog):
     # ──────────────────────────────────────────────
     # UI
     # ──────────────────────────────────────────────
-    def _create_ui(self):
+    def _init_ui(self):
         main_layout = QVBoxLayout(self)
 
         bold = QFont()

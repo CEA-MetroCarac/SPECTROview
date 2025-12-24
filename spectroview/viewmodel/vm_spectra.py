@@ -4,6 +4,9 @@ from pathlib import Path
 
 
 from spectroview.model.m_spectra import MSpectra
+from spectroview.model.m_settings import MSettings
+
+
 from spectroview.model.m_io import load_spectrum_file
 
 
@@ -16,8 +19,9 @@ class VMSpectra(QObject):
 
     notify = Signal(str)  # general notifications
     
-    def __init__(self):
+    def __init__(self, settings: MSettings):
         super().__init__()
+        self.settings = settings
         self.spectra = MSpectra()
         self.selected_indices = []
 
@@ -149,8 +153,8 @@ class VMSpectra(QObject):
 
         spectrum = self.spectra.get(self.selected_indices)[0]
 
-        maxshift = 20
-        maxfwhm = 200
+        maxshift = self.settings.value("fit_settings/maxshift", 20.0, type=float)
+        maxfwhm = self.settings.value("fit_settings/maxfwhm", 200.0, type=float)
 
         spectrum.add_peak_model(
             spectrum.peak_model if hasattr(spectrum, "peak_model") else "Lorentzian",

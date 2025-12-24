@@ -152,9 +152,12 @@ class VMSpectra(QObject):
             return
 
         spectrum = self.spectra.get(self.selected_indices)[0]
+        
 
-        maxshift = self.settings.value("fit_settings/maxshift", 20.0, type=float)
-        maxfwhm = self.settings.value("fit_settings/maxfwhm", 200.0, type=float)
+        fit_settings = self.settings.load_fit_settings()
+
+        maxshift = fit_settings.get("maxshift", 20.0)
+        maxfwhm = fit_settings.get("maxfwhm", 200.0)
 
         spectrum.add_peak_model(
             spectrum.peak_model if hasattr(spectrum, "peak_model") else "Lorentzian",

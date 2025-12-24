@@ -278,7 +278,7 @@ class VFitModelBuilder(QWidget):
         row2.addWidget(QLabel("Fit model:"))
 
         self.cbb_model = QComboBox()
-        self.cbb_model.addItem("model_test_voigt_assymetry.json")
+        self.cbb_model.setMinimumWidth(100)
 
         self.btn_apply = QPushButton("Apply")
         self.btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))

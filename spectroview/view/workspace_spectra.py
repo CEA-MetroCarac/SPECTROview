@@ -10,6 +10,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.view.components.v_spectra_list import VSpectraList
 from spectroview.view.components.v_spectra_viewer import VSpectraViewer
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
+from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
 
 from spectroview.viewmodel.vm_spectra import VMSpectra
 
@@ -49,6 +50,8 @@ class WorkspaceSpectra(QWidget):
         self.bottom_tabs = QTabWidget()
         self.bottom_tabs.setMinimumHeight(150)
         self.fit_model_builder = VFitModelBuilder()
+        self.vm_fit_models = VMFitModelBuilder(self.m_settings)
+        
         self.bottom_tabs.addTab(self.fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(QWidget(), "Fit Results")
         
@@ -133,3 +136,29 @@ class WorkspaceSpectra(QWidget):
 
         vm.show_xcorrection_value.connect(self.fit_model_builder.set_xcorrection_value)        
 
+
+        # Fit Model Builder connection: ViewModel → View
+        # View → VM
+        self.fit_model_builder.btn_refresh.clicked.connect(
+            self.vm_fit_models.refresh_models
+        )
+        self.fit_model_builder.btn_load.clicked.connect(
+            self.vm_fit_models.pick_and_load_model
+        )
+        self.fit_model_builder.btn_apply.clicked.connect(
+            lambda: self.vm_fit_models.apply_model(
+                self.fit_model_builder.cbb_model.currentText()
+            )
+        )
+
+        # VM → View
+        self.vm_fit_models.models_changed.connect(
+            self.fit_model_builder.cbb_model.clear
+        )
+        self.vm_fit_models.models_changed.connect(
+            self.fit_model_builder.cbb_model.addItems
+        )
+        self.vm_fit_models.model_selected.connect(
+            self.fit_model_builder.cbb_model.setCurrentText
+        )
+        self.vm_fit_models.refresh_models() # Initial load of models

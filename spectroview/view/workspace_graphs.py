@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt
 
 
-class VGraphsWorkspace(QWidget):
+class WorkspaceGraphs(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.init_ui()

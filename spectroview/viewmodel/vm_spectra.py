@@ -115,57 +115,6 @@ class VMSpectra(QObject):
 
         self.spectra_selection_changed.emit(lines)
 
-    def _plot_baseline(self, spectrum):
-        baseline = spectrum.baseline
-        if not baseline or not baseline.points:
-            return
-
-        xs, ys = baseline.points
-        if not xs:
-            return
-
-        self.ax.plot(
-            xs, ys,
-            "o--",
-            color="orange",
-            ms=5,
-            lw=1,
-            label="_baseline_points"
-        )
-
-    def _plot_peaks(self, spectrum):
-        if not hasattr(spectrum, "peak_models"):
-            return
-
-        self._fitted_lines = []
-
-        x = spectrum.x
-
-        for peak_model, label in zip(spectrum.peak_models, spectrum.peak_labels):
-            y = self._evaluate_peak_model(peak_model, x)
-
-            line, = self.ax.plot(
-                x, y,
-                lw=self.spin_lw.value(),
-                label=label,
-                alpha=0.9
-            )
-
-            self._fitted_lines.append((line, peak_model))
-
-    def _evaluate_peak_model(self, peak_model, x):
-        param_hints_orig = peak_model.param_hints.copy()
-
-        for key in peak_model.param_hints:
-            peak_model.param_hints[key]["expr"] = ""
-
-        params = peak_model.make_params()
-        y = peak_model.eval(params, x=x)
-
-        peak_model.param_hints = param_hints_orig
-        return y
-
-
 
     def apply_x_correction(self, measured_peak: float):
         """

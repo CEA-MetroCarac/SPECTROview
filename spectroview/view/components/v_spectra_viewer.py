@@ -336,7 +336,7 @@ class VSpectraViewer(QWidget):
                     y_fit = y_peaks
 
                 self.ax.plot(
-                    x, y_fit, lw=lw, color="black", label="bestfit"
+                    x, y_fit, lw=lw,  label="bestfit"
                 )
 
         # ── Legend / grid / axes

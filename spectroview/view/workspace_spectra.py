@@ -1,4 +1,4 @@
-# view/v_spectra_workspace.py
+# view/workspace_spectra.py
 import os
 from PySide6.QtWidgets import (QWidget, QVBoxLayout,QHBoxLayout, QLabel,
     QPushButton, QCheckBox,QProgressBar,QSplitter,QTabWidget, QMessageBox, QFrame
@@ -15,7 +15,7 @@ from spectroview.viewmodel.vm_spectra import VMSpectra
 from spectroview import ICON_DIR
 
 
-class VSpectraWorkspace(QWidget):
+class WorkspaceSpectra(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.vm = VMSpectra()

@@ -9,9 +9,10 @@ from PySide6.QtCore import Qt, QSettings
 from PySide6.QtGui import QIcon
 
 from spectroview.view.v_menubar import VMenuBar
-from spectroview.view.v_spectra_workspace import VSpectraWorkspace
-from spectroview.view.v_maps_workspace import VMapsWorkspace
-from spectroview.view.v_graphs_workspace import VGraphsWorkspace
+from spectroview.view.workspace_spectra import WorkspaceSpectra
+from spectroview.view.workspace_maps import WorkspaceMaps
+from spectroview.view.workspace_graphs import WorkspaceGraphs
+
 from spectroview.view.components.v_utils import dark_palette, light_palette
 
 from spectroview import LOGO_APPLI
@@ -39,9 +40,9 @@ class VMain(QMainWindow):
         # Main Tab Widget
         self.tabWidget = QTabWidget(central)
 
-        self.v_spectra_workspace = VSpectraWorkspace()
-        self.v_graphs_workspace = VGraphsWorkspace()
-        self.v_maps_workspace = VMapsWorkspace()
+        self.v_spectra_workspace = WorkspaceSpectra()
+        self.v_graphs_workspace = WorkspaceGraphs()
+        self.v_maps_workspace = WorkspaceMaps()
 
         self.tabWidget.addTab(self.v_spectra_workspace, "Spectra")
         self.tabWidget.addTab(self.v_maps_workspace, "Maps")

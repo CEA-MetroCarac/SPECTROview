@@ -1,5 +1,5 @@
 # spectroview/view/components/v_fit_model_builder.py
-from spectroview import ICON_DIR
+from spectroview import ICON_DIR, PEAK_MODELS
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QGroupBox, QLabel, QPushButton, QComboBox,
@@ -65,6 +65,7 @@ class VFitModelBuilder(QWidget):
     def _x_correction_group(self):
         gb = QGroupBox("X-axis correction")
         l = QHBoxLayout(gb)
+        l.setContentsMargins(2, 2, 2, 2)
 
         # Reference selection
         self.cbb_xcorr = QComboBox()
@@ -115,6 +116,7 @@ class VFitModelBuilder(QWidget):
     def _spectral_range_group(self):
         gb = QGroupBox("Spectral range")
         l = QHBoxLayout(gb)
+        l.setContentsMargins(2, 2, 2, 2)
 
         self.spin_xmin = QDoubleSpinBox()
         self.spin_xmax = QDoubleSpinBox()
@@ -138,6 +140,7 @@ class VFitModelBuilder(QWidget):
     def _baseline_group(self):
         gb = QGroupBox("Baseline")
         v = QVBoxLayout(gb)
+        v.setContentsMargins(2, 2, 2, 2)
 
         # ── Row 1: baseline type
         row1 = QHBoxLayout()
@@ -207,10 +210,11 @@ class VFitModelBuilder(QWidget):
     def _peaks_group(self):
         gb = QGroupBox("Peaks")
         v = QVBoxLayout(gb)
+        v.setContentsMargins(2, 2, 2, 2)
 
         row1 = QHBoxLayout()
         self.cbb_peak_shape = QComboBox()
-        self.cbb_peak_shape.addItems(["Lorentzian", "Gaussian", "Voigt"])
+        self.cbb_peak_shape.addItems(PEAK_MODELS)
 
         row1.addWidget(QLabel("Peak shape:"))
         row1.addWidget(self.cbb_peak_shape)

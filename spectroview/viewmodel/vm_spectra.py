@@ -1,7 +1,6 @@
 from PySide6.QtCore import QObject, Signal
 from pathlib import Path
 
-from PySide6.QtWidgets import QFileDialog
 
 
 from spectroview.model.m_spectra import MSpectra
@@ -50,15 +49,15 @@ class VMSpectra(QObject):
         self.selected_indices = indices
         self._emit_selected_spectra()
         
-    def file_open_dialog(self):
-        paths, _ = QFileDialog.getOpenFileNames(
-            None,
-            "Open spectra",
-            "",
-            "Data (*.txt *.csv)"
-        )
-        if paths:
-            self.load_files(paths)   
+    
+    def reorder_spectra(self, new_order: list[int]):
+        """new_order = list of old indices in new visual order"""
+        self.spectra.reorder(new_order)
+
+        # After reorder, selection must be re-emitted
+        self._emit_list_update()
+        self._emit_selected_spectra()
+
             
             
     def remove_selected_spectra(self):
@@ -102,7 +101,7 @@ class VMSpectra(QObject):
         # emit x-correction of first spectrum to show in GUI
         self.show_xcorrection_value.emit(selected_spectra[0].xcorrection_value)
 
-        # emit list of the elected spectra to plot in View
+        # emit list of the selected spectra to plot in View
         self.spectra_selection_changed.emit(selected_spectra)
 
 

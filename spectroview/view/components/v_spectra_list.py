@@ -28,8 +28,10 @@ class VSpectraList(QListWidget):
     def set_spectra_names(self, names: list[str]):
         """Replace entire list (ViewModel-driven)."""
         self.clear()
-        for name in names:
-            self.addItem(QListWidgetItem(name))
+        for i, name in enumerate(names):
+            item = QListWidgetItem(name)
+            item.setData(Qt.UserRole, i)  # model index -> used when dragging/reordering
+            self.addItem(item)
 
     def selected_rows(self) -> list[int]:
         return [self.row(i) for i in self.selectedItems()]
@@ -65,6 +67,7 @@ class VSpectraList(QListWidget):
         order_after = self._current_order()
         if order_after != self._order_before_drag:
             self.order_changed.emit(order_after)
+
             
     def startDrag(self, supportedActions):
         self._order_before_drag = self._current_order()
@@ -72,11 +75,22 @@ class VSpectraList(QListWidget):
 
     # ───── Helpers ───────────────────────────────────────────────
     def _current_order(self) -> list[int]:
-        """Return list of row indices in current visual order."""
-        return list(range(self.count()))
+        """Return model indices in current visual order."""
+        return [
+            self.item(row).data(Qt.UserRole)
+            for row in range(self.count())
+        ]
+
+
+    def selected_model_indices(self) -> list[int]:
+        """Return list of selected spectra indices in the Model."""
+        return [
+            item.data(Qt.UserRole)
+            for item in self.selectedItems()
+        ]
 
     def _emit_selection_changed(self):
-        self.selection_changed.emit(self.selected_rows())
+        self.selection_changed.emit(self.selected_model_indices())
 
     def _on_item_activated(self, item: QListWidgetItem):
         self.item_activated.emit(self.row(item))

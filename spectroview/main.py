@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog
 from PySide6.QtCore import Qt, QSettings
 from PySide6.QtGui import QIcon
 
@@ -56,9 +56,40 @@ class VMain(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, self.menu_bar)
         
     def setup_connections(self):
-        self.menu_bar.open_requested.connect(self.v_spectra_workspace.vm.file_open_dialog)
-        self.menu_bar.theme_requested.connect(self.toggle_theme)
+        self.menu_bar.open_requested.connect(self.open_files)
+        self.menu_bar.save_requested.connect(self.save)
+        self.menu_bar.clear_requested.connect(self.clear_workspace)
+        self.menu_bar.convert_requested.connect(self.file_converter)
 
+        self.menu_bar.about_requested.connect(self.about)
+        self.menu_bar.manual_requested.connect(self.manual) 
+        self.menu_bar.theme_requested.connect(self.toggle_theme)
+        
+
+    def open_files(self):
+        paths, _ = QFileDialog.getOpenFileNames(
+            None,
+            "Open spectra",
+            "",
+            "Data (*.txt *.csv)"
+        )
+        if paths:
+            self.v_spectra_workspace.vm.load_files(paths)   # Load files into spectra workspace
+
+    def save(self):
+        pass  # Implement save functionality as needed
+
+    def clear_workspace(self):
+        pass  # Implement clear functionality as needed
+
+    def file_converter(self):
+        pass  # Implement file conversion functionality as needed
+
+    def about(self):
+        pass  # Implement about dialog as needed
+
+    def manual(self):
+        pass  # Implement manual/help dialog as needed
 
     def toggle_theme(self, theme=None):
         app = QApplication.instance()

@@ -105,10 +105,12 @@ class WorkspaceSpectra(QWidget):
         vm = self.vm 
         
         # SpectraList connection: View → ViewModel
-        self.spectra_list.selection_changed.connect(vm.set_selected_indices) # V Notify VM of selection change
         self.btn_select_all.clicked.connect(self.spectra_list.select_all)
         self.btn_remove.clicked.connect(vm.remove_selected_spectra)
+
+        self.spectra_list.selection_changed.connect(vm.set_selected_indices) # V Notify VM of selection change
         self.spectra_list.files_dropped.connect(vm.load_files)
+        self.spectra_list.order_changed.connect(self.vm.reorder_spectra)
 
         # SpectraViewer connections: View → ViewModel
         v.peak_add_requested.connect(vm.add_peak_at)

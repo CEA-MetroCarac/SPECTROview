@@ -49,7 +49,7 @@ class VMSpectra(QObject):
         self.selected_indices = indices
         self._emit_selection_plot()
         
-    def open_dialog(self):
+    def file_open_dialog(self):
         paths, _ = QFileDialog.getOpenFileNames(
             None,
             "Open spectra",

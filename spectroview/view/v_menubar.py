@@ -60,3 +60,4 @@ class VMenuBar(QToolBar):
         self.actionAbout.triggered.connect(self.about_requested.emit)
         self.addSeparator()
         
+    

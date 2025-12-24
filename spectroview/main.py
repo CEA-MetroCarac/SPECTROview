@@ -5,21 +5,26 @@ from pathlib import Path
 
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSettings
 from PySide6.QtGui import QIcon
 
 from spectroview.view.v_menubar import VMenuBar
 from spectroview.view.v_spectra_workspace import VSpectraWorkspace
 from spectroview.view.v_maps_workspace import VMapsWorkspace
 from spectroview.view.v_graphs_workspace import VGraphsWorkspace
+from spectroview.view.components.v_utils import dark_palette, light_palette
 
 from spectroview import LOGO_APPLI
 
 class VMain(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.settings = QSettings("CEA-Leti", "SPECTROview")
+
         self.init_ui()
+        self.toggle_theme(self.settings.value("theme"))
         self.setup_connections()
+
 
     def init_ui(self):
         self.setWindowTitle(
@@ -51,8 +56,20 @@ class VMain(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, self.menu_bar)
         
     def setup_connections(self):
-        self.menu_bar.open_requested.connect(self.v_spectra_workspace.vm.open_dialog)
+        self.menu_bar.open_requested.connect(self.v_spectra_workspace.vm.file_open_dialog)
+        self.menu_bar.theme_requested.connect(self.toggle_theme)
 
+
+    def toggle_theme(self, theme=None):
+        app = QApplication.instance()
+        if theme is None:
+            theme = "light" if self.settings.value("theme", "dark") == "dark" else "dark"
+        if theme == "dark":
+            app.setPalette(dark_palette())
+            self.settings.setValue("theme", "dark")
+        else:
+            app.setPalette(light_palette())
+            self.settings.setValue("theme", "light")
 
 def launcher():
     app = QApplication(sys.argv)

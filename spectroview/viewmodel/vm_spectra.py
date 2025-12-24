@@ -109,3 +109,8 @@ class VMSpectra(QObject):
             })
 
         self.spectra_selection_changed.emit(lines)
+
+    def apply_x_correction(self):
+        pass
+    def undo_x_correction(self):
+        pass

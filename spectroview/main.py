@@ -25,7 +25,7 @@ class VMain(QMainWindow):
         self.setWindowTitle(
             "SPECTROview (Tool for Spectroscopic Data Processing and Visualization)"
         )
-        self.setGeometry(100, 100, 1300, 900)
+        self.setGeometry(100, 100, 1400, 900)
         self.setWindowIcon(QIcon(LOGO_APPLI))
 
         # Central widget

@@ -8,6 +8,7 @@ from PySide6.QtGui import QIcon
 
 from spectroview.view.components.v_spectra_list import VSpectraList
 from spectroview.view.components.v_spectra_viewer import VSpectraViewer
+from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
 
 from spectroview.viewmodel.vm_spectra import VMSpectra
 
@@ -45,12 +46,13 @@ class VSpectraWorkspace(QWidget):
         # --- Lower: TabWidget
         self.bottom_tabs = QTabWidget()
         self.bottom_tabs.setMinimumHeight(150)
-        self.bottom_tabs.addTab(QWidget(), "Fit Model Builder")
+        self.fit_model_builder = VFitModelBuilder()
+        self.bottom_tabs.addTab(self.fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(QWidget(), "Fit Results")
         
         left_splitter.addWidget(self.spectra_viewer)
         left_splitter.addWidget(self.bottom_tabs)
-        left_splitter.setSizes([600, 500])
+        left_splitter.setSizes([500, 500])
 
         # RIGHT SIDE (Sidebar)
         right_widget = QFrame()
@@ -104,6 +106,9 @@ class VSpectraWorkspace(QWidget):
         self.btn_select_all.clicked.connect(self.spectra_list.select_all)
         self.btn_remove.clicked.connect(self.vm.remove_selected)
         self.spectra_list.files_dropped.connect(self.vm.load_files)
+
+        self.fit_model_builder.btn_correct.clicked.connect(self.vm.apply_x_correction)
+        self.fit_model_builder.btn_undo_corr.clicked.connect(self.vm.undo_x_correction)
         
         # ViewModel → View
         self.vm.spectra_list_changed.connect(self.spectra_list.set_spectra_names)

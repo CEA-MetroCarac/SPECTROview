@@ -91,7 +91,9 @@ class VSpectraList(QListWidget):
         ]
 
     def _emit_selection_changed(self):
+        """Emit selection_changed signal with model indices of selected items."""
         self.selection_changed.emit(self.selected_model_indices())
 
     def _on_item_activated(self, item: QListWidgetItem):
+        """Emit item_activated signal with row index."""
         self.item_activated.emit(self.row(item))

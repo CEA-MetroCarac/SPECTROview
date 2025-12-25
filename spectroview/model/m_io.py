@@ -27,6 +27,7 @@ def load_spectrum_file(path: Path) -> MSpectrum:
     s.x = s.x0.copy()
     s.y = s.y0.copy()
     s.baseline.mode = "Linear"
+    s.baseline.sigma = 4
 
     return s
 

@@ -1,4 +1,4 @@
-# view/workspace_spectra.py
+# view/v_workspace_spectra.py
 import os
 from PySide6.QtWidgets import (QWidget, QVBoxLayout,QHBoxLayout, QLabel,
     QPushButton, QCheckBox,QProgressBar,QSplitter,QTabWidget, QMessageBox, QFrame
@@ -43,19 +43,19 @@ class VWorkspaceSpectra(QWidget):
         left_layout.addWidget(left_splitter)
 
         # --- Upper: SpectraViewer (placeholder for now)
-        self.spectra_viewer = VSpectraViewer(parent=self)
-        self.spectra_viewer.setMinimumHeight(200)
+        self.v_spectra_viewer = VSpectraViewer(parent=self)
+        self.v_spectra_viewer.setMinimumHeight(200)
         
         # --- Lower: TabWidget
         self.bottom_tabs = QTabWidget()
         self.bottom_tabs.setMinimumHeight(150)
-        self.fit_model_builder = VFitModelBuilder()
-        self.vm_fit_models = VMFitModelBuilder(self.m_settings)
+        self.v_fit_model_builder = VFitModelBuilder()
+        self.vm_fit_model_builder = VMFitModelBuilder(self.m_settings)
         
-        self.bottom_tabs.addTab(self.fit_model_builder, "Fit Model Builder")
+        self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(QWidget(), "Fit Results")
         
-        left_splitter.addWidget(self.spectra_viewer)
+        left_splitter.addWidget(self.v_spectra_viewer)
         left_splitter.addWidget(self.bottom_tabs)
         left_splitter.setSizes([500, 500])
 
@@ -87,8 +87,8 @@ class VWorkspaceSpectra(QWidget):
         right_layout.addWidget(self.cb_check_all)
 
         # --- Spectra list
-        self.spectra_list = VSpectraList()
-        right_layout.addWidget(self.spectra_list, stretch=1)
+        self.v_spectra_list = VSpectraList()
+        right_layout.addWidget(self.v_spectra_list, stretch=1)
 
         # --- Footer: count + progress
         self.lbl_count = QLabel("Loaded spectra: 0")
@@ -106,64 +106,42 @@ class VWorkspaceSpectra(QWidget):
 
     def connect_vm(self):
         """Connect ViewModel signals and slots to the View components."""
-        v = self.spectra_viewer
-        vm = self.vm 
+        vm = self.vm # VMWorkspaceSpectra
         
-        # SpectraList connection: View → ViewModel
-        self.btn_select_all.clicked.connect(self.spectra_list.select_all)
+        self.btn_select_all.clicked.connect(self.v_spectra_list.select_all)
         self.btn_remove.clicked.connect(vm.remove_selected_spectra)
 
-        self.spectra_list.selection_changed.connect(vm.set_selected_indices) # V Notify VM of selection change
-        self.spectra_list.files_dropped.connect(vm.load_files)
-        self.spectra_list.order_changed.connect(self.vm.reorder_spectra)
+        # Connection with VMWorkspaceSpectra (vm)
+        self.v_spectra_list.selection_changed.connect(vm.set_selected_indices) # V Notify VM of selection change
+        self.v_spectra_list.files_dropped.connect(vm.load_files)
+        self.v_spectra_list.order_changed.connect(vm.reorder_spectra)
 
-        # SpectraViewer connections: View → ViewModel
-        v.peak_add_requested.connect(vm.add_peak_at)
-        v.peak_remove_requested.connect(vm.remove_peak_at)
-        v.baseline_add_requested.connect(vm.add_baseline_point)
-        v.baseline_remove_requested.connect(vm.remove_baseline_point)
+        self.v_spectra_viewer.peak_add_requested.connect(vm.add_peak_at)
+        self.v_spectra_viewer.peak_remove_requested.connect(vm.remove_peak_at)
+        self.v_spectra_viewer.baseline_add_requested.connect(vm.add_baseline_point)
+        self.v_spectra_viewer.baseline_remove_requested.connect(vm.remove_baseline_point)
 
-        # Fit Model Builder connections : view → viewmodel
-        self.fit_model_builder.btn_xcorrect.clicked.connect(lambda: vm.apply_x_correction(self.fit_model_builder.spin_xcorr.value()))
-        self.fit_model_builder.btn_undo_corr.clicked.connect(vm.undo_x_correction)
-        
+
+        self.v_fit_model_builder.btn_xcorrect.clicked.connect(lambda: vm.apply_x_correction(self.v_fit_model_builder.spin_xcorr.value()))
+        self.v_fit_model_builder.btn_undo_corr.clicked.connect(vm.undo_x_correction)
+        self.v_fit_model_builder.spectral_range_apply_requested.connect(vm.apply_spectral_range)
+        self.v_fit_model_builder.baseline_settings_changed.connect(vm.set_baseline_settings)
         
         # SpectraList connection: ViewModel → View
-        vm.spectra_list_changed.connect(self.spectra_list.set_spectra_names)
-        vm.spectra_selection_changed.connect(self.spectra_viewer.set_plot_data)
+        vm.spectra_list_changed.connect(self.v_spectra_list.set_spectra_names)
+        vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
         vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
         vm.notify.connect(lambda msg: QMessageBox.information(self, "Spectra already loaded", msg))
 
-        vm.show_xcorrection_value.connect(self.fit_model_builder.set_xcorrection_value)        
+        vm.show_xcorrection_value.connect(self.v_fit_model_builder.set_xcorrection_value)        
+        vm.spectral_range_changed.connect(self.v_fit_model_builder.set_spectral_range)
 
+        # V_FitModelBuilder <-> VM_FitModelBuilder
+        self.v_fit_model_builder.btn_refresh.clicked.connect(self.vm_fit_model_builder.refresh_models)
+        self.v_fit_model_builder.btn_load.clicked.connect(self.vm_fit_model_builder.pick_and_load_model)
+        self.v_fit_model_builder.btn_apply.clicked.connect(lambda: self.vm_fit_model_builder.apply_model(self.v_fit_model_builder.cbb_model.currentText()))
 
-        # Fit Model Builder connection: ViewModel → View
-        # View → VM
-        self.fit_model_builder.btn_refresh.clicked.connect(
-            self.vm_fit_models.refresh_models
-        )
-        self.fit_model_builder.btn_load.clicked.connect(
-            self.vm_fit_models.pick_and_load_model
-        )
-        self.fit_model_builder.btn_apply.clicked.connect(
-            lambda: self.vm_fit_models.apply_model(
-                self.fit_model_builder.cbb_model.currentText()
-            )
-        )
-
-        # VM → View
-        self.vm_fit_models.models_changed.connect(
-            self.fit_model_builder.cbb_model.clear
-        )
-        self.vm_fit_models.models_changed.connect(
-            self.fit_model_builder.cbb_model.addItems
-        )
-        self.vm_fit_models.model_selected.connect(
-            self.fit_model_builder.cbb_model.setCurrentText
-        )
-        self.vm_fit_models.refresh_models() # Initial load of models
-
-        # View → VM
-        self.fit_model_builder.baseline_settings_changed.connect(
-            self.vm.set_baseline_settings
-        )
+        self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.clear)
+        self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.addItems)
+        self.vm_fit_model_builder.model_selected.connect(self.v_fit_model_builder.cbb_model.setCurrentText)
+        self.vm_fit_model_builder.refresh_models() # Initial load of models

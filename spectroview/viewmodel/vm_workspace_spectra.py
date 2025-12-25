@@ -1,4 +1,6 @@
 # ─── spectroview/viewmodel/vm_workspace_spectra.py ───
+import numpy as np
+
 from PySide6.QtCore import QObject, Signal
 from pathlib import Path
 
@@ -7,12 +9,14 @@ from spectroview.model.m_settings import MSettings
 
 from spectroview.model.m_io import load_spectrum_file
 
+
 class VMWorkspaceSpectra(QObject):
     # ───── ViewModel → View signals ─────
     spectra_list_changed = Signal(list)      # list[str]
     spectra_selection_changed = Signal(list) # list[dict] → plot data
     count_changed = Signal(int)
     show_xcorrection_value = Signal(float)  # ΔX of first selected spectrum
+    spectral_range_changed = Signal(float, float)
 
     notify = Signal(str)  # general notifications
     
@@ -41,7 +45,6 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit(
                 f"Already loaded and skipped:\n" + "\n".join(skipped)
             )
-
         self._emit_list_update()
 
 
@@ -49,7 +52,25 @@ class VMWorkspaceSpectra(QObject):
         """Set currently selected spectra (via Listwidget) by their indices."""
         self.selected_indices = indices
         self._emit_selected_spectra()
-        
+
+    def _emit_selected_spectra(self):
+        """Prepare and emit data for plotting the selected spectra."""
+        selected_spectra = self.spectra.get(self.selected_indices)
+
+        if not selected_spectra:
+            self.spectra_selection_changed.emit([])
+            return
+        # emit list of the selected spectra to plot in View
+        self.spectra_selection_changed.emit(selected_spectra)    
+
+        # emit x-correction of first spectrum to show in GUI
+        self.show_xcorrection_value.emit(selected_spectra[0].xcorrection_value)
+
+        # emit spectral range of first selected spectrum to show in GUI
+        s = selected_spectra[0]
+        xmin = float(s.x[0])
+        xmax = float(s.x[-1])
+        self.spectral_range_changed.emit(xmin, xmax)
     
     def reorder_spectra(self, new_order: list[int]):
         """new_order = list of old indices in new visual order"""
@@ -92,57 +113,7 @@ class VMWorkspaceSpectra(QObject):
         self.spectra_list_changed.emit(names)
         self.count_changed.emit(len(self.spectra))
 
-    def _emit_selected_spectra(self):
-        """Prepare and emit data for plotting the selected spectra."""
-        selected_spectra = self.spectra.get(self.selected_indices)
-
-        if not selected_spectra:
-            self.spectra_selection_changed.emit([])
-            return
-        
-        # emit x-correction of first spectrum to show in GUI
-        self.show_xcorrection_value.emit(selected_spectra[0].xcorrection_value)
-
-        # emit list of the selected spectra to plot in View
-        self.spectra_selection_changed.emit(selected_spectra)
-
-
-    def apply_x_correction(self, measured_peak: float):
-        """
-        Apply X-axis correction to selected spectra.
-        delta_x: user-entered correction value
-        """
-        if not self.selected_indices:
-            self.notify.emit("No spectrum selected.")
-            return
-
-        spectra = self.spectra.get(self.selected_indices)
-
-        SI_REF = 520.7
-        delta_x = SI_REF - measured_peak 
-
-        for s in spectra:
-            s.apply_xcorrection(delta_x)
-
-        # Trigger plot refresh
-        self.show_xcorrection_value.emit(spectra[0].xcorrection_value)
-        self._emit_selected_spectra()
-
-
-    def undo_x_correction(self):
-        """Undo X-axis correction for selected spectra."""
-        if not self.selected_indices:
-            self.notify.emit("No spectrum selected.")
-            return
-
-        spectra = self.spectra.get(self.selected_indices)
-
-        for spectrum in spectra:
-            spectrum.undo_xcorrection()
-
-        self.show_xcorrection_value.emit(spectra[0].xcorrection_value)
-        self._emit_selected_spectra()
-
+    
 
     def add_peak_at(self, x: float):
         if not self.selected_indices:
@@ -199,7 +170,7 @@ class VMWorkspaceSpectra(QObject):
                 bl.order_max = settings["order"]
 
         self._emit_selected_spectra()
-
+ 
 
     def add_baseline_point(self, x: float, y: float):
         if not self.selected_indices:
@@ -233,3 +204,71 @@ class VMWorkspaceSpectra(QObject):
         ys.pop(idx)
 
         self._emit_selected_spectra()
+
+    def apply_x_correction(self, measured_peak: float):
+        """
+        Apply X-axis correction to selected spectra.
+        delta_x: user-entered correction value
+        """
+        if not self.selected_indices:
+            self.notify.emit("No spectrum selected.")
+            return
+
+        spectra = self.spectra.get(self.selected_indices)
+
+        SI_REF = 520.7
+        delta_x = SI_REF - measured_peak 
+
+        for s in spectra:
+            s.apply_xcorrection(delta_x)
+
+        # Trigger plot refresh
+        self.show_xcorrection_value.emit(spectra[0].xcorrection_value)
+        self._emit_selected_spectra()
+
+
+    def undo_x_correction(self):
+        """Undo X-axis correction for selected spectra."""
+        if not self.selected_indices:
+            self.notify.emit("No spectrum selected.")
+            return
+
+        spectra = self.spectra.get(self.selected_indices)
+
+        for spectrum in spectra:
+            spectrum.undo_xcorrection()
+
+        self.show_xcorrection_value.emit(spectra[0].xcorrection_value)
+        self._emit_selected_spectra()
+
+
+    def apply_spectral_range(self, xmin: float, xmax: float, apply_all: bool):
+        if not self.selected_indices:
+            return
+
+        if xmin > xmax:
+            xmin, xmax = xmax, xmin
+
+        spectra = (
+            self.spectra
+            if apply_all
+            else self.spectra.get(self.selected_indices)
+        )
+
+        for spectrum in spectra:
+            spectrum.reinit()
+
+            i_min = self._closest_index(spectrum.x0, xmin)
+            i_max = self._closest_index(spectrum.x0, xmax)
+
+            spectrum.x = spectrum.x0[i_min:i_max + 1].copy()
+            spectrum.y = spectrum.y0[i_min:i_max + 1].copy()
+
+        self._emit_selected_spectra()
+
+
+    def _closest_index(self, array, value):
+        return int(np.abs(array - value).argmin())
+    
+
+ 

@@ -265,13 +265,11 @@ class VSpectraViewer(QWidget):
         self._plot()
 
     def _plot(self):
-        """Redraw spectra based purely on Spectrum model objects."""
         if not self._current_spectra:
             self.ax.clear()
             self.canvas.draw_idle()
             return
 
-        # Preserve zoom / pan
         xlim = self.ax.get_xlim()
         ylim = self.ax.get_ylim()
         is_default = (xlim == (0.0, 1.0) and ylim == (0.0, 1.0))
@@ -286,39 +284,17 @@ class VSpectraViewer(QWidget):
 
             # ── Main spectrum
             line, = self.ax.plot(
-                x,
-                y,
+                x, y,
                 lw=lw,
                 label=spectrum.label or spectrum.fname,
                 color=spectrum.color
             )
             line._spectrum_ref = spectrum
 
-            # ─────────────────────────────────
-            # BASELINE POINTS
-            # ─────────────────────────────────
-            baseline = spectrum.baseline
-            if hasattr(baseline, "points"):
-                xs, ys = baseline.points
-                if xs:
-                    self.ax.plot(xs, ys, "ro", ms=4, zorder=5)
+            # ── Baseline (ONE place only)
+            y_base = self._plot_baseline(spectrum)
 
-            # ─────────────────────────────────
-            # BASELINE CURVE
-            # ─────────────────────────────────
-            y_base = None
-            if baseline.mode is not None:
-                try:
-                    params = baseline.mode.make_params()
-                    y_base = baseline.mode.eval(params, x=x)
-                    self.ax.plot(x, y_base, "--", color="gray", lw=1.2)
-                except Exception:
-                    y_base = None
-                    
-            self._plot_baseline(spectrum)
-            # ─────────────────────────────────
-            # PEAKS
-            # ─────────────────────────────────
+            # ── Peaks
             y_peaks = None
             if getattr(spectrum, "peak_models", None):
                 y_peaks = np.zeros_like(x)
@@ -331,16 +307,12 @@ class VSpectraViewer(QWidget):
                     except Exception:
                         pass
 
-            # ─────────────────────────────────
-            # BEST FIT
-            # ─────────────────────────────────
+            # ── Best fit
             if y_peaks is not None:
                 y_fit = y_peaks + y_base if y_base is not None else y_peaks
                 self.ax.plot(x, y_fit, lw=lw, color="black", label="bestfit")
 
-        # ─────────────────────────────────
-        # AXES / GRID / LEGEND
-        # ─────────────────────────────────
+        # ── Axes / legend
         if self.btn_legend.isChecked():
             legend = self.ax.legend(loc="best")
             self._make_legend_pickable(legend)
@@ -360,28 +332,23 @@ class VSpectraViewer(QWidget):
 
         self.canvas.draw_idle()
 
+
     def _plot_baseline(self, spectrum):
-        """Plot baseline points and curve for a given spectrum."""
         baseline = spectrum.baseline
 
         if baseline.is_subtracted:
-            return
+            return None
 
         if not baseline.points or not baseline.points[0]:
-            return
+            return None
 
         x = spectrum.x
         y = spectrum.y if baseline.attached else None
 
         try:
-            # Evaluate baseline
-            y_base = baseline.eval(
-                x,
-                y,
-                attached=baseline.attached
-            )
+            y_base = baseline.eval(x, y, attached=baseline.attached)
         except Exception:
-            return
+            return None
 
         # Baseline curve
         self.ax.plot(x, y_base, "--", color="red", lw=1.4, label="Baseline")
@@ -389,12 +356,12 @@ class VSpectraViewer(QWidget):
         # Baseline points
         if baseline.attached and y is not None:
             xs, ys = baseline.attached_points(x, y)
-            self.ax.plot(xs, ys, "ko", mfc="none", ms=5)
         else:
             xs, ys = baseline.points
-            self.ax.plot(xs, ys, "ko", mfc="none", ms=5)
 
+        self.ax.plot(xs, ys, "ko", mfc="none", ms=5)
 
+        return y_base
 
     def _get_normalized_y(self, x, y):
         """Apply normalization if enabled (VIEW-ONLY)."""

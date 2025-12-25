@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QGroupBox, QLabel, QPushButton, QComboBox,
     QDoubleSpinBox, QSpinBox, QRadioButton,
-    QScrollArea, QTableView, QCheckBox
+    QScrollArea, QTableView, QCheckBox, QApplication
 )
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, Signal
@@ -14,6 +14,7 @@ class VFitModelBuilder(QWidget):
     """View: Fit Model Builder panel"""
     # ───── View → ViewModel signals ─────
     baseline_settings_changed = Signal(dict)
+    spectral_range_apply_requested = Signal(float, float, bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -84,8 +85,8 @@ class VFitModelBuilder(QWidget):
         self.lbl_xcorr_value = QLabel("(0)")
         
         # Buttons
-        self.btn_correct = QPushButton("Correct")
-        self.btn_correct.setIcon(QIcon(f"{ICON_DIR}/done.png"))
+        self.btn_xcorrect = QPushButton("Correct")
+        self.btn_xcorrect.setIcon(QIcon(f"{ICON_DIR}/done.png"))
         
 
         self.btn_undo_corr = QPushButton()
@@ -98,7 +99,7 @@ class VFitModelBuilder(QWidget):
         l.addWidget(self.spin_xcorr)
         l.addWidget(self.lbl_xcorr_value)
         l.addStretch()
-        l.addWidget(self.btn_correct)
+        l.addWidget(self.btn_xcorrect)
         l.addWidget(self.btn_undo_corr)
 
         return gb
@@ -110,19 +111,36 @@ class VFitModelBuilder(QWidget):
         else:
             self.lbl_xcorr_value.setText(f"Δx = {value:+.2f}")
 
+    def set_spectral_range(self, xmin, xmax):
+        self.spin_xmin.blockSignals(True)
+        self.spin_xmax.blockSignals(True)
+
+        self.spin_xmin.setValue(xmin)
+        self.spin_xmax.setValue(xmax)
+
+        self.spin_xmin.blockSignals(False)
+        self.spin_xmax.blockSignals(False) 
+
     def _spectral_range_group(self):
         gb = QGroupBox("Spectral range")
         l = QHBoxLayout(gb)
         l.setContentsMargins(2, 2, 2, 2)
 
         self.spin_xmin = QDoubleSpinBox()
+        self.spin_xmin.setFixedWidth(80)
         self.spin_xmax = QDoubleSpinBox()
+        self.spin_xmax.setFixedWidth(80)
         self.spin_xmin.setDecimals(3)
         self.spin_xmax.setDecimals(3)
+
+        self.spin_xmin.setRange(-1e9, 1e9)
+        self.spin_xmax.setRange(-1e9, 1e9)
 
         self.btn_extract = QPushButton("Extract")
         self.btn_extract.setIcon(QIcon(f"{ICON_DIR}/cut.png"))
         self.btn_extract.setToolTip("Extract selected spectra range. Hold Ctrl to paste to all spectra.")
+
+        self.btn_extract.clicked.connect(self._on_extract_clicked)
 
         l.addWidget(QLabel("X min/max:"))
         l.addWidget(self.spin_xmin)
@@ -131,8 +149,18 @@ class VFitModelBuilder(QWidget):
         l.addStretch()
         l.addWidget(self.btn_extract)
         
-
         return gb
+    
+    def _on_extract_clicked(self):
+        modifiers = QApplication.keyboardModifiers()
+        apply_all = modifiers & Qt.ControlModifier
+
+        self.spectral_range_apply_requested.emit(
+            self.spin_xmin.value(),
+            self.spin_xmax.value(),
+            bool(apply_all)
+    )
+
 
     def _baseline_group(self):
         gb = QGroupBox("Baseline")
@@ -147,7 +175,7 @@ class VFitModelBuilder(QWidget):
         self.rb_linear.setChecked(True)  
 
         self.spin_poly = QSpinBox()
-        self.spin_poly.setRange(1, 20)
+        self.spin_poly.setRange(2, 20)
 
         # ── Row 3: actions
         row2 = QHBoxLayout()

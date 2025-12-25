@@ -2,6 +2,58 @@
 from PySide6.QtGui import QPalette, QColor
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
+import os
+import base64
+import markdown
+import zlib
+import numpy as np
+import pandas as pd
+import platform
+
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+
+from io import BytesIO
+from PIL import Image
+from threading import Thread
+from multiprocessing import Queue
+from copy import deepcopy
+from openpyxl.styles import PatternFill
+
+from fitspy.core.spectrum import Spectrum as FitspySpectrum
+from fitspy.core.spectra import Spectra as FitspySpectra
+from fitspy.core.baseline import BaseLine
+from fitspy.core.utils_mp import fit_mp
+
+from spectroview import PALETTE, DEFAULT_COLORS
+from spectroview.modules.df_table import DataframeTable
+
+from PySide6.QtWidgets import QDialog, QTableWidgetItem, QVBoxLayout,  QTextBrowser, \
+    QComboBox, QListWidgetItem, QMessageBox, QDialog, QVBoxLayout, QListWidget, QAbstractItemView
+    
+from PySide6.QtCore import Signal, QThread, Qt, QSize
+from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, Qt, QPixmap, QImage
+
+if platform.system() == 'Darwin':
+    import AppKit 
+if platform.system() == 'Windows':
+    import win32clipboard
+    
+
+def baseline_to_dict(spectrum):
+    dict_baseline = dict(vars(spectrum.baseline).items())
+    return dict_baseline
+
+def dict_to_baseline(dict_baseline, spectrums):
+    for spectrum in spectrums:
+        # Create a fresh BaselineModel instance
+        new_baseline =  BaseLine()
+        for key, value in dict_baseline.items():
+            setattr(new_baseline, key, deepcopy(value))
+        spectrum.baseline = new_baseline
 
 
 def dark_palette():

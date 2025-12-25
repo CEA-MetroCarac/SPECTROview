@@ -16,7 +16,7 @@ from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.v_workspace_maps import WorkspaceMaps
 from spectroview.view.v_workspace_graphs import WorkspaceGraphs
 
-from spectroview.view.components.v_utils import dark_palette, light_palette
+from spectroview.viewmodel.utils import dark_palette, light_palette
 
 from spectroview import LOGO_APPLI
 

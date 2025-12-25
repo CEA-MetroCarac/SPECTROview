@@ -1,4 +1,5 @@
 # ─── spectroview/viewmodel/vm_workspace_spectra.py ───
+from copy import deepcopy
 import numpy as np
 
 from PySide6.QtCore import QObject, Signal
@@ -8,6 +9,8 @@ from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_settings import MSettings
 
 from spectroview.model.m_io import load_spectrum_file
+
+from spectroview.viewmodel.utils import baseline_to_dict, dict_to_baseline
 
 
 class VMWorkspaceSpectra(QObject):
@@ -25,6 +28,7 @@ class VMWorkspaceSpectra(QObject):
         self.settings = settings
         self.spectra = MSpectra()
         self.selected_indices = []
+        self._baseline_clipboard = None  # for copy/paste baseline
 
     # View → ViewModel slots
     def load_files(self, paths: list[str]):
@@ -279,6 +283,75 @@ class VMWorkspaceSpectra(QObject):
             spectrum.y = spectrum.y0[i_min:i_max + 1].copy()
 
         self._emit_selected_spectra()
+
+    def copy_baseline(self):
+        if not self.selected_indices:
+            self.notify.emit("No spectrum selected.")
+            return
+
+        spectrum = self.spectra.get(self.selected_indices)[0]
+        self._baseline_clipboard = deepcopy(baseline_to_dict(spectrum))
+
+    def paste_baseline(self, apply_all: bool = False):
+        if self._baseline_clipboard is None:
+            self.notify.emit("No baseline copied.")
+            return
+
+        if apply_all:
+            spectra = self.spectra
+        else:
+            if not self.selected_indices:
+                self.notify.emit("No spectrum selected.")
+                return
+            spectra = self.spectra.get(self.selected_indices)
+
+        dict_to_baseline(
+            deepcopy(self._baseline_clipboard),
+            spectra
+        )
+
+        self._emit_selected_spectra()
+
+    def subtract_baseline(self, apply_all: bool = False):
+        if apply_all:
+            spectra = self.spectra
+        else:
+            if not self.selected_indices:
+                self.notify.emit("No spectrum selected.")
+                return
+            spectra = self.spectra.get(self.selected_indices)
+
+        for spectrum in spectra:
+            if not spectrum.baseline.is_subtracted:
+                spectrum.subtract_baseline()
+
+        self._emit_selected_spectra()
+
+    def delete_baseline(self, apply_all: bool = False):
+        """Delete baseline (points + subtraction state)."""
+
+        if apply_all:
+            spectra = self.spectra
+        else:
+            if not self.selected_indices:
+                self.notify.emit("No spectrum selected.")
+                return
+            spectra = self.spectra.get(self.selected_indices)
+
+        for spectrum in spectra:
+            bl = spectrum.baseline
+
+            # Clear baseline points
+            if bl.points:
+                xs, ys = bl.points
+                xs.clear()
+                ys.clear()
+
+            # Reset subtraction state
+            bl.is_subtracted = False
+
+        self._emit_selected_spectra()
+
 
 
     def _closest_index(self, array, value):

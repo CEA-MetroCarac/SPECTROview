@@ -13,8 +13,13 @@ from PySide6.QtCore import Qt, Signal
 class VFitModelBuilder(QWidget):
     """View: Fit Model Builder panel"""
     # ───── View → ViewModel signals ─────
-    baseline_settings_changed = Signal(dict)
     spectral_range_apply_requested = Signal(float, float, bool)
+
+    baseline_settings_changed = Signal(dict)
+    baseline_copy_requested = Signal()
+    baseline_paste_requested = Signal(bool)     # apply_all
+    baseline_subtract_requested = Signal(bool)  # apply_all
+    baseline_delete_requested = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -183,23 +188,27 @@ class VFitModelBuilder(QWidget):
         self.btn_base_delete = QPushButton()
         self.btn_base_delete.setIcon(QIcon(f"{ICON_DIR}/trash3.png"))
         self.btn_base_delete.setFixedSize(30, 24)
-        self.btn_base_delete.setToolTip("Delete baseline")
+        self.btn_base_delete.setToolTip("Delete baseline. Hold Ctrl to delete from all spectra.")
+        self.btn_base_delete.clicked.connect(lambda: self._emit_with_ctrl(self.baseline_delete_requested))
 
         self.btn_base_copy = QPushButton()
         self.btn_base_copy.setIcon(QIcon(f"{ICON_DIR}/copy3.png"))
         self.btn_base_copy.setFixedSize(30, 24)
         self.btn_base_copy.setToolTip("Copy baseline")
+        self.btn_base_copy.clicked.connect(lambda: self.baseline_copy_requested.emit())
 
         self.btn_base_paste = QPushButton()
         self.btn_base_paste.setIcon(QIcon(f"{ICON_DIR}/paste.png"))
         self.btn_base_paste.setFixedSize(30, 24)
         self.btn_base_paste.setToolTip("Paste baseline. Hold Ctrl to paste to all spectra.")
+        self.btn_base_paste.clicked.connect(lambda: self._emit_with_ctrl(self.baseline_paste_requested))
 
 
         self.btn_base_subtract = QPushButton("Subtract")
         self.btn_base_subtract.setIcon(QIcon(f"{ICON_DIR}/done.png"))
         self.btn_base_subtract.setFixedSize(80, 24)
         self.btn_base_subtract.setToolTip("Subtract baseline. Hold Ctrl to subtract from all spectra.")
+        self.btn_base_subtract.clicked.connect(lambda: self._emit_with_ctrl(self.baseline_subtract_requested))
 
         self.chk_attached = QCheckBox("Attached")
         self.chk_attached.setChecked(True)
@@ -295,6 +304,12 @@ class VFitModelBuilder(QWidget):
         v.addLayout(row1)
         v.addLayout(row2)
         return gb
+    
+    def _emit_with_ctrl(self, signal):
+        """Helper to emit signal with apply_all based on Ctrl key."""
+        apply_all = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
+        signal.emit(apply_all)
+
 
     def _fit_control_panel(self):
         gb = QGroupBox("")

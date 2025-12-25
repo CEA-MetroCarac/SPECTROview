@@ -131,6 +131,12 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.btn_undo_corr.clicked.connect(vm.undo_x_correction)
         self.v_fit_model_builder.spectral_range_apply_requested.connect(vm.apply_spectral_range)
         self.v_fit_model_builder.baseline_settings_changed.connect(vm.set_baseline_settings)
+
+        self.v_fit_model_builder.baseline_copy_requested.connect(vm.copy_baseline)
+        self.v_fit_model_builder.baseline_paste_requested.connect(vm.paste_baseline)
+        self.v_fit_model_builder.baseline_subtract_requested.connect(vm.subtract_baseline)
+        self.v_fit_model_builder.baseline_delete_requested.connect(vm.delete_baseline)
+
         
         # SpectraList connection: ViewModel → View
         vm.spectra_list_changed.connect(self.v_spectra_list.set_spectra_names)

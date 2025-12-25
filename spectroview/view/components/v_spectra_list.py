@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt, Signal
 
 
 class VSpectraList(QListWidget):
+    # ───── View → ViewModel signals ─────
     selection_changed = Signal(list)     # list of selected row indices
     order_changed = Signal(list)          # new order of row indices
     files_dropped = Signal(list)          # list of file paths

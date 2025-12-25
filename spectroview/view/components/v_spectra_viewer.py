@@ -24,6 +24,7 @@ from spectroview import ICON_DIR, X_AXIS_UNIT, PLOT_POLICY
 
 
 class VSpectraViewer(QWidget):
+    # ───── View → ViewModel signals ─────
     mouseClicked = Signal(float, float, int)
     zoomToggled = Signal(bool)
     rescaleRequested = Signal()

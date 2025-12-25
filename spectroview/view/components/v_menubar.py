@@ -12,6 +12,7 @@ from spectroview import ICON_DIR
 
 
 class VMenuBar(QToolBar):
+    # ───── View → ViewModel signals ─────
     open_requested = Signal()
     save_requested = Signal()
     clear_requested = Signal()

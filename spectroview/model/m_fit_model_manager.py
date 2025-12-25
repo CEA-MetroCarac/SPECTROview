@@ -9,6 +9,7 @@ class MFitModelManager:
         self.available_models: list[str] = []
 
     def scan_folder(self, folder: str) -> list[str]:
+        """Scan given folder for available fit models (JSON files)."""
         self.available_models.clear()
         self.model_folder = folder
 
@@ -23,4 +24,5 @@ class MFitModelManager:
         return self.available_models
 
     def resolve_path(self, model_name: str) -> str:
+        """Get full path of a model given its name."""
         return str(Path(self.model_folder) / model_name)

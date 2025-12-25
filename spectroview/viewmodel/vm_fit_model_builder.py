@@ -7,10 +7,6 @@ from spectroview.model.m_settings import MSettings
 
 
 class VMFitModelBuilder(QObject):
-    """
-    ViewModel for Fit Model Builder.
-    """
-
     # ───── VM → View signals ──────────────────────────────
     models_changed = Signal(list)          # list[str]
     model_selected = Signal(str)

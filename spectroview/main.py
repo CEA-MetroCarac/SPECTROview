@@ -20,7 +20,7 @@ from spectroview.view.components.v_utils import dark_palette, light_palette
 
 from spectroview import LOGO_APPLI
 
-class VMain(QMainWindow):
+class Main(QMainWindow):
     def __init__(self):
         super().__init__()
         self.settings = QSettings("CEA-Leti", "SPECTROview")
@@ -116,7 +116,7 @@ def launcher():
     app.setWindowIcon(QIcon(LOGO_APPLI))
     app.setStyle("Fusion")
 
-    window = VMain()
+    window = Main()
     window.show()
     sys.exit(app.exec())
 

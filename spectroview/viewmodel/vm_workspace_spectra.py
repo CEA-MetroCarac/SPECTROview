@@ -1,16 +1,13 @@
+# ─── spectroview/viewmodel/vm_workspace_spectra.py ───
 from PySide6.QtCore import QObject, Signal
 from pathlib import Path
-
-
 
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_settings import MSettings
 
-
 from spectroview.model.m_io import load_spectrum_file
 
-
-class VMSpectra(QObject):
+class VMWorkspaceSpectra(QObject):
     # ───── ViewModel → View signals ─────
     spectra_list_changed = Signal(list)      # list[str]
     spectra_selection_changed = Signal(list) # list[dict] → plot data

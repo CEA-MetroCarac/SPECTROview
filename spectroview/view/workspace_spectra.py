@@ -12,7 +12,7 @@ from spectroview.view.components.v_spectra_viewer import VSpectraViewer
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
 from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
 
-from spectroview.viewmodel.vm_spectra import VMSpectra
+from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 
 from spectroview import ICON_DIR
 
@@ -21,7 +21,7 @@ class WorkspaceSpectra(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.m_settings = MSettings()
-        self.vm = VMSpectra(self.m_settings) # To bind View to ViewModel
+        self.vm = VMWorkspaceSpectra(self.m_settings) # To bind View to ViewModel
 
         self.init_ui()
         self.connect_vm()

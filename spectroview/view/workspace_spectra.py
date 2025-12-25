@@ -162,3 +162,8 @@ class WorkspaceSpectra(QWidget):
             self.fit_model_builder.cbb_model.setCurrentText
         )
         self.vm_fit_models.refresh_models() # Initial load of models
+
+        # View → VM
+        self.fit_model_builder.baseline_settings_changed.connect(
+            self.vm.set_baseline_settings
+        )

@@ -150,7 +150,6 @@ class VMWorkspaceSpectra(QObject):
 
         spectrum = self.spectra.get(self.selected_indices)[0]
         
-
         fit_settings = self.settings.load_fit_settings()
 
         maxshift = fit_settings.get("maxshift", 20.0)
@@ -184,7 +183,24 @@ class VMWorkspaceSpectra(QObject):
         del spectrum.peak_labels[idx]
         self._emit_selected_spectra()
 
-    
+    def set_baseline_settings(self, settings: dict):
+        if not self.selected_indices:
+            return
+
+        for spectrum in self.spectra.get(self.selected_indices):
+            bl = spectrum.baseline
+            bl.attached = settings["attached"]
+            bl.sigma = settings["noise"]
+
+            if settings["mode"] == "Linear":
+                bl.mode = "Linear"
+            else:
+                bl.mode = "Polynomial"
+                bl.order_max = settings["order"]
+
+        self._emit_selected_spectra()
+
+
     def add_baseline_point(self, x: float, y: float):
         if not self.selected_indices:
             return

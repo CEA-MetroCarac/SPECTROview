@@ -314,7 +314,8 @@ class VSpectraViewer(QWidget):
                     self.ax.plot(x, y_base, "--", color="gray", lw=1.2)
                 except Exception:
                     y_base = None
-
+                    
+            self._plot_baseline(spectrum)
             # ─────────────────────────────────
             # PEAKS
             # ─────────────────────────────────
@@ -358,6 +359,41 @@ class VSpectraViewer(QWidget):
             self.ax.set_ylim(ylim)
 
         self.canvas.draw_idle()
+
+    def _plot_baseline(self, spectrum):
+        """Plot baseline points and curve for a given spectrum."""
+        baseline = spectrum.baseline
+
+        if baseline.is_subtracted:
+            return
+
+        if not baseline.points or not baseline.points[0]:
+            return
+
+        x = spectrum.x
+        y = spectrum.y if baseline.attached else None
+
+        try:
+            # Evaluate baseline
+            y_base = baseline.eval(
+                x,
+                y,
+                attached=baseline.attached
+            )
+        except Exception:
+            return
+
+        # Baseline curve
+        self.ax.plot(x, y_base, "--", color="red", lw=1.4, label="Baseline")
+
+        # Baseline points
+        if baseline.attached and y is not None:
+            xs, ys = baseline.attached_points(x, y)
+            self.ax.plot(xs, ys, "ko", mfc="none", ms=5)
+        else:
+            xs, ys = baseline.points
+            self.ax.plot(xs, ys, "ko", mfc="none", ms=5)
+
 
 
     def _get_normalized_y(self, x, y):

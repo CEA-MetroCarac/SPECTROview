@@ -13,6 +13,7 @@ class VMFitModelBuilder(QObject):
     notify = Signal(str)
     model_applied = Signal(str)            # full path
 
+
     def __init__(self, settings: MSettings):
         super().__init__()
         self.settings = settings

@@ -7,11 +7,14 @@ from PySide6.QtWidgets import (
     QScrollArea, QTableView, QCheckBox
 )
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 
 
 class VFitModelBuilder(QWidget):
     """View: Fit Model Builder panel"""
+    # ───── View → ViewModel signals ─────
+    baseline_settings_changed = Signal(dict)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._init_ui()
@@ -171,6 +174,8 @@ class VFitModelBuilder(QWidget):
         self.btn_base_subtract.setToolTip("Subtract baseline. Hold Ctrl to subtract from all spectra.")
 
         self.chk_attached = QCheckBox("Attached")
+        self.chk_attached.setChecked(True)
+
         self.spin_noise = QSpinBox()
         self.spin_noise.setRange(0, 20)
         self.spin_noise.setValue(4)  
@@ -190,16 +195,42 @@ class VFitModelBuilder(QWidget):
         ):
             row2.addWidget(b)
 
+        
 
         row2.addWidget(QLabel("Noise cor:"))
         row2.addWidget(self.spin_noise)
         row2.addStretch()
         row2.addWidget(self.btn_base_subtract)
 
+        self._connect_baseline_signals()
+
         v.addLayout(row1)
         v.addLayout(row2)
 
         return gb
+    
+    def _connect_baseline_signals(self):
+            for w in (
+                self.rb_linear,
+                self.rb_poly,
+                self.spin_poly,
+                self.chk_attached,
+                self.spin_noise,
+            ):
+                if hasattr(w, "toggled"):
+                    w.toggled.connect(self._emit_baseline_settings)
+                else:
+                    w.valueChanged.connect(self._emit_baseline_settings)
+
+    def _emit_baseline_settings(self):
+        """Emit baseline settings changed signal."""
+        data = {
+            "mode": "Linear" if self.rb_linear.isChecked() else "Polynomial",
+            "order": self.spin_poly.value(),
+            "attached": self.chk_attached.isChecked(),
+            "noise": self.spin_noise.value(),
+        }
+        self.baseline_settings_changed.emit(data)
 
     def _peaks_group(self):
         gb = QGroupBox("Peaks")

@@ -21,6 +21,10 @@ class VFitModelBuilder(QWidget):
     baseline_subtract_requested = Signal(bool)  # apply_all
     baseline_delete_requested = Signal(bool)
 
+    peaks_copy_requested = Signal()
+    peaks_paste_requested = Signal(bool)    # apply_all
+    peaks_delete_requested = Signal(bool)  # apply_all
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._init_ui()
@@ -285,17 +289,24 @@ class VFitModelBuilder(QWidget):
         self.btn_peak_delete = QPushButton()
         self.btn_peak_delete.setIcon(QIcon(f"{ICON_DIR}/trash3.png"))
         self.btn_peak_delete.setFixedSize(30, 24)
-        self.btn_peak_delete.setToolTip("Delete peaks.")
+        self.btn_peak_delete.setToolTip("Delete peaks. Hold Ctrl to delete from all spectra.")
+        self.btn_peak_delete.clicked.connect(
+            lambda: self._emit_with_ctrl(self.peaks_delete_requested)
+        )
 
         self.btn_peak_copy = QPushButton()
         self.btn_peak_copy.setIcon(QIcon(f"{ICON_DIR}/copy3.png"))
         self.btn_peak_copy.setFixedSize(30, 24)
         self.btn_peak_copy.setToolTip("Copy peaks.")
+        self.btn_peak_copy.clicked.connect(self.peaks_copy_requested.emit)
 
         self.btn_peak_paste = QPushButton()
         self.btn_peak_paste.setIcon(QIcon(f"{ICON_DIR}/paste.png"))
         self.btn_peak_paste.setFixedSize(30, 24)
         self.btn_peak_paste.setToolTip("Paste peaks. Hold Ctrl to paste to all spectra.")
+        self.btn_peak_paste.clicked.connect(
+            lambda: self._emit_with_ctrl(self.peaks_paste_requested)
+        )
 
         for b in (self.btn_peak_delete, self.btn_peak_copy, self.btn_peak_paste):
             row2.addWidget(b)

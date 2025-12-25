@@ -618,8 +618,6 @@ class Spectrums(QObject):
         fnames = checked_spectra.fnames
         self.clear_peaks(fnames)
 
-    
-
     def paste_fit_model_all(self):
         """Apply the copied fit model to selected spectrum(s)"""
         checked_spectra = self.get_checked_spectra()

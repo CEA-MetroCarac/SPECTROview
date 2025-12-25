@@ -29,6 +29,8 @@ class VMWorkspaceSpectra(QObject):
         self.spectra = MSpectra()
         self.selected_indices = []
         self._baseline_clipboard = None  # for copy/paste baseline
+        self._peaks_clipboard = None    # for copy/paste peaks
+
 
     # View → ViewModel slots
     def load_files(self, paths: list[str]):
@@ -352,6 +354,62 @@ class VMWorkspaceSpectra(QObject):
 
         self._emit_selected_spectra()
 
+    def copy_peaks(self):
+        if not self.selected_indices:
+            self.notify.emit("No spectrum selected.")
+            return
+
+        spectrum = self.spectra.get(self.selected_indices)[0]
+
+        if not spectrum.peak_models:
+            self.notify.emit("No peaks to copy.")
+            return
+
+        # IMPORTANT: save(), not manual extraction
+        self._peaks_clipboard = deepcopy(spectrum.save())
+
+
+
+    def paste_peaks(self, apply_all: bool = False):
+        if not hasattr(self, "_peaks_clipboard") or self._peaks_clipboard is None:
+            self.notify.emit("No peaks copied.")
+            return
+
+        spectra = (
+            self.spectra
+            if apply_all
+            else self.spectra.get(self.selected_indices)
+        )
+
+        for spectrum in spectra:
+            spectrum.set_attributes(
+                {
+                    "peak_labels": self._peaks_clipboard.get("peak_labels", []),
+                    "peak_models": deepcopy(
+                        self._peaks_clipboard.get("peak_models", {})
+                    ),
+                }
+            )
+
+        self._emit_selected_spectra()
+
+
+    def delete_peaks(self, apply_all: bool = False):
+        spectra = (
+            self.spectra
+            if apply_all
+            else self.spectra.get(self.selected_indices)
+        )
+
+        if not spectra:
+            self.notify.emit("No spectrum selected.")
+            return
+
+        for spectrum in spectra:
+            if spectrum.peak_models:
+                spectrum.remove_models()
+
+        self._emit_selected_spectra()
 
 
     def _closest_index(self, array, value):

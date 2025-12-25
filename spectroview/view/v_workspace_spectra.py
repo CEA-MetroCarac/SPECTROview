@@ -137,7 +137,10 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.baseline_subtract_requested.connect(vm.subtract_baseline)
         self.v_fit_model_builder.baseline_delete_requested.connect(vm.delete_baseline)
 
-        
+        self.v_fit_model_builder.peaks_copy_requested.connect(vm.copy_peaks)
+        self.v_fit_model_builder.peaks_paste_requested.connect(vm.paste_peaks)
+        self.v_fit_model_builder.peaks_delete_requested.connect(vm.delete_peaks)
+
         # SpectraList connection: ViewModel → View
         vm.spectra_list_changed.connect(self.v_spectra_list.set_spectra_names)
         vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)

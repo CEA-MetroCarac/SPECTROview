@@ -80,7 +80,8 @@ class VMWorkspaceSpectra(QObject):
         self._emit_list_update()
         self._emit_selected_spectra()
 
-            
+    
+    
             
     def remove_selected_spectra(self):
         """Remove currently selected spectra."""
@@ -112,8 +113,6 @@ class VMWorkspaceSpectra(QObject):
         names = [s.fname for s in self.spectra]
         self.spectra_list_changed.emit(names)
         self.count_changed.emit(len(self.spectra))
-
-    
 
     def add_peak_at(self, x: float):
         if not self.selected_indices:
@@ -240,6 +239,21 @@ class VMWorkspaceSpectra(QObject):
 
         self.show_xcorrection_value.emit(spectra[0].xcorrection_value)
         self._emit_selected_spectra()
+
+    def reinit_spectra(self, apply_all: bool = False):
+        """Reinitialize spectra to original data."""
+        if apply_all:
+            spectra = self.spectra
+        else:
+            if not self.selected_indices:
+                self.notify.emit("No spectrum selected.")
+                return
+            spectra = self.spectra.get(self.selected_indices)
+
+        for spectrum in spectra:
+            spectrum.reinit()
+        
+        self._emit_selected_spectra() # Refresh plot 
 
 
     def apply_spectral_range(self, xmin: float, xmax: float, apply_all: bool):

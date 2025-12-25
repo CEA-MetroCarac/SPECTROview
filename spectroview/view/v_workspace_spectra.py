@@ -1,6 +1,6 @@
 # view/v_workspace_spectra.py
 import os
-from PySide6.QtWidgets import (QWidget, QVBoxLayout,QHBoxLayout, QLabel,
+from PySide6.QtWidgets import (QWidget, QVBoxLayout,QHBoxLayout, QLabel,QApplication,
     QPushButton, QCheckBox,QProgressBar,QSplitter,QTabWidget, QMessageBox, QFrame
 )
 from PySide6.QtCore import Qt
@@ -104,12 +104,17 @@ class VWorkspaceSpectra(QWidget):
         main_splitter.addWidget(right_widget)
         main_splitter.setSizes([900, 200])
 
+    def _apply_with_ctrl(self, fn):
+        apply_all = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
+        fn(apply_all)
+
     def connect_vm(self):
         """Connect ViewModel signals and slots to the View components."""
         vm = self.vm # VMWorkspaceSpectra
         
         self.btn_select_all.clicked.connect(self.v_spectra_list.select_all)
         self.btn_remove.clicked.connect(vm.remove_selected_spectra)
+        self.btn_reinit.clicked.connect(lambda: self._apply_with_ctrl(vm.reinit_spectra))
 
         # Connection with VMWorkspaceSpectra (vm)
         self.v_spectra_list.selection_changed.connect(vm.set_selected_indices) # V Notify VM of selection change

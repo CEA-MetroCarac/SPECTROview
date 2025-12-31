@@ -251,44 +251,85 @@ def view_markdown(ui, title, fname, x, y, working_folder):
     about_dialog.show()
                     
 def dark_palette():
-        """Palette color for dark mode of the appli's GUI"""
-        dark_palette = QPalette()
-        dark_palette.setColor(QPalette.Window, QColor(70, 70, 70))
-        dark_palette.setColor(QPalette.WindowText, Qt.white)
-        dark_palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
-        dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
-        dark_palette.setColor(QPalette.ToolTipText, Qt.black)
-        dark_palette.setColor(QPalette.Text, Qt.white)
-        dark_palette.setColor(QPalette.Button, QColor(64, 64, 64))
-        dark_palette.setColor(QPalette.ButtonText, Qt.white)
-        dark_palette.setColor(QPalette.BrightText, Qt.red)
-        dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-        dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-        dark_palette.setColor(QPalette.HighlightedText, Qt.white)
-        dark_palette.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
-        dark_palette.setColor(QPalette.Base, QColor(60, 60, 60))  # Background color for QMenu
-        
-        return dark_palette
+    """Palette color for dark mode of the appli's GUI"""
+    p = QPalette()
+
+    # ---------- Base surfaces ----------
+    p.setColor(QPalette.Window, QColor(53, 53, 53))          # main background
+    p.setColor(QPalette.Base, QColor(42, 42, 42))            # lists, tables, editors
+    p.setColor(QPalette.AlternateBase, QColor(48, 48, 48))   # alternating rows
+
+    # ---------- Text ----------
+    p.setColor(QPalette.WindowText, Qt.white)
+    p.setColor(QPalette.Text, Qt.white)
+    p.setColor(QPalette.ButtonText, Qt.white)
+    p.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
+
+    # ---------- Buttons / controls ----------
+    p.setColor(QPalette.Button, QColor(64, 64, 64))
+    p.setColor(QPalette.Light, QColor(90, 90, 90))
+    p.setColor(QPalette.Mid, QColor(72, 72, 72))
+    p.setColor(QPalette.Dark, QColor(40, 40, 40))
+    p.setColor(QPalette.Shadow, QColor(20, 20, 20))
+
+    # ---------- Tooltips ----------
+    p.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
+    p.setColor(QPalette.ToolTipText, Qt.black)
+
+    # ---------- Highlights / accent ----------
+    accent = QColor(42, 130, 218)  # Qt blue (matches screenshot)
+    p.setColor(QPalette.Highlight, accent)
+    p.setColor(QPalette.HighlightedText, Qt.white)
+    p.setColor(QPalette.Link, accent)
+
+    # ---------- Disabled ----------
+    p.setColor(QPalette.Disabled, QPalette.Text, QColor(130, 130, 130))
+    p.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(130, 130, 130))
+    p.setColor(QPalette.Disabled, QPalette.WindowText, QColor(130, 130, 130))
+
+    return p
+
 
 def light_palette():
     """Palette color for light mode of the appli's GUI"""
-    light_palette = QPalette()
-    light_palette.setColor(QPalette.Window, QColor(225, 225, 225))
-    light_palette.setColor(QPalette.WindowText, Qt.black)
-    light_palette.setColor(QPalette.AlternateBase, QColor(230, 230, 230))
-    light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
-    light_palette.setColor(QPalette.ToolTipText, Qt.black)
-    light_palette.setColor(QPalette.Text, Qt.black)
-    light_palette.setColor(QPalette.Button, QColor(230, 230, 230))
-    light_palette.setColor(QPalette.ButtonText, Qt.black)
-    light_palette.setColor(QPalette.BrightText, Qt.red)
-    light_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    light_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    light_palette.setColor(QPalette.HighlightedText, Qt.black)
-    light_palette.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
-    light_palette.setColor(QPalette.Base, QColor(240, 240, 240))  # Menu background color
+    p = QPalette()
 
-    return light_palette
+    # ---- Base colors ----
+    p.setColor(QPalette.Window, QColor(245, 246, 248))        # main background
+    p.setColor(QPalette.Base, QColor(255, 255, 255))          # inputs, tables
+    p.setColor(QPalette.AlternateBase, QColor(238, 240, 243)) # alternate rows
+
+    # ---- Text ----
+    p.setColor(QPalette.WindowText, QColor(30, 30, 30))
+    p.setColor(QPalette.Text, QColor(30, 30, 30))
+    p.setColor(QPalette.ButtonText, QColor(30, 30, 30))
+    p.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
+
+    # ---- Buttons ----
+    p.setColor(QPalette.Button, QColor(235, 236, 239))
+    p.setColor(QPalette.Light, QColor(255, 255, 255))
+    p.setColor(QPalette.Midlight, QColor(220, 220, 220))
+    p.setColor(QPalette.Mid, QColor(200, 200, 200))
+    p.setColor(QPalette.Dark, QColor(160, 160, 160))
+
+    # ---- Blue accent ----
+    accent = QColor(64, 156, 255)  # soft modern blue
+    accent_hover = QColor(90, 170, 255)
+
+    p.setColor(QPalette.Highlight, accent)
+    p.setColor(QPalette.HighlightedText, Qt.white)
+    p.setColor(QPalette.Link, accent)
+
+    # ---- Tooltips ----
+    p.setColor(QPalette.ToolTipBase, QColor(255, 255, 240))
+    p.setColor(QPalette.ToolTipText, QColor(20, 20, 20))
+
+    # ---- Disabled state ----
+    p.setColor(QPalette.Disabled, QPalette.Text, QColor(160, 160, 160))
+    p.setColor(QPalette.Disabled, QPalette.WindowText, QColor(160, 160, 160))
+    p.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(160, 160, 160))
+
+    return p
                 
 def view_text(ui, title, text):
         """ Create a QTextBrowser to display a text content"""

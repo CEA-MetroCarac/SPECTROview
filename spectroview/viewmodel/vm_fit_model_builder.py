@@ -105,3 +105,15 @@ class VMFitModelBuilder(QObject):
     # ─────────────────────────────────────────────────────
     def current_model(self) -> str | None:
         return self._current_model_name
+
+
+    def get_current_model_path(self) -> Path | None:
+        """Return the full path of the currently selected model."""
+        if not self._current_model_name:
+            return None
+
+        if self._current_model_name in self._extra_models:
+            return self._extra_models[self._current_model_name]
+
+        resolved = self.model_manager.resolve_path(self._current_model_name)
+        return Path(resolved) if resolved else None

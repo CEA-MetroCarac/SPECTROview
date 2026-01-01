@@ -17,6 +17,11 @@ from matplotlib.backends.backend_qtagg import (
     NavigationToolbar2QT
 )
 
+
+from PySide6.QtWidgets import QLabel
+from PySide6.QtGui import QCursor
+from PySide6.QtCore import QPoint
+
 import matplotlib.lines as mlines
 import matplotlib.text as mtext
 
@@ -46,10 +51,11 @@ class VSpectraViewer(QWidget):
         super().__init__(parent)
         self._init_ui()
         self._current_spectra = []
+        self._fitted_lines = []     # [(line, peak_info)]
+        self._highlighted_line = None
 
         self.zoom_pan_active = True
 
-        
     def _init_ui(self):
         plt.style.use(PLOT_POLICY)
 
@@ -62,6 +68,9 @@ class VSpectraViewer(QWidget):
         self.canvas = FigureCanvas(self.figure)
         
         self.canvas.mpl_connect("button_press_event", self._on_mouse_click)
+        self.canvas.mpl_connect("scroll_event", self._on_scroll)
+        self.canvas.mpl_connect("motion_notify_event", self._on_hover)
+
 
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
         self.toolbar.zoom() # Start with zoom enabled
@@ -275,6 +284,7 @@ class VSpectraViewer(QWidget):
         is_default = (xlim == (0.0, 1.0) and ylim == (0.0, 1.0))
 
         self.ax.clear()
+        self._fitted_lines.clear()  # always reset
 
         for spectrum in self._current_spectra:
             x = spectrum.x
@@ -282,7 +292,7 @@ class VSpectraViewer(QWidget):
             y = self._get_normalized_y(x, y_raw)
             lw = self.spin_lw.value()
 
-            # ── Main spectrum
+            # ── Main spectrum (always shown)
             line, = self.ax.plot(
                 x, y,
                 lw=lw,
@@ -291,28 +301,62 @@ class VSpectraViewer(QWidget):
             )
             line._spectrum_ref = spectrum
 
-            # ── Baseline (ONE place only)
+            # ── Baseline (independent of bestfit toggle)
             y_base = self._plot_baseline(spectrum)
 
-            # ── Peaks
-            y_peaks = None
-            if getattr(spectrum, "peak_models", None):
+            # ==================================================
+            # Peaks + Bestfit (ONLY if Bestfit is checked)
+            # ==================================================
+            if (
+                self.act_bestfit.isChecked()
+                and getattr(spectrum, "peak_models", None)
+                and spectrum.peak_models
+            ):
                 y_peaks = np.zeros_like(x)
-                for peak_model in spectrum.peak_models:
-                    try:
-                        params = peak_model.make_params()
-                        y_peak = peak_model.eval(params, x=x)
-                        y_peaks += y_peak
-                        self.ax.plot(x, y_peak, lw=lw, alpha=0.8)
-                    except Exception:
-                        pass
 
-            # ── Best fit
-            if y_peaks is not None:
-                y_fit = y_peaks + y_base if y_base is not None else y_peaks
-                self.ax.plot(x, y_fit, lw=lw, color="black", label="bestfit")
+                for i, peak_model in enumerate(spectrum.peak_models):
+                    params = peak_model.make_params()
+                    y_peak = peak_model.eval(params, x=x)
+                    y_peaks += y_peak
 
-        # ── Axes / legend
+                    # ── Individual peak curve
+                    peak_line, = self.ax.plot(x, y_peak, lw=lw, alpha=0.8)
+
+                    peak_info = {
+                        "peak_label": (
+                            spectrum.peak_labels[i]
+                            if i < len(spectrum.peak_labels)
+                            else f"Peak {i+1}"
+                        ),
+                        "peak_model": peak_model,
+                    }
+
+                    for pname in getattr(peak_model, "param_names", []):
+                        key = pname.split("_", 1)[1]
+                        if key in peak_model.param_hints:
+                            peak_info[key] = peak_model.param_hints[key].get("value")
+
+                    self._fitted_lines.append((peak_line, peak_info))
+
+                # ── Best-fit curve
+                if (
+                    hasattr(spectrum, "result_fit")
+                    and getattr(spectrum.result_fit, "success", False)
+                ):
+                    y_fit = y_peaks + y_base if y_base is not None else y_peaks
+                    self.ax.plot(x, y_fit, lw=lw, color="black", label="bestfit")
+
+            # ==================================================
+            # Residual (independent toggle)
+            # ==================================================
+            if self.act_residual.isChecked():
+                try:
+                    xr, residual = self._compute_residual(spectrum)
+                    self.ax.plot(xr, residual, "r-", lw=1.0, label="residual")
+                except Exception:
+                    pass
+
+        # ── Legend / axes / grid
         if self.btn_legend.isChecked():
             legend = self.ax.legend(loc="best")
             self._make_legend_pickable(legend)
@@ -331,6 +375,48 @@ class VSpectraViewer(QWidget):
             self.ax.set_ylim(ylim)
 
         self.canvas.draw_idle()
+
+
+    def _get_baseline_y(self, spectrum, x):
+        baseline = spectrum.baseline
+
+        if baseline is None or baseline.is_subtracted:
+            return np.zeros_like(x)
+
+        if not baseline.points or not baseline.points[0]:
+            return np.zeros_like(x)
+
+        try:
+            y_attached = spectrum.y if baseline.attached else None
+            return baseline.eval(x, y_attached, attached=baseline.attached)
+        except Exception:
+            return np.zeros_like(x)
+
+    def _get_peaks_y(self, spectrum, x):
+        if not getattr(spectrum, "peak_models", None):
+            return np.zeros_like(x)
+
+        y_peaks = np.zeros_like(x)
+        for peak_model in spectrum.peak_models:
+            try:
+                params = peak_model.make_params()
+                y_peaks += peak_model.eval(params, x=x)
+            except Exception:
+                pass
+
+        return y_peaks
+    
+    def _compute_residual(self, spectrum):
+        x = spectrum.x
+        y_raw = spectrum.y
+
+        y_base = self._get_baseline_y(spectrum, x)
+        y_peaks = self._get_peaks_y(spectrum, x)
+
+        y_fit = y_base + y_peaks
+        residual = y_raw - y_fit
+
+        return x, residual
 
 
     def _plot_baseline(self, spectrum):
@@ -544,3 +630,111 @@ class VSpectraViewer(QWidget):
         else:
             self.zoom_pan_active = False
             self.toolbar.zoom() 
+
+    def _on_scroll(self, event):
+        if event.inaxes != self.ax:
+            return
+
+        y_min, y_max = self.ax.get_ylim()
+        dy = (y_max - y_min) * 0.1
+
+        if event.step < 0:      # scroll up
+            y_max += dy
+        else:                   # scroll down
+            y_max = max(y_min + 1e-9, y_max - dy)
+
+        self.ax.set_ylim(y_min, y_max)
+        self.canvas.draw_idle()
+
+    def _on_hover(self, event):
+        # Same early exits as legacy
+        if event.inaxes != self.ax:
+            self._hide_tooltip()
+            self._reset_highlight()
+            return
+
+        if not self._fitted_lines:
+            self._hide_tooltip()
+            self._reset_highlight()
+            return
+
+        for line, info in self._fitted_lines:
+            hit, _ = line.contains(event)
+            if not hit:
+                continue
+
+            # Define fields exactly like legacy
+            fields = [
+                ("label", info.get("peak_label")),
+                ("center", info.get("x0")),
+                ("intensity", info.get("amplitude") or info.get("ampli")),
+                ("fwhm", info.get("fwhm")),
+                ("fwhm_l", info.get("fwhm_l")),
+                ("fwhm_r", info.get("fwhm_r")),
+                ("alpha", info.get("alpha")),
+            ]
+
+            lines = []
+            for label, val in fields:
+                if val is None:
+                    continue
+                try:
+                    val_str = f"{val:.3f}" if isinstance(val, (float, int)) else str(val)
+                except Exception:
+                    val_str = str(val)
+                lines.append(f"{label}: {val_str}")
+
+            # 🔴 CRITICAL: do NOT show tooltip if nothing to show
+            if not lines:
+                self._hide_tooltip()
+                self._reset_highlight()
+                return
+
+            text = "\n".join(lines)
+            self._show_tooltip(event, text)
+            self._highlight_line(line)
+            return
+
+        # Nothing hit
+        self._hide_tooltip()
+        self._reset_highlight()
+
+    def _show_tooltip(self, event, text):
+
+        if not hasattr(self, "_tooltip"):
+            self._tooltip = QLabel(self.canvas)
+            self._tooltip.setStyleSheet("""
+                background-color: rgba(255, 255, 255, 0.5);
+                color: black;
+                border: 0.1px solid gray;
+                padding: 2px;
+            """)
+            self._tooltip.setWindowFlags(Qt.ToolTip)
+
+        self._tooltip.setText(text)
+        self._tooltip.move(QCursor.pos() + QPoint(10, -40))
+        self._tooltip.show()
+
+
+    def _hide_tooltip(self):
+        if hasattr(self, "_tooltip"):
+            self._tooltip.hide()
+
+    def _highlight_line(self, line):
+        if self._highlighted_line == line:
+            return
+
+        self._reset_highlight()
+        line._orig_lw = line.get_linewidth()
+        line.set_linewidth(3)
+        self._highlighted_line = line
+        self.canvas.draw_idle()
+
+
+    def _reset_highlight(self):
+        if self._highlighted_line is not None:
+            lw = getattr(self._highlighted_line, "_orig_lw", 1.5)
+            self._highlighted_line.set_linewidth(lw)
+            self._highlighted_line = None
+            self.canvas.draw_idle()
+

@@ -1,7 +1,8 @@
 # ─── spectroview/viewmodel/vm_workspace_spectra.py ───
 from copy import deepcopy
 import numpy as np
-
+from PySide6.QtWidgets import QFileDialog
+import json
 from PySide6.QtCore import QObject, Signal
 from pathlib import Path
 
@@ -10,7 +11,8 @@ from spectroview.model.m_settings import MSettings
 
 from spectroview.model.m_io import load_spectrum_file
 
-from spectroview.viewmodel.utils import baseline_to_dict, dict_to_baseline
+from spectroview.viewmodel.utils import baseline_to_dict, dict_to_baseline, closest_index
+from spectroview.viewmodel.utils import FitThread
 
 
 class VMWorkspaceSpectra(QObject):
@@ -27,9 +29,12 @@ class VMWorkspaceSpectra(QObject):
         super().__init__()
         self.settings = settings
         self.spectra = MSpectra()
+
         self.selected_indices = []
         self._baseline_clipboard = None  # for copy/paste baseline
         self._peaks_clipboard = None    # for copy/paste peaks
+        self._loaded_fit_model = None  # for applying loaded fit model
+        self._current_peak_shape = "Lorentzian"
 
 
     # View → ViewModel slots
@@ -130,13 +135,9 @@ class VMWorkspaceSpectra(QObject):
 
         maxshift = fit_settings.get("maxshift", 20.0)
         maxfwhm = fit_settings.get("maxfwhm", 200.0)
+        peak_shape = self._current_peak_shape or "Lorentzian"
 
-        spectrum.add_peak_model(
-            spectrum.peak_model if hasattr(spectrum, "peak_model") else "Lorentzian",
-            x,
-            dx0=(maxshift, maxshift),
-            dfwhm=maxfwhm,
-        )
+        spectrum.add_peak_model(peak_shape,x,dx0=(maxshift, maxshift),dfwhm=maxfwhm)
         self._emit_selected_spectra()
 
     def remove_peak_at(self, x: float):
@@ -278,8 +279,11 @@ class VMWorkspaceSpectra(QObject):
         for spectrum in spectra:
             spectrum.reinit()
 
-            i_min = self._closest_index(spectrum.x0, xmin)
-            i_max = self._closest_index(spectrum.x0, xmax)
+            spectrum.range_min = xmin
+            spectrum.range_max = xmax
+
+            i_min = closest_index(spectrum.x0, xmin)
+            i_max = closest_index(spectrum.x0, xmax)
 
             spectrum.x = spectrum.x0[i_min:i_max + 1].copy()
             spectrum.y = spectrum.y0[i_min:i_max + 1].copy()
@@ -364,11 +368,7 @@ class VMWorkspaceSpectra(QObject):
         if not spectrum.peak_models:
             self.notify.emit("No peaks to copy.")
             return
-
-        # IMPORTANT: save(), not manual extraction
         self._peaks_clipboard = deepcopy(spectrum.save())
-
-
 
     def paste_peaks(self, apply_all: bool = False):
         if not hasattr(self, "_peaks_clipboard") or self._peaks_clipboard is None:
@@ -412,8 +412,115 @@ class VMWorkspaceSpectra(QObject):
         self._emit_selected_spectra()
 
 
-    def _closest_index(self, array, value):
-        return int(np.abs(array - value).argmin())
+    def fit(self, apply_all: bool = False):
+        spectra = self.spectra if apply_all else self.spectra.get(self.selected_indices)
+        for s in spectra:
+            if s.peak_models:
+                s.fit()
+        self._emit_selected_spectra()
     
+    def copy_fit_model(self):
+        if not self.selected_indices:
+            self.notify.emit("No spectrum selected.")
+            return
 
+        spectrum = self.spectra.get(self.selected_indices)[0]
+        if not spectrum.peak_models:
+            self.notify.emit("No fit results to copy.")
+            return
+
+        self._fitmodel_clipboard = deepcopy(spectrum.save())
+
+    def paste_fit_model(self, apply_all: bool = False):
+        if not hasattr(self, "_fitmodel_clipboard"):
+            self.notify.emit("No fit model copied.")
+            return
+        spectra = self.spectra if apply_all else self.spectra.get(self.selected_indices)
+
+        for s in spectra:
+            s.reinit()
+
+        self._run_fit_thread(deepcopy(self._fitmodel_clipboard), spectra)
+
+    def save_fit_model(self):
+        if not self.selected_indices:
+            self.notify.emit("No spectrum selected.")
+            return
+
+        spectrum = self.spectra.get(self.selected_indices)[0]
+
+        if not spectrum.peak_models:
+            self.notify.emit("No fit model to save.")
+            return
+
+        path, _ = QFileDialog.getSaveFileName(
+            None,
+            "Save Fit Model",
+            "",
+            "JSON Files (*.json)"
+        )
+
+        if not path:
+            return
+
+        self.spectra.save(path, [spectrum.fname])
+        self.notify.emit("Fit model saved successfully.")
+
+    def apply_loaded_fit_model(self, apply_all: bool = False):
+        print("Applying loaded fit model...")
+
+        if not hasattr(self, "_vm_fit_model_builder"):
+            self.notify.emit("Fit model manager not connected.")
+            return
+
+        model_path = self._vm_fit_model_builder.get_current_model_path()
+        if model_path is None or not model_path.exists():
+            self.notify.emit("No fit model selected.")
+            return
+
+        # 🔹 Load JSON → dict
+        try:
+            with open(model_path, "r") as f:
+                fit_model = json.load(f)
+        except Exception as e:
+            self.notify.emit(f"Failed to load fit model:\n{e}")
+            return
+
+        spectra = self.spectra if apply_all else self.spectra.get(self.selected_indices)
+        if not spectra:
+            self.notify.emit("No spectrum selected.")
+            return
+
+        for s in spectra:
+            s.reinit()
+
+        self._run_fit_thread(fit_model, spectra)
+
+
+
+    def _run_fit_thread(self, fit_model: dict, spectra):
+        if not spectra:
+            self.notify.emit("No spectra selected.")
+            return
+
+        fnames = [s.fname for s in spectra]
+        ncpu = self.settings.load_fit_settings().get("ncpu", 1)
+
+        self.spectra.pbar_index = 0
+
+        self.thread = FitThread(
+            self.spectra,
+            fit_model,
+            fnames,
+            ncpu
+        )
+        self.thread.finished.connect(self._emit_selected_spectra)
+        self.thread.start()
+
+
+    def set_fit_model_builder(self, vm_fit_model_builder):
+        self._vm_fit_model_builder = vm_fit_model_builder
  
+    def set_peak_shape(self, shape: str):
+        """Receive peak shape from View."""
+        self._current_peak_shape = shape

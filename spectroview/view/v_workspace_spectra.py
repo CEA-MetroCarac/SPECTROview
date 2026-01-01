@@ -22,6 +22,9 @@ class VWorkspaceSpectra(QWidget):
         super().__init__(parent)
         self.m_settings = MSettings()
         self.vm = VMWorkspaceSpectra(self.m_settings) # To bind View to ViewModel
+        self.vm_fit_model_builder = VMFitModelBuilder(self.m_settings)
+        # 🔑 inject dependency
+        self.vm.set_fit_model_builder(self.vm_fit_model_builder)
 
         self.init_ui()
         self.connect_vm()
@@ -57,7 +60,7 @@ class VWorkspaceSpectra(QWidget):
         
         left_splitter.addWidget(self.v_spectra_viewer)
         left_splitter.addWidget(self.bottom_tabs)
-        left_splitter.setSizes([500, 500])
+        left_splitter.setSizes([550, 450])
 
         # RIGHT SIDE (Sidebar)
         right_widget = QFrame()
@@ -126,7 +129,6 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_viewer.baseline_add_requested.connect(vm.add_baseline_point)
         self.v_spectra_viewer.baseline_remove_requested.connect(vm.remove_baseline_point)
 
-
         self.v_fit_model_builder.btn_xcorrect.clicked.connect(lambda: vm.apply_x_correction(self.v_fit_model_builder.spin_xcorr.value()))
         self.v_fit_model_builder.btn_undo_corr.clicked.connect(vm.undo_x_correction)
         self.v_fit_model_builder.spectral_range_apply_requested.connect(vm.apply_spectral_range)
@@ -135,11 +137,19 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.baseline_copy_requested.connect(vm.copy_baseline)
         self.v_fit_model_builder.baseline_paste_requested.connect(vm.paste_baseline)
         self.v_fit_model_builder.baseline_subtract_requested.connect(vm.subtract_baseline)
-        self.v_fit_model_builder.baseline_delete_requested.connect(vm.delete_baseline)
+        #self.v_fit_model_builder.baseline_delete_requested.connect(vm.apply_spectral_range)
 
         self.v_fit_model_builder.peaks_copy_requested.connect(vm.copy_peaks)
         self.v_fit_model_builder.peaks_paste_requested.connect(vm.paste_peaks)
         self.v_fit_model_builder.peaks_delete_requested.connect(vm.delete_peaks)
+        self.v_fit_model_builder.peak_shape_changed.connect(self.vm.set_peak_shape)
+
+
+        #Fit control
+        self.v_fit_model_builder.fit_requested.connect(vm.fit)
+        self.v_fit_model_builder.fitmodel_copy_requested.connect(vm.copy_fit_model)
+        self.v_fit_model_builder.fitmodel_paste_requested.connect(vm.paste_fit_model)
+        self.v_fit_model_builder.fitmodel_save_requested.connect(vm.save_fit_model)
 
         # SpectraList connection: ViewModel → View
         vm.spectra_list_changed.connect(self.v_spectra_list.set_spectra_names)
@@ -151,9 +161,10 @@ class VWorkspaceSpectra(QWidget):
         vm.spectral_range_changed.connect(self.v_fit_model_builder.set_spectral_range)
 
         # V_FitModelBuilder <-> VM_FitModelBuilder
-        self.v_fit_model_builder.btn_refresh.clicked.connect(self.vm_fit_model_builder.refresh_models)
-        self.v_fit_model_builder.btn_load.clicked.connect(self.vm_fit_model_builder.pick_and_load_model)
+        self.v_fit_model_builder.refresh_fit_models_requested.connect(self.vm_fit_model_builder.refresh_models)
+        self.v_fit_model_builder.load_fit_models_requested.connect(self.vm_fit_model_builder.pick_and_load_model)
         self.v_fit_model_builder.btn_apply.clicked.connect(lambda: self.vm_fit_model_builder.apply_model(self.v_fit_model_builder.cbb_model.currentText()))
+        self.v_fit_model_builder.apply_loaded_fit_model_requested.connect(vm.apply_loaded_fit_model)
 
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.clear)
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.addItems)

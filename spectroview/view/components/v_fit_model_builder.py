@@ -13,6 +13,7 @@ from PySide6.QtCore import Qt, Signal
 class VFitModelBuilder(QWidget):
     """View: Fit Model Builder panel"""
     # ───── View → ViewModel signals ─────
+    peak_shape_changed = Signal(str)
     spectral_range_apply_requested = Signal(float, float, bool)
 
     baseline_settings_changed = Signal(dict)
@@ -24,6 +25,16 @@ class VFitModelBuilder(QWidget):
     peaks_copy_requested = Signal()
     peaks_paste_requested = Signal(bool)    # apply_all
     peaks_delete_requested = Signal(bool)  # apply_all
+
+    fitmodel_copy_requested = Signal()
+    fitmodel_paste_requested = Signal(bool)
+    fitmodel_save_requested = Signal()
+
+    fit_requested = Signal(bool)  # apply_all
+
+    load_fit_models_requested = Signal()
+    refresh_fit_models_requested = Signal()
+    apply_loaded_fit_model_requested = Signal(bool)  # apply_all
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -193,7 +204,8 @@ class VFitModelBuilder(QWidget):
         self.btn_base_delete.setIcon(QIcon(f"{ICON_DIR}/trash3.png"))
         self.btn_base_delete.setFixedSize(30, 24)
         self.btn_base_delete.setToolTip("Delete baseline. Hold Ctrl to delete from all spectra.")
-        self.btn_base_delete.clicked.connect(lambda: self._emit_with_ctrl(self.baseline_delete_requested))
+        #self.btn_base_delete.clicked.connect(lambda: self._emit_with_ctrl(self.baseline_delete_requested))
+        self.btn_base_delete.clicked.connect(self._on_extract_clicked)
 
         self.btn_base_copy = QPushButton()
         self.btn_base_copy.setIcon(QIcon(f"{ICON_DIR}/copy3.png"))
@@ -281,6 +293,7 @@ class VFitModelBuilder(QWidget):
         row1 = QHBoxLayout()
         self.cbb_peak_shape = QComboBox()
         self.cbb_peak_shape.addItems(PEAK_MODELS)
+        self.cbb_peak_shape.currentTextChanged.connect(self.peak_shape_changed.emit)
 
         row1.addWidget(QLabel("Peak shape:"))
         row1.addWidget(self.cbb_peak_shape)
@@ -331,27 +344,33 @@ class VFitModelBuilder(QWidget):
         self.btn_fit = QPushButton("Fit")
         #self.btn_fit.setFixedSize(80, 24)
         self.btn_fit.setToolTip("Fit the spectrum. Hold Ctrl to fit all spectra.")
-
+        self.btn_fit.clicked.connect(
+            lambda: self._emit_with_ctrl(self.fit_requested)
+        )
 
         self.btn_copy = QPushButton("Copy")
         self.btn_copy.setIcon(QIcon(f"{ICON_DIR}/copy3.png"))
         #self.btn_copy.setFixedSize(80, 24)
         self.btn_copy.setToolTip("Copy fit model of selected spectrum.")
+        self.btn_copy.clicked.connect(self.fitmodel_copy_requested.emit)
 
 
         self.btn_paste = QPushButton("Paste")
         self.btn_paste.setIcon(QIcon(f"{ICON_DIR}/paste.png"))
         #self.btn_paste.setFixedSize(80, 24)
         self.btn_paste.setToolTip("Paste fit model of selected spectrum. Hold Ctrl to paste to all spectra.")
+        self.btn_paste.clicked.connect(
+            lambda: self._emit_with_ctrl(self.fitmodel_paste_requested)
+        )
 
         self.btn_save = QPushButton("Save")
         self.btn_save.setIcon(QIcon(f"{ICON_DIR}/save.png"))
         #self.btn_save.setFixedSize(80, 24)
         self.btn_save.setToolTip("Save the current fit model.")
+        self.btn_save.clicked.connect(self.fitmodel_save_requested.emit)
 
         self.chk_limits = QCheckBox("Limits")
         self.chk_expr = QCheckBox("Expression")
-
 
         for b in (self.btn_fit, self.btn_copy, self.btn_paste, self.btn_save, self.chk_limits, self.chk_expr):
             row1.addWidget(b)
@@ -364,15 +383,24 @@ class VFitModelBuilder(QWidget):
         self.cbb_model = QComboBox()
         self.cbb_model.setFixedWidth(300)
 
-
         self.cbb_model.setToolTip("Select fit model.")
 
         self.btn_apply = QPushButton("Apply")
         self.btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
+        self.btn_apply.setToolTip("Apply selected fit model to current selected spectrum.")
+        self.btn_apply.clicked.connect(
+            lambda: self._emit_with_ctrl(self.apply_loaded_fit_model_requested)
+        )
+
         self.btn_load = QPushButton("Load")
         self.btn_load.setIcon(QIcon(f"{ICON_DIR}/load.png"))
+        self.btn_load.setToolTip("Load fit model from a JSON file.")
+        self.btn_load.clicked.connect(self.load_fit_models_requested.emit)  
+
         self.btn_refresh = QPushButton()
         self.btn_refresh.setIcon(QIcon(f"{ICON_DIR}/refresh.png"))
+        self.btn_refresh.setToolTip("Refresh fit model list.")
+        self.btn_refresh.clicked.connect(self.refresh_fit_models_requested.emit)    
 
         row2.addWidget(self.cbb_model)
         row2.addWidget(self.btn_apply)

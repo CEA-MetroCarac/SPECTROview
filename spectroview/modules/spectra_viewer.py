@@ -747,12 +747,7 @@ class SpectraViewer(QWidget):
         self.refresh_gui() 
 
 
-    def get_background_y_values(self, spectrum):
-        """Get y-values for the background model."""
-        x_values = spectrum.x
-        if spectrum.bkg_model is not None:
-            return spectrum.bkg_model.eval(spectrum.bkg_model.make_params(), x=x_values)
-        return np.zeros_like(x_values)
+    
 
     def evaluate_peak_model(self, peak_model, x_values):
         """Evaluate the peak model to get y-values."""
@@ -772,7 +767,14 @@ class SpectraViewer(QWidget):
         position = round(position, 2)
         text = f"{peak_label}\n({position})"
         self.ax.text(position, intensity, text, ha='center', va='bottom', color='black', fontsize=12)
-
+        
+    def get_background_y_values(self, spectrum):
+        """Get y-values for the background model."""
+        x_values = spectrum.x
+        if spectrum.bkg_model is not None:
+            return spectrum.bkg_model.eval(spectrum.bkg_model.make_params(), x=x_values)
+        return np.zeros_like(x_values)
+    
     def compute_residual(self, spectrum):
         """Compute residual = raw data - (background + sum of peaks)."""
         x_values = spectrum.x

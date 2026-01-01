@@ -41,7 +41,27 @@ if platform.system() == 'Darwin':
     import AppKit 
 if platform.system() == 'Windows':
     import win32clipboard
-    
+
+
+class FitThread(QThread):
+    """ Class to perform fitting in a separate Thread """
+    progress_changed = Signal(int)
+    def __init__(self, spectrums, fit_model, fnames, ncpus=1):
+        super().__init__()
+        self.spectrums = spectrums
+        self.fit_model = fit_model
+        self.fnames = fnames
+        self.ncpus = ncpus
+
+    def run(self):
+        fit_model = deepcopy(self.fit_model)
+        self.spectrums.apply_model(fit_model, fnames=self.fnames,
+                                   ncpus=self.ncpus, show_progressbar=False)
+
+        self.progress_changed.emit(100)
+
+def closest_index(array, value):
+    return int(np.abs(array - value).argmin())
 
 def baseline_to_dict(spectrum):
     dict_baseline = dict(vars(spectrum.baseline).items())
@@ -137,3 +157,5 @@ def light_palette():
     p.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(160, 160, 160))
 
     return p
+
+

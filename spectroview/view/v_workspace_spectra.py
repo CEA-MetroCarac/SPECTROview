@@ -22,12 +22,9 @@ class VWorkspaceSpectra(QWidget):
         super().__init__(parent)
         self.m_settings = MSettings()
         self.vm = VMWorkspaceSpectra(self.m_settings) # To bind View to ViewModel
-        self.vm_fit_model_builder = VMFitModelBuilder(self.m_settings)
-        # 🔑 inject dependency
-        self.vm.set_fit_model_builder(self.vm_fit_model_builder)
-
+        
         self.init_ui()
-        self.connect_vm()
+        self.setup_connections()
 
     def init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -54,6 +51,7 @@ class VWorkspaceSpectra(QWidget):
         self.bottom_tabs.setMinimumHeight(150)
         self.v_fit_model_builder = VFitModelBuilder()
         self.vm_fit_model_builder = VMFitModelBuilder(self.m_settings)
+        self.vm.set_fit_model_builder(self.vm_fit_model_builder) # 🔑 inject dependency
         
         self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(QWidget(), "Fit Results")
@@ -111,7 +109,7 @@ class VWorkspaceSpectra(QWidget):
         apply_all = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
         fn(apply_all)
 
-    def connect_vm(self):
+    def setup_connections(self):
         """Connect ViewModel signals and slots to the View components."""
         vm = self.vm # VMWorkspaceSpectra
         
@@ -144,7 +142,6 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.peaks_delete_requested.connect(vm.delete_peaks)
         self.v_fit_model_builder.peak_shape_changed.connect(self.vm.set_peak_shape)
 
-
         #Fit control
         self.v_fit_model_builder.fit_requested.connect(vm.fit)
         self.v_fit_model_builder.fitmodel_copy_requested.connect(vm.copy_fit_model)
@@ -163,7 +160,7 @@ class VWorkspaceSpectra(QWidget):
         # V_FitModelBuilder <-> VM_FitModelBuilder
         self.v_fit_model_builder.refresh_fit_models_requested.connect(self.vm_fit_model_builder.refresh_models)
         self.v_fit_model_builder.load_fit_models_requested.connect(self.vm_fit_model_builder.pick_and_load_model)
-        self.v_fit_model_builder.btn_apply.clicked.connect(lambda: self.vm_fit_model_builder.apply_model(self.v_fit_model_builder.cbb_model.currentText()))
+        self.v_fit_model_builder.cbb_model.currentTextChanged.connect(self.vm_fit_model_builder.set_current_model)
         self.v_fit_model_builder.apply_loaded_fit_model_requested.connect(vm.apply_loaded_fit_model)
 
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.clear)

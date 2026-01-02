@@ -387,7 +387,7 @@ class VFitModelBuilder(QWidget):
 
         self.btn_apply = QPushButton("Apply")
         self.btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
-        self.btn_apply.setToolTip("Apply selected fit model to current selected spectrum.")
+        self.btn_apply.setToolTip("Apply selected fit model to current selected spectrum(s).")
         self.btn_apply.clicked.connect(
             lambda: self._emit_with_ctrl(self.apply_loaded_fit_model_requested)
         )

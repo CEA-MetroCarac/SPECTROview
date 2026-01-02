@@ -205,8 +205,8 @@ class VSpectraViewer(QWidget):
         menu.addSeparator()
 
         # Toggles
-        self._add_checkbox(menu, "Colors")
-        self._add_checkbox(menu, "Peaks")
+        #self._add_checkbox(menu, "Colors")
+        #self._add_checkbox(menu, "Peaks")
         self._add_checkbox(menu, "Raw")
         self._add_checkbox(menu, "Bestfit", True)
         self._add_checkbox(menu, "Residual")
@@ -292,6 +292,22 @@ class VSpectraViewer(QWidget):
             y = self._get_normalized_y(x, y_raw)
             lw = self.spin_lw.value()
 
+            # ── RAW data (original x0 / y0)
+            if self.act_raw.isChecked() and hasattr(spectrum, "x0") and hasattr(spectrum, "y0"):
+                try:
+                    self.ax.plot(
+                        spectrum.x0,
+                        spectrum.y0,
+                        "o-",
+                        ms=3,
+                        lw=0.8,
+                        alpha=0.8,
+                        color="black",
+                        label="raw", 
+                    )
+                except Exception:
+                    pass
+
             # ── Main spectrum (always shown)
             line, = self.ax.plot(
                 x, y,
@@ -304,9 +320,7 @@ class VSpectraViewer(QWidget):
             # ── Baseline (independent of bestfit toggle)
             y_base = self._plot_baseline(spectrum)
 
-            # ==================================================
-            # Peaks + Bestfit (ONLY if Bestfit is checked)
-            # ==================================================
+            # ── Peaks + Bestfit 
             if (
                 self.act_bestfit.isChecked()
                 and getattr(spectrum, "peak_models", None)
@@ -346,9 +360,7 @@ class VSpectraViewer(QWidget):
                     y_fit = y_peaks + y_base if y_base is not None else y_peaks
                     self.ax.plot(x, y_fit, lw=lw, color="black", label="bestfit")
 
-            # ==================================================
-            # Residual (independent toggle)
-            # ==================================================
+            # ── Residual
             if self.act_residual.isChecked():
                 try:
                     xr, residual = self._compute_residual(spectrum)
@@ -559,7 +571,7 @@ class VSpectraViewer(QWidget):
         self.viewOptionsChanged.emit({
             "legend": self.btn_legend.isChecked(),
             "grid": self.act_grid.isChecked(),
-            "colors": self.act_colors.isChecked(),
+            #"colors": self.act_colors.isChecked(),
             "raw": self.act_raw.isChecked(),
             "bestfit": self.act_bestfit.isChecked(),
             "residual": self.act_residual.isChecked(),

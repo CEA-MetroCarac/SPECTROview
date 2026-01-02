@@ -212,10 +212,6 @@ class VMWorkspaceSpectra(QObject):
         self._emit_selected_spectra()
 
     def apply_x_correction(self, measured_peak: float):
-        """
-        Apply X-axis correction to selected spectra.
-        delta_x: user-entered correction value
-        """
         if not self.selected_indices:
             self.notify.emit("No spectrum selected.")
             return
@@ -467,21 +463,18 @@ class VMWorkspaceSpectra(QObject):
         self.notify.emit("Fit model saved successfully.")
 
     def apply_loaded_fit_model(self, apply_all: bool = False):
-        print("Applying loaded fit model...")
-
         if not hasattr(self, "_vm_fit_model_builder"):
             self.notify.emit("Fit model manager not connected.")
             return
 
         model_path = self._vm_fit_model_builder.get_current_model_path()
+        
         if model_path is None or not model_path.exists():
             self.notify.emit("No fit model selected.")
             return
-
-        # 🔹 Load JSON → dict
+        #Load fit model from JSON file
         try:
-            with open(model_path, "r") as f:
-                fit_model = json.load(f)
+            fit_model = self.spectra.load_model(str(model_path), ind=0)
         except Exception as e:
             self.notify.emit(f"Failed to load fit model:\n{e}")
             return
@@ -495,8 +488,6 @@ class VMWorkspaceSpectra(QObject):
             s.reinit()
 
         self._run_fit_thread(fit_model, spectra)
-
-
 
     def _run_fit_thread(self, fit_model: dict, spectra):
         if not spectra:

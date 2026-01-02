@@ -13,7 +13,6 @@ class VMFitModelBuilder(QObject):
     notify = Signal(str)
     model_applied = Signal(str)            # full path
 
-
     def __init__(self, settings: MSettings):
         super().__init__()
         self.settings = settings
@@ -24,9 +23,7 @@ class VMFitModelBuilder(QObject):
 
         self.refresh_models()
 
-    # ─────────────────────────────────────────────────────
     # View → VM
-    # ─────────────────────────────────────────────────────
     def refresh_models(self):
         """Reload models from default model folder only."""
         folder = self.settings.get_model_folder()
@@ -81,31 +78,14 @@ class VMFitModelBuilder(QObject):
         self._current_model_name = model_name
         self.model_selected.emit(model_name)
 
-    def apply_model(self, model_name: str):
-        """Apply selected model (default or external)."""
-
-        print(f"Applying model: {model_name}")
-        if not model_name:
-            self.notify.emit("No fit model selected.")
-            return
-
-        # External model?
-        if model_name in self._extra_models:
-            model_path = self._extra_models[model_name]
-        else:
-            model_path = Path(self.model_manager.resolve_path(model_name))
-
-        if not model_path.exists():
-            self.notify.emit(f"Model not found:\n{model_path}")
-            return
-
-        self._current_model_name = model_name
-        self.model_applied.emit(str(model_path))
-
-    # ─────────────────────────────────────────────────────
     def current_model(self) -> str | None:
         return self._current_model_name
-
+    
+    def set_current_model(self, model_name: str):
+        """Called when user changes combobox selection."""
+        if not model_name:
+            return
+        self._current_model_name = model_name
 
     def get_current_model_path(self) -> Path | None:
         """Return the full path of the currently selected model."""

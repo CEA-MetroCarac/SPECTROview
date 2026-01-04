@@ -167,3 +167,17 @@ class VWorkspaceSpectra(QWidget):
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.addItems)
         self.vm_fit_model_builder.model_selected.connect(self.v_fit_model_builder.cbb_model.setCurrentText)
         self.vm_fit_model_builder.refresh_models() # Initial load of models
+
+
+        # PeakTable → VMWorkspaceSpectra
+        pt = self.v_fit_model_builder.peak_table
+        pt.peak_label_changed.connect(vm.update_peak_label)
+        pt.peak_model_changed.connect(vm.update_peak_model)
+        pt.peak_param_changed.connect(vm.update_peak_param)
+        pt.peak_deleted.connect(vm.delete_peak)
+
+        # Selection → PeakTable
+        vm.spectra_selection_changed.connect(
+            lambda specs:
+            pt.set_spectrum(specs[0] if specs else None)
+        )

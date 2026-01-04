@@ -515,3 +515,40 @@ class VMWorkspaceSpectra(QObject):
     def set_peak_shape(self, shape: str):
         """Receive peak shape from View."""
         self._current_peak_shape = shape
+
+
+    def update_peak_label(self, index, text):
+        s = self.spectra.get(self.selected_indices)[0]
+        s.peak_labels[index] = text
+        self._emit_selected_spectra()
+
+    def update_peak_model(self, index, model_name):
+        s = self.spectra.get(self.selected_indices)[0]
+        pm = s.peak_models[index]
+
+        x0 = pm.param_hints["x0"]["value"]
+        ampli = pm.param_hints["ampli"]["value"]
+
+        new_pm = s.create_peak_model(
+            index + 1,
+            model_name,
+            x0=x0,
+            ampli=ampli,
+            dx0=(20.0, 20.0)  # ✅ FIXED
+        )
+
+        s.peak_models[index] = new_pm
+        s.result_fit = None
+        self._emit_selected_spectra()
+
+
+    def update_peak_param(self, index, key, field, value):
+        s = self.spectra.get(self.selected_indices)[0]
+        s.peak_models[index].param_hints[key][field] = value
+        self._emit_selected_spectra()
+
+    def delete_peak(self, index):
+        s = self.spectra.get(self.selected_indices)[0]
+        del s.peak_models[index]
+        del s.peak_labels[index]
+        self._emit_selected_spectra()

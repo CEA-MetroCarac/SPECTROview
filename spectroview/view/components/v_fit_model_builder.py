@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, Signal
+from spectroview.view.components.v_peak_table import VPeakTable
 
 
 class VFitModelBuilder(QWidget):
@@ -35,6 +36,13 @@ class VFitModelBuilder(QWidget):
     load_fit_models_requested = Signal()
     refresh_fit_models_requested = Signal()
     apply_loaded_fit_model_requested = Signal(bool)  # apply_all
+
+    #PeakTable signals: 
+    peak_label_changed = Signal(int, str)
+    peak_model_changed = Signal(int, str)
+    peak_param_changed = Signal(int, str, str, float)
+    peak_deleted = Signal(int)
+
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -73,7 +81,12 @@ class VFitModelBuilder(QWidget):
         splitter.addWidget(right_splitter)
 
         # --- Peak table
-        self.peak_table = QTableView()
+        self.peak_table = VPeakTable()
+        self.peak_table.peak_label_changed.connect(self.peak_label_changed.emit)
+        self.peak_table.peak_model_changed.connect(self.peak_model_changed.emit)
+        self.peak_table.peak_param_changed.connect(self.peak_param_changed.emit)
+        self.peak_table.peak_deleted.connect(self.peak_deleted.emit)
+
         right_splitter.addWidget(self.peak_table)
 
         # --- Fit controls
@@ -371,6 +384,9 @@ class VFitModelBuilder(QWidget):
 
         self.chk_limits = QCheckBox("Limits")
         self.chk_expr = QCheckBox("Expression")
+
+        self.chk_limits.toggled.connect(self.peak_table.set_show_limits)
+        self.chk_expr.toggled.connect(self.peak_table.set_show_expr)
 
         for b in (self.btn_fit, self.btn_copy, self.btn_paste, self.btn_save, self.chk_limits, self.chk_expr):
             row1.addWidget(b)

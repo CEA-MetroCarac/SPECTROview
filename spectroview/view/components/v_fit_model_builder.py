@@ -63,6 +63,7 @@ class VFitModelBuilder(QWidget):
 
         left_container = QWidget()
         left_layout = QVBoxLayout(left_container)
+        left_layout.setContentsMargins(4, 4, 4, 4)
         left_layout.setSpacing(8)
 
         left_layout.addWidget(self._x_correction_group())
@@ -360,6 +361,7 @@ class VFitModelBuilder(QWidget):
     def _fit_control_panel(self):
         gb = QGroupBox("")
         v = QVBoxLayout(gb)
+        v.setContentsMargins(4, 4, 4, 4)
 
         # ── Row 1: Fit actions
         row1 = QHBoxLayout()

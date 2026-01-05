@@ -203,3 +203,16 @@ class VWorkspaceSpectra(QWidget):
             lambda specs:
             pt.set_spectrum(specs[0] if specs else None)
         )
+
+    def save_work(self):
+        """Trigger save work in ViewModel."""
+        self.vm.save_work()
+
+    def load_work(self, file_path: str):
+        """Trigger load work in ViewModel."""
+        self.vm.load_work(file_path)
+
+    def clear_workspace(self):
+        """Trigger workspace clear in ViewModel."""
+        self.vm.clear_workspace()
+

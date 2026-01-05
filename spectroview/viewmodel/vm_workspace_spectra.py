@@ -10,12 +10,14 @@ from PySide6.QtWidgets import QFileDialog
 from spectroview.model.m_io import load_spectrum_file
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
+from spectroview.model.m_spectrum import MSpectrum
 from spectroview.viewmodel.utils import (
     FitThread,
     baseline_to_dict,
     closest_index,
     dict_to_baseline,
 )
+from spectroview.modules.utils import spectrum_to_dict, dict_to_spectrum
 
 
 class VMWorkspaceSpectra(QObject):
@@ -695,3 +697,81 @@ class VMWorkspaceSpectra(QObject):
         # Create DataFrame and copy to clipboard
         df = pd.DataFrame(data)
         df.to_clipboard(index=False)
+
+    def save_work(self):
+        """Save current workspace to .spectra file."""
+        file_path, _ = QFileDialog.getSaveFileName(
+            None,
+            "Save work",
+            "",
+            "SPECTROview Files (*.spectra)"
+        )
+        
+        if not file_path:
+            return
+        
+        try:
+            data_to_save = {
+                'spectrums': spectrum_to_dict(self.spectra, is_map=False)
+            }
+            with open(file_path, 'w') as f:
+                json.dump(data_to_save, f, indent=4)
+            self.notify.emit("Work saved successfully.")
+        except Exception as e:
+            self.notify.emit(f"Error saving work: {e}")
+
+    def load_work(self, file_path: str):
+        """Load previously saved workspace from .spectra file."""
+        try:
+            with open(file_path, 'r') as f:
+                load = json.load(f)
+            
+            # Clear existing data
+            self.spectra = MSpectra()
+            
+            # Load all spectra
+            for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
+                spectrum = MSpectrum()
+                dict_to_spectrum(spectrum=spectrum, spectrum_data=spectrum_data, is_map=False)
+                spectrum.preprocess()
+                self.spectra.append(spectrum)
+            
+            # Update UI
+            self._emit_list_update()
+            if len(self.spectra) > 0:
+                self.selected_indices = [0]
+                self._emit_selected_spectra()
+            else:
+                self.selected_indices = []
+                self.spectra_selection_changed.emit([])
+                
+            self.notify.emit(f"Loaded {len(self.spectra)} spectra from {Path(file_path).name}")
+            
+        except Exception as e:
+            self.notify.emit(f"Error loading work: {e}")
+
+    def clear_workspace(self):
+        """Clear all spectra and reset workspace to initial state."""
+        # Clear data model
+        self.spectra = MSpectra()
+        self.selected_indices = []
+        
+        # Clear clipboard data
+        self._baseline_clipboard = None
+        self._peaks_clipboard = None
+        self._fitmodel_clipboard = None
+        self._loaded_fit_model = None
+        
+        # Stop any running fit thread
+        if self._fit_thread and self._fit_thread.isRunning():
+            self._fit_thread.terminate()
+            self._fit_thread.wait()
+            self._fit_thread = None
+        
+        self._is_fitting = False
+        
+        # Emit updates to View
+        self._emit_list_update()
+        self.spectra_selection_changed.emit([])
+        self.fit_in_progress.emit(False)
+        print("Spectra Workspace cleared.")

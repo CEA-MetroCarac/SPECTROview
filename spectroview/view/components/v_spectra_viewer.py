@@ -711,6 +711,10 @@ class VSpectraViewer(QWidget):
             return
 
         for line, info in self._fitted_lines:
+            # Check if line still has a valid figure before calling contains()
+            if line.figure is None:
+                continue
+            
             hit, _ = line.contains(event)
             if not hit:
                 continue

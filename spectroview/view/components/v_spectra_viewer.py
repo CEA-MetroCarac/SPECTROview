@@ -35,7 +35,7 @@ class VSpectraViewer(QWidget):
     zoomToggled = Signal(bool)
     rescaleRequested = Signal()
     viewOptionsChanged = Signal(dict)
-    copyRequested = Signal(bool)   # ctrl_pressed
+    copy_data_requested = Signal()  # Request ViewModel to copy spectrum data
     toolModeChanged = Signal(str)  # zoom / baseline / peak
     normalizationChanged = Signal(bool, float, float)
 
@@ -374,7 +374,7 @@ class VSpectraViewer(QWidget):
             self._make_legend_pickable(legend)
 
         if self.act_grid.isChecked():
-            self.ax.grid(True, linestyle="--", alpha=0.4)
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
 
         self.ax.set_xlabel(self.cbb_xaxis.currentText())
         self.ax.set_ylabel("Intensity (a.u.)")
@@ -609,7 +609,15 @@ class VSpectraViewer(QWidget):
     def _emit_copy(self):
         from PySide6.QtWidgets import QApplication
         ctrl = QApplication.keyboardModifiers() & Qt.ControlModifier
-        self.copyRequested.emit(bool(ctrl))
+        
+        if ctrl:
+            # Request ViewModel to copy spectrum data
+            self.copy_data_requested.emit()
+        else:
+            # Copy canvas directly in View
+            width = float(self.width_entry.text()) if self.width_entry.text() else 5.5
+            height = float(self.height_entry.text()) if self.height_entry.text() else 4.0
+            self.copy_canvas_to_clipboard((width, height))
 
     def _emit_norm(self):
         try:
@@ -770,4 +778,60 @@ class VSpectraViewer(QWidget):
             self._highlighted_line.set_linewidth(lw)
             self._highlighted_line = None
             self.canvas.draw_idle()
+
+    def copy_canvas_to_clipboard(self, size_tuple: tuple):
+        """Copy figure canvas to clipboard with specified size"""
+        import platform
+        from io import BytesIO
+        from PIL import Image
+        from PySide6.QtWidgets import QMessageBox
+        
+        width, height = size_tuple
+        current_os = platform.system()
+
+        if self.canvas:
+            figure = self.canvas.figure
+            # Save the original size to restore later
+            original_size = figure.get_size_inches()
+            
+            # Resize the figure
+            figure.set_size_inches((width, height), forward=True)
+            self.canvas.draw()
+
+            try:
+                if current_os == 'Darwin':  # macOS
+                    import AppKit
+                    buf = BytesIO()
+                    self.canvas.print_png(buf)
+                    buf.seek(0)
+                    image = Image.open(buf)
+                    img_size = image.size
+                    png_data = buf.getvalue()
+                    image_rep = AppKit.NSBitmapImageRep.alloc().initWithData_(
+                        AppKit.NSData.dataWithBytes_length_(png_data, len(png_data))
+                    )
+                    ns_image = AppKit.NSImage.alloc().initWithSize_((img_size[0], img_size[1]))
+                    ns_image.addRepresentation_(image_rep)
+                    pasteboard = AppKit.NSPasteboard.generalPasteboard()
+                    pasteboard.clearContents()
+                    pasteboard.writeObjects_([ns_image])
+
+                elif current_os == 'Windows':
+                    import win32clipboard
+                    with BytesIO() as buf:
+                        figure.savefig(buf, format='png', dpi=300)
+                        data = buf.getvalue()
+                    format_id = win32clipboard.RegisterClipboardFormat('PNG')
+                    win32clipboard.OpenClipboard()
+                    win32clipboard.EmptyClipboard()
+                    win32clipboard.SetClipboardData(format_id, data)
+                    win32clipboard.CloseClipboard()
+
+                else:
+                    QMessageBox.critical(None, "Error", f"Unsupported OS: {current_os}")
+            
+            finally:
+                # Restore original size
+                figure.set_size_inches(original_size, forward=True)
+                self.canvas.draw()
 

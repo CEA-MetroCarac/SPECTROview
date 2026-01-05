@@ -552,3 +552,59 @@ class VMWorkspaceSpectra(QObject):
         del s.peak_models[index]
         del s.peak_labels[index]
         self._emit_selected_spectra()
+
+
+    def copy_spectrum_data_to_clipboard(self):
+        """Copy X, Y, and peak model data of the first selected spectrum to clipboard as DataFrame."""
+        self._copy_spectrum_data()
+
+    def _copy_spectrum_data(self):
+        """Copy X, Y, and peak model data of the first selected spectrum to clipboard as DataFrame."""
+        import pandas as pd
+        import numpy as np
+
+        if not self.selected_indices:
+            return
+
+        selected_spectra = self.spectra.get(self.selected_indices)
+        if not selected_spectra:
+            return
+
+        spectrum = selected_spectra[0]
+        x_values = spectrum.x
+        y_values = spectrum.y
+
+        # Create a dictionary for the DataFrame
+        data = {
+            "X values": x_values,
+            "Y values": y_values
+        }
+
+        # Add each peak model's evaluated Y values as a new column
+        for i, peak_model in enumerate(spectrum.peak_models):
+            # Evaluate peak model
+            try:
+                from copy import deepcopy
+                param_hints_orig = deepcopy(peak_model.param_hints)
+                for key in peak_model.param_hints.keys():
+                    peak_model.param_hints[key]["vary"] = False
+                
+                params = peak_model.make_params()
+                peak_model.param_hints = param_hints_orig
+                
+                y_peak = peak_model.eval(params, x=x_values)
+
+                if hasattr(spectrum, 'peak_labels') and i < len(spectrum.peak_labels):
+                    label = spectrum.peak_labels[i]
+                else:
+                    label = f"Peak {i + 1}"
+
+                data[label] = y_peak
+            except Exception as e:
+                print(f"Error evaluating peak {i}: {e}")
+                continue
+
+        # Create DataFrame and copy to clipboard
+        df = pd.DataFrame(data)
+        df.to_clipboard(index=False)
+        print("Spectrum data copied to clipboard.")

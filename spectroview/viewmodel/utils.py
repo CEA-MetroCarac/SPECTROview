@@ -75,7 +75,6 @@ def dict_to_baseline(dict_baseline, spectrums):
             setattr(new_baseline, key, deepcopy(value))
         spectrum.baseline = new_baseline
 
-
 def dark_palette():
     """Dark palette tuned for SPECTROview UI"""
 

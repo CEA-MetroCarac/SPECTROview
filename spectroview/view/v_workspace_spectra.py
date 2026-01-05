@@ -126,6 +126,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_viewer.peak_remove_requested.connect(vm.remove_peak_at)
         self.v_spectra_viewer.baseline_add_requested.connect(vm.add_baseline_point)
         self.v_spectra_viewer.baseline_remove_requested.connect(vm.remove_baseline_point)
+        self.v_spectra_viewer.copy_data_requested.connect(vm.copy_spectrum_data_to_clipboard)
 
         self.v_fit_model_builder.btn_xcorrect.clicked.connect(lambda: vm.apply_x_correction(self.v_fit_model_builder.spin_xcorr.value()))
         self.v_fit_model_builder.btn_undo_corr.clicked.connect(vm.undo_x_correction)

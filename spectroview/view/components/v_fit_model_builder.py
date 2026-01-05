@@ -59,9 +59,11 @@ class VFitModelBuilder(QWidget):
         # LEFT SIDE – Fit settings (scrollable)
         # ==================================================
         left_scroll = QScrollArea()
+        left_scroll.setMaximumWidth(400) 
+        left_scroll.setMinimumWidth(300) 
         left_scroll.setWidgetResizable(True)
 
-        left_container = QWidget()
+        left_container = QWidget() # Set maximum width
         left_layout = QVBoxLayout(left_container)
         left_layout.setContentsMargins(4, 4, 4, 4)
         left_layout.setSpacing(8)

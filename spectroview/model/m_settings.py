@@ -7,7 +7,7 @@ class MSettings:
     """Model: persistent application settings"""
 
     def __init__(self):
-        self.settings = QSettings()
+        self.settings = QSettings("CEA-Leti", "SPECTROview")
 
     # ---------- Fit settings ----------
     def load_fit_settings(self) -> dict:
@@ -15,7 +15,7 @@ class MSettings:
             "fit_negative": self.settings.value("fit_settings/fit_negative", False, bool),
             "method": self.settings.value("fit_settings/method", "Leastsq"),
             "max_ite": self.settings.value("fit_settings/max_ite", 200, int),
-            "xtol": self.settings.value("fit_settings/xtol", 1e-4, float),
+            "xtol": self.settings.value("fit_settings/xtol", 1e-5, float),
             "ncpu": self.settings.value("fit_settings/ncpu", 1, int),
             "maxshift": self.settings.value("fit_settings/maxshift", 20.0, float),
             "maxfwhm": self.settings.value("fit_settings/maxfwhm", 200.0, float),

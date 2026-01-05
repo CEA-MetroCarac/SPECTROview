@@ -1,5 +1,4 @@
 # spectroview/view/components/v_settings.py
-
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QCheckBox, QSpinBox, QComboBox,
@@ -12,6 +11,7 @@ from spectroview.viewmodel.vm_settings import VMSettings
 
 
 class VSettingsDialog(QDialog):
+    
     def __init__(self, vm: VMSettings, parent=None):
         super().__init__(parent)
         self.vm = vm

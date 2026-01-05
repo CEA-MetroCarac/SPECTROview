@@ -77,23 +77,32 @@ class VFitModelBuilder(QWidget):
         # ==================================================
         # RIGHT SIDE – Peak table + Fit controls
         # ==================================================
-        right_splitter = QSplitter(Qt.Vertical)
-        splitter.addWidget(right_splitter)
+        right_widget = QWidget()
+        right_layout = QVBoxLayout(right_widget)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(4)
 
-        # --- Peak table
+        # ── Peak table in scroll area
+        peak_scroll = QScrollArea()
+        peak_scroll.setWidgetResizable(True)
+
         self.peak_table = VPeakTable()
         self.peak_table.peak_label_changed.connect(self.peak_label_changed.emit)
         self.peak_table.peak_model_changed.connect(self.peak_model_changed.emit)
         self.peak_table.peak_param_changed.connect(self.peak_param_changed.emit)
         self.peak_table.peak_deleted.connect(self.peak_deleted.emit)
 
-        right_splitter.addWidget(self.peak_table)
+        peak_scroll.setWidget(self.peak_table)
 
-        # --- Fit controls
-        right_splitter.addWidget(self._fit_control_panel())
+        right_layout.addWidget(peak_scroll, stretch=1)
 
+        # ── Fit control panel (fixed)
+        right_layout.addWidget(self._fit_control_panel(), stretch=0)
+
+        splitter.addWidget(right_widget)
+
+        # Initial sizes
         splitter.setSizes([370, 650])
-        right_splitter.setSizes([500, 100])
 
     # ======================================================
     # GROUPS

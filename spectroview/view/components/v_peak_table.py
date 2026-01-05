@@ -11,14 +11,6 @@ from spectroview import PEAK_MODELS, ICON_DIR
 
 
 class VPeakTable(QWidget):
-    """
-    Peak table VIEW (MVVM compliant)
-
-    - Displays peak parameters
-    - Emits signals only
-    - No direct model mutation
-    """
-
     # ───── View → ViewModel signals ─────
     peak_label_changed = Signal(int, str)
     peak_model_changed = Signal(int, str)

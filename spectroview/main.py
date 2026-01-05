@@ -39,6 +39,7 @@ class Main(QMainWindow):
         # Central widget
         central = QWidget(self)
         layout = QVBoxLayout(central)
+        layout.setContentsMargins(4, 4, 4, 4)
 
         # Main Tab Widget
         self.tabWidget = QTabWidget(central)

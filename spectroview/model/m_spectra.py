@@ -32,7 +32,7 @@ class MSpectra(FitspySpectra):
         return super().__len__()
 
     
-    def apply_model(self, model_dict, fnames=None, ncpus=1,show_progressbar=True):
+    def apply_model(self, model_dict, fnames=None, ncpus=1, show_progressbar=True, queue_incr=None):
         """ Apply 'model' to all or part of the spectra."""
         if fnames is None:
             fnames = self.fnames
@@ -56,10 +56,17 @@ class MSpectra(FitspySpectra):
 
         self.pbar_index = 0
 
-        queue_incr = Queue()
-        args = (queue_incr, len(fnames), ncpus, show_progressbar)
-        thread = Thread(target=self.progressbar, args=args)
-        thread.start()
+        # Use provided queue or create new one
+        if queue_incr is None:
+            queue_incr = Queue()
+        
+        # Only start progressbar thread if show_progressbar is True
+        if show_progressbar:
+            args = (queue_incr, len(fnames), ncpus, show_progressbar)
+            thread = Thread(target=self.progressbar, args=args)
+            thread.start()
+        else:
+            thread = None
 
         if ncpus == 1:
             for spectrum in spectra:
@@ -68,4 +75,7 @@ class MSpectra(FitspySpectra):
                 queue_incr.put(1)
         else:
             fit_mp(spectra, ncpus, queue_incr)
-        thread.join()     
+        
+        # Only join thread if it was started
+        if thread is not None:
+            thread.join()     

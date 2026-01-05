@@ -746,9 +746,6 @@ class SpectraViewer(QWidget):
             self.release_event_connection = None
         self.refresh_gui() 
 
-
-    
-
     def evaluate_peak_model(self, peak_model, x_values):
         """Evaluate the peak model to get y-values."""
         param_hints_orig = deepcopy(peak_model.param_hints)

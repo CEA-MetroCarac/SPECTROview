@@ -1,18 +1,21 @@
-# ─── spectroview/viewmodel/vm_workspace_spectra.py ───
-from copy import deepcopy
-import numpy as np
-from PySide6.QtWidgets import QFileDialog
+"""ViewModel for Spectra Workspace - handles business logic and data management."""
 import json
-from PySide6.QtCore import QObject, Signal
+from copy import deepcopy
 from pathlib import Path
 
-from spectroview.model.m_spectra import MSpectra
-from spectroview.model.m_settings import MSettings
+import numpy as np
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QFileDialog
 
 from spectroview.model.m_io import load_spectrum_file
-
-from spectroview.viewmodel.utils import baseline_to_dict, dict_to_baseline, closest_index
-from spectroview.viewmodel.utils import FitThread
+from spectroview.model.m_settings import MSettings
+from spectroview.model.m_spectra import MSpectra
+from spectroview.viewmodel.utils import (
+    FitThread,
+    baseline_to_dict,
+    closest_index,
+    dict_to_baseline,
+)
 
 
 class VMWorkspaceSpectra(QObject):
@@ -22,6 +25,8 @@ class VMWorkspaceSpectra(QObject):
     count_changed = Signal(int)
     show_xcorrection_value = Signal(float)  # ΔX of first selected spectrum
     spectral_range_changed = Signal(float, float)
+    fit_in_progress = Signal(bool)  # Enable/disable fit buttons
+    fit_progress_updated = Signal(int, int, int, float)  # (current, total, percentage, elapsed_time)
 
     notify = Signal(str)  # general notifications
     
@@ -35,6 +40,8 @@ class VMWorkspaceSpectra(QObject):
         self._peaks_clipboard = None    # for copy/paste peaks
         self._loaded_fit_model = None  # for applying loaded fit model
         self._current_peak_shape = "Lorentzian"
+        self._fit_thread = None  # Track active fit thread
+        self._is_fitting = False  # Track if fitting is in progress
 
 
     # View → ViewModel slots
@@ -409,11 +416,35 @@ class VMWorkspaceSpectra(QObject):
 
 
     def fit(self, apply_all: bool = False):
+        # Prevent concurrent fit operations
+        if self._is_fitting:
+            self.notify.emit("Fit already in progress. Please wait...")
+            return
+
         spectra = self.spectra if apply_all else self.spectra.get(self.selected_indices)
-        for s in spectra:
-            if s.peak_models:
-                s.fit()
-        self._emit_selected_spectra()
+        
+        if not spectra:
+            return
+
+        # Check if any spectrum has peak models
+        has_peaks = any(s.peak_models for s in spectra)
+        if not has_peaks:
+            self.notify.emit("No peaks to fit.")
+            return
+
+        self._is_fitting = True
+        self.fit_in_progress.emit(True)
+
+        try:
+            for s in spectra:
+                if s.peak_models:
+                    s.fit()
+        except Exception as e:
+            self.notify.emit(f"Fit error: {e}")
+        finally:
+            self._is_fitting = False
+            self.fit_in_progress.emit(False)
+            self._emit_selected_spectra()
     
     def copy_fit_model(self):
         if not self.selected_indices:
@@ -490,23 +521,50 @@ class VMWorkspaceSpectra(QObject):
         self._run_fit_thread(fit_model, spectra)
 
     def _run_fit_thread(self, fit_model: dict, spectra):
+        # Prevent concurrent fit operations
+        if self._is_fitting:
+            self.notify.emit("Fit already in progress. Please wait...")
+            return
+
         if not spectra:
             self.notify.emit("No spectra selected.")
             return
+
+        # Cancel any existing thread
+        if self._fit_thread and self._fit_thread.isRunning():
+            self._fit_thread.terminate()
+            self._fit_thread.wait()
 
         fnames = [s.fname for s in spectra]
         ncpu = self.settings.load_fit_settings().get("ncpu", 1)
 
         self.spectra.pbar_index = 0
 
-        self.thread = FitThread(
+        self._is_fitting = True
+        self.fit_in_progress.emit(True)
+
+        self._fit_thread = FitThread(
             self.spectra,
             fit_model,
             fnames,
             ncpu
         )
-        self.thread.finished.connect(self._emit_selected_spectra)
-        self.thread.start()
+        self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
+        self._fit_thread.finished.connect(self._on_fit_finished)
+        self._fit_thread.start()
+
+    def _on_fit_finished(self):
+        """Handle fit thread completion."""
+        self._is_fitting = False
+        self.fit_in_progress.emit(False)
+        
+        # Don't reset progress bar - let final state (X/X 100%) remain visible
+        self._emit_selected_spectra()
+        
+        # Cleanup thread
+        if self._fit_thread:
+            self._fit_thread.deleteLater()
+            self._fit_thread = None
 
 
     def set_fit_model_builder(self, vm_fit_model_builder):
@@ -551,6 +609,35 @@ class VMWorkspaceSpectra(QObject):
         s = self.spectra.get(self.selected_indices)[0]
         del s.peak_models[index]
         del s.peak_labels[index]
+        self._emit_selected_spectra()
+
+    def update_dragged_peak(self, x: float, y: float):
+        """Update peak position during dragging (real-time update).
+        
+        Args:
+            x: New x position (center)
+            y: New y value (amplitude/intensity)
+        """
+        if not self.selected_indices:
+            return
+
+        spectrum = self.spectra.get(self.selected_indices)[0]
+        
+        if not spectrum.peak_models:
+            return
+
+        # Find the peak model being dragged (closest to new x position)
+        # Note: The View already updates the model directly for immediate visual feedback
+        # This method is here for any additional processing needed
+        # The actual update happens in the View for performance
+        pass
+
+    def finalize_peak_drag(self):
+        """Finalize peak drag operation - ensure model is synchronized."""
+        if not self.selected_indices:
+            return
+
+        # Re-emit to ensure everything is synchronized
         self._emit_selected_spectra()
 
 
@@ -601,10 +688,9 @@ class VMWorkspaceSpectra(QObject):
 
                 data[label] = y_peak
             except Exception as e:
-                print(f"Error evaluating peak {i}: {e}")
+                # Skip peaks that fail to evaluate
                 continue
 
         # Create DataFrame and copy to clipboard
         df = pd.DataFrame(data)
         df.to_clipboard(index=False)
-        print("Spectrum data copied to clipboard.")

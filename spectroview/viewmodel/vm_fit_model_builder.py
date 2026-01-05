@@ -1,6 +1,8 @@
+"""ViewModel for Fit Model Builder - manages fit model selection and loading."""
+from pathlib import Path
+
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog
-from pathlib import Path
 
 from spectroview.model.m_fit_model_manager import MFitModelManager
 from spectroview.model.m_settings import MSettings

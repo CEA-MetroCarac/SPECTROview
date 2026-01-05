@@ -4,15 +4,17 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QGroupBox, QLabel, QPushButton, QComboBox,
     QDoubleSpinBox, QSpinBox, QRadioButton,
-    QScrollArea, QTableView, QCheckBox, QApplication
+    QScrollArea, QCheckBox, QApplication
 )
+from PySide6.QtCore import Qt, Signal   
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, Signal
+
+from spectroview import ICON_DIR, PEAK_MODELS
 from spectroview.view.components.v_peak_table import VPeakTable
 
 
 class VFitModelBuilder(QWidget):
-    """View: Fit Model Builder panel"""
+    """View: Fit Model Builder panel."""
     # ───── View → ViewModel signals ─────
     peak_shape_changed = Signal(str)
     spectral_range_apply_requested = Signal(float, float, bool)
@@ -272,9 +274,7 @@ class VFitModelBuilder(QWidget):
             self.btn_base_paste, 
         ):
             row2.addWidget(b)
-
-        
-
+            
         row2.addWidget(QLabel("Noise cor:"))
         row2.addWidget(self.spin_noise)
         row2.addStretch()
@@ -437,9 +437,20 @@ class VFitModelBuilder(QWidget):
         row2.addWidget(self.btn_refresh)
         row2.addStretch()
 
-        
         v.addLayout(row1)
         v.addLayout(row2)
 
         return gb
+
+    def set_fit_buttons_enabled(self, enabled: bool):
+        """Enable/disable fit-related buttons to prevent concurrent operations."""
+        self.btn_fit.setEnabled(enabled)
+        self.btn_apply.setEnabled(enabled)
+        self.btn_paste.setEnabled(enabled)
+        if not enabled:
+            self.btn_fit.setText("Fitting...")
+            self.btn_apply.setText("Applying...")
+        else:
+            self.btn_fit.setText("Fit")
+            self.btn_apply.setText("Apply")
 

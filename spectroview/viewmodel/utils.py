@@ -44,8 +44,9 @@ if platform.system() == 'Windows':
 
 
 class FitThread(QThread):
-    """ Class to perform fitting in a separate Thread """
-    progress_changed = Signal(int)
+    """Class to perform fitting in a separate Thread."""
+    progress_changed = Signal(int, int, int, float)  # (current, total, percentage, elapsed_time)
+    
     def __init__(self, spectrums, fit_model, fnames, ncpus=1):
         super().__init__()
         self.spectrums = spectrums
@@ -54,11 +55,59 @@ class FitThread(QThread):
         self.ncpus = ncpus
 
     def run(self):
+        """Execute fitting with progress tracking."""
+        import time
+        
         fit_model = deepcopy(self.fit_model)
-        self.spectrums.apply_model(fit_model, fnames=self.fnames,
-                                   ncpus=self.ncpus, show_progressbar=False)
-
-        self.progress_changed.emit(100)
+        total = len(self.fnames)
+        
+        # Start timing
+        start_time = time.time()
+        
+        # Emit initial progress
+        self.progress_changed.emit(0, total, 0, 0.0)
+        
+        # Apply model (this will update progress through queue)
+        from multiprocessing import Queue
+        queue_incr = Queue()
+        
+        # Start monitoring progress in background
+        from threading import Thread
+        monitor_thread = Thread(target=self._monitor_progress, args=(queue_incr, total, start_time))
+        monitor_thread.start()
+        
+        # Perform fitting - pass our queue to apply_model
+        self.spectrums.apply_model(
+            fit_model, 
+            fnames=self.fnames,
+            ncpus=self.ncpus, 
+            show_progressbar=False,
+            queue_incr=queue_incr
+        )
+        
+        # Wait for progress monitor to finish
+        monitor_thread.join()
+        
+        # Emit final completion with total elapsed time
+        elapsed_time = time.time() - start_time
+        self.progress_changed.emit(total, total, 100, elapsed_time)
+    
+    def _monitor_progress(self, queue_incr, total, start_time):
+        """Monitor fitting progress from queue."""
+        import time
+        
+        count = 0
+        while count < total:
+            try:
+                # Wait for progress update from fitting process
+                queue_incr.get(timeout=0.1)
+                count += 1
+                percentage = int((count / total) * 100)
+                elapsed_time = time.time() - start_time
+                self.progress_changed.emit(count, total, percentage, elapsed_time)
+            except:
+                # Timeout or queue empty, continue waiting
+                continue
 
 def closest_index(array, value):
     return int(np.abs(array - value).argmin())

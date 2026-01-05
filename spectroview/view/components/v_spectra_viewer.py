@@ -18,7 +18,6 @@ from matplotlib.backends.backend_qtagg import (
     NavigationToolbar2QT
 )
 
-
 from PySide6.QtWidgets import QLabel
 from PySide6.QtGui import QCursor
 from PySide6.QtCore import QPoint
@@ -54,6 +53,7 @@ class VSpectraViewer(QWidget):
         self._current_spectra = []
         self._fitted_lines = []     # [(line, peak_info)]
         self._highlighted_line = None
+        self._dragging_peak = None  # Stores (line, info) when dragging
 
         self.zoom_pan_active = True
 
@@ -645,7 +645,18 @@ class VSpectraViewer(QWidget):
         # ─── Peak tool ─────────────────────────
         if self.btn_peak.isChecked():
             if event.button == 1:      # left click
-                self.peak_add_requested.emit(x)
+                # Check if clicking on an existing peak to drag it
+                clicked_peak = self._find_peak_at_position(x, y)
+                if clicked_peak:
+                    # Start dragging
+                    self._dragging_peak = clicked_peak
+                    self.peak_drag_started.emit(clicked_peak)
+                    # Connect drag events
+                    self._drag_cid = self.canvas.mpl_connect('motion_notify_event', self._on_drag_peak)
+                    self._release_cid = self.canvas.mpl_connect('button_release_event', self._on_release_drag)
+                else:
+                    # Add new peak
+                    self.peak_add_requested.emit(x)
             elif event.button == 3:    # right click
                 self.peak_remove_requested.emit(x)
 
@@ -778,6 +789,79 @@ class VSpectraViewer(QWidget):
             self._highlighted_line.set_linewidth(lw)
             self._highlighted_line = None
             self.canvas.draw_idle()
+
+    def _find_peak_at_position(self, x, y):
+        """Find if a peak line is near the clicked position."""
+        if not self._fitted_lines:
+            return None
+
+        # Tolerance for click detection (in data units)
+        x_range = self.ax.get_xlim()[1] - self.ax.get_xlim()[0]
+        x_tol = x_range * 0.03  # 3% of x-range
+
+        closest_peak = None
+        min_distance = float('inf')
+
+        for line, info in self._fitted_lines:
+            # Check distance from peak center (x0)
+            if "x0" in info:
+                peak_x = info["x0"]
+                distance = abs(x - peak_x)
+                
+                if distance < x_tol and distance < min_distance:
+                    min_distance = distance
+                    closest_peak = (line, info)
+
+        return closest_peak
+
+    def _on_drag_peak(self, event):
+        """Handle peak dragging - update peak position in real-time."""
+        if not hasattr(self, '_dragging_peak') or self._dragging_peak is None:
+            return
+
+        if event.xdata is None or event.ydata is None:
+            return
+
+        line, info = self._dragging_peak
+        peak_model = info.get('peak_model')
+        
+        if not peak_model:
+            return
+
+        # Update peak model parameters
+        new_x = event.xdata
+        new_y = event.ydata
+
+        # Emit signal to ViewModel to update model
+        self.peak_dragged.emit(new_x, new_y)
+
+        # Update visual feedback immediately
+        peak_model.param_hints['x0']['value'] = new_x
+        if 'ampli' in peak_model.param_hints:
+            peak_model.param_hints['ampli']['value'] = new_y
+        elif 'amplitude' in peak_model.param_hints:
+            peak_model.param_hints['amplitude']['value'] = new_y
+
+        # Redraw
+        self._plot()
+
+    def _on_release_drag(self, event):
+        """Handle peak drag release - finalize the change."""
+        if hasattr(self, '_dragging_peak') and self._dragging_peak is not None:
+            # Disconnect drag events
+            if hasattr(self, '_drag_cid'):
+                self.canvas.mpl_disconnect(self._drag_cid)
+                delattr(self, '_drag_cid')
+            
+            if hasattr(self, '_release_cid'):
+                self.canvas.mpl_disconnect(self._release_cid)
+                delattr(self, '_release_cid')
+
+            # Emit final signal
+            self.peak_drag_finished.emit()
+            
+            # Clear dragging state
+            self._dragging_peak = None
 
     def copy_canvas_to_clipboard(self, size_tuple: tuple):
         """Copy figure canvas to clipboard with specified size"""

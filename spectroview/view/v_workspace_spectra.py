@@ -1,20 +1,21 @@
-# view/v_workspace_spectra.py
+"""View for Spectra Workspace - main UI coordinator for spectral analysis."""
 import os
-from PySide6.QtWidgets import (QWidget, QVBoxLayout,QHBoxLayout, QLabel,QApplication,
-    QPushButton, QCheckBox,QProgressBar,QSplitter,QTabWidget, QMessageBox, QFrame
-)
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-
-from spectroview.model.m_settings import MSettings
-from spectroview.view.components.v_spectra_list import VSpectraList
-from spectroview.view.components.v_spectra_viewer import VSpectraViewer
-from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
-from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
-
-from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication,
+    QPushButton, QCheckBox, QProgressBar, QSplitter, QTabWidget,
+    QMessageBox, QFrame
+)
 
 from spectroview import ICON_DIR
+from spectroview.model.m_settings import MSettings
+from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
+from spectroview.view.components.v_spectra_list import VSpectraList
+from spectroview.view.components.v_spectra_viewer import VSpectraViewer
+from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
+from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 
 
 class VWorkspaceSpectra(QWidget):
@@ -109,6 +110,20 @@ class VWorkspaceSpectra(QWidget):
         apply_all = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
         fn(apply_all)
 
+    def _update_progress_bar(self, current: int, total: int, percentage: int, elapsed_time: float):
+        """Update progress bar with fitting progress and elapsed time."""
+        if total > 0:
+            self.progress_bar.setValue(percentage)
+            # Format elapsed time as MM:SS
+            minutes = int(elapsed_time // 60)
+            seconds = int(elapsed_time % 60)
+            time_str = f"{minutes:02d}:{seconds:02d}"
+            self.progress_bar.setFormat(f"Fitting: {current}/{total} ({percentage}%) - {time_str}")
+        else:
+            # Reset to default state
+            self.progress_bar.setValue(100)
+            self.progress_bar.setFormat("")
+
     def setup_connections(self):
         """Connect ViewModel signals and slots to the View components."""
         vm = self.vm # VMWorkspaceSpectra
@@ -127,6 +142,10 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_viewer.baseline_add_requested.connect(vm.add_baseline_point)
         self.v_spectra_viewer.baseline_remove_requested.connect(vm.remove_baseline_point)
         self.v_spectra_viewer.copy_data_requested.connect(vm.copy_spectrum_data_to_clipboard)
+        
+        # Peak dragging
+        self.v_spectra_viewer.peak_dragged.connect(vm.update_dragged_peak)
+        self.v_spectra_viewer.peak_drag_finished.connect(vm.finalize_peak_drag)
 
         self.v_fit_model_builder.btn_xcorrect.clicked.connect(lambda: vm.apply_x_correction(self.v_fit_model_builder.spin_xcorr.value()))
         self.v_fit_model_builder.btn_undo_corr.clicked.connect(vm.undo_x_correction)
@@ -157,6 +176,8 @@ class VWorkspaceSpectra(QWidget):
 
         vm.show_xcorrection_value.connect(self.v_fit_model_builder.set_xcorrection_value)        
         vm.spectral_range_changed.connect(self.v_fit_model_builder.set_spectral_range)
+        vm.fit_in_progress.connect(lambda in_progress: self.v_fit_model_builder.set_fit_buttons_enabled(not in_progress))
+        vm.fit_progress_updated.connect(self._update_progress_bar)
 
         # V_FitModelBuilder <-> VM_FitModelBuilder
         self.v_fit_model_builder.refresh_fit_models_requested.connect(self.vm_fit_model_builder.refresh_models)

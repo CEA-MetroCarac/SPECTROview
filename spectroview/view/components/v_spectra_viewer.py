@@ -1,4 +1,5 @@
 # view/components/spectra_viewer.py
+from copy import deepcopy
 import numpy as np
 
 from PySide6.QtWidgets import (
@@ -329,8 +330,7 @@ class VSpectraViewer(QWidget):
                 y_peaks = np.zeros_like(x)
 
                 for i, peak_model in enumerate(spectrum.peak_models):
-                    params = peak_model.make_params()
-                    y_peak = peak_model.eval(params, x=x)
+                    y_peak = self._eval_peak_model_safe(peak_model, x)
                     y_peaks += y_peak
 
                     # ── Individual peak curve
@@ -389,6 +389,27 @@ class VSpectraViewer(QWidget):
         self.canvas.draw_idle()
 
 
+    def _eval_peak_model_safe(self, peak_model, x):
+        """
+        Evaluate a peak model for plotting purposes.
+        Expressions are temporarily disabled to avoid lmfit NameError.
+        """
+        # Backup param_hints
+        param_hints_orig = deepcopy(peak_model.param_hints)
+
+        # Disable expressions
+        for key in peak_model.param_hints:
+            peak_model.param_hints[key]["expr"] = ""
+
+        try:
+            params = peak_model.make_params()
+            y = peak_model.eval(params, x=x)
+        finally:
+            # Restore expressions
+            peak_model.param_hints = param_hints_orig
+
+        return y
+    
     def _get_baseline_y(self, spectrum, x):
         baseline = spectrum.baseline
 

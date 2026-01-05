@@ -9,7 +9,7 @@ from PySide6.QtGui import QIcon, QPalette, QColor
 
 from spectroview import PEAK_MODELS, ICON_DIR
 
-
+ROW_HEIGHT = 24
 class VPeakTable(QWidget):
     # ───── View → ViewModel signals ─────
     peak_label_changed = Signal(int, str)
@@ -32,6 +32,7 @@ class VPeakTable(QWidget):
     def _build_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.main_layout = QHBoxLayout()
         layout.addLayout(self.main_layout)
@@ -76,6 +77,12 @@ class VPeakTable(QWidget):
         labels = self._spectrum.peak_labels
 
         param_order = ["x0", "fwhm", "fwhm_l", "fwhm_r", "ampli", "alpha"]
+        
+        # determine which parameters are present in at least one peak
+        active_params = {
+            p for p in param_order
+            if any(p in pm.param_hints for pm in peaks)
+        }
 
         # ── Column containers
         cols = {
@@ -86,15 +93,24 @@ class VPeakTable(QWidget):
 
         param_cols = {}
         for p in param_order:
-            param_cols[p] = {
-                "value": QVBoxLayout(),
-                "vary": QVBoxLayout(),
-            }
+            if p not in active_params:
+                continue
+
+            param_cols[p] = {}
+            # Target order: [min] [value] [max] [fix]
             if self._show_limits:
                 param_cols[p]["min"] = QVBoxLayout()
+
+            param_cols[p]["value"] = QVBoxLayout()
+
+            if self._show_limits:
                 param_cols[p]["max"] = QVBoxLayout()
+
+            param_cols[p]["vary"] = QVBoxLayout()
+            
             if self._show_expr:
                 param_cols[p]["expr"] = QVBoxLayout()
+
 
         # ── Headers
         self._add_header(cols["del"], "")
@@ -113,14 +129,15 @@ class VPeakTable(QWidget):
         # ── Rows
         for i, pm in enumerate(peaks):
             # delete
-            btn = QPushButton()
+            btn = QPushButton(pm.prefix)
             btn.setIcon(QIcon(f"{ICON_DIR}/close.png"))
-            btn.setFixedWidth(28)
+            btn.setFixedWidth(50)
             btn.clicked.connect(lambda _, idx=i: self.peak_deleted.emit(idx))
             cols["del"].addWidget(btn)
 
             # label
             le = QLineEdit(labels[i])
+            le.setFixedSize(60, ROW_HEIGHT)
             le.editingFinished.connect(
                 lambda idx=i, w=le: self.peak_label_changed.emit(idx, w.text())
             )
@@ -130,6 +147,7 @@ class VPeakTable(QWidget):
             cmb = QComboBox()
             cmb.addItems(PEAK_MODELS)
             cmb.setCurrentText(pm.name2)
+            cmb.setFixedWidth(100)
             cmb.currentTextChanged.connect(
                 lambda txt, idx=i: self.peak_model_changed.emit(idx, txt)
             )
@@ -146,6 +164,8 @@ class VPeakTable(QWidget):
                 # value
                 val = QLineEdit(f"{hint.get('value', 0):.6g}")
                 val.setAlignment(Qt.AlignRight)
+                # val.setFixedWidth(60)
+                val.setFixedSize(60, ROW_HEIGHT)
                 val.editingFinished.connect(
                     lambda idx=i, k=p, w=val:
                     self._emit_value(idx, k, "value", w.text())
@@ -159,7 +179,7 @@ class VPeakTable(QWidget):
                     lambda st, idx=i, k=p:
                     self.peak_param_changed.emit(idx, k, "vary", not st)
                 )
-                d["vary"].addWidget(self._center(chk))
+                d["vary"].addWidget(self._center_checkbox(chk))
 
                 # limits
                 if "min" in d:
@@ -169,23 +189,32 @@ class VPeakTable(QWidget):
                 # expr
                 if "expr" in d:
                     expr = QLineEdit(str(hint.get("expr", "")))
+                    # expr.setFixedWidth(150)
+                    expr.setFixedSize(150, ROW_HEIGHT)
                     expr.editingFinished.connect(
                         lambda idx=i, k=p, w=expr:
                         self.peak_param_changed.emit(idx, k, "expr", w.text())
                     )
                     d["expr"].addWidget(expr)
 
-        # ── Assemble
-        self.main_layout.addLayout(cols["del"])
-        self.main_layout.addLayout(cols["label"])
-        self.main_layout.addLayout(cols["model"])
+        # ── Add vertical stretch to absorb remaining space
+        def add_vstretch(layout):
+            layout.addStretch(1)
 
+        # ── Assemble
+        # add stretch to fixed columns
+        for c in cols.values():
+            add_vstretch(c)
+            self.main_layout.addLayout(c)
+
+        # add stretch to parameter columns
         for d in param_cols.values():
             for col in d.values():
+                add_vstretch(col)
                 self.main_layout.addLayout(col)
 
         self.main_layout.addStretch()
-
+        
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
@@ -198,6 +227,8 @@ class VPeakTable(QWidget):
 
     def _add_limit(self, layout, idx, key, field, hint):
         le = QLineEdit(f"{hint.get(field, 0):.6g}")
+        # le.setFixedWidth(60)
+        le.setFixedSize(60, ROW_HEIGHT)
         le.setAlignment(Qt.AlignRight)
 
         pal = le.palette()
@@ -216,16 +247,26 @@ class VPeakTable(QWidget):
         layout.addWidget(lbl)
 
     def _add_empty(self, d):
+        """Add empty labels for alignment"""
         for col in d.values():
-            col.addWidget(QLabel(""))
+            empty_label = QLabel()
+            empty_label.setFixedHeight(ROW_HEIGHT)
+            col.addWidget(empty_label)
+            
 
-    def _center(self, w):
+    def _center_checkbox(self, chk):
         c = QWidget()
         l = QHBoxLayout(c)
         l.setContentsMargins(0, 0, 0, 0)
         l.setAlignment(Qt.AlignCenter)
-        l.addWidget(w)
+
+        # match QLineEdit height exactly
+        ref = QLineEdit()
+        c.setFixedHeight(ref.sizeHint().height())
+
+        l.addWidget(chk)
         return c
+
 
     def _clear_layout(self, layout):
         if not layout:

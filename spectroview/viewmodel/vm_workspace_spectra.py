@@ -4,6 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog
 
@@ -17,7 +18,12 @@ from spectroview.viewmodel.utils import (
     closest_index,
     dict_to_baseline,
 )
-from spectroview.modules.utils import spectrum_to_dict, dict_to_spectrum
+from spectroview.modules.utils import (
+    spectrum_to_dict, 
+    dict_to_spectrum,
+    replace_peak_labels,
+    save_df_to_excel
+)
 
 
 class VMWorkspaceSpectra(QObject):
@@ -30,6 +36,10 @@ class VMWorkspaceSpectra(QObject):
     
     fit_in_progress = Signal(bool)  # Enable/disable fit buttons
     fit_progress_updated = Signal(int, int, int, float)  # To show fitting progress in GUI
+    
+    # Fit results signals
+    fit_results_updated = Signal(object)  # pd.DataFrame
+    split_parts_updated = Signal(list)    # list[str] for combobox
 
     notify = Signal(str)  # general notifications
     
@@ -45,6 +55,10 @@ class VMWorkspaceSpectra(QObject):
         self._current_peak_shape = "Lorentzian"
         self._fit_thread = None  # Track active fit thread
         self._is_fitting = False  # Track if fitting is in progress
+        
+        # Fit results data
+        self.df_fit_results = None
+        self._fitmodel_clipboard = None
 
 
     # View → ViewModel slots
@@ -774,4 +788,194 @@ class VMWorkspaceSpectra(QObject):
         self._emit_list_update()
         self.spectra_selection_changed.emit([])
         self.fit_in_progress.emit(False)
-        print("Spectra Workspace cleared.")
+        
+        # Clear fit results
+        self.df_fit_results = None
+        self.fit_results_updated.emit(None)
+        
+        self.notify.emit("Workspace cleared.")
+
+    # ═════════════════════════════════════════════════════════════════════
+    # Fit Results Methods
+    # ═════════════════════════════════════════════════════════════════════
+    
+    def collect_fit_results(self):
+        """Collect best-fit results from all spectra and create DataFrame."""
+        if not self.spectra:
+            self.notify.emit("No spectra loaded.")
+            return
+        
+        # Copy current fit model for reference
+        if self.selected_indices and self.spectra.get(self.selected_indices):
+            spectrum = self.spectra.get(self.selected_indices)[0]
+            if spectrum.peak_models:
+                self._fitmodel_clipboard = deepcopy(spectrum.save())
+        
+        fit_results_list = []
+        
+        for spectrum in self.spectra:
+            if not hasattr(spectrum, 'peak_models') or not spectrum.peak_models:
+                continue
+            
+            params = {}
+            fit_result = {'Filename': spectrum.fname}
+            
+            for model in spectrum.peak_models:
+                model_name = model.name
+                
+                # Get result parameters if fit was performed
+                if hasattr(spectrum, 'result_fit') and spectrum.result_fit:
+                    for param_name in model.param_names:
+                        # Extract peak-specific parameter value
+                        if param_name in spectrum.result_fit.params:
+                            param_value = spectrum.result_fit.params[param_name].value
+                            params[param_name] = param_value
+                else:
+                    # Use param_hints if no fit result
+                    for key in model.param_hints:
+                        param_name = f"{model_name}_{key}"
+                        param_value = model.param_hints[key].get('value')
+                        params[param_name] = param_value
+            
+            # Add all parameters to fit_result
+            fit_result.update(params)
+            
+            if len(fit_result) > 1:  # Has more than just filename
+                fit_results_list.append(fit_result)
+        
+        if not fit_results_list:
+            self.notify.emit("No fit results to collect.")
+            return
+        
+        # Create DataFrame
+        self.df_fit_results = pd.DataFrame(fit_results_list).round(3)
+        
+        # Replace peak labels if clipboard has model (before sorting)
+        if self._fitmodel_clipboard:
+            columns = [
+                replace_peak_labels(self._fitmodel_clipboard, col) 
+                for col in self.df_fit_results.columns
+            ]
+            self.df_fit_results.columns = columns
+        
+        # Sort columns: Filename first, then grouped by parameter type (x0_, fwhm_, ampli_, etc.)
+        cols = list(self.df_fit_results.columns)
+        filename_col = ['Filename'] if 'Filename' in cols else []
+        other_cols = [c for c in cols if c != 'Filename']
+        
+        # Define priority order for parameter types
+        param_priority = {
+            'x0': 0,
+            'fwhm': 1,
+            'ampli': 2,
+            'sigma': 3,
+            'gamma': 4,
+            'fraction': 5,
+            'height': 6,
+        }
+        
+        # Sort by parameter type (prefix) then by peak identifier (suffix)
+        def sort_key(col_name):
+            if '_' in col_name:
+                parts = col_name.split('_', 1)  # Split on first underscore
+                param_type = parts[0]  # e.g., "x0", "ampli", "fwhm"
+                peak_id = parts[1] if len(parts) > 1 else ''  # e.g., "p1", "p2"
+                # Use priority if defined, otherwise use high number (appears last)
+                priority = param_priority.get(param_type, 999)
+                return (priority, param_type, peak_id)
+            else:
+                return (999, col_name, '')
+        
+        sorted_cols = sorted(other_cols, key=sort_key)
+        final_cols = filename_col + sorted_cols
+        
+        self.df_fit_results = self.df_fit_results[final_cols]
+        
+        # Emit signal to update View
+        self.fit_results_updated.emit(self.df_fit_results)
+        #self.notify.emit(f"Collected results from {len(fit_results_list)} spectra.")
+    
+    def split_filename(self):
+        """Split the first filename by underscore and emit parts for combobox."""
+        if self.df_fit_results is None or self.df_fit_results.empty:
+            self.notify.emit("No fit results available. Collect results first.")
+            return
+        
+        fname = self.df_fit_results.loc[0, 'Filename']
+        parts = fname.split('_')
+        
+        self.split_parts_updated.emit(parts)
+    
+    def add_column_from_filename(self, col_name: str, part_index: int):
+        """Add a new column to fit results by extracting part from filename."""
+        if self.df_fit_results is None or self.df_fit_results.empty:
+            self.notify.emit("No fit results available.")
+            return
+        
+        if not col_name:
+            self.notify.emit("Please enter a column name.")
+            return
+        
+        # Check if column already exists
+        if col_name in self.df_fit_results.columns:
+            self.notify.emit(f"Column '{col_name}' already exists. Please choose a different name.")
+            return
+        
+        try:
+            parts = self.df_fit_results['Filename'].str.split('_')
+            
+            # Extract selected part and convert to float if possible
+            new_col = []
+            for part in parts:
+                if len(part) > part_index:
+                    value = part[part_index]
+                    # Try to convert to float
+                    try:
+                        new_col.append(float(value))
+                    except (ValueError, TypeError):
+                        new_col.append(value)
+                else:
+                    new_col.append(None)
+            
+            self.df_fit_results[col_name] = new_col
+            
+            # Emit updated dataframe
+            self.fit_results_updated.emit(self.df_fit_results)
+            self.notify.emit(f"Added column '{col_name}'.")
+            
+        except Exception as e:
+            self.notify.emit(f"Error adding column: {e}")
+    
+    def save_fit_results(self):
+        """Save fit results DataFrame to Excel file."""
+        if self.df_fit_results is None or self.df_fit_results.empty:
+            self.notify.emit("No fit results to save.")
+            return
+        
+        last_dir = self.settings.load_fit_settings().get("last_directory", "/")
+        save_path, _ = QFileDialog.getSaveFileName(
+            None,
+            "Save Fit Results",
+            last_dir,
+            "Excel Files (*.xlsx)"
+        )
+        
+        if not save_path:
+            return
+        
+        success, message = save_df_to_excel(save_path, self.df_fit_results)
+        
+        if success:
+            self.notify.emit("Fit results saved successfully.")
+        else:
+            self.notify.emit(f"Error saving results: {message}")
+    
+    def send_results_to_graphs(self, df_name: str):
+        """Send fit results to visualization tab (placeholder for future implementation)."""
+        if self.df_fit_results is None or self.df_fit_results.empty:
+            self.notify.emit("No fit results to send.")
+            return
+        
+        # TODO: Implement when Graphs workspace is converted to MVVM
+        # For now, just notify
+        self.notify.emit(f"Send to Viz feature will be implemented when Graphs workspace is converted to MVVM.")

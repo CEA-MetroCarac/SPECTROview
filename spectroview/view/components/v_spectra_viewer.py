@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QDoubleSpinBox, QColorDialog, QInputDialog
 )
 from PySide6.QtCore import Qt, Signal, QSize
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QShortcut, QKeySequence
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -96,6 +96,7 @@ class VSpectraViewer(QWidget):
         self.btn_rescale = QPushButton()
         self.btn_rescale.setIcon(QIcon(f"{ICON_DIR}/rescale.png"))
         self.btn_rescale.setIconSize(QSize(22, 22))
+        self.btn_rescale.setToolTip("Rescale (Ctrl+R)")
         self.btn_rescale.clicked.connect(self.rescaleRequested)
         self.btn_rescale.clicked.connect(self._rescale)
         

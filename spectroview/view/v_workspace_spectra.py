@@ -2,7 +2,7 @@
 import os
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication,
     QPushButton, QCheckBox, QProgressBar, QSplitter, QTabWidget,
@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 from spectroview import ICON_DIR
 from spectroview.model.m_settings import MSettings
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
+from spectroview.view.components.v_fit_results import VFitResults
 from spectroview.view.components.v_spectra_list import VSpectraList
 from spectroview.view.components.v_spectra_viewer import VSpectraViewer
 from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
@@ -47,15 +48,21 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_viewer = VSpectraViewer(parent=self)
         self.v_spectra_viewer.setMinimumHeight(200)
         
+        # Shortcut for rescale - only works when this workspace is active
+        self.shortcut_rescale = QShortcut(QKeySequence("Ctrl+R"), self)
+        self.shortcut_rescale.setContext(Qt.WidgetWithChildrenShortcut)
+        self.shortcut_rescale.activated.connect(self.v_spectra_viewer._rescale)
+        
         # --- Lower: TabWidget
         self.bottom_tabs = QTabWidget()
         self.bottom_tabs.setMinimumHeight(150)
         self.v_fit_model_builder = VFitModelBuilder()
+        self.v_fit_results = VFitResults()
         self.vm_fit_model_builder = VMFitModelBuilder(self.m_settings)
         self.vm.set_fit_model_builder(self.vm_fit_model_builder) # 🔑 inject dependency
         
         self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
-        self.bottom_tabs.addTab(QWidget(), "Fit Results")
+        self.bottom_tabs.addTab(self.v_fit_results, "Fit Results")
         
         left_splitter.addWidget(self.v_spectra_viewer)
         left_splitter.addWidget(self.bottom_tabs)
@@ -96,7 +103,7 @@ class VWorkspaceSpectra(QWidget):
         self.lbl_count = QLabel("Loaded spectra: 0")
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(100)
-        self.progress_bar.setFixedHeight(12)
+        self.progress_bar.setFixedHeight(15)
 
         right_layout.addWidget(self.lbl_count)
         right_layout.addWidget(self.progress_bar)
@@ -203,7 +210,27 @@ class VWorkspaceSpectra(QWidget):
             lambda specs:
             pt.set_spectrum(specs[0] if specs else None)
         )
+        
+        # ═════════════════════════════════════════════════════════════════
+        # Fit Results connections
+        # ═════════════════════════════════════════════════════════════════
+        self.v_fit_results.collect_results_requested.connect(vm.collect_fit_results)
+        self.v_fit_results.split_fname_requested.connect(vm.split_filename)
+        self.v_fit_results.add_column_requested.connect(vm.add_column_from_filename)
+        self.v_fit_results.save_results_requested.connect(vm.save_fit_results)
+        self.v_fit_results.send_to_viz_requested.connect(vm.send_results_to_graphs)
+        
+        # ViewModel → View for fit results
+        vm.fit_results_updated.connect(self._update_fit_results)
+        vm.split_parts_updated.connect(self.v_fit_results.populate_split_combobox)
 
+    def _update_fit_results(self, df):
+        """Update fit results table display."""
+        if df is not None and not df.empty:
+            self.v_fit_results.show_results(df)
+        else:
+            self.v_fit_results.clear_results()
+    
     def save_work(self):
         """Trigger save work in ViewModel."""
         self.vm.save_work()

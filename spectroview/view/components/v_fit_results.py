@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
 
 from spectroview import ICON_DIR
-from spectroview.modules.df_table import DataframeTable
+from spectroview.view.components.v_dataframe_table import VDataframeTable
 
 
 class VFitResults(QWidget):
@@ -44,6 +44,9 @@ class VFitResults(QWidget):
         left_layout.addWidget(self.btn_collect)
         
         # Row 2: Split filename controls
+        lbl_split = QLabel("Split the filename of spectra:")
+        left_layout.addWidget(lbl_split)
+        
         split_layout = QHBoxLayout()
         
         self.btn_split = QPushButton("Split")
@@ -70,13 +73,16 @@ class VFitResults(QWidget):
         left_layout.addLayout(split_layout)
         
         # Row 3: Send to visualization
+        lbl_send = QLabel("Send fit results to Graphs Workspace for visualization:")
+        left_layout.addWidget(lbl_send)
+        
         send_layout = QHBoxLayout()
         
         self.ent_send_df_to_viz = QLineEdit()
         self.ent_send_df_to_viz.setPlaceholderText("DataFrame name")
         self.ent_send_df_to_viz.setText("SPECTRUMS_best_fit")
         
-        self.btn_send = QPushButton("Send to Viz")
+        self.btn_send = QPushButton("Send to Graphs")
         self.btn_send.setFixedWidth(100)
         self.btn_send.clicked.connect(self._on_send_to_viz)
         
@@ -88,7 +94,8 @@ class VFitResults(QWidget):
         # Row 4: Save button at bottom
         left_layout.addStretch()
         
-        self.btn_save = QPushButton("Save Results")
+        self.btn_save = QPushButton("Save Fit Results")
+        self.btn_save.setToolTip("Save fit results to Excel file")
         self.btn_save.setIcon(QIcon(os.path.join(ICON_DIR, "save.png")))
         self.btn_save.setMinimumHeight(40)
         self.btn_save.clicked.connect(self.save_results_requested.emit)
@@ -110,8 +117,8 @@ class VFitResults(QWidget):
         table_layout = QVBoxLayout(table_container)
         table_layout.setContentsMargins(0, 0, 0, 0)
         
-        # DataframeTable
-        self.df_table = DataframeTable(table_layout)
+        # VDataframeTable
+        self.df_table = VDataframeTable(table_layout)
         
         scroll_area.setWidget(table_container)
         right_layout.addWidget(scroll_area)

@@ -17,9 +17,7 @@ from spectroview.viewmodel.utils import (
     baseline_to_dict,
     closest_index,
     dict_to_baseline,
-)
-from spectroview.modules.utils import (
-    spectrum_to_dict, 
+    spectrum_to_dict,
     dict_to_spectrum,
     replace_peak_labels,
     save_df_to_excel
@@ -950,7 +948,7 @@ class VMWorkspaceSpectra(QObject):
             
             # Emit updated dataframe
             self.fit_results_updated.emit(self.df_fit_results)
-            self.notify.emit(f"Added column '{col_name}'.")
+            self.notify.emit(f"Added column '{col_name}' in the fit results.")
             
         except Exception as e:
             self.notify.emit(f"Error adding column: {e}")

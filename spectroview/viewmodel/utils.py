@@ -2,8 +2,11 @@
 from PySide6.QtGui import QPalette, QColor
 from PySide6.QtCore import Qt
 
+import base64
 import numpy as np
-
+import zlib
+from openpyxl.styles import PatternFill
+import pandas as pd
 from copy import deepcopy
 
 from fitspy.core.baseline import BaseLine
@@ -11,6 +14,18 @@ from fitspy.core.utils_mp import fit_mp
     
 from PySide6.QtCore import Signal, QThread, Qt
 from PySide6.QtGui import QPalette, QColor, Qt
+
+def compress(array):
+    """Compress and encode a numpy array to a base64 string."""
+    compressed = zlib.compress(array.tobytes())
+    encoded = base64.b64encode(compressed).decode('utf-8')
+    return encoded
+
+def decompress(data, dtype):
+    """Decode and decompress a base64 string to a numpy array."""
+    decoded = base64.b64decode(data.encode('utf-8'))
+    decompressed = zlib.decompress(decoded)
+    return np.frombuffer(decompressed, dtype=dtype)
 
 class FitThread(QThread):
     """Class to perform fitting in a separate Thread."""
@@ -92,6 +107,107 @@ def dict_to_baseline(dict_baseline, spectrums):
         for key, value in dict_baseline.items():
             setattr(new_baseline, key, deepcopy(value))
         spectrum.baseline = new_baseline
+        
+def spectrum_to_dict(spectrums, is_map=False):
+    """Custom 'save' method to save 'Spectrum' object in a dictionary"""
+    spectrums_data = spectrums.save()
+    # Iterate over the saved spectrums data and update x0 and y0
+    for i, spectrum in enumerate(spectrums):
+        spectrum_dict = {}
+        
+        # Save x0 and y0 only if it's not a 2DMAP
+        if not is_map:
+            spectrum_dict.update({
+                "x0": compress(spectrum.x0),
+                "y0": compress(spectrum.y0)
+            })
+        
+        # Update the spectrums_data with the new dictionary values
+        spectrums_data[i].update(spectrum_dict)
+    return spectrums_data
+
+def dict_to_spectrum(spectrum, spectrum_data, is_map=True, maps=None):
+    """Set attributes of Spectrum object from JSON dict"""
+    spectrum.set_attributes(spectrum_data)
+    
+    if is_map: 
+        if maps is None:
+            raise ValueError("maps must be provided when map=True.")
+        
+        # Retrieve map_name and coord from spectrum.fname
+        fname = spectrum.fname
+        map_name, coord_str = fname.rsplit('_', 1)
+        coord_str = coord_str.strip('()')  # Remove parentheses
+        coord = tuple(map(float, coord_str.split(',')))  # Convert to float tuple
+        
+        # Retrieve x0 and y0 from the corresponding map_df using map_name and coord
+        if map_name in maps:
+            map_df = maps[map_name]
+            map_df = map_df.iloc[:, :-1]  # Drop the last column from map_df (NaN)
+            coord_x, coord_y = coord
+
+            row = map_df[(map_df['X'] == coord_x) & (map_df['Y'] == coord_y)]
+            
+            if not row.empty:
+                x0 = map_df.columns[2:].astype(float).values  # retreive original x0
+                spectrum.x0 = x0 + spectrum.xcorrection_value # apply xcorrection_value
+                spectrum.y0 = row.iloc[0, 2:].values  
+            else:
+                spectrum.x0 = None
+                spectrum.y0 = None
+        else:
+            spectrum.x0 = None
+            spectrum.y0 = None
+    else:
+        # Handle single spectrum case
+        if 'x0' in spectrum_data:
+            spectrum.x0 = decompress(spectrum_data['x0'], dtype=np.float64)
+        if 'y0' in spectrum_data:
+            spectrum.y0 = decompress(spectrum_data['y0'], dtype=np.float64)
+
+def save_df_to_excel(save_path, df):
+    """Saves a DataFrame to an Excel file with colored columns based on prefixes."""
+    if not save_path:
+        return False, "No save path provided."
+
+    try:
+        if df.empty:
+            return False, "DataFrame is empty. Nothing to save."
+        with pd.ExcelWriter(save_path, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Results')
+            workbook = writer.book
+            worksheet = writer.sheets['Results']
+            palette = ['#bda16d', '#a27ba0', '#cb5b12', '#23993b', '#008281', '#147ce4']
+            prefix_colors = {}
+
+            # Apply colors based on column prefixes
+            for col_idx, col_name in enumerate(df.columns, start=1):
+                prefix = col_name.split("_")[0] if "_" in col_name else col_name
+                if prefix not in prefix_colors:
+                    color_index = len(prefix_colors) % len(palette)
+                    prefix_colors[prefix] = PatternFill(start_color=palette[color_index][1:], 
+                                                        end_color=palette[color_index][1:], 
+                                                        fill_type='solid')
+                for row in range(2, len(df) + 2):  # Apply the fill color to the entire column
+                    worksheet.cell(row=row, column=col_idx).fill = prefix_colors[prefix]
+
+        return True, "DataFrame saved successfully."
+    
+    except Exception as e:
+        return False, f"Error when saving DataFrame: {str(e)}"
+    
+def replace_peak_labels(fit_model, param):
+        """Replace prefix 'm01' of peak model by labels designed by user"""
+        peak_labels = fit_model["peak_labels"]
+        if "_" in param:
+            prefix, param = param.split("_", 1)  
+            # Convert prefix to peak_label
+            peak_index = int(prefix[1:]) - 1
+            if 0 <= peak_index < len(peak_labels):
+                peak_label = peak_labels[peak_index]
+                return f"{param}_{peak_label}"
+        return param
+
 
 def dark_palette():
     """Dark palette tuned for SPECTROview UI"""

@@ -1,6 +1,7 @@
-# spectroview/view/v_utils.py
-from PySide6.QtGui import QPalette, QColor
-from PySide6.QtCore import Qt
+# spectroview/viewmodel/utils.py
+from PySide6.QtGui import QPalette, QColor, QIcon, QPixmap, QImage
+from PySide6.QtCore import Qt, Signal, QThread, QSize
+from PySide6.QtWidgets import QComboBox
 
 import base64
 import numpy as np
@@ -9,11 +10,54 @@ from openpyxl.styles import PatternFill
 import pandas as pd
 from copy import deepcopy
 
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
 from fitspy.core.baseline import BaseLine
 from fitspy.core.utils_mp import fit_mp
-    
-from PySide6.QtCore import Signal, QThread, Qt
-from PySide6.QtGui import QPalette, QColor, Qt
+
+from spectroview import PALETTE
+
+
+class CustomizedPalette(QComboBox):
+    """Custom QComboBox to show color palette previews along with their names."""
+    def __init__(self, palette_list=None, parent=None, icon_size=(99, 12)):
+        super().__init__(parent)
+        self.icon_width, self.icon_height = icon_size
+        self.setIconSize(QSize(*icon_size))
+        self.setMinimumWidth(100)
+
+        self.palette_list = palette_list or PALETTE
+        self._populate_with_previews()
+
+    def _populate_with_previews(self):
+        self.clear()
+        for cmap_name in self.palette_list:
+            icon = QIcon(self._create_colormap_preview(cmap_name))
+            self.addItem(icon, cmap_name)
+
+    def _create_colormap_preview(self, cmap_name):
+        """Generate a horizontal gradient preview image for the colormap."""
+        width, height = self.icon_width, self.icon_height
+        gradient = np.linspace(0, 1, 20).reshape(1, -1)
+
+        fig = Figure(figsize=(width / 100, height / 100), dpi=100)
+        canvas = FigureCanvas(fig)
+        ax = fig.add_axes([0, 0, 1, 1], frameon=False)
+        ax.imshow(gradient, aspect='auto', cmap=cm.get_cmap(cmap_name))
+        ax.set_axis_off()
+        canvas.draw()
+
+        image = np.array(canvas.buffer_rgba())
+        qimage = QImage(image.data, image.shape[1], image.shape[0],
+                        QImage.Format_RGBA8888)
+        return QPixmap.fromImage(qimage)
+
+    def get_selected_palette(self):
+        return self.currentText()
+
 
 def compress(array):
     """Compress and encode a numpy array to a base64 string."""

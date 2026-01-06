@@ -19,7 +19,7 @@ from spectroview.view.components.v_about import VAboutDialog
 from spectroview.view.components.v_menubar import VMenuBar
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.v_workspace_maps import WorkspaceMaps
-from spectroview.view.v_workspace_graphs import WorkspaceGraphs
+from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 
 from spectroview.viewmodel.utils import dark_palette, light_palette
 
@@ -50,7 +50,7 @@ class Main(QMainWindow):
         self.tabWidget = QTabWidget(central)
 
         self.v_spectra_workspace = VWorkspaceSpectra()
-        self.v_graphs_workspace = WorkspaceGraphs()
+        self.v_graphs_workspace = VWorkspaceGraphs()
         self.v_maps_workspace = WorkspaceMaps()
 
         self.tabWidget.addTab(self.v_spectra_workspace, "Spectra")
@@ -142,8 +142,7 @@ class Main(QMainWindow):
             self.tabWidget.setCurrentWidget(self.v_maps_workspace)
         
         if dataframes:
-            # TODO: Implement when graphs workspace is converted to MVVM
-            # self.v_graphs_workspace.vm.load_files(dataframes)
+            self.v_graphs_workspace.vm.load_dataframes(dataframes)
             self.tabWidget.setCurrentWidget(self.v_graphs_workspace)
         
         # Load saved work files
@@ -157,8 +156,7 @@ class Main(QMainWindow):
             self.tabWidget.setCurrentWidget(self.v_maps_workspace)
         
         if graphs_work_file:
-            # TODO: Implement when graphs workspace is converted to MVVM
-            # self.v_graphs_workspace.load_work(graphs_work_file)
+            self.v_graphs_workspace.load_workspace(graphs_work_file)
             self.tabWidget.setCurrentWidget(self.v_graphs_workspace)
 
     def save(self):
@@ -172,9 +170,7 @@ class Main(QMainWindow):
             # self.v_maps_workspace.save_work()
             QMessageBox.information(self, "Not Implemented", "Maps workspace save not yet implemented in MVVM.")
         elif current_tab == self.v_graphs_workspace:
-            # TODO: Implement when graphs workspace is converted to MVVM
-            # self.v_graphs_workspace.save_work()
-            QMessageBox.information(self, "Not Implemented", "Graphs workspace save not yet implemented in MVVM.")
+            self.v_graphs_workspace.save_workspace()
         else:
             QMessageBox.warning(self, "No Tab Selected", "No valid tab is selected for saving.")
 
@@ -197,9 +193,15 @@ class Main(QMainWindow):
             # self.v_maps_workspace.clear_workspace()
             QMessageBox.information(self, "Not Implemented", "Maps workspace clear not yet implemented in MVVM.")
         elif current_tab == self.v_graphs_workspace:
-            # TODO: Implement when graphs workspace is converted to MVVM
-            # self.v_graphs_workspace.clear_workspace()
-            QMessageBox.information(self, "Not Implemented", "Graphs workspace clear not yet implemented in MVVM.")
+            reply = QMessageBox.question(
+                self,
+                "Clear Workspace",
+                "Are you sure you want to clear all graphs and dataframes?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            if reply == QMessageBox.Yes:
+                self.v_graphs_workspace.clear_workspace()
         else:
             QMessageBox.warning(self, "No Tab Selected", "Nothing to clear.")
 

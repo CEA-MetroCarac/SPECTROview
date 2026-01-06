@@ -83,9 +83,9 @@ class VWorkspaceGraphs(QWidget):
         
         # Graph list combobox
         toolbar_layout.addWidget(QLabel("Graph list:"))
-        self.cbb_graph_list_toolbar = QComboBox()
-        self.cbb_graph_list_toolbar.setMinimumWidth(150)
-        toolbar_layout.addWidget(self.cbb_graph_list_toolbar)
+        self.cbb_graph_list = QComboBox()
+        self.cbb_graph_list.setMinimumWidth(150)
+        toolbar_layout.addWidget(self.cbb_graph_list)
         
         # Minimize all button
         self.btn_minimize_all = QPushButton("Minimize All")
@@ -498,7 +498,7 @@ class VWorkspaceGraphs(QWidget):
         self.btn_clear_limits.clicked.connect(self._on_clear_limits)
         
         # Bottom toolbar connections
-        self.cbb_graph_list_toolbar.currentIndexChanged.connect(self._on_graph_selected_toolbar)
+        self.cbb_graph_list.currentIndexChanged.connect(self._on_graph_selected_toolbar)
         self.btn_minimize_all.clicked.connect(self._on_minimize_all)
         self.spin_dpi_toolbar.valueChanged.connect(self._on_dpi_changed_toolbar)
         self.spin_xlabel_rotation.valueChanged.connect(self._on_xlabel_rotation_changed)
@@ -719,18 +719,18 @@ class VWorkspaceGraphs(QWidget):
     
     def _update_graph_list(self, graph_ids: list):
         """Update graph list combobox in toolbar."""
-        self.cbb_graph_list_toolbar.clear()
+        self.cbb_graph_list.clear()
         for gid in graph_ids:
             graph = self.vm.get_graph(gid)
             if graph:
                 display_name = graph.get_display_name()
-                self.cbb_graph_list_toolbar.addItem(display_name, gid)
+                self.cbb_graph_list.addItem(display_name, gid)
     
     def _on_graph_selected_toolbar(self):
         """Handle graph selection from toolbar combobox."""
-        index = self.cbb_graph_list_toolbar.currentIndex()
+        index = self.cbb_graph_list.currentIndex()
         if index >= 0:
-            graph_id = self.cbb_graph_list_toolbar.currentData()
+            graph_id = self.cbb_graph_list.currentData()
             if graph_id:
                 self.vm.select_graph(graph_id)
     
@@ -902,9 +902,9 @@ class VWorkspaceGraphs(QWidget):
         self._sync_gui_from_graph(graph_model)
         
         # Update graph list combobox selection
-        for i in range(self.cbb_graph_list_toolbar.count()):
-            if self.cbb_graph_list_toolbar.itemData(i) == graph_model.graph_id:
-                self.cbb_graph_list_toolbar.setCurrentIndex(i)
+        for i in range(self.cbb_graph_list.count()):
+            if self.cbb_graph_list.itemData(i) == graph_model.graph_id:
+                self.cbb_graph_list.setCurrentIndex(i)
                 break
     
     def _sync_gui_from_graph(self, model):
@@ -1091,7 +1091,6 @@ class VWorkspaceGraphs(QWidget):
     
     def _create_mdi_subwindow(self, graph_widget: VGraph, model) -> QMdiSubWindow:
         """Create MDI subwindow for graph."""
-        from spectroview.workspaces.graphs import MdiSubWindow
         
         sub_window = MdiSubWindow(
             graph_id=model.graph_id,
@@ -1209,7 +1208,7 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_z.clear()
         
         # Clear graph list combobox
-        self.cbb_graph_list_toolbar.clear()
+        self.cbb_graph_list.clear()
         
         # Reset limits to default
         self._on_clear_limits()
@@ -1226,3 +1225,43 @@ class VWorkspaceGraphs(QWidget):
         # Clear ViewModel data
         self.vm.clear_workspace()
 
+
+class MdiSubWindow(QMdiSubWindow):
+    """
+    Custom class of QMdiSubWindow to prevent automatic selection of other windows
+    when one subwindow is closed.
+    """
+    closed = Signal(int)
+
+    def __init__(self, graph_id, figsize_label, mdi_area, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.graph_id = graph_id
+        self.figsize_label = figsize_label
+        self.mdi_area = mdi_area  # Reference to the parent QMdiArea
+
+    def closeEvent(self, event):
+        """Override closeEvent to prevent automatic selection of another subwindow"""
+        # Clear focus to prevent any subwindow from being automatically selected
+        self.mdi_area.clearFocus()
+        self.mdi_area.setActiveSubWindow(None)
+
+        # Emit the signal when the window is closing
+        self.closed.emit(self.graph_id)
+        
+        # Call the parent close event to actually close the window
+        super().closeEvent(event)
+
+    def resizeEvent(self, event):
+        """Override resizeEvent to handle window resizing"""
+        new_size = self.size()
+        width, height = new_size.width(), new_size.height()
+        # Update QLabel with the new size
+        self.figsize_label.setText(f"({width}x{height})")
+        super().resizeEvent(event)
+
+    def focusInEvent(self, event):
+        """Override focusInEvent to prevent automatic selection"""
+        # Prevent the window from being focused (optional)
+        if not self.mdi_area.activeSubWindow():
+            self.mdi_area.setActiveSubWindow(None)
+        super().focusInEvent(event)

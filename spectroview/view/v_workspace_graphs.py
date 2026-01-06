@@ -5,16 +5,19 @@ import os
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
     QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QLineEdit, QSplitter,
-    QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame, QScrollArea
+    QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame, QScrollArea,
+    QDialog
 )
-from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon
 
 from spectroview import ICON_DIR, PLOT_STYLES
 from spectroview.model.m_settings import MSettings
 from spectroview.view.components.v_data_filter import VDataFilter
+from spectroview.view.components.v_dataframe_table import VDataframeTable
+from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
-from spectroview.viewmodel.utils import CustomizedPalette
+from spectroview.viewmodel.utils import CustomizedPalette, show_toast_notification
 
 
 class VWorkspaceGraphs(QWidget):
@@ -24,6 +27,9 @@ class VWorkspaceGraphs(QWidget):
         super().__init__(parent)
         self.m_settings = MSettings()
         self.vm = VMWorkspaceGraphs(self.m_settings)
+        
+        # Graph storage: {graph_id: (Graph widget, QDialog, QMdiSubWindow)}
+        self.graph_widgets = {}
         
         self.init_ui()
         self.setup_connections()
@@ -96,14 +102,16 @@ class VWorkspaceGraphs(QWidget):
         self.spin_dpi_toolbar = QSpinBox()
         self.spin_dpi_toolbar.setRange(50, 300)
         self.spin_dpi_toolbar.setValue(110)
+        self.spin_dpi_toolbar.setSingleStep(10)
         self.spin_dpi_toolbar.setMaximumWidth(60)
         toolbar_layout.addWidget(self.spin_dpi_toolbar)
         
         # X label rotation
         toolbar_layout.addWidget(QLabel("X label rotation:"))
         self.spin_xlabel_rotation = QSpinBox()
-        self.spin_xlabel_rotation.setRange(0, 360)
+        self.spin_xlabel_rotation.setRange(0, 90)
         self.spin_xlabel_rotation.setValue(0)
+        self.spin_xlabel_rotation.setSingleStep(10)
         self.spin_xlabel_rotation.setMaximumWidth(60)
         toolbar_layout.addWidget(self.spin_xlabel_rotation)
         
@@ -474,6 +482,7 @@ class VWorkspaceGraphs(QWidget):
         
         # DataFrame management
         self.df_listbox.itemSelectionChanged.connect(self._on_df_selected)
+        self.btn_view_df.clicked.connect(self._on_view_df)
         self.btn_remove_df.clicked.connect(self._on_remove_df)
         self.btn_save_df.clicked.connect(self._on_save_df)
         
@@ -483,6 +492,10 @@ class VWorkspaceGraphs(QWidget):
         # Plot buttons
         self.btn_add_plot.clicked.connect(self._on_add_plot)
         self.btn_update_plot.clicked.connect(self._on_update_plot)
+        
+        # Limits buttons
+        self.btn_set_limits.clicked.connect(self._on_set_current_limits)
+        self.btn_clear_limits.clicked.connect(self._on_clear_limits)
         
         # Bottom toolbar connections
         self.cbb_graph_list_toolbar.currentIndexChanged.connect(self._on_graph_selected_toolbar)
@@ -494,11 +507,14 @@ class VWorkspaceGraphs(QWidget):
         self.cb_grid_toolbar.stateChanged.connect(self._on_grid_changed_toolbar)
         self.btn_copy_figure.clicked.connect(self._on_copy_figure)
         
+        # MDI area connections
+        self.mdi_area.subWindowActivated.connect(self._on_subwindow_activated)
+        
         # ViewModel → View
         vm.dataframes_changed.connect(self._update_df_list)
         vm.dataframe_columns_changed.connect(self._update_column_combos)
         vm.graphs_changed.connect(self._update_graph_list)
-        vm.notify.connect(lambda msg: QMessageBox.information(self, "Graphs", msg))
+        vm.notify.connect(self._show_toast_notification)
     
     def _on_df_selected(self):
         """Handle DataFrame selection."""
@@ -506,6 +522,35 @@ class VWorkspaceGraphs(QWidget):
         if current_item:
             df_name = current_item.text()
             self.vm.select_dataframe(df_name)
+    
+    def _on_view_df(self):
+        """View selected DataFrame in a table dialog."""
+        current_item = self.df_listbox.currentItem()
+        if not current_item:
+            QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame to view.")
+            return
+        
+        df_name = current_item.text()
+        df = self.vm.get_dataframe(df_name)
+        
+        if df is None or df.empty:
+            QMessageBox.warning(self, "Empty DataFrame", "Selected DataFrame is empty.")
+            return
+        
+        # Create dialog to show DataFrame
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"DataFrame: {df_name}")
+        dialog.resize(800, 600)
+        
+        # Create layout for dialog
+        layout = QVBoxLayout()
+        
+        # Create and show DataFrame table
+        table_view = VDataframeTable(layout)
+        table_view.show(df, fill_colors=False)  # No color coding for regular DataFrames
+        
+        dialog.setLayout(layout)
+        dialog.exec()
     
     def _on_remove_df(self):
         """Remove selected DataFrame."""
@@ -529,15 +574,132 @@ class VWorkspaceGraphs(QWidget):
         filters = self.v_data_filter.get_filters()
         self.vm.apply_filters(self.vm.selected_df_name, filters)
     
+    def _show_toast_notification(self, message: str):
+        """Show auto-dismissing toast notification."""
+        show_toast_notification(
+            parent=self,
+            message=message,
+            duration=3000
+        )
+    
     def _on_add_plot(self):
-        """Add a new plot."""
-        # This will be implemented when adding matplotlib integration
-        self.vm.notify.emit("Plot functionality will be implemented in Phase 2")
+        """Add a new plot based on current GUI configuration."""
+        # Validate DataFrame selection
+        if not self.vm.selected_df_name:
+            QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame first.")
+            return
+        
+        # Get selected DataFrame
+        df = self.vm.get_dataframe(self.vm.selected_df_name)
+        if df is None or df.empty:
+            QMessageBox.warning(self, "Empty DataFrame", "Selected DataFrame is empty.")
+            return
+        
+        # Collect plot properties from GUI
+        plot_config = self._collect_plot_config()
+        
+        # Validate axes selection
+        if not plot_config['x'] or not plot_config['y']:
+            QMessageBox.warning(self, "Missing Axes", "Please select X and Y axes.")
+            return
+        
+        # Create graph model via ViewModel
+        graph_model = self.vm.create_graph(plot_config)
+        
+        # Apply filters to get filtered data
+        filters = self.v_data_filter.get_filters()
+        filtered_df = self.vm.apply_filters(self.vm.selected_df_name, filters)
+        
+        # Create Graph widget
+        graph_widget = VGraph(graph_id=graph_model.graph_id)
+        self._configure_graph_from_model(graph_widget, graph_model)
+        
+        # Create plot
+        graph_widget.create_plot_widget(graph_model.dpi)
+        self._render_plot(graph_widget, filtered_df, graph_model)
+        
+        # Save legend properties back to model after rendering
+        self.vm.update_graph(graph_model.graph_id, {
+            'legend_properties': graph_widget.legend_properties
+        })
+        
+        # Create MDI subwindow
+        sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
+        
+        # Store reference
+        from PySide6.QtWidgets import QDialog, QVBoxLayout
+        graph_dialog = QDialog(self)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(graph_widget)
+        graph_dialog.setLayout(layout)
+        sub_window.setWidget(graph_dialog)
+        
+        self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
+        
+        # Show the subwindow
+        self.mdi_area.addSubWindow(sub_window)
+        sub_window.show()
+        
+        # Update graph list
+        self._update_graph_list(self.vm.get_graph_ids())
     
     def _on_update_plot(self):
         """Update selected plot."""
-        # This will be implemented when adding matplotlib integration
-        self.vm.notify.emit("Plot functionality will be implemented in Phase 2")
+        # Get currently active MDI subwindow
+        active_subwindow = self.mdi_area.activeSubWindow()
+        if not active_subwindow:
+            QMessageBox.warning(self, "No Plot Selected", "Please select a plot to update.")
+            return
+        
+        # Find the corresponding graph
+        graph_widget = None
+        graph_model = None
+        for gid, (gw, gd, sw) in self.graph_widgets.items():
+            if sw == active_subwindow:
+                graph_widget = gw
+                graph_model = self.vm.get_graph(gid)
+                break
+        
+        if not graph_widget or not graph_model:
+            return
+        
+        # Collect updated plot properties from GUI
+        plot_config = self._collect_plot_config()
+        
+        # Check if Z-axis has changed (reset legend properties if so)
+        if plot_config['z'] != graph_model.z:
+            graph_widget.legend_properties = []
+        
+        # Check if filters have changed
+        current_filters = self.v_data_filter.get_filters()
+        if current_filters != graph_model.filters:
+            graph_widget.legend_properties = []
+        
+        # Update graph model
+        self.vm.update_graph(graph_model.graph_id, plot_config)
+        
+        # Get updated model
+        graph_model = self.vm.get_graph(graph_model.graph_id)
+        
+        # Apply filters
+        filtered_df = self.vm.apply_filters(self.vm.selected_df_name, current_filters)
+        
+        # Reconfigure and re-render
+        self._configure_graph_from_model(graph_widget, graph_model)
+        graph_widget.create_plot_widget(graph_model.dpi)
+        self._render_plot(graph_widget, filtered_df, graph_model)
+        
+        # Save legend properties back to model after rendering
+        self.vm.update_graph(graph_model.graph_id, {
+            'legend_properties': graph_widget.legend_properties
+        })
+        
+        # Update window title
+        title = f"{graph_model.graph_id}-{graph_model.plot_style}: [{graph_model.x}] vs [{graph_model.y[0] if graph_model.y else 'None'}]"
+        if graph_model.z:
+            title += f" - [{graph_model.z}]"
+        active_subwindow.setWindowTitle(title)
     
     def _update_df_list(self, df_names: list):
         """Update DataFrame listbox."""
@@ -577,50 +739,490 @@ class VWorkspaceGraphs(QWidget):
         for window in self.mdi_area.subWindowList():
             window.showMinimized()
     
+    def _on_set_current_limits(self):
+        """Get and set current axis limits from the active plot."""
+        active_subwindow = self.mdi_area.activeSubWindow()
+        if not active_subwindow:
+            QMessageBox.warning(self, "No Plot Selected", "Please select a plot first.")
+            return
+        
+        # Find the corresponding graph
+        for gid, (gw, gd, sw) in self.graph_widgets.items():
+            if sw == active_subwindow:
+                try:
+                    # Get current limits from matplotlib axes
+                    xmin, xmax = gw.ax.get_xlim()
+                    ymin, ymax = gw.ax.get_ylim()
+                    
+                    # Update spinboxes
+                    self.spin_xmin.setValue(round(xmin, 3))
+                    self.spin_xmax.setValue(round(xmax, 3))
+                    self.spin_ymin.setValue(round(ymin, 3))
+                    self.spin_ymax.setValue(round(ymax, 3))
+                    
+                    # Update model and graph widget
+                    gw.xmin = xmin
+                    gw.xmax = xmax
+                    gw.ymin = ymin
+                    gw.ymax = ymax
+                    
+                    self.vm.update_graph(gid, {
+                        'xmin': xmin,
+                        'xmax': xmax,
+                        'ymin': ymin,
+                        'ymax': ymax
+                    })
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Error getting limits: {str(e)}")
+                break
+    
+    def _on_clear_limits(self):
+        """Clear all axis limit inputs."""
+        self.spin_xmin.setValue(-999999)
+        self.spin_xmax.setValue(-999999)
+        self.spin_ymin.setValue(-999999)
+        self.spin_ymax.setValue(-999999)
+        self.spin_zmin.setValue(-999999)
+        self.spin_zmax.setValue(-999999)
+    
     def _on_dpi_changed_toolbar(self, value: int):
         """Handle DPI change from toolbar."""
-        # TODO: Update current plot DPI in Phase 2
-        pass
+        active_subwindow = self.mdi_area.activeSubWindow()
+        if active_subwindow:
+            # Find the corresponding graph and update
+            for gid, (gw, gd, sw) in self.graph_widgets.items():
+                if sw == active_subwindow:
+                    gw.dpi = value
+                    self.vm.update_graph(gid, {'dpi': value})
+                    break
     
     def _on_xlabel_rotation_changed(self, value: int):
         """Handle X label rotation change."""
-        # TODO: Update current plot X label rotation in Phase 2
-        pass
+        active_subwindow = self.mdi_area.activeSubWindow()
+        if active_subwindow:
+            # Find the corresponding graph and update
+            for gid, (gw, gd, sw) in self.graph_widgets.items():
+                if sw == active_subwindow:
+                    gw.x_rot = value
+                    self.vm.update_graph(gid, {'x_rot': value})
+                    gw._set_rotation()
+                    gw.canvas.draw_idle()
+                    break
     
     def _on_legend_outside_changed_toolbar(self, state: int):
         """Handle legend outside toggle from toolbar."""
-        # Sync with More options tab
-        self.cb_legend_outside.setChecked(state == Qt.Checked)
-        # TODO: Update current plot legend in Phase 2
+        # Sync with More options tab if it exists
+        if hasattr(self, 'cb_legend_outside'):
+            self.cb_legend_outside.setChecked(state == Qt.Checked)
+        
+        active_subwindow = self.mdi_area.activeSubWindow()
+        if active_subwindow:
+            for gid, (gw, gd, sw) in self.graph_widgets.items():
+                if sw == active_subwindow:
+                    gw.legend_outside = (state == Qt.Checked)
+                    self.vm.update_graph(gid, {'legend_outside': gw.legend_outside})
+                    gw._set_legend()
+                    gw.canvas.draw_idle()
+                    break
     
     def _on_legend_loc_changed_toolbar(self, location: str):
         """Handle legend location change from toolbar."""
-        # Sync with More options tab
-        index = self.cbb_legend_loc.findText(location)
-        if index >= 0:
-            self.cbb_legend_loc.setCurrentIndex(index)
-        # TODO: Update current plot legend location in Phase 2
+        # Sync with More options tab if it exists
+        if hasattr(self, 'cbb_legend_loc'):
+            index = self.cbb_legend_loc.findText(location)
+            if index >= 0:
+                self.cbb_legend_loc.setCurrentIndex(index)
+        
+        active_subwindow = self.mdi_area.activeSubWindow()
+        if active_subwindow:
+            for gid, (gw, gd, sw) in self.graph_widgets.items():
+                if sw == active_subwindow:
+                    gw.legend_location = location
+                    self.vm.update_graph(gid, {'legend_location': location})
+                    gw._set_legend()
+                    gw.canvas.draw_idle()
+                    break
     
     def _on_grid_changed_toolbar(self, state: int):
         """Handle grid toggle from toolbar."""
-        # Sync with More options tab
-        self.cb_grid.setChecked(state == Qt.Checked)
-        # TODO: Update current plot grid in Phase 2
+        # Sync with More options tab if it exists
+        if hasattr(self, 'cb_grid'):
+            self.cb_grid.setChecked(state == Qt.Checked)
+        
+        active_subwindow = self.mdi_area.activeSubWindow()
+        if active_subwindow:
+            for gid, (gw, gd, sw) in self.graph_widgets.items():
+                if sw == active_subwindow:
+                    gw.grid = (state == Qt.Checked)
+                    self.vm.update_graph(gid, {'grid': gw.grid})
+                    gw._set_grid()
+                    gw.canvas.draw_idle()
+                    break
     
     def _on_copy_figure(self):
         """Copy selected figure to clipboard."""
-        # TODO: Implement clipboard copy in Phase 2
-        QMessageBox.information(self, "Copy Figure", "Copy to clipboard will be implemented in Phase 2")
+        active_subwindow = self.mdi_area.activeSubWindow()
+        if not active_subwindow:
+            QMessageBox.warning(self, "No Plot Selected", "Please select a plot to copy.")
+            return
+        
+        # Find the corresponding graph
+        for gid, (gw, gd, sw) in self.graph_widgets.items():
+            if sw == active_subwindow:
+                try:
+                    from spectroview.modules.utils import copy_fig_to_clb
+                    copy_fig_to_clb(gw.canvas)
+                    self.vm.notify.emit("Figure copied to clipboard")
+                except Exception as e:
+                    QMessageBox.critical(self, "Copy Error", f"Error copying figure: {str(e)}")
+                break
+    
+    def _on_subwindow_activated(self, sub_window):
+        """Handle MDI subwindow activation - sync GUI controls with selected graph."""
+        if not sub_window:
+            return
+        
+        # Find the corresponding graph
+        graph_widget = None
+        graph_model = None
+        for gid, (gw, gd, sw) in self.graph_widgets.items():
+            if sw == sub_window:
+                graph_widget = gw
+                graph_model = self.vm.get_graph(gid)
+                break
+        
+        if not graph_widget or not graph_model:
+            return
+        
+        # Update plot size label
+        size = sub_window.size()
+        self.lbl_plot_size.setText(f"({size.width()}x{size.height()})")
+        
+        # Sync GUI controls with graph properties
+        self._sync_gui_from_graph(graph_model)
+        
+        # Update graph list combobox selection
+        for i in range(self.cbb_graph_list_toolbar.count()):
+            if self.cbb_graph_list_toolbar.itemData(i) == graph_model.graph_id:
+                self.cbb_graph_list_toolbar.setCurrentIndex(i)
+                break
+    
+    def _sync_gui_from_graph(self, model):
+        """Sync GUI controls from graph model."""
+        # Block signals to prevent triggering updates
+        self.cbb_plot_style.blockSignals(True)
+        self.cbb_x.blockSignals(True)
+        self.cbb_y.blockSignals(True)
+        self.cbb_z.blockSignals(True)
+        
+        try:
+            # Plot style
+            idx = self.cbb_plot_style.findText(model.plot_style)
+            if idx >= 0:
+                self.cbb_plot_style.setCurrentIndex(idx)
+            
+            # Axes
+            idx = self.cbb_x.findText(model.x)
+            if idx >= 0:
+                self.cbb_x.setCurrentIndex(idx)
+            
+            if model.y:
+                idx = self.cbb_y.findText(model.y[0])
+                if idx >= 0:
+                    self.cbb_y.setCurrentIndex(idx)
+            
+            idx = self.cbb_z.findText(model.z if model.z else "None")
+            if idx >= 0:
+                self.cbb_z.setCurrentIndex(idx)
+            
+            # Log scales
+            self.cb_xlog.setChecked(model.xlogscale)
+            self.cb_ylog.setChecked(model.ylogscale)
+            
+            # Labels
+            self.edit_plot_title.setText(model.plot_title or "")
+            self.edit_xlabel.setText(model.xlabel or "")
+            self.edit_ylabel.setText(model.ylabel or "")
+            self.edit_zlabel.setText(model.zlabel or "")
+            
+            # Limits
+            self.spin_xmin.setValue(model.xmin if model.xmin is not None else -999999)
+            self.spin_xmax.setValue(model.xmax if model.xmax is not None else -999999)
+            self.spin_ymin.setValue(model.ymin if model.ymin is not None else -999999)
+            self.spin_ymax.setValue(model.ymax if model.ymax is not None else -999999)
+            self.spin_zmin.setValue(model.zmin if model.zmin is not None else -999999)
+            self.spin_zmax.setValue(model.zmax if model.zmax is not None else -999999)
+            
+            # Toolbar controls
+            self.spin_dpi_toolbar.setValue(model.dpi)
+            
+            self.spin_xlabel_rotation.setValue(model.x_rot)
+            self.cb_legend_outside_toolbar.setChecked(model.legend_outside)
+            
+            idx = self.cbb_legend_loc_toolbar.findText(model.legend_location)
+            if idx >= 0:
+                self.cbb_legend_loc_toolbar.setCurrentIndex(idx)
+            
+            self.cb_grid_toolbar.setChecked(model.grid)
+            
+            # More options
+            self.cb_error_bar.setChecked(model.show_bar_plot_error_bar)
+            self.cb_wafer_stats.setChecked(model.wafer_stats)
+            self.cb_join_point_plot.setChecked(model.join_for_point_plot)
+            self.cb_trendline_eq.setChecked(model.show_trendline_eq)
+            self.spin_trendline_order.setValue(model.trendline_order)
+            
+        finally:
+            # Unblock signals
+            self.cbb_plot_style.blockSignals(False)
+            self.cbb_x.blockSignals(False)
+            self.cbb_y.blockSignals(False)
+            self.cbb_z.blockSignals(False)
+    
+    # ═════════════════════════════════════════════════════════════════════
+    # Phase 2: Plotting Helper Methods
+    # ═════════════════════════════════════════════════════════════════════
+    
+    def _collect_plot_config(self) -> dict:
+        """Collect plot configuration from GUI controls."""
+        plot_style = self.cbb_plot_style.currentText()
+        z_value = self.cbb_z.currentText() if self.cbb_z.currentText() != "None" else None
+        
+        # Only use color palette for wafer/2D maps or when Z axis is selected
+        use_palette = plot_style in ['wafer', '2Dmap'] or z_value is not None
+        
+        return {
+            'df_name': self.vm.selected_df_name,
+            'plot_style': plot_style,
+            'x': self.cbb_x.currentText(),
+            'y': [self.cbb_y.currentText()],
+            'z': z_value,
+            'xlogscale': self.cb_xlog.isChecked(),
+            'ylogscale': self.cb_ylog.isChecked(),
+            'plot_title': self.edit_plot_title.text() or None,
+            'xlabel': self.edit_xlabel.text() or None,
+            'ylabel': self.edit_ylabel.text() or None,
+            'zlabel': self.edit_zlabel.text() or None,
+            'xmin': self.spin_xmin.value() if self.spin_xmin.value() != -999999 else None,
+            'xmax': self.spin_xmax.value() if self.spin_xmax.value() != -999999 else None,
+            'ymin': self.spin_ymin.value() if self.spin_ymin.value() != -999999 else None,
+            'ymax': self.spin_ymax.value() if self.spin_ymax.value() != -999999 else None,
+            'zmin': self.spin_zmin.value() if self.spin_zmin.value() != -999999 else None,
+            'zmax': self.spin_zmax.value() if self.spin_zmax.value() != -999999 else None,
+            'color_palette': self.cbb_colormap.get_selected_palette() if use_palette else 'jet',
+            'wafer_size': float(self.cbb_wafer_size.currentText()),
+            'wafer_stats': self.cb_wafer_stats.isChecked(),
+            'dpi': self.spin_dpi_toolbar.value(),
+            'x_rot': self.spin_xlabel_rotation.value(),
+            'legend_visible': True,  # From More Options tab when implemented
+            'legend_location': self.cbb_legend_loc_toolbar.currentText(),
+            'legend_outside': self.cb_legend_outside_toolbar.isChecked(),
+            'grid': self.cb_grid_toolbar.isChecked(),
+            'show_bar_plot_error_bar': self.cb_error_bar.isChecked(),
+            'show_trendline_eq': self.cb_trendline_eq.isChecked(),
+            'trendline_order': self.spin_trendline_order.value(),
+            'join_for_point_plot': self.cb_join_point_plot.isChecked(),
+            'filters': self.v_data_filter.get_filters()
+        }
+    
+    def _configure_graph_from_model(self, graph_widget: VGraph, model):
+        """Configure Graph widget properties from model."""
+        # Data source
+        graph_widget.df_name = model.df_name
+        graph_widget.filters = model.filters
+        
+        # Plot style and dimensions
+        graph_widget.plot_style = model.plot_style
+        graph_widget.plot_width = model.plot_width
+        graph_widget.plot_height = model.plot_height
+        graph_widget.dpi = model.dpi
+        
+        # Axes
+        graph_widget.x = model.x
+        graph_widget.y = model.y.copy() if model.y else []
+        graph_widget.z = model.z
+        
+        # Axis limits
+        graph_widget.xmin = model.xmin
+        graph_widget.xmax = model.xmax
+        graph_widget.ymin = model.ymin
+        graph_widget.ymax = model.ymax
+        graph_widget.zmin = model.zmin
+        graph_widget.zmax = model.zmax
+        
+        # Axis scales
+        graph_widget.xlogscale = model.xlogscale
+        graph_widget.ylogscale = model.ylogscale
+        
+        # Labels
+        graph_widget.plot_title = model.plot_title
+        graph_widget.xlabel = model.xlabel
+        graph_widget.ylabel = model.ylabel
+        graph_widget.zlabel = model.zlabel
+        
+        # Visual properties
+        graph_widget.x_rot = model.x_rot
+        graph_widget.grid = model.grid
+        
+        # Legend
+        graph_widget.legend_visible = model.legend_visible
+        graph_widget.legend_location = model.legend_location
+        graph_widget.legend_outside = model.legend_outside
+        graph_widget.legend_properties = model.legend_properties.copy() if model.legend_properties else []
+        
+        # Plot-specific
+        graph_widget.color_palette = model.color_palette
+        graph_widget.wafer_size = model.wafer_size
+        graph_widget.wafer_stats = model.wafer_stats
+        graph_widget.trendline_order = model.trendline_order
+        graph_widget.show_trendline_eq = model.show_trendline_eq
+        graph_widget.show_bar_plot_error_bar = model.show_bar_plot_error_bar
+        graph_widget.join_for_point_plot = model.join_for_point_plot
+    
+    def _render_plot(self, graph_widget: VGraph, filtered_df, model):
+        """Render the plot using the Graph widget."""
+        try:
+            # The Graph class has a single plot() method that handles all plot types
+            graph_widget.plot(filtered_df)
+        except Exception as e:
+            QMessageBox.critical(self, "Plot Error", 
+                               f"Error rendering plot: {str(e)}")
+            print(f"Plot rendering error: {e}")
+    
+    def _create_mdi_subwindow(self, graph_widget: VGraph, model) -> QMdiSubWindow:
+        """Create MDI subwindow for graph."""
+        from spectroview.workspaces.graphs import MdiSubWindow
+        
+        sub_window = MdiSubWindow(
+            graph_id=model.graph_id,
+            figsize_label=self.lbl_plot_size,
+            mdi_area=self.mdi_area
+        )
+        
+        # Set window title
+        title = f"{model.graph_id}-{model.plot_style}: [{model.x}] vs [{model.y[0] if model.y else 'None'}]"
+        if model.z:
+            title += f" - [{model.z}]"
+        sub_window.setWindowTitle(title)
+        
+        # Set size
+        sub_window.resize(model.plot_width, model.plot_height)
+        
+        # Connect close signal to cleanup
+        sub_window.closed.connect(lambda gid=model.graph_id: self._on_graph_closed(gid))
+        
+        return sub_window
+    
+    def _on_graph_closed(self, graph_id: int):
+        """Handle graph window closing."""
+        # Remove from storage
+        if graph_id in self.graph_widgets:
+            del self.graph_widgets[graph_id]
+        
+        # Remove from ViewModel
+        self.vm.delete_graph(graph_id)
+        
+        # Update graph list
+        self._update_graph_list(self.vm.get_graph_ids())
+    
+    # ═════════════════════════════════════════════════════════════════════
+    # Workspace Management
+    # ═════════════════════════════════════════════════════════════════════
     
     def save_workspace(self):
         """Save workspace (called from main menu)."""
+        # Update all graph models with current state before saving
+        for gid, (gw, gd, sw) in self.graph_widgets.items():
+            size = sw.size()
+            self.vm.update_graph(gid, {
+                'plot_width': size.width(),
+                'plot_height': size.height(),
+                'legend_properties': gw.legend_properties,
+                'legend_visible': gw.legend_visible,
+                'legend_location': gw.legend_location,
+                'legend_outside': gw.legend_outside
+            })
+        
+        # Save workspace
         self.vm.save_workspace()
     
     def load_workspace(self, file_path: str):
         """Load workspace (called from main menu)."""
+        # Load data into ViewModel
         self.vm.load_workspace(file_path)
+        
+        # Select first DataFrame if available
+        if self.df_listbox.count() > 0:
+            self.df_listbox.setCurrentRow(0)
+        
+        # Recreate graph widgets and MDI subwindows for each loaded graph
+        for graph_id in self.vm.get_graph_ids():
+            graph_model = self.vm.get_graph(graph_id)
+            if graph_model:
+                # Create Graph widget
+                graph_widget = VGraph(graph_id=graph_model.graph_id)
+                self._configure_graph_from_model(graph_widget, graph_model)
+                
+                # Create plot
+                graph_widget.create_plot_widget(graph_model.dpi)
+                
+                # Get filtered data
+                filtered_df = self.vm.apply_filters(graph_model.df_name, graph_model.filters)
+                
+                # Render plot
+                self._render_plot(graph_widget, filtered_df, graph_model)
+                
+                # Create MDI subwindow
+                sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
+                
+                # Store reference
+                from PySide6.QtWidgets import QDialog, QVBoxLayout
+                graph_dialog = QDialog(self)
+                layout = QVBoxLayout()
+                layout.setContentsMargins(0, 0, 0, 0)
+                layout.addWidget(graph_widget)
+                graph_dialog.setLayout(layout)
+                sub_window.setWidget(graph_dialog)
+                
+                self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
+                
+                # Show the subwindow
+                self.mdi_area.addSubWindow(sub_window)
+                sub_window.show()
     
     def clear_workspace(self):
         """Clear workspace (called from main menu)."""
+        # Close and remove all MDI subwindows
+        for sub_window in self.mdi_area.subWindowList():
+            sub_window.close()
+            self.mdi_area.removeSubWindow(sub_window)
+        
+        # Clear graph widgets storage
+        self.graph_widgets.clear()
+        
+        # Clear DataFrame listbox
+        self.df_listbox.clear()
+        
+        # Clear column comboboxes
+        self.cbb_x.clear()
+        self.cbb_y.clear()
+        self.cbb_z.clear()
+        
+        # Clear graph list combobox
+        self.cbb_graph_list_toolbar.clear()
+        
+        # Reset limits to default
+        self._on_clear_limits()
+        
+        # Clear labels
+        self.edit_plot_title.clear()
+        self.edit_xlabel.clear()
+        self.edit_ylabel.clear()
+        self.edit_zlabel.clear()
+        
+        # Reset plot size label
+        self.lbl_plot_size.setText("(600x500)")
+        
+        # Clear ViewModel data
         self.vm.clear_workspace()
 

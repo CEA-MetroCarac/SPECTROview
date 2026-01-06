@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QFileDialog
 
 from spectroview.model.m_graph import MGraph
 from spectroview.model.m_settings import MSettings
+from spectroview.model.m_io import load_dataframe_file
 
 
 class VMWorkspaceGraphs(QObject):
@@ -37,11 +38,7 @@ class VMWorkspaceGraphs(QObject):
     notify = Signal(str)  # General notifications
     
     def __init__(self, settings: MSettings):
-        """Initialize the ViewModel.
-        
-        Args:
-            settings: Application settings manager
-        """
+        """Initialize the ViewModel."""
         super().__init__()
         self.settings = settings
         
@@ -61,11 +58,7 @@ class VMWorkspaceGraphs(QObject):
     # ═════════════════════════════════════════════════════════════════════
     
     def load_dataframes(self, file_paths: List[str] = None):
-        """Load DataFrames from Excel/CSV files.
-        
-        Args:
-            file_paths: List of file paths. If None, opens file dialog.
-        """
+        """Load DataFrames from Excel/CSV files."""
         if not file_paths:
             file_paths, _ = QFileDialog.getOpenFileNames(
                 None,
@@ -77,42 +70,35 @@ class VMWorkspaceGraphs(QObject):
         if not file_paths:
             return
         
+        skipped = []
+        
         for file_path in file_paths:
             try:
                 path = Path(file_path)
                 
-                # Read file based on extension
-                if path.suffix.lower() in ['.xlsx', '.xls']:
-                    df = pd.read_excel(file_path)
-                elif path.suffix.lower() == '.csv':
-                    df = pd.read_csv(file_path)
-                else:
-                    self.notify.emit(f"Unsupported file type: {path.suffix}")
-                    continue
+                # Load DataFrame(s) using helper function
+                # Returns dict: {name: DataFrame}
+                dfs_dict = load_dataframe_file(path)
                 
-                # Use filename as DataFrame name
-                df_name = path.stem
-                
-                # Check if already loaded
-                if df_name in self.dataframes:
-                    self.notify.emit(f"DataFrame '{df_name}' already loaded.")
-                    continue
-                
-                self.dataframes[df_name] = df
-                self.notify.emit(f"Loaded DataFrame: {df_name} ({len(df)} rows)")
+                # Add each DataFrame to workspace
+                for df_name, df in dfs_dict.items():
+                    # Check if already loaded
+                    if df_name in self.dataframes:
+                        skipped.append(df_name)
+                        continue
+                    
+                    self.dataframes[df_name] = df
                 
             except Exception as e:
                 self.notify.emit(f"Error loading {Path(file_path).name}: {e}")
         
+        if skipped:
+            self.notify.emit(f"Already loaded and skipped:\n" + "\n".join(skipped))
+        
         self._emit_dataframes_list()
     
     def add_dataframe(self, df_name: str, df: pd.DataFrame):
-        """Add a DataFrame programmatically (e.g., from fit results).
-        
-        Args:
-            df_name: Name for the DataFrame
-            df: pandas DataFrame
-        """
+        """Add a DataFrame programmatically (e.g., from fit results)."""
         if df_name in self.dataframes:
             self.notify.emit(f"DataFrame '{df_name}' already exists.")
             return
@@ -122,11 +108,7 @@ class VMWorkspaceGraphs(QObject):
         self.notify.emit(f"Added DataFrame: {df_name}")
     
     def remove_dataframe(self, df_name: str):
-        """Remove a DataFrame.
-        
-        Args:
-            df_name: Name of DataFrame to remove
-        """
+        """Remove a DataFrame."""
         if df_name in self.dataframes:
             del self.dataframes[df_name]
             self._emit_dataframes_list()
@@ -137,11 +119,7 @@ class VMWorkspaceGraphs(QObject):
                 self.dataframe_columns_changed.emit([])
     
     def select_dataframe(self, df_name: str):
-        """Select a DataFrame and emit its columns.
-        
-        Args:
-            df_name: Name of DataFrame to select
-        """
+        """Select a DataFrame and emit its columns."""
         if df_name not in self.dataframes:
             return
         
@@ -153,22 +131,11 @@ class VMWorkspaceGraphs(QObject):
         self.dataframe_columns_changed.emit(list(df.columns))
     
     def get_dataframe(self, df_name: str) -> Optional[pd.DataFrame]:
-        """Get a DataFrame by name.
-        
-        Args:
-            df_name: Name of DataFrame
-            
-        Returns:
-            DataFrame or None if not found
-        """
+        """Get a DataFrame by name."""
         return self.dataframes.get(df_name)
     
     def save_dataframe_to_excel(self, df_name: str):
-        """Save a DataFrame to Excel file.
-        
-        Args:
-            df_name: Name of DataFrame to save
-        """
+        """Save a DataFrame to Excel file."""
         if df_name not in self.dataframes:
             return
         
@@ -191,15 +158,7 @@ class VMWorkspaceGraphs(QObject):
     # ═════════════════════════════════════════════════════════════════════
     
     def apply_filters(self, df_name: str, filters: List[Dict]) -> Optional[pd.DataFrame]:
-        """Apply filters to a DataFrame.
-        
-        Args:
-            df_name: Name of DataFrame to filter
-            filters: List of filter dicts with 'expression' and 'state'
-            
-        Returns:
-            Filtered DataFrame or None
-        """
+        """Apply filters to a DataFrame."""
         if df_name not in self.dataframes:
             return None
         
@@ -222,36 +181,32 @@ class VMWorkspaceGraphs(QObject):
     # Graph Management
     # ═════════════════════════════════════════════════════════════════════
     
-    def create_graph(self) -> MGraph:
-        """Create a new graph with default properties.
-        
-        Returns:
-            New MGraph instance
-        """
+    def create_graph(self, plot_config: Dict = None) -> MGraph:
+        """Create a new graph with properties from config."""
         graph = MGraph(graph_id=self._next_graph_id)
+        
+        # Apply configuration if provided
+        if plot_config:
+            for key, value in plot_config.items():
+                if hasattr(graph, key):
+                    setattr(graph, key, value)
+        
         self.graphs[self._next_graph_id] = graph
         self._next_graph_id += 1
         
         self._emit_graphs_list()
         return graph
     
+    def get_graph_ids(self) -> List[int]:
+        """Get list of all graph IDs."""
+        return list(self.graphs.keys())
+    
     def get_graph(self, graph_id: int) -> Optional[MGraph]:
-        """Get a graph by ID.
-        
-        Args:
-            graph_id: Graph ID
-            
-        Returns:
-            MGraph or None
-        """
+        """Get a graph by ID."""
         return self.graphs.get(graph_id)
     
     def select_graph(self, graph_id: int):
-        """Select a graph and emit its properties.
-        
-        Args:
-            graph_id: Graph ID to select
-        """
+        """Select a graph and emit its properties."""
         if graph_id not in self.graphs:
             return
         
@@ -260,12 +215,7 @@ class VMWorkspaceGraphs(QObject):
         self.graph_properties_changed.emit(self.graphs[graph_id])
     
     def update_graph(self, graph_id: int, properties: Dict):
-        """Update graph properties.
-        
-        Args:
-            graph_id: Graph ID
-            properties: Dictionary of properties to update
-        """
+        """Update graph properties."""
         if graph_id not in self.graphs:
             return
         
@@ -277,11 +227,7 @@ class VMWorkspaceGraphs(QObject):
         self.graph_properties_changed.emit(graph)
     
     def delete_graph(self, graph_id: int):
-        """Delete a graph.
-        
-        Args:
-            graph_id: Graph ID to delete
-        """
+        """Delete a graph."""
         if graph_id in self.graphs:
             del self.graphs[graph_id]
             self._emit_graphs_list()
@@ -321,11 +267,7 @@ class VMWorkspaceGraphs(QObject):
             self.notify.emit(f"Error saving workspace: {e}")
     
     def load_workspace(self, file_path: str):
-        """Load graphs workspace from .graphs file.
-        
-        Args:
-            file_path: Path to .graphs file
-        """
+        """Load graphs workspace from .graphs file."""
         try:
             with open(file_path, 'r') as f:
                 data = json.load(f)
@@ -367,7 +309,7 @@ class VMWorkspaceGraphs(QObject):
         self._emit_graphs_list()
         self.dataframe_columns_changed.emit([])
         
-        self.notify.emit("Workspace cleared.")
+        print("Graphs Workspace cleared.")
     
     # ═════════════════════════════════════════════════════════════════════
     # Internal Helpers

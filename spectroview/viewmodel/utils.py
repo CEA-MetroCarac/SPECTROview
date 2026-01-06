@@ -20,6 +20,50 @@ from fitspy.core.utils_mp import fit_mp
 
 from spectroview import PALETTE
 
+try:
+    from pyqttoast import Toast, ToastPreset
+    TOAST_AVAILABLE = True
+except ImportError:
+    TOAST_AVAILABLE = False
+
+
+def show_toast_notification(parent, message, title=None, duration=3000, preset=None):
+    """Show an auto-dismissing toast notification.
+    
+    Args:
+        parent: Parent widget for the toast notification
+        message: Notification message to display
+        title: Title of the notification (default: None, no title for minimal size)
+        duration: Duration in milliseconds (default: 3000ms = 3 seconds)
+        preset: Toast preset style (SUCCESS, ERROR, WARNING, INFO, etc.)
+                If None, defaults to SUCCESS
+    
+    Returns:
+        Toast instance if pyqttoast is available, None otherwise
+    
+    Note:
+        Requires pyqttoast package: pip install pyqttoast
+    """
+    if not TOAST_AVAILABLE:
+        # Fallback to console print if pyqttoast not available
+        prefix = f"[{title}] " if title else ""
+        print(f"{prefix}{message}")
+        return None
+    
+    toast = Toast(parent)
+    toast.setDuration(duration)
+    if title:
+        toast.setTitle(title)
+    toast.setText(message)
+    
+    # Apply preset style (default to SUCCESS)
+    if preset is None:
+        preset = ToastPreset.SUCCESS
+    toast.applyPreset(preset)
+    
+    toast.show()
+    return toast
+
 
 class CustomizedPalette(QComboBox):
     """Custom QComboBox to show color palette previews along with their names."""

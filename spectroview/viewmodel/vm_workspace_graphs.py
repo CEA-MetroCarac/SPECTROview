@@ -2,9 +2,13 @@
 """ViewModel for Graphs Workspace - handles business logic and data management."""
 
 import json
+import pandas as pd
+import gzip
+from io import StringIO
+
 from pathlib import Path
 from typing import Dict, List, Optional
-import pandas as pd
+
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog
@@ -252,15 +256,28 @@ class VMWorkspaceGraphs(QObject):
             return
         
         try:
-            # Prepare data
-            workspace_data = {
-                'graphs': {gid: g.save() for gid, g in self.graphs.items()},
-                'dataframes': {name: df.to_dict('list') for name, df in self.dataframes.items()},
-                'next_graph_id': self._next_graph_id
+            # Convert Graph objects to serializable format (use 'plots' key for compatibility)
+            plots_data = {}
+            for graph_id, graph in self.graphs.items():
+                graph_data = graph.save()
+                plots_data[graph_id] = graph_data
+            
+            # Compress DataFrames using gzip (same as legacy code)
+            compressed_dfs = {}
+            for k, v in self.dataframes.items():
+                # Convert DataFrame to a CSV string and compress it
+                compressed_df = v.to_csv(index=False).encode('utf-8')
+                compressed_dfs[k] = gzip.compress(compressed_df)
+            
+            # Prepare data to save (use 'plots' and 'original_dfs' keys for compatibility)
+            data_to_save = {
+                'plots': plots_data,
+                'original_dfs': {k: v.hex() for k, v in compressed_dfs.items()},
             }
             
+            # Save to JSON file
             with open(file_path, 'w') as f:
-                json.dump(workspace_data, f, indent=4)
+                json.dump(data_to_save, f, indent=4)
             
             self.notify.emit(f"Workspace saved: {Path(file_path).name}")
         except Exception as e:
@@ -276,18 +293,25 @@ class VMWorkspaceGraphs(QObject):
             self.graphs.clear()
             self.dataframes.clear()
             
-            # Load DataFrames
-            for name, df_data in data.get('dataframes', {}).items():
-                self.dataframes[name] = pd.DataFrame(df_data)
+            # Load DataFrames from compressed format (use 'original_dfs' key for compatibility)
+            for k, v in data.get('original_dfs', {}).items():
+                compressed_data = bytes.fromhex(v)
+                csv_data = gzip.decompress(compressed_data).decode('utf-8')
+                self.dataframes[k] = pd.read_csv(StringIO(csv_data))
             
-            # Load graphs
-            for gid_str, graph_data in data.get('graphs', {}).items():
-                gid = int(gid_str)
-                graph = MGraph(gid)
+            # Load graphs (use 'plots' key for compatibility)
+            plots_data = data.get('plots', {})
+            for graph_id_str, graph_data in plots_data.items():
+                graph_id = int(graph_id_str)
+                graph = MGraph(graph_id=graph_id)
                 graph.load(graph_data)
-                self.graphs[gid] = graph
+                self.graphs[graph_id] = graph
             
-            self._next_graph_id = data.get('next_graph_id', len(self.graphs) + 1)
+            # Update next graph ID
+            if self.graphs:
+                self._next_graph_id = max(self.graphs.keys()) + 1
+            else:
+                self._next_graph_id = 1
             
             # Emit updates
             self._emit_dataframes_list()

@@ -28,22 +28,7 @@ except ImportError:
 
 
 def show_toast_notification(parent, message, title=None, duration=3000, preset=None):
-    """Show an auto-dismissing toast notification.
-    
-    Args:
-        parent: Parent widget for the toast notification
-        message: Notification message to display
-        title: Title of the notification (default: None, no title for minimal size)
-        duration: Duration in milliseconds (default: 3000ms = 3 seconds)
-        preset: Toast preset style (SUCCESS, ERROR, WARNING, INFO, etc.)
-                If None, defaults to SUCCESS
-    
-    Returns:
-        Toast instance if pyqttoast is available, None otherwise
-    
-    Note:
-        Requires pyqttoast package: pip install pyqttoast
-    """
+    """Show an auto-dismissing toast notification"""
     if not TOAST_AVAILABLE:
         # Fallback to console print if pyqttoast not available
         prefix = f"[{title}] " if title else ""
@@ -101,19 +86,6 @@ class CustomizedPalette(QComboBox):
 
     def get_selected_palette(self):
         return self.currentText()
-
-
-def compress(array):
-    """Compress and encode a numpy array to a base64 string."""
-    compressed = zlib.compress(array.tobytes())
-    encoded = base64.b64encode(compressed).decode('utf-8')
-    return encoded
-
-def decompress(data, dtype):
-    """Decode and decompress a base64 string to a numpy array."""
-    decoded = base64.b64decode(data.encode('utf-8'))
-    decompressed = zlib.decompress(decoded)
-    return np.frombuffer(decompressed, dtype=dtype)
 
 class FitThread(QThread):
     """Class to perform fitting in a separate Thread."""
@@ -183,6 +155,20 @@ class FitThread(QThread):
 
 def closest_index(array, value):
     return int(np.abs(array - value).argmin())
+
+
+def compress(array):
+    """Compress and encode a numpy array to a base64 string."""
+    compressed = zlib.compress(array.tobytes())
+    encoded = base64.b64encode(compressed).decode('utf-8')
+    return encoded
+
+def decompress(data, dtype):
+    """Decode and decompress a base64 string to a numpy array."""
+    decoded = base64.b64decode(data.encode('utf-8'))
+    decompressed = zlib.decompress(decoded)
+    return np.frombuffer(decompressed, dtype=dtype)
+
 
 def baseline_to_dict(spectrum):
     dict_baseline = dict(vars(spectrum.baseline).items())

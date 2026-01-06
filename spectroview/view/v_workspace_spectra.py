@@ -121,10 +121,8 @@ class VWorkspaceSpectra(QWidget):
         """Update progress bar with fitting progress and elapsed time."""
         if total > 0:
             self.progress_bar.setValue(percentage)
-            # Format elapsed time as MM:SS
-            minutes = int(elapsed_time // 60)
-            seconds = int(elapsed_time % 60)
-            time_str = f"{minutes:02d}:{seconds:02d}"
+            # Format elapsed time in seconds with 2 decimal places
+            time_str = f"{elapsed_time:.2f}s"
             self.progress_bar.setFormat(f"Fitting: {current}/{total} ({percentage}%) - {time_str}")
         else:
             # Reset to default state

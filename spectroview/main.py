@@ -204,6 +204,7 @@ class Main(QMainWindow):
             QMessageBox.warning(self, "No Tab Selected", "Nothing to clear.")
 
     def _open_settings(self):
+        """   Open settings dialog. """
         vm = VMSettings()
         dlg = VSettingsDialog(vm, self)
         dlg.exec()

@@ -758,8 +758,6 @@ class VMWorkspaceSpectra(QObject):
             else:
                 self.selected_indices = []
                 self.spectra_selection_changed.emit([])
-                
-            self.notify.emit(f"Loaded {len(self.spectra)} spectra from {Path(file_path).name}")
             
         except Exception as e:
             self.notify.emit(f"Error loading work: {e}")
@@ -793,7 +791,7 @@ class VMWorkspaceSpectra(QObject):
         self.df_fit_results = None
         self.fit_results_updated.emit(None)
         
-        self.notify.emit("Workspace cleared.")
+        print("Spectra Workspace cleared.")
 
     # ═════════════════════════════════════════════════════════════════════
     # Fit Results Methods
@@ -824,7 +822,10 @@ class VMWorkspaceSpectra(QObject):
                 model_name = model.name
                 
                 # Get result parameters if fit was performed
-                if hasattr(spectrum, 'result_fit') and spectrum.result_fit:
+                # Check that result_fit exists, is not None, and has params attribute (not a function)
+                if (hasattr(spectrum, 'result_fit') and 
+                    spectrum.result_fit and 
+                    hasattr(spectrum.result_fit, 'params')):
                     for param_name in model.param_names:
                         # Extract peak-specific parameter value
                         if param_name in spectrum.result_fit.params:
@@ -832,8 +833,16 @@ class VMWorkspaceSpectra(QObject):
                             params[param_name] = param_value
                 else:
                     # Use param_hints if no fit result
+                    # Extract prefix from model (e.g., "m01" from "Model(lorentzian, prefix='m01')")
+                    # Use model.prefix if available, otherwise parse from name
+                    if hasattr(model, 'prefix') and model.prefix:
+                        prefix = model.prefix.rstrip('_')  # Remove trailing underscore
+                    else:
+                        # Fallback: use model_name directly
+                        prefix = model_name
+                    
                     for key in model.param_hints:
-                        param_name = f"{model_name}_{key}"
+                        param_name = f"{prefix}_{key}"
                         param_value = model.param_hints[key].get('value')
                         params[param_name] = param_value
             

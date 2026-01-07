@@ -74,7 +74,7 @@ class VGraph(QWidget):
         self.x_rot = 0
         self.grid = False
         self.legend_visible = True
-        self.legend_location = 'upper right'
+        self.legend_location = 'best'
         self.legend_outside = False
         self.legend_properties = []
         
@@ -395,7 +395,7 @@ class VGraph(QWidget):
             
             if self.legend_visible:
                 legend = self.ax.legend(handles, legend_labels, loc=self.legend_location)
-                legend.set_draggable(True)
+                #legend.set_draggable(True)
             else:
                 self.ax.legend().remove()
             
@@ -405,7 +405,7 @@ class VGraph(QWidget):
                     loc='center left',
                     bbox_to_anchor=(1, 0.5)
                 )
-                legend.set_draggable(True)
+                #legend.set_draggable(True)
     
     def _set_grid(self):
         """Add grid for the plot (supports linear & log scale automatically)."""

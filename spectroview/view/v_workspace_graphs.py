@@ -121,7 +121,7 @@ class VWorkspaceGraphs(QWidget):
         
         # Legend location combobox
         self.cbb_legend_loc_toolbar = QComboBox()
-        self.cbb_legend_loc_toolbar.addItems(['lower left', 'upper right', 'upper left', 'lower right',
+        self.cbb_legend_loc_toolbar.addItems(['best', 'lower left', 'upper right', 'upper left', 'lower right',
                                                'right', 'center left', 'center right', 'lower center',
                                                'upper center', 'center'])
         self.cbb_legend_loc_toolbar.setMaximumWidth(100)

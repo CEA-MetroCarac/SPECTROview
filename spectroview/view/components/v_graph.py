@@ -94,6 +94,9 @@ class VGraph(QWidget):
         self.ax3 = None
         self.canvas = None
         
+        # Store DataFrame for replotting
+        self.df = None
+        
         # Layout setup
         self.graph_layout = QVBoxLayout()
         self.setLayout(self.graph_layout)
@@ -144,6 +147,9 @@ class VGraph(QWidget):
     
     def plot(self, df):
         """Renders plot based on DataFrame and current properties."""
+        # Store DataFrame for replotting when legend is customized
+        self.df = df
+        
         self.ax.clear()
         if self.ax2:
             self.ax2.clear()
@@ -311,8 +317,11 @@ class VGraph(QWidget):
             # Show dialog
             result = dialog.exec()
             if result == QDialog.Accepted:
-                # Keep the modified legend properties and redraw
-                self.canvas.draw_idle()
+                # Replot with updated colors and labels
+                if self.df is not None:
+                    self.plot(self.df)
+                else:
+                    self.canvas.draw_idle()
             else:
                 # Restore original legend properties if cancelled
                 self.legend_properties = original_legend_properties

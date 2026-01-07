@@ -282,7 +282,46 @@ def replace_peak_labels(fit_model, param):
                 return f"{param}_{peak_label}"
         return param
 
-
+def calc_area(model_name, params):
+    """Calculate area under the peak based on model type and parameters."""
+    # params: dict with parameter values like ampli, fwhm, alpha, etc.
+    if model_name == "Gaussian":
+        ampli = params.get('ampli')
+        fwhm = params.get('fwhm')
+        if ampli is not None and fwhm is not None:
+            return ampli * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
+    elif model_name == "Lorentzian":
+        ampli = params.get('ampli')
+        fwhm = params.get('fwhm')
+        if ampli is not None and fwhm is not None:
+            return np.pi * ampli * fwhm / 2
+    elif model_name == "PseudoVoigt":
+        ampli = params.get('ampli')
+        fwhm = params.get('fwhm')
+        alpha = params.get('alpha', 0.5)
+        if ampli is not None and fwhm is not None:
+            gauss_area = ampli * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
+            lorentz_area = np.pi * ampli * fwhm / 2
+            return alpha * gauss_area + (1 - alpha) * lorentz_area
+    elif model_name == "GaussianAsym":
+        # asymmetric Gaussian has left and right FWHM
+        ampli = params.get('ampli')
+        fwhm_l = params.get('fwhm_l')
+        fwhm_r = params.get('fwhm_r')
+        if ampli is not None and fwhm_l is not None and fwhm_r is not None:
+            area_l = (ampli * fwhm_l * np.sqrt(np.pi / (4 * np.log(2))))/2
+            area_r = (ampli * fwhm_r * np.sqrt(np.pi / (4 * np.log(2))))/2
+            return area_l + area_r
+    elif model_name == "LorentzianAsym":
+        ampli = params.get('ampli')
+        fwhm_l = params.get('fwhm_l')
+        fwhm_r = params.get('fwhm_r')
+        if ampli is not None and fwhm_l is not None and fwhm_r is not None:
+            area_l = (np.pi * ampli * fwhm_l / 2)/2
+            area_r = (np.pi * ampli * fwhm_r / 2)/2
+            return area_l + area_r
+    return None  # default if parameters missing
+    
 def dark_palette():
     """Dark palette tuned for SPECTROview UI"""
 

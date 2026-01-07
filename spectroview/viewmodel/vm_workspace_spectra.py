@@ -15,6 +15,7 @@ from spectroview.model.m_spectrum import MSpectrum
 from spectroview.viewmodel.utils import (
     FitThread,
     baseline_to_dict,
+    calc_area,
     closest_index,
     dict_to_baseline,
     spectrum_to_dict,
@@ -113,9 +114,6 @@ class VMWorkspaceSpectra(QObject):
         self._emit_list_update()
         self._emit_selected_spectra()
 
-    
-    
-            
     def remove_selected_spectra(self):
         """Remove currently selected spectra."""
         if not self.selected_indices:
@@ -840,6 +838,27 @@ class VMWorkspaceSpectra(QObject):
                         param_name = f"{prefix}_{key}"
                         param_value = model.param_hints[key].get('value')
                         params[param_name] = param_value
+                
+                # Calculate peak area
+                model_type = model.name2  # Get the type of peak model: Lorentzian, Gaussian, etc.
+                # Extract prefix for this model
+                if hasattr(model, 'prefix') and model.prefix:
+                    peak_id = model.prefix.rstrip('_')
+                else:
+                    peak_id = model_name
+                
+                # Build params dict for this specific peak (filter by prefix)
+                peak_params = {}
+                for param_name, param_value in params.items():
+                    if param_name.startswith(peak_id + '_'):
+                        # Remove prefix to get parameter name (e.g., 'ampli', 'fwhm')
+                        param_key = param_name.replace(peak_id + '_', '')
+                        peak_params[param_key] = param_value
+                
+                area = calc_area(model_type, peak_params)
+                if area is not None:
+                    area_key = f"{peak_id}_area"
+                    params[area_key] = area
             
             # Add all parameters to fit_result
             fit_result.update(params)
@@ -872,10 +891,11 @@ class VMWorkspaceSpectra(QObject):
             'x0': 0,
             'fwhm': 1,
             'ampli': 2,
-            'sigma': 3,
-            'gamma': 4,
-            'fraction': 5,
-            'height': 6,
+            'area': 3,
+            'sigma': 4,
+            'gamma': 5,
+            'fraction': 6,
+            'height': 7,
         }
         
         # Sort by parameter type (prefix) then by peak identifier (suffix)

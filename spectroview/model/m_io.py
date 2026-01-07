@@ -32,9 +32,43 @@ def load_spectrum_file(path: Path) -> MSpectrum:
     return s
 
 
-def load_map_file(path: Path) -> MSpectrum:
-    """Load TXT or CSV spectrum file."""
-    pass
+def load_map_file(path: Path) -> pd.DataFrame:
+    """Load hyperspectral map file (CSV or TXT).
+    
+    Returns:
+        pd.DataFrame with columns: X, Y, wavenumber1, wavenumber2, ...
+    """
+    ext = path.suffix.lower()
+    
+    if ext == '.csv':
+        # Read first 3 lines to determine format
+        with open(path, 'r') as file:
+            lines = [next(file) for _ in range(3)]
+        
+        # Check 2nd line to determine old and new format
+        if len(lines[1].split(';')) > 3:
+            # New format: multiple columns
+            map_df = pd.read_csv(path, skiprows=1, delimiter=";")
+        else:
+            # Old format: alternating rows
+            df = pd.read_csv(path, skiprows=2, delimiter=";")
+            map_df = df.iloc[::2].reset_index(drop=True)
+            map_df.rename(columns={
+                map_df.columns[0]: "X", 
+                map_df.columns[1]: "Y"
+            }, inplace=True)
+    
+    elif ext == '.txt':
+        map_df = pd.read_csv(path, delimiter="\t")
+        map_df.columns = ['Y', 'X'] + list(map_df.columns[2:])
+        # Reorder columns by increasing wavenumber
+        sorted_columns = sorted(map_df.columns[2:], key=float)
+        map_df = map_df[['X', 'Y'] + sorted_columns]
+    
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
+    
+    return map_df
 
 
 def load_dataframe_file(path: Path) -> dict[str, pd.DataFrame]:

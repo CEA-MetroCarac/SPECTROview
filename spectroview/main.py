@@ -137,8 +137,7 @@ class Main(QMainWindow):
             self.tabWidget.setCurrentWidget(self.v_spectra_workspace)
         
         if hyperspectral_files:
-            # TODO: Implement when maps workspace is converted to MVVM
-            # self.v_maps_workspace.vm.load_files(hyperspectral_files)
+            self.v_maps_workspace.vm.load_map_files(hyperspectral_files)
             self.tabWidget.setCurrentWidget(self.v_maps_workspace)
         
         if dataframes:

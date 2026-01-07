@@ -18,12 +18,15 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     maps_list_changed = Signal(list)  # list[str] - map names
     map_selected = Signal(str)  # selected map name
     map_data_updated = Signal(object)  # pd.DataFrame for map visualization
+    send_spectra_to_workspace = Signal(list)  # list[MSpectrum] - spectra to send to Spectra workspace
     
     def __init__(self, settings: MSettings):
         super().__init__(settings)
         self.maps = {}  # dict[str, pd.DataFrame] - {map_name: map_dataframe}
+        self.map_spectra = {}  # dict[str, list[MSpectrum]] - {map_name: [spectra...]}
         self.current_map_name = None
         self.current_map_df = None
+        self.current_map_indices = []  # Global indices of currently displayed map's spectra
     
     # ─────────────────────────────────────────────────────────────────
     # MAPS LOADING AND MANAGEMENT
@@ -59,15 +62,19 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         return load_map_file(path)
     
     def select_map(self, map_name: str):
-        """Select a map and extract its spectra."""
+        """Select a map and show its spectra."""
         if map_name not in self.maps:
             return
         
         self.current_map_name = map_name
         self.current_map_df = self.maps[map_name]
         
-        # Extract all spectra from the selected map
-        self._extract_spectra_from_map(map_name, self.current_map_df)
+        # Extract spectra if not already extracted for this map
+        if map_name not in self.map_spectra:
+            self._extract_spectra_from_map(map_name, self.current_map_df)
+        else:
+            # Use existing spectra (preserves fitting results)
+            self._show_map_spectra(map_name)
         
         # Emit signals
         self.map_selected.emit(map_name)
@@ -75,9 +82,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     
     def _extract_spectra_from_map(self, map_name: str, map_df: pd.DataFrame):
         """Extract all individual spectra from a hyperspectral map dataframe."""
-        # Clear current spectra
-        self.spectra = MSpectra()
-        
         # Extract wavenumber columns (all columns except X, Y)
         wavenumber_cols = [col for col in map_df.columns if col not in ['X', 'Y']]
         
@@ -89,10 +93,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         x_data = np.asarray(x_values)
         
+        # Create list to store spectra for this map
+        map_spectra_list = []
+        
         # Create spectrum for each row (spatial point)
         for idx, row in map_df.iterrows():
-            x_pos = row['X']
-            y_pos = row['Y']
+            x_pos = float(row['X'])
+            y_pos = float(row['Y'])
             
             # Extract y values and skip last one
             y_values = row[wavenumber_cols].tolist()
@@ -100,7 +107,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             
             # Create MSpectrum object
             spectrum = MSpectrum()
-            spectrum.fname = f"{map_name}_{tuple([x_pos, y_pos])}"
+            spectrum.fname = f"{map_name}_({x_pos}, {y_pos})"
             spectrum.x = x_data.copy()
             spectrum.x0 = x_data.copy()
             spectrum.y = y_data.copy()
@@ -118,27 +125,156 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             spectrum.metadata['y_position'] = y_pos
             spectrum.metadata['point_index'] = idx
             
+            map_spectra_list.append(spectrum)
+        
+        # Store the extracted spectra with this map
+        self.map_spectra[map_name] = map_spectra_list
+        
+        # Add these spectra to the main collection
+        for spectrum in map_spectra_list:
             self.spectra.add(spectrum)
         
-        # Update View
-        self._emit_list_update()
+        # Update View to show only this map's spectra
+        self._show_map_spectra(map_name)
+    
+    def _show_map_spectra(self, map_name: str):
+        """Display spectra for the selected map in the spectra list."""
+        if map_name not in self.map_spectra:
+            return
+        
+        # Get spectra for this map
+        map_spectra = self.map_spectra[map_name]
+        spectra_names = [s.fname for s in map_spectra]
+        
+        # Find global indices of this map's spectra in self.spectra
+        all_spectra_list = list(self.spectra)
+        self.current_map_indices = []
+        for spectrum in map_spectra:
+            try:
+                idx = all_spectra_list.index(spectrum)
+                self.current_map_indices.append(idx)
+            except ValueError:
+                pass  # Spectrum not found
+        
+        # Update the view to show only this map's spectra
+        self.spectra_list_changed.emit(spectra_names)
+        self.count_changed.emit(len(map_spectra))
         
         # Auto-select first spectrum if exists
-        if len(self.spectra) > 0:
-            self.selected_indices = [0]
+        if self.current_map_indices:
+            self.selected_indices = [self.current_map_indices[0]]
             self._emit_selected_spectra()
     
+    def get_current_map_dataframe(self) -> pd.DataFrame | None:
+        """Get the DataFrame of the currently selected map."""
+        if self.current_map_name and self.current_map_name in self.maps:
+            return self.maps[self.current_map_name]
+        return None
+    
+    def save_current_map_to_excel(self, file_path: str):
+        """Save the currently selected map to an Excel file."""
+        if not self.current_map_name or self.current_map_name not in self.maps:
+            self.notify.emit("No map selected.")
+            return
+        
+        try:
+            df = self.maps[self.current_map_name]
+            df.to_excel(file_path, index=False)
+            self.notify.emit(f"Map '{self.current_map_name}' saved to Excel.")
+        except Exception as e:
+            self.notify.emit(f"Error saving map: {e}")
+    
+    def delete_current_map(self):
+        """Delete the currently selected map."""
+        if not self.current_map_name:
+            self.notify.emit("No map selected.")
+            return
+        
+        map_name = self.current_map_name
+        self.remove_map(map_name)
+        self.notify.emit(f"Map '{map_name}' deleted.")
+    
+    def select_all_current_map_spectra(self):
+        """Select all spectra from the currently displayed map."""
+        if not self.current_map_indices:
+            return
+        
+        # Select all indices from current map
+        self.selected_indices = self.current_map_indices.copy()
+        self._emit_selected_spectra()
+    
+    def reinit_current_map_spectra(self, apply_all: bool = False):
+        """Reinitialize selected spectra or all spectra from all maps.
+        
+        Args:
+            apply_all: If True, reinit ALL spectra from ALL maps. If False, only selected spectra.
+        """
+        if apply_all:
+            # Reinit all spectra from all loaded maps
+            for spectra_list in self.map_spectra.values():
+                for spectrum in spectra_list:
+                    spectrum.reinit()
+        else:
+            # Reinit only selected spectra
+            if not self.selected_indices:
+                self.notify.emit("No spectrum selected.")
+                return
+            
+            selected_spectra = self.spectra.get(self.selected_indices)
+            for spectrum in selected_spectra:
+                spectrum.reinit()
+        
+        self._emit_selected_spectra()
+    
+    def send_selected_spectra_to_spectra_workspace(self):
+        """Send selected spectra to the Spectra workspace tab for comparison."""
+        if not self.selected_indices:
+            self.notify.emit("No spectrum selected.")
+            return
+        
+        from copy import deepcopy
+        
+        selected_spectra = self.spectra.get(self.selected_indices)
+        if not selected_spectra:
+            return
+        
+        # Create deep copies to avoid modifying the original spectra
+        spectra_copies = [deepcopy(spectrum) for spectrum in selected_spectra]
+        
+        # Emit signal with the copies
+        self.send_spectra_to_workspace.emit(spectra_copies)
+        self.notify.emit(f"Sent {len(spectra_copies)} spectra to Spectra workspace.")
+    
     def remove_map(self, map_name: str):
-        """Remove a map from the loaded maps."""
+        """Remove a map and its spectra from the loaded maps."""
         if map_name in self.maps:
             del self.maps[map_name]
             
-            # If removed map was selected, clear spectra
+            # Remove spectra from main collection
+            if map_name in self.map_spectra:
+                # Find indices of spectra to remove
+                all_spectra_list = list(self.spectra)
+                indices_to_remove = []
+                
+                for spectrum in self.map_spectra[map_name]:
+                    try:
+                        idx = all_spectra_list.index(spectrum)
+                        indices_to_remove.append(idx)
+                    except ValueError:
+                        pass  # Spectrum not found, skip
+                
+                # Remove by indices
+                if indices_to_remove:
+                    self.spectra.remove(indices_to_remove)
+                
+                del self.map_spectra[map_name]
+            
+            # If removed map was selected, clear view
             if self.current_map_name == map_name:
                 self.current_map_name = None
                 self.current_map_df = None
-                self.spectra = MSpectra()
-                self._emit_list_update()
+                self.spectra_list_changed.emit([])
+                self.count_changed.emit(0)
                 self.spectra_selection_changed.emit([])
             
             self._emit_maps_list_update()
@@ -147,6 +283,22 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         """Emit updated list of map names."""
         map_names = list(self.maps.keys())
         self.maps_list_changed.emit(map_names)
+    
+    def set_selected_indices(self, indices: list[int]):
+        """Override to map displayed list indices to global spectra indices."""
+        if not self.current_map_indices:
+            # No map selected, use parent behavior
+            super().set_selected_indices(indices)
+            return
+        
+        # Map from displayed list indices to global indices
+        global_indices = []
+        for idx in indices:
+            if 0 <= idx < len(self.current_map_indices):
+                global_indices.append(self.current_map_indices[idx])
+        
+        # Call parent with global indices
+        super().set_selected_indices(global_indices)
     
     # ─────────────────────────────────────────────────────────────────
     # MAP VISUALIZATION HELPERS

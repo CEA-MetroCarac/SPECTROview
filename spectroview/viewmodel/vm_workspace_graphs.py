@@ -332,8 +332,6 @@ class VMWorkspaceGraphs(QObject):
         self._emit_dataframes_list()
         self._emit_graphs_list()
         self.dataframe_columns_changed.emit([])
-        
-        print("Graphs Workspace cleared.")
     
     # ═════════════════════════════════════════════════════════════════════
     # Internal Helpers

@@ -137,6 +137,9 @@ class VGraph(QWidget):
             self.graph_layout.addWidget(self.canvas)
             self.graph_layout.addWidget(self.toolbar)
         
+        # Connect pick event for legend customization
+        self.canvas.mpl_connect('pick_event', self._on_legend_pick)
+        
         self.canvas.draw_idle()
     
     def plot(self, df):
@@ -246,6 +249,12 @@ class VGraph(QWidget):
             
             self.update_combobox_color(color)
         
+        # Add vertical stretch to absorb remaining space
+        label_layout.addStretch()
+        if self.plot_style == 'point':
+            marker_layout.addStretch()
+        color_layout.addStretch()
+        
         main_layout.addLayout(label_layout)
         main_layout.addLayout(marker_layout)
         main_layout.addLayout(color_layout)
@@ -265,6 +274,50 @@ class VGraph(QWidget):
         """Updates legend properties based on user modifications via GUI."""
         self.legend_properties[idx][property_type] = text
         self._set_legend()
+    
+    def _on_legend_pick(self, event):
+        """Handle legend click event to show customization dialog."""
+        from PySide6.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox, QHBoxLayout
+        import copy
+        
+        # Check if legend was clicked
+        if event.artist.get_label() == '_legend_':
+            return
+        
+        legend = self.ax.get_legend()
+        if legend and event.artist == legend:
+            # Save original legend properties before allowing edits
+            original_legend_properties = copy.deepcopy(self.legend_properties)
+            
+            # Create customization dialog
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Customize Legend")
+            dialog.resize(250, 400)
+            
+            # Main layout
+            main_layout = QVBoxLayout(dialog)
+            
+            # Legend customization widget layout
+            legend_layout = QHBoxLayout()
+            self.customize_legend_widget(legend_layout)
+            main_layout.addLayout(legend_layout)
+            
+            # Dialog buttons
+            button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+            button_box.accepted.connect(dialog.accept)
+            button_box.rejected.connect(dialog.reject)
+            main_layout.addWidget(button_box)
+            
+            # Show dialog
+            result = dialog.exec()
+            if result == QDialog.Accepted:
+                # Keep the modified legend properties and redraw
+                self.canvas.draw_idle()
+            else:
+                # Restore original legend properties if cancelled
+                self.legend_properties = original_legend_properties
+                self._set_legend()
+                self.canvas.draw_idle()
     
     def _plot_primary_axis(self, df):
         """Plots data on the primary axis based on the current plot style."""
@@ -395,6 +448,7 @@ class VGraph(QWidget):
             
             if self.legend_visible:
                 legend = self.ax.legend(handles, legend_labels, loc=self.legend_location)
+                legend.set_picker(True)  # Make legend clickable
                 #legend.set_draggable(True)
             else:
                 self.ax.legend().remove()
@@ -405,6 +459,7 @@ class VGraph(QWidget):
                     loc='center left',
                     bbox_to_anchor=(1, 0.5)
                 )
+                legend.set_picker(True)  # Make legend clickable
                 #legend.set_draggable(True)
     
     def _set_grid(self):

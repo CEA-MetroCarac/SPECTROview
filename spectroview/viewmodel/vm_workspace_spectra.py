@@ -788,9 +788,6 @@ class VMWorkspaceSpectra(QObject):
         # Clear fit results
         self.df_fit_results = None
         self.fit_results_updated.emit(None)
-        
-        print("Spectra Workspace cleared.")
-
     # ═════════════════════════════════════════════════════════════════════
     # Fit Results Methods
     # ═════════════════════════════════════════════════════════════════════

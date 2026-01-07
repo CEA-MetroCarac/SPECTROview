@@ -1,10 +1,14 @@
 # spectroview/view/components/v_map_list.py
 """View component for Maps list - two-level navigation (Maps → Spectra)."""
+import os
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QListWidget, 
-    QListWidgetItem, QAbstractItemView
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
+    QListWidgetItem, QAbstractItemView, QPushButton
 )
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QIcon
+
+from spectroview import ICON_DIR
 
 
 class VMapsList(QWidget):
@@ -14,20 +18,36 @@ class VMapsList(QWidget):
     map_selection_changed = Signal(int)       # selected map index
     spectra_selection_changed = Signal(list)  # list of selected spectrum indices
     files_dropped = Signal(list)               # list of file paths dropped on maps list
+    view_map_requested = Signal()              # view button clicked
+    delete_map_requested = Signal()            # delete button clicked
+    save_requested = Signal()              # info button clicked
+    select_all_requested = Signal()            # select all button clicked
+    reinitialize_requested = Signal()          # reinitialize button clicked
+    stats_requested = Signal()                 # stats button clicked
+    send_to_spectra_requested = Signal()       # send to spectra tab button clicked
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self._init_ui()
         
     def _init_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(4)
         
-        # ── Upper list: Maps ──
+        # ══════════════════════════════════════════════════════════════
+        # MAPS LIST WITH ACTION BUTTONS
+        # ══════════════════════════════════════════════════════════════
+        maps_container = QHBoxLayout()
+        maps_container.setSpacing(4)
+        
+        # Left: Maps list
+        maps_list_layout = QVBoxLayout()
+        maps_list_layout.setContentsMargins(0, 0, 0, 0)
+        maps_list_layout.setSpacing(2)
+        
         maps_label = QLabel("Maps:")
-        maps_label.setStyleSheet("font-weight: bold;")
-        layout.addWidget(maps_label)
+        maps_list_layout.addWidget(maps_label)
         
         self.maps_list = QListWidget()
         self.maps_list.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -43,12 +63,52 @@ class VMapsList(QWidget):
         # Connect selection change
         self.maps_list.itemSelectionChanged.connect(self._on_map_selected)
         
-        layout.addWidget(self.maps_list)
+        maps_list_layout.addWidget(self.maps_list)
+        maps_container.addLayout(maps_list_layout, stretch=1)
         
-        # ── Lower list: Spectra from selected map ──
+        # Right: Map action buttons
+        map_buttons_layout = QVBoxLayout()
+        map_buttons_layout.setSpacing(4)
+        
+        self.btn_view = QPushButton()
+        self.btn_view.setIcon(QIcon(os.path.join(ICON_DIR, "view.png")))
+        self.btn_view.setToolTip("View selected map")
+        self.btn_view.setFixedSize(32, 32)
+        self.btn_view.clicked.connect(self.view_map_requested.emit)
+        
+        self.btn_delete = QPushButton()
+        self.btn_delete.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))
+        self.btn_delete.setToolTip("Delete selected map")
+        self.btn_delete.setFixedSize(32, 32)
+        self.btn_delete.clicked.connect(self.delete_map_requested.emit)
+        
+        self.btn_save = QPushButton()
+        self.btn_save.setIcon(QIcon(os.path.join(ICON_DIR, "save.png")))
+        self.btn_save.setToolTip("Save the selected map")
+        self.btn_save.setFixedSize(32, 32)
+        self.btn_save.clicked.connect(self.save_requested.emit)
+        
+        map_buttons_layout.addWidget(self.btn_view)
+        map_buttons_layout.addWidget(self.btn_delete)
+        map_buttons_layout.addWidget(self.btn_save)
+        map_buttons_layout.addStretch()
+        
+        maps_container.addLayout(map_buttons_layout)
+        main_layout.addLayout(maps_container)
+        
+        # ══════════════════════════════════════════════════════════════
+        # SPECTRA LIST WITH ACTION BUTTONS
+        # ══════════════════════════════════════════════════════════════
+        spectra_container = QHBoxLayout()
+        spectra_container.setSpacing(4)
+        
+        # Left: Spectra list
+        spectra_list_layout = QVBoxLayout()
+        spectra_list_layout.setContentsMargins(0, 0, 0, 0)
+        spectra_list_layout.setSpacing(2)
+        
         spectra_label = QLabel("Spectrum(s):")
-        spectra_label.setStyleSheet("font-weight: bold;")
-        layout.addWidget(spectra_label)
+        spectra_list_layout.addWidget(spectra_label)
         
         self.spectra_list = QListWidget()
         self.spectra_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -56,7 +116,45 @@ class VMapsList(QWidget):
         # Connect selection change
         self.spectra_list.itemSelectionChanged.connect(self._on_spectra_selection_changed)
         
-        layout.addWidget(self.spectra_list, stretch=1)
+        spectra_list_layout.addWidget(self.spectra_list, stretch=1)
+        spectra_container.addLayout(spectra_list_layout, stretch=1)
+        
+        # Right: Spectra action buttons
+        spectra_buttons_layout = QVBoxLayout()
+        spectra_buttons_layout.setSpacing(4)
+        
+        self.btn_select_all = QPushButton()
+        self.btn_select_all.setIcon(QIcon(os.path.join(ICON_DIR, "select-all.png")))
+        self.btn_select_all.setToolTip("Select all spectra")
+        self.btn_select_all.setFixedSize(32,32)
+        self.btn_select_all.clicked.connect(self.select_all_requested.emit)
+        
+        self.btn_reinit = QPushButton()
+        self.btn_reinit.setIcon(QIcon(os.path.join(ICON_DIR, "undo2.png")))
+        self.btn_reinit.setToolTip("Reinitialize selected spectra")
+        self.btn_reinit.setFixedSize(32,32)
+        self.btn_reinit.clicked.connect(self.reinitialize_requested.emit)
+        
+        self.btn_stats = QPushButton()
+        self.btn_stats.setIcon(QIcon(os.path.join(ICON_DIR, "stats.png")))
+        self.btn_stats.setToolTip("Show fitting statistics")
+        self.btn_stats.setFixedSize(32,32)
+        self.btn_stats.clicked.connect(self.stats_requested.emit)
+        
+        self.btn_send_to_spectra = QPushButton()
+        self.btn_send_to_spectra.setIcon(QIcon(os.path.join(ICON_DIR, "send.png")))
+        self.btn_send_to_spectra.setToolTip("Send selected spectra to 'Spectra' Workspace")
+        self.btn_send_to_spectra.setFixedSize(32,32)
+        self.btn_send_to_spectra.clicked.connect(self.send_to_spectra_requested.emit)
+        
+        spectra_buttons_layout.addWidget(self.btn_select_all)
+        spectra_buttons_layout.addWidget(self.btn_reinit)
+        spectra_buttons_layout.addWidget(self.btn_stats)
+        spectra_buttons_layout.addWidget(self.btn_send_to_spectra)
+        spectra_buttons_layout.addStretch()
+        
+        spectra_container.addLayout(spectra_buttons_layout)
+        main_layout.addLayout(spectra_container, stretch=1)
     
     # ───── Public API (ViewModel → View) ─────────────────────────
     def set_maps_names(self, names: list[str]):

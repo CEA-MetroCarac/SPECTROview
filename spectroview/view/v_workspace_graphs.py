@@ -465,10 +465,15 @@ class VWorkspaceGraphs(QWidget):
         
         self.btn_add_plot = QPushButton("Add plot")
         self.btn_add_plot.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
+        self.btn_add_plot.setIconSize(QSize(24, 24))
+        self.btn_add_plot.setToolTip("Add new plot with current configuration")
+        
         self.btn_add_plot.setMinimumHeight(35)
         
         self.btn_update_plot = QPushButton("Update plot")
         self.btn_update_plot.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
+        self.btn_update_plot.setIconSize(QSize(24, 24))
+        self.btn_update_plot.setToolTip("Update selected plot with current configuration")
         self.btn_update_plot.setMinimumHeight(35)
         
         action_buttons_layout.addWidget(self.btn_add_plot)
@@ -537,9 +542,23 @@ class VWorkspaceGraphs(QWidget):
             QMessageBox.warning(self, "Empty DataFrame", "Selected DataFrame is empty.")
             return
         
+        # Apply current filters if any
+        filters = self.v_data_filter.get_filters()
+        active_filters = [f for f in filters if f.get("state", False)]
+        
+        if active_filters:
+            # Apply filters to get filtered DataFrame
+            df = self.vm.apply_filters(df_name, filters)
+            if df is None or df.empty:
+                QMessageBox.warning(self, "Empty Result", "No data after applying filters.")
+                return
+        
         # Create dialog to show DataFrame
         dialog = QDialog(self)
-        dialog.setWindowTitle(f"DataFrame: {df_name}")
+        title = f"DataFrame: {df_name}"
+        if active_filters:
+            title += f" (with {len(active_filters)} filter(s))"
+        dialog.setWindowTitle(title)
         dialog.resize(800, 600)
         
         # Create layout for dialog
@@ -978,6 +997,9 @@ class VWorkspaceGraphs(QWidget):
             self.cb_join_point_plot.setChecked(model.join_for_point_plot)
             self.cb_trendline_eq.setChecked(model.show_trendline_eq)
             self.spin_trendline_order.setValue(model.trendline_order)
+            
+            # Filters - sync with data filter widget
+            self.v_data_filter.set_filters(model.filters)
             
         finally:
             # Unblock signals

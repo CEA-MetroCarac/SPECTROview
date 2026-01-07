@@ -93,7 +93,7 @@ class VWorkspaceGraphs(QWidget):
         toolbar_layout.addWidget(self.btn_minimize_all)
         
         # Plot size label
-        self.lbl_plot_size = QLabel("(600x500)")
+        self.lbl_plot_size = QLabel("(480x400)")
         self.lbl_plot_size.setMinimumWidth(70)
         toolbar_layout.addWidget(self.lbl_plot_size)
         
@@ -101,7 +101,7 @@ class VWorkspaceGraphs(QWidget):
         toolbar_layout.addWidget(QLabel("DPI:"))
         self.spin_dpi_toolbar = QSpinBox()
         self.spin_dpi_toolbar.setRange(50, 300)
-        self.spin_dpi_toolbar.setValue(110)
+        self.spin_dpi_toolbar.setValue(90)
         self.spin_dpi_toolbar.setSingleStep(10)
         self.spin_dpi_toolbar.setMaximumWidth(60)
         toolbar_layout.addWidget(self.spin_dpi_toolbar)
@@ -1220,7 +1220,7 @@ class VWorkspaceGraphs(QWidget):
         self.edit_zlabel.clear()
         
         # Reset plot size label
-        self.lbl_plot_size.setText("(600x500)")
+        self.lbl_plot_size.setText("(480x420)")
         
         # Clear ViewModel data
         self.vm.clear_workspace()

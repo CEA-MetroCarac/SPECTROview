@@ -30,9 +30,9 @@ class VGraph(QWidget):
         self.filters = {}
         
         # Plot dimensions
-        self.plot_width = 600
-        self.plot_height = 500
-        self.dpi = 100
+        self.plot_width = 480  
+        self.plot_height = 400
+        self.dpi = 90
         
         # Plot type and axes
         self.plot_style = "point"

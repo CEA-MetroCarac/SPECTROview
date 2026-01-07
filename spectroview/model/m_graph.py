@@ -30,8 +30,8 @@ class MGraph:
         
         # Plot configuration
         self.plot_style: str = "point"  # point, line, bar, wafer, 2Dmap, etc.
-        self.plot_width: int = 600
-        self.plot_height: int = 500
+        self.plot_width: int = 480
+        self.plot_height: int = 420
         self.dpi: int = 100
         
         # Axes
@@ -148,8 +148,19 @@ class MGraph:
         Args:
             data: Dictionary containing graph properties
         """
+        # List of float-type limit properties
+        float_limit_keys = ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax', 
+                           'y2min', 'y2max', 'y3min', 'y3max']
+        
         for key, value in data.items():
             if hasattr(self, key):
+                # Convert string limit values to float or None
+                if key in float_limit_keys and value is not None:
+                    try:
+                        value = float(value) if value != '' else None
+                    except (ValueError, TypeError):
+                        value = None
+                
                 setattr(self, key, value)
     
     def get_display_name(self) -> str:

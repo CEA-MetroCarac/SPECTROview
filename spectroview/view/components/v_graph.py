@@ -185,23 +185,33 @@ class VGraph(QWidget):
                     label = text.get_text()
                     handle = legend_handles[idx]
                     
+                    # Extract RGBA color from seaborn
                     if self.plot_style in ['point', 'scatter', 'line']:
-                        color = handle.get_markerfacecolor()
+                        rgba_color = handle.get_markerfacecolor()
                         marker = handle.get_marker()
                     elif self.plot_style in ['box', 'bar']:
-                        color = rgba_to_default_color(handle.get_facecolor())
+                        rgba_color = handle.get_facecolor()
                         marker = 'o'
                     else:
-                        color = 'blue'
+                        rgba_color = 'blue'
                         marker = 'o'
+                    
+                    # Map to closest DEFAULT_COLOR
+                    color = rgba_to_default_color(rgba_color)
                     
                     legend_properties.append({
                         'label': label,
                         'marker': marker,
-                        'color': color
+                        'color': color,
+                        'rgba': rgba_color  # Keep original RGBA for mapping
                     })
         
         self.legend_properties = legend_properties
+        
+        # Fix box/bar patch colors to match DEFAULT_COLORS
+        if self.plot_style in ['box', 'bar'] and self.legend_properties:
+            self._fix_box_bar_colors()
+        
         return self.legend_properties
     
     def customize_legend_widget(self, main_layout):
@@ -239,12 +249,15 @@ class VGraph(QWidget):
                 marker.currentTextChanged.connect(lambda text, idx=idx: self.udp_legend(idx, 'marker', text))
                 marker_layout.addWidget(marker)
             
-            # Color
+            # Color - only show original DEFAULT_COLORS (limit to 12 unique colors)
             color = QComboBox()
             delegate = ColorDelegate(color)
             color.setItemDelegate(delegate)
-            for color_code in DEFAULT_COLORS:
-                item = color.addItem(color_code)
+            
+            # Use only the first 12 unique colors from DEFAULT_COLORS
+            unique_colors = list(dict.fromkeys(DEFAULT_COLORS))[:12]
+            for color_code in unique_colors:
+                color.addItem(color_code)
                 item = color.model().item(color.count() - 1)
                 item.setBackground(QColor(color_code))
             
@@ -330,6 +343,13 @@ class VGraph(QWidget):
     
     def _plot_primary_axis(self, df):
         """Plots data on the primary axis based on the current plot style."""
+        # Determine number of hue categories
+        n_categories = df[self.z].nunique() if self.z and self.z in df.columns else 0
+        
+        # Reset legend_properties if number of categories changed
+        if self.legend_properties and n_categories > 0 and len(self.legend_properties) != n_categories:
+            self.legend_properties = []
+        
         if not self.legend_properties:
             markers = DEFAULT_MARKERS
             colors = DEFAULT_COLORS
@@ -337,9 +357,14 @@ class VGraph(QWidget):
             markers = [str(prop['marker']) for prop in self.legend_properties]
             colors = [str(prop['color']) for prop in self.legend_properties]
         
-        # Trim colors/markers to match actual number of hue categories
-        if self.z and self.z in df.columns:
-            n_categories = df[self.z].nunique()
+        # Extend or trim colors/markers to match actual number of hue categories
+        if n_categories > 0:
+            # Extend by cycling through DEFAULT_COLORS/DEFAULT_MARKERS if needed
+            while len(colors) < n_categories:
+                idx = len(colors)
+                colors.append(DEFAULT_COLORS[idx % len(DEFAULT_COLORS)])
+                markers.append(DEFAULT_MARKERS[idx % len(DEFAULT_MARKERS)])
+            # Trim if too many
             colors = colors[:n_categories]
             markers = markers[:n_categories]
         
@@ -394,6 +419,37 @@ class VGraph(QWidget):
                 self._plot_2dmap(df, y)
             else:
                 show_alert("Unsupported plot style")
+    
+    def _fix_box_bar_colors(self):
+        """Fix box/bar patch colors to use exact DEFAULT_COLORS by mapping seaborn's RGBA."""
+        patches = [p for p in self.ax.patches if hasattr(p, 'get_facecolor')]
+        
+        if not patches or not self.legend_properties:
+            return
+        
+        # Build RGBA -> DEFAULT_COLOR mapping from legend
+        rgba_to_color_map = {}
+        for prop in self.legend_properties:
+            if 'rgba' in prop:
+                # Convert RGBA tuple to string for dictionary key
+                rgba_key = tuple(prop['rgba']) if hasattr(prop['rgba'], '__iter__') else prop['rgba']
+                rgba_to_color_map[rgba_key] = prop['color']
+        
+        # Update each patch's facecolor to exact DEFAULT_COLOR
+        for patch in patches:
+            current_rgba = patch.get_facecolor()
+            rgba_key = tuple(current_rgba)
+            
+            # Find matching DEFAULT_COLOR from legend mapping
+            if rgba_key in rgba_to_color_map:
+                default_color = rgba_to_color_map[rgba_key]
+            else:
+                # Fallback: find closest RGBA in mapping
+                default_color = rgba_to_default_color(current_rgba)
+            
+            patch.set_facecolor(default_color)
+            patch.set_edgecolor('black')
+            patch.set_linewidth(0.8)
     
     def _plot_2dmap(self, df, y):
         """Plot 2D heatmap."""

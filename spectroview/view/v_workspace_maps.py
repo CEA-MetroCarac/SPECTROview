@@ -71,12 +71,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_map_viewer = VMapViewer()
         layout.addWidget(self.v_map_viewer)
         
-        
-        # ══════════════════════════════════════════════════════════════
-        # ADD MORE MAP VIEWER BUTTONS
-        # ══════════════════════════════════════════════════════════════
-        layout.addWidget(self._create_multi_viewer_group())
-        
         # ══════════════════════════════════════════════════════════════
         # MAPS AND SPECTRA LIST (VMapsList widget with action buttons)
         # ══════════════════════════════════════════════════════════════
@@ -86,29 +80,12 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # ── Progress info (from parent) ──
         self.lbl_count.setText("0 points")
         layout.addWidget(self.lbl_count)
-        layout.addWidget(self.progress_bar)
         
         # Set scroll content and add to main panel
         scroll_area.setWidget(scroll_content)
         main_layout.addWidget(scroll_area)
         
+        # Progress bar outside scroll area
+        main_layout.addWidget(self.progress_bar)
+        
         return panel
-    
-    def _create_multi_viewer_group(self):
-        """Create 'Add more map viewer' controls."""
-        gb = QGroupBox("Add more map viewer:")
-        layout = QHBoxLayout(gb)
-        layout.setContentsMargins(4, 6, 4, 4)
-        
-        self.btn_viewer_2 = QPushButton("2")
-        self.btn_viewer_3 = QPushButton("3")
-        self.btn_viewer_4 = QPushButton("4")
-        
-        for btn in [self.btn_viewer_2, self.btn_viewer_3, self.btn_viewer_4]:
-            btn.setCheckable(True)
-            btn.setFixedSize(40, 26)
-            layout.addWidget(btn)
-        
-        layout.addStretch()
-        
-        return gb

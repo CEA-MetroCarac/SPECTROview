@@ -10,12 +10,13 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QCheckBox, QDoubleSpinBox,
     QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction,
-    QSpacerItem, QSizePolicy
+    QSpacerItem, QSizePolicy, QGroupBox
 )
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QIcon, QAction
 
 from spectroview import ICON_DIR
+from spectroview.modules.utils import CustomizedPalette
 
 
 class VMapViewer(QWidget):
@@ -32,6 +33,7 @@ class VMapViewer(QWidget):
     mask_settings_changed = Signal(dict)  # {param, operator, threshold}
     plot_option_changed = Signal(dict)  # {smoothing, grid, show_stats}
     extract_profile_requested = Signal(str)  # profile name
+    multi_viewer_requested = Signal(int)  # number of viewers (2, 3, or 4)
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -43,11 +45,17 @@ class VMapViewer(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(4)
         
-        # ══════════════════════════════════════════════════════════════
-        # MATPLOTLIB CANVAS AND TOOLBAR
-        # ══════════════════════════════════════════════════════════════
+        # Add all UI sections
+        main_layout.addWidget(self._create_canvas())
+        main_layout.addLayout(self._create_map_type_controls())
+        main_layout.addLayout(self._create_z_range_slider())
+        main_layout.addLayout(self._create_x_range_slider())
+        main_layout.addLayout(self._create_mask_controls())
+        main_layout.addWidget(self._create_multi_viewer_controls())
+    
+    def _create_canvas(self):
+        """Create matplotlib canvas and toolbar."""
         canvas_frame = QFrame()
-        canvas_frame.setFrameShape(QFrame.Box)
         canvas_layout = QVBoxLayout(canvas_frame)
         canvas_layout.setContentsMargins(2, 2, 2, 2)
         
@@ -64,7 +72,7 @@ class VMapViewer(QWidget):
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
         # Hide some toolbar actions
         for action in self.toolbar.actions():
-            if action.text() in ['Customize', 'Subplots']:
+            if action.text() in ['Customize','Zoom','Save', 'Pan', 'Back', 'Forward', 'Subplots']:
                 action.setVisible(False)
         
         # Custom toolbar with copy button
@@ -83,11 +91,10 @@ class VMapViewer(QWidget):
         canvas_layout.addWidget(self.canvas, stretch=1)
         canvas_layout.addLayout(toolbar_layout)
         
-        main_layout.addWidget(canvas_frame)
-        
-        # ══════════════════════════════════════════════════════════════
-        # MAP TYPE AND PALETTE CONTROLS
-        # ══════════════════════════════════════════════════════════════
+        return canvas_frame
+    
+    def _create_map_type_controls(self):
+        """Create map type and palette selector controls."""
         type_layout = QHBoxLayout()
         type_layout.setContentsMargins(4, 4, 4, 4)
         
@@ -99,32 +106,21 @@ class VMapViewer(QWidget):
         self.cbb_map_type.currentTextChanged.connect(self.map_type_changed.emit)
         type_layout.addWidget(self.cbb_map_type)
         
-        # Palette selector placeholder (can be CustomizedPalette widget later)
-        self.cbb_palette = QComboBox()
-        self.cbb_palette.addItems(['viridis', 'plasma', 'inferno', 'magma', 'jet', 'rainbow'])
-        self.cbb_palette.setFixedWidth(100)
+        self.cbb_palette = CustomizedPalette()
         self.cbb_palette.currentIndexChanged.connect(self.palette_changed.emit)
         type_layout.addWidget(self.cbb_palette)
+        #type_layout.addStretch()
         
-        self.cb_remove_outlier = QCheckBox("Remove Outlier")
-        self.cb_remove_outlier.setChecked(True)
-        self.cb_remove_outlier.stateChanged.connect(
-            lambda state: self.remove_outlier_changed.emit(state == Qt.Checked)
-        )
-        type_layout.addWidget(self.cb_remove_outlier)
-        type_layout.addStretch()
-        
-        main_layout.addLayout(type_layout)
-        
-        # ══════════════════════════════════════════════════════════════
-        # Z-RANGE SLIDER (Intensity/Area selector)
-        # ══════════════════════════════════════════════════════════════
+        return type_layout
+    
+    def _create_z_range_slider(self):
+        """Create Z-range slider with parameter selector."""
         z_slider_layout = QHBoxLayout()
         z_slider_layout.setContentsMargins(4, 2, 4, 2)
         
         self.cbb_zparameter = QComboBox()
         self.cbb_zparameter.addItems(['Intensity', 'Area'])
-        self.cbb_zparameter.setFixedWidth(80)
+        self.cbb_zparameter.setFixedWidth(50)
         self.cbb_zparameter.setToolTip("Select parameter to plot in heatmap")
         self.cbb_zparameter.currentTextChanged.connect(self.zparameter_changed.emit)
         z_slider_layout.addWidget(self.cbb_zparameter)
@@ -160,15 +156,16 @@ class VMapViewer(QWidget):
         self.spin_zmin.valueChanged.connect(self._update_z_slider_from_spins)
         self.spin_zmax.valueChanged.connect(self._update_z_slider_from_spins)
         
-        main_layout.addLayout(z_slider_layout)
-        
-        # ══════════════════════════════════════════════════════════════
-        # X-RANGE SLIDER
-        # ══════════════════════════════════════════════════════════════
+        return z_slider_layout
+    
+    def _create_x_range_slider(self):
+        """Create X-range slider controls."""
         x_slider_layout = QHBoxLayout()
         x_slider_layout.setContentsMargins(4, 2, 4, 2)
         
-        x_slider_layout.addWidget(QLabel("X-range:"))
+        lbl_x_slider = QLabel("X-range:")
+        lbl_x_slider.setFixedWidth(50)
+        x_slider_layout.addWidget(lbl_x_slider)
         
         self.cb_fix_x = QCheckBox("Fix")
         self.cb_fix_x.setToolTip("Fix X-range when refreshing")
@@ -201,11 +198,10 @@ class VMapViewer(QWidget):
         self.spin_xmin.valueChanged.connect(self._update_x_slider_from_spins)
         self.spin_xmax.valueChanged.connect(self._update_x_slider_from_spins)
         
-        main_layout.addLayout(x_slider_layout)
-        
-        # ══════════════════════════════════════════════════════════════
-        # MASK CONTROLS AND OPTIONS MENU
-        # ══════════════════════════════════════════════════════════════
+        return x_slider_layout
+    
+    def _create_mask_controls(self):
+        """Create mask controls and options menu."""
         mask_layout = QHBoxLayout()
         mask_layout.setContentsMargins(4, 2, 4, 2)
         
@@ -250,7 +246,33 @@ class VMapViewer(QWidget):
         
         mask_layout.addWidget(self.btn_options)
         
-        main_layout.addLayout(mask_layout)
+        return mask_layout
+    
+    def _create_multi_viewer_controls(self):
+        """Create multi-viewer buttons."""
+        multi_viewer_gb = QGroupBox()
+        multi_viewer_layout = QHBoxLayout(multi_viewer_gb)
+        multi_viewer_layout.setContentsMargins(4, 6, 4, 4)
+        
+        multi_viewer_layout.addWidget(QLabel("Add more map viewer:"))
+        
+        self.btn_viewer_2 = QPushButton("2")
+        self.btn_viewer_3 = QPushButton("3")
+        self.btn_viewer_4 = QPushButton("4")
+        
+        for btn in [self.btn_viewer_2, self.btn_viewer_3, self.btn_viewer_4]:
+            btn.setCheckable(True)
+            btn.setFixedSize(40, 26)
+            multi_viewer_layout.addWidget(btn)
+        
+        # Connect buttons to signal with viewer count
+        self.btn_viewer_2.clicked.connect(lambda: self.multi_viewer_requested.emit(2))
+        self.btn_viewer_3.clicked.connect(lambda: self.multi_viewer_requested.emit(3))
+        self.btn_viewer_4.clicked.connect(lambda: self.multi_viewer_requested.emit(4))
+        
+        multi_viewer_layout.addStretch()
+        
+        return multi_viewer_gb
     
     def _create_options_menu(self):
         """Create options menu with smoothing, grid, stats, and profile extraction."""
@@ -280,6 +302,14 @@ class VMapViewer(QWidget):
         self.options_menu.addSeparator()
         
         # Checkable options
+        self.action_remove_outlier = QAction("Remove Outlier", self)
+        self.action_remove_outlier.setCheckable(True)
+        self.action_remove_outlier.setChecked(True)
+        self.action_remove_outlier.triggered.connect(
+            lambda checked: self.remove_outlier_changed.emit(checked)
+        )
+        self.options_menu.addAction(self.action_remove_outlier)
+        
         self.action_smoothing = QAction("Smoothing", self)
         self.action_smoothing.setCheckable(True)
         self.action_smoothing.setChecked(False)

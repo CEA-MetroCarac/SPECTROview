@@ -108,7 +108,7 @@ class VFitModelBuilder(QWidget):
         splitter.addWidget(right_widget)
 
         # Initial sizes
-        splitter.setSizes([370, 650])
+        splitter.setSizes([390, 650])
 
     # ======================================================
     # GROUPS

@@ -50,7 +50,7 @@ class VWorkspaceGraphs(QWidget):
         # Add panels to splitter
         main_splitter.addWidget(left_panel)
         main_splitter.addWidget(right_panel)
-        main_splitter.setSizes([650, 350])
+        main_splitter.setSizes([650, 370])
         
         main_layout.addWidget(main_splitter)
     

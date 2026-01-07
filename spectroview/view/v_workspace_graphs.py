@@ -643,6 +643,12 @@ class VWorkspaceGraphs(QWidget):
         
         # Update graph list
         self._update_graph_list(self.vm.get_graph_ids())
+        
+        # Select the newly created graph in the combobox
+        for i in range(self.cbb_graph_list.count()):
+            if self.cbb_graph_list.itemData(i) == graph_model.graph_id:
+                self.cbb_graph_list.setCurrentIndex(i)
+                break
     
     def _on_update_plot(self):
         """Update selected plot."""
@@ -731,8 +737,11 @@ class VWorkspaceGraphs(QWidget):
         index = self.cbb_graph_list.currentIndex()
         if index >= 0:
             graph_id = self.cbb_graph_list.currentData()
-            if graph_id:
-                self.vm.select_graph(graph_id)
+            if graph_id and graph_id in self.graph_widgets:
+                # Activate the corresponding MDI subwindow
+                _, _, sub_window = self.graph_widgets[graph_id]
+                self.mdi_area.setActiveSubWindow(sub_window)
+                sub_window.showNormal()  # Restore if minimized
     
     def _on_minimize_all(self):
         """Minimize all MDI subwindows."""
@@ -845,10 +854,6 @@ class VWorkspaceGraphs(QWidget):
     
     def _on_grid_changed_toolbar(self, state: int):
         """Handle grid toggle from toolbar."""
-        # Sync with More options tab if it exists
-        if hasattr(self, 'cb_grid'):
-            self.cb_grid.setChecked(state == Qt.Checked)
-        
         active_subwindow = self.mdi_area.activeSubWindow()
         if active_subwindow:
             for gid, (gw, gd, sw) in self.graph_widgets.items():
@@ -901,11 +906,13 @@ class VWorkspaceGraphs(QWidget):
         # Sync GUI controls with graph properties
         self._sync_gui_from_graph(graph_model)
         
-        # Update graph list combobox selection
+        # Update graph list combobox selection (block signals to prevent conflicts)
+        self.cbb_graph_list.blockSignals(True)
         for i in range(self.cbb_graph_list.count()):
             if self.cbb_graph_list.itemData(i) == graph_model.graph_id:
                 self.cbb_graph_list.setCurrentIndex(i)
                 break
+        self.cbb_graph_list.blockSignals(False)
     
     def _sync_gui_from_graph(self, model):
         """Sync GUI controls from graph model."""

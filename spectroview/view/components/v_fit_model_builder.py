@@ -90,6 +90,7 @@ class VFitModelBuilder(QWidget):
         # ── Peak table in scroll area
         peak_scroll = QScrollArea()
         peak_scroll.setWidgetResizable(True)
+        peak_scroll.setContentsMargins(0, 0, 0, 0)
 
         self.peak_table = VPeakTable()
         self.peak_table.peak_label_changed.connect(self.peak_label_changed.emit)

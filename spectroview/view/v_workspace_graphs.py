@@ -502,6 +502,9 @@ class VWorkspaceGraphs(QWidget):
         self.btn_set_limits.clicked.connect(self._on_set_current_limits)
         self.btn_clear_limits.clicked.connect(self._on_clear_limits)
         
+        # Plot style connection
+        self.cbb_plot_style.currentTextChanged.connect(self._on_plot_style_changed)
+        
         # Bottom toolbar connections
         self.cbb_graph_list.currentIndexChanged.connect(self._on_graph_selected_toolbar)
         self.btn_minimize_all.clicked.connect(self._on_minimize_all)
@@ -520,6 +523,18 @@ class VWorkspaceGraphs(QWidget):
         vm.dataframe_columns_changed.connect(self._update_column_combos)
         vm.graphs_changed.connect(self._update_graph_list)
         vm.notify.connect(self._show_toast_notification)
+    
+    def _on_plot_style_changed(self, plot_style: str):
+        """Handle plot style change - auto-select X and Y for wafer plots."""
+        if plot_style == 'wafer':
+            # Find and set X and Y columns if they exist
+            x_index = self.cbb_x.findText('X')
+            y_index = self.cbb_y.findText('Y')
+            
+            if x_index >= 0:
+                self.cbb_x.setCurrentIndex(x_index)
+            if y_index >= 0:
+                self.cbb_y.setCurrentIndex(y_index)
     
     def _on_df_selected(self):
         """Handle DataFrame selection."""

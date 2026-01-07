@@ -428,6 +428,14 @@ class VGraph(QWidget):
                 ha="right",
                 rotation_mode="anchor"
             )
+        else:
+            # Reset to default when rotation is 0
+            plt.setp(
+                self.ax.get_xticklabels(),
+                rotation=0,
+                ha="center",
+                rotation_mode=None
+            )
     
     def _annotate_trendline_eq(self, df):
         """Add the trendline equation in the plot."""

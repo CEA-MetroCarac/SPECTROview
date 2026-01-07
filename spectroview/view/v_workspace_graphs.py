@@ -1154,6 +1154,9 @@ class VWorkspaceGraphs(QWidget):
     
     def load_workspace(self, file_path: str):
         """Load workspace (called from main menu)."""
+        # Clear existing workspace first
+        self.clear_workspace()
+        
         # Load data into ViewModel
         self.vm.load_workspace(file_path)
         

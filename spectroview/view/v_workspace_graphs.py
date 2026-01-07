@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
     QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QLineEdit, QSplitter,
     QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame, QScrollArea,
-    QDialog
+    QDialog, QGridLayout
 )
 from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon
@@ -91,6 +91,14 @@ class VWorkspaceGraphs(QWidget):
         self.btn_minimize_all = QPushButton("Minimize All")
         self.btn_minimize_all.setMaximumWidth(100)
         toolbar_layout.addWidget(self.btn_minimize_all)
+        
+        # Delete all button
+        self.btn_delete_all = QPushButton("Delete All")
+        self.btn_delete_all.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))    
+        self.btn_delete_all.setToolTip("Delete all graphs from workspace")
+        
+        self.btn_delete_all.setMaximumWidth(100)
+        toolbar_layout.addWidget(self.btn_delete_all)
         
         # Plot size label
         self.lbl_plot_size = QLabel("(480x400)")
@@ -200,11 +208,45 @@ class VWorkspaceGraphs(QWidget):
         df_section_layout.addLayout(df_buttons_layout)
         parent_layout.addLayout(df_section_layout)
     
-    def _setup_filter_section(self, parent_layout):
+    def _setup_filter_section(self, parent_layout):  
         """Setup the data filter section."""
         self.v_data_filter = VDataFilter()
         self.v_data_filter.setMaximumHeight(150)
         parent_layout.addWidget(self.v_data_filter)
+    
+    def _setup_slot_selector_section(self, parent_layout):
+        """Setup the wafer slot selector section."""
+        # Container widget for slot selector
+        self.slot_selector_widget = QWidget()
+        self.slot_selector_widget.setMaximumHeight(120)
+        slot_layout = QVBoxLayout(self.slot_selector_widget)
+        slot_layout.setContentsMargins(2, 2, 2, 2)
+        slot_layout.setSpacing(2)
+        
+        # Label and Select All checkbox in same row
+        header_layout = QHBoxLayout()
+        lbl_slot = QLabel("Select wafer slot(s):")
+        header_layout.addWidget(lbl_slot)
+        
+        self.select_all_checkbox = QCheckBox("Select All")
+        self.select_all_checkbox.setChecked(True)
+        self.select_all_checkbox.setVisible(False)
+        header_layout.addWidget(self.select_all_checkbox)
+        header_layout.addStretch()
+        
+        slot_layout.addLayout(header_layout)
+        
+        # Grid layout for checkboxes
+        self.slot_grid_layout = QGridLayout()
+        self.slot_grid_layout.setSpacing(4)
+        slot_layout.addLayout(self.slot_grid_layout)
+        
+        # Storage for checkboxes
+        self.slot_checkboxes = []
+        
+        # Initially hide the whole widget
+        self.slot_selector_widget.setVisible(False)
+        parent_layout.addWidget(self.slot_selector_widget)
     
     def _setup_plot_tabs(self, parent_layout):
         """Setup the plot configuration tabs."""
@@ -254,6 +296,9 @@ class VWorkspaceGraphs(QWidget):
         
         # Axis limits
         self._create_axis_limits(tab_plot_layout)
+        
+        # Slot selector section (for wafer plots)
+        self._setup_slot_selector_section(tab_plot_layout)
         
         tab_plot_layout.addStretch()
         
@@ -460,24 +505,32 @@ class VWorkspaceGraphs(QWidget):
         return tab_more
     
     def _setup_action_buttons(self, parent_layout):
-        """Setup the action buttons (Add plot, Update plot)."""
+        """Setup the action buttons (Add plot, Update plot, Multi-wafer)."""
         action_buttons_layout = QHBoxLayout()
         
         self.btn_add_plot = QPushButton("Add plot")
         self.btn_add_plot.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
-        self.btn_add_plot.setIconSize(QSize(24, 24))
+        self.btn_add_plot.setIconSize(QSize(20, 20))
         self.btn_add_plot.setToolTip("Add new plot with current configuration")
-        
-        self.btn_add_plot.setMinimumHeight(35)
+        self.btn_add_plot.setMinimumHeight(25)
         
         self.btn_update_plot = QPushButton("Update plot")
         self.btn_update_plot.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
-        self.btn_update_plot.setIconSize(QSize(24, 24))
+        self.btn_update_plot.setIconSize(QSize(20, 20))
         self.btn_update_plot.setToolTip("Update selected plot with current configuration")
-        self.btn_update_plot.setMinimumHeight(35)
+        self.btn_update_plot.setMinimumHeight(25)
+        
+        # Multi-wafer plot button (shown when Slot column exists)
+        self.btn_add_multi_wafer = QPushButton("Add Multi-Wafer")
+        self.btn_add_multi_wafer.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
+        self.btn_add_multi_wafer.setIconSize(QSize(20, 20))
+        self.btn_add_multi_wafer.setToolTip("Create wafer plots for selected slots")
+        self.btn_add_multi_wafer.setMinimumHeight(25)
+        self.btn_add_multi_wafer.setVisible(False)  # Initially hidden
         
         action_buttons_layout.addWidget(self.btn_add_plot)
         action_buttons_layout.addWidget(self.btn_update_plot)
+        action_buttons_layout.addWidget(self.btn_add_multi_wafer)
         
         parent_layout.addLayout(action_buttons_layout)
     
@@ -494,6 +547,10 @@ class VWorkspaceGraphs(QWidget):
         # Filter connections
         self.v_data_filter.apply_requested.connect(self._on_apply_filters)
         
+        # Slot selector connections
+        self.select_all_checkbox.stateChanged.connect(self._on_select_all_slots)
+        self.btn_add_multi_wafer.clicked.connect(self._on_plot_multi_wafer)
+        
         # Plot buttons
         self.btn_add_plot.clicked.connect(self._on_add_plot)
         self.btn_update_plot.clicked.connect(self._on_update_plot)
@@ -508,6 +565,7 @@ class VWorkspaceGraphs(QWidget):
         # Bottom toolbar connections
         self.cbb_graph_list.currentIndexChanged.connect(self._on_graph_selected_toolbar)
         self.btn_minimize_all.clicked.connect(self._on_minimize_all)
+        self.btn_delete_all.clicked.connect(self._on_delete_all)
         self.spin_dpi_toolbar.valueChanged.connect(self._on_dpi_changed_toolbar)
         self.spin_xlabel_rotation.valueChanged.connect(self._on_xlabel_rotation_changed)
         self.cb_legend_outside_toolbar.stateChanged.connect(self._on_legend_outside_changed_toolbar)
@@ -521,6 +579,7 @@ class VWorkspaceGraphs(QWidget):
         # ViewModel → View
         vm.dataframes_changed.connect(self._update_df_list)
         vm.dataframe_columns_changed.connect(self._update_column_combos)
+        vm.dataframe_columns_changed.connect(self._update_slot_selector)
         vm.graphs_changed.connect(self._update_graph_list)
         vm.notify.connect(self._show_toast_notification)
     
@@ -757,6 +816,153 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_z.addItem("None")
         self.cbb_z.addItems(columns)
     
+    def _update_slot_selector(self, columns: list):
+        """Update slot selector checkboxes based on DataFrame columns."""
+        # Clear existing checkboxes
+        for cb in self.slot_checkboxes:
+            cb.deleteLater()
+        self.slot_checkboxes.clear()
+        
+        # Clear grid layout
+        while self.slot_grid_layout.count():
+            item = self.slot_grid_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        
+        # Check if selected DataFrame has Slot column
+        if not self.vm.selected_df_name:
+            self.slot_selector_widget.setVisible(False)
+            self.btn_add_multi_wafer.setVisible(False)
+            return
+        
+        if not self.vm.has_slot_column(self.vm.selected_df_name):
+            self.slot_selector_widget.setVisible(False)
+            self.btn_add_multi_wafer.setVisible(False)
+            return
+        
+        # Get unique slots
+        unique_slots = self.vm.get_unique_slots(self.vm.selected_df_name)
+        
+        if not unique_slots:
+            self.slot_selector_widget.setVisible(False)
+            self.btn_add_multi_wafer.setVisible(False)
+            return
+        
+        # Show slot selector and multi-wafer button
+        self.slot_selector_widget.setVisible(True)
+        self.select_all_checkbox.setVisible(True)
+        self.btn_add_multi_wafer.setVisible(True)
+        
+        # Create checkboxes in grid (9 columns max)
+        row, col = 0, 0
+        for slot in unique_slots:
+            cb = QCheckBox(str(slot))
+            cb.setChecked(True)
+            cb.stateChanged.connect(self._on_slot_checkbox_changed)
+            self.slot_grid_layout.addWidget(cb, row, col)
+            self.slot_checkboxes.append(cb)
+            
+            col += 1
+            if col >= 8:  # 8 columns per row
+                col = 0
+                row += 1
+    
+    def _on_select_all_slots(self, state):
+        """Toggle all slot checkboxes."""
+        checked = bool(state)  # Convert Qt state to boolean (0=False, 2=True)
+        for cb in self.slot_checkboxes:
+            cb.blockSignals(True)
+            cb.setChecked(checked)
+            cb.blockSignals(False)
+    
+    def _on_slot_checkbox_changed(self):
+        """Update Select All checkbox based on individual checkboxes."""
+        all_checked = all(cb.isChecked() for cb in self.slot_checkboxes)
+        self.select_all_checkbox.blockSignals(True)
+        self.select_all_checkbox.setChecked(all_checked)
+        self.select_all_checkbox.blockSignals(False)
+    
+    def _on_plot_multi_wafer(self):
+        """Create multiple wafer plots for selected slots."""
+        # Get checked slots
+        checked_slots = [int(cb.text()) for cb in self.slot_checkboxes if cb.isChecked()]
+        
+        if not checked_slots:
+            QMessageBox.warning(self, "No Slots Selected", "Please select at least one slot.")
+            return
+        
+        # Validate DataFrame selection
+        if not self.vm.selected_df_name:
+            QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame first.")
+            return
+        
+        # Get DataFrame
+        df = self.vm.get_dataframe(self.vm.selected_df_name)
+        if df is None or df.empty:
+            QMessageBox.warning(self, "Empty DataFrame", "Selected DataFrame is empty.")
+            return
+        
+        # Force wafer plot style
+        wafer_index = self.cbb_plot_style.findText('wafer')
+        if wafer_index >= 0:
+            self.cbb_plot_style.setCurrentIndex(wafer_index)
+        
+        # Collect base plot configuration
+        plot_config = self._collect_plot_config()
+        plot_config['plot_style'] = 'wafer'
+        
+        # Get base filters
+        base_filters = self.v_data_filter.get_filters()
+        
+        # Create graphs via ViewModel
+        created_graphs = self.vm.create_multi_wafer_graphs(
+            self.vm.selected_df_name,
+            checked_slots,
+            plot_config,
+            base_filters
+        )
+        
+        # Create UI for each graph
+        for graph_model in created_graphs:
+            # Apply filters to get filtered data
+            filtered_df = self.vm.apply_filters(self.vm.selected_df_name, graph_model.filters)
+            
+            # Create Graph widget
+            graph_widget = VGraph(graph_id=graph_model.graph_id)
+            self._configure_graph_from_model(graph_widget, graph_model)
+            
+            # Create plot
+            graph_widget.create_plot_widget(graph_model.dpi)
+            self._render_plot(graph_widget, filtered_df, graph_model)
+            
+            # Save legend properties
+            self.vm.update_graph(graph_model.graph_id, {
+                'legend_properties': graph_widget.legend_properties
+            })
+            
+            # Create MDI subwindow
+            sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
+            
+            # Store reference
+            from PySide6.QtWidgets import QDialog, QVBoxLayout
+            graph_dialog = QDialog(self)
+            layout = QVBoxLayout()
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.addWidget(graph_widget)
+            graph_dialog.setLayout(layout)
+            sub_window.setWidget(graph_dialog)
+            
+            self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
+            
+            # Show the subwindow
+            self.mdi_area.addSubWindow(sub_window)
+            sub_window.show()
+        
+        # Update graph list
+        self._update_graph_list(self.vm.get_graph_ids())
+        
+        self.vm.notify.emit(f"Created {len(created_graphs)} wafer plots")
+    
     def _update_graph_list(self, graph_ids: list):
         """Update graph list combobox in toolbar."""
         self.cbb_graph_list.clear()
@@ -781,6 +987,33 @@ class VWorkspaceGraphs(QWidget):
         """Minimize all MDI subwindows."""
         for window in self.mdi_area.subWindowList():
             window.showMinimized()
+    
+    def _on_delete_all(self):
+        """Delete all graphs and close all MDI subwindows."""
+        # Confirm with user
+        reply = QMessageBox.question(
+            self,
+            "Delete All Graphs",
+            "Are you sure you want to delete all graphs?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            # Close all MDI subwindows
+            for sub_window in self.mdi_area.subWindowList():
+                self.mdi_area.removeSubWindow(sub_window)
+                sub_window.close()
+            
+            # Clear graph widgets storage
+            self.graph_widgets.clear()
+            
+            # Clear graphs from ViewModel
+            for graph_id in list(self.vm.graphs.keys()):
+                self.vm.delete_graph(graph_id)
+            
+            # Update graph list combobox
+            self._update_graph_list([])
     
     def _on_set_current_limits(self):
         """Get and set current axis limits from the active plot."""

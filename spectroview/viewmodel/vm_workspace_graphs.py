@@ -181,6 +181,89 @@ class VMWorkspaceGraphs(QObject):
         self.filtered_data_ready.emit(df)
         return df
     
+    def has_slot_column(self, df_name: str) -> bool:
+        """Check if DataFrame has a 'Slot' column."""
+        if df_name not in self.dataframes:
+            return False
+        return 'Slot' in self.dataframes[df_name].columns
+    
+    def get_unique_slots(self, df_name: str) -> List:
+        """Get unique slot values from DataFrame."""
+        if not self.has_slot_column(df_name):
+            return []
+        
+        df = self.dataframes[df_name]
+        return sorted(df['Slot'].dropna().unique())
+    
+    def create_multi_wafer_graphs(self, df_name: str, slot_numbers: List, 
+                                   plot_config: Dict, base_filters: List[Dict]) -> List[MGraph]:
+        """Create multiple wafer graphs, one for each slot.
+        
+        Args:
+            df_name: Name of the DataFrame
+            slot_numbers: List of slot numbers to plot
+            plot_config: Base plot configuration
+            base_filters: Base filters to apply (will be merged with slot filters)
+        
+        Returns:
+            List of created MGraph objects
+        """
+        created_graphs = []
+        
+        for slot_num in slot_numbers:
+            # Merge base filters with slot-specific filter
+            slot_filters = self._merge_filters_with_slot(base_filters, slot_num)
+            
+            # Create new graph
+            graph = MGraph(graph_id=self._next_graph_id)
+            
+            # Apply base configuration
+            for key, value in plot_config.items():
+                if hasattr(graph, key):
+                    setattr(graph, key, value)
+            
+            # Set slot-specific filters
+            graph.filters = slot_filters
+            
+            # Store graph
+            self.graphs[self._next_graph_id] = graph
+            self._next_graph_id += 1
+            
+            created_graphs.append(graph)
+        
+        self._emit_graphs_list()
+        return created_graphs
+    
+    def _merge_filters_with_slot(self, base_filters: List[Dict], slot_num: int) -> List[Dict]:
+        """Merge base filters with slot-specific filter.
+        
+        Ensures that only the specified slot filter is active.
+        """
+        import copy
+        # Deep copy to avoid modifying original filter dictionaries
+        merged = copy.deepcopy(base_filters)
+        slot_expr = f"Slot == {slot_num}"
+        
+        # Check if a Slot filter already exists
+        slot_found = False
+        for f in merged:
+            expr = f.get("expression", "")
+            if "Slot ==" in expr:
+                # Replace with current slot and activate
+                f["expression"] = slot_expr
+                f["state"] = True
+                slot_found = True
+                break
+        
+        # If no Slot filter exists, add one
+        if not slot_found:
+            merged.append({
+                "expression": slot_expr,
+                "state": True
+            })
+        
+        return merged
+    
     # ═════════════════════════════════════════════════════════════════════
     # Graph Management
     # ═════════════════════════════════════════════════════════════════════

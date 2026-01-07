@@ -18,7 +18,7 @@ from spectroview.view.components.v_about import VAboutDialog
 
 from spectroview.view.components.v_menubar import VMenuBar
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
-from spectroview.view.v_workspace_maps import WorkspaceMaps
+from spectroview.view.v_workspace_maps import VWorkspaceMaps
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 
 from spectroview.viewmodel.utils import dark_palette, light_palette
@@ -51,7 +51,7 @@ class Main(QMainWindow):
 
         self.v_spectra_workspace = VWorkspaceSpectra()
         self.v_graphs_workspace = VWorkspaceGraphs()
-        self.v_maps_workspace = WorkspaceMaps()
+        self.v_maps_workspace = VWorkspaceMaps()
 
         self.tabWidget.addTab(self.v_spectra_workspace, "Spectra")
         self.tabWidget.addTab(self.v_maps_workspace, "Maps")

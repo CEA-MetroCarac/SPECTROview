@@ -113,7 +113,7 @@ class VWorkspaceSpectra(QWidget):
         # Assemble main splitter
         main_splitter.addWidget(left_widget)
         main_splitter.addWidget(right_widget)
-        main_splitter.setSizes([900, 200])
+        main_splitter.setSizes([900, 300])
 
     def _apply_with_ctrl(self, fn):
         apply_all = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)

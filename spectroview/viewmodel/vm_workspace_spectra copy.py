@@ -898,19 +898,7 @@ class VMWorkspaceSpectra(QObject):
             'height': 7,
         }
         
-        # Build peak_id order mapping to preserve original order
-        peak_id_order = {}
-        peak_id_index = 0
-        for col in other_cols:
-            if '_' in col:
-                parts = col.split('_', 1)
-                if len(parts) > 1:
-                    peak_id = parts[1]
-                    if peak_id not in peak_id_order:
-                        peak_id_order[peak_id] = peak_id_index
-                        peak_id_index += 1
-        
-        # Sort by parameter type (prefix) then by peak identifier (in original order)
+        # Sort by parameter type (prefix) then by peak identifier (suffix)
         def sort_key(col_name):
             if '_' in col_name:
                 parts = col_name.split('_', 1)  # Split on first underscore
@@ -918,11 +906,9 @@ class VMWorkspaceSpectra(QObject):
                 peak_id = parts[1] if len(parts) > 1 else ''  # e.g., "p1", "p2"
                 # Use priority if defined, otherwise use high number (appears last)
                 priority = param_priority.get(param_type, 999)
-                # Use original order index for peak_id
-                peak_order = peak_id_order.get(peak_id, 999)
-                return (priority, param_type, peak_order)
+                return (priority, param_type, peak_id)
             else:
-                return (999, col_name, 999)
+                return (999, col_name, '')
         
         sorted_cols = sorted(other_cols, key=sort_key)
         final_cols = filename_col + sorted_cols

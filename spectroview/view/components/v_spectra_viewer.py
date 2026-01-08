@@ -26,6 +26,7 @@ import matplotlib.lines as mlines
 import matplotlib.text as mtext
 
 from spectroview import ICON_DIR, X_AXIS_UNIT, PLOT_POLICY
+from spectroview.viewmodel.utils import copy_fig_to_clb
 
 
 class VSpectraViewer(QWidget):
@@ -615,10 +616,10 @@ class VSpectraViewer(QWidget):
             # Request ViewModel to copy spectrum data
             self.copy_data_requested.emit()
         else:
-            # Copy canvas directly in View
+            # Copy canvas directly using viewmodel utility
             width = float(self.width_entry.text()) if self.width_entry.text() else 5.5
             height = float(self.height_entry.text()) if self.height_entry.text() else 4.0
-            self.copy_canvas_to_clipboard((width, height))
+            copy_fig_to_clb(self.canvas, size_ratio=(width, height))
 
     def _emit_norm(self):
         try:
@@ -867,60 +868,4 @@ class VSpectraViewer(QWidget):
             
             # Clear dragging state
             self._dragging_peak = None
-
-    def copy_canvas_to_clipboard(self, size_tuple: tuple):
-        """Copy figure canvas to clipboard with specified size"""
-        import platform
-        from io import BytesIO
-        from PIL import Image
-        from PySide6.QtWidgets import QMessageBox
-        
-        width, height = size_tuple
-        current_os = platform.system()
-
-        if self.canvas:
-            figure = self.canvas.figure
-            # Save the original size to restore later
-            original_size = figure.get_size_inches()
-            
-            # Resize the figure
-            figure.set_size_inches((width, height), forward=True)
-            self.canvas.draw()
-
-            try:
-                if current_os == 'Darwin':  # macOS
-                    import AppKit
-                    buf = BytesIO()
-                    self.canvas.print_png(buf)
-                    buf.seek(0)
-                    image = Image.open(buf)
-                    img_size = image.size
-                    png_data = buf.getvalue()
-                    image_rep = AppKit.NSBitmapImageRep.alloc().initWithData_(
-                        AppKit.NSData.dataWithBytes_length_(png_data, len(png_data))
-                    )
-                    ns_image = AppKit.NSImage.alloc().initWithSize_((img_size[0], img_size[1]))
-                    ns_image.addRepresentation_(image_rep)
-                    pasteboard = AppKit.NSPasteboard.generalPasteboard()
-                    pasteboard.clearContents()
-                    pasteboard.writeObjects_([ns_image])
-
-                elif current_os == 'Windows':
-                    import win32clipboard
-                    with BytesIO() as buf:
-                        figure.savefig(buf, format='png', dpi=300)
-                        data = buf.getvalue()
-                    format_id = win32clipboard.RegisterClipboardFormat('PNG')
-                    win32clipboard.OpenClipboard()
-                    win32clipboard.EmptyClipboard()
-                    win32clipboard.SetClipboardData(format_id, data)
-                    win32clipboard.CloseClipboard()
-
-                else:
-                    QMessageBox.critical(None, "Error", f"Unsupported OS: {current_os}")
-            
-            finally:
-                # Restore original size
-                figure.set_size_inches(original_size, forward=True)
-                self.canvas.draw()
 

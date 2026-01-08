@@ -9,7 +9,8 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from copy import deepcopy
 
 from spectroview import X_AXIS_UNIT, ICON_DIR, PLOT_POLICY
-from spectroview.modules.utils import plot_baseline_dynamically, copy_fig_to_clb, show_alert
+from spectroview.modules.utils import plot_baseline_dynamically, show_alert
+from spectroview.viewmodel.utils import copy_fig_to_clb
 
 from PySide6.QtWidgets import  QWidgetAction, QHBoxLayout, QLabel, QToolButton, QDoubleSpinBox,\
     QLineEdit, QWidget, QPushButton, QComboBox, QApplication,  QWidget, QMenu, QColorDialog, QInputDialog

@@ -126,7 +126,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # ── VMapsList → ViewModel connections ──
         self.v_maps_list.files_dropped.connect(self.vm.load_map_files)
         self.v_maps_list.map_selection_changed.connect(self._on_map_selected)
-        self.v_maps_list.spectra_selection_changed.connect(self.vm.set_selected_indices)
+        self.v_maps_list.spectra_selection_changed.connect(self._on_spectra_list_selection)
         
         # ── VMapsList button connections ──
         self.v_maps_list.view_map_requested.connect(self._on_view_map_requested)
@@ -149,7 +149,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         )
         
         # ── ViewModel → VMapViewer connections ──
-        self.vm.map_selected.connect(self._on_map_data_changed)
+        # Note: map_selected signal removed to avoid duplicate calls to _on_map_data_changed
         self.vm.map_data_updated.connect(self._on_map_data_changed)
         
         # Connect spectra selection to viewer (inherited from parent)
@@ -166,8 +166,11 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         """Handle spectrum selection from map viewer (click on heatmap).
         
         Converts (x, y) coordinates to spectrum indices and updates selection.
+        Syncs with spectra list.
         """
         if not selected_points:
+            # Clear selection in list
+            self.v_maps_list.spectra_list.clearSelection()
             return
         
         # Create fast lookup set for selected coordinates
@@ -183,36 +186,112 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                 if (float(x_pos), float(y_pos)) in selected_coords:
                     indices.append(i)
         
+        if not indices:
+            return
+        
         # Block signals to prevent multiple plot updates
         self.v_maps_list.spectra_list.blockSignals(True)
         
-        # Update list widget selection
-        for idx in range(self.v_maps_list.spectra_list.count()):
-            item = self.v_maps_list.spectra_list.item(idx)
-            if idx in indices:
-                item.setSelected(True)
-            else:
-                item.setSelected(False)
+        # Clear and update list widget selection to match heatmap selection
+        self.v_maps_list.spectra_list.clearSelection()
         
-        # Unblock signals and update selection once
+        # Map global indices to list widget indices
+        list_indices = []
+        for global_idx in indices:
+            if global_idx in self.vm.current_map_indices:
+                list_idx = self.vm.current_map_indices.index(global_idx)
+                list_indices.append(list_idx)
+        
+        # Set selection in list widget
+        for list_idx in list_indices:
+            if 0 <= list_idx < self.v_maps_list.spectra_list.count():
+                item = self.v_maps_list.spectra_list.item(list_idx)
+                item.setSelected(True)
+        
+        # Auto-scroll to show first selected item (legacy behavior)
+        if list_indices:
+            first_idx = list_indices[0]
+            if 0 <= first_idx < self.v_maps_list.spectra_list.count():
+                self.v_maps_list.spectra_list.scrollToItem(
+                    self.v_maps_list.spectra_list.item(first_idx)
+                )
+        
+        # Unblock signals
         self.v_maps_list.spectra_list.blockSignals(False)
         
-        # Update ViewModel (this will trigger single plot update)
-        if indices:
-            self.vm.set_selected_indices(indices)
+        # Update ViewModel to trigger plot
+        self.vm.set_selected_indices(indices)
+    
+    def _on_spectra_list_selection(self, list_indices: list):
+        """Handle spectra selection from list - sync to heatmap and update plot.
+        
+        Args:
+            list_indices: Indices in the spectra list widget (0-based)
+        """
+        if not list_indices:
+            # Clear heatmap selection
+            self.v_map_viewer.set_selected_points([])
+            self.vm.set_selected_indices([])
+            return
+        
+        # Convert list widget indices to global indices
+        global_indices = []
+        for list_idx in list_indices:
+            if 0 <= list_idx < len(self.vm.current_map_indices):
+                global_idx = self.vm.current_map_indices[list_idx]
+                global_indices.append(global_idx)
+        
+        if not global_indices:
+            return
+        
+        # Get (x, y) coordinates for selected spectra
+        selected_points = []
+        for global_idx in global_indices:
+            if 0 <= global_idx < len(self.vm.spectra):
+                spectrum = self.vm.spectra[global_idx]
+                x_pos = spectrum.metadata.get('x_position')
+                y_pos = spectrum.metadata.get('y_position')
+                
+                if x_pos is not None and y_pos is not None:
+                    selected_points.append((float(x_pos), float(y_pos)))
+        
+        # Update heatmap selection highlights
+        if selected_points:
+            self.v_map_viewer.set_selected_points(selected_points)
+        
+        # Auto-scroll to show first selected item in list (legacy behavior)
+        if list_indices:
+            first_idx = list_indices[0]
+            if 0 <= first_idx < self.v_maps_list.spectra_list.count():
+                self.v_maps_list.spectra_list.scrollToItem(
+                    self.v_maps_list.spectra_list.item(first_idx)
+                )
+        
+        # Update ViewModel - use parent's method directly to avoid double conversion
+        # global_indices are already global, not list indices
+        super(type(self.vm), self.vm).set_selected_indices(global_indices)
     
     def _on_map_data_changed(self):
         """Update map viewer when map data changes."""
         if not self.vm.current_map_name:
             return
         
-        # Get current map data and fit results
-        map_df = self.vm.get_current_map_dataframe()
-        fit_results = self.vm.get_fit_results_dataframe()
+        # Block signals to prevent cascading updates during data load
+        old_state = self.v_map_viewer.blockSignals(True)
         
-        # Update map viewer
-        if map_df is not None:
-            self.v_map_viewer.set_map_data(map_df, self.vm.current_map_name, fit_results)
+        try:
+            # Get current map data and fit results
+            map_df = self.vm.get_current_map_dataframe()
+            fit_results = self.vm.get_fit_results_dataframe()
+            
+            # Update map viewer
+            if map_df is not None:
+                self.v_map_viewer.set_map_data(map_df, self.vm.current_map_name, fit_results)
+        finally:
+            # Restore signal state
+            self.v_map_viewer.blockSignals(old_state)
+        
+        # Don't auto-plot - wait for user to select a spectrum
     
     def _on_map_selected(self, index: int):
         """Handle map selection - convert index to map name and call ViewModel."""

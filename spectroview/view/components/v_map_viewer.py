@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction,
     QSpacerItem, QSizePolicy, QGroupBox, QApplication
 )
-from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon, QAction
 
 from spectroview import ICON_DIR
@@ -51,6 +51,15 @@ class VMapViewer(QWidget):
         self._last_final_z_col = None
         self._last_stats_text_artist = None
         self._selection_scatter = None  # Cache for selection overlay
+        
+        # Cache for expensive griddata computation (wafer maps)
+        self._griddata_cache = {}  # {cache_key: (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col)}
+        
+        # Debounce timer for plot updates (matches legacy 100ms delay)
+        self.plot_timer = QTimer()
+        self.plot_timer.setSingleShot(True)
+        self.plot_timer.setInterval(100)
+        self.plot_timer.timeout.connect(self._do_plot_heatmap)
         
         self._init_ui()
     
@@ -345,10 +354,16 @@ class VMapViewer(QWidget):
     # ═══ Public API (ViewModel → View) ═══
     
     def set_map_data(self, map_df, map_name, df_fit_results=None):
-        """Set map data and trigger plot update."""
+        """Set map data and schedule plot update with debounce."""
         self.map_df = map_df
         self.map_df_name = map_name
         self.df_fit_results = df_fit_results if df_fit_results is not None else pd.DataFrame()
+        
+        # Clear selection points when switching maps (prevents out-of-range highlights)
+        self.selected_points = []
+        
+        # Clear griddata cache when switching maps
+        self._griddata_cache.clear()
         
         # Update available parameters
         self._update_parameter_lists()
@@ -356,8 +371,8 @@ class VMapViewer(QWidget):
         # Update sliders based on new data
         self._update_range_sliders()
         
-        # Plot the heatmap
-        self.plot_heatmap()
+        # Schedule plot with debounce (matches legacy performance)
+        self.plot_timer.start()
     
     def set_selected_points(self, points: list):
         """Set externally selected points and refresh plot."""
@@ -505,6 +520,10 @@ class VMapViewer(QWidget):
         self.canvas.draw_idle()
     
     def plot_heatmap(self):
+        """Schedule a debounced heatmap plot update."""
+        self.plot_timer.start()
+    
+    def _do_plot_heatmap(self):
         """Plot 2D heatmap or wafer map based on current data and settings."""
         if self.map_df is None or self.map_df.empty:
             self.ax.clear()
@@ -550,13 +569,15 @@ class VMapViewer(QWidget):
         interpolation = 'bilinear' if self.action_smoothing.isChecked() else 'none'
         vmin_plot, vmax_plot = self.z_range_slider.value()
         
-        # Plot heatmap
-        if map_type != '2Dmap' and grid_z is not None and self.number_of_points >= 4:
-            r = self._get_wafer_radius(map_type)
-            self.img = self.ax.imshow(grid_z, extent=[-r-0.5, r+0.5, -r-0.5, r+0.5],
-                                     origin='lower', aspect='equal', cmap=color, 
-                                     interpolation='nearest', vmin=vmin_plot, vmax=vmax_plot)
+        # Plot heatmap - different approaches for wafer vs 2D maps
+        if map_type != '2Dmap' and grid_z is not None:
+            # Wafer maps: Use griddata result (already interpolated, smooth)
+            self.img = self.ax.imshow(grid_z, extent=extent,
+                                     vmin=vmin_plot, vmax=vmax_plot,
+                                     origin='lower', aspect='equal', cmap=color,
+                                     interpolation='bilinear')  # Smooth the 100x100 grid
         elif not heatmap_pivot.empty:
+            # 2D maps: Use pivot table with optional smoothing
             self.img = self.ax.imshow(heatmap_pivot, extent=extent, 
                                      vmin=vmin_plot, vmax=vmax_plot,
                                      origin='lower', aspect='equal', cmap=color, 
@@ -594,11 +615,31 @@ class VMapViewer(QWidget):
         self.canvas.draw_idle()
     
     def _get_data_for_heatmap(self):
-        """Compute heatmap data from map DataFrame.
+        """Compute heatmap data from map DataFrame (with caching for wafer griddata).
         
         Returns:
             tuple: (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col)
         """
+        # Build cache key from all parameters that affect the result
+        xmin, xmax = self.x_range_slider.value()
+        parameter = self.cbb_zparameter.currentText()
+        map_type = self.cbb_map_type.currentText()
+        mask_enabled = self.cb_enable_mask.isChecked() if map_type == '2Dmap' else False
+        remove_outliers = self.action_remove_outlier.isChecked()
+        
+        cache_key = (
+            self.map_df_name,
+            parameter,
+            (xmin, xmax),
+            map_type,
+            mask_enabled,
+            remove_outliers
+        )
+        
+        # Check cache first (avoid expensive griddata computation!)
+        if cache_key in self._griddata_cache:
+            return self._griddata_cache[cache_key]
+        
         # Default returns
         heatmap_pivot = pd.DataFrame()
         extent = [0, 0, 0, 0]
@@ -675,24 +716,35 @@ class VMapViewer(QWidget):
         # Count unique sites
         self.number_of_points = len(set(zip(x_col, y_col)))
         
-        # Generate grid for wafer maps
+        # Different approach for wafer vs 2D maps
         if map_type != '2Dmap' and self.number_of_points >= 4:
+            # Wafer maps: Use griddata for scattered point interpolation
             r = self._get_wafer_radius(map_type)
             if r:
                 grid_x, grid_y = np.meshgrid(
-                    np.linspace(-r, r, 300),
-                    np.linspace(-r, r, 300)
+                    np.linspace(-r, r, 80),  
+                    np.linspace(-r, r, 80)
                 )
+                from scipy.interpolate import griddata
+                # Linear interpolation for smooth result
                 grid_z = griddata((x_col, y_col), final_z_col, 
                                  (grid_x, grid_y), method='linear')
+                
                 extent = [-r-1, r+1, -r-0.5, r+0.5]
+                heatmap_pivot = pd.DataFrame()  # Not used for wafer
         else:
-            # Create pivot table for 2D map
+            # 2D maps: Use fast pivot table (regular grid, no interpolation needed)
             heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
             heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
             extent = [x_col.min(), x_col.max(), y_col.min(), y_col.max()]
+            grid_z = None  # Not used for 2D maps
         
-        return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
+        result = (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col)
+        
+        # Cache the result to avoid recomputing expensive griddata
+        self._griddata_cache[cache_key] = result
+        
+        return result
     
     def _apply_mask(self, z_col, filtered_df):
         """Apply mask to z_col based on mask settings."""

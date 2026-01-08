@@ -180,6 +180,9 @@ class VMapsList(QWidget):
     
     def set_spectra_names(self, names: list[str]):
         """Replace spectra list for currently selected map."""
+        # Block signals to prevent itemSelectionChanged cascade when clearing
+        self.spectra_list.blockSignals(True)
+        
         self.spectra_list.clear()
         for i, name in enumerate(names):
             item = QListWidgetItem(name)
@@ -187,6 +190,9 @@ class VMapsList(QWidget):
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Unchecked)
             self.spectra_list.addItem(item)
+        
+        # Unblock signals
+        self.spectra_list.blockSignals(False)
     
     def get_selected_map_index(self) -> int:
         """Return currently selected map index, or -1 if none."""

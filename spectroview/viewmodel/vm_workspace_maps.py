@@ -27,13 +27,20 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.current_map_name = None
         self.current_map_df = None
         self.current_map_indices = []  # Global indices of currently displayed map's spectra
+        
+        # Cache for fit results
+        self._fit_results_cache: pd.DataFrame | None = None
+        self._fit_results_cache_dirty: bool = True
+        
+        # Cache spectrum to index mapping to avoid list conversions
+        self._spectrum_to_index: dict = {}  # {id(spectrum): index}
     
     # ─────────────────────────────────────────────────────────────────
     # MAPS LOADING AND MANAGEMENT
     # ─────────────────────────────────────────────────────────────────
     
     def load_map_files(self, paths: list[str]):
-        """Load hyperspectral map files (CSV, TXT formats)."""
+        """Load hyperspectral map files and extract spectra immediately (matches legacy)."""
         loaded_maps = []
         
         for p in paths:
@@ -45,10 +52,14 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 self.notify.emit(f"Map '{map_name}' already loaded, skipping.")
                 continue
             
-            # Load map dataframe based on file extension
+            # Load map dataframe
             try:
                 map_df = self._load_map_dataframe(path)
                 self.maps[map_name] = map_df
+                
+                # IMMEDIATELY extract spectra (legacy behavior - no lazy loading)
+                self._extract_spectra_from_map(map_name, map_df)
+                
                 loaded_maps.append(map_name)
             except Exception as e:
                 self.notify.emit(f"Error loading {path.name}: {str(e)}")
@@ -62,22 +73,17 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         return load_map_file(path)
     
     def select_map(self, map_name: str):
-        """Select a map and show its spectra."""
+        """Select a map and filter/show its spectra (fast - no extraction)."""
         if map_name not in self.maps:
             return
         
         self.current_map_name = map_name
         self.current_map_df = self.maps[map_name]
         
-        # Extract spectra if not already extracted for this map
-        if map_name not in self.map_spectra:
-            self._extract_spectra_from_map(map_name, self.current_map_df)
-        else:
-            # Use existing spectra (preserves fitting results)
-            self._show_map_spectra(map_name)
+        # Filter and show spectra for this map (already extracted during load)
+        self._show_map_spectra(map_name)
         
-        # Emit signals
-        self.map_selected.emit(map_name)
+        # Emit single signal to update view
         self.map_data_updated.emit(self.current_map_df)
     
     def _extract_spectra_from_map(self, map_name: str, map_df: pd.DataFrame):
@@ -93,17 +99,20 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         x_data = np.asarray(x_values)
         
-        # Create list to store spectra for this map
-        map_spectra_list = []
+        # Pre-extract all spatial coordinates and intensity data (faster)
+        x_positions = map_df['X'].values
+        y_positions = map_df['Y'].values
+        intensity_data = map_df[wavenumber_cols].values  # 2D numpy array
         
-        # Create spectrum for each row (spatial point)
-        for idx, row in map_df.iterrows():
-            x_pos = float(row['X'])
-            y_pos = float(row['Y'])
-            
-            # Extract y values and skip last one
-            y_values = row[wavenumber_cols].tolist()
-            y_data = np.asarray(y_values)
+        # Create list to store spectra for this map (pre-allocate)
+        num_spectra = len(map_df)
+        map_spectra_list = [None] * num_spectra
+        
+        # Create spectrum for each row (spatial point) - vectorized operations
+        for idx in range(num_spectra):
+            x_pos = float(x_positions[idx])
+            y_pos = float(y_positions[idx])
+            y_data = intensity_data[idx]  # Already numpy array, no conversion needed
             
             # Create MSpectrum object
             spectrum = MSpectrum()
@@ -125,17 +134,19 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             spectrum.metadata['y_position'] = y_pos
             spectrum.metadata['point_index'] = idx
             
-            map_spectra_list.append(spectrum)
+            map_spectra_list[idx] = spectrum
         
         # Store the extracted spectra with this map
         self.map_spectra[map_name] = map_spectra_list
         
-        # Add these spectra to the main collection
-        for spectrum in map_spectra_list:
+        # Add these spectra to the main collection and update index cache
+        start_idx = len(self.spectra)
+        for i, spectrum in enumerate(map_spectra_list):
             self.spectra.add(spectrum)
+            self._spectrum_to_index[id(spectrum)] = start_idx + i
         
-        # Update View to show only this map's spectra
-        self._show_map_spectra(map_name)
+        # Note: Don't call _show_map_spectra here - extraction happens during load,
+        # filtering happens during select_map() when user clicks a map
     
     def _show_map_spectra(self, map_name: str):
         """Display spectra for the selected map in the spectra list."""
@@ -144,26 +155,27 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         # Get spectra for this map
         map_spectra = self.map_spectra[map_name]
-        spectra_names = [s.fname for s in map_spectra]
+        num_spectra = len(map_spectra)
         
-        # Find global indices of this map's spectra in self.spectra
-        all_spectra_list = list(self.spectra)
+        # Single pass: extract names AND indices together (optimize!)
+        spectra_names = []
         self.current_map_indices = []
+        
         for spectrum in map_spectra:
-            try:
-                idx = all_spectra_list.index(spectrum)
+            # Extract name
+            spectra_names.append(spectrum.fname)
+            
+            # Get index from cache (O(1) lookup)
+            idx = self._spectrum_to_index.get(id(spectrum))
+            if idx is not None:
                 self.current_map_indices.append(idx)
-            except ValueError:
-                pass  # Spectrum not found
         
-        # Update the view to show only this map's spectra
+        # Single batched signal emission to update view
         self.spectra_list_changed.emit(spectra_names)
-        self.count_changed.emit(len(map_spectra))
+        self.count_changed.emit(num_spectra)
         
-        # Auto-select first spectrum if exists
-        if self.current_map_indices:
-            self.selected_indices = [self.current_map_indices[0]]
-            self._emit_selected_spectra()
+        # Clear selection when switching maps (don't auto-select to avoid premature plotting)
+        self.selected_indices = []
     
     def get_current_map_dataframe(self) -> pd.DataFrame | None:
         """Get the DataFrame of the currently selected map."""
@@ -285,20 +297,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.maps_list_changed.emit(map_names)
     
     def set_selected_indices(self, indices: list[int]):
-        """Override to map displayed list indices to global spectra indices."""
-        if not self.current_map_indices:
-            # No map selected, use parent behavior
-            super().set_selected_indices(indices)
-            return
+        """Override to handle index selection.
         
-        # Map from displayed list indices to global indices
-        global_indices = []
-        for idx in indices:
-            if 0 <= idx < len(self.current_map_indices):
-                global_indices.append(self.current_map_indices[idx])
-        
-        # Call parent with global indices
-        super().set_selected_indices(global_indices)
+        Note: This receives GLOBAL indices directly from View layer.
+        The View layer does the list-to-global conversion before calling this.
+        """
+        # Just pass through to parent - indices are already global
+        super().set_selected_indices(indices)
     
     # ─────────────────────────────────────────────────────────────────
     # MAP VISUALIZATION HELPERS
@@ -383,15 +388,32 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         return matches
     
     def get_fit_results_dataframe(self):
-        """Get fit results DataFrame for the current map.
+        """Get fit results DataFrame for the current map (cached).
         
         Returns:
             pd.DataFrame: DataFrame with columns [Filename, X, Y, ...fit_parameters]
         """
+        # Return cached results if available and not dirty
+        if not self._fit_results_cache_dirty and self._fit_results_cache is not None:
+            return self._fit_results_cache
+        
         import pandas as pd
         
         if not self.spectra or len(self.spectra) == 0:
-            return pd.DataFrame()
+            self._fit_results_cache = pd.DataFrame()
+            self._fit_results_cache_dirty = False
+            return self._fit_results_cache
+        
+        # Quick check: do ANY spectra have fit results? If not, skip entirely
+        has_any_fits = any(
+            hasattr(s, 'result_fit') and s.result_fit 
+            for s in self.spectra
+        )
+        
+        if not has_any_fits:
+            self._fit_results_cache = pd.DataFrame()
+            self._fit_results_cache_dirty = False
+            return self._fit_results_cache
         
         # Collect all fit results
         results = []
@@ -438,7 +460,22 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             results.append(row)
         
         if not results:
-            return pd.DataFrame()
+            self._fit_results_cache = pd.DataFrame()
+        else:
+            self._fit_results_cache = pd.DataFrame(results)
         
-        return pd.DataFrame(results)
+        self._fit_results_cache_dirty = False
+        return self._fit_results_cache
+    
+    def invalidate_fit_results_cache(self):
+        """Mark fit results cache as dirty (call after fitting)."""
+        self._fit_results_cache_dirty = True
+    
+    def _on_fit_finished(self):
+        """Override to invalidate cache when fitting completes."""
+        super()._on_fit_finished()
+        self.invalidate_fit_results_cache()
+        # Re-emit map data to update heatmap with new fit results
+        if self.current_map_name:
+            self.map_data_updated.emit(self.current_map_df)
 

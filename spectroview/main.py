@@ -1,14 +1,13 @@
 # main.py
 import sys
 import os
-import webbrowser
 from pathlib import Path
 
 import pandas as pd
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog, QMessageBox
-from PySide6.QtCore import Qt, QSettings, QFileInfo
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, QSettings, QFileInfo, QUrl
+from PySide6.QtGui import QIcon, QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter
 
@@ -227,11 +226,24 @@ class Main(QMainWindow):
         dlg.exec()
 
     def manual(self):
-        """Open user manual PDF in default browser."""
-        if os.path.exists(USER_MANUAL_PDF):
-            webbrowser.open(USER_MANUAL_PDF)
-        else:
-            QMessageBox.warning(self, "Manual Not Found", f"User manual not found at:\n{USER_MANUAL_PDF}")
+        """Open user manual PDF using system's default PDF viewer (cross-platform)."""
+        if not os.path.exists(USER_MANUAL_PDF):
+            QMessageBox.warning(
+                self, 
+                "Manual Not Found", 
+                f"User manual not found at:\n{USER_MANUAL_PDF}"
+            )
+            return
+        
+        # Use Qt's QDesktopServices for cross-platform file opening
+        pdf_url = QUrl.fromLocalFile(USER_MANUAL_PDF)
+        if not QDesktopServices.openUrl(pdf_url):
+            QMessageBox.critical(
+                self,
+                "Cannot Open Manual",
+                f"Failed to open the user manual.\n\n"
+                f"Please open it manually:\n{USER_MANUAL_PDF}"
+            )
 
     def toggle_theme(self, theme=None):
         app = QApplication.instance()

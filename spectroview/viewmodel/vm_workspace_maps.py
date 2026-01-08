@@ -1,68 +1,58 @@
 """ViewModel for Maps Workspace - extends Spectra Workspace with hyperspectral map functionality."""
+import json
+import gzip
+from io import StringIO
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QMessageBox
 
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
 from spectroview.model.m_io import load_map_file
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
+from spectroview.viewmodel.utils import spectrum_to_dict, dict_to_spectrum
 
 
 class VMWorkspaceMaps(VMWorkspaceSpectra):
-    """Maps Workspace ViewModel - handles hyperspectral data and map visualization."""
+    """Maps Workspace ViewModel."""
     
-    # ───── Additional Maps-specific signals ─────
-    maps_list_changed = Signal(list)  # list[str] - map names
-    map_selected = Signal(str)  # selected map name
-    map_data_updated = Signal(object)  # pd.DataFrame for map visualization
-    selection_indices_to_restore = Signal(list)  # List indices to select in widget after map switch
-    send_spectra_to_workspace = Signal(list)  # list[MSpectrum] - spectra to send to Spectra workspace
-    clear_map_cache_requested = Signal(str)  # map_name - clear griddata cache for this map
+    maps_list_changed = Signal(list)
+    map_selected = Signal(str)
+    map_data_updated = Signal(object)
+    selection_indices_to_restore = Signal(list)
+    send_spectra_to_workspace = Signal(list)
+    clear_map_cache_requested = Signal(str)
     
     def __init__(self, settings: MSettings):
         super().__init__(settings)
-        self.maps = {}  # dict[str, pd.DataFrame] - {map_name: map_dataframe}
-        self.map_spectra = {}  # dict[str, list[MSpectrum]] - {map_name: [spectra...]}
+        self.maps = {}  # {map_name: map_dataframe}
         self.current_map_name = None
         self.current_map_df = None
-        self.current_map_indices = []  # Global indices of currently displayed map's spectra
-        self.selected_list_indices = []  # List indices to persist across map switches
+        self.current_map_indices = []  # Global indices for current map
+        self.selected_list_indices = []  # Persists across map switches
         
-        # Cache for fit results
         self._fit_results_cache: pd.DataFrame | None = None
         self._fit_results_cache_dirty: bool = True
-        
-        # Cache spectrum fname to index mapping (fname is unique and never changes)
-        self._fname_to_index: dict[str, int] = {}  # fname -> index
-    
-    # ─────────────────────────────────────────────────────────────────
-    # MAPS LOADING AND MANAGEMENT
-    # ─────────────────────────────────────────────────────────────────
     
     def load_map_files(self, paths: list[str]):
-        """Load hyperspectral map files and extract spectra immediately (matches legacy)."""
+        """Load hyperspectral map files and extract spectra."""
         loaded_maps = []
         
         for p in paths:
             path = Path(p)
             map_name = path.stem
             
-            # Skip if already loaded
             if map_name in self.maps:
                 self.notify.emit(f"Map '{map_name}' already loaded, skipping.")
                 continue
             
-            # Load map dataframe
             try:
-                map_df = self._load_map_dataframe(path)
+                map_df = load_map_file(path)
                 self.maps[map_name] = map_df
-                
-                # IMMEDIATELY extract spectra (legacy behavior - no lazy loading)
                 self._extract_spectra_from_map(map_name, map_df)
-                
                 loaded_maps.append(map_name)
             except Exception as e:
                 self.notify.emit(f"Error loading {path.name}: {str(e)}")
@@ -111,12 +101,8 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         y_positions = map_df['Y'].values
         intensity_data = map_df[wavenumber_cols].values  # 2D numpy array
         
-        # Create list to store spectra for this map (pre-allocate)
-        num_spectra = len(map_df)
-        map_spectra_list = [None] * num_spectra
-        
-        # Create spectrum for each row (spatial point) - vectorized operations
-        for idx in range(num_spectra):
+        # Create spectra for each row (spatial point) and add to main collection
+        for idx in range(len(map_df)):
             x_pos = float(x_positions[idx])
             y_pos = float(y_positions[idx])
             y_data = intensity_data[idx]  # Already numpy array, no conversion needed
@@ -133,48 +119,25 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             spectrum.baseline.mode = "Linear"
             spectrum.baseline.sigma = 4
             
-            # Note: No metadata needed - all info is in fname: "map_name_(x, y)"
-            
-            map_spectra_list[idx] = spectrum
-        
-        # Store the extracted spectra with this map
-        self.map_spectra[map_name] = map_spectra_list
-        
-        # Add these spectra to the main collection and update fname->index cache
-        start_idx = len(self.spectra)
-        for i, spectrum in enumerate(map_spectra_list):
+            # Add to main collection
             self.spectra.add(spectrum)
-            self._fname_to_index[spectrum.fname] = start_idx + i
-        
-        # Note: Don't call _show_map_spectra here - extraction happens during load,
-        # filtering happens during select_map() when user clicks a map
     
     def _show_map_spectra(self, map_name: str):
         """Display spectra for the selected map in the spectra list."""
-        if map_name not in self.map_spectra:
-            return
+        # Filter spectra by fname prefix: "{map_name}_("
+        fname_prefix = f"{map_name}_("
         
-        # Get spectra for this map
-        map_spectra = self.map_spectra[map_name]
-        num_spectra = len(map_spectra)
-        
-        # Single pass: extract names AND indices together (optimize!)
         spectra_names = []
         self.current_map_indices = []
         
-        for spectrum in map_spectra:
-            # Extract name
-            fname = spectrum.fname
-            spectra_names.append(fname)
-            
-            # Get index from fname cache (O(1) lookup)
-            idx = self._fname_to_index.get(fname)
-            if idx is not None:
+        for idx, spectrum in enumerate(self.spectra):
+            if spectrum.fname.startswith(fname_prefix):
+                spectra_names.append(spectrum.fname)
                 self.current_map_indices.append(idx)
         
         # Single batched signal emission to update view
         self.spectra_list_changed.emit(spectra_names)
-        self.count_changed.emit(num_spectra)
+        self.count_changed.emit(len(spectra_names))
     
     def _restore_selection_after_map_switch(self):
         """Restore selection based on list indices after switching maps."""
@@ -251,16 +214,11 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self._emit_selected_spectra()
     
     def reinit_current_map_spectra(self, apply_all: bool = False):
-        """Reinitialize selected spectra or all spectra from all maps.
-        
-        Args:
-            apply_all: If True, reinit ALL spectra from ALL maps. If False, only selected spectra.
-        """
+        """Reinitialize selected spectra or all spectra from all maps """
         if apply_all:
-            # Reinit all spectra from all loaded maps
-            for spectra_list in self.map_spectra.values():
-                for spectrum in spectra_list:
-                    spectrum.reinit()
+            # Reinit all spectra
+            for spectrum in self.spectra:
+                spectrum.reinit()
         else:
             # Reinit only selected spectra
             if not self.selected_indices:
@@ -294,41 +252,35 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     
     def remove_map(self, map_name: str):
         """Remove a map and its spectra from the loaded maps."""
-        if map_name in self.maps:
-            del self.maps[map_name]
-            
-            # Remove spectra from main collection
-            if map_name in self.map_spectra:
-                # Find indices of spectra to remove
-                all_spectra_list = list(self.spectra)
-                indices_to_remove = []
-                
-                for spectrum in self.map_spectra[map_name]:
-                    try:
-                        idx = all_spectra_list.index(spectrum)
-                        indices_to_remove.append(idx)
-                    except ValueError:
-                        pass  # Spectrum not found, skip
-                
-                # Remove by indices
-                if indices_to_remove:
-                    self.spectra.remove(indices_to_remove)
-                
-                del self.map_spectra[map_name]
-            
-            # If removed map was selected, clear view
-            if self.current_map_name == map_name:
-                self.current_map_name = None
-                self.current_map_df = None
-                self.current_map_indices = []
-                self.selected_indices = []
-                self.spectra_list_changed.emit([])
-                self.count_changed.emit(0)
-                self.spectra_selection_changed.emit([])
-                # Clear map plot by emitting empty DataFrame
-                self.map_data_updated.emit(pd.DataFrame())
-            
-            self._emit_maps_list_update()
+        if map_name not in self.maps:
+            return
+        
+        del self.maps[map_name]
+        
+        # Remove all spectra belonging to this map (filter by fname prefix)
+        fname_prefix = f"{map_name}_("
+        indices_to_remove = [
+            idx for idx, spectrum in enumerate(self.spectra)
+            if spectrum.fname.startswith(fname_prefix)
+        ]
+        
+        if indices_to_remove:
+            self.spectra.remove(indices_to_remove)
+        
+        # If removed map was selected, clear view
+        if self.current_map_name == map_name:
+            self.current_map_name = None
+            self.current_map_df = None
+            self.current_map_indices = []
+            self.selected_indices = []
+            self.spectra_list_changed.emit([])
+            self.count_changed.emit(0)
+            self.spectra_selection_changed.emit([])
+            # Clear map plot by emitting empty DataFrame
+            self.map_data_updated.emit(pd.DataFrame())
+        
+        # Update maps list in View
+        self._emit_maps_list_update()
     
     def _emit_maps_list_update(self):
         """Emit updated list of map names."""
@@ -447,30 +399,19 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         This is necessary after operations that might modify the spectra list
         (like fitting) to ensure coordinate-based lookups still work.
         """
-        if not self.current_map_name or self.current_map_name not in self.map_spectra:
+        if not self.current_map_name:
             return
         
-        # Rebuild fname->index cache for all spectra
-        self._fname_to_index.clear()
-        for idx, spectrum in enumerate(self.spectra):
-            self._fname_to_index[spectrum.fname] = idx
-        
-        # Rebuild current_map_indices using fname lookup
-        self.current_map_indices = []
-        map_spectra = self.map_spectra[self.current_map_name]
-        for spectrum in map_spectra:
-            idx = self._fname_to_index.get(spectrum.fname)
-            if idx is not None:
-                self.current_map_indices.append(idx)
-    
-    def invalidate_fit_results_cache(self):
-        """Mark fit results cache as dirty (call after fitting)."""
-        self._fit_results_cache_dirty = True
+        # Rebuild current_map_indices by filtering fname prefix
+        fname_prefix = f"{self.current_map_name}_("
+        self.current_map_indices = [
+            idx for idx, spectrum in enumerate(self.spectra)
+            if spectrum.fname.startswith(fname_prefix)
+        ]
     
     def _on_fit_finished(self):
         """Override to invalidate cache when fitting completes."""
         super()._on_fit_finished()
-        self.invalidate_fit_results_cache()
         
         # Rebuild current_map_indices to ensure coordinate lookups work
         # (fitting might have modified the spectra list indices)
@@ -489,14 +430,12 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         # Clear Maps-specific data structures
         self.maps.clear()
-        self.map_spectra.clear()
         self.current_map_name = None
         self.current_map_df = None
         self.current_map_indices = []
         self.selected_list_indices = []
         
         # Clear all caches
-        self._fname_to_index.clear()
         self._fit_results_cache = None
         self._fit_results_cache_dirty = True
         
@@ -505,4 +444,92 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.map_data_updated.emit(pd.DataFrame())
         # Parent already emits: spectra_list_changed, spectra_selection_changed, 
         # count_changed, fit_in_progress, fit_results_updated
+    
+    # ─────────────────────────────────────────────────────────────────
+    # SAVE/LOAD WORKSPACE
+    # ─────────────────────────────────────────────────────────────────
+    
+    def save_work(self):
+        """Save current maps workspace to .maps file (100% compatible with legacy format)."""
+        from PySide6.QtWidgets import QFileDialog, QMessageBox
+        
+        file_path, _ = QFileDialog.getSaveFileName(
+            None,
+            "Save work",
+            "",
+            "SPECTROview Files (*.maps)"
+        )
+        
+        if not file_path:
+            return
+        
+        try:
+            # Convert all spectra to dict format (is_map=True for map spectra)
+            spectrums_data = spectrum_to_dict(self.spectra, is_map=True)
+            
+            # Compress map DataFrames (gzip + hex encoding for JSON compatibility)
+            compressed_maps = {}
+            for map_name, map_df in self.maps.items():
+                csv_data = map_df.to_csv(index=False).encode('utf-8')
+                compressed_maps[map_name] = gzip.compress(csv_data)
+            
+            # Prepare data structure matching legacy format exactly
+            data_to_save = {
+                'spectrums_data': spectrums_data,
+                'maps': {k: v.hex() for k, v in compressed_maps.items()},
+            }
+            
+            # Save to JSON file
+            with open(file_path, 'w') as f:
+                json.dump(data_to_save, f, indent=4)
+            
+            self.notify.emit("Maps workspace saved successfully.")
+            
+        except Exception as e:
+            QMessageBox.critical(None, "Save Error", f"Error saving maps workspace:\n{str(e)}")
+    
+    def load_work(self, file_path: str):
+        """Load maps workspace from .maps file (100% compatible with legacy format)."""
+        
+        
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+            
+            # Clear current workspace first
+            self.clear_workspace()
+            
+            # Load and decompress map DataFrames
+            self.maps = {}
+            for map_name, hex_data in data.get('maps', {}).items():
+                compressed_data = bytes.fromhex(hex_data)
+                csv_data = gzip.decompress(compressed_data).decode('utf-8')
+                self.maps[map_name] = pd.read_csv(StringIO(csv_data))
+            
+            # Reconstruct spectrum objects from saved data
+            self.spectra = MSpectra()
+            for spectrum_id, spectrum_data in data.get('spectrums_data', {}).items():
+                spectrum = MSpectrum()
+                dict_to_spectrum(
+                    spectrum=spectrum,
+                    spectrum_data=spectrum_data,
+                    maps=self.maps,
+                    is_map=True
+                )
+                spectrum.preprocess()
+                self.spectra.append(spectrum)
+            
+            # Select first map by default
+            map_names = list(self.maps.keys())
+            if map_names:
+                self.select_map(map_names[0])
+            
+            # Emit updates to View
+            self.maps_list_changed.emit(list(self.maps.keys()))
+            self.count_changed.emit(len(self.spectra))
+            self.notify.emit(f"Loaded {len(self.maps)} map(s) with {len(self.spectra)} spectra")
+            
+        except Exception as e:
+            QMessageBox.critical(None, "Load Error", f"Error loading maps workspace:\n{str(e)}")
+
 

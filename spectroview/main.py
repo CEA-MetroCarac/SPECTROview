@@ -149,8 +149,7 @@ class Main(QMainWindow):
             self.tabWidget.setCurrentWidget(self.v_spectra_workspace)
         
         if maps_work_file:
-            # TODO: Implement when maps workspace is converted to MVVM
-            # self.v_maps_workspace.load_work(maps_work_file)
+            self.v_maps_workspace.load_work(maps_work_file)
             self.tabWidget.setCurrentWidget(self.v_maps_workspace)
         
         if graphs_work_file:
@@ -164,9 +163,7 @@ class Main(QMainWindow):
         if current_tab == self.v_spectra_workspace:
             self.v_spectra_workspace.save_work()
         elif current_tab == self.v_maps_workspace:
-            # TODO: Implement when maps workspace is converted to MVVM
-            # self.v_maps_workspace.save_work()
-            QMessageBox.information(self, "Not Implemented", "Maps workspace save not yet implemented in MVVM.")
+            self.v_maps_workspace.save_work()
         elif current_tab == self.v_graphs_workspace:
             self.v_graphs_workspace.save_workspace()
         else:

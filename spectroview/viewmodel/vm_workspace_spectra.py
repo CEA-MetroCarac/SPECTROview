@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog,QMessageBox
 
 from spectroview.model.m_io import load_spectrum_file
 from spectroview.model.m_settings import MSettings
@@ -711,6 +711,8 @@ class VMWorkspaceSpectra(QObject):
 
     def save_work(self):
         """Save current workspace to .spectra file."""
+        from PySide6.QtWidgets import QMessageBox
+        
         file_path, _ = QFileDialog.getSaveFileName(
             None,
             "Save work",
@@ -729,10 +731,11 @@ class VMWorkspaceSpectra(QObject):
                 json.dump(data_to_save, f, indent=4)
             self.notify.emit("Work saved successfully.")
         except Exception as e:
-            self.notify.emit(f"Error saving work: {e}")
+            QMessageBox.critical(None, "Save Error", f"Error saving work:\n{str(e)}")
 
     def load_work(self, file_path: str):
         """Load previously saved workspace from .spectra file."""
+        
         try:
             with open(file_path, 'r') as f:
                 load = json.load(f)
@@ -757,7 +760,7 @@ class VMWorkspaceSpectra(QObject):
                 self.spectra_selection_changed.emit([])
             
         except Exception as e:
-            self.notify.emit(f"Error loading work: {e}")
+            QMessageBox.critical(None, "Load Error", f"Error loading work:\n{str(e)}")
 
     def clear_workspace(self):
         """Clear all spectra and reset workspace to initial state."""

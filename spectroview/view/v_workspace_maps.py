@@ -189,37 +189,27 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.vm.notify.connect(self._show_toast_notification)
     
     def _on_map_viewer_selection(self, selected_points: list):
-        """Handle spectrum selection from map viewer (click on heatmap).
-        
-        Converts (x, y) coordinates to spectrum indices and updates selection.
-        Syncs with spectra list.
-        """
+        """Handle spectrum selection from map viewer."""
         if not selected_points:
-            # Clear selection in list
             self.v_maps_list.spectra_list.clearSelection()
             return
         
-        # Find indices by constructing fname from coordinates
-        # fname format: "map_name_(x, y)" - this is unique and never changes
+        # Find indices by fname matching
         indices = []
         for x, y in selected_points:
-            # Construct the expected fname (matching format from _extract_spectra_from_map)
             fname = f"{self.vm.current_map_name}_({x}, {y})"
-            # Look up index using fname cache
-            idx = self.vm._fname_to_index.get(fname)
-            if idx is not None:
-                indices.append(idx)
+            for idx, spectrum in enumerate(self.vm.spectra):
+                if spectrum.fname == fname:
+                    indices.append(idx)
+                    break
         
         if not indices:
             return
         
-        # Block signals to prevent multiple plot updates
         self.v_maps_list.spectra_list.blockSignals(True)
-        
-        # Clear and update list widget selection to match heatmap selection
         self.v_maps_list.spectra_list.clearSelection()
         
-        # Map global indices to list widget indices
+        # Map global to list indices
         list_indices = []
         for global_idx in indices:
             if global_idx in self.vm.current_map_indices:
@@ -229,68 +219,51 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Set selection in list widget
         for list_idx in list_indices:
             if 0 <= list_idx < self.v_maps_list.spectra_list.count():
-                item = self.v_maps_list.spectra_list.item(list_idx)
-                item.setSelected(True)
+                self.v_maps_list.spectra_list.item(list_idx).setSelected(True)
         
-        # Auto-scroll to show first selected item (legacy behavior)
+        # Auto-scroll
         if list_indices:
-            first_idx = list_indices[0]
-            if 0 <= first_idx < self.v_maps_list.spectra_list.count():
-                self.v_maps_list.spectra_list.scrollToItem(
-                    self.v_maps_list.spectra_list.item(first_idx)
-                )
+            self.v_maps_list.spectra_list.scrollToItem(
+                self.v_maps_list.spectra_list.item(list_indices[0])
+            )
         
-        # Unblock signals
         self.v_maps_list.spectra_list.blockSignals(False)
-        
-        # Update ViewModel to trigger plot
         self.vm.set_selected_indices(indices)
     
     def _on_spectra_list_selection(self, list_indices: list):
-        """Handle spectra selection from list - sync to heatmap and update plot.
-        
-        Args:
-            list_indices: Indices in the spectra list widget (0-based)
-        """
+        """Handle spectra selection from list."""
         if not list_indices:
-            # Clear heatmap selection
             self.v_map_viewer.set_selected_points([])
             self.vm.set_selected_indices([])
             return
         
-        # Convert list widget indices to global indices
-        global_indices = []
-        for list_idx in list_indices:
-            if 0 <= list_idx < len(self.vm.current_map_indices):
-                global_idx = self.vm.current_map_indices[list_idx]
-                global_indices.append(global_idx)
+        # Convert list to global indices
+        global_indices = [
+            self.vm.current_map_indices[i]
+            for i in list_indices
+            if 0 <= i < len(self.vm.current_map_indices)
+        ]
         
         if not global_indices:
             return
         
-        # Get (x, y) coordinates for selected spectra
-        # Extract from fname (never changes) instead of metadata (can be stale after fitting)
+        # Get coordinates from fname
         selected_points = []
         for global_idx in global_indices:
             if 0 <= global_idx < len(self.vm.spectra):
-                spectrum = self.vm.spectra[global_idx]
-                coords = self._extract_coords_from_fname(spectrum.fname)
+                coords = self._extract_coords_from_fname(self.vm.spectra[global_idx].fname)
                 if coords:
                     selected_points.append(coords)
         
-        # Update heatmap selection highlights
         if selected_points:
             self.v_map_viewer.set_selected_points(selected_points)
         
-        # Auto-scroll to show first selected item in list (legacy behavior)
-        if list_indices:
-            first_idx = list_indices[0]
-            if 0 <= first_idx < self.v_maps_list.spectra_list.count():
-                self.v_maps_list.spectra_list.scrollToItem(
-                    self.v_maps_list.spectra_list.item(first_idx)
-                )
+        # Auto-scroll
+        if list_indices and 0 <= list_indices[0] < self.v_maps_list.spectra_list.count():
+            self.v_maps_list.spectra_list.scrollToItem(
+                self.v_maps_list.spectra_list.item(list_indices[0])
+            )
         
-        # Update ViewModel - use override to save list indices for persistence
         self.vm.set_selected_indices(global_indices)
     
     def _on_map_data_changed(self):
@@ -467,3 +440,21 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Delegate to ViewModel for data clearing
         self.vm.clear_workspace()
+    
+    def save_work(self):
+        """Trigger save work in ViewModel."""
+        self.vm.save_work()
+
+    def load_work(self, file_path: str):
+        """Trigger load work in ViewModel."""
+        from PySide6.QtCore import QTimer
+        
+        # Delegate to ViewModel
+        self.vm.load_work(file_path)
+        
+        # Clear griddata cache since we loaded new data
+        if hasattr(self, 'v_map_viewer'):
+            self.v_map_viewer._griddata_cache.clear()
+        
+        # Delay fit results collection to ensure UI is ready (matches legacy)
+        QTimer.singleShot(300, self.vm.collect_fit_results)

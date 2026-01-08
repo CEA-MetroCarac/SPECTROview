@@ -80,8 +80,16 @@ class VWorkspaceGraphs(QWidget):
         toolbar_layout.setContentsMargins(4, 2, 4, 2)
         toolbar_layout.setSpacing(8)
         
+
+        # Delete all button
+        self.btn_delete_all = QPushButton()
+        self.btn_delete_all.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))    
+        self.btn_delete_all.setToolTip("Delete all graphs from workspace")
+        
+        self.btn_delete_all.setMaximumWidth(100)
+        toolbar_layout.addWidget(self.btn_delete_all)
+
         # Graph list combobox
-        toolbar_layout.addWidget(QLabel("Graph list:"))
         self.cbb_graph_list = QComboBox()
         self.cbb_graph_list.setMinimumWidth(150)
         toolbar_layout.addWidget(self.cbb_graph_list)
@@ -90,14 +98,6 @@ class VWorkspaceGraphs(QWidget):
         self.btn_minimize_all = QPushButton("Minimize All")
         self.btn_minimize_all.setMaximumWidth(100)
         toolbar_layout.addWidget(self.btn_minimize_all)
-        
-        # Delete all button
-        self.btn_delete_all = QPushButton("Delete All")
-        self.btn_delete_all.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))    
-        self.btn_delete_all.setToolTip("Delete all graphs from workspace")
-        
-        self.btn_delete_all.setMaximumWidth(100)
-        toolbar_layout.addWidget(self.btn_delete_all)
         
         # Plot size label
         self.lbl_plot_size = QLabel("(480x400)")

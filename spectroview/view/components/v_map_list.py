@@ -164,11 +164,19 @@ class VMapsList(QWidget):
     # ───── Public API (ViewModel → View) ─────────────────────────
     def set_maps_names(self, names: list[str]):
         """Replace entire maps list (ViewModel-driven)."""
+        current_selection = self.get_selected_map_index()
+        
         self.maps_list.clear()
         for i, name in enumerate(names):
             item = QListWidgetItem(name)
             item.setData(Qt.UserRole, i)  # Store index
             self.maps_list.addItem(item)
+        
+        # Auto-select first map if no selection and maps exist
+        if current_selection < 0 and len(names) > 0:
+            self.maps_list.setCurrentRow(0)
+        elif 0 <= current_selection < len(names):
+            self.maps_list.setCurrentRow(current_selection)
     
     def set_spectra_names(self, names: list[str]):
         """Replace spectra list for currently selected map."""

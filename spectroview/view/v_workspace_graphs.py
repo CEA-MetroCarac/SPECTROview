@@ -17,8 +17,7 @@ from spectroview.view.components.v_data_filter import VDataFilter
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
-from spectroview.viewmodel.utils import CustomizedPalette, show_toast_notification
-
+from spectroview.viewmodel.utils import CustomizedPalette, show_toast_notification, copy_fig_to_clb
 
 class VWorkspaceGraphs(QWidget):
     """View for Graphs Workspace - manages DataFrame plotting and visualization."""
@@ -1142,7 +1141,7 @@ class VWorkspaceGraphs(QWidget):
         for gid, (gw, gd, sw) in self.graph_widgets.items():
             if sw == active_subwindow:
                 try:
-                    from spectroview.modules.utils import copy_fig_to_clb
+                    
                     copy_fig_to_clb(gw.canvas)
                     self.vm.notify.emit("Figure copied to clipboard")
                 except Exception as e:

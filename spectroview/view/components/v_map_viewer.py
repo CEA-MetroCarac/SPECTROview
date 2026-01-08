@@ -1,42 +1,57 @@
 # spectroview/view/components/v_map_viewer.py
 """View component for Map visualization with matplotlib canvas and controls."""
 import os
+import re
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+from scipy.interpolate import griddata
 from superqt import QLabeledDoubleRangeSlider
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QCheckBox, QDoubleSpinBox,
     QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction,
-    QSpacerItem, QSizePolicy, QGroupBox
+    QSpacerItem, QSizePolicy, QGroupBox, QApplication
 )
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QIcon, QAction
 
 from spectroview import ICON_DIR
-from spectroview.modules.utils import CustomizedPalette
+from spectroview.viewmodel.utils import CustomizedPalette, copy_fig_to_clb
 
 
 class VMapViewer(QWidget):
     """Map viewer widget with matplotlib canvas and control widgets."""
     
     # ───── View → ViewModel signals ─────
-    map_type_changed = Signal(str)
-    palette_changed = Signal(int)
-    remove_outlier_changed = Signal(bool)
-    xrange_changed = Signal(tuple)  # (xmin, xmax)
-    zrange_changed = Signal(tuple)  # (zmin, zmax)
-    zparameter_changed = Signal(str)  # 'Intensity', 'Area', or fit parameter
-    mask_enabled_changed = Signal(bool)
-    mask_settings_changed = Signal(dict)  # {param, operator, threshold}
-    plot_option_changed = Signal(dict)  # {smoothing, grid, show_stats}
+    spectra_selected = Signal(list)  # List of (x, y) tuples for selected spectra
     extract_profile_requested = Signal(str)  # profile name
     multi_viewer_requested = Signal(int)  # number of viewers (2, 3, or 4)
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        # Data state
+        self.map_df = None
+        self.map_df_name = None
+        self.df_fit_results = None
+        self.selected_points = []
+        self.number_of_points = 0
+        
+        # Rectangle selection state
+        self.rect_start = None
+        self.rect_patch = None
+        
+        # Plot artifacts
+        self.img = None
+        self.cbar = None
+        self._last_final_z_col = None
+        self._last_stats_text_artist = None
+        self._selection_scatter = None  # Cache for selection overlay
+        
         self._init_ui()
     
     def _init_ui(self):
@@ -68,6 +83,11 @@ class VMapViewer(QWidget):
         self.canvas.setMinimumHeight(200)
         self.canvas.setMaximumHeight(350)
         
+        # Connect mouse events for interactive selection
+        self.canvas.mpl_connect('button_press_event', self._on_mouse_click)
+        self.canvas.mpl_connect('motion_notify_event', self._on_mouse_move)
+        self.canvas.mpl_connect('button_release_event', self._on_mouse_release)
+        
         # Matplotlib toolbar
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
         # Hide some toolbar actions
@@ -86,6 +106,7 @@ class VMapViewer(QWidget):
         self.btn_copy.setIconSize(QSize(20, 20))
         self.btn_copy.setToolTip("Copy figure to clipboard")
         self.btn_copy.setFixedSize(28, 28)
+        self.btn_copy.clicked.connect(self._copy_figure_to_clipboard)
         toolbar_layout.addWidget(self.btn_copy)
         
         canvas_layout.addWidget(self.canvas, stretch=1)
@@ -98,18 +119,15 @@ class VMapViewer(QWidget):
         type_layout = QHBoxLayout()
         type_layout.setContentsMargins(4, 4, 4, 4)
         
-        type_layout.addWidget(QLabel("Map Type:"))
-        
         self.cbb_map_type = QComboBox()
         self.cbb_map_type.addItems(['2Dmap', 'Wafer_300mm', 'Wafer_200mm', 'Wafer_100mm'])
         self.cbb_map_type.setFixedWidth(120)
-        self.cbb_map_type.currentTextChanged.connect(self.map_type_changed.emit)
+        self.cbb_map_type.currentTextChanged.connect(lambda: self.plot_heatmap())
         type_layout.addWidget(self.cbb_map_type)
         
         self.cbb_palette = CustomizedPalette()
-        self.cbb_palette.currentIndexChanged.connect(self.palette_changed.emit)
+        self.cbb_palette.currentIndexChanged.connect(lambda: self.plot_heatmap())
         type_layout.addWidget(self.cbb_palette)
-        #type_layout.addStretch()
         
         return type_layout
     
@@ -122,7 +140,7 @@ class VMapViewer(QWidget):
         self.cbb_zparameter.addItems(['Intensity', 'Area'])
         self.cbb_zparameter.setFixedWidth(50)
         self.cbb_zparameter.setToolTip("Select parameter to plot in heatmap")
-        self.cbb_zparameter.currentTextChanged.connect(self.zparameter_changed.emit)
+        self.cbb_zparameter.currentTextChanged.connect(lambda: self._on_parameter_changed())
         z_slider_layout.addWidget(self.cbb_zparameter)
         
         self.cb_fix_z = QCheckBox("Fix")
@@ -206,20 +224,18 @@ class VMapViewer(QWidget):
         mask_layout.setContentsMargins(4, 2, 4, 2)
         
         self.cb_enable_mask = QCheckBox("Enable mask:")
-        self.cb_enable_mask.stateChanged.connect(
-            lambda state: self.mask_enabled_changed.emit(state == Qt.Checked)
-        )
+        self.cb_enable_mask.stateChanged.connect(lambda: self.plot_heatmap())
         mask_layout.addWidget(self.cb_enable_mask)
         
         self.cbb_mask_param = QComboBox()
         self.cbb_mask_param.setFixedWidth(100)
-        self.cbb_mask_param.currentTextChanged.connect(self._emit_mask_settings)
+        self.cbb_mask_param.currentTextChanged.connect(lambda: self.plot_heatmap())
         mask_layout.addWidget(self.cbb_mask_param)
         
         self.cbb_mask_operator = QComboBox()
         self.cbb_mask_operator.addItems([">", "<", ">=", "<=", "=="])
         self.cbb_mask_operator.setFixedWidth(50)
-        self.cbb_mask_operator.currentTextChanged.connect(self._emit_mask_settings)
+        self.cbb_mask_operator.currentTextChanged.connect(lambda: self.plot_heatmap())
         mask_layout.addWidget(self.cbb_mask_operator)
         
         self.spin_mask_threshold = QDoubleSpinBox()
@@ -227,7 +243,7 @@ class VMapViewer(QWidget):
         self.spin_mask_threshold.setDecimals(2)
         self.spin_mask_threshold.setValue(0.00)
         self.spin_mask_threshold.setFixedWidth(80)
-        self.spin_mask_threshold.valueChanged.connect(self._emit_mask_settings)
+        self.spin_mask_threshold.valueChanged.connect(lambda: self.plot_heatmap())
         mask_layout.addWidget(self.spin_mask_threshold)
         
         mask_layout.addStretch()
@@ -305,81 +321,149 @@ class VMapViewer(QWidget):
         self.action_remove_outlier = QAction("Remove Outlier", self)
         self.action_remove_outlier.setCheckable(True)
         self.action_remove_outlier.setChecked(True)
-        self.action_remove_outlier.triggered.connect(
-            lambda checked: self.remove_outlier_changed.emit(checked)
-        )
+        self.action_remove_outlier.triggered.connect(lambda: self._on_plot_option_changed())
         self.options_menu.addAction(self.action_remove_outlier)
         
         self.action_smoothing = QAction("Smoothing", self)
         self.action_smoothing.setCheckable(True)
         self.action_smoothing.setChecked(False)
-        self.action_smoothing.triggered.connect(self._emit_plot_options)
+        self.action_smoothing.triggered.connect(lambda: self.plot_heatmap())
         self.options_menu.addAction(self.action_smoothing)
         
         self.action_grid = QAction("Grid", self)
         self.action_grid.setCheckable(True)
         self.action_grid.setChecked(False)
-        self.action_grid.triggered.connect(self._emit_plot_options)
+        self.action_grid.triggered.connect(lambda: self.plot_heatmap())
         self.options_menu.addAction(self.action_grid)
         
         self.action_show_stats = QAction("Show stats", self)
         self.action_show_stats.setCheckable(True)
         self.action_show_stats.setChecked(True)
-        self.action_show_stats.triggered.connect(self._emit_plot_options)
+        self.action_show_stats.triggered.connect(lambda: self.plot_heatmap())
         self.options_menu.addAction(self.action_show_stats)
     
-    # ───── Public API (ViewModel → View) ─────────────────────────
-    def set_map_type(self, map_type: str):
-        """Set map type selection."""
-        self.cbb_map_type.setCurrentText(map_type)
+    # ═══ Public API (ViewModel → View) ═══
     
-    def set_xrange(self, xmin: float, xmax: float):
-        """Set X-range slider and spinboxes."""
-        self.x_range_slider.setRange(xmin, xmax)
-        self.x_range_slider.setValue((xmin, xmax))
-        self.spin_xmin.setValue(xmin)
-        self.spin_xmax.setValue(xmax)
+    def set_map_data(self, map_df, map_name, df_fit_results=None):
+        """Set map data and trigger plot update."""
+        self.map_df = map_df
+        self.map_df_name = map_name
+        self.df_fit_results = df_fit_results if df_fit_results is not None else pd.DataFrame()
+        
+        # Update available parameters
+        self._update_parameter_lists()
+        
+        # Update sliders based on new data
+        self._update_range_sliders()
+        
+        # Plot the heatmap
+        self.plot_heatmap()
     
-    def set_zrange(self, zmin: float, zmax: float):
-        """Set Z-range slider and spinboxes."""
-        self.z_range_slider.setRange(zmin, zmax)
-        self.z_range_slider.setValue((zmin, zmax))
-        self.spin_zmin.setValue(zmin)
-        self.spin_zmax.setValue(zmax)
+    def set_selected_points(self, points: list):
+        """Set externally selected points and refresh plot."""
+        self.selected_points = points
+        self._update_selection_overlay()
     
-    def add_zparameters(self, parameters: list):
-        """Add fit parameters to Z-value combobox."""
-        current = self.cbb_zparameter.currentText()
+    def _update_parameter_lists(self):
+        """Update z-parameter and mask parameter lists from fit results."""
+        self.cbb_zparameter.blockSignals(True)
+        self.cbb_mask_param.blockSignals(True)
+        
+        current_z = self.cbb_zparameter.currentText()
+        
+        # Update Z parameters
         self.cbb_zparameter.clear()
-        self.cbb_zparameter.addItems(['Intensity', 'Area'] + parameters)
-        if current in ['Intensity', 'Area'] + parameters:
-            self.cbb_zparameter.setCurrentText(current)
+        self.cbb_zparameter.addItems(['Intensity', 'Area'])
+        
+        if not self.df_fit_results.empty:
+            fit_columns = [col for col in self.df_fit_results.columns 
+                          if col not in ['Filename', 'X', 'Y']]
+            self.cbb_zparameter.addItems(fit_columns)
+            self.cbb_mask_param.clear()
+            self.cbb_mask_param.addItems(fit_columns)
+        
+        # Restore selection if possible
+        if current_z and self.cbb_zparameter.findText(current_z) >= 0:
+            self.cbb_zparameter.setCurrentText(current_z)
+        
+        self.cbb_zparameter.blockSignals(False)
+        self.cbb_mask_param.blockSignals(False)
     
-    def set_mask_parameters(self, parameters: list):
-        """Set available mask parameters."""
-        self.cbb_mask_param.clear()
-        self.cbb_mask_param.addItems(parameters)
+    def _update_range_sliders(self):
+        """Update X and Z range sliders based on current data."""
+        if self.map_df is None or self.map_df.empty:
+            return
+        
+        # X-range: based on wavenumber columns
+        column_labels = self.map_df.columns[2:]
+        try:
+            numeric_cols = column_labels.astype(float)
+            xmin, xmax = float(numeric_cols.min()), float(numeric_cols.max())
+            
+            # Update X-range slider
+            if not self.cb_fix_x.isChecked():
+                self.x_range_slider.setRange(xmin, xmax)
+                self.x_range_slider.setValue((xmin, xmax))
+                self.spin_xmin.setValue(xmin)
+                self.spin_xmax.setValue(xmax)
+        except:
+            pass
+        
+        # Z-range: computed from current parameter
+        self._update_z_range()
     
-    # ───── Internal signal handlers ──────────────────────────────
+    def _update_z_range(self):
+        """Update Z-range slider based on current parameter selection."""
+        if self.map_df is None:
+            return
+        
+        try:
+            _, _, vmin, vmax, _, _ = self._get_data_for_heatmap()
+            
+            # Update Z-range slider
+            if not self.cb_fix_z.isChecked():
+                self.z_range_slider.setRange(vmin, vmax)
+                self.z_range_slider.setValue((vmin, vmax))
+                self.spin_zmin.setValue(vmin)
+                self.spin_zmax.setValue(vmax)
+            else:
+                # Just update the range, keep current values
+                self.z_range_slider.setRange(vmin, vmax)
+        except:
+            pass
+    
+    # ═══ Internal signal handlers ═══
+    
+    def _on_parameter_changed(self):
+        """Z parameter changed - update range and refresh plot."""
+        self._update_z_range()
+        self.plot_heatmap()
+    
+    def _on_plot_option_changed(self):
+        """Plot option changed - update range if needed and refresh."""
+        self._update_z_range()
+        self.plot_heatmap()
+    
     def _on_x_slider_changed(self, values):
-        """X-range slider changed - update spinboxes and emit signal."""
+        """X-range slider changed - update spinboxes and trigger plot."""
         self.spin_xmin.blockSignals(True)
         self.spin_xmax.blockSignals(True)
         self.spin_xmin.setValue(values[0])
         self.spin_xmax.setValue(values[1])
         self.spin_xmin.blockSignals(False)
         self.spin_xmax.blockSignals(False)
-        self.xrange_changed.emit(values)
+        self._update_z_range()  # Recalculate Z values for new X range
+        self.plot_heatmap()
     
     def _on_z_slider_changed(self, values):
-        """Z-range slider changed - update spinboxes and emit signal."""
+        """Z-range slider changed - update spinboxes and trigger plot."""
         self.spin_zmin.blockSignals(True)
         self.spin_zmax.blockSignals(True)
         self.spin_zmin.setValue(values[0])
         self.spin_zmax.setValue(values[1])
         self.spin_zmin.blockSignals(False)
         self.spin_zmax.blockSignals(False)
-        self.zrange_changed.emit(values)
+        self.plot_heatmap()
     
     def _update_x_slider_from_spins(self):
         """Update X slider when spinboxes change."""
@@ -387,6 +471,8 @@ class VMapViewer(QWidget):
         xmax = self.spin_xmax.value()
         if xmin <= xmax:
             self.x_range_slider.setValue((xmin, xmax))
+            self._update_z_range()
+            self.plot_heatmap()
     
     def _update_z_slider_from_spins(self):
         """Update Z slider when spinboxes change."""
@@ -394,21 +480,421 @@ class VMapViewer(QWidget):
         zmax = self.spin_zmax.value()
         if zmin <= zmax:
             self.z_range_slider.setValue((zmin, zmax))
+            self.plot_heatmap()
     
-    def _emit_mask_settings(self):
-        """Emit mask settings signal."""
-        settings = {
-            'parameter': self.cbb_mask_param.currentText(),
-            'operator': self.cbb_mask_operator.currentText(),
-            'threshold': self.spin_mask_threshold.value()
-        }
-        self.mask_settings_changed.emit(settings)
+    # ═══ Core plotting methods ═══
     
-    def _emit_plot_options(self):
-        """Emit plot options signal."""
-        options = {
-            'smoothing': self.action_smoothing.isChecked(),
-            'grid': self.action_grid.isChecked(),
-            'show_stats': self.action_show_stats.isChecked()
-        }
-        self.plot_option_changed.emit(options)
+    def _update_selection_overlay(self):
+        """Update selection overlay without full plot redraw (fast)."""
+        # Remove old selection scatter
+        if self._selection_scatter is not None:
+            try:
+                self._selection_scatter.remove()
+            except:
+                pass
+            self._selection_scatter = None
+        
+        # Add new selection overlay
+        if self.selected_points:
+            x, y = zip(*self.selected_points)
+            self._selection_scatter = self.ax.scatter(
+                x, y, facecolors='none', edgecolors='red', 
+                marker='s', s=60, linewidths=1, zorder=10
+            )
+        
+        self.canvas.draw_idle()
+    
+    def plot_heatmap(self):
+        """Plot 2D heatmap or wafer map based on current data and settings."""
+        if self.map_df is None or self.map_df.empty:
+            self.ax.clear()
+            self.canvas.draw_idle()
+            return
+        
+        map_type = self.cbb_map_type.currentText()
+        
+        # Clear axes and cached selection
+        self.ax.clear()
+        self._selection_scatter = None
+        
+        # Plot wafer circle for wafer maps
+        if map_type != '2Dmap':
+            r = self._get_wafer_radius(map_type)
+            if r:
+                wafer_circle = patches.Circle((0, 0), radius=r, fill=False, 
+                                             color='black', linewidth=1)
+                self.ax.add_patch(wafer_circle)
+                
+                # Show all measurement sites
+                all_x, all_y = self._get_measurement_sites()
+                self.ax.scatter(all_x, all_y, marker='x', color='gray', s=15)
+                
+                # Remove X labels for wafer, keep Y
+                self.ax.tick_params(axis='x', which='both', bottom=False, 
+                                   top=False, labelbottom=False)
+                self.ax.tick_params(axis='y', which='both', left=True, 
+                                   right=False, labelleft=True)
+        else:
+            # 2D map: show both axes
+            self.ax.tick_params(axis='x', which='both', bottom=True, 
+                               top=False, labelbottom=True)
+            self.ax.tick_params(axis='y', which='both', left=True, 
+                               right=False, labelleft=True)
+        
+        # Get heatmap data
+        heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col = self._get_data_for_heatmap()
+        self._last_final_z_col = final_z_col
+        
+        # Plot settings
+        color = self.cbb_palette.currentText()
+        interpolation = 'bilinear' if self.action_smoothing.isChecked() else 'none'
+        vmin_plot, vmax_plot = self.z_range_slider.value()
+        
+        # Plot heatmap
+        if map_type != '2Dmap' and grid_z is not None and self.number_of_points >= 4:
+            r = self._get_wafer_radius(map_type)
+            self.img = self.ax.imshow(grid_z, extent=[-r-0.5, r+0.5, -r-0.5, r+0.5],
+                                     origin='lower', aspect='equal', cmap=color, 
+                                     interpolation='nearest', vmin=vmin_plot, vmax=vmax_plot)
+        elif not heatmap_pivot.empty:
+            self.img = self.ax.imshow(heatmap_pivot, extent=extent, 
+                                     vmin=vmin_plot, vmax=vmax_plot,
+                                     origin='lower', aspect='equal', cmap=color, 
+                                     interpolation=interpolation)
+        
+        # Colorbar
+        if self.img:
+            if hasattr(self, 'cbar') and self.cbar is not None:
+                try:
+                    self.cbar.update_normal(self.img)
+                except:
+                    self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
+            else:
+                self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
+        
+        # Grid
+        if self.action_grid.isChecked():
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+        
+        # Show stats (wafer only)
+        if map_type != '2Dmap' and self.action_show_stats.isChecked():
+            self._draw_stats_box()
+        
+        # Highlight selected points
+        if self.selected_points:
+            x, y = zip(*self.selected_points)
+            self.ax.scatter(x, y, facecolors='none', edgecolors='red', 
+                           marker='s', s=60, linewidths=1, zorder=10)
+        
+        # Title
+        title = self.cbb_zparameter.currentText()
+        self.ax.set_title(title, fontsize=13)
+        
+        self.ax.get_figure().tight_layout()
+        self.canvas.draw_idle()
+    
+    def _get_data_for_heatmap(self):
+        """Compute heatmap data from map DataFrame.
+        
+        Returns:
+            tuple: (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col)
+        """
+        # Default returns
+        heatmap_pivot = pd.DataFrame()
+        extent = [0, 0, 0, 0]
+        vmin, vmax = 0, 100
+        grid_z = None
+        final_z_col = None
+        
+        if self.map_df is None or self.map_df.empty:
+            return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
+        
+        # Get X-range filter
+        xmin, xmax = self.x_range_slider.value()
+        column_labels = self.map_df.columns[2:]
+        
+        try:
+            filtered_columns = column_labels[
+                (column_labels.astype(float) >= xmin) &
+                (column_labels.astype(float) <= xmax)
+            ]
+        except:
+            filtered_columns = column_labels
+        
+        if len(filtered_columns) == 0:
+            return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
+        
+        # Get filtered data
+        filtered_df = self.map_df[['X', 'Y'] + list(filtered_columns)]
+        x_col = filtered_df['X'].values
+        y_col = filtered_df['Y'].values
+        
+        # Compute Z values based on selected parameter
+        parameter = self.cbb_zparameter.currentText()
+        
+        if parameter == 'Area':
+            z_col = (filtered_df[filtered_columns]
+                    .replace([np.inf, -np.inf], np.nan)
+                    .fillna(0).clip(lower=0).sum(axis=1))
+        elif parameter == 'Intensity':
+            z_col = (filtered_df[filtered_columns]
+                    .replace([np.inf, -np.inf], np.nan)
+                    .fillna(0).clip(lower=0).max(axis=1))
+        else:
+            # Fit parameter
+            if not self.df_fit_results.empty and parameter in self.df_fit_results.columns:
+                filtered_results = self.df_fit_results.query("Filename == @self.map_df_name")
+                if not filtered_results.empty:
+                    z_col = filtered_results[parameter]
+                else:
+                    z_col = pd.Series([0] * len(x_col))
+            else:
+                z_col = pd.Series([0] * len(x_col))
+        
+        if z_col is None or len(z_col) == 0:
+            return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
+        
+        # Apply mask (2D map only)
+        map_type = self.cbb_map_type.currentText()
+        if map_type == '2Dmap' and self.cb_enable_mask.isChecked():
+            z_col = self._apply_mask(z_col, filtered_df)
+        
+        # Remove outliers if requested
+        if self.action_remove_outlier.isChecked():
+            z_col = self._remove_outliers(z_col)
+        
+        final_z_col = z_col
+        
+        # Compute vmin/vmax
+        try:
+            vmin = float(final_z_col.min())
+            vmax = float(final_z_col.max())
+        except:
+            vmin, vmax = 0, 100
+        
+        # Count unique sites
+        self.number_of_points = len(set(zip(x_col, y_col)))
+        
+        # Generate grid for wafer maps
+        if map_type != '2Dmap' and self.number_of_points >= 4:
+            r = self._get_wafer_radius(map_type)
+            if r:
+                grid_x, grid_y = np.meshgrid(
+                    np.linspace(-r, r, 300),
+                    np.linspace(-r, r, 300)
+                )
+                grid_z = griddata((x_col, y_col), final_z_col, 
+                                 (grid_x, grid_y), method='linear')
+                extent = [-r-1, r+1, -r-0.5, r+0.5]
+        else:
+            # Create pivot table for 2D map
+            heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
+            heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
+            extent = [x_col.min(), x_col.max(), y_col.min(), y_col.max()]
+        
+        return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
+    
+    def _apply_mask(self, z_col, filtered_df):
+        """Apply mask to z_col based on mask settings."""
+        mask_param = self.cbb_mask_param.currentText()
+        mask_operator = self.cbb_mask_operator.currentText()
+        threshold = self.spin_mask_threshold.value()
+        
+        mask_values = None
+        
+        # Try to get mask values from map DataFrame
+        if mask_param in filtered_df.columns:
+            mask_values = filtered_df[mask_param].astype(float).values
+        # Or from fit results
+        elif not self.df_fit_results.empty and mask_param in self.df_fit_results.columns:
+            filtered_results = self.df_fit_results.query("Filename == @self.map_df_name")
+            if not filtered_results.empty:
+                mask_values = filtered_results[mask_param].astype(float).values
+        
+        if mask_values is None:
+            return z_col
+        
+        # Apply operator
+        if mask_operator == ">":
+            valid = mask_values > threshold
+        elif mask_operator == "<":
+            valid = mask_values < threshold
+        elif mask_operator == ">=":
+            valid = mask_values >= threshold
+        elif mask_operator == "<=":
+            valid = mask_values <= threshold
+        elif mask_operator == "==":
+            valid = mask_values == threshold
+        else:
+            valid = np.ones_like(mask_values, dtype=bool)
+        
+        # Set invalid points to NaN
+        return np.where(valid, z_col, np.nan)
+    
+    def _remove_outliers(self, z_col):
+        """Remove outliers using IQR method with interpolation."""
+        try:
+            Q1 = z_col.quantile(0.05)
+            Q3 = z_col.quantile(0.95)
+            IQR = Q3 - Q1
+            
+            outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
+            
+            z_col_interpolated = z_col.copy()
+            z_col_interpolated[outlier_mask] = np.nan
+            z_col_interpolated = z_col_interpolated.interpolate(
+                method='linear', limit_direction='both'
+            )
+            return z_col_interpolated
+        except:
+            return z_col
+    
+    def _get_wafer_radius(self, map_type_text):
+        """Extract wafer radius from map type string."""
+        match = re.search(r'Wafer_(\d+)mm', map_type_text)
+        if match:
+            diameter = int(match.group(1))
+            return diameter / 2
+        return None
+    
+    def _get_measurement_sites(self):
+        """Get all measurement site coordinates."""
+        if self.map_df is None:
+            return np.array([]), np.array([])
+        return self.map_df['X'].values, self.map_df['Y'].values
+    
+    def _draw_stats_box(self):
+        """Draw statistics text box on the plot (wafer mode)."""
+        # Remove old stats
+        if self._last_stats_text_artist is not None:
+            try:
+                self._last_stats_text_artist.remove()
+            except:
+                pass
+            self._last_stats_text_artist = None
+        
+        if self._last_final_z_col is None:
+            return
+        
+        # Calculate statistics
+        arr_clean = pd.Series(self._last_final_z_col).dropna()
+        if arr_clean.empty:
+            return
+        
+        mean = float(arr_clean.mean())
+        mn = float(arr_clean.min())
+        mx = float(arr_clean.max())
+        std = float(arr_clean.std())
+        sigma3 = 3 * std
+        
+        txt = (f"mean: {mean:.2f}\n"
+               f"min: {mn:.2f}\n"
+               f"max: {mx:.2f}\n"
+               f"3σ: {sigma3:.2f}")
+        
+        # Place text box on axes
+        self._last_stats_text_artist = self.ax.text(
+            0.02, 0.98, txt,
+            transform=self.ax.transAxes,
+            fontsize=9, va='top', ha='left',
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", alpha=0.8, ec="black")
+        )
+    
+    # ═══ Mouse interaction handlers ═══
+    
+    def _on_mouse_click(self, event):
+        """Start selection on mouse click."""
+        if event.inaxes != self.ax or event.button != 1:
+            return
+        
+        self.rect_start = (event.xdata, event.ydata)
+        
+        # Remove previous rectangle
+        if self.rect_patch is not None:
+            try:
+                self.rect_patch.remove()
+            except:
+                pass
+            self.rect_patch = None
+    
+    def _on_mouse_move(self, event):
+        """Update rectangle during drag."""
+        if self.rect_start is None or event.inaxes != self.ax:
+            return
+        
+        x0, y0 = self.rect_start
+        x1, y1 = event.xdata, event.ydata
+        
+        if self.rect_patch is None:
+            self.rect_patch = patches.Rectangle(
+                (min(x0, x1), min(y0, y1)),
+                abs(x1 - x0), abs(y1 - y0),
+                linewidth=1.2, edgecolor='black', 
+                facecolor='none', linestyle='--'
+            )
+            self.ax.add_patch(self.rect_patch)
+        else:
+            self.rect_patch.set_x(min(x0, x1))
+            self.rect_patch.set_y(min(y0, y1))
+            self.rect_patch.set_width(abs(x1 - x0))
+            self.rect_patch.set_height(abs(y1 - y0))
+        
+        self.canvas.draw_idle()
+    
+    def _on_mouse_release(self, event):
+        """Finish selection on mouse release."""
+        if self.rect_start is None or event.inaxes != self.ax:
+            return
+        
+        x0, y0 = self.rect_start
+        x1, y1 = event.xdata, event.ydata
+        
+        all_x, all_y = self._get_measurement_sites()
+        all_x, all_y = np.array(all_x), np.array(all_y)
+        
+        modifiers = QApplication.keyboardModifiers()
+        
+        if self.rect_patch is not None:
+            # Rectangle selection
+            xmin, xmax = sorted([x0, x1])
+            ymin, ymax = sorted([y0, y1])
+            inside = ((all_x >= xmin) & (all_x <= xmax) & 
+                     (all_y >= ymin) & (all_y <= ymax))
+            
+            if modifiers != Qt.ControlModifier:
+                self.selected_points = []
+            
+            for x, y in zip(all_x[inside], all_y[inside]):
+                self.selected_points.append((float(x), float(y)))
+            
+            try:
+                self.rect_patch.remove()
+            except:
+                pass
+            self.rect_patch = None
+        else:
+            # Single click - nearest point
+            if all_x.size > 0:
+                distances = np.sqrt((all_x - x1) ** 2 + (all_y - y1) ** 2)
+                idx = np.argmin(distances)
+                pt = (float(all_x[idx]), float(all_y[idx]))
+                
+                if modifiers == Qt.ControlModifier:
+                    if pt in self.selected_points:
+                        self.selected_points.remove(pt)
+                    else:
+                        self.selected_points.append(pt)
+                else:
+                    self.selected_points = [pt]
+        
+        self.rect_start = None
+        
+        # Emit signal with selected points
+        self.spectra_selected.emit(self.selected_points)
+        
+        # Update selection overlay without full redraw
+        self._update_selection_overlay()
+    
+    def _copy_figure_to_clipboard(self):
+        """Copy the matplotlib figure to clipboard."""
+        copy_fig_to_clb(self.canvas)

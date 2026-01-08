@@ -136,6 +136,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_maps_list.reinitialize_requested.connect(self._on_reinit_spectra)
         self.v_maps_list.send_to_spectra_requested.connect(self._on_send_to_spectra)
         
+        # ── VMapViewer → ViewModel connections ──
+        self.v_map_viewer.spectra_selected.connect(self._on_map_viewer_selection)
+        
         # ── ViewModel → VMapsList connections ──
         self.vm.maps_list_changed.connect(self.v_maps_list.set_maps_names)
         
@@ -144,6 +147,10 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.vm.spectra_list_changed.connect(
             lambda names: self.v_maps_list.set_spectra_names(names)
         )
+        
+        # ── ViewModel → VMapViewer connections ──
+        self.vm.map_selected.connect(self._on_map_data_changed)
+        self.vm.map_data_updated.connect(self._on_map_data_changed)
         
         # Connect spectra selection to viewer (inherited from parent)
         self.vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
@@ -154,6 +161,58 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Override parent's QMessageBox notification with toast notification
         self.vm.notify.disconnect()  # Disconnect parent's QMessageBox handler
         self.vm.notify.connect(self._show_toast_notification)
+    
+    def _on_map_viewer_selection(self, selected_points: list):
+        """Handle spectrum selection from map viewer (click on heatmap).
+        
+        Converts (x, y) coordinates to spectrum indices and updates selection.
+        """
+        if not selected_points:
+            return
+        
+        # Create fast lookup set for selected coordinates
+        selected_coords = set(selected_points)
+        
+        # Find indices of spectra matching the selected coordinates
+        indices = []
+        for i, spectrum in enumerate(self.vm.spectra):
+            x_pos = spectrum.metadata.get('x_position')
+            y_pos = spectrum.metadata.get('y_position')
+            
+            if x_pos is not None and y_pos is not None:
+                if (float(x_pos), float(y_pos)) in selected_coords:
+                    indices.append(i)
+        
+        # Block signals to prevent multiple plot updates
+        self.v_maps_list.spectra_list.blockSignals(True)
+        
+        # Update list widget selection
+        for idx in range(self.v_maps_list.spectra_list.count()):
+            item = self.v_maps_list.spectra_list.item(idx)
+            if idx in indices:
+                item.setSelected(True)
+            else:
+                item.setSelected(False)
+        
+        # Unblock signals and update selection once
+        self.v_maps_list.spectra_list.blockSignals(False)
+        
+        # Update ViewModel (this will trigger single plot update)
+        if indices:
+            self.vm.set_selected_indices(indices)
+    
+    def _on_map_data_changed(self):
+        """Update map viewer when map data changes."""
+        if not self.vm.current_map_name:
+            return
+        
+        # Get current map data and fit results
+        map_df = self.vm.get_current_map_dataframe()
+        fit_results = self.vm.get_fit_results_dataframe()
+        
+        # Update map viewer
+        if map_df is not None:
+            self.v_map_viewer.set_map_data(map_df, self.vm.current_map_name, fit_results)
     
     def _on_map_selected(self, index: int):
         """Handle map selection - convert index to map name and call ViewModel."""

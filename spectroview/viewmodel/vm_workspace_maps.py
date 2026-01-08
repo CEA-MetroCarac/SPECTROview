@@ -381,4 +381,64 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                     matches.append(idx)
         
         return matches
+    
+    def get_fit_results_dataframe(self):
+        """Get fit results DataFrame for the current map.
+        
+        Returns:
+            pd.DataFrame: DataFrame with columns [Filename, X, Y, ...fit_parameters]
+        """
+        import pandas as pd
+        
+        if not self.spectra or len(self.spectra) == 0:
+            return pd.DataFrame()
+        
+        # Collect all fit results
+        results = []
+        for spectrum in self.spectra:
+            # Only include spectra that have been fitted
+            if not hasattr(spectrum, 'result_fit') or not spectrum.result_fit:
+                continue
+            
+            # Get metadata
+            map_name = spectrum.metadata.get('map_name', '')
+            x_pos = spectrum.metadata.get('x_position')
+            y_pos = spectrum.metadata.get('y_position')
+            
+            if x_pos is None or y_pos is None:
+                continue
+            
+            # Start row with identification
+            row = {
+                'Filename': map_name,
+                'X': float(x_pos),
+                'Y': float(y_pos)
+            }
+            
+            # Add peak parameters
+            if hasattr(spectrum, 'peak_models') and spectrum.peak_models:
+                for i, peak_model in enumerate(spectrum.peak_models):
+                    peak_label = (spectrum.peak_labels[i] 
+                                 if i < len(spectrum.peak_labels) 
+                                 else f"Peak_{i+1}")
+                    
+                    # Get parameters from param_hints
+                    for param_name, param_hint in peak_model.param_hints.items():
+                        # Extract the parameter key (remove peak prefix)
+                        parts = param_name.split('_', 1)
+                        if len(parts) == 2:
+                            key = parts[1]  # e.g., 'x0', 'amplitude', 'fwhm'
+                        else:
+                            key = param_name
+                        
+                        # Create column name
+                        col_name = f"{peak_label}_{key}"
+                        row[col_name] = param_hint.get('value', 0)
+            
+            results.append(row)
+        
+        if not results:
+            return pd.DataFrame()
+        
+        return pd.DataFrame(results)
 

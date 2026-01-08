@@ -128,6 +128,8 @@ class VMapViewer(QWidget):
         type_layout = QHBoxLayout()
         type_layout.setContentsMargins(4, 4, 4, 4)
         
+        lbl = QLabel("Select Map type:")
+        type_layout.addWidget(lbl)
         self.cbb_map_type = QComboBox()
         self.cbb_map_type.addItems(['2Dmap', 'Wafer_300mm', 'Wafer_200mm', 'Wafer_100mm'])
         self.cbb_map_type.setFixedWidth(120)
@@ -362,8 +364,8 @@ class VMapViewer(QWidget):
         # Clear selection points when switching maps (prevents out-of-range highlights)
         self.selected_points = []
         
-        # Clear griddata cache when switching maps
-        self._griddata_cache.clear()
+        # Note: griddata cache is NOT cleared here - it persists across map switches
+        # for faster map switching. Cache is only cleared when data changes (after fitting).
         
         # Update available parameters
         self._update_parameter_lists()
@@ -379,6 +381,16 @@ class VMapViewer(QWidget):
         # Ensure uniqueness while preserving order
         self.selected_points = list(dict.fromkeys(points))
         self._update_selection_overlay()
+    
+    def clear_cache_for_map(self, map_name: str):
+        """Clear cached griddata for specific map (e.g., after fitting changes data).
+        
+        Args:
+            map_name: Name of the map whose cache entries should be cleared
+        """
+        keys_to_remove = [k for k in self._griddata_cache if k[0] == map_name]
+        for key in keys_to_remove:
+            del self._griddata_cache[key]
     
     def _update_parameter_lists(self):
         """Update z-parameter and mask parameter lists from fit results."""

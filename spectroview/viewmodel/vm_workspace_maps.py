@@ -20,6 +20,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     map_data_updated = Signal(object)  # pd.DataFrame for map visualization
     selection_indices_to_restore = Signal(list)  # List indices to select in widget after map switch
     send_spectra_to_workspace = Signal(list)  # list[MSpectrum] - spectra to send to Spectra workspace
+    clear_map_cache_requested = Signal(str)  # map_name - clear griddata cache for this map
     
     def __init__(self, settings: MSettings):
         super().__init__(settings)
@@ -34,8 +35,8 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self._fit_results_cache: pd.DataFrame | None = None
         self._fit_results_cache_dirty: bool = True
         
-        # Cache spectrum to index mapping to avoid list conversions
-        self._spectrum_to_index: dict = {}  # {id(spectrum): index}
+        # Cache spectrum fname to index mapping (fname is unique and never changes)
+        self._fname_to_index: dict[str, int] = {}  # fname -> index
     
     # ─────────────────────────────────────────────────────────────────
     # MAPS LOADING AND MANAGEMENT
@@ -145,11 +146,11 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Store the extracted spectra with this map
         self.map_spectra[map_name] = map_spectra_list
         
-        # Add these spectra to the main collection and update index cache
+        # Add these spectra to the main collection and update fname->index cache
         start_idx = len(self.spectra)
         for i, spectrum in enumerate(map_spectra_list):
             self.spectra.add(spectrum)
-            self._spectrum_to_index[id(spectrum)] = start_idx + i
+            self._fname_to_index[spectrum.fname] = start_idx + i
         
         # Note: Don't call _show_map_spectra here - extraction happens during load,
         # filtering happens during select_map() when user clicks a map
@@ -169,10 +170,11 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         for spectrum in map_spectra:
             # Extract name
-            spectra_names.append(spectrum.fname)
+            fname = spectrum.fname
+            spectra_names.append(fname)
             
-            # Get index from cache (O(1) lookup)
-            idx = self._spectrum_to_index.get(id(spectrum))
+            # Get index from fname cache (O(1) lookup)
+            idx = self._fname_to_index.get(fname)
             if idx is not None:
                 self.current_map_indices.append(idx)
         
@@ -345,9 +347,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             if self.current_map_name == map_name:
                 self.current_map_name = None
                 self.current_map_df = None
+                self.current_map_indices = []
+                self.selected_indices = []
                 self.spectra_list_changed.emit([])
                 self.count_changed.emit(0)
                 self.spectra_selection_changed.emit([])
+                # Clear map plot by emitting empty DataFrame
+                self.map_data_updated.emit(pd.DataFrame())
             
             self._emit_maps_list_update()
     
@@ -534,6 +540,28 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self._fit_results_cache_dirty = False
         return self._fit_results_cache
     
+    def _rebuild_current_map_indices(self):
+        """Rebuild current_map_indices by finding all spectra for the current map.
+        
+        This is necessary after operations that might modify the spectra list
+        (like fitting) to ensure coordinate-based lookups still work.
+        """
+        if not self.current_map_name or self.current_map_name not in self.map_spectra:
+            return
+        
+        # Rebuild fname->index cache for all spectra
+        self._fname_to_index.clear()
+        for idx, spectrum in enumerate(self.spectra):
+            self._fname_to_index[spectrum.fname] = idx
+        
+        # Rebuild current_map_indices using fname lookup
+        self.current_map_indices = []
+        map_spectra = self.map_spectra[self.current_map_name]
+        for spectrum in map_spectra:
+            idx = self._fname_to_index.get(spectrum.fname)
+            if idx is not None:
+                self.current_map_indices.append(idx)
+    
     def invalidate_fit_results_cache(self):
         """Mark fit results cache as dirty (call after fitting)."""
         self._fit_results_cache_dirty = True
@@ -542,7 +570,14 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         """Override to invalidate cache when fitting completes."""
         super()._on_fit_finished()
         self.invalidate_fit_results_cache()
-        # Re-emit map data to update heatmap with new fit results
+        
+        # Rebuild current_map_indices to ensure coordinate lookups work
+        # (fitting might have modified the spectra list indices)
         if self.current_map_name:
+            self._rebuild_current_map_indices()
+            # Re-emit map data to update heatmap with new fit results
             self.map_data_updated.emit(self.current_map_df)
+            
+            # Signal View to clear griddata cache for this map (data has changed)
+            self.clear_map_cache_requested.emit(self.current_map_name)
 

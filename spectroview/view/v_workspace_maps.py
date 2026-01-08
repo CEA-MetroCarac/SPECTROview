@@ -1,5 +1,6 @@
 """View for Maps Workspace - extends Spectra Workspace with map-specific features."""
 import os
+import logging
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
@@ -151,6 +152,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Restore selection after map switch (maintains list index positions)
         self.vm.selection_indices_to_restore.connect(self._restore_list_selection)
         
+        # Clear griddata cache when map data changes (after fitting)
+        self.vm.clear_map_cache_requested.connect(self.v_map_viewer.clear_cache_for_map)
+        
         # ── ViewModel → VMapViewer connections ──
         # Note: map_selected signal removed to avoid duplicate calls to _on_map_data_changed
         self.vm.map_data_updated.connect(self._on_map_data_changed)
@@ -176,20 +180,16 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             self.v_maps_list.spectra_list.clearSelection()
             return
         
-        # Create fast lookup set for selected coordinates
-        selected_coords = set(selected_points)
-        
-        # Find indices of spectra matching the selected coordinates
-        # CRITICAL: Only search within current map's spectra, not all spectra globally!
+        # Find indices by constructing fname from coordinates
+        # fname format: "map_name_(x, y)" - this is unique and never changes
         indices = []
-        for global_idx in self.vm.current_map_indices:
-            spectrum = self.vm.spectra[global_idx]
-            x_pos = spectrum.metadata.get('x_position')
-            y_pos = spectrum.metadata.get('y_position')
-            
-            if x_pos is not None and y_pos is not None:
-                if (float(x_pos), float(y_pos)) in selected_coords:
-                    indices.append(global_idx)
+        for x, y in selected_points:
+            # Construct the expected fname (matching format from _extract_spectra_from_map)
+            fname = f"{self.vm.current_map_name}_({x}, {y})"
+            # Look up index using fname cache
+            idx = self.vm._fname_to_index.get(fname)
+            if idx is not None:
+                indices.append(idx)
         
         if not indices:
             return
@@ -277,9 +277,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     def _on_map_data_changed(self):
         """Update map viewer when map data changes."""
-        if not self.vm.current_map_name:
-            return
-        
         # Block signals to prevent cascading updates during data load
         old_state = self.v_map_viewer.blockSignals(True)
         
@@ -289,8 +286,11 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             fit_results = self.vm.get_fit_results_dataframe()
             
             # Update map viewer
-            if map_df is not None:
+            if map_df is not None and not map_df.empty and self.vm.current_map_name:
                 self.v_map_viewer.set_map_data(map_df, self.vm.current_map_name, fit_results)
+            else:
+                # Clear map plot when no map data (all maps deleted or map removed)
+                self.v_map_viewer.set_map_data(None, None, None)
         finally:
             # Restore signal state
             self.v_map_viewer.blockSignals(old_state)

@@ -133,13 +133,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             spectrum.baseline.mode = "Linear"
             spectrum.baseline.sigma = 4
             
-            # Store map metadata
-            if not hasattr(spectrum, 'metadata'):
-                spectrum.metadata = {}
-            spectrum.metadata['map_name'] = map_name
-            spectrum.metadata['x_position'] = x_pos
-            spectrum.metadata['y_position'] = y_pos
-            spectrum.metadata['point_index'] = idx
+            # Note: No metadata needed - all info is in fname: "map_name_(x, y)"
             
             map_spectra_list[idx] = spectrum
         
@@ -393,19 +387,28 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             if not hasattr(spectrum, 'result_fit') or not spectrum.result_fit:
                 continue
             
-            # Get metadata
-            map_name = spectrum.metadata.get('map_name', '')
-            x_pos = spectrum.metadata.get('x_position')
-            y_pos = spectrum.metadata.get('y_position')
+            # Parse map_name and coordinates from fname: "map_name_(x, y)"
+            fname = spectrum.fname
+            if '(' not in fname or ')' not in fname:
+                continue  # Skip if fname format is unexpected
             
-            if x_pos is None or y_pos is None:
-                continue
+            # Extract map_name (everything before last '(')
+            map_name = fname[:fname.rfind('(')].rstrip('_')
+            
+            # Extract coordinates
+            coords_str = fname[fname.rfind('(')+1:fname.rfind(')')]
+            try:
+                x_str, y_str = coords_str.split(',')
+                x_pos = float(x_str.strip())
+                y_pos = float(y_str.strip())
+            except (ValueError, AttributeError):
+                continue  # Skip if parsing fails
             
             # Start row with identification
             row = {
                 'Filename': map_name,
-                'X': float(x_pos),
-                'Y': float(y_pos)
+                'X': x_pos,
+                'Y': y_pos
             }
             
             # Add peak parameters

@@ -216,28 +216,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self._emit_selected_spectra()
         # Signal View to select first item in list widget
         self.selection_indices_to_restore.emit([0])
-        if self.selected_list_indices:
-            # Convert list indices to global indices for the new map
-            restored_global_indices = []
-            for list_idx in self.selected_list_indices:
-                if 0 <= list_idx < num_spectra:
-                    global_idx = self.current_map_indices[list_idx]
-                    restored_global_indices.append(global_idx)
-            
-            if restored_global_indices:
-                self.selected_indices = restored_global_indices
-                self._emit_selected_spectra()
-                # Signal View to update list widget selection
-                self.selection_indices_to_restore.emit(self.selected_list_indices)
-                return
-        
-        # No previous selection or all indices invalid → auto-select first item
-        first_global_idx = self.current_map_indices[0]
-        self.selected_indices = [first_global_idx]
-        self.selected_list_indices = [0]
-        self._emit_selected_spectra()
-        # Signal View to select first item in list widget
-        self.selection_indices_to_restore.emit([0])
+
     
     def get_current_map_dataframe(self) -> pd.DataFrame | None:
         """Get the DataFrame of the currently selected map."""
@@ -378,87 +357,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Pass through to parent - indices are already global
         super().set_selected_indices(indices)
     
-    # ─────────────────────────────────────────────────────────────────
-    # MAP VISUALIZATION HELPERS
-    # ─────────────────────────────────────────────────────────────────
-    
-    def get_map_heatmap_data(self, parameter: str = 'Intensity') -> dict:
-        """
-        Get heatmap data for the current map.
-        
-        Args:
-            parameter: 'Intensity', 'Area', or fit parameter name
-            
-        Returns:
-            dict with keys: 'X', 'Y', 'Z', 'map_type'
-        """
-        if self.current_map_df is None:
-            return None
-        
-        df = self.current_map_df
-        
-        # Extract X, Y positions
-        x_positions = df['X'].values
-        y_positions = df['Y'].values
-        
-        # Calculate Z values based on parameter
-        if parameter == 'Intensity':
-            # Use maximum intensity for each spectrum
-            wavenumber_cols = [col for col in df.columns if col not in ['X', 'Y']]
-            z_values = df[wavenumber_cols].max(axis=1).values
-        
-        elif parameter == 'Area':
-            # Calculate area under curve for each spectrum
-            wavenumber_cols = [col for col in df.columns if col not in ['X', 'Y']]
-            x_data = [float(col) for col in wavenumber_cols]
-            
-            z_values = []
-            for _, row in df.iterrows():
-                y_data = row[wavenumber_cols].values.astype(float)
-                area = np.trapz(y_data, x_data)
-                z_values.append(area)
-            z_values = np.array(z_values)
-        
-        else:
-            # Fit parameter - extract from fit results DataFrame
-            if self.df_fit_results is not None and parameter in self.df_fit_results.columns:
-                z_values = self.df_fit_results[parameter].values
-            else:
-                return None
-        
-        return {
-            'X': x_positions,
-            'Y': y_positions,
-            'Z': z_values,
-            'map_name': self.current_map_name
-        }
-    
-    def get_spectra_at_position(self, x: float, y: float, tolerance: float = 1.0) -> list[int]:
-        """
-        Get spectrum indices at a given spatial position.
-        
-        Args:
-            x, y: Spatial coordinates
-            tolerance: Maximum distance to consider a match
-            
-        Returns:
-            List of spectrum indices matching the position
-        """
-        if self.current_map_df is None:
-            return []
-        
-        matches = []
-        for idx, spectrum in enumerate(self.spectra):
-            if 'metadata' in spectrum.__dict__:
-                meta = spectrum.metadata
-                x_pos = meta.get('x_position', 0)
-                y_pos = meta.get('y_position', 0)
-                
-                distance = ((x - x_pos)**2 + (y - y_pos)**2)**0.5
-                if distance <= tolerance:
-                    matches.append(idx)
-        
-        return matches
     
     def get_fit_results_dataframe(self):
         """Get fit results DataFrame for the current map (cached).

@@ -48,6 +48,25 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self._add_maps_panel()
         self._connect_signals()
     
+    @staticmethod
+    def _extract_coords_from_fname(fname: str) -> tuple[float, float] | None:
+        """Extract (x, y) coordinates from spectrum fname.
+        
+        Args:
+            fname: Spectrum filename with format \"map_name_(x, y)\"
+            
+        Returns:
+            Tuple of (x, y) coordinates, or None if parsing fails
+        """
+        if '(' in fname and ')' in fname:
+            coords_str = fname[fname.rfind('(')+1:fname.rfind(')')]
+            try:
+                x_str, y_str = coords_str.split(',')
+                return (float(x_str.strip()), float(y_str.strip()))
+            except (ValueError, AttributeError):
+                pass
+        return None
+    
     def setup_connections(self):
         """Override to prevent double connection during parent init, then connect properly."""
         if hasattr(self, '_skip_parent_setup') and self._skip_parent_setup:
@@ -250,15 +269,14 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             return
         
         # Get (x, y) coordinates for selected spectra
+        # Extract from fname (never changes) instead of metadata (can be stale after fitting)
         selected_points = []
         for global_idx in global_indices:
             if 0 <= global_idx < len(self.vm.spectra):
                 spectrum = self.vm.spectra[global_idx]
-                x_pos = spectrum.metadata.get('x_position')
-                y_pos = spectrum.metadata.get('y_position')
-                
-                if x_pos is not None and y_pos is not None:
-                    selected_points.append((float(x_pos), float(y_pos)))
+                coords = self._extract_coords_from_fname(spectrum.fname)
+                if coords:
+                    selected_points.append(coords)
         
         # Update heatmap selection highlights
         if selected_points:
@@ -332,14 +350,14 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                 global_indices.append(global_idx)
         
         # Get coordinates for heatmap highlights
+        # Extract from fname (never changes) instead of metadata (can be stale after fitting)
         selected_points = []
         for global_idx in global_indices:
             if 0 <= global_idx < len(self.vm.spectra):
                 spectrum = self.vm.spectra[global_idx]
-                x_pos = spectrum.metadata.get('x_position')
-                y_pos = spectrum.metadata.get('y_position')
-                if x_pos is not None and y_pos is not None:
-                    selected_points.append((float(x_pos), float(y_pos)))
+                coords = self._extract_coords_from_fname(spectrum.fname)
+                if coords:
+                    selected_points.append(coords)
         
         if selected_points:
             self.v_map_viewer.set_selected_points(selected_points)

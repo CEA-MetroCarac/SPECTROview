@@ -18,6 +18,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     maps_list_changed = Signal(list)  # list[str] - map names
     map_selected = Signal(str)  # selected map name
     map_data_updated = Signal(object)  # pd.DataFrame for map visualization
+    selection_indices_to_restore = Signal(list)  # List indices to select in widget after map switch
     send_spectra_to_workspace = Signal(list)  # list[MSpectrum] - spectra to send to Spectra workspace
     
     def __init__(self, settings: MSettings):
@@ -27,6 +28,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.current_map_name = None
         self.current_map_df = None
         self.current_map_indices = []  # Global indices of currently displayed map's spectra
+        self.selected_list_indices = []  # List indices to persist across map switches
         
         # Cache for fit results
         self._fit_results_cache: pd.DataFrame | None = None
@@ -85,6 +87,10 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         # Emit single signal to update view
         self.map_data_updated.emit(self.current_map_df)
+        
+        # Restore selection based on list indices (or select first item if no previous selection)
+        self._restore_selection_after_map_switch()
+        
     
     def _extract_spectra_from_map(self, map_name: str, map_df: pd.DataFrame):
         """Extract all individual spectra from a hyperspectral map dataframe."""
@@ -173,9 +179,63 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Single batched signal emission to update view
         self.spectra_list_changed.emit(spectra_names)
         self.count_changed.emit(num_spectra)
+    
+    def _restore_selection_after_map_switch(self):
+        """Restore selection based on list indices after switching maps."""
+        num_spectra = len(self.current_map_indices)
         
-        # Clear selection when switching maps (don't auto-select to avoid premature plotting)
-        self.selected_indices = []
+        if num_spectra == 0:
+            self.selected_indices = []
+            self._emit_selected_spectra()
+            return
+        
+        # If we have saved list indices, restore them (if valid for this map)
+        if self.selected_list_indices:
+            # Convert list indices to global indices for the new map
+            restored_global_indices = []
+            restored_list_indices = []
+            for list_idx in self.selected_list_indices:
+                if 0 <= list_idx < num_spectra:
+                    global_idx = self.current_map_indices[list_idx]
+                    restored_global_indices.append(global_idx)
+                    restored_list_indices.append(list_idx)
+            
+            if restored_global_indices:
+                self.selected_indices = restored_global_indices
+                self._emit_selected_spectra()
+                # Signal View to update list widget selection
+                self.selection_indices_to_restore.emit(restored_list_indices)
+                return
+        
+        # No previous selection or all indices invalid → auto-select first item
+        first_global_idx = self.current_map_indices[0]
+        self.selected_indices = [first_global_idx]
+        self.selected_list_indices = [0]
+        self._emit_selected_spectra()
+        # Signal View to select first item in list widget
+        self.selection_indices_to_restore.emit([0])
+        if self.selected_list_indices:
+            # Convert list indices to global indices for the new map
+            restored_global_indices = []
+            for list_idx in self.selected_list_indices:
+                if 0 <= list_idx < num_spectra:
+                    global_idx = self.current_map_indices[list_idx]
+                    restored_global_indices.append(global_idx)
+            
+            if restored_global_indices:
+                self.selected_indices = restored_global_indices
+                self._emit_selected_spectra()
+                # Signal View to update list widget selection
+                self.selection_indices_to_restore.emit(self.selected_list_indices)
+                return
+        
+        # No previous selection or all indices invalid → auto-select first item
+        first_global_idx = self.current_map_indices[0]
+        self.selected_indices = [first_global_idx]
+        self.selected_list_indices = [0]
+        self._emit_selected_spectra()
+        # Signal View to select first item in list widget
+        self.selection_indices_to_restore.emit([0])
     
     def get_current_map_dataframe(self) -> pd.DataFrame | None:
         """Get the DataFrame of the currently selected map."""
@@ -302,7 +362,14 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         Note: This receives GLOBAL indices directly from View layer.
         The View layer does the list-to-global conversion before calling this.
         """
-        # Just pass through to parent - indices are already global
+        # Save list indices for persistence across map switches
+        self.selected_list_indices = []
+        for global_idx in indices:
+            if global_idx in self.current_map_indices:
+                list_idx = self.current_map_indices.index(global_idx)
+                self.selected_list_indices.append(list_idx)
+        
+        # Pass through to parent - indices are already global
         super().set_selected_indices(indices)
     
     # ─────────────────────────────────────────────────────────────────

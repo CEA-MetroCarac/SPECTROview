@@ -347,7 +347,7 @@ class VMapViewer(QWidget):
         
         self.action_show_stats = QAction("Show stats", self)
         self.action_show_stats.setCheckable(True)
-        self.action_show_stats.setChecked(True)
+        self.action_show_stats.setChecked(False)
         self.action_show_stats.triggered.connect(lambda: self.plot_heatmap())
         self.options_menu.addAction(self.action_show_stats)
     
@@ -376,7 +376,8 @@ class VMapViewer(QWidget):
     
     def set_selected_points(self, points: list):
         """Set externally selected points and refresh plot."""
-        self.selected_points = points
+        # Ensure uniqueness while preserving order
+        self.selected_points = list(dict.fromkeys(points))
         self._update_selection_overlay()
     
     def _update_parameter_lists(self):
@@ -601,18 +602,16 @@ class VMapViewer(QWidget):
         if map_type != '2Dmap' and self.action_show_stats.isChecked():
             self._draw_stats_box()
         
-        # Highlight selected points
-        if self.selected_points:
-            x, y = zip(*self.selected_points)
-            self.ax.scatter(x, y, facecolors='none', edgecolors='red', 
-                           marker='s', s=60, linewidths=1, zorder=10)
-        
         # Title
         title = self.cbb_zparameter.currentText()
         self.ax.set_title(title, fontsize=13)
         
         self.ax.get_figure().tight_layout()
         self.canvas.draw_idle()
+        
+        # Update selection overlay after plot is complete
+        # (separate method handles adding/removing selection highlights)
+        self._update_selection_overlay()
     
     def _get_data_for_heatmap(self):
         """Compute heatmap data from map DataFrame (with caching for wafer griddata).
@@ -916,8 +915,11 @@ class VMapViewer(QWidget):
             if modifiers != Qt.ControlModifier:
                 self.selected_points = []
             
-            for x, y in zip(all_x[inside], all_y[inside]):
-                self.selected_points.append((float(x), float(y)))
+            # Add selected points (ensure uniqueness)
+            new_points = [(float(x), float(y)) for x, y in zip(all_x[inside], all_y[inside])]
+            for pt in new_points:
+                if pt not in self.selected_points:
+                    self.selected_points.append(pt)
             
             try:
                 self.rect_patch.remove()

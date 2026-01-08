@@ -148,6 +148,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             lambda names: self.v_maps_list.set_spectra_names(names)
         )
         
+        # Restore selection after map switch (maintains list index positions)
+        self.vm.selection_indices_to_restore.connect(self._restore_list_selection)
+        
         # ── ViewModel → VMapViewer connections ──
         # Note: map_selected signal removed to avoid duplicate calls to _on_map_data_changed
         self.vm.map_data_updated.connect(self._on_map_data_changed)
@@ -177,14 +180,16 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         selected_coords = set(selected_points)
         
         # Find indices of spectra matching the selected coordinates
+        # CRITICAL: Only search within current map's spectra, not all spectra globally!
         indices = []
-        for i, spectrum in enumerate(self.vm.spectra):
+        for global_idx in self.vm.current_map_indices:
+            spectrum = self.vm.spectra[global_idx]
             x_pos = spectrum.metadata.get('x_position')
             y_pos = spectrum.metadata.get('y_position')
             
             if x_pos is not None and y_pos is not None:
                 if (float(x_pos), float(y_pos)) in selected_coords:
-                    indices.append(i)
+                    indices.append(global_idx)
         
         if not indices:
             return
@@ -267,9 +272,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                     self.v_maps_list.spectra_list.item(first_idx)
                 )
         
-        # Update ViewModel - use parent's method directly to avoid double conversion
-        # global_indices are already global, not list indices
-        super(type(self.vm), self.vm).set_selected_indices(global_indices)
+        # Update ViewModel - use override to save list indices for persistence
+        self.vm.set_selected_indices(global_indices)
     
     def _on_map_data_changed(self):
         """Update map viewer when map data changes."""
@@ -299,6 +303,49 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             map_names = list(self.vm.maps.keys())
             map_name = map_names[index]
             self.vm.select_map(map_name)
+    
+    def _restore_list_selection(self, list_indices: list):
+        """Restore list widget selection based on list indices from ViewModel."""
+        # Block signals to prevent triggering selection changed events
+        self.v_maps_list.spectra_list.blockSignals(True)
+        
+        # Clear and set new selection
+        self.v_maps_list.spectra_list.clearSelection()
+        for list_idx in list_indices:
+            if 0 <= list_idx < self.v_maps_list.spectra_list.count():
+                item = self.v_maps_list.spectra_list.item(list_idx)
+                item.setSelected(True)
+        
+        # Auto-scroll to first selected item
+        if list_indices:
+            first_idx = list_indices[0]
+            if 0 <= first_idx < self.v_maps_list.spectra_list.count():
+                self.v_maps_list.spectra_list.scrollToItem(
+                    self.v_maps_list.spectra_list.item(first_idx)
+                )
+        
+        # Update heatmap highlights to match selection
+        global_indices = []
+        for list_idx in list_indices:
+            if 0 <= list_idx < len(self.vm.current_map_indices):
+                global_idx = self.vm.current_map_indices[list_idx]
+                global_indices.append(global_idx)
+        
+        # Get coordinates for heatmap highlights
+        selected_points = []
+        for global_idx in global_indices:
+            if 0 <= global_idx < len(self.vm.spectra):
+                spectrum = self.vm.spectra[global_idx]
+                x_pos = spectrum.metadata.get('x_position')
+                y_pos = spectrum.metadata.get('y_position')
+                if x_pos is not None and y_pos is not None:
+                    selected_points.append((float(x_pos), float(y_pos)))
+        
+        if selected_points:
+            self.v_map_viewer.set_selected_points(selected_points)
+        
+        # Unblock signals
+        self.v_maps_list.spectra_list.blockSignals(False)
     
     def _on_view_map_requested(self):
         """Display the current map's DataFrame in a table dialog."""

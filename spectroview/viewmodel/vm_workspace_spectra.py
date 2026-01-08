@@ -84,7 +84,8 @@ class VMWorkspaceSpectra(QObject):
 
     def set_selected_indices(self, indices: list[int]):
         """Set currently selected spectra (via Listwidget) by their indices."""
-        self.selected_indices = indices
+        # Ensure uniqueness while preserving order (dict.fromkeys trick)
+        self.selected_indices = list(dict.fromkeys(indices))
         self._emit_selected_spectra()
 
     def _emit_selected_spectra(self):

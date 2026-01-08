@@ -4,6 +4,7 @@ from threading import Thread
 from multiprocessing import Queue
 
 from fitspy.core.spectra import Spectra as FitspySpectra
+from fitspy.core.utils_mp import fit_mp
 
 class MSpectra(FitspySpectra):
     """Model: container for SpectrumM"""

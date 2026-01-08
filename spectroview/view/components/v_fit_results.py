@@ -32,6 +32,7 @@ class VFitResults(QWidget):
         
         # Left panel - Controls
         left_panel = QWidget()
+        left_panel.setMaximumWidth(400)
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(10)

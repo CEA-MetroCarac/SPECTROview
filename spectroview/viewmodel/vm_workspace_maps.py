@@ -115,7 +115,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             
             # Set default baseline settings (matching legacy)
             spectrum.baseline.mode = "Linear"
-            spectrum.baseline.sigma = 5
+            spectrum.baseline.sigma = 4
             
             # Store map metadata
             if not hasattr(spectrum, 'metadata'):
@@ -381,46 +381,4 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                     matches.append(idx)
         
         return matches
-    
-    def select_quadrant(self, quadrant: str):
-        """
-        Select spectra in a specific wafer quadrant.
-        
-        Args:
-            quadrant: 'Q1', 'Q2', 'Q3', 'Q4', 'H' (horizontal), 'V' (vertical), 'All'
-        """
-        if self.current_map_df is None:
-            return
-        
-        df = self.current_map_df
-        x_center = df['X'].mean()
-        y_center = df['Y'].mean()
-        
-        selected = []
-        for idx, row in df.iterrows():
-            x = row['X']
-            y = row['Y']
-            
-            if quadrant == 'All':
-                selected.append(idx)
-            elif quadrant == 'Q1':  # Upper right
-                if x >= x_center and y >= y_center:
-                    selected.append(idx)
-            elif quadrant == 'Q2':  # Upper left
-                if x < x_center and y >= y_center:
-                    selected.append(idx)
-            elif quadrant == 'Q3':  # Lower left
-                if x < x_center and y < y_center:
-                    selected.append(idx)
-            elif quadrant == 'Q4':  # Lower right
-                if x >= x_center and y < y_center:
-                    selected.append(idx)
-            elif quadrant == 'H':  # Horizontal center
-                if abs(y - y_center) < df['Y'].std() * 0.5:
-                    selected.append(idx)
-            elif quadrant == 'V':  # Vertical center
-                if abs(x - x_center) < df['X'].std() * 0.5:
-                    selected.append(idx)
-        
-        self.selected_indices = selected
-        self._emit_selected_spectra()
+

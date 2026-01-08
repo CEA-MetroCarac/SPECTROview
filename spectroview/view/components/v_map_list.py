@@ -1,6 +1,7 @@
 # spectroview/view/components/v_map_list.py
 """View component for Maps list - two-level navigation (Maps → Spectra)."""
-import os
+import os 
+from typing import List
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
     QListWidgetItem, QAbstractItemView, QPushButton
@@ -12,19 +13,23 @@ from spectroview import ICON_DIR
 
 
 class VMapsList(QWidget):
-    """Two-level list widget: Maps (top) → Spectra from selected map (bottom)."""
+    """Two-level list widget: Maps (top) → Spectra from selected map (bottom).
     
-    # ───── View → ViewModel signals ─────
-    map_selection_changed = Signal(int)       # selected map index
-    spectra_selection_changed = Signal(list)  # list of selected spectrum indices
-    files_dropped = Signal(list)               # list of file paths dropped on maps list
-    view_map_requested = Signal()              # view button clicked
-    delete_map_requested = Signal()            # delete button clicked
-    save_requested = Signal()              # info button clicked
-    select_all_requested = Signal()            # select all button clicked
-    reinitialize_requested = Signal()          # reinitialize button clicked
-    stats_requested = Signal()                 # stats button clicked
-    send_to_spectra_requested = Signal()       # send to spectra tab button clicked
+    Provides drag-and-drop support for loading map files and action buttons
+    for viewing, deleting, saving maps, and managing extracted spectra.
+    """
+    
+    # ═══ View → ViewModel signals ═══
+    map_selection_changed = Signal(int)           # Selected map index
+    spectra_selection_changed = Signal(list)      # Selected spectrum indices
+    files_dropped = Signal(list)                  # File paths dropped on maps list
+    view_map_requested = Signal()                 # View map DataFrame
+    delete_map_requested = Signal()               # Delete selected map
+    save_requested = Signal()                     # Save map to Excel
+    select_all_requested = Signal()               # Select all spectra
+    reinitialize_requested = Signal()             # Reinitialize selected spectra
+    stats_requested = Signal()                    # Show fitting statistics
+    send_to_spectra_requested = Signal()          # Send to Spectra workspace
     
     def __init__(self, parent=None):
         super().__init__(parent)

@@ -37,6 +37,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Replace parent's ViewModel with Maps-specific ViewModel
         self.vm = VMWorkspaceMaps(self.m_settings)
         
+        # Re-inject the fit model builder dependency (required for apply_loaded_fit_model)
+        self.vm.set_fit_model_builder(self.vm_fit_model_builder)
+        
         # Now set up ALL connections with the correct VM
         self._skip_parent_setup = False
         self.setup_connections()

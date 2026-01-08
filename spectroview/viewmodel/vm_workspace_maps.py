@@ -481,4 +481,28 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             
             # Signal View to clear griddata cache for this map (data has changed)
             self.clear_map_cache_requested.emit(self.current_map_name)
+    
+    def clear_workspace(self):
+        """Clear all maps, spectra, and reset workspace to initial state."""
+        # Stop any running fit thread first (via parent)
+        super().clear_workspace()
+        
+        # Clear Maps-specific data structures
+        self.maps.clear()
+        self.map_spectra.clear()
+        self.current_map_name = None
+        self.current_map_df = None
+        self.current_map_indices = []
+        self.selected_list_indices = []
+        
+        # Clear all caches
+        self._fname_to_index.clear()
+        self._fit_results_cache = None
+        self._fit_results_cache_dirty = True
+        
+        # Emit updates to View
+        self.maps_list_changed.emit([])
+        self.map_data_updated.emit(pd.DataFrame())
+        # Parent already emits: spectra_list_changed, spectra_selection_changed, 
+        # count_changed, fit_in_progress, fit_results_updated
 

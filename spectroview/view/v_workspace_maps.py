@@ -458,3 +458,12 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             message=message,
             duration=3000
         )
+    
+    def clear_workspace(self):
+        """Clear the Maps workspace (called from main window)."""
+        # Clear griddata cache in map viewer
+        if hasattr(self, 'v_map_viewer'):
+            self.v_map_viewer._griddata_cache.clear()
+        
+        # Delegate to ViewModel for data clearing
+        self.vm.clear_workspace()

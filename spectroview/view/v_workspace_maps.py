@@ -101,16 +101,20 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_maps_list = VMapsList()
         layout.addWidget(self.v_maps_list, stretch=1)
         
-        # ── Progress info (from parent) ──
-        self.lbl_count.setText("0 points")
-        layout.addWidget(self.lbl_count)
-        
         # Set scroll content and add to main panel
         scroll_area.setWidget(scroll_content)
         main_layout.addWidget(scroll_area)
         
-        # Progress bar outside scroll area
-        main_layout.addWidget(self.progress_bar)
+        # ── Footer: count + progress bar (outside scroll area) ──
+        footer_layout = QHBoxLayout()
+        footer_layout.setSpacing(4)
+        
+        self.lbl_count.setText("0 spectra loaded")
+        self.progress_bar.setFixedHeight(15)
+        
+        footer_layout.addWidget(self.lbl_count)
+        footer_layout.addWidget(self.progress_bar)
+        main_layout.addLayout(footer_layout)
         
         return panel
     

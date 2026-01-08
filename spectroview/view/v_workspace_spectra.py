@@ -102,13 +102,17 @@ class VWorkspaceSpectra(QWidget):
         right_layout.addWidget(self.v_spectra_list, stretch=1)
 
         # --- Footer: count + progress
-        self.lbl_count = QLabel("Loaded spectra: 0")
+        footer_layout = QHBoxLayout()
+        footer_layout.setSpacing(4)
+        
+        self.lbl_count = QLabel("0 spectra loaded")
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(100)
         self.progress_bar.setFixedHeight(15)
 
-        right_layout.addWidget(self.lbl_count)
-        right_layout.addWidget(self.progress_bar)
+        footer_layout.addWidget(self.lbl_count)
+        footer_layout.addWidget(self.progress_bar)
+        right_layout.addLayout(footer_layout)
 
         # Assemble main splitter
         main_splitter.addWidget(left_widget)

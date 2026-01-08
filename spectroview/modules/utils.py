@@ -29,15 +29,10 @@ from spectroview import PALETTE, DEFAULT_COLORS
 from spectroview.modules.df_table import DataframeTable
 
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QVBoxLayout,  QTextBrowser, \
-    QComboBox, QListWidgetItem, QMessageBox, QDialog, QVBoxLayout, QListWidget, QAbstractItemView
+    QComboBox, QListWidgetItem, QMessageBox, QDialog, QVBoxLayout, QListWidget, QAbstractItemView, QApplication
     
 from PySide6.QtCore import Signal, QThread, Qt, QSize
 from PySide6.QtGui import QPalette, QColor, QTextCursor, QIcon, Qt, QPixmap, QImage
-
-if platform.system() == 'Darwin':
-    import AppKit 
-if platform.system() == 'Windows':
-    import win32clipboard
     
     
 class CustomizedPalette(QComboBox):
@@ -566,54 +561,41 @@ def save_df_to_excel(save_path, df):
         return False, f"Error when saving DataFrame: {str(e)}"
 
 def copy_fig_to_clb(canvas, size_ratio=None):
-    """Copy matplotlib figure canvas to clipboard with optional resizing."""
-    current_os = platform.system()
-
-    if canvas:
-        figure = canvas.figure
-        # Resize the figure if a size_ratio is provided
-        if size_ratio:
-            # Save the original size to restore later
-            original_size = figure.get_size_inches()
-            figure.set_size_inches(size_ratio, forward=True)  
-            canvas.draw()  
-            figure.tight_layout()
-
-        if current_os == 'Darwin':  # macOS
-            buf = BytesIO()
-            canvas.print_png(buf)
-            buf.seek(0)
-            image = Image.open(buf)
-            img_size = image.size
-            png_data = buf.getvalue()
-            image_rep = AppKit.NSBitmapImageRep.alloc().initWithData_(
-                AppKit.NSData.dataWithBytes_length_(png_data, len(png_data))
-            )
-            ns_image = AppKit.NSImage.alloc().initWithSize_((img_size[0], img_size[1]))
-            ns_image.addRepresentation_(image_rep)
-            pasteboard = AppKit.NSPasteboard.generalPasteboard()
-            pasteboard.clearContents()
-            pasteboard.writeObjects_([ns_image])
-
-        elif current_os == 'Windows':
-            with BytesIO() as buf:
-                figure.savefig(buf, format='png', dpi=300) 
-                data = buf.getvalue()
-            format_id = win32clipboard.RegisterClipboardFormat('PNG')
-            win32clipboard.OpenClipboard()
-            win32clipboard.EmptyClipboard()
-            win32clipboard.SetClipboardData(format_id, data)
-            win32clipboard.CloseClipboard()
-
-        else:
-            QMessageBox.critical(None, "Error", f"Unsupported OS: {current_os}")
-
-        # Restore the original figure size if resized
-        if size_ratio:
-            figure.set_size_inches(original_size, forward=True)
-            canvas.draw()  
-    else:
+    """Copy matplotlib figure canvas to clipboard with optional resizing.
+    
+    Args:
+        canvas: FigureCanvasQTAgg object from matplotlib
+        size_ratio: Optional tuple (width, height) in inches to resize figure before copying
+    """
+    if not canvas:
         QMessageBox.critical(None, "Error", "No plot to copy.")
+        return
+    
+    figure = canvas.figure
+    original_size = figure.get_size_inches()
+    original_dpi = figure.dpi
+    
+    try:
+        # Temporarily set high DPI and custom size for clipboard export
+        if size_ratio:
+            figure.set_size_inches(size_ratio, forward=True)
+        figure.set_dpi(300)  # High resolution for clipboard
+        canvas.draw()
+        
+        # Get rendered buffer and convert to QPixmap
+        buffer = canvas.buffer_rgba()
+        width, height = canvas.get_width_height()
+        qimage = QImage(buffer, width, height, QImage.Format_RGBA8888)
+        
+        # Copy to clipboard
+        clipboard = QApplication.clipboard()
+        clipboard.setPixmap(QPixmap.fromImage(qimage))
+        
+    finally:
+        # Restore original figure state
+        figure.set_size_inches(original_size, forward=True)
+        figure.set_dpi(original_dpi)
+        canvas.draw()
         
         
 def calc_area(model_name, params):

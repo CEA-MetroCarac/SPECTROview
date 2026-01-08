@@ -108,7 +108,7 @@ class VWorkspaceGraphs(QWidget):
         toolbar_layout.addWidget(QLabel("DPI:"))
         self.spin_dpi_toolbar = QSpinBox()
         self.spin_dpi_toolbar.setRange(50, 300)
-        self.spin_dpi_toolbar.setValue(90)
+        self.spin_dpi_toolbar.setValue(100)
         self.spin_dpi_toolbar.setSingleStep(10)
         self.spin_dpi_toolbar.setMaximumWidth(60)
         toolbar_layout.addWidget(self.spin_dpi_toolbar)

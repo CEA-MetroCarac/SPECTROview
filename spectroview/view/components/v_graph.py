@@ -395,10 +395,12 @@ class VGraph(QWidget):
                     ax=self.ax, palette=colors, width=0.4
                 )
             elif self.plot_style == 'line':
-                sns.lineplot(
-                    data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                    palette=colors
-                )
+                # Only pass palette if hue is provided
+                line_kwargs = {'data': df, 'x': self.x, 'y': y, 'ax': self.ax}
+                if self.z:
+                    line_kwargs['hue'] = self.z
+                    line_kwargs['palette'] = colors
+                sns.lineplot(**line_kwargs)
             elif self.plot_style == 'bar':
                 sns.barplot(
                     data=df, x=self.x, y=y, hue=self.z,

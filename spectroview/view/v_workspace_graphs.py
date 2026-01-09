@@ -742,6 +742,67 @@ class VWorkspaceGraphs(QWidget):
                 self.cbb_graph_list.setCurrentIndex(i)
                 break
     
+    def create_plot_from_config(self, df_name: str, plot_config: dict) -> bool:
+        """Create a plot programmatically from configuration (for cross-workspace use).
+        
+        Args:
+            df_name: Name of DataFrame to plot
+            plot_config: Dictionary with plot configuration (plot_style, x, y, z, etc.)
+            
+        Returns:
+            True if plot was created successfully, False otherwise
+        """
+        # Validate DataFrame
+        df = self.vm.get_dataframe(df_name)
+        if df is None or df.empty:
+            return False
+        
+        # Set as selected DataFrame (required for ViewModel operations)
+        self.vm.select_dataframe(df_name)
+        
+        # Create graph model via ViewModel
+        graph_model = self.vm.create_graph(plot_config)
+        
+        # Apply filters (use empty filters if not specified)
+        filters = plot_config.get('filters', [])
+        filtered_df = self.vm.apply_filters(df_name, filters)
+        
+        # Create Graph widget
+        graph_widget = VGraph(graph_id=graph_model.graph_id)
+        self._configure_graph_from_model(graph_widget, graph_model)
+        
+        # Create plot
+        graph_widget.create_plot_widget(graph_model.dpi)
+        self._render_plot(graph_widget, filtered_df, graph_model)
+        
+        # Save legend properties back to model after rendering
+        self.vm.update_graph(graph_model.graph_id, {
+            'legend_properties': graph_widget.legend_properties
+        })
+        
+        # Create MDI subwindow
+        sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
+        
+        # Store reference
+        from PySide6.QtWidgets import QDialog, QVBoxLayout
+        graph_dialog = QDialog(self)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(graph_widget)
+        graph_dialog.setLayout(layout)
+        sub_window.setWidget(graph_dialog)
+        
+        self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
+        
+        # Show the subwindow
+        self.mdi_area.addSubWindow(sub_window)
+        sub_window.show()
+        
+        # Update graph list
+        self._update_graph_list(self.vm.get_graph_ids())
+        
+        return True
+    
     def _on_update_plot(self):
         """Update selected plot."""
         # Get currently active MDI subwindow

@@ -468,7 +468,12 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.graphs_workspace = graphs_workspace
     
     def extract_and_send_profile_to_graphs(self, profile_name: str, profile_df: pd.DataFrame):
-        """Extract profile data and send to Graphs workspace for plotting."""
+        """Extract profile data and send to Graphs workspace for plotting.
+        
+        Args:
+            profile_name: Name for the profile (used as DataFrame name in Graphs)
+            profile_df: DataFrame with columns: X, Y, distance, values
+        """
         if profile_df is None or profile_df.empty:
             self.notify.emit("No profile data to extract. Select exactly 2 points in 2D map mode.")
             return
@@ -484,7 +489,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Add DataFrame to Graphs workspace
         self.graphs_workspace.vm.add_dataframe(profile_name, profile_df)
         
-        # Create graph model configuration for line plot
+        # Create plot configuration for line plot
         plot_config = {
             'df_name': profile_name,
             'plot_style': 'line',
@@ -497,50 +502,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             'dpi': 100
         }
         
-        # Create graph model via ViewModel
-        graph_model = self.graphs_workspace.vm.create_graph(plot_config)
+        # Create plot using Graphs workspace method
+        success = self.graphs_workspace.create_plot_from_config(profile_name, plot_config)
         
-        # Get filtered data (no filters applied)
-        filtered_df = self.graphs_workspace.vm.apply_filters(profile_name, [])
-        
-        # Create Graph widget
-        from spectroview.view.components.v_graph import VGraph
-        graph_widget = VGraph(graph_id=graph_model.graph_id)
-        self.graphs_workspace._configure_graph_from_model(graph_widget, graph_model)
-        
-        # Create plot
-        graph_widget.create_plot_widget(graph_model.dpi)
-        self.graphs_workspace._render_plot(graph_widget, filtered_df, graph_model)
-        
-        # Save legend properties back to model
-        self.graphs_workspace.vm.update_graph(graph_model.graph_id, {
-            'legend_properties': graph_widget.legend_properties
-        })
-        
-        # Create MDI subwindow
-        sub_window = self.graphs_workspace._create_mdi_subwindow(graph_widget, graph_model)
-        
-        # Wrap in QDialog
-        from PySide6.QtWidgets import QDialog, QVBoxLayout
-        graph_dialog = QDialog(self.graphs_workspace)
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(graph_widget)
-        graph_dialog.setLayout(layout)
-        sub_window.setWidget(graph_dialog)
-        
-        # Store reference
-        self.graphs_workspace.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
-        
-        # Show the subwindow
-        self.graphs_workspace.mdi_area.addSubWindow(sub_window)
-        sub_window.show()
-        
-        # Update graph list
-        self.graphs_workspace._update_graph_list(self.graphs_workspace.vm.get_graph_ids())
-        
-        # Emit signal to request tab switch
-        self.switch_to_graphs_tab.emit()
-        
-        self.notify.emit(f"Profile '{profile_name}' sent to Graphs workspace")
+        if success:
+            # Emit signal to request tab switch
+            self.switch_to_graphs_tab.emit()
+            self.notify.emit(f"Profile '{profile_name}' sent to Graphs workspace")
+        else:
+            self.notify.emit("Failed to create profile plot.")
 

@@ -71,7 +71,7 @@ class VWorkspaceSpectra(QWidget):
         # RIGHT SIDE (Sidebar)
         right_widget = QFrame()
         right_widget.setMinimumWidth(200)
-        right_widget.setMaximumWidth(400)
+        right_widget.setMaximumWidth(450)
         right_layout = QVBoxLayout(right_widget)
         right_widget.setFrameShape(QFrame.StyledPanel)
         right_layout.setContentsMargins(4, 4, 4, 4)
@@ -117,7 +117,7 @@ class VWorkspaceSpectra(QWidget):
         # Assemble main splitter
         main_splitter.addWidget(left_widget)
         main_splitter.addWidget(right_widget)
-        main_splitter.setSizes([900, 300])
+        main_splitter.setSizes([900, 400])
 
     def _apply_with_ctrl(self, fn):
         apply_all = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)

@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
     QListWidgetItem, QAbstractItemView, QPushButton
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QIcon
 
 from spectroview import ICON_DIR
@@ -77,18 +77,21 @@ class VMapsList(QWidget):
         
         self.btn_view = QPushButton()
         self.btn_view.setIcon(QIcon(os.path.join(ICON_DIR, "view.png")))
+        self.btn_view.setIconSize(QSize(24,24))
         self.btn_view.setToolTip("View selected map")
         self.btn_view.setFixedSize(32, 32)
         self.btn_view.clicked.connect(self.view_map_requested.emit)
         
         self.btn_delete = QPushButton()
         self.btn_delete.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))
+        self.btn_delete.setIconSize(QSize(24,24))
         self.btn_delete.setToolTip("Delete selected map")
         self.btn_delete.setFixedSize(32, 32)
         self.btn_delete.clicked.connect(self.delete_map_requested.emit)
         
         self.btn_save = QPushButton()
         self.btn_save.setIcon(QIcon(os.path.join(ICON_DIR, "save.png")))
+        self.btn_save.setIconSize(QSize(24,24))
         self.btn_save.setToolTip("Save the selected map")
         self.btn_save.setFixedSize(32, 32)
         self.btn_save.clicked.connect(self.save_requested.emit)

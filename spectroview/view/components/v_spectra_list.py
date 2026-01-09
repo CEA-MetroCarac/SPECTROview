@@ -32,6 +32,8 @@ class VSpectraList(QListWidget):
         for i, name in enumerate(names):
             item = QListWidgetItem(name)
             item.setData(Qt.UserRole, i)  # model index -> used when dragging/reordering
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            item.setCheckState(Qt.Checked)  # Default to checked
             self.addItem(item)
 
     def selected_rows(self) -> list[int]:
@@ -40,6 +42,21 @@ class VSpectraList(QListWidget):
     def select_all(self):
         """Select all items in the list."""
         self.selectAll()
+    
+    def get_checked_spectra_indices(self) -> list[int]:
+        """Return list of checked spectrum indices."""
+        checked = []
+        for i in range(self.count()):
+            item = self.item(i)
+            if item.checkState() == Qt.Checked:
+                checked.append(i)
+        return checked
+    
+    def check_all_spectra(self, checked: bool):
+        """Check or uncheck all spectra."""
+        state = Qt.Checked if checked else Qt.Unchecked
+        for i in range(self.count()):
+            self.item(i).setCheckState(state)
     
     # ───── Drag & Drop handling ──────────────────────────────────
     def dragEnterEvent(self, event):

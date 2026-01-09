@@ -195,7 +195,7 @@ class VMapsList(QWidget):
             item = QListWidgetItem(name)
             item.setData(Qt.UserRole, i)  # Store index
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            item.setCheckState(Qt.Unchecked)
+            item.setCheckState(Qt.Checked)  # Default to checked
             self.spectra_list.addItem(item)
         
         # Restore selection at same positions (if they still exist)

@@ -18,7 +18,7 @@ from matplotlib.backends.backend_qtagg import (
     NavigationToolbar2QT
 )
 
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QLabel, QApplication
 from PySide6.QtGui import QCursor
 from PySide6.QtCore import QPoint
 
@@ -57,7 +57,8 @@ class VSpectraViewer(QWidget):
         self._dragging_peak = None  # Stores (line, info) when dragging
 
         self.zoom_pan_active = True
-
+        QApplication.instance().focusChanged.connect(self._hide_tooltip)   
+        
     def _init_ui(self):
         plt.style.use(PLOT_POLICY)
 

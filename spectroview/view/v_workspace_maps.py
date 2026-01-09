@@ -124,6 +124,13 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_maps_list = VMapsList()
         layout.addWidget(self.v_maps_list, stretch=1)
         
+        # Check all checkbox for Maps workspace (between maps list and spectra list)
+        # This is inserted into the VMapsList layout
+        self.cb_check_all = QCheckBox("Check All")
+        self.cb_check_all.setChecked(True)  # Checked by default
+        # Insert checkbox at index 1 (after maps_container, before spectra_container)
+        self.v_maps_list.layout().insertWidget(1, self.cb_check_all)
+        
         # Set scroll content and add to main panel
         scroll_area.setWidget(scroll_content)
         main_layout.addWidget(scroll_area)
@@ -171,6 +178,34 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             updated_df = self.vm.get_current_map_dataframe()
             self.vm.map_data_updated.emit(updated_df)
     
+    def _on_check_all_toggled(self, checked: bool):
+        """Handle check all checkbox toggle for current map."""
+        if not self.vm.current_map_name:
+            return
+        
+        # Block signals temporarily to avoid triggering individual checkbox handlers
+        self.v_maps_list.spectra_list.blockSignals(True)
+        
+        # Get current map's spectra
+        fname_prefix = f"{self.vm.current_map_name}_("
+        map_spectra = [s for s in self.vm.spectra if s.fname.startswith(fname_prefix)]
+        
+        # Update all checkboxes in the list
+        for i in range(self.v_maps_list.spectra_list.count()):
+            item = self.v_maps_list.spectra_list.item(i)
+            item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
+        
+        # Update all current map spectra is_active state
+        for spectrum in map_spectra:
+            spectrum.is_active = checked
+        
+        self.v_maps_list.spectra_list.blockSignals(False)
+        
+        # Invalidate cache and trigger map data update
+        self.vm._fit_results_cache_dirty = True
+        updated_df = self.vm.get_current_map_dataframe()
+        self.vm.map_data_updated.emit(updated_df)
+    
     def _connect_signals(self):
         """Connect Maps-specific signals between View and ViewModel."""
         # ── VMapsList → ViewModel connections ──
@@ -191,6 +226,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # ── ViewModel → VMapsList connections ──
         self.vm.maps_list_changed.connect(self.v_maps_list.set_maps_names)
+        
+        # Check all checkbox
+        self.cb_check_all.toggled.connect(self._on_check_all_toggled)
         
         # The spectra list is updated via inherited VMWorkspaceSpectra signals
         # when vm.select_map() calls _extract_spectra_from_map()
@@ -477,4 +515,4 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             self.v_map_viewer._griddata_cache.clear()
         
         # Delay fit results collection to ensure UI is ready (matches legacy)
-        QTimer.singleShot(300, self.vm.collect_fit_results)
+        self.vm.collect_fit_results()

@@ -94,6 +94,7 @@ class VWorkspaceSpectra(QWidget):
 
         # --- Check all checkbox
         self.cb_check_all = QCheckBox("Check All")
+        self.cb_check_all.setChecked(True)  # Checked by default
         right_layout.addWidget(self.cb_check_all)
 
         # --- Spectra list
@@ -154,6 +155,22 @@ class VWorkspaceSpectra(QWidget):
         if 0 <= idx < len(self.vm.spectra):
             is_checked = item.checkState() == Qt.Checked
             self.vm.spectra[idx].is_active = is_checked
+    
+    def _on_check_all_toggled(self, checked: bool):
+        """Handle check all checkbox toggle."""
+        # Block signals temporarily to avoid triggering individual checkbox handlers
+        self.v_spectra_list.blockSignals(True)
+        
+        # Update all checkboxes in the list
+        for i in range(self.v_spectra_list.count()):
+            item = self.v_spectra_list.item(i)
+            item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
+        
+        # Update all spectra is_active state
+        for spectrum in self.vm.spectra:
+            spectrum.is_active = checked
+        
+        self.v_spectra_list.blockSignals(False)
 
     def setup_connections(self):
         """Connect ViewModel signals and slots to the View components."""
@@ -199,6 +216,9 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.fitmodel_paste_requested.connect(vm.paste_fit_model)
         self.v_fit_model_builder.fitmodel_save_requested.connect(vm.save_fit_model)
 
+        # Check all checkbox
+        self.cb_check_all.toggled.connect(self._on_check_all_toggled)
+        
         # SpectraList connection: ViewModel → View
         vm.spectra_list_changed.connect(self._on_spectra_list_changed)
         self.v_spectra_list.itemChanged.connect(self._on_checkbox_changed)
@@ -267,6 +287,7 @@ class VWorkspaceSpectra(QWidget):
     def load_work(self, file_path: str):
         """Trigger load work in ViewModel."""
         self.vm.load_work(file_path)
+        self.vm.collect_fit_results()
 
     def clear_workspace(self):
         """Trigger workspace clear in ViewModel."""

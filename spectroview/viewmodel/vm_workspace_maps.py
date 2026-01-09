@@ -4,6 +4,7 @@ import gzip
 from io import StringIO
 import numpy as np
 import pandas as pd
+import pandas as pd
 from pathlib import Path
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QMessageBox
@@ -32,6 +33,16 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         self._fit_results_cache: pd.DataFrame | None = None
         self._fit_results_cache_dirty: bool = True
+    
+    def _get_selected_spectra(self) -> list[MSpectrum]:
+        """Get currently selected spectra that are also active (checked).
+        
+        Override parent to filter by is_active so that operations on selected
+        spectra (non-Ctrl click) also respect checkbox state.
+        """
+        selected = self._get_spectra_by_fnames(self.selected_fnames)
+        # Filter to only active (checked) spectra
+        return [s for s in selected if s.is_active]
     
     def load_map_files(self, paths: list[str]):
         """Load hyperspectral map files and extract spectra."""
@@ -261,99 +272,23 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     
     
     def get_fit_results_dataframe(self):
-        """Get fit results DataFrame for the current map (cached).
+        """Get fit results DataFrame for the current map (cached for heatmap display).
         
-        Returns:
-            pd.DataFrame: DataFrame with columns [Filename, X, Y, ...fit_parameters]
+        This method returns a simplified version of the fit results for heatmap visualization.
+        It reuses self.df_fit_results (created by collect_fit_results) to avoid redundancy.
         """
         # Return cached results if available and not dirty
         if not self._fit_results_cache_dirty and self._fit_results_cache is not None:
             return self._fit_results_cache
         
-        import pandas as pd
-        
-        if not self.spectra or len(self.spectra) == 0:
-            self._fit_results_cache = pd.DataFrame()
+        # If we have collected fit results (from collect_fit_results), use them
+        if self.df_fit_results is not None and not self.df_fit_results.empty:
+            self._fit_results_cache = self.df_fit_results.copy()
             self._fit_results_cache_dirty = False
             return self._fit_results_cache
         
-        # Quick check: do ANY spectra have fit results? If not, skip entirely
-        has_any_fits = any(
-            hasattr(s, 'result_fit') and s.result_fit 
-            for s in self.spectra
-        )
-        
-        if not has_any_fits:
-            self._fit_results_cache = pd.DataFrame()
-            self._fit_results_cache_dirty = False
-            return self._fit_results_cache
-        
-        # Get active spectra to filter results
-        active_spectra = self._get_active_spectra()
-        active_fnames = {s.fname for s in active_spectra}
-        
-        # Collect all fit results (only from active spectra)
-        results = []
-        for spectrum in self.spectra:
-            # Skip inactive spectra
-            if spectrum.fname not in active_fnames:
-                continue
-            
-            # Only include spectra that have been fitted
-            if not hasattr(spectrum, 'result_fit') or not spectrum.result_fit:
-                continue
-            
-            # Parse map_name and coordinates from fname: "map_name_(x, y)"
-            fname = spectrum.fname
-            if '(' not in fname or ')' not in fname:
-                continue  # Skip if fname format is unexpected
-            
-            # Extract map_name (everything before last '(')
-            map_name = fname[:fname.rfind('(')].rstrip('_')
-            
-            # Extract coordinates
-            coords_str = fname[fname.rfind('(')+1:fname.rfind(')')]
-            try:
-                x_str, y_str = coords_str.split(',')
-                x_pos = float(x_str.strip())
-                y_pos = float(y_str.strip())
-            except (ValueError, AttributeError):
-                continue  # Skip if parsing fails
-            
-            # Start row with identification
-            row = {
-                'Filename': map_name,
-                'X': x_pos,
-                'Y': y_pos
-            }
-            
-            # Add peak parameters
-            if hasattr(spectrum, 'peak_models') and spectrum.peak_models:
-                for i, peak_model in enumerate(spectrum.peak_models):
-                    peak_label = (spectrum.peak_labels[i] 
-                                 if i < len(spectrum.peak_labels) 
-                                 else f"Peak_{i+1}")
-                    
-                    # Get parameters from param_hints
-                    for param_name, param_hint in peak_model.param_hints.items():
-                        # Extract the parameter key (remove peak prefix)
-                        parts = param_name.split('_', 1)
-                        if len(parts) == 2:
-                            key = parts[1]  # e.g., 'x0', 'amplitude', 'fwhm'
-                        else:
-                            key = param_name
-                        
-                        # Create column name
-                        col_name = f"{peak_label}_{key}"
-                        row[col_name] = param_hint.get('value', 0)
-            
-            results.append(row)
-        
-        if not results:
-            self._fit_results_cache = pd.DataFrame()
-        else:
-            self._fit_results_cache = pd.DataFrame(results)
-        
+        # Otherwise return empty DataFrame
+        self._fit_results_cache = pd.DataFrame()
         self._fit_results_cache_dirty = False
         return self._fit_results_cache
     
@@ -366,6 +301,67 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             self.map_data_updated.emit(self.current_map_df)
             # Signal View to clear griddata cache for this map (data has changed)
             self.clear_map_cache_requested.emit(self.current_map_name)
+    
+    def collect_fit_results(self):
+        """Override parent to add X and Y coordinate columns for map data."""
+        # Invalidate cache so get_fit_results_dataframe will use fresh data
+        self._fit_results_cache_dirty = True
+        
+        # Call parent's collect_fit_results to generate base DataFrame
+        super().collect_fit_results()
+        
+        # If no fit results, nothing to do
+        if self.df_fit_results is None or self.df_fit_results.empty:
+            return
+        
+        # For Maps workspace, we need to restructure the DataFrame:
+        # - Extract map_name from fname (everything before "_(")
+        # - Extract X, Y coordinates from fname
+        # - Replace Filename column with just map_name
+        
+        map_names = []
+        x_coords = []
+        y_coords = []
+        
+        for fname in self.df_fit_results['Filename']:
+            # Extract coordinates from fname: "map_name_(x, y)"
+            if '(' in fname and ')' in fname:
+                # Extract map_name (everything before last '_(')
+                map_name = fname[:fname.rfind('_(')]
+                map_names.append(map_name)
+                
+                # Extract coordinates
+                coords_str = fname[fname.rfind('(')+1:fname.rfind(')')]
+                try:
+                    x_str, y_str = coords_str.split(',')
+                    x_coords.append(float(x_str.strip()))
+                    y_coords.append(float(y_str.strip()))
+                except (ValueError, AttributeError):
+                    x_coords.append(None)
+                    y_coords.append(None)
+            else:
+                # Fallback if format is unexpected
+                map_names.append(fname)
+                x_coords.append(None)
+                y_coords.append(None)
+        
+        # Replace Filename column with map_name only
+        self.df_fit_results['Filename'] = map_names
+        
+        # Insert X and Y columns after Filename (at positions 1 and 2)
+        self.df_fit_results.insert(1, 'X', x_coords)
+        self.df_fit_results.insert(2, 'Y', y_coords)
+        
+        # Emit updated DataFrame
+        self.fit_results_updated.emit(self.df_fit_results)
+        
+        # Trigger heatmap refresh with new fit results
+        # This ensures the map viewer uses fresh data instead of cache
+        if self.current_map_name:
+            # Clear VMapViewer's griddata cache to force recomputation
+            self.clear_map_cache_requested.emit(self.current_map_name)
+            # Emit map data update to trigger plot refresh
+            self.map_data_updated.emit(self.current_map_df)
     
     def clear_workspace(self):
         """Clear all maps, spectra, and reset workspace to initial state."""

@@ -27,11 +27,7 @@ class VSpectraList(QListWidget):
 
     # ───── Public API (used by ViewModel) ────────────────────────
     def set_spectra_names(self, spectra: list):
-        """Replace entire list (ViewModel-driven).
-        
-        Args:
-            spectra: List of MSpectrum objects
-        """
+        """Replace entire list (ViewModel-driven)."""
         self.clear()
         for i, spectrum in enumerate(spectra):
             item = QListWidgetItem(spectrum.fname)

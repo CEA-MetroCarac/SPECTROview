@@ -80,8 +80,14 @@ class VMWorkspaceSpectra(QObject):
         return result
     
     def _get_selected_spectra(self) -> list[MSpectrum]:
-        """Get currently selected spectra."""
-        return self._get_spectra_by_fnames(self.selected_fnames)
+        """Get currently selected spectra that are also active (checked).
+        
+        Filters selected spectra to only include those with is_active=True,
+        so operations respect checkbox state.
+        """
+        selected = self._get_spectra_by_fnames(self.selected_fnames)
+        # Filter to only active (checked) spectra
+        return [s for s in selected if s.is_active]
 
 
     # View → ViewModel slots

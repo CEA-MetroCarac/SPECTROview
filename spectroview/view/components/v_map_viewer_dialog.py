@@ -25,7 +25,7 @@ class VMapViewerDialog(QDialog):
         # Dialog setup
         self.setWindowTitle(f"Map Viewer {viewer_number}")
         self.setWindowFlags(Qt.Window)  # Independent window
-        self.resize(450, 700)
+        self.resize(450, 550)
         
         # Create layout
         layout = QVBoxLayout(self)
@@ -44,7 +44,6 @@ class VMapViewerDialog(QDialog):
         self.map_viewer.btn_add_viewer.setToolTip("Only available in main viewer")
     
     # Public API - delegate to internal viewer
-    
     def set_map_data(self, map_df, map_name, df_fit_results=None):
         """Set map data in the viewer."""
         self.map_viewer.set_map_data(map_df, map_name, df_fit_results)

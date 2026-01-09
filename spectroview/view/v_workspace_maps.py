@@ -136,13 +136,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_maps_list = VMapsList()
         layout.addWidget(self.v_maps_list, stretch=1)
         
-        # Check all checkbox for Maps workspace (between maps list and spectra list)
-        # This is inserted into the VMapsList layout
-        self.cb_check_all = QCheckBox("Check All")
-        self.cb_check_all.setChecked(True)  # Checked by default
-        # Insert checkbox at index 1 (after maps_container, before spectra_container)
-        self.v_maps_list.layout().insertWidget(1, self.cb_check_all)
-        
         # Set scroll content and add to main panel
         scroll_area.setWidget(scroll_content)
         main_layout.addWidget(scroll_area)
@@ -241,8 +234,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # ── ViewModel → VMapsList connections ──
         self.vm.maps_list_changed.connect(self.v_maps_list.set_maps_names)
         
-        # Check all checkbox
-        self.cb_check_all.toggled.connect(self._on_check_all_toggled)
+        # Check all checkbox (now in VMapsList)
+        self.v_maps_list.check_all_toggled.connect(self._on_check_all_toggled)
         
         # The spectra list is updated via inherited VMWorkspaceSpectra signals
         # when vm.select_map() calls _extract_spectra_from_map()

@@ -4,7 +4,7 @@ import os
 from typing import List
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
-    QListWidgetItem, QAbstractItemView, QPushButton
+    QListWidgetItem, QAbstractItemView, QPushButton, QCheckBox
 )
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QIcon
@@ -22,6 +22,7 @@ class VMapsList(QWidget):
     # ═══ View → ViewModel signals ═══
     map_selection_changed = Signal(int)           # Selected map index
     spectra_selection_changed = Signal(list)      # Selected spectrum indices
+    check_all_toggled = Signal(bool)              # Check all checkbox toggled
     files_dropped = Signal(list)                  # File paths dropped on maps list
     view_map_requested = Signal()                 # View map DataFrame
     delete_map_requested = Signal()               # Delete selected map
@@ -118,6 +119,12 @@ class VMapsList(QWidget):
         
         spectra_label = QLabel("Spectrum(s):")
         spectra_list_layout.addWidget(spectra_label)
+        
+        # Check All checkbox above the spectra list
+        self.cb_check_all = QCheckBox("Check All")
+        self.cb_check_all.setChecked(True)  # Checked by default
+        self.cb_check_all.toggled.connect(self.check_all_toggled.emit)
+        spectra_list_layout.addWidget(self.cb_check_all)
         
         self.spectra_list = QListWidget()
         self.spectra_list.setSelectionMode(QAbstractItemView.ExtendedSelection)

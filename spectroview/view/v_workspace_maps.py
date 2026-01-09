@@ -306,6 +306,10 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         self.v_maps_list.spectra_list.blockSignals(False)
         self.vm.set_selected_fnames(selected_fnames)
+        
+        # Sync selected points to all dialog viewers
+        for dialog in self.viewer_dialogs:
+            dialog.set_selected_points(selected_points)
     
     def _on_add_viewer_requested(self, _count: int):
         """Handle request to open a new floating map viewer window."""
@@ -340,10 +344,13 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     def _on_dialog_viewer_selection(self, selected_points: list):
         """Handle selection from a dialog viewer - sync with main viewer and list."""
-        # Same logic as main viewer selection
+        # Same logic as main viewer selection (updates list and ViewModel)
         self._on_map_viewer_selection(selected_points)
         
-        # Also update all other dialog viewers
+        # Update main viewer with selected points
+        self.v_map_viewer.set_selected_points(selected_points)
+        
+        # Update all dialog viewers
         for dialog in self.viewer_dialogs:
             dialog.set_selected_points(selected_points)
     

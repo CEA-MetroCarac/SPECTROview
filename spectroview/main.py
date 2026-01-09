@@ -74,6 +74,14 @@ class Main(QMainWindow):
         self.menu_bar.manual_requested.connect(self.manual) 
         self.menu_bar.theme_requested.connect(self.toggle_theme)
         
+        # Inject Graphs workspace into Maps ViewModel for cross-workspace communication
+        self.v_maps_workspace.vm.set_graphs_workspace(self.v_graphs_workspace)
+        
+        # Connect Maps to Main: tab switching
+        self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
+            lambda: self.tabWidget.setCurrentWidget(self.v_graphs_workspace)
+        )
+        
 
     def open_files(self):
         """Universal file opener supporting all SPECTROview formats."""

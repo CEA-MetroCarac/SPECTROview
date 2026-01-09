@@ -25,6 +25,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     map_data_updated = Signal(object)
     send_spectra_to_workspace = Signal(list)
     clear_map_cache_requested = Signal(str)
+    switch_to_graphs_tab = Signal()  # Request to switch to Graphs tab
     
     def __init__(self, settings: MSettings):
         super().__init__(settings)
@@ -34,6 +35,9 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         self._fit_results_cache: pd.DataFrame | None = None
         self._fit_results_cache_dirty: bool = True
+        
+        # Reference to Graphs workspace (injected after construction)
+        self.graphs_workspace = None
     
     def _get_selected_spectra(self) -> list[MSpectrum]:
         """Get currently selected spectra that are also active (checked).
@@ -312,11 +316,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if self.df_fit_results is None or self.df_fit_results.empty:
             return
         
-        # For Maps workspace, we need to restructure the DataFrame:
-        # - Extract map_name from fname (everything before "_(")
-        # - Extract X, Y coordinates from fname
-        # - Replace Filename column with just map_name
-        
         map_names = []
         x_coords = []
         y_coords = []
@@ -378,8 +377,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Emit updates to View
         self.maps_list_changed.emit([])
         self.map_data_updated.emit(pd.DataFrame())
-        # Parent already emits: spectra_list_changed, spectra_selection_changed, 
-        # count_changed, fit_in_progress, fit_results_updated
     
     # ─────────────────────────────────────────────────────────────────
     # SAVE/LOAD WORKSPACE
@@ -465,5 +462,85 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             
         except Exception as e:
             QMessageBox.critical(None, "Load Error", f"Error loading maps workspace:\n{str(e)}")
-
+    
+    def set_graphs_workspace(self, graphs_workspace):
+        """Inject Graphs workspace reference for cross-workspace communication."""
+        self.graphs_workspace = graphs_workspace
+    
+    def extract_and_send_profile_to_graphs(self, profile_name: str, profile_df: pd.DataFrame):
+        """Extract profile data and send to Graphs workspace for plotting."""
+        if profile_df is None or profile_df.empty:
+            self.notify.emit("No profile data to extract. Select exactly 2 points in 2D map mode.")
+            return
+        
+        if not profile_name or profile_name.strip() == "":
+            self.notify.emit("Please provide a name for the profile.")
+            return
+        
+        if self.graphs_workspace is None:
+            self.notify.emit("Graphs workspace not available.")
+            return
+        
+        # Add DataFrame to Graphs workspace
+        self.graphs_workspace.vm.add_dataframe(profile_name, profile_df)
+        
+        # Create graph model configuration for line plot
+        plot_config = {
+            'df_name': profile_name,
+            'plot_style': 'line',
+            'x': 'distance',
+            'y': ['values'],
+            'z': None,
+            'filters': [],
+            'plot_width': 480,
+            'plot_height': 420,
+            'dpi': 100
+        }
+        
+        # Create graph model via ViewModel
+        graph_model = self.graphs_workspace.vm.create_graph(plot_config)
+        
+        # Get filtered data (no filters applied)
+        filtered_df = self.graphs_workspace.vm.apply_filters(profile_name, [])
+        
+        # Create Graph widget
+        from spectroview.view.components.v_graph import VGraph
+        graph_widget = VGraph(graph_id=graph_model.graph_id)
+        self.graphs_workspace._configure_graph_from_model(graph_widget, graph_model)
+        
+        # Create plot
+        graph_widget.create_plot_widget(graph_model.dpi)
+        self.graphs_workspace._render_plot(graph_widget, filtered_df, graph_model)
+        
+        # Save legend properties back to model
+        self.graphs_workspace.vm.update_graph(graph_model.graph_id, {
+            'legend_properties': graph_widget.legend_properties
+        })
+        
+        # Create MDI subwindow
+        sub_window = self.graphs_workspace._create_mdi_subwindow(graph_widget, graph_model)
+        
+        # Wrap in QDialog
+        from PySide6.QtWidgets import QDialog, QVBoxLayout
+        graph_dialog = QDialog(self.graphs_workspace)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(graph_widget)
+        graph_dialog.setLayout(layout)
+        sub_window.setWidget(graph_dialog)
+        
+        # Store reference
+        self.graphs_workspace.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
+        
+        # Show the subwindow
+        self.graphs_workspace.mdi_area.addSubWindow(sub_window)
+        sub_window.show()
+        
+        # Update graph list
+        self.graphs_workspace._update_graph_list(self.graphs_workspace.vm.get_graph_ids())
+        
+        # Emit signal to request tab switch
+        self.switch_to_graphs_tab.emit()
+        
+        self.notify.emit(f"Profile '{profile_name}' sent to Graphs workspace")
 

@@ -30,7 +30,7 @@ class VMapViewer(QWidget):
     # ───── View → ViewModel signals ─────
     spectra_selected = Signal(list)  # List of (x, y) tuples for selected spectra
     extract_profile_requested = Signal(str)  # profile name
-    multi_viewer_requested = Signal(int)  # number of viewers (2, 3, or 4)
+    multi_viewer_requested = Signal(int) # Add more map_viewer
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -51,6 +51,8 @@ class VMapViewer(QWidget):
         self._last_final_z_col = None
         self._last_stats_text_artist = None
         self._selection_scatter = None  # Cache for selection overlay
+        self._profile_line = None  # Profile line connecting 2 points
+        self._profile_height_line = None  # Profile height visualization
         
         # Cache for expensive griddata computation (wafer maps)
         self._griddata_cache = {}  # {cache_key: (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col)}
@@ -505,6 +507,21 @@ class VMapViewer(QWidget):
                 pass
             self._selection_scatter = None
         
+        # Remove old profile lines
+        if self._profile_line is not None:
+            try:
+                self._profile_line.remove()
+            except:
+                pass
+            self._profile_line = None
+        
+        if self._profile_height_line is not None:
+            try:
+                self._profile_height_line.remove()
+            except:
+                pass
+            self._profile_height_line = None
+        
         # Add new selection overlay
         if self.selected_points:
             x, y = zip(*self.selected_points)
@@ -512,6 +529,11 @@ class VMapViewer(QWidget):
                 x, y, facecolors='none', edgecolors='red', 
                 marker='s', s=60, linewidths=1, zorder=10
             )
+            
+            # Plot profile if exactly 2 points selected and in 2D map mode
+            map_type = self.cbb_map_type.currentText()
+            if len(self.selected_points) == 2 and map_type == '2Dmap':
+                self._plot_height_profile_on_map()
         
         self.canvas.draw_idle()
     
@@ -978,3 +1000,113 @@ class VMapViewer(QWidget):
     def _copy_figure_to_clipboard(self):
         """Copy the matplotlib figure to clipboard."""
         copy_fig_to_clb(self.canvas)
+    
+    def _plot_height_profile_on_map(self):
+        """Plot height profile directly on heatmap when exactly 2 points selected."""
+        if len(self.selected_points) != 2:
+            return
+        
+        x, y = zip(*self.selected_points)
+        
+        # Draw dotted line connecting the two points
+        self._profile_line, = self.ax.plot(
+            x, y, color='black', linestyle='dotted', linewidth=2, zorder=11
+        )
+        
+        # Extract profile values and plot height visualization
+        profile_df = self._extract_profile()
+        if profile_df is not None and not profile_df.empty:
+            # Calculate the diagonal length of the heatmap for normalization
+            extent = self._get_data_for_heatmap()[1]
+            diagonal_length = np.sqrt((extent[1] - extent[0])**2 + (extent[3] - extent[2])**2)
+            max_normalized_value = 0.3 * diagonal_length
+            
+            # Calculate height values (normalized)
+            values = profile_df['values'].values
+            if values.max() > 0:
+                profile_df['height'] = (values / values.max()) * max_normalized_value
+                profile_df['height'] -= profile_df['height'].min()
+                
+                x_vals = []
+                y_vals = []
+                
+                # Calculate perpendicular points for height visualization
+                for i, row in profile_df.iterrows():
+                    x_val = row['X']
+                    y_val = row['Y']
+                    normalized_distance = row['height']
+                    
+                    # Calculate the direction vector of the line
+                    dx = x[1] - x[0]
+                    dy = y[1] - y[0]
+                    length = np.sqrt(dx**2 + dy**2)
+                    
+                    if length > 0:
+                        # Normalize the direction vector
+                        dx /= length
+                        dy /= length
+                        
+                        # Calculate the perpendicular direction
+                        perp_dx = -dy
+                        perp_dy = dx
+                        
+                        # Calculate the new x and y values
+                        x_vals.append(x_val + perp_dx * normalized_distance)
+                        y_vals.append(y_val + perp_dy * normalized_distance)
+                
+                # Plot the height profile
+                if x_vals and y_vals:
+                    self._profile_height_line, = self.ax.plot(
+                        x_vals, y_vals, color='black', linestyle='-', linewidth=2, zorder=11
+                    )
+    
+    def _extract_profile(self) -> pd.DataFrame | None:
+        """Extract a profile from 2D map plot via interpolation.
+        
+        Returns:
+            DataFrame with columns: X, Y, distance, values
+            or None if extraction fails
+        """
+        # Ensure exactly two points have been selected
+        if len(self.selected_points) != 2:
+            return None
+        
+        (x1, y1), (x2, y2) = self.selected_points
+        
+        # Get heatmap data
+        heatmap_pivot, _, _, _, _, _ = self._get_data_for_heatmap()
+        
+        if heatmap_pivot.empty:
+            return None
+        
+        # Extract X and Y coordinates of the heatmap grid
+        x_values = heatmap_pivot.columns.values
+        y_values = heatmap_pivot.index.values
+        z_values = heatmap_pivot.values
+        
+        # Interpolate Z values at the sampled points along the profile
+        from scipy.interpolate import RegularGridInterpolator
+        interpolator = RegularGridInterpolator((y_values, x_values), z_values)
+        
+        num_samples = 100
+        x_samples = np.linspace(x1, x2, num_samples)
+        y_samples = np.linspace(y1, y2, num_samples)
+        sample_points = np.vstack((y_samples, x_samples)).T
+        
+        try:
+            z_samples = interpolator(sample_points)
+        except Exception as e:
+            print(f"Profile interpolation failed: {e}")
+            return None
+        
+        # Calculate the distance from (x1, y1) to each sample point
+        dists_from_start = np.sqrt((x_samples - x1)**2 + (y_samples - y1)**2)
+        
+        profile_df = pd.DataFrame({
+            'X': x_samples,
+            'Y': y_samples,
+            'distance': dists_from_start,
+            'values': z_samples
+        })
+        
+        return profile_df

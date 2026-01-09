@@ -62,14 +62,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     @staticmethod
     def _extract_coords_from_fname(fname: str) -> tuple[float, float] | None:
-        """Extract (x, y) coordinates from spectrum fname.
-        
-        Args:
-            fname: Spectrum filename with format \"map_name_(x, y)\"
-            
-        Returns:
-            Tuple of (x, y) coordinates, or None if parsing fails
-        """
+        """Extract (x, y) coordinates from spectrum fname."""
         if '(' in fname and ')' in fname:
             coords_str = fname[fname.rfind('(')+1:fname.rfind(')')]
             try:
@@ -230,6 +223,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_map_viewer.spectra_selected.connect(self._on_map_viewer_selection)
         self.v_map_viewer.multi_viewer_requested.connect(self._on_add_viewer_requested)
         self.v_map_viewer.cbb_map_type.currentTextChanged.connect(self._on_map_type_changed)
+        self.v_map_viewer.extract_profile_requested.connect(self._on_extract_profile_requested)
         
         # ── ViewModel → VMapsList connections ──
         self.vm.maps_list_changed.connect(self.v_maps_list.set_maps_names)
@@ -315,7 +309,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Connect signals from dialog viewer
         dialog.spectra_selected.connect(self._on_dialog_viewer_selection)
-        dialog.extract_profile_requested.connect(lambda name: print(f"Profile extraction from dialog: {name}"))
+        dialog.extract_profile_requested.connect(lambda name, d=dialog: self._on_extract_profile_from_dialog(name, d))
         
         # Connect map type change to centralized handler
         dialog.map_viewer.cbb_map_type.currentTextChanged.connect(self._on_map_type_changed)
@@ -547,10 +541,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.vm.send_selected_spectra_to_spectra_workspace()
     
     def _receive_spectra_from_maps(self, spectra_list: list):
-        """Receive spectra from Maps workspace and add to parent's Spectra workspace.
-        
-        This is called when user clicks 'Send to Spectra' in Maps workspace.
-        """
+        """Receive spectra from Maps workspace and add to parent's Spectra workspace."""
         # Access the parent window's Spectra workspace
         parent_window = self.window()
         if not hasattr(parent_window, 'v_spectra_workspace'):
@@ -567,6 +558,38 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Switch to Spectra tab
         if hasattr(parent_window, 'tabWidget'):
             parent_window.tabWidget.setCurrentWidget(spectra_workspace)
+    
+    def _on_extract_profile_requested(self, profile_name: str):
+        """Handle profile extraction request from map viewer."""
+        # Extract profile data from map viewer
+        profile_df = self.v_map_viewer._extract_profile()
+        
+        if profile_df is None or profile_df.empty:
+            show_toast_notification(
+                parent=self,
+                message="Select exactly 2 points in 2D map mode to extract a profile.",
+                duration=3000
+            )
+            return
+        
+        # Send to ViewModel which will emit signal to Graphs workspace
+        self.vm.extract_and_send_profile_to_graphs(profile_name, profile_df)
+    
+    def _on_extract_profile_from_dialog(self, profile_name: str, dialog):
+        """Handle profile extraction request from dialog viewer."""
+        # Extract profile data from dialog's map viewer
+        profile_df = dialog.map_viewer._extract_profile()
+        
+        if profile_df is None or profile_df.empty:
+            show_toast_notification(
+                parent=self,
+                message="Select exactly 2 points in 2D map mode to extract a profile.",
+                duration=3000
+            )
+            return
+        
+        # Send to ViewModel which will emit signal to Graphs workspace
+        self.vm.extract_and_send_profile_to_graphs(profile_name, profile_df)
     
     def _show_toast_notification(self, message: str):
         """Show auto-dismissing toast notification."""

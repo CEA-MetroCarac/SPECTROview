@@ -31,8 +31,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.maps = {}  # {map_name: map_dataframe}
         self.current_map_name = None
         self.current_map_df = None
-        self.current_map_indices = []  # Global indices for current map
-        self.selected_list_indices = []  # Persists across map switches
         
         self._fit_results_cache: pd.DataFrame | None = None
         self._fit_results_cache_dirty: bool = True
@@ -126,53 +124,31 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         """Display spectra for the selected map in the spectra list."""
         # Filter spectra by fname prefix: "{map_name}_("
         fname_prefix = f"{map_name}_("
-        
-        spectra_names = []
-        self.current_map_indices = []
-        
-        for idx, spectrum in enumerate(self.spectra):
-            if spectrum.fname.startswith(fname_prefix):
-                spectra_names.append(spectrum.fname)
-                self.current_map_indices.append(idx)
+        spectra_names = [
+            s.fname for s in self.spectra 
+            if s.fname.startswith(fname_prefix)
+        ]
         
         # Single batched signal emission to update view
         self.spectra_list_changed.emit(spectra_names)
         self.count_changed.emit(len(spectra_names))
     
     def _restore_selection_after_map_switch(self):
-        """Restore selection based on list indices after switching maps."""
-        num_spectra = len(self.current_map_indices)
+        """Auto-select first spectrum when switching maps."""
+        fname_prefix = f"{self.current_map_name}_("
+        first_spectrum = next(
+            (s.fname for s in self.spectra if s.fname.startswith(fname_prefix)),
+            None
+        )
         
-        if num_spectra == 0:
-            self.selected_indices = []
+        if first_spectrum:
+            self.selected_fnames = [first_spectrum]
             self._emit_selected_spectra()
-            return
-        
-        # If we have saved list indices, restore them (if valid for this map)
-        if self.selected_list_indices:
-            # Convert list indices to global indices for the new map
-            restored_global_indices = []
-            restored_list_indices = []
-            for list_idx in self.selected_list_indices:
-                if 0 <= list_idx < num_spectra:
-                    global_idx = self.current_map_indices[list_idx]
-                    restored_global_indices.append(global_idx)
-                    restored_list_indices.append(list_idx)
-            
-            if restored_global_indices:
-                self.selected_indices = restored_global_indices
-                self._emit_selected_spectra()
-                # Signal View to update list widget selection
-                self.selection_indices_to_restore.emit(restored_list_indices)
-                return
-        
-        # No previous selection or all indices invalid → auto-select first item
-        first_global_idx = self.current_map_indices[0]
-        self.selected_indices = [first_global_idx]
-        self.selected_list_indices = [0]
-        self._emit_selected_spectra()
-        # Signal View to select first item in list widget
-        self.selection_indices_to_restore.emit([0])
+            # Signal View to select first item in list
+            self.selection_indices_to_restore.emit([0])
+        else:
+            self.selected_fnames = []
+            self._emit_selected_spectra()
 
     
     def get_current_map_dataframe(self) -> pd.DataFrame | None:
@@ -206,40 +182,30 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     
     def select_all_current_map_spectra(self):
         """Select all spectra from the currently displayed map."""
-        if not self.current_map_indices:
+        if not self.current_map_name:
             return
         
-        # Select all indices from current map
-        self.selected_indices = self.current_map_indices.copy()
+        fname_prefix = f"{self.current_map_name}_("
+        self.selected_fnames = [
+            s.fname for s in self.spectra 
+            if s.fname.startswith(fname_prefix)
+        ]
         self._emit_selected_spectra()
     
     def reinit_current_map_spectra(self, apply_all: bool = False):
-        """Reinitialize selected spectra or all spectra from all maps """
-        if apply_all:
-            # Reinit all spectra
-            for spectrum in self.spectra:
-                spectrum.reinit()
-        else:
-            # Reinit only selected spectra
-            if not self.selected_indices:
-                self.notify.emit("No spectrum selected.")
-                return
-            
-            selected_spectra = self.spectra.get(self.selected_indices)
-            for spectrum in selected_spectra:
-                spectrum.reinit()
-        
-        self._emit_selected_spectra()
+        """Reinitialize selected spectra or all spectra from all maps."""
+        # Delegate to parent's reinit_spectra which already handles fname-based selection
+        self.reinit_spectra(apply_all)
     
     def send_selected_spectra_to_spectra_workspace(self):
         """Send selected spectra to the Spectra workspace tab for comparison."""
-        if not self.selected_indices:
+        if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
             return
         
         from copy import deepcopy
         
-        selected_spectra = self.spectra.get(self.selected_indices)
+        selected_spectra = self._get_spectra_by_fnames(self.selected_fnames)
         if not selected_spectra:
             return
         
@@ -271,8 +237,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if self.current_map_name == map_name:
             self.current_map_name = None
             self.current_map_df = None
-            self.current_map_indices = []
-            self.selected_indices = []
+            self.selected_fnames = []
             self.spectra_list_changed.emit([])
             self.count_changed.emit(0)
             self.spectra_selection_changed.emit([])
@@ -286,22 +251,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         """Emit updated list of map names."""
         map_names = list(self.maps.keys())
         self.maps_list_changed.emit(map_names)
-    
-    def set_selected_indices(self, indices: list[int]):
-        """Override to handle index selection.
-        
-        Note: This receives GLOBAL indices directly from View layer.
-        The View layer does the list-to-global conversion before calling this.
-        """
-        # Save list indices for persistence across map switches
-        self.selected_list_indices = []
-        for global_idx in indices:
-            if global_idx in self.current_map_indices:
-                list_idx = self.current_map_indices.index(global_idx)
-                self.selected_list_indices.append(list_idx)
-        
-        # Pass through to parent - indices are already global
-        super().set_selected_indices(indices)
     
     
     def get_fit_results_dataframe(self):
@@ -393,33 +342,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self._fit_results_cache_dirty = False
         return self._fit_results_cache
     
-    def _rebuild_current_map_indices(self):
-        """Rebuild current_map_indices by finding all spectra for the current map.
-        
-        This is necessary after operations that might modify the spectra list
-        (like fitting) to ensure coordinate-based lookups still work.
-        """
-        if not self.current_map_name:
-            return
-        
-        # Rebuild current_map_indices by filtering fname prefix
-        fname_prefix = f"{self.current_map_name}_("
-        self.current_map_indices = [
-            idx for idx, spectrum in enumerate(self.spectra)
-            if spectrum.fname.startswith(fname_prefix)
-        ]
-    
     def _on_fit_finished(self):
         """Override to invalidate cache when fitting completes."""
         super()._on_fit_finished()
         
-        # Rebuild current_map_indices to ensure coordinate lookups work
-        # (fitting might have modified the spectra list indices)
+        # Re-emit map data to update heatmap with new fit results
         if self.current_map_name:
-            self._rebuild_current_map_indices()
-            # Re-emit map data to update heatmap with new fit results
             self.map_data_updated.emit(self.current_map_df)
-            
             # Signal View to clear griddata cache for this map (data has changed)
             self.clear_map_cache_requested.emit(self.current_map_name)
     
@@ -432,8 +361,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.maps.clear()
         self.current_map_name = None
         self.current_map_df = None
-        self.current_map_indices = []
-        self.selected_list_indices = []
         
         # Clear all caches
         self._fit_results_cache = None

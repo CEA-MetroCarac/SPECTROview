@@ -47,7 +47,7 @@ class VMWorkspaceSpectra(QObject):
         self.settings = settings
         self.spectra = MSpectra()
 
-        self.selected_indices = []
+        self.selected_fnames = []  # Changed from indices to fnames for robust identification
         self._baseline_clipboard = None  # for copy/paste baseline
         self._peaks_clipboard = None    # for copy/paste peaks
         self._loaded_fit_model = None  # for applying loaded fit model
@@ -58,6 +58,30 @@ class VMWorkspaceSpectra(QObject):
         # Fit results data
         self.df_fit_results = None
         self._fitmodel_clipboard = None
+    
+    # ═════════════════════════════════════════════════════════════════════
+    # Helper methods for fname-based spectrum retrieval
+    # ═════════════════════════════════════════════════════════════════════
+    
+    def _get_spectrum_by_fname(self, fname: str) -> MSpectrum | None:
+        """Get a single spectrum by its fname (unique identifier)."""
+        for spectrum in self.spectra:
+            if spectrum.fname == fname:
+                return spectrum
+        return None
+    
+    def _get_spectra_by_fnames(self, fnames: list[str]) -> list[MSpectrum]:
+        """Get multiple spectra by their fnames."""
+        result = []
+        for fname in fnames:
+            spectrum = self._get_spectrum_by_fname(fname)
+            if spectrum is not None:
+                result.append(spectrum)
+        return result
+    
+    def _get_selected_spectra(self) -> list[MSpectrum]:
+        """Get currently selected spectra."""
+        return self._get_spectra_by_fnames(self.selected_fnames)
 
 
     # View → ViewModel slots
@@ -83,14 +107,29 @@ class VMWorkspaceSpectra(QObject):
 
 
     def set_selected_indices(self, indices: list[int]):
-        """Set currently selected spectra (via Listwidget) by their indices."""
-        # Ensure uniqueness while preserving order (dict.fromkeys trick)
-        self.selected_indices = list(dict.fromkeys(indices))
+        """Set currently selected spectra by list widget indices.
+        
+        Converts list indices to fnames for robust identification.
+        """
+        # Convert indices to fnames (unique identifiers)
+        fnames = []
+        for idx in indices:
+            if 0 <= idx < len(self.spectra):
+                fnames.append(self.spectra[idx].fname)
+        
+        # Store fnames (ensure uniqueness while preserving order)
+        self.selected_fnames = list(dict.fromkeys(fnames))
+        self._emit_selected_spectra()
+    
+    def set_selected_fnames(self, fnames: list[str]):
+        """Set currently selected spectra by their fnames directly."""
+        # Store fnames (ensure uniqueness while preserving order)
+        self.selected_fnames = list(dict.fromkeys(fnames))
         self._emit_selected_spectra()
 
     def _emit_selected_spectra(self):
         """Prepare and emit data for plotting the selected spectra."""
-        selected_spectra = self.spectra.get(self.selected_indices)
+        selected_spectra = self._get_selected_spectra()
 
         if not selected_spectra:
             self.spectra_selection_changed.emit([])
@@ -117,26 +156,36 @@ class VMWorkspaceSpectra(QObject):
 
     def remove_selected_spectra(self):
         """Remove currently selected spectra."""
-        if not self.selected_indices:
+        if not self.selected_fnames:
             self.notify.emit("No spectra selected.")
             return
-        old_selection = set(self.selected_indices)
-        old_count = len(self.spectra)
+        
+        # Find indices to remove (fname-based)
+        indices_to_remove = []
+        for idx, spectrum in enumerate(self.spectra):
+            if spectrum.fname in self.selected_fnames:
+                indices_to_remove.append(idx)
+        
+        if not indices_to_remove:
+            return
+        
+        # Store first removed index for re-selection
+        min_removed_idx = min(indices_to_remove)
+        
         # Remove from model
-        self.spectra.remove(self.selected_indices)
+        self.spectra.remove(indices_to_remove)
         
         new_count = len(self.spectra)
         self._emit_list_update()
 
         if new_count == 0:
-            self.selected_indices = []
+            self.selected_fnames = []
             self.spectra_selection_changed.emit([])
             return
-        # Find closest valid index
-        min_removed = min(old_selection)
-        new_index = min(min_removed, new_count - 1)
-
-        self.selected_indices = [new_index]
+        
+        # Select closest spectrum by index
+        new_index = min(min_removed_idx, new_count - 1)
+        self.selected_fnames = [self.spectra[new_index].fname]
         self._emit_selected_spectra()
         
     # Internal helpers
@@ -147,10 +196,10 @@ class VMWorkspaceSpectra(QObject):
         self.count_changed.emit(len(self.spectra))
 
     def add_peak_at(self, x: float):
-        if not self.selected_indices:
+        if not self.selected_fnames:
             return
 
-        spectrum = self.spectra.get(self.selected_indices)[0]
+        spectrum = self._get_selected_spectra()[0]
         
         fit_settings = self.settings.load_fit_settings()
 
@@ -162,10 +211,10 @@ class VMWorkspaceSpectra(QObject):
         self._emit_selected_spectra()
 
     def remove_peak_at(self, x: float):
-        if not self.selected_indices:
+        if not self.selected_fnames:
             return
 
-        spectrum = self.spectra.get(self.selected_indices)[0]
+        spectrum = self._get_selected_spectra()[0]
 
         if not spectrum.peak_models:
             return
@@ -182,10 +231,10 @@ class VMWorkspaceSpectra(QObject):
         self._emit_selected_spectra()
 
     def set_baseline_settings(self, settings: dict):
-        if not self.selected_indices:
+        if not self.selected_fnames:
             return
 
-        for spectrum in self.spectra.get(self.selected_indices):
+        for spectrum in self._get_selected_spectra():
             bl = spectrum.baseline
             bl.attached = settings["attached"]
             bl.sigma = settings["noise"]
@@ -200,10 +249,10 @@ class VMWorkspaceSpectra(QObject):
  
 
     def add_baseline_point(self, x: float, y: float):
-        if not self.selected_indices:
+        if not self.selected_fnames:
             return
 
-        spectrum = self.spectra.get(self.selected_indices)[0]
+        spectrum = self._get_selected_spectra()[0]
 
         if spectrum.baseline.is_subtracted:
             self.notify.emit("Baseline already subtracted.")
@@ -214,10 +263,10 @@ class VMWorkspaceSpectra(QObject):
 
 
     def remove_baseline_point(self, x: float):
-        if not self.selected_indices:
+        if not self.selected_fnames:
             return
 
-        spectrum = self.spectra.get(self.selected_indices)[0]
+        spectrum = self._get_selected_spectra()[0]
 
         if not spectrum.baseline.points:
             return
@@ -233,11 +282,11 @@ class VMWorkspaceSpectra(QObject):
         self._emit_selected_spectra()
 
     def apply_x_correction(self, measured_peak: float):
-        if not self.selected_indices:
+        if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
             return
 
-        spectra = self.spectra.get(self.selected_indices)
+        spectra = self._get_selected_spectra()
 
         SI_REF = 520.7
         delta_x = SI_REF - measured_peak 
@@ -252,11 +301,11 @@ class VMWorkspaceSpectra(QObject):
 
     def undo_x_correction(self):
         """Undo X-axis correction for selected spectra."""
-        if not self.selected_indices:
+        if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
             return
 
-        spectra = self.spectra.get(self.selected_indices)
+        spectra = self._get_selected_spectra()
 
         for spectrum in spectra:
             spectrum.undo_xcorrection()
@@ -269,10 +318,10 @@ class VMWorkspaceSpectra(QObject):
         if apply_all:
             spectra = self.spectra
         else:
-            if not self.selected_indices:
+            if not self.selected_fnames:
                 self.notify.emit("No spectrum selected.")
                 return
-            spectra = self.spectra.get(self.selected_indices)
+            spectra = self._get_selected_spectra()
 
         for spectrum in spectra:
             spectrum.reinit()
@@ -281,7 +330,7 @@ class VMWorkspaceSpectra(QObject):
 
 
     def apply_spectral_range(self, xmin: float, xmax: float, apply_all: bool):
-        if not self.selected_indices:
+        if not self.selected_fnames:
             return
 
         if xmin > xmax:
@@ -290,7 +339,7 @@ class VMWorkspaceSpectra(QObject):
         spectra = (
             self.spectra
             if apply_all
-            else self.spectra.get(self.selected_indices)
+            else self._get_selected_spectra()
         )
 
         for spectrum in spectra:
@@ -308,11 +357,11 @@ class VMWorkspaceSpectra(QObject):
         self._emit_selected_spectra()
 
     def copy_baseline(self):
-        if not self.selected_indices:
+        if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
             return
 
-        spectrum = self.spectra.get(self.selected_indices)[0]
+        spectrum = self._get_selected_spectra()[0]
         self._baseline_clipboard = deepcopy(baseline_to_dict(spectrum))
 
     def paste_baseline(self, apply_all: bool = False):
@@ -323,10 +372,10 @@ class VMWorkspaceSpectra(QObject):
         if apply_all:
             spectra = self.spectra
         else:
-            if not self.selected_indices:
+            if not self.selected_fnames:
                 self.notify.emit("No spectrum selected.")
                 return
-            spectra = self.spectra.get(self.selected_indices)
+            spectra = self._get_selected_spectra()
 
         dict_to_baseline(
             deepcopy(self._baseline_clipboard),
@@ -339,10 +388,10 @@ class VMWorkspaceSpectra(QObject):
         if apply_all:
             spectra = self.spectra
         else:
-            if not self.selected_indices:
+            if not self.selected_fnames:
                 self.notify.emit("No spectrum selected.")
                 return
-            spectra = self.spectra.get(self.selected_indices)
+            spectra = self._get_selected_spectra()
 
         for spectrum in spectra:
             if not spectrum.baseline.is_subtracted:
@@ -356,10 +405,10 @@ class VMWorkspaceSpectra(QObject):
         if apply_all:
             spectra = self.spectra
         else:
-            if not self.selected_indices:
+            if not self.selected_fnames:
                 self.notify.emit("No spectrum selected.")
                 return
-            spectra = self.spectra.get(self.selected_indices)
+            spectra = self._get_selected_spectra()
 
         for spectrum in spectra:
             bl = spectrum.baseline
@@ -376,11 +425,11 @@ class VMWorkspaceSpectra(QObject):
         self._emit_selected_spectra()
 
     def copy_peaks(self):
-        if not self.selected_indices:
+        if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
             return
 
-        spectrum = self.spectra.get(self.selected_indices)[0]
+        spectrum = self._get_selected_spectra()[0]
 
         if not spectrum.peak_models:
             self.notify.emit("No peaks to copy.")
@@ -395,7 +444,7 @@ class VMWorkspaceSpectra(QObject):
         spectra = (
             self.spectra
             if apply_all
-            else self.spectra.get(self.selected_indices)
+            else self._get_selected_spectra()
         )
 
         for spectrum in spectra:
@@ -415,7 +464,7 @@ class VMWorkspaceSpectra(QObject):
         spectra = (
             self.spectra
             if apply_all
-            else self.spectra.get(self.selected_indices)
+            else self._get_selected_spectra()
         )
 
         if not spectra:
@@ -435,7 +484,7 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("Fit already in progress. Please wait...")
             return
 
-        spectra = self.spectra if apply_all else self.spectra.get(self.selected_indices)
+        spectra = self.spectra if apply_all else self._get_selected_spectra()
         
         if not spectra:
             return
@@ -461,11 +510,11 @@ class VMWorkspaceSpectra(QObject):
         self._fit_thread.start()
     
     def copy_fit_model(self):
-        if not self.selected_indices:
+        if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
             return
 
-        spectrum = self.spectra.get(self.selected_indices)[0]
+        spectrum = self._get_selected_spectra()[0]
         if not spectrum.peak_models:
             self.notify.emit("No fit results to copy.")
             return
@@ -476,7 +525,7 @@ class VMWorkspaceSpectra(QObject):
         if not hasattr(self, "_fitmodel_clipboard"):
             self.notify.emit("No fit model copied.")
             return
-        spectra = self.spectra if apply_all else self.spectra.get(self.selected_indices)
+        spectra = self.spectra if apply_all else self._get_selected_spectra()
 
         for s in spectra:
             s.reinit()
@@ -484,11 +533,11 @@ class VMWorkspaceSpectra(QObject):
         self._run_fit_thread(deepcopy(self._fitmodel_clipboard), spectra)
 
     def save_fit_model(self):
-        if not self.selected_indices:
+        if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
             return
 
-        spectrum = self.spectra.get(self.selected_indices)[0]
+        spectrum = self._get_selected_spectra()[0]
 
         if not spectrum.peak_models:
             self.notify.emit("No fit model to save.")
@@ -524,7 +573,7 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit(f"Failed to load fit model:\n{e}")
             return
 
-        spectra = self.spectra if apply_all else self.spectra.get(self.selected_indices)
+        spectra = self.spectra if apply_all else self._get_selected_spectra()
         if not spectra:
             self.notify.emit("No spectrum selected.")
             return
@@ -604,12 +653,12 @@ class VMWorkspaceSpectra(QObject):
 
 
     def update_peak_label(self, index, text):
-        s = self.spectra.get(self.selected_indices)[0]
+        s = self._get_selected_spectra()[0]
         s.peak_labels[index] = text
         self._emit_selected_spectra()
 
     def update_peak_model(self, index, model_name):
-        s = self.spectra.get(self.selected_indices)[0]
+        s = self._get_selected_spectra()[0]
         pm = s.peak_models[index]
 
         x0 = pm.param_hints["x0"]["value"]
@@ -629,12 +678,12 @@ class VMWorkspaceSpectra(QObject):
 
 
     def update_peak_param(self, index, key, field, value):
-        s = self.spectra.get(self.selected_indices)[0]
+        s = self._get_selected_spectra()[0]
         s.peak_models[index].param_hints[key][field] = value
         self._emit_selected_spectra()
 
     def delete_peak(self, index):
-        s = self.spectra.get(self.selected_indices)[0]
+        s = self._get_selected_spectra()[0]
         del s.peak_models[index]
         del s.peak_labels[index]
         self._emit_selected_spectra()
@@ -646,10 +695,10 @@ class VMWorkspaceSpectra(QObject):
             x: New x position (center)
             y: New y value (amplitude/intensity)
         """
-        if not self.selected_indices:
+        if not self.selected_fnames:
             return
 
-        spectrum = self.spectra.get(self.selected_indices)[0]
+        spectrum = self._get_selected_spectra()[0]
         
         if not spectrum.peak_models:
             return
@@ -662,7 +711,7 @@ class VMWorkspaceSpectra(QObject):
 
     def finalize_peak_drag(self):
         """Finalize peak drag operation - ensure model is synchronized."""
-        if not self.selected_indices:
+        if not self.selected_fnames:
             return
 
         # Re-emit to ensure everything is synchronized
@@ -767,10 +816,10 @@ class VMWorkspaceSpectra(QObject):
             # Update UI
             self._emit_list_update()
             if len(self.spectra) > 0:
-                self.selected_indices = [0]
+                self.selected_fnames = [self.spectra[0].fname]
                 self._emit_selected_spectra()
             else:
-                self.selected_indices = []
+                self.selected_fnames = []
                 self.spectra_selection_changed.emit([])
             
         except Exception as e:
@@ -780,7 +829,7 @@ class VMWorkspaceSpectra(QObject):
         """Clear all spectra and reset workspace to initial state."""
         # Clear data model
         self.spectra = MSpectra()
-        self.selected_indices = []
+        self.selected_fnames = []
         
         # Clear clipboard data
         self._baseline_clipboard = None
@@ -815,8 +864,9 @@ class VMWorkspaceSpectra(QObject):
             return
         
         # Copy current fit model for reference
-        if self.selected_indices and self.spectra.get(self.selected_indices):
-            spectrum = self.spectra.get(self.selected_indices)[0]
+        selected = self._get_selected_spectra()
+        if selected:
+            spectrum = selected[0]
             if spectrum.peak_models:
                 self._fitmodel_clipboard = deepcopy(spectrum.save())
         

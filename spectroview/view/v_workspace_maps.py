@@ -199,27 +199,30 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             self.v_maps_list.spectra_list.clearSelection()
             return
         
-        # Find indices by fname matching
-        indices = []
-        for x, y in selected_points:
-            fname = f"{self.vm.current_map_name}_({x}, {y})"
-            for idx, spectrum in enumerate(self.vm.spectra):
-                if spectrum.fname == fname:
-                    indices.append(idx)
-                    break
+        # Build fnames from coordinates
+        selected_fnames = [
+            f"{self.vm.current_map_name}_({x}, {y})"
+            for x, y in selected_points
+        ]
         
-        if not indices:
+        # Get list of current map's spectra
+        fname_prefix = f"{self.vm.current_map_name}_("
+        current_map_fnames = [
+            s.fname for s in self.vm.spectra 
+            if s.fname.startswith(fname_prefix)
+        ]
+        
+        # Find list indices
+        list_indices = [
+            i for i, fname in enumerate(current_map_fnames)
+            if fname in selected_fnames
+        ]
+        
+        if not list_indices:
             return
         
         self.v_maps_list.spectra_list.blockSignals(True)
         self.v_maps_list.spectra_list.clearSelection()
-        
-        # Map global to list indices
-        list_indices = []
-        for global_idx in indices:
-            if global_idx in self.vm.current_map_indices:
-                list_idx = self.vm.current_map_indices.index(global_idx)
-                list_indices.append(list_idx)
         
         # Set selection in list widget
         for list_idx in list_indices:
@@ -233,32 +236,38 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             )
         
         self.v_maps_list.spectra_list.blockSignals(False)
-        self.vm.set_selected_indices(indices)
+        self.vm.set_selected_fnames(selected_fnames)
     
     def _on_spectra_list_selection(self, list_indices: list):
         """Handle spectra selection from list."""
         if not list_indices:
             self.v_map_viewer.set_selected_points([])
-            self.vm.set_selected_indices([])
+            self.vm.set_selected_fnames([])
             return
         
-        # Convert list to global indices
-        global_indices = [
-            self.vm.current_map_indices[i]
-            for i in list_indices
-            if 0 <= i < len(self.vm.current_map_indices)
+        # Get list of current map's spectra
+        fname_prefix = f"{self.vm.current_map_name}_("
+        current_map_fnames = [
+            s.fname for s in self.vm.spectra 
+            if s.fname.startswith(fname_prefix)
         ]
         
-        if not global_indices:
+        # Convert list indices to fnames
+        selected_fnames = [
+            current_map_fnames[i]
+            for i in list_indices
+            if 0 <= i < len(current_map_fnames)
+        ]
+        
+        if not selected_fnames:
             return
         
-        # Get coordinates from fname
-        selected_points = []
-        for global_idx in global_indices:
-            if 0 <= global_idx < len(self.vm.spectra):
-                coords = self._extract_coords_from_fname(self.vm.spectra[global_idx].fname)
-                if coords:
-                    selected_points.append(coords)
+        # Extract coordinates from fnames for map viewer
+        selected_points = [
+            self._extract_coords_from_fname(fname)
+            for fname in selected_fnames
+        ]
+        selected_points = [p for p in selected_points if p is not None]
         
         if selected_points:
             self.v_map_viewer.set_selected_points(selected_points)
@@ -269,7 +278,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                 self.v_maps_list.spectra_list.item(list_indices[0])
             )
         
-        self.vm.set_selected_indices(global_indices)
+        self.vm.set_selected_fnames(selected_fnames)
     
     def _on_map_data_changed(self):
         """Update map viewer when map data changes."""
@@ -320,20 +329,19 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                     self.v_maps_list.spectra_list.item(first_idx)
                 )
         
-        # Update heatmap highlights to match selection
-        global_indices = []
-        for list_idx in list_indices:
-            if 0 <= list_idx < len(self.vm.current_map_indices):
-                global_idx = self.vm.current_map_indices[list_idx]
-                global_indices.append(global_idx)
+        # Get list of current map's spectra for coordinate extraction
+        fname_prefix = f"{self.vm.current_map_name}_("
+        current_map_fnames = [
+            s.fname for s in self.vm.spectra 
+            if s.fname.startswith(fname_prefix)
+        ]
         
-        # Get coordinates for heatmap highlights
-        # Extract from fname (never changes) instead of metadata (can be stale after fitting)
+        # Extract coordinates from selected fnames
         selected_points = []
-        for global_idx in global_indices:
-            if 0 <= global_idx < len(self.vm.spectra):
-                spectrum = self.vm.spectra[global_idx]
-                coords = self._extract_coords_from_fname(spectrum.fname)
+        for list_idx in list_indices:
+            if 0 <= list_idx < len(current_map_fnames):
+                fname = current_map_fnames[list_idx]
+                coords = self._extract_coords_from_fname(fname)
                 if coords:
                     selected_points.append(coords)
         

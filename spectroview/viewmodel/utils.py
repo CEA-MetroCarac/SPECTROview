@@ -19,13 +19,42 @@ from fitspy.core.baseline import BaseLine
 from fitspy.core.utils_mp import fit_mp
 
 
-from spectroview import PALETTE
+from spectroview import PALETTE, DEFAULT_COLORS
 
 try:
     from pyqttoast import Toast, ToastPreset
     TOAST_AVAILABLE = True
 except ImportError:
     TOAST_AVAILABLE = False
+
+
+def rgba_to_default_color(rgba, default_colors=DEFAULT_COLORS):
+    """
+    Convert an RGBA tuple to the closest color in DEFAULT_COLORS.
+    If no DEFAULT_COLORS are given, falls back to hex.
+    """
+    # Convert input to RGB array
+    rgb = np.array(mcolors.to_rgb(rgba)) # drops alpha
+
+    # Compute distance to each default color
+    best_color = None
+    best_dist = float("inf")
+    for dc in default_colors:
+        dc_rgb = np.array(mcolors.to_rgb(dc))
+        dist = np.linalg.norm(rgb - dc_rgb)  # Euclidean distance in RGB
+        if dist < best_dist:
+            best_dist = dist
+            best_color = dc
+
+    return best_color if best_color else mcolors.to_hex(rgba)
+
+def show_alert(message):
+    """Show alert"""
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Warning)
+    msg_box.setWindowTitle("Alert")
+    msg_box.setText(message)
+    msg_box.exec_()
 
 
 def show_toast_notification(parent, message, title=None, duration=3000, preset=None):

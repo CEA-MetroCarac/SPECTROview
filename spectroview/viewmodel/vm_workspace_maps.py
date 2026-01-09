@@ -6,8 +6,9 @@ import numpy as np
 import pandas as pd
 import pandas as pd
 from pathlib import Path
+
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
@@ -62,11 +63,10 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 self._extract_spectra_from_map(map_name, map_df)
                 loaded_maps.append(map_name)
             except Exception as e:
-                self.notify.emit(f"Error loading {path.name}: {str(e)}")
+                QMessageBox.critical(None, "Error", f"Error loading {path.name}: {str(e)}")
         
         if loaded_maps:
             self._emit_maps_list_update()
-            self.notify.emit(f"Loaded {len(loaded_maps)} map(s)")
     
     def select_map(self, map_name: str):
         """Select a map and filter/show its spectra (fast - no extraction)."""
@@ -81,8 +81,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         # Emit single signal to update view
         self.map_data_updated.emit(self.current_map_df)
-        
-        # View will restore selection and notify us via set_selected_fnames()
     
     def _extract_spectra_from_map(self, map_name: str, map_df: pd.DataFrame):
         """Extract all individual spectra from a hyperspectral map dataframe."""
@@ -186,7 +184,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             df.to_excel(file_path, index=False)
             self.notify.emit(f"Map '{self.current_map_name}' saved to Excel.")
         except Exception as e:
-            self.notify.emit(f"Error saving map: {e}")
+            QMessageBox.critical(None, "Error", f"Error saving map: {e}")
     
     def delete_current_map(self):
         """Delete the currently selected map."""
@@ -388,9 +386,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     # ─────────────────────────────────────────────────────────────────
     
     def save_work(self):
-        """Save current maps workspace to .maps file (100% compatible with legacy format)."""
-        from PySide6.QtWidgets import QFileDialog, QMessageBox
-        
+        """Save current maps workspace to .maps file (100% compatible with legacy format)."""  
         file_path, _ = QFileDialog.getSaveFileName(
             None,
             "Save work",

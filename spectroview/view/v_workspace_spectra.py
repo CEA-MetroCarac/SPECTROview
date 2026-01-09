@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
 
 from spectroview import ICON_DIR
 from spectroview.model.m_settings import MSettings
+
+from spectroview.viewmodel.utils import show_toast_notification
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
 from spectroview.view.components.v_fit_results import VFitResults
 from spectroview.view.components.v_spectra_list import VSpectraList
@@ -224,7 +226,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_list.itemChanged.connect(self._on_checkbox_changed)
         vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
         vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
-        vm.notify.connect(lambda msg: QMessageBox.information(self, "Spectra already loaded", msg))
+        vm.notify.connect(self._show_toast_notification)
 
         vm.show_xcorrection_value.connect(self.v_fit_model_builder.set_xcorrection_value)        
         vm.spectral_range_changed.connect(self.v_fit_model_builder.set_spectral_range)
@@ -292,4 +294,12 @@ class VWorkspaceSpectra(QWidget):
     def clear_workspace(self):
         """Trigger workspace clear in ViewModel."""
         self.vm.clear_workspace()
+        
+    def _show_toast_notification(self, message: str):
+        """Show auto-dismissing toast notification."""
+        show_toast_notification(
+            parent=self,
+            message=message,
+            duration=3000
+        )
 

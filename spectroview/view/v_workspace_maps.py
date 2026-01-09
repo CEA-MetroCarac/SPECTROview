@@ -247,10 +247,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Connect send to spectra workspace signal to parent's spectra workspace
         self.vm.send_spectra_to_workspace.connect(self._receive_spectra_from_maps)
-        
-        # Override parent's QMessageBox notification with toast notification
-        self.vm.notify.disconnect()  # Disconnect parent's QMessageBox handler
-        self.vm.notify.connect(self._show_toast_notification)
     
     def _on_map_viewer_selection(self, selected_points: list):
         """Handle spectrum selection from map viewer."""

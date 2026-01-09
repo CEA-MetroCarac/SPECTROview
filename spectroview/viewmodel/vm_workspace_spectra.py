@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QFileDialog,QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from spectroview.model.m_io import load_spectrum_file
 from spectroview.model.m_settings import MSettings
@@ -92,24 +92,27 @@ class VMWorkspaceSpectra(QObject):
 
     # View → ViewModel slots
     def load_files(self, paths: list[str]):
+        """Load spectrum files from disk."""
         existing_paths = {s.source_path for s in self.spectra}
-
-        skipped = []
+        loaded_files = []
 
         for p in paths:
-            path = str(Path(p).resolve())
-            if path in existing_paths:
-                skipped.append(Path(p).name)
+            path = Path(p)
+            resolved_path = str(path.resolve())
+            
+            if resolved_path in existing_paths:
+                self.notify.emit(f"Spectrum '{path.name}' already loaded, skipping.")
                 continue
 
-            spectrum = load_spectrum_file(Path(p))
-            self.spectra.add(spectrum)
+            try:
+                spectrum = load_spectrum_file(path)
+                self.spectra.add(spectrum)
+                loaded_files.append(path.name)
+            except Exception as e:
+                QMessageBox.critical(None, "Error", f"Error loading {path.name}: {str(e)}")
 
-        if skipped:
-            self.notify.emit(
-                f"Already loaded and skipped:\n" + "\n".join(skipped)
-            )
-        self._emit_list_update()
+        if loaded_files:
+            self._emit_list_update()
 
 
     def set_selected_indices(self, indices: list[int]):
@@ -577,7 +580,7 @@ class VMWorkspaceSpectra(QObject):
         try:
             fit_model = self.spectra.load_model(str(model_path), ind=0)
         except Exception as e:
-            self.notify.emit(f"Failed to load fit model:\n{e}")
+            QMessageBox.critical(None, "Error", f"Failed to load fit model:\n{e}")
             return
 
         spectra = self._get_active_spectra() if apply_all else self._get_selected_spectra()
@@ -1082,7 +1085,7 @@ class VMWorkspaceSpectra(QObject):
         if success:
             self.notify.emit("Fit results saved successfully.")
         else:
-            self.notify.emit(f"Error saving results: {message}")
+            QMessageBox.critical(None, "Error", f"Error saving results: {message}")
     
     def send_results_to_graphs(self, df_name: str):
         """Send fit results to visualization tab (placeholder for future implementation)."""

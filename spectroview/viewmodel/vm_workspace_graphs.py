@@ -11,7 +11,7 @@ from typing import Dict, List, Optional
 
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from spectroview.model.m_graph import MGraph
 from spectroview.model.m_settings import MSettings
@@ -155,7 +155,7 @@ class VMWorkspaceGraphs(QObject):
                 self.dataframes[df_name].to_excel(file_path, index=False)
                 self.notify.emit(f"DataFrame saved: {Path(file_path).name}")
             except Exception as e:
-                self.notify.emit(f"Error saving DataFrame: {e}")
+                QMessageBox.critical(None, "Error", f"Error saving DataFrame: {e}")
     
     # ═════════════════════════════════════════════════════════════════════
     # Filter Management
@@ -175,7 +175,7 @@ class VMWorkspaceGraphs(QObject):
                 try:
                     df = df.query(expression)
                 except Exception as e:
-                    self.notify.emit(f"Filter error: {e}")
+                    QMessageBox.critical(None, "Error", f"Filter error: {e}")
                     return None
         
         self.filtered_data_ready.emit(df)
@@ -364,7 +364,7 @@ class VMWorkspaceGraphs(QObject):
             
             self.notify.emit(f"Workspace saved: {Path(file_path).name}")
         except Exception as e:
-            self.notify.emit(f"Error saving workspace: {e}")
+            QMessageBox.critical(None, "Error", f"Error saving workspace: {e}")
     
     def load_workspace(self, file_path: str):
         """Load graphs workspace from .graphs file."""
@@ -402,7 +402,7 @@ class VMWorkspaceGraphs(QObject):
             
             self.notify.emit(f"Loaded {len(self.graphs)} graphs, {len(self.dataframes)} DataFrames")
         except Exception as e:
-            self.notify.emit(f"Error loading workspace: {e}")
+            QMessageBox.critical(None, "Error", f"Error loading workspace: {e}")
     
     def clear_workspace(self):
         """Clear all graphs and DataFrames."""

@@ -16,6 +16,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.components.v_map_list import VMapsList
 from spectroview.view.components.v_map_viewer import VMapViewer
+from spectroview.view.components.v_map_viewer_dialog import VMapViewerDialog
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
 from spectroview.viewmodel.utils import show_toast_notification
@@ -37,6 +38,10 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Replace parent's ViewModel with Maps-specific ViewModel
         self.vm = VMWorkspaceMaps(self.m_settings)
+        
+        # Track additional viewer dialogs
+        self.viewer_dialogs = []  # List of VMapViewerDialog instances
+        self.next_viewer_number = 2  # Counter for dialog titles
         
         # Re-inject the fit model builder dependency (required for apply_loaded_fit_model)
         self.vm.set_fit_model_builder(self.vm_fit_model_builder)
@@ -223,6 +228,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # ── VMapViewer → ViewModel connections ──
         self.v_map_viewer.spectra_selected.connect(self._on_map_viewer_selection)
+        self.v_map_viewer.multi_viewer_requested.connect(self._on_add_viewer_requested)
         
         # ── ViewModel → VMapsList connections ──
         self.vm.maps_list_changed.connect(self.v_maps_list.set_maps_names)
@@ -293,6 +299,45 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_maps_list.spectra_list.blockSignals(False)
         self.vm.set_selected_fnames(selected_fnames)
     
+    def _on_add_viewer_requested(self, _count: int):
+        """Handle request to open a new floating map viewer window."""
+        # Create a new dialog viewer
+        dialog = VMapViewerDialog(self, viewer_number=self.next_viewer_number)
+        self.next_viewer_number += 1
+        
+        # Track the dialog
+        self.viewer_dialogs.append(dialog)
+        
+        # Connect signals from dialog viewer
+        dialog.spectra_selected.connect(self._on_dialog_viewer_selection)
+        dialog.extract_profile_requested.connect(lambda name: print(f"Profile extraction from dialog: {name}"))
+        
+        # Set current map data in dialog
+        map_df = self.vm.get_current_map_dataframe()
+        fit_results = self.vm.get_fit_results_dataframe()
+        if map_df is not None and not map_df.empty and self.vm.current_map_name:
+            dialog.set_map_data(map_df, self.vm.current_map_name, fit_results)
+        
+        # Clean up when dialog is closed
+        dialog.finished.connect(lambda: self._on_dialog_closed(dialog))
+        
+        # Show the dialog (non-modal - user can interact with both windows)
+        dialog.show()
+    
+    def _on_dialog_viewer_selection(self, selected_points: list):
+        """Handle selection from a dialog viewer - sync with main viewer and list."""
+        # Same logic as main viewer selection
+        self._on_map_viewer_selection(selected_points)
+        
+        # Also update all other dialog viewers
+        for dialog in self.viewer_dialogs:
+            dialog.set_selected_points(selected_points)
+    
+    def _on_dialog_closed(self, dialog):
+        """Clean up when a dialog viewer is closed."""
+        if dialog in self.viewer_dialogs:
+            self.viewer_dialogs.remove(dialog)
+    
     def _on_spectra_list_selection(self, list_indices: list):
         """Handle spectra selection from list."""
         # Update heatmap highlights
@@ -329,15 +374,13 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     def _on_map_data_changed(self):
         """Update map viewer when map data changes."""
-        # Block signals to prevent cascading updates during data load
-        old_state = self.v_map_viewer.blockSignals(True)
+        # Get current map data and fit results
+        map_df = self.vm.get_current_map_dataframe()
+        fit_results = self.vm.get_fit_results_dataframe()
         
+        # Update main map viewer
+        old_state = self.v_map_viewer.blockSignals(True)
         try:
-            # Get current map data and fit results
-            map_df = self.vm.get_current_map_dataframe()
-            fit_results = self.vm.get_fit_results_dataframe()
-            
-            # Update map viewer
             if map_df is not None and not map_df.empty and self.vm.current_map_name:
                 self.v_map_viewer.set_map_data(map_df, self.vm.current_map_name, fit_results)
             else:
@@ -346,6 +389,17 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         finally:
             # Restore signal state
             self.v_map_viewer.blockSignals(old_state)
+        
+        # Update all dialog viewers
+        for dialog in self.viewer_dialogs:
+            dialog_old_state = dialog.blockSignals(True)
+            try:
+                if map_df is not None and not map_df.empty and self.vm.current_map_name:
+                    dialog.set_map_data(map_df, self.vm.current_map_name, fit_results)
+                else:
+                    dialog.set_map_data(None, None, None)
+            finally:
+                dialog.blockSignals(dialog_old_state)
         
         # After map data is loaded, sync heatmap highlights with current selection
         self._sync_heatmap_with_selection()
@@ -381,9 +435,13 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                 if coords:
                     selected_points.append(coords)
         
-        # Update heatmap highlights
+        # Update heatmap highlights in main viewer
         if selected_points:
             self.v_map_viewer.set_selected_points(selected_points)
+        
+        # Update all dialog viewers
+        for dialog in self.viewer_dialogs:
+            dialog.set_selected_points(selected_points if selected_points else [])
     
     def _on_map_selected(self, index: int):
         """Handle map selection - convert index to map name and call ViewModel."""
@@ -490,7 +548,18 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         """Clear the Maps workspace (called from main window)."""
         # Clear griddata cache in map viewer
         if hasattr(self, 'v_map_viewer'):
-            self.v_map_viewer._griddata_cache.clear()
+            if self.v_map_viewer:
+                self.v_map_viewer._griddata_cache.clear()
+        
+        # Clear cache in all dialog viewers
+        for dialog in self.viewer_dialogs:
+            dialog.clear_cache_for_map("")
+        
+        # Close all dialog viewers
+        for dialog in list(self.viewer_dialogs):  # Copy list to avoid modification during iteration
+            dialog.close()
+        self.viewer_dialogs.clear()
+        self.next_viewer_number = 2
         
         # Delegate to ViewModel for data clearing
         self.vm.clear_workspace()
@@ -508,7 +577,12 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Clear griddata cache since we loaded new data
         if hasattr(self, 'v_map_viewer'):
-            self.v_map_viewer._griddata_cache.clear()
+            if self.v_map_viewer:
+                self.v_map_viewer._griddata_cache.clear()
+        
+        # Clear cache in all dialog viewers
+        for dialog in self.viewer_dialogs:
+            dialog.clear_cache_for_map("")
         
         # Delay fit results collection to ensure UI is ready (matches legacy)
         self.vm.collect_fit_results()

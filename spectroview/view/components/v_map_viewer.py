@@ -75,7 +75,6 @@ class VMapViewer(QWidget):
         main_layout.addLayout(self._create_z_range_slider())
         main_layout.addLayout(self._create_x_range_slider())
         main_layout.addLayout(self._create_mask_controls())
-        main_layout.addWidget(self._create_multi_viewer_controls())
     
     def _create_canvas(self):
         """Create matplotlib canvas and toolbar."""
@@ -104,12 +103,22 @@ class VMapViewer(QWidget):
             if action.text() in ['Customize','Zoom','Save', 'Pan', 'Back', 'Forward', 'Subplots']:
                 action.setVisible(False)
         
-        # Custom toolbar with copy button
+        # Custom toolbar with add viewer and copy buttons
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setContentsMargins(2, 2, 2, 2)
         toolbar_layout.addWidget(self.toolbar)
         toolbar_layout.addStretch()
         
+        # Add viewer button
+        self.btn_add_viewer = QPushButton()
+        self.btn_add_viewer.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
+        self.btn_add_viewer.setIconSize(QSize(20, 20))
+        self.btn_add_viewer.setToolTip("Open a new map viewer window")
+        self.btn_add_viewer.setFixedSize(28, 28)
+        self.btn_add_viewer.clicked.connect(lambda: self.multi_viewer_requested.emit(1))
+        toolbar_layout.addWidget(self.btn_add_viewer)
+        
+        # Copy button
         self.btn_copy = QPushButton()
         self.btn_copy.setIcon(QIcon(os.path.join(ICON_DIR, "copy.png")))
         self.btn_copy.setIconSize(QSize(20, 20))
@@ -274,32 +283,6 @@ class VMapViewer(QWidget):
         mask_layout.addWidget(self.btn_options)
         
         return mask_layout
-    
-    def _create_multi_viewer_controls(self):
-        """Create multi-viewer buttons."""
-        multi_viewer_gb = QGroupBox()
-        multi_viewer_layout = QHBoxLayout(multi_viewer_gb)
-        multi_viewer_layout.setContentsMargins(4, 6, 4, 4)
-        
-        multi_viewer_layout.addWidget(QLabel("Add more map viewer:"))
-        
-        self.btn_viewer_2 = QPushButton("2")
-        self.btn_viewer_3 = QPushButton("3")
-        self.btn_viewer_4 = QPushButton("4")
-        
-        for btn in [self.btn_viewer_2, self.btn_viewer_3, self.btn_viewer_4]:
-            btn.setCheckable(True)
-            btn.setFixedSize(40, 26)
-            multi_viewer_layout.addWidget(btn)
-        
-        # Connect buttons to signal with viewer count
-        self.btn_viewer_2.clicked.connect(lambda: self.multi_viewer_requested.emit(2))
-        self.btn_viewer_3.clicked.connect(lambda: self.multi_viewer_requested.emit(3))
-        self.btn_viewer_4.clicked.connect(lambda: self.multi_viewer_requested.emit(4))
-        
-        multi_viewer_layout.addStretch()
-        
-        return multi_viewer_gb
     
     def _create_options_menu(self):
         """Create options menu with smoothing, grid, stats, and profile extraction."""

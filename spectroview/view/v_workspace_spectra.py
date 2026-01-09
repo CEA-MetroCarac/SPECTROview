@@ -73,7 +73,6 @@ class VWorkspaceSpectra(QWidget):
         right_widget.setMinimumWidth(200)
         right_widget.setMaximumWidth(450)
         right_layout = QVBoxLayout(right_widget)
-        right_widget.setFrameShape(QFrame.StyledPanel)
         right_layout.setContentsMargins(4, 4, 4, 4)
         right_layout.setSpacing(6)
 

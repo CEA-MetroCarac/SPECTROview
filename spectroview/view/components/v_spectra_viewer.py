@@ -279,6 +279,7 @@ class VSpectraViewer(QWidget):
     def _plot(self):
         if not self._current_spectra:
             self.ax.clear()
+            self.lbl_r2.setText("R²=0")
             self.canvas.draw_idle()
             return
 
@@ -288,6 +289,9 @@ class VSpectraViewer(QWidget):
 
         self.ax.clear()
         self._fitted_lines.clear()  # always reset
+        
+        # Display R² value from first spectrum (if fitted)
+        self._update_r2_display()
 
         for spectrum in self._current_spectra:
             x = spectrum.x
@@ -530,6 +534,24 @@ class VSpectraViewer(QWidget):
 
     def set_r2(self, value):
         self.lbl_r2.setText(f"R²={value:.4f}")
+    
+    def _update_r2_display(self):
+        """Display R² value from the first selected spectrum."""
+        if not self._current_spectra:
+            self.lbl_r2.setText("R²=0")
+            return
+        
+        # Get first spectrum
+        spectrum = self._current_spectra[0]
+        
+        # Check if it has fit results with R²
+        if (hasattr(spectrum, 'result_fit') and 
+            spectrum.result_fit is not None and 
+            hasattr(spectrum.result_fit, 'rsquared')):
+            rsquared = round(spectrum.result_fit.rsquared, 4)
+            self.lbl_r2.setText(f"R²={rsquared}")
+        else:
+            self.lbl_r2.setText("R²=0")
 
     def _on_legend_pick(self, event):
         artist = event.artist

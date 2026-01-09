@@ -237,8 +237,10 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     def _on_spectra_list_selection(self, list_indices: list):
         """Handle spectra selection from list."""
+        # Update heatmap highlights
+        self._update_heatmap_selection()
+        
         if not list_indices:
-            self.v_map_viewer.set_selected_points([])
             self.vm.set_selected_fnames([])
             return
         
@@ -259,18 +261,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         if not selected_fnames:
             return
         
-        # Extract coordinates from fnames for map viewer
-        selected_points = [
-            self._extract_coords_from_fname(fname)
-            for fname in selected_fnames
-        ]
-        selected_points = [p for p in selected_points if p is not None]
-        
-        if selected_points:
-            self.v_map_viewer.set_selected_points(selected_points)
-        
-        # Auto-scroll
-        if list_indices and 0 <= list_indices[0] < self.v_maps_list.spectra_list.count():
+        # Auto-scroll to first selected item
+        if 0 <= list_indices[0] < self.v_maps_list.spectra_list.count():
             self.v_maps_list.spectra_list.scrollToItem(
                 self.v_maps_list.spectra_list.item(list_indices[0])
             )
@@ -302,6 +294,10 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     def _sync_heatmap_with_selection(self):
         """Synchronize heatmap highlights with current spectra list selection."""
+        self._update_heatmap_selection()
+    
+    def _update_heatmap_selection(self):
+        """Update heatmap highlights based on current list selection (common logic)."""
         if not self.vm.current_map_name:
             return
         

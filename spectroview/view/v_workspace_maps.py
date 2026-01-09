@@ -43,6 +43,13 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.viewer_dialogs = []  # List of VMapViewerDialog instances
         self.next_viewer_number = 2  # Counter for dialog titles
         
+        # Centralized map type - all viewers reference this
+        self.selected_map_type = '2Dmap'
+        
+        # Shared data references to avoid duplication
+        self._current_map_df = None
+        self._current_fit_results = None
+        
         # Re-inject the fit model builder dependency (required for apply_loaded_fit_model)
         self.vm.set_fit_model_builder(self.vm_fit_model_builder)
         
@@ -229,6 +236,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # ── VMapViewer → ViewModel connections ──
         self.v_map_viewer.spectra_selected.connect(self._on_map_viewer_selection)
         self.v_map_viewer.multi_viewer_requested.connect(self._on_add_viewer_requested)
+        self.v_map_viewer.cbb_map_type.currentTextChanged.connect(self._on_map_type_changed)
         
         # ── ViewModel → VMapsList connections ──
         self.vm.maps_list_changed.connect(self.v_maps_list.set_maps_names)
@@ -312,11 +320,17 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         dialog.spectra_selected.connect(self._on_dialog_viewer_selection)
         dialog.extract_profile_requested.connect(lambda name: print(f"Profile extraction from dialog: {name}"))
         
-        # Set current map data in dialog
-        map_df = self.vm.get_current_map_dataframe()
-        fit_results = self.vm.get_fit_results_dataframe()
-        if map_df is not None and not map_df.empty and self.vm.current_map_name:
-            dialog.set_map_data(map_df, self.vm.current_map_name, fit_results)
+        # Connect map type change to centralized handler
+        dialog.map_viewer.cbb_map_type.currentTextChanged.connect(self._on_map_type_changed)
+        
+        # Set current map data in dialog (shared references - no duplication)
+        if self._current_map_df is not None and not self._current_map_df.empty and self.vm.current_map_name:
+            dialog.set_map_data(self._current_map_df, self.vm.current_map_name, self._current_fit_results)
+        
+        # Sync map type with centralized value
+        dialog.map_viewer.cbb_map_type.blockSignals(True)
+        dialog.map_viewer.cbb_map_type.setCurrentText(self.selected_map_type)
+        dialog.map_viewer.cbb_map_type.blockSignals(False)
         
         # Clean up when dialog is closed
         dialog.finished.connect(lambda: self._on_dialog_closed(dialog))
@@ -337,6 +351,24 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         """Clean up when a dialog viewer is closed."""
         if dialog in self.viewer_dialogs:
             self.viewer_dialogs.remove(dialog)
+    
+    def _on_map_type_changed(self, map_type: str):
+        """Handle map type change - update centralized value and sync all comboboxes."""
+        # Update centralized value
+        self.selected_map_type = map_type
+        
+        # Sync main viewer combobox and trigger replot
+        self.v_map_viewer.cbb_map_type.blockSignals(True)
+        self.v_map_viewer.cbb_map_type.setCurrentText(map_type)
+        self.v_map_viewer.cbb_map_type.blockSignals(False)
+        self.v_map_viewer.plot_heatmap()  # Manually trigger plot update
+        
+        # Sync all dialog viewers comboboxes and trigger replots
+        for dialog in self.viewer_dialogs:
+            dialog.map_viewer.cbb_map_type.blockSignals(True)
+            dialog.map_viewer.cbb_map_type.setCurrentText(map_type)
+            dialog.map_viewer.cbb_map_type.blockSignals(False)
+            dialog.map_viewer.plot_heatmap()  # Manually trigger plot update
     
     def _on_spectra_list_selection(self, list_indices: list):
         """Handle spectra selection from list."""
@@ -374,15 +406,15 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     def _on_map_data_changed(self):
         """Update map viewer when map data changes."""
-        # Get current map data and fit results
-        map_df = self.vm.get_current_map_dataframe()
-        fit_results = self.vm.get_fit_results_dataframe()
+        # Get current map data and fit results ONCE (shared references)
+        self._current_map_df = self.vm.get_current_map_dataframe()
+        self._current_fit_results = self.vm.get_fit_results_dataframe()
         
         # Update main map viewer
         old_state = self.v_map_viewer.blockSignals(True)
         try:
-            if map_df is not None and not map_df.empty and self.vm.current_map_name:
-                self.v_map_viewer.set_map_data(map_df, self.vm.current_map_name, fit_results)
+            if self._current_map_df is not None and not self._current_map_df.empty and self.vm.current_map_name:
+                self.v_map_viewer.set_map_data(self._current_map_df, self.vm.current_map_name, self._current_fit_results)
             else:
                 # Clear map plot when no map data (all maps deleted or map removed)
                 self.v_map_viewer.set_map_data(None, None, None)
@@ -390,12 +422,12 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             # Restore signal state
             self.v_map_viewer.blockSignals(old_state)
         
-        # Update all dialog viewers
+        # Update all dialog viewers (they share the same dataframe references - no duplication)
         for dialog in self.viewer_dialogs:
             dialog_old_state = dialog.blockSignals(True)
             try:
-                if map_df is not None and not map_df.empty and self.vm.current_map_name:
-                    dialog.set_map_data(map_df, self.vm.current_map_name, fit_results)
+                if self._current_map_df is not None and not self._current_map_df.empty and self.vm.current_map_name:
+                    dialog.set_map_data(self._current_map_df, self.vm.current_map_name, self._current_fit_results)
                 else:
                     dialog.set_map_data(None, None, None)
             finally:

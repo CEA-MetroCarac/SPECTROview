@@ -140,6 +140,20 @@ class VWorkspaceSpectra(QWidget):
             # Reset to default state
             self.progress_bar.setValue(100)
             self.progress_bar.setFormat("")
+    
+    def _on_spectra_list_changed(self, spectra: list):
+        """Handle spectra list update from ViewModel."""
+        self.v_spectra_list.set_spectra_names(spectra)
+    
+    def _on_checkbox_changed(self, item):
+        """Update spectrum.is_active when checkbox state changes."""
+        if item is None:
+            return
+        
+        idx = self.v_spectra_list.row(item)
+        if 0 <= idx < len(self.vm.spectra):
+            is_checked = item.checkState() == Qt.Checked
+            self.vm.spectra[idx].is_active = is_checked
 
     def setup_connections(self):
         """Connect ViewModel signals and slots to the View components."""
@@ -186,7 +200,8 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.fitmodel_save_requested.connect(vm.save_fit_model)
 
         # SpectraList connection: ViewModel → View
-        vm.spectra_list_changed.connect(self.v_spectra_list.set_spectra_names)
+        vm.spectra_list_changed.connect(self._on_spectra_list_changed)
+        self.v_spectra_list.itemChanged.connect(self._on_checkbox_changed)
         vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
         vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
         vm.notify.connect(lambda msg: QMessageBox.information(self, "Spectra already loaded", msg))

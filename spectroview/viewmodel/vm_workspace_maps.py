@@ -116,21 +116,53 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         """Display spectra for the selected map in the spectra list."""
         # Filter spectra by fname prefix: "{map_name}_("
         fname_prefix = f"{map_name}_("
-        spectra_names = [
-            s.fname for s in self.spectra 
+        map_spectra = [
+            s for s in self.spectra 
             if s.fname.startswith(fname_prefix)
         ]
         
-        # Single batched signal emission to update view
-        self.spectra_list_changed.emit(spectra_names)
-        self.count_changed.emit(len(spectra_names))
+        # Single batched signal emission to update view (pass spectrum objects)
+        self.spectra_list_changed.emit(map_spectra)
+        self.count_changed.emit(len(map_spectra))
 
     
     def get_current_map_dataframe(self) -> pd.DataFrame | None:
-        """Get the DataFrame of the currently selected map."""
-        if self.current_map_name and self.current_map_name in self.maps:
-            return self.maps[self.current_map_name]
-        return None
+        """Get the DataFrame of the currently selected map (filtered by checked spectra).
+        
+        Returns only rows corresponding to checked spectra in the list.
+        """
+        if not self.current_map_name or self.current_map_name not in self.maps:
+            return None
+        
+        df = self.maps[self.current_map_name]
+        
+        # Filter by active spectra
+        active_spectra = self._get_active_spectra()
+        active_fnames = {s.fname for s in active_spectra}
+        
+        # Filter DataFrame to only include active spectra
+        # Match based on fname format: "map_name_(x, y)"
+        fname_prefix = f"{self.current_map_name}_("
+        
+        # Build set of (X, Y) tuples from active fnames
+        active_coords = set()
+        for fname in active_fnames:
+            if fname.startswith(fname_prefix):
+                # Extract coordinates from fname
+                coords_str = fname[fname.rfind('(')+1:fname.rfind(')')]
+                try:
+                    x_str, y_str = coords_str.split(',')
+                    active_coords.add((float(x_str.strip()), float(y_str.strip())))
+                except (ValueError, AttributeError):
+                    continue
+        
+        if not active_coords:
+            # No active spectra for this map, return empty DataFrame with same structure
+            return df.iloc[0:0]
+        
+        # Filter DataFrame rows by (X, Y) coordinates
+        mask = df.apply(lambda row: (row['X'], row['Y']) in active_coords, axis=1)
+        return df[mask]
     
     def save_current_map_to_excel(self, file_path: str):
         """Save the currently selected map to an Excel file."""
@@ -256,9 +288,17 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             self._fit_results_cache_dirty = False
             return self._fit_results_cache
         
-        # Collect all fit results
+        # Get active spectra to filter results
+        active_spectra = self._get_active_spectra()
+        active_fnames = {s.fname for s in active_spectra}
+        
+        # Collect all fit results (only from active spectra)
         results = []
         for spectrum in self.spectra:
+            # Skip inactive spectra
+            if spectrum.fname not in active_fnames:
+                continue
+            
             # Only include spectra that have been fitted
             if not hasattr(spectrum, 'result_fit') or not spectrum.result_fit:
                 continue

@@ -26,15 +26,29 @@ class VSpectraList(QListWidget):
         self.itemDoubleClicked.connect(self._on_item_activated)
 
     # ───── Public API (used by ViewModel) ────────────────────────
-    def set_spectra_names(self, names: list[str]):
-        """Replace entire list (ViewModel-driven)."""
+    def set_spectra_names(self, spectra: list):
+        """Replace entire list (ViewModel-driven).
+        
+        Args:
+            spectra: List of MSpectrum objects
+        """
         self.clear()
-        for i, name in enumerate(names):
-            item = QListWidgetItem(name)
+        for i, spectrum in enumerate(spectra):
+            item = QListWidgetItem(spectrum.fname)
             item.setData(Qt.UserRole, i)  # model index -> used when dragging/reordering
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            item.setCheckState(Qt.Checked)  # Default to checked
+            # Set checkbox state from spectrum.is_active
+            item.setCheckState(Qt.Checked if spectrum.is_active else Qt.Unchecked)
             self.addItem(item)
+            
+            # Connect checkbox state change to update spectrum.is_active
+            # Store reference to spectrum object
+            item.setData(Qt.UserRole + 1, id(spectrum))  # Store spectrum ID for lookup
+    
+    def itemChanged(self, item):
+        """Handle checkbox state change to update spectrum.is_active."""
+        # This will be connected from the workspace view
+        pass
 
     def selected_rows(self) -> list[int]:
         return [self.row(i) for i in self.selectedItems()]

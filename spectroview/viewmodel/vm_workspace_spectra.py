@@ -126,6 +126,14 @@ class VMWorkspaceSpectra(QObject):
         # Store fnames (ensure uniqueness while preserving order)
         self.selected_fnames = list(dict.fromkeys(fnames))
         self._emit_selected_spectra()
+    
+    def _get_active_spectra(self) -> list:
+        """Get list of active spectra (used for apply_all operations).
+        
+        Returns:
+            List of active MSpectrum objects (where is_active=True)
+        """
+        return [s for s in self.spectra if s.is_active]
 
     def _emit_selected_spectra(self):
         """Prepare and emit data for plotting the selected spectra."""
@@ -190,9 +198,8 @@ class VMWorkspaceSpectra(QObject):
         
     # Internal helpers
     def _emit_list_update(self):
-        """Emit updated list of spectra names and count."""
-        names = [s.fname for s in self.spectra]
-        self.spectra_list_changed.emit(names)
+        """Emit updated list of spectra (full objects) and count."""
+        self.spectra_list_changed.emit(list(self.spectra))
         self.count_changed.emit(len(self.spectra))
 
     def add_peak_at(self, x: float):
@@ -316,7 +323,7 @@ class VMWorkspaceSpectra(QObject):
     def reinit_spectra(self, apply_all: bool = False):
         """Reinitialize spectra to original data."""
         if apply_all:
-            spectra = self.spectra
+            spectra = self._get_active_spectra()
         else:
             if not self.selected_fnames:
                 self.notify.emit("No spectrum selected.")
@@ -370,23 +377,17 @@ class VMWorkspaceSpectra(QObject):
             return
 
         if apply_all:
-            spectra = self.spectra
+            spectra = self._get_active_spectra()
         else:
             if not self.selected_fnames:
                 self.notify.emit("No spectrum selected.")
                 return
-            spectra = self._get_selected_spectra()
-
-        dict_to_baseline(
-            deepcopy(self._baseline_clipboard),
-            spectra
-        )
 
         self._emit_selected_spectra()
 
     def subtract_baseline(self, apply_all: bool = False):
         if apply_all:
-            spectra = self.spectra
+            spectra = self._get_active_spectra()
         else:
             if not self.selected_fnames:
                 self.notify.emit("No spectrum selected.")
@@ -442,7 +443,7 @@ class VMWorkspaceSpectra(QObject):
             return
 
         spectra = (
-            self.spectra
+            self._get_active_spectra()
             if apply_all
             else self._get_selected_spectra()
         )
@@ -462,7 +463,7 @@ class VMWorkspaceSpectra(QObject):
 
     def delete_peaks(self, apply_all: bool = False):
         spectra = (
-            self.spectra
+            self._get_active_spectra()
             if apply_all
             else self._get_selected_spectra()
         )
@@ -484,7 +485,7 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("Fit already in progress. Please wait...")
             return
 
-        spectra = self.spectra if apply_all else self._get_selected_spectra()
+        spectra = self._get_active_spectra() if apply_all else self._get_selected_spectra()
         
         if not spectra:
             return
@@ -525,7 +526,7 @@ class VMWorkspaceSpectra(QObject):
         if not hasattr(self, "_fitmodel_clipboard"):
             self.notify.emit("No fit model copied.")
             return
-        spectra = self.spectra if apply_all else self._get_selected_spectra()
+        spectra = self._get_active_spectra() if apply_all else self._get_selected_spectra()
 
         for s in spectra:
             s.reinit()
@@ -573,7 +574,7 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit(f"Failed to load fit model:\n{e}")
             return
 
-        spectra = self.spectra if apply_all else self._get_selected_spectra()
+        spectra = self._get_active_spectra() if apply_all else self._get_selected_spectra()
         if not spectra:
             self.notify.emit("No spectrum selected.")
             return
@@ -858,9 +859,10 @@ class VMWorkspaceSpectra(QObject):
     # ═════════════════════════════════════════════════════════════════════
     
     def collect_fit_results(self):
-        """Collect best-fit results from all spectra and create DataFrame."""
-        if not self.spectra:
-            self.notify.emit("No spectra loaded.")
+        """Collect best-fit results from active spectra and create DataFrame."""
+        active_spectra = self._get_active_spectra()
+        if not active_spectra:
+            self.notify.emit("No active spectra to collect results from.")
             return
         
         # Copy current fit model for reference
@@ -872,7 +874,7 @@ class VMWorkspaceSpectra(QObject):
         
         fit_results_list = []
         
-        for spectrum in self.spectra:
+        for spectrum in active_spectra:
             if not hasattr(spectrum, 'peak_models') or not spectrum.peak_models:
                 continue
             

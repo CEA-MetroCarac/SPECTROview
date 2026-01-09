@@ -182,8 +182,12 @@ class VMapsList(QWidget):
         elif 0 <= current_selection < len(names):
             self.maps_list.setCurrentRow(current_selection)
     
-    def set_spectra_names(self, names: list[str]):
-        """Replace spectra list for currently selected map."""
+    def set_spectra_names(self, spectra: list):
+        """Replace spectra list for currently selected map.
+        
+        Args:
+            spectra: List of MSpectrum objects for the current map
+        """
         # Save current selection positions before clearing
         self._last_selected_positions = self.get_selected_spectra_indices()
         
@@ -191,22 +195,23 @@ class VMapsList(QWidget):
         self.spectra_list.blockSignals(True)
         
         self.spectra_list.clear()
-        for i, name in enumerate(names):
-            item = QListWidgetItem(name)
+        for i, spectrum in enumerate(spectra):
+            item = QListWidgetItem(spectrum.fname)
             item.setData(Qt.UserRole, i)  # Store index
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            item.setCheckState(Qt.Checked)  # Default to checked
+            # Set checkbox state from spectrum.is_active
+            item.setCheckState(Qt.Checked if spectrum.is_active else Qt.Unchecked)
             self.spectra_list.addItem(item)
         
         # Restore selection at same positions (if they still exist)
         selection_restored = False
         for pos in self._last_selected_positions:
-            if 0 <= pos < len(names):
+            if 0 <= pos < len(spectra):
                 self.spectra_list.item(pos).setSelected(True)
                 selection_restored = True
         
         # If no selection was restored and list is not empty, select first item
-        if not selection_restored and len(names) > 0:
+        if not selection_restored and len(spectra) > 0:
             self.spectra_list.item(0).setSelected(True)
         
         # Unblock signals

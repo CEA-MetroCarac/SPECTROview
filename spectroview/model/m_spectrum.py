@@ -12,6 +12,7 @@ class MSpectrum(FitspySpectrum):
         
         self.xcorrection_value = 0   # peak position correction using reference value
         self.source_path = None
+        self.is_active = True  # whether spectrum is active for operations (Fit, Apply, etc.)
         
                     
     def reinit(self):

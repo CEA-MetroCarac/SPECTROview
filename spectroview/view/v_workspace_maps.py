@@ -146,6 +146,31 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         return panel
     
+    def _on_spectra_list_changed(self, spectra: list):
+        """Handle spectra list update from ViewModel."""
+        self.v_maps_list.set_spectra_names(spectra)
+    
+    def _on_checkbox_changed(self, item):
+        """Update spectrum.is_active when checkbox state changes."""
+        if item is None or not self.vm.current_map_name:
+            return
+        
+        idx = self.v_maps_list.spectra_list.row(item)
+        
+        # Get current map's spectra
+        fname_prefix = f"{self.vm.current_map_name}_("
+        map_spectra = [s for s in self.vm.spectra if s.fname.startswith(fname_prefix)]
+        
+        if 0 <= idx < len(map_spectra):
+            is_checked = item.checkState() == Qt.Checked
+            map_spectra[idx].is_active = is_checked
+            
+            # Invalidate fit results cache and trigger map data update
+            self.vm._fit_results_cache_dirty = True
+            # Get updated DataFrame and emit
+            updated_df = self.vm.get_current_map_dataframe()
+            self.vm.map_data_updated.emit(updated_df)
+    
     def _connect_signals(self):
         """Connect Maps-specific signals between View and ViewModel."""
         # ── VMapsList → ViewModel connections ──
@@ -169,9 +194,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # The spectra list is updated via inherited VMWorkspaceSpectra signals
         # when vm.select_map() calls _extract_spectra_from_map()
-        self.vm.spectra_list_changed.connect(
-            lambda names: self.v_maps_list.set_spectra_names(names)
-        )
+        self.vm.spectra_list_changed.connect(self._on_spectra_list_changed)
+        self.v_maps_list.spectra_list.itemChanged.connect(self._on_checkbox_changed)
         
         # Clear griddata cache when map data changes (after fitting)
         self.vm.clear_map_cache_requested.connect(self.v_map_viewer.clear_cache_for_map)

@@ -1,6 +1,8 @@
 """View for Spectra Workspace - main UI coordinator for spectral analysis."""
 import os
 
+import pandas as pd
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QShortcut, QKeySequence
 from PySide6.QtWidgets import (
@@ -234,6 +236,9 @@ class VWorkspaceSpectra(QWidget):
         vm.fit_in_progress.connect(self.btn_stop_fit.setVisible)  # Show/hide Stop button
         vm.fit_progress_updated.connect(self._update_progress_bar)
         
+        # Send DataFrame to Graphs workspace
+        vm.send_df_to_graphs.connect(self._send_df_to_graphs)
+        
         # Stop button → ViewModel
         self.btn_stop_fit.clicked.connect(vm.stop_fit)
 
@@ -294,6 +299,17 @@ class VWorkspaceSpectra(QWidget):
     def clear_workspace(self):
         """Trigger workspace clear in ViewModel."""
         self.vm.clear_workspace()
+        
+    def _send_df_to_graphs(self, df_name: str, df: pd.DataFrame):
+        """Forward DataFrame to Graphs workspace"""
+        # Access the parent window's Graphs workspace
+        parent_window = self.window()
+        if not hasattr(parent_window, 'v_graphs_workspace'):
+            return
+        
+        # Add DataFrame to Graphs workspace via its ViewModel
+        graphs_workspace = parent_window.v_graphs_workspace
+        graphs_workspace.vm.add_dataframe(df_name, df)
         
     def _show_toast_notification(self, message: str):
         """Show auto-dismissing toast notification."""

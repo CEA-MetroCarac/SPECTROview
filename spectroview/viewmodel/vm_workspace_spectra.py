@@ -39,6 +39,7 @@ class VMWorkspaceSpectra(QObject):
     # Fit results signals
     fit_results_updated = Signal(object)  # pd.DataFrame
     split_parts_updated = Signal(list)    # list[str] for combobox
+    send_df_to_graphs = Signal(str, object)  # (df_name, pd.DataFrame)
 
     notify = Signal(str)  # general notifications
     
@@ -1088,11 +1089,13 @@ class VMWorkspaceSpectra(QObject):
             QMessageBox.critical(None, "Error", f"Error saving results: {message}")
     
     def send_results_to_graphs(self, df_name: str):
-        """Send fit results to visualization tab (placeholder for future implementation)."""
+        """Send fit results DataFrame to Graphs workspace."""
         if self.df_fit_results is None or self.df_fit_results.empty:
             self.notify.emit("No fit results to send.")
             return
         
-        # TODO: Implement when Graphs workspace is converted to MVVM
-        # For now, just notify
-        self.notify.emit(f"Send to Viz feature will be implemented when Graphs workspace is converted to MVVM.")
+        if not df_name:
+            self.notify.emit("Please enter a DataFrame name.")
+            return
+        self.send_df_to_graphs.emit(df_name, self.df_fit_results)
+        self.notify.emit(f"Sent fit results to Graphs workspace as '{df_name}'.")

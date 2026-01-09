@@ -18,6 +18,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from fitspy.core.baseline import BaseLine
 from fitspy.core.utils_mp import fit_mp
 
+
 from spectroview import PALETTE
 
 try:
@@ -87,7 +88,7 @@ class CustomizedPalette(QComboBox):
     def get_selected_palette(self):
         return self.currentText()
 
-class FitThread(QThread):
+class ApplyFitModelThread(QThread):
     """Class to perform fitting in a separate Thread."""
     progress_changed = Signal(int, int, int, float)  # (current, total, percentage, elapsed_time)
     
@@ -152,6 +153,39 @@ class FitThread(QThread):
             except:
                 # Timeout or queue empty, continue waiting
                 continue
+
+class FitThread(QThread):
+    """Thread for fitting spectra with their own existing peak models (no model copying)."""
+    progress_changed = Signal(int, int, int, float)  # (current, total, percentage, elapsed_time)
+    
+    def __init__(self, spectra):
+        super().__init__()
+        self.spectra = spectra
+
+    def run(self):
+        """Fit each spectrum with its own peak models, tracking progress."""
+        import time
+        
+        total = len(self.spectra)
+        start_time = time.time()
+        
+        # Emit initial progress
+        self.progress_changed.emit(0, total, 0, 0.0)
+        
+        # Fit each spectrum sequentially
+        for i, spectrum in enumerate(self.spectra, 1):
+            if spectrum.peak_models:
+                try:
+                    spectrum.preprocess()
+                    spectrum.fit()
+                except Exception:
+                    # Continue fitting other spectra even if one fails
+                    pass
+            
+            # Update progress
+            percentage = int((i / total) * 100)
+            elapsed_time = time.time() - start_time
+            self.progress_changed.emit(i, total, percentage, elapsed_time)
 
 def closest_index(array, value):
     return int(np.abs(array - value).argmin())

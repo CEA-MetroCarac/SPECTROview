@@ -13,7 +13,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
 from spectroview.viewmodel.utils import (
-    FitThread,
+    ApplyFitModelThread, FitThread,
     baseline_to_dict,
     calc_area,
     closest_index,
@@ -446,19 +446,19 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No peaks to fit.")
             return
 
+        # Cancel any existing thread
+        if self._fit_thread and self._fit_thread.isRunning():
+            self._fit_thread.terminate()
+            self._fit_thread.wait()
+
         self._is_fitting = True
         self.fit_in_progress.emit(True)
 
-        try:
-            for s in spectra:
-                if s.peak_models:
-                    s.fit()
-        except Exception as e:
-            self.notify.emit(f"Fit error: {e}")
-        finally:
-            self._is_fitting = False
-            self.fit_in_progress.emit(False)
-            self._emit_selected_spectra()
+        # Use SimpleFitThread to fit each spectrum with its own models
+        self._fit_thread = FitThread(spectra)
+        self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
+        self._fit_thread.finished.connect(self._on_fit_finished)
+        self._fit_thread.start()
     
     def copy_fit_model(self):
         if not self.selected_indices:
@@ -557,7 +557,7 @@ class VMWorkspaceSpectra(QObject):
         self._is_fitting = True
         self.fit_in_progress.emit(True)
 
-        self._fit_thread = FitThread(
+        self._fit_thread = ApplyFitModelThread(
             self.spectra,
             fit_model,
             fnames,

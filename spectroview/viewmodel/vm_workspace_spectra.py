@@ -392,7 +392,12 @@ class VMWorkspaceSpectra(QObject):
             if not self.selected_fnames:
                 self.notify.emit("No spectrum selected.")
                 return
+            spectra = self._get_selected_spectra()
 
+        # Apply baseline to selected spectra
+        baseline_data = deepcopy(self._baseline_clipboard)
+        dict_to_baseline(baseline_data, spectra)
+        
         self._emit_selected_spectra()
 
     def subtract_baseline(self, apply_all: bool = False):

@@ -578,7 +578,10 @@ class VMapViewer(QWidget):
         self._last_final_z_col = final_z_col
         
         # Plot settings
-        color = self.cbb_palette.currentText()
+        import matplotlib.pyplot as plt
+        cmap = plt.get_cmap(self.cbb_palette.currentText()).copy()
+        cmap.set_bad(color='white')  # Set NaN values to white (masked regions)
+        
         interpolation = 'bilinear' if self.action_smoothing.isChecked() else 'none'
         vmin_plot, vmax_plot = self.z_range_slider.value()
         
@@ -587,13 +590,13 @@ class VMapViewer(QWidget):
             # Wafer maps: Use griddata result (already interpolated, smooth)
             self.img = self.ax.imshow(grid_z, extent=extent,
                                      vmin=vmin_plot, vmax=vmax_plot,
-                                     origin='lower', aspect='equal', cmap=color,
+                                     origin='lower', aspect='equal', cmap=cmap,
                                      interpolation='bilinear')  # Smooth the 100x100 grid
         elif not heatmap_pivot.empty:
             # 2D maps: Use pivot table with optional smoothing
             self.img = self.ax.imshow(heatmap_pivot, extent=extent, 
                                      vmin=vmin_plot, vmax=vmax_plot,
-                                     origin='lower', aspect='equal', cmap=color, 
+                                     origin='lower', aspect='equal', cmap=cmap, 
                                      interpolation=interpolation)
         
         # Colorbar
@@ -638,12 +641,22 @@ class VMapViewer(QWidget):
         mask_enabled = self.cb_enable_mask.isChecked() if map_type == '2Dmap' else False
         remove_outliers = self.action_remove_outlier.isChecked()
         
+        # Build mask configuration tuple for cache key
+        if mask_enabled:
+            mask_config = (
+                self.cbb_mask_param.currentText(),
+                self.cbb_mask_operator.currentText(),
+                self.spin_mask_threshold.value()
+            )
+        else:
+            mask_config = None
+        
         cache_key = (
             self.map_df_name,
             parameter,
             (xmin, xmax),
             map_type,
-            mask_enabled,
+            mask_config,  # Full mask configuration (not just enabled flag)
             remove_outliers
         )
         
@@ -693,11 +706,17 @@ class VMapViewer(QWidget):
                     .replace([np.inf, -np.inf], np.nan)
                     .fillna(0).clip(lower=0).max(axis=1))
         else:
-            # Fit parameter
+            # Fit parameter - merge with map coordinates to handle filtered (active only) fit results
             if not self.df_fit_results.empty and parameter in self.df_fit_results.columns:
                 filtered_results = self.df_fit_results.query("Filename == @self.map_df_name")
-                if not filtered_results.empty:
-                    z_col = filtered_results[parameter]
+                if not filtered_results.empty and 'X' in filtered_results.columns and 'Y' in filtered_results.columns:
+                    # Create DataFrame with map coordinates
+                    map_coords = pd.DataFrame({'X': x_col, 'Y': y_col})
+                    # Merge with fit results on X, Y coordinates (left join to keep all map points)
+                    merged = map_coords.merge(filtered_results[['X', 'Y', parameter]], 
+                                             on=['X', 'Y'], how='left')
+                    # Fill missing values (unchecked spectra) with 0
+                    z_col = merged[parameter].fillna(0)
                 else:
                     z_col = pd.Series([0] * len(x_col))
             else:
@@ -737,14 +756,26 @@ class VMapViewer(QWidget):
                     np.linspace(-r, r, 80)
                 )
                 from scipy.interpolate import griddata
-                # Linear interpolation for smooth result
-                grid_z = griddata((x_col, y_col), final_z_col, 
-                                 (grid_x, grid_y), method='linear')
+                
+                # Filter out NaN values before interpolation (masked points)
+                # This prevents interpolation from filling in masked regions
+                valid_mask = ~pd.isna(final_z_col)
+                if valid_mask.any():
+                    x_valid = x_col[valid_mask]
+                    y_valid = y_col[valid_mask]
+                    z_valid = final_z_col[valid_mask]
+                    
+                    # Linear interpolation for smooth result (only on valid points)
+                    grid_z = griddata((x_valid, y_valid), z_valid, 
+                                     (grid_x, grid_y), method='linear')
+                else:
+                    grid_z = np.full_like(grid_x, np.nan)
                 
                 extent = [-r-1, r+1, -r-0.5, r+0.5]
                 heatmap_pivot = pd.DataFrame()  # Not used for wafer
         else:
             # 2D maps: Use fast pivot table (regular grid, no interpolation needed)
+            # NaN values in final_z_col will be preserved in the pivot table
             heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
             heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
             extent = [x_col.min(), x_col.max(), y_col.min(), y_col.max()]

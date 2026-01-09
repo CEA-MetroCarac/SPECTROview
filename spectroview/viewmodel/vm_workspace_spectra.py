@@ -580,6 +580,20 @@ class VMWorkspaceSpectra(QObject):
             self._fit_thread.deleteLater()
             self._fit_thread = None
 
+    def stop_fit(self):
+        """Stop the currently running fit thread."""
+        if self._fit_thread and self._fit_thread.isRunning():
+            # Store reference before terminating (terminate may trigger finished signal)
+            thread = self._fit_thread
+            self._fit_thread = None
+            
+            thread.terminate()
+            thread.wait()
+            thread.deleteLater()
+            
+            self._is_fitting = False
+            self.fit_in_progress.emit(False)
+            self.notify.emit("Fitting stopped by user.")
 
     def set_fit_model_builder(self, vm_fit_model_builder):
         self._vm_fit_model_builder = vm_fit_model_builder

@@ -100,7 +100,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_list = VSpectraList()
         right_layout.addWidget(self.v_spectra_list, stretch=1)
 
-        # --- Footer: count + progress
+        # --- Footer: count + progress + stop button
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(4)
         
@@ -108,9 +108,16 @@ class VWorkspaceSpectra(QWidget):
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(100)
         self.progress_bar.setFixedHeight(15)
+        
+        self.btn_stop_fit = QPushButton("Stop")
+        self.btn_stop_fit.setIcon(QIcon(os.path.join(ICON_DIR, "stop.png")))
+        self.btn_stop_fit.setFixedHeight(15)
+        self.btn_stop_fit.setFixedWidth(50)
+        self.btn_stop_fit.setVisible(False)  # Hidden by default
 
         footer_layout.addWidget(self.lbl_count)
         footer_layout.addWidget(self.progress_bar)
+        footer_layout.addWidget(self.btn_stop_fit)
         right_layout.addLayout(footer_layout)
 
         # Assemble main splitter
@@ -187,7 +194,11 @@ class VWorkspaceSpectra(QWidget):
         vm.show_xcorrection_value.connect(self.v_fit_model_builder.set_xcorrection_value)        
         vm.spectral_range_changed.connect(self.v_fit_model_builder.set_spectral_range)
         vm.fit_in_progress.connect(lambda in_progress: self.v_fit_model_builder.set_fit_buttons_enabled(not in_progress))
+        vm.fit_in_progress.connect(self.btn_stop_fit.setVisible)  # Show/hide Stop button
         vm.fit_progress_updated.connect(self._update_progress_bar)
+        
+        # Stop button → ViewModel
+        self.btn_stop_fit.clicked.connect(vm.stop_fit)
 
         # V_FitModelBuilder <-> VM_FitModelBuilder
         self.v_fit_model_builder.refresh_fit_models_requested.connect(self.vm_fit_model_builder.refresh_models)

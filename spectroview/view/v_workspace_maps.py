@@ -128,15 +128,20 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         scroll_area.setWidget(scroll_content)
         main_layout.addWidget(scroll_area)
         
-        # ── Footer: count + progress bar (outside scroll area) ──
+        # ── Footer: count + progress bar + stop button (outside scroll area) ──
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(4)
         
         self.lbl_count.setText("0 spectra loaded")
         self.progress_bar.setFixedHeight(15)
         
+        # Stop button is inherited from parent but needs to be added to layout
+        self.btn_stop_fit.setFixedHeight(15)
+        self.btn_stop_fit.setFixedWidth(50)
+        
         footer_layout.addWidget(self.lbl_count)
         footer_layout.addWidget(self.progress_bar)
+        footer_layout.addWidget(self.btn_stop_fit)
         main_layout.addLayout(footer_layout)
         
         return panel

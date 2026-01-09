@@ -33,6 +33,7 @@ class VMapsList(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._last_selected_positions = []  # Remember last selected positions
         self._init_ui()
         
     def _init_ui(self):
@@ -183,6 +184,9 @@ class VMapsList(QWidget):
     
     def set_spectra_names(self, names: list[str]):
         """Replace spectra list for currently selected map."""
+        # Save current selection positions before clearing
+        self._last_selected_positions = self.get_selected_spectra_indices()
+        
         # Block signals to prevent itemSelectionChanged cascade when clearing
         self.spectra_list.blockSignals(True)
         
@@ -194,8 +198,22 @@ class VMapsList(QWidget):
             item.setCheckState(Qt.Unchecked)
             self.spectra_list.addItem(item)
         
+        # Restore selection at same positions (if they still exist)
+        selection_restored = False
+        for pos in self._last_selected_positions:
+            if 0 <= pos < len(names):
+                self.spectra_list.item(pos).setSelected(True)
+                selection_restored = True
+        
+        # If no selection was restored and list is not empty, select first item
+        if not selection_restored and len(names) > 0:
+            self.spectra_list.item(0).setSelected(True)
+        
         # Unblock signals
         self.spectra_list.blockSignals(False)
+        
+        # Trigger selection changed signal manually
+        self._on_spectra_selection_changed()
     
     def get_selected_map_index(self) -> int:
         """Return currently selected map index, or -1 if none."""

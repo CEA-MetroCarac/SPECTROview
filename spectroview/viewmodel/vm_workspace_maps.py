@@ -20,9 +20,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     """Maps Workspace ViewModel."""
     
     maps_list_changed = Signal(list)
-    map_selected = Signal(str)
     map_data_updated = Signal(object)
-    selection_indices_to_restore = Signal(list)
     send_spectra_to_workspace = Signal(list)
     clear_map_cache_requested = Signal(str)
     
@@ -59,10 +57,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             self._emit_maps_list_update()
             self.notify.emit(f"Loaded {len(loaded_maps)} map(s)")
     
-    def _load_map_dataframe(self, path: Path) -> pd.DataFrame:
-        """Load hyperspectral dataframe from CSV or TXT file."""
-        return load_map_file(path)
-    
     def select_map(self, map_name: str):
         """Select a map and filter/show its spectra (fast - no extraction)."""
         if map_name not in self.maps:
@@ -77,9 +71,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Emit single signal to update view
         self.map_data_updated.emit(self.current_map_df)
         
-        # Restore selection based on list indices (or select first item if no previous selection)
-        self._restore_selection_after_map_switch()
-        
+        # View will restore selection and notify us via set_selected_fnames()
     
     def _extract_spectra_from_map(self, map_name: str, map_df: pd.DataFrame):
         """Extract all individual spectra from a hyperspectral map dataframe."""
@@ -132,23 +124,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Single batched signal emission to update view
         self.spectra_list_changed.emit(spectra_names)
         self.count_changed.emit(len(spectra_names))
-    
-    def _restore_selection_after_map_switch(self):
-        """Auto-select first spectrum when switching maps."""
-        fname_prefix = f"{self.current_map_name}_("
-        first_spectrum = next(
-            (s.fname for s in self.spectra if s.fname.startswith(fname_prefix)),
-            None
-        )
-        
-        if first_spectrum:
-            self.selected_fnames = [first_spectrum]
-            self._emit_selected_spectra()
-            # Signal View to select first item in list
-            self.selection_indices_to_restore.emit([0])
-        else:
-            self.selected_fnames = []
-            self._emit_selected_spectra()
 
     
     def get_current_map_dataframe(self) -> pd.DataFrame | None:

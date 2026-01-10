@@ -99,6 +99,7 @@ class VMapsList(QWidget):
         self.btn_save.setFixedSize(32, 32)
         self.btn_save.clicked.connect(self.save_requested.emit)
         
+        map_buttons_layout.addStretch()
         map_buttons_layout.addWidget(self.btn_view)
         map_buttons_layout.addWidget(self.btn_delete)
         map_buttons_layout.addWidget(self.btn_save)

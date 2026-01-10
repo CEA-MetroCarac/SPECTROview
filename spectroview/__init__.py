@@ -1,6 +1,6 @@
 import os
 
-VERSION = "0.9.6"
+VERSION = "26.1.0"
 
 
 TEXT_EXPIRE = (

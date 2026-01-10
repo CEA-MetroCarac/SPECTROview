@@ -312,52 +312,34 @@ class VWorkspaceGraphs(QWidget):
         """Create axes controls."""
         axes_layout = QVBoxLayout()
         
-        # X axis
-        x_layout = QHBoxLayout()
-        lbl_x= QLabel("X:")
-        lbl_x.setFixedWidth(15)
-        x_layout.addWidget(lbl_x)
-        self.cbb_x = QComboBox()
-        self.cbb_x.setFixedWidth(200)
-        x_layout.addWidget(self.cbb_x)
-        self.cb_xlog = QCheckBox("Log scale")
-        x_layout.addWidget(self.cb_xlog)
-        x_layout.addStretch()
-        axes_layout.addLayout(x_layout)
-        
-        # Y axis
-        y_layout = QHBoxLayout()
-        lbl_y=QLabel("Y:")
-        lbl_y.setFixedWidth(15)
-        y_layout.addWidget(lbl_y)
-        self.cbb_y = QComboBox()
-        self.cbb_y.setFixedWidth(200)
-        y_layout.addWidget(self.cbb_y)
-        self.cb_ylog = QCheckBox("Log scale")
-        y_layout.addWidget(self.cb_ylog)
-        y_layout.addStretch()
-        axes_layout.addLayout(y_layout)
-        
-        # Z axis
-        z_layout = QHBoxLayout()
-        lbl_z=QLabel("Z:")
-        lbl_z.setFixedWidth(15)
-        z_layout.addWidget(lbl_z)
-        self.cbb_z = QComboBox()
-        self.cbb_z.setFixedWidth(200)
-        z_layout.addWidget(self.cbb_z)
-        
-        # Wafer size combobox
-        lbl_wafer = QLabel("Wafer size:")
-        z_layout.addWidget(lbl_wafer)
-        self.cbb_wafer_size = QComboBox()
-        self.cbb_wafer_size.addItems(['300', '200', '150', '100'])
-        self.cbb_wafer_size.setCurrentText('300')
-        self.cbb_wafer_size.setMaximumWidth(80)
-        z_layout.addWidget(self.cbb_wafer_size)
-        
-        z_layout.addStretch()
-        axes_layout.addLayout(z_layout)
+        # X, Y, Z axes with log scale checkboxes
+        for axis_name, label_text in [('x', 'X:'), ('y', 'Y:'), ('z', 'Z:')]:
+            h_layout = QHBoxLayout()
+            lbl = QLabel(label_text)
+            lbl.setFixedWidth(15)
+            h_layout.addWidget(lbl)
+            
+            cbb = QComboBox()
+            cbb.setFixedWidth(200)
+            setattr(self, f'cbb_{axis_name}', cbb)
+            h_layout.addWidget(cbb)
+            
+            if axis_name != 'z':
+                cb_log = QCheckBox("Log scale")
+                setattr(self, f'cb_{axis_name}log', cb_log)
+                h_layout.addWidget(cb_log)
+            else:
+                # Wafer size for Z axis
+                lbl_wafer = QLabel("Wafer size:")
+                h_layout.addWidget(lbl_wafer)
+                self.cbb_wafer_size = QComboBox()
+                self.cbb_wafer_size.addItems(['300', '200', '150', '100'])
+                self.cbb_wafer_size.setCurrentText('300')
+                self.cbb_wafer_size.setMaximumWidth(80)
+                h_layout.addWidget(self.cbb_wafer_size)
+            
+            h_layout.addStretch()
+            axes_layout.addLayout(h_layout)
         
         parent_layout.addLayout(axes_layout)
     
@@ -368,45 +350,25 @@ class VWorkspaceGraphs(QWidget):
         group_layout.setContentsMargins(5, 2, 5, 2)
         group_layout.setSpacing(2)
         
-        # Plot title
-        title_layout = QHBoxLayout()
-        lbl_title = QLabel("Plot title:")
-        lbl_title.setFixedWidth(60)
-        title_layout.addWidget(lbl_title)
-        self.edit_plot_title = QLineEdit()
-        self.edit_plot_title.setPlaceholderText("Type to modify the plot title")
-        title_layout.addWidget(self.edit_plot_title)
-        group_layout.addLayout(title_layout)
+        # Create all label inputs
+        labels = [
+            ('plot_title', 'Plot title:', 'Type to modify the plot title'),
+            ('xlabel', 'X label:', 'X axis label'),
+            ('ylabel', 'Y label:', 'Y axis label'),
+            ('zlabel', 'Z label:', 'Z axis label')
+        ]
         
-        # X label
-        xlabel_layout = QHBoxLayout()
-        lbl_xlabel = QLabel("X label:")
-        lbl_xlabel.setFixedWidth(60)
-        xlabel_layout.addWidget(lbl_xlabel)
-        self.edit_xlabel = QLineEdit()
-        self.edit_xlabel.setPlaceholderText("X axis label")
-        xlabel_layout.addWidget(self.edit_xlabel)
-        group_layout.addLayout(xlabel_layout)
-        
-        # Y label
-        ylabel_layout = QHBoxLayout()
-        lbl_ylabel = QLabel("Y label:")
-        lbl_ylabel.setFixedWidth(60)
-        ylabel_layout.addWidget(lbl_ylabel)
-        self.edit_ylabel = QLineEdit()
-        self.edit_ylabel.setPlaceholderText("Y axis label")
-        ylabel_layout.addWidget(self.edit_ylabel)
-        group_layout.addLayout(ylabel_layout)
-        
-        # Z label
-        zlabel_layout = QHBoxLayout()
-        lbl_zlabel = QLabel("Z label:")
-        lbl_zlabel.setFixedWidth(60)
-        zlabel_layout.addWidget(lbl_zlabel)
-        self.edit_zlabel = QLineEdit()
-        self.edit_zlabel.setPlaceholderText("Z axis label")
-        zlabel_layout.addWidget(self.edit_zlabel)
-        group_layout.addLayout(zlabel_layout)
+        for attr_name, label_text, placeholder in labels:
+            h_layout = QHBoxLayout()
+            lbl = QLabel(label_text)
+            lbl.setFixedWidth(60)
+            h_layout.addWidget(lbl)
+            
+            line_edit = QLineEdit()
+            line_edit.setPlaceholderText(placeholder)
+            setattr(self, f'edit_{attr_name}', line_edit)
+            h_layout.addWidget(line_edit)
+            group_layout.addLayout(h_layout)
         
         parent_layout.addWidget(title_labels_group)
     
@@ -417,31 +379,18 @@ class VWorkspaceGraphs(QWidget):
         limits_layout.setContentsMargins(5, 2, 5, 2)
         limits_layout.setSpacing(2)
         
-        # X limits
-        x_limits_layout = QHBoxLayout()
-        x_limits_layout.addWidget(QLabel("X limits:"))
-        self.spin_xmin = QDoubleSpinBox()
-        self.spin_xmin.setRange(-999999, 999999)
-        self.spin_xmax = QDoubleSpinBox()
-        self.spin_xmax.setRange(-999999, 999999)
-        x_limits_layout.addWidget(QLabel("min"))
-        x_limits_layout.addWidget(self.spin_xmin)
-        x_limits_layout.addWidget(QLabel("max"))
-        x_limits_layout.addWidget(self.spin_xmax)
-        limits_layout.addLayout(x_limits_layout)
-        
-        # Y limits
-        y_limits_layout = QHBoxLayout()
-        y_limits_layout.addWidget(QLabel("Y limits:"))
-        self.spin_ymin = QDoubleSpinBox()
-        self.spin_ymin.setRange(-999999, 999999)
-        self.spin_ymax = QDoubleSpinBox()
-        self.spin_ymax.setRange(-999999, 999999)
-        y_limits_layout.addWidget(QLabel("min"))
-        y_limits_layout.addWidget(self.spin_ymin)
-        y_limits_layout.addWidget(QLabel("max"))
-        y_limits_layout.addWidget(self.spin_ymax)
-        limits_layout.addLayout(y_limits_layout)
+        # X, Y limits
+        for axis in ['X', 'Y']:
+            h_layout = QHBoxLayout()
+            h_layout.addWidget(QLabel(f"{axis} limits:"))
+            
+            for limit_type in ['min', 'max']:
+                spin = QDoubleSpinBox()
+                spin.setRange(-999999, 999999)
+                setattr(self, f'spin_{axis.lower()}{limit_type}', spin)
+                h_layout.addWidget(QLabel(limit_type))
+                h_layout.addWidget(spin)
+            limits_layout.addLayout(h_layout)
         
         # Limit buttons
         limits_btn_layout = QHBoxLayout()
@@ -451,17 +400,15 @@ class VWorkspaceGraphs(QWidget):
         limits_btn_layout.addWidget(self.btn_clear_limits)
         limits_layout.addLayout(limits_btn_layout)
         
-        # Z limits / color range
+        # Z limits
         z_limits_layout = QHBoxLayout()
         z_limits_layout.addWidget(QLabel("Z limits:"))
-        self.spin_zmin = QDoubleSpinBox()
-        self.spin_zmin.setRange(-999999, 999999)
-        self.spin_zmax = QDoubleSpinBox()
-        self.spin_zmax.setRange(-999999, 999999)
-        z_limits_layout.addWidget(QLabel("min"))
-        z_limits_layout.addWidget(self.spin_zmin)
-        z_limits_layout.addWidget(QLabel("max"))
-        z_limits_layout.addWidget(self.spin_zmax)
+        for limit_type in ['min', 'max']:
+            spin = QDoubleSpinBox()
+            spin.setRange(-999999, 999999)
+            setattr(self, f'spin_z{limit_type}', spin)
+            z_limits_layout.addWidget(QLabel(limit_type))
+            z_limits_layout.addWidget(spin)
         limits_layout.addLayout(z_limits_layout)
         
         parent_layout.addWidget(limits_group)
@@ -675,123 +622,73 @@ class VWorkspaceGraphs(QWidget):
     
     def _on_add_plot(self):
         """Add new plot."""
-        # Validate DataFrame selection
-        if not self.vm.selected_df_name:
-            QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame first.")
+        if not self._validate_plot_request():
             return
         
-        # Get selected DataFrame
-        df = self.vm.get_dataframe(self.vm.selected_df_name)
-        if df is None or df.empty:
-            QMessageBox.warning(self, "Empty DataFrame", "Selected DataFrame is empty.")
-            return
-        
-        # Collect plot properties from GUI
         plot_config = self._collect_plot_config()
-        
-        # Validate axes selection
         if not plot_config['x'] or not plot_config['y']:
             QMessageBox.warning(self, "Missing Axes", "Please select X and Y axes.")
             return
         
-        # Create graph model via ViewModel
+        self._create_and_display_plot(plot_config)
+    
+    def _validate_plot_request(self) -> bool:
+        """Validate DataFrame selection."""
+        if not self.vm.selected_df_name:
+            QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame first.")
+            return False
+        
+        df = self.vm.get_dataframe(self.vm.selected_df_name)
+        if df is None or df.empty:
+            QMessageBox.warning(self, "Empty DataFrame", "Selected DataFrame is empty.")
+            return False
+        return True
+    
+    def _create_and_display_plot(self, plot_config: dict, select_in_list: bool = True):
+        """Create and display a plot from configuration."""
         graph_model = self.vm.create_graph(plot_config)
+        filtered_df = self.vm.apply_filters(self.vm.selected_df_name, self.v_data_filter.get_filters())
         
-        # Apply filters to get filtered data
-        filters = self.v_data_filter.get_filters()
-        filtered_df = self.vm.apply_filters(self.vm.selected_df_name, filters)
-        
-        # Create Graph widget
         graph_widget = VGraph(graph_id=graph_model.graph_id)
         self._configure_graph_from_model(graph_widget, graph_model)
-        
-        # Create plot
         graph_widget.create_plot_widget(graph_model.dpi)
         self._render_plot(graph_widget, filtered_df, graph_model)
         
-        # Save legend properties back to model after rendering
-        self.vm.update_graph(graph_model.graph_id, {
-            'legend_properties': graph_widget.legend_properties
-        })
+        self.vm.update_graph(graph_model.graph_id, {'legend_properties': graph_widget.legend_properties})
         
-        # Create MDI subwindow
         sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
+        graph_dialog = self._wrap_graph_in_dialog(graph_widget)
+        sub_window.setWidget(graph_dialog)
         
-        # Store reference
+        self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
+        self.mdi_area.addSubWindow(sub_window)
+        sub_window.show()
+        
+        self._update_graph_list(self.vm.get_graph_ids())
+        
+        if select_in_list:
+            for i in range(self.cbb_graph_list.count()):
+                if self.cbb_graph_list.itemData(i) == graph_model.graph_id:
+                    self.cbb_graph_list.setCurrentIndex(i)
+                    break
+    
+    def _wrap_graph_in_dialog(self, graph_widget: VGraph) -> QDialog:
+        """Wrap graph widget in dialog."""
         from PySide6.QtWidgets import QDialog, QVBoxLayout
         graph_dialog = QDialog(self)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(graph_widget)
         graph_dialog.setLayout(layout)
-        sub_window.setWidget(graph_dialog)
-        
-        self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
-        
-        # Show the subwindow
-        self.mdi_area.addSubWindow(sub_window)
-        sub_window.show()
-        
-        # Update graph list
-        self._update_graph_list(self.vm.get_graph_ids())
-        
-        # Select the newly created graph in the combobox
-        for i in range(self.cbb_graph_list.count()):
-            if self.cbb_graph_list.itemData(i) == graph_model.graph_id:
-                self.cbb_graph_list.setCurrentIndex(i)
-                break
+        return graph_dialog
     
     def create_plot_from_config(self, df_name: str, plot_config: dict) -> bool:
         """Create plot from configuration."""
-        # Validate DataFrame
-        df = self.vm.get_dataframe(df_name)
-        if df is None or df.empty:
+        if self.vm.get_dataframe(df_name) is None:
             return False
         
-        # Set as selected DataFrame (required for ViewModel operations)
         self.vm.select_dataframe(df_name)
-        
-        # Create graph model via ViewModel
-        graph_model = self.vm.create_graph(plot_config)
-        
-        # Apply filters (use empty filters if not specified)
-        filters = plot_config.get('filters', [])
-        filtered_df = self.vm.apply_filters(df_name, filters)
-        
-        # Create Graph widget
-        graph_widget = VGraph(graph_id=graph_model.graph_id)
-        self._configure_graph_from_model(graph_widget, graph_model)
-        
-        # Create plot
-        graph_widget.create_plot_widget(graph_model.dpi)
-        self._render_plot(graph_widget, filtered_df, graph_model)
-        
-        # Save legend properties back to model after rendering
-        self.vm.update_graph(graph_model.graph_id, {
-            'legend_properties': graph_widget.legend_properties
-        })
-        
-        # Create MDI subwindow
-        sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
-        
-        # Store reference
-        from PySide6.QtWidgets import QDialog, QVBoxLayout
-        graph_dialog = QDialog(self)
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(graph_widget)
-        graph_dialog.setLayout(layout)
-        sub_window.setWidget(graph_dialog)
-        
-        self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
-        
-        # Show the subwindow
-        self.mdi_area.addSubWindow(sub_window)
-        sub_window.show()
-        
-        # Update graph list
-        self._update_graph_list(self.vm.get_graph_ids())
-        
+        self._create_and_display_plot(plot_config, select_in_list=False)
         return True
     
     def _on_update_plot(self):
@@ -935,22 +832,13 @@ class VWorkspaceGraphs(QWidget):
     
     def _on_plot_multi_wafer(self):
         """Create multi-wafer plots."""
-        # Get checked slots
         checked_slots = [int(cb.text()) for cb in self.slot_checkboxes if cb.isChecked()]
         
         if not checked_slots:
             QMessageBox.warning(self, "No Slots Selected", "Please select at least one slot.")
             return
         
-        # Validate DataFrame selection
-        if not self.vm.selected_df_name:
-            QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame first.")
-            return
-        
-        # Get DataFrame
-        df = self.vm.get_dataframe(self.vm.selected_df_name)
-        if df is None or df.empty:
-            QMessageBox.warning(self, "Empty DataFrame", "Selected DataFrame is empty.")
+        if not self._validate_plot_request():
             return
         
         # Force wafer plot style
@@ -958,24 +846,17 @@ class VWorkspaceGraphs(QWidget):
         if wafer_index >= 0:
             self.cbb_plot_style.setCurrentIndex(wafer_index)
         
-        # Collect base plot configuration
         plot_config = self._collect_plot_config()
         plot_config['plot_style'] = 'wafer'
         
-        # Get base filters
-        base_filters = self.v_data_filter.get_filters()
-        
-        # Create graphs via ViewModel
         created_graphs = self.vm.create_multi_wafer_graphs(
             self.vm.selected_df_name,
             checked_slots,
             plot_config,
-            base_filters
+            self.v_data_filter.get_filters()
         )
         
-        # Create UI for each graph
         for graph_model in created_graphs:
-            # Apply filters to get filtered data
             filtered_df = self.vm.apply_filters(self.vm.selected_df_name, graph_model.filters)
             
             # Create Graph widget
@@ -986,26 +867,13 @@ class VWorkspaceGraphs(QWidget):
             graph_widget.create_plot_widget(graph_model.dpi)
             self._render_plot(graph_widget, filtered_df, graph_model)
             
-            # Save legend properties
-            self.vm.update_graph(graph_model.graph_id, {
-                'legend_properties': graph_widget.legend_properties
-            })
+            self.vm.update_graph(graph_model.graph_id, {'legend_properties': graph_widget.legend_properties})
             
-            # Create MDI subwindow
             sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
-            
-            # Store reference
-            from PySide6.QtWidgets import QDialog, QVBoxLayout
-            graph_dialog = QDialog(self)
-            layout = QVBoxLayout()
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.addWidget(graph_widget)
-            graph_dialog.setLayout(layout)
+            graph_dialog = self._wrap_graph_in_dialog(graph_widget)
             sub_window.setWidget(graph_dialog)
             
             self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
-            
-            # Show the subwindow
             self.mdi_area.addSubWindow(sub_window)
             sub_window.show()
         
@@ -1176,37 +1044,35 @@ class VWorkspaceGraphs(QWidget):
     
     def _sync_gui_from_graph(self, model):
         """Sync GUI from graph model."""
-        # Block signals to prevent triggering updates
         self.cbb_plot_style.blockSignals(True)
         self.cbb_x.blockSignals(True)
         self.cbb_y.blockSignals(True)
         self.cbb_z.blockSignals(True)
         
         try:
-            # Plot style
-            idx = self.cbb_plot_style.findText(model.plot_style)
-            if idx >= 0:
-                self.cbb_plot_style.setCurrentIndex(idx)
-            
-            # Axes
-            idx = self.cbb_x.findText(model.x)
-            if idx >= 0:
-                self.cbb_x.setCurrentIndex(idx)
+            # Combos
+            for cbb_name, value in [('plot_style', model.plot_style), ('x', model.x), ('z', model.z or "None")]:
+                cbb = getattr(self, f'cbb_{cbb_name}')
+                idx = cbb.findText(value)
+                if idx >= 0:
+                    cbb.setCurrentIndex(idx)
             
             if model.y:
                 idx = self.cbb_y.findText(model.y[0])
                 if idx >= 0:
                     self.cbb_y.setCurrentIndex(idx)
             
-            idx = self.cbb_z.findText(model.z if model.z else "None")
-            if idx >= 0:
-                self.cbb_z.setCurrentIndex(idx)
-            
-            # Log scales
+            # Checkboxes
             self.cb_xlog.setChecked(model.xlogscale)
             self.cb_ylog.setChecked(model.ylogscale)
+            self.cb_legend_outside_toolbar.setChecked(model.legend_outside)
+            self.cb_grid_toolbar.setChecked(model.grid)
+            self.cb_error_bar.setChecked(model.show_bar_plot_error_bar)
+            self.cb_wafer_stats.setChecked(model.wafer_stats)
+            self.cb_join_point_plot.setChecked(model.join_for_point_plot)
+            self.cb_trendline_eq.setChecked(model.show_trendline_eq)
             
-            # Labels
+            # Text inputs
             self.edit_plot_title.setText(model.plot_title or "")
             self.edit_xlabel.setText(model.xlabel or "")
             self.edit_ylabel.setText(model.ylabel or "")
@@ -1222,28 +1088,17 @@ class VWorkspaceGraphs(QWidget):
             
             # Toolbar controls
             self.spin_dpi_toolbar.setValue(model.dpi)
-            
             self.spin_xlabel_rotation.setValue(model.x_rot)
-            self.cb_legend_outside_toolbar.setChecked(model.legend_outside)
+            self.spin_trendline_order.setValue(model.trendline_order)
             
+            # Legend location
             idx = self.cbb_legend_loc_toolbar.findText(model.legend_location)
             if idx >= 0:
                 self.cbb_legend_loc_toolbar.setCurrentIndex(idx)
             
-            self.cb_grid_toolbar.setChecked(model.grid)
-            
-            # More options
-            self.cb_error_bar.setChecked(model.show_bar_plot_error_bar)
-            self.cb_wafer_stats.setChecked(model.wafer_stats)
-            self.cb_join_point_plot.setChecked(model.join_for_point_plot)
-            self.cb_trendline_eq.setChecked(model.show_trendline_eq)
-            self.spin_trendline_order.setValue(model.trendline_order)
-            
-            # Filters - sync with data filter widget
+            # Filters
             self.v_data_filter.set_filters(model.filters)
-            
         finally:
-            # Unblock signals
             self.cbb_plot_style.blockSignals(False)
             self.cbb_x.blockSignals(False)
             self.cbb_y.blockSignals(False)
@@ -1417,7 +1272,6 @@ class VWorkspaceGraphs(QWidget):
     
     def load_workspace(self, file_path: str):
         """Load workspace."""
-        # Clear existing workspace first
         self.clear_workspace()
         
         # Load data into ViewModel
@@ -1430,37 +1284,22 @@ class VWorkspaceGraphs(QWidget):
         # Recreate graph widgets and MDI subwindows for each loaded graph
         for graph_id in self.vm.get_graph_ids():
             graph_model = self.vm.get_graph(graph_id)
-            if graph_model:
-                # Create Graph widget
-                graph_widget = VGraph(graph_id=graph_model.graph_id)
-                self._configure_graph_from_model(graph_widget, graph_model)
-                
-                # Create plot
-                graph_widget.create_plot_widget(graph_model.dpi)
-                
-                # Get filtered data
-                filtered_df = self.vm.apply_filters(graph_model.df_name, graph_model.filters)
-                
-                # Render plot
-                self._render_plot(graph_widget, filtered_df, graph_model)
-                
-                # Create MDI subwindow
-                sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
-                
-                # Store reference
-                from PySide6.QtWidgets import QDialog, QVBoxLayout
-                graph_dialog = QDialog(self)
-                layout = QVBoxLayout()
-                layout.setContentsMargins(0, 0, 0, 0)
-                layout.addWidget(graph_widget)
-                graph_dialog.setLayout(layout)
-                sub_window.setWidget(graph_dialog)
-                
-                self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
-                
-                # Show the subwindow
-                self.mdi_area.addSubWindow(sub_window)
-                sub_window.show()
+            if not graph_model:
+                continue
+            
+            filtered_df = self.vm.apply_filters(graph_model.df_name, graph_model.filters)
+            graph_widget = VGraph(graph_id=graph_model.graph_id)
+            self._configure_graph_from_model(graph_widget, graph_model)
+            graph_widget.create_plot_widget(graph_model.dpi)
+            self._render_plot(graph_widget, filtered_df, graph_model)
+            
+            sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
+            graph_dialog = self._wrap_graph_in_dialog(graph_widget)
+            sub_window.setWidget(graph_dialog)
+            
+            self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
+            self.mdi_area.addSubWindow(sub_window)
+            sub_window.show()
     
     def clear_workspace(self):
         """Clear workspace."""
@@ -1469,35 +1308,19 @@ class VWorkspaceGraphs(QWidget):
             sub_window.close()
             self.mdi_area.removeSubWindow(sub_window)
         
-        # Clear graph widgets storage
         self.graph_widgets.clear()
-        
-        # Clear DataFrame listbox
         self.df_listbox.clear()
-        
-        # Clear column comboboxes
         self.cbb_x.clear()
         self.cbb_y.clear()
         self.cbb_z.clear()
-        
-        # Clear graph list combobox
         self.cbb_graph_list.clear()
-        
-        # Reset limits to default
         self._on_clear_limits()
-        
-        # Clear labels
         self.edit_plot_title.clear()
         self.edit_xlabel.clear()
         self.edit_ylabel.clear()
         self.edit_zlabel.clear()
-        
-        # Reset plot size label
         self.lbl_plot_size.setText("(480x420)")
-        
-        # Clear ViewModel data
         self.vm.clear_workspace()
-
 
 class MdiSubWindow(QMdiSubWindow):
     """Custom MDI subwindow."""

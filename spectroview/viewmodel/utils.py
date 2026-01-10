@@ -1,7 +1,7 @@
 # spectroview/viewmodel/utils.py
 from PySide6.QtGui import QPalette, QColor, QIcon, QPixmap, QImage
 from PySide6.QtCore import Qt, Signal, QThread, QSize
-from PySide6.QtWidgets import QComboBox, QMessageBox, QApplication    
+from PySide6.QtWidgets import QComboBox, QMessageBox, QApplication, QListWidgetItem    
     
 import base64
 import numpy as np
@@ -47,6 +47,23 @@ def rgba_to_default_color(rgba, default_colors=DEFAULT_COLORS):
             best_color = dc
 
     return best_color if best_color else mcolors.to_hex(rgba)
+
+
+def set_spectrum_item_color(item: QListWidgetItem, spectrum):
+    """Set list item background color based on spectrum status."""
+    if spectrum.baseline.is_subtracted:
+        if not hasattr(spectrum.result_fit, 'success'):
+            # Baseline subtracted but no fit result
+            item.setBackground(QColor("red"))
+        elif spectrum.result_fit.success:
+            # Fit succeeded
+            item.setBackground(QColor("green"))
+        else:
+            # Fit failed
+            item.setBackground(QColor("orange"))
+    else:
+        # Baseline not subtracted - transparent background
+        item.setBackground(QColor(0, 0, 0, 0))
 
 def show_alert(message):
     """Show alert"""
@@ -140,7 +157,7 @@ class ApplyFitModelThread(QThread):
         
         # Emit initial progress
         self.progress_changed.emit(0, total, 0, 0.0)
-        
+         
         # Apply model (this will update progress through queue)
         from multiprocessing import Queue
         queue_incr = Queue()

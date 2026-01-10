@@ -2,6 +2,8 @@
 from PySide6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt, Signal
 
+from spectroview.viewmodel.utils import set_spectrum_item_color
+
 
 class VSpectraList(QListWidget):
     # ───── View → ViewModel signals ─────
@@ -35,6 +37,10 @@ class VSpectraList(QListWidget):
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             # Set checkbox state from spectrum.is_active
             item.setCheckState(Qt.Checked if spectrum.is_active else Qt.Unchecked)
+            
+            # Set background color based on spectrum status
+            set_spectrum_item_color(item, spectrum)
+            
             self.addItem(item)
             
             # Connect checkbox state change to update spectrum.is_active

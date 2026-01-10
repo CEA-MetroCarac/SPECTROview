@@ -344,6 +344,7 @@ class VMWorkspaceSpectra(QObject):
             spectrum.reinit()
         
         self._emit_selected_spectra() # Refresh plot 
+        self._emit_list_update()  # Refresh list colors after reinit
 
 
     def apply_spectral_range(self, xmin: float, xmax: float, apply_all: bool):
@@ -372,6 +373,7 @@ class VMWorkspaceSpectra(QObject):
             spectrum.y = spectrum.y0[i_min:i_max + 1].copy()
 
         self._emit_selected_spectra()
+        self._emit_list_update()  # Refresh list colors after range change
 
     def copy_baseline(self):
         if not self.selected_fnames:
@@ -414,6 +416,7 @@ class VMWorkspaceSpectra(QObject):
                 spectrum.subtract_baseline()
 
         self._emit_selected_spectra()
+        self._emit_list_update()  # Refresh list colors after baseline subtraction
 
     def delete_baseline(self, apply_all: bool = False):
         """Delete baseline (points + subtraction state)."""
@@ -439,6 +442,7 @@ class VMWorkspaceSpectra(QObject):
             bl.is_subtracted = False
 
         self._emit_selected_spectra()
+        self._emit_list_update()  # Refresh list colors after baseline deletion
 
     def copy_peaks(self):
         if not self.selected_fnames:
@@ -474,6 +478,7 @@ class VMWorkspaceSpectra(QObject):
             )
 
         self._emit_selected_spectra()
+        self._emit_list_update()  # Refresh list colors after paste peaks
 
 
     def delete_peaks(self, apply_all: bool = False):
@@ -492,6 +497,7 @@ class VMWorkspaceSpectra(QObject):
                 spectrum.remove_models()
 
         self._emit_selected_spectra()
+        self._emit_list_update()  # Refresh list colors after clear peaks
 
 
     def fit(self, apply_all: bool = False):
@@ -639,6 +645,7 @@ class VMWorkspaceSpectra(QObject):
         
         # Don't reset progress bar - let final state (X/X 100%) remain visible
         self._emit_selected_spectra()
+        self._emit_list_update()  # Refresh list colors after fitting
         
         # Cleanup thread
         if self._fit_thread:

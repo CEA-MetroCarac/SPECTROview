@@ -622,6 +622,9 @@ class VWorkspaceGraphs(QWidget):
     
     def _on_add_plot(self):
         """Add new plot."""
+        # Capture filters FIRST before any GUI state changes
+        current_filters = self.v_data_filter.get_filters()
+        
         if not self._validate_plot_request():
             return
         
@@ -630,7 +633,7 @@ class VWorkspaceGraphs(QWidget):
             QMessageBox.warning(self, "Missing Axes", "Please select X and Y axes.")
             return
         
-        self._create_and_display_plot(plot_config)
+        self._create_and_display_plot(plot_config, filters=current_filters)
     
     def _validate_plot_request(self) -> bool:
         """Validate DataFrame selection."""
@@ -644,10 +647,14 @@ class VWorkspaceGraphs(QWidget):
             return False
         return True
     
-    def _create_and_display_plot(self, plot_config: dict, select_in_list: bool = True):
+    def _create_and_display_plot(self, plot_config: dict, select_in_list: bool = True, filters: list = None):
         """Create and display a plot from configuration."""
+        # Use provided filters or get current ones
+        if filters is None:
+            filters = self.v_data_filter.get_filters()
+        
         graph_model = self.vm.create_graph(plot_config)
-        filtered_df = self.vm.apply_filters(self.vm.selected_df_name, self.v_data_filter.get_filters())
+        filtered_df = self.vm.apply_filters(self.vm.selected_df_name, filters)
         
         graph_widget = VGraph(graph_id=graph_model.graph_id)
         self._configure_graph_from_model(graph_widget, graph_model)
@@ -832,6 +839,9 @@ class VWorkspaceGraphs(QWidget):
     
     def _on_plot_multi_wafer(self):
         """Create multi-wafer plots."""
+        # Capture filters FIRST before any GUI state changes
+        current_filters = self.v_data_filter.get_filters()
+        
         checked_slots = [int(cb.text()) for cb in self.slot_checkboxes if cb.isChecked()]
         
         if not checked_slots:
@@ -853,7 +863,7 @@ class VWorkspaceGraphs(QWidget):
             self.vm.selected_df_name,
             checked_slots,
             plot_config,
-            self.v_data_filter.get_filters()
+            current_filters
         )
         
         for graph_model in created_graphs:

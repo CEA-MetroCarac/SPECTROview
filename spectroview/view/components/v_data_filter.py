@@ -139,11 +139,7 @@ class VDataFilter(QGroupBox):
             QApplication.clipboard().setText(checkbox.text())
     
     def get_filters(self) -> list:
-        """Get current filter expressions and their states.
-        
-        Returns:
-            List of dicts with 'expression' and 'state' keys
-        """
+        """Get current filter expressions and their states."""
         filters = []
         for i in range(self.filter_listbox.count()):
             item = self.filter_listbox.item(i)
@@ -156,11 +152,7 @@ class VDataFilter(QGroupBox):
         return filters
     
     def set_filters(self, filters: list):
-        """Set filter expressions and states.
-        
-        Args:
-            filters: List of dicts with 'expression' and 'state' keys
-        """
+        """Set filter expressions and states."""
         self.filter_listbox.clear()
         for filter_data in filters:
             item = QListWidgetItem()

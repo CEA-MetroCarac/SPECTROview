@@ -33,11 +33,7 @@ def load_spectrum_file(path: Path) -> MSpectrum:
 
 
 def load_map_file(path: Path) -> pd.DataFrame:
-    """Load hyperspectral map file (CSV or TXT).
-    
-    Returns:
-        pd.DataFrame with columns: X, Y, wavenumber1, wavenumber2, ...
-    """
+    """Load hyperspectral map file (CSV or TXT). """
     ext = path.suffix.lower()
     
     if ext == '.csv':

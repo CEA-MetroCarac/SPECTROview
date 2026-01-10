@@ -19,30 +19,15 @@ from spectroview.model.m_io import load_dataframe_file
 
 
 class VMWorkspaceGraphs(QObject):
-    """ViewModel for managing graphs, DataFrames, and plotting logic.
-    
-    Responsibilities:
-    - Manage multiple DataFrames
-    - Handle graph creation and updates
-    - Apply filters to DataFrames
-    - Save/load workspace
-    """
+    """ViewModel for managing graphs, DataFrames, and plotting logic."""
     
     # ───── ViewModel → View signals ─────
-    dataframes_changed = Signal(list)  # List of DataFrame names
-    dataframe_selected = Signal(str)  # Selected DataFrame name
-    dataframe_columns_changed = Signal(list)  # List of column names
-    
-    graphs_changed = Signal(list)  # List of graph IDs
-    graph_selected = Signal(int)  # Selected graph ID
-    graph_properties_changed = Signal(object)  # MGraph object
-    
-    filtered_data_ready = Signal(object)  # Filtered DataFrame
-    
-    notify = Signal(str)  # General notifications
+    dataframes_changed = Signal(list)
+    dataframe_columns_changed = Signal(list)
+    graphs_changed = Signal(list)
+    notify = Signal(str)
     
     def __init__(self, settings: MSettings):
-        """Initialize the ViewModel."""
         super().__init__()
         self.settings = settings
         
@@ -50,9 +35,8 @@ class VMWorkspaceGraphs(QObject):
         self.dataframes: Dict[str, pd.DataFrame] = {}
         self.graphs: Dict[int, MGraph] = {}
         
-        # Current selections
+        # Current selection
         self.selected_df_name: Optional[str] = None
-        self.selected_graph_id: Optional[int] = None
         
         # Graph ID counter
         self._next_graph_id = 1
@@ -62,7 +46,7 @@ class VMWorkspaceGraphs(QObject):
     # ═════════════════════════════════════════════════════════════════════
     
     def load_dataframes(self, file_paths: List[str] = None):
-        """Load DataFrames from Excel/CSV files."""
+        """Load DataFrames from files."""
         if not file_paths:
             file_paths, _ = QFileDialog.getOpenFileNames(
                 None,
@@ -102,7 +86,7 @@ class VMWorkspaceGraphs(QObject):
         self._emit_dataframes_list()
     
     def add_dataframe(self, df_name: str, df: pd.DataFrame):
-        """Add a DataFrame programmatically (e.g., from fit results)."""
+        """Add a DataFrame to workspace."""
         if df_name in self.dataframes:
             self.notify.emit(f"DataFrame '{df_name}' already exists.")
             return
@@ -123,12 +107,11 @@ class VMWorkspaceGraphs(QObject):
                 self.dataframe_columns_changed.emit([])
     
     def select_dataframe(self, df_name: str):
-        """Select a DataFrame and emit its columns."""
+        """Select a DataFrame."""
         if df_name not in self.dataframes:
             return
         
         self.selected_df_name = df_name
-        self.dataframe_selected.emit(df_name)
         
         # Emit column names
         df = self.dataframes[df_name]
@@ -139,7 +122,7 @@ class VMWorkspaceGraphs(QObject):
         return self.dataframes.get(df_name)
     
     def save_dataframe_to_excel(self, df_name: str):
-        """Save a DataFrame to Excel file."""
+        """Save DataFrame to Excel."""
         if df_name not in self.dataframes:
             return
         
@@ -178,17 +161,16 @@ class VMWorkspaceGraphs(QObject):
                     QMessageBox.critical(None, "Error", f"Filter error: {e}")
                     return None
         
-        self.filtered_data_ready.emit(df)
         return df
     
     def has_slot_column(self, df_name: str) -> bool:
-        """Check if DataFrame has a 'Slot' column."""
+        """Check if DataFrame has 'Slot' column."""
         if df_name not in self.dataframes:
             return False
         return 'Slot' in self.dataframes[df_name].columns
     
     def get_unique_slots(self, df_name: str) -> List:
-        """Get unique slot values from DataFrame."""
+        """Get unique slot values."""
         if not self.has_slot_column(df_name):
             return []
         
@@ -197,17 +179,7 @@ class VMWorkspaceGraphs(QObject):
     
     def create_multi_wafer_graphs(self, df_name: str, slot_numbers: List, 
                                    plot_config: Dict, base_filters: List[Dict]) -> List[MGraph]:
-        """Create multiple wafer graphs, one for each slot.
-        
-        Args:
-            df_name: Name of the DataFrame
-            slot_numbers: List of slot numbers to plot
-            plot_config: Base plot configuration
-            base_filters: Base filters to apply (will be merged with slot filters)
-        
-        Returns:
-            List of created MGraph objects
-        """
+        """Create multiple wafer graphs for each slot."""
         created_graphs = []
         
         for slot_num in slot_numbers:
@@ -235,10 +207,7 @@ class VMWorkspaceGraphs(QObject):
         return created_graphs
     
     def _merge_filters_with_slot(self, base_filters: List[Dict], slot_num: int) -> List[Dict]:
-        """Merge base filters with slot-specific filter.
-        
-        Ensures that only the specified slot filter is active.
-        """
+        """Merge base filters with slot filter."""
         import copy
         # Deep copy to avoid modifying original filter dictionaries
         merged = copy.deepcopy(base_filters)
@@ -269,7 +238,7 @@ class VMWorkspaceGraphs(QObject):
     # ═════════════════════════════════════════════════════════════════════
     
     def create_graph(self, plot_config: Dict = None) -> MGraph:
-        """Create a new graph with properties from config."""
+        """Create a new graph."""
         graph = MGraph(graph_id=self._next_graph_id)
         
         # Apply configuration if provided
@@ -285,21 +254,12 @@ class VMWorkspaceGraphs(QObject):
         return graph
     
     def get_graph_ids(self) -> List[int]:
-        """Get list of all graph IDs."""
+        """Get all graph IDs."""
         return list(self.graphs.keys())
     
     def get_graph(self, graph_id: int) -> Optional[MGraph]:
         """Get a graph by ID."""
         return self.graphs.get(graph_id)
-    
-    def select_graph(self, graph_id: int):
-        """Select a graph and emit its properties."""
-        if graph_id not in self.graphs:
-            return
-        
-        self.selected_graph_id = graph_id
-        self.graph_selected.emit(graph_id)
-        self.graph_properties_changed.emit(self.graphs[graph_id])
     
     def update_graph(self, graph_id: int, properties: Dict):
         """Update graph properties."""
@@ -310,24 +270,19 @@ class VMWorkspaceGraphs(QObject):
         for key, value in properties.items():
             if hasattr(graph, key):
                 setattr(graph, key, value)
-        
-        self.graph_properties_changed.emit(graph)
     
     def delete_graph(self, graph_id: int):
         """Delete a graph."""
         if graph_id in self.graphs:
             del self.graphs[graph_id]
             self._emit_graphs_list()
-            
-            if self.selected_graph_id == graph_id:
-                self.selected_graph_id = None
     
     # ═════════════════════════════════════════════════════════════════════
     # Save/Load Workspace
     # ═════════════════════════════════════════════════════════════════════
     
     def save_workspace(self):
-        """Save graphs workspace to .graphs file."""
+        """Save workspace to file."""
         file_path, _ = QFileDialog.getSaveFileName(
             None,
             "Save Graphs Workspace",
@@ -339,20 +294,16 @@ class VMWorkspaceGraphs(QObject):
             return
         
         try:
-            # Convert Graph objects to serializable format (use 'plots' key for compatibility)
-            plots_data = {}
-            for graph_id, graph in self.graphs.items():
-                graph_data = graph.save()
-                plots_data[graph_id] = graph_data
+            # Serialize graphs
+            plots_data = {graph_id: graph.save() for graph_id, graph in self.graphs.items()}
             
-            # Compress DataFrames using gzip (same as legacy code)
-            compressed_dfs = {}
-            for k, v in self.dataframes.items():
-                # Convert DataFrame to a CSV string and compress it
-                compressed_df = v.to_csv(index=False).encode('utf-8')
-                compressed_dfs[k] = gzip.compress(compressed_df)
+            # Compress DataFrames
+            compressed_dfs = {
+                k: gzip.compress(v.to_csv(index=False).encode('utf-8'))
+                for k, v in self.dataframes.items()
+            }
             
-            # Prepare data to save (use 'plots' and 'original_dfs' keys for compatibility)
+            # Prepare data to save
             data_to_save = {
                 'plots': plots_data,
                 'original_dfs': {k: v.hex() for k, v in compressed_dfs.items()},
@@ -367,34 +318,29 @@ class VMWorkspaceGraphs(QObject):
             QMessageBox.critical(None, "Error", f"Error saving workspace: {e}")
     
     def load_workspace(self, file_path: str):
-        """Load graphs workspace from .graphs file."""
+        """Load workspace from file."""
         try:
             with open(file_path, 'r') as f:
                 data = json.load(f)
             
-            # Clear current data
             self.graphs.clear()
             self.dataframes.clear()
             
-            # Load DataFrames from compressed format (use 'original_dfs' key for compatibility)
+            # Load DataFrames
             for k, v in data.get('original_dfs', {}).items():
                 compressed_data = bytes.fromhex(v)
                 csv_data = gzip.decompress(compressed_data).decode('utf-8')
                 self.dataframes[k] = pd.read_csv(StringIO(csv_data))
             
-            # Load graphs (use 'plots' key for compatibility)
-            plots_data = data.get('plots', {})
-            for graph_id_str, graph_data in plots_data.items():
+            # Load graphs
+            for graph_id_str, graph_data in data.get('plots', {}).items():
                 graph_id = int(graph_id_str)
                 graph = MGraph(graph_id=graph_id)
                 graph.load(graph_data)
                 self.graphs[graph_id] = graph
             
             # Update next graph ID
-            if self.graphs:
-                self._next_graph_id = max(self.graphs.keys()) + 1
-            else:
-                self._next_graph_id = 1
+            self._next_graph_id = max(self.graphs.keys()) + 1 if self.graphs else 1
             
             # Emit updates
             self._emit_dataframes_list()
@@ -405,11 +351,10 @@ class VMWorkspaceGraphs(QObject):
             QMessageBox.critical(None, "Error", f"Error loading workspace: {e}")
     
     def clear_workspace(self):
-        """Clear all graphs and DataFrames."""
+        """Clear workspace."""
         self.graphs.clear()
         self.dataframes.clear()
         self.selected_df_name = None
-        self.selected_graph_id = None
         self._next_graph_id = 1
         
         self._emit_dataframes_list()

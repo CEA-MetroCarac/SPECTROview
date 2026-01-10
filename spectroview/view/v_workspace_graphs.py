@@ -20,7 +20,7 @@ from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
 from spectroview.viewmodel.utils import CustomizedPalette, show_toast_notification, copy_fig_to_clb
 
 class VWorkspaceGraphs(QWidget):
-    """View for Graphs Workspace - manages DataFrame plotting and visualization."""
+    """View for Graphs Workspace."""
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -34,7 +34,7 @@ class VWorkspaceGraphs(QWidget):
         self.setup_connections()
     
     def init_ui(self):
-        """Initialize the user interface."""
+        """Initialize UI."""
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(4, 4, 4, 4)
         
@@ -54,7 +54,7 @@ class VWorkspaceGraphs(QWidget):
         main_layout.addWidget(main_splitter)
     
     def _setup_left_panel(self):
-        """Setup the left panel with MDI area and bottom toolbar."""
+        """Setup left panel."""
         left_panel = QWidget()
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(0, 0, 0, 0)
@@ -72,7 +72,7 @@ class VWorkspaceGraphs(QWidget):
         return left_panel
     
     def _create_bottom_toolbar(self):
-        """Create the bottom toolbar with plot controls."""
+        """Create bottom toolbar."""
         bottom_toolbar = QFrame()
         bottom_toolbar.setFrameShape(QFrame.StyledPanel)
         bottom_toolbar.setMaximumHeight(40)
@@ -150,7 +150,7 @@ class VWorkspaceGraphs(QWidget):
         return bottom_toolbar
     
     def _setup_right_panel(self):
-        """Setup the right control panel."""
+        """Setup right panel."""
         right_panel = QFrame()
         right_panel.setFrameShape(QFrame.StyledPanel)
         right_layout = QVBoxLayout(right_panel)
@@ -166,7 +166,7 @@ class VWorkspaceGraphs(QWidget):
         return right_panel
     
     def _setup_dataframe_section(self, parent_layout):
-        """Setup the DataFrame section with listbox and buttons."""
+        """Setup DataFrame section."""
         lbl_dfs = QLabel("Loaded dataframe(s):")
         parent_layout.addWidget(lbl_dfs)
         
@@ -208,13 +208,13 @@ class VWorkspaceGraphs(QWidget):
         parent_layout.addLayout(df_section_layout)
     
     def _setup_filter_section(self, parent_layout):  
-        """Setup the data filter section."""
+        """Setup filter section."""
         self.v_data_filter = VDataFilter()
         self.v_data_filter.setMaximumHeight(150)
         parent_layout.addWidget(self.v_data_filter)
     
     def _setup_slot_selector_section(self, parent_layout):
-        """Setup the wafer slot selector section."""
+        """Setup slot selector section."""
         # Container widget for slot selector
         self.slot_selector_widget = QWidget()
         self.slot_selector_widget.setMaximumHeight(120)
@@ -248,7 +248,7 @@ class VWorkspaceGraphs(QWidget):
         parent_layout.addWidget(self.slot_selector_widget)
     
     def _setup_plot_tabs(self, parent_layout):
-        """Setup the plot configuration tabs."""
+        """Setup plot tabs."""
         self.plot_tabs = QTabWidget()
         
         # Create tabs
@@ -261,7 +261,7 @@ class VWorkspaceGraphs(QWidget):
         parent_layout.addWidget(self.plot_tabs, stretch=1)
     
     def _create_plot_tab(self):
-        """Create the Plot tab with all plot configuration controls."""
+        """Create plot tab."""
         tab_plot = QWidget()
         tab_plot_layout = QVBoxLayout(tab_plot)
         tab_plot_layout.setContentsMargins(5, 5, 5, 5)
@@ -309,7 +309,7 @@ class VWorkspaceGraphs(QWidget):
         return scroll_area_plot
     
     def _create_axes_controls(self, parent_layout):
-        """Create X, Y, Z axis selection controls."""
+        """Create axes controls."""
         axes_layout = QVBoxLayout()
         
         # X axis
@@ -362,12 +362,11 @@ class VWorkspaceGraphs(QWidget):
         parent_layout.addLayout(axes_layout)
     
     def _create_title_and_labels(self, parent_layout):
-        """Create plot title and axis label inputs."""
-        # Create group box
+        """Create title and labels controls."""
         title_labels_group = QGroupBox("Title and labels:")
         group_layout = QVBoxLayout(title_labels_group)
-        group_layout.setContentsMargins(5, 2, 5, 2)  # Reduce margins
-        group_layout.setSpacing(2)  # Reduce spacing
+        group_layout.setContentsMargins(5, 2, 5, 2)
+        group_layout.setSpacing(2)
         
         # Plot title
         title_layout = QHBoxLayout()
@@ -415,8 +414,8 @@ class VWorkspaceGraphs(QWidget):
         """Create axis limits controls."""
         limits_group = QGroupBox("Axis limits:")
         limits_layout = QVBoxLayout(limits_group)
-        limits_layout.setContentsMargins(5, 2, 5, 2)  # Reduce margins
-        limits_layout.setSpacing(2)  # Reduce spacing
+        limits_layout.setContentsMargins(5, 2, 5, 2)
+        limits_layout.setSpacing(2)
         
         # X limits
         x_limits_layout = QHBoxLayout()
@@ -468,7 +467,7 @@ class VWorkspaceGraphs(QWidget):
         parent_layout.addWidget(limits_group)
     
     def _create_more_options_tab(self):
-        """Create the More Options tab."""
+        """Create more options tab."""
         tab_more = QWidget()
         tab_more_layout = QVBoxLayout(tab_more)
         tab_more_layout.setContentsMargins(5, 5, 5, 5)
@@ -504,7 +503,7 @@ class VWorkspaceGraphs(QWidget):
         return tab_more
     
     def _setup_action_buttons(self, parent_layout):
-        """Setup the action buttons (Add plot, Update plot, Multi-wafer)."""
+        """Setup action buttons."""
         action_buttons_layout = QHBoxLayout()
         
         self.btn_add_plot = QPushButton("Add plot")
@@ -534,7 +533,7 @@ class VWorkspaceGraphs(QWidget):
         parent_layout.addLayout(action_buttons_layout)
     
     def setup_connections(self):
-        """Connect ViewModel signals and slots to View components."""
+        """Connect signals and slots."""
         vm = self.vm
         
         # DataFrame management
@@ -583,7 +582,7 @@ class VWorkspaceGraphs(QWidget):
         vm.notify.connect(self._show_toast_notification)
     
     def _on_plot_style_changed(self, plot_style: str):
-        """Handle plot style change - auto-select X and Y for wafer plots."""
+        """Handle plot style change."""
         if plot_style == 'wafer':
             # Find and set X and Y columns if they exist
             x_index = self.cbb_x.findText('X')
@@ -602,7 +601,7 @@ class VWorkspaceGraphs(QWidget):
             self.vm.select_dataframe(df_name)
     
     def _on_view_df(self):
-        """View selected DataFrame in a table dialog."""
+        """View DataFrame in table."""
         current_item = self.df_listbox.currentItem()
         if not current_item:
             QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame to view.")
@@ -645,21 +644,21 @@ class VWorkspaceGraphs(QWidget):
         dialog.exec()
     
     def _on_remove_df(self):
-        """Remove selected DataFrame."""
+        """Remove DataFrame."""
         current_item = self.df_listbox.currentItem()
         if current_item:
             df_name = current_item.text()
             self.vm.remove_dataframe(df_name)
     
     def _on_save_df(self):
-        """Save selected DataFrame to Excel."""
+        """Save DataFrame to Excel."""
         current_item = self.df_listbox.currentItem()
         if current_item:
             df_name = current_item.text()
             self.vm.save_dataframe_to_excel(df_name)
     
     def _on_apply_filters(self):
-        """Apply filters to selected DataFrame."""
+        """Apply filters."""
         if not self.vm.selected_df_name:
             return
         
@@ -667,7 +666,7 @@ class VWorkspaceGraphs(QWidget):
         self.vm.apply_filters(self.vm.selected_df_name, filters)
     
     def _show_toast_notification(self, message: str):
-        """Show auto-dismissing toast notification."""
+        """Show toast notification."""
         show_toast_notification(
             parent=self,
             message=message,
@@ -675,7 +674,7 @@ class VWorkspaceGraphs(QWidget):
         )
     
     def _on_add_plot(self):
-        """Add a new plot based on current GUI configuration."""
+        """Add new plot."""
         # Validate DataFrame selection
         if not self.vm.selected_df_name:
             QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame first.")
@@ -743,15 +742,7 @@ class VWorkspaceGraphs(QWidget):
                 break
     
     def create_plot_from_config(self, df_name: str, plot_config: dict) -> bool:
-        """Create a plot programmatically from configuration (for cross-workspace use).
-        
-        Args:
-            df_name: Name of DataFrame to plot
-            plot_config: Dictionary with plot configuration (plot_style, x, y, z, etc.)
-            
-        Returns:
-            True if plot was created successfully, False otherwise
-        """
+        """Create plot from configuration."""
         # Validate DataFrame
         df = self.vm.get_dataframe(df_name)
         if df is None or df.empty:
@@ -861,7 +852,7 @@ class VWorkspaceGraphs(QWidget):
         active_subwindow.setWindowTitle(title)
     
     def _update_df_list(self, df_names: list):
-        """Update DataFrame listbox."""
+        """Update DataFrame list."""
         self.df_listbox.clear()
         self.df_listbox.addItems(df_names)
     
@@ -877,7 +868,7 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_z.addItems(columns)
     
     def _update_slot_selector(self, columns: list):
-        """Update slot selector checkboxes based on DataFrame columns."""
+        """Update slot selector."""
         # Clear existing checkboxes
         for cb in self.slot_checkboxes:
             cb.deleteLater()
@@ -923,12 +914,12 @@ class VWorkspaceGraphs(QWidget):
             self.slot_checkboxes.append(cb)
             
             col += 1
-            if col >= 8:  # 8 columns per row
+            if col >= 8:
                 col = 0
                 row += 1
     
     def _on_select_all_slots(self, state):
-        """Toggle all slot checkboxes."""
+        """Toggle all slots."""
         checked = bool(state)  # Convert Qt state to boolean (0=False, 2=True)
         for cb in self.slot_checkboxes:
             cb.blockSignals(True)
@@ -936,14 +927,14 @@ class VWorkspaceGraphs(QWidget):
             cb.blockSignals(False)
     
     def _on_slot_checkbox_changed(self):
-        """Update Select All checkbox based on individual checkboxes."""
+        """Update select all checkbox."""
         all_checked = all(cb.isChecked() for cb in self.slot_checkboxes)
         self.select_all_checkbox.blockSignals(True)
         self.select_all_checkbox.setChecked(all_checked)
         self.select_all_checkbox.blockSignals(False)
     
     def _on_plot_multi_wafer(self):
-        """Create multiple wafer plots for selected slots."""
+        """Create multi-wafer plots."""
         # Get checked slots
         checked_slots = [int(cb.text()) for cb in self.slot_checkboxes if cb.isChecked()]
         
@@ -1024,7 +1015,7 @@ class VWorkspaceGraphs(QWidget):
         self.vm.notify.emit(f"Created {len(created_graphs)} wafer plots")
     
     def _update_graph_list(self, graph_ids: list):
-        """Update graph list combobox in toolbar."""
+        """Update graph list."""
         self.cbb_graph_list.clear()
         for gid in graph_ids:
             graph = self.vm.get_graph(gid)
@@ -1033,7 +1024,7 @@ class VWorkspaceGraphs(QWidget):
                 self.cbb_graph_list.addItem(display_name, gid)
     
     def _on_graph_selected_toolbar(self):
-        """Handle graph selection from toolbar combobox."""
+        """Handle graph selection."""
         index = self.cbb_graph_list.currentIndex()
         if index >= 0:
             graph_id = self.cbb_graph_list.currentData()
@@ -1044,12 +1035,12 @@ class VWorkspaceGraphs(QWidget):
                 sub_window.showNormal()  # Restore if minimized
     
     def _on_minimize_all(self):
-        """Minimize all MDI subwindows."""
+        """Minimize all windows."""
         for window in self.mdi_area.subWindowList():
             window.showMinimized()
     
     def _on_delete_all(self):
-        """Delete all graphs and close all MDI subwindows."""
+        """Delete all graphs."""
         # Confirm with user
         reply = QMessageBox.question(
             self,
@@ -1065,18 +1056,18 @@ class VWorkspaceGraphs(QWidget):
                 self.mdi_area.removeSubWindow(sub_window)
                 sub_window.close()
             
+            # Delete graphs from ViewModel
+            for graph_id in list(self.graph_widgets.keys()):
+                self.vm.delete_graph(graph_id)
+            
             # Clear graph widgets storage
             self.graph_widgets.clear()
-            
-            # Clear graphs from ViewModel
-            for graph_id in list(self.vm.graphs.keys()):
-                self.vm.delete_graph(graph_id)
             
             # Update graph list combobox
             self._update_graph_list([])
     
     def _on_set_current_limits(self):
-        """Get and set current axis limits from the active plot."""
+        """Get current axis limits."""
         active_subwindow = self.mdi_area.activeSubWindow()
         if not active_subwindow:
             QMessageBox.warning(self, "No Plot Selected", "Please select a plot first.")
@@ -1090,30 +1081,17 @@ class VWorkspaceGraphs(QWidget):
                     xmin, xmax = gw.ax.get_xlim()
                     ymin, ymax = gw.ax.get_ylim()
                     
-                    # Update spinboxes
+                    # Update spinboxes only - model will be updated when "Update plot" is clicked
                     self.spin_xmin.setValue(round(xmin, 3))
                     self.spin_xmax.setValue(round(xmax, 3))
                     self.spin_ymin.setValue(round(ymin, 3))
                     self.spin_ymax.setValue(round(ymax, 3))
-                    
-                    # Update model and graph widget
-                    gw.xmin = xmin
-                    gw.xmax = xmax
-                    gw.ymin = ymin
-                    gw.ymax = ymax
-                    
-                    self.vm.update_graph(gid, {
-                        'xmin': xmin,
-                        'xmax': xmax,
-                        'ymin': ymin,
-                        'ymax': ymax
-                    })
                 except Exception as e:
                     QMessageBox.critical(self, "Error", f"Error getting limits: {str(e)}")
                 break
     
     def _on_clear_limits(self):
-        """Clear all axis limit inputs."""
+        """Clear axis limits."""
         self.spin_xmin.setValue(-999999)
         self.spin_xmax.setValue(-999999)
         self.spin_ymin.setValue(-999999)
@@ -1122,77 +1100,32 @@ class VWorkspaceGraphs(QWidget):
         self.spin_zmax.setValue(-999999)
     
     def _on_dpi_changed_toolbar(self, value: int):
-        """Handle DPI change from toolbar."""
-        active_subwindow = self.mdi_area.activeSubWindow()
-        if active_subwindow:
-            # Find the corresponding graph and update
-            for gid, (gw, gd, sw) in self.graph_widgets.items():
-                if sw == active_subwindow:
-                    gw.dpi = value
-                    self.vm.update_graph(gid, {'dpi': value})
-                    break
+        """Handle DPI change from toolbar (will apply on Update plot)."""
+        # Don't update immediately - wait for user to click "Update plot"
+        pass
     
     def _on_xlabel_rotation_changed(self, value: int):
-        """Handle X label rotation change."""
-        active_subwindow = self.mdi_area.activeSubWindow()
-        if active_subwindow:
-            # Find the corresponding graph and update
-            for gid, (gw, gd, sw) in self.graph_widgets.items():
-                if sw == active_subwindow:
-                    gw.x_rot = value
-                    self.vm.update_graph(gid, {'x_rot': value})
-                    gw._set_rotation()
-                    gw.canvas.draw_idle()
-                    break
+        """Handle X label rotation change (will apply on Update plot)."""
+        # Don't update immediately - wait for user to click "Update plot"
+        pass
     
     def _on_legend_outside_changed_toolbar(self, state: int):
-        """Handle legend outside toggle from toolbar."""
-        # Sync with More options tab if it exists
-        if hasattr(self, 'cb_legend_outside'):
-            self.cb_legend_outside.setChecked(state == Qt.Checked)
-        
-        active_subwindow = self.mdi_area.activeSubWindow()
-        if active_subwindow:
-            for gid, (gw, gd, sw) in self.graph_widgets.items():
-                if sw == active_subwindow:
-                    gw.legend_outside = (state == Qt.Checked)
-                    self.vm.update_graph(gid, {'legend_outside': gw.legend_outside})
-                    gw._set_legend()
-                    gw.canvas.draw_idle()
-                    break
+        """Handle legend outside toggle from toolbar (will apply on Update plot)."""
+        # Don't update immediately - wait for user to click "Update plot"
+        pass
     
     def _on_legend_loc_changed_toolbar(self, location: str):
-        """Handle legend location change from toolbar."""
-        # Sync with More options tab if it exists
-        if hasattr(self, 'cbb_legend_loc'):
-            index = self.cbb_legend_loc.findText(location)
-            if index >= 0:
-                self.cbb_legend_loc.setCurrentIndex(index)
-        
-        active_subwindow = self.mdi_area.activeSubWindow()
-        if active_subwindow:
-            for gid, (gw, gd, sw) in self.graph_widgets.items():
-                if sw == active_subwindow:
-                    gw.legend_location = location
-                    self.vm.update_graph(gid, {'legend_location': location})
-                    gw._set_legend()
-                    gw.canvas.draw_idle()
-                    break
+        """Handle legend location change from toolbar (will apply on Update plot)."""
+        # Don't update immediately - wait for user to click "Update plot"
+        pass
     
     def _on_grid_changed_toolbar(self, state: int):
-        """Handle grid toggle from toolbar."""
-        active_subwindow = self.mdi_area.activeSubWindow()
-        if active_subwindow:
-            for gid, (gw, gd, sw) in self.graph_widgets.items():
-                if sw == active_subwindow:
-                    gw.grid = (state == Qt.Checked)
-                    self.vm.update_graph(gid, {'grid': gw.grid})
-                    gw._set_grid()
-                    gw.canvas.draw_idle()
-                    break
+        """Handle grid toggle from toolbar (will apply on Update plot)."""
+        # Don't update immediately - wait for user to click "Update plot"
+        pass
     
     def _on_copy_figure(self):
-        """Copy selected figure to clipboard."""
+        """Copy figure to clipboard."""
         active_subwindow = self.mdi_area.activeSubWindow()
         if not active_subwindow:
             QMessageBox.warning(self, "No Plot Selected", "Please select a plot to copy.")
@@ -1210,7 +1143,7 @@ class VWorkspaceGraphs(QWidget):
                 break
     
     def _on_subwindow_activated(self, sub_window):
-        """Handle MDI subwindow activation - sync GUI controls with selected graph."""
+        """Handle subwindow activation."""
         if not sub_window:
             return
         
@@ -1242,7 +1175,7 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_graph_list.blockSignals(False)
     
     def _sync_gui_from_graph(self, model):
-        """Sync GUI controls from graph model."""
+        """Sync GUI from graph model."""
         # Block signals to prevent triggering updates
         self.cbb_plot_style.blockSignals(True)
         self.cbb_x.blockSignals(True)
@@ -1321,7 +1254,7 @@ class VWorkspaceGraphs(QWidget):
     # ═════════════════════════════════════════════════════════════════════
     
     def _collect_plot_config(self) -> dict:
-        """Collect plot configuration from GUI controls."""
+        """Collect plot configuration."""
         plot_style = self.cbb_plot_style.currentText()
         z_value = self.cbb_z.currentText() if self.cbb_z.currentText() != "None" else None
         
@@ -1363,7 +1296,7 @@ class VWorkspaceGraphs(QWidget):
         }
     
     def _configure_graph_from_model(self, graph_widget: VGraph, model):
-        """Configure Graph widget properties from model."""
+        """Configure graph widget."""
         # Data source
         graph_widget.df_name = model.df_name
         graph_widget.filters = model.filters
@@ -1417,7 +1350,7 @@ class VWorkspaceGraphs(QWidget):
         graph_widget.join_for_point_plot = model.join_for_point_plot
     
     def _render_plot(self, graph_widget: VGraph, filtered_df, model):
-        """Render the plot using the Graph widget."""
+        """Render plot."""
         try:
             # The Graph class has a single plot() method that handles all plot types
             graph_widget.plot(filtered_df)
@@ -1427,7 +1360,7 @@ class VWorkspaceGraphs(QWidget):
             print(f"Plot rendering error: {e}")
     
     def _create_mdi_subwindow(self, graph_widget: VGraph, model) -> QMdiSubWindow:
-        """Create MDI subwindow for graph."""
+        """Create MDI subwindow."""
         
         sub_window = MdiSubWindow(
             graph_id=model.graph_id,
@@ -1450,7 +1383,7 @@ class VWorkspaceGraphs(QWidget):
         return sub_window
     
     def _on_graph_closed(self, graph_id: int):
-        """Handle graph window closing."""
+        """Handle graph closing."""
         # Remove from storage
         if graph_id in self.graph_widgets:
             del self.graph_widgets[graph_id]
@@ -1466,7 +1399,7 @@ class VWorkspaceGraphs(QWidget):
     # ═════════════════════════════════════════════════════════════════════
     
     def save_workspace(self):
-        """Save workspace (called from main menu)."""
+        """Save workspace."""
         # Update all graph models with current state before saving
         for gid, (gw, gd, sw) in self.graph_widgets.items():
             size = sw.size()
@@ -1483,7 +1416,7 @@ class VWorkspaceGraphs(QWidget):
         self.vm.save_workspace()
     
     def load_workspace(self, file_path: str):
-        """Load workspace (called from main menu)."""
+        """Load workspace."""
         # Clear existing workspace first
         self.clear_workspace()
         
@@ -1530,7 +1463,7 @@ class VWorkspaceGraphs(QWidget):
                 sub_window.show()
     
     def clear_workspace(self):
-        """Clear workspace (called from main menu)."""
+        """Clear workspace."""
         # Close and remove all MDI subwindows
         for sub_window in self.mdi_area.subWindowList():
             sub_window.close()
@@ -1567,10 +1500,7 @@ class VWorkspaceGraphs(QWidget):
 
 
 class MdiSubWindow(QMdiSubWindow):
-    """
-    Custom class of QMdiSubWindow to prevent automatic selection of other windows
-    when one subwindow is closed.
-    """
+    """Custom MDI subwindow."""
     closed = Signal(int)
 
     def __init__(self, graph_id, figsize_label, mdi_area, *args, **kwargs):
@@ -1580,28 +1510,20 @@ class MdiSubWindow(QMdiSubWindow):
         self.mdi_area = mdi_area  # Reference to the parent QMdiArea
 
     def closeEvent(self, event):
-        """Override closeEvent to prevent automatic selection of another subwindow"""
-        # Clear focus to prevent any subwindow from being automatically selected
+        """Override close event."""
         self.mdi_area.clearFocus()
         self.mdi_area.setActiveSubWindow(None)
-
-        # Emit the signal when the window is closing
         self.closed.emit(self.graph_id)
-        
-        # Call the parent close event to actually close the window
         super().closeEvent(event)
 
     def resizeEvent(self, event):
-        """Override resizeEvent to handle window resizing"""
+        """Override resize event."""
         new_size = self.size()
-        width, height = new_size.width(), new_size.height()
-        # Update QLabel with the new size
-        self.figsize_label.setText(f"({width}x{height})")
+        self.figsize_label.setText(f"({new_size.width()}x{new_size.height()})")
         super().resizeEvent(event)
 
     def focusInEvent(self, event):
-        """Override focusInEvent to prevent automatic selection"""
-        # Prevent the window from being focused (optional)
+        """Override focus event."""
         if not self.mdi_area.activeSubWindow():
             self.mdi_area.setActiveSubWindow(None)
         super().focusInEvent(event)

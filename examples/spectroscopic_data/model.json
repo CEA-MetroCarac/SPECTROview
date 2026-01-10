@@ -1,0 +1,112 @@
+{
+   "0": {
+      "fname": "spectrum2_1ML",
+      "range_min": null,
+      "range_max": null,
+      "normalize": false,
+      "normalize_range_min": null,
+      "normalize_range_max": null,
+      "peak_labels": ["1", "2", "3"],
+      "fit_params": {
+         "method": "leastsq",
+         "fit_negative": false,
+         "fit_outliers": false,
+         "max_ite": 200,
+         "coef_noise": 1,
+         "xtol": 0.0001,
+         "independent_models": false,
+         "ncpus": "auto"
+      },
+      "label": null,
+      "color": null,
+      "xcorrection_value": 0,
+      "source_path": "/Users/HoanLe/Documents/SPECTROview/examples/spectroscopic_data/spectrum2_1ML.txt",
+      "baseline": {
+         "mode": "Linear",
+         "coef": 5,
+         "points": [[], []],
+         "order_max": 1,
+         "sigma": 4,
+         "attached": true,
+         "is_subtracted": false
+      },
+      "peak_models": {
+         "0": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 1700.7967666931584,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 199.99988250114242,
+                  "min": 0,
+                  "max": 200.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 394.2553622728931,
+                  "min": 366.964975784855,
+                  "max": 406.964975784855,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "1": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 4080.3533139380256,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 3.341426202369846,
+                  "min": 0,
+                  "max": 200.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 405.293045129899,
+                  "min": 382.80640782565104,
+                  "max": 422.80640782565104,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "2": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 35122.51546510051,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 3.7088665350836436,
+                  "min": 0,
+                  "max": 200.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 520.1697608382756,
+                  "min": 505.57750614182,
+                  "max": 545.57750614182,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         }
+      },
+      "result_fit_success": true
+   }
+}

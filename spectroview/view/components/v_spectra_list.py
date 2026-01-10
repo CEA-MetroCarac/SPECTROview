@@ -30,6 +30,14 @@ class VSpectraList(QListWidget):
     # ───── Public API (used by ViewModel) ────────────────────────
     def set_spectra_names(self, spectra: list):
         """Replace entire list (ViewModel-driven)."""
+        # Save current selection by fname (more robust than indices)
+        selected_fnames = []
+        for item in self.selectedItems():
+            selected_fnames.append(item.text())
+        
+        # Block signals to prevent selection change cascade
+        self.blockSignals(True)
+        
         self.clear()
         for i, spectrum in enumerate(spectra):
             item = QListWidgetItem(spectrum.fname)
@@ -46,6 +54,24 @@ class VSpectraList(QListWidget):
             # Connect checkbox state change to update spectrum.is_active
             # Store reference to spectrum object
             item.setData(Qt.UserRole + 1, id(spectrum))  # Store spectrum ID for lookup
+        
+        # Restore selection by matching fnames
+        selection_restored = False
+        for fname in selected_fnames:
+            for i in range(self.count()):
+                item = self.item(i)
+                if item.text() == fname:
+                    item.setSelected(True)
+                    selection_restored = True
+                    break
+        
+        # If no selection was restored and list is not empty, select first item
+        if not selection_restored and self.count() > 0:
+            self.item(0).setSelected(True)
+        
+        # Unblock signals and manually emit selection changed
+        self.blockSignals(False)
+        self._emit_selection_changed()
     
     def itemChanged(self, item):
         """Handle checkbox state change to update spectrum.is_active."""

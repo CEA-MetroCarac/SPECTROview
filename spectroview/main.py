@@ -32,6 +32,7 @@ class Main(QMainWindow):
         self.init_ui()
         self.toggle_theme(self.settings.value("theme"))
         self.setup_connections()
+        self.tabWidget.setCurrentWidget(self.v_maps_workspace)
 
     def init_ui(self):
         self.setWindowTitle(

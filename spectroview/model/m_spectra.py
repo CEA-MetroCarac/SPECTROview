@@ -3,6 +3,7 @@ from copy import deepcopy
 from threading import Thread
 from multiprocessing import Queue
 import dill
+from joblib import Parallel, delayed
 
 from fitspy.core.spectra import Spectra as FitspySpectra
 
@@ -32,7 +33,6 @@ class MSpectra(FitspySpectra):
     def __len__(self):
         return super().__len__()
 
-    
     
     def apply_model(self, model_dict, fnames=None, ncpus=1, show_progressbar=True, queue_incr=None):
         """ Apply 'model' to all or part of the spectra."""
@@ -77,12 +77,11 @@ class MSpectra(FitspySpectra):
                 spectrum.fit()
                 queue_incr.put(1)
         else:
-            # Parallel processing using joblib
-            from joblib import Parallel, delayed
+            # Parallel processing using joblib (SAFE VERSION)
+            
             # Worker function for joblib (no Queue - it's not picklable)
             def _fit_worker(spectrum_data):
                 """Worker function that fits a single spectrum."""
-                import dill
                 # Deserialize spectrum
                 spectrum = dill.loads(spectrum_data)
                 
@@ -101,7 +100,6 @@ class MSpectra(FitspySpectra):
                 )
             
             # Serialize spectra for parallel processing
-            import dill
             serialized_spectra = [dill.dumps(s) for s in spectra]
             
             # Run parallel fitting with joblib
@@ -110,7 +108,7 @@ class MSpectra(FitspySpectra):
                 for spec_data in serialized_spectra
             )
             
-            # Update spectra with results
+            # Update spectra with results and report progress
             for i, spectrum in enumerate(spectra):
                 res = results[i]
                 spectrum.x = res[0]
@@ -126,4 +124,4 @@ class MSpectra(FitspySpectra):
         
         # Only join thread if it was started
         if thread is not None:
-            thread.join()     
+            thread.join()

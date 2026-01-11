@@ -16,7 +16,6 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from fitspy.core.baseline import BaseLine
-from fitspy.core.utils_mp import fit_mp
 
 
 from spectroview import PALETTE, DEFAULT_COLORS

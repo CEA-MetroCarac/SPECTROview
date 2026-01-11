@@ -77,7 +77,7 @@ class MSpectra(FitspySpectra):
                 spectrum.fit()
                 queue_incr.put(1)
         else:
-            # Parallel processing using joblib (SAFE VERSION)
+            # Parallel processing using joblib
             
             # Worker function for joblib (no Queue - it's not picklable)
             def _fit_worker(spectrum_data):
@@ -102,8 +102,8 @@ class MSpectra(FitspySpectra):
             # Serialize spectra for parallel processing
             serialized_spectra = [dill.dumps(s) for s in spectra]
             
-            # Run parallel fitting with joblib
-            results = Parallel(n_jobs=ncpus, backend='loky', verbose=0)(
+            # Run parallel fitting with joblib (with batch_size optimization)
+            results = Parallel(n_jobs=ncpus, backend='loky', verbose=0, batch_size='auto')(
                 delayed(_fit_worker)(spec_data) 
                 for spec_data in serialized_spectra
             )

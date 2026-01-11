@@ -166,7 +166,7 @@ class ApplyFitModelThread(QThread):
         monitor_thread = Thread(target=self._monitor_progress, args=(queue_incr, total, start_time))
         monitor_thread.start()
         
-        # Perform fitting - pass our queue to apply_model
+        # Perform fitting
         self.spectrums.apply_model(
             fit_model, 
             fnames=self.fnames,

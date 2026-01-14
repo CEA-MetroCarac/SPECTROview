@@ -125,8 +125,39 @@ class Main(QMainWindow):
             elif ext in ['.csv', '.txt']:
                 # Detect if it's spectrum or hyperspectral data
                 try:
-                    delimiter = ";" if ext == '.csv' else "\t"
-                    df = pd.read_csv(path, delimiter=delimiter, header=None, skiprows=3)
+                    # Auto-detect delimiter (same logic as load_spectrum_file)
+                    if ext == '.txt':
+                        with open(path, 'r') as f:
+                            first_line = next(f, None)
+                            second_line = next(f, None)
+                            
+                        # Determine delimiter from first or second line
+                        test_line = second_line if second_line else first_line
+                        if test_line:
+                            if ';' in test_line:
+                                delimiter = ';'
+                            elif '\t' in test_line:
+                                delimiter = '\t'
+                            else:
+                                delimiter = r'\s+'
+                        else:
+                            delimiter = '\t'
+                    else:  # .csv
+                        delimiter = ','
+                    
+                    # Try reading with and without header
+                    try:
+                        # Try with skiprows=1 (assuming 1 header line)
+                        df = pd.read_csv(path, delimiter=delimiter, header=None, skiprows=1, 
+                                       engine='python' if delimiter == r'\s+' else 'c', nrows=5)
+                        if df.empty or df.shape[1] < 2:
+                            # Try without skipping (no header)
+                            df = pd.read_csv(path, delimiter=delimiter, header=None, 
+                                           engine='python' if delimiter == r'\s+' else 'c', nrows=5)
+                    except:
+                        # Fallback: try without skipping rows
+                        df = pd.read_csv(path, delimiter=delimiter, header=None, 
+                                       engine='python' if delimiter == r'\s+' else 'c', nrows=5)
                     
                     if df.shape[1] == 2:
                         spectra_files.append(str(path))

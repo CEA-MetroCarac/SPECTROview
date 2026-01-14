@@ -7,11 +7,50 @@ from spectroview.model.m_spectrum import MSpectrum
 
 
 def load_spectrum_file(path: Path) -> MSpectrum:
-    """Load TXT or CSV spectrum file."""
+    """Load TXT or CSV spectrum file.
+    
+    For TXT files, automatically detects delimiter (semicolon, tab, or space).
+    For CSV files, uses default comma delimiter.
+    """
     ext = path.suffix.lower()
 
     if ext == ".txt":
-        df = pd.read_csv(path, header=None, skiprows=1, delimiter="\t")
+        # Auto-detect delimiter by reading the first data line (after header)
+        with open(path, 'r') as f:
+            # Skip first line (header)
+            first_line = next(f, None)
+            # Read second line to detect delimiter
+            second_line = next(f, None)
+            
+        # Use second line for detection if available, otherwise first line
+        test_line = second_line if second_line else first_line
+        
+        if test_line:
+            # Check for delimiter in priority order: semicolon, tab, then space/whitespace
+            if ';' in test_line:
+                delimiter = ';'
+            elif '\t' in test_line:
+                delimiter = '\t'
+            else:
+                # Use whitespace (handles multiple spaces)
+                delimiter = r'\s+'
+        else:
+            # Default to tab if file has no data
+            delimiter = '\t'
+        
+        # Try reading with header (skiprows=1), then without if that fails
+        try:
+            df = pd.read_csv(path, header=None, skiprows=1, delimiter=delimiter, 
+                           engine='python' if delimiter == r'\s+' else 'c')
+            # Check if we got valid data
+            if df.empty or df.shape[1] < 2:
+                # Try without skipping rows (no header)
+                df = pd.read_csv(path, header=None, delimiter=delimiter, 
+                               engine='python' if delimiter == r'\s+' else 'c')
+        except:
+            # Fallback: try without skipping rows
+            df = pd.read_csv(path, header=None, delimiter=delimiter, 
+                           engine='python' if delimiter == r'\s+' else 'c')
     elif ext == ".csv":
         df = pd.read_csv(path)
     else:

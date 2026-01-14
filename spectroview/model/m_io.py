@@ -10,7 +10,7 @@ def load_spectrum_file(path: Path) -> MSpectrum:
     """Load TXT or CSV spectrum file.
     
     For TXT files, automatically detects delimiter (semicolon, tab, or space).
-    For CSV files, uses default comma delimiter.
+    For CSV files, uses semicolon delimiter and skips 3 header rows.
     """
     ext = path.suffix.lower()
 
@@ -48,7 +48,8 @@ def load_spectrum_file(path: Path) -> MSpectrum:
             df = pd.read_csv(path, header=None, delimiter=delimiter, 
                            engine='python' if delimiter == r'\s+' else 'c')
     elif ext == ".csv":
-        df = pd.read_csv(path)
+        # CSV files use semicolon delimiter and have 3 header rows
+        df = pd.read_csv(path, delimiter=";", header=None, skiprows=3)
     else:
         raise ValueError(f"Unsupported file type: {ext}")
 

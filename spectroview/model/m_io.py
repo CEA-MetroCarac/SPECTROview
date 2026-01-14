@@ -15,37 +15,7 @@ def load_spectrum_file(path: Path) -> MSpectrum:
     ext = path.suffix.lower()
 
     if ext == ".txt":
-        # Auto-detect delimiter by reading the first data line (after header)
-        with open(path, 'r') as f:
-            first_line = next(f, None) # Skip first line (header)
-            second_line = next(f, None)  # Read second line to detect delimiter
-            
-        # Use second line for detection if available, otherwise first line
-        test_line = second_line if second_line else first_line
-        
-        if test_line:
-            if ';' in test_line:
-                delimiter = ';' # semicolon
-            elif '\t' in test_line:
-                delimiter = '\t' # tab
-            else:
-                delimiter = r'\s+' # space
-        else:
-            delimiter = '\t'
-        
-        # Try reading with header (skiprows=1), then without if that fails
-        try:
-            df = pd.read_csv(path, header=None, skiprows=1, delimiter=delimiter, 
-                           engine='python' if delimiter == r'\s+' else 'c')
-            # Check if we got valid data
-            if df.empty or df.shape[1] < 2:
-                # Try without skipping rows (no header)
-                df = pd.read_csv(path, header=None, delimiter=delimiter, 
-                               engine='python' if delimiter == r'\s+' else 'c')
-        except:
-            # Fallback: try without skipping rows
-            df = pd.read_csv(path, header=None, delimiter=delimiter, 
-                           engine='python' if delimiter == r'\s+' else 'c')
+        df = pd.read_csv(path, header=None, skiprows=1, delimiter="\t")
     elif ext == ".csv":
         df = pd.read_csv(path)
     else:

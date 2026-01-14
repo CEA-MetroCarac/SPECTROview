@@ -17,40 +17,21 @@ def load_spectrum_file(path: Path) -> MSpectrum:
     if ext == ".txt":
         # Auto-detect delimiter by reading the first data line (after header)
         with open(path, 'r') as f:
-<<<<<<< HEAD
-            first_line = next(f, None) # Skip first line (header)
+            first_line = next(f, None)  # Skip first line (header)
             second_line = next(f, None)  # Read second line to detect delimiter
-=======
-            # Skip first line (header)
-            first_line = next(f, None)
-            # Read second line to detect delimiter
-            second_line = next(f, None)
->>>>>>> 3b358788d551909f950babf2458e297bfac177a0
             
         # Use second line for detection if available, otherwise first line
         test_line = second_line if second_line else first_line
         
         if test_line:
-<<<<<<< HEAD
-            if ';' in test_line:
-                delimiter = ';' # semicolon
-            elif '\t' in test_line:
-                delimiter = '\t' # tab
-            else:
-                delimiter = r'\s+' # space
-        else:
-=======
             # Check for delimiter in priority order: semicolon, tab, then space/whitespace
             if ';' in test_line:
                 delimiter = ';'
             elif '\t' in test_line:
                 delimiter = '\t'
             else:
-                # Use whitespace (handles multiple spaces)
                 delimiter = r'\s+'
         else:
-            # Default to tab if file has no data
->>>>>>> 3b358788d551909f950babf2458e297bfac177a0
             delimiter = '\t'
         
         # Try reading with header (skiprows=1), then without if that fails

@@ -1,7 +1,10 @@
 # spectroview/viewmodel/utils.py
-from PySide6.QtGui import QPalette, QColor, QIcon, QPixmap, QImage
+from PySide6.QtGui import QPalette, QColor, QIcon, QPixmap, QImage, QTextCursor
 from PySide6.QtCore import Qt, Signal, QThread, QSize
-from PySide6.QtWidgets import QComboBox, QMessageBox, QApplication, QListWidgetItem    
+from PySide6.QtWidgets import (
+    QComboBox, QMessageBox, QApplication, QListWidgetItem,
+    QDialog, QTextBrowser, QVBoxLayout
+)    
     
 import base64
 import numpy as np
@@ -27,7 +30,21 @@ try:
 except ImportError:
     TOAST_AVAILABLE = False
 
+def view_text(ui, title, text):
+        """ Create a QTextBrowser to display a text content"""
+        report_viewer = QDialog(ui)
+        report_viewer.setWindowTitle(title)
+        report_viewer.setGeometry(100, 100, 800, 600)
+        text_browser = QTextBrowser(report_viewer)
+        text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        text_browser.setOpenExternalLinks(True)
+        text_browser.setPlainText(text)
+        text_browser.moveCursor(QTextCursor.Start)
+        layout = QVBoxLayout(report_viewer)
+        layout.addWidget(text_browser)
+        report_viewer.show()  
 
+        
 def rgba_to_default_color(rgba, default_colors=DEFAULT_COLORS):
     """
     Convert an RGBA tuple to the closest color in DEFAULT_COLORS.

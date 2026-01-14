@@ -183,6 +183,7 @@ class VWorkspaceSpectra(QWidget):
         self.btn_select_all.clicked.connect(self.v_spectra_list.select_all)
         self.btn_remove.clicked.connect(vm.remove_selected_spectra)
         self.btn_reinit.clicked.connect(lambda: self._apply_with_ctrl(vm.reinit_spectra))
+        self.btn_stats.clicked.connect(lambda: vm.view_stats(parent_widget=self))
 
         # Connection with VMWorkspaceSpectra (vm)
         self.v_spectra_list.selection_changed.connect(vm.set_selected_indices) # V Notify VM of selection change

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from lmfit import fit_report
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
@@ -21,7 +22,7 @@ from spectroview.viewmodel.utils import (
     spectrum_to_dict,
     dict_to_spectrum,
     replace_peak_labels,
-    save_df_to_excel
+    save_df_to_excel, view_text,
 )
 
 
@@ -1111,3 +1112,29 @@ class VMWorkspaceSpectra(QObject):
             return
         self.send_df_to_graphs.emit(df_name, self.df_fit_results)
         self.notify.emit(f"Sent fit results to Graphs workspace as '{df_name}'.")
+    
+    def view_stats(self, parent_widget=None):
+        """Show statistical fitting results of the selected spectrum."""
+        selected_spectra = self._get_selected_spectra()
+        
+        if not selected_spectra:
+            self.notify.emit("No spectrum selected.")
+            return
+        
+        # Show the 'report' of the first selected spectrum
+        spectrum = selected_spectra[0]
+        fnames = [s.fname for s in selected_spectra]
+        title = f"Fitting Report - {fnames}"
+        
+        # Check if result_fit exists and has the necessary params attribute
+        if (hasattr(spectrum, 'result_fit') and 
+            spectrum.result_fit is not None and
+            hasattr(spectrum.result_fit, 'params') and
+            spectrum.result_fit.params is not None):
+            try:
+                text = fit_report(spectrum.result_fit)
+                view_text(parent_widget, title, text)
+            except Exception as e:
+                self.notify.emit(f"Error generating fit report: {str(e)}")
+        else:
+            self.notify.emit("No fit results available for the selected spectrum. Please fit the spectrum first.")

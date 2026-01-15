@@ -77,13 +77,15 @@ X_AXIS_UNIT = [
 # ---------------------------------------------------------------------
 def resource_path(relative_path: str) -> str:
     """
-    Get absolute path to resource.
-    Works in development and in PyInstaller (--onefile / --onedir).
+    Return absolute path to resource.
+    Works in development and in PyInstaller onefile/onedir.
     """
     if hasattr(sys, "_MEIPASS"):
+        # PyInstaller extracts files here
         base_path = Path(sys._MEIPASS)
     else:
-        base_path = Path(__file__).resolve().parent
+        # Project root (one level ABOVE spectroview/)
+        base_path = Path(__file__).resolve().parent.parent
 
     return str(base_path / relative_path)
 
@@ -91,15 +93,14 @@ def resource_path(relative_path: str) -> str:
 # ---------------------------------------------------------------------
 # 📁 Resource paths 
 # ---------------------------------------------------------------------
-RESOURCES_DIR = resource_path("resources")
+RESOURCES_DIR = resource_path("spectroview/resources")
 
-ICON_DIR = resource_path("resources/icons")
-PLOT_POLICY = resource_path("resources/plotpolicy.mplstyle")
+ICON_DIR = resource_path("spectroview/resources/icons")
+PLOT_POLICY = resource_path("spectroview/resources/plotpolicy.mplstyle")
 
-UI_FILE = resource_path("config/gui/gui.ui")
-LOGO_APPLI = resource_path("resources/icons/logo_spectroview.png")
+UI_FILE = resource_path("spectroview/config/gui/gui.ui")
+LOGO_APPLI = resource_path("spectroview/resources/icons/logo_spectroview.png")
 
-USER_MANUAL_MD = (
-    "https://github.com/CEA-MetroCarac/SPECTROview/blob/main/doc/user_manual.md"
+USER_MANUAL_PDF = resource_path(
+    "spectroview/resources/SPECTROview_UserManual.pdf"
 )
-USER_MANUAL_PDF = resource_path("resources/SPECTROview_UserManual.pdf")

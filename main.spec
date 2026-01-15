@@ -60,5 +60,4 @@ exe = EXE(
     runtime_tmpdir=None,
     console=False,  # windowed app
     icon='spectroview/resources/icons/logo_spectroview.ico',
-    version='version.txt',
 )

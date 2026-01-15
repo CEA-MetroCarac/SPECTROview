@@ -1,4 +1,5 @@
 .venv/
+.spectroview/
 build/
 dist/
 __pycache__/

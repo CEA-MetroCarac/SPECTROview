@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon
 
-from spectroview import ICON_DIR, PLOT_STYLES
+from spectroview import ICON_DIR, PLOT_STYLES, LEGEND_LOCATION
 from spectroview.model.m_settings import MSettings
 from spectroview.view.components.v_data_filter import VDataFilter
 from spectroview.view.components.v_dataframe_table import VDataframeTable
@@ -128,9 +128,7 @@ class VWorkspaceGraphs(QWidget):
         
         # Legend location combobox
         self.cbb_legend_loc_toolbar = QComboBox()
-        self.cbb_legend_loc_toolbar.addItems(['best', 'lower left', 'upper right', 'upper left', 'lower right',
-                                               'right', 'center left', 'center right', 'lower center',
-                                               'upper center', 'center'])
+        self.cbb_legend_loc_toolbar.addItems(LEGEND_LOCATION)
         self.cbb_legend_loc_toolbar.setMaximumWidth(100)
         toolbar_layout.addWidget(self.cbb_legend_loc_toolbar)
         

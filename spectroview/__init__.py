@@ -34,7 +34,14 @@ LEGEND_LOCATION = ['upper right', 'upper left', 'lower left', 'lower right',
                    'center left', 'center right', 'lower center',
                    'upper center', 'center']
 
-X_AXIS_UNIT = ['Wavenumber (cm-1)', 'Wavelength (nm)', 'Emission energy (eV)', 'Binding energy (eV)', 'Frequency (GHz)', '$2\Theta$ (°)']
+X_AXIS_UNIT = [
+    'Wavenumber (cm⁻¹)',
+    'Wavelength (nm)',
+    'Emission energy (eV)',
+    'Binding energy (eV)',
+    'Frequency (GHz)',
+    r'$2\theta$ (°)',
+]
 
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

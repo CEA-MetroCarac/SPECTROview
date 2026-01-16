@@ -91,9 +91,25 @@ def map_2d_file(spectroscopic_data_dir):
 
 
 @pytest.fixture(scope="session")
+def multiple_map_files(spectroscopic_data_dir):
+    """Return list of 2D map file paths for batch testing."""
+    return [
+        spectroscopic_data_dir / "Small2Dmap.txt",
+        spectroscopic_data_dir / "wafer4_process1.csv",
+        spectroscopic_data_dir / "wafer10_newformat.csv",
+    ]
+
+
+@pytest.fixture(scope="session")
 def wafer_file(spectroscopic_data_dir):
     """Return path to a wafer data test file."""
     return spectroscopic_data_dir / "wafer10_newformat.csv"
+
+
+@pytest.fixture(scope="session")
+def wafer4_file(spectroscopic_data_dir):
+    """Return path to wafer4_process1 test file."""
+    return spectroscopic_data_dir / "wafer4_process1.csv"
 
 
 @pytest.fixture(scope="session")

@@ -324,3 +324,161 @@ class TestEdgeCases:
         
         # Operations should handle gracefully
         assert len(vm.spectra) == 1
+
+
+class TestMapsWorkflow:
+    """Integration tests for complete maps processing workflow."""
+    
+    def test_load_multiple_maps(self, qtbot, mock_settings, multiple_map_files, monkeypatch):
+        """Test loading multiple 2D map files.
+        
+        Tests:
+        1. Load Small2Dmap.txt
+        2. Load wafer4_process1.csv  
+        3. Load wafer10_newformat.csv
+        4. Verify all maps are loaded correctly
+        5. Verify spectra extraction for each map
+        """
+        from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
+        from PySide6.QtWidgets import QMessageBox
+        from unittest.mock import MagicMock
+        
+        # Mock QMessageBox to avoid popups
+        mock_msgbox = MagicMock()
+        monkeypatch.setattr(QMessageBox, "critical", mock_msgbox)
+        
+        # Create Maps ViewModel
+        vm = VMWorkspaceMaps(mock_settings)
+        
+        # Track map list changes
+        map_lists = []
+        vm.maps_list_changed.connect(lambda data: map_lists.append(data))
+        
+        # Load all map files
+        existing_files = [str(f) for f in multiple_map_files if f.exists()]
+        if not existing_files:
+            pytest.skip("No map files available")
+        
+        vm.load_map_files(existing_files)
+        qtbot.wait(500)  # Maps loading takes time
+        
+        # Verify maps were loaded
+        assert len(vm.maps) == len(existing_files)
+        
+        # Verify each map has spectra extracted
+        for map_file in existing_files:
+            map_name = Path(map_file).stem
+            assert map_name in vm.maps
+            
+            # Select the map and verify spectra
+            vm.select_map(map_name)
+            qtbot.wait(100)
+            
+            # Verify spectra were extracted
+            map_prefix = f"{map_name}_("
+            map_spectra = [s for s in vm.spectra if s.fname.startswith(map_prefix)]
+            assert len(map_spectra) > 0
+    
+    def test_process_single_map(self, qtbot, mock_settings, map_2d_file, monkeypatch):
+        """Test complete processing workflow for a single map."""
+        from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
+        from PySide6.QtWidgets import QMessageBox
+        from unittest.mock import MagicMock
+        
+        if not map_2d_file.exists():
+            pytest.skip("Map test file not available")
+        
+        # Mock QMessageBox
+        mock_msgbox = MagicMock()
+        monkeypatch.setattr(QMessageBox, "critical", mock_msgbox)
+        
+        vm = VMWorkspaceMaps(mock_settings)
+        
+        # Step 1: Load map
+        vm.load_map_files([str(map_2d_file)])
+        qtbot.wait(300)
+        
+        # Step 2: Select map
+        map_name = list(vm.maps.keys())[0]
+        vm.select_map(map_name)
+        qtbot.wait(100)
+        
+        # Step 3: Verify current map is set
+        assert vm.current_map_name == map_name
+        assert vm.current_map_df is not None
+        
+        # Step 4: Select a spectrum
+        if len(vm.spectra) > 0:
+            vm.set_selected_indices([0])
+            qtbot.wait(50)
+            
+            # Step 5: Add baseline to selected spectrum
+            selected = vm._get_selected_spectra()[0]
+            x_min = selected.x.min()
+            x_max = selected.x.max()
+            vm.add_baseline_point(x_min + 50, 100)
+            vm.add_baseline_point(x_max - 50, 100)
+            qtbot.wait(50)
+            
+            # Step 6: Subtract baseline
+            vm.subtract_baseline(apply_all=False)
+            qtbot.wait(50)
+            
+            # Verify baseline points were added
+            assert len(selected.baseline.points) > 0
+    
+    def test_map_save_load_workflow(self, qtbot, mock_settings, map_2d_file, temp_workspace, monkeypatch):
+        """Test saving and loading map workspace.
+        
+        Workflow:
+        1. Load map
+        2. Process spectra (baseline, peaks)
+        3. Save workspace
+        4. Load into new ViewModel
+        5. Verify data persisted
+        """
+        from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
+        from PySide6.QtWidgets import QFileDialog, QMessageBox
+        from unittest.mock import MagicMock
+        
+        if not map_2d_file.exists():
+            pytest.skip("Map test file not available")
+        
+        # Mock QMessageBox
+        mock_msgbox = MagicMock()
+        monkeypatch.setattr(QMessageBox, "critical", mock_msgbox)
+        
+        # Create first ViewModel
+        vm1 = VMWorkspaceMaps(mock_settings)
+        vm1.load_map_files([str(map_2d_file)])
+        qtbot.wait(300)
+        
+        # Process data
+        map_name = list(vm1.maps.keys())[0]
+        vm1.select_map(map_name)
+        qtbot.wait(100)
+        
+        if len(vm1.spectra) > 0:
+            vm1.set_selected_indices([0])
+            vm1.add_peak_at(300)
+        
+        # Save workspace
+        save_path = temp_workspace / "test_maps.maps"
+        
+        def mock_get_save_filename(*args, **kwargs):
+            return str(save_path), ""
+        
+        monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
+        vm1.save_work()
+        
+        assert save_path.exists()
+        
+        # Load into new ViewModel
+        vm2 = VMWorkspaceMaps(mock_settings)
+        vm2.load_work(str(save_path))
+        qtbot.wait(300)
+        
+        # Verify data persisted
+        assert len(vm2.maps) == 1
+        assert map_name in vm2.maps
+        assert len(vm2.spectra) > 0

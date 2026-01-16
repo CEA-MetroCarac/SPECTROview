@@ -20,85 +20,101 @@ from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
 class TestSpectraWorkflow:
     """Integration tests for complete spectra processing workflow."""
     
-    def test_complete_spectra_workflow(self, qapp, mock_settings, single_spectrum_file, temp_workspace, monkeypatch):
+    def test_complete_multi_spectra_workflow(self, qapp, mock_settings, multiple_spectra_files, temp_workspace, monkeypatch):
         """
-        Test complete workflow:
-        1. Load spectrum
-        2. Crop range
-        3. Add baseline
-        4. Subtract baseline
-        5. Add peaks
-        6. Perform fitting
-        7. Save workspace
-        8. Reload workspace
-        9. Verify consistency
+        Comprehensive test for complete spectra workflow with multiple file types.
+        
+        Step 1: Load multiple spectra and verify properties
+        Step 2: Perform fitting on spectrum1_1ML (crop, baseline, fit)
+        Step 3: Verify fit results
+        Step 4: Load and apply saved fit model
+        Step 5: Save and reload workspace, verify persistence
         """
-        # Step 1: Load spectrum
         vm = VMWorkspaceSpectra(mock_settings)
-        vm.load_files([str(single_spectrum_file)])
-        assert len(vm.spectra) == 1
-
-        # Verify spectrum is loaded correctly
-        spectrum = vm.spectra[0]
         
-        # Verify fname matches filename without extension
-        assert spectrum.fname == single_spectrum_file.stem, \
-            f"Expected fname '{single_spectrum_file.stem}', got '{spectrum.fname}'"
+        # ===================================================================
+        # STEP 1: Load multiple spectrum files and verify
+        # ===================================================================
+        file_paths = [str(f) for f in multiple_spectra_files]
+        vm.load_files(file_paths)
         
-        # Verify x array properties
-        assert len(spectrum.x) == 571, \
-            f"Expected x length 571, got {len(spectrum.x)}"
-        assert abs(spectrum.x.min() - 55.76) < 0.1, \
-            f"Expected x min ~55.76, got {spectrum.x.min():.2f}"
-        assert abs(spectrum.x.max() - 952.67) < 0.1, \
-            f"Expected x max ~952.67, got {spectrum.x.max():.2f}"
+        # Verify number of loaded spectra
+        assert len(vm.spectra) == 2, \
+            f"Expected 2 spectra, got {len(vm.spectra)}"
         
-        # Verify y array properties
-        assert len(spectrum.y) == 571, \
-            f"Expected y length 571, got {len(spectrum.y)}"
-        assert abs(spectrum.y.min() - 200.76) < 1.0, \
-            f"Expected y min ~200.76, got {spectrum.y.min():.2f}"
-        assert abs(spectrum.y.max() - 37047.90) < 1.0, \
-            f"Expected y max ~37047.90, got {spectrum.y.max():.2f}"
+        # Find both spectra
+        spectrum1_1ml = None
+        xrd_spectrum = None
+        for spectrum in vm.spectra:
+            if spectrum.fname == "spectrum1_1ML":
+                spectrum1_1ml = spectrum
+            elif spectrum.fname == "XRDspectra":
+                xrd_spectrum = spectrum
         
-        # Step 2: Select spectrum and crop range
-        vm.set_selected_indices([0])
+        assert spectrum1_1ml is not None, "spectrum1_1ML not found"
+        assert xrd_spectrum is not None, "XRDspectra not found"
+        
+        # Verify spectrum1_1ML properties
+        assert len(spectrum1_1ml.x) == 571
+        assert abs(spectrum1_1ml.x.min() - 55.76) < 0.1
+        assert abs(spectrum1_1ml.x.max() - 952.67) < 0.1
+        assert len(spectrum1_1ml.y) == 571
+        assert abs(spectrum1_1ml.y.min() - 200.76) < 1.0
+        assert abs(spectrum1_1ml.y.max() - 37047.90) < 1.0
+        
+        # Verify XRDspectra properties
+        assert len(xrd_spectrum.x) == 3889
+        assert abs(xrd_spectrum.x.min() - 15.12) < 0.1
+        assert abs(xrd_spectrum.x.max() - 80.07) < 0.1
+        assert len(xrd_spectrum.y) == 3889
+        assert abs(xrd_spectrum.y.min() - 3.0) < 0.1
+        assert abs(xrd_spectrum.y.max() - 1128.0) < 1.0
+        
+        # ===================================================================
+        # STEP 2: Perform fitting on spectrum1_1ML
+        # ===================================================================
+        # Select spectrum1_1ML by finding its index
+        spectrum1_index = None
+        for i, spectrum in enumerate(vm.spectra):
+            if spectrum.fname == "spectrum1_1ML":
+                spectrum1_index = i
+                break
+        
+        vm.set_selected_indices([spectrum1_index])
+        
+        # Crop range
         x_min = 460
         x_max = 570
         vm.apply_spectral_range(x_min, x_max, apply_all=False)
         
-        # Step 3: Add baseline points
+        # Add baseline points
         vm.add_baseline_point(460.6702169878947, 1.8264804387197842)
         vm.add_baseline_point(568.8419912888185, -0.8027723385864789)
-        baseline_points_count = len(spectrum.baseline.points)
+        baseline_points_count = len(spectrum1_1ml.baseline.points)
         
-        # Step 4: Subtract baseline
+        # Subtract baseline
         vm.subtract_baseline(apply_all=False)
         
-        # Step 5: Add peak model
+        # Add peak model
         mid_x = 529
         vm.add_peak_at(mid_x)
-        models_count = len(spectrum.peak_models)
+        models_count = len(spectrum1_1ml.peak_models)
         
-        # Step 6: Perform fitting
-        spectrum.preprocess()
-        spectrum.fit()
+        # Perform fitting
+        spectrum1_1ml.preprocess()
+        spectrum1_1ml.fit()
         
         # Verify fitting was successful
-        assert hasattr(spectrum, 'result_fit'), "Fitting did not produce result_fit"
-        assert spectrum.result_fit.success, "Fitting failed"
+        assert hasattr(spectrum1_1ml, 'result_fit'), "Fitting did not produce result_fit"
+        assert spectrum1_1ml.result_fit.success, "Fitting failed"
         
         # Verify peak model parameters
-        assert len(spectrum.peak_models) == 1, \
-            f"Expected 1 peak model, got {len(spectrum.peak_models)}"
+        assert len(spectrum1_1ml.peak_models) == 1
         
-        # Get fitted parameters from result_fit.best_values
-        best_values = spectrum.result_fit.best_values
-        
-        # Verify that the key parameters exist
-        assert 'm01_ampli' in best_values, "Missing ampli parameter"
-        assert 'm01_fwhm' in best_values, "Missing fwhm parameter"
-        assert 'm01_x0' in best_values, "Missing x0 parameter"
+        best_values = spectrum1_1ml.result_fit.best_values
+        assert 'm01_ampli' in best_values
+        assert 'm01_fwhm' in best_values
+        assert 'm01_x0' in best_values
         
         ampli_value = best_values['m01_ampli']
         fwhm_value = best_values['m01_fwhm']
@@ -107,15 +123,73 @@ class TestSpectraWorkflow:
         # Verify fitted values with 1 decimal precision
         assert abs(ampli_value - 37096.2) < 15.0, \
             f"Expected ampli ~37096.2, got {ampli_value:.1f}"
-        
         assert abs(fwhm_value - 3.6) < 0.1, \
             f"Expected fwhm ~3.6, got {fwhm_value:.1f}"
-        
         assert abs(x0_value - 520.1) < 0.1, \
             f"Expected x0 ~520.1, got {x0_value:.1f}"
         
-        # Step 7: Save workspace
-        save_path = temp_workspace / "workflow.spectra"
+        # ===================================================================
+        # STEP 3: Load and apply saved fit model
+        # ===================================================================
+        from pathlib import Path as PathlibPath
+        fit_model_path = PathlibPath("examples/spectroscopic_data/fit_model_Si_.json")
+        
+        # Load the fit model using spectra.load_model
+        fit_model_dict = vm.spectra.load_model(str(fit_model_path), ind=0)
+        
+        # Verify the loaded model has expected structure
+        assert 'range_min' in fit_model_dict
+        assert 'range_max' in fit_model_dict
+        assert 'baseline' in fit_model_dict
+        assert 'peak_models' in fit_model_dict
+        
+        # Preserve the original fname (set_attributes will overwrite it)
+        original_fname = spectrum1_1ml.fname
+        
+        # Reinit spectrum1_1ML and apply the loaded model
+        spectrum1_1ml.reinit()
+        
+        # Apply the model attributes
+        spectrum1_1ml.set_attributes(fit_model_dict)
+        
+        # Restore the original fname
+        spectrum1_1ml.fname = original_fname
+        
+        # Perform preprocessing and fitting with loaded model
+        spectrum1_1ml.preprocess()
+        spectrum1_1ml.fit()
+        
+        # Verify fitting with loaded model was successful
+        assert hasattr(spectrum1_1ml, 'result_fit'), "Fitting with loaded model did not produce result_fit"
+        assert spectrum1_1ml.result_fit.success, "Fitting with loaded model failed"
+        
+        # Verify the loaded model parameters
+        # The loaded model should have a Lorentzian peak
+        assert len(spectrum1_1ml.peak_models) >= 1, \
+            f"Expected at least 1 peak model from loaded fit, got {len(spectrum1_1ml.peak_models)}"
+        
+        # Get fitted results from loaded model
+        loaded_best_values = spectrum1_1ml.result_fit.best_values
+        
+        # Check the fitted parameters match expected values (same as Step 2)
+        # Applying the loaded fit model should produce consistent results
+        if 'm01_ampli' in loaded_best_values:
+            loaded_ampli = loaded_best_values['m01_ampli']
+            loaded_fwhm = loaded_best_values['m01_fwhm']
+            loaded_x0 = loaded_best_values['m01_x0']
+            
+            # Verify fitted values with 1 decimal precision (same checks as Step 2)
+            assert abs(loaded_ampli - 37096.2) < 15.0, \
+                f"Expected ampli ~37096.2, got {loaded_ampli:.1f}"
+            assert abs(loaded_fwhm - 3.6) < 0.1, \
+                f"Expected fwhm ~3.6, got {loaded_fwhm:.1f}"
+            assert abs(loaded_x0 - 520.1) < 0.1, \
+                f"Expected x0 ~520.1, got {loaded_x0:.1f}"
+        
+        # ===================================================================
+        # STEP 4: Save workspace and reload to verify persistence
+        # ===================================================================
+        save_path = temp_workspace / "complete_workflow.spectra"
         
         def mock_get_save_filename(*args, **kwargs):
             return str(save_path), ""
@@ -124,71 +198,37 @@ class TestSpectraWorkflow:
         monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
         
         vm.save_work()
-        assert save_path.exists()
+        assert save_path.exists(), "Workspace file was not created"
         
-        # Step 8: Reload workspace into new ViewModel
+        # Reload workspace into new ViewModel
         vm2 = VMWorkspaceSpectra(mock_settings)
         vm2.load_work(str(save_path))
         
-        # Step 9: Verify consistency
-        assert len(vm2.spectra) == 1
-        loaded_spectrum = vm2.spectra[0]
+        # Verify both spectra were saved and loaded
+        assert len(vm2.spectra) == 2, \
+            f"Expected 2 spectra after reload, got {len(vm2.spectra)}"
         
-        # Verify spectrum data is preserved
-        assert loaded_spectrum.fname == spectrum.fname
-        assert loaded_spectrum.range_min is not None
-        assert loaded_spectrum.range_max is not None
-        
-        # Verify baseline is preserved
-        assert len(loaded_spectrum.baseline.points) == baseline_points_count
-        
-        # Verify peak models are preserved
-        assert len(loaded_spectrum.peak_models) == models_count
-    
-    def test_load_multiple_spectral_types(self, qapp, mock_settings, multiple_spectra_files):
-        """
-        Test loading multiple spectral data types.
-        
-        Verify:
-        1. Load two different spectrum file types
-        2. Check number of loaded spectra
-        3. Verify XRDspectra.txt data properties
-        """
-        vm = VMWorkspaceSpectra(mock_settings)
-        
-        # Load multiple spectrum files (spectrum1_1ML.txt and XRDspectra.txt)
-        file_paths = [str(f) for f in multiple_spectra_files]
-        vm.load_files(file_paths)
-        
-        # Verify number of loaded spectra
-        assert len(vm.spectra) == 2, \
-            f"Expected 2 spectra, got {len(vm.spectra)}"
-        
-        # Find the XRDspectra spectrum
-        xrd_spectrum = None
-        for spectrum in vm.spectra:
-            if spectrum.fname == "XRDspectra":
-                xrd_spectrum = spectrum
+        # Find the reloaded spectrum1_1ML
+        loaded_spectrum1 = None
+        for spectrum in vm2.spectra:
+            if spectrum.fname == "spectrum1_1ML":
+                loaded_spectrum1 = spectrum
                 break
         
-        assert xrd_spectrum is not None, "XRDspectra not found in loaded spectra"
+        assert loaded_spectrum1 is not None, "spectrum1_1ML not found after reload"
         
-        # Verify XRDspectra.txt data properties
-        # X array properties
-        assert len(xrd_spectrum.x) == 3889, \
-            f"Expected x length 3889, got {len(xrd_spectrum.x)}"
-        assert abs(xrd_spectrum.x.min() - 15.12) < 0.1, \
-            f"Expected x min ~15.12, got {xrd_spectrum.x.min():.2f}"
-        assert abs(xrd_spectrum.x.max() - 80.07) < 0.1, \
-            f"Expected x max ~80.07, got {xrd_spectrum.x.max():.2f}"
+        # Verify spectrum data is preserved
+        assert loaded_spectrum1.range_min is not None
+        assert loaded_spectrum1.range_max is not None
         
-        # Y array properties
-        assert len(xrd_spectrum.y) == 3889, \
-            f"Expected y length 3889, got {len(xrd_spectrum.y)}"
-        assert abs(xrd_spectrum.y.min() - 3.0) < 0.1, \
-            f"Expected y min ~3.0, got {xrd_spectrum.y.min():.2f}"
-        assert abs(xrd_spectrum.y.max() - 1128.0) < 1.0, \
-            f"Expected y max ~1128.0, got {xrd_spectrum.y.max():.2f}"
+        # Verify baseline is preserved
+        assert len(loaded_spectrum1.baseline.points) == baseline_points_count, \
+            f"Expected {baseline_points_count} baseline points, got {len(loaded_spectrum1.baseline.points)}"
+        
+        # Verify peak models are preserved
+        assert len(loaded_spectrum1.peak_models) == models_count, \
+            f"Expected {models_count} peak models, got {len(loaded_spectrum1.peak_models)}"
+
 
 
 class TestMapsWorkflow:
@@ -202,7 +242,8 @@ class TestMapsWorkflow:
         2. Load wafer4_process1.csv  
         3. Load wafer10_newformat.csv
         4. Verify all maps are loaded correctly
-        5. Verify spectra extraction for each map
+        5. Verify spectra counts for each map
+        6. Verify first spectrum properties for each map
         """
         from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
         from PySide6.QtWidgets import QMessageBox
@@ -215,10 +256,6 @@ class TestMapsWorkflow:
         # Create Maps ViewModel
         vm = VMWorkspaceMaps(mock_settings)
         
-        # Track map list changes
-        map_lists = []
-        vm.maps_list_changed.connect(lambda data: map_lists.append(data))
-        
         # Load all map files
         existing_files = [str(f) for f in multiple_map_files if f.exists()]
         if not existing_files:
@@ -227,22 +264,79 @@ class TestMapsWorkflow:
         vm.load_map_files(existing_files)
         qtbot.wait(500)  # Maps loading takes time
         
-        # Verify maps were loaded
-        assert len(vm.maps) == len(existing_files)
+        # Verify number of loaded maps
+        assert len(vm.maps) == 3, \
+            f"Expected 3 maps, got {len(vm.maps)}"
         
-        # Verify each map has spectra extracted
-        for map_file in existing_files:
-            map_name = Path(map_file).stem
-            assert map_name in vm.maps
+        # Define expected counts and properties for each map
+        map_expectations = {
+            'Small2Dmap': {
+                'count': 1681,
+                'x_len': 574,
+                'x_min': 55.79,
+                'x_max': 957.19,
+                'y_len': 574,
+                'y_min': -4.61,
+                'y_max': 809.99
+            },
+            'wafer4_process1': {
+                'count': 49,
+                'x_len': 2048,
+                'x_min': -96.70,
+                'x_max': 1079.36,
+                'y_len': 2048,
+                'y_min': -7072.00,
+                'y_max': 17101.00
+            },
+            'wafer10_newformat': {
+                'count': 4,
+                'x_len': 2048,
+                'x_min': -40.49,
+                'x_max': 1029.65,
+                'y_len': 2048,
+                'y_min': -1883.00,
+                'y_max': 62075.00
+            }
+        }
+        
+        # Verify each map
+        for map_name, expected in map_expectations.items():
+            # Verify map exists
+            assert map_name in vm.maps, \
+                f"Map '{map_name}' not found in loaded maps"
             
-            # Select the map and verify spectra
+            # Select the map
             vm.select_map(map_name)
             qtbot.wait(100)
             
-            # Verify spectra were extracted
+            # Count spectra for this map
             map_prefix = f"{map_name}_("
             map_spectra = [s for s in vm.spectra if s.fname.startswith(map_prefix)]
-            assert len(map_spectra) > 0
+            
+            # Verify spectra count
+            assert len(map_spectra) == expected['count'], \
+                f"{map_name}: Expected {expected['count']} spectra, got {len(map_spectra)}"
+            
+            # Verify first spectrum properties
+            if len(map_spectra) > 0:
+                first_spectrum = map_spectra[0]
+                
+                # X array properties
+                assert len(first_spectrum.x) == expected['x_len'], \
+                    f"{map_name}: Expected x length {expected['x_len']}, got {len(first_spectrum.x)}"
+                assert abs(first_spectrum.x.min() - expected['x_min']) < 0.1, \
+                    f"{map_name}: Expected x min ~{expected['x_min']}, got {first_spectrum.x.min():.2f}"
+                assert abs(first_spectrum.x.max() - expected['x_max']) < 0.1, \
+                    f"{map_name}: Expected x max ~{expected['x_max']}, got {first_spectrum.x.max():.2f}"
+                
+                # Y array properties
+                assert len(first_spectrum.y) == expected['y_len'], \
+                    f"{map_name}: Expected y length {expected['y_len']}, got {len(first_spectrum.y)}"
+                assert abs(first_spectrum.y.min() - expected['y_min']) < 1.0, \
+                    f"{map_name}: Expected y min ~{expected['y_min']}, got {first_spectrum.y.min():.2f}"
+                assert abs(first_spectrum.y.max() - expected['y_max']) < 1.0, \
+                    f"{map_name}: Expected y max ~{expected['y_max']}, got {first_spectrum.y.max():.2f}"
+
     
     def test_process_single_map(self, qtbot, mock_settings, map_2d_file, monkeypatch):
         """Test complete processing workflow for a single map."""

@@ -129,42 +129,43 @@ class TestSpectraWorkflow:
             f"Expected x0 ~520.1, got {x0_value:.1f}"
         
         # ===================================================================
-        # STEP 3: Load and apply saved fit model
+        # STEP 3: Load and apply saved fit model using VM method
         # ===================================================================
         from pathlib import Path as PathlibPath
+        from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
+        from unittest.mock import MagicMock
+        
         fit_model_path = PathlibPath("examples/spectroscopic_data/fit_model_Si_.json")
         
-        # Load the fit model using spectra.load_model
-        fit_model_dict = vm.spectra.load_model(str(fit_model_path), ind=0)
+        # Setup fit model builder (required by apply_loaded_fit_model)
+        vm._vm_fit_model_builder = MagicMock(spec=VMFitModelBuilder)
+        vm._vm_fit_model_builder.get_current_model_path.return_value = fit_model_path
         
-        # Verify the loaded model has expected structure
-        assert 'range_min' in fit_model_dict
-        assert 'range_max' in fit_model_dict
-        assert 'baseline' in fit_model_dict
-        assert 'peak_models' in fit_model_dict
+        # Ensure spectrum1_1ML is still selected
+        vm.set_selected_indices([spectrum1_index])
         
-        # Preserve the original fname (set_attributes will overwrite it)
-        original_fname = spectrum1_1ml.fname
+        # Track fit completion
+        fit_completed = []
+        vm.fit_in_progress.connect(lambda in_progress: fit_completed.append(not in_progress) if not in_progress else None)
         
-        # Reinit spectrum1_1ML and apply the loaded model
-        spectrum1_1ml.reinit()
+        # Apply the loaded fit model using the VM method
+        vm.apply_loaded_fit_model(apply_all=False)
         
-        # Apply the model attributes
-        spectrum1_1ml.set_attributes(fit_model_dict)
+        # Wait for fitting thread to complete (max 5 seconds)
+        import time
+        timeout = 5.0
+        start_time = time.time()
+        while not fit_completed and (time.time() - start_time) < timeout:
+            qapp.processEvents()
+            time.sleep(0.01)
         
-        # Restore the original fname
-        spectrum1_1ml.fname = original_fname
-        
-        # Perform preprocessing and fitting with loaded model
-        spectrum1_1ml.preprocess()
-        spectrum1_1ml.fit()
+        assert len(fit_completed) > 0, "Fit did not complete within timeout"
         
         # Verify fitting with loaded model was successful
         assert hasattr(spectrum1_1ml, 'result_fit'), "Fitting with loaded model did not produce result_fit"
         assert spectrum1_1ml.result_fit.success, "Fitting with loaded model failed"
         
         # Verify the loaded model parameters
-        # The loaded model should have a Lorentzian peak
         assert len(spectrum1_1ml.peak_models) >= 1, \
             f"Expected at least 1 peak model from loaded fit, got {len(spectrum1_1ml.peak_models)}"
         
@@ -185,6 +186,7 @@ class TestSpectraWorkflow:
                 f"Expected fwhm ~3.6, got {loaded_fwhm:.1f}"
             assert abs(loaded_x0 - 520.1) < 0.1, \
                 f"Expected x0 ~520.1, got {loaded_x0:.1f}"
+
         
         # ===================================================================
         # STEP 4: Save workspace and reload to verify persistence

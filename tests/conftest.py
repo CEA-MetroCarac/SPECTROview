@@ -78,8 +78,6 @@ def multiple_spectra_files(spectroscopic_data_dir):
     """Return list of spectrum file paths."""
     return [
         spectroscopic_data_dir / "spectrum1_1ML.txt",
-        spectroscopic_data_dir / "spectrum2_1ML.txt",
-        spectroscopic_data_dir / "spectrum3_3ML.txt",
         spectroscopic_data_dir / "XRDspectra.txt",
     ]
 

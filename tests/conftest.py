@@ -80,6 +80,7 @@ def multiple_spectra_files(spectroscopic_data_dir):
         spectroscopic_data_dir / "spectrum1_1ML.txt",
         spectroscopic_data_dir / "spectrum2_1ML.txt",
         spectroscopic_data_dir / "spectrum3_3ML.txt",
+        spectroscopic_data_dir / "XRDspectra.txt",
     ]
 
 
@@ -98,7 +99,7 @@ def wafer_file(spectroscopic_data_dir):
 @pytest.fixture(scope="session")
 def fit_model_file(spectroscopic_data_dir):
     """Return path to a fit model JSON file."""
-    return spectroscopic_data_dir / "model.json"
+    return spectroscopic_data_dir / "fit_model_Si_.json"
 
 
 @pytest.fixture(scope="session")

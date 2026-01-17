@@ -14,6 +14,8 @@ import pandas as pd
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from PySide6.QtWidgets import QFileDialog
+
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
 from spectroview.model.m_graph import MGraph
 
@@ -44,8 +46,6 @@ class TestVMWorkspaceGraphsDataFrameLoading:
         # Mock file dialog
         def mock_get_open_filenames(*args, **kwargs):
             return [str(dataframe_excel_file)], ""
-        
-        from PySide6.QtWidgets import QFileDialog
         monkeypatch.setattr(QFileDialog, "getOpenFileNames", mock_get_open_filenames)
         
         # Load DataFrame
@@ -70,8 +70,6 @@ class TestVMWorkspaceGraphsDataFrameLoading:
         # Mock file dialog
         def mock_get_open_filenames(*args, **kwargs):
             return [str(csv_file)], ""
-        
-        from PySide6.QtWidgets import QFileDialog
         monkeypatch.setattr(QFileDialog, "getOpenFileNames", mock_get_open_filenames)
         
         # Load DataFrame
@@ -297,8 +295,6 @@ class TestVMWorkspaceGraphsPersistence:
         
         def mock_get_save_filename(*args, **kwargs):
             return str(save_path), ""
-        
-        from PySide6.QtWidgets import QFileDialog
         monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
         
         # Save workspace
@@ -337,8 +333,6 @@ class TestVMWorkspaceGraphsPersistence:
         
         def mock_get_save_filename(*args, **kwargs):
             return str(save_path), ""
-        
-        from PySide6.QtWidgets import QFileDialog
         monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
         
         vm1.save_workspace()

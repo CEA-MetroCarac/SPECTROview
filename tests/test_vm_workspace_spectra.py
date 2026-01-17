@@ -20,6 +20,7 @@ from unittest.mock import MagicMock, patch, Mock
 from io import StringIO
 
 from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QFileDialog
 import numpy as np
 
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
@@ -387,8 +388,6 @@ class TestVMWorkspaceSpectraPersistence:
         
         def mock_get_save_filename(*args, **kwargs):
             return str(save_path), ""
-        
-        from PySide6.QtWidgets import QFileDialog
         monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
         
         # Save workspace
@@ -428,8 +427,6 @@ class TestVMWorkspaceSpectraPersistence:
         
         def mock_get_save_filename(*args, **kwargs):
             return str(save_path), ""
-        
-        from PySide6.QtWidgets import QFileDialog
         monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
         
         vm1.save_work()

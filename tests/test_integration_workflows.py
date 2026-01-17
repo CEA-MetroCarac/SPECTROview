@@ -10,11 +10,19 @@ Tests cover:
 
 import pytest
 import pandas as pd
+import numpy as np
+import time
 from pathlib import Path
+from pathlib import Path as PathlibPath
 from unittest.mock import patch, MagicMock
+
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
+from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
+from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
+from spectroview.model.m_spectrum import MSpectrum
 
 
 class TestSpectraWorkflow:
@@ -131,10 +139,6 @@ class TestSpectraWorkflow:
         # ===================================================================
         # STEP 3: Load and apply saved fit model using VM method
         # ===================================================================
-        from pathlib import Path as PathlibPath
-        from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
-        from unittest.mock import MagicMock
-        
         fit_model_path = PathlibPath("examples/spectroscopic_data/fit_model_Si_.json")
         
         # Setup fit model builder (required by apply_loaded_fit_model)
@@ -152,7 +156,7 @@ class TestSpectraWorkflow:
         vm.apply_loaded_fit_model(apply_all=False)
         
         # Wait for fitting thread to complete (max 5 seconds)
-        import time
+
         timeout = 5.0
         start_time = time.time()
         while not fit_completed and (time.time() - start_time) < timeout:
@@ -169,23 +173,23 @@ class TestSpectraWorkflow:
         assert len(spectrum1_1ml.peak_models) >= 1, \
             f"Expected at least 1 peak model from loaded fit, got {len(spectrum1_1ml.peak_models)}"
         
-        # Get fitted results from loaded model
-        loaded_best_values = spectrum1_1ml.result_fit.best_values
+        # Get fitted results
+        best_values = spectrum1_1ml.result_fit.best_values
         
         # Check the fitted parameters match expected values (same as Step 2)
         # Applying the loaded fit model should produce consistent results
-        if 'm01_ampli' in loaded_best_values:
-            loaded_ampli = loaded_best_values['m01_ampli']
-            loaded_fwhm = loaded_best_values['m01_fwhm']
-            loaded_x0 = loaded_best_values['m01_x0']
+        if 'm01_ampli' in best_values:
+            ampli = best_values['m01_ampli']
+            fwhm = best_values['m01_fwhm']
+            x0 = best_values['m01_x0']
             
             # Verify fitted values with 1 decimal precision (same checks as Step 2)
-            assert abs(loaded_ampli - 37096.2) < 15.0, \
-                f"Expected ampli ~37096.2, got {loaded_ampli:.1f}"
-            assert abs(loaded_fwhm - 3.6) < 0.1, \
-                f"Expected fwhm ~3.6, got {loaded_fwhm:.1f}"
-            assert abs(loaded_x0 - 520.1) < 0.1, \
-                f"Expected x0 ~520.1, got {loaded_x0:.1f}"
+            assert abs(ampli - 37096.2) < 15.0, \
+                f"Expected ampli ~37096.2, got {ampli:.1f}"
+            assert abs(fwhm - 3.6) < 0.1, \
+                f"Expected fwhm ~3.6, got {fwhm:.1f}"
+            assert abs(x0 - 520.1) < 0.1, \
+                f"Expected x0 ~520.1, got {x0:.1f}"
 
         
         # ===================================================================
@@ -196,7 +200,7 @@ class TestSpectraWorkflow:
         def mock_get_save_filename(*args, **kwargs):
             return str(save_path), ""
         
-        from PySide6.QtWidgets import QFileDialog
+        
         monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
         
         vm.save_work()
@@ -247,10 +251,6 @@ class TestMapsWorkflow:
         5. Verify spectra counts for each map
         6. Verify first spectrum properties for each map
         """
-        from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
-        from PySide6.QtWidgets import QMessageBox
-        from unittest.mock import MagicMock
-        
         # Mock QMessageBox to avoid popups
         mock_msgbox = MagicMock()
         monkeypatch.setattr(QMessageBox, "critical", mock_msgbox)
@@ -342,10 +342,6 @@ class TestMapsWorkflow:
     
     def test_process_single_map(self, qtbot, mock_settings, map_2d_file, monkeypatch):
         """Test complete processing workflow for a single map."""
-        from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
-        from PySide6.QtWidgets import QMessageBox
-        from unittest.mock import MagicMock
-        
         if not map_2d_file.exists():
             pytest.skip("Map test file not available")
         
@@ -398,10 +394,6 @@ class TestMapsWorkflow:
         4. Load into new ViewModel
         5. Verify data persisted
         """
-        from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
-        from PySide6.QtWidgets import QFileDialog, QMessageBox
-        from unittest.mock import MagicMock
-        
         if not map_2d_file.exists():
             pytest.skip("Map test file not available")
         
@@ -494,8 +486,7 @@ class TestGraphsWorkflow:
         
         def mock_get_save_filename(*args, **kwargs):
             return str(save_path), ""
-        
-        from PySide6.QtWidgets import QFileDialog
+
         monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
         
         vm.save_workspace()
@@ -565,8 +556,7 @@ class TestWorkspacePersistenceRobustness:
         
         def mock_get_save_filename(*args, **kwargs):
             return str(save_path), ""
-        
-        from PySide6.QtWidgets import QFileDialog
+
         monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
         
         # Save empty workspace
@@ -589,7 +579,6 @@ class TestWorkspacePersistenceRobustness:
         
         # Mock QMessageBox to prevent actual popup
         mock_msgbox = MagicMock()
-        from PySide6.QtWidgets import QMessageBox
         monkeypatch.setattr(QMessageBox, "critical", mock_msgbox)
         
         # Attempt to load - should handle error gracefully
@@ -663,9 +652,7 @@ class TestEdgeCases:
     def test_single_point_spectrum(self, qapp, mock_settings):
         """Test handling spectrum with single data point."""
         vm = VMWorkspaceSpectra(mock_settings)
-        
-        from spectroview.model.m_spectrum import MSpectrum
-        import numpy as np
+
         
         spectrum = MSpectrum()
         spectrum.fname = "single_point"

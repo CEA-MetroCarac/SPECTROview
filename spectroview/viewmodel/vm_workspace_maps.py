@@ -217,6 +217,33 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Delegate to parent's reinit_spectra which already handles fname-based selection
         self.reinit_spectra(apply_all)
     
+    def reinit_spectra(self, apply_all: bool = False):
+        """Override parent to refresh map-specific list after reinit."""
+        # Call parent implementation
+        super().reinit_spectra(apply_all)
+        
+        # Refresh current map's spectra list with updated colors
+        if self.current_map_name:
+            self._show_map_spectra(self.current_map_name)
+    
+    def delete_baseline(self, apply_all: bool = False):
+        """Override parent to refresh map-specific list after baseline deletion."""
+        # Call parent implementation
+        super().delete_baseline(apply_all)
+        
+        # Refresh current map's spectra list with updated colors
+        if self.current_map_name:
+            self._show_map_spectra(self.current_map_name)
+    
+    def delete_peaks(self, apply_all: bool = False):
+        """Override parent to refresh map-specific list after peaks deletion."""
+        # Call parent implementation
+        super().delete_peaks(apply_all)
+        
+        # Refresh current map's spectra list with updated colors
+        if self.current_map_name:
+            self._show_map_spectra(self.current_map_name)
+    
     def send_selected_spectra_to_spectra_workspace(self):
         """Send selected spectra to the Spectra workspace tab for comparison."""
         if not self.selected_fnames:

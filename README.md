@@ -39,7 +39,7 @@ ______
 ### Create fit models, copy/paste to others, saved fit model for later use, use defined fit model for fitting multiple spectra, wafer data, and 2D maps, collect all best-fit results with one click:
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/GIF/fitting.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/GIF/Fitting2.gif">
 </p>
 
 

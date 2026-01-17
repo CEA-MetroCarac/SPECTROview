@@ -132,7 +132,7 @@ class VPeakTable(QWidget):
             btn = QPushButton(pm.prefix)
             btn.setIcon(QIcon(f"{ICON_DIR}/close.png"))
             btn.setFixedWidth(50)
-            btn.clicked.connect(lambda _, idx=i: self.peak_deleted.emit(idx))
+            btn.clicked.connect(self._make_delete_callback(i))
             cols["del"].addWidget(btn)
 
             # label
@@ -218,6 +218,10 @@ class VPeakTable(QWidget):
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
+    def _make_delete_callback(self, idx):
+        """Create a callback that properly captures the peak index."""
+        return lambda: self.peak_deleted.emit(idx)
+
     def _emit_value(self, idx, key, field, text):
         try:
             val = float(text)

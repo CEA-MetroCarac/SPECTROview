@@ -9,9 +9,14 @@
 
 ## SPECTROview : A Tool for Spectroscopic Data Processing and Visualization.
 
-Spectroscopy techniques (such as Raman, Photoluminescences, XRD, XPS…) are widely used in various fields, including materials science, chemistry, biology, and geology. In recent years, these techniques have increasingly found their place in cleanroom environments, particularly within the microelectronics industry, where they serve as critical metrology tools for wafer-scale measurements. The data collected from these in-line measurements (wafer data) require specific processing, but existing software solutions are often not optimized for this type of data and typically lack advanced plotting and visualization capabilities. Additionally, the licensing requirements of these software solutions can restrict access for a broader community of users.
+SPECTROview is free, open-source software designed for spectroscopic data analysis. It supports a wide range of data types, including discrete spectra and hyperspectral data (such as 2D maps and wafer maps).
 
-SPECTROview addresses these gap by offering free, open-source software that is compatible with both in-line data (wafer-map) as well as standard spectroscopic data (discret spectra, 2D maps). It also features a built-in visualization tool, enabling users to streamline both data processing and visualization in a single application, making the workflow more efficient. 
+With its built-in visualization tools, SPECTROview streamlines your workflow by combining data processing and visualization into a single, efficient application. 
+
+- **Getting Started**: Check out [this folder](https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples) to see the supported data formats and find example datasets for practice.
+
+- **Documentation**: A detailed manual is available [here](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/resources/SPECTROview_UserManual.pdf) or can be accessed directly within the application.
+- **Installation**: Instructions can be found at the bottom of this page.
 
 ___
 ## Features: 

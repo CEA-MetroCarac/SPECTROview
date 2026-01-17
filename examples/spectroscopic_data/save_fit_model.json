@@ -1,0 +1,139 @@
+{
+   "0": {
+      "fname": "wafer4_process1_(0.0, 0.0)",
+      "range_min": 320.0,
+      "range_max": 490.0,
+      "normalize": false,
+      "normalize_range_min": null,
+      "normalize_range_max": null,
+      "peak_labels": ["A", "B", "C", "4"],
+      "fit_params": {
+         "method": "Leastsq",
+         "fit_negative": false,
+         "fit_outliers": false,
+         "max_ite": 200,
+         "coef_noise": 1.0,
+         "xtol": 9.999999747378752e-05,
+         "independent_models": false,
+         "ncpus": 1
+      },
+      "label": null,
+      "color": null,
+      "xcorrection_value": 0,
+      "source_path": null,
+      "is_active": true,
+      "baseline": {
+         "mode": "Linear",
+         "coef": 5,
+         "points": [[320.57355402428146, 489.0815975463537],
+            [552.3977816573006, 460.8054633753934]],
+         "order_max": 1,
+         "sigma": 4,
+         "attached": true,
+         "is_subtracted": true
+      },
+      "peak_models": {
+         "0": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 2095.7550790549462,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 6.549489676432363,
+                  "min": 0,
+                  "max": 200.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 414.7167670540107,
+                  "min": 395.07736979617306,
+                  "max": 435.07736979617306,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "1": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 682.3104179208729,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 5.683294220874857,
+                  "min": 0,
+                  "max": 200.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 392.66681021745876,
+                  "min": 372.49253549685045,
+                  "max": 412.49253549685045,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "2": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 347.62330824524565,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 19.48754513937072,
+                  "min": 0,
+                  "max": 200.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 383.2919296968634,
+                  "min": 345.0530171892623,
+                  "max": 385.0530171892623,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "3": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 191.03796901405988,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 30.57994491383956,
+                  "min": 0,
+                  "max": 200.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 463.0186073887266,
+                  "min": 443.62420987882905,
+                  "max": 483.62420987882905,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         }
+      },
+      "result_fit_success": true
+   }
+}

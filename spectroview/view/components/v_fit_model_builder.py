@@ -448,8 +448,8 @@ class VFitModelBuilder(QWidget):
         self.btn_apply.setEnabled(enabled)
         self.btn_paste.setEnabled(enabled)
         if not enabled:
-            self.btn_fit.setText("Fitting...")
-            self.btn_apply.setText("Applying...")
+            self.btn_fit.setText("Fitting")
+            self.btn_apply.setText("Applying")
         else:
             self.btn_fit.setText("Fit")
             self.btn_apply.setText("Apply")

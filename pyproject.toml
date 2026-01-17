@@ -78,4 +78,10 @@ where = ["."]
 include = ["spectroview*"]
 namespaces = false
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
 

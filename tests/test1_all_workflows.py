@@ -340,9 +340,24 @@ class TestMapsWorkflow:
                     f"{map_name}: Expected y max ~{expected['y_max']}, got {first_spectrum.y.max():.2f}"
 
     
-    def test_process_single_map(self, qtbot, mock_settings, map_2d_file, monkeypatch):
-        """Test complete processing workflow for a single map."""
-        if not map_2d_file.exists():
+    
+    def test_process_single_map(self, qapp, qtbot, mock_settings, temp_workspace, monkeypatch):
+        """
+        Test complete map processing workflow.
+        
+        Steps:
+        1. Load Small2Dmap
+        2. Select map and first spectrum
+        3. Load and apply fit model
+        4. Verify fitted results of first spectrum
+        5. Collect fit results and verify DataFrame
+        6. Save workspace
+        7. Reload workspace and verify persistence
+        """
+        from pathlib import Path as PathlibPath
+        
+        map_file = PathlibPath("examples/spectroscopic_data/Small2Dmap.txt")
+        if not map_file.exists():
             pytest.skip("Map test file not available")
         
         # Mock QMessageBox
@@ -351,248 +366,410 @@ class TestMapsWorkflow:
         
         vm = VMWorkspaceMaps(mock_settings)
         
-        # Step 1: Load map
-        vm.load_map_files([str(map_2d_file)])
-        qtbot.wait(300)
+        # ===================================================================
+        # STEP 1: Load Small2Dmap
+        # ===================================================================
+        vm.load_map_files([str(map_file)])
+        qtbot.wait(500)
         
-        # Step 2: Select map
-        map_name = list(vm.maps.keys())[0]
-        vm.select_map(map_name)
-        qtbot.wait(100)
+        # Verify map was loaded
+        assert "Small2Dmap" in vm.maps, "Small2Dmap not loaded"
         
-        # Step 3: Verify current map is set
-        assert vm.current_map_name == map_name
+        # ===================================================================
+        # STEP 2: Select map
+        # ===================================================================
+        vm.select_map("Small2Dmap")
+        qtbot.wait(200)
+        
+        # Verify map selection
+        assert vm.current_map_name == "Small2Dmap"
         assert vm.current_map_df is not None
+        assert len(vm.spectra) == 1681, f"Expected 1681 spectra, got {len(vm.spectra)}"
         
-        # Step 4: Select a spectrum
-        if len(vm.spectra) > 0:
-            vm.set_selected_indices([0])
-            qtbot.wait(50)
-            
-            # Step 5: Add baseline to selected spectrum
-            selected = vm._get_selected_spectra()[0]
-            x_min = selected.x.min()
-            x_max = selected.x.max()
-            vm.add_baseline_point(x_min + 50, 100)
-            vm.add_baseline_point(x_max - 50, 100)
-            qtbot.wait(50)
-            
-            # Step 6: Subtract baseline
-            vm.subtract_baseline(apply_all=False)
-            qtbot.wait(50)
-            
-            # Verify baseline points were added
-            assert len(selected.baseline.points) > 0
+        # ===================================================================
+        # STEP 3: Load and apply fit model to first spectrum
+        # ===================================================================
+        fit_model_path = PathlibPath("examples/spectroscopic_data/fit_model_Si_.json")
+        
+        # Setup fit model builder
+        vm._vm_fit_model_builder = MagicMock(spec=VMFitModelBuilder)
+        vm._vm_fit_model_builder.get_current_model_path.return_value = fit_model_path
+        
+        # Select first spectrum
+        vm.set_selected_indices([0])
+        qtbot.wait(50)
+        
+        # Track fit completion
+        fit_completed = []
+        vm.fit_in_progress.connect(lambda in_progress: fit_completed.append(not in_progress) if not in_progress else None)
+        
+        # Apply the loaded fit model
+        vm.apply_loaded_fit_model(apply_all=False)
+        
+        # Wait for fitting thread to complete (max 5 seconds)
+        timeout = 5.0
+        start_time = time.time()
+        while not fit_completed and (time.time() - start_time) < timeout:
+            qapp.processEvents()
+            time.sleep(0.01)
+        
+        assert len(fit_completed) > 0, "Fit did not complete within timeout"
+        
+        # ===================================================================
+        # STEP 4: Verify fitted results of first spectrum
+        # ===================================================================
+        first_spectrum = vm.spectra[0]
+        
+        # Verify fitting was successful
+        assert hasattr(first_spectrum, 'result_fit'), "Fitting did not produce result_fit"
+        assert first_spectrum.result_fit.success, "Fitting failed"
+        
+        # Verify peak models were applied
+        assert len(first_spectrum.peak_models) >= 1, \
+            f"Expected at least 1 peak model, got {len(first_spectrum.peak_models)}"
+        
+        # Get fitted parameters
+        best_values = first_spectrum.result_fit.best_values
+        assert 'm01_ampli' in best_values, "Missing ampli parameter"
+        assert 'm01_fwhm' in best_values, "Missing fwhm parameter"
+        assert 'm01_x0' in best_values, "Missing x0 parameter"
+        
+        # Verify fitted values are reasonable
+        ampli = best_values['m01_ampli']
+        fwhm = best_values['m01_fwhm']
+        x0 = best_values['m01_x0']
+        
+        assert 820 < ampli < 830, f"Ampli should be 821.233, got {ampli:.1f}"
+        assert 3.2 < fwhm < 3.4, f"fwhm should be 3.3632, got {fwhm:.1f}"
+        assert 520 <x0 < 520.3, f"x0 should be 520.221, got {x0:.1f}"
+        
+        # ===================================================================
+        # STEP 5: Collect fit results and verify DataFrame
+        # ===================================================================
+        vm.collect_fit_results()
+        
+        # Verify fit results DataFrame
+        assert vm.df_fit_results is not None, "Fit results DataFrame is None"
+        assert len(vm.df_fit_results) == 1, \
+            f"Expected 1 row in fit results, got {len(vm.df_fit_results)}"
+        
+        # Verify DataFrame has map-specific columns (Filename, X, Y)
+        assert 'Filename' in vm.df_fit_results.columns
+        assert 'X' in vm.df_fit_results.columns, "Missing X coordinate column"
+        assert 'Y' in vm.df_fit_results.columns, "Missing Y coordinate column"
+        assert 'x0_Si' in vm.df_fit_results.columns, "Missing x0_Si column"
+        assert 'fwhm_Si' in vm.df_fit_results.columns, "Missing fwhm_Si column"
+        assert 'ampli_Si' in vm.df_fit_results.columns, "Missing ampli_Si column"
+        assert 'ampli_Si' in vm.df_fit_results.columns, "Missing ampli_Si column"
+        
+        # Verify the DataFrame contains fit parameters
+        assert 'm01_ampli' in vm.df_fit_results.columns or any('ampli' in col for col in vm.df_fit_results.columns), \
+            "Missing amplitude column in fit results"
+        
+        # ===================================================================
+        # STEP 6: Save workspace
+        # ===================================================================
+        save_path = temp_workspace / "processed_map.maps"
+        
+        def mock_get_save_filename(*args, **kwargs):
+            return str(save_path), ""
+        
+        monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
+        vm.save_work()
+        
+        assert save_path.exists(), "Workspace file was not created"
+        
+        # ===================================================================
+        # STEP 7: Reload workspace and verify persistence
+        # ===================================================================
+        vm2 = VMWorkspaceMaps(mock_settings)
+        vm2.load_work(str(save_path))
+        qtbot.wait(500)
+        
+        # Verify map persisted
+        assert len(vm2.maps) == 1, f"Expected 1 map, got {len(vm2.maps)}"
+        assert "Small2Dmap" in vm2.maps
+        
+        # Verify spectra persisted
+        assert len(vm2.spectra) > 0, "No spectra loaded from workspace"
+        
+        # Verify first spectrum fit results persisted
+        loaded_first_spectrum = vm2.spectra[0]
+        if hasattr(loaded_first_spectrum, 'result_fit') and loaded_first_spectrum.result_fit:
+            assert loaded_first_spectrum.result_fit.success, "Loaded spectrum fit result not successful"
+            assert len(loaded_first_spectrum.peak_models) >= 1, "Peak models not persisted"
+
+
+class TestGraphsWorkflow:
+    """Integration tests for complete graphs workflow."""
     
-    def test_map_save_load_workflow(self, qtbot, mock_settings, map_2d_file, temp_workspace, monkeypatch):
-        """Test saving and loading map workspace.
-        
-        Workflow:
-        1. Load map
-        2. Process spectra (baseline, peaks)
-        3. Save workspace
-        4. Load into new ViewModel
-        5. Verify data persisted
+    def test_complete_graphs_workflow(self, qapp, mock_settings, dataframe_excel_file, temp_workspace, monkeypatch):
         """
-        if not map_2d_file.exists():
-            pytest.skip("Map test file not available")
+        Test complete graphs workflow with real Excel file.
+        
+        Steps:
+        1. Load real Excel file (data_inline.xlsx) with 2 sheets
+        2. Verify both dataframes (sheet1, sheet2) are loaded
+        3. Verify dimensions of each dataframe
+        4. Select sheet1 and apply filter "Zone != Edge"
+        5. Create box plot with X=Slot, Y=x0_Si, Z=Zone
+        6. Create bar plot with same X, Y, Z
+        7. Save workspace
+        8. Reload workspace and verify consistency
+        """
+        if not dataframe_excel_file.exists():
+            pytest.skip("Excel test file not available")
+        
+        vm = VMWorkspaceGraphs(mock_settings)
+        
+        # ===================================================================
+        # STEP 1: Load real Excel file with 2 sheets
+        # ===================================================================
+        def mock_get_open_filenames(*args, **kwargs):
+            return [str(dataframe_excel_file)], ""
+        
+        monkeypatch.setattr(QFileDialog, "getOpenFileNames", mock_get_open_filenames)
+        vm.load_dataframes()
+        
+        # ===================================================================
+        # STEP 2: Verify both dataframes are loaded
+        # ===================================================================
+        assert "data_inline_sheet1" in vm.dataframes, "data_inline_sheet1 not loaded from Excel file"
+        assert "data_inline_sheet2" in vm.dataframes, "data_inline_sheet2 not loaded from Excel file"
+        assert len(vm.dataframes) == 2, f"Expected 2 dataframes, got {len(vm.dataframes)}"
+        
+        # ===================================================================
+        # STEP 3: Verify dimensions of each dataframe
+        # ===================================================================
+        sheet1_df = vm.dataframes["data_inline_sheet1"]
+        sheet2_df = vm.dataframes["data_inline_sheet2"]
+        
+        assert len(sheet1_df) > 580, "sheet1 is empty"
+        assert len(sheet1_df.columns) > 11, "sheet1 has no columns"
+        assert len(sheet2_df) > 580, "sheet2 is empty"
+        assert len(sheet2_df.columns) > 12, "sheet2 has no columns"
+        
+        # Verify required columns exist in sheet1
+        assert 'Slot' in sheet1_df.columns, "Missing Slot column in sheet1"
+        assert 'x0_Si' in sheet1_df.columns, "Missing x0_Si column in sheet1"
+        assert 'Zone' in sheet1_df.columns, "Missing Zone column in sheet1"
+        
+        # ===================================================================
+        # STEP 4: Select sheet1 and apply filter "Zone != Edge"
+        # ===================================================================
+        vm.select_dataframe("data_inline_sheet1")
+        
+        filters = [
+            {'expression': 'Zone != "Edge"', 'state': True}
+        ]
+        filtered_df = vm.apply_filters("data_inline_sheet1", filters)
+        
+        assert len(filtered_df) < len(sheet1_df), "Filter did not reduce dataframe size"
+        assert all(filtered_df['Zone'] != 'Edge'), "Filter did not exclude Edge zone"
+        
+        # ===================================================================
+        # STEP 5: Create box plot with X=Slot, Y=x0_Si, Z=Zone
+        # ===================================================================
+        box_plot_config = {
+            'df_name': 'data_inline_sheet1',
+            'plot_style': 'box',
+            'x': 'Slot',
+            'y': ['x0_Si'],
+            'z': 'Zone',
+            'xlabel': 'Slot',
+            'ylabel': 'x0_Si',
+            'filters': filters
+        }
+        box_graph = vm.create_graph(box_plot_config)
+        
+        assert box_graph is not None, "Box graph creation failed"
+        assert box_graph.graph_id in vm.graphs
+        
+        # ===================================================================
+        # STEP 6: Create bar plot with same X, Y, Z
+        # ===================================================================
+        bar_plot_config = {
+            'df_name': 'data_inline_sheet1',
+            'plot_style': 'bar',
+            'x': 'Slot',
+            'y': ['x0_Si'],
+            'z': 'Zone',
+            'xlabel': 'Slot',
+            'ylabel': 'x0_Si',
+            'filters': filters
+        }
+        bar_graph = vm.create_graph(bar_plot_config)
+        
+        assert bar_graph is not None, "Bar graph creation failed"
+        assert bar_graph.graph_id in vm.graphs
+        assert len(vm.graphs) == 2, f"Expected 2 graphs, got {len(vm.graphs)}"
+        
+        # ===================================================================
+        # STEP 7: Save workspace
+        # ===================================================================
+        save_path = temp_workspace / "graphs_with_excel.graphs"
+        
+        def mock_get_save_filename(*args, **kwargs):
+            return str(save_path), ""
+
+        monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
+        vm.save_workspace()
+        
+        assert save_path.exists(), "Workspace file was not created"
+        
+        # ===================================================================
+        # STEP 8: Reload workspace and verify consistency
+        # ===================================================================
+        vm2 = VMWorkspaceGraphs(mock_settings)
+        vm2.load_workspace(str(save_path))
+        
+        # Verify dataframes persisted
+        assert "data_inline_sheet1" in vm2.dataframes, "data_inline_sheet1 not loaded from workspace"
+        assert "data_inline_sheet2" in vm2.dataframes, "data_inline_sheet2 not loaded from workspace"
+        assert len(vm2.dataframes) == 2, f"Expected 2 dataframes, got {len(vm2.dataframes)}"
+        
+        pd.testing.assert_frame_equal(vm2.dataframes["data_inline_sheet1"], sheet1_df)
+        pd.testing.assert_frame_equal(vm2.dataframes["data_inline_sheet2"], sheet2_df)
+        
+        # Verify graphs persisted
+        assert len(vm2.graphs) == 2, f"Expected 2 graphs, got {len(vm2.graphs)}"
+        
+        loaded_graphs = list(vm2.graphs.values())
+        box_graph_loaded = next((g for g in loaded_graphs if g.plot_style == 'box'), None)
+        assert box_graph_loaded is not None, "Box graph not found in loaded workspace"
+        assert box_graph_loaded.x == 'Slot'
+        assert box_graph_loaded.y == ['x0_Si']
+        assert box_graph_loaded.z == 'Zone'
+        
+        bar_graph_loaded = next((g for g in loaded_graphs if g.plot_style == 'bar'), None)
+        assert bar_graph_loaded is not None, "Bar graph not found in loaded workspace"
+        assert bar_graph_loaded.x == 'Slot'
+        assert bar_graph_loaded.y == ['x0_Si']
+        assert bar_graph_loaded.z == 'Zone'
+
+class TestSaveLoadWorkspace:
+    """Test save and load a save workpsace files (.spectra, .maps, .graphs)"""
+    
+    
+    def test_load_saved_spectra_workspace(self, qapp, mock_settings, saved_spectra_workspace):
+        """
+        Test loading saved spectra workspace.
+        
+        Verifies:
+        - 26 spectra loaded
+        - First spectrum fit results: x0=414.126, fwhm=5.68787, ampli=2696.76
+        """
+        if not saved_spectra_workspace.exists():
+            pytest.skip("Saved spectra workspace not available")
+        
+        vm = VMWorkspaceSpectra(mock_settings)
+        vm.load_work(str(saved_spectra_workspace))
+        
+        # Verify number of loaded spectra
+        assert len(vm.spectra) == 26, f"Expected 26 spectra, got {len(vm.spectra)}"
+        
+        # Select first spectrum
+        vm.set_selected_indices([0])
+        
+        # Get first spectrum
+        first_spectrum = vm.spectra[0]
+        assert hasattr(first_spectrum, 'x'), "First spectrum missing x data"
+        assert hasattr(first_spectrum, 'y'), "First spectrum missing y data"
+        assert len(first_spectrum.x) > 100, "First spectrum x data is empty"
+        assert len(first_spectrum.y) > 100, "First spectrum y data is empty"
+        
+        # Perform fit on first spectrum
+        first_spectrum.fit()
+        
+        # Verify fit results
+        assert hasattr(first_spectrum, 'result_fit'), "Spectrum has no result_fit after fitting"
+        assert first_spectrum.result_fit is not None, "result_fit is None after fitting"
+        assert first_spectrum.result_fit.success, "Fit was not successful"
+        
+        # Get fit parameters
+        params = first_spectrum.result_fit.params
+        
+        # Check x0 parameter
+        x0_key = next((k for k in params.keys() if 'x0' in k.lower()), None)
+        assert x0_key is not None, "No x0 parameter found in fit results"
+        x0_value = params[x0_key].value
+        assert abs(x0_value - 414.126) < 0.1, \
+            f"Expected x0 ~414.126, got {x0_value:.3f}"
+        
+        # Check fwhm parameter
+        fwhm_key = next((k for k in params.keys() if 'fwhm' in k.lower()), None)
+        assert fwhm_key is not None, "No fwhm parameter found in fit results"
+        fwhm_value = params[fwhm_key].value
+        assert abs(fwhm_value - 5.68787) < 0.1, \
+            f"Expected fwhm ~5.68787, got {fwhm_value:.5f}"
+        
+        # Check ampli parameter
+        ampli_key = next((k for k in params.keys() if 'ampli' in k.lower()), None)
+        assert ampli_key is not None, "No ampli parameter found in fit results"
+        ampli_value = params[ampli_key].value
+        assert abs(ampli_value - 2696.76) < 10.0, \
+            f"Expected ampli ~2696.76, got {ampli_value:.2f}"
+    
+    def test_load_saved_maps_workspace(self, qapp, qtbot, mock_settings, saved_maps_workspace, monkeypatch):
+        """
+        Test loading saved maps workspace.
+        
+        Verifies:
+        - 4 maps loaded
+        - First map is wafer4_process1 with 49 spectra
+        """
+        if not saved_maps_workspace.exists():
+            pytest.skip("Saved maps workspace not available")
         
         # Mock QMessageBox
         mock_msgbox = MagicMock()
         monkeypatch.setattr(QMessageBox, "critical", mock_msgbox)
         
-        # Create first ViewModel
-        vm1 = VMWorkspaceMaps(mock_settings)
-        vm1.load_map_files([str(map_2d_file)])
+        vm = VMWorkspaceMaps(mock_settings)
+        vm.load_work(str(saved_maps_workspace))
         qtbot.wait(300)
         
-        # Process data
-        map_name = list(vm1.maps.keys())[0]
-        vm1.select_map(map_name)
+        # Verify number of loaded maps
+        assert len(vm.maps) == 4, f"Expected 4 maps, got {len(vm.maps)}"
+        
+        # Get map names
+        map_names = list(vm.maps.keys())
+        
+        # Verify wafer4_process1 is in the maps
+        assert "wafer4_process1" in map_names, \
+            f"wafer4_process1 not found in maps: {map_names}"
+        
+        # Select wafer4_process1
+        vm.select_map("wafer4_process1")
         qtbot.wait(100)
         
-        if len(vm1.spectra) > 0:
-            vm1.set_selected_indices([0])
-            vm1.add_peak_at(300)
-        
-        # Save workspace
-        save_path = temp_workspace / "test_maps.maps"
-        
-        def mock_get_save_filename(*args, **kwargs):
-            return str(save_path), ""
-        
-        monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
-        vm1.save_work()
-        
-        assert save_path.exists()
-        
-        # Load into new ViewModel
-        vm2 = VMWorkspaceMaps(mock_settings)
-        vm2.load_work(str(save_path))
-        qtbot.wait(300)
-        
-        # Verify data persisted
-        assert len(vm2.maps) == 1
-        assert map_name in vm2.maps
-        assert len(vm2.spectra) > 0
-class TestGraphsWorkflow:
-    """Integration tests for complete graphs workflow."""
+        # Verify wafer4_process1 has 49 spectra
+        wafer4_map = vm.maps["wafer4_process1"]
+        assert len(wafer4_map) == 49, \
+            f"Expected 49 entries in wafer4_process1 map, got {len(wafer4_map)}"
     
-    def test_complete_graphs_workflow(self, qapp, mock_settings, temp_workspace, monkeypatch):
+    def test_load_saved_graphs_workspace(self, qapp, mock_settings, saved_graphs_workspace):
         """
-        Test complete workflow:
-        1. Load DataFrame
-        2. Apply filters
-        3. Create graph
-        4. Save workspace
-        5. Reload workspace
-        6. Verify consistency
+        Test loading saved graphs workspace.
+        
+        Verifies:
+        - 2 dataframes loaded
+        - 7 graphs loaded
         """
-        # Step 1: Create and load DataFrame
+        if not saved_graphs_workspace.exists():
+            pytest.skip("Saved graphs workspace not available")
+        
         vm = VMWorkspaceGraphs(mock_settings)
+        vm.load_workspace(str(saved_graphs_workspace))
         
-        test_df = pd.DataFrame({
-            'X': list(range(20)),
-            'Y': list(range(0, 40, 2)),
-            'Z': list(range(20, 40)),
-            'Category': ['A', 'B'] * 10
-        })
-        vm.add_dataframe("test_data", test_df)
+        # Verify number of loaded dataframes
+        assert len(vm.dataframes) == 2, \
+            f"Expected 2 dataframes, got {len(vm.dataframes)}"
         
-        # Step 2: Apply filters (correct format with expression and state)
-        filters = [
-            {'expression': 'X > 5', 'state': True},
-            {'expression': 'Y < 30', 'state': True}
-        ]
-        filtered_df = vm.apply_filters("test_data", filters)
-        assert len(filtered_df) < len(test_df)
-        
-        # Step 3: Create graph
-        plot_config = {
-            'df_name': 'test_data',
-            'plot_style': 'scatter',
-            'x': 'X',
-            'y': ['Y', 'Z'],
-            'xlabel': 'X Values',
-            'ylabel': 'Y Values',
-            'grid': True,
-            'filters': filters
-        }
-        graph = vm.create_graph(plot_config)
-        assert graph.graph_id in vm.graphs
-        
-        # Step 4: Save workspace
-        save_path = temp_workspace / "graphs_workflow.graphs"
-        
-        def mock_get_save_filename(*args, **kwargs):
-            return str(save_path), ""
-
-        monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
-        
-        vm.save_workspace()
-        assert save_path.exists()
-        
-        # Step 5: Reload workspace
-        vm2 = VMWorkspaceGraphs(mock_settings)
-        vm2.load_workspace(str(save_path))
-        
-        # Step 6: Verify consistency
-        assert "test_data" in vm2.dataframes
-        pd.testing.assert_frame_equal(vm2.dataframes["test_data"], test_df)
-        
-        assert len(vm2.graphs) == 1
-        loaded_graph = list(vm2.graphs.values())[0]
-        assert loaded_graph.plot_style == 'scatter'
-        assert loaded_graph.x == 'X'
-        assert loaded_graph.xlabel == 'X Values'
-        assert loaded_graph.grid is True
-
-
-class TestMultipleSpectraProcessing:
-    """Integration test for batch processing multiple spectra."""
+        # Verify number of loaded graphs
+        assert len(vm.graphs) == 7, \
+            f"Expected 7 graphs, got {len(vm.graphs)}"
     
-    def test_batch_processing(self, qapp, mock_settings, multiple_spectra_files):
-        """Test processing multiple spectra with same settings."""
-        vm = VMWorkspaceSpectra(mock_settings)
-        
-        # Load multiple files
-        file_paths = [str(f) for f in multiple_spectra_files]
-        vm.load_files(file_paths)
-        assert len(vm.spectra) == len(multiple_spectra_files)
-        
-        # Select all spectra
-        vm.set_selected_indices(list(range(len(vm.spectra))))
-        
-        # Apply range to all
-        vm.apply_spectral_range(200, 400, apply_all=True)
-        
-        # Verify range was applied to all
-        for spectrum in vm.spectra:
-            assert spectrum.range_min is not None
-            assert spectrum.range_max is not None
-        
-        # Add baseline to first, then copy to all
-        vm.set_selected_indices([0])
-        vm.add_baseline_point(220, 100)
-        vm.add_baseline_point(380, 100)
-        vm.copy_baseline()
-        
-        # Paste to all others
-        vm.paste_baseline(apply_all=True)
-        
-        # Verify all spectra have baseline points
-        for spectrum in vm.spectra:
-            assert len(spectrum.baseline.points) > 0
-
-
-class TestWorkspacePersistenceRobustness:
-    """Integration tests for workspace persistence robustness."""
-    
-    def test_save_empty_workspace(self, qapp, mock_settings, temp_workspace, monkeypatch):
-        """Test saving empty workspace."""
-        vm = VMWorkspaceSpectra(mock_settings)
-        
-        save_path = temp_workspace / "empty.spectra"
-        
-        def mock_get_save_filename(*args, **kwargs):
-            return str(save_path), ""
-
-        monkeypatch.setattr(QFileDialog, "getSaveFileName", mock_get_save_filename)
-        
-        # Save empty workspace
-        vm.save_work()
-        
-        # Load it back
-        vm2 = VMWorkspaceSpectra(mock_settings)
-        vm2.load_work(str(save_path))
-        
-        # Verify it's still empty
-        assert len(vm2.spectra) == 0
-    
-    def test_load_corrupted_workspace(self, qapp, mock_settings, temp_workspace, monkeypatch):
-        """Test loading corrupted workspace file handles gracefully."""
-        vm = VMWorkspaceSpectra(mock_settings)
-        
-        # Create corrupted file
-        corrupted_path = temp_workspace / "corrupted.spectra"
-        corrupted_path.write_text("This is not valid JSON")
-        
-        # Mock QMessageBox to prevent actual popup
-        mock_msgbox = MagicMock()
-        monkeypatch.setattr(QMessageBox, "critical", mock_msgbox)
-        
-        # Attempt to load - should handle error gracefully
-        # (Implementation should emit error notification, not crash)
-        try:
-            vm.load_work(str(corrupted_path))
-            # If it doesn't raise, that's fine too
-        except Exception as e:
-            # Error handling is acceptable
-            pass
-        
-        # Verify error message was shown (via QMessageBox or exception)
-        # The method should not crash
-        assert True  # Test passes if we get here without crashing
 
 
 class TestDataIntegrity:

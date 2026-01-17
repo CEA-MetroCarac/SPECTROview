@@ -103,8 +103,8 @@ class TestVMWorkspaceSpectraSelection:
     
     def test_set_selected_indices(self, vm_with_spectra):
         """Test setting selected spectra by indices."""
-        # Select indices 0 and 2
-        vm_with_spectra.set_selected_indices([0, 2])
+        # Select indices 0 and 1 (fixture loads 2 spectra)
+        vm_with_spectra.set_selected_indices([0, 1])
         
         # Verify selection
         assert len(vm_with_spectra.selected_fnames) == 2

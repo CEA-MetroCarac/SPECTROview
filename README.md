@@ -42,7 +42,6 @@ ______
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/GIF/Fitting2.gif">
 </p>
 
-
 ### Plot and visualize data with ease:
 
 <p align="center">

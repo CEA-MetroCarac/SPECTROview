@@ -33,18 +33,13 @@ ___
 ______
 ### Three separate tabs for processing discrete spectra, hyperspectral data, and data visualization:
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/GIF/ThreeTabs.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/GIF/General.gif">
 </p>
 
-### Fit a spectrum; create/save and apply a fit models; collect fitted data with single click:
+### Create fit models, copy/paste to others, saved fit model for later use, use defined fit model for fitting multiple spectra, wafer data, and 2D maps, collect all best-fit results with one click:
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/GIF/Fitting.gif">
-</p>
-
-### Fit multiple spectra, wafer data, and 2D maps with predefined models:
-<p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/GIF/MapTab.gif">
 </p>
 
 
@@ -53,7 +48,6 @@ ______
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/GIF/Plotting.gif">
 </p>
-
 
 ____
 

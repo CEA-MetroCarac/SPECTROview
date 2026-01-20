@@ -380,7 +380,7 @@ def replace_peak_labels(fit_model, param):
         return param
 
 def copy_fig_to_clb(canvas, size_ratio=None):
-    """Copy matplotlib figure canvas to clipboard with optional resizing"""
+    """Copy matplotlib figure canvas to clipboard with optional resizing. """
     if not canvas:
         QMessageBox.critical(None, "Error", "No plot to copy.")
         return
@@ -390,18 +390,20 @@ def copy_fig_to_clb(canvas, size_ratio=None):
     original_dpi = figure.dpi
     
     try:
-        # Temporarily set high DPI and custom size for clipboard export
+        # Optionally resize the figure
         if size_ratio:
             figure.set_size_inches(size_ratio, forward=True)
-        figure.set_dpi(300)  # High resolution for clipboard
-        canvas.draw()
+            canvas.draw()
         
-        # Get rendered buffer and convert to QPixmap
-        buffer = canvas.buffer_rgba()
-        width, height = canvas.get_width_height()
-        qimage = QImage(buffer, width, height, QImage.Format_RGBA8888)
+        from io import BytesIO
+        buf = BytesIO()
+        figure.savefig(buf, format='png', dpi=300, bbox_inches='tight')
+        buf.seek(0)
         
-        # Copy to clipboard
+        # Load PNG from buffer and copy to clipboard
+        qimage = QImage()
+        qimage.loadFromData(buf.getvalue())
+        
         clipboard = QApplication.clipboard()
         clipboard.setPixmap(QPixmap.fromImage(qimage))
         

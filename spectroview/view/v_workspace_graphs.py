@@ -6,10 +6,10 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
     QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QLineEdit, QSplitter,
     QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame, QScrollArea,
-    QDialog, QGridLayout
+    QDialog, QGridLayout, QApplication
 )
-from PySide6.QtCore import Qt, Signal, QSize, QTimer
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, Signal, QSize, QTimer, QUrl
+from PySide6.QtGui import QIcon, QDesktopServices
 
 from spectroview import ICON_DIR, PLOT_STYLES, LEGEND_LOCATION
 from spectroview.model.m_settings import MSettings
@@ -175,7 +175,7 @@ class VWorkspaceGraphs(QWidget):
         self.btn_view_df = QPushButton()
         self.btn_view_df.setIcon(QIcon(os.path.join(ICON_DIR, "view.png")))
         self.btn_view_df.setIconSize(QSize(20, 20))
-        self.btn_view_df.setToolTip("View DataFrame")
+        self.btn_view_df.setToolTip("View DataFrame\nCtrl+Click: Open source file")
         self.btn_view_df.setMaximumWidth(35)
         
         self.btn_remove_df = QPushButton()
@@ -190,9 +190,16 @@ class VWorkspaceGraphs(QWidget):
         self.btn_save_df.setToolTip("Save DataFrame to Excel")
         self.btn_save_df.setMaximumWidth(35)
         
+        self.btn_refresh_df = QPushButton()
+        self.btn_refresh_df.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
+        self.btn_refresh_df.setIconSize(QSize(20, 20))
+        self.btn_refresh_df.setToolTip("Refresh DataFrame from source file")
+        self.btn_refresh_df.setMaximumWidth(35)
+        
         df_buttons_layout.addWidget(self.btn_view_df)
         df_buttons_layout.addWidget(self.btn_remove_df)
         df_buttons_layout.addWidget(self.btn_save_df)
+        df_buttons_layout.addWidget(self.btn_refresh_df)
         df_buttons_layout.addStretch()
         
         df_section_layout.addLayout(df_buttons_layout)
@@ -479,6 +486,7 @@ class VWorkspaceGraphs(QWidget):
         self.btn_view_df.clicked.connect(self._on_view_df)
         self.btn_remove_df.clicked.connect(self._on_remove_df)
         self.btn_save_df.clicked.connect(self._on_save_df)
+        self.btn_refresh_df.clicked.connect(self._on_refresh_df)
         
         # Filter connections
         self.v_data_filter.apply_requested.connect(self._on_apply_filters)
@@ -538,13 +546,39 @@ class VWorkspaceGraphs(QWidget):
             self.vm.select_dataframe(df_name)
     
     def _on_view_df(self):
-        """View DataFrame in table."""
+        """View DataFrame in table, or open source file if Ctrl is held."""
         current_item = self.df_listbox.currentItem()
         if not current_item:
             QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame to view.")
             return
         
         df_name = current_item.text()
+        
+        # Check if Ctrl key is held down
+        modifiers = QApplication.keyboardModifiers()
+        
+        if modifiers & Qt.ControlModifier:
+            # Ctrl is held - open source file
+            if df_name in self.vm.dataframe_sources:
+                source_path = self.vm.dataframe_sources[df_name]
+                try:
+                    # Use Qt's QDesktopServices for cross-platform file opening
+                    file_url = QUrl.fromLocalFile(source_path)
+                    if QDesktopServices.openUrl(file_url):
+                        self.vm.notify.emit(f"Opening file: {os.path.basename(source_path)}")
+                    else:
+                        QMessageBox.warning(self, "Error", f"Could not open file: {source_path}")
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Could not open file: {str(e)}")
+            else:
+                QMessageBox.warning(
+                    self, 
+                    "No Source File", 
+                    f"No source file found for '{df_name}'."
+                )
+            return
+        
+        # Normal click - show DataFrame in dialog
         df = self.vm.get_dataframe(df_name)
         
         if df is None or df.empty:
@@ -593,6 +627,25 @@ class VWorkspaceGraphs(QWidget):
         if current_item:
             df_name = current_item.text()
             self.vm.save_dataframe_to_excel(df_name)
+    
+    def _on_refresh_df(self):
+        """Refresh DataFrame from source file."""
+        current_item = self.df_listbox.currentItem()
+        if not current_item:
+            QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame to refresh.")
+            return
+        
+        df_name = current_item.text()
+        success = self.vm.refresh_dataframe(df_name)
+        
+        if success:
+            self.vm.notify.emit(f"DataFrame '{df_name}' refreshed successfully")
+        else:
+            QMessageBox.warning(
+                self, 
+                "Refresh Failed", 
+                f"Could not refresh DataFrame '{df_name}'. Source file may not exist or be accessible."
+            )
     
     def _on_apply_filters(self):
         """Apply filters."""
@@ -1035,8 +1088,19 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_x.blockSignals(True)
         self.cbb_y.blockSignals(True)
         self.cbb_z.blockSignals(True)
+        self.df_listbox.blockSignals(True)
         
         try:
+            # Dataframe selection
+            if model.df_name:
+                # Also need to select in VM to trigger column updates
+                self.vm.select_dataframe(model.df_name)
+                # Find and select the dataframe in the list
+                for i in range(self.df_listbox.count()):
+                    if self.df_listbox.item(i).text() == model.df_name:
+                        self.df_listbox.setCurrentRow(i)
+                        break
+            
             # Combos
             for cbb_name, value in [('plot_style', model.plot_style), ('x', model.x), ('z', model.z or "None")]:
                 cbb = getattr(self, f'cbb_{cbb_name}')
@@ -1048,6 +1112,12 @@ class VWorkspaceGraphs(QWidget):
                 idx = self.cbb_y.findText(model.y[0])
                 if idx >= 0:
                     self.cbb_y.setCurrentIndex(idx)
+            
+            # Color palette (CustomizedPalette is a QComboBox)
+            if model.color_palette:
+                idx = self.cbb_colormap.findText(model.color_palette)
+                if idx >= 0:
+                    self.cbb_colormap.setCurrentIndex(idx)
             
             # Checkboxes
             self.cb_xlog.setChecked(model.xlogscale)
@@ -1090,6 +1160,7 @@ class VWorkspaceGraphs(QWidget):
             self.cbb_x.blockSignals(False)
             self.cbb_y.blockSignals(False)
             self.cbb_z.blockSignals(False)
+            self.df_listbox.blockSignals(False)
     
     # ═════════════════════════════════════════════════════════════════════
     # Phase 2: Plotting Helper Methods

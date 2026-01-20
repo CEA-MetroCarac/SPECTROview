@@ -108,26 +108,24 @@ def load_dataframe_file(path: Path) -> dict[str, pd.DataFrame]:
     ext = path.suffix.lower()
     
     if ext in ['.xlsx', '.xls']:
-        # Read all sheets from Excel file
-        excel_file = pd.ExcelFile(path)
-        sheet_names = excel_file.sheet_names
-        
-        if len(sheet_names) == 1:
-            # Single sheet: use filename as key
-            df = pd.read_excel(path)
-            return {path.stem: df}
-        else:
-            # Multiple sheets: use filename_sheetname as keys
-            dfs = {}
-            for sheet_name in sheet_names:
-                df = pd.read_excel(path, sheet_name=sheet_name)
-                df_name = f"{path.stem}_{sheet_name}"
-                dfs[df_name] = df
-            return dfs
+        # Use context manager to ensure file is properly closed
+        with pd.ExcelFile(path) as excel_file:
+            sheet_names = excel_file.sheet_names
+            
+            if len(sheet_names) == 1:
+                # Single sheet: use filename as key
+                df = pd.read_excel(excel_file)
+                return {path.stem: df}
+            else:
+                # Multiple sheets: use filename_sheetname as keys
+                dfs = {}
+                for sheet_name in sheet_names:
+                    df = pd.read_excel(excel_file, sheet_name=sheet_name)
+                    df_name = f"{path.stem}_{sheet_name}"
+                    dfs[df_name] = df
+                return dfs
     elif ext == '.csv':
         df = pd.read_csv(path)
         return {path.stem: df}
     else:
         raise ValueError(f"Unsupported file type: {ext}")
-    
-    return df

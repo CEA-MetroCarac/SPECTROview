@@ -33,6 +33,7 @@ class VMWorkspaceGraphs(QObject):
         
         # Data storage
         self.dataframes: Dict[str, pd.DataFrame] = {}
+        self.dataframe_sources: Dict[str, str] = {}  # Track source file paths for refresh
         self.graphs: Dict[int, MGraph] = {}
         
         # Current selection
@@ -76,6 +77,8 @@ class VMWorkspaceGraphs(QObject):
                         continue
                     
                     self.dataframes[df_name] = df
+                    # Store source file path for refresh functionality
+                    self.dataframe_sources[df_name] = str(path)
                 
             except Exception as e:
                 self.notify.emit(f"Error loading {Path(file_path).name}: {e}")
@@ -99,6 +102,10 @@ class VMWorkspaceGraphs(QObject):
         """Remove a DataFrame."""
         if df_name in self.dataframes:
             del self.dataframes[df_name]
+            # Also remove source file reference
+            if df_name in self.dataframe_sources:
+                del self.dataframe_sources[df_name]
+            
             self._emit_dataframes_list()
             
             # Clear selection if this was selected
@@ -120,6 +127,46 @@ class VMWorkspaceGraphs(QObject):
     def get_dataframe(self, df_name: str) -> Optional[pd.DataFrame]:
         """Get a DataFrame by name."""
         return self.dataframes.get(df_name)
+    
+    def refresh_dataframe(self, df_name: str) -> bool:
+        """Refresh DataFrame from source file.
+        
+        Returns:
+            bool: True if refresh succeeded, False otherwise
+        """
+        # Check if DataFrame exists and has source file
+        if df_name not in self.dataframes:
+            return False
+        
+        if df_name not in self.dataframe_sources:
+            return False
+        
+        source_path = Path(self.dataframe_sources[df_name])
+        
+        # Check if source file still exists
+        if not source_path.exists():
+            return False
+        
+        try:
+            # Reload DataFrame from source file
+            dfs_dict = load_dataframe_file(source_path)
+            
+            # Find the matching DataFrame (should have same name)
+            if df_name in dfs_dict:
+                # Update the DataFrame in place
+                self.dataframes[df_name] = dfs_dict[df_name]
+                
+                # If this is the selected DataFrame, re-emit columns
+                if self.selected_df_name == df_name:
+                    self.dataframe_columns_changed.emit(list(self.dataframes[df_name].columns))
+                
+                return True
+            else:
+                return False
+                
+        except Exception as e:
+            self.notify.emit(f"Error refreshing DataFrame: {e}")
+            return False
     
     def save_dataframe_to_excel(self, df_name: str):
         """Save DataFrame to Excel."""
@@ -307,6 +354,7 @@ class VMWorkspaceGraphs(QObject):
             data_to_save = {
                 'plots': plots_data,
                 'original_dfs': {k: v.hex() for k, v in compressed_dfs.items()},
+                'dataframe_sources': self.dataframe_sources,  # Save source file paths
             }
             
             # Save to JSON file
@@ -325,12 +373,17 @@ class VMWorkspaceGraphs(QObject):
             
             self.graphs.clear()
             self.dataframes.clear()
+            self.dataframe_sources.clear()
             
             # Load DataFrames
             for k, v in data.get('original_dfs', {}).items():
                 compressed_data = bytes.fromhex(v)
                 csv_data = gzip.decompress(compressed_data).decode('utf-8')
                 self.dataframes[k] = pd.read_csv(StringIO(csv_data))
+            
+            # Load source file paths (if available)
+            if 'dataframe_sources' in data:
+                self.dataframe_sources = data['dataframe_sources']
             
             # Load graphs
             for graph_id_str, graph_data in data.get('plots', {}).items():
@@ -354,6 +407,7 @@ class VMWorkspaceGraphs(QObject):
         """Clear workspace."""
         self.graphs.clear()
         self.dataframes.clear()
+        self.dataframe_sources.clear()  # Clear source file references
         self.selected_df_name = None
         self._next_graph_id = 1
         

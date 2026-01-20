@@ -124,8 +124,9 @@ class VFitModelBuilder(QWidget):
         self.cbb_xcorr.setCurrentText("Si-Ref")
 
         # User correction value
-        self.spin_xcorr = QSpinBox()
+        self.spin_xcorr = QDoubleSpinBox()
         self.spin_xcorr.setRange(-100000, 100000)
+        self.spin_xcorr.setDecimals(3)  # Allow up to 3 decimal places
         self.spin_xcorr.setValue(0)
         self.spin_xcorr.setToolTip("Type measured reference peak position")
 

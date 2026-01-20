@@ -10,10 +10,11 @@ from scipy.interpolate import griddata
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from PySide6.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QWidget, QComboBox, QStyledItemDelegate
+from PySide6.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QWidget, QComboBox, QStyledItemDelegate, QPushButton, QHBoxLayout
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QPalette, QColor
+from PySide6.QtGui import QPalette, QColor, QIcon
 
+from spectroview import ICON_DIR
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS
 from spectroview.viewmodel.utils import rgba_to_default_color, show_alert
 
@@ -133,21 +134,49 @@ class VGraph(QWidget):
             if action.text() in ['Save', 'Subplots']:
                 action.setVisible(False)
         
+        self.btn_copy_figure = QPushButton()
+        self.btn_copy_figure.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
+        self.btn_copy_figure.setIconSize(QSize(26, 26))
+        self.btn_copy_figure.setFixedSize(30, 30)
+        self.btn_copy_figure.setToolTip("Copy figure to clipboard")
+        self.btn_copy_figure.clicked.connect(self.copy_to_clipboard)
+        
+        # Create toolbar layout with copy button
+        toolbar_layout = QHBoxLayout()
+        toolbar_layout.setContentsMargins(0, 0, 0, 0)
+        toolbar_layout.setSpacing(4)
+        toolbar_layout.addWidget(self.toolbar)
+        toolbar_layout.addStretch()  
+        toolbar_layout.addWidget(self.btn_copy_figure)
+        
+        # Create container widget for toolbar layout
+        from PySide6.QtWidgets import QWidget as QWidgetContainer
+        toolbar_container = QWidgetContainer()
+        toolbar_container.setLayout(toolbar_layout)
+        
         if layout:
             layout.addWidget(self.canvas)
-            layout.addWidget(self.toolbar)
+            layout.addWidget(toolbar_container)
         else:
             self.graph_layout.addWidget(self.canvas)
-            self.graph_layout.addWidget(self.toolbar)
+            self.graph_layout.addWidget(toolbar_container)
         
         # Connect pick event for legend customization
         self.canvas.mpl_connect('pick_event', self._on_legend_pick)
         
         self.canvas.draw_idle()
     
+    def copy_to_clipboard(self):
+        """Copy the current figure to clipboard."""
+        try:
+            from spectroview.viewmodel.utils import copy_fig_to_clb
+            copy_fig_to_clb(self.canvas)
+        except Exception as e:
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "Copy Error", f"Error copying figure: {str(e)}")
+    
     def plot(self, df):
         """Renders plot based on DataFrame and current properties."""
-        # Store DataFrame for replotting when legend is customized
         self.df = df
         
         self.ax.clear()

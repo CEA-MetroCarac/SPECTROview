@@ -136,13 +136,6 @@ class VWorkspaceGraphs(QWidget):
         self.cb_grid_toolbar = QCheckBox("Grid")
         toolbar_layout.addWidget(self.cb_grid_toolbar)
         
-        # Copy button
-        self.btn_copy_figure = QPushButton()
-        self.btn_copy_figure.setIcon(QIcon(os.path.join(ICON_DIR, "copy.png")))
-        self.btn_copy_figure.setToolTip("Copy selected figure to clipboard")
-        self.btn_copy_figure.setMaximumWidth(35)
-        toolbar_layout.addWidget(self.btn_copy_figure)
-        
         toolbar_layout.addStretch()
         
         return bottom_toolbar
@@ -514,7 +507,6 @@ class VWorkspaceGraphs(QWidget):
         self.cb_legend_outside_toolbar.stateChanged.connect(self._on_legend_outside_changed_toolbar)
         self.cbb_legend_loc_toolbar.currentTextChanged.connect(self._on_legend_loc_changed_toolbar)
         self.cb_grid_toolbar.stateChanged.connect(self._on_grid_changed_toolbar)
-        self.btn_copy_figure.clicked.connect(self._on_copy_figure)
         
         # MDI area connections
         self.mdi_area.subWindowActivated.connect(self._on_subwindow_activated)
@@ -657,6 +649,7 @@ class VWorkspaceGraphs(QWidget):
         graph_widget = VGraph(graph_id=graph_model.graph_id)
         self._configure_graph_from_model(graph_widget, graph_model)
         graph_widget.create_plot_widget(graph_model.dpi)
+        
         self._render_plot(graph_widget, filtered_df, graph_model)
         
         self.vm.update_graph(graph_model.graph_id, {'legend_properties': graph_widget.legend_properties})
@@ -740,6 +733,8 @@ class VWorkspaceGraphs(QWidget):
         # Reconfigure and re-render
         self._configure_graph_from_model(graph_widget, graph_model)
         graph_widget.create_plot_widget(graph_model.dpi)
+
+        
         self._render_plot(graph_widget, filtered_df, graph_model)
         
         # Save legend properties back to model after rendering
@@ -873,6 +868,8 @@ class VWorkspaceGraphs(QWidget):
             
             # Create plot
             graph_widget.create_plot_widget(graph_model.dpi)
+
+            
             self._render_plot(graph_widget, filtered_df, graph_model)
             
             self.vm.update_graph(graph_model.graph_id, {'legend_properties': graph_widget.legend_properties})
@@ -999,24 +996,6 @@ class VWorkspaceGraphs(QWidget):
         """Handle grid toggle from toolbar (will apply on Update plot)."""
         # Don't update immediately - wait for user to click "Update plot"
         pass
-    
-    def _on_copy_figure(self):
-        """Copy figure to clipboard."""
-        active_subwindow = self.mdi_area.activeSubWindow()
-        if not active_subwindow:
-            QMessageBox.warning(self, "No Plot Selected", "Please select a plot to copy.")
-            return
-        
-        # Find the corresponding graph
-        for gid, (gw, gd, sw) in self.graph_widgets.items():
-            if sw == active_subwindow:
-                try:
-                    
-                    copy_fig_to_clb(gw.canvas)
-                    self.vm.notify.emit("Figure copied to clipboard")
-                except Exception as e:
-                    QMessageBox.critical(self, "Copy Error", f"Error copying figure: {str(e)}")
-                break
     
     def _on_subwindow_activated(self, sub_window):
         """Handle subwindow activation."""

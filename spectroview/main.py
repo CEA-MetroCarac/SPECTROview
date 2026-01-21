@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, QSettings, QFileInfo, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter
+from spectroview.model.m_settings import MSettings
 
 from spectroview.viewmodel.vm_settings import VMSettings
 from spectroview.view.components.v_settings import VSettingsDialog
@@ -27,10 +28,10 @@ from spectroview import LOGO_APPLI, USER_MANUAL_PDF
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.settings = QSettings("CEA-Leti", "SPECTROview")
+        self.settings = MSettings()
 
         self.init_ui()
-        self.toggle_theme(self.settings.value("theme"))
+        self.toggle_theme(self.settings.get_theme())
         self.setup_connections()
         self.tabWidget.setCurrentWidget(self.v_maps_workspace)
 
@@ -86,7 +87,7 @@ class Main(QMainWindow):
 
     def open_files(self):
         """Universal file opener supporting all SPECTROview formats."""
-        last_dir = self.settings.value("last_directory", "/")
+        last_dir = self.settings.get_last_directory()
         paths, _ = QFileDialog.getOpenFileNames(
             None,
             "Open file(s)",
@@ -99,7 +100,7 @@ class Main(QMainWindow):
         
         # Save last directory
         last_dir = QFileInfo(paths[0]).absolutePath()
-        self.settings.setValue("last_directory", last_dir)
+        self.settings.set_last_directory(last_dir)
         
         # Categorize files by type
         spectra_files = []
@@ -313,13 +314,13 @@ class Main(QMainWindow):
     def toggle_theme(self, theme=None):
         app = QApplication.instance()
         if theme is None:
-            theme = "light" if self.settings.value("theme") == "dark" else "dark"
+            theme = "light" if self.settings.get_theme() == "dark" else "dark"
         if theme == "dark":
             app.setPalette(dark_palette())
-            self.settings.setValue("theme", "dark")
+            self.settings.set_theme("dark")
         else:
             app.setPalette(light_palette())
-            self.settings.setValue("theme", "light")
+            self.settings.set_theme("light")
 
 def launcher():
     app = QApplication(sys.argv)

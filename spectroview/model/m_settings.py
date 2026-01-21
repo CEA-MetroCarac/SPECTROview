@@ -33,3 +33,23 @@ class MSettings:
     def set_model_folder(self, path: str):
         self.settings.setValue("model_folder", path)
         self.settings.sync()
+    
+    # ---------- Last directory ----------
+    def get_last_directory(self) -> str:
+        """Get the last working directory used for file operations."""
+        return self.settings.value("last_directory", "/", str)
+    
+    def set_last_directory(self, path: str):
+        """Set the last working directory for file operations."""
+        self.settings.setValue("last_directory", path)
+        self.settings.sync()
+    
+    # ---------- Theme ----------
+    def get_theme(self) -> str:
+        """Get current theme (light or dark)."""
+        return self.settings.value("theme", "light", str)
+    
+    def set_theme(self, theme: str):
+        """Set theme (light or dark)."""
+        self.settings.setValue("theme", theme)
+        self.settings.sync()

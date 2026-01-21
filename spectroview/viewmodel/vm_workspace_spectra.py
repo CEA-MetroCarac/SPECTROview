@@ -22,7 +22,8 @@ from spectroview.viewmodel.utils import (
     spectrum_to_dict,
     dict_to_spectrum,
     replace_peak_labels,
-    save_df_to_excel, view_text,
+    save_df_to_excel,
+    view_text,
 )
 
 
@@ -1078,28 +1079,43 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit(f"Error adding column: {e}")
     
     def save_fit_results(self):
-        """Save fit results DataFrame to Excel file."""
+        """Save fit results to Excel or CSV file."""
         if self.df_fit_results is None or self.df_fit_results.empty:
             self.notify.emit("No fit results to save.")
             return
         
-        last_dir = self.settings.load_fit_settings().get("last_directory", "/")
-        save_path, _ = QFileDialog.getSaveFileName(
+        last_dir = self.settings.get_last_directory()
+        file_path, selected_filter = QFileDialog.getSaveFileName(
             None,
             "Save Fit Results",
-            last_dir,
-            "Excel Files (*.xlsx)"
+            str(Path(last_dir) / "fit_results.xlsx"),
+            "Excel Files (*.xlsx);;CSV Files (*.csv)"
         )
         
-        if not save_path:
-            return
-        
-        success, message = save_df_to_excel(save_path, self.df_fit_results)
-        
-        if success:
-            self.notify.emit("Fit results saved successfully.")
-        else:
-            QMessageBox.critical(None, "Error", f"Error saving results: {message}")
+        if file_path:
+            try:
+                # Determine format from file extension or filter
+                ext = Path(file_path).suffix.lower()
+                
+                if ext == '.csv' or 'CSV' in selected_filter:
+                    # Save as CSV with semicolon delimiter
+                    self.df_fit_results.to_csv(file_path, index=False, sep=';')
+                    self.notify.emit(f"Fit results saved: {Path(file_path).name}")
+                else:
+                    # Save as Excel (default) using custom function with colored columns
+                    if not ext:
+                        file_path += '.xlsx'
+                    success, message = save_df_to_excel(file_path, self.df_fit_results)
+                    if success:
+                        self.notify.emit(f"Fit results saved: {Path(file_path).name}")
+                    else:
+                        QMessageBox.critical(None, "Error", f"Error saving fit results: {message}")
+                        return
+                
+                # Update last_directory setting
+                self.settings.set_last_directory(str(Path(file_path).parent))
+            except Exception as e:
+                QMessageBox.critical(None, "Error", f"Error saving fit results: {e}")
     
     def send_results_to_graphs(self, df_name: str):
         """Send fit results DataFrame to Graphs workspace."""

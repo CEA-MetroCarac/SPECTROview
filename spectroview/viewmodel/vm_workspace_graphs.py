@@ -173,10 +173,11 @@ class VMWorkspaceGraphs(QObject):
         if df_name not in self.dataframes:
             return
         
+        last_dir = self.settings.get_last_directory()
         file_path, selected_filter = QFileDialog.getSaveFileName(
             None,
             "Save DataFrame",
-            f"{df_name}.xlsx",
+            str(Path(last_dir) / f"{df_name}.xlsx"),
             "Excel Files (*.xlsx);;CSV Files (*.csv)"
         )
         
@@ -195,6 +196,8 @@ class VMWorkspaceGraphs(QObject):
                     self.dataframes[df_name].to_excel(file_path, index=False)
                 
                 self.notify.emit(f"DataFrame saved: {Path(file_path).name}")
+                # Update last_directory setting
+                self.settings.set_last_directory(str(Path(file_path).parent))
             except Exception as e:
                 QMessageBox.critical(None, "Error", f"Error saving DataFrame: {e}")
     

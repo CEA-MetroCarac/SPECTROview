@@ -19,6 +19,9 @@ class VSpectraList(QListWidget):
         self.setDragDropMode(QAbstractItemView.InternalMove)
         self.setAcceptDrops(True)
         self.setDefaultDropAction(Qt.MoveAction)
+        
+        # Set text to inform users about drag-and-drop feature
+        self._update_placeholder()
 
         # Internal state to detect reorder
         self._order_before_drag = []
@@ -26,6 +29,54 @@ class VSpectraList(QListWidget):
         # Qt signals → our semantic signals
         self.itemSelectionChanged.connect(self._emit_selection_changed)
         self.itemDoubleClicked.connect(self._on_item_activated)
+    
+    def _update_placeholder(self):
+        """Update placeholder text based on list state."""
+        if self.count() == 0:
+            # Calculate number of spacer items needed for vertical centering
+            # Estimate: list height / item height / 2
+            visible_height = self.viewport().height()
+            item_height = self.sizeHintForRow(0) if self.count() > 0 else 30
+            num_spacers = max(0, (visible_height // item_height // 2) - 1)
+            
+            # Add top spacers for vertical centering
+            for _ in range(num_spacers):
+                spacer = QListWidgetItem("")
+                spacer.setFlags(Qt.NoItemFlags)
+                self.addItem(spacer)
+            
+            # Add the centered placeholder item with larger text
+            placeholder = QListWidgetItem("📂 Drag and drop spectra file(s) here to open")
+            placeholder.setFlags(Qt.NoItemFlags)  # Make it non-selectable and non-editable
+            placeholder.setForeground(Qt.gray)
+            placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
+            
+            # Set larger font size
+            from PySide6.QtGui import QFont
+            font = QFont()
+            font.setPointSize(12)  # Increase font size
+            placeholder.setFont(font)
+            
+            self.addItem(placeholder)
+            
+            # Add bottom spacers for vertical centering
+            for _ in range(num_spacers):
+                spacer = QListWidgetItem("")
+                spacer.setFlags(Qt.NoItemFlags)
+                self.addItem(spacer)
+            
+            self._has_placeholder = True
+        else:
+            # Remove all placeholder items if they exist
+            if hasattr(self, '_has_placeholder') and self._has_placeholder:
+                # Clear all items with NoItemFlags (placeholders and spacers)
+                i = 0
+                while i < self.count():
+                    if self.item(i).flags() == Qt.NoItemFlags:
+                        self.takeItem(i)
+                    else:
+                        i += 1
+                self._has_placeholder = False
 
     # ───── Public API (used by ViewModel) ────────────────────────
     def set_spectra_names(self, spectra: list):
@@ -39,6 +90,8 @@ class VSpectraList(QListWidget):
         self.blockSignals(True)
         
         self.clear()
+        self._has_placeholder = False  # Reset placeholder flag
+        
         for i, spectrum in enumerate(spectra):
             item = QListWidgetItem(spectrum.fname)
             item.setData(Qt.UserRole, i)  # model index -> used when dragging/reordering
@@ -68,6 +121,9 @@ class VSpectraList(QListWidget):
         # If no selection was restored and list is not empty, select first item
         if not selection_restored and self.count() > 0:
             self.item(0).setSelected(True)
+        
+        # Update placeholder if list is empty
+        self._update_placeholder()
         
         # Unblock signals and manually emit selection changed
         self.blockSignals(False)

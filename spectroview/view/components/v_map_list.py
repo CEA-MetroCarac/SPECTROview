@@ -36,7 +36,9 @@ class VMapsList(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._last_selected_positions = []  # Remember last selected positions
+        self._has_maps_placeholder = False  # Track placeholder state
         self._init_ui()
+        self._update_maps_placeholder()  # Show placeholder initially
         
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -174,16 +176,68 @@ class VMapsList(QWidget):
         spectra_container.addLayout(spectra_buttons_layout)
         main_layout.addLayout(spectra_container, stretch=1)
     
+    def _update_maps_placeholder(self):
+        """Update placeholder text for maps list based on state."""
+        if self.maps_list.count() == 0:
+            # Calculate number of spacer items needed for vertical centering
+            visible_height = self.maps_list.viewport().height()
+            item_height = self.maps_list.sizeHintForRow(0) if self.maps_list.count() > 0 else 30
+            num_spacers = max(0, (visible_height // item_height // 2) - 1)
+            
+            # Add top spacers for vertical centering
+            for _ in range(num_spacers):
+                spacer = QListWidgetItem("")
+                spacer.setFlags(Qt.NoItemFlags)
+                self.maps_list.addItem(spacer)
+            
+            # Add the centered placeholder item with larger text
+            placeholder = QListWidgetItem("📂 Drag and drop map file(s) here to open")
+            placeholder.setFlags(Qt.NoItemFlags)  # Make it non-selectable and non-editable
+            placeholder.setForeground(Qt.gray)
+            placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
+            
+            # Set larger font size
+            from PySide6.QtGui import QFont
+            font = QFont()
+            font.setPointSize(12)  # Increase font size
+            placeholder.setFont(font)
+            
+            self.maps_list.addItem(placeholder)
+            
+            # Add bottom spacers for vertical centering
+            for _ in range(num_spacers):
+                spacer = QListWidgetItem("")
+                spacer.setFlags(Qt.NoItemFlags)
+                self.maps_list.addItem(spacer)
+            
+            self._has_maps_placeholder = True
+        else:
+            # Remove all placeholder items if they exist
+            if self._has_maps_placeholder:
+                # Clear all items with NoItemFlags (placeholders and spacers)
+                i = 0
+                while i < self.maps_list.count():
+                    if self.maps_list.item(i).flags() == Qt.NoItemFlags:
+                        self.maps_list.takeItem(i)
+                    else:
+                        i += 1
+                self._has_maps_placeholder = False
+    
     # ───── Public API (ViewModel → View) ─────────────────────────
     def set_maps_names(self, names: list[str]):
         """Replace entire maps list (ViewModel-driven)."""
         current_selection = self.get_selected_map_index()
         
         self.maps_list.clear()
+        self._has_maps_placeholder = False  # Reset placeholder flag
+        
         for i, name in enumerate(names):
             item = QListWidgetItem(name)
             item.setData(Qt.UserRole, i)  # Store index
             self.maps_list.addItem(item)
+        
+        # Update placeholder if list is empty
+        self._update_maps_placeholder()
         
         # Auto-select first map if no selection and maps exist
         if current_selection < 0 and len(names) > 0:

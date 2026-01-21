@@ -166,7 +166,7 @@ class VWorkspaceGraphs(QWidget):
         
         # DataFrame listbox
         self.df_listbox = QListWidget()
-        self.df_listbox.setMaximumHeight(80)
+        self.df_listbox.setMaximumHeight(120)
         df_section_layout.addWidget(self.df_listbox)
         
         # DataFrame buttons (vertical layout on the right)

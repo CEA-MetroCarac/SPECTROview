@@ -71,7 +71,7 @@ def set_spectrum_item_color(item: QListWidgetItem, spectrum):
     if spectrum.baseline.is_subtracted:
         if not hasattr(spectrum.result_fit, 'success'):
             # Baseline subtracted but no fit result
-            item.setBackground(QColor("red"))
+            item.setBackground(QColor("gray"))
         elif spectrum.result_fit.success:
             # Fit succeeded
             item.setBackground(QColor("green"))

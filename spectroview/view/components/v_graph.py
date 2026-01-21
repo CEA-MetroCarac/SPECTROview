@@ -1,5 +1,5 @@
 # view/v_graph.py
-"""Graph plotting widget - handles matplotlib visualization following MVVM pattern."""
+"""Matplotlib graph visualization widget for MVVM pattern."""
 
 import numpy as np
 import seaborn as sns
@@ -20,7 +20,7 @@ from spectroview.viewmodel.utils import rgba_to_default_color, show_alert
 
 
 class VGraph(QWidget):
-    """Graph plotting widget - renders plots based on MGraph model properties."""
+    """Graph widget rendering plots based on MGraph model properties."""
     
     def __init__(self, graph_id=None):
         super().__init__()

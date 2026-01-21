@@ -1,5 +1,5 @@
 # view/components/v_data_filter.py
-"""View component for DataFrame filtering widget."""
+"""DataFrame filtering widget with checkboxes."""
 
 import os
 from spectroview import ICON_DIR
@@ -13,18 +13,7 @@ from PySide6.QtCore import Qt, Signal
 
 
 class VDataFilter(QGroupBox):
-    """View component for filtering DataFrames with expressions.
-    
-    Features:
-    - Add/remove filter expressions
-    - Enable/disable filters with checkboxes
-    - Apply checked filters
-    - Copy filter text via context menu
-    
-    Signals:
-        filters_changed: Emitted when filters are added/removed
-        apply_requested: Emitted when user requests to apply filters
-    """
+    """DataFrame filter widget with add/remove/apply functionality."""
     
     # Signals
     filters_changed = Signal(list)  # List of filter dicts
@@ -82,7 +71,7 @@ class VDataFilter(QGroupBox):
         layout_main.addWidget(self.filter_listbox)
     
     def _on_add_filter(self):
-        """Add a new filter expression."""
+        """Add new filter expression to list."""
         filter_expression = self.filter_query.text().strip()
         if filter_expression:
             # Add checkbox item to listbox
@@ -99,7 +88,7 @@ class VDataFilter(QGroupBox):
             self.filters_changed.emit(self.get_filters())
     
     def _on_remove_filter(self):
-        """Remove selected filter(s)."""
+        """Remove selected filter(s) from list."""
         selected_items = self.filter_listbox.selectedItems()
         for item in selected_items:
             row = self.filter_listbox.row(item)
@@ -109,11 +98,11 @@ class VDataFilter(QGroupBox):
         self.filters_changed.emit(self.get_filters())
     
     def _on_apply(self):
-        """Emit signal to request filter application."""
+        """Emit signal to apply filters."""
         self.apply_requested.emit()
     
     def _on_filter_selected(self):
-        """Display selected filter text in the input field."""
+        """Show selected filter text in input field."""
         selected_items = self.filter_listbox.selectedItems()
         if selected_items:
             item = selected_items[0]
@@ -139,7 +128,7 @@ class VDataFilter(QGroupBox):
             QApplication.clipboard().setText(checkbox.text())
     
     def get_filters(self) -> list:
-        """Get current filter expressions and their states."""
+        """Get all filter expressions and states."""
         filters = []
         for i in range(self.filter_listbox.count()):
             item = self.filter_listbox.item(i)

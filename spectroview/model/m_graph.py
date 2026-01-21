@@ -1,27 +1,14 @@
 # model/m_graph.py
-"""Model for Graph - represents a single graph/plot with all its properties."""
+"""Graph data model with all plot properties."""
 
-import json
-from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 
 class MGraph:
-    """Data model for a graph/plot.
-    
-    Stores all properties needed to render a graph including:
-    - Data source (DataFrame name)
-    - Plot style and axes configuration
-    - Visual properties (colors, markers, legend)
-    - Filters applied to data
-    """
+    """Graph/plot data model storing configuration and visual properties."""
     
     def __init__(self, graph_id: Optional[int] = None):
-        """Initialize a new graph with default properties.
-        
-        Args:
-            graph_id: Unique identifier for this graph
-        """
+        """Initialize graph with default properties."""
         self.graph_id = graph_id
         
         # Data source
@@ -89,11 +76,7 @@ class MGraph:
         self.join_for_point_plot: bool = False
     
     def save(self) -> Dict[str, Any]:
-        """Serialize graph to dictionary for saving.
-        
-        Returns:
-            Dictionary containing all graph properties
-        """
+        """Serialize graph to dictionary."""
         return {
             'graph_id': self.graph_id,
             'df_name': self.df_name,
@@ -143,11 +126,7 @@ class MGraph:
         }
     
     def load(self, data: Dict[str, Any]):
-        """Load graph properties from dictionary.
-        
-        Args:
-            data: Dictionary containing graph properties
-        """
+        """Load graph properties from dictionary."""
         # List of float-type limit properties
         float_limit_keys = ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax', 
                            'y2min', 'y2max', 'y3min', 'y3max']
@@ -164,11 +143,7 @@ class MGraph:
                 setattr(self, key, value)
     
     def get_display_name(self) -> str:
-        """Get a display name for this graph.
-        
-        Returns:
-            String representation like "1-line_plot: [X] - [Y] - [Z]"
-        """
+        """Get display name for graph list."""
         x_str = self.x if self.x else "None"
         y_str = self.y[0] if self.y else "None"
         z_str = self.z if self.z else "None"

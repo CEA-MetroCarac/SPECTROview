@@ -168,21 +168,32 @@ class VMWorkspaceGraphs(QObject):
             self.notify.emit(f"Error refreshing DataFrame: {e}")
             return False
     
-    def save_dataframe_to_excel(self, df_name: str):
-        """Save DataFrame to Excel."""
+    def save_dataframe(self, df_name: str):
+        """Save DataFrame to Excel or CSV file."""
         if df_name not in self.dataframes:
             return
         
-        file_path, _ = QFileDialog.getSaveFileName(
+        file_path, selected_filter = QFileDialog.getSaveFileName(
             None,
             "Save DataFrame",
             f"{df_name}.xlsx",
-            "Excel Files (*.xlsx)"
+            "Excel Files (*.xlsx);;CSV Files (*.csv)"
         )
         
         if file_path:
             try:
-                self.dataframes[df_name].to_excel(file_path, index=False)
+                # Determine format from file extension
+                ext = Path(file_path).suffix.lower()
+                
+                if ext == '.csv' or 'CSV' in selected_filter:
+                    # Save as CSV with semicolon delimiter
+                    self.dataframes[df_name].to_csv(file_path, index=False, sep=';')
+                else:
+                    # Save as Excel (default)
+                    if not ext:
+                        file_path += '.xlsx'
+                    self.dataframes[df_name].to_excel(file_path, index=False)
+                
                 self.notify.emit(f"DataFrame saved: {Path(file_path).name}")
             except Exception as e:
                 QMessageBox.critical(None, "Error", f"Error saving DataFrame: {e}")

@@ -622,11 +622,11 @@ class VWorkspaceGraphs(QWidget):
             self.vm.remove_dataframe(df_name)
     
     def _on_save_df(self):
-        """Save DataFrame to Excel."""
+        """Save DataFrame to Excel or CSV."""
         current_item = self.df_listbox.currentItem()
         if current_item:
             df_name = current_item.text()
-            self.vm.save_dataframe_to_excel(df_name)
+            self.vm.save_dataframe(df_name)
     
     def _on_refresh_df(self):
         """Refresh DataFrame from source file."""

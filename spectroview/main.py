@@ -123,44 +123,76 @@ class Main(QMainWindow):
             elif ext == '.xlsx':
                 dataframes.append(str(path))
             elif ext in ['.csv', '.txt']:
-                # Detect if it's spectrum or hyperspectral data
+                # Detect if it's a dataframe, spectrum, or hyperspectral map data
                 try:
+                    # Read first line to determine file type
+                    with open(path, 'r') as f:
+                        first_line = f.readline().strip()
+                    
+                    # Determine if this is a saved dataframe CSV vs map/spectrum data
+                    is_dataframe_csv = False
+                    is_wafer_map = False
+                    
                     if ext == '.csv':
-                        # CSV files use semicolon delimiter and have 3 header rows
-                        delimiter = ";"
-                        skiprows = 3
-                        engine = 'c'
-                    else:  # .txt
-                        # Auto-detect delimiter by reading first lines
-                        with open(path, 'r') as f:
-                            first_line = next(f, None)
-                            second_line = next(f, None)
-                        
-                        test_line = second_line if second_line else first_line
-                        if test_line:
-                            if ';' in test_line:
-                                delimiter = ';'
-                                engine = 'c'
-                            elif '\t' in test_line:
-                                delimiter = '\t'
-                                engine = 'c'
-                            else:
-                                delimiter = r'\s+'  # space/whitespace
-                                engine = 'python'
-                        else:
-                            delimiter = '\t'
-                            engine = 'c'
-                        skiprows = 1  # TXT files typically have 1 header row
+                        # Check for wafer map CSV signature
+                        if "Dynamic Sitebased Spectral" in first_line:
+                            is_wafer_map = True
+                        # Check if it's a saved dataframe (has semicolons and text header)
+                        elif ';' in first_line:
+                            first_values = first_line.split(';')
+                            # Try to parse first value as float
+                            try:
+                                float(first_values[0])
+                                # Numeric header, not a saved dataframe
+                                is_dataframe_csv = False
+                            except (ValueError, AttributeError):
+                                # Text header = saved dataframe
+                                is_dataframe_csv = True
                     
-                    df = pd.read_csv(path, delimiter=delimiter, header=None, 
-                                   skiprows=skiprows, nrows=5, engine=engine)
-                    
-                    if df.shape[1] == 2:
-                        spectra_files.append(str(path))
-                    elif df.shape[1] > 3:
+                    if is_dataframe_csv:
+                        # CSV with dataframe header format
+                        dataframes.append(str(path))
+                    elif is_wafer_map:
+                        # Wafer map CSV
                         hyperspectral_files.append(str(path))
                     else:
-                        QMessageBox.warning(self, "Invalid File", f"Invalid number of columns in {path.name}")
+                        # Spectroscopic data (map or spectrum) - need to check structure
+                        if ext == '.csv':
+                            # CSV files use semicolon delimiter and have 3 header rows for maps
+                            delimiter = ";"
+                            skiprows = 3
+                            engine = 'c'
+                        else:  # .txt
+                            # Auto-detect delimiter by reading first lines
+                            with open(path, 'r') as f:
+                                first_line = next(f, None)
+                                second_line = next(f, None)
+                            
+                            test_line = second_line if second_line else first_line
+                            if test_line:
+                                if ';' in test_line:
+                                    delimiter = ';'
+                                    engine = 'c'
+                                elif '\t' in test_line:
+                                    delimiter = '\t'
+                                    engine = 'c'
+                                else:
+                                    delimiter = r'\s+'  # space/whitespace
+                                    engine = 'python'
+                            else:
+                                delimiter = '\t'
+                                engine = 'c'
+                            skiprows = 1  # TXT files typically have 1 header row
+                        
+                        df = pd.read_csv(path, delimiter=delimiter, header=None, 
+                                       skiprows=skiprows, nrows=5, engine=engine)
+                        
+                        if df.shape[1] == 2:
+                            spectra_files.append(str(path))
+                        elif df.shape[1] > 3:
+                            hyperspectral_files.append(str(path))
+                        else:
+                            QMessageBox.warning(self, "Invalid File", f"Invalid number of columns in {path.name}")
                 except Exception as e:
                     QMessageBox.warning(self, "Read Error", f"Failed to read {path.name}: {e}")
             else:

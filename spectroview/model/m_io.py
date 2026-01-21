@@ -125,7 +125,19 @@ def load_dataframe_file(path: Path) -> dict[str, pd.DataFrame]:
                     dfs[df_name] = df
                 return dfs
     elif ext == '.csv':
-        df = pd.read_csv(path)
+        try:
+            # Try reading with semicolon delimiter first (our default format)
+            df = pd.read_csv(path, sep=';')
+            # If only 1 column, it might strictly be comma separated
+            if df.shape[1] == 1:
+                 # Try comma
+                 df_comma = pd.read_csv(path, sep=',')
+                 if df_comma.shape[1] > 1:
+                     df = df_comma
+        except:
+             # Fallback to default
+             df = pd.read_csv(path)
+             
         return {path.stem: df}
     else:
         raise ValueError(f"Unsupported file type: {ext}")

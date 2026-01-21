@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit,
     QLabel, QComboBox, QSplitter, QScrollArea
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QIcon
 
 from spectroview import ICON_DIR
@@ -98,6 +98,7 @@ class VFitResults(QWidget):
         self.btn_save = QPushButton("Save Fit Results")
         self.btn_save.setToolTip("Save fit results to Excel file")
         self.btn_save.setIcon(QIcon(os.path.join(ICON_DIR, "save.png")))
+        self.btn_save.setIconSize(QSize(24, 24))
         self.btn_save.setMinimumHeight(40)
         self.btn_save.clicked.connect(self.save_results_requested.emit)
         left_layout.addWidget(self.btn_save)

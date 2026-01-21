@@ -153,6 +153,7 @@ class VGraph(QWidget):
         from PySide6.QtWidgets import QWidget as QWidgetContainer
         toolbar_container = QWidgetContainer()
         toolbar_container.setLayout(toolbar_layout)
+        toolbar_container.setFixedHeight(30)
         
         if layout:
             layout.addWidget(self.canvas)

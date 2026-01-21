@@ -33,14 +33,8 @@ class VSpectraList(QListWidget):
     def _update_placeholder(self):
         """Update placeholder text based on list state."""
         if self.count() == 0:
-            # Calculate number of spacer items needed for vertical centering
-            # Estimate: list height / item height / 2
-            visible_height = self.viewport().height()
-            item_height = self.sizeHintForRow(0) if self.count() > 0 else 30
-            num_spacers = max(0, (visible_height // item_height // 2) - 1)
-            
-            # Add top spacers for vertical centering
-            for _ in range(num_spacers):
+            # Add 6 empty lines before placeholder for spacing
+            for _ in range(6):
                 spacer = QListWidgetItem("")
                 spacer.setFlags(Qt.NoItemFlags)
                 self.addItem(spacer)
@@ -58,12 +52,6 @@ class VSpectraList(QListWidget):
             placeholder.setFont(font)
             
             self.addItem(placeholder)
-            
-            # Add bottom spacers for vertical centering
-            for _ in range(num_spacers):
-                spacer = QListWidgetItem("")
-                spacer.setFlags(Qt.NoItemFlags)
-                self.addItem(spacer)
             
             self._has_placeholder = True
         else:
@@ -122,12 +110,13 @@ class VSpectraList(QListWidget):
         if not selection_restored and self.count() > 0:
             self.item(0).setSelected(True)
         
-        # Update placeholder if list is empty
-        self._update_placeholder()
-        
         # Unblock signals and manually emit selection changed
         self.blockSignals(False)
         self._emit_selection_changed()
+        
+        # Update placeholder only if list is empty after adding items
+        if len(spectra) == 0:
+            self._update_placeholder()
     
     def itemChanged(self, item):
         """Handle checkbox state change to update spectrum.is_active."""

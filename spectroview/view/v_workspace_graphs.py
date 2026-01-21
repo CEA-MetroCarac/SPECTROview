@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
     QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QLineEdit, QSplitter,
     QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame, QScrollArea,
-    QDialog, QGridLayout, QApplication
+    QDialog, QGridLayout, QApplication, QListWidgetItem
 )
 from PySide6.QtCore import Qt, Signal, QSize, QTimer, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices
@@ -167,6 +167,16 @@ class VWorkspaceGraphs(QWidget):
         # DataFrame listbox
         self.df_listbox = QListWidget()
         self.df_listbox.setMaximumHeight(120)
+        self.df_listbox.setAcceptDrops(True)  # Enable drag-and-drop
+        
+        # Enable drag & drop for external files
+        self.df_listbox.dragEnterEvent = self._on_df_drag_enter
+        self.df_listbox.dragMoveEvent = self._on_df_drag_move
+        self.df_listbox.dropEvent = self._on_df_drop
+        
+        self._has_df_placeholder = False  # Track placeholder state
+        self._update_df_placeholder()  # Show placeholder initially
+        
         df_section_layout.addWidget(self.df_listbox)
         
         # DataFrame buttons (vertical layout on the right)
@@ -519,12 +529,77 @@ class VWorkspaceGraphs(QWidget):
         # MDI area connections
         self.mdi_area.subWindowActivated.connect(self._on_subwindow_activated)
         
-        # ViewModel → View
+        # ViewModel → View signal connections
         vm.dataframes_changed.connect(self._update_df_list)
         vm.dataframe_columns_changed.connect(self._update_column_combos)
         vm.dataframe_columns_changed.connect(self._update_slot_selector)
         vm.graphs_changed.connect(self._update_graph_list)
         vm.notify.connect(self._show_toast_notification)
+    
+    def _update_df_placeholder(self):
+        """Update placeholder text for dataframe list based on state."""
+        if self.df_listbox.count() == 0:
+            # Add 2 empty lines before placeholder for spacing
+            for _ in range(2):
+                spacer = QListWidgetItem("")
+                spacer.setFlags(Qt.NoItemFlags)
+                self.df_listbox.addItem(spacer)
+            
+            # Add the centered placeholder item with larger text
+            placeholder = QListWidgetItem("📊 Drag and drop Excel/CSV file(s) here to open")
+            placeholder.setFlags(Qt.NoItemFlags)  # Make it non-selectable and non-editable
+            placeholder.setForeground(Qt.gray)
+            placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
+            
+            # Set larger font size
+            from PySide6.QtGui import QFont
+            font = QFont()
+            font.setPointSize(11)  # Increase font size
+            placeholder.setFont(font)
+            
+            self.df_listbox.addItem(placeholder)
+            
+            self._has_df_placeholder = True
+        else:
+            # Remove all placeholder items if they exist
+            if self._has_df_placeholder:
+                # Clear all items with NoItemFlags (placeholders and spacers)
+                i = 0
+                while i < self.df_listbox.count():
+                    if self.df_listbox.item(i).flags() == Qt.NoItemFlags:
+                        self.df_listbox.takeItem(i)
+                    else:
+                        i += 1
+                self._has_df_placeholder = False
+    
+    def _on_df_drag_enter(self, event):
+        """Accept external file drops on dataframe list."""
+        if event.mimeData().hasUrls():
+            # Check if files are Excel or CSV
+            urls = event.mimeData().urls()
+            for url in urls:
+                file_path = url.toLocalFile()
+                if file_path.lower().endswith(('.xlsx', '.xls', '.csv')):
+                    event.acceptProposedAction()
+                    return
+        event.ignore()
+    
+    def _on_df_drag_move(self, event):
+        """Allow drag movement."""
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+    
+    def _on_df_drop(self, event):
+        """Handle file drop on dataframe list."""
+        if event.mimeData().hasUrls():
+            paths = [url.toLocalFile() for url in event.mimeData().urls()]
+            # Filter for Excel and CSV files only
+            valid_paths = [p for p in paths if p.lower().endswith(('.xlsx', '.xls', '.csv'))]
+            if valid_paths:
+                self.vm.load_dataframes(valid_paths)
+            event.acceptProposedAction()
     
     def _on_plot_style_changed(self, plot_style: str):
         """Handle plot style change."""
@@ -802,9 +877,35 @@ class VWorkspaceGraphs(QWidget):
         active_subwindow.setWindowTitle(title)
     
     def _update_df_list(self, df_names: list):
-        """Update DataFrame list."""
+        """Update DataFrame list from ViewModel."""
+        self.df_listbox.blockSignals(True)
+        
+        # Remember current selection
+        current_selection = self.df_listbox.currentItem()
+        selected_name = current_selection.text() if current_selection else None
+        
         self.df_listbox.clear()
-        self.df_listbox.addItems(df_names)
+        self._has_df_placeholder = False  # Reset placeholder flag
+        
+        for name in df_names:
+            self.df_listbox.addItem(name)
+        
+        # Restore selection if possible
+        if selected_name:
+            items = self.df_listbox.findItems(selected_name, Qt.MatchExactly)
+            if items:
+                self.df_listbox.setCurrentItem(items[0])
+        elif df_names:
+            self.df_listbox.setCurrentRow(0)
+        
+        self.df_listbox.blockSignals(False)
+        
+        # Trigger selection changed to update UI
+        self._on_df_selected()
+        
+        # Update placeholder only if list is empty
+        if len(df_names) == 0:
+            self._update_df_placeholder()
     
     def _update_column_combos(self, columns: list):
         """Update column comboboxes."""

@@ -179,13 +179,8 @@ class VMapsList(QWidget):
     def _update_maps_placeholder(self):
         """Update placeholder text for maps list based on state."""
         if self.maps_list.count() == 0:
-            # Calculate number of spacer items needed for vertical centering
-            visible_height = self.maps_list.viewport().height()
-            item_height = self.maps_list.sizeHintForRow(0) if self.maps_list.count() > 0 else 30
-            num_spacers = max(0, (visible_height // item_height // 2) - 1)
-            
-            # Add top spacers for vertical centering
-            for _ in range(num_spacers):
+            # Add 2 empty lines before placeholder for spacing
+            for _ in range(2):
                 spacer = QListWidgetItem("")
                 spacer.setFlags(Qt.NoItemFlags)
                 self.maps_list.addItem(spacer)
@@ -203,12 +198,6 @@ class VMapsList(QWidget):
             placeholder.setFont(font)
             
             self.maps_list.addItem(placeholder)
-            
-            # Add bottom spacers for vertical centering
-            for _ in range(num_spacers):
-                spacer = QListWidgetItem("")
-                spacer.setFlags(Qt.NoItemFlags)
-                self.maps_list.addItem(spacer)
             
             self._has_maps_placeholder = True
         else:
@@ -236,14 +225,15 @@ class VMapsList(QWidget):
             item.setData(Qt.UserRole, i)  # Store index
             self.maps_list.addItem(item)
         
-        # Update placeholder if list is empty
-        self._update_maps_placeholder()
-        
         # Auto-select first map if no selection and maps exist
         if current_selection < 0 and len(names) > 0:
             self.maps_list.setCurrentRow(0)
         elif 0 <= current_selection < len(names):
             self.maps_list.setCurrentRow(current_selection)
+        
+        # Update placeholder only if list is empty after adding items
+        if len(names) == 0:
+            self._update_maps_placeholder()
     
     def set_spectra_names(self, spectra: list):
         """Replace spectra list for currently selected map.

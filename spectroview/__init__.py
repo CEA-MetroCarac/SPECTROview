@@ -2,7 +2,7 @@ import os
 import sys
 from pathlib import Path
 
-VERSION = "26.3.3"
+VERSION = "26.4.1"
 
 
 TEXT_EXPIRE = (

@@ -40,7 +40,7 @@ dependencies = [
     "numpy",
     "openpyxl",
     "pandas",
-    "matplotlib==3.8.4",
+    "matplotlib==3.10.8",
     "seaborn==0.13.2",
     "pyside6",
     "markdown",

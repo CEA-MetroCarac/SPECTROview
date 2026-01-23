@@ -210,7 +210,7 @@ class VGraph(QWidget):
             legend = self.ax.get_legend()
             if legend:
                 legend_texts = legend.get_texts()
-                legend_handles = legend.legendHandles
+                legend_handles = legend.legend_handles
                 for idx, text in enumerate(legend_texts):
                     label = text.get_text()
                     handle = legend_handles[idx]
@@ -532,7 +532,13 @@ class VGraph(QWidget):
                     for idx, prop in enumerate(self.legend_properties):
                         legend_labels.append(prop['label'])
                         handles[idx].set_label(prop['label'])
-                        handles[idx].set_color(prop['color'])
+                        # For box/bar plots, use set_facecolor to preserve edge color
+                        if self.plot_style in ['box', 'bar']:
+                            handles[idx].set_facecolor(prop['color'])
+                            handles[idx].set_edgecolor('black')
+                            handles[idx].set_linewidth(0.8)
+                        else:
+                            handles[idx].set_color(prop['color'])
                         if self.plot_style in ['point', 'scatter']:
                             handles[idx].set_marker(prop['marker'])
                 except Exception:

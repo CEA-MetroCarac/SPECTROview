@@ -521,7 +521,7 @@ class VSpectraViewer(QWidget):
         for text in legend.get_texts():
             text.set_picker(True)
 
-        for handle in legend.legendHandles:
+        for handle in legend.legend_handles:
             handle.set_picker(True)
 
         # Cache bbox to avoid conflicts with plot clicks

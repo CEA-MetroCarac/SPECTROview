@@ -52,6 +52,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     def load_map_files(self, paths: list[str]):
         """Load hyperspectral map files and extract spectra."""
         loaded_maps = []
+        last_valid_path = None
         
         for p in paths:
             path = Path(p)
@@ -66,11 +67,16 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 self.maps[map_name] = map_df
                 self._extract_spectra_from_map(map_name, map_df)
                 loaded_maps.append(map_name)
+                last_valid_path = path  # Track last successfully loaded file
             except Exception as e:
                 QMessageBox.critical(None, "Error", f"Error loading {path.name}: {str(e)}")
         
         if loaded_maps:
             self._emit_maps_list_update()
+            
+            # Update last_directory setting
+            if last_valid_path:
+                self.settings.set_last_directory(str(last_valid_path.parent))
     
     def select_map(self, map_name: str):
         """Select a map and filter/show its spectra (fast - no extraction)."""

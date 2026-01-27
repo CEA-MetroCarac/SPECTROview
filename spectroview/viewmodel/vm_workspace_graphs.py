@@ -60,6 +60,7 @@ class VMWorkspaceGraphs(QObject):
             return
         
         skipped = []
+        last_valid_path = None
         
         for file_path in file_paths:
             try:
@@ -79,6 +80,7 @@ class VMWorkspaceGraphs(QObject):
                     self.dataframes[df_name] = df
                     # Store source file path for refresh functionality
                     self.dataframe_sources[df_name] = str(path)
+                    last_valid_path = path  # Track last successfully loaded file
                 
             except Exception as e:
                 self.notify.emit(f"Error loading {Path(file_path).name}: {e}")
@@ -87,6 +89,10 @@ class VMWorkspaceGraphs(QObject):
             self.notify.emit(f"Already loaded and skipped:\n" + "\n".join(skipped))
         
         self._emit_dataframes_list()
+        
+        # Update last_directory setting
+        if last_valid_path:
+            self.settings.set_last_directory(str(last_valid_path.parent))
     
     def add_dataframe(self, df_name: str, df: pd.DataFrame):
         """Add a DataFrame to workspace."""

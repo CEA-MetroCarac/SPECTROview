@@ -98,6 +98,7 @@ class VMWorkspaceSpectra(QObject):
         """Load spectrum files from disk."""
         existing_paths = {s.source_path for s in self.spectra}
         loaded_files = []
+        last_valid_path = None
 
         for p in paths:
             path = Path(p)
@@ -111,11 +112,16 @@ class VMWorkspaceSpectra(QObject):
                 spectrum = load_spectrum_file(path)
                 self.spectra.add(spectrum)
                 loaded_files.append(path.name)
+                last_valid_path = path  # Track last successfully loaded file
             except Exception as e:
                 QMessageBox.critical(None, "Error", f"Error loading {path.name}: {str(e)}")
 
         if loaded_files:
             self._emit_list_update()
+            
+            # Update last_directory setting
+            if last_valid_path:
+                self.settings.set_last_directory(str(last_valid_path.parent))
 
 
     def set_selected_indices(self, indices: list[int]):

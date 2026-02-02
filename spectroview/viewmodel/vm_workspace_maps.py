@@ -393,24 +393,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             # Emit map data update to trigger plot refresh
             self.map_data_updated.emit(self.current_map_df)
     
-    def clear_workspace(self):
-        """Clear all maps, spectra, and reset workspace to initial state."""
-        # Stop any running fit thread first (via parent)
-        super().clear_workspace()
-        
-        # Clear Maps-specific data structures
-        self.maps.clear()
-        self.current_map_name = None
-        self.current_map_df = None
-        
-        # Clear all caches
-        self._fit_results_cache = None
-        self._fit_results_cache_dirty = True
-        
-        # Emit updates to View
-        self.maps_list_changed.emit([])
-        self.map_data_updated.emit(pd.DataFrame())
-    
     # ─────────────────────────────────────────────────────────────────
     # SAVE/LOAD WORKSPACE
     # ─────────────────────────────────────────────────────────────────
@@ -442,6 +424,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 'spectrums_data': spectrums_data,
                 'maps': {k: v.hex() for k, v in compressed_maps.items()},
             }
+            
+            # Save fit results DataFrame (including computed columns)
+            if self.df_fit_results is not None and not self.df_fit_results.empty:
+                data_to_save['df_fit_results'] = self.df_fit_results.to_dict('records')
+            else:
+                data_to_save['df_fit_results'] = None
+            
             
             # Save to JSON file
             with open(file_path, 'w') as f:
@@ -483,6 +472,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 spectrum.preprocess()
                 self.spectra.append(spectrum)
             
+            
+            # Restore fit results DataFrame (including computed columns)
+            if 'df_fit_results' in data and data['df_fit_results'] is not None:
+                self.df_fit_results = pd.DataFrame(data['df_fit_results'])
+            else:
+                self.df_fit_results = None
+            
             # Select first map by default
             map_names = list(self.maps.keys())
             if map_names:
@@ -491,22 +487,42 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             # Emit updates to View
             self.maps_list_changed.emit(list(self.maps.keys()))
             self.count_changed.emit(len(self.spectra))
+            
+            # Populate fit results table and map viewer parameter lists
+            if self.df_fit_results is not None and not self.df_fit_results.empty:
+                self.fit_results_updated.emit(self.df_fit_results)
+            
             self.notify.emit(f"Loaded {len(self.maps)} map(s) with {len(self.spectra)} spectra")
             
         except Exception as e:
             QMessageBox.critical(None, "Load Error", f"Error loading maps workspace:\n{str(e)}")
     
+    def clear_workspace(self):
+        """Clear all maps, spectra, and reset workspace to initial state."""
+        # Stop any running fit thread first (via parent)
+        super().clear_workspace()
+        
+        # Clear Maps-specific data structures
+        self.maps.clear()
+        self.current_map_name = None
+        self.current_map_df = None
+        
+        # Clear all caches
+        self._fit_results_cache = None
+        self._fit_results_cache_dirty = True
+        
+        # Emit updates to View
+        self.maps_list_changed.emit([])
+        self.map_data_updated.emit(pd.DataFrame())
+
+
     def set_graphs_workspace(self, graphs_workspace):
         """Inject Graphs workspace reference for cross-workspace communication."""
         self.graphs_workspace = graphs_workspace
     
     def extract_and_send_profile_to_graphs(self, profile_name: str, profile_df: pd.DataFrame):
-        """Extract profile data and send to Graphs workspace for plotting.
+        """Extract profile data and send to Graphs workspace for plotting."""
         
-        Args:
-            profile_name: Name for the profile (used as DataFrame name in Graphs)
-            profile_df: DataFrame with columns: X, Y, distance, values
-        """
         if profile_df is None or profile_df.empty:
             self.notify.emit("No profile data to extract. Select exactly 2 points in 2D map mode.")
             return

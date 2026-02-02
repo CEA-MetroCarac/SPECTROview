@@ -296,7 +296,6 @@ class VWorkspaceSpectra(QWidget):
     def load_work(self, file_path: str):
         """Trigger load work in ViewModel."""
         self.vm.load_work(file_path)
-        self.vm.collect_fit_results()
 
     def clear_workspace(self):
         """Trigger workspace clear in ViewModel."""

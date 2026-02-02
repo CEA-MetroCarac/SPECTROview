@@ -650,6 +650,3 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Clear cache in all dialog viewers
         for dialog in self.viewer_dialogs:
             dialog.clear_cache_for_map("")
-        
-        # Delay fit results collection to ensure UI is ready (matches legacy)
-        self.vm.collect_fit_results()

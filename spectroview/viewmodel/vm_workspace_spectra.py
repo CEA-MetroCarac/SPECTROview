@@ -821,6 +821,13 @@ class VMWorkspaceSpectra(QObject):
             data_to_save = {
                 'spectrums': spectrum_to_dict(self.spectra, is_map=False)
             }
+            
+            # Save fit results DataFrame (including computed columns)
+            if self.df_fit_results is not None and not self.df_fit_results.empty:
+                data_to_save['df_fit_results'] = self.df_fit_results.to_dict('records')
+            else:
+                data_to_save['df_fit_results'] = None
+            
             with open(file_path, 'w') as f:
                 json.dump(data_to_save, f, indent=4)
             self.notify.emit("Work saved successfully.")
@@ -844,6 +851,15 @@ class VMWorkspaceSpectra(QObject):
                 spectrum.preprocess()
                 self.spectra.append(spectrum)
             
+            # Restore fit results DataFrame (including computed columns)
+            if 'df_fit_results' in load and load['df_fit_results'] is not None:
+                self.df_fit_results = pd.DataFrame(load['df_fit_results'])
+
+                # Emit signal to update fit results table
+                self.fit_results_updated.emit(self.df_fit_results)
+            else:
+                self.df_fit_results = None
+            
             # Update UI
             self._emit_list_update()
             if len(self.spectra) > 0:
@@ -854,7 +870,7 @@ class VMWorkspaceSpectra(QObject):
                 self.spectra_selection_changed.emit([])
             
         except Exception as e:
-            QMessageBox.critical(None, "Load Error", f"Error loading work:\n{str(e)}")
+            QMessageBox.critical(None, "Load Error", f"Error loading spectra workspace:\n{str(e)}")
 
     def clear_workspace(self):
         """Clear all spectra and reset workspace to initial state."""

@@ -711,10 +711,23 @@ class VWorkspaceGraphs(QWidget):
             return
         
         df_name = current_item.text()
+        
+        # Get current graph before refresh to restore properties after
+        current_graph_id = None
+        current_graph_index = self.cbb_graph_list.currentIndex()
+        if current_graph_index >= 0:
+            current_graph_id = self.cbb_graph_list.currentData()
+        
         success = self.vm.refresh_dataframe(df_name)
         
         if success:
             self.vm.notify.emit(f"DataFrame '{df_name}' refreshed successfully")
+            
+            # Restore current graph properties after df refresh
+            if current_graph_id:
+                graph_model = self.vm.get_graph(current_graph_id)
+                if graph_model and graph_model.df_name == df_name:
+                    self._sync_gui_from_graph(graph_model)
         else:
             QMessageBox.warning(
                 self, 
@@ -920,7 +933,7 @@ class VWorkspaceGraphs(QWidget):
         
         # Update filter autocomplete with DataFrame columns
         self.v_data_filter.update_column_list(columns)
-    
+        
     def _update_slot_selector(self, columns: list):
         """Update slot selector."""
         # Clear existing checkboxes

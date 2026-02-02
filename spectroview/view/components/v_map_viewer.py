@@ -14,8 +14,7 @@ from superqt import QLabeledDoubleRangeSlider
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QCheckBox, QDoubleSpinBox,
-    QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction,
-    QSpacerItem, QSizePolicy, QGroupBox, QApplication
+    QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction, QApplication, QMessageBox
 )
 from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon, QAction
@@ -578,31 +577,66 @@ class VMapViewer(QWidget):
             self.ax.tick_params(axis='y', which='both', left=True, 
                                right=False, labelleft=True)
         
-        # Get heatmap data
-        heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col = self._get_data_for_heatmap()
-        self._last_final_z_col = final_z_col
+        # Get heatmap data and plot (consolidated error handling)
+        try:
+            # Get heatmap data
+            heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col = self._get_data_for_heatmap()
+            self._last_final_z_col = final_z_col
         
-        # Plot settings
-        import matplotlib.pyplot as plt
-        cmap = plt.get_cmap(self.cbb_palette.currentText()).copy()
-        cmap.set_bad(color='white')  # Set NaN values to white (masked regions)
-        
-        interpolation = 'bilinear' if self.action_smoothing.isChecked() else 'none'
-        vmin_plot, vmax_plot = self.z_range_slider.value()
-        
-        # Plot heatmap - different approaches for wafer vs 2D maps
-        if map_type != '2Dmap' and grid_z is not None:
-            # Wafer maps: Use griddata result (already interpolated, smooth)
-            self.img = self.ax.imshow(grid_z, extent=extent,
-                                     vmin=vmin_plot, vmax=vmax_plot,
-                                     origin='lower', aspect='equal', cmap=cmap,
-                                     interpolation='bilinear')  # Smooth the 100x100 grid
-        elif not heatmap_pivot.empty:
-            # 2D maps: Use pivot table with optional smoothing
-            self.img = self.ax.imshow(heatmap_pivot, extent=extent, 
-                                     vmin=vmin_plot, vmax=vmax_plot,
-                                     origin='lower', aspect='equal', cmap=cmap, 
-                                     interpolation=interpolation)
+            
+            # Plot settings
+            cmap = plt.get_cmap(self.cbb_palette.currentText()).copy()
+            cmap.set_bad(color='white')  # Set NaN values to white (masked regions)
+            
+            interpolation = 'bilinear' if self.action_smoothing.isChecked() else 'none'
+            vmin_plot, vmax_plot = self.z_range_slider.value()
+            
+            # Plot heatmap - different approaches for wafer vs 2D maps
+            if map_type != '2Dmap' and grid_z is not None:
+                # Wafer maps: Use griddata result (already interpolated, smooth)
+                self.img = self.ax.imshow(grid_z, extent=extent,
+                                         vmin=vmin_plot, vmax=vmax_plot,
+                                         origin='lower', aspect='equal', cmap=cmap,
+                                         interpolation='bilinear')  # Smooth the 100x100 grid
+            elif not heatmap_pivot.empty:
+                # 2D maps: Use pivot table with optional smoothing
+                self.img = self.ax.imshow(heatmap_pivot, extent=extent, 
+                                         vmin=vmin_plot, vmax=vmax_plot,
+                                         origin='lower', aspect='equal', cmap=cmap, 
+                                         interpolation=interpolation)
+                                         
+        except (ValueError, TypeError) as e:
+            # Handle non-numeric data errors (from both scipy griddata and matplotlib imshow)
+            error_msg = str(e)
+            if "could not convert string to float" in error_msg or "dtype object cannot be converted to float" in error_msg:
+
+                QMessageBox.critical(
+                    None,
+                    "Non-Numeric Data",
+                    f"The selected parameter contains non-numerical values and cannot be visualized on the map.\n\n"
+                    f"Please select a different parameter that contains only numeric data.\n\n"
+                    f"Error: {error_msg}"
+                )
+            else:
+
+                QMessageBox.critical(
+                    None,
+                    "Plot Error",
+                    f"An error occurred while plotting the heatmap:\n\n{str(e)}"
+                )
+            self.ax.clear()
+            self.canvas.draw_idle()
+            return
+        except Exception as e:
+            # Handle any other errors
+            QMessageBox.critical(
+                None,
+                "Plot Error",
+                f"An error occurred while plotting the heatmap:\n\n{str(e)}"
+            )
+            self.ax.clear()
+            self.canvas.draw_idle()
+            return
         
         # Colorbar
         if self.img:
@@ -760,7 +794,6 @@ class VMapViewer(QWidget):
                     np.linspace(-r, r, 80),  
                     np.linspace(-r, r, 80)
                 )
-                from scipy.interpolate import griddata
                 
                 # Filter out NaN values before interpolation (masked points)
                 # This prevents interpolation from filling in masked regions

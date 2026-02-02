@@ -1084,6 +1084,113 @@ class VMWorkspaceSpectra(QObject):
         except Exception as e:
             self.notify.emit(f"Error adding column: {e}")
     
+    def compute_column_from_expression(self, col_name: str, expression: str):
+        """Add a new column to fit results by evaluating a mathematical expression."""
+        
+        if self.df_fit_results is None or self.df_fit_results.empty:
+            QMessageBox.warning(None, "No Fit Results", "No fit results available. Collect results first.")
+            return
+        
+        if not col_name:
+            QMessageBox.warning(None, "Missing Column Name", "Please enter a column name.")
+            return
+        
+        if not expression:
+            QMessageBox.warning(None, "Missing Expression", "Please enter a mathematical expression.")
+            return
+        
+        # Check if column already exists
+        if col_name in self.df_fit_results.columns:
+            QMessageBox.warning(
+                None, 
+                "Duplicate Column Name",
+                f"Column '{col_name}' already exists. Please choose a different name."
+            )
+            return
+        
+        try:
+            # Use pandas eval for safe expression evaluation
+            # This handles mathematical operations safely without eval()
+            result = self.df_fit_results.eval(expression)
+            
+            # Check for inf and NaN values (from division by zero, etc.)
+            warnings = []
+            if pd.isna(result).any():
+                nan_count = pd.isna(result).sum()
+                warnings.append(
+                    f"Expression resulted in {nan_count} NaN value(s). "
+                    "This may be due to division by zero or invalid operations."
+                )
+            
+            if np.isinf(result).any():
+                inf_count = np.isinf(result).sum()
+                warnings.append(
+                    f"Expression resulted in {inf_count} infinite value(s). "
+                    "This may be due to division by zero."
+                )
+            
+            # Add the computed column to the dataframe
+            self.df_fit_results[col_name] = result
+            
+            # Round to 3 decimals for consistency
+            if pd.api.types.is_numeric_dtype(self.df_fit_results[col_name]):
+                self.df_fit_results[col_name] = self.df_fit_results[col_name].round(3)
+            
+            # Emit updated dataframe
+            self.fit_results_updated.emit(self.df_fit_results)
+            
+            # Show success message with warnings if any
+            if warnings:
+                message = f"Successfully added computed column '{col_name}'.\n\nWarnings:\n" + "\n".join(f"• {w}" for w in warnings)
+                QMessageBox.warning(None, "Column Added with Warnings", message)
+            else:
+                QMessageBox.information(
+                    None, 
+                    "Success",
+                    f"Successfully added computed column '{col_name}'."
+                )
+            
+        except pd.errors.UndefinedVariableError as e:
+            # Column name in expression doesn't exist
+            QMessageBox.critical(
+                None,
+                "Invalid Column Name",
+                f"Invalid column name in expression.\n\n"
+                f"Error: {str(e)}\n\n"
+                f"Available columns:\n{', '.join(self.df_fit_results.columns)}\n\n"
+                "Note: Use backticks for names with special characters: `x0_LO(M)`"
+            )
+        except SyntaxError as e:
+            # Invalid syntax in expression
+            QMessageBox.critical(
+                None,
+                "Syntax Error",
+                f"Invalid expression syntax.\n\n"
+                f"Error: {str(e)}\n\n"
+                "Examples:\n"
+                "• column1 - column2\n"
+                "• (col1 + col2) * 2\n\n"
+                "Note: Use backticks for names with special characters: `x0_LO(M)`"
+            )
+        except ZeroDivisionError:
+            # Explicit division by zero (though pandas.eval usually handles this)
+            QMessageBox.critical(
+                None,
+                "Division by Zero",
+                "Division by zero detected in expression.\n\n"
+                "Please check your formula."
+            )
+        except Exception as e:
+            # Catch-all for other errors
+            QMessageBox.critical(
+                None,
+                "Expression Error",
+                f"Error evaluating expression:\n\n"
+                f"{str(e)}\n\n"
+                f"Available columns:\n{', '.join(self.df_fit_results.columns)}\n\n"
+                "Note: Use backticks for names with special characters or when column's header contain spaces: `x0_LO(M)`"
+            )
+    
     def save_fit_results(self):
         """Save fit results to Excel or CSV file."""
         if self.df_fit_results is None or self.df_fit_results.empty:

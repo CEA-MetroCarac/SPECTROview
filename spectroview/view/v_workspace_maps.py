@@ -1,18 +1,10 @@
-"""View for Maps Workspace - extends Spectra Workspace with map-specific features."""
-import os
-import logging
+import pandas as pd
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QCheckBox, QComboBox, QFrame,
-    QGroupBox, QLineEdit, QDoubleSpinBox, QSpacerItem, QSizePolicy,
-    QScrollArea, QDialog
+    QWidget, QVBoxLayout, QHBoxLayout, QFrame, QScrollArea, QDialog
 )
 
-from spectroview import ICON_DIR
-from spectroview.model.m_settings import MSettings
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.components.v_map_list import VMapsList
 from spectroview.view.components.v_map_viewer import VMapViewer
@@ -244,6 +236,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Note: map_selected signal removed to avoid duplicate calls to _on_map_data_changed
         self.vm.map_data_updated.connect(self._on_map_data_changed)
         
+        # Update parameter lists when fit results change (e.g., computed columns added)
+        self.vm.fit_results_updated.connect(self._on_fit_results_updated)
+        
         # Connect spectra selection to viewer (inherited from parent)
         self.vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
         
@@ -430,6 +425,22 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # After map data is loaded, sync heatmap highlights with current selection
         self._sync_heatmap_with_selection()
+    
+    def _on_fit_results_updated(self, df_fit_results):
+        """Update map viewer parameter lists when fit results change.
+        
+        This supplements the parent class's _update_fit_results() which updates
+        the fit results table. Here we update the map viewer comboboxes with
+        new parameter choices (e.g., when computed columns are added).
+        """
+        # Update parameter lists in main viewer
+        self.v_map_viewer.df_fit_results = df_fit_results if df_fit_results is not None else pd.DataFrame()
+        self.v_map_viewer._update_parameter_lists()
+        
+        # Update parameter lists in all dialog viewers
+        for dialog in self.viewer_dialogs:
+            dialog.map_viewer.df_fit_results = df_fit_results if df_fit_results is not None else pd.DataFrame()
+            dialog.map_viewer._update_parameter_lists()
     
     def _sync_heatmap_with_selection(self):
         """Synchronize heatmap highlights with current spectra list selection."""

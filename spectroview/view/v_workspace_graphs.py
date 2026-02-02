@@ -917,6 +917,9 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_y.addItems(columns)
         self.cbb_z.addItem("None")
         self.cbb_z.addItems(columns)
+        
+        # Update filter autocomplete with DataFrame columns
+        self.v_data_filter.update_column_list(columns)
     
     def _update_slot_selector(self, columns: list):
         """Update slot selector."""

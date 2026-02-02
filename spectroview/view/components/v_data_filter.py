@@ -5,11 +5,13 @@ import os
 from spectroview import ICON_DIR
 
 from PySide6.QtWidgets import (
-    QGroupBox, QVBoxLayout, QLineEdit, QHBoxLayout, QPushButton,
-    QListWidget, QListWidgetItem, QCheckBox, QMenu, QApplication
+    QGroupBox, QVBoxLayout, QHBoxLayout, QPushButton,
+    QListWidget, QListWidgetItem, QCheckBox, QMenu, QApplication, QCompleter
 )
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QStringListModel
+
+from spectroview.view.components.v_expression_lineedit import ExpressionLineEdit
 
 
 class VDataFilter(QGroupBox):
@@ -34,11 +36,18 @@ class VDataFilter(QGroupBox):
         layout_buttons = QHBoxLayout()
         layout_buttons.setSpacing(2)
         
-        # Filter query input
-        self.filter_query = QLineEdit()
+        # Filter query input with autocomplete
+        self.filter_query = ExpressionLineEdit()
         self.filter_query.setPlaceholderText("Enter your filter expression...")
         self.filter_query.returnPressed.connect(self._on_add_filter)
         layout_buttons.addWidget(self.filter_query)
+        
+        # Setup autocomplete (will be populated when DataFrame is set)
+        self._completer_model = QStringListModel()
+        self._completer = QCompleter()
+        self._completer.setModel(self._completer_model)
+        self._completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.filter_query.setCompleter(self._completer)
         
         # Add filter button
         self.btn_add = QPushButton()
@@ -156,3 +165,9 @@ class VDataFilter(QGroupBox):
         self.filter_listbox.clear()
         self.filter_query.clear()
         self.filters_changed.emit([])
+    
+    def update_column_list(self, columns: list):
+        """Update autocomplete suggestions with DataFrame column names."""
+        if columns:
+            self._completer_model.setStringList(columns)
+

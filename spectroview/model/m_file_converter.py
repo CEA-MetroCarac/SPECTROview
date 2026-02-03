@@ -61,7 +61,7 @@ class MFileConverter(QDialog):
 
         # Show dialog if no file_paths provided
         if file_paths is None:
-            last_dir = self.settings.value("last_directory", "/")
+            last_dir = self.settings.get_last_directory()
             options = QFileDialog.Options()
             options |= QFileDialog.ReadOnly
             file_paths, _ = QFileDialog.getOpenFileNames(
@@ -71,7 +71,7 @@ class MFileConverter(QDialog):
         # If files were selected
         if file_paths:
             last_dir = QFileInfo(file_paths[0]).absolutePath()
-            self.settings.setValue("last_directory", last_dir)
+            self.settings.set_last_directory(last_dir)
 
             for file_path in file_paths:
                 if os.path.isfile(file_path):

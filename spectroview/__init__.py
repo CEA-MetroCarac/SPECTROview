@@ -1,18 +1,13 @@
 import os
 import sys
 from pathlib import Path
-
-VERSION = "26.6.1"
-
-# ---------------------------------------------------------------------
-# 🔧 Register custom fitting models with fitspy
-# ---------------------------------------------------------------------
 from spectroview.model.m_fit_models import fano
 import fitspy
 
-# Add custom Fano model to fitspy's PEAK_MODELS dictionary
-fitspy.PEAK_MODELS["Fano"] = fano
+VERSION = "26.6.1"
 
+# 🔧 Add custom Fano model to fitspy's PEAK_MODELS dictionary
+fitspy.PEAK_MODELS["Fano"] = fano
 
 TEXT_EXPIRE = (
     "The current SPECTROview version has expired. Checkout the SPECTROview's "
@@ -79,11 +74,8 @@ X_AXIS_UNIT = [
     'Frequency (GHz)',
     r'$2\theta$ (°)',
 ]
-
-
-# ---------------------------------------------------------------------
+ 
 # 🔑 PyInstaller-safe resource path helper
-# ---------------------------------------------------------------------
 def resource_path(relative_path: str) -> str:
     """
     Return absolute path to resource.
@@ -99,9 +91,7 @@ def resource_path(relative_path: str) -> str:
     return str(base_path / relative_path)
 
 
-# ---------------------------------------------------------------------
 # 📁 Resource paths 
-# ---------------------------------------------------------------------
 RESOURCES_DIR = resource_path("spectroview/resources")
 
 ICON_DIR = resource_path("spectroview/resources/icons")

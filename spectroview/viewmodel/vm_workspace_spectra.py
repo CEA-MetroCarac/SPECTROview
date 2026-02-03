@@ -811,10 +811,10 @@ class VMWorkspaceSpectra(QObject):
         import pandas as pd
         import numpy as np
 
-        if not self.selected_indices:
+        if not self.selected_fnames:
             return
 
-        selected_spectra = self.spectra.get(self.selected_indices)
+        selected_spectra = self._get_selected_spectra()
         if not selected_spectra:
             return
 

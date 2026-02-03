@@ -328,20 +328,31 @@ class VSpectraViewer(QWidget):
             # ── Baseline (independent of bestfit toggle)
             y_base = self._plot_baseline(spectrum)
 
+
             # ── Peaks + Bestfit 
             if (
                 self.act_bestfit.isChecked()
                 and getattr(spectrum, "peak_models", None)
                 and spectrum.peak_models
             ):
-                y_peaks = np.zeros_like(x)
+                # Create dense interpolation grid for SMOOTH curves
+                x_fine = np.linspace(x.min(), x.max(), 1000)
+                y_peaks_fine = np.zeros_like(x_fine)
+                
+                # Also keep track on original grid for residual calculation
+                y_peaks_orig = np.zeros_like(x)
 
                 for i, peak_model in enumerate(spectrum.peak_models):
-                    y_peak = self._eval_peak_model_safe(peak_model, x)
-                    y_peaks += y_peak
+                    # Evaluate on FINE grid for smooth plotting
+                    y_peak_fine = self._eval_peak_model_safe(peak_model, x_fine)
+                    y_peaks_fine += y_peak_fine
+                    
+                    # Also evaluate on original grid (needed for residuals)
+                    y_peak_orig = self._eval_peak_model_safe(peak_model, x)
+                    y_peaks_orig += y_peak_orig
 
-                    # ── Individual peak curve
-                    peak_line, = self.ax.plot(x, y_peak, lw=lw, alpha=0.8)
+                    # ── Individual peak curve (SMOOTH)
+                    peak_line, = self.ax.plot(x_fine, y_peak_fine, lw=lw, alpha=0.8)
 
                     peak_info = {
                         "peak_label": (
@@ -359,13 +370,24 @@ class VSpectraViewer(QWidget):
 
                     self._fitted_lines.append((peak_line, peak_info))
 
-                # ── Best-fit curve
+                # ── Best-fit curve (SMOOTH)
                 if (
                     hasattr(spectrum, "result_fit")
                     and getattr(spectrum.result_fit, "success", False)
                 ):
-                    y_fit = y_peaks + y_base if y_base is not None else y_peaks
-                    self.ax.plot(x, y_fit, lw=lw, color="black", label="bestfit")
+                    # Evaluate baseline on fine grid for smooth bestfit
+                    if y_base is not None:
+                        baseline = spectrum.baseline
+                        try:
+                            y_base_fine = baseline.eval(x_fine, None, attached=False)
+                        except Exception:
+                            y_base_fine = np.zeros_like(x_fine)
+                        y_fit_fine = y_peaks_fine + y_base_fine
+                    else:
+                        y_fit_fine = y_peaks_fine
+                    
+                    self.ax.plot(x_fine, y_fit_fine, lw=lw, color="black", label="bestfit")
+
 
             # ── Residual
             if self.act_residual.isChecked():

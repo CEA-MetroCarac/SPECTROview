@@ -1,13 +1,15 @@
 import os
 import sys
 from pathlib import Path
-from spectroview.model.m_fit_models import fano
+from spectroview.model.m_fit_models import fano, decay_single_exp, decay_bi_exp
 import fitspy
 
 VERSION = "26.6.1"
 
-# 🔧 Add custom Fano model to fitspy's PEAK_MODELS dictionary
+# 🔧 Add custom models to fitspy's PEAK_MODELS dictionary
 fitspy.PEAK_MODELS["Fano"] = fano
+fitspy.PEAK_MODELS["DecaySingleExp"] = decay_single_exp
+fitspy.PEAK_MODELS["DecayBiExp"] = decay_bi_exp
 
 TEXT_EXPIRE = (
     "The current SPECTROview version has expired. Checkout the SPECTROview's "
@@ -16,7 +18,8 @@ TEXT_EXPIRE = (
 
 PEAK_MODELS = [
     "Lorentzian", "Gaussian", "PseudoVoigt",
-    "GaussianAsym", "LorentzianAsym", "Fano"
+    "GaussianAsym", "LorentzianAsym", "Fano",
+    "DecaySingleExp", "DecayBiExp"
 ]
 
 FIT_PARAMS = {

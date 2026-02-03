@@ -45,3 +45,74 @@ def fano(x, ampli, fwhm, x0, q=1.0):
 
     # Pure Fano formula: ampli * (q + ε)² / (1 + ε²)
     return ampli * (q + epsilon) ** 2 / (1 + epsilon ** 2)
+
+
+def decay_single_exp(x, A, tau, B):
+    r"""
+    Single exponential decay function for TRPL (Time-Resolved Photoluminescence).
+    
+    The function is defined as:
+    :math:`I(t) = A \cdot e^{-t/\tau} + B`
+    
+    Parameters
+    ----------
+    x : array-like
+        Time values (typically in nanoseconds)
+    A : float
+        Amplitude of the exponential decay
+    tau : float
+        Decay time constant (lifetime)
+    B : float
+        Baseline offset (background intensity)
+    
+    Returns
+    -------
+    array-like
+        Intensity values at each time point
+    
+    Example
+    -------
+    >>> import numpy as np
+    >>> t = np.linspace(0, 100, 1001)
+    >>> y = decay_single_exp(t, A=1000, tau=20, B=10)
+    """
+    return A * np.exp(-x / tau) + B
+
+
+def decay_bi_exp(x, A1, tau1, A2, tau2, B):
+    r"""
+    Bi-exponential decay function for TRPL (Time-Resolved Photoluminescence).
+    
+    Models decay with two distinct lifetime components, commonly observed in
+    systems with multiple decay pathways or heterogeneous populations.
+    
+    The function is defined as:
+    :math:`I(t) = A_1 \cdot e^{-t/\tau_1} + A_2 \cdot e^{-t/\tau_2} + B`
+    
+    Parameters
+    ----------
+    x : array-like
+        Time values (typically in nanoseconds)
+    A1 : float
+        Amplitude of the first exponential component
+    tau1 : float
+        First decay time constant (fast lifetime)
+    A2 : float
+        Amplitude of the second exponential component
+    tau2 : float
+        Second decay time constant (slow lifetime)
+    B : float
+        Baseline offset (background intensity)
+    
+    Returns
+    -------
+    array-like
+        Intensity values at each time point
+    
+    Example
+    -------
+    >>> import numpy as np
+    >>> t = np.linspace(0, 100, 1001)
+    >>> y = decay_bi_exp(t, A1=800, tau1=10, A2=200, tau2=40, B=5)
+    """
+    return A1 * np.exp(-x / tau1) + A2 * np.exp(-x / tau2) + B

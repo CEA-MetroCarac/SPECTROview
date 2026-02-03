@@ -76,7 +76,7 @@ class VPeakTable(QWidget):
         peaks = self._spectrum.peak_models
         labels = self._spectrum.peak_labels
 
-        param_order = ["x0", "fwhm", "fwhm_l", "fwhm_r", "ampli", "alpha"]
+        param_order = ["x0", "fwhm", "fwhm_l", "fwhm_r", "ampli", "alpha", "q"]
         
         # determine which parameters are present in at least one peak
         active_params = {

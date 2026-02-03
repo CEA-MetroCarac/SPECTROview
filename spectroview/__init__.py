@@ -4,6 +4,15 @@ from pathlib import Path
 
 VERSION = "26.6.1"
 
+# ---------------------------------------------------------------------
+# 🔧 Register custom fitting models with fitspy
+# ---------------------------------------------------------------------
+from spectroview.model.m_fit_models import fano
+import fitspy
+
+# Add custom Fano model to fitspy's PEAK_MODELS dictionary
+fitspy.PEAK_MODELS["Fano"] = fano
+
 
 TEXT_EXPIRE = (
     "The current SPECTROview version has expired. Checkout the SPECTROview's "
@@ -12,7 +21,7 @@ TEXT_EXPIRE = (
 
 PEAK_MODELS = [
     "Lorentzian", "Gaussian", "PseudoVoigt",
-    "GaussianAsym", "LorentzianAsym"
+    "GaussianAsym", "LorentzianAsym", "Fano"
 ]
 
 FIT_PARAMS = {
@@ -104,3 +113,5 @@ LOGO_APPLI = resource_path("spectroview/resources/icons/logo_spectroview.png")
 USER_MANUAL_PDF = resource_path(
     "spectroview/resources/SPECTROview_UserManual.pdf"
 )
+
+

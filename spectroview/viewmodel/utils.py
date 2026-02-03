@@ -239,8 +239,27 @@ class FitThread(QThread):
         for i, spectrum in enumerate(self.spectra, 1):
             if spectrum.peak_models:
                 try:
+                    # Check if any peak model is a decay model
+                    # Decay models have built-in B (baseline) parameter
+                    has_decay_model = any(
+                        pm.name2 in ["DecaySingleExp", "DecayBiExp"] 
+                        for pm in spectrum.peak_models
+                    )
+                    
+                    # For decay models: Mark baseline as already subtracted
+                    # This prevents preprocess() from subtracting it (which would 
+                    # conflict with the decay model's B parameter)
+                    if has_decay_model and not spectrum.baseline.is_subtracted:
+                        spectrum.baseline.is_subtracted = True
+                    
                     spectrum.preprocess()
-                    spectrum.fit()
+                    
+                    # For decay models: Skip reinit logic and noisy area detection
+                    # Both expect ampli/x0 parameters which decay models don't have
+                    if has_decay_model:
+                        spectrum.fit(reinit_guess=False, coef_noise=0)
+                    else:
+                        spectrum.fit()
                 except Exception:
                     # Continue fitting other spectra even if one fails
                     pass

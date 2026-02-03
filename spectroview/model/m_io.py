@@ -123,12 +123,8 @@ def load_TRPL_data(path: Path) -> MSpectrum:
     s.y0 = np.array(extracted_y)
     s.x = s.x0.copy()
     s.y = s.y0.copy()
-    
-    # Disable baseline for TRPL decay fitting
-    # Decay models have built-in baseline parameter B, so fitspy's baseline
-    # would interfere with parameter optimization
     s.baseline.mode = "Linear"
-    s.baseline.is_subtracted = True  # Mark as already subtracted to disable baseline fitting
+    s.baseline.is_subtracted = False  
     s.baseline.sigma = 4
     
     return s

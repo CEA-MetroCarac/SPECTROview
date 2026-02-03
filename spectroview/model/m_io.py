@@ -68,6 +68,64 @@ def load_spectrum_file(path: Path) -> MSpectrum:
     return s
 
 
+def load_TRPL_data(path: Path) -> MSpectrum:
+    """Load TRPL .dat file (Time-Resolved Photoluminescence).
+    
+    Extracts:
+    - Bin value from line after "#ns/bin"
+    - Count values from lines after "#counts" (until first zero)
+    - Data from max count index onwards
+    - X-axis = time in ns (index * bin_value)
+    """
+    bin_value = None
+    y_values = []
+
+    with open(path, 'r') as file:
+        lines = file.readlines()
+    
+    for i, line in enumerate(lines):
+        line = line.strip()
+        
+        # Extract bin value from line after "#ns/bin"
+        if line.startswith("#ns/bin") and i + 1 < len(lines):
+            bin_value = float(lines[i + 1].strip())
+        
+        # Extract count values from lines after "#counts"
+        if line.startswith("#counts"):
+            for count_line in lines[i + 1:]:
+                try:
+                    value = int(count_line.strip())
+                    if value == 0:  # Stop at first zero
+                        break
+                    y_values.append(value)
+                except ValueError:
+                    # Skip non-integer lines
+                    break
+            break
+    
+    if bin_value is None or not y_values:
+        raise ValueError("Invalid TRPL file format: missing bin value or counts")
+    
+    # Keeping all data points
+    extracted_y = y_values
+    
+    # Generate x-values (time in ns)
+    x_values = [i * bin_value for i in range(len(extracted_y))]
+    
+    # Create MSpectrum object
+    s = MSpectrum()
+    s.source_path = str(path.resolve())
+    s.fname = path.stem
+    s.x0 = np.array(x_values)
+    s.y0 = np.array(extracted_y)
+    s.x = s.x0.copy()
+    s.y = s.y0.copy()
+    s.baseline.mode = "Linear"
+    s.baseline.sigma = 4
+    
+    return s
+
+
 def load_map_file(path: Path) -> pd.DataFrame:
     """Load hyperspectral map file (CSV or TXT). """
     ext = path.suffix.lower()

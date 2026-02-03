@@ -9,7 +9,7 @@ from lmfit import fit_report
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
-from spectroview.model.m_io import load_spectrum_file
+from spectroview.model.m_io import load_spectrum_file, load_TRPL_data
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
@@ -109,7 +109,11 @@ class VMWorkspaceSpectra(QObject):
                 continue
 
             try:
-                spectrum = load_spectrum_file(path)
+                # Use appropriate loader based on file extension
+                if path.suffix.lower() == '.dat':
+                    spectrum = load_TRPL_data(path)
+                else:
+                    spectrum = load_spectrum_file(path)
                 self.spectra.add(spectrum)
                 loaded_files.append(path.name)
                 last_valid_path = path  # Track last successfully loaded file

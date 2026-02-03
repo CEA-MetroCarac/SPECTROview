@@ -92,7 +92,7 @@ class Main(QMainWindow):
             None,
             "Open file(s)",
             last_dir,
-            "SPECTROview formats (*.csv *.txt *.spectra *.maps *.graphs *.xlsx)"
+            "SPECTROview formats (*.csv *.txt *.dat *.spectra *.maps *.graphs *.xlsx)"
         )
         
         if not paths:
@@ -121,6 +121,9 @@ class Main(QMainWindow):
                 maps_work_file = str(path)
             elif ext == '.graphs':
                 graphs_work_file = str(path)
+            elif ext == '.dat':
+                # TRPL time-resolved data
+                spectra_files.append(str(path))
             elif ext == '.xlsx':
                 dataframes.append(str(path))
             elif ext in ['.csv', '.txt']:

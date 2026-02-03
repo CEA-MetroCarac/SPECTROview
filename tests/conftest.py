@@ -85,41 +85,41 @@ def multiple_spectra_files(spectroscopic_data_dir):
 @pytest.fixture(scope="session")
 def map_2d_file(spectroscopic_data_dir):
     """Return path to a 2D map test file."""
-    return spectroscopic_data_dir / "Small2Dmap.txt"
+    return spectroscopic_data_dir / "2Dmap_Si.txt"
 
 
 @pytest.fixture(scope="session")
 def multiple_map_files(spectroscopic_data_dir):
     """Return list of 2D map file paths for batch testing."""
     return [
-        spectroscopic_data_dir / "Small2Dmap.txt",
-        spectroscopic_data_dir / "wafer4_process1.csv",
-        spectroscopic_data_dir / "wafer10_newformat.csv",
+        spectroscopic_data_dir / "2Dmap_Si.txt",
+        spectroscopic_data_dir / "wafer1_process1.csv",
+        spectroscopic_data_dir / "wafer4_newformat.csv",
     ]
 
 
 @pytest.fixture(scope="session")
 def wafer_file(spectroscopic_data_dir):
     """Return path to a wafer data test file."""
-    return spectroscopic_data_dir / "wafer10_newformat.csv"
+    return spectroscopic_data_dir / "wafer4_newformat.csv"
 
 
 @pytest.fixture(scope="session")
 def wafer4_file(spectroscopic_data_dir):
     """Return path to wafer4_process1 test file."""
-    return spectroscopic_data_dir / "wafer4_process1.csv"
+    return spectroscopic_data_dir / "wafer1_process1.csv"
 
 
 @pytest.fixture(scope="session")
-def fit_model_file(spectroscopic_data_dir):
+def fit_model_file(examples_dir):
     """Return path to a fit model JSON file."""
-    return spectroscopic_data_dir / "fit_model_Si_.json"
+    return examples_dir / "predefined_fit_models" / "fit_model_Si_.json"
 
 
 @pytest.fixture(scope="session")
 def dataframe_excel_file(examples_dir):
     """Return path to an Excel DataFrame file."""
-    return examples_dir / "data_inline.xlsx"
+    return examples_dir / "datasets_for_plotting" / "dataset_Excel.xlsx"
 
 
 @pytest.fixture(scope="session")

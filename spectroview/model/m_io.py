@@ -119,8 +119,10 @@ def load_TRPL_data(path: Path) -> MSpectrum:
     s = MSpectrum()
     s.source_path = str(path.resolve())
     s.fname = path.stem
-    s.x0 = np.array(x_values)
-    s.y0 = np.array(extracted_y)
+    # Explicitly use float64 for both x and y to ensure compatibility with save/load
+    # (decompress always uses float64, so we must match that dtype)
+    s.x0 = np.array(x_values, dtype=np.float64)
+    s.y0 = np.array(extracted_y, dtype=np.float64)
     s.x = s.x0.copy()
     s.y = s.y0.copy()
     s.baseline.mode = "Linear"

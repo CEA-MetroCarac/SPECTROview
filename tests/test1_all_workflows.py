@@ -139,7 +139,7 @@ class TestSpectraWorkflow:
         # ===================================================================
         # STEP 3: Load and apply saved fit model using VM method
         # ===================================================================
-        fit_model_path = PathlibPath("examples/spectroscopic_data/fit_model_Si_.json")
+        fit_model_path = PathlibPath("examples/predefined_fit_models/fit_model_Si_.json")
         
         # Setup fit model builder (required by apply_loaded_fit_model)
         vm._vm_fit_model_builder = MagicMock(spec=VMFitModelBuilder)
@@ -244,9 +244,9 @@ class TestMapsWorkflow:
         """Test loading multiple 2D map files.
         
         Tests:
-        1. Load Small2Dmap.txt
-        2. Load wafer4_process1.csv  
-        3. Load wafer10_newformat.csv
+        1. Load 2Dmap_Si.txt
+        2. Load wafer1_process1.csv  
+        3. Load wafer4_newformat.csv
         4. Verify all maps are loaded correctly
         5. Verify spectra counts for each map
         6. Verify first spectrum properties for each map
@@ -272,7 +272,7 @@ class TestMapsWorkflow:
         
         # Define expected counts and properties for each map
         map_expectations = {
-            'Small2Dmap': {
+            '2Dmap_Si': {
                 'count': 1681,
                 'x_len': 574,
                 'x_min': 55.79,
@@ -281,7 +281,7 @@ class TestMapsWorkflow:
                 'y_min': -4.61,
                 'y_max': 809.99
             },
-            'wafer4_process1': {
+            'wafer1_process1': {
                 'count': 49,
                 'x_len': 2048,
                 'x_min': -96.70,
@@ -290,7 +290,7 @@ class TestMapsWorkflow:
                 'y_min': -7072.00,
                 'y_max': 17101.00
             },
-            'wafer10_newformat': {
+            'wafer4_newformat': {
                 'count': 4,
                 'x_len': 2048,
                 'x_min': -40.49,
@@ -346,7 +346,7 @@ class TestMapsWorkflow:
         Test complete map processing workflow.
         
         Steps:
-        1. Load Small2Dmap
+        1. Load 2Dmap_Si
         2. Select map and first spectrum
         3. Load and apply fit model
         4. Verify fitted results of first spectrum
@@ -356,7 +356,7 @@ class TestMapsWorkflow:
         """
         from pathlib import Path as PathlibPath
         
-        map_file = PathlibPath("examples/spectroscopic_data/Small2Dmap.txt")
+        map_file = PathlibPath("examples/spectroscopic_data/2Dmap_Si.txt")
         if not map_file.exists():
             pytest.skip("Map test file not available")
         
@@ -367,29 +367,29 @@ class TestMapsWorkflow:
         vm = VMWorkspaceMaps(mock_settings)
         
         # ===================================================================
-        # STEP 1: Load Small2Dmap
+        # STEP 1: Load 2Dmap_Si
         # ===================================================================
         vm.load_map_files([str(map_file)])
         qtbot.wait(500)
         
         # Verify map was loaded
-        assert "Small2Dmap" in vm.maps, "Small2Dmap not loaded"
+        assert "2Dmap_Si" in vm.maps, "2Dmap_Si not loaded"
         
         # ===================================================================
         # STEP 2: Select map
         # ===================================================================
-        vm.select_map("Small2Dmap")
+        vm.select_map("2Dmap_Si")
         qtbot.wait(200)
         
         # Verify map selection
-        assert vm.current_map_name == "Small2Dmap"
+        assert vm.current_map_name == "2Dmap_Si"
         assert vm.current_map_df is not None
         assert len(vm.spectra) == 1681, f"Expected 1681 spectra, got {len(vm.spectra)}"
         
         # ===================================================================
         # STEP 3: Load and apply fit model to first spectrum
         # ===================================================================
-        fit_model_path = PathlibPath("examples/spectroscopic_data/fit_model_Si_.json")
+        fit_model_path = PathlibPath("examples/predefined_fit_models/fit_model_Si_.json")
         
         # Setup fit model builder
         vm._vm_fit_model_builder = MagicMock(spec=VMFitModelBuilder)
@@ -488,7 +488,7 @@ class TestMapsWorkflow:
         
         # Verify map persisted
         assert len(vm2.maps) == 1, f"Expected 1 map, got {len(vm2.maps)}"
-        assert "Small2Dmap" in vm2.maps
+        assert "2Dmap_Si" in vm2.maps
         
         # Verify spectra persisted
         assert len(vm2.spectra) > 0, "No spectra loaded from workspace"
@@ -534,15 +534,15 @@ class TestGraphsWorkflow:
         # ===================================================================
         # STEP 2: Verify both dataframes are loaded
         # ===================================================================
-        assert "data_inline_sheet1" in vm.dataframes, "data_inline_sheet1 not loaded from Excel file"
-        assert "data_inline_sheet2" in vm.dataframes, "data_inline_sheet2 not loaded from Excel file"
+        assert "dataset_Excel_sheet1" in vm.dataframes, "dataset_Excel_sheet1 not loaded from Excel file"
+        assert "dataset_Excel_sheet2" in vm.dataframes, "dataset_Excel_sheet2 not loaded from Excel file"
         assert len(vm.dataframes) == 2, f"Expected 2 dataframes, got {len(vm.dataframes)}"
         
         # ===================================================================
         # STEP 3: Verify dimensions of each dataframe
         # ===================================================================
-        sheet1_df = vm.dataframes["data_inline_sheet1"]
-        sheet2_df = vm.dataframes["data_inline_sheet2"]
+        sheet1_df = vm.dataframes["dataset_Excel_sheet1"]
+        sheet2_df = vm.dataframes["dataset_Excel_sheet2"]
         
         assert len(sheet1_df) > 580, "sheet1 is empty"
         assert len(sheet1_df.columns) > 11, "sheet1 has no columns"
@@ -557,12 +557,12 @@ class TestGraphsWorkflow:
         # ===================================================================
         # STEP 4: Select sheet1 and apply filter "Zone != Edge"
         # ===================================================================
-        vm.select_dataframe("data_inline_sheet1")
+        vm.select_dataframe("dataset_Excel_sheet1")
         
         filters = [
             {'expression': 'Zone != "Edge"', 'state': True}
         ]
-        filtered_df = vm.apply_filters("data_inline_sheet1", filters)
+        filtered_df = vm.apply_filters("dataset_Excel_sheet1", filters)
         
         assert len(filtered_df) < len(sheet1_df), "Filter did not reduce dataframe size"
         assert all(filtered_df['Zone'] != 'Edge'), "Filter did not exclude Edge zone"
@@ -571,7 +571,7 @@ class TestGraphsWorkflow:
         # STEP 5: Create box plot with X=Slot, Y=x0_Si, Z=Zone
         # ===================================================================
         box_plot_config = {
-            'df_name': 'data_inline_sheet1',
+            'df_name': 'dataset_Excel_sheet1',
             'plot_style': 'box',
             'x': 'Slot',
             'y': ['x0_Si'],
@@ -589,7 +589,7 @@ class TestGraphsWorkflow:
         # STEP 6: Create bar plot with same X, Y, Z
         # ===================================================================
         bar_plot_config = {
-            'df_name': 'data_inline_sheet1',
+            'df_name': 'dataset_Excel_sheet1',
             'plot_style': 'bar',
             'x': 'Slot',
             'y': ['x0_Si'],
@@ -624,12 +624,12 @@ class TestGraphsWorkflow:
         vm2.load_workspace(str(save_path))
         
         # Verify dataframes persisted
-        assert "data_inline_sheet1" in vm2.dataframes, "data_inline_sheet1 not loaded from workspace"
-        assert "data_inline_sheet2" in vm2.dataframes, "data_inline_sheet2 not loaded from workspace"
+        assert "dataset_Excel_sheet1" in vm2.dataframes, "dataset_Excel_sheet1 not loaded from workspace"
+        assert "dataset_Excel_sheet2" in vm2.dataframes, "dataset_Excel_sheet2 not loaded from workspace"
         assert len(vm2.dataframes) == 2, f"Expected 2 dataframes, got {len(vm2.dataframes)}"
         
-        pd.testing.assert_frame_equal(vm2.dataframes["data_inline_sheet1"], sheet1_df)
-        pd.testing.assert_frame_equal(vm2.dataframes["data_inline_sheet2"], sheet2_df)
+        pd.testing.assert_frame_equal(vm2.dataframes["dataset_Excel_sheet1"], sheet1_df)
+        pd.testing.assert_frame_equal(vm2.dataframes["dataset_Excel_sheet2"], sheet2_df)
         
         # Verify graphs persisted
         assert len(vm2.graphs) == 2, f"Expected 2 graphs, got {len(vm2.graphs)}"

@@ -1,0 +1,149 @@
+{
+   "0": {
+      "fname": "SampleA_161R_p1_10sx2_0degre_231",
+      "range_min": 56.0,
+      "range_max": 350.0,
+      "normalize": false,
+      "normalize_range_min": null,
+      "normalize_range_max": null,
+      "peak_labels": ["E", "A", "3", "Ge-Ge"],
+      "fit_params": {
+         "method": "Leastsq",
+         "fit_negative": false,
+         "fit_outliers": false,
+         "max_ite": 200,
+         "coef_noise": 1,
+         "xtol": 9.999999747378752e-05,
+         "ncpus": 1
+      },
+      "is_corrected": false,
+      "correction_value": 0,
+      "baseline": {
+         "mode": "Linear",
+         "coef": 5,
+         "points": [[55.81093268458325, 349.7718003586225],
+            [33.599826648795556, 48.04291181012974]],
+         "order_max": 1,
+         "sigma": 2.0,
+         "attached": true,
+         "is_subtracted": true
+      },
+      "peak_models": {
+         "0": {
+            "PseudoVoigt": {
+               "ampli": {
+                  "value": 897.1594372348711,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 20.724354060998852,
+                  "min": 0,
+                  "max": 200,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 83.53682602683486,
+                  "min": 64.18750695046558,
+                  "max": 104.18750695046558,
+                  "vary": false,
+                  "expr": null
+               },
+               "alpha": {
+                  "value": 0.7058089648927997,
+                  "min": 0,
+                  "max": 1,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "1": {
+            "PseudoVoigt": {
+               "ampli": {
+                  "value": 586.6837931637654,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 22.951221685185295,
+                  "min": 0,
+                  "max": 200,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 120.72855984844432,
+                  "min": 101.06381448230219,
+                  "max": 141.06381448230218,
+                  "vary": false,
+                  "expr": null
+               },
+               "alpha": {
+                  "value": 2.1423252319907604e-06,
+                  "min": 0,
+                  "max": 1,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "2": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 43.19747688201922,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 121.21490704947153,
+                  "min": 0,
+                  "max": 200,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 199.35512779557092,
+                  "min": 199.35506027537326,
+                  "max": 239.35506027537326,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "3": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 191.92181169433832,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 4.060173477042817,
+                  "min": 0,
+                  "max": 200,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 299.78861725695174,
+                  "min": 280.17259272069776,
+                  "max": 320.17259272069776,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         }
+      },
+      "result_fit_success": true
+   }
+}

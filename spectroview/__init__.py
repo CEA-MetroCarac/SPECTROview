@@ -76,6 +76,7 @@ X_AXIS_UNIT = [
     'Binding energy (eV)',
     'Frequency (GHz)',
     r'$2\theta$ (°)',
+    'Time (ns)',
 ]
  
 # 🔑 PyInstaller-safe resource path helper

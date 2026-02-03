@@ -237,7 +237,37 @@ class VMWorkspaceSpectra(QObject):
         peak_shape = self._current_peak_shape or "Lorentzian"
 
         spectrum.add_peak_model(peak_shape,x,dx0=(maxshift, maxshift),dfwhm=maxfwhm)
+        
+        # Initialize decay model parameters with reasonable values
+        if peak_shape in ["DecaySingleExp", "DecayBiExp"]:
+            self._initialize_decay_params(spectrum.peak_models[-1], spectrum)
+        
         self._emit_selected_spectra()
+    
+    def _initialize_decay_params(self, peak_model, spectrum):
+        """Initialize decay model parameters with reasonable values for TRPL fitting.
+        
+        Sets proper initial values and bounds for exponential decay parameters:
+        - A, A1, A2: Amplitudes (based on max intensity)
+        - tau, tau1, tau2: Decay time constants (lifetimes in ns)
+        - B: Baseline offset (based on min intensity)
+        """
+        y_max = np.max(spectrum.y)
+        y_min = np.min(spectrum.y)
+        
+        if peak_model.name2 == "DecaySingleExp":
+            # Single exponential: A * exp(-t/tau) + B
+            peak_model.set_param_hint("A", value=y_max, min=0, vary=True)
+            peak_model.set_param_hint("tau", value=5.0, min=0.1, max=100, vary=True)
+            peak_model.set_param_hint("B", value=y_min, min=0, vary=True)
+        
+        elif peak_model.name2 == "DecayBiExp":
+            # Bi-exponential: A1*exp(-t/tau1) + A2*exp(-t/tau2) + B
+            peak_model.set_param_hint("A1", value=y_max * 0.7, min=0, vary=True)
+            peak_model.set_param_hint("tau1", value=2.0, min=0.1, max=50, vary=True)
+            peak_model.set_param_hint("A2", value=y_max * 0.3, min=0, vary=True)
+            peak_model.set_param_hint("tau2", value=10.0, min=0.1, max=100, vary=True)
+            peak_model.set_param_hint("B", value=y_min, min=0, vary=True)
 
     def remove_peak_at(self, x: float):
         if not self.selected_fnames:
@@ -696,18 +726,37 @@ class VMWorkspaceSpectra(QObject):
         s = self._get_selected_spectra()[0]
         pm = s.peak_models[index]
 
-        x0 = pm.param_hints["x0"]["value"]
-        ampli = pm.param_hints["ampli"]["value"]
+        # Check if this is a decay model or spectroscopy model
+        is_decay_model = model_name in ["DecaySingleExp", "DecayBiExp"]
+        
+        if is_decay_model:
+            # Decay models don't have x0/ampli - create fresh and reinitialize
+            # Use a dummy x0 value (middle of data range)
+            x0_dummy = (s.x[0] + s.x[-1]) / 2
+            new_pm = s.create_peak_model(
+                index + 1,
+                model_name,
+                x0=x0_dummy,
+                ampli=1.0,  # Dummy value, will be overwritten
+                dx0=(20.0, 20.0)
+            )
+            # Initialize decay parameters properly
+            s.peak_models[index] = new_pm
+            self._initialize_decay_params(new_pm, s)
+        else:
+            # Spectroscopy models - preserve x0 and ampli if available
+            x0 = pm.param_hints.get("x0", {}).get("value", (s.x[0] + s.x[-1]) / 2)
+            ampli = pm.param_hints.get("ampli", {}).get("value", 1.0)
+            
+            new_pm = s.create_peak_model(
+                index + 1,
+                model_name,
+                x0=x0,
+                ampli=ampli,
+                dx0=(20.0, 20.0)
+            )
+            s.peak_models[index] = new_pm
 
-        new_pm = s.create_peak_model(
-            index + 1,
-            model_name,
-            x0=x0,
-            ampli=ampli,
-            dx0=(20.0, 20.0)  # ✅ FIXED
-        )
-
-        s.peak_models[index] = new_pm
         s.result_fit = None
         self._emit_selected_spectra()
 

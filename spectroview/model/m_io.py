@@ -103,13 +103,16 @@ def load_TRPL_data(path: Path) -> MSpectrum:
                     break
             break
     
+    
     if bin_value is None or not y_values:
         raise ValueError("Invalid TRPL file format: missing bin value or counts")
     
-    # Keeping all data points
-    extracted_y = y_values
+    # Find max y-value and extract data from that point onwards
+    # This aligns t=0 with the peak of the decay curve
+    max_y_index = y_values.index(max(y_values))
+    extracted_y = y_values[max_y_index:]
     
-    # Generate x-values (time in ns)
+    # Generate x-values (time in ns), starting from 0 at the peak
     x_values = [i * bin_value for i in range(len(extracted_y))]
     
     # Create MSpectrum object
@@ -120,7 +123,12 @@ def load_TRPL_data(path: Path) -> MSpectrum:
     s.y0 = np.array(extracted_y)
     s.x = s.x0.copy()
     s.y = s.y0.copy()
+    
+    # Disable baseline for TRPL decay fitting
+    # Decay models have built-in baseline parameter B, so fitspy's baseline
+    # would interfere with parameter optimization
     s.baseline.mode = "Linear"
+    s.baseline.is_subtracted = True  # Mark as already subtracted to disable baseline fitting
     s.baseline.sigma = 4
     
     return s

@@ -2,8 +2,8 @@
 import json
 import gzip
 from io import StringIO
+from copy import deepcopy
 import numpy as np
-import pandas as pd
 import pandas as pd
 from pathlib import Path
 
@@ -255,8 +255,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
             return
-        
-        from copy import deepcopy
         
         selected_spectra = self._get_spectra_by_fnames(self.selected_fnames)
         if not selected_spectra:

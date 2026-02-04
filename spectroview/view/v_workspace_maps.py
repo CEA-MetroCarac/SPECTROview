@@ -566,10 +566,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Update the Spectra workspace view
         spectra_workspace.vm._emit_list_update()
-        
-        # Switch to Spectra tab
-        if hasattr(parent_window, 'tabWidget'):
-            parent_window.tabWidget.setCurrentWidget(spectra_workspace)
     
     def _on_extract_profile_requested(self, profile_name: str):
         """Handle profile extraction request from map viewer."""

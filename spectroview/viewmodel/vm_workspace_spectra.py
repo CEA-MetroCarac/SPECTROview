@@ -1308,6 +1308,7 @@ class VMWorkspaceSpectra(QObject):
         if not df_name:
             self.notify.emit("Please enter a DataFrame name.")
             return
+            
         self.send_df_to_graphs.emit(df_name, self.df_fit_results)
         self.notify.emit(f"Sent fit results to Graphs workspace as '{df_name}'.")
     

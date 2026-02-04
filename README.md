@@ -53,7 +53,7 @@ ____
 
 ## Installation from PyPI:
 
-Make sure that Python (a version > 3.8 and < 3.12) is already installed.
+Make sure that Python (version between 3.8 and 3.12) is already installed.
 
 ```bash
 pip install spectroview

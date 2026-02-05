@@ -474,6 +474,8 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             # Restore fit results DataFrame (including computed columns)
             if 'df_fit_results' in data and data['df_fit_results'] is not None:
                 self.df_fit_results = pd.DataFrame(data['df_fit_results'])
+                # CRITICAL: Invalidate cache so get_fit_results_dataframe() returns fresh data
+                self._fit_results_cache_dirty = True
             else:
                 self.df_fit_results = None
             

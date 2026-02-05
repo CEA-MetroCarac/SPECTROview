@@ -198,13 +198,27 @@ class VSpectraViewer(QWidget):
         self.cbb_xaxis = QComboBox()
         self.cbb_xaxis.addItems(X_AXIS_UNIT)
         self.cbb_xaxis.currentIndexChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("X-axis:", self.cbb_xaxis))
+        menu.addAction(self._wrap("X-axissss:", self.cbb_xaxis))
 
         # Y-scale
         self.cbb_yscale = QComboBox()
         self.cbb_yscale.addItems(["Linear", "Log"])
         self.cbb_yscale.currentIndexChanged.connect(self._emit_view_options)
         menu.addAction(self._wrap("Y-scale:", self.cbb_yscale))
+
+        # Main spectrum plot style
+        self.cbb_plotstyle = QComboBox()
+        self.cbb_plotstyle.addItems(["line", "dot"])
+        self.cbb_plotstyle.currentIndexChanged.connect(self._emit_view_options)
+        menu.addAction(self._wrap("Spectrum plot style:", self.cbb_plotstyle))
+
+        # Dot size
+        self.spin_dotsize = QDoubleSpinBox()
+        self.spin_dotsize.setRange(0.5, 10)
+        self.spin_dotsize.setSingleStep(0.5)
+        self.spin_dotsize.setValue(3)
+        self.spin_dotsize.valueChanged.connect(self._emit_view_options)
+        menu.addAction(self._wrap("Dot size:", self.spin_dotsize))
 
         menu.addSeparator()
 
@@ -263,7 +277,7 @@ class VSpectraViewer(QWidget):
         """Helper to wrap a widget with a label into a QWidgetAction."""
         w = QWidget()
         l = QHBoxLayout(w)
-        l.setContentsMargins(5, 5, 5, 5)
+        l.setContentsMargins(2, 2, 2, 2)
         l.addWidget(QLabel(label))
         l.addWidget(widget)
         act = QWidgetAction(self)
@@ -317,12 +331,23 @@ class VSpectraViewer(QWidget):
                     pass
 
             # ── Main spectrum (always shown)
-            line, = self.ax.plot(
-                x, y,
-                lw=lw,
-                label=spectrum.label or spectrum.fname,
-                color=spectrum.color
-            )
+            plot_style = self.cbb_plotstyle.currentText()
+            if plot_style == "dot":
+                dot_size = self.spin_dotsize.value()
+                line, = self.ax.plot(
+                    x, y,
+                    'o',
+                    ms=dot_size,
+                    label=spectrum.label or spectrum.fname,
+                    color=spectrum.color
+                )
+            else:  # "line"
+                line, = self.ax.plot(
+                    x, y,
+                    lw=lw,
+                    label=spectrum.label or spectrum.fname,
+                    color=spectrum.color
+                )
             line._spectrum_ref = spectrum
 
             # ── Baseline (independent of bestfit toggle)

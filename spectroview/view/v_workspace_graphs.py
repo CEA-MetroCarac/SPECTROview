@@ -791,7 +791,16 @@ class VWorkspaceGraphs(QWidget):
         self._configure_graph_from_model(graph_widget, graph_model)
         graph_widget.create_plot_widget(graph_model.dpi)
         
-        self._render_plot(graph_widget, filtered_df, graph_model)
+        # Try to render the plot - if it fails, clean up and return
+        try:
+            self._render_plot(graph_widget, filtered_df, graph_model)
+        except Exception as e:
+            # Clean up the graph from ViewModel
+            self.vm.delete_graph(graph_model.graph_id)
+            # Re-raise to show error dialog
+            QMessageBox.critical(self, "Plot Error", 
+                               f"Error rendering plot: {str(e)}")
+            return
         
         self.vm.update_graph(graph_model.graph_id, {'legend_properties': graph_widget.legend_properties})
         
@@ -1029,6 +1038,7 @@ class VWorkspaceGraphs(QWidget):
             current_filters
         )
         
+        successfully_created = 0
         for graph_model in created_graphs:
             filtered_df = self.vm.apply_filters(self.vm.selected_df_name, graph_model.filters)
             
@@ -1039,8 +1049,16 @@ class VWorkspaceGraphs(QWidget):
             # Create plot
             graph_widget.create_plot_widget(graph_model.dpi)
 
-            
-            self._render_plot(graph_widget, filtered_df, graph_model)
+            # Try to render the plot - if it fails, clean up and continue with next graph
+            try:
+                self._render_plot(graph_widget, filtered_df, graph_model)
+            except Exception as e:
+                # Clean up the graph from ViewModel
+                self.vm.delete_graph(graph_model.graph_id)
+                # Show error but continue with other plots
+                QMessageBox.warning(self, "Plot Error", 
+                                   f"Error rendering plot for slot {graph_model.filters[-1].get('value', 'unknown')}: {str(e)}")
+                continue
             
             self.vm.update_graph(graph_model.graph_id, {'legend_properties': graph_widget.legend_properties})
             
@@ -1051,11 +1069,13 @@ class VWorkspaceGraphs(QWidget):
             self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
             self.mdi_area.addSubWindow(sub_window)
             sub_window.show()
+            successfully_created += 1
         
         # Update graph list
         self._update_graph_list(self.vm.get_graph_ids())
         
-        self.vm.notify.emit(f"Created {len(created_graphs)} wafer plots")
+        if successfully_created > 0:
+            self.vm.notify.emit(f"Created {successfully_created} wafer plot(s)")
     
     def _update_graph_list(self, graph_ids: list):
         """Update graph list."""
@@ -1381,13 +1401,8 @@ class VWorkspaceGraphs(QWidget):
     
     def _render_plot(self, graph_widget: VGraph, filtered_df, model):
         """Render plot."""
-        try:
-            # The Graph class has a single plot() method that handles all plot types
-            graph_widget.plot(filtered_df)
-        except Exception as e:
-            QMessageBox.critical(self, "Plot Error", 
-                               f"Error rendering plot: {str(e)}")
-            print(f"Plot rendering error: {e}")
+        # The Graph class has a single plot() method that handles all plot types
+        graph_widget.plot(filtered_df)
     
     def _create_mdi_subwindow(self, graph_widget: VGraph, model) -> QMdiSubWindow:
         """Create MDI subwindow."""

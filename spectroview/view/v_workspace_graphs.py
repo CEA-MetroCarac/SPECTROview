@@ -236,7 +236,7 @@ class VWorkspaceGraphs(QWidget):
         header_layout.addWidget(lbl_slot)
         
         self.select_all_checkbox = QCheckBox("Select All")
-        self.select_all_checkbox.setChecked(True)
+        self.select_all_checkbox.setChecked(False)
         self.select_all_checkbox.setVisible(False)
         header_layout.addWidget(self.select_all_checkbox)
         header_layout.addStretch()
@@ -992,7 +992,7 @@ class VWorkspaceGraphs(QWidget):
         row, col = 0, 0
         for slot in unique_slots:
             cb = QCheckBox(str(slot))
-            cb.setChecked(True)
+            cb.setChecked(False)
             cb.stateChanged.connect(self._on_slot_checkbox_changed)
             self.slot_grid_layout.addWidget(cb, row, col)
             self.slot_checkboxes.append(cb)

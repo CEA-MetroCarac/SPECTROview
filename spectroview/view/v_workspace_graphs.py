@@ -6,12 +6,12 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
     QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QLineEdit, QSplitter,
     QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame, QScrollArea,
-    QDialog, QGridLayout, QApplication, QListWidgetItem
+    QDialog, QGridLayout, QApplication, QListWidgetItem, QCompleter
 )
 from PySide6.QtCore import Qt, Signal, QSize, QTimer, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices
 
-from spectroview import ICON_DIR, PLOT_STYLES, LEGEND_LOCATION
+from spectroview import ICON_DIR, PLOT_STYLES, LEGEND_LOCATION, AXIS_LABELS
 from spectroview.model.m_settings import MSettings
 from spectroview.view.components.v_data_filter import VDataFilter
 from spectroview.view.components.v_dataframe_table import VDataframeTable
@@ -374,6 +374,14 @@ class VWorkspaceGraphs(QWidget):
             
             line_edit = QLineEdit()
             line_edit.setPlaceholderText(placeholder)
+            
+            # Add QCompleter for x, y, z labels (not for plot_title)
+            if attr_name in ['xlabel', 'ylabel', 'zlabel']:
+                completer = QCompleter(AXIS_LABELS)
+                completer.setCaseSensitivity(Qt.CaseInsensitive)
+                completer.setCompletionMode(QCompleter.PopupCompletion)
+                line_edit.setCompleter(completer)
+            
             setattr(self, f'edit_{attr_name}', line_edit)
             h_layout.addWidget(line_edit)
             group_layout.addLayout(h_layout)

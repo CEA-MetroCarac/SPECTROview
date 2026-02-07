@@ -953,6 +953,11 @@ class VWorkspaceGraphs(QWidget):
         
     def _update_slot_selector(self, columns: list):
         """Update slot selector."""
+        # Save current checkbox states before clearing
+        saved_states = {}
+        for cb in self.slot_checkboxes:
+            saved_states[cb.text()] = cb.isChecked()
+        
         # Clear existing checkboxes
         for cb in self.slot_checkboxes:
             cb.deleteLater()
@@ -992,7 +997,9 @@ class VWorkspaceGraphs(QWidget):
         row, col = 0, 0
         for slot in unique_slots:
             cb = QCheckBox(str(slot))
-            cb.setChecked(False)
+            # Restore previous state if it existed, otherwise default to unchecked
+            slot_str = str(slot)
+            cb.setChecked(saved_states.get(slot_str, False))
             cb.stateChanged.connect(self._on_slot_checkbox_changed)
             self.slot_grid_layout.addWidget(cb, row, col)
             self.slot_checkboxes.append(cb)

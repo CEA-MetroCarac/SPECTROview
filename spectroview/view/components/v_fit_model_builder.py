@@ -126,7 +126,8 @@ class VFitModelBuilder(QWidget):
         # User correction value
         self.spin_xcorr = QDoubleSpinBox()
         self.spin_xcorr.setRange(-100000, 100000)
-        self.spin_xcorr.setDecimals(3)  # Allow up to 3 decimal places
+        self.spin_xcorr.setFixedWidth(80)
+        self.spin_xcorr.setDecimals(3)  
         self.spin_xcorr.setValue(0)
         self.spin_xcorr.setToolTip("Type measured reference peak position")
 
@@ -156,9 +157,9 @@ class VFitModelBuilder(QWidget):
     def set_xcorrection_value(self, value: float):
         """Update label from Model state (xcorrection_value)"""
         if abs(value) < 1e-9:
-            self.lbl_xcorr_value.setText("Δx = 0")
+            self.lbl_xcorr_value.setText("(0)")
         else:
-            self.lbl_xcorr_value.setText(f"Δx = {value:+.2f}")
+            self.lbl_xcorr_value.setText(f"({value:+.2f})")
 
     def set_spectral_range(self, xmin, xmax):
         self.spin_xmin.blockSignals(True)
@@ -171,7 +172,7 @@ class VFitModelBuilder(QWidget):
         self.spin_xmax.blockSignals(False) 
 
     def _spectral_range_group(self):
-        gb = QGroupBox("Spectral range")
+        gb = QGroupBox("Spectral range (X axis)")
         l = QHBoxLayout(gb)
         l.setContentsMargins(2, 2, 2, 2)
 
@@ -185,13 +186,13 @@ class VFitModelBuilder(QWidget):
         self.spin_xmin.setRange(-1e9, 1e9)
         self.spin_xmax.setRange(-1e9, 1e9)
 
-        self.btn_extract = QPushButton("Extract")
+        self.btn_extract = QPushButton("Crop")
         self.btn_extract.setIcon(QIcon(f"{ICON_DIR}/cut.png"))
         self.btn_extract.setToolTip("Extract selected spectra range. Hold Ctrl to paste to all spectra.")
 
         self.btn_extract.clicked.connect(self._on_extract_clicked)
 
-        l.addWidget(QLabel("X min/max:"))
+        l.addWidget(QLabel("Min/Max:"))
         l.addWidget(self.spin_xmin)
         l.addWidget(QLabel("/"))
         l.addWidget(self.spin_xmax)

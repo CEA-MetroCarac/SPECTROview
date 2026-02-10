@@ -88,6 +88,9 @@ class VGraph(QWidget):
         self.show_bar_plot_error_bar = True
         self.join_for_point_plot = False
         
+        # Annotations
+        self.annotations = []
+        
         # Matplotlib objects
         self.figure = None
         self.ax = None
@@ -199,6 +202,7 @@ class VGraph(QWidget):
         self._set_grid()
         self._set_rotation()
         self._set_legend()
+        self._render_annotations()  # Render annotations after all plot elements
         
         self.get_legend_properties()
         self.canvas.draw_idle()
@@ -507,7 +511,16 @@ class VGraph(QWidget):
             vmin=vmin,
             vmax=vmax
         )
-        plt.colorbar(heatmap, orientation='vertical')
+        
+        # Remove existing colorbar if present to prevent accumulation
+        if hasattr(self.ax, '_2dmap_colorbar') and self.ax._2dmap_colorbar is not None:
+            try:
+                self.ax._2dmap_colorbar.remove()
+            except:
+                pass
+        
+        # Add new colorbar and store reference
+        self.ax._2dmap_colorbar = plt.colorbar(heatmap, orientation='vertical')
     
     def _set_legend(self):
         """Sets up and displays the legend for the plot."""
@@ -791,6 +804,88 @@ class VGraph(QWidget):
             if self.ax3:
                 self.ax3.set_ylabel(self.y3label, color='green')
                 self.ax3.tick_params(axis='y', colors='green')
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # Annotation Rendering
+    # ═══════════════════════════════════════════════════════════════════
+    
+    def _render_annotations(self):
+        """Render all annotations (lines and text) on the plot."""
+        if not hasattr(self, 'annotations') or not self.annotations:
+            return
+        
+        for ann in self.annotations:
+            ann_type = ann.get('type')
+            try:
+                if ann_type == 'vline':
+                    self._render_vline(ann)
+                elif ann_type == 'hline':
+                    self._render_hline(ann)
+                elif ann_type == 'text':
+                    self._render_text(ann)
+            except Exception as e:
+                print(f"[WARNING] Failed to render annotation {ann.get('id')}: {e}")
+    
+    def _render_vline(self, ann: dict):
+        """Render vertical line annotation."""
+        x_pos = ann.get('x', 0)
+        color = ann.get('color', 'red')
+        linestyle = ann.get('linestyle', '--')
+        linewidth = ann.get('linewidth', 1.5)
+        label = ann.get('label', None)
+        
+        self.ax.axvline(
+            x=x_pos,
+            color=color,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            label=label,
+            zorder=100  # Render on top of other elements
+        )
+    
+    def _render_hline(self, ann: dict):
+        """Render horizontal line annotation."""
+        y_pos = ann.get('y', 0)
+        color = ann.get('color', 'blue')
+        linestyle = ann.get('linestyle', '--')
+        linewidth = ann.get('linewidth', 1.5)
+        label = ann.get('label', None)
+        
+        self.ax.axhline(
+            y=y_pos,
+            color=color,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            label=label,
+            zorder=100  # Render on top of other elements
+        )
+    
+    def _render_text(self, ann: dict):
+        """Render text annotation."""
+        x_pos = ann.get('x', 0)
+        y_pos = ann.get('y', 0)
+        text = ann.get('text', '')
+        fontsize = ann.get('fontsize', 12)
+        color = ann.get('color', 'black')
+        ha = ann.get('ha', 'left')
+        va = ann.get('va', 'top')
+        
+        self.ax.text(
+            x_pos,
+            y_pos,
+            text,
+            fontsize=fontsize,
+            color=color,
+            ha=ha,
+            va=va,
+            bbox=dict(
+                boxstyle='round,pad=0.5',
+                facecolor='yellow',
+                alpha=0.7,
+                edgecolor='black'
+            ),
+            zorder=101  # Render on top of lines
+        )
 
 
 class WaferPlot:
@@ -828,7 +923,15 @@ class WaferPlot:
         if vmax is not None and vmin is not None:
             im.set_clim(vmin, vmax)
         
-        plt.colorbar(im, ax=ax)
+        # Remove existing colorbar if present to prevent accumulation
+        if hasattr(ax, '_wafer_colorbar') and ax._wafer_colorbar is not None:
+            try:
+                ax._wafer_colorbar.remove()
+            except:
+                pass
+        
+        # Add new colorbar and store reference
+        ax._wafer_colorbar = plt.colorbar(im, ax=ax)
         
         if stats:
             self.stats(z, ax)

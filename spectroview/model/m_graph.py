@@ -74,6 +74,9 @@ class MGraph:
         self.show_trendline_eq: bool = True
         self.show_bar_plot_error_bar: bool = True
         self.join_for_point_plot: bool = False
+        
+        # Annotations (lines and text)
+        self.annotations: List[Dict[str, Any]] = []
     
     def save(self) -> Dict[str, Any]:
         """Serialize graph to dictionary."""
@@ -123,6 +126,7 @@ class MGraph:
             'show_trendline_eq': self.show_trendline_eq,
             'show_bar_plot_error_bar': self.show_bar_plot_error_bar,
             'join_for_point_plot': self.join_for_point_plot,
+            'annotations': self.annotations,
         }
     
     def load(self, data: Dict[str, Any]):
@@ -141,6 +145,10 @@ class MGraph:
                         value = None
                 
                 setattr(self, key, value)
+        
+        # Backward compatibility: ensure annotations exists for old .graphs files
+        if not hasattr(self, 'annotations') or self.annotations is None:
+            self.annotations = []
     
     def get_display_name(self) -> str:
         """Get display name for graph list."""

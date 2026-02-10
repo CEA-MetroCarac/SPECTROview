@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame, QScrollArea,
     QDialog, QGridLayout, QApplication, QListWidgetItem, QCompleter
 )
-from PySide6.QtCore import Qt, Signal, QSize, QTimer, QUrl
+from PySide6.QtCore import Qt, Signal, QSize, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices
 
 from spectroview import ICON_DIR, PLOT_STYLES, LEGEND_LOCATION, AXIS_LABELS
@@ -17,7 +17,7 @@ from spectroview.view.components.v_data_filter import VDataFilter
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
-from spectroview.viewmodel.utils import CustomizedPalette, show_toast_notification, copy_fig_to_clb
+from spectroview.viewmodel.utils import CustomizedPalette, show_toast_notification
 
 class VWorkspaceGraphs(QWidget):
     """View for Graphs Workspace."""
@@ -462,66 +462,6 @@ class VWorkspaceGraphs(QWidget):
         tab_more_layout.addLayout(trendline_layout)
         
         # ═══════════════════════════════════════════
-        # Annotations Section
-        # ═══════════════════════════════════════════
-        annotations_group = QGroupBox("Annotations")
-        ann_layout = QVBoxLayout(annotations_group)
-        ann_layout.setContentsMargins(5, 8, 5, 5)
-        ann_layout.setSpacing(4)
-        
-        # Annotation add buttons
-        ann_buttons_layout = QHBoxLayout()
-        
-        self.btn_add_vline = QPushButton("V-Line")
-        self.btn_add_vline.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
-        self.btn_add_vline.setIconSize(QSize(16, 16))
-        self.btn_add_vline.setToolTip("Add vertical line annotation")
-        ann_buttons_layout.addWidget(self.btn_add_vline)
-        
-        self.btn_add_hline = QPushButton("H-Line")
-        self.btn_add_hline.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
-        self.btn_add_hline.setIconSize(QSize(16, 16))
-        self.btn_add_hline.setToolTip("Add horizontal line annotation")
-        ann_buttons_layout.addWidget(self.btn_add_hline)
-        
-        self.btn_add_text = QPushButton("Text")
-        self.btn_add_text.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
-        self.btn_add_text.setIconSize(QSize(16, 16))
-        self.btn_add_text.setToolTip("Add text annotation")
-        ann_buttons_layout.addWidget(self.btn_add_text)
-        
-        ann_layout.addLayout(ann_buttons_layout)
-        
-        # Annotation list widget
-        ann_list_label = QLabel("Current annotations:")
-        ann_layout.addWidget(ann_list_label)
-        
-        self.annotation_listbox = QListWidget()
-        self.annotation_listbox.setMaximumHeight(80)
-        ann_layout.addWidget(self.annotation_listbox)
-        
-        # Annotation management buttons
-        ann_mgmt_layout = QHBoxLayout()
-        
-        self.btn_edit_annotation = QPushButton()
-        self.btn_edit_annotation.setIcon(QIcon(os.path.join(ICON_DIR, "edit.png")))
-        self.btn_edit_annotation.setIconSize(QSize(18, 18))
-        self.btn_edit_annotation.setToolTip("Edit selected annotation")
-        self.btn_edit_annotation.setMaximumWidth(35)
-        ann_mgmt_layout.addWidget(self.btn_edit_annotation)
-        
-        self.btn_delete_annotation = QPushButton()
-        self.btn_delete_annotation.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))
-        self.btn_delete_annotation.setIconSize(QSize(18, 18))
-        self.btn_delete_annotation.setToolTip("Delete selected annotation")
-        self.btn_delete_annotation.setMaximumWidth(35)
-        ann_mgmt_layout.addWidget(self.btn_delete_annotation)
-        
-        ann_mgmt_layout.addStretch()
-        ann_layout.addLayout(ann_mgmt_layout)
-        
-        tab_more_layout.addWidget(annotations_group)
-        
         tab_more_layout.addStretch()
         
         return tab_more
@@ -594,13 +534,6 @@ class VWorkspaceGraphs(QWidget):
         self.cb_legend_outside_toolbar.stateChanged.connect(self._on_legend_outside_changed_toolbar)
         self.cbb_legend_loc_toolbar.currentTextChanged.connect(self._on_legend_loc_changed_toolbar)
         self.cb_grid_toolbar.stateChanged.connect(self._on_grid_changed_toolbar)
-        
-        # Annotation button connections
-        self.btn_add_vline.clicked.connect(self._on_add_vline)
-        self.btn_add_hline.clicked.connect(self._on_add_hline)
-        self.btn_add_text.clicked.connect(self._on_add_text)
-        self.btn_edit_annotation.clicked.connect(self._on_edit_annotation)
-        self.btn_delete_annotation.clicked.connect(self._on_delete_annotation)
         
         # MDI area connections
         self.mdi_area.subWindowActivated.connect(self._on_subwindow_activated)
@@ -1547,235 +1480,26 @@ class VWorkspaceGraphs(QWidget):
             graph_widget.grid = (state == Qt.Checked)
             graph_widget.plot(self.vm.get_dataframe(self.vm.selected_df_name))
     
-    # ═══════════════════════════════════════════════════════════════════
-    # Annotation Handlers
-    # ═══════════════════════════════════════════════════════════════════
-    
-    def _on_add_vline(self):
-        """Add vertical line annotation."""
-        graph_id = self.cbb_graph_list.currentData()
-        if graph_id is None:
-            QMessageBox.warning(self, "No Graph", "Please select a graph first.")
-            return
-        
-        from PySide6.QtWidgets import QInputDialog
-        # Prompt for x position
-        x_pos, ok = QInputDialog.getDouble(
-            self, 
-            "Add Vertical Line", 
-            "Enter X position for vertical line:",
-            value=0.0,
-            decimals=3
-        )
-        
-        if not ok:
-            return
-        
-        # Create annotation data with timestamp-based ID
-        import time
-        annotation = {
-            'type': 'vline',
-            'id': f"vline_{int(time.time() * 1000000)}_{x_pos:.3f}",
-            'x': x_pos,
-            'color': 'red',
-            'linestyle': '--',
-            'linewidth': 1.5,
-            'label': f"V-Line at x={x_pos:.2f}"
-        }
-        
-        # Add to graph model
+    def _on_annotation_position_changed(self, graph_id: int, ann_id: str, new_x: float, new_y: float):
+        """Handle annotation position change from drag operation in CustomizeGraphDialog."""
         graph_model = self.vm.get_graph(graph_id)
-        if graph_model:
-            graph_model.annotations.append(annotation)
-            self._update_annotation_list(graph_id)
-            
-            # Refresh plot
-            if graph_id in self.graph_widgets:
-                graph_widget, _, _ = self.graph_widgets[graph_id]
-                df = self.vm.get_dataframe(graph_model.df_name)
-                if df is not None:
-                    graph_widget.plot(df)
-    
-    def _on_add_hline(self):
-        """Add horizontal line annotation."""
-        graph_id = self.cbb_graph_list.currentData()
-        if graph_id is None:
-            QMessageBox.warning(self, "No Graph", "Please select a graph first.")
+        if not graph_model:
             return
         
-        from PySide6.QtWidgets import QInputDialog
-        # Prompt for y position
-        y_pos, ok = QInputDialog.getDouble(
-            self, 
-            "Add Horizontal Line", 
-            "Enter Y position for horizontal line:",
-            value=0.0,
-            decimals=3
-        )
-        
-        if not ok:
-            return
-        
-        # Create annotation data with timestamp-based ID
-        import time
-        annotation = {
-            'type': 'hline',
-            'id': f"hline_{int(time.time() * 1000000)}_{y_pos:.3f}",
-            'y': y_pos,
-            'color': 'blue',
-            'linestyle': '--',
-            'linewidth': 1.5,
-            'label': f"H-Line at y={y_pos:.2f}"
-        }
-        
-        # Add to graph model
-        graph_model = self.vm.get_graph(graph_id)
-        if graph_model:
-            graph_model.annotations.append(annotation)
-            self._update_annotation_list(graph_id)
-            
-            # Refresh plot
-            if graph_id in self.graph_widgets:
-                graph_widget, _, _ = self.graph_widgets[graph_id]
-                df = self.vm.get_dataframe(graph_model.df_name)
-                if df is not None:
-                    graph_widget.plot(df)
-    
-    def _on_add_text(self):
-        """Add text annotation."""
-        graph_id = self.cbb_graph_list.currentData()
-        if graph_id is None:
-            QMessageBox.warning(self, "No Graph", "Please select a graph first.")
-            return
-        
-        from PySide6.QtWidgets import QInputDialog
-        
-        # Prompt for text content
-        text, ok = QInputDialog.getText(
-            self,
-            "Add Text Annotation",
-            "Enter text:"
-        )
-        
-        if not ok or not text.strip():
-            return
-        
-        # Prompt for x position
-        x_pos, ok = QInputDialog.getDouble(
-            self,
-            "Text Position",
-            "Enter X position:",
-            value=0.0,
-            decimals=3
-        )
-        
-        if not ok:
-            return
-        
-        # Prompt for y position
-        y_pos, ok = QInputDialog.getDouble(
-            self,
-            "Text Position",
-            "Enter Y position:",
-            value=0.0,
-            decimals=3
-        )
-        
-        if not ok:
-            return
-        
-        # Create annotation data with timestamp-based ID
-        import time
-        annotation = {
-            'type': 'text',
-            'id': f"text_{int(time.time() * 1000000)}",
-            'text': text,
-            'x': x_pos,
-            'y': y_pos,
-            'fontsize': 12,
-            'color': 'black',
-            'ha': 'left',
-            'va': 'top'
-        }
-        
-        # Add to graph model
-        graph_model = self.vm.get_graph(graph_id)
-        if graph_model:
-            graph_model.annotations.append(annotation)
-            self._update_annotation_list(graph_id)
-            
-            # Refresh plot
-            if graph_id in self.graph_widgets:
-                graph_widget, _, _ = self.graph_widgets[graph_id]
-                df = self.vm.get_dataframe(graph_model.df_name)
-                if df is not None:
-                    graph_widget.plot(df)
-    
-    def _on_edit_annotation(self):
-        """Edit selected annotation."""
-        # TODO: Implement annotation editing dialog
-        selected_item = self.annotation_listbox.currentItem()
-        if not selected_item:
-            QMessageBox.warning(self, "No Selection", "Please select an annotation to edit.")
-            return
-        
-        QMessageBox.information(self, "Not Implemented", "Annotation editing will be implemented in Phase 4.")
-    
-    def _on_delete_annotation(self):
-        """Delete selected annotation."""
-        graph_id = self.cbb_graph_list.currentData()
-        if graph_id is None:
-            return
-        
-        selected_item = self.annotation_listbox.currentItem()
-        if not selected_item:
-            QMessageBox.warning(self, "No Selection", "Please select an annotation to delete.")
-            return
-        
-        # Get annotation ID from item data
-        annotation_id = selected_item.data(Qt.UserRole)
-        
-        # Remove from graph model
-        graph_model = self.vm.get_graph(graph_id)
-        if graph_model:
-            graph_model.annotations = [
-                ann for ann in graph_model.annotations 
-                if ann.get('id') != annotation_id
-            ]
-            self._update_annotation_list(graph_id)
-            
-            # Refresh plot
-            if graph_id in self.graph_widgets:
-                graph_widget, _, _ = self.graph_widgets[graph_id]
-                df = self.vm.get_dataframe(graph_model.df_name)
-                if df is not None:
-                    graph_widget.plot(df)
-    
-    def _update_annotation_list(self, graph_id: int):
-        """Update the annotation list widget for the current graph."""
-        self.annotation_listbox.clear()
-        
-        graph_model = self.vm.get_graph(graph_id)
-        if not graph_model or not graph_model.annotations:
-            return
-        
+        # Update annotation coordinates in model
         for ann in graph_model.annotations:
-            if ann['type'] == 'vline':
-                text = f"├ VLine @ x={ann['x']:.2f} ({ann.get('color', 'red')})"
-            elif ann['type'] == 'hline':
-                text = f"├ HLine @ y={ann['y']:.2f} ({ann.get('color', 'blue')})"
-            elif ann['type'] == 'text':
-                text = f"└ Text \"{ann['text'][:20]}...\" @ ({ann['x']:.1f},{ann['y']:.1f})"
-            else:
-                text = f"Unknown annotation type: {ann['type']}"
-            
-            item = QListWidgetItem(text)
-            item.setData(Qt.UserRole, ann['id'])  # Store annotation ID
-            self.annotation_listbox.addItem(item)
+            if ann.get('id') == ann_id:
+                if ann['type'] == 'vline':
+                    ann['x'] = new_x
+                    ann['label'] = f"V-Line at x={new_x:.2f}"
+                elif ann['type'] == 'hline':
+                    ann['y'] = new_y
+                    ann['label'] = f"H-Line at y={new_y:.2f}"
+                elif ann['type'] == 'text':
+                    ann['x'] = new_x
+                    ann['y'] = new_y
+                break
     
-    # ═══════════════════════════════════════════════════════════════════
-    # Workspace Management
-    # ═════════════════════════════════════════════════════════════════
     
     def _on_graph_closed(self, graph_id: int):
         """Handle graph closing."""

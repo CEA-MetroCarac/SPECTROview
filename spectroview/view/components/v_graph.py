@@ -11,16 +11,20 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QWidget, QComboBox, QStyledItemDelegate, QPushButton, QHBoxLayout
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, Signal
 from PySide6.QtGui import QPalette, QColor, QIcon
 
 from spectroview import ICON_DIR
+from spectroview.view.components.customize_graph_dialog import CustomizeGraphDialog
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS
-from spectroview.viewmodel.utils import rgba_to_default_color, show_alert
+from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb
 
 
 class VGraph(QWidget):
     """Graph widget rendering plots based on MGraph model properties."""
+    
+    # Signal emitted when annotation position changes (graph_id, ann_id, new_x, new_y)
+    annotation_position_changed = Signal(int, str, float, float)
     
     def __init__(self, graph_id=None):
         super().__init__()
@@ -137,6 +141,15 @@ class VGraph(QWidget):
             if action.text() in ['Save', 'Subplots']:
                 action.setVisible(False)
         
+        # Create Customize button
+        self.btn_customize = QPushButton()
+        self.btn_customize.setIcon(QIcon(f"{ICON_DIR}/customize.png"))
+        self.btn_customize.setIconSize(QSize(26, 26))
+        self.btn_customize.setFixedSize(30, 30)
+        self.btn_customize.setToolTip("Customize graph and annotations")
+        self.btn_customize.clicked.connect(self._show_customize_dialog)
+        
+        # Create Copy button
         self.btn_copy_figure = QPushButton()
         self.btn_copy_figure.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
         self.btn_copy_figure.setIconSize(QSize(26, 26))
@@ -144,12 +157,13 @@ class VGraph(QWidget):
         self.btn_copy_figure.setToolTip("Copy figure to clipboard")
         self.btn_copy_figure.clicked.connect(self.copy_to_clipboard)
         
-        # Create toolbar layout with copy button
+        # Create toolbar layout with customize and copy buttons
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
         toolbar_layout.setSpacing(4)
         toolbar_layout.addWidget(self.toolbar)
-        toolbar_layout.addStretch()  
+        toolbar_layout.addStretch()
+        toolbar_layout.addWidget(self.btn_customize)
         toolbar_layout.addWidget(self.btn_copy_figure)
         
         # Create container widget for toolbar layout
@@ -168,12 +182,16 @@ class VGraph(QWidget):
         # Connect pick event for legend customization
         self.canvas.mpl_connect('pick_event', self._on_legend_pick)
         
+        # Connect events for annotation dragging
+        self.canvas.mpl_connect('motion_notify_event', self._on_annotation_drag)
+        self.canvas.mpl_connect('button_release_event', self._on_annotation_release)
+        
         self.canvas.draw_idle()
     
     def copy_to_clipboard(self):
         """Copy the current figure to clipboard."""
         try:
-            from spectroview.viewmodel.utils import copy_fig_to_clb
+            
             copy_fig_to_clb(self.canvas)
         except Exception as e:
             from PySide6.QtWidgets import QMessageBox
@@ -333,12 +351,22 @@ class VGraph(QWidget):
         from PySide6.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox, QHBoxLayout
         import copy
         
+        # First, check if an annotation was picked (for dragging)
+        artist = event.artist
+        if hasattr(artist, '_annotation_data'):
+            # Start dragging annotation
+            artist._is_dragging = True
+            self._dragged_annotation = artist
+            self._drag_start_x = event.mouseevent.xdata
+            self._drag_start_y = event.mouseevent.ydata
+            return
+        
         # Check if legend was clicked
-        if event.artist.get_label() == '_legend_':
+        if artist.get_label() == '_legend_':
             return
         
         legend = self.ax.get_legend()
-        if legend and event.artist == legend:
+        if legend and artist == legend:
             # Save original legend properties before allowing edits
             original_legend_properties = copy.deepcopy(self.legend_properties)
             
@@ -834,14 +862,20 @@ class VGraph(QWidget):
         linewidth = ann.get('linewidth', 1.5)
         label = ann.get('label', None)
         
-        self.ax.axvline(
+        line = self.ax.axvline(
             x=x_pos,
             color=color,
             linestyle=linestyle,
             linewidth=linewidth,
             label=label,
-            zorder=100  # Render on top of other elements
+            zorder=100,  # Render on top of other elements
+            picker=5  # Enable picking with 5pt tolerance
         )
+        
+        # Attach metadata for drag handling
+        line._annotation_data = ann
+        line._is_dragging = False
+        return line
     
     def _render_hline(self, ann: dict):
         """Render horizontal line annotation."""
@@ -851,14 +885,20 @@ class VGraph(QWidget):
         linewidth = ann.get('linewidth', 1.5)
         label = ann.get('label', None)
         
-        self.ax.axhline(
+        line = self.ax.axhline(
             y=y_pos,
             color=color,
             linestyle=linestyle,
             linewidth=linewidth,
             label=label,
-            zorder=100  # Render on top of other elements
+            zorder=100,  # Render on top of other elements
+            picker=5  # Enable picking with 5pt tolerance
         )
+        
+        # Attach metadata for drag handling
+        line._annotation_data = ann
+        line._is_dragging = False
+        return line
     
     def _render_text(self, ann: dict):
         """Render text annotation."""
@@ -870,7 +910,7 @@ class VGraph(QWidget):
         ha = ann.get('ha', 'left')
         va = ann.get('va', 'top')
         
-        self.ax.text(
+        text_obj = self.ax.text(
             x_pos,
             y_pos,
             text,
@@ -884,8 +924,79 @@ class VGraph(QWidget):
                 alpha=0.7,
                 edgecolor='black'
             ),
-            zorder=101  # Render on top of lines
+            zorder=101,  # Render on top of lines
+            picker=True  # Enable picking for drag functionality
         )
+        
+        # Attach metadata for drag handling
+        text_obj._annotation_data = ann
+        text_obj._is_dragging = False
+        return text_obj
+    
+    def _on_annotation_drag(self, event):
+        """Handle annotation drag (mouse move while dragging)."""
+        if not hasattr(self, '_dragged_annotation'):
+            return
+        
+        if event.xdata is None or event.ydata is None:
+            return
+        
+        ann = self._dragged_annotation
+        if not getattr(ann, '_is_dragging', False):
+            return
+        
+        ann_data = ann._annotation_data
+        
+        # Update visual position based on annotation type
+        if ann_data['type'] == 'vline':
+            ann.set_xdata([event.xdata, event.xdata])
+            ann_data['x'] = event.xdata
+        elif ann_data['type'] == 'hline':
+            ann.set_ydata([event.ydata, event.ydata])
+            ann_data['y'] = event.ydata
+        elif ann_data['type'] == 'text':
+            ann.set_position((event.xdata, event.ydata))
+            ann_data['x'] = event.xdata
+            ann_data['y'] = event.ydata
+        
+        self.canvas.draw_idle()
+    
+    def _on_annotation_release(self, event):
+        """Handle mouse release (finish dragging)."""
+        if not hasattr(self, '_dragged_annotation'):
+            return
+        
+        ann = self._dragged_annotation
+        ann._is_dragging = False
+        
+        # Emit signal to update model
+        ann_data = ann._annotation_data
+        if ann_data['type'] == 'vline':
+            self.annotation_position_changed.emit(
+                self.graph_id, ann_data['id'], ann_data['x'], 0
+            )
+        elif ann_data['type'] == 'hline':
+            self.annotation_position_changed.emit(
+                self.graph_id, ann_data['id'], 0, ann_data['y']
+            )
+        elif ann_data['type'] == 'text':
+            self.annotation_position_changed.emit(
+                self.graph_id, ann_data['id'], ann_data['x'], ann_data['y']
+            )
+        
+        del self._dragged_annotation
+        self.canvas.draw_idle()
+    
+    def _show_customize_dialog(self):
+        """Show customize dialog for this graph."""
+        # Check if dialog already exists
+        if not hasattr(self, '_customize_dialog') or self._customize_dialog is None:
+            self._customize_dialog = CustomizeGraphDialog(self, self.graph_id, parent=self)
+        
+        # Show non-modal dialog
+        self._customize_dialog.show()
+        self._customize_dialog.raise_()
+        self._customize_dialog.activateWindow()
 
 
 class WaferPlot:

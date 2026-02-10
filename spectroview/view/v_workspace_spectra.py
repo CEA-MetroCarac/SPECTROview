@@ -203,6 +203,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.btn_xcorrect.clicked.connect(lambda: vm.apply_x_correction(self.v_fit_model_builder.spin_xcorr.value()))
         self.v_fit_model_builder.btn_undo_corr.clicked.connect(vm.undo_x_correction)
         self.v_fit_model_builder.spectral_range_apply_requested.connect(vm.apply_spectral_range)
+        self.v_fit_model_builder.spectral_range_apply_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after crop
         self.v_fit_model_builder.baseline_settings_changed.connect(vm.set_baseline_settings)
 
         self.v_fit_model_builder.baseline_copy_requested.connect(vm.copy_baseline)

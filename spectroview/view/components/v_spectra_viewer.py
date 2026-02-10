@@ -126,6 +126,7 @@ class VSpectraViewer(QWidget):
         self.btn_norm = QToolButton()
         self.btn_norm.setCheckable(True)
         self.btn_norm.setIcon(QIcon(f"{ICON_DIR}/norm.png"))
+        self.btn_norm.setToolTip("Intensity normalization to maximum of spectrum or selected region")
         self.btn_norm.setIconSize(QSize(22, 22))
         self.btn_norm.toggled.connect(self._emit_norm)
         self.btn_norm.toggled.connect(self._plot)
@@ -136,11 +137,13 @@ class VSpectraViewer(QWidget):
         self.norm_xmin = QLineEdit()
         self.norm_xmin.setFixedWidth(45)
         self.norm_xmin.setPlaceholderText("Xmin")
+        self.norm_xmin.setToolTip("Intensity normalization to maximum of spectrum or selected region")
         layout.addWidget(self.norm_xmin)
 
         self.norm_xmax = QLineEdit()
         self.norm_xmax.setFixedWidth(45)
         self.norm_xmax.setPlaceholderText("Xmax")
+        self.norm_xmax.setToolTip("Intensity normalization to maximum of spectrum or selected region")
         layout.addWidget(self.norm_xmax)
 
         self.norm_xmin.editingFinished.connect(self._plot)
@@ -148,10 +151,22 @@ class VSpectraViewer(QWidget):
         self.norm_xmin.editingFinished.connect(self._rescale)
         self.norm_xmax.editingFinished.connect(self._rescale)
 
+        # Bestfit
+        self.btn_bestfit = QToolButton()
+        self.btn_bestfit.setCheckable(True)
+        self.btn_bestfit.setChecked(True)  # Checked by default
+        self.btn_bestfit.setIcon(QIcon(f"{ICON_DIR}/bestfit.png"))
+        self.btn_bestfit.setToolTip("Show or hide best-fit lines")
+        self.btn_bestfit.setIconSize(QSize(22, 22))
+        self.btn_bestfit.toggled.connect(self._emit_view_options)
+        layout.addWidget(self.btn_bestfit)
+
+
         # Legend
         self.btn_legend = QToolButton()
         self.btn_legend.setCheckable(True)
         self.btn_legend.setIcon(QIcon(f"{ICON_DIR}/legend.png"))
+        self.btn_legend.setToolTip("Show or hide legend box")
         self.btn_legend.setIconSize(QSize(22, 22))
         self.btn_legend.toggled.connect(self._emit_view_options)
         layout.addWidget(self.btn_legend)
@@ -226,7 +241,7 @@ class VSpectraViewer(QWidget):
         #self._add_checkbox(menu, "Colors")
         #self._add_checkbox(menu, "Peaks")
         self._add_checkbox(menu, "Raw")
-        self._add_checkbox(menu, "Bestfit", True)
+        # Bestfit is now controlled by btn_bestfit button in toolbar
         self._add_checkbox(menu, "Residual")
         self._add_checkbox(menu, "Grid")
 
@@ -356,7 +371,7 @@ class VSpectraViewer(QWidget):
 
             # ── Peaks + Bestfit 
             if (
-                self.act_bestfit.isChecked()
+                self.btn_bestfit.isChecked()  # Now using toolbar button
                 and getattr(spectrum, "peak_models", None)
                 and spectrum.peak_models
             ):
@@ -666,7 +681,7 @@ class VSpectraViewer(QWidget):
             "grid": self.act_grid.isChecked(),
             #"colors": self.act_colors.isChecked(),
             "raw": self.act_raw.isChecked(),
-            "bestfit": self.act_bestfit.isChecked(),
+            "bestfit": self.btn_bestfit.isChecked(),  # Now using toolbar button
             "residual": self.act_residual.isChecked(),
             "x_unit": self.cbb_xaxis.currentText(),
             "y_scale": self.cbb_yscale.currentText(),

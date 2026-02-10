@@ -138,7 +138,7 @@ class VGraph(QWidget):
         
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
         for action in self.toolbar.actions():
-            if action.text() in ['Save', 'Subplots']:
+            if action.text() in ['Save', 'Back', 'Forward', 'Subplots', "Customize"]:
                 action.setVisible(False)
         
         # Create Customize button
@@ -182,9 +182,10 @@ class VGraph(QWidget):
         # Connect pick event for legend customization
         self.canvas.mpl_connect('pick_event', self._on_legend_pick)
         
-        # Connect events for annotation dragging
+        # Connect annotation drag events
         self.canvas.mpl_connect('motion_notify_event', self._on_annotation_drag)
         self.canvas.mpl_connect('button_release_event', self._on_annotation_release)
+        self.canvas.mpl_connect('button_press_event', self._on_annotation_click)
         
         self.canvas.draw_idle()
     
@@ -907,8 +908,17 @@ class VGraph(QWidget):
         text = ann.get('text', '')
         fontsize = ann.get('fontsize', 12)
         color = ann.get('color', 'black')
-        ha = ann.get('ha', 'left')
-        va = ann.get('va', 'top')
+        ha = ann.get('ha', 'center')
+        va = ann.get('va', 'center')
+        
+        # Get bbox from annotation, use default if not specified
+        bbox = ann.get('bbox')
+        if bbox is None:
+            # Default: no background/frame
+            bbox_props = None
+        else:
+            # Use bbox from annotation
+            bbox_props = bbox
         
         text_obj = self.ax.text(
             x_pos,
@@ -918,12 +928,7 @@ class VGraph(QWidget):
             color=color,
             ha=ha,
             va=va,
-            bbox=dict(
-                boxstyle='round,pad=0.5',
-                facecolor='yellow',
-                alpha=0.7,
-                edgecolor='black'
-            ),
+            bbox=bbox_props,
             zorder=101,  # Render on top of lines
             picker=True  # Enable picking for drag functionality
         )
@@ -932,6 +937,55 @@ class VGraph(QWidget):
         text_obj._annotation_data = ann
         text_obj._is_dragging = False
         return text_obj
+    
+    def _on_annotation_click(self, event):
+        """Handle click on annotation - detect double-click to edit."""
+        # Only handle double-clicks
+        if event.dblclick and event.inaxes == self.ax:
+            # Check if click is on an annotation
+            for ann in self.ax.findobj():
+                if hasattr(ann, '_annotation_data'):
+                    contains, _ = ann.contains(event)
+                    if contains:
+                        # Double-clicked on annotation - open edit dialog
+                        self._edit_annotation_direct(ann._annotation_data)
+                        break
+    
+    def _edit_annotation_direct(self, annotation):
+        """Open edit dialog for annotation (called from double-click)."""
+        from .customize_graph_dialog import AnnotationLineEditDialog, AnnotationTextEditDialog
+        from PySide6.QtWidgets import QDialog
+        
+        # Open appropriate edit dialog based on type
+        if annotation['type'] in ['vline', 'hline']:
+            dialog = AnnotationLineEditDialog(annotation, None)
+            if dialog.exec() == QDialog.Accepted:
+                # Update annotation properties
+                props = dialog.get_properties()
+                annotation.update(props)
+                
+                # Update label
+                if annotation['type'] == 'vline':
+                    annotation['label'] = f"V-Line at x={annotation['x']:.2f}"
+                else:
+                    annotation['label'] = f"H-Line at y={annotation['y']:.2f}"
+                
+                # Refresh plot
+                self.ax.clear()
+                if self.df is not None:
+                    self.plot(self.df)
+        
+        elif annotation['type'] == 'text':
+            dialog = AnnotationTextEditDialog(annotation, None)
+            if dialog.exec() == QDialog.Accepted:
+                # Update annotation properties
+                props = dialog.get_properties()
+                annotation.update(props)
+                
+                # Refresh plot
+                self.ax.clear()
+                if self.df is not None:
+                    self.plot(self.df)
     
     def _on_annotation_drag(self, event):
         """Handle annotation drag (mouse move while dragging)."""

@@ -1230,10 +1230,6 @@ class VWorkspaceGraphs(QWidget):
                 self.cbb_graph_list.setCurrentIndex(i)
                 break
         self.cbb_graph_list.blockSignals(False)
-        
-        # Update annotation list only if More options tab is active (optimization)
-        if self.plot_tabs.currentIndex() == 1:  # More options tab
-            self._update_annotation_list(graph_model.graph_id)
     
     def _sync_gui_from_graph(self, model):
         """Sync GUI from graph model."""
@@ -1479,27 +1475,6 @@ class VWorkspaceGraphs(QWidget):
             graph_widget, _, _ = self.graph_widgets[graph_id]
             graph_widget.grid = (state == Qt.Checked)
             graph_widget.plot(self.vm.get_dataframe(self.vm.selected_df_name))
-    
-    def _on_annotation_position_changed(self, graph_id: int, ann_id: str, new_x: float, new_y: float):
-        """Handle annotation position change from drag operation in CustomizeGraphDialog."""
-        graph_model = self.vm.get_graph(graph_id)
-        if not graph_model:
-            return
-        
-        # Update annotation coordinates in model
-        for ann in graph_model.annotations:
-            if ann.get('id') == ann_id:
-                if ann['type'] == 'vline':
-                    ann['x'] = new_x
-                    ann['label'] = f"V-Line at x={new_x:.2f}"
-                elif ann['type'] == 'hline':
-                    ann['y'] = new_y
-                    ann['label'] = f"H-Line at y={new_y:.2f}"
-                elif ann['type'] == 'text':
-                    ann['x'] = new_x
-                    ann['y'] = new_y
-                break
-    
     
     def _on_graph_closed(self, graph_id: int):
         """Handle graph closing."""

@@ -187,7 +187,7 @@ class VWorkspaceSpectra(QWidget):
 
         # Connection with VMWorkspaceSpectra (vm)
         self.v_spectra_list.selection_changed.connect(vm.set_selected_indices) # V Notify VM of selection change
-        self.v_spectra_list.files_dropped.connect(vm.load_files)
+        self.v_spectra_list.files_dropped.connect(self._handle_dropped_files)
         self.v_spectra_list.order_changed.connect(vm.reorder_spectra)
 
         self.v_spectra_viewer.peak_add_requested.connect(vm.add_peak_at)
@@ -301,6 +301,12 @@ class VWorkspaceSpectra(QWidget):
     def clear_workspace(self):
         """Trigger workspace clear in ViewModel."""
         self.vm.clear_workspace()
+    
+    def _handle_dropped_files(self, paths: list):
+        """Route dropped files to the main window's universal file opener."""
+        parent_window = self.window()
+        if hasattr(parent_window, '_load_files_by_paths'):
+            parent_window._load_files_by_paths(paths)
         
     def _send_df_to_graphs(self, df_name: str, df: pd.DataFrame):
         """Forward DataFrame to Graphs workspace"""

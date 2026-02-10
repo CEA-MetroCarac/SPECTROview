@@ -554,7 +554,7 @@ class VWorkspaceGraphs(QWidget):
                 self.df_listbox.addItem(spacer)
             
             # Add the centered placeholder item with larger text
-            placeholder = QListWidgetItem("📊 Drag and drop Excel/CSV file(s) here to open")
+            placeholder = QListWidgetItem("📂 Drag and drop file(s) here to open")
             placeholder.setFlags(Qt.NoItemFlags)  # Make it non-selectable and non-editable
             placeholder.setForeground(Qt.gray)
             placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
@@ -583,14 +583,10 @@ class VWorkspaceGraphs(QWidget):
     def _on_df_drag_enter(self, event):
         """Accept external file drops on dataframe list."""
         if event.mimeData().hasUrls():
-            # Check if files are Excel or CSV
-            urls = event.mimeData().urls()
-            for url in urls:
-                file_path = url.toLocalFile()
-                if file_path.lower().endswith(('.xlsx', '.xls', '.csv')):
-                    event.acceptProposedAction()
-                    return
-        event.ignore()
+            # Accept all file types - universal opener will handle routing
+            event.acceptProposedAction()
+        else:
+            event.ignore()
     
     def _on_df_drag_move(self, event):
         """Allow drag movement."""
@@ -603,10 +599,10 @@ class VWorkspaceGraphs(QWidget):
         """Handle file drop on dataframe list."""
         if event.mimeData().hasUrls():
             paths = [url.toLocalFile() for url in event.mimeData().urls()]
-            # Filter for Excel and CSV files only
-            valid_paths = [p for p in paths if p.lower().endswith(('.xlsx', '.xls', '.csv'))]
-            if valid_paths:
-                self.vm.load_dataframes(valid_paths)
+            # Route to universal file opener
+            parent_window = self.window()
+            if hasattr(parent_window, '_load_files_by_paths'):
+                parent_window._load_files_by_paths(paths)
             event.acceptProposedAction()
     
     def _on_plot_style_changed(self, plot_style: str):

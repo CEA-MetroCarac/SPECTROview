@@ -199,7 +199,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     def _connect_signals(self):
         """Connect Maps-specific signals between View and ViewModel."""
         # ── VMapsList → ViewModel connections ──
-        self.v_maps_list.files_dropped.connect(self.vm.load_map_files)
+        self.v_maps_list.files_dropped.connect(self._handle_dropped_files)
         self.v_maps_list.map_selection_changed.connect(self._on_map_selected)
         self.v_maps_list.spectra_selection_changed.connect(self._on_spectra_list_selection)
         
@@ -598,6 +598,12 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Send to ViewModel which will emit signal to Graphs workspace
         self.vm.extract_and_send_profile_to_graphs(profile_name, profile_df)
+    
+    def _handle_dropped_files(self, paths: list):
+        """Route dropped files to the main window's universal file opener."""
+        parent_window = self.window()
+        if hasattr(parent_window, '_load_files_by_paths'):
+            parent_window._load_files_by_paths(paths)
     
     def _show_toast_notification(self, message: str):
         """Show auto-dismissing toast notification."""

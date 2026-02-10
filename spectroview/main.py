@@ -98,6 +98,16 @@ class Main(QMainWindow):
         if not paths:
             return
         
+        self._load_files_by_paths(paths)
+    
+    def _load_files_by_paths(self, paths: list):
+        """Load files from a list of paths into appropriate workspaces.
+        
+        This method is called by both the file dialog (open_files) and drag-and-drop operations.
+        """
+        if not paths:
+            return
+        
         # Save last directory
         last_dir = QFileInfo(paths[0]).absolutePath()
         self.settings.set_last_directory(last_dir)

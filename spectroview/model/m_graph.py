@@ -62,9 +62,9 @@ class MGraph:
         
         # Legend
         self.legend_visible: bool = True
-        self.legend_location: str = 'upper right'
         self.legend_outside: bool = False
         self.legend_properties: List[Dict[str, Any]] = []
+        self.legend_bbox = None  # (x, y) in axes coords for dragged position
         
         # Plot-specific properties
         self.color_palette: str = "jet"  # For wafer/2D maps
@@ -116,9 +116,9 @@ class MGraph:
             'x_rot': self.x_rot,
             'grid': self.grid,
             'legend_visible': self.legend_visible,
-            'legend_location': self.legend_location,
             'legend_outside': self.legend_outside,
             'legend_properties': self.legend_properties,
+            'legend_bbox': self.legend_bbox,
             'color_palette': self.color_palette,
             'wafer_size': self.wafer_size,
             'wafer_stats': self.wafer_stats,

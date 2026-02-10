@@ -6,6 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
+
 from scipy.interpolate import griddata
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -79,9 +80,9 @@ class VGraph(QWidget):
         self.x_rot = 0
         self.grid = False
         self.legend_visible = True
-        self.legend_location = 'best'
         self.legend_outside = False
         self.legend_properties = []
+        self.legend_bbox = None  # (x, y) in axes coords for dragged position
         
         # Plot-specific settings
         self.color_palette = "jet"
@@ -351,18 +352,14 @@ class VGraph(QWidget):
         """Updates legend properties based on user modifications via GUI."""
         self.legend_properties[idx][property_type] = text
         self._set_legend()
+        self.canvas.draw_idle()
     
     def _on_legend_pick(self, event):
-        """Handle legend click event to show customization dialog."""
-        from PySide6.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox, QHBoxLayout
-        import copy
-        
-        # First, check if an annotation was picked (for dragging)
+        """Handle pick event — record annotation candidate for drag, or legend double-click."""
         artist = event.artist
         if hasattr(artist, '_annotation_data'):
-            # Start dragging annotation
-            artist._is_dragging = True
-            self._dragged_annotation = artist
+            # Record as drag candidate (actual drag starts on mouse move)
+            self._drag_candidate = artist
             self._drag_start_x = event.mouseevent.xdata
             self._drag_start_y = event.mouseevent.ydata
             return
@@ -371,43 +368,15 @@ class VGraph(QWidget):
         if artist.get_label() == '_legend_':
             return
         
+        # Check if it's a double-click on the legend
         legend = self.ax.get_legend()
-        if legend and artist == legend:
-            # Save original legend properties before allowing edits
-            original_legend_properties = copy.deepcopy(self.legend_properties)
+        if legend and artist == legend and event.mouseevent.dblclick:
+            # Open CustomizeGraphDialog with Legend tab
+            if not hasattr(self, '_customize_dialog') or self._customize_dialog is None:
+                self._customize_dialog = CustomizeGraphDialog(self, self.graph_id, parent=self)
             
-            # Create customization dialog
-            dialog = QDialog(self)
-            dialog.setWindowTitle("Customize Legend")
-            dialog.resize(250, 400)
-            
-            # Main layout
-            main_layout = QVBoxLayout(dialog)
-            
-            # Legend customization widget layout
-            legend_layout = QHBoxLayout()
-            self.customize_legend_widget(legend_layout)
-            main_layout.addLayout(legend_layout)
-            
-            # Dialog buttons
-            button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-            button_box.accepted.connect(dialog.accept)
-            button_box.rejected.connect(dialog.reject)
-            main_layout.addWidget(button_box)
-            
-            # Show dialog
-            result = dialog.exec()
-            if result == QDialog.Accepted:
-                # Replot with updated colors and labels
-                if self.df is not None:
-                    self.plot(self.df)
-                else:
-                    self.canvas.draw_idle()
-            else:
-                # Restore original legend properties if cancelled
-                self.legend_properties = original_legend_properties
-                self._set_legend()
-                self.canvas.draw_idle()
+            # Open the Legend tab
+            self._customize_dialog.open_legend_tab()
     
     def _plot_primary_axis(self, df):
         """Plots data on the primary axis based on the current plot style."""
@@ -597,20 +566,33 @@ class VGraph(QWidget):
                 self.legend_properties = self.get_legend_properties()
             
             if self.legend_visible:
-                legend = self.ax.legend(handles, legend_labels, loc=self.legend_location)
+                if self.legend_outside:
+                    legend = self.ax.legend(
+                        handles, legend_labels,
+                        loc='center left',
+                        bbox_to_anchor=(1, 0.5)
+                    )
+                else:
+                    legend = self.ax.legend(
+                        handles, legend_labels, loc='best'
+                    )
                 legend.set_picker(True)  # Make legend clickable
-                #legend.set_draggable(True)
+                legend.set_draggable(True)  # Make legend draggable
+                
+                # Restore dragged position if saved
+                if self.legend_bbox is not None and not self.legend_outside:
+                    legend._loc = tuple(self.legend_bbox)
             else:
                 self.ax.legend().remove()
-            
-            if self.legend_outside:
-                legend = self.ax.legend(
-                    handles, legend_labels,
-                    loc='center left',
-                    bbox_to_anchor=(1, 0.5)
-                )
-                legend.set_picker(True)  # Make legend clickable
-                #legend.set_draggable(True)
+    
+    def _save_legend_position(self):
+        """Save current legend position in axes coordinates."""
+        legend = self.ax.get_legend()
+        if legend is not None:
+            loc = legend._loc
+            # After dragging, _loc becomes a tuple (x, y) in axes coords
+            if isinstance(loc, tuple):
+                self.legend_bbox = [float(loc[0]), float(loc[1])]
     
     def _set_grid(self):
         """Add grid for the plot (supports linear & log scale automatically)."""
@@ -944,17 +926,24 @@ class VGraph(QWidget):
         return text_obj
     
     def _on_annotation_click(self, event):
-        """Handle click on annotation - detect double-click to edit."""
-        # Only handle double-clicks
-        if event.dblclick and event.inaxes == self.ax:
-            # Check if click is on an annotation
-            for ann in self.ax.findobj():
-                if hasattr(ann, '_annotation_data'):
-                    contains, _ = ann.contains(event)
-                    if contains:
-                        # Double-clicked on annotation - open edit dialog
-                        self._edit_annotation_direct(ann._annotation_data)
-                        break
+        """Handle click on annotation — only double-click opens edit dialog."""
+        if not event.dblclick or event.inaxes != self.ax:
+            return
+        
+        # Cancel any pending drag on double-click
+        if hasattr(self, '_drag_candidate'):
+            del self._drag_candidate
+        if hasattr(self, '_dragged_annotation'):
+            self._dragged_annotation._is_dragging = False
+            del self._dragged_annotation
+        
+        # Check if double-click is on an annotation
+        for ann in self.ax.findobj():
+            if hasattr(ann, '_annotation_data'):
+                contains, _ = ann.contains(event)
+                if contains:
+                    self._edit_annotation_direct(ann._annotation_data)
+                    return
     
     def _edit_annotation_direct(self, annotation):
         """Open edit dialog for annotation (called from double-click)."""
@@ -994,10 +983,22 @@ class VGraph(QWidget):
     
     def _on_annotation_drag(self, event):
         """Handle annotation drag (mouse move while dragging)."""
-        if not hasattr(self, '_dragged_annotation'):
+        if event.xdata is None or event.ydata is None:
             return
         
-        if event.xdata is None or event.ydata is None:
+        # Promote drag candidate to actual drag once mouse moves
+        if hasattr(self, '_drag_candidate') and not hasattr(self, '_dragged_annotation'):
+            dx = abs(event.xdata - (self._drag_start_x or 0))
+            dy = abs(event.ydata - (self._drag_start_y or 0))
+            # Use a small threshold to distinguish click from drag
+            x_range = abs(self.ax.get_xlim()[1] - self.ax.get_xlim()[0])
+            y_range = abs(self.ax.get_ylim()[1] - self.ax.get_ylim()[0])
+            if dx > x_range * 0.005 or dy > y_range * 0.005:
+                self._dragged_annotation = self._drag_candidate
+                self._dragged_annotation._is_dragging = True
+                del self._drag_candidate
+        
+        if not hasattr(self, '_dragged_annotation'):
             return
         
         ann = self._dragged_annotation
@@ -1022,6 +1023,10 @@ class VGraph(QWidget):
     
     def _on_annotation_release(self, event):
         """Handle mouse release (finish dragging)."""
+        # Clean up drag candidate if no drag occurred
+        if hasattr(self, '_drag_candidate'):
+            del self._drag_candidate
+        
         if not hasattr(self, '_dragged_annotation'):
             return
         

@@ -1,5 +1,6 @@
 import time
 import os
+import copy
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGroupBox, 
                                QPushButton, QListWidget, QListWidgetItem, QLabel,
                                QDialogButtonBox, QMessageBox, QTabWidget, QWidget,
@@ -246,6 +247,9 @@ class CustomizeGraphDialog(QDialog):
         self.graph_widget = graph_widget
         self.graph_id = graph_id
         
+        # Store original legend properties for Cancel functionality
+        self.original_legend_properties = None
+        
         self.setWindowTitle(f"Customize Graph {graph_id}")
         self.resize(450, 550)
         
@@ -269,10 +273,13 @@ class CustomizeGraphDialog(QDialog):
         
         # Create tabs
         tab_annotations = self._create_annotations_tab()
+        tab_legend = self._create_legend_tab()
         tab_general = self._create_general_tab()
         tab_axis = self._create_axis_tab()
         
         # Add tabs to widget
+
+        self.tabs.addTab(tab_legend, "Legend")
         self.tabs.addTab(tab_annotations, "Annotations")
         self.tabs.addTab(tab_axis, "Axis")
         self.tabs.addTab(tab_general, "General")
@@ -335,6 +342,44 @@ class CustomizeGraphDialog(QDialog):
         self.btn_add_text.clicked.connect(self._add_text)
         self.btn_edit.clicked.connect(self._edit_annotation)
         self.btn_delete.clicked.connect(self._delete_annotation)
+        
+        return tab
+    
+    def _create_legend_tab(self):
+        """Create legend customization tab."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        
+        # Info label
+        info_label = QLabel("Customize legend labels, colors, and markers:")
+        layout.addWidget(info_label)
+        
+        # Container for legend widgets
+        self.legend_container = QWidget()
+        self.legend_layout = QHBoxLayout(self.legend_container)
+        self.legend_layout.setContentsMargins(0, 0, 0, 0)
+        
+        layout.addWidget(self.legend_container)
+        layout.addStretch()
+        
+        # Apply / Cancel buttons
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+        
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.setStyleSheet("background-color: red; color: white; font-weight: bold;")
+        btn_cancel.clicked.connect(self._cancel_legend)
+        btn_layout.addWidget(btn_cancel)
+        
+        btn_apply = QPushButton("Apply")
+        btn_apply.setStyleSheet("background-color: green; color: white; font-weight: bold;")
+        btn_apply.clicked.connect(self._apply_legend)
+        btn_layout.addWidget(btn_apply)
+        
+        layout.addLayout(btn_layout)
+        
+        # Load initial legend properties
+        self._load_legend_properties()
         
         return tab
     
@@ -666,3 +711,80 @@ class CustomizeGraphDialog(QDialog):
         # Only update if this is our graph
         if graph_id == self.graph_id:
             self._load_annotations()
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # Legend Customization Methods
+    # ═══════════════════════════════════════════════════════════════════
+    
+    def _load_legend_properties(self):
+        """Load current legend properties from graph widget and populate the Legend tab."""
+        # Get legend properties from the graph widget
+        legend_properties = self.graph_widget.get_legend_properties()
+        
+        # Store backup for potential Cancel
+        if self.original_legend_properties is None:
+            self.original_legend_properties = copy.deepcopy(legend_properties)
+        
+        # Clear existing widgets from legend layout
+        while self.legend_layout.count():
+            item = self.legend_layout.takeAt(0)
+            if item.layout():
+                # Recursively clear sub-layouts
+                while item.layout().count():
+                    sub = item.layout().takeAt(0)
+                    if sub.widget():
+                        sub.widget().deleteLater()
+            if item.widget():
+                item.widget().deleteLater()
+        
+        # If no legend properties, show message
+        if not legend_properties:
+            no_legend_label = QLabel("No legend available for this plot.")
+            self.legend_layout.addWidget(no_legend_label)
+            return
+        
+        # Create legend customization widgets using graph widget's method
+        self.graph_widget.customize_legend_widget(self.legend_layout)
+    
+    def open_legend_tab(self):
+        """Open the dialog and switch to the Legend tab."""
+        # Reload legend properties in case they changed
+        self._load_legend_properties()
+        
+        # Store current legend properties as backup
+        self.original_legend_properties = copy.deepcopy(
+            self.graph_widget.legend_properties
+        )
+        
+        # Switch to Legend tab (index 0)
+        self.tabs.setCurrentIndex(0)
+        
+        # Show the dialog
+        self.show()
+        self.raise_()
+        self.activateWindow()
+    
+    def _apply_legend(self):
+        """Apply legend changes by doing a full replot."""
+        # Full replot to ensure all changes are committed
+        if self.graph_widget.df is not None:
+            self.graph_widget.plot(self.graph_widget.df)
+        else:
+            self.graph_widget.canvas.draw_idle()
+        
+        # Update the backup so Cancel won't revert applied changes
+        self.original_legend_properties = copy.deepcopy(
+            self.graph_widget.legend_properties
+        )
+    
+    def _cancel_legend(self):
+        """Cancel legend changes and restore original properties."""
+        if self.original_legend_properties is not None:
+            self.graph_widget.legend_properties = copy.deepcopy(
+                self.original_legend_properties
+            )
+            self.graph_widget._set_legend()
+            self.graph_widget.canvas.draw_idle()
+        
+        # Reload widgets to show restored properties
+        self._load_legend_properties()

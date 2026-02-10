@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QSize, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices
 
-from spectroview import ICON_DIR, PLOT_STYLES, LEGEND_LOCATION, AXIS_LABELS
+from spectroview import ICON_DIR, PLOT_STYLES, AXIS_LABELS
 from spectroview.model.m_settings import MSettings
 from spectroview.view.components.v_data_filter import VDataFilter
 from spectroview.view.components.v_dataframe_table import VDataframeTable
@@ -125,12 +125,6 @@ class VWorkspaceGraphs(QWidget):
         # Legend outside checkbox
         self.cb_legend_outside_toolbar = QCheckBox("Legend outside")
         toolbar_layout.addWidget(self.cb_legend_outside_toolbar)
-        
-        # Legend location combobox
-        self.cbb_legend_loc_toolbar = QComboBox()
-        self.cbb_legend_loc_toolbar.addItems(LEGEND_LOCATION)
-        self.cbb_legend_loc_toolbar.setMaximumWidth(100)
-        toolbar_layout.addWidget(self.cbb_legend_loc_toolbar)
         
         # Grid checkbox
         self.cb_grid_toolbar = QCheckBox("Grid")
@@ -532,7 +526,6 @@ class VWorkspaceGraphs(QWidget):
         self.spin_dpi_toolbar.valueChanged.connect(self._on_dpi_changed_toolbar)
         self.spin_xlabel_rotation.valueChanged.connect(self._on_xlabel_rotation_changed)
         self.cb_legend_outside_toolbar.stateChanged.connect(self._on_legend_outside_changed_toolbar)
-        self.cbb_legend_loc_toolbar.currentTextChanged.connect(self._on_legend_loc_changed_toolbar)
         self.cb_grid_toolbar.stateChanged.connect(self._on_grid_changed_toolbar)
         
         # MDI area connections
@@ -1189,11 +1182,6 @@ class VWorkspaceGraphs(QWidget):
         # Don't update immediately - wait for user to click "Update plot"
         pass
     
-    def _on_legend_loc_changed_toolbar(self, location: str):
-        """Handle legend location change from toolbar (will apply on Update plot)."""
-        # Don't update immediately - wait for user to click "Update plot"
-        pass
-    
     def _on_grid_changed_toolbar(self, state: int):
         """Handle grid toggle from toolbar (will apply on Update plot)."""
         # Don't update immediately - wait for user to click "Update plot"
@@ -1310,11 +1298,6 @@ class VWorkspaceGraphs(QWidget):
             self.spin_xlabel_rotation.setValue(model.x_rot)
             self.spin_trendline_order.setValue(model.trendline_order)
             
-            # Legend location
-            idx = self.cbb_legend_loc_toolbar.findText(model.legend_location)
-            if idx >= 0:
-                self.cbb_legend_loc_toolbar.setCurrentIndex(idx)
-            
             # Filters
             self.v_data_filter.set_filters(model.filters)
         finally:
@@ -1370,7 +1353,6 @@ class VWorkspaceGraphs(QWidget):
             'dpi': self.spin_dpi_toolbar.value(),
             'x_rot': self.spin_xlabel_rotation.value(),
             'legend_visible': True,  # From More Options tab when implemented
-            'legend_location': self.cbb_legend_loc_toolbar.currentText(),
             'legend_outside': self.cb_legend_outside_toolbar.isChecked(),
             'grid': self.cb_grid_toolbar.isChecked(),
             'show_bar_plot_error_bar': self.cb_error_bar.isChecked(),
@@ -1421,9 +1403,9 @@ class VWorkspaceGraphs(QWidget):
         
         # Legend
         graph_widget.legend_visible = model.legend_visible
-        graph_widget.legend_location = model.legend_location
         graph_widget.legend_outside = model.legend_outside
         graph_widget.legend_properties = model.legend_properties.copy() if model.legend_properties else []
+        graph_widget.legend_bbox = model.legend_bbox if hasattr(model, 'legend_bbox') else None
         
         # Plot-specific
         graph_widget.color_palette = model.color_palette
@@ -1497,13 +1479,15 @@ class VWorkspaceGraphs(QWidget):
         # Update all graph models with current state before saving
         for gid, (gw, gd, sw) in self.graph_widgets.items():
             size = sw.size()
+            # Save legend position if it was dragged
+            gw._save_legend_position()
             self.vm.update_graph(gid, {
                 'plot_width': size.width(),
                 'plot_height': size.height(),
                 'legend_properties': gw.legend_properties,
                 'legend_visible': gw.legend_visible,
-                'legend_location': gw.legend_location,
                 'legend_outside': gw.legend_outside,
+                'legend_bbox': gw.legend_bbox,
                 'annotations': gw.annotations,  # Sync annotations back to model
                 'axis_breaks': gw.axis_breaks  # Sync axis breaks back to model
             })

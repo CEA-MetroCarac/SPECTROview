@@ -274,8 +274,8 @@ class CustomizeGraphDialog(QDialog):
         
         # Add tabs to widget
         self.tabs.addTab(tab_annotations, "Annotations")
-        self.tabs.addTab(tab_general, "General")
         self.tabs.addTab(tab_axis, "Axis")
+        self.tabs.addTab(tab_general, "General")
         
         layout.addWidget(self.tabs)
         
@@ -347,11 +347,73 @@ class CustomizeGraphDialog(QDialog):
         return tab
     
     def _create_axis_tab(self):
-        """Create axis settings tab (placeholder for future)."""
+        """Create axis settings tab with break controls."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.addWidget(QLabel("Axis configuration will be added here."))
+        
+        # ===== X-Axis Break Section =====
+        x_break_group = QGroupBox("X-Axis Break")
+        x_break_layout = QVBoxLayout()
+        
+        # Enable checkbox
+        self.x_break_enabled = QCheckBox("Enable X-axis break")
+        self.x_break_enabled.stateChanged.connect(self._on_x_break_toggled)
+        
+        # Input fields
+        x_input_layout = QFormLayout()
+        self.x_break_start = QDoubleSpinBox()
+        self.x_break_start.setRange(-999999, 999999)
+        self.x_break_start.setDecimals(2)
+        
+        self.x_break_end = QDoubleSpinBox()
+        self.x_break_end.setRange(-999999, 999999)
+        self.x_break_end.setDecimals(2)
+        
+        x_input_layout.addRow("Break from:", self.x_break_start)
+        x_input_layout.addRow("Break to:", self.x_break_end)
+        
+        x_break_layout.addWidget(self.x_break_enabled)
+        x_break_layout.addLayout(x_input_layout)
+        x_break_group.setLayout(x_break_layout)
+        
+        # ===== Y-Axis Break Section =====
+        y_break_group = QGroupBox("Y-Axis Break")
+        y_break_layout = QVBoxLayout()
+        
+        # Enable checkbox
+        self.y_break_enabled = QCheckBox("Enable Y-axis break")
+        self.y_break_enabled.stateChanged.connect(self._on_y_break_toggled)
+        
+        # Input fields
+        y_input_layout = QFormLayout()
+        self.y_break_start = QDoubleSpinBox()
+        self.y_break_start.setRange(-999999, 999999)
+        self.y_break_start.setDecimals(2)
+        
+        self.y_break_end = QDoubleSpinBox()
+        self.y_break_end.setRange(-999999, 999999)
+        self.y_break_end.setDecimals(2)
+        
+        y_input_layout.addRow("Break from:", self.y_break_start)
+        y_input_layout.addRow("Break to:", self.y_break_end)
+        
+        y_break_layout.addWidget(self.y_break_enabled)
+        y_break_layout.addLayout(y_input_layout)
+        y_break_group.setLayout(y_break_layout)
+        
+        # ===== Apply Button =====
+        self.btn_apply_breaks = QPushButton("Apply Breaks")
+        self.btn_apply_breaks.clicked.connect(self._apply_axis_breaks)
+        
+        # Add to main layout
+        layout.addWidget(x_break_group)
+        layout.addWidget(y_break_group)
+        layout.addWidget(self.btn_apply_breaks)
         layout.addStretch()
+        
+        # Load current breaks from graph
+        self._load_axis_breaks()
+        
         return tab
     
     def _get_plot_center(self):
@@ -513,6 +575,91 @@ class CustomizeGraphDialog(QDialog):
             item = QListWidgetItem(text)
             item.setData(Qt.UserRole, ann['id'])
             self.annotation_list.addItem(item)
+    
+    def _load_axis_breaks(self):
+        """Load current axis breaks from graph widget."""
+        if not hasattr(self.graph_widget, 'axis_breaks'):
+            self.graph_widget.axis_breaks = {'x': None, 'y': None}
+        
+        breaks = self.graph_widget.axis_breaks
+        
+        # Get current axis limits from the graph
+        x_min, x_max, y_min, y_max = 0, 100, 0, 100  # defaults
+        if hasattr(self.graph_widget, 'ax') and self.graph_widget.ax is not None:
+            try:
+                x_min, x_max = self.graph_widget.ax.get_xlim()
+                y_min, y_max = self.graph_widget.ax.get_ylim()
+            except:
+                pass  # Use defaults if axis not available
+        
+        # Load X-axis break
+        if breaks.get('x'):
+            self.x_break_enabled.setChecked(True)
+            self.x_break_start.setValue(breaks['x']['start'])
+            self.x_break_end.setValue(breaks['x']['end'])
+        else:
+            self.x_break_enabled.setChecked(False)
+            # Set to middle range as suggestion
+            mid_x = (x_min + x_max) / 2
+            range_x = (x_max - x_min) / 4
+            self.x_break_start.setValue(mid_x - range_x/2)
+            self.x_break_end.setValue(mid_x + range_x/2)
+        
+        # Load Y-axis break
+        if breaks.get('y'):
+            self.y_break_enabled.setChecked(True)
+            self.y_break_start.setValue(breaks['y']['start'])
+            self.y_break_end.setValue(breaks['y']['end'])
+        else:
+            self.y_break_enabled.setChecked(False)
+            # Set to middle range as suggestion
+            mid_y = (y_min + y_max) / 2
+            range_y = (y_max - y_min) / 4
+            self.y_break_start.setValue(mid_y - range_y/2)
+            self.y_break_end.setValue(mid_y + range_y/2)
+    
+    def _on_x_break_toggled(self, state):
+        """Handle X-axis break checkbox toggle."""
+        pass  # Keep for future use if needed
+    
+    def _on_y_break_toggled(self, state):
+        """Handle Y-axis break checkbox toggle."""
+        pass  # Keep for future use if needed
+    
+    def _apply_axis_breaks(self):
+        """Apply axis breaks to the graph."""
+        # Validate and save X-axis break
+        if self.x_break_enabled.isChecked():
+            start = self.x_break_start.value()
+            end = self.x_break_end.value()
+            
+            if start >= end:
+                QMessageBox.warning(self, "Invalid Range", 
+                                  "X-axis break start must be less than end.")
+                return
+            
+            self.graph_widget.axis_breaks['x'] = {'start': start, 'end': end}
+        else:
+            self.graph_widget.axis_breaks['x'] = None
+        
+        # Validate and save Y-axis break
+        if self.y_break_enabled.isChecked():
+            start = self.y_break_start.value()
+            end = self.y_break_end.value()
+            
+            if start >= end:
+                QMessageBox.warning(self, "Invalid Range", 
+                                  "Y-axis break start must be less than end.")
+                return
+            
+            self.graph_widget.axis_breaks['y'] = {'start': start, 'end': end}
+        else:
+            self.graph_widget.axis_breaks['y'] = None
+        
+        # Refresh the plot with breaks applied
+        self._refresh_plot()
+        
+        QMessageBox.information(self, "Success", "Axis breaks applied successfully!")
     
     def _on_annotation_dragged(self, graph_id, ann_id, new_x, new_y):
         """Handle annotation position change from dragging - refresh the list."""

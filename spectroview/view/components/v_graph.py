@@ -95,6 +95,9 @@ class VGraph(QWidget):
         # Annotations
         self.annotations = []
         
+        # Axis breaks storage
+        self.axis_breaks = {'x': None, 'y': None}
+        
         # Matplotlib objects
         self.figure = None
         self.ax = None
@@ -222,6 +225,7 @@ class VGraph(QWidget):
         self._set_grid()
         self._set_rotation()
         self._set_legend()
+        self._apply_axis_breaks()  # Apply breaks before annotations
         self._render_annotations()  # Render annotations after all plot elements
         
         self.get_legend_properties()
@@ -1041,6 +1045,146 @@ class VGraph(QWidget):
         
         del self._dragged_annotation
         self.canvas.draw_idle()
+    
+    def _apply_axis_breaks(self):
+        """Apply axis breaks by adjusting limits and hiding ticks in break range."""
+        if not hasattr(self, 'axis_breaks') or not self.axis_breaks:
+            return
+        
+        # Apply X-axis break  
+        if self.axis_breaks.get('x'):
+            break_start = self.axis_breaks['x']['start']
+            break_end = self.axis_breaks['x']['end']
+            
+            # Get current limits
+            x_min, x_max = self.ax.get_xlim()
+            y_min, y_max = self.ax.get_ylim()
+            
+            # Calculate new compressed range (remove break range from display)
+            total_range = x_max - x_min
+            break_range = break_end - break_start
+            new_range = total_range - break_range
+            
+            # Don't apply if break is outside data range
+            if break_start < x_min or break_end > x_max:
+                return
+            
+            # Adjust x-axis to skip the break range
+            # Map data points: values before break stay same, values after break shift left
+            # BUT leave a small visual gap for the break markers
+            # Use fixed pixel gap for consistent appearance
+            gap_pixels = 3  # 5 pixels
+            # Convert pixels to data coordinates
+            bbox = self.ax.get_window_extent().transformed(self.figure.dpi_scale_trans.inverted())
+            gap_size = gap_pixels / bbox.width * (x_max - x_min) / self.figure.get_size_inches()[0]
+            
+            for line in self.ax.get_lines():
+                xdata = line.get_xdata()
+                ydata = line.get_ydata()
+                
+                # Convert to numpy arrays if needed
+                import numpy as np
+                xdata = np.asarray(xdata)
+                ydata = np.asarray(ydata)
+                
+                # Shift x values after break (compress break range, keep small gap)
+                xdata_new = xdata.copy()
+                mask = xdata >= break_end
+                xdata_new[mask] = xdata[mask] - break_range + gap_size
+                
+                # Remove points in break range
+                keep_mask = (xdata < break_start) | (xdata >= break_end)
+                line.set_data(xdata_new[keep_mask], ydata[keep_mask])
+            
+            # Adjust axis limits (compress but keep gap)
+            self.ax.set_xlim(x_min, x_max - break_range + gap_size)
+            
+            # Add zigzag break markers in the gap
+            break_x = break_start + gap_size / 2
+            gap_height = (y_max - y_min) * 0.05
+            
+            # Left zigzag
+            self.ax.plot([break_start, break_start + gap_size*0.3], 
+                        [y_min, y_min + gap_height], 
+                        'k-', linewidth=2, clip_on=False, zorder=100)
+            self.ax.plot([break_start + gap_size*0.3, break_start + gap_size*0.5], 
+                        [y_min + gap_height, y_min], 
+                        'k-', linewidth=2, clip_on=False, zorder=100)
+            
+            # Right zigzag  
+            self.ax.plot([break_start + gap_size*0.5, break_start + gap_size*0.7], 
+                        [y_max, y_max - gap_height], 
+                        'k-', linewidth=2, clip_on=False, zorder=100)
+            self.ax.plot([break_start + gap_size*0.7, break_start + gap_size], 
+                        [y_max - gap_height, y_max], 
+                        'k-', linewidth=2, clip_on=False, zorder=100)
+        
+        # Apply Y-axis break
+        if self.axis_breaks.get('y'):
+            break_start = self.axis_breaks['y']['start']
+            break_end = self.axis_breaks['y']['end']
+            
+            # Get current limits
+            x_min, x_max = self.ax.get_xlim()
+            y_min, y_max = self.ax.get_ylim()
+            
+            # Calculate new compressed range
+            total_range = y_max - y_min
+            break_range = break_end - break_start  
+            new_range = total_range - break_range
+            
+            # Don't apply if break is outside data range
+            if break_start < y_min or break_end > y_max:
+                return
+            
+            # Adjust y-axis to skip the break range
+            # Leave a small visual gap for the break markers
+            # Use fixed pixel gap for consistent appearance
+            gap_pixels = 3  # 5 pixels
+            # Convert pixels to data coordinates
+            bbox = self.ax.get_window_extent().transformed(self.figure.dpi_scale_trans.inverted())
+            gap_size = gap_pixels / bbox.height * (y_max - y_min) / self.figure.get_size_inches()[1]
+            
+            for line in self.ax.get_lines():
+                xdata = line.get_xdata()
+                ydata = line.get_ydata()
+                
+                # Convert to numpy arrays if needed
+                import numpy as np
+                xdata = np.asarray(xdata)
+                ydata = np.asarray(ydata)
+                
+                # Shift y values after break (compress break range, keep small gap)
+                ydata_new = ydata.copy()
+                mask = ydata >= break_end
+                ydata_new[mask] = ydata[mask] - break_range + gap_size
+                
+                # Remove points in break range
+                keep_mask = (ydata < break_start) | (ydata >= break_end)
+                line.set_data(xdata[keep_mask], ydata_new[keep_mask])
+            
+            # Adjust axis limits (compress but keep gap)
+            self.ax.set_ylim(y_min, y_max - break_range + gap_size)
+            
+            # Add zigzag break markers in the gap
+            break_y = break_start + gap_size / 2
+            gap_width = (x_max - x_min) * 0.05
+            
+            # Bottom zigzag
+            self.ax.plot([x_min, x_min + gap_width], 
+                        [break_start, break_start + gap_size*0.3], 
+                        'k-', linewidth=2, clip_on=False, zorder=100)
+            self.ax.plot([x_min + gap_width, x_min], 
+                        [break_start + gap_size*0.3, break_start + gap_size*0.5], 
+                        'k-', linewidth=2, clip_on=False, zorder=100)
+            
+            # Top zigzag
+            self.ax.plot([x_max, x_max - gap_width], 
+                        [break_start + gap_size*0.5, break_start + gap_size*0.7], 
+                        'k-', linewidth=2, clip_on=False, zorder=100)
+            self.ax.plot([x_max - gap_width, x_max], 
+                        [break_start + gap_size*0.7, break_start + gap_size], 
+                        'k-', linewidth=2, clip_on=False, zorder=100)
     
     def _show_customize_dialog(self):
         """Show customize dialog for this graph."""

@@ -1504,7 +1504,8 @@ class VWorkspaceGraphs(QWidget):
                 'legend_visible': gw.legend_visible,
                 'legend_location': gw.legend_location,
                 'legend_outside': gw.legend_outside,
-                'annotations': gw.annotations  # Sync annotations back to model
+                'annotations': gw.annotations,  # Sync annotations back to model
+                'axis_breaks': gw.axis_breaks  # Sync axis breaks back to model
             })
         
         # Save workspace

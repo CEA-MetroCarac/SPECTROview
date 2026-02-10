@@ -137,8 +137,9 @@ class VGraph(QWidget):
         self.canvas = FigureCanvas(self.figure)
         
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        self.toolbar.setIconSize(QSize(30, 30))  # Set larger icon size
         for action in self.toolbar.actions():
-            if action.text() in ['Save', 'Back', 'Forward', 'Subplots', "Customize"]:
+            if action.text() in ['Save', 'Back', 'Forward']:
                 action.setVisible(False)
         
         # Create Customize button
@@ -170,7 +171,7 @@ class VGraph(QWidget):
         from PySide6.QtWidgets import QWidget as QWidgetContainer
         toolbar_container = QWidgetContainer()
         toolbar_container.setLayout(toolbar_layout)
-        toolbar_container.setFixedHeight(30)
+        toolbar_container.setFixedHeight(35)
         
         if layout:
             layout.addWidget(self.canvas)

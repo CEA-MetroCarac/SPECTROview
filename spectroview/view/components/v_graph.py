@@ -6,7 +6,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-
 from scipy.interpolate import griddata
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -15,9 +14,8 @@ from PySide6.QtWidgets import QVBoxLayout, QWidget, QPushButton, QHBoxLayout
 from PySide6.QtCore import QSize, Signal
 from PySide6.QtGui import QIcon
 
-from spectroview import ICON_DIR
+from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR
 from spectroview.view.components.customize_graph_dialog import CustomizeGraphDialog
-from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS
 from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb
 
 
@@ -82,7 +80,6 @@ class VGraph(QWidget):
         self.x_rot = 0
         self.grid = False
         self.legend_visible = True
-        self.legend_outside = False
         self.legend_properties = []
         self.legend_bbox = None  # (x, y) in axes coords for dragged position
         
@@ -327,14 +324,20 @@ class VGraph(QWidget):
         
         for y in self.y:
             if self.plot_style == 'point':
-                sns.pointplot(
-                    data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                    linestyles='-' if self.join_for_point_plot else 'none',
-                    marker=markers, palette=colors,
-                    markeredgecolor='black', markeredgewidth=1,
-                    err_kws={'linewidth': 1, 'color': 'black'},
-                    capsize=0.02
-                )
+                # Only pass palette if hue is provided
+                point_kwargs = {
+                    'data': df, 'x': self.x, 'y': y, 'ax': self.ax,
+                    'linestyles': '-' if self.join_for_point_plot else 'none',
+                    'markeredgecolor': 'black', 'markeredgewidth': 1,
+                    'err_kws': {'linewidth': 1, 'color': 'black'},
+                    'capsize': 0.02
+                }
+                if self.z:
+                    point_kwargs['hue'] = self.z
+                    point_kwargs['palette'] = colors
+                    point_kwargs['marker'] = markers
+                sns.pointplot(**point_kwargs)
+
             elif self.plot_style == 'scatter':
                 if self.z:
                     sns.scatterplot(
@@ -347,10 +350,12 @@ class VGraph(QWidget):
                         s=70, edgecolor='black'
                     )
             elif self.plot_style == 'box':
-                sns.boxplot(
-                    data=df, x=self.x, y=y, hue=self.z,
-                    ax=self.ax, palette=colors, width=0.4
-                )
+                # Only pass palette if hue is provided
+                box_kwargs = {'data': df, 'x': self.x, 'y': y, 'ax': self.ax, 'width': 0.4}
+                if self.z:
+                    box_kwargs['hue'] = self.z
+                    box_kwargs['palette'] = colors
+                sns.boxplot(**box_kwargs)
             elif self.plot_style == 'line':
                 # Only pass palette if hue is provided
                 line_kwargs = {'data': df, 'x': self.x, 'y': y, 'ax': self.ax}
@@ -359,12 +364,16 @@ class VGraph(QWidget):
                     line_kwargs['palette'] = colors
                 sns.lineplot(**line_kwargs)
             elif self.plot_style == 'bar':
-                sns.barplot(
-                    data=df, x=self.x, y=y, hue=self.z,
-                    errorbar='sd' if self.show_bar_plot_error_bar else None,
-                    err_kws={'linewidth': 1},
-                    ax=self.ax, palette=colors
-                )
+                # Only pass palette if hue is provided
+                bar_kwargs = {
+                    'data': df, 'x': self.x, 'y': y, 'ax': self.ax,
+                    'errorbar': 'sd' if self.show_bar_plot_error_bar else None,
+                    'err_kws': {'linewidth': 1}
+                }
+                if self.z:
+                    bar_kwargs['hue'] = self.z
+                    bar_kwargs['palette'] = colors
+                sns.barplot(**bar_kwargs)
             elif self.plot_style == 'trendline':
                 sns.regplot(
                     data=df, x=self.x, y=y, ax=self.ax,
@@ -486,21 +495,12 @@ class VGraph(QWidget):
                 self.legend_properties = self.get_legend_properties()
             
             if self.legend_visible:
-                if self.legend_outside:
-                    legend = self.ax.legend(
-                        handles, legend_labels,
-                        loc='center left',
-                        bbox_to_anchor=(1, 0.5)
-                    )
-                else:
-                    legend = self.ax.legend(
-                        handles, legend_labels, loc='best'
-                    )
+                legend = self.ax.legend(handles, legend_labels, loc='best')
                 legend.set_picker(True)  # Make legend clickable
                 legend.set_draggable(True)  # Make legend draggable
                 
                 # Restore dragged position if saved
-                if self.legend_bbox is not None and not self.legend_outside:
+                if self.legend_bbox is not None:
                     legend._loc = tuple(self.legend_bbox)
             else:
                 self.ax.legend().remove()

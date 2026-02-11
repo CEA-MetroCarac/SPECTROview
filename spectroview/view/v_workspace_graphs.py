@@ -122,10 +122,6 @@ class VWorkspaceGraphs(QWidget):
         self.spin_xlabel_rotation.setMaximumWidth(60)
         toolbar_layout.addWidget(self.spin_xlabel_rotation)
         
-        # Legend outside checkbox
-        self.cb_legend_outside_toolbar = QCheckBox("Legend outside")
-        toolbar_layout.addWidget(self.cb_legend_outside_toolbar)
-        
         # Grid checkbox
         self.cb_grid_toolbar = QCheckBox("Grid")
         toolbar_layout.addWidget(self.cb_grid_toolbar)
@@ -1218,7 +1214,6 @@ class VWorkspaceGraphs(QWidget):
         # Block checkbox signals to prevent expensive signal handlers during sync
         self.cb_xlog.blockSignals(True)
         self.cb_ylog.blockSignals(True)
-        self.cb_legend_outside_toolbar.blockSignals(True)
         self.cb_grid_toolbar.blockSignals(True)
         self.cb_error_bar.blockSignals(True)
         self.cb_wafer_stats.blockSignals(True)
@@ -1259,7 +1254,7 @@ class VWorkspaceGraphs(QWidget):
             # Checkboxes
             self.cb_xlog.setChecked(model.xlogscale)
             self.cb_ylog.setChecked(model.ylogscale)
-            self.cb_legend_outside_toolbar.setChecked(model.legend_outside)
+
             self.cb_grid_toolbar.setChecked(model.grid)
             self.cb_error_bar.setChecked(model.show_bar_plot_error_bar)
             self.cb_wafer_stats.setChecked(model.wafer_stats)
@@ -1297,7 +1292,7 @@ class VWorkspaceGraphs(QWidget):
             # Unblock checkbox signals
             self.cb_xlog.blockSignals(False)
             self.cb_ylog.blockSignals(False)
-            self.cb_legend_outside_toolbar.blockSignals(False)
+
             self.cb_grid_toolbar.blockSignals(False)
             self.cb_error_bar.blockSignals(False)
             self.cb_wafer_stats.blockSignals(False)
@@ -1340,7 +1335,7 @@ class VWorkspaceGraphs(QWidget):
             'dpi': self.spin_dpi_toolbar.value(),
             'x_rot': self.spin_xlabel_rotation.value(),
             'legend_visible': True,  # From More Options tab when implemented
-            'legend_outside': self.cb_legend_outside_toolbar.isChecked(),
+
             'grid': self.cb_grid_toolbar.isChecked(),
             'show_bar_plot_error_bar': self.cb_error_bar.isChecked(),
             'show_trendline_eq': self.cb_trendline_eq.isChecked(),
@@ -1390,7 +1385,7 @@ class VWorkspaceGraphs(QWidget):
         
         # Legend
         graph_widget.legend_visible = model.legend_visible
-        graph_widget.legend_outside = model.legend_outside
+
         graph_widget.legend_properties = model.legend_properties.copy() if model.legend_properties else []
         graph_widget.legend_bbox = model.legend_bbox if hasattr(model, 'legend_bbox') else None
         
@@ -1479,7 +1474,7 @@ class VWorkspaceGraphs(QWidget):
                 'plot_height': size.height(),
                 'legend_properties': gw.legend_properties,
                 'legend_visible': gw.legend_visible,
-                'legend_outside': gw.legend_outside,
+
                 'legend_bbox': gw.legend_bbox,
                 'annotations': gw.annotations,  # Sync annotations back to model
                 'axis_breaks': gw.axis_breaks  # Sync axis breaks back to model

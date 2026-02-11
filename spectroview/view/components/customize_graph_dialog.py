@@ -1,6 +1,7 @@
 import time
 import os
 import copy
+
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGroupBox, 
                                QPushButton, QListWidget, QListWidgetItem, QLabel,
                                QDialogButtonBox, QMessageBox, QTabWidget, QWidget,
@@ -9,23 +10,10 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGroupBox,
                                QStyledItemDelegate)
 from PySide6.QtCore import Qt, QSize, Signal
 from PySide6.QtGui import QIcon, QColor, QPalette
+
 from spectroview import DEFAULT_COLORS, MARKERS
 from spectroview import ICON_DIR
 
-
-class ColorDelegate(QStyledItemDelegate):
-    """Show color in background of color selector comboboxes."""
-    
-    def paint(self, painter, option, index):
-        painter.save()
-        color = index.data(Qt.BackgroundRole)
-        if color:
-            painter.fillRect(option.rect, color)
-        painter.drawText(option.rect, Qt.AlignCenter, index.data(Qt.DisplayRole))
-        painter.restore()
-    
-    def sizeHint(self, option, index):
-        return QSize(70, 20)
 
 
 class CustomizeGraphDialog(QDialog):
@@ -43,12 +31,11 @@ class CustomizeGraphDialog(QDialog):
         self.original_legend_properties = None
         
         self.setWindowTitle(f"Customize Graph {graph_id}")
+        self.setModal(False)
         self.resize(450, 550)
         
-        self.setModal(False) # Make dialog non-modal and always on top
-        
         self._setup_ui()
-        self._load_annotations()
+        self._load_annotations() # Load annotations from graph to listwidget
         
         # Connect to annotation position changed signal to update list when dragging
         self.graph_widget.annotation_position_changed.connect(self._on_annotation_dragged)
@@ -491,7 +478,7 @@ class CustomizeGraphDialog(QDialog):
         QMessageBox.information(self, "Success", "Axis breaks applied successfully!")
     
     def _on_annotation_dragged(self, graph_id, ann_id, new_x, new_y):
-        """Handle annotation position change from dragging - refresh the list."""
+        """Handle annotation position change from dragging - refresh the list widget."""
         # Only update if this is our graph
         if graph_id == self.graph_id:
             self._load_annotations()
@@ -887,3 +874,16 @@ class AnnotationTextEditDialog(QDialog):
         
         return props
 
+class ColorDelegate(QStyledItemDelegate):
+    """Show color in background of color selector comboboxes."""
+    
+    def paint(self, painter, option, index):
+        painter.save()
+        color = index.data(Qt.BackgroundRole)
+        if color:
+            painter.fillRect(option.rect, color)
+        painter.drawText(option.rect, Qt.AlignCenter, index.data(Qt.DisplayRole))
+        painter.restore()
+    
+    def sizeHint(self, option, index):
+        return QSize(70, 20)

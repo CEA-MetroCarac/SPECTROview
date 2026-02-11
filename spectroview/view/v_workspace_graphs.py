@@ -899,7 +899,7 @@ class VWorkspaceGraphs(QWidget):
         # If Z changed and CustomizeGraphDialog is open, reload legend properties
         if z_changed and hasattr(graph_widget, '_customize_dialog') and graph_widget._customize_dialog is not None:
             if graph_widget._customize_dialog.isVisible():
-                graph_widget._customize_dialog._load_legend_properties()
+                graph_widget._customize_dialog.legend_widget.load_legend_properties()
         
         # Update window title
         title = f"{graph_model.graph_id}-{graph_model.plot_style}: [{graph_model.x}] vs [{graph_model.y[0] if graph_model.y else 'None'}]"

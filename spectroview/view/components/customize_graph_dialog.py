@@ -15,6 +15,163 @@ from spectroview import DEFAULT_COLORS, MARKERS
 from spectroview import ICON_DIR
 
 
+class CustomizeLegendWidget(QWidget):
+    """Widget for customizing legend properties (labels, markers, colors)."""
+    
+    properties_changed = Signal()
+    
+    def __init__(self, graph_widget, parent=None):
+        super().__init__(parent)
+        self.graph_widget = graph_widget
+        self.original_legend_properties = None
+        
+        # Create main layout
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Info label
+        info_label = QLabel("Customize legend labels, colors, and markers:")
+        self.main_layout.addWidget(info_label)
+        
+        # Container for legend widgets (labels, markers, colors)
+        self.legend_container = QWidget()
+        self.legend_layout = QHBoxLayout(self.legend_container)
+        self.legend_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.main_layout.addWidget(self.legend_container)
+        self.main_layout.addStretch()
+        
+        # Load initial properties
+        self.load_legend_properties()
+    
+    def load_legend_properties(self):
+        """Load current legend properties from graph widget and populate the GUI."""
+        # Get legend properties from the graph widget
+        legend_properties = self.graph_widget.get_legend_properties()
+        
+        # Store backup for potential Cancel
+        if self.original_legend_properties is None:
+            self.original_legend_properties = copy.deepcopy(legend_properties)
+        
+        # Clear existing widgets from legend layout
+        while self.legend_layout.count():
+            item = self.legend_layout.takeAt(0)
+            if item.layout():
+                # Recursively clear sub-layouts
+                while item.layout().count():
+                    sub = item.layout().takeAt(0)
+                    if sub.widget():
+                        sub.widget().deleteLater()
+            if item.widget():
+                item.widget().deleteLater()
+        
+        # If no legend properties, show message
+        if not legend_properties:
+            no_legend_label = QLabel("No legend available for this plot.")
+            self.legend_layout.addWidget(no_legend_label)
+            return
+        
+        # Build legend customization widgets
+        self._build_legend_widgets(legend_properties)
+    
+    def _build_legend_widgets(self, legend_properties):
+        """Build the legend customization widgets (label, marker, color)."""
+        label_layout = QVBoxLayout()
+        marker_layout = QVBoxLayout()
+        color_layout = QVBoxLayout()
+        
+        # Headers
+        for header in ['Label', 'Marker', 'Color']:
+            lbl = QLabel(header)
+            lbl.setAlignment(Qt.AlignCenter)
+            if header == 'Label':
+                label_layout.addWidget(lbl)
+            elif header == 'Marker':
+                if self.graph_widget.plot_style == 'point':
+                    marker_layout.addWidget(lbl)
+            elif header == 'Color':
+                color_layout.addWidget(lbl)
+        
+        for idx, prop in enumerate(legend_properties):
+            # Label
+            label = QLineEdit(prop['label'])
+            label.setFixedWidth(200)
+            label.textChanged.connect(
+                lambda text, i=idx: self._update_legend_property(i, 'label', text)
+            )
+            label_layout.addWidget(label)
+            
+            # Marker (only for point plots)
+            if self.graph_widget.plot_style == 'point':
+                marker = QComboBox()
+                marker.addItems(MARKERS)
+                marker.setCurrentText(prop['marker'])
+                marker.currentTextChanged.connect(
+                    lambda text, i=idx: self._update_legend_property(i, 'marker', text)
+                )
+                marker_layout.addWidget(marker)
+            
+            # Color combobox with colored items
+            color = QComboBox()
+            delegate = ColorDelegate(color)
+            color.setItemDelegate(delegate)
+            
+            unique_colors = list(dict.fromkeys(DEFAULT_COLORS))[:12]
+            for color_code in unique_colors:
+                color.addItem(color_code)
+                item = color.model().item(color.count() - 1)
+                item.setBackground(QColor(color_code))
+            
+            color.setCurrentText(prop['color'])
+            color.currentIndexChanged.connect(
+                lambda _, cb=color: self._update_combobox_color(cb)
+            )
+            color.currentTextChanged.connect(
+                lambda text, i=idx: self._update_legend_property(i, 'color', text)
+            )
+            color_layout.addWidget(color)
+            self._update_combobox_color(color)
+        
+        # Stretch at bottom
+        label_layout.addStretch()
+        if self.graph_widget.plot_style == 'point':
+            marker_layout.addStretch()
+        color_layout.addStretch()
+        
+        self.legend_layout.addLayout(label_layout)
+        self.legend_layout.addLayout(marker_layout)
+        self.legend_layout.addLayout(color_layout)
+    
+    def _update_legend_property(self, idx, property_type, text):
+        """Update a legend property and refresh the plot live."""
+        self.graph_widget.legend_properties[idx][property_type] = text
+        self.graph_widget._set_legend()
+        self.graph_widget.canvas.draw_idle()
+        self.properties_changed.emit()
+    
+    def _update_combobox_color(self, combobox):
+        """Update combobox background color to match selected color."""
+        selected_color = combobox.currentText()
+        color = QColor(selected_color)
+        palette = combobox.palette()
+        palette.setColor(QPalette.Button, color)
+        palette.setColor(QPalette.ButtonText, Qt.white)
+        combobox.setAutoFillBackground(True)
+        combobox.setPalette(palette)
+        combobox.update()
+    
+    def save_original_properties(self):
+        """Save the current legend properties as the original backup."""
+        self.original_legend_properties = copy.deepcopy(self.graph_widget.get_legend_properties())
+    
+    def restore_original_properties(self):
+        """Restore legend properties to the original backup."""
+        if self.original_legend_properties is not None:
+            self.graph_widget.legend_properties = copy.deepcopy(self.original_legend_properties)
+            self.graph_widget._set_legend()
+            self.graph_widget.canvas.draw()
+
+
 
 class CustomizeGraphDialog(QDialog):
     """Dialog for customizing graph"""
@@ -121,16 +278,10 @@ class CustomizeGraphDialog(QDialog):
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # Info label
-        info_label = QLabel("Customize legend labels, colors, and markers:")
-        layout.addWidget(info_label)
+        # Create legend customization widget
+        self.legend_widget = CustomizeLegendWidget(self.graph_widget, parent=tab)
+        layout.addWidget(self.legend_widget)
         
-        # Container for legend widgets
-        self.legend_container = QWidget()
-        self.legend_layout = QHBoxLayout(self.legend_container)
-        self.legend_layout.setContentsMargins(0, 0, 0, 0)
-        
-        layout.addWidget(self.legend_container)
         layout.addStretch()
         
         # Apply / Cancel buttons
@@ -148,9 +299,6 @@ class CustomizeGraphDialog(QDialog):
         btn_layout.addWidget(btn_apply)
         
         layout.addLayout(btn_layout)
-        
-        # Load initial legend properties
-        self._load_legend_properties()
         
         return tab
     
@@ -327,7 +475,7 @@ class CustomizeGraphDialog(QDialog):
         
         # Open appropriate edit dialog based on type
         if annotation['type'] in ['vline', 'hline']:
-            dialog = AnnotationLineEditDialog(annotation, self)
+            dialog = CustomizeAnnLineWidget(annotation, self)
             if dialog.exec() == QDialog.Accepted:
                 # Update annotation properties
                 props = dialog.get_properties()
@@ -343,7 +491,7 @@ class CustomizeGraphDialog(QDialog):
                 self._load_annotations()
         
         elif annotation['type'] == 'text':
-            dialog = AnnotationTextEditDialog(annotation, self)
+            dialog = CustomizeAnnTextWidget(annotation, self)
             if dialog.exec() == QDialog.Accepted:
                 # Update annotation properties
                 props = dialog.get_properties()
@@ -482,135 +630,14 @@ class CustomizeGraphDialog(QDialog):
         # Only update if this is our graph
         if graph_id == self.graph_id:
             self._load_annotations()
-    
-    # ═══════════════════════════════════════════════════════════════════
-    # Legend Customization Methods
-    # ═══════════════════════════════════════════════════════════════════
-    
-    def _load_legend_properties(self):
-        """Load current legend properties from graph widget and populate the Legend tab."""
-        # Get legend properties from the graph widget
-        legend_properties = self.graph_widget.get_legend_properties()
-        
-        # Store backup for potential Cancel
-        if self.original_legend_properties is None:
-            self.original_legend_properties = copy.deepcopy(legend_properties)
-        
-        # Clear existing widgets from legend layout
-        while self.legend_layout.count():
-            item = self.legend_layout.takeAt(0)
-            if item.layout():
-                # Recursively clear sub-layouts
-                while item.layout().count():
-                    sub = item.layout().takeAt(0)
-                    if sub.widget():
-                        sub.widget().deleteLater()
-            if item.widget():
-                item.widget().deleteLater()
-        
-        # If no legend properties, show message
-        if not legend_properties:
-            no_legend_label = QLabel("No legend available for this plot.")
-            self.legend_layout.addWidget(no_legend_label)
-            return
-        
-        # Build legend customization widgets
-        self._build_legend_widgets(legend_properties)
-    
-    def _build_legend_widgets(self, legend_properties):
-        """Build the legend customization widgets (label, marker, color)."""
-        label_layout = QVBoxLayout()
-        marker_layout = QVBoxLayout()
-        color_layout = QVBoxLayout()
-        
-        # Headers
-        for header in ['Label', 'Marker', 'Color']:
-            lbl = QLabel(header)
-            lbl.setAlignment(Qt.AlignCenter)
-            if header == 'Label':
-                label_layout.addWidget(lbl)
-            elif header == 'Marker':
-                if self.graph_widget.plot_style == 'point':
-                    marker_layout.addWidget(lbl)
-            elif header == 'Color':
-                color_layout.addWidget(lbl)
-        
-        for idx, prop in enumerate(legend_properties):
-            # Label
-            label = QLineEdit(prop['label'])
-            label.setFixedWidth(200)
-            label.textChanged.connect(
-                lambda text, i=idx: self._update_legend_property(i, 'label', text)
-            )
-            label_layout.addWidget(label)
-            
-            # Marker (only for point plots)
-            if self.graph_widget.plot_style == 'point':
-                marker = QComboBox()
-                marker.addItems(MARKERS)
-                marker.setCurrentText(prop['marker'])
-                marker.currentTextChanged.connect(
-                    lambda text, i=idx: self._update_legend_property(i, 'marker', text)
-                )
-                marker_layout.addWidget(marker)
-            
-            # Color combobox with colored items
-            color = QComboBox()
-            delegate = ColorDelegate(color)
-            color.setItemDelegate(delegate)
-            
-            unique_colors = list(dict.fromkeys(DEFAULT_COLORS))[:12]
-            for color_code in unique_colors:
-                color.addItem(color_code)
-                item = color.model().item(color.count() - 1)
-                item.setBackground(QColor(color_code))
-            
-            color.setCurrentText(prop['color'])
-            color.currentIndexChanged.connect(
-                lambda _, cb=color: self._update_combobox_color(cb)
-            )
-            color.currentTextChanged.connect(
-                lambda text, i=idx: self._update_legend_property(i, 'color', text)
-            )
-            color_layout.addWidget(color)
-            self._update_combobox_color(color)
-        
-        # Stretch at bottom
-        label_layout.addStretch()
-        if self.graph_widget.plot_style == 'point':
-            marker_layout.addStretch()
-        color_layout.addStretch()
-        
-        self.legend_layout.addLayout(label_layout)
-        self.legend_layout.addLayout(marker_layout)
-        self.legend_layout.addLayout(color_layout)
-    
-    def _update_legend_property(self, idx, property_type, text):
-        """Update a legend property and refresh the plot live."""
-        self.graph_widget.legend_properties[idx][property_type] = text
-        self.graph_widget._set_legend()
-        self.graph_widget.canvas.draw_idle()
-    
-    def _update_combobox_color(self, combobox):
-        """Update combobox background color to match selected color."""
-        selected_color = combobox.currentText()
-        color = QColor(selected_color)
-        palette = combobox.palette()
-        palette.setColor(QPalette.Button, color)
-        palette.setColor(QPalette.ButtonText, Qt.white)
-        combobox.setAutoFillBackground(True)
-        combobox.setPalette(palette)
-        combobox.update()
-    
+
     def open_legend_tab(self):
         """Open the dialog and switch to the Legend tab."""
         # Reload legend properties in case they changed
-        self._load_legend_properties()
+        self.legend_widget.load_legend_properties()
         
         # Store current legend properties as backup
-        self.original_legend_properties = copy.deepcopy(
-            self.graph_widget.legend_properties
-        )
+        self.legend_widget.save_original_properties()
         
         # Switch to Legend tab (index 0)
         self.tabs.setCurrentIndex(0)
@@ -629,27 +656,20 @@ class CustomizeGraphDialog(QDialog):
             self.graph_widget.canvas.draw_idle()
         
         # Update the backup so Cancel won't revert applied changes
-        self.original_legend_properties = copy.deepcopy(
-            self.graph_widget.legend_properties
-        )
+        self.legend_widget.save_original_properties()
         
         # Notify workspace to sync legend properties back to model
         self.legend_applied.emit(self.graph_id)
     
     def _cancel_legend(self):
         """Cancel legend changes and restore original properties."""
-        if self.original_legend_properties is not None:
-            self.graph_widget.legend_properties = copy.deepcopy(
-                self.original_legend_properties
-            )
-            self.graph_widget._set_legend()
-            self.graph_widget.canvas.draw_idle()
+        self.legend_widget.restore_original_properties()
         
         # Reload widgets to show restored properties
-        self._load_legend_properties()
+        self.legend_widget.load_legend_properties()
 
 
-class AnnotationLineEditDialog(QDialog):
+class CustomizeAnnLineWidget(QDialog):
     """Dialog for editing line annotations (vline/hline)."""
     
     def __init__(self, annotation, parent=None):
@@ -712,7 +732,7 @@ class AnnotationLineEditDialog(QDialog):
         }
 
 
-class AnnotationTextEditDialog(QDialog):
+class CustomizeAnnTextWidget(QDialog):
     """Dialog for editing text annotations."""
     
     def __init__(self, annotation, parent=None):

@@ -775,7 +775,9 @@ class VWorkspaceGraphs(QWidget):
             filters = self.v_data_filter.get_filters()
         
         graph_model = self.vm.create_graph(plot_config)
-        filtered_df = self.vm.apply_filters(self.vm.selected_df_name, filters)
+        # CRITICAL: Use df_name from plot_config, not vm.selected_df_name
+        # because vm.selected_df_name can be changed by window activation events
+        filtered_df = self.vm.apply_filters(plot_config['df_name'], filters)
         
         graph_widget = VGraph(graph_id=graph_model.graph_id)
         self._configure_graph_from_model(graph_widget, graph_model)

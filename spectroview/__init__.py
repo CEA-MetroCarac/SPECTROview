@@ -21,8 +21,8 @@ AXIS_LABELS = [
     "Si peak position (cm$^{-1}$)",
     "Si peak FWHM (cm$^{-1}$)",
     "Si peak intensity (a.u.)", 
-    "Stress $\sigma_{yy}$ (MPa)", 
-    "Strain $\epsilon_{xx}$ (\%)",
+    r"Stress $\sigma_{yy}$ (MPa)", 
+    r"Strain $\epsilon_{xx}$ (%)",
 ]
 
 PEAK_MODELS = [

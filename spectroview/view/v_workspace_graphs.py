@@ -404,7 +404,7 @@ class VWorkspaceGraphs(QWidget):
         
         # Limit buttons
         limits_btn_layout = QHBoxLayout()
-        self.btn_set_limits = QPushButton("Set current XY limits")
+        self.btn_set_limits = QPushButton("Get current XY limits from plot")
         self.btn_clear_limits = QPushButton("Clear XY limits")
         limits_btn_layout.addWidget(self.btn_set_limits)
         limits_btn_layout.addWidget(self.btn_clear_limits)

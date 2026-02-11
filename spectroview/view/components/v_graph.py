@@ -11,13 +11,13 @@ from scipy.interpolate import griddata
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from PySide6.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QWidget, QComboBox, QStyledItemDelegate, QPushButton, QHBoxLayout
-from PySide6.QtCore import Qt, QSize, Signal
-from PySide6.QtGui import QPalette, QColor, QIcon
+from PySide6.QtWidgets import QVBoxLayout, QWidget, QPushButton, QHBoxLayout
+from PySide6.QtCore import QSize, Signal
+from PySide6.QtGui import QIcon
 
 from spectroview import ICON_DIR
 from spectroview.view.components.customize_graph_dialog import CustomizeGraphDialog
-from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, MARKERS
+from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS
 from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb
 
 
@@ -34,11 +34,13 @@ class VGraph(QWidget):
         # Data source
         self.df_name = None
         self.filters = {}
+        # Store DataFrame for replotting
+        self.df = None
         
         # Plot dimensions
         self.plot_width = 480  
         self.plot_height = 400
-        self.dpi = 90
+        self.dpi = 100
         
         # Plot type and axes
         self.plot_style = "point"
@@ -107,15 +109,11 @@ class VGraph(QWidget):
         self.ax3 = None
         self.canvas = None
         
-        # Store DataFrame for replotting
-        self.df = None
-        
         # Layout setup
         self.graph_layout = QVBoxLayout()
         self.setLayout(self.graph_layout)
         self.graph_layout.setContentsMargins(0, 0, 0, 0)
         self.graph_layout.setSpacing(0)
-    
     def clear_layout(self, layout):
         """Clears all widgets and layouts from the specified layout."""
         if layout is not None:
@@ -274,86 +272,7 @@ class VGraph(QWidget):
         
         return self.legend_properties
     
-    def customize_legend_widget(self, main_layout):
-        """Displays legend properties in the GUI for user modifications."""
-        self.clear_layout(main_layout)
-        headers = ['Label', 'Marker', 'Color']
-        
-        label_layout = QVBoxLayout()
-        marker_layout = QVBoxLayout()
-        color_layout = QVBoxLayout()
-        
-        for header in headers:
-            label = QLabel(header)
-            label.setAlignment(Qt.AlignCenter)
-            if header == "Label":
-                label_layout.addWidget(label)
-            elif header == "Marker":
-                if self.plot_style == 'point':
-                    marker_layout.addWidget(label)
-            elif header == "Color":
-                color_layout.addWidget(label)
-        
-        for idx, prop in enumerate(self.legend_properties):
-            # Label
-            label = QLineEdit(prop['label'])
-            label.setFixedWidth(200)
-            label.textChanged.connect(lambda text, idx=idx: self.udp_legend(idx, 'label', text))
-            label_layout.addWidget(label)
-            
-            # Marker
-            if self.plot_style == 'point':
-                marker = QComboBox()
-                marker.addItems(MARKERS)
-                marker.setCurrentText(prop['marker'])
-                marker.currentTextChanged.connect(lambda text, idx=idx: self.udp_legend(idx, 'marker', text))
-                marker_layout.addWidget(marker)
-            
-            # Color - only show original DEFAULT_COLORS (limit to 12 unique colors)
-            color = QComboBox()
-            delegate = ColorDelegate(color)
-            color.setItemDelegate(delegate)
-            
-            # Use only the first 12 unique colors from DEFAULT_COLORS
-            unique_colors = list(dict.fromkeys(DEFAULT_COLORS))[:12]
-            for color_code in unique_colors:
-                color.addItem(color_code)
-                item = color.model().item(color.count() - 1)
-                item.setBackground(QColor(color_code))
-            
-            color.setCurrentText(prop['color'])
-            color.currentIndexChanged.connect(lambda idx, color=color: self.update_combobox_color(color))
-            color.currentTextChanged.connect(lambda text, idx=idx: self.udp_legend(idx, 'color', text))
-            color_layout.addWidget(color)
-            
-            self.update_combobox_color(color)
-        
-        # Add vertical stretch to absorb remaining space
-        label_layout.addStretch()
-        if self.plot_style == 'point':
-            marker_layout.addStretch()
-        color_layout.addStretch()
-        
-        main_layout.addLayout(label_layout)
-        main_layout.addLayout(marker_layout)
-        main_layout.addLayout(color_layout)
-    
-    def update_combobox_color(self, combobox):
-        """Update combobox background color based on the selected color."""
-        selected_color = combobox.currentText()
-        color = QColor(selected_color)
-        palette = combobox.palette()
-        palette.setColor(QPalette.Button, color)
-        palette.setColor(QPalette.ButtonText, Qt.white)
-        combobox.setAutoFillBackground(True)
-        combobox.setPalette(palette)
-        combobox.update()
-    
-    def udp_legend(self, idx, property_type, text):
-        """Updates legend properties based on user modifications via GUI."""
-        self.legend_properties[idx][property_type] = text
-        self._set_legend()
-        self.canvas.draw_idle()
+
     
     def _on_legend_pick(self, event):
         """Handle pick event — record annotation candidate for drag, or legend double-click."""
@@ -1283,16 +1202,3 @@ class WaferPlot:
                 transform=ax.transAxes, fontsize=10, verticalalignment='bottom')
 
 
-class ColorDelegate(QStyledItemDelegate):
-    """Show color in background of color selector comboboxes."""
-    
-    def paint(self, painter, option, index):
-        painter.save()
-        color = index.data(Qt.BackgroundRole)
-        if color:
-            painter.fillRect(option.rect, color)
-        painter.drawText(option.rect, Qt.AlignCenter, index.data(Qt.DisplayRole))
-        painter.restore()
-    
-    def sizeHint(self, option, index):
-        return QSize(70, 20)

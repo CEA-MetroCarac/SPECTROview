@@ -868,6 +868,12 @@ class VWorkspaceGraphs(QWidget):
         # Update graph model
         self.vm.update_graph(graph_model.graph_id, plot_config)
         
+        # Sync current legend properties to model BEFORE reconfiguring
+        # (so customizations from the dialog are not lost)
+        self.vm.update_graph(graph_model.graph_id, {
+            'legend_properties': graph_widget.legend_properties
+        })
+        
         # Get updated model
         graph_model = self.vm.get_graph(graph_model.graph_id)
         
@@ -1420,6 +1426,12 @@ class VWorkspaceGraphs(QWidget):
         
         # Set size
         sub_window.resize(model.plot_width, model.plot_height)
+        
+        # Block ESC key — Qt internally hides the widget on ESC
+        from PySide6.QtGui import QShortcut, QKeySequence
+        shortcut = QShortcut(QKeySequence(Qt.Key_Escape), sub_window)
+        shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        shortcut.activated.connect(lambda: None)  # Consume ESC, do nothing
         
         # Connect close signal to cleanup
         sub_window.closed.connect(lambda gid=model.graph_id: self._on_graph_closed(gid))

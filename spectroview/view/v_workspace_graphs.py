@@ -868,10 +868,14 @@ class VWorkspaceGraphs(QWidget):
         # Update graph model
         self.vm.update_graph(graph_model.graph_id, plot_config)
         
+        # Capture current legend position from matplotlib before syncing
+        graph_widget._save_legend_position()
+        
         # Sync current legend properties to model BEFORE reconfiguring
         # (so customizations from the dialog are not lost)
         self.vm.update_graph(graph_model.graph_id, {
-            'legend_properties': graph_widget.legend_properties
+            'legend_properties': graph_widget.legend_properties,
+            'legend_bbox': graph_widget.legend_bbox
         })
         
         # Get updated model
@@ -889,7 +893,8 @@ class VWorkspaceGraphs(QWidget):
         
         # Save legend properties back to model after rendering
         self.vm.update_graph(graph_model.graph_id, {
-            'legend_properties': graph_widget.legend_properties
+            'legend_properties': graph_widget.legend_properties,
+            'legend_bbox': graph_widget.legend_bbox
         })
         
         # Update window title

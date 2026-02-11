@@ -853,7 +853,8 @@ class VWorkspaceGraphs(QWidget):
         plot_config = self._collect_plot_config()
         
         # Check if Z-axis has changed (reset legend properties if so)
-        if plot_config['z'] != graph_model.z:
+        z_changed = plot_config['z'] != graph_model.z
+        if z_changed:
             graph_widget.legend_properties = []
         
         # Check if filters have changed
@@ -892,6 +893,11 @@ class VWorkspaceGraphs(QWidget):
             'legend_properties': graph_widget.legend_properties,
             'legend_bbox': graph_widget.legend_bbox
         })
+        
+        # If Z changed and CustomizeGraphDialog is open, reload legend properties
+        if z_changed and hasattr(graph_widget, '_customize_dialog') and graph_widget._customize_dialog is not None:
+            if graph_widget._customize_dialog.isVisible():
+                graph_widget._customize_dialog._load_legend_properties()
         
         # Update window title
         title = f"{graph_model.graph_id}-{graph_model.plot_style}: [{graph_model.x}] vs [{graph_model.y[0] if graph_model.y else 'None'}]"

@@ -50,7 +50,7 @@ FIT_METHODS = {
 
 PALETTE = [
     'jet', 'viridis', 'plasma', 'magma',
-    'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd'
+    'cividis', 'cool', 'hot', 'YlGnBu', 'YlOrRd', 'seismic', 'bwr', 'Spectral',
 ]
 
 PLOT_STYLES = [

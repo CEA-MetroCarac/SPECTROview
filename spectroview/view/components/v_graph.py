@@ -867,12 +867,12 @@ class VGraph(QWidget):
     
     def _edit_annotation_direct(self, annotation):
         """Open edit dialog for annotation (called from double-click)."""
-        from .customize_graph_dialog import CustomizeAnnLineWidget, CustomizeAnnTextWidget
+        from .customize_graph_dialog import EditLineDialog, EditTextDialog
         from PySide6.QtWidgets import QDialog
         
         # Open appropriate edit dialog based on type
         if annotation['type'] in ['vline', 'hline']:
-            dialog = CustomizeAnnLineWidget(annotation, None)
+            dialog = EditLineDialog(annotation, None)
             if dialog.exec() == QDialog.Accepted:
                 # Update annotation properties
                 props = dialog.get_properties()
@@ -890,7 +890,7 @@ class VGraph(QWidget):
                     self.plot(self.df)
         
         elif annotation['type'] == 'text':
-            dialog = CustomizeAnnTextWidget(annotation, None)
+            dialog = EditTextDialog(annotation, None)
             if dialog.exec() == QDialog.Accepted:
                 # Update annotation properties
                 props = dialog.get_properties()

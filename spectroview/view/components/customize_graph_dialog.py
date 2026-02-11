@@ -14,17 +14,114 @@ from PySide6.QtGui import QIcon, QColor, QPalette
 from spectroview import DEFAULT_COLORS, MARKERS
 from spectroview import ICON_DIR
 
+class CustomizeGraphDialog(QDialog):
+    """Dialog for customizing graph"""
+    
+    # Signal emitted when legend properties are applied (graph_id)
+    legend_applied = Signal(int)
+    
+    def __init__(self, graph_widget, graph_id, parent=None):
+        super().__init__(parent)
+        self.graph_widget = graph_widget
+        self.graph_id = graph_id
+        
+        # Store original legend properties for Cancel functionality
+        self.original_legend_properties = None
+        
+        self.setWindowTitle(f"Customize Graph {graph_id}")
+        self.setModal(False)
+        self.resize(450, 550)
+        
+        self._setup_ui()
+    
+    
+    def _setup_ui(self):
+        """Setup dialog UI with tabs."""
+        layout = QVBoxLayout(self)
+        
+        # Create tab widget
+        self.tabs = QTabWidget()
+        
+        # Create tabs
+        tab_annotations = self._create_annotations_tab()
+        tab_legend = self._create_legend_tab()
+        tab_general = self._create_general_tab()
+        tab_axis = self._create_axis_tab()
+        
+        # Add tabs to widget
+        self.tabs.addTab(tab_legend, "Legend")
+        self.tabs.addTab(tab_annotations, "Annotations")
+        self.tabs.addTab(tab_axis, "Axis")
+        self.tabs.addTab(tab_general, "General")
+        
+        layout.addWidget(self.tabs)
 
-class CustomizeLegendWidget(QWidget):
+    def _create_legend_tab(self):
+        """Create legend customization tab."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        self.legend_widget = CustomizeLegend(self.graph_widget, parent=tab)
+        self.legend_widget.legend_applied.connect(lambda gid: self.legend_applied.emit(gid))
+        layout.addWidget(self.legend_widget)
+        layout.addStretch()
+        return tab
+    
+    def _create_annotations_tab(self):
+        """Create annotations tab."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        self.annotations_widget = CustomizeAnnotations(self.graph_widget, parent=tab)
+        layout.addWidget(self.annotations_widget)
+        return tab
+    
+    def _create_general_tab(self):
+        """Create general settings tab (placeholder for future)."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.addWidget(QLabel("General graph settings will be added here."))
+        layout.addStretch()
+        return tab
+    
+    def _create_axis_tab(self):
+        """Create axis settings tab."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        self.axis_widget = CustomizeAxis(self.graph_widget, parent=tab)
+        layout.addWidget(self.axis_widget)
+        return tab
+
+    def open_legend_tab(self):
+        """Open the dialog and switch to the Legend tab."""
+        # Reload legend properties in case they changed
+        self.legend_widget.load_legend_properties()
+        
+        # Switch to Legend tab (index 0)
+        self.tabs.setCurrentIndex(0)
+        
+        # Show the dialog
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+
+class CustomizeLegend(QWidget):
     """Widget for customizing legend properties (labels, markers, colors)."""
     
     properties_changed = Signal()
+    legend_applied = Signal(int) # emit when legend properties are applied (graph_id)
     
     def __init__(self, graph_widget, parent=None):
         super().__init__(parent)
         self.graph_widget = graph_widget
         self.original_legend_properties = None
         
+        self._setup_ui()
+        
+        # Load initial properties
+        self.load_legend_properties()
+    
+    def _setup_ui(self):
+        """Setup the UI components for the legend customization widget."""
         # Create main layout
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -41,17 +138,29 @@ class CustomizeLegendWidget(QWidget):
         self.main_layout.addWidget(self.legend_container)
         self.main_layout.addStretch()
         
-        # Load initial properties
-        self.load_legend_properties()
+        # Apply / Cancel buttons
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+        
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.setStyleSheet("background-color: red; color: white; font-weight: bold;")
+        btn_cancel.clicked.connect(self.cancel_changes)
+        btn_layout.addWidget(btn_cancel)
+        
+        btn_apply = QPushButton("Apply")
+        btn_apply.setStyleSheet("background-color: green; color: white; font-weight: bold;")
+        btn_apply.clicked.connect(self.apply_changes)
+        btn_layout.addWidget(btn_apply)
+        
+        self.main_layout.addLayout(btn_layout)
     
     def load_legend_properties(self):
         """Load current legend properties from graph widget and populate the GUI."""
         # Get legend properties from the graph widget
         legend_properties = self.graph_widget.get_legend_properties()
         
-        # Store backup for potential Cancel
-        if self.original_legend_properties is None:
-            self.original_legend_properties = copy.deepcopy(legend_properties)
+        # Store backup for potential Cancel - ALWAYS update on load to ensure fresh state
+        self.original_legend_properties = copy.deepcopy(legend_properties)
         
         # Clear existing widgets from legend layout
         while self.legend_layout.count():
@@ -160,69 +269,61 @@ class CustomizeLegendWidget(QWidget):
         combobox.setPalette(palette)
         combobox.update()
     
-    def save_original_properties(self):
-        """Save the current legend properties as the original backup."""
+    def apply_changes(self):
+        """Apply legend changes by doing a full replot."""
+        # Full replot to ensure all changes are committed
+        if self.graph_widget.df is not None:
+            self.graph_widget.plot(self.graph_widget.df)
+        else:
+            self.graph_widget.canvas.draw_idle()
+        
+        # Update the backup so Cancel won't revert applied changes
         self.original_legend_properties = copy.deepcopy(self.graph_widget.get_legend_properties())
-    
-    def restore_original_properties(self):
-        """Restore legend properties to the original backup."""
+        
+        # Notify whoever is listening (dialop -> workspace)
+        # Note: self.graph_widget.graph_id might be needed by the listener
+        self.legend_applied.emit(self.graph_widget.graph_id)
+        
+    def cancel_changes(self):
+        """Cancel legend changes and restore original properties."""
         if self.original_legend_properties is not None:
             self.graph_widget.legend_properties = copy.deepcopy(self.original_legend_properties)
             self.graph_widget._set_legend()
             self.graph_widget.canvas.draw()
+            
+            # Reload widgets to show restored properties
+            # We don't want to reset backup here, just reload UI
+            # But load_legend_properties resets backup. 
+            # Let's call internal build instead? 
+            # OR just call load_legend_properties, it will take a NEW backup of the RESTORED state, which is fine.
+            self.load_legend_properties()
 
 
-
-class CustomizeGraphDialog(QDialog):
-    """Dialog for customizing graph"""
+class CustomizeAnnotations(QWidget):
+    """Widget for customizing graph annotations (vline, hline, text)."""
     
-    # Signal emitted when legend properties are applied (graph_id)
-    legend_applied = Signal(int)
-    
-    def __init__(self, graph_widget, graph_id, parent=None):
+    def __init__(self, graph_widget, parent=None):
         super().__init__(parent)
         self.graph_widget = graph_widget
-        self.graph_id = graph_id
-        
-        # Store original legend properties for Cancel functionality
-        self.original_legend_properties = None
-        
-        self.setWindowTitle(f"Customize Graph {graph_id}")
-        self.setModal(False)
-        self.resize(450, 550)
         
         self._setup_ui()
-        self._load_annotations() # Load annotations from graph to listwidget
         
         # Connect to annotation position changed signal to update list when dragging
         self.graph_widget.annotation_position_changed.connect(self._on_annotation_dragged)
+        
+        # Load initial annotations
+        self.load_annotations()
     
+    def _on_annotation_dragged(self, graph_id, ann_id, new_x, new_y):
+        """Handle annotation position change from dragging - refresh the list widget."""
+        # Only update if this is our graph
+        if graph_id == self.graph_widget.graph_id:
+            self.load_annotations()
     
     def _setup_ui(self):
-        """Setup dialog UI with tabs."""
+        """Setup the UI components for the annotations widget."""
         layout = QVBoxLayout(self)
-        
-        # Create tab widget
-        self.tabs = QTabWidget()
-        
-        # Create tabs
-        tab_annotations = self._create_annotations_tab()
-        tab_legend = self._create_legend_tab()
-        tab_general = self._create_general_tab()
-        tab_axis = self._create_axis_tab()
-        
-        # Add tabs to widget
-        self.tabs.addTab(tab_legend, "Legend")
-        self.tabs.addTab(tab_annotations, "Annotations")
-        self.tabs.addTab(tab_axis, "Axis")
-        self.tabs.addTab(tab_general, "General")
-        
-        layout.addWidget(self.tabs)
-    
-    def _create_annotations_tab(self):
-        """Create annotations tab."""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(0, 0, 0, 0)
         
         # Add buttons
         btn_layout = QHBoxLayout()
@@ -270,50 +371,247 @@ class CustomizeGraphDialog(QDialog):
         self.btn_add_text.clicked.connect(self._add_text)
         self.btn_edit.clicked.connect(self._edit_annotation)
         self.btn_delete.clicked.connect(self._delete_annotation)
-        
-        return tab
     
-    def _create_legend_tab(self):
-        """Create legend customization tab."""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        
-        # Create legend customization widget
-        self.legend_widget = CustomizeLegendWidget(self.graph_widget, parent=tab)
-        layout.addWidget(self.legend_widget)
-        
-        layout.addStretch()
-        
-        # Apply / Cancel buttons
-        btn_layout = QHBoxLayout()
-        btn_layout.addStretch()
-        
-        btn_cancel = QPushButton("Cancel")
-        btn_cancel.setStyleSheet("background-color: red; color: white; font-weight: bold;")
-        btn_cancel.clicked.connect(self._cancel_legend)
-        btn_layout.addWidget(btn_cancel)
-        
-        btn_apply = QPushButton("Apply")
-        btn_apply.setStyleSheet("background-color: green; color: white; font-weight: bold;")
-        btn_apply.clicked.connect(self._apply_legend)
-        btn_layout.addWidget(btn_apply)
-        
-        layout.addLayout(btn_layout)
-        
-        return tab
+    def _get_plot_center(self):
+        """Get center coordinates of the plot."""
+        ax = self.graph_widget.ax
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+        center_x = (xlim[0] + xlim[1]) / 2
+        center_y = (ylim[0] + ylim[1]) / 2
+        return center_x, center_y
     
-    def _create_general_tab(self):
-        """Create general settings tab (placeholder for future)."""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        layout.addWidget(QLabel("General graph settings will be added here."))
-        layout.addStretch()
-        return tab
+    def _add_vline(self):
+        """Add vertical line at plot center."""
+        center_x, _ = self._get_plot_center()
+        
+        ann_id = f"vline_{int(time.time() * 1000000)}"
+        annotation = {
+            'id': ann_id,
+            'type': 'vline',
+            'x': center_x,
+            'color': 'red',
+            'linestyle': '--',
+            'linewidth': 1.5,
+            'label': f'V-Line at x={center_x:.2f}'
+        }
+        
+        self.graph_widget.annotations.append(annotation)
+        self._refresh_plot()
+        self.load_annotations()
     
-    def _create_axis_tab(self):
-        """Create axis settings tab with break controls."""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
+    def _add_hline(self):
+        """Add horizontal line at plot center."""
+        _, center_y = self._get_plot_center()
+        
+        ann_id = f"hline_{int(time.time() * 1000000)}"
+        annotation = {
+            'id': ann_id,
+            'type': 'hline',
+            'y': center_y,
+            'color': 'blue',
+            'linestyle': '--',
+            'linewidth': 1.5,
+            'label': f'H-Line at y={center_y:.2f}'
+        }
+        
+        self.graph_widget.annotations.append(annotation)
+        self._refresh_plot()
+        self.load_annotations()
+    
+    def _add_text(self):
+        """Add text annotation at plot center."""
+        center_x, center_y = self._get_plot_center()
+        
+        ann_id = f"text_{int(time.time() * 1000000)}"
+        annotation = {
+            'id': ann_id,
+            'type': 'text',
+            'x': center_x,
+            'y': center_y,
+            'text': 'Text',
+            'fontsize': 11,
+            'color': 'black',
+            'ha': 'center',
+            'va': 'center',
+            'bbox': {
+                'facecolor': 'yellow',
+                'edgecolor': 'black',
+                'boxstyle': 'round,pad=0.3',
+                'alpha': 0.7
+            }
+        }
+        
+        self.graph_widget.annotations.append(annotation)
+        self._refresh_plot()
+        self.load_annotations()
+    
+    def _edit_annotation(self):
+        """Edit selected annotation."""
+        selected = self.annotation_list.currentItem()
+        if not selected:
+            QMessageBox.warning(self, "No Selection", "Please select an annotation to edit.")
+            return
+        
+        ann_id = selected.data(Qt.UserRole)
+        
+        # Find the annotation
+        annotation = None
+        for ann in self.graph_widget.annotations:
+            if ann.get('id') == ann_id:
+                annotation = ann
+                break
+        
+        if not annotation:
+            return
+        
+        # Open appropriate edit dialog based on type
+        if annotation['type'] in ['vline', 'hline']:
+            dialog = EditLineDialog(annotation, self)
+            if dialog.exec() == QDialog.Accepted:
+                # Update annotation properties
+                props = dialog.get_properties()
+                annotation.update(props)
+                
+                # Update label
+                if annotation['type'] == 'vline':
+                    annotation['label'] = f"V-Line at x={annotation['x']:.2f}"
+                else:
+                    annotation['label'] = f"H-Line at y={annotation['y']:.2f}"
+                
+                self._refresh_plot()
+                self.load_annotations()
+        
+        elif annotation['type'] == 'text':
+            dialog = EditTextDialog(annotation, self)
+            if dialog.exec() == QDialog.Accepted:
+                # Update annotation properties
+                props = dialog.get_properties()
+                annotation.update(props)
+                
+                self._refresh_plot()
+                self.load_annotations()
+    
+    def _delete_annotation(self):
+        """Delete selected annotation."""
+        selected = self.annotation_list.currentItem()
+        if not selected:
+            QMessageBox.warning(self, "No Selection", "Please select an annotation to delete.")
+            return
+        
+        ann_id = selected.data(Qt.UserRole)
+        self.graph_widget.annotations = [
+            ann for ann in self.graph_widget.annotations
+            if ann.get('id') != ann_id
+        ]
+        
+        self._refresh_plot()
+        self.load_annotations()
+    
+    def _refresh_plot(self):
+        """Refresh the plot with updated annotations."""
+        self.graph_widget.ax.clear()
+        if self.graph_widget.df is not None:
+            self.graph_widget.plot(self.graph_widget.df)
+    
+    def load_annotations(self):
+        """Load annotations into the list widget."""
+        self.annotation_list.clear()
+        
+        for ann in self.graph_widget.annotations:
+            if ann['type'] == 'vline':
+                text = f"├ VLine @ x={ann['x']:.2f} ({ann.get('color', 'red')})"
+            elif ann['type'] == 'hline':
+                text = f"├ HLine @ y={ann['y']:.2f} ({ann.get('color', 'blue')})"
+            elif ann['type'] == 'text':
+                text = f"└ Text \"{ann['text'][:20]}...\" @ ({ann['x']:.1f},{ann['y']:.1f})"
+            else:
+                text = f"Unknown type: {ann['type']}"
+            
+            item = QListWidgetItem(text)
+            item.setData(Qt.UserRole, ann['id'])
+            self.annotation_list.addItem(item)
+
+
+class EditLineDialog(QDialog):
+    """Dialog for editing line annotations (vline/hline)."""
+    
+    def __init__(self, annotation, parent=None):
+        super().__init__(parent)
+        self.annotation = annotation
+        self.setWindowTitle("Edit Line Annotation")
+        self.resize(350, 200)
+        
+        layout = QFormLayout(self)
+        
+        # Color picker
+        self.color_button = QPushButton()
+        current_color = QColor(annotation.get('color', 'red'))
+        self.color_button.setStyleSheet(f"background-color: {current_color.name()};")
+        self.color_button.setText(current_color.name())
+        self.color_button.clicked.connect(self._pick_color)
+        
+        # Line style
+        self.linestyle_combo = QComboBox()
+        self.linestyle_combo.addItem("Solid", "-")
+        self.linestyle_combo.addItem("Dashed", "--")
+        self.linestyle_combo.addItem("Dotted", ":")
+        self.linestyle_combo.addItem("Dash-Dot", "-.")
+        
+        current_style = annotation.get('linestyle', '--')
+        index = self.linestyle_combo.findData(current_style)
+        if index >= 0:
+            self.linestyle_combo.setCurrentIndex(index)
+        
+        # Line width
+        self.linewidth_spin = QDoubleSpinBox()
+        self.linewidth_spin.setRange(0.5, 5.0)
+        self.linewidth_spin.setSingleStep(0.5)
+        self.linewidth_spin.setValue(annotation.get('linewidth', 1.5))
+        
+        layout.addRow("Color:", self.color_button)
+        layout.addRow("Line Style:", self.linestyle_combo)
+        layout.addRow("Line Width:", self.linewidth_spin)
+        
+        # Buttons
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addRow(button_box)
+    
+    def _pick_color(self):
+        """Open color picker dialog."""
+        current_color = QColor(self.color_button.text())
+        color = QColorDialog.getColor(current_color, self, "Select Line Color")
+        if color.isValid():
+            self.color_button.setStyleSheet(f"background-color: {color.name()};")
+            self.color_button.setText(color.name())
+    
+    def get_properties(self):
+        """Return updated properties."""
+        return {
+            'color': self.color_button.text(),
+            'linestyle': self.linestyle_combo.currentData(),
+            'linewidth': self.linewidth_spin.value()
+        }
+
+
+class CustomizeAxis(QWidget):
+    """Widget for customizing axis settings (breaks)."""
+    
+    def __init__(self, graph_widget, parent=None):
+        super().__init__(parent)
+        self.graph_widget = graph_widget
+        
+        self._setup_ui()
+        
+        # Load current breaks
+        self.load_axis_breaks()
+    
+    def _setup_ui(self):
+        """Setup the UI components for the axis customization widget."""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
         
         # ===== X-Axis Break Section =====
         x_break_group = QGroupBox("X-Axis Break")
@@ -374,173 +672,8 @@ class CustomizeGraphDialog(QDialog):
         layout.addWidget(y_break_group)
         layout.addWidget(self.btn_apply_breaks)
         layout.addStretch()
-        
-        # Load current breaks from graph
-        self._load_axis_breaks()
-        
-        return tab
     
-    def _get_plot_center(self):
-        """Get center coordinates of the plot."""
-        ax = self.graph_widget.ax
-        xlim = ax.get_xlim()
-        ylim = ax.get_ylim()
-        center_x = (xlim[0] + xlim[1]) / 2
-        center_y = (ylim[0] + ylim[1]) / 2
-        return center_x, center_y
-    
-    def _add_vline(self):
-        """Add vertical line at plot center."""
-        center_x, _ = self._get_plot_center()
-        
-        ann_id = f"vline_{int(time.time() * 1000000)}"
-        annotation = {
-            'id': ann_id,
-            'type': 'vline',
-            'x': center_x,
-            'color': 'red',
-            'linestyle': '--',
-            'linewidth': 1.5,
-            'label': f'V-Line at x={center_x:.2f}'
-        }
-        
-        self.graph_widget.annotations.append(annotation)
-        self._refresh_plot()
-        self._load_annotations()
-    
-    def _add_hline(self):
-        """Add horizontal line at plot center."""
-        _, center_y = self._get_plot_center()
-        
-        ann_id = f"hline_{int(time.time() * 1000000)}"
-        annotation = {
-            'id': ann_id,
-            'type': 'hline',
-            'y': center_y,
-            'color': 'blue',
-            'linestyle': '--',
-            'linewidth': 1.5,
-            'label': f'H-Line at y={center_y:.2f}'
-        }
-        
-        self.graph_widget.annotations.append(annotation)
-        self._refresh_plot()
-        self._load_annotations()
-    
-    def _add_text(self):
-        """Add text annotation at plot center."""
-        center_x, center_y = self._get_plot_center()
-        
-        ann_id = f"text_{int(time.time() * 1000000)}"
-        annotation = {
-            'id': ann_id,
-            'type': 'text',
-            'x': center_x,
-            'y': center_y,
-            'text': 'Text',
-            'fontsize': 11,
-            'color': 'black',
-            'ha': 'center',
-            'va': 'center',
-            'bbox': {
-                'facecolor': 'yellow',
-                'edgecolor': 'black',
-                'boxstyle': 'round,pad=0.3',
-                'alpha': 0.7
-            }
-        }
-        
-        self.graph_widget.annotations.append(annotation)
-        self._refresh_plot()
-        self._load_annotations()
-    
-    def _edit_annotation(self):
-        """Edit selected annotation."""
-        selected = self.annotation_list.currentItem()
-        if not selected:
-            QMessageBox.warning(self, "No Selection", "Please select an annotation to edit.")
-            return
-        
-        ann_id = selected.data(Qt.UserRole)
-        
-        # Find the annotation
-        annotation = None
-        for ann in self.graph_widget.annotations:
-            if ann.get('id') == ann_id:
-                annotation = ann
-                break
-        
-        if not annotation:
-            return
-        
-        # Open appropriate edit dialog based on type
-        if annotation['type'] in ['vline', 'hline']:
-            dialog = CustomizeAnnLineWidget(annotation, self)
-            if dialog.exec() == QDialog.Accepted:
-                # Update annotation properties
-                props = dialog.get_properties()
-                annotation.update(props)
-                
-                # Update label
-                if annotation['type'] == 'vline':
-                    annotation['label'] = f"V-Line at x={annotation['x']:.2f}"
-                else:
-                    annotation['label'] = f"H-Line at y={annotation['y']:.2f}"
-                
-                self._refresh_plot()
-                self._load_annotations()
-        
-        elif annotation['type'] == 'text':
-            dialog = CustomizeAnnTextWidget(annotation, self)
-            if dialog.exec() == QDialog.Accepted:
-                # Update annotation properties
-                props = dialog.get_properties()
-                annotation.update(props)
-                
-                self._refresh_plot()
-                self._load_annotations()
-    
-    def _delete_annotation(self):
-        """Delete selected annotation."""
-        selected = self.annotation_list.currentItem()
-        if not selected:
-            QMessageBox.warning(self, "No Selection", "Please select an annotation to delete.")
-            return
-        
-        ann_id = selected.data(Qt.UserRole)
-        self.graph_widget.annotations = [
-            ann for ann in self.graph_widget.annotations
-            if ann.get('id') != ann_id
-        ]
-        
-        self._refresh_plot()
-        self._load_annotations()
-    
-    def _refresh_plot(self):
-        """Refresh the plot with updated annotations."""
-        self.graph_widget.ax.clear()
-        if self.graph_widget.df is not None:
-            self.graph_widget.plot(self.graph_widget.df)
-    
-    def _load_annotations(self):
-        """Load annotations into the list widget."""
-        self.annotation_list.clear()
-        
-        for ann in self.graph_widget.annotations:
-            if ann['type'] == 'vline':
-                text = f"├ VLine @ x={ann['x']:.2f} ({ann.get('color', 'red')})"
-            elif ann['type'] == 'hline':
-                text = f"├ HLine @ y={ann['y']:.2f} ({ann.get('color', 'blue')})"
-            elif ann['type'] == 'text':
-                text = f"└ Text \"{ann['text'][:20]}...\" @ ({ann['x']:.1f},{ann['y']:.1f})"
-            else:
-                text = f"Unknown type: {ann['type']}"
-            
-            item = QListWidgetItem(text)
-            item.setData(Qt.UserRole, ann['id'])
-            self.annotation_list.addItem(item)
-    
-    def _load_axis_breaks(self):
+    def load_axis_breaks(self):
         """Load current axis breaks from graph widget."""
         if not hasattr(self.graph_widget, 'axis_breaks'):
             self.graph_widget.axis_breaks = {'x': None, 'y': None}
@@ -625,114 +758,14 @@ class CustomizeGraphDialog(QDialog):
         
         QMessageBox.information(self, "Success", "Axis breaks applied successfully!")
     
-    def _on_annotation_dragged(self, graph_id, ann_id, new_x, new_y):
-        """Handle annotation position change from dragging - refresh the list widget."""
-        # Only update if this is our graph
-        if graph_id == self.graph_id:
-            self._load_annotations()
-
-    def open_legend_tab(self):
-        """Open the dialog and switch to the Legend tab."""
-        # Reload legend properties in case they changed
-        self.legend_widget.load_legend_properties()
-        
-        # Store current legend properties as backup
-        self.legend_widget.save_original_properties()
-        
-        # Switch to Legend tab (index 0)
-        self.tabs.setCurrentIndex(0)
-        
-        # Show the dialog
-        self.show()
-        self.raise_()
-        self.activateWindow()
-    
-    def _apply_legend(self):
-        """Apply legend changes by doing a full replot."""
-        # Full replot to ensure all changes are committed
+    def _refresh_plot(self):
+        """Refresh the plot with updated axis breaks."""
+        self.graph_widget.ax.clear()
         if self.graph_widget.df is not None:
             self.graph_widget.plot(self.graph_widget.df)
-        else:
-            self.graph_widget.canvas.draw_idle()
-        
-        # Update the backup so Cancel won't revert applied changes
-        self.legend_widget.save_original_properties()
-        
-        # Notify workspace to sync legend properties back to model
-        self.legend_applied.emit(self.graph_id)
-    
-    def _cancel_legend(self):
-        """Cancel legend changes and restore original properties."""
-        self.legend_widget.restore_original_properties()
-        
-        # Reload widgets to show restored properties
-        self.legend_widget.load_legend_properties()
 
 
-class CustomizeAnnLineWidget(QDialog):
-    """Dialog for editing line annotations (vline/hline)."""
-    
-    def __init__(self, annotation, parent=None):
-        super().__init__(parent)
-        self.annotation = annotation
-        self.setWindowTitle("Edit Line Annotation")
-        self.resize(350, 200)
-        
-        layout = QFormLayout(self)
-        
-        # Color picker
-        self.color_button = QPushButton()
-        current_color = QColor(annotation.get('color', 'red'))
-        self.color_button.setStyleSheet(f"background-color: {current_color.name()};")
-        self.color_button.setText(current_color.name())
-        self.color_button.clicked.connect(self._pick_color)
-        
-        # Line style
-        self.linestyle_combo = QComboBox()
-        self.linestyle_combo.addItem("Solid", "-")
-        self.linestyle_combo.addItem("Dashed", "--")
-        self.linestyle_combo.addItem("Dotted", ":")
-        self.linestyle_combo.addItem("Dash-Dot", "-.")
-        
-        current_style = annotation.get('linestyle', '--')
-        index = self.linestyle_combo.findData(current_style)
-        if index >= 0:
-            self.linestyle_combo.setCurrentIndex(index)
-        
-        # Line width
-        self.linewidth_spin = QDoubleSpinBox()
-        self.linewidth_spin.setRange(0.5, 5.0)
-        self.linewidth_spin.setSingleStep(0.5)
-        self.linewidth_spin.setValue(annotation.get('linewidth', 1.5))
-        
-        layout.addRow("Color:", self.color_button)
-        layout.addRow("Line Style:", self.linestyle_combo)
-        layout.addRow("Line Width:", self.linewidth_spin)
-        
-        # Buttons
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        button_box.accepted.connect(self.accept)
-        button_box.rejected.connect(self.reject)
-        layout.addRow(button_box)
-    
-    def _pick_color(self):
-        """Open color picker dialog."""
-        current_color = QColor(self.color_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Line Color")
-        if color.isValid():
-            self.color_button.setStyleSheet(f"background-color: {color.name()};")
-            self.color_button.setText(color.name())
-    
-    def get_properties(self):
-        """Return updated properties."""
-        return {
-            'color': self.color_button.text(),
-            'linestyle': self.linestyle_combo.currentData(),
-            'linewidth': self.linewidth_spin.value()
-        }
-
-
-class CustomizeAnnTextWidget(QDialog):
+class EditTextDialog(QDialog):
     """Dialog for editing text annotations."""
     
     def __init__(self, annotation, parent=None):

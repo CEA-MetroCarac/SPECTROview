@@ -1,4 +1,3 @@
-# view/v_graph.py
 """Matplotlib graph visualization widget for MVVM pattern."""
 
 import numpy as np
@@ -111,6 +110,7 @@ class VGraph(QWidget):
         self.setLayout(self.graph_layout)
         self.graph_layout.setContentsMargins(0, 0, 0, 0)
         self.graph_layout.setSpacing(0)
+
     def clear_layout(self, layout):
         """Clears all widgets and layouts from the specified layout."""
         if layout is not None:
@@ -147,7 +147,7 @@ class VGraph(QWidget):
         self.btn_customize.setIcon(QIcon(f"{ICON_DIR}/customize.png"))
         self.btn_customize.setIconSize(QSize(26, 26))
         self.btn_customize.setFixedSize(30, 30)
-        self.btn_customize.setToolTip("Customize graph and annotations")
+        self.btn_customize.setToolTip("Customize graph")
         self.btn_customize.clicked.connect(self._show_customize_dialog)
         
         # Create Copy button
@@ -192,12 +192,7 @@ class VGraph(QWidget):
     
     def copy_to_clipboard(self):
         """Copy the current figure to clipboard."""
-        try:
-            
-            copy_fig_to_clb(self.canvas)
-        except Exception as e:
-            from PySide6.QtWidgets import QMessageBox
-            QMessageBox.critical(self, "Copy Error", f"Error copying figure: {str(e)}")
+        copy_fig_to_clb(self.canvas)
     
     def plot(self, df):
         """Renders plot based on DataFrame and current properties."""
@@ -269,7 +264,6 @@ class VGraph(QWidget):
         
         return self.legend_properties
     
-
     
     def _on_legend_pick(self, event):
         """Handle pick event — record annotation candidate for drag, or legend double-click."""
@@ -1006,9 +1000,6 @@ class VGraph(QWidget):
                 return
             
             # Adjust x-axis to skip the break range
-            # Map data points: values before break stay same, values after break shift left
-            # BUT leave a small visual gap for the break markers
-            # Use fixed pixel gap for consistent appearance
             gap_pixels = 3  # 5 pixels
             # Convert pixels to data coordinates
             bbox = self.ax.get_window_extent().transformed(self.figure.dpi_scale_trans.inverted())

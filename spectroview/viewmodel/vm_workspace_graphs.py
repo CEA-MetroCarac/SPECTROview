@@ -1,14 +1,11 @@
-# viewmodel/vm_workspace_graphs.py
 """ViewModel for Graphs Workspace - handles business logic and data management."""
-
 import json
 import pandas as pd
 import gzip
-from io import StringIO
 
+from io import StringIO
 from pathlib import Path
 from typing import Dict, List, Optional
-
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
@@ -41,11 +38,10 @@ class VMWorkspaceGraphs(QObject):
         
         # Graph ID counter
         self._next_graph_id = 1
-    
-    # ═════════════════════════════════════════════════════════════════════
-    # DataFrame Management
-    # ═════════════════════════════════════════════════════════════════════
-    
+
+    # ------------------------------------------------------------------------
+    # Dataframe management
+    # ------------------------------------------------------------------------
     def load_dataframes(self, file_paths: List[str] = None):
         """Load DataFrames from files."""
         if not file_paths:
@@ -65,9 +61,6 @@ class VMWorkspaceGraphs(QObject):
         for file_path in file_paths:
             try:
                 path = Path(file_path)
-                
-                # Load DataFrame(s) using helper function
-                # Returns dict: {name: DataFrame}
                 dfs_dict = load_dataframe_file(path)
                 
                 # Add each DataFrame to workspace
@@ -135,11 +128,7 @@ class VMWorkspaceGraphs(QObject):
         return self.dataframes.get(df_name)
     
     def refresh_dataframe(self, df_name: str) -> bool:
-        """Refresh DataFrame from source file.
-        
-        Returns:
-            bool: True if refresh succeeded, False otherwise
-        """
+        """Refresh DataFrame from source file"""
         # Check if DataFrame exists and has source file
         if df_name not in self.dataframes:
             return False

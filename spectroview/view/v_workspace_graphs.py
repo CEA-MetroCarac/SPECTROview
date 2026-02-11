@@ -1,4 +1,3 @@
-# view/v_workspace_graphs.py
 """View for Graphs Workspace - main UI coordinator for graph plotting and visualization."""
 import time
 import os
@@ -548,7 +547,7 @@ class VWorkspaceGraphs(QWidget):
             # Set larger font size
             from PySide6.QtGui import QFont
             font = QFont()
-            font.setPointSize(11)  # Increase font size
+            font.setPointSize(11)
             placeholder.setFont(font)
             
             self.df_listbox.addItem(placeholder)
@@ -569,7 +568,6 @@ class VWorkspaceGraphs(QWidget):
     def _on_df_drag_enter(self, event):
         """Accept external file drops on dataframe list."""
         if event.mimeData().hasUrls():
-            # Accept all file types - universal opener will handle routing
             event.acceptProposedAction()
         else:
             event.ignore()
@@ -1308,7 +1306,7 @@ class VWorkspaceGraphs(QWidget):
             self.cb_trendline_eq.blockSignals(False)
     
     # ═════════════════════════════════════════════════════════════════════
-    # Phase 2: Plotting Helper Methods
+    # Plotting Helper Methods
     # ═════════════════════════════════════════════════════════════════════
     
     def _collect_plot_config(self) -> dict:

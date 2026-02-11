@@ -523,10 +523,6 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_graph_list.currentIndexChanged.connect(self._on_graph_selected_toolbar)
         self.btn_minimize_all.clicked.connect(self._on_minimize_all)
         self.btn_delete_all.clicked.connect(self._on_delete_all)
-        self.spin_dpi_toolbar.valueChanged.connect(self._on_dpi_changed_toolbar)
-        self.spin_xlabel_rotation.valueChanged.connect(self._on_xlabel_rotation_changed)
-        self.cb_legend_outside_toolbar.stateChanged.connect(self._on_legend_outside_changed_toolbar)
-        self.cb_grid_toolbar.stateChanged.connect(self._on_grid_changed_toolbar)
         
         # MDI area connections
         self.mdi_area.subWindowActivated.connect(self._on_subwindow_activated)
@@ -1166,26 +1162,6 @@ class VWorkspaceGraphs(QWidget):
         self.spin_ymax.setValue(-999999)
         self.spin_zmin.setValue(-999999)
         self.spin_zmax.setValue(-999999)
-    
-    def _on_dpi_changed_toolbar(self, value: int):
-        """Handle DPI change from toolbar (will apply on Update plot)."""
-        # Don't update immediately - wait for user to click "Update plot"
-        pass
-    
-    def _on_xlabel_rotation_changed(self, value: int):
-        """Handle X label rotation change (will apply on Update plot)."""
-        # Don't update immediately - wait for user to click "Update plot"
-        pass
-    
-    def _on_legend_outside_changed_toolbar(self, state: int):
-        """Handle legend outside toggle from toolbar (will apply on Update plot)."""
-        # Don't update immediately - wait for user to click "Update plot"
-        pass
-    
-    def _on_grid_changed_toolbar(self, state: int):
-        """Handle grid toggle from toolbar (will apply on Update plot)."""
-        # Don't update immediately - wait for user to click "Update plot"
-        pass
     
     def _on_subwindow_activated(self, sub_window):
         """Handle subwindow activation."""

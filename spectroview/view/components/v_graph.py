@@ -98,6 +98,7 @@ class VGraph(QWidget):
         
         # Axis breaks storage
         self.axis_breaks = {'x': None, 'y': None}
+        self._break_markers = []  # Store artist references for cleanup
         
         # Matplotlib objects
         self.figure = None
@@ -1055,6 +1056,17 @@ class VGraph(QWidget):
         """Apply axis breaks by adjusting limits and hiding ticks in break range."""
         if not hasattr(self, 'axis_breaks') or not self.axis_breaks:
             return
+        
+        # Clear old break markers to prevent accumulation
+        if hasattr(self, '_break_markers'):
+            for artist in self._break_markers:
+                try:
+                    artist.remove()
+                except:
+                    pass  # Artist may already be removed
+            self._break_markers = []
+        else:
+            self._break_markers = []
         
         # Apply X-axis break  
         if self.axis_breaks.get('x'):

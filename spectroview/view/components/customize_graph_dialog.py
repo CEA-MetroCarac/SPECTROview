@@ -11,236 +11,8 @@ from PySide6.QtGui import QIcon, QColor
 from spectroview import ICON_DIR
 
 
-class AnnotationLineEditDialog(QDialog):
-    """Dialog for editing line annotations (vline/hline)."""
-    
-    def __init__(self, annotation, parent=None):
-        super().__init__(parent)
-        self.annotation = annotation
-        self.setWindowTitle("Edit Line Annotation")
-        self.resize(350, 200)
-        
-        layout = QFormLayout(self)
-        
-        # Color picker
-        self.color_button = QPushButton()
-        current_color = QColor(annotation.get('color', 'red'))
-        self.color_button.setStyleSheet(f"background-color: {current_color.name()};")
-        self.color_button.setText(current_color.name())
-        self.color_button.clicked.connect(self._pick_color)
-        
-        # Line style
-        self.linestyle_combo = QComboBox()
-        self.linestyle_combo.addItem("Solid", "-")
-        self.linestyle_combo.addItem("Dashed", "--")
-        self.linestyle_combo.addItem("Dotted", ":")
-        self.linestyle_combo.addItem("Dash-Dot", "-.")
-        
-        current_style = annotation.get('linestyle', '--')
-        index = self.linestyle_combo.findData(current_style)
-        if index >= 0:
-            self.linestyle_combo.setCurrentIndex(index)
-        
-        # Line width
-        self.linewidth_spin = QDoubleSpinBox()
-        self.linewidth_spin.setRange(0.5, 5.0)
-        self.linewidth_spin.setSingleStep(0.5)
-        self.linewidth_spin.setValue(annotation.get('linewidth', 1.5))
-        
-        layout.addRow("Color:", self.color_button)
-        layout.addRow("Line Style:", self.linestyle_combo)
-        layout.addRow("Line Width:", self.linewidth_spin)
-        
-        # Buttons
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        button_box.accepted.connect(self.accept)
-        button_box.rejected.connect(self.reject)
-        layout.addRow(button_box)
-    
-    def _pick_color(self):
-        """Open color picker dialog."""
-        current_color = QColor(self.color_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Line Color")
-        if color.isValid():
-            self.color_button.setStyleSheet(f"background-color: {color.name()};")
-            self.color_button.setText(color.name())
-    
-    def get_properties(self):
-        """Return updated properties."""
-        return {
-            'color': self.color_button.text(),
-            'linestyle': self.linestyle_combo.currentData(),
-            'linewidth': self.linewidth_spin.value()
-        }
-
-
-class AnnotationTextEditDialog(QDialog):
-    """Dialog for editing text annotations."""
-    
-    def __init__(self, annotation, parent=None):
-        super().__init__(parent)
-        self.annotation = annotation
-        self.setWindowTitle("Edit Text Annotation")
-        self.resize(400, 350)
-        
-        layout = QFormLayout(self)
-        
-        # Text content
-        self.text_edit = QLineEdit()
-        self.text_edit.setText(annotation.get('text', 'Text'))
-        
-        # Font size
-        self.fontsize_spin = QSpinBox()
-        self.fontsize_spin.setRange(6, 72)
-        self.fontsize_spin.setValue(annotation.get('fontsize', 12))
-        
-        # Text color
-        self.text_color_button = QPushButton()
-        current_color = QColor(annotation.get('color', 'black'))
-        self.text_color_button.setStyleSheet(f"background-color: {current_color.name()};")
-        self.text_color_button.setText(current_color.name())
-        self.text_color_button.clicked.connect(self._pick_text_color)
-        
-        # Background/frame options
-        self.frame_checkbox = QCheckBox("Show frame/box")
-        bbox = annotation.get('bbox')
-        self.frame_checkbox.setChecked(bbox is not None)
-        
-        # Background color
-        self.bg_color_combo = QComboBox()
-        self.bg_color_combo.addItem("Transparent", None)
-        self.bg_color_combo.addItem("Yellow", 'yellow')
-        self.bg_color_combo.addItem("White", 'white')
-        self.bg_color_combo.addItem("Red", 'red')
-        self.bg_color_combo.addItem("Green", 'green')
-        self.bg_color_combo.addItem("Blue", 'blue')
-        
-        # Set current background
-        if bbox is None:
-            self.bg_color_combo.setCurrentIndex(0)
-        elif isinstance(bbox, dict) and bbox.get('facecolor') == 'yellow':
-            self.bg_color_combo.setCurrentIndex(1)
-        elif isinstance(bbox, dict) and bbox.get('facecolor') == 'white':
-            self.bg_color_combo.setCurrentIndex(2)
-        else:
-            self.bg_color_combo.setCurrentIndex(3)
-        
-        self.bg_color_combo.currentIndexChanged.connect(self._on_bg_color_changed)
-        
-        # Custom background color button
-        self.custom_bg_button = QPushButton()
-        if isinstance(bbox, dict) and bbox.get('facecolor'):
-            self.custom_bg_button.setStyleSheet(f"background-color: {bbox.get('facecolor')};")
-            self.custom_bg_button.setText(bbox.get('facecolor'))
-        else:
-            self.custom_bg_button.setStyleSheet("background-color: lightgray;")
-            self.custom_bg_button.setText("lightgray")
-        self.custom_bg_button.clicked.connect(self._pick_bg_color)
-        self.custom_bg_button.setEnabled(self.bg_color_combo.currentData() == 'custom')
-        
-        # Transparency slider (0-100%)
-        self.transparency_slider = QSpinBox()
-        self.transparency_slider.setRange(0, 100)
-        self.transparency_slider.setSingleStep(10)
-        self.transparency_slider.setSuffix("%")
-
-        # Get current alpha from bbox, default to 70%
-        current_alpha = 0.7
-        if isinstance(bbox, dict) and 'alpha' in bbox:
-            current_alpha = bbox['alpha']
-        self.transparency_slider.setValue(int(current_alpha * 100))
-        
-        # Horizontal alignment
-        self.ha_combo = QComboBox()
-        self.ha_combo.addItems(['left', 'center', 'right'])
-        ha = annotation.get('ha', 'center')
-        index = self.ha_combo.findText(ha)
-        if index >= 0:
-            self.ha_combo.setCurrentIndex(index)
-        
-        # Vertical alignment
-        self.va_combo = QComboBox()
-        self.va_combo.addItems(['top', 'center', 'bottom', 'baseline'])
-        va = annotation.get('va', 'center')
-        index = self.va_combo.findText(va)
-        if index >= 0:
-            self.va_combo.setCurrentIndex(index)
-        
-        layout.addRow("Text:", self.text_edit)
-        layout.addRow("Font Size:", self.fontsize_spin)
-        layout.addRow("Text Color:", self.text_color_button)
-        layout.addRow("", self.frame_checkbox)
-        layout.addRow("Background:", self.bg_color_combo)
-        layout.addRow("Custom Color:", self.custom_bg_button)
-        layout.addRow("Transparency:", self.transparency_slider)
-        layout.addRow("H-Align:", self.ha_combo)
-        layout.addRow("V-Align:", self.va_combo)
-        
-        # Buttons
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        button_box.accepted.connect(self.accept)
-        button_box.rejected.connect(self.reject)
-        layout.addRow(button_box)
-    
-    def _pick_text_color(self):
-        """Open color picker for text color."""
-        current_color = QColor(self.text_color_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Text Color")
-        if color.isValid():
-            self.text_color_button.setStyleSheet(f"background-color: {color.name()};")
-            self.text_color_button.setText(color.name())
-    
-    def _pick_bg_color(self):
-        """Open color picker for background color."""
-        current_color = QColor(self.custom_bg_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Background Color")
-        if color.isValid():
-            self.custom_bg_button.setStyleSheet(f"background-color: {color.name()};")
-            self.custom_bg_button.setText(color.name())
-    
-    def _on_bg_color_changed(self, index):
-        """Enable/disable custom color button."""
-        self.custom_bg_button.setEnabled(self.bg_color_combo.currentData() == 'custom')
-    
-    def get_properties(self):
-        """Return updated properties."""
-        props = {
-            'text': self.text_edit.text(),
-            'fontsize': self.fontsize_spin.value(),
-            'color': self.text_color_button.text(),
-            'ha': self.ha_combo.currentText(),
-            'va': self.va_combo.currentText()
-        }
-        
-        # Handle bbox
-        if self.frame_checkbox.isChecked():
-            bg_data = self.bg_color_combo.currentData()
-            if bg_data == 'custom':
-                facecolor = self.custom_bg_button.text()
-            elif bg_data:
-                facecolor = bg_data
-            else:
-                facecolor = 'white'
-            
-            # Get transparency from slider (convert percentage to 0-1 range)
-            alpha = self.transparency_slider.value() / 100.0
-            
-            props['bbox'] = {
-                'facecolor': facecolor,
-                'edgecolor': 'black',
-                'boxstyle': 'round,pad=0.3',
-                'alpha': alpha
-            }
-        else:
-            props['bbox'] = None
-        
-        return props
-
-
-
-
 class CustomizeGraphDialog(QDialog):
-    """Dialog for customizing graph including annotations."""
+    """Dialog for customizing graph"""
     
     def __init__(self, graph_widget, graph_id, parent=None):
         super().__init__(parent)
@@ -253,9 +25,7 @@ class CustomizeGraphDialog(QDialog):
         self.setWindowTitle(f"Customize Graph {graph_id}")
         self.resize(450, 550)
         
-        # Make dialog non-modal and always on top
-        #self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
-        self.setModal(False)
+        self.setModal(False) # Make dialog non-modal and always on top
         
         self._setup_ui()
         self._load_annotations()
@@ -278,7 +48,6 @@ class CustomizeGraphDialog(QDialog):
         tab_axis = self._create_axis_tab()
         
         # Add tabs to widget
-
         self.tabs.addTab(tab_legend, "Legend")
         self.tabs.addTab(tab_annotations, "Annotations")
         self.tabs.addTab(tab_axis, "Axis")
@@ -788,3 +557,230 @@ class CustomizeGraphDialog(QDialog):
         
         # Reload widgets to show restored properties
         self._load_legend_properties()
+
+
+class AnnotationLineEditDialog(QDialog):
+    """Dialog for editing line annotations (vline/hline)."""
+    
+    def __init__(self, annotation, parent=None):
+        super().__init__(parent)
+        self.annotation = annotation
+        self.setWindowTitle("Edit Line Annotation")
+        self.resize(350, 200)
+        
+        layout = QFormLayout(self)
+        
+        # Color picker
+        self.color_button = QPushButton()
+        current_color = QColor(annotation.get('color', 'red'))
+        self.color_button.setStyleSheet(f"background-color: {current_color.name()};")
+        self.color_button.setText(current_color.name())
+        self.color_button.clicked.connect(self._pick_color)
+        
+        # Line style
+        self.linestyle_combo = QComboBox()
+        self.linestyle_combo.addItem("Solid", "-")
+        self.linestyle_combo.addItem("Dashed", "--")
+        self.linestyle_combo.addItem("Dotted", ":")
+        self.linestyle_combo.addItem("Dash-Dot", "-.")
+        
+        current_style = annotation.get('linestyle', '--')
+        index = self.linestyle_combo.findData(current_style)
+        if index >= 0:
+            self.linestyle_combo.setCurrentIndex(index)
+        
+        # Line width
+        self.linewidth_spin = QDoubleSpinBox()
+        self.linewidth_spin.setRange(0.5, 5.0)
+        self.linewidth_spin.setSingleStep(0.5)
+        self.linewidth_spin.setValue(annotation.get('linewidth', 1.5))
+        
+        layout.addRow("Color:", self.color_button)
+        layout.addRow("Line Style:", self.linestyle_combo)
+        layout.addRow("Line Width:", self.linewidth_spin)
+        
+        # Buttons
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addRow(button_box)
+    
+    def _pick_color(self):
+        """Open color picker dialog."""
+        current_color = QColor(self.color_button.text())
+        color = QColorDialog.getColor(current_color, self, "Select Line Color")
+        if color.isValid():
+            self.color_button.setStyleSheet(f"background-color: {color.name()};")
+            self.color_button.setText(color.name())
+    
+    def get_properties(self):
+        """Return updated properties."""
+        return {
+            'color': self.color_button.text(),
+            'linestyle': self.linestyle_combo.currentData(),
+            'linewidth': self.linewidth_spin.value()
+        }
+
+
+class AnnotationTextEditDialog(QDialog):
+    """Dialog for editing text annotations."""
+    
+    def __init__(self, annotation, parent=None):
+        super().__init__(parent)
+        self.annotation = annotation
+        self.setWindowTitle("Edit Text Annotation")
+        self.resize(400, 350)
+        
+        layout = QFormLayout(self)
+        
+        # Text content
+        self.text_edit = QLineEdit()
+        self.text_edit.setText(annotation.get('text', 'Text'))
+        
+        # Font size
+        self.fontsize_spin = QSpinBox()
+        self.fontsize_spin.setRange(6, 72)
+        self.fontsize_spin.setValue(annotation.get('fontsize', 12))
+        
+        # Text color
+        self.text_color_button = QPushButton()
+        current_color = QColor(annotation.get('color', 'black'))
+        self.text_color_button.setStyleSheet(f"background-color: {current_color.name()};")
+        self.text_color_button.setText(current_color.name())
+        self.text_color_button.clicked.connect(self._pick_text_color)
+        
+        # Background/frame options
+        self.frame_checkbox = QCheckBox("Show frame/box")
+        bbox = annotation.get('bbox')
+        self.frame_checkbox.setChecked(bbox is not None)
+        
+        # Background color
+        self.bg_color_combo = QComboBox()
+        self.bg_color_combo.addItem("Transparent", None)
+        self.bg_color_combo.addItem("Yellow", 'yellow')
+        self.bg_color_combo.addItem("White", 'white')
+        self.bg_color_combo.addItem("Red", 'red')
+        self.bg_color_combo.addItem("Green", 'green')
+        self.bg_color_combo.addItem("Blue", 'blue')
+        
+        # Set current background
+        if bbox is None:
+            self.bg_color_combo.setCurrentIndex(0)
+        elif isinstance(bbox, dict) and bbox.get('facecolor') == 'yellow':
+            self.bg_color_combo.setCurrentIndex(1)
+        elif isinstance(bbox, dict) and bbox.get('facecolor') == 'white':
+            self.bg_color_combo.setCurrentIndex(2)
+        else:
+            self.bg_color_combo.setCurrentIndex(3)
+        
+        self.bg_color_combo.currentIndexChanged.connect(self._on_bg_color_changed)
+        
+        # Custom background color button
+        self.custom_bg_button = QPushButton()
+        if isinstance(bbox, dict) and bbox.get('facecolor'):
+            self.custom_bg_button.setStyleSheet(f"background-color: {bbox.get('facecolor')};")
+            self.custom_bg_button.setText(bbox.get('facecolor'))
+        else:
+            self.custom_bg_button.setStyleSheet("background-color: lightgray;")
+            self.custom_bg_button.setText("lightgray")
+        self.custom_bg_button.clicked.connect(self._pick_bg_color)
+        self.custom_bg_button.setEnabled(self.bg_color_combo.currentData() == 'custom')
+        
+        # Transparency slider (0-100%)
+        self.transparency_slider = QSpinBox()
+        self.transparency_slider.setRange(0, 100)
+        self.transparency_slider.setSingleStep(10)
+        self.transparency_slider.setSuffix("%")
+
+        # Get current alpha from bbox, default to 70%
+        current_alpha = 0.7
+        if isinstance(bbox, dict) and 'alpha' in bbox:
+            current_alpha = bbox['alpha']
+        self.transparency_slider.setValue(int(current_alpha * 100))
+        
+        # Horizontal alignment
+        self.ha_combo = QComboBox()
+        self.ha_combo.addItems(['left', 'center', 'right'])
+        ha = annotation.get('ha', 'center')
+        index = self.ha_combo.findText(ha)
+        if index >= 0:
+            self.ha_combo.setCurrentIndex(index)
+        
+        # Vertical alignment
+        self.va_combo = QComboBox()
+        self.va_combo.addItems(['top', 'center', 'bottom', 'baseline'])
+        va = annotation.get('va', 'center')
+        index = self.va_combo.findText(va)
+        if index >= 0:
+            self.va_combo.setCurrentIndex(index)
+        
+        layout.addRow("Text:", self.text_edit)
+        layout.addRow("Font Size:", self.fontsize_spin)
+        layout.addRow("Text Color:", self.text_color_button)
+        layout.addRow("", self.frame_checkbox)
+        layout.addRow("Background:", self.bg_color_combo)
+        layout.addRow("Custom Color:", self.custom_bg_button)
+        layout.addRow("Transparency:", self.transparency_slider)
+        layout.addRow("H-Align:", self.ha_combo)
+        layout.addRow("V-Align:", self.va_combo)
+        
+        # Buttons
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addRow(button_box)
+    
+    def _pick_text_color(self):
+        """Open color picker for text color."""
+        current_color = QColor(self.text_color_button.text())
+        color = QColorDialog.getColor(current_color, self, "Select Text Color")
+        if color.isValid():
+            self.text_color_button.setStyleSheet(f"background-color: {color.name()};")
+            self.text_color_button.setText(color.name())
+    
+    def _pick_bg_color(self):
+        """Open color picker for background color."""
+        current_color = QColor(self.custom_bg_button.text())
+        color = QColorDialog.getColor(current_color, self, "Select Background Color")
+        if color.isValid():
+            self.custom_bg_button.setStyleSheet(f"background-color: {color.name()};")
+            self.custom_bg_button.setText(color.name())
+    
+    def _on_bg_color_changed(self, index):
+        """Enable/disable custom color button."""
+        self.custom_bg_button.setEnabled(self.bg_color_combo.currentData() == 'custom')
+    
+    def get_properties(self):
+        """Return updated properties."""
+        props = {
+            'text': self.text_edit.text(),
+            'fontsize': self.fontsize_spin.value(),
+            'color': self.text_color_button.text(),
+            'ha': self.ha_combo.currentText(),
+            'va': self.va_combo.currentText()
+        }
+        
+        # Handle bbox
+        if self.frame_checkbox.isChecked():
+            bg_data = self.bg_color_combo.currentData()
+            if bg_data == 'custom':
+                facecolor = self.custom_bg_button.text()
+            elif bg_data:
+                facecolor = bg_data
+            else:
+                facecolor = 'white'
+            
+            # Get transparency from slider (convert percentage to 0-1 range)
+            alpha = self.transparency_slider.value() / 100.0
+            
+            props['bbox'] = {
+                'facecolor': facecolor,
+                'edgecolor': 'black',
+                'boxstyle': 'round,pad=0.3',
+                'alpha': alpha
+            }
+        else:
+            props['bbox'] = None
+        
+        return props
+

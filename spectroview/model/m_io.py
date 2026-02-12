@@ -411,10 +411,6 @@ def load_spc_spectrum(path: Path) -> MSpectrum:
     
     # Use the first spectrum if multiple exist, or the only one
     if reader.header['fnsub'] > 1:
-        # If multifile, for spectrum loader we just take the first one or mean? 
-        # Usually single spectrum loader expects single spectrum. 
-        # Let's take the first one for now, or maybe we should raise warning?
-        # WDF loader averages them or takes first. Let's take first.
         y_data = reader.y_data[0]
     else:
         y_data = reader.y_data
@@ -448,47 +444,37 @@ def load_spc_map(path: Path) -> tuple[pd.DataFrame, dict]:
     """Load 2D hyperspectral map from Galactic .spc file."""
     reader = SpcReader(str(path))
     
-    # X and Y coordinates for the map pixels
-    # SPC format doesn't standardized X/Y stage positions for maps as strictly as WDF.
-    # Often stored in log block or subheaders. 
-    # For now, if we can't find them, we might need to generate a grid or fail.
-    # Let's check if we can interpret log block or just generate sequential?
-    # Requirement says "read spectra or 2dmap data".
-    
-    # If explicit X/Y mapping data is missing, we create a dummy grid or linear list
-    # Many 2D SPC files might just be a sequence of spectra.
-    # Let's assume a grid if number of subfiles is a square? 
-    # Or just return a linear map list.
-    
     num_spectra = reader.header['fnsub']
     
-    # Try to parse X, Y from log or header if possible. 
-    # For now, let's generate a simple linear index map if no spatial data found.
-    # This matches behavior for "old format" CSV maps in load_map_file where we might just have data.
-    # But `load_map_file` expects X, Y columns.
-    
-    # Let's create X, Y as just index 0..N for now if not found, 
-    # or try to extract from subheaders (some formats put Z pos in subheader).
-    
-    x_coords = np.zeros(num_spectra)
-    y_coords = np.zeros(num_spectra)
-    
-    # Attempt to read from subheaders if available (sometimes stored in subwlevel or spare)
-    # But usually external log file or specific log block parsing is needed.
-    # Given the implementation plan constraint, we will generate a default grid 
-    # or just linear X, Y=0. 
-    # Let's try to see if it's a square grid.
-    side = int(np.sqrt(num_spectra))
-    if side * side == num_spectra:
-        # Assume row-major or column-major grid
-        y_indices, x_indices = np.unravel_index(np.arange(num_spectra), (side, side))
-        # Scale by arbitrary step or 1
-        x_coords = x_indices.astype(float)
-        y_coords = y_indices.astype(float)
-    else:
-        # Linear scan
-        x_coords = np.arange(num_spectra, dtype=float)
+    # Try to extract X, Y from subheaders
+    # "time" usually maps to X (fast axis) and "wlevel" to Y (slow axis) in valid maps
+    if reader.subheaders:
+        extracted_x = np.array([sh.get('time', 0.0) for sh in reader.subheaders], dtype=float)
+        extracted_y = np.array([sh.get('wlevel', 0.0) for sh in reader.subheaders], dtype=float)
         
+        # Check if they look like valid coordinates (not all zeros)
+        if np.any(extracted_x) or np.any(extracted_y):
+             x_coords = extracted_x
+             y_coords = extracted_y
+        else:
+             # Fallback to grid generation
+             side = int(np.sqrt(num_spectra))
+             if side * side == num_spectra:
+                 y_indices, x_indices = np.unravel_index(np.arange(num_spectra), (side, side))
+                 x_coords = x_indices.astype(float)
+                 y_coords = y_indices.astype(float)
+             else:
+                 x_coords = np.arange(num_spectra, dtype=float)
+    else:
+        # Fallback if no subheaders (unlikely for SPC)
+        side = int(np.sqrt(num_spectra))
+        if side * side == num_spectra:
+            y_indices, x_indices = np.unravel_index(np.arange(num_spectra), (side, side))
+            x_coords = x_indices.astype(float)
+            y_coords = y_indices.astype(float)
+        else:
+            x_coords = np.arange(num_spectra, dtype=float)
+            
     wavenumbers = reader.x_data
     spectra_matrix = reader.y_data # (num_spectra, num_points)
     

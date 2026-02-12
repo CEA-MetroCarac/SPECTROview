@@ -2,6 +2,9 @@
 from copy import deepcopy
 from threading import Thread
 from multiprocessing import Queue
+import numpy as np
+import zlib
+import base64
 
 from fitspy.core.spectra import Spectra as FitspySpectra
 from fitspy.core.utils_mp import fit_mp
@@ -31,6 +34,123 @@ class MSpectra(FitspySpectra):
 
     def __len__(self):
         return super().__len__()
+
+    def save(self, is_map=False):
+        """Override Fitspy's save() to handle custom attributes.
+        
+        Args:
+            is_map: If True, metadata is NOT saved per-spectrum (saved per-map instead).
+                   x0/y0 are also not saved for maps (retrieved from map DataFrame).
+        
+        Returns:
+            dict: Serialized spectra data with custom attributes handled properly.
+        """
+        # Call parent's save() to get base Fitspy attributes
+        spectrums_data = super().save()
+        
+        # Process each spectrum to handle custom attributes
+        for i, spectrum in enumerate(self):
+            spectrum_dict = {}
+            
+            # Save x0, y0 only if it's not a map
+            if not is_map:
+                spectrum_dict.update({
+                    "x0": self._compress(spectrum.x0),
+                    "y0": self._compress(spectrum.y0)
+                })
+            else:
+                # Remove metadata added by Fitspy's .save() for maps
+                # (metadata is saved once per map in maps_metadata, not per-spectrum)
+                spectrums_data[i].pop('metadata', None)
+            
+            # Update the spectrums_data with custom attributes
+            spectrums_data[i].update(spectrum_dict)
+        
+        return spectrums_data
+    
+    @staticmethod
+    def _compress(array):
+        """Compress and encode a numpy array to a base64 string."""
+        if array is None:
+            return None
+        compressed = zlib.compress(array.tobytes())
+        encoded = base64.b64encode(compressed).decode('utf-8')
+        return encoded
+    
+    @staticmethod
+    def _decompress(data, dtype=np.float64):
+        """Decode and decompress a base64 string to a numpy array."""
+        if data is None:
+            return None
+        decoded = base64.b64decode(data.encode('utf-8'))
+        decompressed = zlib.decompress(decoded)
+        return np.frombuffer(decompressed, dtype=dtype) 
+    
+    @staticmethod
+    def load_from_dict(spectrum_class, spectrum_data, is_map=True, maps=None):
+        """Load a spectrum from dictionary data.
+        
+        Args:
+            spectrum_class: The MSpectrum class to instantiate
+            spectrum_data: Dictionary containing spectrum attributes
+            is_map: If True, x0/y0 are retrieved from maps DataFrame
+            maps: Dictionary of map DataFrames (required if is_map=True)
+        
+        Returns:
+            MSpectrum: Reconstructed spectrum object
+        """
+        from spectroview.model.m_spectrum import MSpectrum
+        
+        # Pop custom attributes before set_attributes() to prevent Fitspy crash
+        # (Fitspy's set_attributes tries to process all keys as model attributes
+        #  and crashes when calling .keys() on string values in metadata dict)
+        saved_metadata = spectrum_data.pop('metadata', None)
+        
+        # Create spectrum and set Fitspy attributes
+        spectrum = MSpectrum()
+        spectrum.set_attributes(spectrum_data)
+        
+        # Restore metadata
+        if saved_metadata:
+            spectrum.metadata = saved_metadata
+        
+        if is_map:
+            # Retrieve x0 and y0 from map DataFrame
+            if maps is None:
+                raise ValueError("maps must be provided when is_map=True.")
+            
+            # Parse map_name and coordinates from fname
+            fname = spectrum.fname
+            map_name, coord_str = fname.rsplit('_', 1)
+            coord_str = coord_str.strip('()')
+            coord = tuple(map(float, coord_str.split(',')))
+            
+            # Retrieve x0 and y0 from the corresponding map_df
+            if map_name in maps:
+                map_df = maps[map_name]
+                map_df = map_df.iloc[:, :-1]  # Drop the last column from map_df (NaN)
+                coord_x, coord_y = coord
+                
+                row = map_df[(map_df['X'] == coord_x) & (map_df['Y'] == coord_y)]
+                
+                if not row.empty:
+                    x0 = map_df.columns[2:].astype(float).values
+                    spectrum.x0 = x0 + spectrum.xcorrection_value
+                    spectrum.y0 = row.iloc[0, 2:].values
+                else:
+                    spectrum.x0 = None
+                    spectrum.y0 = None
+            else:
+                spectrum.x0 = None
+                spectrum.y0 = None
+        else:
+            # Decompress x0 and y0 for non-map spectra
+            if 'x0' in spectrum_data:
+                spectrum.x0 = MSpectra._decompress(spectrum_data['x0'])
+            if 'y0' in spectrum_data:
+                spectrum.y0 = MSpectra._decompress(spectrum_data['y0'])
+        
+        return spectrum
 
     
     def apply_model(self, model_dict, fnames=None, ncpus=1, show_progressbar=True, queue_incr=None):

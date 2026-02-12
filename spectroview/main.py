@@ -92,7 +92,7 @@ class Main(QMainWindow):
             None,
             "Open file(s)",
             last_dir,
-            "SPECTROview formats (*.csv *.txt *.dat *.spectra *.maps *.graphs *.xlsx)"
+            "SPECTROview formats (*.csv *.txt *.dat *.wdf *.spectra *.maps *.graphs *.xlsx)"
         )
         
         if not paths:
@@ -134,6 +134,20 @@ class Main(QMainWindow):
             elif ext == '.dat':
                 # TRPL time-resolved data
                 spectra_files.append(str(path))
+            elif ext == '.wdf':
+                # Renishaw WiRE native format - detect if it's a map or single spectrum
+                from renishawWiRE import WDFReader
+                try:
+                    reader = WDFReader(str(path))
+                    # Check measurement type: Mapping = hyperspectral, Single = spectrum
+                    # measurement_type is an enum, so convert to string for comparison
+                    if str(reader.measurement_type) == 'Mapping' or 'Mapping' in str(reader.measurement_type):
+                        hyperspectral_files.append(str(path))
+                    else:
+                        spectra_files.append(str(path))
+                    reader.close()
+                except Exception as e:
+                    QMessageBox.warning(self, "WDF Error", f"Failed to read WDF file {path.name}: {e}")
             elif ext == '.xlsx':
                 dataframes.append(str(path))
             elif ext in ['.csv', '.txt']:

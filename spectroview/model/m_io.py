@@ -2,8 +2,12 @@
 
 import numpy as np
 import pandas as pd
+from renishawWiRE import WDFReader
+
 from pathlib import Path
 from spectroview.model.m_spectrum import MSpectrum
+from spectroview.viewmodel.utils import parse_wdf_metadata
+from collections import OrderedDict
 
 
 def load_spectrum_file(path: Path) -> MSpectrum:
@@ -56,7 +60,7 @@ def load_spectrum_file(path: Path) -> MSpectrum:
     df = df.sort_values(df.columns[0])
 
     s = MSpectrum()
-    s.source_path = str(path.resolve()) 
+    #s.source_path = str(path.resolve()) 
     s.fname = path.stem
     s.x0 = df.iloc[:, 0].to_numpy()
     s.y0 = df.iloc[:, 1].to_numpy()
@@ -65,6 +69,78 @@ def load_spectrum_file(path: Path) -> MSpectrum:
     s.baseline.mode = "Linear"
     s.baseline.sigma = 4
 
+    return s
+
+
+def load_wdf_spectrum(path: Path) -> MSpectrum:
+    """Load single spectrum from Renishaw .wdf file.
+    
+    Uses renishawWIRE package to read native WiRE software files.
+    Prints comprehensive metadata to console.
+    
+    """
+    reader = WDFReader(str(path))
+        
+    # Extract data
+    wavenumbers = reader.xdata  # Wavenumber axis (cm^-1)
+    
+    # Handle different array dimensions
+    # Single spectrum: spectra is 1D array (num_wavenumbers,)
+    # Multiple spectra: spectra is 2D array (num_spectra, num_wavenumbers)
+    if reader.spectra.ndim == 1:
+        intensities = reader.spectra  # Already 1D
+    else:
+        # Multiple spectra - take the first one or average
+        intensities = reader.spectra[0] if reader.count == 1 else reader.spectra.mean(axis=0)
+    
+    
+    # Create MSpectrum object
+    s = MSpectrum()
+    #s.source_path = str(path.resolve())
+    s.fname = path.stem
+    s.x0 = np.array(wavenumbers, dtype=np.float64)
+    s.y0 = np.array(intensities, dtype=np.float64)
+    s.x = s.x0.copy()
+    s.y = s.y0.copy()
+    s.baseline.mode = "Linear"
+    s.baseline.sigma = 4
+    
+    # Extract additional metadata from WDF file blocks
+    wdf_metadata = parse_wdf_metadata(reader)
+    
+    # Build metadata dictionary with proper formatting
+    metadata = {
+        "File Format": "Renishaw WDF",
+
+        "Grating": wdf_metadata.get('grating_name', 'Unknown'),
+        "Objective Used": wdf_metadata.get('objective_name', 'Unknown'),
+
+        "Laser Wavelength (nm)": f"{reader.laser_length:.2f}",
+        "Laser Power (%)": f"{wdf_metadata['laser_power']}" if 'laser_power' in wdf_metadata else 'Unknown',
+
+        "Exposure Time (s)": f"{wdf_metadata['exposure_time']}" if 'exposure_time' in wdf_metadata else 'Unknown',
+        "Accumulations": reader.accumulation_count,
+
+        "Slit Opening (µm)": f"{wdf_metadata['slit_opening']}" if 'slit_opening' in wdf_metadata else 'Unknown',
+        "Slit Centre (µm)": f"{wdf_metadata['slit_centre']}" if 'slit_centre' in wdf_metadata else 'Unknown',
+
+        "Title": reader.title,
+        "Username": reader.username,
+        "Application": f"{reader.application_name} v{'.'.join(map(str, reader.application_version))}",
+        "Measurement Type": str(reader.measurement_type),
+        "Scan Type": str(reader.scan_type),
+        "Number of Spectra": reader.count,
+        "Points per Spectrum": reader.point_per_spectrum,
+        "Spectral Unit": reader.spectral_unit,
+        "X-axis Type": reader.xlist_type,
+        "X-axis Unit": reader.xlist_unit,
+        "Wavenumber Range": f"{reader.xdata[0]:.2f} to {reader.xdata[-1]:.2f} {reader.xlist_unit}",
+    }
+    
+    # Assign metadata to spectrum
+    s.metadata = metadata
+    
+    reader.close()
     return s
 
 
@@ -117,7 +193,7 @@ def load_TRPL_data(path: Path) -> MSpectrum:
     
     # Create MSpectrum object
     s = MSpectrum()
-    s.source_path = str(path.resolve())
+    #s.source_path = str(path.resolve())
     s.fname = path.stem
     # Explicitly use float64 for both x and y to ensure compatibility with save/load
     # (decompress always uses float64, so we must match that dtype)
@@ -165,6 +241,105 @@ def load_map_file(path: Path) -> pd.DataFrame:
         raise ValueError(f"Unsupported file type: {ext}")
     
     return map_df
+
+
+def load_wdf_map(path: Path) -> pd.DataFrame:
+    """Load 2D hyperspectral map from Renishaw .wdf file.
+    
+    Uses renishawWIRE package to read native WiRE software mapping files.
+    Prints comprehensive metadata to console.
+    Converts to DataFrame format compatible with SPECTROview Maps workspace.
+    """
+    reader = WDFReader(str(path))
+      
+    # Extract data
+    x_coords = reader.xpos  # X stage positions (µm)
+    y_coords = reader.ypos  # Y stage positions (µm)
+    wavenumbers = reader.xdata  # Wavenumber axis (cm^-1)
+    spectra_data = reader.spectra  # Can be 2D or 3D array
+    
+    # Handle different array shapes
+    # For 2D maps, spectra might be 3D: (x_grid, y_grid, wavenumbers)
+    # We need to reshape to 2D: (num_spectra, num_wavenumbers)
+    if spectra_data.ndim == 3:
+        # Reshape from (x_grid, y_grid, wavenumbers) to (num_spectra, num_wavenumbers)
+        x_size, y_size, num_wavenumbers = spectra_data.shape
+        spectra_matrix = spectra_data.reshape(x_size * y_size, num_wavenumbers)
+    else:
+        # Already 2D
+        spectra_matrix = spectra_data
+    
+    # Create DataFrame with X, Y columns and wavenumber columns
+    # Convert wavenumbers to strings for column names
+    wavenumber_cols = [str(wn) for wn in wavenumbers]
+    
+    # Build dictionary for DataFrame
+    data_dict = {
+        'X': x_coords,
+        'Y': y_coords
+    }
+    
+    # Add spectral data columns
+    for i in range(len(wavenumber_cols)):
+        data_dict[wavenumber_cols[i]] = spectra_matrix[:, i]
+    
+    df = pd.DataFrame(data_dict)
+    
+    # Extract additional metadata from WDF file blocks
+    wdf_metadata = parse_wdf_metadata(reader)
+    
+    # Calculate step size from position arrays (for maps)
+    import numpy as np
+    x_step = None
+    y_step = None
+    
+    if len(reader.xpos) > 1:
+        x_unique = np.unique(reader.xpos)
+        if len(x_unique) > 1:
+            x_step = x_unique[1] - x_unique[0]
+    
+    if len(reader.ypos) > 1:
+        y_unique = np.unique(reader.ypos)
+        if len(y_unique) > 1:
+            y_step = y_unique[1] - y_unique[0]
+    
+    # Build metadata dictionary with proper formatting and order
+    metadata = {
+        "File Format": "Renishaw WDF Map",
+
+        "Grating": wdf_metadata.get('grating_name', 'Unknown'),
+        "Objective Used": wdf_metadata.get('objective_name', 'Unknown'),
+
+        "Laser Wavelength (nm)": f"{reader.laser_length:.2f}",
+        "Laser Power (%)": f"{wdf_metadata['laser_power']}" if 'laser_power' in wdf_metadata else 'Unknown',
+
+        "Exposure Time (s)": f"{wdf_metadata['exposure_time']}" if 'exposure_time' in wdf_metadata else 'Unknown',
+        "Accumulations": reader.accumulation_count,
+
+        "Slit Opening (µm)": f"{wdf_metadata['slit_opening']}" if 'slit_opening' in wdf_metadata else 'Unknown',
+        "Slit Centre (µm)": f"{wdf_metadata['slit_centre']}" if 'slit_centre' in wdf_metadata else 'Unknown',
+        
+        "Title": reader.title,
+        "Username": reader.username,
+        "Application": f"{reader.application_name} v{'.'.join(map(str, reader.application_version))}",
+
+        "Measurement Type": str(reader.measurement_type),    
+        "Scan Type": str(reader.scan_type),
+        "Total Map Points": reader.count,
+        "X Range (µm)": f"{reader.xpos.min():.2f} to {reader.xpos.max():.2f}",
+        "Y Range (µm)": f"{reader.ypos.min():.2f} to {reader.ypos.max():.2f}",
+        "X Step Size (µm)": f"{x_step:.3f}" if x_step is not None else 'Unknown',
+        "Y Step Size (µm)": f"{y_step:.3f}" if y_step is not None else 'Unknown',
+
+        "Points per Spectrum": reader.point_per_spectrum,
+        "Spectral Unit": reader.spectral_unit,
+        "X-axis Type": reader.xlist_type,
+        "X-axis Unit": reader.xlist_unit,
+        "Wavenumber Range": f"{reader.xdata[0]:.2f} to {reader.xdata[-1]:.2f} {reader.xlist_unit}",
+    }
+    
+    reader.close()
+    return df, metadata
 
 
 def load_dataframe_file(path: Path) -> dict[str, pd.DataFrame]:

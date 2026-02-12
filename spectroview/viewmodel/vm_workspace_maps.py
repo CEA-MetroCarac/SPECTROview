@@ -13,9 +13,9 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
-from spectroview.model.m_io import load_map_file
+from spectroview.model.m_io import load_map_file, load_wdf_map
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
-from spectroview.viewmodel.utils import spectrum_to_dict, dict_to_spectrum
+
 
 
 class VMWorkspaceMaps(VMWorkspaceSpectra):
@@ -29,9 +29,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     
     def __init__(self, settings: MSettings):
         super().__init__(settings)
-        self.maps = {}  # {map_name: map_dataframe}
-        self.current_map_name = None
+        # Maps storage: {map_name: DataFrame}
+        self.maps: dict[str, pd.DataFrame] = {}
+        self.current_map_name: str | None = None
         self.current_map_df = None
+        
+        # Store metadata for each map (for WDF files)
+        self.maps_metadata: dict[str, dict] = {}  # {map_name: metadata_dict}
         
         self._fit_results_cache: pd.DataFrame | None = None
         self._fit_results_cache_dirty: bool = True
@@ -63,7 +67,18 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 continue
             
             try:
-                map_df = load_map_file(path)
+                # Use appropriate loader based on file extension
+                if path.suffix.lower() == '.wdf':
+                    result = load_wdf_map(path)
+                    # Handle tuple return (DataFrame, metadata)
+                    if isinstance(result, tuple):
+                        map_df, metadata = result
+                        self.maps_metadata[map_name] = metadata
+                    else:
+                        map_df = result
+                else:
+                    map_df = load_map_file(path)
+                    self.maps_metadata[map_name] = {}  # Empty metadata for non-WDF maps
                 self.maps[map_name] = map_df
                 self._extract_spectra_from_map(map_name, map_df)
                 loaded_maps.append(map_name)
@@ -110,6 +125,9 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         y_positions = map_df['Y'].values
         intensity_data = map_df[wavenumber_cols].values  # 2D numpy array
         
+        # Check if this map has metadata (WDF files)
+        map_metadata = self.maps_metadata.get(map_name, {})
+        
         # Create spectra for each row (spatial point) and add to main collection
         for idx in range(len(map_df)):
             x_pos = float(x_positions[idx])
@@ -127,6 +145,10 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             # Set default baseline settings (matching legacy)
             spectrum.baseline.mode = "Linear"
             spectrum.baseline.sigma = 4
+            
+            # Add metadata if available (from WDF maps)
+            if map_metadata:
+                spectrum.metadata = map_metadata.copy()
             
             # Add to main collection
             self.spectra.add(spectrum)
@@ -409,7 +431,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         try:
             # Convert all spectra to dict format (is_map=True for map spectra)
-            spectrums_data = spectrum_to_dict(self.spectra, is_map=True)
+            spectrums_data = self.spectra.save(is_map=True)
             
             # Compress map DataFrames (gzip + hex encoding for JSON compatibility)
             compressed_maps = {}
@@ -421,6 +443,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             data_to_save = {
                 'spectrums_data': spectrums_data,
                 'maps': {k: v.hex() for k, v in compressed_maps.items()},
+                'maps_metadata': self.maps_metadata,  # Save metadata for WDF maps
             }
             
             # Save fit results DataFrame (including computed columns)
@@ -442,7 +465,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     def load_work(self, file_path: str):
         """Load maps workspace from .maps file (100% compatible with legacy format)."""
         
-        
         try:
             with open(file_path, 'r') as f:
                 data = json.load(f)
@@ -452,23 +474,37 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             
             # Load and decompress map DataFrames
             self.maps = {}
+            self.maps_metadata = {}  # Initialize metadata dict
+            
             for map_name, hex_data in data.get('maps', {}).items():
                 compressed_data = bytes.fromhex(hex_data)
                 csv_data = gzip.decompress(compressed_data).decode('utf-8')
                 self.maps[map_name] = pd.read_csv(StringIO(csv_data))
             
+            # Restore maps metadata (for WDF files)
+            if 'maps_metadata' in data and data['maps_metadata'] is not None:
+                self.maps_metadata = data['maps_metadata']
+            else:
+                self.maps_metadata = {}  # Ensure it's always a valid dict
+            
             # Reconstruct spectrum objects from saved data
             self.spectra = MSpectra()
             for spectrum_id, spectrum_data in data.get('spectrums_data', {}).items():
-                spectrum = MSpectrum()
-                dict_to_spectrum(
-                    spectrum=spectrum,
+                spectrum = MSpectra.load_from_dict(
+                    spectrum_class=MSpectrum,
                     spectrum_data=spectrum_data,
                     maps=self.maps,
                     is_map=True
                 )
                 spectrum.preprocess()
                 self.spectra.append(spectrum)
+            
+            # Restore metadata from maps_metadata (stored per-map, not per-spectrum)
+            for spectrum in self.spectra:
+                map_name = spectrum.fname.rsplit('_', 1)[0]
+                map_metadata = self.maps_metadata.get(map_name, {})
+                if map_metadata:
+                    spectrum.metadata = map_metadata.copy()
             
             
             # Restore fit results DataFrame (including computed columns)

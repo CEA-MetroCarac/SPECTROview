@@ -5,9 +5,13 @@ from PySide6.QtWidgets import (
     QComboBox, QMessageBox, QApplication, QListWidgetItem,
     QDialog, QTextBrowser, QVBoxLayout
 )    
+import struct
+import re
     
 import base64
+import json
 import numpy as np
+import re
 import zlib
 from openpyxl.styles import PatternFill
 import pandas as pd
@@ -29,6 +33,166 @@ try:
     TOAST_AVAILABLE = True
 except ImportError:
     TOAST_AVAILABLE = False
+
+
+def parse_wdf_metadata(reader):
+    """Extract comprehensive metadata from WDF file's WXIS and WXCS blocks.
+    
+    This function parses unparsed WDF file blocks to extract instrument settings
+   that are not exposed by the renishawWiRE package but are stored in the file.
+    
+    Args:
+        reader: WDFReader object with file already opened
+        
+    Returns:
+        dict with keys: objective_name, grating_name, exposure_time, 
+                       slit_opening, slit_centre, laser_power (if available)
+    """
+    import struct
+    
+    metadata = {}
+    
+    # Parse WXIS block for objective, grating, slit, and laser power
+    if 'WXIS' in reader.block_info:
+        uid, pos, size = reader.block_info['WXIS']
+        reader.file_obj.seek(pos + 16)
+        wxis_data = reader.file_obj.read(size - 16)
+        
+        try:
+            text_data = wxis_data.decode('utf-8', errors='ignore')
+            
+            # Extract objective (e.g., "x100", "x50", "x20")
+            for objective in ['x100', 'x50', 'x20', 'x10', 'x5', 'x2']:
+                if objective in text_data:
+                    metadata['objective_name'] = objective
+                    break
+            
+            # Extract grating (e.g., "1800 l/mm")
+            grating_patterns = [
+                '1800 l/mm', '2400 l/mm', '1200 l/mm',
+                '600 l/mm', '300 l/mm', '150 l/mm'
+            ]
+            for pattern in grating_patterns:
+                if pattern in text_data:
+                    metadata['grating_name'] = pattern
+                    break
+            
+            # Extract slit opening and centre using labels
+            # Look for labeled patterns: "Opening" followed by value, "SlitBeamCentre" followed by value
+            # The pattern in WXIS is: ...Opening...<value>µm...SlitBeamCentre...<value>µm...
+            
+            # Find all µm values with their preceding context
+            import re
+            # Find pattern: word/label, then µm value
+            # Looking for: "20µm" after something like "Opening" and "1725µm" after "SlitBeamCentre" or similar
+            
+            # More robust: find all number-µm pairs
+            all_um_values = re.findall(r'(\d+)[\xc2\xb5µ]m', text_data)
+            
+            # In WXIS, we know from analysis that the pattern is:
+            # ...'0µm'...'20µm'...'1725µm'...
+            # where 20 is slit opening and 1725 is slit centre
+            # We need to skip the first "0" value and take the next two
+            
+            if len(all_um_values) >= 3:
+                # Skip first value (bias), take second (opening) and third (centre)
+                try:
+                    slit_opening = float(all_um_values[1])  # Second value
+                    slit_centre = float(all_um_values[2])   # Third value
+                    
+                    # Sanity check: slit opening typically 10-200, centre typically 100-3000
+                    if 5 <= slit_opening <= 500 and 50 <= slit_centre <= 5000:
+                        metadata['slit_opening'] = slit_opening
+                        metadata['slit_centre'] = slit_centre
+                except (ValueError, IndexError):
+                    pass
+            
+            # Extract laser power from WXIS structured records
+            # Laser power is stored as a 'u' (string) record with id=0x0500
+            # Located near offset 2300-2400 with a simple numeric string value
+            # Record format: u(0x75) + 2-byte-id(0x0500) + \x80 + 4-byte-strlen + string
+            # Search specifically in the range 2300-2500 for a simple numeric pattern
+            for i in range(2300, min(len(wxis_data) - 12, 2500)):
+                if (wxis_data[i:i+1] == b'u' and wxis_data[i+3:i+4] == b'\x80'):
+                    try:
+                        rec_id = struct.unpack('<H', wxis_data[i+1:i+3])[0]
+                        str_len = struct.unpack('<i', wxis_data[i+4:i+8])[0]
+                        if rec_id == 0x0500 and 0 < str_len < 20:
+                            power_str = wxis_data[i+8:i+8+str_len].decode(
+                                'utf-8', errors='ignore').strip('\x00')
+                            # Check if it's a simple numeric string (laser power)
+                            # Should be like "0.5" or "1" (not "30.8786 Degrees")
+                            if power_str and not any(c.isalpha() for c in power_str):
+                                try:
+                                    power_val = float(power_str)
+                                    # Laser power typically 0.1% to 100%
+                                    if 0.01 <= power_val <= 100:
+                                        metadata['laser_power'] = power_val
+                                        break
+                                except ValueError:
+                                    pass
+                    except (struct.error, IndexError):
+                        pass
+            
+        except Exception:
+            pass
+    
+    # Parse WXCS block for confocal values (alternative source)
+    if 'WXCS' in reader.block_info and ('slit_opening' not in metadata or 'slit_centre' not in metadata):
+        uid, pos, size = reader.block_info['WXCS']
+        reader.file_obj.seek(pos + 16)
+        wxcs_data = reader.file_obj.read(size - 16)
+        
+        try:
+            text_data = wxcs_data.decode('utf-8', errors='ignore')
+            
+            # WXCS contains "20.0µm" and "1724.7µm" for confocal opening and centre
+            all_um_values = re.findall(r'(\d+\.?\d*)[\xc2\xb5µ]m', text_data)
+            
+            # Look for two values where one is small (~20) and one is large (~1724)
+            for i in range(len(all_um_values) - 1):
+                try:
+                    val1 = float(all_um_values[i])
+                    val2 = float(all_um_values[i+1])
+                    
+                    # Identify which is opening (smaller) and which is centre (larger)
+                    if 5 <= val1 <= 500 and 50 <= val2 <= 5000:
+                        if val1 < val2 and 'slit_opening' not in metadata:
+                            metadata['slit_opening'] = val1
+                            metadata['slit_centre'] = val2
+                            break
+                        elif val2 < val1 and 'slit_opening' not in metadata:
+                            metadata['slit_opening'] = val2
+                            metadata['slit_centre'] = val1
+                            break
+                except ValueError:
+                    pass
+        except Exception:
+            pass
+    
+    # Parse WXDM block for exposure time
+    # Exposure time is stored as int32 milliseconds in an 'i' record with id=0x2300
+    # Record format: i(0x69) + 2-byte-id(0x2300) + \x80 + 4-byte-int-value
+    if 'WXDM' in reader.block_info:
+        uid, pos, size = reader.block_info['WXDM']
+        reader.file_obj.seek(pos + 16)
+        wxdm_data = reader.file_obj.read(size - 16)
+        
+        try:
+            for i in range(len(wxdm_data) - 8):
+                if (wxdm_data[i:i+1] == b'i'
+                        and wxdm_data[i+3:i+4] == b'\x80'):
+                    rec_id = struct.unpack('<H', wxdm_data[i+1:i+3])[0]
+                    if rec_id == 0x2300:  # Exposure time record ID
+                        val = struct.unpack('<i', wxdm_data[i+4:i+8])[0]
+                        if 10 <= val <= 3600000:  # 10ms to 1 hour
+                            metadata['exposure_time'] = val / 1000.0  # Convert ms to seconds
+                            break
+        except Exception:
+            pass
+    
+    return metadata
+
 
 def view_text(ui, title, text):
         """ Create a QTextBrowser to display a text content"""
@@ -273,17 +437,7 @@ def closest_index(array, value):
     return int(np.abs(array - value).argmin())
 
 
-def compress(array):
-    """Compress and encode a numpy array to a base64 string."""
-    compressed = zlib.compress(array.tobytes())
-    encoded = base64.b64encode(compressed).decode('utf-8')
-    return encoded
 
-def decompress(data, dtype):
-    """Decode and decompress a base64 string to a numpy array."""
-    decoded = base64.b64decode(data.encode('utf-8'))
-    decompressed = zlib.decompress(decoded)
-    return np.frombuffer(decompressed, dtype=dtype)
 
 
 def baseline_to_dict(spectrum):
@@ -298,63 +452,6 @@ def dict_to_baseline(dict_baseline, spectrums):
             setattr(new_baseline, key, deepcopy(value))
         spectrum.baseline = new_baseline
         
-def spectrum_to_dict(spectrums, is_map=False):
-    """Custom 'save' method to save 'Spectrum' object in a dictionary"""
-    spectrums_data = spectrums.save()
-    # Iterate over the saved spectrums data and update x0 and y0
-    for i, spectrum in enumerate(spectrums):
-        spectrum_dict = {}
-        
-        # Save x0 and y0 only if it's not a 2DMAP
-        if not is_map:
-            spectrum_dict.update({
-                "x0": compress(spectrum.x0),
-                "y0": compress(spectrum.y0)
-            })
-        
-        # Update the spectrums_data with the new dictionary values
-        spectrums_data[i].update(spectrum_dict)
-    return spectrums_data
-
-def dict_to_spectrum(spectrum, spectrum_data, is_map=True, maps=None):
-    """Set attributes of Spectrum object from JSON dict"""
-    spectrum.set_attributes(spectrum_data)
-    
-    if is_map: 
-        if maps is None:
-            raise ValueError("maps must be provided when map=True.")
-        
-        # Retrieve map_name and coord from spectrum.fname
-        fname = spectrum.fname
-        map_name, coord_str = fname.rsplit('_', 1)
-        coord_str = coord_str.strip('()')  # Remove parentheses
-        coord = tuple(map(float, coord_str.split(',')))  # Convert to float tuple
-        
-        # Retrieve x0 and y0 from the corresponding map_df using map_name and coord
-        if map_name in maps:
-            map_df = maps[map_name]
-            map_df = map_df.iloc[:, :-1]  # Drop the last column from map_df (NaN)
-            coord_x, coord_y = coord
-
-            row = map_df[(map_df['X'] == coord_x) & (map_df['Y'] == coord_y)]
-            
-            if not row.empty:
-                x0 = map_df.columns[2:].astype(float).values  # retreive original x0
-                spectrum.x0 = x0 + spectrum.xcorrection_value # apply xcorrection_value
-                spectrum.y0 = row.iloc[0, 2:].values  
-            else:
-                spectrum.x0 = None
-                spectrum.y0 = None
-        else:
-            spectrum.x0 = None
-            spectrum.y0 = None
-    else:
-        # Handle single spectrum case
-        if 'x0' in spectrum_data:
-            spectrum.x0 = decompress(spectrum_data['x0'], dtype=np.float64)
-        if 'y0' in spectrum_data:
-            spectrum.y0 = decompress(spectrum_data['y0'], dtype=np.float64)
-
 def save_df_to_excel(save_path, df):
     """Saves a DataFrame to an Excel file with colored columns based on prefixes."""
     if not save_path:

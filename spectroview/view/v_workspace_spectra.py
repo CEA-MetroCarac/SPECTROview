@@ -17,6 +17,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.viewmodel.utils import show_toast_notification
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
 from spectroview.view.components.v_fit_results import VFitResults
+from spectroview.view.components.v_metadata import VMetadata
 from spectroview.view.components.v_spectra_list import VSpectraList
 from spectroview.view.components.v_spectra_viewer import VSpectraViewer
 from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
@@ -62,11 +63,13 @@ class VWorkspaceSpectra(QWidget):
         self.bottom_tabs.setMinimumHeight(150)
         self.v_fit_model_builder = VFitModelBuilder()
         self.v_fit_results = VFitResults()
+        self.v_metadata = VMetadata()
         self.vm_fit_model_builder = VMFitModelBuilder(self.m_settings)
         self.vm.set_fit_model_builder(self.vm_fit_model_builder) # 🔑 inject dependency
         
         self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(self.v_fit_results, "Fit Results")
+        self.bottom_tabs.addTab(self.v_metadata, "Metadata")
         
         left_splitter.addWidget(self.v_spectra_viewer)
         left_splitter.addWidget(self.bottom_tabs)
@@ -229,6 +232,7 @@ class VWorkspaceSpectra(QWidget):
         vm.spectra_list_changed.connect(self._on_spectra_list_changed)
         self.v_spectra_list.itemChanged.connect(self._on_checkbox_changed)
         vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
+        vm.spectra_selection_changed.connect(self._update_metadata_display)
         vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
         vm.notify.connect(self._show_toast_notification)
 
@@ -289,6 +293,14 @@ class VWorkspaceSpectra(QWidget):
             self.v_fit_results.show_results(df)
         else:
             self.v_fit_results.clear_results()
+    
+    def _update_metadata_display(self, selected_spectra: list):
+        """Update metadata display with first selected spectrum's metadata."""
+        if selected_spectra and len(selected_spectra) > 0:
+            metadata = selected_spectra[0].metadata
+            self.v_metadata.show_metadata(metadata)
+        else:
+            self.v_metadata.clear_metadata()
     
     def save_work(self):
         """Trigger save work in ViewModel."""

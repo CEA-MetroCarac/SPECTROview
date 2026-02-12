@@ -9,7 +9,7 @@ from lmfit import fit_report
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
-from spectroview.model.m_io import load_spectrum_file, load_TRPL_data
+from spectroview.model.m_io import load_spectrum_file, load_TRPL_data, load_wdf_spectrum
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
@@ -19,8 +19,7 @@ from spectroview.viewmodel.utils import (
     calc_area,
     closest_index,
     dict_to_baseline,
-    spectrum_to_dict,
-    dict_to_spectrum,
+
     replace_peak_labels,
     save_df_to_excel,
     view_text,
@@ -112,6 +111,8 @@ class VMWorkspaceSpectra(QObject):
                 # Use appropriate loader based on file extension
                 if path.suffix.lower() == '.dat':
                     spectrum = load_TRPL_data(path)
+                elif path.suffix.lower() == '.wdf':
+                    spectrum = load_wdf_spectrum(path)
                 else:
                     spectrum = load_spectrum_file(path)
                 self.spectra.add(spectrum)
@@ -871,9 +872,7 @@ class VMWorkspaceSpectra(QObject):
             return
         
         try:
-            data_to_save = {
-                'spectrums': spectrum_to_dict(self.spectra, is_map=False)
-            }
+            data_to_save = {'spectrums': self.spectra.save(is_map=False)}
             
             # Save fit results DataFrame (including computed columns)
             if self.df_fit_results is not None and not self.df_fit_results.empty:
@@ -899,8 +898,11 @@ class VMWorkspaceSpectra(QObject):
             
             # Load all spectra
             for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
-                spectrum = MSpectrum()
-                dict_to_spectrum(spectrum=spectrum, spectrum_data=spectrum_data, is_map=False)
+                spectrum = MSpectra.load_from_dict(
+                    spectrum_class=MSpectrum,
+                    spectrum_data=spectrum_data,
+                    is_map=False
+                )
                 spectrum.preprocess()
                 self.spectra.append(spectrum)
             

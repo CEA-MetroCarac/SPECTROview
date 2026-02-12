@@ -117,7 +117,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if len(x_values) > 1:
             x_values = x_values[:-1]  # Skip last value
             wavenumber_cols = wavenumber_cols[:-1]
-        
+               
         x_data = np.asarray(x_values)
         
         # Pre-extract all spatial coordinates and intensity data (faster)

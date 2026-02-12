@@ -93,6 +93,16 @@ def load_wdf_spectrum(path: Path) -> MSpectrum:
         # Multiple spectra - take the first one or average
         intensities = reader.spectra[0] if reader.count == 1 else reader.spectra.mean(axis=0)
     
+    # Ensure x-axis is ascending (Fitspy requirement)
+    # WDF files often have descending wavenumbers (e.g. 3200 -> 100)
+    wavenumbers = np.array(wavenumbers, dtype=np.float64)
+    intensities = np.array(intensities, dtype=np.float64)
+    
+    if len(wavenumbers) > 1 and wavenumbers[0] > wavenumbers[-1]:
+        sort_inds = np.argsort(wavenumbers)
+        wavenumbers = wavenumbers[sort_inds]
+        intensities = intensities[sort_inds]
+    
     
     # Create MSpectrum object
     s = MSpectrum()
@@ -268,6 +278,15 @@ def load_wdf_map(path: Path) -> pd.DataFrame:
     else:
         # Already 2D
         spectra_matrix = spectra_data
+        
+    # Ensure x-axis is ascending (Fitspy requirement)
+    # WDF files often have descending wavenumbers
+    wavenumbers = np.array(wavenumbers)
+    if len(wavenumbers) > 1 and wavenumbers[0] > wavenumbers[-1]:
+        sort_inds = np.argsort(wavenumbers)
+        wavenumbers = wavenumbers[sort_inds]
+        # Reorder columns of the spectra matrix
+        spectra_matrix = spectra_matrix[:, sort_inds]
     
     # Create DataFrame with X, Y columns and wavenumber columns
     # Convert wavenumbers to strings for column names
@@ -289,7 +308,6 @@ def load_wdf_map(path: Path) -> pd.DataFrame:
     wdf_metadata = parse_wdf_metadata(reader)
     
     # Calculate step size from position arrays (for maps)
-    import numpy as np
     x_step = None
     y_step = None
     

@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, QSettings, QFileInfo, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter
+from spectroview.model.m_spc import SpcReader
 from spectroview.model.m_settings import MSettings
 
 from spectroview.viewmodel.vm_settings import VMSettings
@@ -148,6 +149,17 @@ class Main(QMainWindow):
                     reader.close()
                 except Exception as e:
                     QMessageBox.warning(self, "WDF Error", f"Failed to read WDF file {path.name}: {e}")
+            elif ext == '.spc':
+                # Galactic SPC format
+                try:
+                    reader = SpcReader(str(path))
+                    # Check if multifile (fnsub > 1) -> likely a map or series
+                    if reader.header['fnsub'] > 1:
+                        hyperspectral_files.append(str(path))
+                    else:
+                        spectra_files.append(str(path))
+                except Exception as e:
+                     QMessageBox.warning(self, "SPC Error", f"Failed to read SPC file {path.name}: {e}")
             elif ext == '.xlsx':
                 dataframes.append(str(path))
             elif ext in ['.csv', '.txt']:

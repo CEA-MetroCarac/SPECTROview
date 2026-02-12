@@ -48,9 +48,10 @@ SPECTROview is a Qt/PySide6 desktop application for spectroscopic data processin
   - `m_spectra.py`: Extends `fitspy.Spectra` for spectrum collections
   - `m_graph.py`: Graph/plot configuration model
   - `m_settings.py`: Application settings model
-  - `m_io.py`: File loading utilities
+  - `m_io.py`: File loading utilities (supports TXT, CSV, WDF, SPC, TRPL)
   - `m_file_converter.py`: File format conversion utilities
   - `m_fit_model_manager.py`: Fit model management
+  - `m_spc.py`: Custom reader for Galactic SPC files (binary format)
 
 ### Communication Flow
 ```
@@ -92,7 +93,7 @@ class VWorkspaceSpectra(QWidget):
 - **ViewModel**: `viewmodel/vm_workspace_spectra.py`
 - **Purpose**: Process discrete 1D spectra
 - **Features**:
-  - Load individual spectrum files (`.txt`, `.csv`)
+  - Load individual spectrum files (`.txt`, `.csv`, `.wdf`, `.spc`, `.dat`)
   - Baseline correction, peak fitting
   - Batch processing with parallel fitting
   - Export fit results to Excel
@@ -103,7 +104,7 @@ class VWorkspaceSpectra(QWidget):
 - **ViewModel**: `viewmodel/vm_workspace_maps.py` (extends `VMWorkspaceSpectra`)
 - **Purpose**: Process 2D hyperspectral maps and wafer data
 - **Features**:
-  - Load hyperspectral map files (`.txt`, `.csv` with X, Y columns)
+  - Load hyperspectral map files (`.txt`, `.csv`, `.wdf`, `.spc`)
   - Interactive heatmap visualization with map viewer
   - Profile extraction (2 points → line plot in Graphs workspace)
   - Multiple map viewers (main + floating dialogs)
@@ -165,8 +166,15 @@ class VWorkspaceSpectra(QWidget):
 ## File Formats
 
 ### Input Formats
-- **Spectra**: `.csv`, `.txt` (2 columns: wavelength, intensity)
-- **Maps**: `.csv`, `.txt` (first 2 columns: X, Y, remaining columns: wavelengths)
+- **Spectra**: 
+  - `.csv`, `.txt` (2 columns: wavelength, intensity)
+  - `.wdf` (Renishaw WiRE files)
+  - `.spc` (Galactic SPC files)
+  - `.dat` (Time-Resolved Photoluminescence - TRPL)
+- **Maps**: 
+  - `.csv`, `.txt` (first 2 columns: X, Y, remaining columns: wavelengths)
+  - `.wdf` (Renishaw WiRE mapping files)
+  - `.spc` (Galactic SPC mapping files)
 - **DataFrames**: `.xlsx`, `.csv` (any tabular data)
 
 ### Workspace Save Files
@@ -250,9 +258,10 @@ def setup_connections(self):
 ## External Dependencies
 
 - **fitspy** `==2025.6`: Core fitting engine
+- **renishawWiRE**: Reading Renishaw WDF files
 - **lmfit**: Nonlinear least-squares minimization
 - **PySide6**: Qt bindings for Python (**not PyQt5/PyQt6**)
-- **matplotlib** `==3.8.4`: Plotting backend
+- **matplotlib** `==3.10.8`: Plotting backend
 - **seaborn** `==0.13.2`: Statistical plotting
 - **pandas**: DataFrame handling
 - **scipy**: Scientific computing (interpolation, optimization)

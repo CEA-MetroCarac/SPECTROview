@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
-from spectroview.model.m_io import load_map_file, load_wdf_map
+from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 
 
@@ -76,6 +76,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                         self.maps_metadata[map_name] = metadata
                     else:
                         map_df = result
+                elif path.suffix.lower() == '.spc':
+                     result = load_spc_map(path)
+                     if isinstance(result, tuple):
+                         map_df, metadata = result
+                         self.maps_metadata[map_name] = metadata
+                     else:
+                         map_df = result
                 else:
                     map_df = load_map_file(path)
                     self.maps_metadata[map_name] = {}  # Empty metadata for non-WDF maps

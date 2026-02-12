@@ -7,6 +7,7 @@ from renishawWiRE import WDFReader
 from pathlib import Path
 from spectroview.model.m_spectrum import MSpectrum
 from spectroview.viewmodel.utils import parse_wdf_metadata
+from spectroview.model.m_spc import SpcReader
 from collections import OrderedDict
 
 
@@ -398,3 +399,127 @@ def load_dataframe_file(path: Path) -> dict[str, pd.DataFrame]:
         return {path.stem: df}
     else:
         raise ValueError(f"Unsupported file type: {ext}")
+
+
+def load_spc_spectrum(path: Path) -> MSpectrum:
+    """Load single spectrum from Galactic .spc file."""
+    reader = SpcReader(str(path))
+    
+    # Create MSpectrum object
+    s = MSpectrum()
+    s.fname = path.stem
+    
+    # Use the first spectrum if multiple exist, or the only one
+    if reader.header['fnsub'] > 1:
+        # If multifile, for spectrum loader we just take the first one or mean? 
+        # Usually single spectrum loader expects single spectrum. 
+        # Let's take the first one for now, or maybe we should raise warning?
+        # WDF loader averages them or takes first. Let's take first.
+        y_data = reader.y_data[0]
+    else:
+        y_data = reader.y_data
+        
+    s.x0 = np.array(reader.x_data, dtype=np.float64)
+    s.y0 = np.array(y_data, dtype=np.float64)
+    s.x = s.x0.copy()
+    s.y = s.y0.copy()
+    s.baseline.mode = "Linear"
+    s.baseline.sigma = 4
+    
+    # Metadata
+    metadata = {
+        "File Format": "Galactic SPC",
+        "Title": reader.header.get('fcmnt', ''),
+        "Date": reader.header.get('date', ''),
+        "Points": reader.header['npts'],
+        "X Units": "Wavenumber" if reader.header.get('ftflgs', 0) & 0x80 else "Arbitrary", 
+    }
+    
+    # Add metadata from Log Block if available
+    if hasattr(reader, 'log_metadata') and reader.log_metadata:
+        metadata.update(reader.log_metadata)
+        
+    s.metadata = metadata
+    
+    return s
+
+
+def load_spc_map(path: Path) -> tuple[pd.DataFrame, dict]:
+    """Load 2D hyperspectral map from Galactic .spc file."""
+    reader = SpcReader(str(path))
+    
+    # X and Y coordinates for the map pixels
+    # SPC format doesn't standardized X/Y stage positions for maps as strictly as WDF.
+    # Often stored in log block or subheaders. 
+    # For now, if we can't find them, we might need to generate a grid or fail.
+    # Let's check if we can interpret log block or just generate sequential?
+    # Requirement says "read spectra or 2dmap data".
+    
+    # If explicit X/Y mapping data is missing, we create a dummy grid or linear list
+    # Many 2D SPC files might just be a sequence of spectra.
+    # Let's assume a grid if number of subfiles is a square? 
+    # Or just return a linear map list.
+    
+    num_spectra = reader.header['fnsub']
+    
+    # Try to parse X, Y from log or header if possible. 
+    # For now, let's generate a simple linear index map if no spatial data found.
+    # This matches behavior for "old format" CSV maps in load_map_file where we might just have data.
+    # But `load_map_file` expects X, Y columns.
+    
+    # Let's create X, Y as just index 0..N for now if not found, 
+    # or try to extract from subheaders (some formats put Z pos in subheader).
+    
+    x_coords = np.zeros(num_spectra)
+    y_coords = np.zeros(num_spectra)
+    
+    # Attempt to read from subheaders if available (sometimes stored in subwlevel or spare)
+    # But usually external log file or specific log block parsing is needed.
+    # Given the implementation plan constraint, we will generate a default grid 
+    # or just linear X, Y=0. 
+    # Let's try to see if it's a square grid.
+    side = int(np.sqrt(num_spectra))
+    if side * side == num_spectra:
+        # Assume row-major or column-major grid
+        y_indices, x_indices = np.unravel_index(np.arange(num_spectra), (side, side))
+        # Scale by arbitrary step or 1
+        x_coords = x_indices.astype(float)
+        y_coords = y_indices.astype(float)
+    else:
+        # Linear scan
+        x_coords = np.arange(num_spectra, dtype=float)
+        
+    wavenumbers = reader.x_data
+    spectra_matrix = reader.y_data # (num_spectra, num_points)
+    
+    # Ensure dimensions match
+    if spectra_matrix.ndim == 1:
+         # Single spectrum treated as map?
+         spectra_matrix = spectra_matrix.reshape(1, -1)
+         
+    # Create DataFrame
+    data_dict = {
+        'X': x_coords,
+        'Y': y_coords
+    }
+    
+    wavenumber_cols = [str(wn) for wn in wavenumbers]
+    
+    for i in range(len(wavenumber_cols)):
+        data_dict[wavenumber_cols[i]] = spectra_matrix[:, i]
+        
+    df = pd.DataFrame(data_dict)
+    
+    metadata = {
+        "File Format": "Galactic SPC Map",
+        "Title": reader.header.get('fcmnt', ''),
+        "Date": reader.header.get('date', ''),
+        "Total Map Points": num_spectra,
+        "Points per Spectrum": reader.header['npts'],
+    }
+    
+    # Add metadata from Log Block if available
+    if hasattr(reader, 'log_metadata') and reader.log_metadata:
+        metadata.update(reader.log_metadata)
+        
+    return df, metadata

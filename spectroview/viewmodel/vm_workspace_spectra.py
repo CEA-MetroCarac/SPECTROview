@@ -9,7 +9,7 @@ from lmfit import fit_report
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
-from spectroview.model.m_io import load_spectrum_file, load_TRPL_data, load_wdf_spectrum
+from spectroview.model.m_io import load_spectrum_file, load_TRPL_data, load_wdf_spectrum, load_spc_spectrum
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
@@ -113,6 +113,8 @@ class VMWorkspaceSpectra(QObject):
                     spectrum = load_TRPL_data(path)
                 elif path.suffix.lower() == '.wdf':
                     spectrum = load_wdf_spectrum(path)
+                elif path.suffix.lower() == '.spc':
+                    spectrum = load_spc_spectrum(path)
                 else:
                     spectrum = load_spectrum_file(path)
                 self.spectra.add(spectrum)

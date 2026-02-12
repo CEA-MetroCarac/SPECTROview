@@ -499,12 +499,13 @@ class VMapViewer(QWidget):
     def _update_selection_overlay(self):
         """Update selection overlay without full plot redraw (fast)."""
         # Remove old selection scatter
-        if self._selection_scatter is not None:
-            try:
-                self._selection_scatter.remove()
-            except:
-                pass
-            self._selection_scatter = None
+        if hasattr(self, '_selection_patches') and self._selection_patches:
+            for patch in self._selection_patches:
+                try:
+                    patch.remove()
+                except:
+                    pass
+            self._selection_patches = []
         
         # Remove old profile lines
         if self._profile_line is not None:
@@ -523,16 +524,35 @@ class VMapViewer(QWidget):
         
         # Add new selection overlay
         if self.selected_points:
-            x, y = zip(*self.selected_points)
-            self._selection_scatter = self.ax.scatter(
-                x, y, facecolors='none', edgecolors='red', 
-                marker='s', s=60, linewidths=1, zorder=10
-            )
-            
-            # Plot profile if exactly 2 points selected and in 2D map mode
-            map_type = self.cbb_map_type.currentText()
-            if len(self.selected_points) == 2 and map_type == '2Dmap':
-                self._plot_height_profile_on_map()
+            try:
+                # Use stored dx/dy if available, otherwise estimate or default
+                if hasattr(self, '_current_dx') and hasattr(self, '_current_dy'):
+                    dx, dy = self._current_dx, self._current_dy
+                else:
+                    # Fallback if plot hasn't updated yet
+                    dx, dy = 1.0, 1.0
+                
+                # Create a collection of patches for performance
+                patches_list = []
+                for x, y in self.selected_points:
+                    # Center the rectangle on the coordinate
+                    rect = patches.Rectangle(
+                        (x - dx/2, y - dy/2), dx, dy,
+                        linewidth=1.2, edgecolor='red', facecolor='none', zorder=10
+                    )
+                    self.ax.add_patch(rect)
+                    patches_list.append(rect)
+                
+                # Store references to remove later
+                self._selection_patches = patches_list
+                
+                # Plot profile if exactly 2 points selected and in 2D map mode
+                map_type = self.cbb_map_type.currentText()
+                if len(self.selected_points) == 2 and map_type == '2Dmap':
+                    self._plot_height_profile_on_map()
+                    
+            except Exception as e:
+                print(f"Error drawing selection overlay: {e}")
         
         self.canvas.draw_idle()
     
@@ -598,12 +618,29 @@ class VMapViewer(QWidget):
                                          vmin=vmin_plot, vmax=vmax_plot,
                                          origin='lower', aspect='equal', cmap=cmap,
                                          interpolation='bilinear')  # Smooth the 100x100 grid
+                                         
+                # Calculate pixel size for wafer map (grid_x is 80x80)
+                # extent = [-r-1, r+1, -r-0.5, r+0.5] roughly
+                width = extent[1] - extent[0]
+                height = extent[3] - extent[2]
+                self._current_dx = width / 80.0
+                self._current_dy = height / 80.0
+                
             elif not heatmap_pivot.empty:
                 # 2D maps: Use pivot table with optional smoothing
                 self.img = self.ax.imshow(heatmap_pivot, extent=extent, 
                                          vmin=vmin_plot, vmax=vmax_plot,
                                          origin='lower', aspect='equal', cmap=cmap, 
                                          interpolation=interpolation)
+                                         
+                # Calculate pixel size from pivot table shape and extent
+                rows, cols = heatmap_pivot.shape
+                if cols > 0 and rows > 0:
+                    self._current_dx = (extent[1] - extent[0]) / cols
+                    self._current_dy = (extent[3] - extent[2]) / rows
+                else:
+                    self._current_dx = 1.0
+                    self._current_dy = 1.0
                                          
         except (ValueError, TypeError) as e:
             # Handle non-numeric data errors (from both scipy griddata and matplotlib imshow)
@@ -816,7 +853,32 @@ class VMapViewer(QWidget):
             # NaN values in final_z_col will be preserved in the pivot table
             heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
             heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
-            extent = [x_col.min(), x_col.max(), y_col.min(), y_col.max()]
+            
+            # Calculate extent to center pixels on coordinates 
+            # Use sorted unique coordinates
+            u_x = np.sort(np.unique(x_col))
+            u_y = np.sort(np.unique(y_col))
+            
+            xmin, xmax = 0, 1
+            ymin, ymax = 0, 1
+            
+            if len(u_x) > 1:
+                dx = (u_x[1] - u_x[0])
+                xmin = u_x[0] - 0.5 * dx
+                xmax = u_x[-1] + 0.5 * (u_x[-1] - u_x[-2])
+            elif len(u_x) == 1:
+                xmin = u_x[0] - 0.5
+                xmax = u_x[0] + 0.5
+                
+            if len(u_y) > 1:
+                dy = (u_y[1] - u_y[0])
+                ymin = u_y[0] - 0.5 * dy
+                ymax = u_y[-1] + 0.5 * (u_y[-1] - u_y[-2])
+            elif len(u_y) == 1:
+                ymin = u_y[0] - 0.5
+                ymax = u_y[0] + 0.5
+            
+            extent = [xmin, xmax, ymin, ymax]
             grid_z = None  # Not used for 2D maps
         
         result = (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col)

@@ -886,9 +886,16 @@ class VSpectraViewer(QWidget):
         if not self._fitted_lines:
             return None
 
-        # Tolerance for click detection (in data units)
-        x_range = self.ax.get_xlim()[1] - self.ax.get_xlim()[0]
-        x_tol = x_range * 0.03  # 3% of x-range
+        # Use pixel-based tolerance for better UX (consistent "visual" click area)
+        # 10 pixels is a standard "slop" for mouse clicks
+        TOLERANCE_PX = 10 
+        
+        # Convert click x-coordinate to pixels
+        # We use [(x, 0)] because we only care about the x-projection
+        try:
+            click_pix = self.ax.transData.transform([(x, 0)])[0][0]
+        except Exception:
+             return None
 
         closest_peak = None
         min_distance = float('inf')
@@ -897,11 +904,17 @@ class VSpectraViewer(QWidget):
             # Check distance from peak center (x0)
             if "x0" in info:
                 peak_x = info["x0"]
-                distance = abs(x - peak_x)
                 
-                if distance < x_tol and distance < min_distance:
-                    min_distance = distance
-                    closest_peak = (line, info)
+                try:
+                    # Convert peak x to pixels
+                    peak_pix = self.ax.transData.transform([(peak_x, 0)])[0][0]
+                    distance = abs(click_pix - peak_pix)
+                    
+                    if distance < TOLERANCE_PX and distance < min_distance:
+                        min_distance = distance
+                        closest_peak = (line, info)
+                except Exception:
+                    continue
 
         return closest_peak
 

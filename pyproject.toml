@@ -47,7 +47,9 @@ dependencies = [
     "scipy",
     "lmfit",
     "pywin32; platform_system == 'Windows'",
-    "superqt"
+    "superqt",
+    "spc",
+    "renishawwire"
 ]
 
 [tool.setuptools.package-data]

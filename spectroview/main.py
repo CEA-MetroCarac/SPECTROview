@@ -92,7 +92,7 @@ class Main(QMainWindow):
             None,
             "Open file(s)",
             last_dir,
-            "SPECTROview formats (*.csv *.txt *.dat *.wdf *.spectra *.maps *.graphs *.xlsx)"
+            "SPECTROview formats (*.csv *.txt *.dat *.wdf *.spc *.spectra *.maps *.graphs *.xlsx)"
         )
         
         if not paths:

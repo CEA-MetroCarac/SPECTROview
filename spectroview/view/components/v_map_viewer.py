@@ -101,7 +101,7 @@ class VMapViewer(QWidget):
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
         # Hide some toolbar actions
         for action in self.toolbar.actions():
-            if action.text() in ['Customize','Zoom','Save', 'Pan', 'Back', 'Forward', 'Subplots']:
+            if action.text() in ['Customize', 'Save', 'Back', 'Forward', 'Subplots']:
                 action.setVisible(False)
         
         # Custom toolbar with add viewer and copy buttons
@@ -998,6 +998,10 @@ class VMapViewer(QWidget):
     
     def _on_mouse_click(self, event):
         """Start selection on mouse click."""
+        # Disable selection if toolbar mode (Zoom/Pan) is active
+        if self.toolbar.mode:
+            return
+            
         if event.inaxes != self.ax or event.button != 1:
             return
         
@@ -1013,6 +1017,9 @@ class VMapViewer(QWidget):
     
     def _on_mouse_move(self, event):
         """Update rectangle during drag."""
+        if self.toolbar.mode:
+            return
+            
         if self.rect_start is None or event.inaxes != self.ax:
             return
         
@@ -1037,6 +1044,9 @@ class VMapViewer(QWidget):
     
     def _on_mouse_release(self, event):
         """Finish selection on mouse release."""
+        if self.toolbar.mode:
+            return
+            
         if self.rect_start is None or event.inaxes != self.ax:
             return
         

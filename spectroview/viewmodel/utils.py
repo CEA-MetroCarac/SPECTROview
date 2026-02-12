@@ -13,9 +13,12 @@ import json
 import numpy as np
 import re
 import zlib
+import zlib
 from openpyxl.styles import PatternFill
 import pandas as pd
 from copy import deepcopy
+import os
+import datetime
 
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
@@ -190,6 +193,82 @@ def parse_wdf_metadata(reader):
                             break
         except Exception:
             pass
+    
+    # Parse WDF1 block to find Creation Date (SYSTEMTIME structure)
+    # Search priority:
+    # 1. File Info region (0xD0 - 0xF0)
+    # 2. Entire Header (first 512 bytes)
+    # 3. File modification time (fallback)
+    
+    found_date = None
+    try:
+        reader.file_obj.seek(0)
+        header_bytes = reader.file_obj.read(1024) # Read enough to cover header
+        
+        def check_systemtime(buf, offset):
+            if offset + 16 > len(buf): return None
+            # SYSTEMTIME: 8 unsigned shorts (Year, Month, Dow, Day, Hour, Min, Sec, Ms)
+            vals = struct.unpack('<8H', buf[offset:offset+16])
+            wYear, wMonth, wDow, wDay, wHour, wMinute, wSecond, wMs = vals
+            
+            # Loose validation for reasonable date
+            if (1990 <= wYear <= 2030 and 
+                1 <= wMonth <= 12 and 
+                1 <= wDay <= 31 and 
+                0 <= wHour <= 23 and 
+                0 <= wMinute <= 59 and 
+                0 <= wSecond <= 59):
+                    # Filter out empty/zero dates
+                    if wYear == 0 and wMonth == 0: return None
+                    return f"{wYear}-{wMonth:02d}-{wDay:02d} {wHour:02d}:{wMinute:02d}:{wSecond:02d}"
+            return None
+
+        # 1. Check exact gap at 0x88 (between Measurement Info and Spectral Info)
+        # This is exactly 16 bytes (sizeof SYSTEMTIME) and most probable location
+        d = check_systemtime(header_bytes, 0x88)
+        if d:
+            found_date = d
+            
+        # 2. If not found, check Gap 2 (0xA0 to 0xD0) 
+        if not found_date:
+            for i in range(0xA0, 0xD0, 2):
+                 d = check_systemtime(header_bytes, i)
+                 if d:
+                     found_date = d
+                     break
+
+        # 3. Check File Info region (0xD0 to 0xF0) - Legacy check
+        if not found_date:
+            for i in range(0xD0, 0xF0, 2):
+                d = check_systemtime(header_bytes, i)
+                if d:
+                    found_date = d
+                    break
+        
+        # 4. Last resort: scan full header
+        if not found_date:
+            for i in range(0, 512, 2):
+                d = check_systemtime(header_bytes, i)
+                if d:
+                    found_date = d
+                    break
+                    
+    except Exception as e:
+        print(f"Error scanning WDF date: {e}")
+        
+    # 3. Fallback to file modification time
+    if not found_date:
+        try:
+            fname = getattr(reader.file_obj, 'name', None)
+            if fname and os.path.exists(fname):
+                ts = os.path.getmtime(fname)
+                dt = datetime.datetime.fromtimestamp(ts)
+                found_date = dt.strftime("%Y-%m-%d %H:%M:%S")
+        except Exception:
+            pass
+            
+    if found_date:
+        metadata['timestamp'] = found_date
     
     return metadata
 

@@ -137,6 +137,7 @@ def load_wdf_spectrum(path: Path) -> MSpectrum:
 
         "Title": reader.title,
         "Username": reader.username,
+        "Date": wdf_metadata.get('timestamp', 'Unknown'),
         "Application": f"{reader.application_name} v{'.'.join(map(str, reader.application_version))}",
         "Measurement Type": str(reader.measurement_type),
         "Scan Type": str(reader.scan_type),
@@ -340,6 +341,7 @@ def load_wdf_map(path: Path) -> pd.DataFrame:
         
         "Title": reader.title,
         "Username": reader.username,
+        "Date": wdf_metadata.get('timestamp', 'Unknown'),
         "Application": f"{reader.application_name} v{'.'.join(map(str, reader.application_version))}",
 
         "Measurement Type": str(reader.measurement_type),    

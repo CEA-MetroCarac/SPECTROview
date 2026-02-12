@@ -59,7 +59,7 @@ class MSpectra(FitspySpectra):
                     "y0": self._compress(spectrum.y0)
                 })
             else:
-                # Remove metadata added by Fitspy's .save() for maps
+                # For Maps : Remove metadata added by Fitspy's .save()
                 # (metadata is saved once per map in maps_metadata, not per-spectrum)
                 spectrums_data[i].pop('metadata', None)
             
@@ -67,24 +67,6 @@ class MSpectra(FitspySpectra):
             spectrums_data[i].update(spectrum_dict)
         
         return spectrums_data
-    
-    @staticmethod
-    def _compress(array):
-        """Compress and encode a numpy array to a base64 string."""
-        if array is None:
-            return None
-        compressed = zlib.compress(array.tobytes())
-        encoded = base64.b64encode(compressed).decode('utf-8')
-        return encoded
-    
-    @staticmethod
-    def _decompress(data, dtype=np.float64):
-        """Decode and decompress a base64 string to a numpy array."""
-        if data is None:
-            return None
-        decoded = base64.b64decode(data.encode('utf-8'))
-        decompressed = zlib.decompress(decoded)
-        return np.frombuffer(decompressed, dtype=dtype) 
     
     @staticmethod
     def load_from_dict(spectrum_class, spectrum_data, is_map=True, maps=None):
@@ -131,13 +113,22 @@ class MSpectra(FitspySpectra):
                 map_df = map_df.iloc[:, :-1]  # Drop the last column from map_df (NaN)
                 coord_x, coord_y = coord
                 
-                row = map_df[(map_df['X'] == coord_x) & (map_df['Y'] == coord_y)]
+                # Use nearest neighbor matching to handle floating point precision differences
+                # between coordinates in filename (string) and saved CSV data
+                dist = (map_df['X'] - coord_x)**2 + (map_df['Y'] - coord_y)**2
+                min_dist_idx = dist.values.argmin()
                 
-                if not row.empty:
+                # Check if the closest point is within a reasonable tolerance (e.g., < 1e-4 units)
+                # This ensures we don't match random points if the map changed
+                if dist.iloc[min_dist_idx] < 1e-4:
+                    row = map_df.iloc[[min_dist_idx]]
+                    
                     x0 = map_df.columns[2:].astype(float).values
                     spectrum.x0 = x0 + spectrum.xcorrection_value
                     spectrum.y0 = row.iloc[0, 2:].values
                 else:
+                    # If no match found, initialize as None (will likely cause issues downstream, 
+                    # but better than matching wrong point)
                     spectrum.x0 = None
                     spectrum.y0 = None
             else:
@@ -200,3 +191,22 @@ class MSpectra(FitspySpectra):
         # Only join thread if it was started
         if thread is not None:
             thread.join()     
+
+
+    @staticmethod
+    def _compress(array):
+        """Compress and encode a numpy array to a base64 string."""
+        if array is None:
+            return None
+        compressed = zlib.compress(array.tobytes())
+        encoded = base64.b64encode(compressed).decode('utf-8')
+        return encoded
+    
+    @staticmethod
+    def _decompress(data, dtype=np.float64):
+        """Decode and decompress a base64 string to a numpy array."""
+        if data is None:
+            return None
+        decoded = base64.b64decode(data.encode('utf-8'))
+        decompressed = zlib.decompress(decoded)
+        return np.frombuffer(decompressed, dtype=dtype) 

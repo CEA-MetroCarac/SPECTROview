@@ -37,8 +37,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Store metadata for each map (for WDF files)
         self.maps_metadata: dict[str, dict] = {}  # {map_name: metadata_dict}
         
-        self._fit_results_cache: pd.DataFrame | None = None
-        self._fit_results_cache_dirty: bool = True
+
         
         # Reference to Graphs workspace (injected after construction)
         self.graphs_workspace = None
@@ -334,25 +333,17 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     
     
     def get_fit_results_dataframe(self):
-        """Get fit results DataFrame for the current map (cached for heatmap display).
+        """Get fit results DataFrame for the current map.
         
         This method returns a simplified version of the fit results for heatmap visualization.
         It reuses self.df_fit_results (created by collect_fit_results) to avoid redundancy.
         """
-        # Return cached results if available and not dirty
-        if not self._fit_results_cache_dirty and self._fit_results_cache is not None:
-            return self._fit_results_cache
-        
         # If we have collected fit results (from collect_fit_results), use them
         if self.df_fit_results is not None and not self.df_fit_results.empty:
-            self._fit_results_cache = self.df_fit_results.copy()
-            self._fit_results_cache_dirty = False
-            return self._fit_results_cache
+            return self.df_fit_results
         
         # Otherwise return empty DataFrame
-        self._fit_results_cache = pd.DataFrame()
-        self._fit_results_cache_dirty = False
-        return self._fit_results_cache
+        return pd.DataFrame()
     
     def _on_fit_finished(self):
         """Override to invalidate cache when fitting completes."""
@@ -366,8 +357,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     
     def collect_fit_results(self):
         """Override parent to add X and Y coordinate columns for map data."""
-        # Invalidate cache so get_fit_results_dataframe will use fresh data
-        self._fit_results_cache_dirty = True
+
         
         # Call parent's collect_fit_results to generate base DataFrame
         super().collect_fit_results()
@@ -517,8 +507,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             # Restore fit results DataFrame (including computed columns)
             if 'df_fit_results' in data and data['df_fit_results'] is not None:
                 self.df_fit_results = pd.DataFrame(data['df_fit_results'])
-                # CRITICAL: Invalidate cache so get_fit_results_dataframe() returns fresh data
-                self._fit_results_cache_dirty = True
+
             else:
                 self.df_fit_results = None
             
@@ -550,9 +539,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.current_map_name = None
         self.current_map_df = None
         
-        # Clear all caches
-        self._fit_results_cache = None
-        self._fit_results_cache_dirty = True
+
         
         # Emit updates to View
         self.maps_list_changed.emit([])

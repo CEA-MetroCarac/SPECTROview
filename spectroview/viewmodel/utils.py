@@ -194,64 +194,83 @@ def parse_wdf_metadata(reader):
         except Exception:
             pass
     
-    # Parse WDF1 block to find Creation Date (SYSTEMTIME structure)
-    # Search priority:
-    # 1. File Info region (0xD0 - 0xF0)
-    # 2. Entire Header (first 512 bytes)
-    # 3. File modification time (fallback)
+    # Parse WDF1 block to find Creation Date
+    # Priority:
+    # 1. Windows FILETIME at 0x90 (End Time)
+    # 2. Windows FILETIME at 0x88 (Start Time)
+    # 3. Check for SYSTEMTIME structure (legacy fallback)
+    # 4. File modification time (last resort)
     
     found_date = None
+    
     try:
         reader.file_obj.seek(0)
         header_bytes = reader.file_obj.read(1024) # Read enough to cover header
-        
-        def check_systemtime(buf, offset):
-            if offset + 16 > len(buf): return None
-            # SYSTEMTIME: 8 unsigned shorts (Year, Month, Dow, Day, Hour, Min, Sec, Ms)
-            vals = struct.unpack('<8H', buf[offset:offset+16])
-            wYear, wMonth, wDow, wDay, wHour, wMinute, wSecond, wMs = vals
-            
-            # Loose validation for reasonable date
-            if (1990 <= wYear <= 2030 and 
-                1 <= wMonth <= 12 and 
-                1 <= wDay <= 31 and 
-                0 <= wHour <= 23 and 
-                0 <= wMinute <= 59 and 
-                0 <= wSecond <= 59):
-                    # Filter out empty/zero dates
-                    if wYear == 0 and wMonth == 0: return None
-                    return f"{wYear}-{wMonth:02d}-{wDay:02d} {wHour:02d}:{wMinute:02d}:{wSecond:02d}"
-            return None
 
-        # 1. Check exact gap at 0x88 (between Measurement Info and Spectral Info)
-        # This is exactly 16 bytes (sizeof SYSTEMTIME) and most probable location
-        d = check_systemtime(header_bytes, 0x88)
-        if d:
-            found_date = d
-            
-        # 2. If not found, check Gap 2 (0xA0 to 0xD0) 
+        # Helper to decode FILETIME (100-ns intervals since Jan 1, 1601 UTC)
+        def decode_filetime(ft_bytes):
+            try:
+                ft_int = int.from_bytes(ft_bytes, 'little')
+                if ft_int == 0: return None
+                
+                EPOCH_AS_FILETIME = 116444736000000000
+                HUNDREDS_OF_NANOSECONDS = 10000000
+                
+                if ft_int < EPOCH_AS_FILETIME: return None
+                
+                ts = (ft_int - EPOCH_AS_FILETIME) / HUNDREDS_OF_NANOSECONDS
+                # Use local time for display consistent with user expectation
+                dt = datetime.datetime.fromtimestamp(ts)
+                return dt.strftime("%Y-%m-%d %H:%M:%S")
+            except:
+                return None
+
+        # 1. Check End Time at 0x90
+        if len(header_bytes) >= 0x98:
+            d = decode_filetime(header_bytes[0x90:0x98])
+            if d:
+                found_date = d
+
+        # 2. Check Start Time at 0x88 (if End Time not found)
+        if not found_date and len(header_bytes) >= 0x90:
+            d = decode_filetime(header_bytes[0x88:0x90])
+            if d:
+                found_date = d
+
+        # 3. Legacy SYSTEMTIME scan
         if not found_date:
-            for i in range(0xA0, 0xD0, 2):
+            def check_systemtime(buf, offset):
+                if offset + 16 > len(buf): return None
+                # SYSTEMTIME: 8 unsigned shorts (Year, Month, Dow, Day, Hour, Min, Sec, Ms)
+                vals = struct.unpack('<8H', buf[offset:offset+16])
+                wYear, wMonth, wDow, wDay, wHour, wMinute, wSecond, wMs = vals
+                
+                # Loose validation for reasonable date
+                if (1990 <= wYear <= 2030 and 
+                    1 <= wMonth <= 12 and 
+                    1 <= wDay <= 31 and 
+                    0 <= wHour <= 23 and 
+                    0 <= wMinute <= 59 and 
+                    0 <= wSecond <= 59):
+                        # Filter out empty/zero dates
+                        if wYear == 0 and wMonth == 0: return None
+                        return f"{wYear}-{wMonth:02d}-{wDay:02d} {wHour:02d}:{wMinute:02d}:{wSecond:02d}"
+                return None
+
+            # Check known gaps
+            for i in range(0xA0, 0xF0, 2):
                  d = check_systemtime(header_bytes, i)
                  if d:
                      found_date = d
                      break
-
-        # 3. Check File Info region (0xD0 to 0xF0) - Legacy check
-        if not found_date:
-            for i in range(0xD0, 0xF0, 2):
-                d = check_systemtime(header_bytes, i)
-                if d:
-                    found_date = d
-                    break
-        
-        # 4. Last resort: scan full header
-        if not found_date:
-            for i in range(0, 512, 2):
-                d = check_systemtime(header_bytes, i)
-                if d:
-                    found_date = d
-                    break
+            
+            # Scan full header if needed
+            if not found_date:
+                for i in range(0, 512, 2):
+                    d = check_systemtime(header_bytes, i)
+                    if d:
+                        found_date = d
+                        break
                     
     except Exception as e:
         print(f"Error scanning WDF date: {e}")

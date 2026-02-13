@@ -2,6 +2,7 @@
 .spectroview/
 build/
 dist/
+scripts/
 __pycache__/
 *.egg*
 app/.DS_Store

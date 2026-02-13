@@ -89,8 +89,8 @@ class VMapViewer(QWidget):
         self.ax.tick_params(axis='both', which='both')
         
         self.canvas = FigureCanvas(self.figure)
-        self.canvas.setMinimumHeight(200)
-        self.canvas.setMaximumHeight(350)
+        # self.canvas.setMinimumHeight(200)
+        # self.canvas.setMaximumHeight(350)
         
         # Connect mouse events for interactive selection
         self.canvas.mpl_connect('button_press_event', self._on_mouse_click)

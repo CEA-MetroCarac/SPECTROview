@@ -213,7 +213,7 @@ class VSpectraViewer(QWidget):
         self.cbb_xaxis = QComboBox()
         self.cbb_xaxis.addItems(X_AXIS_UNIT)
         self.cbb_xaxis.currentIndexChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("X-axissss:", self.cbb_xaxis))
+        menu.addAction(self._wrap("X-axis:", self.cbb_xaxis))
 
         # Y-scale
         self.cbb_yscale = QComboBox()

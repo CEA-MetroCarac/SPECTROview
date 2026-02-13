@@ -93,19 +93,24 @@ class SpcReader:
                 self.y_data = np.vstack(self.y_data)
             else:
                 self.y_data = self.y_data[0]
-                
-            # Log Block
-            # ...
-            # Recalculate offset logic...
-            
-            real_bytes_per_point = 4 if (not is_16bit or (len(self.subheaders) > 0 and self.subheaders[0]['exp'] == -128)) else 2
-            
-            calculated_data_end = 512 + (self.header['npts'] * 4 if has_txvals else 0) + \
-                                  self.header['fnsub'] * (32 + self.header['npts'] * real_bytes_per_point)
 
-            self.f.seek(calculated_data_end)
+            
+            # Determine Log Offset
+            file_size = self.f.seek(0, 2)
+            
+            if self.header['flogoff'] != 0 and self.header['flogoff'] < file_size:
+                log_offset = self.header['flogoff']
+            else:
+                 # Fallback: Calculate end of data
+                real_bytes_per_point = 4 if (not is_16bit or (len(self.subheaders) > 0 and self.subheaders[0]['exp'] == -128)) else 2
+                log_offset = 512 + (self.header['npts'] * 4 if has_txvals else 0) + \
+                                      self.header['fnsub'] * (32 + self.header['npts'] * real_bytes_per_point)
+
+            self.f.seek(log_offset)
             try:
                 self.log_content = self.f.read().decode('utf-8', errors='ignore')
+                # Remove null bytes which might be present in padding
+                self.log_content = self.log_content.replace('\x00', '')
                 self._parse_log_metadata()
             except:
                 pass
@@ -118,19 +123,22 @@ class SpcReader:
         # Pattern: look for printable keys followed by = and value
         # Allow alphanumeric, spaces, and typical punctuation in unit labels like (cm-1)
         # Reject keys with control chars or extended ASCII if it looks like garbage
-        key_pattern = re.compile(r'^[A-Za-z0-9\s\.\(\)_\-\%\/]+$')
+        # Robust regex to find Key=Value pairs even if surrounded by garbage
+        # Key must start with a letter and contain valid chars
+        pair_pattern = re.compile(r'([A-Za-z][A-Za-z0-9\s\.\(\)_\-\%\/]*?)\s*=\s*(.*)')
         
         for line in self.log_content.splitlines():
             line = line.strip()
             if not line: continue
             
-            if '=' in line:
-                parts = line.split('=', 1)
-                key = parts[0].strip()
-                val = parts[1].strip()
+            # Use search to find the pattern anywhere in the line (handles leading garbage)
+            match = pair_pattern.search(line)
+            if match:
+                key = match.group(1).strip()
+                val = match.group(2).strip()
                 
-                # Heuristic: Key must match safe pattern and have reasonable length
-                if len(key) < 64 and len(key) > 1 and key_pattern.match(key):
+                # Check for reasonable key length
+                if len(key) < 64 and len(key) > 1:
                      self.log_metadata[key] = val
 
     def _read_header(self):

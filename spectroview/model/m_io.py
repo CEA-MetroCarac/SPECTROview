@@ -120,37 +120,12 @@ def load_wdf_spectrum(path: Path) -> MSpectrum:
     wdf_metadata = parse_wdf_metadata(reader)
     
     # Build metadata dictionary with proper formatting
-    metadata = {
-        "File Format": "Renishaw WDF",
-
-        "Grating": wdf_metadata.get('grating_name', 'Unknown'),
-        "Objective Used": wdf_metadata.get('objective_name', 'Unknown'),
-
-        "Laser Wavelength (nm)": f"{reader.laser_length:.2f}",
-        "Laser Power (%)": f"{wdf_metadata['laser_power']}" if 'laser_power' in wdf_metadata else 'Unknown',
-
-        "Exposure Time (s)": f"{wdf_metadata['exposure_time']}" if 'exposure_time' in wdf_metadata else 'Unknown',
-        "Accumulations": reader.accumulation_count,
-
-        "Slit Opening (µm)": f"{wdf_metadata['slit_opening']}" if 'slit_opening' in wdf_metadata else 'Unknown',
-        "Slit Centre (µm)": f"{wdf_metadata['slit_centre']}" if 'slit_centre' in wdf_metadata else 'Unknown',
-
-        "Title": reader.title,
-        "Username": reader.username,
-        "Date": wdf_metadata.get('timestamp', 'Unknown'),
-        "Application": f"{reader.application_name} v{'.'.join(map(str, reader.application_version))}",
-        "Measurement Type": str(reader.measurement_type),
-        "Scan Type": str(reader.scan_type),
-        "Number of Spectra": reader.count,
-        "Points per Spectrum": reader.point_per_spectrum,
-        "Spectral Unit": reader.spectral_unit,
-        "X-axis Type": reader.xlist_type,
-        "X-axis Unit": reader.xlist_unit,
-        "Wavenumber Range": f"{reader.xdata[0]:.2f} to {reader.xdata[-1]:.2f} {reader.xlist_unit}",
-    }
+    # Build metadata dictionary with proper formatting
+    metadata = _construct_wdf_metadata(reader, wdf_metadata)
     
     # Assign metadata to spectrum
-    s.metadata = metadata
+    # Reorder keys to match standard WDF structure
+    s.metadata = _reorder_metadata(metadata)
     
     reader.close()
     return s
@@ -324,43 +299,10 @@ def load_wdf_map(path: Path) -> pd.DataFrame:
             y_step = y_unique[1] - y_unique[0]
     
     # Build metadata dictionary with proper formatting and order
-    metadata = {
-        "File Format": "Renishaw WDF Map",
-
-        "Grating": wdf_metadata.get('grating_name', 'Unknown'),
-        "Objective Used": wdf_metadata.get('objective_name', 'Unknown'),
-
-        "Laser Wavelength (nm)": f"{reader.laser_length:.2f}",
-        "Laser Power (%)": f"{wdf_metadata['laser_power']}" if 'laser_power' in wdf_metadata else 'Unknown',
-
-        "Exposure Time (s)": f"{wdf_metadata['exposure_time']}" if 'exposure_time' in wdf_metadata else 'Unknown',
-        "Accumulations": reader.accumulation_count,
-
-        "Slit Opening (µm)": f"{wdf_metadata['slit_opening']}" if 'slit_opening' in wdf_metadata else 'Unknown',
-        "Slit Centre (µm)": f"{wdf_metadata['slit_centre']}" if 'slit_centre' in wdf_metadata else 'Unknown',
-        
-        "Title": reader.title,
-        "Username": reader.username,
-        "Date": wdf_metadata.get('timestamp', 'Unknown'),
-        "Application": f"{reader.application_name} v{'.'.join(map(str, reader.application_version))}",
-
-        "Measurement Type": str(reader.measurement_type),    
-        "Scan Type": str(reader.scan_type),
-        "Total Map Points": reader.count,
-        "X Range (µm)": f"{reader.xpos.min():.2f} to {reader.xpos.max():.2f}",
-        "Y Range (µm)": f"{reader.ypos.min():.2f} to {reader.ypos.max():.2f}",
-        "X Step Size (µm)": f"{x_step:.3f}" if x_step is not None else 'Unknown',
-        "Y Step Size (µm)": f"{y_step:.3f}" if y_step is not None else 'Unknown',
-
-        "Points per Spectrum": reader.point_per_spectrum,
-        "Spectral Unit": reader.spectral_unit,
-        "X-axis Type": reader.xlist_type,
-        "X-axis Unit": reader.xlist_unit,
-        "Wavenumber Range": f"{reader.xdata[0]:.2f} to {reader.xdata[-1]:.2f} {reader.xlist_unit}",
-    }
+    metadata = _construct_wdf_metadata(reader, wdf_metadata, x_step, y_step)
     
     reader.close()
-    return df, metadata
+    return df, _reorder_metadata(metadata)
 
 
 def load_dataframe_file(path: Path) -> dict[str, pd.DataFrame]:
@@ -436,9 +378,12 @@ def load_spc_spectrum(path: Path) -> MSpectrum:
     
     # Add metadata from Log Block if available
     if hasattr(reader, 'log_metadata') and reader.log_metadata:
-        metadata.update(reader.log_metadata)
+        # Map raw SPC keys to standard WDF keys
+        mapped_log = _map_spc_metadata(reader.log_metadata)
+        metadata.update(mapped_log)
         
-    s.metadata = metadata
+    # Reorder keys to match standard WDF structure
+    s.metadata = _reorder_metadata(metadata)
     
     return s
 
@@ -511,9 +456,11 @@ def load_spc_map(path: Path) -> tuple[pd.DataFrame, dict]:
     
     # Add metadata from Log Block if available
     if hasattr(reader, 'log_metadata') and reader.log_metadata:
-        metadata.update(reader.log_metadata)
+        # Map raw SPC keys to standard WDF keys
+        mapped_log = _map_spc_metadata(reader.log_metadata)
+        metadata.update(mapped_log)
         
-    return df, metadata
+    return df, _reorder_metadata(metadata)
 
 
 def _extract_spc_x_unit(reader: SpcReader) -> str:
@@ -554,3 +501,126 @@ def _extract_spc_x_unit(reader: SpcReader) -> str:
              x_unit = "1/cm" 
              
     return x_unit
+
+
+def _construct_wdf_metadata(reader, wdf_metadata, x_step=None, y_step=None):
+    """Helper to construct standardized WDF metadata."""
+    # Build metadata dictionary with proper formatting
+    metadata = {
+        "File Format": "Renishaw WDF" if x_step is None else "Renishaw WDF Map",
+
+        "Grating": wdf_metadata.get('grating_name', 'Unknown'),
+        "Objective Used": wdf_metadata.get('objective_name', 'Unknown'),
+
+        "Laser Wavelength (nm)": f"{reader.laser_length:.2f}",
+        "Laser Power (%)": f"{wdf_metadata['laser_power']}" if 'laser_power' in wdf_metadata else 'Unknown',
+
+        "Exposure Time (s)": f"{wdf_metadata['exposure_time']}" if 'exposure_time' in wdf_metadata else 'Unknown',
+        "Accumulations": reader.accumulation_count,
+
+        "Slit Opening (µm)": f"{wdf_metadata['slit_opening']}" if 'slit_opening' in wdf_metadata else 'Unknown',
+        "Slit Centre (µm)": f"{wdf_metadata['slit_centre']}" if 'slit_centre' in wdf_metadata else 'Unknown',
+
+        "Title": reader.title,
+        "Username": reader.username,
+        "Date": wdf_metadata.get('timestamp', 'Unknown'),
+        "Application": f"{reader.application_name} v{'.'.join(map(str, reader.application_version))}",
+
+        "Measurement Type": str(reader.measurement_type),    
+        "Scan Type": str(reader.scan_type),
+        "Total Map Points": reader.count,
+    }
+    
+    # Map specific fields
+    if x_step is not None:
+        metadata.update({
+             "X Range (µm)": f"{reader.xpos.min():.2f} to {reader.xpos.max():.2f}",
+             "Y Range (µm)": f"{reader.ypos.min():.2f} to {reader.ypos.max():.2f}",
+             "X Step Size (µm)": f"{x_step:.3f}",
+             "Y Step Size (µm)": f"{y_step:.3f}" if y_step is not None else 'Unknown',
+        })
+
+    metadata.update({
+        "Points per Spectrum": reader.point_per_spectrum,
+        "Spectral Unit": reader.spectral_unit,
+        "X-axis Type": reader.xlist_type,
+        "X-axis Unit": reader.xlist_unit,
+        "Wavenumber Range": f"{reader.xdata[0]:.2f} to {reader.xdata[-1]:.2f} {reader.xlist_unit}",
+    })
+    return metadata
+
+def _map_spc_metadata(log_metadata: dict) -> dict:
+    """Map SPC log keys to standard WDF keys."""
+    # Mapping table (WDF Key <- SPC Key)
+    key_map = {
+        "GRATING": "Grating",
+        "OBJECTIV": "Objective Used",
+        "EXCIT_LINE": "Laser Wavelength (nm)",
+        "ND FILTER": "Laser Power (%)",
+        "ACQ. TIME (S)": "Exposure Time (s)",
+        "ACCUMULATIONS": "Accumulations",
+        "HOLE (M)": "Slit Opening (µm)",
+        "DATE": "Date",
+    }
+    
+    new_metadata = {}
+    
+    # Apply mapping
+    for spc_key, standard_key in key_map.items():
+        if spc_key in log_metadata:
+            val = log_metadata[spc_key]
+            new_metadata[standard_key] = val
+            
+    # Add other unmapped keys at the end 
+    mapped_source_keys = set(key_map.keys())
+    
+    for k, v in log_metadata.items():
+        if k not in mapped_source_keys:
+            new_metadata[k] = v
+            
+    return new_metadata
+
+def _reorder_metadata(metadata: dict) -> dict:
+    """Reorder metadata keys to match standard WDF structure where possible."""
+    ordered_keys = [
+        "File Format",
+        "Date",
+        "Grating",
+        "Objective Used",
+        "Laser Wavelength (nm)",
+        "Laser Power (%)",
+        "Exposure Time (s)",
+        "Accumulations",
+        "Slit Opening (µm)",
+        "Wavenumber Range",
+        "X-axis Unit",
+        "Points per Spectrum",
+        "Total Map Points",
+        "X Step Size (µm)",
+        "Y Step Size (µm)",
+
+        "Title",
+        "Username",
+        "Application",
+        "Measurement Type",
+        "Scan Type",
+        "X Range (µm)",
+        "Y Range (µm)",
+        "Spectral Unit",
+        "X-axis Type",
+        "Slit Centre (µm)"
+    ]
+    
+    new_metadata = {}
+    
+    # Add keys in order if they exist
+    for key in ordered_keys:
+        if key in metadata:
+            new_metadata[key] = metadata[key]
+            
+    # Add remaining keys
+    for key, value in metadata.items():
+        if key not in new_metadata:
+             new_metadata[key] = value
+             
+    return new_metadata

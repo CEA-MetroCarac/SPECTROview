@@ -173,17 +173,22 @@ class SpcReader:
         self.f.seek(32)
         self.header['flogoff'] = struct.unpack('<i', self.f.read(4))[0]
         
+        # Read fxtype, fytype, fztype, fpost at 0x24 (byte 36)
+        # 4 bytes = 4 chars/bytes
+        self.f.seek(36)
+        vals = struct.unpack('<BBBB', self.f.read(4))
+        self.header['fxtype'] = vals[0]
+        self.header['fytype'] = vals[1]
+        self.header['fztype'] = vals[2]
+        self.header['fpost'] = vals[3]
+        
+        # Read fcatxt (X axis label) at 0x10E (270)
+        # Size is 30 bytes
+        self.f.seek(270)
+        self.header['fcatxt'] = self.f.read(30).split(b'\0')[0].decode('utf-8', errors='ignore').strip()
+        
         # Read axes labels (null terminated strings)
-        # X label at 0x30 (48), Y label at 0x44 (68) ?? 
-        # Actually in new format:
-        # fxtype (0x24), fytype(0x25), fztype(0x26), fpost(0x27)
-        # fdate (0x28, 4 bytes)
-        # fres (0x2C, 9 bytes string)
-        # fsource (0x35, 9 bytes string)
-        # fpeakpt (0x3E, 2 bytes)
-        # fspare (0x40, 8 floats, 32 bytes)
-        # fcmnt (0x60, 130 bytes)
-        # fcatxt (0x82, 30 bytes) -- x axis label?
+        # ... legacy comments ...
         # flogtxt (0xA0, 19 bytes)
         # fmods (0xB3, 4 bytes)
         # fprocs (0xB7, 1 byte)

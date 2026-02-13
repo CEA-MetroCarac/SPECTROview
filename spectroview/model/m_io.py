@@ -424,13 +424,14 @@ def load_spc_spectrum(path: Path) -> MSpectrum:
     s.baseline.mode = "Linear"
     s.baseline.sigma = 4
     
+    # Determine X-axis Unit
+    x_unit = _extract_spc_x_unit(reader) 
+             
     # Metadata
     metadata = {
         "File Format": "Galactic SPC",
-        "Title": reader.header.get('fcmnt', ''),
-        "Date": reader.header.get('date', ''),
         "Points": reader.header['npts'],
-        "X Units": "Wavenumber" if reader.header.get('ftflgs', 0) & 0x80 else "Arbitrary", 
+        "X-axis Unit": x_unit,
     }
     
     # Add metadata from Log Block if available
@@ -498,12 +499,14 @@ def load_spc_map(path: Path) -> tuple[pd.DataFrame, dict]:
         
     df = pd.DataFrame(data_dict)
     
+    # Determine X-axis Unit
+    x_unit = _extract_spc_x_unit(reader) 
+
     metadata = {
         "File Format": "Galactic SPC Map",
-        "Title": reader.header.get('fcmnt', ''),
-        "Date": reader.header.get('date', ''),
         "Total Map Points": num_spectra,
         "Points per Spectrum": reader.header['npts'],
+        "X-axis Unit": x_unit,
     }
     
     # Add metadata from Log Block if available
@@ -511,3 +514,43 @@ def load_spc_map(path: Path) -> tuple[pd.DataFrame, dict]:
         metadata.update(reader.log_metadata)
         
     return df, metadata
+
+
+def _extract_spc_x_unit(reader: SpcReader) -> str:
+    """Helper to determine X-axis unit from SPC reader."""
+    x_unit = "Arbitrary"
+    
+    # 1. Check fxtype (though often 0)
+    fxtype = reader.header.get('fxtype', 0)
+    # Mapping based on SPC format
+    # 0=Arb, 1=Wavenumber (cm-1), 2=um, 3=nm, 4=secs, 13=eV
+    if fxtype == 1: x_unit = "1/cm"
+    elif fxtype == 3: x_unit = "nm"
+    elif fxtype == 13: x_unit = "eV"
+    elif fxtype == 4: x_unit = "s"
+    
+    # 2. Check fcatxt (X-axis label)
+    fcatxt = reader.header.get('fcatxt', '')
+    if fcatxt:
+        # Check against known units
+        fcatxt_lower = fcatxt.lower()
+        if "cm-1" in fcatxt_lower or "1/cm" in fcatxt_lower or "wavenumber" in fcatxt_lower:
+            x_unit = "1/cm"
+        elif "nm" in fcatxt_lower or "nanometer" in fcatxt_lower:
+            x_unit = "nm"
+        elif "ev" in fcatxt_lower:
+            x_unit = "eV"
+    
+    # 3. Fallback: Check Log Content
+    if x_unit == "Arbitrary" and hasattr(reader, 'log_content'):
+        log_str = reader.log_content
+        # Heuristic checks
+        # Check for SPECTROMETER (NM) specifically
+        if "SPECTROMETER (NM)" in log_str:
+             x_unit = "nm"
+        elif "eV" in log_str:
+             x_unit = "eV"
+        elif "RAMAN" in log_str: 
+             x_unit = "1/cm" 
+             
+    return x_unit

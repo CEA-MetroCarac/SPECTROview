@@ -240,8 +240,8 @@ def load_wdf_map(path: Path) -> pd.DataFrame:
     reader = WDFReader(str(path))
       
     # Extract data
-    x_coords = reader.xpos  # X stage positions (µm)
-    y_coords = reader.ypos  # Y stage positions (µm)
+    x_coords = np.round(np.array(reader.xpos), 4)  # X stage positions (µm)
+    y_coords = np.round(np.array(reader.ypos), 4)  # Y stage positions (µm)
     wavenumbers = reader.xdata  # Wavenumber axis (cm^-1)
     spectra_data = reader.spectra  # Can be 2D or 3D array
     
@@ -433,8 +433,8 @@ def load_spc_map(path: Path) -> tuple[pd.DataFrame, dict]:
          
     # Create DataFrame
     data_dict = {
-        'X': x_coords,
-        'Y': y_coords
+        'X': np.round(x_coords, 4),
+        'Y': np.round(y_coords, 4)
     }
     
     wavenumber_cols = [str(wn) for wn in wavenumbers]

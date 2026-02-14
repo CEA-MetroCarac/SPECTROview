@@ -9,7 +9,6 @@ class VSpectraList(QListWidget):
     # ───── View → ViewModel signals ─────
     selection_changed = Signal(list)     # list of selected row indices
     order_changed = Signal(list)          # new order of row indices
-    files_dropped = Signal(list)          # list of file paths
     item_activated = Signal(int)          # double-clicked row
 
     def __init__(self, parent=None):
@@ -40,7 +39,7 @@ class VSpectraList(QListWidget):
                 self.addItem(spacer)
             
             # Add the centered placeholder item with larger text
-            placeholder = QListWidgetItem("📂 Drag and drop file(s) here to open")
+            placeholder = QListWidgetItem("📂 Drag and drop file(s) anywhere to open")
             placeholder.setFlags(Qt.NoItemFlags)  # Make it non-selectable and non-editable
             placeholder.setForeground(Qt.gray)
             placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
@@ -148,22 +147,20 @@ class VSpectraList(QListWidget):
     # ───── Drag & Drop handling ──────────────────────────────────
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
-            event.acceptProposedAction()
+            event.ignore()
         else:
             super().dragEnterEvent(event)
 
     def dragMoveEvent(self, event):
         if event.mimeData().hasUrls():
-            event.acceptProposedAction()
+            event.ignore()
         else:
             super().dragMoveEvent(event)
 
     def dropEvent(self, event):
-        # External files dropped
+        # External files dropped - ignore them so they propagate to parent
         if event.mimeData().hasUrls():
-            paths = [url.toLocalFile() for url in event.mimeData().urls()]
-            self.files_dropped.emit(paths)
-            event.acceptProposedAction()
+            event.ignore()
             return
 
         # Internal reorder

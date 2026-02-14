@@ -58,6 +58,9 @@ class Main(QMainWindow):
         self.tabWidget.addTab(self.v_spectra_workspace, "Spectra")
         self.tabWidget.addTab(self.v_maps_workspace, "Maps")
         self.tabWidget.addTab(self.v_graphs_workspace, "Graphs")
+        
+        # Enable Drag & Drop
+        self.setAcceptDrops(True)
 
         layout.addWidget(self.tabWidget)
         self.setCentralWidget(central)
@@ -361,6 +364,18 @@ class Main(QMainWindow):
             app.setPalette(light_palette())
             self.settings.set_theme("light")
 
+    def dragEnterEvent(self, event):
+        """Accept dragging files into the application."""
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        """Handle dropped files."""
+        if event.mimeData().hasUrls():
+            paths = [url.toLocalFile() for url in event.mimeData().urls()]
+            self._load_files_by_paths(paths)
+            event.acceptProposedAction()
+
 def launcher():
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(LOGO_APPLI))
@@ -369,7 +384,6 @@ def launcher():
     window = Main()
     window.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     launcher()

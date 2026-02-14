@@ -156,12 +156,9 @@ class VWorkspaceGraphs(QWidget):
         # DataFrame listbox
         self.df_listbox = QListWidget()
         self.df_listbox.setMaximumHeight(120)
-        self.df_listbox.setAcceptDrops(True)  # Enable drag-and-drop
+        # self.df_listbox.setAcceptDrops(True)  # Disabled to allow global drop
         
-        # Enable drag & drop for external files
-        self.df_listbox.dragEnterEvent = self._on_df_drag_enter
-        self.df_listbox.dragMoveEvent = self._on_df_drag_move
-        self.df_listbox.dropEvent = self._on_df_drop
+        # Connect selection change
         
         self._has_df_placeholder = False  # Track placeholder state
         self._update_df_placeholder()  # Show placeholder initially
@@ -539,7 +536,7 @@ class VWorkspaceGraphs(QWidget):
                 self.df_listbox.addItem(spacer)
             
             # Add the centered placeholder item with larger text
-            placeholder = QListWidgetItem("📂 Drag and drop file(s) here to open")
+            placeholder = QListWidgetItem("📂 Drag and drop file(s) anywhere to open")
             placeholder.setFlags(Qt.NoItemFlags)  # Make it non-selectable and non-editable
             placeholder.setForeground(Qt.gray)
             placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
@@ -565,29 +562,7 @@ class VWorkspaceGraphs(QWidget):
                         i += 1
                 self._has_df_placeholder = False
     
-    def _on_df_drag_enter(self, event):
-        """Accept external file drops on dataframe list."""
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-        else:
-            event.ignore()
-    
-    def _on_df_drag_move(self, event):
-        """Allow drag movement."""
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-        else:
-            event.ignore()
-    
-    def _on_df_drop(self, event):
-        """Handle file drop on dataframe list."""
-        if event.mimeData().hasUrls():
-            paths = [url.toLocalFile() for url in event.mimeData().urls()]
-            # Route to universal file opener
-            parent_window = self.window()
-            if hasattr(parent_window, '_load_files_by_paths'):
-                parent_window._load_files_by_paths(paths)
-            event.acceptProposedAction()
+
     
     def _on_plot_style_changed(self, plot_style: str):
         """Handle plot style change."""

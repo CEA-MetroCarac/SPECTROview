@@ -24,7 +24,6 @@ class VMapsList(QWidget):
     map_selection_changed = Signal(int)           # Selected map index
     spectra_selection_changed = Signal(list)      # Selected spectrum indices
     check_all_toggled = Signal(bool)              # Check all checkbox toggled
-    files_dropped = Signal(list)                  # File paths dropped on maps list
     view_map_requested = Signal()                 # View map DataFrame
     delete_map_requested = Signal()               # Delete selected map
     save_requested = Signal()                     # Save map to Excel
@@ -61,14 +60,11 @@ class VMapsList(QWidget):
         
         self.maps_list = QListWidget()
         self.maps_list.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.maps_list.setAcceptDrops(True)
+        # self.maps_list.setAcceptDrops(True) # Disabled to allow global drop
         self.maps_list.setMaximumHeight(150)
         self.maps_list.setMinimumHeight(80)
         
-        # Enable drag & drop for external files
-        self.maps_list.dragEnterEvent = self._on_maps_drag_enter
-        self.maps_list.dragMoveEvent = self._on_maps_drag_move
-        self.maps_list.dropEvent = self._on_maps_drop
+        # Connect selection change
         
         # Connect selection change
         self.maps_list.itemSelectionChanged.connect(self._on_map_selected)
@@ -186,7 +182,7 @@ class VMapsList(QWidget):
                 self.maps_list.addItem(spacer)
             
             # Add the centered placeholder item with larger text
-            placeholder = QListWidgetItem("📂 Drag and drop file(s) here to open")
+            placeholder = QListWidgetItem("📂 Drag and drop file(s) anywhere to open")
             placeholder.setFlags(Qt.NoItemFlags)  # Make it non-selectable and non-editable
             placeholder.setForeground(Qt.gray)
             placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
@@ -322,24 +318,4 @@ class VMapsList(QWidget):
         indices = self.get_selected_spectra_indices()
         self.spectra_selection_changed.emit(indices)
     
-    # ───── Drag & Drop handling ──────────────────────────────────
-    def _on_maps_drag_enter(self, event):
-        """Accept external file drops on maps list."""
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-        else:
-            event.ignore()
-    
-    def _on_maps_drag_move(self, event):
-        """Allow drag movement."""
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-        else:
-            event.ignore()
-    
-    def _on_maps_drop(self, event):
-        """Handle file drop on maps list."""
-        if event.mimeData().hasUrls():
-            paths = [url.toLocalFile() for url in event.mimeData().urls()]
-            self.files_dropped.emit(paths)
-            event.acceptProposedAction()
+    # ───── Internal signal handlers ──────────────────────────────

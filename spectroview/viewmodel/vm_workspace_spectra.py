@@ -95,7 +95,10 @@ class VMWorkspaceSpectra(QObject):
     # View → ViewModel slots
     def load_files(self, paths: list[str]):
         """Load spectrum files from disk."""
-        existing_paths = {s.source_path for s in self.spectra}
+        # Build sets of existing identifiers for fast lookup
+        existing_paths = {s.source_path for s in self.spectra if s.source_path}
+        existing_fnames = {s.fname for s in self.spectra}
+        
         loaded_files = []
         last_valid_path = None
 
@@ -103,8 +106,14 @@ class VMWorkspaceSpectra(QObject):
             path = Path(p)
             resolved_path = str(path.resolve())
             
+            # Check for duplicate path OR duplicate filename
+            # This prevents loading the same file twice, or different files with same name
             if resolved_path in existing_paths:
-                self.notify.emit(f"Spectrum '{path.name}' already loaded, skipping.")
+                self.notify.emit(f"Spectrum '{path.name}' already loaded (path match), skipping.")
+                continue
+                
+            if path.stem in existing_fnames:
+                self.notify.emit(f"Spectrum '{path.name}' already loaded (name match), skipping.")
                 continue
 
             try:

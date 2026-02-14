@@ -61,7 +61,7 @@ def load_spectrum_file(path: Path) -> MSpectrum:
     df = df.sort_values(df.columns[0])
 
     s = MSpectrum()
-    #s.source_path = str(path.resolve()) 
+    s.source_path = str(path.resolve()) 
     s.fname = path.stem
     s.x0 = df.iloc[:, 0].to_numpy()
     s.y0 = df.iloc[:, 1].to_numpy()
@@ -107,7 +107,7 @@ def load_wdf_spectrum(path: Path) -> MSpectrum:
     
     # Create MSpectrum object
     s = MSpectrum()
-    #s.source_path = str(path.resolve())
+    s.source_path = str(path.resolve())
     s.fname = path.stem
     s.x0 = np.array(wavenumbers, dtype=np.float64)
     s.y0 = np.array(intensities, dtype=np.float64)
@@ -180,7 +180,7 @@ def load_TRPL_data(path: Path) -> MSpectrum:
     
     # Create MSpectrum object
     s = MSpectrum()
-    #s.source_path = str(path.resolve())
+    s.source_path = str(path.resolve())
     s.fname = path.stem
     # Explicitly use float64 for both x and y to ensure compatibility with save/load
     # (decompress always uses float64, so we must match that dtype)

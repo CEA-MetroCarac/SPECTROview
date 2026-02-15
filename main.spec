@@ -23,6 +23,10 @@ a = Analysis(
         'PyQt5.QtCore',
         'PyQt5.QtGui',
         'PyQt5.QtWidgets',
+        'PyQt6',
+        'PyQt6.QtCore',
+        'PyQt6.QtGui',
+        'PyQt6.QtWidgets',
     ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
@@ -58,6 +62,6 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,  # windowed app
+    console=True,  # windowed app
     icon='spectroview/resources/icons/logo_spectroview.ico',
 )

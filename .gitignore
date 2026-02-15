@@ -1,4 +1,5 @@
 .venv/
+.venv_clean/
 .spectroview/
 build/
 dist/

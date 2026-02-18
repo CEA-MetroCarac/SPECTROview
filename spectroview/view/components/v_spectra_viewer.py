@@ -26,7 +26,7 @@ import matplotlib.lines as mlines
 import matplotlib.text as mtext
 
 from spectroview import ICON_DIR, X_AXIS_UNIT, PLOT_POLICY
-from spectroview.viewmodel.utils import copy_fig_to_clb
+from spectroview.viewmodel.utils import copy_fig_to_clb, NoDoubleClickZoomToolbar
 
 
 class VSpectraViewer(QWidget):
@@ -75,7 +75,7 @@ class VSpectraViewer(QWidget):
         self.canvas.mpl_connect("motion_notify_event", self._on_hover)
 
 
-        self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        self.toolbar = NoDoubleClickZoomToolbar(self.canvas, self)
         self.toolbar.zoom() # Start with zoom enabled
         for action in self.toolbar.actions():
             if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
@@ -579,20 +579,21 @@ class VSpectraViewer(QWidget):
 
     
     def _make_legend_pickable(self, legend):
-        """Make legend texts and handles pickable for interaction."""
+        """Make legend texts and handles pickable for interaction (double-click)."""
         for text in legend.get_texts():
             text.set_picker(True)
 
         for handle in legend.legend_handles:
             handle.set_picker(True)
 
-        # Cache bbox to avoid conflicts with plot clicks
+        # Cache legend and its artists for double-click hit-testing
+        self._legend_obj = legend
         self._legend_bbox = legend.get_window_extent(self.canvas.renderer)
 
-        # Connect pick event once
-        if not hasattr(self, "_legend_pick_connected"):
-            self.canvas.mpl_connect("pick_event", self._on_legend_pick)
-            self._legend_pick_connected = True
+        # Connect double-click handler once (replaces pick_event)
+        if not hasattr(self, "_legend_dblclick_connected"):
+            self.canvas.mpl_connect("button_press_event", self._on_legend_double_click)
+            self._legend_dblclick_connected = True
 
 
     def set_r2(self, value):
@@ -616,54 +617,76 @@ class VSpectraViewer(QWidget):
         else:
             self.lbl_r2.setText("R²=0")
 
-    def _on_legend_pick(self, event):
-        artist = event.artist
+    def _on_legend_double_click(self, event):
+        """Handle double-click on legend text or marker to edit label/color."""
+        if not event.dblclick:
+            return
+        if event.inaxes != self.ax:
+            return
 
-        # Legend TEXT → rename spectrum
-        if isinstance(artist, mtext.Text):
-            old_label = artist.get_text()
+        legend = getattr(self, "_legend_obj", None)
+        if legend is None:
+            return
 
-            new_label, ok = QInputDialog.getText(
-                self,
-                "Edit legend label",
-                "New label:",
-                text=old_label
-            )
-
-            if not ok or not new_label.strip():
+        # Hit-test legend texts
+        for text in legend.get_texts():
+            contains, _ = text.contains(event)
+            if contains:
+                self._edit_legend_label(text)
                 return
 
-            artist.set_text(new_label)
-
-            for line in self.ax.get_lines():
-                if line.get_label() == old_label:
-                    line.set_label(new_label)
-
-                    if hasattr(line, "_spectrum_ref"):
-                        line._spectrum_ref.label = new_label
-                    break
-
-            self.canvas.draw_idle()
-
-        # Legend LINE → change color
-        elif isinstance(artist, mlines.Line2D):
-            color = QColorDialog.getColor()
-
-            if not color.isValid():
+        # Hit-test legend handles
+        for handle in legend.legend_handles:
+            contains, _ = handle.contains(event)
+            if contains:
+                self._edit_legend_color(handle)
                 return
 
-            hex_color = color.name()
-            artist.set_color(hex_color)
+    def _edit_legend_label(self, artist):
+        """Open dialog to rename the spectrum label."""
+        old_label = artist.get_text()
 
-            for line in self.ax.get_lines():
-                if line.get_label() == artist.get_label():
-                    line.set_color(hex_color)
+        new_label, ok = QInputDialog.getText(
+            self,
+            "Edit legend label",
+            "New label:",
+            text=old_label
+        )
 
-                    if hasattr(line, "_spectrum_ref"):
-                        line._spectrum_ref.color = hex_color
-                    break
+        if not ok or not new_label.strip():
+            return
 
-            self.canvas.draw_idle()
+        artist.set_text(new_label)
+
+        for line in self.ax.get_lines():
+            if line.get_label() == old_label:
+                line.set_label(new_label)
+
+                if hasattr(line, "_spectrum_ref"):
+                    line._spectrum_ref.label = new_label
+                break
+
+        self.canvas.draw_idle()
+
+    def _edit_legend_color(self, artist):
+        """Open color picker to change the spectrum color."""
+        color = QColorDialog.getColor()
+
+        if not color.isValid():
+            return
+
+        hex_color = color.name()
+        artist.set_color(hex_color)
+
+        for line in self.ax.get_lines():
+            if line.get_label() == artist.get_label():
+                line.set_color(hex_color)
+
+                if hasattr(line, "_spectrum_ref"):
+                    line._spectrum_ref.color = hex_color
+                break
+
+        self.canvas.draw_idle()
 
 
     # ─────────────────────────────────────────

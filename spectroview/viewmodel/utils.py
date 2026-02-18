@@ -23,7 +23,7 @@ import datetime
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
 
 from fitspy.core.baseline import BaseLine
 from fitspy.core.utils_mp import fit_mp
@@ -375,6 +375,20 @@ def show_toast_notification(parent, message, title=None, duration=3000, preset=N
     toast.show()
     return toast
 
+
+
+class NoDoubleClickZoomToolbar(NavigationToolbar2QT):
+    """NavigationToolbar that ignores double-clicks in zoom mode.
+
+    By default, matplotlib's zoom tool resets the view on a double-click.
+    This subclass suppresses that behaviour so that double-clicks can be
+    used exclusively for legend customisation without side-effects.
+    """
+
+    def press_zoom(self, event):
+        if getattr(event, "dblclick", False):
+            return  # swallow double-clicks – do not zoom
+        super().press_zoom(event)
 
 class CustomizedPalette(QComboBox):
     """Custom QComboBox to show color palette previews along with their names."""

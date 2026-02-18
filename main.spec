@@ -116,18 +116,12 @@ elif is_windows:
         [],
         name=APP_NAME,
         debug=False,
+        bootloader_ignore_signals=False,
         strip=False,
         upx=True,
+        upx_exclude=[],
+        runtime_tmpdir=None,
         console=True,
         icon=icon_file,
     )
 
-    coll = COLLECT(
-        exe,
-        a.binaries,
-        a.zipfiles,
-        a.datas,
-        strip=False,
-        upx=True,
-        name=APP_NAME,
-    )

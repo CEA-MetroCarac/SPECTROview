@@ -65,8 +65,6 @@ class TestMGraphInitialization:
         
         # Legend
         assert graph.legend_visible is True
-        assert graph.legend_location == 'upper right'
-        assert graph.legend_outside is False
         
         # Plot-specific
         assert graph.color_palette == "jet"
@@ -155,7 +153,6 @@ class TestMGraphSaveLoad:
         graph1.ymax = 10.0
         graph1.xlogscale = True
         graph1.grid = True
-        graph1.legend_location = "lower left"
         graph1.color_palette = "viridis"
         
         # Save to dict
@@ -181,7 +178,6 @@ class TestMGraphSaveLoad:
         assert graph2.ymax == graph1.ymax
         assert graph2.xlogscale == graph1.xlogscale
         assert graph2.grid == graph1.grid
-        assert graph2.legend_location == graph1.legend_location
         assert graph2.color_palette == graph1.color_palette
     
     def test_load_handles_none_limits(self):

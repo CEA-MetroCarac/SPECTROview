@@ -73,7 +73,7 @@ class VWorkspaceSpectra(QWidget):
         
         left_splitter.addWidget(self.v_spectra_viewer)
         left_splitter.addWidget(self.bottom_tabs)
-        left_splitter.setSizes([550, 450])
+        left_splitter.setSizes([530, 470])
 
         # RIGHT SIDE (Sidebar)
         right_widget = QFrame()

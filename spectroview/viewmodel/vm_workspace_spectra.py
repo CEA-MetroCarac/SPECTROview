@@ -24,7 +24,7 @@ from spectroview.viewmodel.utils import (
     save_df_to_excel,
     view_text,
 )
-from fitspy.core.baseline import generate_penalties
+
 
 
 class VMWorkspaceSpectra(QObject):
@@ -177,13 +177,6 @@ class VMWorkspaceSpectra(QObject):
         if not selected_spectra:
             self.spectra_selection_changed.emit([])
             return
-        
-        # FIX: Clear fitspy cache to prevent artifacts from in-place modification bug
-        # This ensures every plot update (switch spectra, paste, preview) uses a fresh calculation
-        try:
-            generate_penalties.cache_clear()
-        except Exception:
-            pass
 
         # emit list of the selected spectra to plot in View
         self.spectra_selection_changed.emit(selected_spectra)    
@@ -308,25 +301,7 @@ class VMWorkspaceSpectra(QObject):
 
         del spectrum.peak_models[idx]
         del spectrum.peak_labels[idx]
-        self._emit_selected_spectra()
-
-    def set_baseline_settings(self, settings: dict):
-        if not self.selected_fnames:
-            return
-
-        for spectrum in self._get_selected_spectra():
-            bl = spectrum.baseline
-            bl.attached = settings["attached"]
-            bl.sigma = settings["noise"]
-
-            if settings["mode"] == "Linear":
-                bl.mode = "Linear"
-            else:
-                bl.mode = "Polynomial"
-                bl.order_max = settings["order"]
-
-        self._emit_selected_spectra()
- 
+        self._emit_selected_spectra() 
 
     def add_baseline_point(self, x: float, y: float):
         if not self.selected_fnames:
@@ -463,11 +438,7 @@ class VMWorkspaceSpectra(QObject):
         baseline_data = deepcopy(self._baseline_clipboard)
         dict_to_baseline(baseline_data, spectra)
         
-        # CLEAR CACHE: ensure pasted baseline calculation starts fresh
-        try:
-            generate_penalties.cache_clear()
-        except Exception:
-            pass
+
 
         self._emit_selected_spectra()
 
@@ -482,11 +453,7 @@ class VMWorkspaceSpectra(QObject):
 
         for spectrum in spectra:
             if not spectrum.baseline.is_subtracted:
-                # CLEAR CACHE: ensure subtraction uses clean matrix
-                try:
-                    generate_penalties.cache_clear()
-                except Exception:
-                    pass
+
                 spectrum.eval_baseline()
                 spectrum.subtract_baseline()
 
@@ -545,7 +512,7 @@ class VMWorkspaceSpectra(QObject):
 
     def _apply_baseline_settings(self, settings: dict, spectra):
         """Internal helper: push mode/params from 'settings' dict onto each spectrum's baseline."""
-        mode     = settings.get("mode")        # fitspy key or None
+        mode     = settings.get("mode")       
         coef     = float(settings.get("coef",     5.0))
         order    = int(settings.get("order_max", 1))
         sigma    = int(settings.get("sigma",     0))
@@ -581,20 +548,8 @@ class VMWorkspaceSpectra(QObject):
         if not self.selected_fnames:
             return
         
-        # CLEAR CACHE: Fix for arPLS inconsistency (fitspy bug where cache is corrupted)
-        try:
-            generate_penalties.cache_clear()
-        except Exception:
-            pass
-
         spectra = self._get_selected_spectra()
         self._apply_baseline_settings(settings, spectra)
-
-        # Force fresh calculation (clearing cached y_eval) to avoid "warm start" drift
-        # This ensures the preview matches the result of a fresh calculation (e.g. Paste)
-        for s in spectra:
-            if hasattr(s.baseline, "y_eval"):
-                s.baseline.y_eval = None
 
         self._emit_selected_spectra()  # triggers viewer._plot() → _plot_baseline()
 

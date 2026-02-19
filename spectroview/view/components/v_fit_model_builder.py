@@ -297,7 +297,7 @@ class VFitModelBuilder(QWidget):
         self.lbl_coef2 = QLabel("Order:")
         self.spin_coef2 = QSpinBox()
         self.spin_coef2.setRange(1, 20)
-        self.spin_coef2.setValue(2)
+        self.spin_coef2.setValue(1)
         self.spin_coef2.setFixedWidth(44)
         self.spin_coef2.setVisible(False)
         self.lbl_coef2.setVisible(False)
@@ -390,9 +390,9 @@ class VFitModelBuilder(QWidget):
 
         # ── Auto methods: only these three methods
         _AUTO_WHITELIST = {
-            "arpls":  "arPLS",
             "airpls": "airPLS",
             "asls":   "asLS",
+            #"arpls":  "arPLS", # Remove because the performance not good.
         }
 
         for key, label in _AUTO_WHITELIST.items():

@@ -26,8 +26,8 @@
             "is_active": true,
             "metadata": {},
             "baseline": {
-                "mode": "arpls",
-                "coef": 3.5,
+                "mode": "airpls",
+                "coef": 5.6,
                 "points": [
                     [],
                     []
@@ -69,7 +69,7 @@
             "metadata": {},
             "baseline": {
                 "mode": "airpls",
-                "coef": 4.3,
+                "coef": 5.6,
                 "points": [
                     [],
                     []
@@ -110,8 +110,8 @@
             "is_active": true,
             "metadata": {},
             "baseline": {
-                "mode": "asls",
-                "coef": 3.1,
+                "mode": "airpls",
+                "coef": 5.6,
                 "points": [
                     [],
                     []

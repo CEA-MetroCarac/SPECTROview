@@ -467,6 +467,7 @@ class VMWorkspaceSpectra(QObject):
 
         for spectrum in spectra:
             if not spectrum.baseline.is_subtracted:
+                spectrum.eval_baseline()
                 spectrum.subtract_baseline()
 
         self._emit_selected_spectra()

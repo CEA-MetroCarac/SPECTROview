@@ -91,8 +91,11 @@ class VWorkspaceSpectra(QWidget):
         
         self.btn_remove = QPushButton()
         self.btn_remove.setIcon(QIcon(os.path.join(ICON_DIR, "trash.png")))
+
         self.btn_reinit = QPushButton("Reinit")
+        self.btn_reinit.setIcon(QIcon(os.path.join(ICON_DIR, "undo2.png")))
         self.btn_stats = QPushButton("Stats")
+        self.btn_stats.setIcon(QIcon(os.path.join(ICON_DIR, "stats.png")))
 
         for btn in (self.btn_select_all, self.btn_remove, self.btn_reinit, self.btn_stats):
             buttons_layout.addWidget(btn)

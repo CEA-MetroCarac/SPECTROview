@@ -520,34 +520,44 @@ class VSpectraViewer(QWidget):
 
         return x, residual
 
+    _MANUAL_BASELINE_MODES = {None, "Linear", "Polynomial"}
 
     def _plot_baseline(self, spectrum):
         baseline = spectrum.baseline
 
         if baseline.is_subtracted:
             return None
+        if baseline.mode is None:
+            return None
 
-        if not baseline.points or not baseline.points[0]:
+        is_auto = baseline.mode not in self._MANUAL_BASELINE_MODES
+
+        # For manual modes, require at least one anchor point
+        if not is_auto and (not baseline.points or not baseline.points[0]):
             return None
 
         x = spectrum.x
-        y = spectrum.y if baseline.attached else None
+        y = spectrum.y
 
         try:
             y_base = baseline.eval(x, y, attached=baseline.attached)
         except Exception:
             return None
 
+        if y_base is None:
+            return None
+
         # Baseline curve
         self.ax.plot(x, y_base, "--", color="red", lw=1.4, label="Baseline")
 
-        # Baseline points
-        if baseline.attached and y is not None:
-            xs, ys = baseline.attached_points(x, y)
-        else:
-            xs, ys = baseline.points
-
-        self.ax.plot(xs, ys, "ko", mfc="none", ms=5)
+        # Show anchor point markers only for manual modes
+        if not is_auto and baseline.points and baseline.points[0]:
+            y_att = y if baseline.attached else None
+            if baseline.attached and y_att is not None:
+                xs, ys = baseline.attached_points(x, y)
+            else:
+                xs, ys = baseline.points
+            self.ax.plot(xs, ys, "ko", mfc="none", ms=5)
 
         return y_base
 

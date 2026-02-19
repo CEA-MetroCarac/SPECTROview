@@ -474,8 +474,10 @@ class VMWorkspaceSpectra(QObject):
         self._emit_list_update()  # Refresh list colors after baseline subtraction
 
     def delete_baseline(self, apply_all: bool = False):
-        """Delete baseline (points + subtraction state)."""
+        """Undo baseline subtraction: reinitialise spectrum data, re-apply crop range.
 
+        If the baseline has not been subtracted yet, only clears the anchor points.
+        """
         if apply_all:
             spectra = self.spectra
         else:
@@ -487,17 +489,81 @@ class VMWorkspaceSpectra(QObject):
         for spectrum in spectra:
             bl = spectrum.baseline
 
-            # Clear baseline points
+            if bl.is_subtracted:
+                # Save crop range and baseline mode BEFORE reinit() clears them
+                saved_xmin = spectrum.range_min   # reinit() sets these to None
+                saved_xmax = spectrum.range_max
+                saved_mode = bl.mode              # reinit() resets to "Linear"
+
+                spectrum.reinit()
+
+                # Re-apply crop range if one was active
+                if saved_xmin is not None and saved_xmax is not None:
+                    spectrum.range_min = saved_xmin
+                    spectrum.range_max = saved_xmax
+                    i_min = closest_index(spectrum.x0, saved_xmin)
+                    i_max = closest_index(spectrum.x0, saved_xmax)
+                    spectrum.x = spectrum.x0[i_min:i_max + 1].copy()
+                    spectrum.y = spectrum.y0[i_min:i_max + 1].copy()
+
+                # Restore the baseline mode (reinit() hardcodes "Linear")
+                bl.mode = saved_mode
+
+            # Clear anchor points so user can re-set the baseline
             if bl.points:
                 xs, ys = bl.points
                 xs.clear()
                 ys.clear()
 
-            # Reset subtraction state
             bl.is_subtracted = False
 
         self._emit_selected_spectra()
-        self._emit_list_update()  # Refresh list colors after baseline deletion
+        self._emit_list_update()
+
+
+    # ── Baseline mode / settings helpers ──────────────────────────────────
+
+    def _apply_baseline_settings(self, settings: dict, spectra):
+        """Internal helper: push mode/params from 'settings' dict onto each spectrum's baseline."""
+        mode     = settings.get("mode")        # fitspy key or None
+        coef     = float(settings.get("coef",     5.0))
+        order    = int(settings.get("order_max", 1))
+        sigma    = int(settings.get("sigma",     0))
+        attached = bool(settings.get("attached", True))
+
+        for spectrum in spectra:
+            bl = spectrum.baseline
+            bl.mode      = mode
+            bl.coef      = coef
+            bl.order_max = order
+            bl.sigma     = sigma
+            bl.attached  = attached
+
+    def set_baseline_settings(self, settings: dict):
+        """Receive unified baseline settings from the View and apply them to selected spectra.
+
+        The 'settings' dict (from VFitModelBuilder._build_baseline_dict) contains:
+            mode (str|None), coef (float), order_max (int), sigma (int), attached (bool)
+        """
+        if not self.selected_fnames:
+            return
+        spectra = self._get_selected_spectra()
+        self._apply_baseline_settings(settings, spectra)
+        # No plot refresh needed here – emitted on every UI change, viewer refreshes
+        # only when _emit_selected_spectra is called (e.g. on preview or subtract)
+
+    def preview_baseline(self, settings: dict):
+        """Apply baseline settings AND trigger a live plot refresh (real-time preview).
+
+        Called on slider/spinbox changes so the user sees the baseline curve update
+        immediately without having to click Subtract.
+        """
+        if not self.selected_fnames:
+            return
+        spectra = self._get_selected_spectra()
+        self._apply_baseline_settings(settings, spectra)
+        self._emit_selected_spectra()  # triggers viewer._plot() → _plot_baseline()
+
 
     def copy_peaks(self):
         if not self.selected_fnames:

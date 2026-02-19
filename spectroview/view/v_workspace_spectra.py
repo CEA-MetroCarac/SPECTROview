@@ -210,11 +210,12 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.spectral_range_apply_requested.connect(vm.apply_spectral_range)
         self.v_fit_model_builder.spectral_range_apply_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after crop
         self.v_fit_model_builder.baseline_settings_changed.connect(vm.set_baseline_settings)
+        self.v_fit_model_builder.baseline_preview_requested.connect(vm.preview_baseline)
 
         self.v_fit_model_builder.baseline_copy_requested.connect(vm.copy_baseline)
         self.v_fit_model_builder.baseline_paste_requested.connect(vm.paste_baseline)
         self.v_fit_model_builder.baseline_subtract_requested.connect(vm.subtract_baseline)
-        #self.v_fit_model_builder.baseline_delete_requested.connect(vm.apply_spectral_range)
+        self.v_fit_model_builder.baseline_delete_requested.connect(vm.delete_baseline)
 
         self.v_fit_model_builder.peaks_copy_requested.connect(vm.copy_peaks)
         self.v_fit_model_builder.peaks_paste_requested.connect(vm.paste_peaks)
@@ -235,6 +236,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_list.itemChanged.connect(self._on_checkbox_changed)
         vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
         vm.spectra_selection_changed.connect(self._update_metadata_display)
+        vm.spectra_selection_changed.connect(self.v_fit_model_builder.update_baseline_ui)
         vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
         vm.notify.connect(self._show_toast_notification)
 

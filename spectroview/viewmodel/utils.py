@@ -548,10 +548,6 @@ class FitThread(QThread):
 def closest_index(array, value):
     return int(np.abs(array - value).argmin())
 
-
-
-
-
 def baseline_to_dict(spectrum):
     dict_baseline = dict(vars(spectrum.baseline).items())
     return dict_baseline

@@ -4,10 +4,14 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QGroupBox, QLabel, QPushButton, QComboBox,
     QDoubleSpinBox, QSpinBox, QRadioButton,
-    QScrollArea, QCheckBox, QApplication
+    QScrollArea, QCheckBox, QApplication, QSlider
 )
-from PySide6.QtCore import Qt, Signal   
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
+
+from fitspy.core.baseline_methods import (
+    _INTERNAL_METHODS, _PYBASELINES_WHITELIST, get_baseline_method_meta
+)
 
 from spectroview import ICON_DIR, PEAK_MODELS
 from spectroview.view.components.v_peak_table import VPeakTable
@@ -19,7 +23,8 @@ class VFitModelBuilder(QWidget):
     peak_shape_changed = Signal(str)
     spectral_range_apply_requested = Signal(float, float, bool)
 
-    baseline_settings_changed = Signal(dict)
+    baseline_settings_changed = Signal(dict)   # sent when mode/params change (persistent)
+    baseline_preview_requested = Signal(dict)   # sent on slider/spin change (live preview)
     baseline_copy_requested = Signal()
     baseline_paste_requested = Signal(bool)     # apply_all
     baseline_subtract_requested = Signal(bool)  # apply_all
@@ -212,30 +217,111 @@ class VFitModelBuilder(QWidget):
     )
 
 
+    _BASELINE_MODE_KEYS = []  # populated at runtime
+
     def _baseline_group(self):
         gb = QGroupBox("Baseline")
         v = QVBoxLayout(gb)
-        v.setContentsMargins(2, 2, 2, 2)
+        v.setContentsMargins(2, 4, 2, 4)
+        v.setSpacing(4)
 
-        # ── Row 1: baseline type
-        row1 = QHBoxLayout()
+        # ── Row 0: mode combobox ────────────────────────────────────
+        row0 = QHBoxLayout()
 
-        self.rb_linear = QRadioButton("Linear")
-        self.rb_poly = QRadioButton("Poly")
-        self.rb_linear.setChecked(True)  
+        self.cbb_baseline_mode = QComboBox()
+        self._populate_baseline_mode_combobox()
+        self.cbb_baseline_mode.setToolTip(
+            "Baseline correction mode.\n"
+            "Manual modes (Linear/Polynomial): place anchor points on the plot.\n"
+            "Auto modes (arPLS, airPLS, …): no anchor points needed; "
+            "adjust the smoothness slider for a real-time preview."
+        )
 
+        row0.addWidget(QLabel("Mode:"))
+        row0.addWidget(self.cbb_baseline_mode)
+        row0.addStretch()
+
+        # ── Row 1: manual controls ───────────────────────────────────
+        # Shown for Linear and Polynomial modes. Contents vary based on mode:
+        self._row1_widget = QWidget()
+        row1 = QHBoxLayout(self._row1_widget)
+        row1.setContentsMargins(0, 0, 0, 0)
+
+        self.lbl_poly_order = QLabel("Order:")
         self.spin_poly = QSpinBox()
         self.spin_poly.setRange(2, 20)
+        self.spin_poly.setFixedWidth(44)
+        self.spin_poly.setToolTip("Polynomial order")
 
-        # ── Row 3: actions
-        row2 = QHBoxLayout()
+        self.chk_attached = QCheckBox("Attached")
+        self.chk_attached.setChecked(True)
+        self.chk_attached.setToolTip(
+            "Snap baseline anchor points vertically to the spectrum profile"
+        )
+
+        self.lbl_sigma = QLabel("Corr. noise:")
+        self.spin_noise = QSpinBox()
+        self.spin_noise.setRange(0, 20)
+        self.spin_noise.setValue(4)
+        self.spin_noise.setFixedWidth(40)
+        self.spin_noise.setToolTip(
+            "Gaussian smoothing σ applied before attachment (noise correction)"
+        )
+
+        row1.addWidget(self.lbl_poly_order)
+        row1.addWidget(self.spin_poly)
+        row1.addStretch()
+        row1.addWidget(self.chk_attached)
+        row1.addWidget(self.lbl_sigma)
+        row1.addWidget(self.spin_noise)
+
+        # ── Row 2: auto controls ────────────────────────────────────
+        self._row2_widget = QWidget()
+        row2 = QHBoxLayout(self._row2_widget)
+        row2.setContentsMargins(0, 0, 0, 0)
+
+        # Coef slider: integer 10–100 maps to coef 1.0–10.0 (λ = 10^coef)
+        self.sld_coef = QSlider(Qt.Horizontal)
+        self.sld_coef.setFixedWidth(200)
+        self.sld_coef.setRange(10, 100)   # ×10 for one decimal precision
+        self.sld_coef.setValue(50)         # default coef = 5 → λ = 1e5
+        self.sld_coef.setToolTip(
+            "Smoothness parameter (λ = 10^coef).\n"
+            "Move right for smoother / higher background insensitivity."
+        )
+
+        self.lbl_coef = QLabel("λ=1e5")
+        self.lbl_coef.setFixedWidth(54)
+
+        # Secondary parameter (order / sigma depending on method)
+        self.lbl_coef2 = QLabel("Order:")
+        self.spin_coef2 = QSpinBox()
+        self.spin_coef2.setRange(1, 20)
+        self.spin_coef2.setValue(1)
+        self.spin_coef2.setFixedWidth(44)
+        self.spin_coef2.setVisible(False)
+        self.lbl_coef2.setVisible(False)
+
+        row2.addWidget(QLabel("Coef:"))
+        row2.addWidget(self.sld_coef)
+        row2.addWidget(self.lbl_coef)
+        row2.addWidget(self.lbl_coef2)
+        row2.addWidget(self.spin_coef2)
+        row2.addStretch()
+
+        # ── Row 3: shared action buttons ──────────────────────────────
+        row3 = QHBoxLayout()
 
         self.btn_base_delete = QPushButton()
         self.btn_base_delete.setIcon(QIcon(f"{ICON_DIR}/trash3.png"))
         self.btn_base_delete.setFixedSize(30, 24)
-        self.btn_base_delete.setToolTip("Delete baseline. Hold Ctrl to delete from all spectra.")
-        #self.btn_base_delete.clicked.connect(lambda: self._emit_with_ctrl(self.baseline_delete_requested))
-        self.btn_base_delete.clicked.connect(self._on_extract_clicked)
+        self.btn_base_delete.setToolTip(
+            "Undo baseline subtraction (reinitialise + re-crop spectrum).\n"
+            "Hold Ctrl to apply to all spectra."
+        )
+        self.btn_base_delete.clicked.connect(
+            lambda: self._emit_with_ctrl(self.baseline_delete_requested)
+        )
 
         self.btn_base_copy = QPushButton()
         self.btn_base_copy.setIcon(QIcon(f"{ICON_DIR}/copy3.png"))
@@ -247,71 +333,233 @@ class VFitModelBuilder(QWidget):
         self.btn_base_paste.setIcon(QIcon(f"{ICON_DIR}/paste.png"))
         self.btn_base_paste.setFixedSize(30, 24)
         self.btn_base_paste.setToolTip("Paste baseline. Hold Ctrl to paste to all spectra.")
-        self.btn_base_paste.clicked.connect(lambda: self._emit_with_ctrl(self.baseline_paste_requested))
-
+        self.btn_base_paste.clicked.connect(
+            lambda: self._emit_with_ctrl(self.baseline_paste_requested)
+        )
 
         self.btn_base_subtract = QPushButton("Subtract")
         self.btn_base_subtract.setIcon(QIcon(f"{ICON_DIR}/done.png"))
         self.btn_base_subtract.setFixedSize(80, 24)
-        self.btn_base_subtract.setToolTip("Subtract baseline. Hold Ctrl to subtract from all spectra.")
-        self.btn_base_subtract.clicked.connect(lambda: self._emit_with_ctrl(self.baseline_subtract_requested))
+        self.btn_base_subtract.setToolTip(
+            "Subtract baseline. Hold Ctrl to subtract from all spectra."
+        )
+        self.btn_base_subtract.clicked.connect(
+            lambda: self._emit_with_ctrl(self.baseline_subtract_requested)
+        )
 
-        self.chk_attached = QCheckBox("Attached")
-        self.chk_attached.setChecked(True)
+        for b in (self.btn_base_delete, self.btn_base_copy, self.btn_base_paste):
+            row3.addWidget(b)
+        row3.addStretch()
+        row3.addWidget(self.btn_base_subtract)
 
-        self.spin_noise = QSpinBox()
-        self.spin_noise.setRange(0, 20)
-        self.spin_noise.setValue(4)  
-        self.spin_noise.setToolTip("Correct noise")
+        # ── Assemble ─────────────────────────────────────────────────
+        v.addLayout(row0)
+        v.addWidget(self._row1_widget)
+        v.addWidget(self._row2_widget)
+        v.addLayout(row3)
 
-        row1.addWidget(self.rb_linear)
-        row1.addWidget(self.rb_poly)
-        row1.addWidget(self.spin_poly)
-        row1.addStretch()
+        # ── Connect signals ───────────────────────────────────────────
+        self.cbb_baseline_mode.currentIndexChanged.connect(self._on_baseline_mode_changed)
+        self.spin_poly.valueChanged.connect(self._emit_baseline_preview)
+        self.chk_attached.toggled.connect(self._emit_baseline_preview)
+        self.spin_noise.valueChanged.connect(self._emit_baseline_preview)
+        self.sld_coef.valueChanged.connect(self._on_coef_slider_changed)
+        self.spin_coef2.valueChanged.connect(self._on_coef2_changed)
 
-        row1.addWidget(self.chk_attached)
-        
-        for b in (
-            self.btn_base_delete,
-            self.btn_base_copy,
-            self.btn_base_paste, 
-        ):
-            row2.addWidget(b)
-            
-        row2.addWidget(QLabel("Noise cor:"))
-        row2.addWidget(self.spin_noise)
-        row2.addStretch()
-        row2.addWidget(self.btn_base_subtract)
-
-        self._connect_baseline_signals()
-
-        v.addLayout(row1)
-        v.addLayout(row2)
+        # Initialise UI state for the default mode ("Linear" = index 1)
+        self._on_baseline_mode_changed(self.cbb_baseline_mode.currentIndex())
 
         return gb
-    
-    def _connect_baseline_signals(self):
-            for w in (
-                self.rb_linear,
-                self.rb_poly,
-                self.spin_poly,
-                self.chk_attached,
-                self.spin_noise,
-            ):
-                if hasattr(w, "toggled"):
-                    w.toggled.connect(self._emit_baseline_settings)
-                else:
-                    w.valueChanged.connect(self._emit_baseline_settings)
+
+    # ── Mode combobox helpers ─────────────────────────────────────────
+
+    def _populate_baseline_mode_combobox(self):
+        """Build the mode combobox with manual and the three supported auto methods."""
+        cbb = self.cbb_baseline_mode
+        cbb.clear()
+        VFitModelBuilder._BASELINE_MODE_KEYS = []
+
+        # ── Manual methods
+        for key in ("Linear", "Polynomial"):
+            cbb.addItem(key)
+            VFitModelBuilder._BASELINE_MODE_KEYS.append(key)
+
+        # separator
+        cbb.insertSeparator(len(VFitModelBuilder._BASELINE_MODE_KEYS))
+        VFitModelBuilder._BASELINE_MODE_KEYS.append("__sep__")
+
+        # ── Auto methods: only these three methods
+        _AUTO_WHITELIST = {
+            "arpls":  "arPLS",
+            "airpls": "airPLS",
+            "asls":   "asLS",
+        }
+
+        for key, label in _AUTO_WHITELIST.items():
+            cbb.addItem(label)
+            VFitModelBuilder._BASELINE_MODE_KEYS.append(key)
+
+        # Set default to "Linear" 
+        cbb.setCurrentIndex(0)
+
+    def _current_mode_key(self):
+        """Return the fitspy mode key for the current combobox selection."""
+        idx = self.cbb_baseline_mode.currentIndex()
+        keys = VFitModelBuilder._BASELINE_MODE_KEYS
+        if 0 <= idx < len(keys):
+            return keys[idx]
+        return None
+
+    def _apply_mode_visibility(self, mode):
+        """Update which widgets are visible for the given mode key.
+
+        Pure side-effect on widget visibility – no signals emitted.
+        Safe to call from both _on_baseline_mode_changed and update_baseline_ui.
+        """
+        is_manual = mode in ("Linear", "Polynomial")
+        is_auto   = not is_manual and mode is not None
+
+        self._row1_widget.setVisible(is_manual)
+        self._row2_widget.setVisible(is_auto)
+
+        if is_manual:
+            show_order = (mode == "Polynomial")
+            self.lbl_poly_order.setVisible(show_order)
+            self.spin_poly.setVisible(show_order)
+
+        if is_auto:
+            meta = get_baseline_method_meta(mode)
+            if meta.get("order_kwarg"):
+                self.lbl_coef2.setText("Order:")
+                self.spin_coef2.setRange(1, 20)
+                self.lbl_coef2.setVisible(True)
+                self.spin_coef2.setVisible(True)
+            elif meta.get("sigma_kwarg"):
+                self.lbl_coef2.setText("σ:")
+                self.spin_coef2.setRange(0, 50)
+                self.lbl_coef2.setVisible(True)
+                self.spin_coef2.setVisible(True)
+            else:
+                self.lbl_coef2.setVisible(False)
+                self.spin_coef2.setVisible(False)
+
+    def _on_baseline_mode_changed(self, _index):
+        """Handle user combobox change: update visibility and emit settings."""
+        mode = self._current_mode_key()
+        if mode == "__sep__":           # separator selected – jump to next valid
+            self.cbb_baseline_mode.setCurrentIndex(_index + 1)
+            return
+
+        self._apply_mode_visibility(mode)
+
+        # Refresh coef label for auto modes (label only, no preview emission)
+        if mode not in ("Linear", "Polynomial", None, "__sep__"):
+            coef = self.sld_coef.value() / 10.0
+            lam  = 10 ** coef
+            if lam >= 1e6:
+                self.lbl_coef.setText(f"λ=1e{coef:.0f}")
+            else:
+                self.lbl_coef.setText(f"λ={lam:.0f}")
+
+        # Emit so ViewModel stays in sync
+        self._emit_baseline_settings()
+
+
+    def _on_coef_slider_changed(self, int_val):
+        """Slider integer (10‒100) → coef float (1.0‒10.0) → update label & preview."""
+        coef = int_val / 10.0
+        lam  = 10 ** coef
+        if lam >= 1e6:
+            self.lbl_coef.setText(f"λ=1e{coef:.0f}")
+        else:
+            self.lbl_coef.setText(f"λ={lam:.0f}")
+        self._emit_baseline_preview()
+
+    def _on_coef2_changed(self, _val):
+        self._emit_baseline_preview()
+
+    # ── Signal emitters ───────────────────────────────────────────────
+
+    def _build_baseline_dict(self) -> dict:
+        """Build the common settings dict from current widget state."""
+        mode = self._current_mode_key()
+        coef = self.sld_coef.value() / 10.0
+        meta = get_baseline_method_meta(mode) if mode not in (None, "__sep__") else {}
+
+        d = {
+            "mode":      mode,
+            "order_max": self.spin_poly.value()  if mode == "Polynomial" else self.spin_coef2.value(),
+            "sigma":     self.spin_noise.value() if mode in ("Linear", "Polynomial") else (
+                             self.spin_coef2.value() if meta.get("sigma_kwarg") else 0
+                         ),
+            "attached":  self.chk_attached.isChecked(),
+            "coef":      coef,
+        }
+        return d
 
     def _emit_baseline_settings(self):
-        """Emit baseline settings changed signal."""
-        data = {
-            "mode": "Linear" if self.rb_linear.isChecked() else "Polynomial",
-            "order": self.spin_poly.value(),
-            "attached": self.chk_attached.isChecked(),
-            "noise": self.spin_noise.value(),
-        }
-        self.baseline_settings_changed.emit(data)
+        """Persistent settings – emitted on combobox / checkbox / spinbox change."""
+        self.baseline_settings_changed.emit(self._build_baseline_dict())
+
+    def _emit_baseline_preview(self):
+        """Live preview – emitted on slider move."""
+        self.baseline_preview_requested.emit(self._build_baseline_dict())
+
+    # ── Public: sync UI from selected spectrum ─────────────────────────────
+
+    def update_baseline_ui(self, spectra: list):
+        """Reflect the first selected spectrum's baseline settings in the GUI.
+
+        Called whenever the spectrum selection changes so the panel always shows
+        the parameters currently stored on the selected spectrum's baseline object.
+        Signals are blocked during the update to avoid feedback loops.
+        """
+        if not spectra:
+            return
+        bl = spectra[0].baseline
+
+        keys = VFitModelBuilder._BASELINE_MODE_KEYS
+        mode = bl.mode  # e.g. "Linear", "arpls", None …
+
+        # Find the combobox index for this mode key
+        try:
+            idx = keys.index(mode)
+        except ValueError:
+            idx = 0   # fall back to first manual mode
+
+        # Block all signals to prevent cascading updates
+        self.cbb_baseline_mode.blockSignals(True)
+        self.sld_coef.blockSignals(True)
+        self.spin_coef2.blockSignals(True)
+        self.spin_poly.blockSignals(True)
+        self.spin_noise.blockSignals(True)
+        self.chk_attached.blockSignals(True)
+
+        try:
+            self.cbb_baseline_mode.setCurrentIndex(idx)
+            # Update attached / sigma for manual modes
+            self.chk_attached.setChecked(bool(bl.attached))
+            self.spin_noise.setValue(int(bl.sigma) if bl.sigma else 0)
+            self.spin_poly.setValue(int(bl.order_max) if bl.order_max else 2)
+            # Update coef slider for auto modes
+            coef_int = max(10, min(100, round(bl.coef * 10)))
+            self.sld_coef.setValue(coef_int)
+            lam = 10 ** bl.coef
+            if lam >= 1e6:
+                self.lbl_coef.setText(f"λ=1e{bl.coef:.0f}")
+            else:
+                self.lbl_coef.setText(f"λ={lam:.0f}")
+        finally:
+            self.cbb_baseline_mode.blockSignals(False)
+            self.sld_coef.blockSignals(False)
+            self.spin_coef2.blockSignals(False)
+            self.spin_poly.blockSignals(False)
+            self.spin_noise.blockSignals(False)
+            self.chk_attached.blockSignals(False)
+
+        # Apply widget visibility without triggering any signals or emissions
+        self._apply_mode_visibility(mode)
+
 
     def _peaks_group(self):
         gb = QGroupBox("Peaks")

@@ -4,7 +4,7 @@ from pathlib import Path
 from spectroview.model.m_fit_models import fano, decay_single_exp, decay_bi_exp
 import fitspy
 
-VERSION = "26.8.2"
+VERSION = "26.9.1"
 
 # 🔧 Add custom models to fitspy's PEAK_MODELS dictionary
 fitspy.PEAK_MODELS["Fano"] = fano

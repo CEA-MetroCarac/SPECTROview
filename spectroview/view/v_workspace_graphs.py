@@ -16,7 +16,8 @@ from spectroview.view.components.v_data_filter import VDataFilter
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
-from spectroview.viewmodel.utils import CustomizedPalette, show_toast_notification
+from spectroview.viewmodel.utils import show_toast_notification
+from spectroview.view.components.customized_widgets import CustomizedPalette
 
 class VWorkspaceGraphs(QWidget):
     """View for Graphs Workspace."""

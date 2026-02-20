@@ -1,8 +1,64 @@
-# spectroview/view/components/v_expression_lineedit.py
-"""Custom QLineEdit with smart autocomplete for mathematical expressions."""
+# spectroview/view/components/customized_widgets.py
 
-from PySide6.QtWidgets import QLineEdit
-from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon, QImage, QPixmap
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtWidgets import QComboBox, QLineEdit
+
+import numpy as np
+import matplotlib.cm as cm
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
+
+from spectroview import PALETTE
+
+
+class NoDoubleClickZoomToolbar(NavigationToolbar2QT):
+    """NavigationToolbar that ignores double-clicks in zoom mode.
+
+    By default, matplotlib's zoom tool resets the view on a double-click.
+    This subclass suppresses that behaviour so that double-clicks can be
+    used exclusively for legend customisation without side-effects.
+    """
+
+    def press_zoom(self, event):
+        if getattr(event, "dblclick", False):
+            return  # swallow double-clicks – do not zoom
+        super().press_zoom(event)
+
+
+class CustomizedPalette(QComboBox):
+    """Custom QComboBox to show color palette previews along with their names."""
+    def __init__(self, palette_list=None, parent=None, icon_size=(99, 12)):
+        super().__init__(parent)
+        self.icon_width, self.icon_height = icon_size
+        self.setIconSize(QSize(*icon_size))
+        self.setMinimumWidth(100)
+
+        self.palette_list = palette_list or PALETTE
+        self._populate_with_previews()
+
+    def _populate_with_previews(self):
+        self.clear()
+        for cmap_name in self.palette_list:
+            icon = QIcon(self._create_colormap_preview(cmap_name))
+            self.addItem(icon, cmap_name)
+
+    def _create_colormap_preview(self, cmap_name):
+        """Generate a horizontal gradient preview image for the colormap."""
+        width, height = self.icon_width, self.icon_height
+        gradient = np.linspace(0, 1, 20).reshape(1, -1)
+
+        fig = Figure(figsize=(width / 100, height / 100), dpi=100)
+        canvas = FigureCanvas(fig)
+        ax = fig.add_axes([0, 0, 1, 1], frameon=False)
+        ax.imshow(gradient, aspect='auto', cmap=cm.get_cmap(cmap_name))
+        ax.set_axis_off()
+        canvas.draw()
+
+        image = np.array(canvas.buffer_rgba())
+        qimage = QImage(image.data, image.shape[1], image.shape[0],
+                        QImage.Format_RGBA8888)
+        return QPixmap.fromImage(qimage)
 
 
 class ExpressionLineEdit(QLineEdit):

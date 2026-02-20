@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, Signal, QStringListModel
 
-from spectroview.view.components.v_expression_lineedit import ExpressionLineEdit
+from spectroview.view.components.customized_widgets import ExpressionLineEdit
 
 
 class VDataFilter(QGroupBox):

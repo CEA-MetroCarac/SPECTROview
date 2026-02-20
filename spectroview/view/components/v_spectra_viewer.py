@@ -26,7 +26,8 @@ import matplotlib.lines as mlines
 import matplotlib.text as mtext
 
 from spectroview import ICON_DIR, X_AXIS_UNIT, PLOT_POLICY
-from spectroview.viewmodel.utils import copy_fig_to_clb, NoDoubleClickZoomToolbar
+from spectroview.viewmodel.utils import copy_fig_to_clb
+from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
 
 
 class VSpectraViewer(QWidget):

@@ -20,7 +20,8 @@ from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon, QAction
 
 from spectroview import ICON_DIR
-from spectroview.viewmodel.utils import CustomizedPalette, copy_fig_to_clb
+from spectroview.viewmodel.utils import copy_fig_to_clb
+from spectroview.view.components.customized_widgets import CustomizedPalette
 
 
 class VMapViewer(QWidget):

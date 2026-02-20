@@ -10,7 +10,7 @@ from PySide6.QtGui import QIcon
 
 from spectroview import ICON_DIR
 from spectroview.view.components.v_dataframe_table import VDataframeTable
-from spectroview.view.components.v_expression_lineedit import ExpressionLineEdit
+from spectroview.view.components.customized_widgets import ExpressionLineEdit
 
 class VFitResults(QWidget):
     """View for Fit Results tab - displays collected fit results in a table."""

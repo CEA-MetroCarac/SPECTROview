@@ -88,17 +88,22 @@ class VWorkspaceSpectra(QWidget):
 
         self.btn_select_all = QPushButton()
         self.btn_select_all.setIcon(QIcon(os.path.join(ICON_DIR, "select-all.png")))
+        self.btn_select_all.setToolTip("Select all spectra")
         
         self.btn_remove = QPushButton()
         self.btn_remove.setIcon(QIcon(os.path.join(ICON_DIR, "trash.png")))
+        self.btn_remove.setToolTip("Remove selected spectra")
 
         self.btn_reinit = QPushButton("Reinit")
         self.btn_reinit.setIcon(QIcon(os.path.join(ICON_DIR, "undo2.png")))
+        self.btn_reinit.setToolTip("Reinitialize selected spectra to original values")
         self.btn_stats = QPushButton("Stats")
         self.btn_stats.setIcon(QIcon(os.path.join(ICON_DIR, "stats.png")))
+        self.btn_stats.setToolTip("View fitting statistics of selected spectra")
 
         self.btn_save_spectra_data = QPushButton("Save Data")
         self.btn_save_spectra_data.setIcon(QIcon(os.path.join(ICON_DIR, "save.png")))
+        self.btn_save_spectra_data.setToolTip("Save selected spectra data to TXT file")
 
         for btn in (self.btn_select_all, self.btn_remove, self.btn_reinit, self.btn_stats, self.btn_save_spectra_data):
             buttons_layout.addWidget(btn)

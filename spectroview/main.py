@@ -281,39 +281,15 @@ class Main(QMainWindow):
             QMessageBox.warning(self, "No Tab Selected", "No valid tab is selected for saving.")
 
     def clear_workspace(self):
-        """Clear current workspace based on active tab."""
+        """Clear current workspace based on active tab without confirmation."""
         current_tab = self.tabWidget.currentWidget()
         
         if current_tab == self.v_spectra_workspace:
-            reply = QMessageBox.question(
-                self,
-                "Clear Workspace",
-                "Are you sure you want to clear all spectra?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
-            )
-            if reply == QMessageBox.Yes:
-                self.v_spectra_workspace.clear_workspace()
+            self.v_spectra_workspace.clear_workspace()
         elif current_tab == self.v_maps_workspace:
-            reply = QMessageBox.question(
-                self,
-                "Clear Workspace",
-                "Are you sure you want to clear all maps and spectra?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
-            )
-            if reply == QMessageBox.Yes:
-                self.v_maps_workspace.clear_workspace()
+            self.v_maps_workspace.clear_workspace()
         elif current_tab == self.v_graphs_workspace:
-            reply = QMessageBox.question(
-                self,
-                "Clear Workspace",
-                "Are you sure you want to clear all graphs and dataframes?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
-            )
-            if reply == QMessageBox.Yes:
-                self.v_graphs_workspace.clear_workspace()
+            self.v_graphs_workspace.clear_workspace()
         else:
             QMessageBox.warning(self, "No Tab Selected", "Nothing to clear.")
 

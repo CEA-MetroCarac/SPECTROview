@@ -11,6 +11,7 @@ class MSpectrum(FitspySpectrum):
         self.color = None   # user-defined color
         
         self.xcorrection_value = 0   # peak position correction using reference value
+        self.intensity_norm_factor = 1.0  # intensity normalization factor
         self.source_path = None
         self.is_active = True  # whether spectrum is active for operations (Fit, Apply, etc.)
         self.metadata = {}  # acquisition metadata (e.g., from WDF files)
@@ -64,3 +65,25 @@ class MSpectrum(FitspySpectrum):
             self.x0 = self.x0 - self.xcorrection_value
             self.x = self.x - self.xcorrection_value
             self.xcorrection_value = 0
+
+    def apply_y_normalization(self, new_norm_factor=None):
+        """Apply intensity normalization (divide y and y0 by norm_factor)."""
+        # Undo existing normalization if needed
+        if getattr(self, 'intensity_norm_factor', 1.0) != 1.0:
+            self.undo_y_normalization()
+
+        # Update the factor if a new one is provided
+        if new_norm_factor is not None and new_norm_factor != 0:
+            self.intensity_norm_factor = new_norm_factor
+
+        # Apply normalization
+        if self.intensity_norm_factor != 1.0 and self.intensity_norm_factor != 0:
+            self.y0 = self.y0 / self.intensity_norm_factor
+            self.y = self.y / self.intensity_norm_factor
+
+    def undo_y_normalization(self):
+        """Undo intensity normalization (restore original y and y0)."""
+        if getattr(self, 'intensity_norm_factor', 1.0) != 1.0 and getattr(self, 'intensity_norm_factor', 1.0) != 0:
+            self.y0 = self.y0 * self.intensity_norm_factor
+            self.y = self.y * self.intensity_norm_factor
+            self.intensity_norm_factor = 1.0

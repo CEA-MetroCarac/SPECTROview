@@ -249,6 +249,14 @@ class VWorkspaceSpectra(QWidget):
         vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
         vm.notify.connect(self._show_toast_notification)
 
+        # MetaData connections
+        self.v_metadata.normalize_requested.connect(
+            lambda factor: self._apply_with_ctrl(lambda apply_all: vm.apply_y_normalization(factor, apply_all))
+        )
+        self.v_metadata.undo_normalization_requested.connect(
+            lambda: self._apply_with_ctrl(vm.undo_y_normalization)
+        )
+
         vm.show_xcorrection_value.connect(self.v_fit_model_builder.set_xcorrection_value)        
         vm.spectral_range_changed.connect(self.v_fit_model_builder.set_spectral_range)
         vm.fit_in_progress.connect(lambda in_progress: self.v_fit_model_builder.set_fit_buttons_enabled(not in_progress))
@@ -310,8 +318,8 @@ class VWorkspaceSpectra(QWidget):
     def _update_metadata_display(self, selected_spectra: list):
         """Update metadata display with first selected spectrum's metadata."""
         if selected_spectra and len(selected_spectra) > 0:
-            metadata = selected_spectra[0].metadata
-            self.v_metadata.show_metadata(metadata)
+            spectrum = selected_spectra[0]
+            self.v_metadata.show_metadata(spectrum)
         else:
             self.v_metadata.clear_metadata()
     

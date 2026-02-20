@@ -385,6 +385,36 @@ class VMWorkspaceSpectra(QObject):
         self.show_xcorrection_value.emit(spectra[0].xcorrection_value)
         self._emit_selected_spectra()
 
+    def apply_y_normalization(self, norm_factor: float, apply_all: bool = False):
+        """Apply intensity normalization for selected spectra."""
+        if apply_all:
+            spectra = self._get_active_spectra()
+        else:
+            if not self.selected_fnames:
+                self.notify.emit("No spectrum selected.")
+                return
+            spectra = self._get_selected_spectra()
+
+        for spectrum in spectra:
+            spectrum.apply_y_normalization(norm_factor)
+
+        self._emit_selected_spectra()
+
+    def undo_y_normalization(self, apply_all: bool = False):
+        """Undo intensity normalization for selected spectra."""
+        if apply_all:
+            spectra = self._get_active_spectra()
+        else:
+            if not self.selected_fnames:
+                self.notify.emit("No spectrum selected.")
+                return
+            spectra = self._get_selected_spectra()
+
+        for spectrum in spectra:
+            spectrum.undo_y_normalization()
+
+        self._emit_selected_spectra()
+
     def reinit_spectra(self, apply_all: bool = False):
         """Reinitialize spectra to original data."""
         if apply_all:

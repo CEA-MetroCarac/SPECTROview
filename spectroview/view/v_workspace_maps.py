@@ -73,9 +73,16 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         super().setup_connections()
     
     def _update_metadata_display(self, selected_spectra: list):
-        """Override: In Maps workspace, metadata is displayed per-map (not per-spectrum).
-        Metadata display is handled in _on_map_selected instead."""
-        pass
+        """Override: In Maps workspace, show spectrum metadata if selected, else map metadata."""
+        if selected_spectra and len(selected_spectra) > 0:
+            spectrum = selected_spectra[0]
+            self.v_metadata.show_metadata(spectrum)
+        else:
+            if self.vm and self.vm.current_map_name:
+                map_metadata = self.vm.maps_metadata.get(self.vm.current_map_name, {})
+                self.v_metadata.show_metadata(map_metadata)
+            else:
+                self.v_metadata.clear_metadata()
     
     def _add_maps_panel(self):
         """Replace the simple spectra list sidebar with Maps-specific controls."""

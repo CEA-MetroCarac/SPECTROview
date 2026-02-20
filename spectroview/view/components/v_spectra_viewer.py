@@ -840,11 +840,22 @@ class VSpectraViewer(QWidget):
             if not hit:
                 continue
 
+            peak_model_obj = info.get("peak_model")
+            model_name = getattr(peak_model_obj, "name2", "") if peak_model_obj else ""
+            
+            raw_intensity = info.get("amplitude") or info.get("ampli")
+            display_intensity = raw_intensity
+            
+            # Fano model correction: show actual peak height for 'ampli'
+            if model_name == "Fano" and display_intensity is not None:
+                q = info.get("q", 50.0)
+                display_intensity = display_intensity * (q**2 + 1)
+
             # Define fields exactly like legacy
             fields = [
                 ("label", info.get("peak_label")),
                 ("center", info.get("x0")),
-                ("intensity", info.get("amplitude") or info.get("ampli")),
+                ("intensity", display_intensity),
                 ("fwhm", info.get("fwhm")),
                 ("fwhm_l", info.get("fwhm_l")),
                 ("fwhm_r", info.get("fwhm_r")),

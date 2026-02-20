@@ -258,8 +258,21 @@ class VMWorkspaceSpectra(QObject):
         if peak_shape in ["DecaySingleExp", "DecayBiExp"]:
             self._initialize_decay_params(peak_model, spectrum)
         elif peak_shape == "Fano":
-            peak_model.set_param_hint("q", value=50, min=-200, max=200, vary=True)
-        
+            q_val = 50.0
+            peak_model.set_param_hint("q", value=q_val, min=-200, max=200, vary=True)
+            # Fano peak amplitude initialization fix
+            # The Fano function is: ampli * (q + eps)^2 / (1 + eps^2)
+            # Its maximum occurs at eps = 1/q, where the value is ampli * (q^2 + 1).
+            # To ensure the initial drawn peak has a height matching the clicked y_val,
+            # we must set ampli = y_val / (q^2 + 1).
+            idx = closest_index(spectrum.x, x)
+            y_val = spectrum.y[idx]
+            
+            if y_val == 0:
+                y_val = 1e-10  # avoid perfectly zero amplitude if clicked on exactly zero
+                
+            peak_model.set_param_hint("ampli", value=y_val / (q_val**2 + 1))
+
         self._emit_selected_spectra()
     
     def _initialize_decay_params(self, peak_model, spectrum):
@@ -828,6 +841,20 @@ class VMWorkspaceSpectra(QObject):
                 dx0=(20.0, 20.0)
             )
             s.peak_models[index] = new_pm
+            
+            if model_name == "Fano":
+                q_val = 50.0
+                new_pm.set_param_hint("q", value=q_val, min=-200, max=200, vary=True)
+                
+                # Fetch original height from the spectrum to set Fano amplitude properly
+                from spectroview.viewmodel.utils import closest_index
+                idx = closest_index(s.x, x0)
+                y_val = s.y[idx]
+                
+                if y_val == 0:
+                    y_val = 1e-10
+                    
+                new_pm.set_param_hint("ampli", value=y_val / (q_val**2 + 1))
 
         s.result_fit = None
         self._emit_selected_spectra()

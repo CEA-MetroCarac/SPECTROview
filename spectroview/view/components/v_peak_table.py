@@ -162,14 +162,32 @@ class VPeakTable(QWidget):
                     continue
 
                 # value
-                val = QLineEdit(f"{hint.get('value', 0):.6g}")
+                display_val = hint.get('value', 0)
+                
+                # Fano model correction: show actual peak height for 'ampli'
+                if pm.name2 == "Fano" and p == "ampli":
+                    q = pm.param_hints.get("q", {}).get("value", 50.0)
+                    display_val = display_val * (q**2 + 1)
+                
+                val = QLineEdit(f"{display_val:.6g}")
                 val.setAlignment(Qt.AlignRight)
-                # val.setFixedWidth(60)
                 val.setFixedSize(60, ROW_HEIGHT)
-                val.editingFinished.connect(
-                    lambda idx=i, k=p, w=val:
-                    self._emit_value(idx, k, "value", w.text())
-                )
+                
+                def make_editing_finished_cb(i_idx, p_key, w_val, model_name, peak_model):
+                    def cb():
+                        text = w_val.text()
+                        try:
+                            num_val = float(text)
+                            # If they edit Fano's ampli, we must scale it back to internal representation
+                            if model_name == "Fano" and p_key == "ampli":
+                                current_q = peak_model.param_hints.get("q", {}).get("value", 50.0)
+                                num_val = num_val / (current_q**2 + 1)
+                            self.peak_param_changed.emit(i_idx, p_key, "value", num_val)
+                        except ValueError:
+                            pass
+                    return cb
+
+                val.editingFinished.connect(make_editing_finished_cb(i, p, val, pm.name2, pm))
                 d["value"].addWidget(val)
 
                 # vary
@@ -183,8 +201,8 @@ class VPeakTable(QWidget):
 
                 # limits
                 if "min" in d:
-                    self._add_limit(d["min"], i, p, "min", hint)
-                    self._add_limit(d["max"], i, p, "max", hint)
+                    self._add_limit(d["min"], i, p, "min", hint, pm.name2, pm)
+                    self._add_limit(d["max"], i, p, "max", hint, pm.name2, pm)
 
                 # expr
                 if "expr" in d:
@@ -229,8 +247,15 @@ class VPeakTable(QWidget):
             return
         self.peak_param_changed.emit(idx, key, field, val)
 
-    def _add_limit(self, layout, idx, key, field, hint):
-        le = QLineEdit(f"{hint.get(field, 0):.6g}")
+    def _add_limit(self, layout, idx, key, field, hint, pm_name=None, peak_model=None):
+        display_val = hint.get(field, 0)
+        
+        # Fano model correction: show actual peak height for 'ampli' limits
+        if pm_name == "Fano" and key == "ampli" and peak_model:
+            q = peak_model.param_hints.get("q", {}).get("value", 50.0)
+            display_val = display_val * (q**2 + 1)
+            
+        le = QLineEdit(f"{display_val:.6g}")
         # le.setFixedWidth(60)
         le.setFixedSize(60, ROW_HEIGHT)
         le.setAlignment(Qt.AlignRight)
@@ -239,10 +264,20 @@ class VPeakTable(QWidget):
         pal.setColor(QPalette.Text, QColor("red"))
         le.setPalette(pal)
 
-        le.editingFinished.connect(
-            lambda idx=idx, k=key, f=field, w=le:
-            self._emit_value(idx, k, f, w.text())
-        )
+        def make_editing_finished_limit_cb(i_idx, p_key, p_field, w_val, model_name, p_model):
+            def cb():
+                text = w_val.text()
+                try:
+                    num_val = float(text)
+                    if model_name == "Fano" and p_key == "ampli":
+                        current_q = p_model.param_hints.get("q", {}).get("value", 50.0)
+                        num_val = num_val / (current_q**2 + 1)
+                    self.peak_param_changed.emit(i_idx, p_key, p_field, num_val)
+                except ValueError:
+                    pass
+            return cb
+
+        le.editingFinished.connect(make_editing_finished_limit_cb(idx, key, field, le, pm_name, peak_model))
         layout.addWidget(le)
 
     def _add_header(self, layout, text):

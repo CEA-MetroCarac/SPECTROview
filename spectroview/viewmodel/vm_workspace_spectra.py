@@ -1437,3 +1437,49 @@ class VMWorkspaceSpectra(QObject):
                 self.notify.emit(f"Error generating fit report: {str(e)}")
         else:
             self.notify.emit("No fit results available for the selected spectrum. Please fit the spectrum first.")
+
+    def save_spectra_data(self, parent_widget=None):
+        """Save selected spectra data (x, y) to separate txt files."""
+        selected_spectra = self._get_selected_spectra()
+        
+        if not selected_spectra:
+            self.notify.emit("No spectrum selected.")
+            return
+            
+        last_dir = self.settings.get_last_directory()
+        
+        from PySide6.QtWidgets import QFileDialog
+        import os
+        import numpy as np
+        
+        dir_path = QFileDialog.getExistingDirectory(
+            parent_widget,
+            "Select Directory to Save Spectra Data",
+            last_dir
+        )
+        
+        if not dir_path:
+            return
+            
+        saved_count = 0
+        for spectrum in selected_spectra:
+            # Create a safe filename based on the spectrum's fname
+            base_name = str(spectrum.fname)
+            # Replace invalid path characters if necessary (though usually fname is already safe)
+            safe_name = "".join([c for c in base_name if c.isalpha() or c.isdigit() or c in (' ', '.', '_', '-')]).rstrip()
+            if not safe_name.lower().endswith('.txt'):
+                safe_name += '.txt'
+                
+            file_path = os.path.join(dir_path, safe_name)
+            
+            try:
+                # spectrum.x and spectrum.y are the data arrays
+                data = np.column_stack((spectrum.x, spectrum.y))
+                np.savetxt(file_path, data, fmt='%.6f', delimiter='\t', comments='')
+                saved_count += 1
+            except Exception as e:
+                self.notify.emit(f"Error saving {safe_name}: {e}")
+                
+        if saved_count > 0:
+            self.notify.emit(f"Successfully saved {saved_count} spectra.")
+            self.settings.set_last_directory(dir_path)

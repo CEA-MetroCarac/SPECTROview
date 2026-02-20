@@ -97,7 +97,10 @@ class VWorkspaceSpectra(QWidget):
         self.btn_stats = QPushButton("Stats")
         self.btn_stats.setIcon(QIcon(os.path.join(ICON_DIR, "stats.png")))
 
-        for btn in (self.btn_select_all, self.btn_remove, self.btn_reinit, self.btn_stats):
+        self.btn_save_spectra_data = QPushButton("Save Data")
+        self.btn_save_spectra_data.setIcon(QIcon(os.path.join(ICON_DIR, "save.png")))
+
+        for btn in (self.btn_select_all, self.btn_remove, self.btn_reinit, self.btn_stats, self.btn_save_spectra_data):
             buttons_layout.addWidget(btn)
 
         right_layout.addLayout(buttons_layout)
@@ -190,6 +193,7 @@ class VWorkspaceSpectra(QWidget):
         self.btn_remove.clicked.connect(vm.remove_selected_spectra)
         self.btn_reinit.clicked.connect(lambda: self._apply_with_ctrl(vm.reinit_spectra))
         self.btn_stats.clicked.connect(lambda: vm.view_stats(parent_widget=self))
+        self.btn_save_spectra_data.clicked.connect(lambda: vm.save_spectra_data(parent_widget=self))
 
         # Connection with VMWorkspaceSpectra (vm)
         self.v_spectra_list.selection_changed.connect(vm.set_selected_indices) # V Notify VM of selection change

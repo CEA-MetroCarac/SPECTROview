@@ -252,9 +252,13 @@ class VMWorkspaceSpectra(QObject):
 
         spectrum.add_peak_model(peak_shape,x,dx0=(maxshift, maxshift),dfwhm=maxfwhm)
         
+        peak_model = spectrum.peak_models[-1]
+        
         # Initialize decay model parameters with reasonable values
         if peak_shape in ["DecaySingleExp", "DecayBiExp"]:
-            self._initialize_decay_params(spectrum.peak_models[-1], spectrum)
+            self._initialize_decay_params(peak_model, spectrum)
+        elif peak_shape == "Fano":
+            peak_model.set_param_hint("q", value=50, min=-200, max=200, vary=True)
         
         self._emit_selected_spectra()
     

@@ -386,61 +386,112 @@ class ApplyFitModelThread(QThread):
         self.fit_model = fit_model
         self.fnames = fnames
         self.ncpus = ncpus
+        self._is_cancelled = False
+        
+    def stop(self):
+        """Request the thread to stop gracefully."""
+        self._is_cancelled = True
 
     def run(self):
-        """Execute fitting with progress tracking."""
+        """Execute fitting with progress tracking and stoppable futures."""
         import time
+        from concurrent.futures import ProcessPoolExecutor, as_completed
+        from fitspy.core.utils_mp import fit, initializer
+        import dill
         
         fit_model = deepcopy(self.fit_model)
         total = len(self.fnames)
         
-        # Start timing
         start_time = time.time()
-        
-        # Emit initial progress
         self.progress_changed.emit(0, total, 0, 0.0)
-         
-        # Apply model (this will update progress through queue)
+        
+        # Prepare spectra for fitting (customize model_dict)
+        # Dont use apply_model method of MSpectra class anymore:
+        spectra = []
+        for fname in self.fnames:
+            spectrum, _ = self.spectrums.get_objects(fname)
+            
+            custom_model = deepcopy(fit_model)
+            if hasattr(spectrum, "xcorrection_value"):
+                custom_model["xcorrection_value"] = spectrum.xcorrection_value
+            if hasattr(spectrum, "label"):  
+                custom_model["label"] = spectrum.label
+            if hasattr(spectrum, "color"):  
+                custom_model["color"] = spectrum.color
+
+            spectrum.set_attributes(custom_model)
+            spectrum.fname = fname
+            spectra.append(spectrum)
+
         from multiprocessing import Queue
         queue_incr = Queue()
         
-        # Start monitoring progress in background
-        from threading import Thread
-        monitor_thread = Thread(target=self._monitor_progress, args=(queue_incr, total, start_time))
-        monitor_thread.start()
-        
-        # Perform fitting - pass our queue to apply_model
-        self.spectrums.apply_model(
-            fit_model, 
-            fnames=self.fnames,
-            ncpus=self.ncpus, 
-            show_progressbar=False,
-            queue_incr=queue_incr
-        )
-        
-        # Wait for progress monitor to finish
-        monitor_thread.join()
-        
-        # Emit final completion with total elapsed time
-        elapsed_time = time.time() - start_time
-        self.progress_changed.emit(total, total, 100, elapsed_time)
-    
-    def _monitor_progress(self, queue_incr, total, start_time):
-        """Monitor fitting progress from queue."""
-        import time
-        
-        count = 0
-        while count < total:
-            try:
-                # Wait for progress update from fitting process
-                queue_incr.get(timeout=0.1)
+        if self.ncpus == 1:
+            # Single-threaded mode - directly fit and check cancel flag
+            count = 0
+            for spectrum in spectra:
+                if self._is_cancelled:
+                    break
+                spectrum.preprocess()
+                spectrum.fit()
                 count += 1
                 percentage = int((count / total) * 100)
                 elapsed_time = time.time() - start_time
                 self.progress_changed.emit(count, total, percentage, elapsed_time)
-            except:
-                # Timeout or queue empty, continue waiting
-                continue
+        else:
+            
+            # Multiprocessing mode now dont use fit_mp of fitspy (bug on MacOS)
+            # but using submit to allow cancellation -> allowing "Stop fit" button to work
+            args = [dill.dumps(spectrum) for spectrum in spectra]
+            
+            with ProcessPoolExecutor(
+                initializer=initializer,
+                initargs=(queue_incr,),
+                max_workers=self.ncpus
+            ) as executor:
+                # Submit all tasks and keep references to futures
+                self.futures = [executor.submit(fit, arg) for arg in args]
+                
+                count = 0
+                for i, future in enumerate(as_completed(self.futures)):
+                    if self._is_cancelled:
+                        # Cancel remaining futures
+                        for f in self.futures:
+                            f.cancel()
+                        break
+                    
+                    try:
+                        res = future.result()
+                        # Find the corresponding original spectrum
+                        # (as_completed yields out of order, but since we map results here we just re-pack them)
+                        # Actually, since fit() doesn't return the ID, we must map Future -> index
+                        pass # handled below via map
+                    except Exception:
+                        pass
+                        
+                    count += 1
+                    percentage = int((count / total) * 100)
+                    elapsed_time = time.time() - start_time
+                    self.progress_changed.emit(count, total, percentage, elapsed_time)
+            
+            # Since as_completed returns out of order, it's safer to re-gather results in order
+            # but only for the futures that successfully completed.
+            if not self._is_cancelled:
+                for res, spectrum in zip([f.result() for f in self.futures if f.done() and not f.cancelled()], spectra):
+                    try:
+                        spectrum.x = res[0]
+                        spectrum.y = res[1]
+                        spectrum.weights = res[2]
+                        spectrum.baseline.y_eval = res[3]
+                        spectrum.baseline.is_subtracted = res[4]
+                        spectrum.result_fit = dill.loads(res[5])
+                        spectrum.reassign_params()
+                    except Exception:
+                        pass
+                        
+        if not self._is_cancelled:
+            elapsed_time = time.time() - start_time
+            self.progress_changed.emit(total, total, 100, elapsed_time)
 
 class FitThread(QThread):
     """Thread for fitting spectra with their own existing peak models (no model copying)."""
@@ -449,6 +500,11 @@ class FitThread(QThread):
     def __init__(self, spectra):
         super().__init__()
         self.spectra = spectra
+        self._is_cancelled = False
+        
+    def stop(self):
+        """Request the thread to stop gracefully."""
+        self._is_cancelled = True
 
     def run(self):
         """Fit each spectrum with its own peak models, tracking progress."""
@@ -462,6 +518,9 @@ class FitThread(QThread):
         
         # Fit each spectrum sequentially
         for i, spectrum in enumerate(self.spectra, 1):
+            if self._is_cancelled:
+                break
+                
             if spectrum.peak_models:
                 try:
                     # Check if any peak model is a decay model

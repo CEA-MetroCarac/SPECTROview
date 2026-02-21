@@ -812,12 +812,13 @@ class VMWorkspaceSpectra(QObject):
     def stop_fit(self):
         """Stop the currently running fit thread."""
         if self._fit_thread and self._fit_thread.isRunning():
-            # Store reference before terminating (terminate may trigger finished signal)
+            # Store reference before stopping (stop may trigger finished signal)
             thread = self._fit_thread
             self._fit_thread = None
             
-            thread.terminate()
-            thread.wait()
+            # Gracefully stop the thread
+            thread.stop()
+            thread.wait() # Wait for thread to finish cleanly
             thread.deleteLater()
             
             self._is_fitting = False

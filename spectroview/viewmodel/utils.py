@@ -404,8 +404,9 @@ class ApplyFitModelThread(QThread):
         self._is_cancelled = True
 
     def run(self):
-        """Execute fitting with progress tracking and stoppable futures.""" 
-
+        """Execute fitting with progress tracking and stoppable futures. Pipelined with O(1) lookup.""" 
+        import warnings
+        
         # Suppress lmfit warning in the main thread (for single-CPU execution)
         warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
         
@@ -414,85 +415,115 @@ class ApplyFitModelThread(QThread):
         
         start_time = time.time()
         self.progress_changed.emit(0, total, 0, 0.0)
-        
-        # Prepare spectra for fitting (customize model_dict)
-        # Dont use apply_model method of MSpectra class anymore:
-        spectra = []
-        for fname in self.fnames:
-            spectrum, _ = self.spectrums.get_objects(fname)
-            
-            custom_model = deepcopy(fit_model)
-            if hasattr(spectrum, "xcorrection_value"):
-                custom_model["xcorrection_value"] = spectrum.xcorrection_value
-            if hasattr(spectrum, "label"):  
-                custom_model["label"] = spectrum.label
-            if hasattr(spectrum, "color"):  
-                custom_model["color"] = spectrum.color
 
-            spectrum.set_attributes(custom_model)
-            spectrum.fname = fname
-            spectra.append(spectrum)
+        # Build an O(1) lookup dictionary to avoid O(N^2) search overhead from get_objects()
+        # get_objects() internally normalizes paths and does a linear list.index() search.
+        import os
+        spectra_dict = {os.path.normpath(s.fname): s for s in self.spectrums.all}
 
         if self.ncpus == 1:
-            # Single-threaded mode - directly fit and check cancel flag
+            # Single-threaded mode - directly fit as we go to eliminate initial delay
             count = 0
-            for spectrum in spectra:
+            for fname in self.fnames:
                 if self._is_cancelled:
                     break
+                    
+                norm_fname = os.path.normpath(fname)
+                spectrum = spectra_dict.get(norm_fname)
+                if not spectrum:
+                    continue
+                    
+                custom_model = deepcopy(fit_model)
+                if hasattr(spectrum, "xcorrection_value"): custom_model["xcorrection_value"] = spectrum.xcorrection_value
+                if hasattr(spectrum, "label"): custom_model["label"] = spectrum.label
+                if hasattr(spectrum, "color"): custom_model["color"] = spectrum.color
+                spectrum.set_attributes(custom_model)
+                spectrum.fname = fname
+                
                 spectrum.preprocess()
                 spectrum.fit()
                 count += 1
                 percentage = int((count / total) * 100)
                 elapsed_time = time.time() - start_time
                 self.progress_changed.emit(count, total, percentage, elapsed_time)
+                
         else:
-            # Multiprocessing mode now dont use fit_mp of fitspy (bug on MacOS)
-            # but using submit to allow cancellation -> allowing "Stop fit" button to work
-            args = [dill.dumps(spectrum) for spectrum in spectra]
-            
+            # Multiprocessing mode using a pipelined execution model
+            # This completely eliminates both serialization delay and O(N^2) lookup lag
             queue_incr = DummyQueue()
             with ProcessPoolExecutor(
                 initializer=worker_initializer,
                 initargs=(queue_incr,),
                 max_workers=self.ncpus
             ) as executor:
-                # Submit all tasks and keep references to futures
-                self.futures = [executor.submit(fit, arg) for arg in args]
+                from concurrent.futures import wait, FIRST_COMPLETED
                 
+                self.futures = set()
+                future_to_spectrum = {}
                 count = 0
-                for i, future in enumerate(as_completed(self.futures)):
+                max_queued = self.ncpus * 2
+                fname_iterator = iter(self.fnames)
+                
+                def submit_next():
+                    fname = next(fname_iterator, None)
+                    if fname is not None:
+                        norm_fname = os.path.normpath(fname)
+                        spectrum = spectra_dict.get(norm_fname)
+                        if not spectrum:
+                            return submit_next()
+                            
+                        custom_model = deepcopy(fit_model)
+                        if hasattr(spectrum, "xcorrection_value"): custom_model["xcorrection_value"] = spectrum.xcorrection_value
+                        if hasattr(spectrum, "label"): custom_model["label"] = spectrum.label
+                        if hasattr(spectrum, "color"): custom_model["color"] = spectrum.color
+                        spectrum.set_attributes(custom_model)
+                        spectrum.fname = fname
+                        
+                        arg = dill.dumps(spectrum)
+                        future = executor.submit(fit, arg)
+                        self.futures.add(future)
+                        future_to_spectrum[future] = spectrum
+                        return True
+                    return False
+                
+                # Pre-fill executor to keep all workers busy
+                for _ in range(max_queued):
+                    if not submit_next():
+                        break
+                        
+                while self.futures:
                     if self._is_cancelled:
-                        # Cancel remaining futures
                         for f in self.futures:
                             f.cancel()
                         break
+                        
+                    done, self.futures = wait(self.futures, return_when=FIRST_COMPLETED)
                     
-                    try:
-                        # Just block until the individual fit is done
-                        res = future.result()
-                    except Exception:
-                        pass
+                    for future in done:
+                        try:
+                            # Retrieve the result
+                            res = future.result()
+                            spectrum = future_to_spectrum.pop(future)
+                            spectrum.x = res[0]
+                            spectrum.y = res[1]
+                            spectrum.weights = res[2]
+                            spectrum.baseline.y_eval = res[3]
+                            spectrum.baseline.is_subtracted = res[4]
+                            spectrum.result_fit = dill.loads(res[5])
+                            spectrum.reassign_params()
+                        except Exception:
+                            # In case of exception, remove from dict if present
+                            future_to_spectrum.pop(future, None)
+                            
+                        count += 1
+                        percentage = int((count / total) * 100)
+                        elapsed_time = time.time() - start_time
+                        self.progress_changed.emit(count, total, percentage, elapsed_time)
                         
-                    count += 1
-                    percentage = int((count / total) * 100)
-                    elapsed_time = time.time() - start_time
-                    self.progress_changed.emit(count, total, percentage, elapsed_time)
-                
-            # Since as_completed returns out of order, it's safer to re-gather results in order
-            # but only for the futures that successfully completed.
-            if not self._is_cancelled:
-                for res, spectrum in zip([f.result() for f in self.futures if f.done() and not f.cancelled()], spectra):
-                    try:
-                        spectrum.x = res[0]
-                        spectrum.y = res[1]
-                        spectrum.weights = res[2]
-                        spectrum.baseline.y_eval = res[3]
-                        spectrum.baseline.is_subtracted = res[4]
-                        spectrum.result_fit = dill.loads(res[5])
-                        spectrum.reassign_params()
-                    except Exception:
-                        pass
-                        
+                        # Queue next item to pipeline execution
+                        if not self._is_cancelled:
+                            submit_next()
+
         if not self._is_cancelled:
             elapsed_time = time.time() - start_time
             self.progress_changed.emit(total, total, 100, elapsed_time)

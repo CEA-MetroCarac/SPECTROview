@@ -5,25 +5,20 @@ from PySide6.QtWidgets import (
     QComboBox, QMessageBox, QApplication, QListWidgetItem,
     QDialog, QTextBrowser, QVBoxLayout
 )    
-
-import os
-import datetime
 import struct
 import re
+    
 import base64
 import json
-import zlib
-import time
-import dill
 import numpy as np
-import pandas as pd
-import warnings
-from io import BytesIO
-
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from multiprocessing import Manager
+import re
+import zlib
+import zlib
 from openpyxl.styles import PatternFill
+import pandas as pd
 from copy import deepcopy
+import os
+import datetime
 
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
@@ -31,7 +26,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
 
 from fitspy.core.baseline import BaseLine
-from fitspy.core.utils_mp import fit_mp, fit, initializer
+from fitspy.core.utils_mp import fit_mp
+
 
 from spectroview import PALETTE, DEFAULT_COLORS
 
@@ -55,6 +51,8 @@ def parse_wdf_metadata(reader):
         dict with keys: objective_name, grating_name, exposure_time, 
                        slit_opening, slit_centre, laser_power (if available)
     """
+    import struct
+    
     metadata = {}
     
     # Parse WXIS block for objective, grating, slit, and laser power
@@ -87,6 +85,7 @@ def parse_wdf_metadata(reader):
             # The pattern in WXIS is: ...Opening...<value>µm...SlitBeamCentre...<value>µm...
             
             # Find all µm values with their preceding context
+            import re
             # Find pattern: word/label, then µm value
             # Looking for: "20µm" after something like "Opening" and "1725µm" after "SlitBeamCentre" or similar
             
@@ -376,11 +375,6 @@ def show_toast_notification(parent, message, title=None, duration=3000, preset=N
     toast.show()
     return toast
 
-def worker_initializer(queue_incr):
-    """Initialize worker thread with warnings suppressed."""
-    warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
-    initializer(queue_incr)
-
 
 class ApplyFitModelThread(QThread):
     """Class to perform fitting in a separate Thread."""
@@ -392,109 +386,61 @@ class ApplyFitModelThread(QThread):
         self.fit_model = fit_model
         self.fnames = fnames
         self.ncpus = ncpus
-        self._is_cancelled = False
-        
-    def stop(self):
-        """Request the thread to stop gracefully."""
-        self._is_cancelled = True
 
     def run(self):
-        """Execute fitting with progress tracking and stoppable futures.""" 
-
-        # Suppress lmfit warning in the main thread (for single-CPU execution)
-        warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
+        """Execute fitting with progress tracking."""
+        import time
         
         fit_model = deepcopy(self.fit_model)
         total = len(self.fnames)
         
+        # Start timing
         start_time = time.time()
-        self.progress_changed.emit(0, total, 0, 0.0)
         
-        # Prepare spectra for fitting (customize model_dict)
-        # Dont use apply_model method of MSpectra class anymore:
-        spectra = []
-        for fname in self.fnames:
-            spectrum, _ = self.spectrums.get_objects(fname)
-            
-            custom_model = deepcopy(fit_model)
-            if hasattr(spectrum, "xcorrection_value"):
-                custom_model["xcorrection_value"] = spectrum.xcorrection_value
-            if hasattr(spectrum, "label"):  
-                custom_model["label"] = spectrum.label
-            if hasattr(spectrum, "color"):  
-                custom_model["color"] = spectrum.color
-
-            spectrum.set_attributes(custom_model)
-            spectrum.fname = fname
-            spectra.append(spectrum)
-
-        if self.ncpus == 1:
-            # Single-threaded mode - directly fit and check cancel flag
-            count = 0
-            for spectrum in spectra:
-                if self._is_cancelled:
-                    break
-                spectrum.preprocess()
-                spectrum.fit()
+        # Emit initial progress
+        self.progress_changed.emit(0, total, 0, 0.0)
+         
+        # Apply model (this will update progress through queue)
+        from multiprocessing import Queue
+        queue_incr = Queue()
+        
+        # Start monitoring progress in background
+        from threading import Thread
+        monitor_thread = Thread(target=self._monitor_progress, args=(queue_incr, total, start_time))
+        monitor_thread.start()
+        
+        # Perform fitting - pass our queue to apply_model
+        self.spectrums.apply_model(
+            fit_model, 
+            fnames=self.fnames,
+            ncpus=self.ncpus, 
+            show_progressbar=False,
+            queue_incr=queue_incr
+        )
+        
+        # Wait for progress monitor to finish
+        monitor_thread.join()
+        
+        # Emit final completion with total elapsed time
+        elapsed_time = time.time() - start_time
+        self.progress_changed.emit(total, total, 100, elapsed_time)
+    
+    def _monitor_progress(self, queue_incr, total, start_time):
+        """Monitor fitting progress from queue."""
+        import time
+        
+        count = 0
+        while count < total:
+            try:
+                # Wait for progress update from fitting process
+                queue_incr.get(timeout=0.1)
                 count += 1
                 percentage = int((count / total) * 100)
                 elapsed_time = time.time() - start_time
                 self.progress_changed.emit(count, total, percentage, elapsed_time)
-        else:
-            # Multiprocessing mode now dont use fit_mp of fitspy (bug on MacOS)
-            # but using submit to allow cancellation -> allowing "Stop fit" button to work
-            args = [dill.dumps(spectrum) for spectrum in spectra]
-            
-            with Manager() as manager:
-                queue_incr = manager.Queue()
-                with ProcessPoolExecutor(
-                    initializer=worker_initializer,
-                    initargs=(queue_incr,),
-                    max_workers=self.ncpus
-                ) as executor:
-                    # Submit all tasks and keep references to futures
-                    self.futures = [executor.submit(fit, arg) for arg in args]
-                    
-                    count = 0
-                    for i, future in enumerate(as_completed(self.futures)):
-                        if self._is_cancelled:
-                            # Cancel remaining futures
-                            for f in self.futures:
-                                f.cancel()
-                            break
-                        
-                        try:
-                            res = future.result()
-                            # Find the corresponding original spectrum
-                            # (as_completed yields out of order, but since we map results here we just re-pack them)
-                            # Actually, since fit() doesn't return the ID, we must map Future -> index
-                            pass # handled below via map
-                        except Exception:
-                            pass
-                            
-                        count += 1
-                        percentage = int((count / total) * 100)
-                        elapsed_time = time.time() - start_time
-                        self.progress_changed.emit(count, total, percentage, elapsed_time)
-                
-                # Since as_completed returns out of order, it's safer to re-gather results in order
-                # but only for the futures that successfully completed.
-                if not self._is_cancelled:
-                    for res, spectrum in zip([f.result() for f in self.futures if f.done() and not f.cancelled()], spectra):
-                        try:
-                            spectrum.x = res[0]
-                            spectrum.y = res[1]
-                            spectrum.weights = res[2]
-                            spectrum.baseline.y_eval = res[3]
-                            spectrum.baseline.is_subtracted = res[4]
-                            spectrum.result_fit = dill.loads(res[5])
-                            spectrum.reassign_params()
-                        except Exception:
-                            pass
-                        
-        if not self._is_cancelled:
-            elapsed_time = time.time() - start_time
-            self.progress_changed.emit(total, total, 100, elapsed_time)
+            except:
+                # Timeout or queue empty, continue waiting
+                continue
 
 class FitThread(QThread):
     """Thread for fitting spectra with their own existing peak models (no model copying)."""
@@ -503,17 +449,10 @@ class FitThread(QThread):
     def __init__(self, spectra):
         super().__init__()
         self.spectra = spectra
-        self._is_cancelled = False
-        
-    def stop(self):
-        """Request the thread to stop gracefully."""
-        self._is_cancelled = True
 
     def run(self):
         """Fit each spectrum with its own peak models, tracking progress."""
-        
-        # Suppress lmfit warning in the main thread
-        warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
+        import time
         
         total = len(self.spectra)
         start_time = time.time()
@@ -523,9 +462,6 @@ class FitThread(QThread):
         
         # Fit each spectrum sequentially
         for i, spectrum in enumerate(self.spectra, 1):
-            if self._is_cancelled:
-                break
-                
             if spectrum.peak_models:
                 try:
                     # Check if any peak model is a decay model
@@ -631,6 +567,8 @@ def copy_fig_to_clb(canvas, size_ratio=None):
         if size_ratio:
             figure.set_size_inches(size_ratio, forward=True)
             canvas.draw()
+        
+        from io import BytesIO
         buf = BytesIO()
         figure.savefig(buf, format='png', dpi=300, bbox_inches='tight')
         buf.seek(0)

@@ -1311,7 +1311,7 @@ class VWorkspaceGraphs(QWidget):
             'ymax': self.spin_ymax.value() if self.spin_ymax.value() != -999999 else None,
             'zmin': self.spin_zmin.value() if self.spin_zmin.value() != -999999 else None,
             'zmax': self.spin_zmax.value() if self.spin_zmax.value() != -999999 else None,
-            'color_palette': self.cbb_colormap.get_selected_palette() if use_palette else 'jet',
+            'color_palette': self.cbb_colormap.currentText() if use_palette else 'jet',
             'wafer_size': float(self.cbb_wafer_size.currentText()),
             'wafer_stats': self.cb_wafer_stats.isChecked(),
             'dpi': self.spin_dpi_toolbar.value(),

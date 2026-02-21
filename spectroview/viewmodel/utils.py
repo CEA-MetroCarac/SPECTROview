@@ -376,6 +376,11 @@ def show_toast_notification(parent, message, title=None, duration=3000, preset=N
     toast.show()
     return toast
 
+class DummyQueue:
+    """A dummy queue to satisfy fitspy's fit() function without IPC overhead."""
+    def put(self, item, block=True, timeout=None):
+        pass
+
 def worker_initializer(queue_incr):
     """Initialize worker thread with warnings suppressed."""
     warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
@@ -445,52 +450,48 @@ class ApplyFitModelThread(QThread):
             # but using submit to allow cancellation -> allowing "Stop fit" button to work
             args = [dill.dumps(spectrum) for spectrum in spectra]
             
-            with Manager() as manager:
-                queue_incr = manager.Queue()
-                with ProcessPoolExecutor(
-                    initializer=worker_initializer,
-                    initargs=(queue_incr,),
-                    max_workers=self.ncpus
-                ) as executor:
-                    # Submit all tasks and keep references to futures
-                    self.futures = [executor.submit(fit, arg) for arg in args]
-                    
-                    count = 0
-                    for i, future in enumerate(as_completed(self.futures)):
-                        if self._is_cancelled:
-                            # Cancel remaining futures
-                            for f in self.futures:
-                                f.cancel()
-                            break
-                        
-                        try:
-                            res = future.result()
-                            # Find the corresponding original spectrum
-                            # (as_completed yields out of order, but since we map results here we just re-pack them)
-                            # Actually, since fit() doesn't return the ID, we must map Future -> index
-                            pass # handled below via map
-                        except Exception:
-                            pass
-                            
-                        count += 1
-                        percentage = int((count / total) * 100)
-                        elapsed_time = time.time() - start_time
-                        self.progress_changed.emit(count, total, percentage, elapsed_time)
+            queue_incr = DummyQueue()
+            with ProcessPoolExecutor(
+                initializer=worker_initializer,
+                initargs=(queue_incr,),
+                max_workers=self.ncpus
+            ) as executor:
+                # Submit all tasks and keep references to futures
+                self.futures = [executor.submit(fit, arg) for arg in args]
                 
-                # Since as_completed returns out of order, it's safer to re-gather results in order
-                # but only for the futures that successfully completed.
-                if not self._is_cancelled:
-                    for res, spectrum in zip([f.result() for f in self.futures if f.done() and not f.cancelled()], spectra):
-                        try:
-                            spectrum.x = res[0]
-                            spectrum.y = res[1]
-                            spectrum.weights = res[2]
-                            spectrum.baseline.y_eval = res[3]
-                            spectrum.baseline.is_subtracted = res[4]
-                            spectrum.result_fit = dill.loads(res[5])
-                            spectrum.reassign_params()
-                        except Exception:
-                            pass
+                count = 0
+                for i, future in enumerate(as_completed(self.futures)):
+                    if self._is_cancelled:
+                        # Cancel remaining futures
+                        for f in self.futures:
+                            f.cancel()
+                        break
+                    
+                    try:
+                        # Just block until the individual fit is done
+                        res = future.result()
+                    except Exception:
+                        pass
+                        
+                    count += 1
+                    percentage = int((count / total) * 100)
+                    elapsed_time = time.time() - start_time
+                    self.progress_changed.emit(count, total, percentage, elapsed_time)
+                
+            # Since as_completed returns out of order, it's safer to re-gather results in order
+            # but only for the futures that successfully completed.
+            if not self._is_cancelled:
+                for res, spectrum in zip([f.result() for f in self.futures if f.done() and not f.cancelled()], spectra):
+                    try:
+                        spectrum.x = res[0]
+                        spectrum.y = res[1]
+                        spectrum.weights = res[2]
+                        spectrum.baseline.y_eval = res[3]
+                        spectrum.baseline.is_subtracted = res[4]
+                        spectrum.result_fit = dill.loads(res[5])
+                        spectrum.reassign_params()
+                    except Exception:
+                        pass
                         
         if not self._is_cancelled:
             elapsed_time = time.time() - start_time

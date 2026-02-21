@@ -60,8 +60,8 @@ class VMetadata(QWidget):
         self.lbl_source = QLineEdit()
         self.lbl_source.setReadOnly(True)
         
-        self.lbl_active = QLineEdit()
-        self.lbl_active.setReadOnly(True)
+        self.lbl_baseline_subtracted = QLineEdit()
+        self.lbl_baseline_subtracted.setReadOnly(True)
         
         self.lbl_norm_factor = QLineEdit()
         self.lbl_norm_factor.setReadOnly(True)
@@ -79,11 +79,11 @@ class VMetadata(QWidget):
         layout_custom.addRow("Color:", self.lbl_color)
         layout_custom.addRow("X-Correction:", self.lbl_xcorr)
         layout_custom.addRow("Source Path:", self.lbl_source)
-        layout_custom.addRow("Is Active:", self.lbl_active)
         layout_custom.addRow("Normalization Factor:", self.lbl_norm_factor)
         layout_custom.addRow("Baseline Mode:", self.lbl_baseline_mode)
         layout_custom.addRow("Baseline Coef:", self.lbl_baseline_coef)
         layout_custom.addRow("Baseline Points:", self.lbl_baseline_points)
+        layout_custom.addRow("Baseline Subtracted:", self.lbl_baseline_subtracted)
         
         main_layout.addWidget(self.group_custom, stretch=2)
         
@@ -156,7 +156,6 @@ class VMetadata(QWidget):
             self.lbl_color.setText(str(spectrum.color) if spectrum.color else "")
             self.lbl_xcorr.setText(str(spectrum.xcorrection_value))
             self.lbl_source.setText(str(spectrum.source_path) if spectrum.source_path else "")
-            self.lbl_active.setText(str(spectrum.is_active))
             
             # Set normalizer factor string
             self.lbl_norm_factor.setText(str(getattr(spectrum, 'intensity_norm_factor', 1.0)))
@@ -165,18 +164,21 @@ class VMetadata(QWidget):
             mode_str = ""
             coef_str = ""
             points_str = ""
+            subtracted_str = ""
             try:
                 from spectroview.viewmodel.utils import baseline_to_dict
                 bl_dict = baseline_to_dict(spectrum)
                 mode_str = str(bl_dict.get('mode', ''))
                 coef_str = str(bl_dict.get('coef', ''))
                 points_str = str(bl_dict.get('points', ''))
+                subtracted_str = str(bl_dict.get('is_subtracted', getattr(spectrum.baseline, 'is_subtracted', '')))
             except Exception:
                 pass
                 
             self.lbl_baseline_mode.setText(mode_str)
             self.lbl_baseline_coef.setText(coef_str)
             self.lbl_baseline_points.setText(points_str)
+            self.lbl_baseline_subtracted.setText(subtracted_str)
             
             # Set normalizer factor spinbox value
             self.spin_norm_factor.setValue(getattr(spectrum, 'intensity_norm_factor', 1.0))
@@ -190,11 +192,11 @@ class VMetadata(QWidget):
             self.lbl_color.clear()
             self.lbl_xcorr.clear()
             self.lbl_source.clear()
-            self.lbl_active.clear()
             self.lbl_norm_factor.clear()
             self.lbl_baseline_mode.clear()
             self.lbl_baseline_coef.clear()
             self.lbl_baseline_points.clear()
+            self.lbl_baseline_subtracted.clear()
             
             self.spin_norm_factor.setValue(1.0)
 
@@ -208,11 +210,11 @@ class VMetadata(QWidget):
         self.lbl_color.clear()
         self.lbl_xcorr.clear()
         self.lbl_source.clear()
-        self.lbl_active.clear()
         self.lbl_norm_factor.clear()
         self.lbl_baseline_mode.clear()
         self.lbl_baseline_coef.clear()
         self.lbl_baseline_points.clear()
+        self.lbl_baseline_subtracted.clear()
         
         self.spin_norm_factor.setValue(1.0)
         

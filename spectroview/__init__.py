@@ -87,6 +87,11 @@ X_AXIS_UNIT = [
     r'$2\theta$ (°)',
     'Time (ns)',
 ]
+
+Y_AXIS_UNIT = [
+    'Intensity (a.u.)',
+    'Intensity (a.u./s)',
+]
  
 # 🔑 PyInstaller-safe resource path helper
 def resource_path(relative_path: str) -> str:

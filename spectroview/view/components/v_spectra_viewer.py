@@ -25,7 +25,7 @@ from PySide6.QtCore import QPoint
 import matplotlib.lines as mlines
 import matplotlib.text as mtext
 
-from spectroview import ICON_DIR, X_AXIS_UNIT, PLOT_POLICY
+from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY
 from spectroview.viewmodel.utils import copy_fig_to_clb
 from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
 
@@ -215,6 +215,12 @@ class VSpectraViewer(QWidget):
         self.cbb_xaxis.addItems(X_AXIS_UNIT)
         self.cbb_xaxis.currentIndexChanged.connect(self._emit_view_options)
         menu.addAction(self._wrap("X-axis:", self.cbb_xaxis))
+
+        # Y-axis unit
+        self.cbb_yaxis = QComboBox()
+        self.cbb_yaxis.addItems(Y_AXIS_UNIT)
+        self.cbb_yaxis.currentIndexChanged.connect(self._emit_view_options)
+        menu.addAction(self._wrap("Y-axis:", self.cbb_yaxis))
 
         # Y-scale
         self.cbb_yscale = QComboBox()
@@ -447,7 +453,7 @@ class VSpectraViewer(QWidget):
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
 
         self.ax.set_xlabel(self.cbb_xaxis.currentText())
-        self.ax.set_ylabel("Intensity (a.u.)")
+        self.ax.set_ylabel(self.cbb_yaxis.currentText())
         self.ax.set_yscale(
             "log" if self.cbb_yscale.currentText() == "Log" else "linear"
         )

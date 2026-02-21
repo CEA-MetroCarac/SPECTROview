@@ -423,9 +423,6 @@ class ApplyFitModelThread(QThread):
             spectrum.fname = fname
             spectra.append(spectrum)
 
-        from multiprocessing import Queue
-        queue_incr = Queue()
-        
         if self.ncpus == 1:
             # Single-threaded mode - directly fit and check cancel flag
             count = 0
@@ -439,55 +436,58 @@ class ApplyFitModelThread(QThread):
                 elapsed_time = time.time() - start_time
                 self.progress_changed.emit(count, total, percentage, elapsed_time)
         else:
+            from multiprocessing import Manager
             
             # Multiprocessing mode now dont use fit_mp of fitspy (bug on MacOS)
             # but using submit to allow cancellation -> allowing "Stop fit" button to work
             args = [dill.dumps(spectrum) for spectrum in spectra]
             
-            with ProcessPoolExecutor(
-                initializer=initializer,
-                initargs=(queue_incr,),
-                max_workers=self.ncpus
-            ) as executor:
-                # Submit all tasks and keep references to futures
-                self.futures = [executor.submit(fit, arg) for arg in args]
-                
-                count = 0
-                for i, future in enumerate(as_completed(self.futures)):
-                    if self._is_cancelled:
-                        # Cancel remaining futures
-                        for f in self.futures:
-                            f.cancel()
-                        break
+            with Manager() as manager:
+                queue_incr = manager.Queue()
+                with ProcessPoolExecutor(
+                    initializer=initializer,
+                    initargs=(queue_incr,),
+                    max_workers=self.ncpus
+                ) as executor:
+                    # Submit all tasks and keep references to futures
+                    self.futures = [executor.submit(fit, arg) for arg in args]
                     
-                    try:
-                        res = future.result()
-                        # Find the corresponding original spectrum
-                        # (as_completed yields out of order, but since we map results here we just re-pack them)
-                        # Actually, since fit() doesn't return the ID, we must map Future -> index
-                        pass # handled below via map
-                    except Exception:
-                        pass
+                    count = 0
+                    for i, future in enumerate(as_completed(self.futures)):
+                        if self._is_cancelled:
+                            # Cancel remaining futures
+                            for f in self.futures:
+                                f.cancel()
+                            break
                         
-                    count += 1
-                    percentage = int((count / total) * 100)
-                    elapsed_time = time.time() - start_time
-                    self.progress_changed.emit(count, total, percentage, elapsed_time)
-            
-            # Since as_completed returns out of order, it's safer to re-gather results in order
-            # but only for the futures that successfully completed.
-            if not self._is_cancelled:
-                for res, spectrum in zip([f.result() for f in self.futures if f.done() and not f.cancelled()], spectra):
-                    try:
-                        spectrum.x = res[0]
-                        spectrum.y = res[1]
-                        spectrum.weights = res[2]
-                        spectrum.baseline.y_eval = res[3]
-                        spectrum.baseline.is_subtracted = res[4]
-                        spectrum.result_fit = dill.loads(res[5])
-                        spectrum.reassign_params()
-                    except Exception:
-                        pass
+                        try:
+                            res = future.result()
+                            # Find the corresponding original spectrum
+                            # (as_completed yields out of order, but since we map results here we just re-pack them)
+                            # Actually, since fit() doesn't return the ID, we must map Future -> index
+                            pass # handled below via map
+                        except Exception:
+                            pass
+                            
+                        count += 1
+                        percentage = int((count / total) * 100)
+                        elapsed_time = time.time() - start_time
+                        self.progress_changed.emit(count, total, percentage, elapsed_time)
+                
+                # Since as_completed returns out of order, it's safer to re-gather results in order
+                # but only for the futures that successfully completed.
+                if not self._is_cancelled:
+                    for res, spectrum in zip([f.result() for f in self.futures if f.done() and not f.cancelled()], spectra):
+                        try:
+                            spectrum.x = res[0]
+                            spectrum.y = res[1]
+                            spectrum.weights = res[2]
+                            spectrum.baseline.y_eval = res[3]
+                            spectrum.baseline.is_subtracted = res[4]
+                            spectrum.result_fit = dill.loads(res[5])
+                            spectrum.reassign_params()
+                        except Exception:
+                            pass
                         
         if not self._is_cancelled:
             elapsed_time = time.time() - start_time

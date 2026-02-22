@@ -435,6 +435,7 @@ class ApplyFitModelThread(QThread):
                     
                 custom_model = deepcopy(fit_model)
                 if hasattr(spectrum, "xcorrection_value"): custom_model["xcorrection_value"] = spectrum.xcorrection_value
+                if hasattr(spectrum, "intensity_norm_factor"): custom_model["intensity_norm_factor"] = spectrum.intensity_norm_factor
                 if hasattr(spectrum, "label"): custom_model["label"] = spectrum.label
                 if hasattr(spectrum, "color"): custom_model["color"] = spectrum.color
                 spectrum.set_attributes(custom_model)
@@ -474,6 +475,7 @@ class ApplyFitModelThread(QThread):
                             
                         custom_model = deepcopy(fit_model)
                         if hasattr(spectrum, "xcorrection_value"): custom_model["xcorrection_value"] = spectrum.xcorrection_value
+                        if hasattr(spectrum, "intensity_norm_factor"): custom_model["intensity_norm_factor"] = spectrum.intensity_norm_factor
                         if hasattr(spectrum, "label"): custom_model["label"] = spectrum.label
                         if hasattr(spectrum, "color"): custom_model["color"] = spectrum.color
                         spectrum.set_attributes(custom_model)

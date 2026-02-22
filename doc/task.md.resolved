@@ -1,0 +1,38 @@
+# Task: Vectorized 2D Map Fit Engine
+
+## Planning
+- [x] Understand root cause: lmfit holds GIL + Windows IPC overhead > per-task compute time
+- [x] Confirm threading doesn't help (GIL locked)
+- [x] Confirm batch multiprocessing kills parallelism 
+- [/] Design new vectorized engine architecture
+
+## Implementation
+
+### Core engine (`spectroview/model/map_fit_engine.py`)
+- [ ] `MapFitEngine` class with numpy model functions
+- [ ] Vectorized peak models: Lorentzian, Gaussian, PseudoVoigt, Fano
+- [ ] scipy.optimize.least_squares direct call (bypasses lmfit Python overhead)
+- [ ] Row-major scan order (neighbor propagation logic)
+- [ ] Result storage as numpy matrix `params_matrix[n_spectra, n_params]`
+- [ ] Compatibility layer: `build_fitspy_result(idx)` → MSpectrum with result_fit
+
+### Thread integration ([spectroview/viewmodel/utils.py](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/utils.py))
+- [ ] `VectorizedMapFitThread` QThread class (replaces [ApplyFitModelThread](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/utils.py#128-341) for maps)
+- [ ] Emits real-time progress as spectra are fitted
+- [ ] Stores `MapFitEngine` result accessible to ViewModel
+
+### ViewModel integration ([spectroview/viewmodel/vm_workspace_maps.py](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/vm_workspace_maps.py))
+- [ ] Detect when vectorized engine is applicable (2D map, supported models)
+- [ ] Route map fits through `VectorizedMapFitThread`
+- [ ] Retrieve per-pixel results from `MapFitEngine.params_matrix`
+- [ ] Fall back to existing [ApplyFitModelThread](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/utils.py#128-341) for unsupported cases
+
+### Vertical compatibility
+- [ ] After vectorized fit, populate spectrum.result_fit on-demand when user selects a pixel
+- [ ] Ensure [collect_fit_results()](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/vm_workspace_spectra.py#1096-1240) still works with the new engine
+
+## Verification
+- [ ] Benchmark: vectorized engine vs old engine on 2Dmap_Si.txt
+- [ ] Confirm neighbor propagation reduces iteration count
+- [ ] Confirm fit results match lmfit results (visual comparison)
+- [ ] Cleanup debug prints from [utils.py](file:///C:/Python312/Lib/site-packages/fitspy/core/utils.py) and [vm_workspace_spectra.py](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/vm_workspace_spectra.py)

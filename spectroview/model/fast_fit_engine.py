@@ -272,9 +272,10 @@ _JAC_REGISTRY = {
 class _PeakSpec:
     """Holds parsed information about one peak in the fit model."""
     __slots__ = ['model_name', 'eval_fn', 'jac_fn', 'param_names', 'p0', 'bounds_lo', 'bounds_hi',
-                 'prefix', 'slice_']
+                 'prefix', 'slice_', 'fixed_mask', 'fixed_values']
 
-    def __init__(self, model_name, eval_fn, jac_fn, param_names, p0, bounds_lo, bounds_hi, prefix, slice_):
+    def __init__(self, model_name, eval_fn, jac_fn, param_names, p0, bounds_lo, bounds_hi, prefix, slice_,
+                 fixed_mask, fixed_values):
         self.model_name  = model_name
         self.eval_fn     = eval_fn
         self.jac_fn      = jac_fn      # analytical Jacobian, or None → fallback to 2-point
@@ -284,6 +285,8 @@ class _PeakSpec:
         self.bounds_hi   = bounds_hi
         self.prefix      = prefix      # e.g. 'm01_'
         self.slice_      = slice_      # slice into the flat per-spectrum param vector
+        self.fixed_mask  = fixed_mask  # bool array: True = parameter is fixed (vary=False)
+        self.fixed_values = fixed_values  # float array: value to hold fixed
 
 
 class FastFitEngine:
@@ -353,14 +356,16 @@ class FastFitEngine:
             n_p = len(param_names)
 
             p0 = np.zeros(n_p)
-            bounds_lo = np.full(n_p, -np.inf)
-            bounds_hi = np.full(n_p, np.inf)
+            bounds_lo  = np.full(n_p, -np.inf)
+            bounds_hi  = np.full(n_p,  np.inf)
+            fixed_mask = np.zeros(n_p, dtype=bool)
 
             for j, pname in enumerate(param_names):
                 hint = param_hints.get(pname, {})
-                val = hint.get('value', 1.0)
-                lo  = hint.get('min', -np.inf)
-                hi  = hint.get('max', np.inf)
+                val  = hint.get('value', 1.0)
+                lo   = hint.get('min', -np.inf)
+                hi   = hint.get('max',  np.inf)
+                vary = hint.get('vary', True)  # False → fixed parameter
                 if val is None or not np.isfinite(val):
                     val = 1.0
                 if lo is None or not np.isfinite(lo):
@@ -370,9 +375,11 @@ class FastFitEngine:
                 # Clamp default value to (lo, hi)
                 val = np.clip(val, lo if np.isfinite(lo) else val,
                               hi if np.isfinite(hi) else val)
-                p0[j]         = val
-                bounds_lo[j]  = lo
-                bounds_hi[j]  = hi
+                p0[j]          = val
+                bounds_lo[j]   = lo
+                bounds_hi[j]   = hi
+                if not vary:
+                    fixed_mask[j] = True
 
             slc = slice(offset, offset + n_p)
             self._peaks.append(_PeakSpec(
@@ -385,6 +392,8 @@ class FastFitEngine:
                 bounds_hi=bounds_hi,
                 prefix=prefix,
                 slice_=slc,
+                fixed_mask=fixed_mask,
+                fixed_values=p0.copy(),   # values to inject for fixed params
             ))
             offset += n_p
 
@@ -478,34 +487,78 @@ class FastFitEngine:
     # Global initial guess from spectral data
     # -----------------------------------------------------------------------
 
-    def _auto_p0(self):
+    def _auto_p0_global(self):
         """
-        Build a global initial-guess parameter vector from data statistics.
-
-        For each peak we try to improve the user-supplied initial guess by
-        looking at the mean spectrum.  Falls back to the user hint if anything
-        goes wrong.
+        Build a global initial-guess parameter vector from the mean spectrum.
+        Serves as the fallback starting point when warmstart quality is poor.
         """
         mean_y = np.mean(self.Y, axis=0)
-        x = self.x
-
-        p0_global = np.zeros(self._n_params)
-
+        p0 = np.zeros(self._n_params)
         for peak in self._peaks:
             slc = peak.slice_
-            p0_global[slc] = peak.p0.copy()  # start with user hints
-
-            # Try to improve ampli / x0 from data if the hint is ~1
+            p0[slc] = peak.p0.copy()
             if 'ampli' in peak.param_names and 'x0' in peak.param_names:
                 i_amp = peak.param_names.index('ampli')
                 i_x0  = peak.param_names.index('x0')
-                current_x0 = p0_global[slc.start + i_x0]
-                i_near = np.argmin(np.abs(x - current_x0))
-                data_amp = mean_y[i_near] if mean_y[i_near] > 0 else np.max(mean_y)
-                if abs(p0_global[slc.start + i_amp]) < 1.0:
-                    p0_global[slc.start + i_amp] = max(data_amp, 1.0)
+                if not peak.fixed_mask[i_amp]:
+                    x0_val = p0[slc.start + i_x0]
+                    i_near = np.argmin(np.abs(self.x - x0_val))
+                    data_amp = mean_y[i_near] if mean_y[i_near] > 0 else float(np.max(mean_y))
+                    if abs(p0[slc.start + i_amp]) < 1.0:
+                        p0[slc.start + i_amp] = max(data_amp, 1.0)
+        return p0
 
-        return p0_global
+    def _refine_ampli_for_spectrum(self, y_i, p_template):
+        """
+        Refine `ampli` (and optionally `ampli`-like params) for a specific
+        spectrum by reading the local intensity near each peak's expected x0.
+
+        Everything else (x0, fwhm, shape params) is taken from p_template
+        unchanged, so warmstart geometry is preserved while amplitudes are
+        locally adapted.
+        """
+        p0 = p_template.copy()
+        for peak in self._peaks:
+            slc = peak.slice_
+            if 'ampli' in peak.param_names and 'x0' in peak.param_names:
+                i_amp = peak.param_names.index('ampli')
+                i_x0  = peak.param_names.index('x0')
+                if peak.fixed_mask[i_amp]:
+                    continue  # skip fixed params
+                x0_val  = p0[slc.start + i_x0]
+                i_near  = int(np.argmin(np.abs(self.x - x0_val)))
+                loc_amp = float(y_i[i_near])
+                if loc_amp > 0:
+                    lo = peak.bounds_lo[i_amp]
+                    hi = peak.bounds_hi[i_amp]
+                    lo_c = lo if np.isfinite(lo) else 0.0
+                    hi_c = hi if np.isfinite(hi) else np.inf
+                    p0[slc.start + i_amp] = float(np.clip(loc_amp, lo_c, hi_c))
+        return p0
+
+    # -----------------------------------------------------------------------
+    # Fixed-parameter helpers
+    # -----------------------------------------------------------------------
+
+    def _make_free_masks(self):
+        """Build a global boolean mask of free (vary=True) parameters."""
+        parts = []
+        for pk in self._peaks:
+            parts.append(~pk.fixed_mask)  # True = free
+        return np.concatenate(parts)  # shape (n_params,)
+
+    def _make_fixed_full(self):
+        """Build the full fixed-value vector (only matters where free_mask is False)."""
+        parts = []
+        for pk in self._peaks:
+            parts.append(pk.fixed_values)
+        return np.concatenate(parts)  # shape (n_params,)
+
+    def _expand(self, p_free, p_full_template):
+        """Inject free params back into the full parameter vector."""
+        out = p_full_template.copy()
+        out[self._free_mask] = p_free
+        return out
 
     # -----------------------------------------------------------------------
     # Fitting
@@ -515,14 +568,17 @@ class FastFitEngine:
         """
         Fit all spectra.
 
-        Parameters
-        ----------
-        cancelled_flag : list or object with bool value, optional
-            If truthy the loop exits early.
-
-        Returns
-        -------
-        self (for chaining)
+        Algorithm
+        ---------
+        1. Per-spectrum amplitude init: estimate `ampli` from local data near
+           each peak's expected x0 — adapts to intensity-varying maps.
+        2. Quality-gated warmstart: use the previous pixel's result only if its
+           chi-square was acceptable; otherwise restart from the global p0.
+        3. Primary solver: ``least_squares(method='trf', bounds=...)`` — TRF
+           enforces bounds at every iteration (same as lmfit quality).
+           Analytical Jacobians provided for all 8 built-in peak models.
+        4. Two-attempt retry: if TRF gives poor quality from warmstart, retry
+           from the global fresh start.
         """
         N, M = self.N, self.M
         x = self.x
@@ -533,97 +589,120 @@ class FastFitEngine:
         self.success_array = np.zeros(N, dtype=bool)
         self.n_eval_array  = np.zeros(N, dtype=int)
 
-        # Flat bounds for scipy
+        # Flat bounds and fixed-parameter info
         lo_all = np.concatenate([pk.bounds_lo for pk in self._peaks])
         hi_all = np.concatenate([pk.bounds_hi for pk in self._peaks])
-        bounds = (lo_all, hi_all)
 
-        # Global initial guess (improved from data)
-        p0_global = self._auto_p0()
+        # Build free-parameter mask once (vary=True params only)
+        self._free_mask = self._make_free_masks()    # (n_p,) bool
+        self._fixed_full = self._make_fixed_full()   # (n_p,) float
 
-        # Scan order for neighbour propagation
+        # Reduced bounds — only for the free parameters
+        lo_free = lo_all[self._free_mask]
+        hi_free = hi_all[self._free_mask]
+        bounds_free = (lo_free, hi_free)
+
+        # Global initial guess (mean spectrum + user hints)
+        p0_global = self._auto_p0_global()
+        p0_global[~self._free_mask] = self._fixed_full[~self._free_mask]
+
+        # Scan order (2D row-major for neighbour propagation)
         order = self._scan_order()
 
-        p_prev = p0_global.copy()  # will become the previous spectrum's params
+        # Chi-square quality threshold — prevent cascading bad warmstarts
+        mean_signal_sq = float(np.mean(self.Y ** 2))
+        _CHI_GOOD = mean_signal_sq * 10.0 if mean_signal_sq > 0 else 1e8
 
-        # Use analytical Jacobian if registered for every peak, else fall back
-        # to scipy's numerical 2-point finite differences.
+        # Analytical Jacobian when all peaks support it
         _all_have_jac = all(pk.jac_fn is not None for pk in self._peaks)
-        if _all_have_jac:
-            _jac_arg = lambda p: self._jac_one(x, p)
-        else:
-            _jac_arg = '2-point'
 
-        from scipy.optimize import least_squares, leastsq
+        # Closures operating in free-parameter subspace
+        def _residual(p_free, _y, _p_tmpl):
+            p_full = self._expand(p_free, _p_tmpl)
+            return self._eval_one(x, p_full) - _y
 
-        for k, idx in enumerate(order):
-            if cancelled_flag is not None and cancelled_flag[0]:
-                break
+        def _jac(p_free, _y, _p_tmpl):
+            p_full = self._expand(p_free, _p_tmpl)
+            J_full = self._jac_one(x, p_full)
+            return J_full[:, self._free_mask]
 
-            y_i = self.Y[idx]
+        jac_arg = _jac if _all_have_jac else '2-point'
 
-            # Use previous neighbour's params as warm start (reduces iterations ~3-5×)
-            p0 = p_prev.copy()
+        from scipy.optimize import least_squares
 
-            def residual(p, _y=y_i):
-                return self._eval_one(x, p) - _y
+        def _try_fit(p0_start, y_i):
+            """Single TRF solve. Returns (p_full, chisqr, success, nfev)."""
+            dof = max(M - n_p, 1)
+            try:
+                res = least_squares(
+                    _residual,
+                    p0_start[self._free_mask],
+                    args=(y_i, p0_start),
+                    bounds=bounds_free,
+                    method='trf',
+                    jac=jac_arg,
+                    ftol=1e-4, xtol=1e-4, gtol=1e-8,
+                    max_nfev=500,
+                    loss='linear',
+                )
+                p_full  = self._expand(res.x, p0_start)
+                chisqr  = float(np.sum(res.fun ** 2) / dof)
+                success = bool(res.success or res.status in (1, 2, 3, 4))
+                return p_full, chisqr, success, int(res.nfev)
+            except Exception:
+                return None, np.inf, False, 0
 
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore')
-                try:
-                    # ---- FAST PATH: MINPACK leastsq (unbounded Levenberg-Marquardt) ----
-                    # Scipy's leastsq has ~2-3x less Python overhead than least_squares.
-                    if _all_have_jac:
-                        def _jac2(p): return self._jac_one(x, p)
-                        popt, _, info, msg, ier = leastsq(
-                            residual, p0, Dfun=_jac2, full_output=True,
-                            ftol=1e-5, xtol=1e-5, gtol=1e-8, maxfev=200
-                        )
+        p_prev      = p0_global.copy()
+        prev_chisqr = np.inf  # first pixel always starts fresh
+
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+
+            for k, idx in enumerate(order):
+                if cancelled_flag is not None and cancelled_flag[0]:
+                    break
+
+                y_i = self.Y[idx]
+
+                # Per-spectrum p0: global geometry + local amplitude estimate
+                p0_local = self._refine_ampli_for_spectrum(y_i, p0_global)
+                p0_local[~self._free_mask] = self._fixed_full[~self._free_mask]
+
+                # Quality-gated warmstart: only propagate if previous fit was good
+                if prev_chisqr < _CHI_GOOD:
+                    p0_warm = self._refine_ampli_for_spectrum(y_i, p_prev)
+                    p0_warm[~self._free_mask] = self._fixed_full[~self._free_mask]
+                else:
+                    p0_warm = p0_local
+
+                # Attempt 1: TRF from warmstart (or fresh if gated out)
+                p_full, chisqr, success, nfev = _try_fit(p0_warm, y_i)
+
+                # Attempt 2: retry from fresh global p0 if quality is poor
+                if (not success or chisqr > _CHI_GOOD) and (p0_warm is not p0_local):
+                    p_full2, chisqr2, success2, nfev2 = _try_fit(p0_local, y_i)
+                    if chisqr2 < chisqr:
+                        p_full, chisqr, success, nfev = p_full2, chisqr2, success2, nfev + nfev2
+
+                # Store result
+                if p_full is not None:
+                    self.params_matrix[idx] = p_full
+                    self.chisqr_array[idx]  = chisqr
+                    self.success_array[idx] = success
+                    self.n_eval_array[idx]  = nfev
+                    if success and chisqr < _CHI_GOOD:
+                        p_prev      = p_full
+                        prev_chisqr = chisqr
                     else:
-                        popt, _, info, msg, ier = leastsq(
-                            residual, p0, full_output=True,
-                            ftol=1e-5, xtol=1e-5, gtol=1e-8, maxfev=200
-                        )
-
-                    # Check if the unbounded result violated our parameter bounds
-                    bounds_violated = np.any(popt < lo_all) or np.any(popt > hi_all)
-                    success_lm = ier in (1, 2, 3, 4)
-
-                    if success_lm and not bounds_violated:
-                        # Accept the fast-path result
-                        self.params_matrix[idx] = popt
-                        dof = max(M - n_p, 1)
-                        self.chisqr_array[idx] = np.sum(info.get('fvec', residual(popt))**2) / dof
-                        self.success_array[idx] = True
-                        self.n_eval_array[idx]  = info.get('nfev', 0)
-                        p_prev = popt.copy()
-
-                    else:
-                        # ---- FALLBACK PATH: TRF with strict bounds ----
-                        # The fast path tried to push a parameter outside its min/max,
-                        # or failed to converge. Fall back to the heavier bounded solver.
-                        result = least_squares(
-                            residual, p0,
-                            bounds=bounds,
-                            method='trf',
-                            jac=_jac_arg,  # analytical or '2-point'
-                            ftol=1e-5, xtol=1e-5, gtol=1e-8,
-                            max_nfev=200,
-                        )
-                        self.params_matrix[idx] = result.x
-                        dof = max(M - n_p, 1)
-                        self.chisqr_array[idx] = np.sum(result.fun**2) / dof
-                        self.success_array[idx] = result.success
-                        self.n_eval_array[idx]  = result.nfev
-                        p_prev = result.x.copy()
-
-                except Exception:
+                        prev_chisqr = np.inf  # force fresh start next pixel
+                else:
                     self.params_matrix[idx] = p_prev
                     self.chisqr_array[idx]  = np.nan
                     self.success_array[idx] = False
+                    prev_chisqr = np.inf
 
-            if self.progress_callback is not None:
-                self.progress_callback(k + 1, N)
+                if self.progress_callback is not None:
+                    self.progress_callback(k + 1, N)
 
         return self
 

@@ -852,7 +852,14 @@ class VMapViewer(QWidget):
         else:
             # 2D maps: Use fast pivot table (regular grid, no interpolation needed)
             # NaN values in final_z_col will be preserved in the pivot table
-            heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
+            # IMPORTANT: reset all indexes before DataFrame construction to prevent
+            # "array length N does not match index length M" when z_col comes
+            # from a merge (fit parameter) and has a mismatched pandas index.
+            heatmap_data = pd.DataFrame({
+                'X': pd.Series(x_col).reset_index(drop=True),
+                'Y': pd.Series(y_col).reset_index(drop=True),
+                'Z': pd.Series(final_z_col.values if hasattr(final_z_col, 'values') else final_z_col)
+            })
             heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
             
             # Calculate extent to center pixels on coordinates 

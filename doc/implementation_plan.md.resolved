@@ -1,0 +1,106 @@
+# Vectorized 2D Map Fit Engine
+
+## Background
+
+**Root-cause analysis of multiprocessing slowness:**
+- `lmfit` is Python-based → holds the GIL → threading gives 0× speedup (confirmed: 10.3s vs 10s)
+- Windows IPC has ~13ms per-task overhead → subprocess per-spectrum costs more than the 5.9ms compute
+- Batch subprocess kills parallelism (56s sequential-within-worker vs 10s single-CPU)
+
+**Solution: New engine bypassing lmfit entirely for 2D maps:**
+1. Store all spectra as a [(N, M)](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/model/m_spectra.py#28-33) numpy matrix
+2. Evaluate all model residuals as vectorized numpy operations
+3. Call `scipy.optimize.least_squares` (FORTRAN MINPACK) directly — zero Python overhead per iteration
+4. Propagate fitted params from neighboring pixels as initial guesses
+5. Store results as [(N, n_params)](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/model/m_spectra.py#28-33) numpy matrix for instant retrieval
+6. Create fitspy `result_fit` objects on-demand when user selects a pixel
+
+## Proposed Changes
+
+### Core Engine
+
+#### [NEW] [map_fit_engine.py](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/model/map_fit_engine.py)
+
+```
+MapFitEngine
+├── __init__(x, Y, fit_model_dict, coords_2d)
+│   └── Parses peak_models from fitspy model dict
+├── _build_param_list()        → list of {'name', 'model', 'index'} per peak×param
+├── _eval_model(x, params_2d)  → (N,M) numpy matrix: vectorized model evaluation
+│   ├── gaussian(x, N×(ampli, fwhm, x0))    → (N,M) broadcasting
+│   ├── lorentzian(x, N×(ampli, fwhm, x0))  → (N,M) broadcasting
+│   ├── pseudovoigt(...)                     → (N,M) broadcasting
+│   └── gaussian_asym | lorentzian_asym | fano → (N,M) broadcasting
+├── fit(progress_callback=None)
+│   ├── p0 = _auto_init_params()   → smart initial guess from spectrum stats
+│   ├── For each spectrum i in scan order (row-major 2D):
+│   │   ├── Use neighbor's params as p0 (propagation)
+│   │   ├── scipy.optimize.least_squares(residual, p0, method='lm')
+│   │   │      → residual = model(x, p) - y[i]  (pure numpy, no Python loop)
+│   │   └── Store result in params_matrix[i, :]
+│   └── Emit progress every 10 spectra
+├── params_matrix: ndarray (N, n_params) — all fit results
+├── chisqr_array:  ndarray (N,)          — fit quality metric
+└── build_fitspy_result(idx) → lmfit.ModelResult compatible object
+    └── Creates MSpectrum.result_fit on-demand from params_matrix[idx]
+```
+
+**Key vectorized math (broadcast over N spectra simultaneously):**
+```python
+# x: (M,)   ampli/fwhm/x0: (N,)
+x_b = x[None, :]             # (1, M) broadcast
+x0_b = x0[:, None]           # (N, 1)
+# lorentzian — ENTIRE MAP in one numpy call:
+Y_model = ampli[:,None] * fwhm[:,None]**2 / (4*((x_b - x0_b)**2 + fwhm[:,None]**2/4) + 1e-6)
+```
+
+#### [NEW] [vm_vectorized_fit_thread.py](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/vm_vectorized_fit_thread.py)
+
+A `QThread` that wraps `MapFitEngine.fit()` and emits progress signals compatible with the existing `progress_changed` signal format.
+
+---
+
+### ViewModel Integration
+
+#### [MODIFY] [vm_workspace_maps.py](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/vm_workspace_maps.py)
+
+- Detect when vectorized engine is applicable (map is loaded + model has supported peak types)
+- Route map fits to `VectorizedMapFitThread` 
+- After fit, store `MapFitEngine.params_matrix` in [VMWorkspaceMaps](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/vm_workspace_maps.py#21-595)
+- [collect_fit_results()](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/vm_workspace_maps.py#358-414) reads from `params_matrix` instead of `spectrum.result_fit`
+- Lazily populate `spectrum.result_fit` when user **selects** a pixel (not during fit)
+
+#### [MODIFY] [utils.py](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/utils.py)
+
+- Clean up all `[MP]`, `[GUI]` debug print statements
+- Remove all multiprocessing infrastructure (shared memory, executor, etc.) used for the failed approach
+- Keep single-CPU [FitThread](file:///c:/Users/VL251876/Documents/Python/SPECTROview-1/spectroview/viewmodel/utils.py#342-403) as fallback for non-map spectra
+
+---
+
+## Performance Estimate
+
+| Approach | 1681 spectra | Notes |
+|---|---|---|
+| Current (lmfit, 1 CPU) | ~10s | Baseline |
+| New engine, no neighbor init | ~2–3s | scipy FORTRAN vs Python lmfit |
+| New engine + neighbor init | ~1–2s | Fewer optimizer iterations |
+| New engine + numpy batch eval | ~1s | Vectorized model in each scipy call |
+
+> [!NOTE]
+> The biggest gain is from bypassing lmfit's Python overhead (5ms→0.5ms/spectrum). Neighbor propagation reduces fitting iterations by ~3–5×. Total expected speedup: **5–10×**.
+
+## Verification Plan
+
+### Automated Tests
+```
+python -c "from spectroview.model.map_fit_engine import MapFitEngine; ..."
+```
+- Time: `MapFitEngine.fit()` on 1681 spectra from 2Dmap_Si.txt
+- Correctness: compare params_matrix to lmfit results for 10 random spectra (should match within 1%)
+- Neighbor propagation: print iteration counts for sequential fits with/without neighbor init
+
+### Manual Verification
+- Load 2Dmap_Si.txt in app, run fit with new engine
+- Click on individual pixels — confirm spectrum popup shows correct fitted curve
+- Verify map heatmap renders correctly with new param results

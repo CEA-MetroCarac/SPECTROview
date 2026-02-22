@@ -738,6 +738,219 @@ def show_toast_notification(parent, message, title=None, duration=3000, preset=N
     return toast
 
 
+<<<<<<< HEAD
+=======
+def worker_initializer(queue_incr):
+    """Initialize worker thread with warnings suppressed."""
+    warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
+    initializer(queue_incr)
+
+
+class ApplyFitModelThread(QThread):
+    """Class to perform fitting in a separate Thread."""
+    progress_changed = Signal(int, int, int, float)  # (current, total, percentage, elapsed_time)
+    
+    def __init__(self, spectrums, fit_model, fnames, ncpus=1):
+        super().__init__()
+        self.spectrums = spectrums
+        self.fit_model = fit_model
+        self.fnames = fnames
+        self.ncpus = ncpus
+        self._is_cancelled = False
+        
+    def stop(self):
+        """Request the thread to stop gracefully."""
+        self._is_cancelled = True
+
+    def run(self):
+        """Execute fitting with progress tracking and stoppable futures. Pipelined with O(1) lookup.""" 
+        import warnings
+        
+        # Suppress lmfit warning in the main thread (for single-CPU execution)
+        warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
+        
+        fit_model = deepcopy(self.fit_model)
+        total = len(self.fnames)
+        
+        start_time = time.time()
+        self.progress_changed.emit(0, total, 0, 0.0)
+
+        # Build an O(1) lookup dictionary to avoid O(N^2) search overhead from get_objects()
+        # get_objects() internally normalizes paths and does a linear list.index() search.
+        import os
+        spectra_dict = {os.path.normpath(s.fname): s for s in self.spectrums.all}
+
+        if self.ncpus == 1:
+            # Single-threaded mode - directly fit as we go to eliminate initial delay
+            count = 0
+            for fname in self.fnames:
+                if self._is_cancelled:
+                    break
+                    
+                norm_fname = os.path.normpath(fname)
+                spectrum = spectra_dict.get(norm_fname)
+                if not spectrum:
+                    continue
+                    
+                custom_model = deepcopy(fit_model)
+                if hasattr(spectrum, "xcorrection_value"): custom_model["xcorrection_value"] = spectrum.xcorrection_value
+                if hasattr(spectrum, "intensity_norm_factor"): custom_model["intensity_norm_factor"] = spectrum.intensity_norm_factor
+                if hasattr(spectrum, "label"): custom_model["label"] = spectrum.label
+                if hasattr(spectrum, "color"): custom_model["color"] = spectrum.color
+                spectrum.set_attributes(custom_model)
+                spectrum.fname = fname
+                
+                spectrum.preprocess()
+                spectrum.fit()
+                count += 1
+                percentage = int((count / total) * 100)
+                elapsed_time = time.time() - start_time
+                self.progress_changed.emit(count, total, percentage, elapsed_time)
+                
+        else:
+            # Multiprocessing mode using a pipelined execution model
+            # This completely eliminates both serialization delay and O(N^2) lookup lag
+            queue_incr = DummyQueue()
+            with ProcessPoolExecutor(
+                initializer=worker_initializer,
+                initargs=(queue_incr,),
+                max_workers=self.ncpus
+            ) as executor:
+                from concurrent.futures import wait, FIRST_COMPLETED
+                
+                self.futures = set()
+                future_to_spectrum = {}
+                count = 0
+                max_queued = self.ncpus * 2
+                fname_iterator = iter(self.fnames)
+                
+                def submit_next():
+                    fname = next(fname_iterator, None)
+                    if fname is not None:
+                        norm_fname = os.path.normpath(fname)
+                        spectrum = spectra_dict.get(norm_fname)
+                        if not spectrum:
+                            return submit_next()
+                            
+                        custom_model = deepcopy(fit_model)
+                        if hasattr(spectrum, "xcorrection_value"): custom_model["xcorrection_value"] = spectrum.xcorrection_value
+                        if hasattr(spectrum, "intensity_norm_factor"): custom_model["intensity_norm_factor"] = spectrum.intensity_norm_factor
+                        if hasattr(spectrum, "label"): custom_model["label"] = spectrum.label
+                        if hasattr(spectrum, "color"): custom_model["color"] = spectrum.color
+                        spectrum.set_attributes(custom_model)
+                        spectrum.fname = fname
+                        
+                        arg = dill.dumps(spectrum)
+                        future = executor.submit(fit, arg)
+                        self.futures.add(future)
+                        future_to_spectrum[future] = spectrum
+                        return True
+                    return False
+                
+                # Pre-fill executor to keep all workers busy
+                for _ in range(max_queued):
+                    if not submit_next():
+                        break
+                        
+                while self.futures:
+                    if self._is_cancelled:
+                        for f in self.futures:
+                            f.cancel()
+                        break
+                        
+                    done, self.futures = wait(self.futures, return_when=FIRST_COMPLETED)
+                    
+                    for future in done:
+                        try:
+                            # Retrieve the result
+                            res = future.result()
+                            spectrum = future_to_spectrum.pop(future)
+                            spectrum.x = res[0]
+                            spectrum.y = res[1]
+                            spectrum.weights = res[2]
+                            spectrum.baseline.y_eval = res[3]
+                            spectrum.baseline.is_subtracted = res[4]
+                            spectrum.result_fit = dill.loads(res[5])
+                            spectrum.reassign_params()
+                        except Exception:
+                            # In case of exception, remove from dict if present
+                            future_to_spectrum.pop(future, None)
+                            
+                        count += 1
+                        percentage = int((count / total) * 100)
+                        elapsed_time = time.time() - start_time
+                        self.progress_changed.emit(count, total, percentage, elapsed_time)
+                        
+                        # Queue next item to pipeline execution
+                        if not self._is_cancelled:
+                            submit_next()
+
+        if not self._is_cancelled:
+            elapsed_time = time.time() - start_time
+            self.progress_changed.emit(total, total, 100, elapsed_time)
+
+class FitThread(QThread):
+    """Thread for fitting spectra with their own existing peak models (no model copying)."""
+    progress_changed = Signal(int, int, int, float)  # (current, total, percentage, elapsed_time)
+    
+    def __init__(self, spectra):
+        super().__init__()
+        self.spectra = spectra
+        self._is_cancelled = False
+        
+    def stop(self):
+        """Request the thread to stop gracefully."""
+        self._is_cancelled = True
+
+    def run(self):
+        """Fit each spectrum with its own peak models, tracking progress."""
+        
+        # Suppress lmfit warning in the main thread
+        warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
+        
+        total = len(self.spectra)
+        start_time = time.time()
+        
+        # Emit initial progress
+        self.progress_changed.emit(0, total, 0, 0.0)
+        
+        # Fit each spectrum sequentially
+        for i, spectrum in enumerate(self.spectra, 1):
+            if self._is_cancelled:
+                break
+                
+            if spectrum.peak_models:
+                try:
+                    # Check if any peak model is a decay model
+                    # Decay models have built-in B (baseline) parameter
+                    has_decay_model = any(
+                        pm.name2 in ["DecaySingleExp", "DecayBiExp"] 
+                        for pm in spectrum.peak_models
+                    )
+                    
+                    # For decay models: Mark baseline as already subtracted
+                    # This prevents preprocess() from subtracting it (which would 
+                    # conflict with the decay model's B parameter)
+                    if has_decay_model and not spectrum.baseline.is_subtracted:
+                        spectrum.baseline.is_subtracted = True
+                    
+                    spectrum.preprocess()
+                    
+                    # For decay models: Skip reinit logic and noisy area detection
+                    # Both expect ampli/x0 parameters which decay models don't have
+                    if has_decay_model:
+                        spectrum.fit(reinit_guess=False, coef_noise=0)
+                    else:
+                        spectrum.fit()
+                except Exception:
+                    # Continue fitting other spectra even if one fails
+                    pass
+            
+            # Update progress
+            percentage = int((i / total) * 100)
+            elapsed_time = time.time() - start_time
+            self.progress_changed.emit(i, total, percentage, elapsed_time)
+>>>>>>> 216d2bfd11e4cbe5ac2c10b06ba4faae4a514a5b
 
 def closest_index(array, value):
     return int(np.abs(array - value).argmin())

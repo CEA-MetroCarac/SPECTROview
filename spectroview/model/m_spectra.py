@@ -157,6 +157,8 @@ class MSpectra(FitspySpectra):
             custom_model = deepcopy(model_dict)
             if hasattr(spectrum, "xcorrection_value"):  # reassign current xcorrection_value
                 custom_model["xcorrection_value"] = spectrum.xcorrection_value
+            if hasattr(spectrum, "intensity_norm_factor"):  # reassign current intensity_norm_factor
+                custom_model["intensity_norm_factor"] = spectrum.intensity_norm_factor
             if hasattr(spectrum, "label"):  
                 custom_model["label"] = spectrum.label
             if hasattr(spectrum, "color"):  

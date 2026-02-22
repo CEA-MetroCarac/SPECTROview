@@ -14,7 +14,6 @@ from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
 from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
-from spectroview.model.fast_fit_engine import FastFitEngine
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 
 
@@ -38,36 +37,11 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Store metadata for each map (for WDF files)
         self.maps_metadata: dict[str, dict] = {}  # {map_name: metadata_dict}
         
-        # Flag used by the view's _on_check_all_toggled to signal stale cache
-        self._fit_results_cache_dirty = False
+
         
         # Reference to Graphs workspace (injected after construction)
         self.graphs_workspace = None
     
-    # ------------------------------------------------------------------
-    # Methods called by the Maps view layer
-    # ------------------------------------------------------------------
-
-    def get_current_map_dataframe(self) -> pd.DataFrame | None:
-        """Return the spectral DataFrame for the currently selected map.
-        
-        Called by VWorkspaceMaps._on_map_data_changed() when the map viewer
-        needs to refresh its heatmap data.
-        """
-        return self.current_map_df
-
-    def get_fit_results_dataframe(self) -> pd.DataFrame | None:
-        """Return the fit-results DataFrame, or None if it is empty.
-        
-        Called by VWorkspaceMaps._on_map_data_changed() to supply fit-parameter
-        columns (e.g. m01_ampli) to the map viewer's heatmap.
-        """
-        if hasattr(self, 'df_fit_results') and self.df_fit_results is not None:
-            return self.df_fit_results if not self.df_fit_results.empty else None
-        return None
-
-    # ------------------------------------------------------------------
-
     def _get_selected_spectra(self) -> list[MSpectrum]:
         """Get currently selected spectra that are also active (checked).
         
@@ -421,11 +395,9 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Replace Filename column with map_name only
         self.df_fit_results['Filename'] = map_names
         
-        # Insert X and Y columns after Filename (at positions 1 and 2) if they aren't already there
-        if 'X' not in self.df_fit_results.columns:
-            self.df_fit_results.insert(1, 'X', x_coords)
-        if 'Y' not in self.df_fit_results.columns:
-            self.df_fit_results.insert(2, 'Y', y_coords)
+        # Insert X and Y columns after Filename (at positions 1 and 2)
+        self.df_fit_results.insert(1, 'X', x_coords)
+        self.df_fit_results.insert(2, 'Y', y_coords)
         
         # Emit updated DataFrame
         self.fit_results_updated.emit(self.df_fit_results)
@@ -619,79 +591,3 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         else:
             self.notify.emit("Failed to create profile plot.")
 
-    # ------------------------------------------------------------------
-    # Vectorized-engine fit override (2D maps only)
-    # ------------------------------------------------------------------
-
-    def _run_fit_thread(self, fit_model: dict, spectra):
-        """
-        Override parent to use the vectorized scipy engine for 2D map fits.
-
-        Falls back to the parent (lmfit-based) implementation when:
-        - The fit model contains unsupported peak types (Fano only on parent).
-        - There is only one spectrum (single-pixel re-fit, no large overhead).
-        """
-        if not spectra:
-            self.notify.emit("No spectra selected.")
-            return
-
-        use_vectorized = (
-            len(spectra) > 1
-            and FastFitEngine.is_supported(fit_model)
-            and self.current_map_name is not None
-        )
-
-        if not use_vectorized:
-            # Delegate to the standard lmfit-based thread
-            super()._run_fit_thread(fit_model, spectra)
-            return
-
-        # --- Use the new vectorized engine ----------------------------
-        if self._is_fitting:
-            self.notify.emit("Fit already in progress. Please wait...")
-            return
-
-        # Cancel stale thread
-        if self._fit_thread and self._fit_thread.isRunning():
-            self._fit_thread.terminate()
-            self._fit_thread.wait()
-
-        # Extract 2D (x, y) coordinates from the 'fname' of each spectrum
-        # fname format: "{map_name}_({x_pos}, {y_pos})"
-        import re as _re
-        coords_2d = []
-        for s in spectra:
-            m = _re.search(r'\(([^,]+),\s*([^)]+)\)', s.fname)
-            if m:
-                try:
-                    coords_2d.append((float(m.group(1)), float(m.group(2))))
-                except ValueError:
-                    coords_2d = None
-                    break
-            else:
-                coords_2d = None
-                break
-
-        from spectroview.viewmodel.vm_vectorized_fit_thread import VectorizedMapFitThread
-
-        self._is_fitting = True
-        self.fit_in_progress.emit(True)
-
-        self._fit_thread = VectorizedMapFitThread(
-            spectra_list   = spectra,
-            fit_model_dict = fit_model,
-            coords_2d      = coords_2d,
-        )
-        self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
-        self._fit_thread.finished.connect(self._on_fit_finished)
-        self._fit_thread.start()
-
-    def _on_fit_finished(self):
-        """
-        Override parent's _on_fit_finished to also refresh the map heatmap
-        after the vectorized fit engine updates all spectrum result_fit objects.
-        """
-        super()._on_fit_finished()
-        # Refresh the map data view so heatmap reflects the new fit results
-        if self.current_map_name and self.current_map_df is not None:
-            self.map_data_updated.emit(self.current_map_df)

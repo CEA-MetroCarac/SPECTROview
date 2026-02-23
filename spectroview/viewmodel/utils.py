@@ -70,7 +70,7 @@ class ApplyFitModelThread(QThread):
 
     def run(self):
         """Execute fitting with progress tracking and stoppable futures. Pipelined with O(1) lookup.""" 
-        import warnings
+
         
         # Suppress lmfit warning in the main thread (for single-CPU execution)
         warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
@@ -83,7 +83,7 @@ class ApplyFitModelThread(QThread):
 
         # Build an O(1) lookup dictionary to avoid O(N^2) search overhead from get_objects()
         # get_objects() internally normalizes paths and does a linear list.index() search.
-        import os
+        
         spectra_dict = {os.path.normpath(s.fname): s for s in self.spectrums.all}
 
         if self.ncpus == 1:
@@ -256,6 +256,8 @@ class FitThread(QThread):
             percentage = int((i / total) * 100)
             elapsed_time = time.time() - start_time
             self.progress_changed.emit(i, total, percentage, elapsed_time)
+
+            
 def parse_wdf_metadata(reader):
     """Extract comprehensive metadata from WDF file's WXIS and WXCS blocks.
     

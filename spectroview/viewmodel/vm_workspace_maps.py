@@ -7,6 +7,7 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from scipy.spatial import KDTree
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
@@ -516,27 +517,76 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             if 'maps_metadata' in data and data['maps_metadata'] is not None:
                 self.maps_metadata = data['maps_metadata']
             
-            # Build KDTree cache for O(1) coordinate lookup per spectrum
-            from scipy.spatial import KDTree
-            kdtree_cache = {}
+            # Reconstruct spectrum objects from saved data using vectorized KDTree queries
+            self.spectra = MSpectra()
+            spectrums_data = data.get('spectrums_data', {})
+            
+            # 1. Group coordinates by map for batched querying
+            map_queries = {}
+            for spectrum_id, spectrum_data in spectrums_data.items():
+                fname = spectrum_data.get('fname', '')
+                try:
+                    map_name, coord_str = fname.rsplit('_', 1)
+                    coord_str = coord_str.strip('()')
+                    coord = tuple(map(float, coord_str.split(',')))
+                    if map_name not in map_queries:
+                        map_queries[map_name] = {'coords': [], 'ids': []}
+                    map_queries[map_name]['coords'].append(coord)
+                    map_queries[map_name]['ids'].append(spectrum_id)
+                except Exception:
+                    continue
+            
+            # 2. Batch query KDTree and pre-assign mapping
+            precalculated_data = {}
             for map_name, map_df_full in self.maps.items():
+                if map_name not in map_queries:
+                    continue
+                
+                # Build tree
                 tree_df = map_df_full.iloc[:, :-1]
-                coords = tree_df[['X', 'Y']].values
-                tree = KDTree(coords)
+                tree_coords = tree_df[['X', 'Y']].values
+                tree = KDTree(tree_coords)
                 df_x0 = tree_df.columns[2:].astype(float).values
                 mapped_y = tree_df.iloc[:, 2:].values.astype(float)
-                kdtree_cache[map_name] = (tree, df_x0, mapped_y)
-
-            # Reconstruct spectrum objects from saved data
-            self.spectra = MSpectra()
-            for spectrum_id, spectrum_data in data.get('spectrums_data', {}).items():
-                spectrum = MSpectra.load_from_dict(
-                    spectrum_class=MSpectrum,
-                    spectrum_data=spectrum_data,
-                    maps=self.maps,
-                    is_map=True,
-                    kdtree_cache=kdtree_cache
-                )
+                
+                # Query in batch
+                qdata = map_queries[map_name]
+                coords_arr = np.array(qdata['coords'])
+                distances, indices = tree.query(coords_arr)
+                
+                # squared distances for threshold
+                dist_sq = distances**2
+                
+                for i, (d_sq, idx_val) in enumerate(zip(dist_sq, indices)):
+                    if d_sq < 1e-4:
+                        precalculated_data[qdata['ids'][i]] = (df_x0, mapped_y[idx_val])
+            
+            # 3. Instantiate spectra with pre-matched variables directly
+            for spectrum_id, spectrum_data in spectrums_data.items():
+                # Pop metadata before setting attributes to prevent Fitspy crashes on dict
+                saved_metadata = spectrum_data.pop('metadata', None)
+                
+                spectrum = MSpectrum()
+                spectrum.set_attributes(spectrum_data)
+                
+                if saved_metadata:
+                    spectrum.metadata = saved_metadata
+                
+                # Assign precalculated spatial data
+                x0_base, y0_base = precalculated_data.get(spectrum_id, (None, None))
+                if x0_base is not None and y0_base is not None:
+                    spectrum.x0 = x0_base + spectrum.xcorrection_value
+                    spectrum.y0 = y0_base
+                    
+                    # Ensure base arrays exist for preprocess() to use or GUI to render
+                    spectrum.x = spectrum.x0.copy()
+                    spectrum.y = spectrum.y0.copy()
+                else:
+                    spectrum.x0 = None
+                    spectrum.y0 = None
+                    spectrum.x = None
+                    spectrum.y = None
+                    
                 spectrum.preprocess()
                 self.spectra.append(spectrum)
             

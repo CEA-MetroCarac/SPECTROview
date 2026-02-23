@@ -1,14 +1,17 @@
 """ViewModel for Spectra Workspace - handles business logic and data management."""
+import os
 import json
 from copy import deepcopy
 from pathlib import Path
-
+from copy import deepcopy
+        
 import numpy as np
 import pandas as pd
 from lmfit import fit_report
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QFileDialog
 
+from spectroview.viewmodel.utils import closest_index
 from spectroview.model.m_io import load_spectrum_file, load_TRPL_data, load_wdf_spectrum, load_spc_spectrum
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
@@ -892,7 +895,6 @@ class VMWorkspaceSpectra(QObject):
                 new_pm.set_param_hint("q", value=q_val, min=-200, max=200, vary=True)
                 
                 # Fetch original height from the spectrum to set Fano amplitude properly
-                from spectroview.viewmodel.utils import closest_index
                 idx = closest_index(s.x, x0)
                 y_val = s.y[idx]
                 
@@ -952,9 +954,6 @@ class VMWorkspaceSpectra(QObject):
 
     def _copy_spectrum_data(self):
         """Copy X, Y, and peak model data of the first selected spectrum to clipboard as DataFrame."""
-        import pandas as pd
-        import numpy as np
-
         if not self.selected_fnames:
             return
 
@@ -976,7 +975,6 @@ class VMWorkspaceSpectra(QObject):
         for i, peak_model in enumerate(spectrum.peak_models):
             # Evaluate peak model
             try:
-                from copy import deepcopy
                 param_hints_orig = deepcopy(peak_model.param_hints)
                 for key in peak_model.param_hints.keys():
                     peak_model.param_hints[key]["vary"] = False
@@ -1002,7 +1000,6 @@ class VMWorkspaceSpectra(QObject):
 
     def save_work(self):
         """Save current workspace to .spectra file."""
-        from PySide6.QtWidgets import QMessageBox
         
         file_path, _ = QFileDialog.getSaveFileName(
             None,
@@ -1041,11 +1038,18 @@ class VMWorkspaceSpectra(QObject):
             
             # Load all spectra
             for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
-                spectrum = MSpectra.load_from_dict(
-                    spectrum_class=MSpectrum,
-                    spectrum_data=spectrum_data,
-                    is_map=False
-                )
+                saved_metadata = spectrum_data.pop('metadata', None)
+                spectrum = MSpectrum()
+                spectrum.set_attributes(spectrum_data)
+                
+                if saved_metadata:
+                    spectrum.metadata = saved_metadata
+                    
+                # Decompress x0 and y0 for non-map spectra
+                if 'x0' in spectrum_data:
+                    spectrum.x0 = MSpectra._decompress(spectrum_data['x0'])
+                if 'y0' in spectrum_data:
+                    spectrum.y0 = MSpectra._decompress(spectrum_data['y0'])
                 spectrum.preprocess()
                 self.spectra.append(spectrum)
             
@@ -1098,6 +1102,8 @@ class VMWorkspaceSpectra(QObject):
         # Clear fit results
         self.df_fit_results = None
         self.fit_results_updated.emit(None)
+
+
     # ═════════════════════════════════════════════════════════════════════
     # Fit Results Methods
     # ═════════════════════════════════════════════════════════════════════
@@ -1492,10 +1498,6 @@ class VMWorkspaceSpectra(QObject):
             return
             
         last_dir = self.settings.get_last_directory()
-        
-        from PySide6.QtWidgets import QFileDialog
-        import os
-        import numpy as np
         
         dir_path = QFileDialog.getExistingDirectory(
             parent_widget,

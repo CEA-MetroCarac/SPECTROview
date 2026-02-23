@@ -63,14 +63,79 @@ def load_spectrum_file(path: Path) -> MSpectrum:
     s = MSpectrum()
     s.source_path = str(path.resolve()) 
     s.fname = path.stem
-    s.x0 = df.iloc[:, 0].to_numpy()
-    s.y0 = df.iloc[:, 1].to_numpy()
+    s.x0 = df.iloc[:, 0].to_numpy(dtype=np.float64)
+    s.y0 = df.iloc[:, 1].to_numpy(dtype=np.float64)
     s.x = s.x0.copy()
     s.y = s.y0.copy()
     s.baseline.mode = "Linear"
     s.baseline.sigma = 4
 
     return s
+
+def load_map_file(path: Path) -> pd.DataFrame:
+    """Load hyperspectral map file (CSV or TXT). """
+    ext = path.suffix.lower()
+    
+    if ext == '.csv':
+        # Read first 3 lines to determine format
+        with open(path, 'r') as file:
+            lines = [next(file) for _ in range(3)]
+        
+        # Check 2nd line to determine old and new format
+        if len(lines[1].split(';')) > 3:
+            # New format: multiple columns
+            map_df = pd.read_csv(path, skiprows=1, delimiter=";")
+        else:
+            # Old format: alternating rows
+            df = pd.read_csv(path, skiprows=2, delimiter=";")
+            map_df = df.iloc[::2].reset_index(drop=True)
+            map_df.rename(columns={
+                map_df.columns[0]: "X", 
+                map_df.columns[1]: "Y"
+            }, inplace=True)
+    
+    elif ext == '.txt':
+        # Add support for CL map type (23/02/2026)
+        # Auto-detect delimiter by reading the first data line
+        with open(path, 'r') as f:
+            first_line = f.readline()
+            second_line = f.readline()
+
+        test_line = second_line if second_line else first_line
+
+        if test_line:
+            if ';' in test_line:
+                delimiter = ';'
+            elif '\t' in test_line:
+                delimiter = '\t'
+            else:
+                delimiter = ' '
+        else:
+            delimiter = '\t'
+
+        if delimiter == ' ':
+            header_tokens = first_line.strip().split()
+            map_df = pd.read_csv(path, sep=' ', skipinitialspace=True,
+                                 header=None, skiprows=1)
+            if len(header_tokens) == len(map_df.columns):
+                wavenumbers = header_tokens[2:]
+            else:
+                wavenumbers = header_tokens
+            map_df.columns = ['Y', 'X'] + wavenumbers
+        else:
+            map_df = pd.read_csv(path, delimiter=delimiter)
+            if isinstance(map_df.index, pd.MultiIndex):
+                map_df.reset_index(inplace=True)
+            map_df.columns = ['Y', 'X'] + list(map_df.columns[2:])
+
+        # Reorder columns by increasing wavenumber
+        sorted_columns = sorted(map_df.columns[2:], key=float)
+        map_df = map_df[['X', 'Y'] + sorted_columns]
+    
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
+    
+    return map_df
 
 
 def load_wdf_spectrum(path: Path) -> MSpectrum:
@@ -131,103 +196,9 @@ def load_wdf_spectrum(path: Path) -> MSpectrum:
     return s
 
 
-def load_TRPL_data(path: Path) -> MSpectrum:
-    """Load TRPL .dat file (Time-Resolved Photoluminescence).
-    
-    Extracts:
-    - Bin value from line after "#ns/bin"
-    - Count values from lines after "#counts" (until first zero)
-    - Data from max count index onwards
-    - X-axis = time in ns (index * bin_value)
-    """
-    bin_value = None
-    y_values = []
-
-    with open(path, 'r') as file:
-        lines = file.readlines()
-    
-    for i, line in enumerate(lines):
-        line = line.strip()
-        
-        # Extract bin value from line after "#ns/bin"
-        if line.startswith("#ns/bin") and i + 1 < len(lines):
-            bin_value = float(lines[i + 1].strip())
-        
-        # Extract count values from lines after "#counts"
-        if line.startswith("#counts"):
-            for count_line in lines[i + 1:]:
-                try:
-                    value = int(count_line.strip())
-                    if value == 0:  # Stop at first zero
-                        break
-                    y_values.append(value)
-                except ValueError:
-                    # Skip non-integer lines
-                    break
-            break
-    
-    
-    if bin_value is None or not y_values:
-        raise ValueError("Invalid TRPL file format: missing bin value or counts")
-    
-    # Find max y-value and extract data from that point onwards
-    # This aligns t=0 with the peak of the decay curve
-    max_y_index = y_values.index(max(y_values))
-    extracted_y = y_values[max_y_index:]
-    
-    # Generate x-values (time in ns), starting from 0 at the peak
-    x_values = [i * bin_value for i in range(len(extracted_y))]
-    
-    # Create MSpectrum object
-    s = MSpectrum()
-    s.source_path = str(path.resolve())
-    s.fname = path.stem
-    # Explicitly use float64 for both x and y to ensure compatibility with save/load
-    # (decompress always uses float64, so we must match that dtype)
-    s.x0 = np.array(x_values, dtype=np.float64)
-    s.y0 = np.array(extracted_y, dtype=np.float64)
-    s.x = s.x0.copy()
-    s.y = s.y0.copy()
-    s.baseline.mode = "Linear"
-    s.baseline.is_subtracted = False  
-    s.baseline.sigma = 4
-    
-    return s
 
 
-def load_map_file(path: Path) -> pd.DataFrame:
-    """Load hyperspectral map file (CSV or TXT). """
-    ext = path.suffix.lower()
-    
-    if ext == '.csv':
-        # Read first 3 lines to determine format
-        with open(path, 'r') as file:
-            lines = [next(file) for _ in range(3)]
-        
-        # Check 2nd line to determine old and new format
-        if len(lines[1].split(';')) > 3:
-            # New format: multiple columns
-            map_df = pd.read_csv(path, skiprows=1, delimiter=";")
-        else:
-            # Old format: alternating rows
-            df = pd.read_csv(path, skiprows=2, delimiter=";")
-            map_df = df.iloc[::2].reset_index(drop=True)
-            map_df.rename(columns={
-                map_df.columns[0]: "X", 
-                map_df.columns[1]: "Y"
-            }, inplace=True)
-    
-    elif ext == '.txt':
-        map_df = pd.read_csv(path, delimiter="\t")
-        map_df.columns = ['Y', 'X'] + list(map_df.columns[2:])
-        # Reorder columns by increasing wavenumber
-        sorted_columns = sorted(map_df.columns[2:], key=float)
-        map_df = map_df[['X', 'Y'] + sorted_columns]
-    
-    else:
-        raise ValueError(f"Unsupported file type: {ext}")
-    
-    return map_df
+
 
 
 def load_wdf_map(path: Path) -> pd.DataFrame:
@@ -624,3 +595,67 @@ def _reorder_metadata(metadata: dict) -> dict:
              new_metadata[key] = value
              
     return new_metadata
+
+
+def load_TRPL_data(path: Path) -> MSpectrum:
+    """Load TRPL .dat file (Time-Resolved Photoluminescence).
+    
+    Extracts:
+    - Bin value from line after "#ns/bin"
+    - Count values from lines after "#counts" (until first zero)
+    - Data from max count index onwards
+    - X-axis = time in ns (index * bin_value)
+    """
+    bin_value = None
+    y_values = []
+
+    with open(path, 'r') as file:
+        lines = file.readlines()
+    
+    for i, line in enumerate(lines):
+        line = line.strip()
+        
+        # Extract bin value from line after "#ns/bin"
+        if line.startswith("#ns/bin") and i + 1 < len(lines):
+            bin_value = float(lines[i + 1].strip())
+        
+        # Extract count values from lines after "#counts"
+        if line.startswith("#counts"):
+            for count_line in lines[i + 1:]:
+                try:
+                    value = int(count_line.strip())
+                    if value == 0:  # Stop at first zero
+                        break
+                    y_values.append(value)
+                except ValueError:
+                    # Skip non-integer lines
+                    break
+            break
+    
+    
+    if bin_value is None or not y_values:
+        raise ValueError("Invalid TRPL file format: missing bin value or counts")
+    
+    # Find max y-value and extract data from that point onwards
+    # This aligns t=0 with the peak of the decay curve
+    max_y_index = y_values.index(max(y_values))
+    extracted_y = y_values[max_y_index:]
+    
+    # Generate x-values (time in ns), starting from 0 at the peak
+    x_values = [i * bin_value for i in range(len(extracted_y))]
+    
+    # Create MSpectrum object
+    s = MSpectrum()
+    s.source_path = str(path.resolve())
+    s.fname = path.stem
+    # Explicitly use float64 for both x and y to ensure compatibility with save/load
+    # (decompress always uses float64, so we must match that dtype)
+    s.x0 = np.array(x_values, dtype=np.float64)
+    s.y0 = np.array(extracted_y, dtype=np.float64)
+    s.x = s.x0.copy()
+    s.y = s.y0.copy()
+    s.baseline.mode = "Linear"
+    s.baseline.is_subtracted = False  
+    s.baseline.sigma = 4
+    
+    return s

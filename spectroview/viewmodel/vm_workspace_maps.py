@@ -124,7 +124,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             x_values = x_values[:-1]  # Skip last value
             wavenumber_cols = wavenumber_cols[:-1]
                
-        x_data = np.asarray(x_values)
+        x_data = np.asarray(x_values, dtype=np.float64)
         
         # Pre-extract all spatial coordinates and intensity data (faster)
         x_positions = map_df['X'].values
@@ -138,7 +138,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         for idx in range(len(map_df)):
             x_pos = float(x_positions[idx])
             y_pos = float(y_positions[idx])
-            y_data = intensity_data[idx]  # Already numpy array, no conversion needed
+            y_data = np.asarray(intensity_data[idx], dtype=np.float64)
             
             # Create MSpectrum object
             spectrum = MSpectrum()

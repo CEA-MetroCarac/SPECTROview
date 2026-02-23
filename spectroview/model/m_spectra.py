@@ -36,7 +36,7 @@ class MSpectra(FitspySpectra):
         return super().__len__()
 
     def save(self, is_map=False):
-        """Override Fitspy's save() to handle custom attributes.
+        """Override Fitspy's save() to handle custom attributes and fix O(N^2) bottleneck.
         
         Args:
             is_map: If True, metadata is NOT saved per-spectrum (saved per-map instead).
@@ -45,12 +45,16 @@ class MSpectra(FitspySpectra):
         Returns:
             dict: Serialized spectra data with custom attributes handled properly.
         """
-        # Call parent's save() to get base Fitspy attributes
-        spectrums_data = super().save()
+        spectrums_data = {}
         
-        # Process each spectrum to handle custom attributes
+        # Process each spectrum directly to avoid Fitspy core O(N^2) get_objects loop
         for i, spectrum in enumerate(self):
-            spectrum_dict = {}
+            # spectrum.save() creates the base dict using vars(self) -> capturing all custom attrs natively
+            spectrum_dict = spectrum.save(save_data=False)
+            
+            # Remove redundant baseline fields to reduce payload
+            if 'baseline' in spectrum_dict:
+                spectrum_dict['baseline'].pop('y_eval', None)
             
             # Save x0, y0 only if it's not a map
             if not is_map:
@@ -61,15 +65,14 @@ class MSpectra(FitspySpectra):
             else:
                 # For Maps : Remove metadata added by Fitspy's .save()
                 # (metadata is saved once per map in maps_metadata, not per-spectrum)
-                spectrums_data[i].pop('metadata', None)
+                spectrum_dict.pop('metadata', None)
             
-            # Update the spectrums_data with custom attributes
-            spectrums_data[i].update(spectrum_dict)
+            spectrums_data[i] = spectrum_dict
         
         return spectrums_data
     
     @staticmethod
-    def load_from_dict(spectrum_class, spectrum_data, is_map=True, maps=None):
+    def load_from_dict(spectrum_class, spectrum_data, is_map=True, maps=None, kdtree_cache=None):
         """Load a spectrum from dictionary data.
         
         Args:
@@ -77,6 +80,7 @@ class MSpectra(FitspySpectra):
             spectrum_data: Dictionary containing spectrum attributes
             is_map: If True, x0/y0 are retrieved from maps DataFrame
             maps: Dictionary of map DataFrames (required if is_map=True)
+            kdtree_cache: Optional dict mapping map_name to (KDTree, x0_array, y_data_matrix)
         
         Returns:
             MSpectrum: Reconstructed spectrum object
@@ -109,28 +113,42 @@ class MSpectra(FitspySpectra):
             
             # Retrieve x0 and y0 from the corresponding map_df
             if map_name in maps:
-                map_df = maps[map_name]
-                map_df = map_df.iloc[:, :-1]  # Drop the last column from map_df (NaN)
                 coord_x, coord_y = coord
                 
-                # Use nearest neighbor matching to handle floating point precision differences
-                # between coordinates in filename (string) and saved CSV data
-                dist = (map_df['X'] - coord_x)**2 + (map_df['Y'] - coord_y)**2
-                min_dist_idx = dist.values.argmin()
-                
-                # Check if the closest point is within a reasonable tolerance (e.g., < 1e-4 units)
-                # This ensures we don't match random points if the map changed
-                if dist.iloc[min_dist_idx] < 1e-4:
-                    row = map_df.iloc[[min_dist_idx]]
+                # Check if we have a precomputed KDTree cache for fast matching
+                if kdtree_cache is not None and map_name in kdtree_cache:
+                    tree, df_x0, mapped_y = kdtree_cache[map_name]
+                    dist, min_dist_idx = tree.query([[coord_x, coord_y]])
+                    dist_val = dist[0]**2  # original used squared Euclidean distance
+                    idx_val = min_dist_idx[0]
                     
-                    x0 = map_df.columns[2:].astype(float).values
-                    spectrum.x0 = x0 + spectrum.xcorrection_value
-                    spectrum.y0 = row.iloc[0, 2:].values
+                    if dist_val < 1e-4:
+                        spectrum.x0 = df_x0 + spectrum.xcorrection_value
+                        spectrum.y0 = mapped_y[idx_val]
+                    else:
+                        spectrum.x0 = None
+                        spectrum.y0 = None
                 else:
-                    # If no match found, initialize as None (will likely cause issues downstream, 
-                    # but better than matching wrong point)
-                    spectrum.x0 = None
-                    spectrum.y0 = None
+                    # Fallback to slower O(N) lookup
+                    map_df = maps[map_name]
+                    map_df = map_df.iloc[:, :-1]  # Drop the last column from map_df (NaN)
+                    
+                    # Use nearest neighbor matching to handle floating point precision differences
+                    # between coordinates in filename (string) and saved CSV data
+                    dist = (map_df['X'] - coord_x)**2 + (map_df['Y'] - coord_y)**2
+                    min_dist_idx = dist.values.argmin()
+                    
+                    # Check if the closest point is within a reasonable tolerance (e.g., < 1e-4 units)
+                    # This ensures we don't match random points if the map changed
+                    if dist.iloc[min_dist_idx] < 1e-4:
+                        row = map_df.iloc[[min_dist_idx]]
+                        
+                        x0 = map_df.columns[2:].astype(float).values
+                        spectrum.x0 = x0 + spectrum.xcorrection_value
+                        spectrum.y0 = row.iloc[0, 2:].values.astype(float)
+                    else:
+                        spectrum.x0 = None
+                        spectrum.y0 = None
             else:
                 spectrum.x0 = None
                 spectrum.y0 = None

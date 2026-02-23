@@ -450,9 +450,9 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 data_to_save['df_fit_results'] = None
             
             
-            # Save to JSON file
+            # Save to JSON file without indentation for massive performance and file size gain
             with open(file_path, 'w') as f:
-                json.dump(data_to_save, f, indent=4)
+                json.dump(data_to_save, f)
             
             self.notify.emit("Maps workspace saved successfully.")
             
@@ -484,6 +484,17 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             else:
                 self.maps_metadata = {}  # Ensure it's always a valid dict
             
+            # Create KDTree cache for faster loading of map coordinates
+            kdtree_cache = {}
+            from scipy.spatial import KDTree
+            for map_name, map_df_full in self.maps.items():
+                tree_df = map_df_full.iloc[:, :-1] # Drop the last column (NaN)
+                coords = tree_df[['X', 'Y']].values
+                tree = KDTree(coords)
+                df_x0 = tree_df.columns[2:].astype(float).values
+                mapped_y = tree_df.iloc[:, 2:].values.astype(float)
+                kdtree_cache[map_name] = (tree, df_x0, mapped_y)
+
             # Reconstruct spectrum objects from saved data
             self.spectra = MSpectra()
             for spectrum_id, spectrum_data in data.get('spectrums_data', {}).items():
@@ -491,10 +502,16 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                     spectrum_class=MSpectrum,
                     spectrum_data=spectrum_data,
                     maps=self.maps,
-                    is_map=True
+                    is_map=True,
+                    kdtree_cache=kdtree_cache
                 )
-                spectrum.preprocess()
                 self.spectra.append(spectrum)
+                
+            # Fast parallel preprocessing
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor() as executor:
+                # Force evaluation by iterating the map object
+                list(executor.map(lambda s: s.preprocess(), self.spectra))
             
             # Restore metadata from maps_metadata (stored per-map, not per-spectrum)
             for spectrum in self.spectra:

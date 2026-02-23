@@ -722,17 +722,31 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No fit model to save.")
             return
 
+        default_dir = ""
+        if hasattr(self, "_vm_fit_model_builder") and self._vm_fit_model_builder is not None:
+            model_path = self._vm_fit_model_builder.get_current_model_path()
+            if model_path is not None:
+                default_dir = str(model_path)
+
         path, _ = QFileDialog.getSaveFileName(
             None,
             "Save Fit Model",
-            "",
+            default_dir,
             "JSON Files (*.json)"
         )
 
         if not path:
             return
 
-        self.spectra.save(path, [spectrum.fname])
+        def default_encoder(obj):
+            if hasattr(obj, 'tolist'):
+                return obj.tolist()
+            raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+        with open(path, 'w', encoding='utf-8') as f:
+            # fitspy's load_model expects integer indexing (e.g. key '0')
+            json.dump({'0': spectrum.save()}, f, indent=2, default=default_encoder)
+
         self.notify.emit("Fit model saved successfully.")
 
     def apply_loaded_fit_model(self, apply_all: bool = False):
@@ -1010,7 +1024,7 @@ class VMWorkspaceSpectra(QObject):
                 data_to_save['df_fit_results'] = None
             
             with open(file_path, 'w') as f:
-                json.dump(data_to_save, f, indent=4)
+                json.dump(data_to_save, f, indent=2)
             self.notify.emit("Work saved successfully.")
         except Exception as e:
             QMessageBox.critical(None, "Save Error", f"Error saving work:\n{str(e)}")

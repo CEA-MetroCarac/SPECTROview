@@ -12,6 +12,8 @@ from scipy.spatial import KDTree
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
+from spectroview.viewmodel.utils import zone, quadrant
+
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
@@ -38,6 +40,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         # Store metadata for each map (for WDF files)
         self.maps_metadata: dict[str, dict] = {}  # {map_name: metadata_dict}
+        self.map_type = '2Dmap'
         
 
         
@@ -400,6 +403,33 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Insert X and Y columns after Filename (at positions 1 and 2)
         self.df_fit_results.insert(1, 'X', x_coords)
         self.df_fit_results.insert(2, 'Y', y_coords)
+        
+        # Add Zone and Quadrant columns if map type is not 2Dmap
+        if self.map_type != '2Dmap':
+            
+            # Determine radius based on map_type (assumes diameter in name, e.g., 'Wafer_300mm')
+            # Default to 150 (300mm wafer) if parsing fails
+            radius = 150
+            if '300' in self.map_type:
+                radius = 150
+            elif '200' in self.map_type:
+                radius = 100
+            elif '100' in self.map_type:
+                radius = 50
+                
+            def safe_zone(row):
+                if pd.isna(row.get('X')) or pd.isna(row.get('Y')):
+                    return np.nan
+                return zone(row, radius)
+                
+            def safe_quadrant(row):
+                if pd.isna(row.get('X')) or pd.isna(row.get('Y')):
+                    return np.nan
+                return quadrant(row)
+
+            # Insert at the end of the dataframe
+            self.df_fit_results['Zone'] = self.df_fit_results.apply(safe_zone, axis=1)
+            self.df_fit_results['Quadrant'] = self.df_fit_results.apply(safe_quadrant, axis=1)
         
         # Emit updated DataFrame
         self.fit_results_updated.emit(self.df_fit_results)

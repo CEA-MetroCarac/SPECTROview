@@ -357,6 +357,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         """Handle map type change - update centralized value and sync all comboboxes."""
         # Update centralized value
         self.selected_map_type = map_type
+        self.vm.map_type = map_type
         
         # Sync main viewer combobox and trigger replot
         self.v_map_viewer.cbb_map_type.blockSignals(True)

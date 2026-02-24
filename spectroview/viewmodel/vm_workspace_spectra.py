@@ -234,7 +234,12 @@ class VMWorkspaceSpectra(QObject):
         new_index = min(min_removed_idx, new_count - 1)
         self.selected_fnames = [self.spectra[new_index].fname]
         self._emit_selected_spectra()
-        
+
+    def cosmic_ray_detection(self):
+        """Detect cosmic rays for all loaded spectra."""
+        self.spectra.outliers_limit_calculation()
+        self.notify.emit("Cosmic ray detection completed.")
+
     # Internal helpers
     def _emit_list_update(self):
         """Emit updated list of spectra (full objects) and count."""

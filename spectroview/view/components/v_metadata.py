@@ -12,6 +12,7 @@ class VMetadata(QWidget):
     
     normalize_requested = Signal(float)
     undo_normalization_requested = Signal()
+    cosmic_ray_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -79,7 +80,7 @@ class VMetadata(QWidget):
         layout_custom.addRow("Color:", self.lbl_color)
         layout_custom.addRow("X-Correction:", self.lbl_xcorr)
         layout_custom.addRow("Source Path:", self.lbl_source)
-        layout_custom.addRow("Normalization Factor:", self.lbl_norm_factor)
+        layout_custom.addRow("Intensity Normalization Factor:", self.lbl_norm_factor)
         layout_custom.addRow("Baseline Mode:", self.lbl_baseline_mode)
         layout_custom.addRow("Baseline Coef:", self.lbl_baseline_coef)
         layout_custom.addRow("Baseline Points:", self.lbl_baseline_points)
@@ -88,7 +89,7 @@ class VMetadata(QWidget):
         main_layout.addWidget(self.group_custom, stretch=2)
         
         # --- RIGHT: Intensity Normalization ---
-        self.group_norm = QGroupBox("Intensity Normalization")
+        self.group_norm = QGroupBox("More options")
         layout_norm = QVBoxLayout(self.group_norm)
         
         layout_norm.addWidget(QLabel("Normalization Factor:"))
@@ -99,10 +100,12 @@ class VMetadata(QWidget):
         
         self.btn_normalize = QPushButton("Normalize")
         self.btn_undo_norm = QPushButton("Undo Normalization")
+        self.btn_cosmic_ray = QPushButton("Cosmic Ray Detector")
         
         layout_norm.addWidget(self.spin_norm_factor)
         layout_norm.addWidget(self.btn_normalize)
         layout_norm.addWidget(self.btn_undo_norm)
+        layout_norm.addWidget(self.btn_cosmic_ray)
         layout_norm.addStretch()
         
         main_layout.addWidget(self.group_norm, stretch=1)
@@ -110,6 +113,7 @@ class VMetadata(QWidget):
         # Connect signals
         self.btn_normalize.clicked.connect(self._on_normalize)
         self.btn_undo_norm.clicked.connect(self.undo_normalization_requested.emit)
+        self.btn_cosmic_ray.clicked.connect(self.cosmic_ray_requested.emit)
         
         # Initially clear all blocks
         self.clear_metadata()

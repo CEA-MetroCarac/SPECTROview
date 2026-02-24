@@ -17,14 +17,18 @@ class MSpectrum(FitspySpectrum):
         self.metadata = {}  # acquisition metadata (e.g., from WDF files)
         
                     
-    def reinit(self):
+    def reinit(self, keep_outliers=True):
         """ Reinitialize the main attributes """
         self.range_min = None
         self.range_max = None
         self.x = self.x0.copy()
         self.y = self.y0.copy()
         self.weights = self.weights0.copy() if self.weights0 is not None else None
-        self.outliers_limit = None
+        
+        if not keep_outliers:
+            self.outliers_limit = None
+            self.outliers_inds = []
+            
         self.normalize = False
         self.normalize_range_min = None
         self.normalize_range_max = None

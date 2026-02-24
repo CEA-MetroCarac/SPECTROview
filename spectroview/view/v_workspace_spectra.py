@@ -256,6 +256,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_metadata.undo_normalization_requested.connect(
             lambda: self._apply_with_ctrl(vm.undo_y_normalization)
         )
+        self.v_metadata.cosmic_ray_requested.connect(vm.cosmic_ray_detection)
 
         vm.show_xcorrection_value.connect(self.v_fit_model_builder.set_xcorrection_value)        
         vm.spectral_range_changed.connect(self.v_fit_model_builder.set_spectral_range)

@@ -70,7 +70,6 @@ class MSpectra(FitspySpectra):
             spectrums_data[i] = spectrum_dict
         
         return spectrums_data
-
     
     def apply_model(self, model_dict, fnames=None, ncpus=1, show_progressbar=True, queue_incr=None):
         """ Apply 'model' to all or part of the spectra."""

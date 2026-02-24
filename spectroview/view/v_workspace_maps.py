@@ -1,8 +1,8 @@
 import pandas as pd
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QFrame, QScrollArea, QDialog
+    QWidget, QVBoxLayout, QHBoxLayout, QFrame, QScrollArea, QDialog, QApplication, QFileDialog
 )
 
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
@@ -530,7 +530,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     def _on_save_map_requested(self):
         """Save the current map to an Excel file."""
-        from PySide6.QtWidgets import QFileDialog
         
         if not self.vm.current_map_name:
             return
@@ -554,8 +553,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     def _on_reinit_spectra(self):
         """Reinitialize selected spectra (Ctrl for all maps)."""
-        from PySide6.QtWidgets import QApplication
-        from PySide6.QtCore import Qt
         
         # Check if Ctrl is held
         modifiers = QApplication.keyboardModifiers()
@@ -649,7 +646,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
 
     def load_work(self, file_path: str):
         """Trigger load work in ViewModel."""
-        from PySide6.QtCore import QTimer
         
         # Delegate to ViewModel
         self.vm.load_work(file_path)

@@ -2,7 +2,7 @@
 import json
 import pandas as pd
 import gzip
-
+import copy
 from io import StringIO
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -264,7 +264,7 @@ class VMWorkspaceGraphs(QObject):
     
     def _merge_filters_with_slot(self, base_filters: List[Dict], slot_num: int) -> List[Dict]:
         """Merge base filters with slot filter."""
-        import copy
+        
         # Deep copy to avoid modifying original filter dictionaries
         merged = copy.deepcopy(base_filters)
         slot_expr = f"Slot == {slot_num}"

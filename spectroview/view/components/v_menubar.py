@@ -1,14 +1,11 @@
 #view/toolbar.py
 import os
 
-import numpy as np
-import matplotlib.pyplot as plt
+from PySide6.QtWidgets import QToolBar, QWidget, QSizePolicy, QLabel
+from PySide6.QtCore import QSize, Signal
+from PySide6.QtGui import  QIcon
 
-from PySide6.QtWidgets import QToolBar, QWidget, QSizePolicy
-from PySide6.QtCore import Qt, QSize, QPoint, Signal
-from PySide6.QtGui import  QIcon, QAction, Qt, QCursor
-
-from spectroview import ICON_DIR
+from spectroview import ICON_DIR, VERSION
 
 
 class VMenuBar(QToolBar):
@@ -18,6 +15,7 @@ class VMenuBar(QToolBar):
     clear_requested = Signal()
     convert_requested = Signal()
     settings_requested = Signal()
+    github_requested = Signal()
     theme_requested = Signal()
     manual_requested = Signal()
     about_requested = Signal()
@@ -51,14 +49,23 @@ class VMenuBar(QToolBar):
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.addWidget(spacer)
         
+        
+        
         self.actionTheme= self.addAction(QIcon(os.path.join(ICON_DIR, "dark-light.png")), "Toggle Dark/Light Theme")
         self.actionTheme.triggered.connect(self.theme_requested.emit)
 
         self.actionManual= self.addAction(QIcon(os.path.join(ICON_DIR, "manual.png")), "Open User Manual")
         self.actionManual.triggered.connect(self.manual_requested.emit)
 
+        self.actionGithub= self.addAction(QIcon(os.path.join(ICON_DIR, "github.png")), "Github")
+        self.actionGithub.triggered.connect(self.github_requested.emit)
+
         self.actionAbout= self.addAction(QIcon(os.path.join(ICON_DIR, "about.png")), "About SPECTROview")
         self.actionAbout.triggered.connect(self.about_requested.emit)
         self.addSeparator()
+
+        version_label = QLabel(f" v{VERSION} ")
+        version_label.setStyleSheet("color: gray; font-size: 11px; padding-right: 5px;")
+        self.addWidget(version_label)
         
     

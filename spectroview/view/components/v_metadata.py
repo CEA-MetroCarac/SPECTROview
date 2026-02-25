@@ -99,12 +99,22 @@ class VMetadata(QWidget):
         self.spin_norm_factor.setValue(1.0)
         
         self.btn_normalize = QPushButton("Normalize")
-        self.btn_undo_norm = QPushButton("Undo Normalization")
-        self.btn_cosmic_ray = QPushButton("Cosmic Ray Detector")
+        self.btn_normalize.setToolTip("Normalize the current spectrum")
+        self.btn_undo_norm = QPushButton("Undo")
+        self.btn_undo_norm.setToolTip("Undo the last normalization")
+        
+        # Horizontal layout for normalize buttons
+        norm_btns_layout = QHBoxLayout()
+        norm_btns_layout.addWidget(self.btn_undo_norm)
+        norm_btns_layout.addWidget(self.btn_normalize)
+        
+        self.lbl_cosmic_ray = QLabel("Cosmic Ray:")
+        self.btn_cosmic_ray = QPushButton("Detect Cosmic Rays")
+        self.btn_cosmic_ray.setToolTip("Detect cosmic rays base on all loaded spectra")
         
         layout_norm.addWidget(self.spin_norm_factor)
-        layout_norm.addWidget(self.btn_normalize)
-        layout_norm.addWidget(self.btn_undo_norm)
+        layout_norm.addLayout(norm_btns_layout)
+        layout_norm.addWidget(self.lbl_cosmic_ray)
         layout_norm.addWidget(self.btn_cosmic_ray)
         layout_norm.addStretch()
         

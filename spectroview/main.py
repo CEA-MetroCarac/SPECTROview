@@ -78,6 +78,7 @@ class Main(QMainWindow):
 
         self.menu_bar.about_requested.connect(self.about)
         self.menu_bar.manual_requested.connect(self.manual) 
+        self.menu_bar.github_requested.connect(self.open_github_repo)
         self.menu_bar.theme_requested.connect(self.toggle_theme)
         
         # Inject Graphs workspace into Maps ViewModel for cross-workspace communication
@@ -328,6 +329,11 @@ class Main(QMainWindow):
                 f"Failed to open the user manual.\n\n"
                 f"Please open it manually:\n{USER_MANUAL_PDF}"
             )
+
+    def open_github_repo(self):
+        """Open the project's GitHub repository."""
+        url = QUrl("https://github.com/CEA-MetroCarac/SPECTROview/")
+        QDesktopServices.openUrl(url)
 
     def toggle_theme(self, theme=None):
         app = QApplication.instance()

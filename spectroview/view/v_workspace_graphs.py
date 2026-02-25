@@ -1514,7 +1514,9 @@ class VWorkspaceGraphs(QWidget):
         self.edit_xlabel.clear()
         self.edit_ylabel.clear()
         self.edit_zlabel.clear()
+        self.v_data_filter.clear_filters()
         self.lbl_plot_size.setText("(480x420)")
+
         self.vm.clear_workspace()
 
 class MdiSubWindow(QMdiSubWindow):

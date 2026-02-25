@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Signal
 
-class VMetadata(QWidget):
+class VMoreTab(QWidget):
     """View for Metadata tab - displays acquisition metadata, custom properties, and normalization."""
     
     normalize_requested = Signal(float)

@@ -21,14 +21,16 @@ def _drain_queue(q):
     """Drain queue and return count (cross-platform).
     
     This helper works on macOS where queue.qsize() raises NotImplementedError.
-    It safely drains the queue and counts items using get_nowait().
+    It safely drains the queue and counts items using get with a timeout
+    to prevent race conditions with multiprocessing.Queue.
     """
+    import queue as pyqueue
     count = 0
-    while not q.empty():
+    while True:
         try:
-            q.get_nowait()
+            q.get(timeout=0.1)
             count += 1
-        except:
+        except pyqueue.Empty:
             break
     return count
 

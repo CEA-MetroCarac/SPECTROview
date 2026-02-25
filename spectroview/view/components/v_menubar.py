@@ -49,15 +49,13 @@ class VMenuBar(QToolBar):
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.addWidget(spacer)
         
-        
-        
         self.actionTheme= self.addAction(QIcon(os.path.join(ICON_DIR, "dark-light.png")), "Toggle Dark/Light Theme")
         self.actionTheme.triggered.connect(self.theme_requested.emit)
 
         self.actionManual= self.addAction(QIcon(os.path.join(ICON_DIR, "manual.png")), "Open User Manual")
         self.actionManual.triggered.connect(self.manual_requested.emit)
 
-        self.actionGithub= self.addAction(QIcon(os.path.join(ICON_DIR, "github.png")), "Github")
+        self.actionGithub= self.addAction(QIcon(os.path.join(ICON_DIR, "github_yellow.png")), "Github")
         self.actionGithub.triggered.connect(self.github_requested.emit)
 
         self.actionAbout= self.addAction(QIcon(os.path.join(ICON_DIR, "about.png")), "About SPECTROview")

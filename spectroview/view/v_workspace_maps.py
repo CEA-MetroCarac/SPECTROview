@@ -76,13 +76,13 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         """Override: In Maps workspace, show spectrum metadata if selected, else map metadata."""
         if selected_spectra and len(selected_spectra) > 0:
             spectrum = selected_spectra[0]
-            self.v_metadata.show_metadata(spectrum)
+            self.v_more_tab.show_metadata(spectrum)
         else:
             if self.vm and self.vm.current_map_name:
                 map_metadata = self.vm.maps_metadata.get(self.vm.current_map_name, {})
-                self.v_metadata.show_metadata(map_metadata)
+                self.v_more_tab.show_metadata(map_metadata)
             else:
-                self.v_metadata.clear_metadata()
+                self.v_more_tab.clear_metadata()
     
     def _add_maps_panel(self):
         """Replace the simple spectra list sidebar with Maps-specific controls."""
@@ -502,7 +502,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             
             # Display metadata for the selected map (not per-spectrum)
             map_metadata = self.vm.maps_metadata.get(map_name, {})
-            self.v_metadata.show_metadata(map_metadata)
+            self.v_more_tab.show_metadata(map_metadata)
     
     def _on_view_map_requested(self):
         """Display the current map's DataFrame in a table dialog."""

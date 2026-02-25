@@ -17,7 +17,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.viewmodel.utils import show_toast_notification
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
 from spectroview.view.components.v_fit_results import VFitResults
-from spectroview.view.components.v_metadata import VMetadata
+from spectroview.view.components.v_moretab  import VMoreTab
 from spectroview.view.components.v_spectra_list import VSpectraList
 from spectroview.view.components.v_spectra_viewer import VSpectraViewer
 from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
@@ -63,13 +63,13 @@ class VWorkspaceSpectra(QWidget):
         self.bottom_tabs.setMinimumHeight(150)
         self.v_fit_model_builder = VFitModelBuilder()
         self.v_fit_results = VFitResults()
-        self.v_metadata = VMetadata()
+        self.v_more_tab = VMoreTab()
         self.vm_fit_model_builder = VMFitModelBuilder(self.m_settings)
         self.vm.set_fit_model_builder(self.vm_fit_model_builder) # 🔑 inject dependency
         
         self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(self.v_fit_results, "Fit Results")
-        self.bottom_tabs.addTab(self.v_metadata, "Metadata")
+        self.bottom_tabs.addTab(self.v_more_tab, "More")
         
         left_splitter.addWidget(self.v_spectra_viewer)
         left_splitter.addWidget(self.bottom_tabs)
@@ -250,13 +250,13 @@ class VWorkspaceSpectra(QWidget):
         vm.notify.connect(self._show_toast_notification)
 
         # MetaData connections
-        self.v_metadata.normalize_requested.connect(
+        self.v_more_tab.normalize_requested.connect(
             lambda factor: self._apply_with_ctrl(lambda apply_all: vm.apply_y_normalization(factor, apply_all))
         )
-        self.v_metadata.undo_normalization_requested.connect(
+        self.v_more_tab.undo_normalization_requested.connect(
             lambda: self._apply_with_ctrl(vm.undo_y_normalization)
         )
-        self.v_metadata.cosmic_ray_requested.connect(vm.cosmic_ray_detection)
+        self.v_more_tab.cosmic_ray_requested.connect(vm.cosmic_ray_detection)
 
         vm.show_xcorrection_value.connect(self.v_fit_model_builder.set_xcorrection_value)        
         vm.spectral_range_changed.connect(self.v_fit_model_builder.set_spectral_range)
@@ -320,9 +320,9 @@ class VWorkspaceSpectra(QWidget):
         """Update metadata display with first selected spectrum's metadata."""
         if selected_spectra and len(selected_spectra) > 0:
             spectrum = selected_spectra[0]
-            self.v_metadata.show_metadata(spectrum)
+            self.v_more_tab.show_metadata(spectrum)
         else:
-            self.v_metadata.clear_metadata()
+            self.v_more_tab.clear_metadata()
     
     def save_work(self):
         """Trigger save work in ViewModel."""

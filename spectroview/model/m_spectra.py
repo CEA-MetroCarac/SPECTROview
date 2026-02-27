@@ -7,7 +7,7 @@ import base64
 
 from fitspy.core.spectra import Spectra as FitspySpectra
 from fitspy.core.utils_mp import fit_mp
-from spectroview.viewmodel.utils import apply_fit_model_to_spectrum
+from spectroview.viewmodel.utils import apply_custom_fit_model
 
 class MSpectra(FitspySpectra):
     """Model: container for SpectrumM"""

@@ -1,5 +1,4 @@
 #spectroview/model/spectra.py
-from copy import deepcopy
 from threading import Thread
 from multiprocessing import Queue
 import numpy as np
@@ -8,6 +7,7 @@ import base64
 
 from fitspy.core.spectra import Spectra as FitspySpectra
 from fitspy.core.utils_mp import fit_mp
+from spectroview.viewmodel.utils import apply_fit_model_to_spectrum
 
 class MSpectra(FitspySpectra):
     """Model: container for SpectrumM"""
@@ -79,20 +79,9 @@ class MSpectra(FitspySpectra):
         spectra = []
         for fname in fnames:
             spectrum, _ = self.get_objects(fname)
-            
-            # Customize the model_dict for this spectrum
-            custom_model = deepcopy(model_dict)
-            if hasattr(spectrum, "xcorrection_value"):  # reassign current xcorrection_value
-                custom_model["xcorrection_value"] = spectrum.xcorrection_value
-            if hasattr(spectrum, "intensity_norm_factor"):  # reassign current intensity_norm_factor
-                custom_model["intensity_norm_factor"] = spectrum.intensity_norm_factor
-            if hasattr(spectrum, "label"):  
-                custom_model["label"] = spectrum.label
-            if hasattr(spectrum, "color"):  
-                custom_model["color"] = spectrum.color
 
-            spectrum.set_attributes(custom_model)
-            spectrum.fname = fname  # reassign the correct fname
+            #apply only CUSTOM MODEL keep some information 
+            apply_custom_fit_model(spectrum, model_dict, fname)
             spectra.append(spectrum)
 
         self.pbar_index = 0

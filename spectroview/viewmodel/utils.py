@@ -52,6 +52,27 @@ def worker_initializer(queue_incr):
     initializer(queue_incr)
 
 
+# Per-spectrum attributes that are unique to each spectrum and must never be
+# overwritten when a fit model is copied from another spectrum.
+_SPECTRUM_OWN_ATTRS = (
+    "xcorrection_value",
+    "intensity_norm_factor",
+    "label",
+    "color",
+    "metadata",
+)
+
+
+def apply_custom_fit_model(spectrum, fit_model: dict, fname: str) -> None:
+    """Apply a cus fit model dict to a spectrum while preserving its own attributes"""  
+    custom_model = deepcopy(fit_model)
+    for attr in _SPECTRUM_OWN_ATTRS:
+        if hasattr(spectrum, attr):
+            custom_model[attr] = getattr(spectrum, attr)
+    spectrum.set_attributes(custom_model)
+    spectrum.fname = fname  # reassign correct fname after set_attributes
+
+
 class ApplyFitModelThread(QThread):
     """Class to perform fitting in a separate Thread."""
     progress_changed = Signal(int, int, int, float)  # (current, total, percentage, elapsed_time)
@@ -71,7 +92,6 @@ class ApplyFitModelThread(QThread):
     def run(self):
         """Execute fitting with progress tracking and stoppable futures. Pipelined with O(1) lookup.""" 
 
-        
         # Suppress lmfit warning in the main thread (for single-CPU execution)
         warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
         
@@ -97,14 +117,9 @@ class ApplyFitModelThread(QThread):
                 spectrum = spectra_dict.get(norm_fname)
                 if not spectrum:
                     continue
-                    
-                custom_model = deepcopy(fit_model)
-                if hasattr(spectrum, "xcorrection_value"): custom_model["xcorrection_value"] = spectrum.xcorrection_value
-                if hasattr(spectrum, "intensity_norm_factor"): custom_model["intensity_norm_factor"] = spectrum.intensity_norm_factor
-                if hasattr(spectrum, "label"): custom_model["label"] = spectrum.label
-                if hasattr(spectrum, "color"): custom_model["color"] = spectrum.color
-                spectrum.set_attributes(custom_model)
-                spectrum.fname = fname
+
+                #apply only CUSTOM MODEL keep some information     
+                apply_custom_fit_model(spectrum, fit_model, fname)
                 
                 spectrum.preprocess()
                 spectrum.fit()
@@ -137,14 +152,9 @@ class ApplyFitModelThread(QThread):
                         spectrum = spectra_dict.get(norm_fname)
                         if not spectrum:
                             return submit_next()
-                            
-                        custom_model = deepcopy(fit_model)
-                        if hasattr(spectrum, "xcorrection_value"): custom_model["xcorrection_value"] = spectrum.xcorrection_value
-                        if hasattr(spectrum, "intensity_norm_factor"): custom_model["intensity_norm_factor"] = spectrum.intensity_norm_factor
-                        if hasattr(spectrum, "label"): custom_model["label"] = spectrum.label
-                        if hasattr(spectrum, "color"): custom_model["color"] = spectrum.color
-                        spectrum.set_attributes(custom_model)
-                        spectrum.fname = fname
+
+                        #apply only CUSTOM MODEL keep some information    
+                        apply_custom_fit_model(spectrum, fit_model, fname)
                         
                         arg = dill.dumps(spectrum)
                         future = executor.submit(fit, arg)
@@ -298,22 +308,9 @@ def parse_wdf_metadata(reader):
                     metadata['grating_name'] = pattern
                     break
             
-            # Extract slit opening and centre using labels
-            # Look for labeled patterns: "Opening" followed by value, "SlitBeamCentre" followed by value
-            # The pattern in WXIS is: ...Opening...<value>µm...SlitBeamCentre...<value>µm...
-            
-            # Find all µm values with their preceding context
-            # Find pattern: word/label, then µm value
-            # Looking for: "20µm" after something like "Opening" and "1725µm" after "SlitBeamCentre" or similar
-            
+            # Extract SLIT OPENING and centre using labels
             # More robust: find all number-µm pairs
             all_um_values = re.findall(r'(\d+)[\xc2\xb5µ]m', text_data)
-            
-            # In WXIS, we know from analysis that the pattern is:
-            # ...'0µm'...'20µm'...'1725µm'...
-            # where 20 is slit opening and 1725 is slit centre
-            # We need to skip the first "0" value and take the next two
-            
             if len(all_um_values) >= 3:
                 # Skip first value (bias), take second (opening) and third (centre)
                 try:
@@ -327,7 +324,7 @@ def parse_wdf_metadata(reader):
                 except (ValueError, IndexError):
                     pass
             
-            # Extract laser power from WXIS structured records
+            # Extract LASER POWER from WXIS structured records
             # Laser power is stored as a 'u' (string) record with id=0x0500
             # Located near offset 2300-2400 with a simple numeric string value
             # Record format: u(0x75) + 2-byte-id(0x0500) + \x80 + 4-byte-strlen + string

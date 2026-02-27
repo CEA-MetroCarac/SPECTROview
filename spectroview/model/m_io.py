@@ -185,7 +185,6 @@ def load_wdf_spectrum(path: Path) -> MSpectrum:
     wdf_metadata = parse_wdf_metadata(reader)
     
     # Build metadata dictionary with proper formatting
-    # Build metadata dictionary with proper formatting
     metadata = _construct_wdf_metadata(reader, wdf_metadata)
     
     # Assign metadata to spectrum
@@ -194,12 +193,6 @@ def load_wdf_spectrum(path: Path) -> MSpectrum:
     
     reader.close()
     return s
-
-
-
-
-
-
 
 def load_wdf_map(path: Path) -> pd.DataFrame:
     """Load 2D hyperspectral map from Renishaw .wdf file.
@@ -216,9 +209,7 @@ def load_wdf_map(path: Path) -> pd.DataFrame:
     wavenumbers = reader.xdata  # Wavenumber axis (cm^-1)
     spectra_data = reader.spectra  # Can be 2D or 3D array
     
-    # Handle different array shapes
-    # For 2D maps, spectra might be 3D: (x_grid, y_grid, wavenumbers)
-    # We need to reshape to 2D: (num_spectra, num_wavenumbers)
+    # Handle different array shapes (1D spectra or 2Dmap)
     if spectra_data.ndim == 3:
         # Reshape from (x_grid, y_grid, wavenumbers) to (num_spectra, num_wavenumbers)
         x_size, y_size, num_wavenumbers = spectra_data.shape

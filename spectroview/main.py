@@ -79,6 +79,7 @@ class Main(QMainWindow):
         self.menu_bar.about_requested.connect(self.about)
         self.menu_bar.manual_requested.connect(self.manual) 
         self.menu_bar.github_requested.connect(self.open_github_repo)
+        self.menu_bar.version_requested.connect(self.open_releases)
         self.menu_bar.theme_requested.connect(self.toggle_theme)
         
         # Inject Graphs workspace into Maps ViewModel for cross-workspace communication
@@ -333,6 +334,11 @@ class Main(QMainWindow):
     def open_github_repo(self):
         """Open the project's GitHub repository."""
         url = QUrl("https://github.com/CEA-MetroCarac/SPECTROview/")
+        QDesktopServices.openUrl(url)
+
+    def open_releases(self):
+        """Open the project's releases page."""
+        url = QUrl("https://github.com/CEA-MetroCarac/SPECTROview/releases")
         QDesktopServices.openUrl(url)
 
     def toggle_theme(self, theme=None):

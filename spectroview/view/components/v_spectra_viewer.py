@@ -175,6 +175,7 @@ class VSpectraViewer(QWidget):
         # Copy
         self.btn_copy = QPushButton()
         self.btn_copy.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
+        self.btn_copy.setToolTip("Copy figure to clipboard. Hold Ctrl + Click to copy data to clipboard")
         self.btn_copy.setIconSize(QSize(22, 22))
         self.btn_copy.clicked.connect(self._emit_copy)
         layout.addWidget(self.btn_copy)
@@ -183,6 +184,7 @@ class VSpectraViewer(QWidget):
         self.options_menu = self._create_options_menu()
         self.btn_options = QToolButton()
         self.btn_options.setIcon(QIcon(f"{ICON_DIR}/options.png"))
+        self.btn_options.setToolTip("More view options")
         self.btn_options.setIconSize(QSize(22, 22))
         self.btn_options.setPopupMode(QToolButton.InstantPopup)
         self.btn_options.setMenu(self.options_menu)

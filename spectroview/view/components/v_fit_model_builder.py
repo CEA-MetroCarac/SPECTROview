@@ -142,6 +142,7 @@ class VFitModelBuilder(QWidget):
         # Buttons
         self.btn_xcorrect = QPushButton("Correct")
         self.btn_xcorrect.setIcon(QIcon(f"{ICON_DIR}/done.png"))
+        self.btn_xcorrect.setToolTip("Apply X correction to current selected spectrum(s)") 
         
 
         self.btn_undo_corr = QPushButton()
@@ -193,7 +194,7 @@ class VFitModelBuilder(QWidget):
 
         self.btn_extract = QPushButton("Crop")
         self.btn_extract.setIcon(QIcon(f"{ICON_DIR}/cut.png"))
-        self.btn_extract.setToolTip("Extract selected spectra range. Hold Ctrl to paste to all spectra.")
+        self.btn_extract.setToolTip("Extract selected spectra range. Hold Ctrl + click to apply cropping to all spectra.")
 
         self.btn_extract.clicked.connect(self._on_extract_clicked)
 

@@ -85,7 +85,7 @@ if is_macos:
         debug=False,
         strip=False,
         upx=False,
-        console=True,
+        console=False,
         icon=icon_file,
     )
 
@@ -121,7 +121,7 @@ elif is_windows:
         upx=True,
         upx_exclude=[],
         runtime_tmpdir=None,
-        console=True,
+        console=False,
         icon=icon_file,
     )
 

@@ -1,0 +1,323 @@
+{
+   "0": {
+      "fname": "C:\\Users\\VL251876\\Downloads\\LTO test\\Sample2_InCell_C_p10_206R_10sx5_25C.txt",
+      "range_min": 97.0,
+      "range_max": 958.66,
+      "outliers_inds": [],
+      "normalize": false,
+      "normalize_range_min": null,
+      "normalize_range_max": null,
+      "peak_labels": ["ETO1", "ETO2", "ETO3", "ETO4", "ETO5", "ETO7", "ETO8", "13", "14"],
+      "fit_params": {
+         "method": "leastsq",
+         "fit_negative": false,
+         "fit_outliers": false,
+         "max_ite": 200,
+         "coef_noise": 1,
+         "xtol": 0.0001,
+         "independent_models": false,
+         "ncpus": "auto"
+      },
+      "baseline": {
+         "mode": "airpls",
+         "coef": 5.2,
+         "points": [[], []],
+         "order_max": 1,
+         "sigma": 0,
+         "attached": true,
+         "is_subtracted": true
+      },
+      "schema_version": 1,
+      "peak_models": {
+         "0": {
+            "PseudoVoigt": {
+               "ampli": {
+                  "value": 5620.169081158714,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 8.481318126312898,
+                  "min": 0,
+                  "max": 150.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 142.2073268907276,
+                  "min": 121.29950934280538,
+                  "max": 161.29950934280538,
+                  "vary": true,
+                  "expr": null
+               },
+               "alpha": {
+                  "value": 0.010641657593450704,
+                  "min": 0,
+                  "max": 1,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "1": {
+            "PseudoVoigt": {
+               "ampli": {
+                  "value": 3130.3637360986595,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 8.344842425627306,
+                  "min": 0,
+                  "max": 150.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 207.4688215780242,
+                  "min": 188.04348955902873,
+                  "max": 228.04348955902873,
+                  "vary": true,
+                  "expr": null
+               },
+               "alpha": {
+                  "value": 0.2925438968494566,
+                  "min": 0,
+                  "max": 1,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "2": {
+            "PseudoVoigt": {
+               "ampli": {
+                  "value": 183.02754396680217,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 12.78438531893163,
+                  "min": 0,
+                  "max": 150.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 250.0491655623875,
+                  "min": 228.95109033671395,
+                  "max": 268.95109033671395,
+                  "vary": true,
+                  "expr": null
+               },
+               "alpha": {
+                  "value": 0.9401753287940067,
+                  "min": 0,
+                  "max": 1,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "3": {
+            "PseudoVoigt": {
+               "ampli": {
+                  "value": 693.6302971277223,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 12.13538608391799,
+                  "min": 0,
+                  "max": 150.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 315.08938606924687,
+                  "min": 293.5420389330591,
+                  "max": 333.5420389330591,
+                  "vary": true,
+                  "expr": null
+               },
+               "alpha": {
+                  "value": 0.35652234147717865,
+                  "min": 0,
+                  "max": 1,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "4": {
+            "PseudoVoigt": {
+               "ampli": {
+                  "value": 2045.24435101935,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 23.070313380655442,
+                  "min": 0,
+                  "max": 150.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 382.04498115872406,
+                  "min": 360.2860191492824,
+                  "max": 400.2860191492824,
+                  "vary": true,
+                  "expr": null
+               },
+               "alpha": {
+                  "value": 0.12423178811004681,
+                  "min": 0,
+                  "max": 1,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "5": {
+            "PseudoVoigt": {
+               "ampli": {
+                  "value": 1707.0044066184814,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 10.090570783574268,
+                  "min": 0,
+                  "max": 150.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 462.5268153188053,
+                  "min": 442.1012207046529,
+                  "max": 482.1012207046529,
+                  "vary": true,
+                  "expr": null
+               },
+               "alpha": {
+                  "value": 0.2822182662953189,
+                  "min": 0,
+                  "max": 1,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "6": {
+            "PseudoVoigt": {
+               "ampli": {
+                  "value": 1717.8481814746033,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 20.10248875620613,
+                  "min": 0,
+                  "max": 150.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 591.3643869533604,
+                  "min": 572.3596337072823,
+                  "max": 612.3596337072823,
+                  "vary": true,
+                  "expr": null
+               },
+               "alpha": {
+                  "value": 0.000584140536343758,
+                  "min": 0,
+                  "max": 1,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "7": {
+            "PseudoVoigt": {
+               "ampli": {
+                  "value": 0,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 0,
+                  "min": 0,
+                  "max": 150.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 781.4828830404223,
+                  "min": 781.2037008354649,
+                  "max": 821.2037008354649,
+                  "vary": true,
+                  "expr": null
+               },
+               "alpha": {
+                  "value": 0.00040841771792221593,
+                  "min": 0,
+                  "max": 1,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         },
+         "8": {
+            "PseudoVoigt": {
+               "ampli": {
+                  "value": 54.34640543624116,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 144.42557192297102,
+                  "min": 0,
+                  "max": 150.0,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 909.8972627961757,
+                  "min": 909.3090822182162,
+                  "max": 949.3090822182162,
+                  "vary": true,
+                  "expr": null
+               },
+               "alpha": {
+                  "value": 0.9475578630804331,
+                  "min": 0,
+                  "max": 1,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         }
+      },
+      "result_fit_success": true
+   }
+}

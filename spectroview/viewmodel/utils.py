@@ -64,8 +64,22 @@ _SPECTRUM_OWN_ATTRS = (
 
 
 def apply_custom_fit_model(spectrum, fit_model: dict, fname: str) -> None:
-    """Apply a cus fit model dict to a spectrum while preserving its own attributes"""  
+    """Apply a custom fit model dict to a spectrum while preserving its own attributes"""  
     custom_model = deepcopy(fit_model)
+
+    # Prevent divide by zero in fitspy by enforcing fwhm/sigma > 0
+    if "peak_models" in custom_model:
+        for p_idx, p_model in custom_model["peak_models"].items():
+            for shape, params in p_model.items():
+                for param_name in ["fwhm", "sigma"]:
+                    if param_name in params:
+                        # Ensure value > 0
+                        if params[param_name].get("value", 1) <= 0:
+                            params[param_name]["value"] = 1e-6
+                        # Ensure min bound > 0
+                        if params[param_name].get("min", 0) <= 0:
+                            params[param_name]["min"] = 1e-6
+
     for attr in _SPECTRUM_OWN_ATTRS:
         if hasattr(spectrum, attr):
             custom_model[attr] = getattr(spectrum, attr)
@@ -118,7 +132,7 @@ class ApplyFitModelThread(QThread):
                 if not spectrum:
                     continue
 
-                #apply only CUSTOM MODEL keep some information     
+                #apply only CUSTOM MODEL keep some information: label, color, metadata...   
                 apply_custom_fit_model(spectrum, fit_model, fname)
                 
                 spectrum.preprocess()

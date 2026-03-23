@@ -1466,7 +1466,6 @@ class VMWorkspaceSpectra(QObject):
             return
             
         self.send_df_to_graphs.emit(df_name, self.df_fit_results)
-        self.notify.emit(f"Sent fit results to Graphs workspace as '{df_name}'.")
     
     def view_stats(self, parent_widget=None):
         """Show statistical fitting results of the selected spectrum."""

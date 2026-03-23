@@ -95,7 +95,7 @@ class VMWorkspaceGraphs(QObject):
         
         self.dataframes[df_name] = df
         self._emit_dataframes_list()
-        self.notify.emit(f"Added DataFrame: {df_name}")
+        #self.notify.emit(f"Added DataFrame: {df_name}")
     
     def remove_dataframe(self, df_name: str):
         """Remove a DataFrame."""
@@ -408,7 +408,7 @@ class VMWorkspaceGraphs(QObject):
             self._emit_dataframes_list()
             self._emit_graphs_list()
             
-            self.notify.emit(f"Loaded {len(self.graphs)} graphs, {len(self.dataframes)} DataFrames")
+            #self.notify.emit(f"Loaded {len(self.graphs)} graphs, {len(self.dataframes)} DataFrames")
         except Exception as e:
             QMessageBox.critical(None, "Error", f"Error loading workspace: {e}")
     

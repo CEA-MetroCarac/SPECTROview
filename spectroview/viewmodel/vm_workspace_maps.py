@@ -650,7 +650,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             if self.df_fit_results is not None and not self.df_fit_results.empty:
                 self.fit_results_updated.emit(self.df_fit_results)
             
-            self.notify.emit(f"Loaded {len(self.maps)} map(s) with {len(self.spectra)} spectra")
+            #self.notify.emit(f"Loaded {len(self.maps)} map(s) with {len(self.spectra)} spectra")
             
         except Exception as e:
             QMessageBox.critical(None, "Load Error", f"Error loading maps workspace:\n{str(e)}")

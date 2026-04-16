@@ -6,7 +6,8 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QToolButton, QLabel,
     QComboBox, QMenu, QWidgetAction,
-    QLineEdit, QDoubleSpinBox, QColorDialog, QInputDialog
+    QLineEdit, QDoubleSpinBox, QColorDialog, QInputDialog,
+    QSlider, QGroupBox
 )
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QIcon, QShortcut, QKeySequence
@@ -82,11 +83,59 @@ class VSpectraViewer(QWidget):
             if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
                 action.setVisible(False)
 
+        # ─── Shift sliders panel (right of canvas) ───
+        self.shift_panel = self._create_shift_panel()
+
+        # ─── Canvas + Sliders row ───
+        canvas_row = QHBoxLayout()
+        canvas_row.setContentsMargins(0, 0, 0, 0)
+        canvas_row.addWidget(self.canvas, stretch=1)
+        canvas_row.addWidget(self.shift_panel)
+
         # ─── Control bar ───
         self.control_bar = self._create_control_bar()
         
-        main_layout.addWidget(self.canvas)
+        main_layout.addLayout(canvas_row)
         main_layout.addWidget(self.control_bar)
+
+    # ─── Shift sliders ───
+    def _create_shift_panel(self):
+        """Create a vertical panel with Y-shift and X-shift sliders."""
+        panel = QGroupBox()
+        panel.setFixedWidth(25)
+        layout = QVBoxLayout(panel)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
+
+        # ── Y Shift slider ──
+        lbl_y = QLabel("Y")
+        lbl_y.setAlignment(Qt.AlignCenter)
+        lbl_y.setToolTip("Shift spectra vertically (waterfall offset)")
+
+        self.slider_y_shift = QSlider(Qt.Vertical)
+        self.slider_y_shift.setRange(0, 100)
+        self.slider_y_shift.setValue(0)
+        self.slider_y_shift.setToolTip("Y Shift: offset each spectrum vertically")
+        self.slider_y_shift.valueChanged.connect(self._plot)
+
+        layout.addWidget(lbl_y)
+        layout.addWidget(self.slider_y_shift, stretch=1)
+
+        # ── X Shift slider ──
+        lbl_x = QLabel("X")
+        lbl_x.setAlignment(Qt.AlignCenter)
+        lbl_x.setToolTip("Shift spectra horizontally")
+
+        self.slider_x_shift = QSlider(Qt.Vertical)
+        self.slider_x_shift.setRange(0, 100)
+        self.slider_x_shift.setValue(0)
+        self.slider_x_shift.setToolTip("X Shift: offset each spectrum horizontally")
+        self.slider_x_shift.valueChanged.connect(self._plot)
+
+        layout.addWidget(lbl_x)
+        layout.addWidget(self.slider_x_shift, stretch=1)
+
+        return panel
 
     # Control bar
     def _create_control_bar(self):
@@ -315,6 +364,34 @@ class VSpectraViewer(QWidget):
         self._current_spectra = selected_spectra or []
         self._plot()
 
+    def _compute_shift_steps(self):
+        """Compute per-spectrum X and Y shift steps based on slider values and data range."""
+        if not self._current_spectra:
+            return 0.0, 0.0
+
+        y_slider = self.slider_y_shift.value()  # 0–100
+        x_slider = self.slider_x_shift.value()  # 0–100
+
+        if y_slider == 0 and x_slider == 0:
+            return 0.0, 0.0
+
+        # Determine global data range across all selected spectra
+        all_y = []
+        all_x = []
+        for s in self._current_spectra:
+            y = self._get_normalized_y(s.x, s.y)
+            all_y.append(y)
+            all_x.append(s.x)
+
+        y_range = max(np.max(a) for a in all_y) - min(np.min(a) for a in all_y)
+        x_range = max(np.max(a) for a in all_x) - min(np.min(a) for a in all_x)
+
+        # Map slider percentage to a fraction of the data range
+        y_shift_step = (y_slider / 100.0) * y_range if y_range > 0 else 0.0
+        x_shift_step = (x_slider / 100.0) * x_range if x_range > 0 else 0.0
+
+        return x_shift_step, y_shift_step
+
     def _plot(self):
         if not self._current_spectra:
             self.ax.clear()
@@ -332,18 +409,25 @@ class VSpectraViewer(QWidget):
         # Display R² value from first spectrum (if fitted)
         self._update_r2_display()
 
-        for spectrum in self._current_spectra:
+        # Compute per-spectrum shift offsets from sliders
+        x_shift_step, y_shift_step = self._compute_shift_steps()
+
+        for spec_idx, spectrum in enumerate(self._current_spectra):
             x = spectrum.x
             y_raw = spectrum.y
             y = self._get_normalized_y(x, y_raw)
             lw = self.spin_lw.value()
 
+            # Per-spectrum cascading offset (waterfall)
+            x_offset = spec_idx * x_shift_step
+            y_offset = spec_idx * y_shift_step
+
             # ── RAW data (original x0 / y0)
             if self.act_raw.isChecked() and hasattr(spectrum, "x0") and hasattr(spectrum, "y0"):
                 try:
                     self.ax.plot(
-                        spectrum.x0,
-                        spectrum.y0,
+                        spectrum.x0 + x_offset,
+                        spectrum.y0 + y_offset,
                         "o-",
                         ms=3,
                         lw=0.8,
@@ -359,7 +443,7 @@ class VSpectraViewer(QWidget):
             if plot_style == "dot":
                 dot_size = self.spin_dotsize.value()
                 line, = self.ax.plot(
-                    x, y,
+                    x + x_offset, y + y_offset,
                     'o',
                     ms=dot_size,
                     label=spectrum.label or spectrum.fname,
@@ -367,7 +451,7 @@ class VSpectraViewer(QWidget):
                 )
             else:  # "line"
                 line, = self.ax.plot(
-                    x, y,
+                    x + x_offset, y + y_offset,
                     lw=lw,
                     label=spectrum.label or spectrum.fname,
                     color=spectrum.color
@@ -375,7 +459,7 @@ class VSpectraViewer(QWidget):
             line._spectrum_ref = spectrum
 
             # ── Baseline (independent of bestfit toggle)
-            y_base = self._plot_baseline(spectrum)
+            y_base = self._plot_baseline(spectrum, x_offset, y_offset)
 
 
             # ── Peaks + Bestfit 
@@ -400,8 +484,11 @@ class VSpectraViewer(QWidget):
                     y_peak_orig = self._eval_peak_model_safe(peak_model, x)
                     y_peaks_orig += y_peak_orig
 
-                    # ── Individual peak curve (SMOOTH)
-                    peak_line, = self.ax.plot(x_fine, y_peak_fine, lw=lw, alpha=0.8)
+                    # ── Individual peak curve (SMOOTH) — with offset
+                    peak_line, = self.ax.plot(
+                        x_fine + x_offset, y_peak_fine + y_offset,
+                        lw=lw, alpha=0.8
+                    )
 
                     peak_info = {
                         "peak_label": (
@@ -419,7 +506,7 @@ class VSpectraViewer(QWidget):
 
                     self._fitted_lines.append((peak_line, peak_info))
 
-                # ── Best-fit curve (SMOOTH)
+                # ── Best-fit curve (SMOOTH) — with offset
                 if (
                     hasattr(spectrum, "result_fit")
                     and getattr(spectrum.result_fit, "success", False)
@@ -435,14 +522,20 @@ class VSpectraViewer(QWidget):
                     else:
                         y_fit_fine = y_peaks_fine
                     
-                    self.ax.plot(x_fine, y_fit_fine, lw=lw, color="black", label="bestfit")
+                    self.ax.plot(
+                        x_fine + x_offset, y_fit_fine + y_offset,
+                        lw=lw, color="black", label="bestfit"
+                    )
 
 
-            # ── Residual
+            # ── Residual — with offset
             if self.act_residual.isChecked():
                 try:
                     xr, residual = self._compute_residual(spectrum)
-                    self.ax.plot(xr, residual, "r-", lw=1.0, label="residual")
+                    self.ax.plot(
+                        xr + x_offset, residual + y_offset,
+                        "r-", lw=1.0, label="residual"
+                    )
                 except Exception:
                     pass
 
@@ -531,7 +624,7 @@ class VSpectraViewer(QWidget):
 
     _MANUAL_BASELINE_MODES = {None, "Linear", "Polynomial"}
 
-    def _plot_baseline(self, spectrum):
+    def _plot_baseline(self, spectrum, x_offset=0.0, y_offset=0.0):
         baseline = spectrum.baseline
 
         if baseline.is_subtracted:
@@ -556,17 +649,22 @@ class VSpectraViewer(QWidget):
         if y_base is None:
             return None
 
-        # Baseline curve
-        self.ax.plot(x, y_base, "--", color="red", lw=1.4, label="Baseline")
+        # Baseline curve — with offset
+        self.ax.plot(
+            x + x_offset, y_base + y_offset,
+            "--", color="red", lw=1.4, label="Baseline"
+        )
 
-        # Show anchor point markers only for manual modes
+        # Show anchor point markers only for manual modes — with offset
         if not is_auto and baseline.points and baseline.points[0]:
             y_att = y if baseline.attached else None
             if baseline.attached and y_att is not None:
                 xs, ys = baseline.attached_points(x, y)
             else:
                 xs, ys = baseline.points
-            self.ax.plot(xs, ys, "ko", mfc="none", ms=5)
+            xs_arr = np.asarray(xs, dtype=float)
+            ys_arr = np.asarray(ys, dtype=float)
+            self.ax.plot(xs_arr + x_offset, ys_arr + y_offset, "ko", mfc="none", ms=5)
 
         return y_base
 

@@ -1,5 +1,5 @@
 dill==0.3.8
-fitspy==2026.2
+fitspy==2026.3
 lmfit==1.2.2
 matplotlib==3.10.8
 numpy==2.4.2

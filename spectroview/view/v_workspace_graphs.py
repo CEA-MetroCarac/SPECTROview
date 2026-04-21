@@ -205,7 +205,7 @@ class VWorkspaceGraphs(QWidget):
     def _setup_filter_section(self, parent_layout):  
         """Setup filter section."""
         self.v_data_filter = VDataFilter()
-        self.v_data_filter.setMaximumHeight(150)
+        self.v_data_filter.setMaximumHeight(200)
         parent_layout.addWidget(self.v_data_filter)
     
     def _setup_slot_selector_section(self, parent_layout):
@@ -232,7 +232,7 @@ class VWorkspaceGraphs(QWidget):
         
         # Grid layout for checkboxes
         self.slot_grid_layout = QGridLayout()
-        self.slot_grid_layout.setSpacing(4)
+        self.slot_grid_layout.setSpacing(2)
         slot_layout.addLayout(self.slot_grid_layout)
         
         # Storage for checkboxes
@@ -754,6 +754,7 @@ class VWorkspaceGraphs(QWidget):
         filtered_df = self.vm.apply_filters(plot_config['df_name'], filters)
         
         graph_widget = VGraph(graph_id=graph_model.graph_id)
+        graph_widget.replicate_requested.connect(self._on_replicate_graph)
         self._configure_graph_from_model(graph_widget, graph_model)
         graph_widget.create_plot_widget(graph_model.dpi)
         
@@ -804,6 +805,30 @@ class VWorkspaceGraphs(QWidget):
         self.vm.select_dataframe(df_name)
         self._create_and_display_plot(plot_config, select_in_list=False)
         return True
+    
+    def _on_replicate_graph(self, graph_id: int):
+        """Replicate a graph."""
+        graph_model = self.vm.get_graph(graph_id)
+        if not graph_model:
+            return
+        
+        # Get properties and remove graph_id to let ViewModel create a new one
+        plot_config = graph_model.save()
+        del plot_config['graph_id']
+        
+        # Capture current widget size so user-resizing is retained
+        if graph_id in self.graph_widgets:
+            _, _, sub_window = self.graph_widgets[graph_id]
+            size = sub_window.size()
+            plot_config['plot_width'] = size.width()
+            plot_config['plot_height'] = size.height()
+        
+        # We need to make sure df_name is correct
+        if not plot_config.get('df_name'):
+            QMessageBox.warning(self, "Error", "Cannot replicate a plot without a valid DataFrame.")
+            return
+            
+        self._create_and_display_plot(plot_config, select_in_list=True, filters=plot_config.get('filters', []))
     
     def _on_update_plot(self):
         """Update selected plot."""
@@ -1034,6 +1059,7 @@ class VWorkspaceGraphs(QWidget):
             
             # Create Graph widget
             graph_widget = VGraph(graph_id=graph_model.graph_id)
+            graph_widget.replicate_requested.connect(self._on_replicate_graph)
             self._configure_graph_from_model(graph_widget, graph_model)
             
             # Create plot
@@ -1484,6 +1510,7 @@ class VWorkspaceGraphs(QWidget):
             
             filtered_df = self.vm.apply_filters(graph_model.df_name, graph_model.filters)
             graph_widget = VGraph(graph_id=graph_model.graph_id)
+            graph_widget.replicate_requested.connect(self._on_replicate_graph)
             self._configure_graph_from_model(graph_widget, graph_model)
             graph_widget.create_plot_widget(graph_model.dpi)
             self._render_plot(graph_widget, filtered_df, graph_model)

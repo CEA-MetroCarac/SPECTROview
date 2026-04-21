@@ -24,6 +24,9 @@ class VGraph(QWidget):
     # Signal emitted when annotation position changes (graph_id, ann_id, new_x, new_y)
     annotation_position_changed = Signal(int, str, float, float)
     
+    # Signal emitted when replicate is requested
+    replicate_requested = Signal(int)
+    
     def __init__(self, graph_id=None):
         super().__init__()
         self.graph_id = graph_id
@@ -142,6 +145,14 @@ class VGraph(QWidget):
             if action.text() in ['Save', 'Back', 'Forward']:
                 action.setVisible(False)
         
+        # Create Replicate button
+        self.btn_replicate = QPushButton()
+        self.btn_replicate.setIcon(QIcon(f"{ICON_DIR}/replicate.png"))
+        self.btn_replicate.setIconSize(QSize(26, 26))
+        self.btn_replicate.setFixedSize(30, 30)
+        self.btn_replicate.setToolTip("Replicate graph")
+        self.btn_replicate.clicked.connect(lambda *args: self.replicate_requested.emit(self.graph_id))
+
         # Create Customize button
         self.btn_customize = QPushButton()
         self.btn_customize.setIcon(QIcon(f"{ICON_DIR}/customize.png"))
@@ -164,6 +175,7 @@ class VGraph(QWidget):
         toolbar_layout.setSpacing(4)
         toolbar_layout.addWidget(self.toolbar)
         toolbar_layout.addStretch()
+        toolbar_layout.addWidget(self.btn_replicate)
         toolbar_layout.addWidget(self.btn_customize)
         toolbar_layout.addWidget(self.btn_copy_figure)
         

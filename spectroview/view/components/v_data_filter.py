@@ -151,6 +151,10 @@ class VDataFilter(QGroupBox):
     
     def set_filters(self, filters: list):
         """Set filter expressions and states."""
+        # Clean up existing checkboxes to prevent visual overlap (orphaned widgets)
+        for cb in self.filter_listbox.findChildren(QCheckBox):
+            cb.setParent(None)
+            cb.deleteLater()
         self.filter_listbox.clear()
         for filter_data in filters:
             item = QListWidgetItem()
@@ -162,6 +166,10 @@ class VDataFilter(QGroupBox):
     
     def clear_filters(self):
         """Clear all filters."""
+        # Clean up existing checkboxes to prevent visual overlap (orphaned widgets)
+        for cb in self.filter_listbox.findChildren(QCheckBox):
+            cb.setParent(None)
+            cb.deleteLater()
         self.filter_listbox.clear()
         self.filter_query.clear()
         self.filters_changed.emit([])

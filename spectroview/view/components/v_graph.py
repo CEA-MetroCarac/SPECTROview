@@ -204,7 +204,7 @@ class VGraph(QWidget):
         if self.ax3:
             self.ax3.clear()
         
-        if self.df_name is not None and self.x is not None and self.y is not None:
+        if df is not None and self.df_name is not None and self.x is not None and self.y is not None:
             self._plot_primary_axis(df)
             self._plot_secondary_axis(df)
             self._plot_tertiary_axis(df)

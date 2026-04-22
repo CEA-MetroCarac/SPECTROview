@@ -38,7 +38,7 @@ classifiers = [
 dependencies = [
     "fitspy < 2026.4",
     "numpy < 2.0.0",
-    "openpyxl",
+    "openpyxl >=3.1.5",
     "pandas",
     "matplotlib <3.10.9",
     "seaborn <0.13.3",
@@ -47,7 +47,9 @@ dependencies = [
     "lmfit",
     "pywin32; platform_system == 'Windows'",
     "superqt",
-    "renishawwire"
+    "renishawwire",
+    "qtbot",
+    "pytest-qt"
 ]
 
 [tool.setuptools.package-data]

@@ -138,8 +138,8 @@ def load_map_file(path: Path) -> pd.DataFrame:
     return map_df
 
 
-def load_wdf_spectrum(path: Path) -> MSpectrum:
-    """Load single spectrum from Renishaw .wdf file.
+def load_wdf_spectrum(path: Path) -> MSpectrum | list[MSpectrum]:
+    """Load spectrum/spectra from Renishaw .wdf file.
     
     Uses renishawWIRE package to read native WiRE software files.
     Prints comprehensive metadata to console.
@@ -150,49 +150,89 @@ def load_wdf_spectrum(path: Path) -> MSpectrum:
     # Extract data
     wavenumbers = reader.xdata  # Wavenumber axis (cm^-1)
     
-    # Handle different array dimensions
-    # Single spectrum: spectra is 1D array (num_wavenumbers,)
-    # Multiple spectra: spectra is 2D array (num_spectra, num_wavenumbers)
-    if reader.spectra.ndim == 1:
-        intensities = reader.spectra  # Already 1D
-    else:
-        # Multiple spectra - take the first one or average
-        intensities = reader.spectra[0] if reader.count == 1 else reader.spectra.mean(axis=0)
-    
     # Ensure x-axis is ascending (Fitspy requirement)
     # WDF files often have descending wavenumbers (e.g. 3200 -> 100)
     wavenumbers = np.array(wavenumbers, dtype=np.float64)
-    intensities = np.array(intensities, dtype=np.float64)
-    
+    sort_inds = None
     if len(wavenumbers) > 1 and wavenumbers[0] > wavenumbers[-1]:
         sort_inds = np.argsort(wavenumbers)
         wavenumbers = wavenumbers[sort_inds]
-        intensities = intensities[sort_inds]
-    
-    
-    # Create MSpectrum object
-    s = MSpectrum()
-    s.source_path = str(path.resolve())
-    s.fname = path.stem
-    s.x0 = np.array(wavenumbers, dtype=np.float64)
-    s.y0 = np.array(intensities, dtype=np.float64)
-    s.x = s.x0.copy()
-    s.y = s.y0.copy()
-    s.baseline.mode = "Linear"
-    s.baseline.sigma = 4
-    
+        
     # Extract additional metadata from WDF file blocks
     wdf_metadata = parse_wdf_metadata(reader)
     
     # Build metadata dictionary with proper formatting
     metadata = _construct_wdf_metadata(reader, wdf_metadata)
-    
-    # Assign metadata to spectrum
-    # Reorder keys to match standard WDF structure
-    s.metadata = _reorder_metadata(metadata)
-    
-    reader.close()
-    return s
+    metadata = _reorder_metadata(metadata)
+
+    is_series = str(reader.measurement_type) == 'Series' or 'Series' in str(reader.measurement_type)
+
+    if is_series and reader.spectra.ndim > 1:
+        # Temporal series data, return a list of MSpectrum objects
+        timestamps = None
+        if hasattr(reader, 'origin_list_header') and reader.origin_list_header is not None:
+            for item in reader.origin_list_header:
+                if len(item) >= 5 and 'Time' in str(item[3]):
+                    timestamps = item[4]
+                    break
+        
+        spectra_list = []
+        for i in range(reader.count):
+            intensities = reader.spectra[i]
+            intensities = np.array(intensities, dtype=np.float64)
+            if sort_inds is not None:
+                intensities = intensities[sort_inds]
+                
+            s = MSpectrum()
+            s.source_path = str(path.resolve())
+            
+            # Format fname with timestamp if available, otherwise index
+            suffix = f"_{i+1}"
+            if timestamps is not None and i < len(timestamps):
+                suffix = f"_{timestamps[i]:.2f}"
+                
+            s.fname = f"{path.stem}{suffix}"
+            s.x0 = wavenumbers.copy()
+            s.y0 = intensities
+            s.x = s.x0.copy()
+            s.y = s.y0.copy()
+            s.baseline.mode = "Linear"
+            s.baseline.sigma = 4
+            s.metadata = metadata.copy()
+            if timestamps is not None and i < len(timestamps):
+                s.metadata["Time (s)"] = round(timestamps[i], 2)
+            
+            spectra_list.append(s)
+            
+        reader.close()
+        return spectra_list
+
+    else:
+        # Handle different array dimensions for standard single or average spectrum
+        if reader.spectra.ndim == 1:
+            intensities = reader.spectra  # Already 1D
+        else:
+            # Multiple spectra - take the first one or average
+            intensities = reader.spectra[0] if reader.count == 1 else reader.spectra.mean(axis=0)
+        
+        intensities = np.array(intensities, dtype=np.float64)
+        if sort_inds is not None:
+            intensities = intensities[sort_inds]
+        
+        # Create MSpectrum object
+        s = MSpectrum()
+        s.source_path = str(path.resolve())
+        s.fname = path.stem
+        s.x0 = wavenumbers.copy()
+        s.y0 = intensities
+        s.x = s.x0.copy()
+        s.y = s.y0.copy()
+        s.baseline.mode = "Linear"
+        s.baseline.sigma = 4
+        s.metadata = metadata
+        
+        reader.close()
+        return s
 
 def load_wdf_map(path: Path) -> pd.DataFrame:
     """Load 2D hyperspectral map from Renishaw .wdf file.

@@ -130,7 +130,13 @@ class VMWorkspaceSpectra(QObject):
                     spectrum = load_spc_spectrum(path)
                 else:
                     spectrum = load_spectrum_file(path)
-                self.spectra.add(spectrum)
+                
+                if isinstance(spectrum, list):
+                    for s in spectrum:
+                        self.spectra.add(s)
+                else:
+                    self.spectra.add(spectrum)
+                    
                 loaded_files.append(path.name)
                 last_valid_path = path  # Track last successfully loaded file
             except Exception as e:

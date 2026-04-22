@@ -36,12 +36,12 @@ classifiers = [
 ]
 
 dependencies = [
-    "fitspy==2026.3",
-    "numpy",
+    "fitspy < 2026.4",
+    "numpy < 2.0.0",
     "openpyxl",
     "pandas",
-    "matplotlib==3.10.8",
-    "seaborn==0.13.2",
+    "matplotlib <3.10.9",
+    "seaborn <0.13.3",
     "pyside6",
     "scipy",
     "lmfit",

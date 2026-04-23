@@ -109,6 +109,15 @@ class Main(QMainWindow):
             self.v_maps_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(
                 self.v_spectra_workspace.v_spectra_viewer.set_options_state
             )
+            
+            # Load persisted view options and apply them
+            persisted_view_options = self.settings.load_view_options()
+            self.v_spectra_workspace.v_spectra_viewer.set_options_state(persisted_view_options)
+            # The above will sync to the maps workspace automatically, but we can do it explicitly just in case
+            self.v_maps_workspace.v_spectra_viewer.set_options_state(persisted_view_options)
+            
+            # Save view options whenever they change
+            self.v_spectra_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(self.settings.save_view_options)
         
 
     def open_files(self):

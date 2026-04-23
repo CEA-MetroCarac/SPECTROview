@@ -584,6 +584,7 @@ class VMapViewer(QWidget):
         """Plot 2D heatmap or wafer map based on current data and settings."""
         if self.map_df is None or self.map_df.empty:
             self.figure.clf()
+            self.figure.patch.set_facecolor(plt.rcParams.get('figure.facecolor', 'white'))
             self.ax = self.figure.add_subplot(111)
             self.cbar = None
             self.canvas.draw_idle()

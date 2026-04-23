@@ -26,6 +26,33 @@ class MSettings:
             self.settings.setValue(f"fit_settings/{key}", value)
         self.settings.sync()
 
+    # ---------- View Options ----------
+    def load_view_options(self) -> dict:
+        """Load view options of spectra viewer from settings"""
+        return {
+            "theme": self.settings.value("view_options/theme", "Light Mode", str),
+            "xaxis": self.settings.value("view_options/xaxis", "Wavenumber (cm⁻¹)", str),
+            "yaxis": self.settings.value("view_options/yaxis", "Intensity (a.u.)", str),
+            "yscale": self.settings.value("view_options/yscale", "Linear", str),
+            "plotstyle": self.settings.value("view_options/plotstyle", "line", str),
+            "lw": self.settings.value("view_options/lw", 1.5, float),
+            "dotsize": self.settings.value("view_options/dotsize", 3.0, float),
+            "raw": self.settings.value("view_options/raw", False, bool),
+            "bestfit_colorful": self.settings.value("view_options/bestfit_colorful", True, bool),
+            "show_peak_label": self.settings.value("view_options/show_peak_label", False, bool),
+            "residual": self.settings.value("view_options/residual", False, bool),
+            "grid": self.settings.value("view_options/grid", False, bool),
+            "width": self.settings.value("view_options/width", "5.5", str),
+            "height": self.settings.value("view_options/height", "4.0", str),
+            "legend": self.settings.value("view_options/legend", False, bool),
+            "bestfit": self.settings.value("view_options/bestfit", False, bool),
+        }
+
+    def save_view_options(self, data: dict):
+        for key, value in data.items():
+            self.settings.setValue(f"view_options/{key}", value)
+        self.settings.sync()
+
     # ---------- Model folder ----------
     def get_model_folder(self) -> str:
         return self.settings.value("model_folder", "", str)

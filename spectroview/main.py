@@ -90,6 +90,17 @@ class Main(QMainWindow):
             lambda: self.tabWidget.setCurrentWidget(self.v_graphs_workspace)
         )
         
+        # Synchronize plot style between SpectraViewer and MapViewer
+        def update_map_viewers():
+            style_name = self.v_maps_workspace.v_spectra_viewer.cbb_theme.currentText()
+            self.v_maps_workspace.v_map_viewer.apply_plot_style(style_name)
+            for dialog in getattr(self.v_maps_workspace, 'viewer_dialogs', []):
+                if hasattr(dialog, 'map_viewer'):
+                    dialog.map_viewer.apply_plot_style(style_name)
+        
+        if hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
+            self.v_maps_workspace.v_spectra_viewer.plotStyleChanged.connect(update_map_viewers)
+        
 
     def open_files(self):
         """Universal file opener supporting all SPECTROview formats."""

@@ -26,7 +26,7 @@ from PySide6.QtCore import QPoint
 import matplotlib.lines as mlines
 import matplotlib.text as mtext
 
-from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY
+from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
 from spectroview.viewmodel.utils import copy_fig_to_clb
 from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
 
@@ -40,6 +40,7 @@ class VSpectraViewer(QWidget):
     copy_data_requested = Signal()  # Request ViewModel to copy spectrum data
     toolModeChanged = Signal(str)  # zoom / baseline / peak
     normalizationChanged = Signal(bool, float, float)
+    plotStyleChanged = Signal()
 
     peak_add_requested = Signal(float)
     peak_remove_requested = Signal(float)
@@ -62,8 +63,6 @@ class VSpectraViewer(QWidget):
         QApplication.instance().focusChanged.connect(self._hide_tooltip)   
         
     def _init_ui(self):
-        plt.style.use(PLOT_POLICY)
-
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -261,6 +260,12 @@ class VSpectraViewer(QWidget):
     def _create_options_menu(self):
         menu = QMenu(self)
 
+        # Plot Theme
+        self.cbb_theme = QComboBox()
+        self.cbb_theme.addItems(["Light Mode", "Dark Mode"])
+        self.cbb_theme.currentIndexChanged.connect(self._apply_plot_style)
+        menu.addAction(self._wrap("Plot Theme:", self.cbb_theme))
+
         # X-axis
         self.cbb_xaxis = QComboBox()
         self.cbb_xaxis.addItems(X_AXIS_UNIT)
@@ -277,7 +282,7 @@ class VSpectraViewer(QWidget):
         self.cbb_yscale = QComboBox()
         self.cbb_yscale.addItems(["Linear", "Log"])
         self.cbb_yscale.currentIndexChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("Y-scale:", self.cbb_yscale))
+        menu.addAction(self._wrap("Y-scale:", self.cbb_yscale))   
 
         # Main spectrum plot style
         self.cbb_plotstyle = QComboBox()
@@ -285,6 +290,13 @@ class VSpectraViewer(QWidget):
         self.cbb_plotstyle.currentIndexChanged.connect(self._emit_view_options)
         menu.addAction(self._wrap("Spectrum plot style:", self.cbb_plotstyle))
 
+        # Line width
+        self.spin_lw = QDoubleSpinBox()
+        self.spin_lw.setRange(0.1, 5)
+        self.spin_lw.setSingleStep(0.5)
+        self.spin_lw.setValue(1.5)
+        self.spin_lw.valueChanged.connect(self._emit_view_options)
+        menu.addAction(self._wrap("Line width:", self.spin_lw))
         # Dot size
         self.spin_dotsize = QDoubleSpinBox()
         self.spin_dotsize.setRange(0.5, 10)
@@ -316,13 +328,7 @@ class VSpectraViewer(QWidget):
 
         menu.addSeparator()
 
-        # Line width
-        self.spin_lw = QDoubleSpinBox()
-        self.spin_lw.setRange(0.1, 5)
-        self.spin_lw.setSingleStep(0.5)
-        self.spin_lw.setValue(1.5)
-        self.spin_lw.valueChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("Line width:", self.spin_lw))
+        
         
         # ─── Copied figure size (NEW) ───
         ratio_widget = QWidget()
@@ -404,6 +410,12 @@ class VSpectraViewer(QWidget):
         return x_shift_step, y_shift_step
 
     def _plot(self):
+        style_name = self.cbb_theme.currentText()
+        style_path = PLOT_POLICY_LIGHT if style_name != "Dark Mode" else PLOT_POLICY_DARK
+        with plt.style.context(style_path):
+            self._plot_internal()
+
+    def _plot_internal(self):
         if not self._current_spectra:
             self.ax.clear()
             self.lbl_r2.setText("R²=0")
@@ -413,6 +425,8 @@ class VSpectraViewer(QWidget):
         xlim = self.ax.get_xlim()
         ylim = self.ax.get_ylim()
         is_default = (xlim == (0.0, 1.0) and ylim == (0.0, 1.0))
+        
+        fg_color = plt.rcParams.get('axes.labelcolor', 'black')
 
         self.ax.clear()
         self._fitted_lines.clear()  # always reset
@@ -443,7 +457,7 @@ class VSpectraViewer(QWidget):
                         ms=3,
                         lw=0.8,
                         alpha=0.8,
-                        color="black",
+                        color=fg_color,
                         label="raw", 
                     )
                 except Exception:
@@ -498,7 +512,7 @@ class VSpectraViewer(QWidget):
                     # ── Individual peak curve (SMOOTH) — with offset
                     color_kwargs = {}
                     if hasattr(self, "act_bestfit_colorful") and not self.act_bestfit_colorful.isChecked():
-                        color_kwargs["color"] = "black"
+                        color_kwargs["color"] = fg_color
 
                     peak_line, = self.ax.plot(
                         x_fine + x_offset, y_peak_fine + y_offset,
@@ -526,7 +540,7 @@ class VSpectraViewer(QWidget):
                         idx = np.argmax(np.abs(y_peak_fine))
                         px = x_fine[idx]
                         py = y_peak_fine[idx]
-                        txt_color = "black" if not self.act_bestfit_colorful.isChecked() else peak_line.get_color()
+                        txt_color = fg_color if not self.act_bestfit_colorful.isChecked() else peak_line.get_color()
                         self.ax.text(
                             px + x_offset, py + y_offset,
                             peak_info["peak_label"],
@@ -553,7 +567,7 @@ class VSpectraViewer(QWidget):
                     
                     self.ax.plot(
                         x_fine + x_offset, y_fit_fine + y_offset,
-                        lw=(lw*0.6), color="black"
+                        lw=(lw*0.6), color=fg_color
                     )
 
 
@@ -838,6 +852,34 @@ class VSpectraViewer(QWidget):
     # ─────────────────────────────────────────
     # Signal emitters
     # ─────────────────────────────────────────
+    def _apply_plot_style(self):
+        style_name = self.cbb_theme.currentText()
+        style_path = PLOT_POLICY_LIGHT if style_name != "Dark Mode" else PLOT_POLICY_DARK
+        
+        # Parse the style file without modifying global rcParams
+        import matplotlib as mpl
+        style_dict = mpl.rc_params_from_file(style_path)
+            
+        self.figure.patch.set_facecolor(style_dict.get('figure.facecolor', 'white'))
+        self.figure.patch.set_edgecolor(style_dict.get('figure.edgecolor', 'white'))
+        self.ax.set_facecolor(style_dict.get('axes.facecolor', 'white'))
+        
+        edge_color = style_dict.get('axes.edgecolor', 'black')
+        for spine in self.ax.spines.values():
+            spine.set_color(edge_color)
+            
+        tick_color = style_dict.get('xtick.color', 'black')
+        self.ax.tick_params(colors=tick_color, which='both')
+        
+        label_color = style_dict.get('axes.labelcolor', 'black')
+        self.ax.xaxis.label.set_color(label_color)
+        self.ax.yaxis.label.set_color(label_color)
+        self.ax.title.set_color(label_color)
+        
+        self.plotStyleChanged.emit()
+
+        self._emit_view_options()
+
     def _emit_view_options(self):
         def _to_float(text, default):
             try:
@@ -851,6 +893,7 @@ class VSpectraViewer(QWidget):
             #"colors": self.act_colors.isChecked(),
             "raw": self.act_raw.isChecked(),
             "bestfit": self.btn_bestfit.isChecked(),  # Now using toolbar button
+            "plot_theme": self.cbb_theme.currentText() if hasattr(self, "cbb_theme") else "Light Mode",
             "bestfit_colorful": self.act_bestfit_colorful.isChecked(),
             "show_peak_label": self.act_show_peak_label.isChecked(),
             "residual": self.act_residual.isChecked(),

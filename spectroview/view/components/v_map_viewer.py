@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon, QAction
 
-from spectroview import ICON_DIR
+from spectroview import ICON_DIR, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
 from spectroview.viewmodel.utils import copy_fig_to_clb
 from spectroview.view.components.customized_widgets import CustomizedPalette
 
@@ -40,6 +40,7 @@ class VMapViewer(QWidget):
         self.df_fit_results = None
         self.selected_points = []
         self.number_of_points = 0
+        self.current_style = 'Light Mode'
         
         # Rectangle selection state
         self.rect_start = None
@@ -134,6 +135,17 @@ class VMapViewer(QWidget):
         
         return canvas_frame
     
+    def apply_plot_style(self, style_name=None):
+        """Update figure and axes colors using local style context."""
+        if not hasattr(self, 'figure') or not hasattr(self, 'ax'):
+            return
+            
+        if style_name is not None:
+            self.current_style = style_name
+            
+        # Manually replot heatmap to update colorbars and contents with new style
+        self.plot_heatmap()
+
     def _create_map_type_controls(self):
         """Create map type and palette selector controls."""
         type_layout = QHBoxLayout()
@@ -562,24 +574,36 @@ class VMapViewer(QWidget):
         self.plot_timer.start()
     
     def _do_plot_heatmap(self):
+        """Wrapper to plot using local style context, isolating from global rcParams."""
+        style_path = PLOT_POLICY_LIGHT if self.current_style != 'Dark Mode' else PLOT_POLICY_DARK
+        with plt.style.context(style_path):
+            self._do_plot_heatmap_internal()
+
+    def _do_plot_heatmap_internal(self):
         """Plot 2D heatmap or wafer map based on current data and settings."""
         if self.map_df is None or self.map_df.empty:
-            self.ax.clear()
+            self.figure.clf()
+            self.ax = self.figure.add_subplot(111)
+            self.cbar = None
             self.canvas.draw_idle()
             return
         
         map_type = self.cbb_map_type.currentText()
         
-        # Clear axes and cached selection
-        self.ax.clear()
+        # Clear figure and recreate axes to ensure no leftover colorbars and reset sizes
+        self.figure.clf()
+        self.figure.patch.set_facecolor(plt.rcParams.get('figure.facecolor', 'white'))
+        self.ax = self.figure.add_subplot(111)
+        self.cbar = None
         self._selection_scatter = None
         
         # Plot wafer circle for wafer maps
         if map_type != '2Dmap':
             r = self._get_wafer_radius(map_type)
             if r:
+                edge_color = plt.rcParams.get('axes.edgecolor', 'black')
                 wafer_circle = patches.Circle((0, 0), radius=r, fill=False, 
-                                             color='black', linewidth=1)
+                                             color=edge_color, linewidth=1)
                 self.ax.add_patch(wafer_circle)
                 
                 # Show all measurement sites
@@ -607,7 +631,8 @@ class VMapViewer(QWidget):
             
             # Plot settings
             cmap = plt.get_cmap(self.cbb_palette.currentText()).copy()
-            cmap.set_bad(color='white')  # Set NaN values to white (masked regions)
+            # Set NaN values to transparent so they don't hide the background
+            cmap.set_bad(color='none')
             
             interpolation = 'bilinear' if self.action_smoothing.isChecked() else 'none'
             vmin_plot, vmax_plot = self.z_range_slider.value()
@@ -680,11 +705,10 @@ class VMapViewer(QWidget):
         if self.img:
             if hasattr(self, 'cbar') and self.cbar is not None:
                 try:
-                    self.cbar.update_normal(self.img)
+                    self.cbar.remove()
                 except:
-                    self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
-            else:
-                self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
+                    pass
+            self.cbar = self.ax.figure.colorbar(self.img, ax=self.ax)
         
         # Grid
         if self.action_grid.isChecked():

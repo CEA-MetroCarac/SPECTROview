@@ -125,6 +125,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # MAP VIEWER WIDGET (with matplotlib canvas and controls)
         # ══════════════════════════════════════════════════════════════
         self.v_map_viewer = VMapViewer()
+        if hasattr(self, 'v_spectra_viewer'):
+            self.v_map_viewer.v_spectra_viewer_ref = self.v_spectra_viewer
         layout.addWidget(self.v_map_viewer)
         
         # ══════════════════════════════════════════════════════════════

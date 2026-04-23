@@ -1131,7 +1131,26 @@ class VMapViewer(QWidget):
     
     def _copy_figure_to_clipboard(self):
         """Copy the matplotlib figure to clipboard."""
-        copy_fig_to_clb(self.canvas)
+        target_theme = "Light Mode"
+        
+        if hasattr(self, 'v_spectra_viewer_ref'):
+            sv = self.v_spectra_viewer_ref
+            if hasattr(sv, 'cbb_copy_theme'):
+                target_theme = sv.cbb_copy_theme.currentText()
+                
+        original_theme = getattr(self, 'current_style', "Light Mode")
+        
+        if target_theme != original_theme:
+            try:
+                self.current_style = target_theme
+                self._do_plot_heatmap()
+                self.canvas.draw()
+                copy_fig_to_clb(self.canvas)
+            finally:
+                self.current_style = original_theme
+                self._do_plot_heatmap()
+        else:
+            copy_fig_to_clb(self.canvas)
     
     def _plot_height_profile_on_map(self):
         """Plot height profile directly on heatmap when exactly 2 points selected."""

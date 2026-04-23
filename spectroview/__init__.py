@@ -59,9 +59,8 @@ PLOT_STYLES = [
 ]
 
 DEFAULT_COLORS = [
-    '#1a6fdf', '#f14040', '#37ad6b', '#515151', '#b177de',
-    '#cc9900', '#00cbcc', '#7d4e4e', '#8e8e00', '#fb6501',
-    '#6699cc', '#6fb802',
+    '#E31A1C', '#33A02C', '#FF7F00', '#1F78B4', '#6A3D9A',
+    '#FB9A99', '#B2DF8A', '#FDBF6F', '#A6CEE3', '#CAB2D6',
 ]
 
 MARKERS = [

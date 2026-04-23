@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QVBoxLayout, QWidget, QPushButton, QHBoxLayout
 from PySide6.QtCore import QSize, Signal
 from PySide6.QtGui import QIcon
 
-from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR
+from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR, PLOT_POLICY_LIGHT
 from spectroview.view.components.customize_graph_dialog import CustomizeGraphDialog
 from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb
 
@@ -135,8 +135,9 @@ class VGraph(QWidget):
         self.clear_layout(self.graph_layout)
         plt.close('all')
         
-        self.figure = plt.figure(layout="compressed", dpi=self.dpi)
-        self.ax = self.figure.add_subplot(111)
+        with plt.style.context(PLOT_POLICY_LIGHT):
+            self.figure = plt.figure(layout="compressed", dpi=self.dpi)
+            self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
         
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
@@ -207,6 +208,11 @@ class VGraph(QWidget):
         copy_fig_to_clb(self.canvas)
     
     def plot(self, df):
+        """Wrapper to render plot using local style context."""
+        with plt.style.context(PLOT_POLICY_LIGHT):
+            self._plot_internal(df)
+
+    def _plot_internal(self, df):
         """Renders plot based on DataFrame and current properties."""
         self.df = df
         

@@ -100,6 +100,15 @@ class Main(QMainWindow):
         
         if hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
             self.v_maps_workspace.v_spectra_viewer.plotStyleChanged.connect(update_map_viewers)
+            
+        # Synchronize options between Spectra and Maps workspaces
+        if hasattr(self.v_spectra_workspace, 'v_spectra_viewer') and hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
+            self.v_spectra_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(
+                self.v_maps_workspace.v_spectra_viewer.set_options_state
+            )
+            self.v_maps_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(
+                self.v_spectra_workspace.v_spectra_viewer.set_options_state
+            )
         
 
     def open_files(self):

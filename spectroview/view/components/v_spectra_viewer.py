@@ -41,6 +41,7 @@ class VSpectraViewer(QWidget):
     toolModeChanged = Signal(str)  # zoom / baseline / peak
     normalizationChanged = Signal(bool, float, float)
     plotStyleChanged = Signal()
+    allOptionsSyncChanged = Signal(dict)
 
     peak_add_requested = Signal(float)
     peak_remove_requested = Signal(float)
@@ -851,8 +852,63 @@ class VSpectraViewer(QWidget):
 
 
     # ─────────────────────────────────────────
-    # Signal emitters
+    # Signal emitters & Synchronization between spectra and maps workspaces
     # ─────────────────────────────────────────
+    def get_options_state(self):
+        """Get the complete state of all view options."""
+        return {
+            "theme": self.cbb_theme.currentText() if hasattr(self, "cbb_theme") else "Light Mode",
+            "xaxis": self.cbb_xaxis.currentText() if hasattr(self, "cbb_xaxis") else "",
+            "yaxis": self.cbb_yaxis.currentText() if hasattr(self, "cbb_yaxis") else "",
+            "yscale": self.cbb_yscale.currentText() if hasattr(self, "cbb_yscale") else "Linear",
+            "plotstyle": self.cbb_plotstyle.currentText() if hasattr(self, "cbb_plotstyle") else "line",
+            "lw": self.spin_lw.value() if hasattr(self, "spin_lw") else 1.5,
+            "dotsize": self.spin_dotsize.value() if hasattr(self, "spin_dotsize") else 3.0,
+            "raw": self.act_raw.isChecked() if hasattr(self, "act_raw") else False,
+            "bestfit_colorful": self.act_bestfit_colorful.isChecked() if hasattr(self, "act_bestfit_colorful") else True,
+            "show_peak_label": self.act_show_peak_label.isChecked() if hasattr(self, "act_show_peak_label") else False,
+            "residual": self.act_residual.isChecked() if hasattr(self, "act_residual") else False,
+            "grid": self.act_grid.isChecked() if hasattr(self, "act_grid") else False,
+            "width": self.width_entry.text() if hasattr(self, "width_entry") else "5.5",
+            "height": self.height_entry.text() if hasattr(self, "height_entry") else "4.0",
+            "legend": self.btn_legend.isChecked() if hasattr(self, "btn_legend") else False,
+            "bestfit": self.btn_bestfit.isChecked() if hasattr(self, "btn_bestfit") else False,
+        }
+
+    def set_options_state(self, state):
+        """Set the complete state of all view options without causing infinite loops."""
+        if not hasattr(self, "cbb_theme"):
+            return
+            
+        current_state = self.get_options_state()
+        if current_state == state:
+            return
+            
+        def _update(widget, setter, value):
+            if value is None: return
+            widget.blockSignals(True)
+            setter(value)
+            widget.blockSignals(False)
+
+        _update(self.cbb_theme, self.cbb_theme.setCurrentText, state.get("theme"))
+        _update(self.cbb_xaxis, self.cbb_xaxis.setCurrentText, state.get("xaxis"))
+        _update(self.cbb_yaxis, self.cbb_yaxis.setCurrentText, state.get("yaxis"))
+        _update(self.cbb_yscale, self.cbb_yscale.setCurrentText, state.get("yscale"))
+        _update(self.cbb_plotstyle, self.cbb_plotstyle.setCurrentText, state.get("plotstyle"))
+        _update(self.spin_lw, self.spin_lw.setValue, state.get("lw"))
+        _update(self.spin_dotsize, self.spin_dotsize.setValue, state.get("dotsize"))
+        _update(self.act_raw, self.act_raw.setChecked, state.get("raw"))
+        _update(self.act_bestfit_colorful, self.act_bestfit_colorful.setChecked, state.get("bestfit_colorful"))
+        _update(self.act_show_peak_label, self.act_show_peak_label.setChecked, state.get("show_peak_label"))
+        _update(self.act_residual, self.act_residual.setChecked, state.get("residual"))
+        _update(self.act_grid, self.act_grid.setChecked, state.get("grid"))
+        _update(self.width_entry, self.width_entry.setText, state.get("width"))
+        _update(self.height_entry, self.height_entry.setText, state.get("height"))
+        _update(self.btn_legend, self.btn_legend.setChecked, state.get("legend"))
+        _update(self.btn_bestfit, self.btn_bestfit.setChecked, state.get("bestfit"))
+
+        self._apply_plot_style()
+        
     def _apply_plot_style(self):
         style_name = self.cbb_theme.currentText()
         style_path = PLOT_POLICY_LIGHT if style_name != "Dark Mode" else PLOT_POLICY_DARK
@@ -904,6 +960,9 @@ class VSpectraViewer(QWidget):
             "copy_width": _to_float(self.width_entry.text(), 5.5),
             "copy_height": _to_float(self.height_entry.text(), 4.0),
         })
+        # Sync options with other viewers
+        self.allOptionsSyncChanged.emit(self.get_options_state())
+        
         # Update plot immediately whenever an view option changes
         self._plot() 
 

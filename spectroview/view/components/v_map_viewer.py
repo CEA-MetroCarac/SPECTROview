@@ -86,9 +86,10 @@ class VMapViewer(QWidget):
         canvas_layout.setContentsMargins(2, 2, 2, 2)
         
         # Create matplotlib figure and canvas
-        self.figure = plt.figure(dpi=70, figsize=(5, 4))
-        self.ax = self.figure.add_subplot(111)
-        self.ax.tick_params(axis='both', which='both')
+        with plt.style.context(PLOT_POLICY_LIGHT):
+            self.figure = plt.figure(dpi=70, figsize=(5, 4))
+            self.ax = self.figure.add_subplot(111)
+            self.ax.tick_params(axis='both', which='both')
         
         self.canvas = FigureCanvas(self.figure)
         # self.canvas.setMinimumHeight(200)

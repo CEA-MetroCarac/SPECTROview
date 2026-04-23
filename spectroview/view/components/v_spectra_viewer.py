@@ -67,8 +67,9 @@ class VSpectraViewer(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
 
         # ─── Figure ───
-        self.figure = Figure(layout="compressed", dpi=80)
-        self.ax = self.figure.add_subplot(111)
+        with plt.style.context(PLOT_POLICY_LIGHT):
+            self.figure = Figure(layout="compressed", dpi=80)
+            self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
         
         self.canvas.mpl_connect("button_press_event", self._on_mouse_click)

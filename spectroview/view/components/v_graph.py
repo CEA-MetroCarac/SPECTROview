@@ -532,11 +532,11 @@ class VGraph(QWidget):
             self.ax.grid(False)
             return
         
-        self.ax.grid(True, which='major', linestyle='--', linewidth=0.6, alpha=1)
+        self.ax.grid(True, which='major', linestyle='--')
         
         if self.xlogscale or self.ylogscale:
             self.ax.minorticks_on()
-            self.ax.grid(True, which='minor', linestyle=':', linewidth=0.4, alpha=1)
+            self.ax.grid(True, which='minor', alpha=0.15, linestyle='--')
     
     def _set_rotation(self):
         """Set rotation of the ticklabels of the x axis."""

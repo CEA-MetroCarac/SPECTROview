@@ -75,7 +75,7 @@ class MSettings:
     # ---------- Theme ----------
     def get_theme(self) -> str:
         """Get current theme (light or dark)."""
-        return self.settings.value("theme", "light", str)
+        return self.settings.value("theme", "dark", str)
     
     def set_theme(self, theme: str):
         """Set theme (light or dark)."""

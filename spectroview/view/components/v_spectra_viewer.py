@@ -355,6 +355,12 @@ class VSpectraViewer(QWidget):
         ratio_action.setDefaultWidget(ratio_widget)
         menu.addAction(ratio_action)
 
+        # Copied figure theme
+        self.cbb_copy_theme = QComboBox()
+        self.cbb_copy_theme.addItems(["Light Mode", "Dark Mode"])
+        self.cbb_copy_theme.currentIndexChanged.connect(self._emit_view_options)
+        menu.addAction(self._wrap("Copied figure theme:", self.cbb_copy_theme))
+
         return menu
 
     def _add_checkbox(self, menu, name, checked=False):
@@ -873,6 +879,7 @@ class VSpectraViewer(QWidget):
             "height": self.height_entry.text() if hasattr(self, "height_entry") else "4.0",
             "legend": self.btn_legend.isChecked() if hasattr(self, "btn_legend") else False,
             "bestfit": self.btn_bestfit.isChecked() if hasattr(self, "btn_bestfit") else False,
+            "copy_fig_theme": self.cbb_copy_theme.currentText() if hasattr(self, "cbb_copy_theme") else "Light Mode",
         }
 
     def set_options_state(self, state):
@@ -906,6 +913,8 @@ class VSpectraViewer(QWidget):
         _update(self.height_entry, self.height_entry.setText, state.get("height"))
         _update(self.btn_legend, self.btn_legend.setChecked, state.get("legend"))
         _update(self.btn_bestfit, self.btn_bestfit.setChecked, state.get("bestfit"))
+        if hasattr(self, "cbb_copy_theme"):
+            _update(self.cbb_copy_theme, self.cbb_copy_theme.setCurrentText, state.get("copy_fig_theme", "Light Mode"))
 
         self._apply_plot_style()
         
@@ -933,9 +942,9 @@ class VSpectraViewer(QWidget):
         self.ax.yaxis.label.set_color(label_color)
         self.ax.title.set_color(label_color)
         
-        self.plotStyleChanged.emit()
-
-        self._emit_view_options()
+        if not getattr(self, '_is_copying', False):
+            self.plotStyleChanged.emit()
+            self._emit_view_options()
 
     def _emit_view_options(self):
         def _to_float(text, default):
@@ -978,7 +987,29 @@ class VSpectraViewer(QWidget):
             # Copy canvas directly using viewmodel utility
             width = float(self.width_entry.text()) if self.width_entry.text() else 5.5
             height = float(self.height_entry.text()) if self.height_entry.text() else 4.0
-            copy_fig_to_clb(self.canvas, size_ratio=(width, height))
+            
+            # Get target copied theme from combobox
+            target_theme = self.cbb_copy_theme.currentText() if hasattr(self, "cbb_copy_theme") else "Light Mode"
+            original_theme = self.cbb_theme.currentText()
+            
+            if target_theme != original_theme:
+                self._is_copying = True
+                try:
+                    self.cbb_theme.blockSignals(True)
+                    self.cbb_theme.setCurrentText(target_theme)
+                    self._apply_plot_style()
+                    self._plot()
+                    self.canvas.draw()
+                    
+                    copy_fig_to_clb(self.canvas, size_ratio=(width, height))
+                finally:
+                    self.cbb_theme.setCurrentText(original_theme)
+                    self.cbb_theme.blockSignals(False)
+                    self._apply_plot_style()
+                    self._plot()
+                    self._is_copying = False
+            else:
+                copy_fig_to_clb(self.canvas, size_ratio=(width, height))
 
     def _emit_norm(self):
         try:

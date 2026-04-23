@@ -46,6 +46,7 @@ class MSettings:
             "height": self.settings.value("view_options/height", "4.0", str),
             "legend": self.settings.value("view_options/legend", False, bool),
             "bestfit": self.settings.value("view_options/bestfit", False, bool),
+            "copy_fig_theme": self.settings.value("view_options/copy_fig_theme", "Light Mode", str),
         }
 
     def save_view_options(self, data: dict):

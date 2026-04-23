@@ -305,6 +305,12 @@ class VSpectraViewer(QWidget):
         self.act_bestfit_colorful.setChecked(True)
         self.act_bestfit_colorful.toggled.connect(self._emit_view_options)
 
+        # Show peak label
+        self.act_show_peak_label = menu.addAction("Show peak label")
+        self.act_show_peak_label.setCheckable(True)
+        self.act_show_peak_label.setChecked(False)
+        self.act_show_peak_label.toggled.connect(self._emit_view_options)
+
         self._add_checkbox(menu, "Residual")
         self._add_checkbox(menu, "Grid")
 
@@ -496,7 +502,7 @@ class VSpectraViewer(QWidget):
 
                     peak_line, = self.ax.plot(
                         x_fine + x_offset, y_peak_fine + y_offset,
-                        lw=lw, alpha=0.8, linestyle="--", **color_kwargs
+                        lw=(lw*0.6),  **color_kwargs
                     )
 
                     peak_info = {
@@ -514,6 +520,20 @@ class VSpectraViewer(QWidget):
                             peak_info[key] = peak_model.param_hints[key].get("value")
 
                     self._fitted_lines.append((peak_line, peak_info))
+
+                    # ── Peak label ──
+                    if hasattr(self, "act_show_peak_label") and self.act_show_peak_label.isChecked():
+                        idx = np.argmax(np.abs(y_peak_fine))
+                        px = x_fine[idx]
+                        py = y_peak_fine[idx]
+                        txt_color = "black" if not self.act_bestfit_colorful.isChecked() else peak_line.get_color()
+                        self.ax.text(
+                            px + x_offset, py + y_offset,
+                            peak_info["peak_label"],
+                            color=txt_color,
+                            fontsize=9,
+                            ha="center", va="bottom" if py >= 0 else "top"
+                        )
 
                 # ── Best-fit curve (SMOOTH) — with offset
                 if (
@@ -533,7 +553,7 @@ class VSpectraViewer(QWidget):
                     
                     self.ax.plot(
                         x_fine + x_offset, y_fit_fine + y_offset,
-                        lw=lw, color="black"
+                        lw=(lw*0.6), color="black"
                     )
 
 
@@ -832,6 +852,7 @@ class VSpectraViewer(QWidget):
             "raw": self.act_raw.isChecked(),
             "bestfit": self.btn_bestfit.isChecked(),  # Now using toolbar button
             "bestfit_colorful": self.act_bestfit_colorful.isChecked(),
+            "show_peak_label": self.act_show_peak_label.isChecked(),
             "residual": self.act_residual.isChecked(),
             "x_unit": self.cbb_xaxis.currentText(),
             "y_scale": self.cbb_yscale.currentText(),

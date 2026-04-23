@@ -374,12 +374,21 @@ class Main(QMainWindow):
         app = QApplication.instance()
         if theme is None:
             theme = "light" if self.settings.get_theme() == "dark" else "dark"
+
+        # Set theme for spectra viewer    
+        target_view_theme = "Dark Mode" if theme == "dark" else "Light Mode"
+        
         if theme == "dark":
             app.setPalette(dark_palette())
             self.settings.set_theme("dark")
         else:
             app.setPalette(light_palette())
             self.settings.set_theme("light")
+            
+        if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
+            self.v_spectra_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
+        if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
+            self.v_maps_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
 
     def dragEnterEvent(self, event):
         """Accept dragging files into the application."""

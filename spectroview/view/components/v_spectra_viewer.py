@@ -296,10 +296,15 @@ class VSpectraViewer(QWidget):
         menu.addSeparator()
 
         # Toggles
-        #self._add_checkbox(menu, "Colors")
-        #self._add_checkbox(menu, "Peaks")
         self._add_checkbox(menu, "Raw")
         # Bestfit is now controlled by btn_bestfit button in toolbar
+        
+        # Bestfit colorful
+        self.act_bestfit_colorful = menu.addAction("Bestfit curve colorful")
+        self.act_bestfit_colorful.setCheckable(True)
+        self.act_bestfit_colorful.setChecked(True)
+        self.act_bestfit_colorful.toggled.connect(self._emit_view_options)
+
         self._add_checkbox(menu, "Residual")
         self._add_checkbox(menu, "Grid")
 
@@ -485,9 +490,13 @@ class VSpectraViewer(QWidget):
                     y_peaks_orig += y_peak_orig
 
                     # ── Individual peak curve (SMOOTH) — with offset
+                    color_kwargs = {}
+                    if hasattr(self, "act_bestfit_colorful") and not self.act_bestfit_colorful.isChecked():
+                        color_kwargs["color"] = "black"
+
                     peak_line, = self.ax.plot(
                         x_fine + x_offset, y_peak_fine + y_offset,
-                        lw=lw, alpha=0.8
+                        lw=lw, alpha=0.8, linestyle="--", **color_kwargs
                     )
 
                     peak_info = {
@@ -524,7 +533,7 @@ class VSpectraViewer(QWidget):
                     
                     self.ax.plot(
                         x_fine + x_offset, y_fit_fine + y_offset,
-                        lw=lw, color="black", label="bestfit"
+                        lw=lw, color="black"
                     )
 
 
@@ -822,6 +831,7 @@ class VSpectraViewer(QWidget):
             #"colors": self.act_colors.isChecked(),
             "raw": self.act_raw.isChecked(),
             "bestfit": self.btn_bestfit.isChecked(),  # Now using toolbar button
+            "bestfit_colorful": self.act_bestfit_colorful.isChecked(),
             "residual": self.act_residual.isChecked(),
             "x_unit": self.cbb_xaxis.currentText(),
             "y_scale": self.cbb_yscale.currentText(),

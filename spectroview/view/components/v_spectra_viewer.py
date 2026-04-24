@@ -700,10 +700,11 @@ class VSpectraViewer(QWidget):
         if y_base is None:
             return None
 
+        fg_color = plt.rcParams.get('axes.labelcolor', 'black')
         # Baseline curve — with offset
         self.ax.plot(
             x + x_offset, y_base + y_offset,
-            "--", color="red", lw=1.4, label="Baseline"
+            "--", color=fg_color, lw=1.4, label="Baseline"
         )
 
         # Show anchor point markers only for manual modes — with offset
@@ -715,7 +716,7 @@ class VSpectraViewer(QWidget):
                 xs, ys = baseline.points
             xs_arr = np.asarray(xs, dtype=float)
             ys_arr = np.asarray(ys, dtype=float)
-            fg_color = plt.rcParams.get('axes.labelcolor', 'black')
+            
             self.ax.plot(xs_arr + x_offset, ys_arr + y_offset, marker="o", color=fg_color, mfc="none", ms=5, ls="none")
 
         return y_base

@@ -715,7 +715,8 @@ class VSpectraViewer(QWidget):
                 xs, ys = baseline.points
             xs_arr = np.asarray(xs, dtype=float)
             ys_arr = np.asarray(ys, dtype=float)
-            self.ax.plot(xs_arr + x_offset, ys_arr + y_offset, "ko", mfc="none", ms=5)
+            fg_color = plt.rcParams.get('axes.labelcolor', 'black')
+            self.ax.plot(xs_arr + x_offset, ys_arr + y_offset, marker="o", color=fg_color, mfc="none", ms=5, ls="none")
 
         return y_base
 

@@ -994,7 +994,7 @@ class VWorkspaceGraphs(QWidget):
         # Capture filters FIRST before any GUI state changes
         current_filters = self.v_data_filter.get_filters()
         
-        checked_slots = [int(cb.text()) for cb in self.slot_checkboxes if cb.isChecked()]
+        checked_slots = [int(float(cb.text())) for cb in self.slot_checkboxes if cb.isChecked()]
         
         if not checked_slots:
             QMessageBox.warning(self, "No Slots Selected", "Please select at least one slot.")

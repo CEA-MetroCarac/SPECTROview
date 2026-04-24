@@ -23,6 +23,7 @@ from spectroview.view.components.v_spectra_list import VSpectraList
 from spectroview.view.components.v_spectra_viewer import VSpectraViewer
 from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
+from spectroview.viewmodel.vm_mva import VMMVA
 
 
 class VWorkspaceSpectra(QWidget):
@@ -67,12 +68,13 @@ class VWorkspaceSpectra(QWidget):
         self.v_more_tab = VMoreTab()
         self.v_mva = VMVA()
         self.vm_fit_model_builder = VMFitModelBuilder(self.m_settings)
+        self.vm_mva = VMMVA(self.m_settings)
         self.vm.set_fit_model_builder(self.vm_fit_model_builder) # 🔑 inject dependency
         
         self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(self.v_fit_results, "Fit Results")
         self.bottom_tabs.addTab(self.v_more_tab, "More")
-        self.bottom_tabs.addTab(self.v_mva, "MVA")
+        self.bottom_tabs.addTab(self.v_mva, "MVA (alpha)")
         
         left_splitter.addWidget(self.v_spectra_viewer)
         left_splitter.addWidget(self.bottom_tabs)
@@ -260,6 +262,18 @@ class VWorkspaceSpectra(QWidget):
             lambda: self._apply_with_ctrl(vm.undo_y_normalization)
         )
         self.v_more_tab.cosmic_ray_requested.connect(vm.cosmic_ray_detection)
+
+        # ═════════════════════════════════════════════════════════════════
+        # MVA connections
+        # ═════════════════════════════════════════════════════════════════
+        self.vm_mva.set_spectra(lambda: self.vm.spectra)  # inject spectra getter
+        self.v_mva.run_pca_requested.connect(self.vm_mva.run_pca)
+        self.v_mva.run_nmf_requested.connect(self.vm_mva.run_nmf)
+        self.v_mva.send_to_graphs_requested.connect(self.vm_mva.send_to_graphs)
+        self.vm_mva.pca_results_ready.connect(self.v_mva.display_pca_results)
+        self.vm_mva.nmf_results_ready.connect(self.v_mva.display_nmf_results)
+        self.vm_mva.send_df_to_graphs.connect(self._send_df_to_graphs)
+        self.vm_mva.notify.connect(self._show_toast_notification)
 
         vm.show_xcorrection_value.connect(self.v_fit_model_builder.set_xcorrection_value)        
         vm.spectral_range_changed.connect(self.v_fit_model_builder.set_spectral_range)

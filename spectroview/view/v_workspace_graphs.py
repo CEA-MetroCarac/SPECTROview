@@ -288,9 +288,6 @@ class VWorkspaceGraphs(QWidget):
         # Plot title and axis labels
         self._create_title_and_labels(tab_plot_layout)
         
-        # Axis limits
-        self._create_axis_limits(tab_plot_layout)
-        
         # Slot selector section (for wafer plots)
         self._setup_slot_selector_section(tab_plot_layout)
         
@@ -375,46 +372,7 @@ class VWorkspaceGraphs(QWidget):
         
         parent_layout.addWidget(title_labels_group)
     
-    def _create_axis_limits(self, parent_layout):
-        """Create axis limits controls."""
-        limits_group = QGroupBox("Axis limits:")
-        limits_layout = QVBoxLayout(limits_group)
-        limits_layout.setContentsMargins(5, 2, 5, 2)
-        limits_layout.setSpacing(2)
-        
-        # X, Y limits
-        for axis in ['X', 'Y']:
-            h_layout = QHBoxLayout()
-            h_layout.addWidget(QLabel(f"{axis} limits:"))
-            
-            for limit_type in ['min', 'max']:
-                spin = QDoubleSpinBox()
-                spin.setRange(-999999, 999999)
-                setattr(self, f'spin_{axis.lower()}{limit_type}', spin)
-                h_layout.addWidget(QLabel(limit_type))
-                h_layout.addWidget(spin)
-            limits_layout.addLayout(h_layout)
-        
-        # Limit buttons
-        limits_btn_layout = QHBoxLayout()
-        self.btn_set_limits = QPushButton("Get current XY limits from plot")
-        self.btn_clear_limits = QPushButton("Clear XY limits")
-        limits_btn_layout.addWidget(self.btn_set_limits)
-        limits_btn_layout.addWidget(self.btn_clear_limits)
-        limits_layout.addLayout(limits_btn_layout)
-        
-        # Z limits
-        z_limits_layout = QHBoxLayout()
-        z_limits_layout.addWidget(QLabel("Z limits:"))
-        for limit_type in ['min', 'max']:
-            spin = QDoubleSpinBox()
-            spin.setRange(-999999, 999999)
-            setattr(self, f'spin_z{limit_type}', spin)
-            z_limits_layout.addWidget(QLabel(limit_type))
-            z_limits_layout.addWidget(spin)
-        limits_layout.addLayout(z_limits_layout)
-        
-        parent_layout.addWidget(limits_group)
+
     
     def _create_more_options_tab(self):
         """Create more options tab."""
@@ -504,10 +462,6 @@ class VWorkspaceGraphs(QWidget):
         # Plot buttons
         self.btn_add_plot.clicked.connect(self._on_add_plot)
         self.btn_update_plot.clicked.connect(self._on_update_plot)
-        
-        # Limits buttons
-        self.btn_set_limits.clicked.connect(self._on_set_current_limits)
-        self.btn_clear_limits.clicked.connect(self._on_clear_limits)
         
         # Plot style connection
         self.cbb_plot_style.currentTextChanged.connect(self._on_plot_style_changed)
@@ -853,6 +807,16 @@ class VWorkspaceGraphs(QWidget):
         # Collect updated plot properties from GUI
         plot_config = self._collect_plot_config()
         
+        # Preserve limits and annotations that are managed outside main GUI
+        plot_config['xmin'] = graph_widget.xmin
+        plot_config['xmax'] = graph_widget.xmax
+        plot_config['ymin'] = graph_widget.ymin
+        plot_config['ymax'] = graph_widget.ymax
+        plot_config['zmin'] = graph_widget.zmin
+        plot_config['zmax'] = graph_widget.zmax
+        plot_config['annotations'] = getattr(graph_widget, 'annotations', [])
+        plot_config['axis_breaks'] = getattr(graph_widget, 'axis_breaks', {'x': None, 'y': None})
+        
         # Check if Z-axis has changed (reset legend properties if so)
         z_changed = plot_config['z'] != graph_model.z
         if z_changed:
@@ -1145,38 +1109,7 @@ class VWorkspaceGraphs(QWidget):
             # Update graph list combobox
             self._update_graph_list([])
     
-    def _on_set_current_limits(self):
-        """Get current axis limits."""
-        active_subwindow = self.mdi_area.activeSubWindow()
-        if not active_subwindow:
-            QMessageBox.warning(self, "No Plot Selected", "Please select a plot first.")
-            return
-        
-        # Find the corresponding graph
-        for gid, (gw, gd, sw) in self.graph_widgets.items():
-            if sw == active_subwindow:
-                try:
-                    # Get current limits from matplotlib axes
-                    xmin, xmax = gw.ax.get_xlim()
-                    ymin, ymax = gw.ax.get_ylim()
-                    
-                    # Update spinboxes only - model will be updated when "Update plot" is clicked
-                    self.spin_xmin.setValue(round(xmin, 3))
-                    self.spin_xmax.setValue(round(xmax, 3))
-                    self.spin_ymin.setValue(round(ymin, 3))
-                    self.spin_ymax.setValue(round(ymax, 3))
-                except Exception as e:
-                    QMessageBox.critical(self, "Error", f"Error getting limits: {str(e)}")
-                break
-    
-    def _on_clear_limits(self):
-        """Clear axis limits."""
-        self.spin_xmin.setValue(-999999)
-        self.spin_xmax.setValue(-999999)
-        self.spin_ymin.setValue(-999999)
-        self.spin_ymax.setValue(-999999)
-        self.spin_zmin.setValue(-999999)
-        self.spin_zmax.setValue(-999999)
+
     
     def _on_subwindow_activated(self, sub_window):
         """Handle subwindow activation."""
@@ -1275,14 +1208,6 @@ class VWorkspaceGraphs(QWidget):
             self.edit_ylabel.setText(model.ylabel or "")
             self.edit_zlabel.setText(model.zlabel or "")
             
-            # Limits
-            self.spin_xmin.setValue(model.xmin if model.xmin is not None else -999999)
-            self.spin_xmax.setValue(model.xmax if model.xmax is not None else -999999)
-            self.spin_ymin.setValue(model.ymin if model.ymin is not None else -999999)
-            self.spin_ymax.setValue(model.ymax if model.ymax is not None else -999999)
-            self.spin_zmin.setValue(model.zmin if model.zmin is not None else -999999)
-            self.spin_zmax.setValue(model.zmax if model.zmax is not None else -999999)
-            
             # Toolbar controls
             self.spin_dpi_toolbar.setValue(model.dpi)
             self.spin_xlabel_rotation.setValue(model.x_rot)
@@ -1331,12 +1256,6 @@ class VWorkspaceGraphs(QWidget):
             'xlabel': self.edit_xlabel.text() or None,
             'ylabel': self.edit_ylabel.text() or None,
             'zlabel': self.edit_zlabel.text() or None,
-            'xmin': self.spin_xmin.value() if self.spin_xmin.value() != -999999 else None,
-            'xmax': self.spin_xmax.value() if self.spin_xmax.value() != -999999 else None,
-            'ymin': self.spin_ymin.value() if self.spin_ymin.value() != -999999 else None,
-            'ymax': self.spin_ymax.value() if self.spin_ymax.value() != -999999 else None,
-            'zmin': self.spin_zmin.value() if self.spin_zmin.value() != -999999 else None,
-            'zmax': self.spin_zmax.value() if self.spin_zmax.value() != -999999 else None,
             'color_palette': self.cbb_colormap.currentText() if use_palette else 'jet',
             'wafer_size': float(self.cbb_wafer_size.currentText()),
             'wafer_stats': self.cb_wafer_stats.isChecked(),
@@ -1484,8 +1403,14 @@ class VWorkspaceGraphs(QWidget):
                 'legend_visible': gw.legend_visible,
 
                 'legend_bbox': gw.legend_bbox,
-                'annotations': gw.annotations,  # Sync annotations back to model
-                'axis_breaks': gw.axis_breaks  # Sync axis breaks back to model
+                'annotations': getattr(gw, 'annotations', []),  # Sync annotations back to model
+                'axis_breaks': getattr(gw, 'axis_breaks', {'x': None, 'y': None}),  # Sync axis breaks back to model
+                'xmin': gw.xmin,
+                'xmax': gw.xmax,
+                'ymin': gw.ymin,
+                'ymax': gw.ymax,
+                'zmin': gw.zmin,
+                'zmax': gw.zmax
             })
         
         # Save workspace
@@ -1536,7 +1461,6 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_y.clear()
         self.cbb_z.clear()
         self.cbb_graph_list.clear()
-        self._on_clear_limits()
         self.edit_plot_title.clear()
         self.edit_xlabel.clear()
         self.edit_ylabel.clear()

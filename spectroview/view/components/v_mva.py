@@ -51,7 +51,7 @@ class VMVA(QWidget):
         left_layout.setSpacing(4)
 
         # Warning label
-        lbl_warning = QLabel("(MVA features are under developement. Do not use!)")
+        lbl_warning = QLabel("(MVA features are under developement. Do not use !)")
         lbl_warning.setStyleSheet("color: red;")
         lbl_warning.setAlignment(Qt.AlignCenter)
         lbl_warning.setWordWrap(True)

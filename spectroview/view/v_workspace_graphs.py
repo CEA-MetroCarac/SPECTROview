@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QDialog, QGridLayout, QApplication, QListWidgetItem, QCompleter
 )
 from PySide6.QtCore import Qt, Signal, QSize, QUrl
-from PySide6.QtGui import QIcon, QDesktopServices
+from PySide6.QtGui import QIcon, QDesktopServices, QBrush
 
 from spectroview import ICON_DIR, PLOT_STYLES, AXIS_LABELS
 from spectroview.model.m_settings import MSettings
@@ -63,6 +63,7 @@ class VWorkspaceGraphs(QWidget):
         # MDI Area
         self.mdi_area = QMdiArea()
         self.mdi_area.setMinimumWidth(600)
+        self.mdi_area.setBackground(QBrush(Qt.transparent))
         left_layout.addWidget(self.mdi_area)
         
         # Bottom Toolbar

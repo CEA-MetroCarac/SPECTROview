@@ -1,6 +1,10 @@
 # view/components/spectra_viewer.py
+import warnings
 from copy import deepcopy
 import numpy as np
+
+# Suppress harmless Matplotlib constrained_layout warning on 0-size UI initialization
+warnings.filterwarnings("ignore", message=".*constrained_layout not applied because axes sizes collapsed to zero.*")
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,

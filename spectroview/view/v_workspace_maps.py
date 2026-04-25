@@ -550,8 +550,16 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     def _on_select_all_spectra(self):
         """Select all spectra in the current map."""
         self.vm.select_all_current_map_spectra()
-        # Update the list widget to show all selected (both checked and highlighted)
-        self.v_maps_list.check_all_spectra(True)
+        
+        # Ensure Check All checkbox is visually checked without emitting toggled twice
+        self.v_maps_list.cb_check_all.blockSignals(True)
+        self.v_maps_list.cb_check_all.setChecked(True)
+        self.v_maps_list.cb_check_all.blockSignals(False)
+        
+        # Manually invoke the check all logic to update all items efficiently
+        self._on_check_all_toggled(True)
+        
+        # Select all items in the UI list
         self.v_maps_list.select_all_spectra()
     
     def _on_reinit_spectra(self):

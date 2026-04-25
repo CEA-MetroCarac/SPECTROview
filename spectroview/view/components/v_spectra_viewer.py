@@ -386,7 +386,8 @@ class VSpectraViewer(QWidget):
     # Public API
     # ─────────────────────────────────────────
     def set_plot_data(self, selected_spectra):
-        self._current_spectra = selected_spectra or []
+        # Limit to 50 spectra maximum to prevent Matplotlib lag
+        self._current_spectra = (selected_spectra or [])[:50]
         self._plot()
 
     def _compute_shift_steps(self):

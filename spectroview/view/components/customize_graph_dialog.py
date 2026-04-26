@@ -562,11 +562,18 @@ class CustomizeAxis(QWidget):
         limits_btn_layout = QHBoxLayout()
         self.btn_set_limits = QPushButton("Get current limits from plot")
         self.btn_set_limits.clicked.connect(self._on_get_current_limits)
+
         self.btn_clear_limits = QPushButton("Clear limits")
         self.btn_clear_limits.setIcon(QIcon(f"{ICON_DIR}/clear.png"))
         self.btn_clear_limits.clicked.connect(self._on_clear_limits)
+
+        self.btn_apply_limits = QPushButton("Apply")
+        self.btn_apply_limits.setIcon(QIcon(f"{ICON_DIR}/done.png"))
+        self.btn_apply_limits.clicked.connect(self._apply_axis_settings)
+        
         limits_btn_layout.addWidget(self.btn_set_limits)
         limits_btn_layout.addWidget(self.btn_clear_limits)
+        limits_btn_layout.addWidget(self.btn_apply_limits)
         limits_layout.addLayout(limits_btn_layout)
         
         # ===== X-Axis Break Section =====

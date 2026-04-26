@@ -23,6 +23,7 @@ class CustomizeGraphDialog(QDialog):
         
         self.setWindowTitle(f"Customize Graph {graph_id}")
         self.setModal(False)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.resize(450, 550)
         
         self._setup_ui()

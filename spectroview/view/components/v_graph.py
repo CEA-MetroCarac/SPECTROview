@@ -876,7 +876,7 @@ class VGraph(QWidget):
                 if contains:
                     self._edit_annotation_direct(ann._annotation_data)
                     return
-    
+                    
     def _edit_annotation_direct(self, annotation):
         """Open edit dialog for annotation (called from double-click)."""
         from .customize_graph_dialog import EditLineDialog, EditTextDialog
@@ -1027,42 +1027,78 @@ class VGraph(QWidget):
                 xdata = line.get_xdata()
                 ydata = line.get_ydata()
                 
-                # Convert to numpy arrays if needed
                 import numpy as np
                 xdata = np.asarray(xdata)
                 ydata = np.asarray(ydata)
                 
-                # Shift x values after break (compress break range, keep small gap)
                 xdata_new = xdata.copy()
                 mask = xdata >= break_end
                 xdata_new[mask] = xdata[mask] - break_range + gap_size
                 
-                # Remove points in break range
-                keep_mask = (xdata < break_start) | (xdata >= break_end)
+                keep_mask = (xdata <= break_start) | (xdata >= break_end)
                 line.set_data(xdata_new[keep_mask], ydata[keep_mask])
+                
+            for collection in self.ax.collections:
+                import numpy as np
+                offsets = collection.get_offsets()
+                if offsets is not None and len(offsets) > 0:
+                    xdata = offsets[:, 0]
+                    ydata = offsets[:, 1]
+                    
+                    xdata_new = xdata.copy()
+                    mask = xdata >= break_end
+                    xdata_new[mask] = xdata[mask] - break_range + gap_size
+                    
+                    keep_mask = (xdata <= break_start) | (xdata >= break_end)
+                    collection.set_offsets(np.column_stack([xdata_new[keep_mask], ydata[keep_mask]]))
+                    
+                    try:
+                        facecolors = collection.get_facecolors()
+                        if facecolors is not None and len(facecolors) == len(xdata):
+                            collection.set_facecolors(facecolors[keep_mask])
+                    except Exception:
+                        pass
+                    try:
+                        edgecolors = collection.get_edgecolors()
+                        if edgecolors is not None and len(edgecolors) == len(xdata):
+                            collection.set_edgecolors(edgecolors[keep_mask])
+                    except Exception:
+                        pass
+                    try:
+                        sizes = collection.get_sizes()
+                        if sizes is not None and len(sizes) == len(xdata):
+                            collection.set_sizes(sizes[keep_mask])
+                    except Exception:
+                        pass
             
             # Adjust axis limits (compress but keep gap)
             self.ax.set_xlim(x_min, x_max - break_range + gap_size)
             
-            # Add zigzag break markers in the gap
-            break_x = break_start + gap_size / 2
-            gap_height = (y_max - y_min) * 0.05
+            # Add parallel diagonal lines (//) at the bottom and top spines using axes coordinates
+            new_x_range = x_max - break_range + gap_size - x_min
+            x_ax_break = (break_start + gap_size / 2 - x_min) / new_x_range
             
-            # Left zigzag
-            self.ax.plot([break_start, break_start + gap_size*0.3], 
-                        [y_min, y_min + gap_height], 
-                        'k-', linewidth=2, clip_on=False, zorder=100)
-            self.ax.plot([break_start + gap_size*0.3, break_start + gap_size*0.5], 
-                        [y_min + gap_height, y_min], 
-                        'k-', linewidth=2, clip_on=False, zorder=100)
+            d = 0.015  # how big to make the diagonal lines in axes coordinates
+            dx = 0.01  # half distance between the two parallel lines
+            kwargs = dict(transform=self.ax.transAxes, color='gray', clip_on=False, linewidth=1)
             
-            # Right zigzag  
-            self.ax.plot([break_start + gap_size*0.5, break_start + gap_size*0.7], 
-                        [y_max, y_max - gap_height], 
-                        'k-', linewidth=2, clip_on=False, zorder=100)
-            self.ax.plot([break_start + gap_size*0.7, break_start + gap_size], 
-                        [y_max - gap_height, y_max], 
-                        'k-', linewidth=2, clip_on=False, zorder=100)
+            # Bottom spine break (//)
+            p1, = self.ax.plot([x_ax_break - dx - d, x_ax_break - dx + d], [-d, d], **kwargs)
+            p2, = self.ax.plot([x_ax_break + dx - d, x_ax_break + dx + d], [-d, d], **kwargs)
+            
+            # Top spine break (//)
+            p3, = self.ax.plot([x_ax_break - dx - d, x_ax_break - dx + d], [1 - d, 1 + d], **kwargs)
+            p4, = self.ax.plot([x_ax_break + dx - d, x_ax_break + dx + d], [1 - d, 1 + d], **kwargs)
+                        
+            self._break_markers.extend([p1, p2, p3, p4])
+            
+            # Correct tick labels
+            from matplotlib.ticker import FuncFormatter
+            def break_formatter_x(x, pos):
+                if x > break_start + gap_size / 2:
+                    return f"{x + break_range - gap_size:g}"
+                return f"{x:g}"
+            self.ax.xaxis.set_major_formatter(FuncFormatter(break_formatter_x))
         
         # Apply Y-axis break
         if self.axis_breaks.get('y'):
@@ -1094,42 +1130,78 @@ class VGraph(QWidget):
                 xdata = line.get_xdata()
                 ydata = line.get_ydata()
                 
-                # Convert to numpy arrays if needed
                 import numpy as np
                 xdata = np.asarray(xdata)
                 ydata = np.asarray(ydata)
                 
-                # Shift y values after break (compress break range, keep small gap)
                 ydata_new = ydata.copy()
                 mask = ydata >= break_end
                 ydata_new[mask] = ydata[mask] - break_range + gap_size
                 
-                # Remove points in break range
-                keep_mask = (ydata < break_start) | (ydata >= break_end)
+                keep_mask = (ydata <= break_start) | (ydata >= break_end)
                 line.set_data(xdata[keep_mask], ydata_new[keep_mask])
+                
+            for collection in self.ax.collections:
+                import numpy as np
+                offsets = collection.get_offsets()
+                if offsets is not None and len(offsets) > 0:
+                    xdata = offsets[:, 0]
+                    ydata = offsets[:, 1]
+                    
+                    ydata_new = ydata.copy()
+                    mask = ydata >= break_end
+                    ydata_new[mask] = ydata[mask] - break_range + gap_size
+                    
+                    keep_mask = (ydata <= break_start) | (ydata >= break_end)
+                    collection.set_offsets(np.column_stack([xdata[keep_mask], ydata_new[keep_mask]]))
+                    
+                    try:
+                        facecolors = collection.get_facecolors()
+                        if facecolors is not None and len(facecolors) == len(ydata):
+                            collection.set_facecolors(facecolors[keep_mask])
+                    except Exception:
+                        pass
+                    try:
+                        edgecolors = collection.get_edgecolors()
+                        if edgecolors is not None and len(edgecolors) == len(ydata):
+                            collection.set_edgecolors(edgecolors[keep_mask])
+                    except Exception:
+                        pass
+                    try:
+                        sizes = collection.get_sizes()
+                        if sizes is not None and len(sizes) == len(ydata):
+                            collection.set_sizes(sizes[keep_mask])
+                    except Exception:
+                        pass
             
             # Adjust axis limits (compress but keep gap)
             self.ax.set_ylim(y_min, y_max - break_range + gap_size)
             
-            # Add zigzag break markers in the gap
-            break_y = break_start + gap_size / 2
-            gap_width = (x_max - x_min) * 0.05
+            # Add parallel diagonal lines (//) at the left and right spines using axes coordinates
+            new_y_range = y_max - break_range + gap_size - y_min
+            y_ax_break = (break_start + gap_size / 2 - y_min) / new_y_range
             
-            # Bottom zigzag
-            self.ax.plot([x_min, x_min + gap_width], 
-                        [break_start, break_start + gap_size*0.3], 
-                        'k-', linewidth=2, clip_on=False, zorder=100)
-            self.ax.plot([x_min + gap_width, x_min], 
-                        [break_start + gap_size*0.3, break_start + gap_size*0.5], 
-                        'k-', linewidth=2, clip_on=False, zorder=100)
+            d = 0.015  # how big to make the diagonal lines in axes coordinates
+            dy = 0.01  # half distance between the two parallel lines
+            kwargs = dict(transform=self.ax.transAxes, color='gray', clip_on=False, linewidth=1)
             
-            # Top zigzag
-            self.ax.plot([x_max, x_max - gap_width], 
-                        [break_start + gap_size*0.5, break_start + gap_size*0.7], 
-                        'k-', linewidth=2, clip_on=False, zorder=100)
-            self.ax.plot([x_max - gap_width, x_max], 
-                        [break_start + gap_size*0.7, break_start + gap_size], 
-                        'k-', linewidth=2, clip_on=False, zorder=100)
+            # Left spine break (//)
+            p1, = self.ax.plot([-d, d], [y_ax_break - dy - d, y_ax_break - dy + d], **kwargs)
+            p2, = self.ax.plot([-d, d], [y_ax_break + dy - d, y_ax_break + dy + d], **kwargs)
+            
+            # Right spine break (//)
+            p3, = self.ax.plot([1 - d, 1 + d], [y_ax_break - dy - d, y_ax_break - dy + d], **kwargs)
+            p4, = self.ax.plot([1 - d, 1 + d], [y_ax_break + dy - d, y_ax_break + dy + d], **kwargs)
+                        
+            self._break_markers.extend([p1, p2, p3, p4])
+            
+            # Correct tick labels
+            from matplotlib.ticker import FuncFormatter
+            def break_formatter_y(y, pos):
+                if y > break_start + gap_size / 2:
+                    return f"{y + break_range - gap_size:g}"
+                return f"{y:g}"
+            self.ax.yaxis.set_major_formatter(FuncFormatter(break_formatter_y))
     
     def _show_customize_dialog(self):
         """Show customize dialog for this graph."""

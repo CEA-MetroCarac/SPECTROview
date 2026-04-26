@@ -42,10 +42,10 @@ class CustomizeGraphDialog(QDialog):
         tab_axis = self._create_axis_tab()
         
         # Add tabs to widget
+        self.tabs.addTab(tab_axis, "Axis")
         self.tabs.addTab(tab_legend, "Legend")
         self.tabs.addTab(tab_annotations, "Annotations")
-        self.tabs.addTab(tab_axis, "Axis")
-        self.tabs.addTab(tab_general, "General")
+        self.tabs.addTab(tab_general, "More options")
         
         layout.addWidget(self.tabs)
 
@@ -85,7 +85,14 @@ class CustomizeGraphDialog(QDialog):
     def open_legend_tab(self):
         """Open the dialog and switch to the Legend tab."""
         self.legend_widget.load_legend_properties()
-        self.tabs.setCurrentIndex(0) # Switch to Legend tab (index 0)
+        self.tabs.setCurrentIndex(1) # Switch to Legend tab (index 1)
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+    def open_axis_tab(self):
+        """Open the dialog and switch to the AXIS tab."""
+        self.tabs.setCurrentIndex(0) # Switch to Legend tab (index 1)
         self.show()
         self.raise_()
         self.activateWindow()
@@ -128,10 +135,12 @@ class CustomizeLegend(QWidget):
         btn_layout.addStretch()
         
         btn_cancel = QPushButton("Cancel")
+        btn_cancel.setIcon(QIcon(f"{ICON_DIR}/close.png"))
         btn_cancel.clicked.connect(self.cancel_changes)
         btn_layout.addWidget(btn_cancel)
         
         btn_apply = QPushButton("Apply")
+        btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
         btn_apply.clicked.connect(self.apply_changes)
         btn_layout.addWidget(btn_apply)
         
@@ -522,13 +531,13 @@ class CustomizeAxis(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         
         # ===== Axis Limits Section =====
-        limits_group = QGroupBox("Axis Limits")
+        limits_group = QGroupBox("Set Axis Limits:")
         limits_layout = QVBoxLayout(limits_group)
         
         # X, Y limits
         for axis in ['X', 'Y']:
             h_layout = QHBoxLayout()
-            h_layout.addWidget(QLabel(f"{axis} limits:"))
+            h_layout.addWidget(QLabel(f"{axis} axis limits:"))
             for limit_type in ['min', 'max']:
                 spin = QDoubleSpinBox()
                 spin.setRange(-999999, 999999)
@@ -539,7 +548,7 @@ class CustomizeAxis(QWidget):
         
         # Z limits
         z_limits_layout = QHBoxLayout()
-        z_limits_layout.addWidget(QLabel("Z limits:"))
+        z_limits_layout.addWidget(QLabel("Z axis limits:"))
         for limit_type in ['min', 'max']:
             spin = QDoubleSpinBox()
             spin.setRange(-999999, 999999)
@@ -553,20 +562,20 @@ class CustomizeAxis(QWidget):
         self.btn_set_limits = QPushButton("Get current limits from plot")
         self.btn_set_limits.clicked.connect(self._on_get_current_limits)
         self.btn_clear_limits = QPushButton("Clear limits")
+        self.btn_clear_limits.setIcon(QIcon(f"{ICON_DIR}/clear.png"))
         self.btn_clear_limits.clicked.connect(self._on_clear_limits)
         limits_btn_layout.addWidget(self.btn_set_limits)
         limits_btn_layout.addWidget(self.btn_clear_limits)
         limits_layout.addLayout(limits_btn_layout)
         
         # ===== X-Axis Break Section =====
-        x_break_group = QGroupBox("X-Axis Break")
-        x_break_layout = QVBoxLayout()
+        x_break_group = QGroupBox("Broken X-axis (beta):")
+        x_break_layout = QHBoxLayout()
         
         # Enable checkbox
-        self.x_break_enabled = QCheckBox("Enable X-axis break")
+        self.x_break_enabled = QCheckBox("Enable break")
         
         # Input fields
-        x_input_layout = QFormLayout()
         self.x_break_start = QDoubleSpinBox()
         self.x_break_start.setRange(-999999, 999999)
         self.x_break_start.setDecimals(2)
@@ -575,22 +584,23 @@ class CustomizeAxis(QWidget):
         self.x_break_end.setRange(-999999, 999999)
         self.x_break_end.setDecimals(2)
         
-        x_input_layout.addRow("Break from:", self.x_break_start)
-        x_input_layout.addRow("Break to:", self.x_break_end)
-        
         x_break_layout.addWidget(self.x_break_enabled)
-        x_break_layout.addLayout(x_input_layout)
+        x_break_layout.addWidget(QLabel("from:"))
+        x_break_layout.addWidget(self.x_break_start)
+        x_break_layout.addWidget(QLabel("to:"))
+        x_break_layout.addWidget(self.x_break_end)
+        x_break_layout.addStretch()
+        
         x_break_group.setLayout(x_break_layout)
         
         # ===== Y-Axis Break Section =====
-        y_break_group = QGroupBox("Y-Axis Break")
-        y_break_layout = QVBoxLayout()
+        y_break_group = QGroupBox("Broken Y-axis (beta):")
+        y_break_layout = QHBoxLayout()
         
         # Enable checkbox
-        self.y_break_enabled = QCheckBox("Enable Y-axis break")
+        self.y_break_enabled = QCheckBox("Enable break")
         
         # Input fields
-        y_input_layout = QFormLayout()
         self.y_break_start = QDoubleSpinBox()
         self.y_break_start.setRange(-999999, 999999)
         self.y_break_start.setDecimals(2)
@@ -599,22 +609,28 @@ class CustomizeAxis(QWidget):
         self.y_break_end.setRange(-999999, 999999)
         self.y_break_end.setDecimals(2)
         
-        y_input_layout.addRow("Break from:", self.y_break_start)
-        y_input_layout.addRow("Break to:", self.y_break_end)
-        
         y_break_layout.addWidget(self.y_break_enabled)
-        y_break_layout.addLayout(y_input_layout)
+        y_break_layout.addWidget(QLabel("from:"))
+        y_break_layout.addWidget(self.y_break_start)
+        y_break_layout.addWidget(QLabel("to:"))
+        y_break_layout.addWidget(self.y_break_end)
+        y_break_layout.addStretch()
+        
         y_break_group.setLayout(y_break_layout)
         
         # ===== Apply Button =====
-        self.btn_apply_breaks = QPushButton("Apply Settings")
-        self.btn_apply_breaks.clicked.connect(self._apply_axis_settings)
+        self.btn_apply = QPushButton("Apply")
+        self.btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
+        self.btn_apply.clicked.connect(self._apply_axis_settings)
+        apply_btn_layout = QHBoxLayout()
+        apply_btn_layout.addStretch()
+        apply_btn_layout.addWidget(self.btn_apply)
         
         # Add to main layout
         layout.addWidget(limits_group)
         layout.addWidget(x_break_group)
         layout.addWidget(y_break_group)
-        layout.addWidget(self.btn_apply_breaks)
+        layout.addLayout(apply_btn_layout)
         layout.addStretch()
     
     def load_axis_settings(self):
@@ -711,8 +727,6 @@ class CustomizeAxis(QWidget):
         
         # Refresh the plot with settings applied
         self._refresh_plot()
-        
-        # QMessageBox.information(self, "Success", "Axis settings applied successfully!")
         
     def _on_get_current_limits(self):
         """Get current axis limits from plot."""

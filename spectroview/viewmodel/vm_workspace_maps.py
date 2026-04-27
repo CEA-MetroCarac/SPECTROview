@@ -212,8 +212,9 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             # No active spectra for this map, return empty DataFrame with same structure
             return df.iloc[0:0]
         
-        # Filter DataFrame rows by (X, Y) coordinates
-        mask = df.apply(lambda row: (row['X'], row['Y']) in active_coords, axis=1)
+        # Filter DataFrame rows by (X, Y) coordinates (Vectorized & much faster than apply)
+        idx = pd.MultiIndex.from_arrays([df['X'], df['Y']])
+        mask = idx.isin(list(active_coords))
         return df[mask]
     
     def save_current_map_to_excel(self, file_path: str):

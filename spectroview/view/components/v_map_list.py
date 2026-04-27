@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
     QListWidgetItem, QAbstractItemView, QPushButton, QCheckBox
 )
-from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtCore import Qt, Signal, QSize, QTimer, QItemSelection, QItemSelectionModel
 from PySide6.QtGui import QIcon
 
 from spectroview import ICON_DIR
@@ -36,6 +36,13 @@ class VMapsList(QWidget):
         super().__init__(parent)
         self._last_selected_positions = []  # Remember last selected positions
         self._has_maps_placeholder = False  # Track placeholder state
+        
+        # Debounce timer for spectra selection changes to prevent plot lag
+        self._selection_timer = QTimer()
+        self._selection_timer.setSingleShot(True)
+        self._selection_timer.setInterval(100)
+        self._selection_timer.timeout.connect(self._emit_debounced_selection)
+        
         self._init_ui()
         self._update_maps_placeholder()  # Show placeholder initially
         
@@ -258,10 +265,23 @@ class VMapsList(QWidget):
         
         # Restore selection at same positions (if they still exist)
         selection_restored = False
-        for pos in self._last_selected_positions:
-            if 0 <= pos < len(spectra):
-                self.spectra_list.item(pos).setSelected(True)
+        if self._last_selected_positions and len(spectra) > 0:
+            selection = QItemSelection()
+            model = self.spectra_list.model()
+            
+            # If all items were selected, use selectAll for maximum speed
+            if len(self._last_selected_positions) >= len(spectra):
+                self.spectra_list.selectAll()
                 selection_restored = True
+            else:
+                for pos in self._last_selected_positions:
+                    if 0 <= pos < len(spectra):
+                        idx = model.index(pos, 0)
+                        selection.select(idx, idx)
+                        selection_restored = True
+                
+                if selection_restored:
+                    self.spectra_list.selectionModel().select(selection, QItemSelectionModel.ClearAndSelect)
         
         # If no selection was restored and list is not empty, select first item
         if not selection_restored and len(spectra) > 0:
@@ -314,7 +334,11 @@ class VMapsList(QWidget):
             self.map_selection_changed.emit(idx)
     
     def _on_spectra_selection_changed(self):
-        """Emit signal when spectra selection changes."""
+        """Debounce spectra selection changes to prevent plot lag."""
+        self._selection_timer.start()
+        
+    def _emit_debounced_selection(self):
+        """Actually emit the signal after debounce timer finishes."""
         indices = self.get_selected_spectra_indices()
         self.spectra_selection_changed.emit(indices)
     

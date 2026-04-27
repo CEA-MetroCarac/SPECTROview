@@ -78,11 +78,11 @@ class VMWorkspaceSpectra(QObject):
     
     def _get_spectra_by_fnames(self, fnames: list[str]) -> list[MSpectrum]:
         """Get multiple spectra by their fnames."""
+        fname_map = {s.fname: s for s in self.spectra}
         result = []
         for fname in fnames:
-            spectrum = self._get_spectrum_by_fname(fname)
-            if spectrum is not None:
-                result.append(spectrum)
+            if fname in fname_map:
+                result.append(fname_map[fname])
         return result
     
     def _get_selected_spectra(self) -> list[MSpectrum]:

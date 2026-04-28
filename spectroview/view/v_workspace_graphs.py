@@ -1073,12 +1073,27 @@ class VWorkspaceGraphs(QWidget):
     
     def _update_graph_list(self, graph_ids: list):
         """Update graph list."""
+        # Save current selection so we don't randomly switch
+        current_id = self.cbb_graph_list.currentData()
+        
+        # Block signals so adding items doesn't trigger UI focus changes
+        self.cbb_graph_list.blockSignals(True)
+        
         self.cbb_graph_list.clear()
         for gid in graph_ids:
             graph = self.vm.get_graph(gid)
             if graph:
                 display_name = graph.get_display_name()
                 self.cbb_graph_list.addItem(display_name, gid)
+                
+        # Restore previous selection visually
+        if current_id is not None:
+            for i in range(self.cbb_graph_list.count()):
+                if self.cbb_graph_list.itemData(i) == current_id:
+                    self.cbb_graph_list.setCurrentIndex(i)
+                    break
+                    
+        self.cbb_graph_list.blockSignals(False)
     
     def _on_graph_selected_toolbar(self):
         """Handle graph selection."""

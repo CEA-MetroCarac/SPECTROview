@@ -14,6 +14,7 @@ class VMenuBar(QToolBar):
     save_requested = Signal()
     clear_requested = Signal()
     convert_requested = Signal()
+    calc_requested = Signal()
     settings_requested = Signal()
     github_requested = Signal()
     theme_requested = Signal()
@@ -40,6 +41,9 @@ class VMenuBar(QToolBar):
         self.addSeparator()
         self.actionConvert= self.addAction(QIcon(os.path.join(ICON_DIR, "FileConvert.png")), "Convert 2Dmap format")
         self.actionConvert.triggered.connect(self.convert_requested.emit)
+
+        self.actionCalc = self.addAction(QIcon(os.path.join(ICON_DIR, "calc.png")), "Quick Calculation")
+        self.actionCalc.triggered.connect(self.calc_requested.emit)
 
         self.addSeparator()
         self.actionSettings= self.addAction(QIcon(os.path.join(ICON_DIR, "settings.png")), "Settings")

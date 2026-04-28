@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, QSettings, QFileInfo, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter
+from spectroview.model.m_quick_calc import MQuickCalc
 from spectroview.model.m_spc import SpcReader
 from spectroview.model.m_settings import MSettings
 
@@ -75,6 +76,7 @@ class Main(QMainWindow):
         self.menu_bar.clear_requested.connect(self.clear_workspace)
         self.menu_bar.settings_requested.connect(self._open_settings)
         self.menu_bar.convert_requested.connect(self.file_converter)
+        self.menu_bar.calc_requested.connect(self.quick_calc)
 
         self.menu_bar.about_requested.connect(self.about)
         self.menu_bar.manual_requested.connect(self.manual) 
@@ -334,6 +336,15 @@ class Main(QMainWindow):
         """Open file converter dialog for hyperspectral data."""
         dlg = MFileConverter(self.settings, self)
         dlg.exec()
+
+    def quick_calc(self):
+        """Open quick calculation dialog."""
+        if not hasattr(self, '_quick_calc_dlg'):
+            self._quick_calc_dlg = MQuickCalc(self)
+            self._quick_calc_dlg.setWindowFlags(self._quick_calc_dlg.windowFlags() | Qt.WindowStaysOnTopHint)
+        self._quick_calc_dlg.show()
+        self._quick_calc_dlg.raise_()
+        self._quick_calc_dlg.activateWindow()
 
     def about(self):
         """Show About dialog."""

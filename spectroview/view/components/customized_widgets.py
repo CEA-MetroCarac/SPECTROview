@@ -1,8 +1,8 @@
 # spectroview/view/components/customized_widgets.py
 
-from PySide6.QtGui import QIcon, QImage, QPixmap
+from PySide6.QtGui import QIcon, QImage, QPixmap, QPainter
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtWidgets import QComboBox, QLineEdit
+from PySide6.QtWidgets import QComboBox, QLineEdit, QLabel, QSizePolicy
 
 import numpy as np
 import matplotlib.cm as cm
@@ -24,6 +24,25 @@ class NoDoubleClickZoomToolbar(NavigationToolbar2QT):
         if getattr(event, "dblclick", False):
             return  # swallow double-clicks – do not zoom
         super().press_zoom(event)
+
+
+class ResizableImageLabel(QLabel):
+    def __init__(self, img_path):
+        super().__init__()
+        self._pixmap = QPixmap(img_path)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setMinimumSize(100, 100)
+
+    def paintEvent(self, event):
+        if not self._pixmap.isNull():
+            painter = QPainter(self)
+            rect = self.contentsRect()
+            scaled_pix = self._pixmap.scaled(rect.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            x = rect.x() + (rect.width() - scaled_pix.width()) // 2
+            y = rect.y() + (rect.height() - scaled_pix.height()) // 2
+            painter.drawPixmap(x, y, scaled_pix)
+        else:
+            super().paintEvent(event)
 
 
 class CustomizedPalette(QComboBox):

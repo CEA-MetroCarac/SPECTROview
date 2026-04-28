@@ -710,6 +710,11 @@ class VWorkspaceGraphs(QWidget):
         
         graph_widget = VGraph(graph_id=graph_model.graph_id)
         graph_widget.replicate_requested.connect(self._on_replicate_graph)
+        
+        # Connect to properties_changed signal to update ViewModel when graph properties change
+        if hasattr(graph_widget, 'properties_changed'):
+            graph_widget.properties_changed.connect(self._on_graph_properties_changed)
+            
         self._configure_graph_from_model(graph_widget, graph_model)
         graph_widget.create_plot_widget(graph_model.dpi)
         
@@ -784,6 +789,10 @@ class VWorkspaceGraphs(QWidget):
             return
             
         self._create_and_display_plot(plot_config, select_in_list=True, filters=plot_config.get('filters', []))
+        
+    def _on_graph_properties_changed(self, graph_id: int, properties: dict):
+        """Update graph model when properties change directly from graph widget."""
+        self.vm.update_graph(graph_id, properties)
     
     def _on_update_plot(self):
         """Update selected plot."""
@@ -1025,6 +1034,10 @@ class VWorkspaceGraphs(QWidget):
             # Create Graph widget
             graph_widget = VGraph(graph_id=graph_model.graph_id)
             graph_widget.replicate_requested.connect(self._on_replicate_graph)
+
+            # Connect to properties_changed signal to update ViewModel when graph properties change
+            if hasattr(graph_widget, 'properties_changed'):
+                graph_widget.properties_changed.connect(self._on_graph_properties_changed)
             self._configure_graph_from_model(graph_widget, graph_model)
             
             # Create plot
@@ -1437,6 +1450,11 @@ class VWorkspaceGraphs(QWidget):
             filtered_df = self.vm.apply_filters(graph_model.df_name, graph_model.filters)
             graph_widget = VGraph(graph_id=graph_model.graph_id)
             graph_widget.replicate_requested.connect(self._on_replicate_graph)
+
+            # Connect to properties_changed signal to update ViewModel when graph properties change
+            if hasattr(graph_widget, 'properties_changed'):
+                graph_widget.properties_changed.connect(self._on_graph_properties_changed)
+
             self._configure_graph_from_model(graph_widget, graph_model)
             graph_widget.create_plot_widget(graph_model.dpi)
             self._render_plot(graph_widget, filtered_df, graph_model)

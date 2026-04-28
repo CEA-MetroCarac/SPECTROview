@@ -20,10 +20,10 @@ from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_
 
 class VGraph(QWidget):
     """Graph widget rendering plots based on MGraph model properties."""
-    
+    # Signal emitted when graph properties are directly changed
+    properties_changed = Signal(int, dict)
     # Signal emitted when annotation position changes (graph_id, ann_id, new_x, new_y)
     annotation_position_changed = Signal(int, str, float, float)
-    
     # Signal emitted when replicate is requested
     replicate_requested = Signal(int)
     

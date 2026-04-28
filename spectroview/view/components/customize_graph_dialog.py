@@ -101,7 +101,6 @@ class CustomizeGraphDialog(QDialog):
 
 class CustomizeLegend(QWidget):
     """Widget Tab for customizing legend properties (labels, markers, colors)"""
-    legend_applied = Signal(int)
     
     def __init__(self, graph_widget, parent=None):
         super().__init__(parent)
@@ -268,8 +267,9 @@ class CustomizeLegend(QWidget):
         # Update the backup so Cancel won't revert applied changes
         self.original_legend_properties = copy.deepcopy(self.graph_widget.get_legend_properties())
         
-        # Notify whoever is listening (dialop -> workspace)
-        self.legend_applied.emit(self.graph_widget.graph_id)
+        # Connect to properties_changed signal to update ViewModel when graph properties change
+        if hasattr(self.graph_widget, 'properties_changed'):
+            self.graph_widget.properties_changed.emit(self.graph_widget.graph_id, {'legend_properties': self.graph_widget.legend_properties})
         
     def cancel_changes(self):
         """Cancel legend changes and restore original properties."""
@@ -378,6 +378,9 @@ class CustomizeAnnotations(QWidget):
         }
         
         self.graph_widget.annotations.append(annotation)
+        # Connect to properties_changed signal to update ViewModel when graph properties change
+        if hasattr(self.graph_widget, 'properties_changed'):
+            self.graph_widget.properties_changed.emit(self.graph_widget.graph_id, {'annotations': self.graph_widget.annotations})
         self._refresh_plot()
         self.load_annotations()
     
@@ -397,6 +400,9 @@ class CustomizeAnnotations(QWidget):
         }
         
         self.graph_widget.annotations.append(annotation)
+        # Connect to properties_changed signal to update ViewModel when graph properties change
+        if hasattr(self.graph_widget, 'properties_changed'):
+            self.graph_widget.properties_changed.emit(self.graph_widget.graph_id, {'annotations': self.graph_widget.annotations})
         self._refresh_plot()
         self.load_annotations()
     
@@ -424,6 +430,10 @@ class CustomizeAnnotations(QWidget):
         }
         
         self.graph_widget.annotations.append(annotation)
+        
+        # Connect to properties_changed signal to update ViewModel when graph properties change
+        if hasattr(self.graph_widget, 'properties_changed'):
+            self.graph_widget.properties_changed.emit(self.graph_widget.graph_id, {'annotations': self.graph_widget.annotations})
         self._refresh_plot()
         self.load_annotations()
     
@@ -460,6 +470,9 @@ class CustomizeAnnotations(QWidget):
                 else:
                     annotation['label'] = f"H-Line at y={annotation['y']:.2f}"
                 
+                # Connect to properties_changed signal to update ViewModel when graph properties change
+                if hasattr(self.graph_widget, 'properties_changed'):
+                    self.graph_widget.properties_changed.emit(self.graph_widget.graph_id, {'annotations': self.graph_widget.annotations})
                 self._refresh_plot()
                 self.load_annotations()
         
@@ -470,6 +483,9 @@ class CustomizeAnnotations(QWidget):
                 props = dialog.get_properties()
                 annotation.update(props)
                 
+                # Connect to properties_changed signal to update ViewModel when graph properties change
+                if hasattr(self.graph_widget, 'properties_changed'):
+                    self.graph_widget.properties_changed.emit(self.graph_widget.graph_id, {'annotations': self.graph_widget.annotations})
                 self._refresh_plot()
                 self.load_annotations()
     
@@ -485,7 +501,9 @@ class CustomizeAnnotations(QWidget):
             ann for ann in self.graph_widget.annotations
             if ann.get('id') != ann_id
         ]
-        
+        # Connect to properties_changed signal to update ViewModel when graph properties change
+        if hasattr(self.graph_widget, 'properties_changed'):
+            self.graph_widget.properties_changed.emit(self.graph_widget.graph_id, {'annotations': self.graph_widget.annotations})
         self._refresh_plot()
         self.load_annotations()
     
@@ -732,6 +750,15 @@ class CustomizeAxis(QWidget):
             self.graph_widget.axis_breaks['y'] = {'start': start, 'end': end}
         else:
             self.graph_widget.axis_breaks['y'] = None
+            
+        # Connect to properties_changed signal to update ViewModel when graph properties change
+        if hasattr(self.graph_widget, 'properties_changed'):
+            self.graph_widget.properties_changed.emit(self.graph_widget.graph_id, {
+                'xmin': gw.xmin, 'xmax': gw.xmax,
+                'ymin': gw.ymin, 'ymax': gw.ymax,
+                'zmin': gw.zmin, 'zmax': gw.zmax,
+                'axis_breaks': gw.axis_breaks
+            })
         
         # Refresh the plot with settings applied
         self._refresh_plot()

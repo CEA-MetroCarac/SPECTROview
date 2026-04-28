@@ -763,6 +763,11 @@ class CustomizeAxis(QWidget):
         self.graph_widget.ax.clear()
         if self.graph_widget.df is not None:
             self.graph_widget.plot(self.graph_widget.df)
+            
+        # Update the matplotlib navigation toolbar so "Home" restores to these new limits
+        if hasattr(self.graph_widget, 'toolbar') and self.graph_widget.toolbar is not None:
+            self.graph_widget.toolbar.update()
+            self.graph_widget.toolbar.push_current()
 
 class EditLineDialog(QDialog):
     """Dialog for editing line annotations (vline/hline)."""

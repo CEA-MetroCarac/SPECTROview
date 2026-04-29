@@ -23,6 +23,8 @@ from spectroview.core.optimizer import (
     fit_single_spectrum, fit_batch_sequential,
 )
 from spectroview.core.batch_engine import BatchFittingEngine
+from spectroview.core2.tensor_engine import TensorFittingEngine
+from spectroview.model.m_spectrum import MSpectrum
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -411,6 +413,49 @@ class TestBatchFittingEngine:
 
         # Verify progress was reported
         assert len(progress_log) > 0
+
+    def test_tensor_engine_reports_completion(self):
+        """Tensor fitting should emit final completion progress."""
+        x = np.linspace(250, 350, 120)
+        y = 150.0 / (1.0 + ((x - 300.0) / 10.0) ** 2)
+
+        spectra = []
+        for i in range(2):
+            spectrum = MSpectrum()
+            spectrum.fname = f"sample_{i}"
+            spectrum.x0 = x.copy()
+            spectrum.y0 = y.copy()
+            spectrum.x = x.copy()
+            spectrum.y = y.copy()
+            spectrum.baseline.mode = "Linear"
+            spectra.append(spectrum)
+
+        fit_model = {
+            "peak_models": {
+                "0": {
+                    "Lorentzian": {
+                        "ampli": {"value": 100.0, "min": 0.0, "max": 1e6, "vary": True},
+                        "fwhm":  {"value": 10.0,  "min": 0.0, "max": 200.0, "vary": True},
+                        "x0":    {"value": 300.0, "min": 280.0, "max": 320.0, "vary": True},
+                    }
+                }
+            },
+            "peak_labels": ["Peak"],
+        }
+
+        progress_log = []
+        engine = TensorFittingEngine()
+        results = engine.fit_spectra(
+            spectra=spectra,
+            fit_model=fit_model,
+            fit_params={"method": "leastsq", "xtol": 1e-4, "ftol": 1e-4, "max_ite": 100},
+            progress_callback=lambda current, total: progress_log.append((current, total)),
+            apply_model_to_spectra=True,
+        )
+
+        assert len(results) == 2
+        assert len(progress_log) > 0
+        assert progress_log[-1] == (2, 2)
 
     def test_batch_fit_without_coords(self):
         """Fit spectra without spatial coordinates (no propagation)."""

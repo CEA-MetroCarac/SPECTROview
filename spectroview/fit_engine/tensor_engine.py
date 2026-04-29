@@ -14,6 +14,8 @@ import numpy as np
 
 from spectroview.fit_engine.evaluator import TensorEvaluator
 from spectroview.fit_engine.optimizer import batched_levenberg_marquardt
+from spectroview.fit_engine.scalar_models import FitResult
+from spectroview.viewmodel.utils import apply_custom_fit_model
 
 
 class TensorFittingEngine:
@@ -56,7 +58,6 @@ class TensorFittingEngine:
         if evaluator.n_params_free == 0:
             if progress_callback:
                 progress_callback(n_spectra, n_spectra)
-            from spectroview.fit_engine.scalar_models import FitResult
             return [FitResult(True, {}, np.array([])) for _ in spectra]
 
         # ─── 3. Preprocess all spectra ───
@@ -68,7 +69,6 @@ class TensorFittingEngine:
         # ─── 4. Extract data matrix ───
         x_array = spectra[0].x
         if x_array is None:
-            from spectroview.fit_engine.scalar_models import FitResult
             return [FitResult(False, {}, np.array([])) for _ in spectra]
 
         M = len(x_array)
@@ -133,6 +133,5 @@ class TensorFittingEngine:
 
     def _apply_model_to_all(self, spectra, fit_model):
         """Apply fit model dict to all spectra (set peak_models, baseline, etc.)."""
-        from spectroview.viewmodel.utils import apply_custom_fit_model
         for spectrum in spectra:
             apply_custom_fit_model(spectrum, fit_model, spectrum.fname)

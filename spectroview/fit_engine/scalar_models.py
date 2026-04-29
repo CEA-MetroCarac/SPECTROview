@@ -1,4 +1,3 @@
-# spectroview/core/models.py
 """
 Vectorized peak model evaluation for the batch fitting engine.
 

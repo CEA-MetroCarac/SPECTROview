@@ -6,7 +6,9 @@ Drop-in replacement for HyperFitThread from core/.
 
 import time
 import numpy as np
+import sys
 from PySide6.QtCore import QThread, Signal
+from spectroview.fit_engine.tensor_engine import TensorFittingEngine
 
 
 class TensorFitThread(QThread):
@@ -25,7 +27,6 @@ class TensorFitThread(QThread):
         # Increase stack size to 8MB (macOS defaults to 512KB for QThread)
         # Prevents segmentation faults when LAPACK (np.linalg.solve) allocates 
         # large arrays on the stack during batched tensor operations.
-        import sys
         if sys.platform == "darwin":
             self.setStackSize(8 * 1024 * 1024)
             
@@ -70,7 +71,6 @@ class TensorFitThread(QThread):
             self.progress_changed.emit(current, total, pct, elapsed)
 
         # Run tensor engine
-        from spectroview.fit_engine.tensor_engine import TensorFittingEngine
 
         engine = TensorFittingEngine()
         fit_results = engine.fit_spectra(

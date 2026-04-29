@@ -94,8 +94,8 @@ class TensorFittingEngine:
         # ─── 6. Parse fit parameters ───
         if fit_params is None:
             fit_params = {}
-        xtol = float(fit_params.get("xtol", 1e-3))
-        ftol = float(fit_params.get("ftol", 1e-3))
+        xtol = float(fit_params.get("xtol", 1e-4))
+        ftol = float(fit_params.get("ftol", 1e-4))
         max_ite = int(fit_params.get("max_ite", 200))
 
         # ─── 7. TENSOR FIT ───

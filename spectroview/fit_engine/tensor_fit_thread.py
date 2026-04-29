@@ -62,7 +62,7 @@ class TensorFitThread(QThread):
         if fit_params is None and spectra:
             fit_params = getattr(spectra[0], "fit_params", None)
         if fit_params is None:
-            fit_params = {"method": "leastsq", "xtol": 1e-3, "max_ite": 200}
+            fit_params = {"method": "leastsq", "xtol": 1e-4, "max_ite": 500}
 
         # Progress callback
         def on_progress(current, total):

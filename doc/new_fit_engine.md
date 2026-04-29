@@ -2,245 +2,206 @@
 
 > **Maintenance Rule**: This document MUST be updated whenever the fitting engine
 > logic, architecture, or module structure is modified. Any PR touching
-> `spectroview/core/` should include corresponding updates to this file.
+> `spectroview/core/` or `spectroview/core2/` should include corresponding updates
+> to this file.
 
 ## Overview
 
-The `spectroview/core/` package provides a high-performance fitting engine for
-spectroscopic data. It replaces the per-spectrum fitspy/lmfit fitting loop with
-a direct `scipy.optimize.least_squares` pipeline, achieving ~2× speedup for
-large hyperspectral datasets while maintaining identical numerical accuracy.
+SPECTROview includes **two** fitting engines:
 
-### Performance Benchmarks (1681-spectrum Si map, 2 Lorentzian peaks)
+| Engine | Package | Strategy | Best For |
+|--------|---------|----------|----------|
+| **BatchFittingEngine** (v1) | `spectroview/core/` | Per-spectrum `scipy.optimize.least_squares` | Discrete spectra, small batches |
+| **TensorFittingEngine** (v2) | `spectroview/core2/` | All-at-once batched Levenberg-Marquardt | 2D hyperspectral maps (≥100 spectra) |
 
-| Step | Time |
-|------|------|
-| Apply fit model to spectra | 0.74s |
-| Preprocessing (range + baseline) | 0.38s |
-| **Fitting (1681 spectra)** | **16.4s** |
-| Write results back to spectra | 0.09s |
-| **Total** | **17.6s** |
-| Old fitspy engine (same data) | ~35s |
-| **Speedup** | **~2×** |
+The **v2 tensor engine** fits ALL spectra in a map simultaneously using
+vectorised NumPy tensor operations (`np.einsum`, `np.linalg.solve`),
+achieving **~3s for 1521 spectra** — comparable to commercial software
+like LabSpec6.
+
+### Performance Comparison (1521-spectrum MoS2 map, 3 Lorentzian peaks)
+
+| Engine | Fit Time | Total Pipeline |
+|--------|----------|---------------|
+| Old fitspy engine | ~35s | ~35s |
+| BatchFittingEngine (v1, core/) | ~16s | ~18s |
+| **TensorFittingEngine (v2, core2/)** | **~2-3s** | **~3-4s** |
 
 ---
 
-## Module Structure
+## Engine Architecture
+
+### V2: Tensor Engine (`spectroview/core2/`)
+
+```
+spectroview/core2/
+├── __init__.py            # Public API exports
+├── models.py              # Batched peak functions + analytical Jacobians
+├── optimizer.py           # Batched Levenberg-Marquardt solver
+├── evaluator.py           # Maps fit_model dict → tensor parameter matrices
+├── tensor_engine.py       # Main orchestrator (TensorFittingEngine)
+└── tensor_fit_thread.py   # QThread wrapper (TensorFitThread)
+```
+
+### V1: Batch Engine (`spectroview/core/`)
 
 ```
 spectroview/core/
-├── __init__.py          # Public API exports
-├── models.py            # Peak model functions + PeakModelEvaluator + FitResult
-├── baseline.py          # Batch baseline preprocessing (delegates to fitspy)
-├── spatial.py           # Spiral traversal + NeighborPropagator (KDTree)
-├── optimizer.py         # scipy.optimize.least_squares wrappers
-├── batch_engine.py      # Main orchestrator (BatchFittingEngine)
-└── hyper_fit_thread.py  # QThread wrapper (HyperFitThread)
+├── __init__.py            # Public API exports
+├── models.py              # Scalar peak functions + PeakModelEvaluator + FitResult
+├── spatial.py             # Spiral traversal + NeighborPropagator
+├── optimizer.py           # scipy.optimize.least_squares wrappers
+├── batch_engine.py        # Main orchestrator (BatchFittingEngine)
+└── hyper_fit_thread.py    # QThread wrapper (HyperFitThread)
 ```
 
 ---
 
-## Core Modules
+## V2 Tensor Engine — Core Modules
 
-### `models.py` — Peak Model Functions & Evaluator
+### `core2/models.py` — Batched Peak Models + Analytical Jacobians
 
-**Peak functions**: Pure-NumPy implementations of all supported peak shapes,
-matching fitspy's output exactly:
+All functions operate on **tensors**:
+- Input: `x (M,)`, `params (N, n_p)` — N spectra, n_p parameters per peak
+- Output: `Y (N, M)` for evaluation, `J (N, M, n_p)` for Jacobians
 
-| Function | Parameters | Notes |
-|----------|-----------|-------|
-| `gaussian` | ampli, fwhm, x0 | Standard Gaussian |
-| `lorentzian` | ampli, fwhm, x0 | Standard Lorentzian |
-| `pseudovoigt` | ampli, fwhm, x0, alpha | Linear mix of G + L |
-| `gaussian_asym` | ampli, fwhm1, fwhm2, x0 | Asymmetric Gaussian |
-| `lorentzian_asym` | ampli, fwhm1, fwhm2, x0 | Asymmetric Lorentzian |
-| `fano` | ampli, fwhm, x0, q | Fano lineshape |
-| `decay_single_exp` | A, tau, B | Single exponential decay |
-| `decay_bi_exp` | A1, tau1, A2, tau2, B | Bi-exponential decay |
+| Model | Function | Jacobian | Parameters |
+|-------|----------|----------|-----------|
+| Lorentzian | `batched_lorentzian` | `batched_lorentzian_jac` | ampli, fwhm, x0 |
+| Gaussian | `batched_gaussian` | `batched_gaussian_jac` | ampli, fwhm, x0 |
+| PseudoVoigt | `batched_pseudovoigt` | `batched_pseudovoigt_jac` | ampli, fwhm, x0, alpha |
+| *Other* | *scalar fallback* | `numerical_jacobian` | *varies* |
 
-**`PeakModelEvaluator`**: Maps a structured fit model dict (from `spectrum.save()`
-or JSON) into a flat parameter vector for scipy optimization.
+**Key design**: Analytical Jacobians eliminate the need for finite-difference
+approximation (which would require 2×K extra model evaluations per iteration).
+This is the primary reason the tensor engine is ~5× faster than v1.
 
-Key responsibilities:
-- Parse `peak_models` dict → extract model functions, parameter values, bounds
-- Maintain mapping between flat vector indices and named parameters
-- Track which parameters are free (vary=True) vs fixed
-- `evaluate(x, p_full)` → sum of all peak contributions
-- `residual(p_free, x, y)` → `evaluate(x, ...) - y`
-- `build_result(p_opt, x, y, success)` → `FitResult` object
-- `write_back_to_spectrum(spectrum, fit_result)` → update MSpectrum attributes
+### `core2/optimizer.py` — Batched Levenberg-Marquardt
 
-**`FitResult`**: Compatibility class matching lmfit's `MinimizerResult` interface:
-- `.success` — convergence flag
-- `.params["name"].value` — parameter access (lmfit pattern)
-- `.best_values` — dict of `{name: value}`
-- `.best_fit` — model evaluated at optimal parameters
+**`batched_levenberg_marquardt(x, Y_data, evaluate_fn, jacobian_fn, p0, ...)`**
 
-### `spatial.py` — Spatial Traversal & Neighbor Propagation
+A custom LM solver that optimises all N spectra simultaneously:
 
-**`build_traversal_order(coords, strategy)`**: Determines the order in which
-map pixels are fitted.
+1. **Compute Jacobian**: `J = jacobian_fn(x, p)` → `(N, M, K)` tensor
+2. **Normal equations**: `JᵀJ = einsum('nmk,nml→nkl', J, J)` → `(N, K, K)`
+3. **Solve**: `np.linalg.solve(JᵀJ + λ·diag, -Jᵀr)` → `(N, K)` step
+4. **Accept/reject**: Per-spectrum cost comparison with LM damping update
+5. **Convergence**: Per-spectrum tracking, early exit for converged spectra
 
-- `"spiral"` (default for maps): Starts from the center of the map and spirals
-  outward. Each pixel's fitted neighbor is likely already available as initial guess.
-- `"sequential"`: Simple index order (for non-map data).
+**Bound handling**: Projected gradient (clip to bounds after each step).
+Simple, robust, and avoids the gradient-squashing issues of sigmoid transforms.
 
-Implementation: Find the pixel closest to the centroid, then greedily select the
-nearest unvisited pixel using a KDTree.
+**Convergence tracking**: Each spectrum converges independently. The optimizer
+skips converged spectra in subsequent iterations, progressively reducing work.
 
-**`NeighborPropagator`**: Stores fitted results and provides initial guesses
-for neighboring pixels.
+### `core2/evaluator.py` — Tensor Evaluator
 
-- `store_result(idx, p_opt)` — cache a fitted result
-- `get_initial_guess(idx, default)` — return the nearest fitted neighbor's
-  parameters, or `default` if no neighbors are fitted yet
-- Uses KDTree with `k_neighbors=4` for fast spatial lookup
+**`TensorEvaluator`**: Maps a `fit_model` dict to the tensor API.
 
-### `optimizer.py` — Fitting Functions
+Key methods:
+- `from_fit_model(dict)` → parse peaks, build parameter layout
+- `evaluate(x, p_free)` → `(N, M)` composite model for all spectra
+- `jacobian(x, p_free)` → `(N, M, K_free)` Jacobian
+- `build_p0_matrix(spectra, x)` → `(N, K_free)` initial guess with per-spectrum amplitude scaling
+- `extract_p0_from_spectrum(s)` → `(K_free,)` warm-start from previous fit
+- `build_result(p, x, y, ok)` → `FitResult` (GUI-compatible)
+- `write_back_to_spectrum(s, fr)` → update `MSpectrum` attributes
 
-**`fit_single_spectrum(x, y, evaluator, p0, bounds, method, xtol, max_nfev)`**:
-Wraps `scipy.optimize.least_squares` for a single spectrum.
+**Mixed model support**: Different peaks can use different model types
+(e.g. peak 1 = Lorentzian, peak 2 = Gaussian). Each peak type is routed
+to its own batched function; results are summed.
 
-- Handles infinite bounds safely (clips p0 within bounds)
-- Falls back from `"lm"` to `"trf"` when finite bounds exist
-- Returns `(p_opt, success, cost)` tuple
+**Fixed parameters**: Parameters with `vary=False` are excluded from the
+free-parameter vector. The evaluator maintains `_free_idx` / `_fixed_idx`
+masks and reconstructs the full vector before evaluation.
 
-**`fit_batch_sequential(...)`**: Fits all spectra sequentially with optional
-neighbor propagation.
+### `core2/tensor_engine.py` — Orchestrator
 
-- Follows `traversal_order` (spiral for maps, sequential otherwise)
-- Uses `NeighborPropagator` to seed initial guesses from fitted neighbors
-- Reports progress via callback
-- Supports cancellation via `cancel_check` callable
+**`TensorFittingEngine.fit_spectra()`**: The main entry point.
 
-**`fit_batch_threaded(...)`**: Parallel fitting using `ThreadPoolExecutor`.
+Pipeline:
+1. Apply fit model to spectra (set peak_models, baseline, range)
+2. Build `TensorEvaluator` from model dict
+3. Preprocess all spectra (range + baseline subtraction)
+4. Extract `(N, M)` data matrix from preprocessed spectra
+5. Build `(N, K)` initial parameter matrix (amplitude-scaled or warm-start)
+6. Call `batched_levenberg_marquardt()`
+7. Write results back to `MSpectrum` objects
 
-> **Note**: Threading does NOT help for map fitting because each fit is only
-> ~5ms and thread overhead dominates. Profiling showed 4-thread was **0.6× slower**
-> than sequential. Threading is available for non-map batches where spatial
-> propagation is not used, but is not currently faster for typical workloads.
+### `core2/tensor_fit_thread.py` — QThread Wrapper
 
-### `batch_engine.py` — Main Orchestrator
-
-**`BatchFittingEngine`**: The public API of the fitting engine.
-
-```python
-engine = BatchFittingEngine()
-results = engine.fit_spectra(
-    spectra=list_of_MSpectrum,
-    fit_model=model_dict,
-    coords=np.array([[x1,y1], ...]),  # None for non-map
-    fit_params={"method": "leastsq", "xtol": 1e-4, "max_ite": 500},
-    ncpus=1,
-    progress_callback=lambda current, total: ...,
-    cancel_check=lambda: False,
-    apply_model_to_spectra=True,  # False for re-fitting
-)
-```
-
-### `hyper_fit_thread.py` — QThread Wrapper
-
-**`HyperFitThread`**: Drop-in replacement for `ApplyFitModelThread`.
-
-```python
-thread = HyperFitThread(
-    spectrums=spectra_collection,
-    fit_model=model_dict,
-    fnames=["fname1", "fname2", ...],
-    ncpus=1,
-    coords=np.array([[x1,y1], ...]),  # None for non-map
-    apply_model_to_spectra=True,
-)
-thread.progress_changed.connect(on_progress)
-thread.finished.connect(on_done)
-thread.start()
-```
-
-Signal: `progress_changed(current, total, percentage, elapsed_time)`
+**`TensorFitThread`**: Drop-in replacement for `HyperFitThread`.
+Same signal interface: `progress_changed(current, total, percent, elapsed)`.
 
 ---
 
-## Data Flow Pipeline
+## Data Flow Pipeline (V2 Tensor Engine)
 
 ```
 User clicks "Apply Fit Model" or "Fit"
          │
          ▼
-VMWorkspace._run_fit_thread(fit_model, spectra)
+VMWorkspaceMaps._run_fit_thread(fit_model, spectra)
          │
          ▼
-HyperFitThread.run()                          [QThread]
-  ├── Build fname → spectrum lookup (O(1) dict)
-  ├── Extract fit_params from spectrum
-  └── Call BatchFittingEngine.fit_spectra()
+TensorFitThread.run()                              [QThread]
+  ├── Build fname → spectrum lookup
+  └── Call TensorFittingEngine.fit_spectra()
          │
          ▼
-BatchFittingEngine.fit_spectra()
+TensorFittingEngine.fit_spectra()
   │
-  ├── Step 1: apply_custom_fit_model()        [0.74s for 1681 spectra]
-  │     └── For each spectrum: deepcopy model, set peak_models/baseline/range
+  ├── Step 1: apply_custom_fit_model()              [~0.7s]
+  │     └── For each spectrum: set peak_models/baseline/range
   │
-  ├── Step 2: spectrum.preprocess()           [0.38s]
-  │     └── For each spectrum: apply_range → eval_baseline → subtract_baseline
+  ├── Step 2: spectrum.preprocess()                 [~0.4s]
+  │     └── For each spectrum: apply_range → eval_baseline → subtract
   │
-  ├── Step 3: Build PeakModelEvaluator        [<1ms]
-  │     └── Parse fit_model → flat param vector + bounds + model functions
+  ├── Step 3: Build p0 matrix                       [<1ms]
+  │     └── Scale amplitudes per spectrum from actual data
   │
-  ├── Step 4: Extract data matrix             [<1ms]
-  │     └── Detect shared x-axis, build (N, M) Y_matrix
+  ├── Step 4: TENSOR FIT — batched_levenberg_marquardt()  [~2-3s]
+  │     ├── All N spectra optimised simultaneously
+  │     ├── Analytical Jacobians (no finite differences)
+  │     ├── np.einsum for JᵀJ, Jᵀr assembly
+  │     ├── np.linalg.solve for all N normal equations at once
+  │     └── Per-spectrum convergence tracking + early exit
   │
-  ├── Step 5: Reinitialize amplitudes         [<1ms]
-  │     └── Adjust model's initial amplitudes to match actual data intensity
-  │
-  ├── Step 6: Choose strategy & FIT           [16.4s]
-  │     ├── If coords provided (maps):
-  │     │     └── fit_batch_sequential with spiral traversal + propagation
-  │     ├── Elif ncpus > 1:
-  │     │     └── fit_batch_threaded (no propagation)
-  │     └── Else:
-  │           └── fit_batch_sequential (no propagation)
-  │
-  └── Step 7: Write results back              [0.09s]
-        └── For each spectrum: build FitResult, set result_fit + peak param hints
+  └── Step 5: Write results back                    [~0.1s]
+        └── For each spectrum: build FitResult, update param hints
 ```
 
 ---
 
 ## Performance Strategy
 
-### Why Direct scipy Instead of lmfit
+### Why Tensor (All-at-Once) Instead of Per-Spectrum
 
-Each `lmfit.Model.fit()` call creates Parameter objects, builds the composite
-model, and initializes the minimizer. For 1681 spectra, this overhead adds up
-to ~1.7 seconds of pure Python object creation. The batch engine creates the
-model evaluator **once** and reuses it for all spectra.
+The v1 engine calls `scipy.optimize.least_squares` individually for each
+spectrum, incurring ~10ms of Python overhead per call. For 1521 spectra,
+that's ~15s of overhead alone.
 
-### Why Spatial Propagation Works
+The v2 tensor engine:
+- Builds the Jacobian for ALL spectra in a single NumPy call
+- Assembles ALL normal equations via `np.einsum` (runs in C/BLAS)
+- Solves ALL normal equations via `np.linalg.solve` (LAPACK `dgesv`)
+- Per-iteration cost: ~30-50ms for 1521 spectra → 30 iterations = ~1.5s
 
-Adjacent pixels in a 2D map have nearly identical spectra. When fitting in
-spiral order from the center, each pixel's neighbor is already fitted. Using
-the neighbor's optimized parameters as the initial guess means the optimizer
-starts very close to the solution, converging in 5-20 iterations instead of
-50-100+ from a generic initial guess.
+### Why Analytical Jacobians Matter
 
-### Why Threading Doesn't Help for Maps
+Finite-difference Jacobians require `2×K` model evaluations per iteration
+(central differences). For K=9 parameters, that's 18 evaluations vs 1
+analytical evaluation — an 18× reduction in the costliest operation.
 
-Each spectrum fit takes only ~5ms (70 data points, 4 free parameters). With
-`ThreadPoolExecutor`, the per-task overhead (GIL acquisition, future creation,
-result retrieval) is ~3ms — a 60% overhead. Profiling showed 4-thread parallel
-fitting was **0.6× slower** than sequential.
+### Why No Spatial Propagation
 
-Additionally, spatial propagation is inherently sequential: each pixel depends
-on its neighbor's result. Parallelizing would break this dependency chain and
-lose the propagation benefit.
+The v1 engine used spatial propagation (spiral traversal + neighbor seeding)
+to get good initial guesses. However, this:
+1. Forces **sequential** fitting (each pixel depends on its neighbor)
+2. **Contaminates** heterogeneous regions (substrate params propagated into flake pixels)
 
-### Why Two-Stage Was Removed
-
-The original design used a coarse-then-refined approach (Stage 1: relaxed xtol,
-Stage 2: full xtol for outliers only). Profiling revealed this fitted every
-spectrum **twice**, doubling the total time from ~9s to ~18s. Since propagation
-already provides excellent initial guesses, a single pass with full tolerance
-converges just as quickly.
+The v2 engine fits all pixels independently but simultaneously. Each pixel's
+initial guess comes from the fit model template + per-spectrum amplitude scaling.
 
 ---
 
@@ -248,26 +209,22 @@ converges just as quickly.
 
 ### Maps Workspace (`VMWorkspaceMaps`)
 
-- **`_run_fit_thread()`**: Overridden to use `HyperFitThread` with spatial
-  coordinates extracted from the map DataFrame
-- **`fit()`**: Overridden to use the batch engine with `apply_model_to_spectra=False`
-  (models already assigned from previous apply/paste)
-- **Fallback**: `_use_batch_engine = False` falls back to parent's `ApplyFitModelThread`
+- **`_run_fit_thread()`**: Uses `TensorFitThread` (core2)
+- **`fit()`**: Uses `TensorFitThread` with `apply_model_to_spectra=False` (warm-start)
+- **Fallback chain**: TensorFitThread → HyperFitThread → parent's FitThread
 
 ### Spectra Workspace (`VMWorkspaceSpectra`)
 
-- **`_run_fit_thread()`**: Uses `HyperFitThread` with `coords=None`
-  (sequential fitting without spatial propagation)
+- **`_run_fit_thread()`**: Uses `HyperFitThread` (core/) with `coords=None`
 - **`fit()`**: Uses `HyperFitThread` for the "Fit" button
 - **Fallback**: `_use_batch_engine = False` falls back to old `FitThread`
 
-### Compatibility
+### GUI Compatibility
 
-The engine writes results back to `MSpectrum` objects using the same attributes
-the GUI expects:
-- `spectrum.result_fit` — `FitResult` (compatible with lmfit's MinimizerResult)
+Both engines write results back to `MSpectrum` objects using the same interface:
+- `spectrum.result_fit` — `FitResult` (lmfit-compatible `.params[key].value`)
 - `spectrum.peak_models[i].param_hints` — updated with fitted values
-- `spectrum.x`, `spectrum.y` — unchanged (preprocessed data)
+- `spectrum.bkg_model.param_hints` — updated if background present
 
 ---
 
@@ -275,11 +232,12 @@ the GUI expects:
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| **Fitting** | ✅ Replaced | BatchFittingEngine + scipy.optimize |
-| **Preprocessing** | ⚠️ Still uses fitspy | `spectrum.preprocess()` delegates to fitspy |
-| **Baseline management** | ⚠️ Still uses fitspy | `BaseLine` class, eval, anchor points |
-| **Peak model management** | ⚠️ Still uses fitspy | `add_peak_model`, `remove_models` |
-| **Save/Load** | ⚠️ Still uses fitspy | `spectrum.save()`, `set_attributes()` |
+| **Fitting (maps)** | ✅ Replaced (core2) | TensorFittingEngine |
+| **Fitting (spectra)** | ✅ Replaced (core/) | BatchFittingEngine |
+| **Preprocessing** | ⚠️ Still uses fitspy | `spectrum.preprocess()` |
+| **Baseline management** | ⚠️ Still uses fitspy | `BaseLine` class |
+| **Peak model management** | ⚠️ Still uses fitspy | `add_peak_model` |
+| **Save/Load** | ⚠️ Still uses fitspy | `spectrum.save()` |
 | **MSpectrum inheritance** | ⚠️ Still inherits | `MSpectrum(FitspySpectrum)` |
 
 Full fitspy decoupling is planned for a future iteration.

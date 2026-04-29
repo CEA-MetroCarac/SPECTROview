@@ -20,6 +20,7 @@ from spectroview.model.m_spectrum import MSpectrum
 from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.core.hyper_fit_thread import HyperFitThread
+from spectroview.core2.tensor_fit_thread import TensorFitThread
 
 
 
@@ -355,14 +356,12 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     
     def _run_fit_thread(self, fit_model: dict, spectra,
                          apply_model_to_spectra=True):
-        """Override parent to use HyperFitThread with spatial propagation for maps.
+        """Override parent to use TensorFitThread for maps.
         
-        Extracts spatial (X, Y) coordinates from the current map DataFrame
-        and passes them to the batch engine for neighbor-based parameter
-        propagation, dramatically reducing fitting time for 2D maps.
+        The tensor engine fits ALL spectra simultaneously using a batched
+        Levenberg-Marquardt optimizer, achieving <3s for typical maps.
         """
         if not self._use_batch_engine:
-            # Fallback to parent implementation
             super()._run_fit_thread(fit_model, spectra)
             return
 
@@ -383,59 +382,76 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         fnames = [s.fname for s in spectra]
         ncpu = self.settings.load_fit_settings().get("ncpu", 1)
 
-        # Extract spatial coordinates from map DataFrame
-        coords = self._extract_coords_for_spectra(spectra)
-
         self._is_fitting = True
         self.fit_in_progress.emit(True)
 
         try:
-            self._fit_thread = HyperFitThread(
+            self._fit_thread = TensorFitThread(
                 self.spectra,
                 fit_model,
                 fnames,
                 ncpus=ncpu,
-                coords=coords,
+                coords=None,  # Tensor engine doesn't use spatial propagation
                 apply_model_to_spectra=apply_model_to_spectra,
             )
             self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
             self._fit_thread.finished.connect(self._on_fit_finished)
             self._fit_thread.start()
         except Exception as e:
-            # If HyperFitThread fails to start, fallback to parent
-            print(f"[Maps] HyperFitThread creation failed: {e}, falling back.")
+            # If TensorFitThread fails, fallback to HyperFitThread
+            print(f"[Maps] TensorFitThread creation failed: {e}, falling back.")
             self._is_fitting = False
             self.fit_in_progress.emit(False)
-            super()._run_fit_thread(fit_model, spectra)
+            coords = self._extract_coords_for_spectra(spectra)
+            try:
+                self._fit_thread = HyperFitThread(
+                    self.spectra, fit_model, fnames,
+                    ncpus=ncpu, coords=coords,
+                    apply_model_to_spectra=apply_model_to_spectra,
+                )
+                self._is_fitting = True
+                self.fit_in_progress.emit(True)
+                self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
+                self._fit_thread.finished.connect(self._on_fit_finished)
+                self._fit_thread.start()
+            except Exception as e2:
+                print(f"[Maps] All engines failed: {e2}, falling back to parent.")
+                super()._run_fit_thread(fit_model, spectra)
 
     def fit(self, apply_all: bool = False):
-        """Override parent to use the batch engine for re-fitting.
+        """Override parent to use the tensor engine for re-fitting maps.
 
-        When spectra already have peak models assigned (from a previous
-        apply/paste), the 'Fit' button re-fits using existing models.
-        We skip re-applying the model (saves ~0.6s) since it's already set.
+        When the Fit button is pressed, fitting starts immediately using
+        all currently defined peak models on ALL active spectra in the map.
+        If no peak models exist, a toast notification is shown.
         """
         if not self._use_batch_engine:
             super().fit(apply_all)
             return
 
-        spectra = self._get_active_spectra() if apply_all else self._get_selected_spectra()
+        # For maps, always fit all active spectra (the whole map)
+        spectra = self._get_active_spectra()
 
         if not spectra:
+            self.notify.emit("No spectra available for fitting.")
             return
 
         # Check if any spectrum has peak models
         has_peaks = any(s.peak_models for s in spectra)
         if not has_peaks:
-            self.notify.emit("No peaks to fit.")
+            self.notify.emit(
+                "No peak models defined. Please add peaks or apply a fit "
+                "model before fitting."
+            )
             return
 
-        # Extract fit model from the first fitted spectrum
+        # Extract fit model from the first spectrum that has peak models
         ref_spectrum = next(s for s in spectra if s.peak_models)
         fit_model = ref_spectrum.save()
 
         # Re-fitting: models already assigned, skip apply_model step
         self._run_fit_thread(fit_model, spectra, apply_model_to_spectra=False)
+
 
     def _extract_coords_for_spectra(self, spectra):
         """Extract (X, Y) spatial coordinates for a list of map spectra.

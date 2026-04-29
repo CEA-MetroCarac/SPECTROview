@@ -452,3 +452,37 @@ class PeakModelEvaluator:
                     spectrum.bkg_model.set_param_hint(
                         key, value=fit_result.params[key].value
                     )
+
+    def extract_p0_from_spectrum(self, spectrum):
+        """Extract the free parameter array (p0) from an MSpectrum's current hints.
+        
+        Used for re-fitting: builds the initial guess array from the 
+        currently assigned peak models instead of the original fit model.
+        """
+        p0_full = list(self._param_values)
+        
+        # Update from peak models
+        for i, peak_model in enumerate(spectrum.peak_models):
+            if i >= self._n_peaks:
+                break
+            for key, hint in peak_model.param_hints.items():
+                full_name = f"m{i+1:02d}_{key}"
+                try:
+                    idx = self._param_names.index(full_name)
+                    if 'value' in hint and hint['value'] is not None:
+                        p0_full[idx] = hint['value']
+                except ValueError:
+                    pass
+                    
+        # Update from background model
+        if spectrum.bkg_model is not None and self._bkg_spec is not None:
+            for key, hint in spectrum.bkg_model.param_hints.items():
+                try:
+                    idx = self._param_names.index(key)
+                    if 'value' in hint and hint['value'] is not None:
+                        p0_full[idx] = hint['value']
+                except ValueError:
+                    pass
+                    
+        p0_full = np.array(p0_full)
+        return p0_full[self._free_mask]

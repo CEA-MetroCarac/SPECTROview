@@ -147,8 +147,16 @@ class BatchFittingEngine:
         p0 = self._evaluator.initial_params
         bounds = self._evaluator.bounds
 
-        # ─── 5. Reinitialize amplitudes from actual data ───
-        p0 = self._reinit_amplitudes(x_array, Y_matrix, p0)
+        # ─── 5. Warm Start or Reinitialize Amplitudes ───
+        if not apply_model_to_spectra:
+            # We are re-fitting: extract existing fitted parameters for each spectrum
+            p0_array = np.zeros((n_spectra, n_free))
+            for i, spectrum in enumerate(spectra):
+                p0_array[i] = self._evaluator.extract_p0_from_spectrum(spectrum)
+            p0 = p0_array
+        else:
+            # First time fitting: adjust initial amplitudes from actual data
+            p0 = self._reinit_amplitudes(x_array, Y_matrix, p0)
 
         # ─── 6. Choose fitting strategy ───
         use_spatial = coords is not None and len(coords) == n_spectra

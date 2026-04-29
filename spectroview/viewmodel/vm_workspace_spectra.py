@@ -16,6 +16,7 @@ from spectroview.model.m_io import load_spectrum_file, load_TRPL_data, load_wdf_
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
+from spectroview.core.hyper_fit_thread import HyperFitThread
 from spectroview.viewmodel.utils import (
     ApplyFitModelThread, FitThread,
     baseline_to_dict,
@@ -60,6 +61,7 @@ class VMWorkspaceSpectra(QObject):
         self._current_peak_shape = "Lorentzian"
         self._fit_thread = None  # Track active fit thread
         self._is_fitting = False  # Track if fitting is in progress
+        self._use_batch_engine = True  # Use high-performance batch engine
         
         # Fit results data
         self.df_fit_results = None
@@ -688,19 +690,27 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No peaks to fit.")
             return
 
-        # Cancel any existing thread
-        if self._fit_thread and self._fit_thread.isRunning():
-            self._fit_thread.terminate()
-            self._fit_thread.wait()
+        if self._use_batch_engine:
+            # Use batch engine: extract fit model from first fitted spectrum
+            ref_spectrum = next(s for s in spectra if s.peak_models)
+            fit_model = ref_spectrum.save()
+            # Re-fitting: models already assigned, skip apply_model step
+            self._run_fit_thread(fit_model, spectra,
+                                apply_model_to_spectra=False)
+        else:
+            # Legacy fallback: use FitThread (fitspy)
+            # Cancel any existing thread
+            if self._fit_thread and self._fit_thread.isRunning():
+                self._fit_thread.terminate()
+                self._fit_thread.wait()
 
-        self._is_fitting = True
-        self.fit_in_progress.emit(True)
+            self._is_fitting = True
+            self.fit_in_progress.emit(True)
 
-        # Use SimpleFitThread to fit each spectrum with its own models
-        self._fit_thread = FitThread(spectra)
-        self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
-        self._fit_thread.finished.connect(self._on_fit_finished)
-        self._fit_thread.start()
+            self._fit_thread = FitThread(spectra)
+            self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
+            self._fit_thread.finished.connect(self._on_fit_finished)
+            self._fit_thread.start()
     
     def copy_fit_model(self):
         if not self.selected_fnames:
@@ -790,7 +800,8 @@ class VMWorkspaceSpectra(QObject):
 
         self._run_fit_thread(fit_model, spectra)
 
-    def _run_fit_thread(self, fit_model: dict, spectra):
+    def _run_fit_thread(self, fit_model: dict, spectra,
+                        apply_model_to_spectra=True):
         # Prevent concurrent fit operations
         if self._is_fitting:
             self.notify.emit("Fit already in progress. Please wait...")
@@ -808,17 +819,29 @@ class VMWorkspaceSpectra(QObject):
         fnames = [s.fname for s in spectra]
         ncpu = self.settings.load_fit_settings().get("ncpu", 1)
 
-        self.spectra.pbar_index = 0
-
         self._is_fitting = True
         self.fit_in_progress.emit(True)
 
-        self._fit_thread = ApplyFitModelThread(
-            self.spectra,
-            fit_model,
-            fnames,
-            ncpu
-        )
+        if self._use_batch_engine:
+            # High-performance batch engine (no spatial coords for spectra)
+            self._fit_thread = HyperFitThread(
+                self.spectra,
+                fit_model,
+                fnames,
+                ncpus=ncpu,
+                coords=None,  # No spatial propagation for discrete spectra
+                apply_model_to_spectra=apply_model_to_spectra,
+            )
+        else:
+            # Legacy fallback: ApplyFitModelThread (fitspy)
+            self.spectra.pbar_index = 0
+            self._fit_thread = ApplyFitModelThread(
+                self.spectra,
+                fit_model,
+                fnames,
+                ncpu
+            )
+
         self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
         self._fit_thread.finished.connect(self._on_fit_finished)
         self._fit_thread.start()

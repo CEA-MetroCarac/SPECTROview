@@ -84,7 +84,7 @@ def batched_gaussian_jac(x, params):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# PseudoVoigt:  PV = alpha·L + (1-alpha)·G
+# PseudoVoigt:  PV = alpha·G + (1-alpha)·L   (fitspy convention)
 #   params[:, 0] = ampli,  params[:, 1] = fwhm,  params[:, 2] = x0,
 #   params[:, 3] = alpha
 # ═══════════════════════════════════════════════════════════════════════════
@@ -92,25 +92,25 @@ def batched_gaussian_jac(x, params):
 def batched_pseudovoigt(x, params):
     p3 = params[:, :3]                # (N,3) — [ampli, fwhm, x0]
     alpha = params[:, 3:4]            # (N,1)
-    L = batched_lorentzian(x, p3)
     G = batched_gaussian(x, p3)
-    return alpha * L + (1.0 - alpha) * G
+    L = batched_lorentzian(x, p3)
+    return alpha * G + (1.0 - alpha) * L
 
 
 def batched_pseudovoigt_jac(x, params):
     p3 = params[:, :3]
     alpha = params[:, 3:4]
-    L = batched_lorentzian(x, p3)      # (N,M)
-    G = batched_gaussian(x, p3)
-    JL = batched_lorentzian_jac(x, p3) # (N,M,3)
-    JG = batched_gaussian_jac(x, p3)
+    G = batched_gaussian(x, p3)        # (N,M)
+    L = batched_lorentzian(x, p3)
+    JG = batched_gaussian_jac(x, p3)   # (N,M,3)
+    JL = batched_lorentzian_jac(x, p3)
 
-    N, M = L.shape
+    N, M = G.shape
     J = np.empty((N, M, 4))
     # dPV/d(ampli,fwhm,x0)
-    J[:, :, :3] = alpha[:, :, None] * JL + (1.0 - alpha[:, :, None]) * JG
-    # dPV/dalpha
-    J[:, :, 3] = L - G
+    J[:, :, :3] = alpha[:, :, None] * JG + (1.0 - alpha[:, :, None]) * JL
+    # dPV/dalpha = G - L
+    J[:, :, 3] = G - L
     return J
 
 
@@ -125,15 +125,21 @@ BATCHED_MODELS = {
 }
 
 
-def numerical_jacobian(model_func, x, params, eps=1e-6):
-    """Finite-difference Jacobian fallback for models without analytical J."""
+def numerical_jacobian(model_func, x, params, eps=1e-7):
+    """Finite-difference Jacobian fallback for models without analytical J.
+
+    Uses relative perturbation: h = max(abs(param) * eps, eps) for each
+    parameter, ensuring accurate gradients regardless of parameter scale.
+    """
     N, K = params.shape
     M = len(x)
     J = np.empty((N, M, K))
     for k in range(K):
+        # Relative perturbation: scale eps by the parameter magnitude
+        h = np.maximum(np.abs(params[:, k]) * eps, eps)  # (N,)
         p_plus = params.copy()
         p_minus = params.copy()
-        p_plus[:, k] += eps
-        p_minus[:, k] -= eps
-        J[:, :, k] = (model_func(x, p_plus) - model_func(x, p_minus)) / (2.0 * eps)
+        p_plus[:, k] += h
+        p_minus[:, k] -= h
+        J[:, :, k] = (model_func(x, p_plus) - model_func(x, p_minus)) / (2.0 * h[:, None])
     return J

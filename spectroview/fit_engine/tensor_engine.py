@@ -86,6 +86,16 @@ class TensorFittingEngine:
             p0 = np.empty((n_spectra, evaluator.n_params_free))
             for i, s in enumerate(spectra):
                 p0[i] = evaluator.extract_p0_from_spectrum(s)
+            
+            # Perturb warm-start p0 slightly to escape premature convergence.
+            # Without this, the optimizer sees the previous optimum and
+            # immediately declares convergence on the first iteration,
+            # making repeated Fit clicks useless.
+            rng = np.random.default_rng(42)
+            noise = rng.uniform(-1e-3, 1e-3, size=p0.shape)
+            p0 *= (1.0 + noise)
+            # Re-clip to bounds
+            p0 = np.clip(p0, evaluator.lower_bounds, evaluator.upper_bounds)
         else:
             # First fit: scale amplitudes per spectrum
             p0 = evaluator.build_p0_matrix(spectra, x_array)

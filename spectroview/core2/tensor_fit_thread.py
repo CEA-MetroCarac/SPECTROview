@@ -21,6 +21,14 @@ class TensorFitThread(QThread):
     def __init__(self, spectrums, fit_model, fnames, ncpus=1,
                  coords=None, apply_model_to_spectra=True):
         super().__init__()
+        
+        # Increase stack size to 8MB (macOS defaults to 512KB for QThread)
+        # Prevents segmentation faults when LAPACK (np.linalg.solve) allocates 
+        # large arrays on the stack during batched tensor operations.
+        import sys
+        if sys.platform == "darwin":
+            self.setStackSize(8 * 1024 * 1024)
+            
         self._spectrums = spectrums      # MSpectra collection
         self._fit_model = fit_model
         self._fnames = fnames

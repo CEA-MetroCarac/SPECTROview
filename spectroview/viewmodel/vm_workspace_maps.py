@@ -421,22 +421,24 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     def fit(self, apply_all: bool = False):
         """Override parent to use the tensor engine for re-fitting maps.
 
-        When the Fit button is pressed, fitting starts immediately using
-        all currently defined peak models on ALL active spectra in the map.
-        If no peak models exist, a toast notification is shown.
+        Behavior:
+          - Fit button (apply_all=False): fits selected spectra only.
+          - Ctrl+Fit   (apply_all=True):  fits all active spectra in the map.
+
+        If no peak models exist on the target spectra, shows a toast notification.
         """
         if not self._use_batch_engine:
             super().fit(apply_all)
             return
 
-        # For maps, always fit all active spectra (the whole map)
-        spectra = self._get_active_spectra()
+        # Respect apply_all: selected-only vs the whole map
+        spectra = self._get_active_spectra() if apply_all else self._get_selected_spectra()
 
         if not spectra:
-            self.notify.emit("No spectra available for fitting.")
+            self.notify.emit("No spectra selected for fitting.")
             return
 
-        # Check if any spectrum has peak models
+        # Check if any target spectrum has peak models
         has_peaks = any(s.peak_models for s in spectra)
         if not has_peaks:
             self.notify.emit(

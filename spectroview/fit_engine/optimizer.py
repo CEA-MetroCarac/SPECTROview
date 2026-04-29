@@ -21,8 +21,8 @@ def batched_levenberg_marquardt(
     lower_bounds,       # (K,)
     upper_bounds,       # (K,)
     max_iter=200,
-    xtol=1e-4,
-    ftol=1e-4,
+    xtol=1e-3,
+    ftol=1e-3,
     progress_callback=None,
     cancel_check=None,
 ):

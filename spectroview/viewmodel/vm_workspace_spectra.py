@@ -16,7 +16,7 @@ from spectroview.model.m_io import load_spectrum_file, load_TRPL_data, load_wdf_
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
-from spectroview.core.hyper_fit_thread import HyperFitThread
+from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
 from spectroview.viewmodel.utils import (
     ApplyFitModelThread, FitThread,
     baseline_to_dict,
@@ -824,7 +824,7 @@ class VMWorkspaceSpectra(QObject):
 
         if self._use_batch_engine:
             # High-performance batch engine (no spatial coords for spectra)
-            self._fit_thread = HyperFitThread(
+            self._fit_thread = TensorFitThread(
                 self.spectra,
                 fit_model,
                 fnames,

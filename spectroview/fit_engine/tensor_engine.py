@@ -12,8 +12,8 @@ Usage:
 import time
 import numpy as np
 
-from spectroview.core2.evaluator import TensorEvaluator
-from spectroview.core2.optimizer import batched_levenberg_marquardt
+from spectroview.fit_engine.evaluator import TensorEvaluator
+from spectroview.fit_engine.optimizer import batched_levenberg_marquardt
 
 
 class TensorFittingEngine:
@@ -56,7 +56,7 @@ class TensorFittingEngine:
         if evaluator.n_params_free == 0:
             if progress_callback:
                 progress_callback(n_spectra, n_spectra)
-            from spectroview.core.models import FitResult
+            from spectroview.fit_engine.scalar_models import FitResult
             return [FitResult(True, {}, np.array([])) for _ in spectra]
 
         # ─── 3. Preprocess all spectra ───
@@ -68,7 +68,7 @@ class TensorFittingEngine:
         # ─── 4. Extract data matrix ───
         x_array = spectra[0].x
         if x_array is None:
-            from spectroview.core.models import FitResult
+            from spectroview.fit_engine.scalar_models import FitResult
             return [FitResult(False, {}, np.array([])) for _ in spectra]
 
         M = len(x_array)
@@ -94,8 +94,8 @@ class TensorFittingEngine:
         # ─── 6. Parse fit parameters ───
         if fit_params is None:
             fit_params = {}
-        xtol = float(fit_params.get("xtol", 1e-4))
-        ftol = float(fit_params.get("ftol", 1e-4))
+        xtol = float(fit_params.get("xtol", 1e-3))
+        ftol = float(fit_params.get("ftol", 1e-3))
         max_ite = int(fit_params.get("max_ite", 200))
 
         # ─── 7. TENSOR FIT ───

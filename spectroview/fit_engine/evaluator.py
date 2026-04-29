@@ -10,8 +10,8 @@ Handles:
 """
 
 import numpy as np
-from spectroview.core.models import FitResult, ParamValue
-from spectroview.core2.models import BATCHED_MODELS, numerical_jacobian
+from spectroview.fit_engine.scalar_models import FitResult, ParamValue
+from spectroview.fit_engine.models import BATCHED_MODELS, numerical_jacobian
 
 
 class TensorEvaluator:
@@ -57,7 +57,7 @@ class TensorEvaluator:
                     has_analytical_jac = True
                 else:
                     # Fallback: use scalar model from core, wrap it
-                    from spectroview.core.models import PEAK_MODEL_REGISTRY
+                    from spectroview.fit_engine.scalar_models import PEAK_MODEL_REGISTRY
                     if model_name not in PEAK_MODEL_REGISTRY:
                         raise ValueError(f"Unknown peak model: {model_name}")
                     scalar_fn, canonical_params = PEAK_MODEL_REGISTRY[model_name]

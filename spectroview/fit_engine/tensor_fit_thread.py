@@ -61,7 +61,7 @@ class TensorFitThread(QThread):
         if fit_params is None and spectra:
             fit_params = getattr(spectra[0], "fit_params", None)
         if fit_params is None:
-            fit_params = {"method": "leastsq", "xtol": 1e-4, "max_ite": 200}
+            fit_params = {"method": "leastsq", "xtol": 1e-3, "max_ite": 200}
 
         # Progress callback
         def on_progress(current, total):
@@ -70,7 +70,7 @@ class TensorFitThread(QThread):
             self.progress_changed.emit(current, total, pct, elapsed)
 
         # Run tensor engine
-        from spectroview.core2.tensor_engine import TensorFittingEngine
+        from spectroview.fit_engine.tensor_engine import TensorFittingEngine
 
         engine = TensorFittingEngine()
         fit_results = engine.fit_spectra(

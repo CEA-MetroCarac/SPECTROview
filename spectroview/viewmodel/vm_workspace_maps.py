@@ -19,8 +19,7 @@ from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
 from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
-from spectroview.core.hyper_fit_thread import HyperFitThread
-from spectroview.core2.tensor_fit_thread import TensorFitThread
+from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
 
 
 
@@ -46,9 +45,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
         # Reference to Graphs workspace (injected after construction)
         self.graphs_workspace = None
-        
-        # Flag to enable/disable batch fitting engine
-        self._use_batch_engine = True
     
     def _get_selected_spectra(self) -> list[MSpectrum]:
         """Get currently selected spectra that are also active (checked).
@@ -361,10 +357,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         The tensor engine fits ALL spectra simultaneously using a batched
         Levenberg-Marquardt optimizer, achieving <3s for typical maps.
         """
-        if not self._use_batch_engine:
-            super()._run_fit_thread(fit_model, spectra)
-            return
-
         # Prevent concurrent fit operations
         if self._is_fitting:
             self.notify.emit("Fit already in progress. Please wait...")
@@ -398,25 +390,9 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             self._fit_thread.finished.connect(self._on_fit_finished)
             self._fit_thread.start()
         except Exception as e:
-            # If TensorFitThread fails, fallback to HyperFitThread
-            print(f"[Maps] TensorFitThread creation failed: {e}, falling back.")
+            print(f"[Maps] TensorFitThread creation failed: {e}")
             self._is_fitting = False
             self.fit_in_progress.emit(False)
-            coords = self._extract_coords_for_spectra(spectra)
-            try:
-                self._fit_thread = HyperFitThread(
-                    self.spectra, fit_model, fnames,
-                    ncpus=ncpu, coords=coords,
-                    apply_model_to_spectra=apply_model_to_spectra,
-                )
-                self._is_fitting = True
-                self.fit_in_progress.emit(True)
-                self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
-                self._fit_thread.finished.connect(self._on_fit_finished)
-                self._fit_thread.start()
-            except Exception as e2:
-                print(f"[Maps] All engines failed: {e2}, falling back to parent.")
-                super()._run_fit_thread(fit_model, spectra)
 
     def fit(self, apply_all: bool = False):
         """Override parent to use the tensor engine for re-fitting maps.
@@ -427,9 +403,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
         If no peak models exist on the target spectra, shows a toast notification.
         """
-        if not self._use_batch_engine:
-            super().fit(apply_all)
-            return
 
         # Respect apply_all: selected-only vs the whole map
         spectra = self._get_active_spectra() if apply_all else self._get_selected_spectra()

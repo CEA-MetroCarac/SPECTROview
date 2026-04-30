@@ -15,6 +15,7 @@ class MSpectrum(FitspySpectrum):
         self.source_path = None
         self.is_active = True  # whether spectrum is active for operations (Fit, Apply, etc.)
         self.metadata = {}  # acquisition metadata (e.g., from WDF files)
+        self.is_preprocessed = False
         
                     
     def reinit(self, keep_outliers=True):
@@ -36,17 +37,22 @@ class MSpectrum(FitspySpectrum):
         self.result_fit = lambda: None
         self.baseline.reinit()
         self.baseline.mode = "Linear"
+        self.is_preprocessed = False
         
         self.color = None
         self.label = None
 
     def preprocess(self):
         """ Preprocess the spectrum """
+        if getattr(self, 'is_preprocessed', False):
+            return
+
         self.load_profile(self.fname)
         self.apply_range()
         self.eval_baseline()
         self.subtract_baseline()
         self.normalization()
+        self.is_preprocessed = True
 
     def apply_xcorrection(self, new_xcorr_value=None):
         """ Apply peak position correction """

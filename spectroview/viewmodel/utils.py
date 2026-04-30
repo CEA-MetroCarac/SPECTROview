@@ -85,6 +85,7 @@ def apply_custom_fit_model(spectrum, fit_model: dict, fname: str) -> None:
             custom_model[attr] = getattr(spectrum, attr)
     spectrum.set_attributes(custom_model)
     spectrum.fname = fname  # reassign correct fname after set_attributes
+    spectrum.is_preprocessed = False
 
 
 class ApplyFitModelThread(QThread):

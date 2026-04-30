@@ -61,10 +61,11 @@ class TensorFittingEngine:
                 progress_callback(n_spectra, n_spectra)
             return [FitResult(True, {}, np.array([])) for _ in spectra]
 
-        # ─── 3. Preprocess all spectra ───
+        # ─── 3. Preprocess all spectra (only when needed) ───
         t0 = time.perf_counter()
         for spectrum in spectra:
-            spectrum.preprocess()
+            if not getattr(spectrum, 'is_preprocessed', False):
+                spectrum.preprocess()
         print(f"  [TensorEngine] Step 2 - preprocess: {time.perf_counter()-t0:.3f}s")
 
         # Build weights matrix to match lmfit masking behavior

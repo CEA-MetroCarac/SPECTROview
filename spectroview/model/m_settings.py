@@ -13,12 +13,15 @@ class MSettings:
     def load_fit_settings(self) -> dict:
         return {
             "fit_negative": self.settings.value("fit_settings/fit_negative", False, bool),
-            "method": self.settings.value("fit_settings/method", "Leastsq"),
             "max_ite": self.settings.value("fit_settings/max_ite", 200, int),
-            "xtol": self.settings.value("fit_settings/xtol", 1e-5, float),
-            "ncpu": self.settings.value("fit_settings/ncpu", 1, int),
+            "xtol": self.settings.value("fit_settings/xtol", 1e-4, float),
+            "ftol": self.settings.value("fit_settings/ftol", 1e-4, float),
+            "fit_outliers": self.settings.value("fit_settings/fit_outliers", True, bool),
+            "coef_noise": self.settings.value("fit_settings/coef_noise", 0.0, float),
             "maxshift": self.settings.value("fit_settings/maxshift", 20.0, float),
             "maxfwhm": self.settings.value("fit_settings/maxfwhm", 200.0, float),
+            "minfwhm": self.settings.value("fit_settings/minfwhm", 0.1, float),
+            "maxintensity": self.settings.value("fit_settings/maxintensity", 100000.0, float),
         }
 
     def save_fit_settings(self, data: dict):

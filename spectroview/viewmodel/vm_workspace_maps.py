@@ -372,7 +372,20 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             self._fit_thread.wait()
 
         fnames = [s.fname for s in spectra]
-        ncpu = self.settings.load_fit_settings().get("ncpu", 1)
+        fit_settings = self.settings.load_fit_settings()
+        ncpu = fit_settings.get("ncpu", 1)
+
+        # Ensure the latest settings are passed to the fit engine
+        if "fit_params" not in fit_model:
+            fit_model["fit_params"] = {}
+        fit_model["fit_params"].update({
+            "xtol": fit_settings.get("xtol", 1e-4),
+            "ftol": fit_settings.get("ftol", 1e-4),
+            "max_ite": fit_settings.get("max_ite", 200),
+            "fit_negative": fit_settings.get("fit_negative", False),
+            "fit_outliers": fit_settings.get("fit_outliers", True),
+            "coef_noise": fit_settings.get("coef_noise", 0.0),
+        })
 
         self._is_fitting = True
         self.fit_in_progress.emit(True)

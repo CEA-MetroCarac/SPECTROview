@@ -269,7 +269,8 @@ class TensorEvaluator:
                         low = max(0, closest - 1)
                         high = min(len(x), closest + 2)
                         for n in range(N):
-                            y = spectra[n].y
+                            spectrum = spectra[n]
+                            y = getattr(spectrum, 'y_no_outliers', spectrum.y)
                             if y is not None and len(y) > closest:
                                 window = np.maximum(np.abs(y[low:high]), 1e-6)
                                 data_amp = float(np.max(window))

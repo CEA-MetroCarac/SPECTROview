@@ -20,6 +20,7 @@ def batched_levenberg_marquardt(
     p0,                 # (N, K) or (K,)
     lower_bounds,       # (K,)
     upper_bounds,       # (K,)
+    weights=None,       # (N, M) or (M,)
     max_iter=200,
     xtol=1e-4,
     ftol=1e-4,
@@ -39,6 +40,15 @@ def batched_levenberg_marquardt(
     lo = np.asarray(lower_bounds, dtype=np.float64)
     hi = np.asarray(upper_bounds, dtype=np.float64)
 
+    if weights is None:
+        weights = np.ones((N, M), dtype=np.float64)
+    else:
+        weights = np.asarray(weights, dtype=np.float64)
+        if weights.ndim == 1:
+            weights = np.tile(weights, (N, 1))
+        if weights.shape != (N, M):
+            raise ValueError(f"weights must have shape ({N}, {M}), got {weights.shape}")
+
     # Broadcast p0 if 1-D
     if p0.ndim == 1:
         p = np.tile(p0, (N, 1)).astype(np.float64)
@@ -50,7 +60,7 @@ def batched_levenberg_marquardt(
 
     # Initial residuals and cost
     Y_pred = evaluate_fn(x, p)
-    residuals = Y_pred - Y_data        # (N, M)
+    residuals = weights * (Y_pred - Y_data)        # (N, M)
     cost = np.sum(residuals * residuals, axis=1)  # (N,)
 
     # Per-spectrum damping factor
@@ -83,6 +93,7 @@ def batched_levenberg_marquardt(
         np.nan_to_num(J_active, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
 
         # ── Normal equations: (JᵀJ + λ·diag(JᵀJ)) δp = -Jᵀr ──
+        J_active *= weights[active, :, None]
         JTJ = np.einsum('nmk,nml->nkl', J_active, J_active)  # (Na, K, K)
         JTr = np.einsum('nmk,nm->nk', J_active, r_active)    # (Na, K)
 
@@ -143,8 +154,13 @@ def batched_levenberg_marquardt(
         # ── Convergence (only for improved spectra) ──
         if improved_active.any():
             rel_cost_change = np.abs(old_cost_improved - cost[improved_idx]) / (cost[improved_idx] + 1e-30)
-            dp_for_improved = np.max(np.abs(dp[improved_active]), axis=1)
-            newly_conv = (rel_cost_change < ftol) & (dp_for_improved < xtol)
+            p_current = p_active[improved_active]
+            dp_rel = np.max(
+                np.abs(dp[improved_active]) / np.maximum(np.abs(p_current), 1.0),
+                axis=1
+            )
+            effective_xtol = max(xtol, 1e-3)
+            newly_conv = (rel_cost_change < ftol) & (dp_rel < effective_xtol)
             converged[improved_idx[newly_conv]] = True
 
         # Track consecutive rejections

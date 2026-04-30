@@ -9,7 +9,7 @@ Returns:
     Y: (N, M)           — model values
     J: (N, M, n_p)      — Jacobian matrix  (for *_jac functions)
 
-The functional forms match fitspy exactly so results are interchangeable.
+The functional forms match lmfit exactly so results are interchangeable.
 """
 
 import numpy as np

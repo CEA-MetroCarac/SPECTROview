@@ -11,6 +11,7 @@ Usage:
 
 import time
 import numpy as np
+from fitspy.core.utils import eval_noise_amplitude
 
 from spectroview.fit_engine.evaluator import TensorEvaluator
 from spectroview.fit_engine.optimizer import batched_levenberg_marquardt
@@ -66,6 +67,9 @@ class TensorFittingEngine:
             spectrum.preprocess()
         print(f"  [TensorEngine] Step 2 - preprocess: {time.perf_counter()-t0:.3f}s")
 
+        # Build weights matrix to match lmfit masking behavior
+        weights_matrix = self._build_fit_weights(spectra, fit_params)
+
         # ─── 4. Extract data matrix ───
         x_array = spectra[0].x
         if x_array is None:
@@ -118,6 +122,7 @@ class TensorFittingEngine:
             p0=p0,
             lower_bounds=evaluator.lower_bounds,
             upper_bounds=evaluator.upper_bounds,
+            weights=weights_matrix,
             max_iter=max_ite,
             xtol=xtol,
             ftol=ftol,
@@ -134,6 +139,9 @@ class TensorFittingEngine:
         fit_results = []
         for i, spectrum in enumerate(spectra):
             fr = evaluator.build_result(p_opt[i], spectrum.x, spectrum.y, bool(success[i]))
+            if weights_matrix is not None:
+                fr.best_fit = fr.best_fit.copy()
+                fr.best_fit[weights_matrix[i] == 0] = 0.0
             evaluator.write_back_to_spectrum(spectrum, fr)
             fit_results.append(fr)
         print(f"  [TensorEngine] Step 5 - write_back: {time.perf_counter()-t0:.3f}s")
@@ -145,3 +153,39 @@ class TensorFittingEngine:
         """Apply fit model dict to all spectra (set peak_models, baseline, etc.)."""
         for spectrum in spectra:
             apply_custom_fit_model(spectrum, fit_model, spectrum.fname)
+
+    def _build_fit_weights(self, spectra, fit_params):
+        """Build a weights matrix that mimics lmfit's masking behavior."""
+        
+
+        weights = []
+        fit_negative = bool(fit_params.get("fit_negative", False))
+        fit_outliers = bool(fit_params.get("fit_outliers", False))
+        coef_noise = float(fit_params.get("coef_noise", 0))
+
+        for spectrum in spectra:
+            if spectrum.y is None:
+                weights.append(np.zeros_like(spectrum.x if spectrum.x is not None else np.array([], dtype=np.float64)))
+                continue
+
+            w = np.ones_like(spectrum.y, dtype=np.float64)
+            if not fit_negative:
+                w[spectrum.y < 0] = 0.0
+
+            if not fit_outliers:
+                x_outliers, _ = spectrum.calculate_outliers()
+                if x_outliers is not None:
+                    w[np.isin(spectrum.x, x_outliers)] = 0.0
+
+            if coef_noise > 0:
+                ampli_noise = eval_noise_amplitude(spectrum.y)
+                noise_level = coef_noise * ampli_noise
+                ymean = np.convolve(spectrum.y, np.ones(5, dtype=np.float64) / 5.0, mode='same')
+                w[ymean < noise_level] = 0.0
+
+            if spectrum.weights is not None:
+                w = w * spectrum.weights
+
+            weights.append(w)
+
+        return np.vstack(weights)

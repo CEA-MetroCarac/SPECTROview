@@ -267,6 +267,7 @@ class VMWorkspaceSpectra(QObject):
         peak_shape = self._current_peak_shape or "Lorentzian"
 
         spectrum.add_peak_model(peak_shape,x,dx0=(maxshift, maxshift),dfwhm=maxfwhm)
+        spectrum.result_fit = None
         
         peak_model = spectrum.peak_models[-1]
         
@@ -334,6 +335,7 @@ class VMWorkspaceSpectra(QObject):
 
         del spectrum.peak_models[idx]
         del spectrum.peak_labels[idx]
+        spectrum.result_fit = None
         self._emit_selected_spectra() 
 
     def add_baseline_point(self, x: float, y: float):
@@ -694,9 +696,9 @@ class VMWorkspaceSpectra(QObject):
             # Use batch engine: extract fit model from first fitted spectrum
             ref_spectrum = next(s for s in spectra if s.peak_models)
             fit_model = ref_spectrum.save()
-            # Re-fitting: models already assigned, skip apply_model step
+            # Re-fitting: reapply the saved model to ensure peak/baseline state is canonical
             self._run_fit_thread(fit_model, spectra,
-                                apply_model_to_spectra=False)
+                                apply_model_to_spectra=True)
         else:
             # Legacy fallback: use FitThread (fitspy)
             # Cancel any existing thread
@@ -944,12 +946,14 @@ class VMWorkspaceSpectra(QObject):
     def update_peak_param(self, index, key, field, value):
         s = self._get_selected_spectra()[0]
         s.peak_models[index].param_hints[key][field] = value
+        s.result_fit = None
         self._emit_selected_spectra()
 
     def delete_peak(self, index):
         s = self._get_selected_spectra()[0]
         del s.peak_models[index]
         del s.peak_labels[index]
+        s.result_fit = None
         self._emit_selected_spectra()
 
     def update_dragged_peak(self, x: float, y: float):

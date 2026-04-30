@@ -424,8 +424,8 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         ref_spectrum = next(s for s in spectra if s.peak_models)
         fit_model = ref_spectrum.save()
 
-        # Re-fitting: models already assigned, skip apply_model step
-        self._run_fit_thread(fit_model, spectra, apply_model_to_spectra=False)
+        # Re-fitting: reapply the saved model to ensure peak/baseline state is canonical
+        self._run_fit_thread(fit_model, spectra, apply_model_to_spectra=True)
 
 
     def _extract_coords_for_spectra(self, spectra):

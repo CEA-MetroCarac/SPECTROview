@@ -281,6 +281,52 @@ class TensorEvaluator:
 
         return p0_matrix
 
+    def apply_noise_threshold(self, spectra, p_matrix, fit_params):
+        """Force ampli=0 and fwhm=0 for peaks located in noisy areas."""
+        if fit_params is None:
+            return
+        coef_noise = float(fit_params.get("coef_noise", 0))
+        if coef_noise <= 0:
+            return
+
+        from fitspy.core.utils import eval_noise_amplitude
+
+        for i, spectrum in enumerate(spectra):
+            y = spectrum.y
+            if y is None:
+                continue
+
+            ampli_noise = eval_noise_amplitude(y)
+            noise_level = coef_noise * ampli_noise
+            ymean = np.convolve(y, np.ones(5, dtype=np.float64) / 5.0, mode='same')
+            x_array = spectrum.x
+            if x_array is None:
+                continue
+
+            for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
+                x0_val = None
+                peak_pnames = self._param_names[slc]
+                for local_j, pname_j in enumerate(peak_pnames):
+                    if "x0" in pname_j:
+                        global_idx = slc.start + local_j
+                        x0_val = self._param_values[global_idx]
+                        if global_idx in self._free_idx:
+                            free_idx = np.searchsorted(self._free_idx, global_idx)
+                            x0_val = p_matrix[i, free_idx]
+                        break
+
+                if x0_val is None or x0_val < x_array[0] or x0_val > x_array[-1]:
+                    continue
+
+                ind = np.argmin(np.abs(x_array - x0_val))
+                if ymean[ind] < noise_level:
+                    for local_j, pname_j in enumerate(peak_pnames):
+                        if "ampli" in pname_j or "fwhm" in pname_j:
+                            global_idx = slc.start + local_j
+                            if global_idx in self._free_idx:
+                                free_idx = np.searchsorted(self._free_idx, global_idx)
+                                p_matrix[i, free_idx] = 0.0
+
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 

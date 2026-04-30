@@ -35,18 +35,6 @@ from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectrum import MSpectrum
 
 
-def pytest_ignore_collect(collection_path, config):
-    """Skip legacy batch engine tests when backward compatibility modules are unavailable."""
-    path = Path(collection_path)
-    if path.name == "test_batch_engine.py":
-        try:
-            __import__("spectroview.core.models")
-            return False
-        except ImportError:
-            return True
-    return False
-
-
 # ============================================================================
 # Qt Application Setup
 # ============================================================================

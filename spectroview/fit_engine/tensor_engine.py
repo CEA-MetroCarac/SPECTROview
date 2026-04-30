@@ -104,6 +104,8 @@ class TensorFittingEngine:
         else:
             # First fit: scale amplitudes per spectrum
             p0 = evaluator.build_p0_matrix(spectra, x_array)
+            
+        evaluator.apply_noise_threshold(spectra, p0, fit_params)
         print(f"  [TensorEngine] Step 3 - build p0: {time.perf_counter()-t0:.3f}s")
 
         # ─── 6. Parse fit parameters ───
@@ -135,6 +137,8 @@ class TensorFittingEngine:
               f"({fit_time/n_spectra*1000:.1f} ms/spectrum, "
               f"{success.sum()}/{n_spectra} converged)")
 
+        evaluator.apply_noise_threshold(spectra, p_opt, fit_params)
+        
         # ─── 8. Write back results ───
         t0 = time.perf_counter()
         fit_results = []
@@ -146,7 +150,6 @@ class TensorFittingEngine:
             evaluator.write_back_to_spectrum(spectrum, fr)
             fit_results.append(fr)
         print(f"  [TensorEngine] Step 5 - write_back: {time.perf_counter()-t0:.3f}s")
-        print(f"  [TensorEngine] TOTAL: {time.perf_counter()-t_total:.3f}s")
 
         return fit_results
 
@@ -160,6 +163,8 @@ class TensorFittingEngine:
         
 
         weights = []
+        if fit_params is None:
+            fit_params = {}
         fit_negative = bool(fit_params.get("fit_negative", False))
         fit_outliers = bool(fit_params.get("fit_outliers", False))
         coef_noise = float(fit_params.get("coef_noise", 0))

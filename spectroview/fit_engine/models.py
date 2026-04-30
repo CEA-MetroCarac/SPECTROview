@@ -1,4 +1,3 @@
-# spectroview/core2/models.py
 """Batched (tensor) peak model functions with analytical Jacobians.
 
 All functions operate on tensors:

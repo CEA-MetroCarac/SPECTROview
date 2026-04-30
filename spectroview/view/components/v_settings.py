@@ -195,7 +195,7 @@ class VSettingsDialog(QDialog):
         self.spin_max_iter.setValue(data.get("max_ite", 200))
         self.spin_x_tol.setValue(data.get("xtol", 1e-4))
         self.spin_f_tol.setValue(data.get("ftol", 1e-4))
-        self.spin_coef_noise.setValue(data.get("coef_noise", 0.0))
+        self.spin_coef_noise.setValue(data.get("coef_noise", 1.0))
         
         self.spin_maxshift.setValue(data.get("maxshift", 20.0))
         self.spin_minfwhm.setValue(data.get("minfwhm", 0.1))

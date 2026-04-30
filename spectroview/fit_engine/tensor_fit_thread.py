@@ -1,4 +1,3 @@
-# spectroview/core2/tensor_fit_thread.py
 """QThread wrapper for the Tensor Fitting Engine.
 
 Drop-in replacement for HyperFitThread from core/.

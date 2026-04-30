@@ -1,4 +1,3 @@
-# spectroview/core2/tensor_engine.py
 """Tensor Fitting Engine — public API.
 
 Fits all spectra in a hyperspectral map simultaneously using a custom

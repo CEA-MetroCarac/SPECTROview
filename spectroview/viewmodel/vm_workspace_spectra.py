@@ -271,16 +271,9 @@ class VMWorkspaceSpectra(QObject):
         
         peak_model = spectrum.peak_models[-1]
         
-        minfwhm = fit_settings.get("minfwhm", 0.1)
-        maxintensity = fit_settings.get("maxintensity", 100000.0)
-        
-        # Enforce the new global bounds
-        if "fwhm" in peak_model.param_names:
-            # fitspy might have set a min/max already, so we overwrite the hint
-            peak_model.set_param_hint("fwhm", min=minfwhm, max=maxfwhm)
-        if "ampli" in peak_model.param_names:
-            peak_model.set_param_hint("ampli", max=maxintensity)
-        
+        # Enforce global bounds (minfwhm, maxintensity) from settings across all peaks
+        spectrum.synchronize_peak_limits(fit_settings)
+
         # Initialize decay model parameters with reasonable values
         if peak_shape in ["DecaySingleExp", "DecayBiExp"]:
             self._initialize_decay_params(peak_model, spectrum)
@@ -961,6 +954,10 @@ class VMWorkspaceSpectra(QObject):
                     y_val = 1e-10
                     
                 new_pm.set_param_hint("ampli", value=y_val / (q_val**2 + 1))
+
+        # Enforce global bounds from settings
+        fit_settings = self.settings.load_fit_settings()
+        s.synchronize_peak_limits(fit_settings)
 
         s.result_fit = None
         self._emit_selected_spectra()

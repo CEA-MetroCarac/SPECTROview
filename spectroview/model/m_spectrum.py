@@ -97,3 +97,34 @@ class MSpectrum(FitspySpectrum):
             self.y0 = self.y0 * self.intensity_norm_factor
             self.y = self.y * self.intensity_norm_factor
             self.intensity_norm_factor = 1.0
+
+    def synchronize_peak_limits(self, fit_settings: dict):
+        """Apply global bounds from settings to all peak models' param_hints."""
+        if not fit_settings:
+            return
+            
+        minfwhm = float(fit_settings.get("minfwhm", 0.01))
+        maxfwhm = float(fit_settings.get("maxfwhm", 200.0))
+        maxintensity = float(fit_settings.get("maxintensity", 1e6))
+        
+        for pm in self.peak_models:
+            # Synchronize FWHM limits. 
+            # Note: For Gaussian/Voigt in fitspy, the free parameter is 'sigma'
+            # and 'fwhm' is an expression (e.g. 2.3548 * sigma).
+            # To ensure the engine respects these, we bind both 'fwhm' (for the UI/Tensor engine)
+            # and 'sigma' (for legacy fitspy fallback).
+            has_fwhm = "fwhm" in pm.param_names or "fwhm" in pm.param_hints
+            has_sigma = "sigma" in pm.param_names or "sigma" in pm.param_hints
+            has_ampli = "ampli" in pm.param_names or "ampli" in pm.param_hints
+            has_amplitude = "amplitude" in pm.param_names or "amplitude" in pm.param_hints
+
+            if has_fwhm:
+                pm.set_param_hint("fwhm", min=minfwhm, max=maxfwhm)
+            if has_sigma:
+                pm.set_param_hint("sigma", min=minfwhm / 2.3548, max=maxfwhm / 2.3548)
+            
+            # Synchronize Intensity/Amplitude limits
+            if has_ampli:
+                pm.set_param_hint("ampli", max=maxintensity)
+            elif has_amplitude:
+                pm.set_param_hint("amplitude", max=maxintensity)

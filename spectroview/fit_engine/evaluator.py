@@ -31,6 +31,7 @@ class TensorEvaluator:
         self._param_lower = []      # lower bounds
         self._param_upper = []      # upper bounds
         self._param_vary = []       # bool: free or fixed
+        self._exprs = []            # list of (idx, expr_str) for parameters with expressions
 
         self._n_total = 0           # total number of params (free + fixed)
         self._free_idx = None       # indices of free params in the full vector
@@ -73,11 +74,20 @@ class TensorEvaluator:
                     pmin = hints.get("min", -np.inf)
                     pmax = hints.get("max", np.inf)
                     vary = hints.get("vary", True)
+                    
+                    expr = hints.get("expr", "")
+                    if expr is None:
+                        expr = ""
+                    expr = str(expr).strip()
 
                     if pmin is None:
                         pmin = -np.inf
                     if pmax is None:
                         pmax = np.inf
+                        
+                    if expr and expr.lower() != "none":
+                        vary = False
+                        ev._exprs.append((len(ev._param_names), expr))
 
                     value = float(max(pmin, min(pmax, value)))
 
@@ -135,6 +145,38 @@ class TensorEvaluator:
             p_full = np.empty((N, self._n_total))
             p_full[:, self._free_idx] = p_free
             p_full[:, self._fixed_idx] = self._fixed_values
+            
+        if self._exprs:
+            loc = {name: p_full[..., i] for i, name in enumerate(self._param_names)}
+            loc["np"] = np
+            loc["pi"] = np.pi
+            loc["sqrt"] = np.sqrt
+            loc["exp"] = np.exp
+            loc["log"] = np.log
+            loc["sin"] = np.sin
+            loc["cos"] = np.cos
+            
+            pending = list(self._exprs)
+            for _ in range(len(pending)):
+                if not pending:
+                    break
+                next_pending = []
+                for idx, expr in pending:
+                    try:
+                        val = eval(expr, {"__builtins__": None}, loc)
+                        if p_full.ndim == 1:
+                            p_full[idx] = val
+                        else:
+                            p_full[:, idx] = val
+                        loc[self._param_names[idx]] = p_full[..., idx]
+                    except NameError:
+                        next_pending.append((idx, expr))
+                    except Exception:
+                        next_pending.append((idx, expr))
+                if len(next_pending) == len(pending):
+                    break
+                pending = next_pending
+                
         return p_full
 
     # ── Model evaluation ─────────────────────────────────────────────────
@@ -175,8 +217,34 @@ class TensorEvaluator:
             else:
                 J_full[:, :, slc] = numerical_jacobian(eval_fn, x, p_peak)
 
-        # Return only columns for free parameters
-        return J_full[:, :, self._free_idx]
+        if not getattr(self, '_exprs', []):
+            # Return only columns for free parameters
+            return J_full[:, :, self._free_idx]
+
+        # Chain rule via J_expr: J_true = J_full @ J_expr
+        K_free = p_free.shape[1] if p_free.ndim == 2 else len(p_free)
+        is_1d = p_free.ndim == 1
+        p_free_2d = p_free[None, :] if is_1d else p_free
+        N_batch = p_free_2d.shape[0]
+        
+        J_expr = np.zeros((N_batch, self._n_total, K_free))
+        eps = 1e-8
+        
+        p_full_2d = p_full[None, :] if is_1d else p_full
+        
+        for f in range(K_free):
+            p_free_plus = p_free_2d.copy()
+            step = np.maximum(np.abs(p_free_2d[:, f]) * 1e-6, eps)
+            p_free_plus[:, f] += step
+            p_full_plus = self._to_full(p_free_plus)
+            J_expr[:, :, f] = (p_full_plus - p_full_2d) / step[:, None]
+            
+        if is_1d:
+            J_true = np.einsum('nmk,nkf->nmf', J_full[None, :, :], J_expr)[0]
+        else:
+            J_true = np.einsum('nmk,nkf->nmf', J_full, J_expr)
+            
+        return J_true
 
     # ── Result construction ──────────────────────────────────────────────
 

@@ -142,7 +142,8 @@ class TensorFittingEngine:
         t0 = time.perf_counter()
         fit_results = []
         for i, spectrum in enumerate(spectra):
-            fr = evaluator.build_result(p_opt[i], spectrum.x, spectrum.y, bool(success[i]))
+            w = weights_matrix[i] if weights_matrix is not None else None
+            fr = evaluator.build_result(p_opt[i], spectrum.x, spectrum.y, bool(success[i]), weights=w)
             if weights_matrix is not None:
                 fr.best_fit = fr.best_fit.copy()
                 fr.best_fit[weights_matrix[i] == 0] = 0.0

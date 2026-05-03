@@ -127,12 +127,13 @@ class FitResult:
         key in result.params    -> bool
     """
 
-    def __init__(self, success, params_dict, best_fit):
+    def __init__(self, success, params_dict, best_fit, rsquared=0.0):
         self.success = success
         self.params = {k: ParamValue(v) for k, v in params_dict.items()}
         self.best_fit = best_fit
         # lmfit ModelResult compatibility: best_values is a plain dict
         self.best_values = dict(params_dict)
+        self.rsquared = rsquared
 
 
 # ═══════════════════════════════════════════════════════════════════════════

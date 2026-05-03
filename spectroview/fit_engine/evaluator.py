@@ -248,7 +248,7 @@ class TensorEvaluator:
 
     # ── Result construction ──────────────────────────────────────────────
 
-    def build_result(self, p_free, x, y, success):
+    def build_result(self, p_free, x, y, success, weights=None):
         """Build a FitResult for a single spectrum.
 
         Args:
@@ -256,6 +256,7 @@ class TensorEvaluator:
             x: (M,) x-axis
             y: (M,) measured data
             success: bool
+            weights: (M,) weights mask (optional)
         """
         p_full = self._to_full(p_free)
         best_fit = self.evaluate(x, p_free[None, :])[0]
@@ -264,7 +265,24 @@ class TensorEvaluator:
         for i, name in enumerate(self._param_names):
             params_dict[name] = p_full[i]
 
-        return FitResult(success=success, params_dict=params_dict, best_fit=best_fit)
+        rsquared = 0.0
+        if y is not None:
+            if weights is not None:
+                residuals = weights * (y - best_fit)
+                ss_res = np.sum(residuals**2)
+                if weights.sum() > 0:
+                    y_mean = np.average(y, weights=weights)
+                    ss_tot = np.sum(weights * (y - y_mean)**2)
+                else:
+                    ss_tot = 0.0
+            else:
+                ss_res = np.sum((y - best_fit)**2)
+                ss_tot = np.sum((y - np.mean(y))**2)
+                
+            if ss_tot > 0:
+                rsquared = 1.0 - (ss_res / ss_tot)
+
+        return FitResult(success=success, params_dict=params_dict, best_fit=best_fit, rsquared=rsquared)
 
     def write_back_to_spectrum(self, spectrum, fit_result):
         """Write fit result back to MSpectrum (same interface as core)."""

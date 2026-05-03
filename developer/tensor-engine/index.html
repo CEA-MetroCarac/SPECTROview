@@ -71,7 +71,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="red">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -126,7 +126,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="red"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -136,7 +136,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="red" data-md-color-accent="red"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
     
       <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -1261,27 +1261,29 @@
 - <strong>Sequential Execution</strong>: Even with multiprocessing, the overhead of serialization and inter-process communication creates bottlenecks.</p>
 <p>The <strong>Tensor Fit Engine</strong> achieves massive speedups (~10x to 15x faster) through the following core principles:</p>
 <ol>
-<li><strong>All-at-Once Optimization</strong>: It optimizes all $N$ spectra simultaneously. The parameter matrices, data arrays, and residuals are manipulated as large 2D or 3D tensors.</li>
+<li><strong>All-at-Once Optimization</strong>: It optimizes all <span class="arithmatex">\(N\)</span> spectra simultaneously. The parameter matrices, data arrays, and residuals are manipulated as large 2D or 3D tensors.</li>
 <li><strong>Vectorized Operations (BLAS/LAPACK)</strong>: By framing the problem as tensors, the heavy lifting is offloaded to highly optimized C/Fortran libraries.<ul>
-<li>Matrix multiplications and transpositions for the normal equations ($J^T J$ and $J^T r$) are performed using <code>np.einsum</code>.</li>
+<li>Matrix multiplications and transpositions for the normal equations (<span class="arithmatex">\(J^T J\)</span> and <span class="arithmatex">\(J^T r\)</span>) are performed using <code>np.einsum</code>.</li>
 <li>The linear systems for all spectra are solved in a single call to <code>np.linalg.solve</code>, which dispatches to LAPACK.</li>
 </ul>
 </li>
-<li><strong>Analytical Jacobians</strong>: Instead of estimating derivatives numerically, the engine uses exact analytical formulas for common peak shapes (Lorentzian, Gaussian, PseudoVoigt). This eliminates the $2 * K$ extra evaluations entirely.</li>
+<li><strong>Analytical Jacobians</strong>: Instead of estimating derivatives numerically, the engine uses exact analytical formulas for common peak shapes (Lorentzian, Gaussian, PseudoVoigt). This eliminates the <span class="arithmatex">\(2K\)</span> extra evaluations entirely.</li>
 <li><strong>No Spatial Propagation</strong>: Unlike older map-fitting approaches that used spiral traversal to propagate guesses from neighbor to neighbor (forcing sequential execution), the tensor engine initializes all pixels independently using amplitude scaling, allowing purely parallel tensor math.</li>
 </ol>
 <hr />
 <h2 id="2-code-logic-and-core-implementation-principles">2. Code Logic and Core Implementation Principles<a class="headerlink" href="#2-code-logic-and-core-implementation-principles" title="Permanent link">&para;</a></h2>
 <p>The engine implements a <strong>Batched Levenberg-Marquardt</strong> algorithm.</p>
 <h3 id="the-mathematics-of-batched-lm">The Mathematics of Batched LM<a class="headerlink" href="#the-mathematics-of-batched-lm" title="Permanent link">&para;</a></h3>
-<p>For $N$ spectra, each with $M$ wavelength points and $K$ free parameters:
-1.  <strong>Evaluate Model</strong>: $\mathbf{Y}<em pred="pred">{pred} = f(\mathbf{x}, \mathbf{p})$, returning an $(N, M)$ tensor.
-2.  <strong>Calculate Residuals</strong>: $\mathbf{r} = \mathbf{W} \circ (\mathbf{Y}</em>)$, returning an $(N, M)$ tensor.
-3.  } - \mathbf{Y}_{data<strong>Calculate Jacobian</strong>: $\mathbf{J} = \frac{\partial f}{\partial \mathbf{p}}$, returning an $(N, M, K)$ tensor.
-4.  <strong>Normal Equations</strong>: Assemble $J^T J$ (size $N \times K \times K$) and $J^T r$ (size $N \times K$).
-5.  <strong>Damping (Marquardt step)</strong>: Add a damping factor $\lambda_i$ to the diagonal of $J^T J$ for each spectrum $i$.
-6.  <strong>Solve</strong>: Solve $(J^T J + \lambda \text{diag}(J^T J)) \delta \mathbf{p} = -J^T r$ for all $N$ spectra simultaneously.
-7.  <strong>Evaluate Step</strong>: Update $\mathbf{p} \leftarrow \mathbf{p} + \delta \mathbf{p}$ (with projection to bounds) and evaluate the new cost. Adjust $\lambda$ per spectrum based on success/failure.</p>
+<p>For <span class="arithmatex">\(N\)</span> spectra, each with <span class="arithmatex">\(M\)</span> wavelength points and <span class="arithmatex">\(K\)</span> free parameters:</p>
+<ol>
+<li><strong>Evaluate Model</strong>: <span class="arithmatex">\(\mathbf{Y}_{pred} = f(\mathbf{x}, \mathbf{p})\)</span>, returning an <span class="arithmatex">\((N, M)\)</span> tensor.</li>
+<li><strong>Calculate Residuals</strong>: <span class="arithmatex">\(\mathbf{r} = \mathbf{W} \circ (\mathbf{Y}_{pred} - \mathbf{Y}_{data})\)</span>, returning an <span class="arithmatex">\((N, M)\)</span> tensor.</li>
+<li><strong>Calculate Jacobian</strong>: <span class="arithmatex">\(\mathbf{J} = \frac{\partial f}{\partial \mathbf{p}}\)</span>, returning an <span class="arithmatex">\((N, M, K)\)</span> tensor.</li>
+<li><strong>Normal Equations</strong>: Assemble <span class="arithmatex">\(J^T J\)</span> (size <span class="arithmatex">\(N \times K \times K\)</span>) and <span class="arithmatex">\(J^T r\)</span> (size <span class="arithmatex">\(N \times K\)</span>).</li>
+<li><strong>Damping (Marquardt step)</strong>: Add a damping factor <span class="arithmatex">\(\lambda_i\)</span> to the diagonal of <span class="arithmatex">\(J^T J\)</span> for each spectrum <span class="arithmatex">\(i\)</span>.</li>
+<li><strong>Solve</strong>: Solve <span class="arithmatex">\((J^T J + \lambda \text{diag}(J^T J)) \delta \mathbf{p} = -J^T r\)</span> for all <span class="arithmatex">\(N\)</span> spectra simultaneously.</li>
+<li><strong>Evaluate Step</strong>: Update <span class="arithmatex">\(\mathbf{p} \leftarrow \mathbf{p} + \delta \mathbf{p}\)</span> (with projection to bounds) and evaluate the new cost. Adjust <span class="arithmatex">\(\lambda\)</span> per spectrum based on success/failure.</li>
+</ol>
 <h3 id="independent-convergence">Independent Convergence<a class="headerlink" href="#independent-convergence" title="Permanent link">&para;</a></h3>
 <p>Even though the math is batched, each spectrum converges independently. The optimizer uses a boolean mask (<code>active = ~converged</code>) to skip Jacobian calculations and linear solves for spectra that have already reached the tolerance limits, progressively speeding up the later iterations.</p>
 <hr />
@@ -1304,7 +1306,7 @@
 <li><strong>Model Application (Optional)</strong>: If <code>apply_model_to_spectra=True</code>, the <code>fit_model</code> dictionary is applied to all <code>MSpectrum</code> objects, ensuring they have the correct number and type of peaks.</li>
 <li><strong>Preprocessing</strong>: <code>spectrum.preprocess()</code> is called for all spectra (applying spectral ranges, evaluating and subtracting baselines).</li>
 <li><strong>Evaluator Construction</strong>: <code>TensorEvaluator.from_fit_model()</code> parses the model, determining which parameters are free vs. fixed, and mapping them to a flat vector space.</li>
-<li><strong>Data Extraction</strong>: The $(N, M)$ data matrix $\mathbf{Y}$ and initial parameter matrix $\mathbf{p_0}$ are extracted. If it's a first fit, $\mathbf{p_0}$ amplitudes are scaled to the actual data. If it's a re-fit, $\mathbf{p_0}$ is extracted from the existing fits (warm start) with slight noise added to prevent premature convergence.</li>
+<li><strong>Data Extraction</strong>: The <span class="arithmatex">\((N, M)\)</span> data matrix <span class="arithmatex">\(\mathbf{Y}\)</span> and initial parameter matrix <span class="arithmatex">\(\mathbf{p_0}\)</span> are extracted. If it's a first fit, <span class="arithmatex">\(\mathbf{p_0}\)</span> amplitudes are scaled to the actual data. If it's a re-fit, <span class="arithmatex">\(\mathbf{p_0}\)</span> is extracted from the existing fits (warm start) with slight noise added to prevent premature convergence.</li>
 <li><strong>Optimization</strong>: <code>batched_levenberg_marquardt()</code> runs the iterations until all spectra converge or <code>max_iter</code> is reached.</li>
 <li><strong>Result Writeback</strong>: The optimized free parameters are reconstructed into full parameter sets by the evaluator, and written back to the <code>spectrum.result_fit</code> and <code>param_hints</code> of each <code>MSpectrum</code>.</li>
 </ol>
@@ -1314,7 +1316,7 @@
 <h3 id="key-parameters">Key Parameters<a class="headerlink" href="#key-parameters" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>max_ite</code> (default: 200)</strong>: The maximum number of Levenberg-Marquardt iterations. Increasing this might help extremely difficult spectra converge but will increase total execution time.</li>
-<li><strong><code>xtol</code> (default: 1e-4)</strong>: The relative tolerance for the parameter step size $\delta p$. If the relative change in all parameters is less than <code>xtol</code>, the spectrum is considered converged.</li>
+<li><strong><code>xtol</code> (default: 1e-4)</strong>: The relative tolerance for the parameter step size <span class="arithmatex">\(\delta p\)</span>. If the relative change in all parameters is less than <code>xtol</code>, the spectrum is considered converged.</li>
 <li><strong><code>ftol</code> (default: 1e-4)</strong>: The relative tolerance for the cost function (sum of squared residuals). If the relative change in the cost is less than <code>ftol</code>, the spectrum is considered converged.</li>
 </ul>
 <h3 id="tuning-for-performance-vs-accuracy">Tuning for Performance vs. Accuracy<a class="headerlink" href="#tuning-for-performance-vs-accuracy" title="Permanent link">&para;</a></h3>
@@ -1420,6 +1422,10 @@
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

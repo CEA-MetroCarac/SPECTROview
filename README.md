@@ -5,7 +5,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14148070.svg)](https://doi.org/10.5281/zenodo.14147172) 
 
 <p align="center">
-    <img width=100 src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/figures/icon.png">
+    <img width=100 src="docs/assets/icon.png">
 </p>
 
 ## SPECTROview : A Tool for Spectroscopic Data Processing and Visualization.
@@ -39,19 +39,19 @@ ___
 ______
 ### Three separate tabs for processing discrete spectra, hyperspectral data, and data visualization:
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/GIF/General.gif">
+    <img src="docs/assets/general_demo.gif">
 </p>
 
 ### Build a fit model for later use, copy/paste to others, fit multiple spectra or maps, collect all best-fit results with one click:
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/GIF/Fitting2.gif">
+    <img src="docs/assets/fitting_demo.gif">
 </p>
 
 ### Plot and visualize data radpily and easily:
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/doc/GIF/Plotting.gif">
+    <img src="docs/assets/plotting_demo.gif">
 </p>
 
 ____

@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QDialog, QGridLayout, QApplication, QListWidgetItem, QCompleter
 )
 from PySide6.QtCore import Qt, Signal, QSize, QUrl
-from PySide6.QtGui import QIcon, QDesktopServices, QBrush
+from PySide6.QtGui import QIcon, QDesktopServices, QBrush, QFont, QShortcut, QKeySequence
 
 from spectroview import ICON_DIR, PLOT_STYLES, AXIS_LABELS
 from spectroview.model.m_settings import MSettings
@@ -18,6 +18,7 @@ from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
 from spectroview.viewmodel.utils import show_toast_notification
 from spectroview.view.components.customized_widgets import CustomizedPalette
+from spectroview.view.components.customize_graph_dialog import CustomizeGraphDialog
 
 class VWorkspaceGraphs(QWidget):
     """View for Graphs Workspace."""
@@ -29,6 +30,9 @@ class VWorkspaceGraphs(QWidget):
         
         # Graph storage: {graph_id: (Graph widget, QDialog, QMdiSubWindow)}
         self.graph_widgets = {}
+        
+        # Singleton customize dialog
+        self._customize_dialog = None
         
         self.init_ui()
         self.setup_connections()
@@ -498,7 +502,6 @@ class VWorkspaceGraphs(QWidget):
             placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
             
             # Set larger font size
-            from PySide6.QtGui import QFont
             font = QFont()
             font.setPointSize(11)
             placeholder.setFont(font)
@@ -710,6 +713,7 @@ class VWorkspaceGraphs(QWidget):
         
         graph_widget = VGraph(graph_id=graph_model.graph_id)
         graph_widget.replicate_requested.connect(self._on_replicate_graph)
+        graph_widget.customize_requested.connect(self._show_or_switch_customize_dialog)
         
         # Connect to properties_changed signal to update ViewModel when graph properties change
         if hasattr(graph_widget, 'properties_changed'):
@@ -749,7 +753,6 @@ class VWorkspaceGraphs(QWidget):
     
     def _wrap_graph_in_dialog(self, graph_widget: VGraph) -> QDialog:
         """Wrap graph widget in dialog."""
-        from PySide6.QtWidgets import QDialog, QVBoxLayout
         graph_dialog = QDialog(self)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -793,6 +796,29 @@ class VWorkspaceGraphs(QWidget):
     def _on_graph_properties_changed(self, graph_id: int, properties: dict):
         """Update graph model when properties change directly from graph widget."""
         self.vm.update_graph(graph_id, properties)
+    
+    def _show_or_switch_customize_dialog(self, graph_id: int):
+        """Show, create, or switch the singleton CustomizeGraphDialog."""
+        if graph_id not in self.graph_widgets:
+            return
+        
+        graph_widget, _, _ = self.graph_widgets[graph_id]
+        
+        if self._customize_dialog is None:
+            # Create the dialog for the first time
+            self._customize_dialog = CustomizeGraphDialog(graph_widget, graph_id, parent=self)
+            self._customize_dialog.show()
+        elif self._customize_dialog.isVisible():
+            # Dialog is open — switch to the new graph
+            self._customize_dialog.switch_graph(graph_widget, graph_id)
+            self._customize_dialog.raise_()
+            self._customize_dialog.activateWindow()
+        else:
+            # Dialog exists but was closed/hidden — switch and re-show
+            self._customize_dialog.switch_graph(graph_widget, graph_id)
+            self._customize_dialog.show()
+            self._customize_dialog.raise_()
+            self._customize_dialog.activateWindow()
     
     def _on_update_plot(self):
         """Update selected plot."""
@@ -869,10 +895,10 @@ class VWorkspaceGraphs(QWidget):
             'legend_bbox': graph_widget.legend_bbox
         })
         
-        # If Z changed and CustomizeGraphDialog is open, reload legend properties
-        if z_changed and hasattr(graph_widget, '_customize_dialog') and graph_widget._customize_dialog is not None:
-            if graph_widget._customize_dialog.isVisible():
-                graph_widget._customize_dialog.legend_widget.load_legend_properties()
+        # If Z changed and CustomizeGraphDialog is open, reload its content
+        if z_changed and self._customize_dialog is not None and self._customize_dialog.isVisible():
+            if self._customize_dialog.graph_id == graph_model.graph_id:
+                self._customize_dialog.legend_widget.load_legend_properties()
         
         # Update window title
         title = f"{graph_model.graph_id}-{graph_model.plot_style}: [{graph_model.x}] vs [{graph_model.y[0] if graph_model.y else 'None'}]"
@@ -1034,6 +1060,7 @@ class VWorkspaceGraphs(QWidget):
             # Create Graph widget
             graph_widget = VGraph(graph_id=graph_model.graph_id)
             graph_widget.replicate_requested.connect(self._on_replicate_graph)
+            graph_widget.customize_requested.connect(self._show_or_switch_customize_dialog)
 
             # Connect to properties_changed signal to update ViewModel when graph properties change
             if hasattr(graph_widget, 'properties_changed'):
@@ -1123,6 +1150,11 @@ class VWorkspaceGraphs(QWidget):
         )
         
         if reply == QMessageBox.Yes:
+            # Close singleton customize dialog if open
+            if self._customize_dialog is not None:
+                self._customize_dialog.close()
+                self._customize_dialog = None
+            
             # Close all MDI subwindows
             for sub_window in self.mdi_area.subWindowList():
                 self.mdi_area.removeSubWindow(sub_window)
@@ -1163,6 +1195,13 @@ class VWorkspaceGraphs(QWidget):
         
         # Sync GUI controls with graph properties
         self._sync_gui_from_graph(graph_model)
+        
+        # Auto-switch the singleton customize dialog if it's open
+        if self._customize_dialog is not None and self._customize_dialog.isVisible():
+            graph_id = graph_model.graph_id
+            if graph_id in self.graph_widgets:
+                gw, _, _ = self.graph_widgets[graph_id]
+                self._customize_dialog.switch_graph(gw, graph_id)
         
         # Update graph list combobox selection (block signals to prevent conflicts)
         self.cbb_graph_list.blockSignals(True)
@@ -1384,7 +1423,6 @@ class VWorkspaceGraphs(QWidget):
         sub_window.resize(model.plot_width, model.plot_height)
         
         # Block ESC key — Qt internally hides the widget on ESC
-        from PySide6.QtGui import QShortcut, QKeySequence
         shortcut = QShortcut(QKeySequence(Qt.Key_Escape), sub_window)
         shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         shortcut.activated.connect(lambda: None)  # Consume ESC, do nothing
@@ -1404,6 +1442,11 @@ class VWorkspaceGraphs(QWidget):
     
     def _on_graph_closed(self, graph_id: int):
         """Handle graph closing."""
+        # Close singleton customize dialog if it's showing this graph
+        if self._customize_dialog is not None and self._customize_dialog.graph_id == graph_id:
+            self._customize_dialog.close()
+            self._customize_dialog = None
+        
         # Remove from storage
         if graph_id in self.graph_widgets:
             del self.graph_widgets[graph_id]
@@ -1465,6 +1508,7 @@ class VWorkspaceGraphs(QWidget):
             filtered_df = self.vm.apply_filters(graph_model.df_name, graph_model.filters)
             graph_widget = VGraph(graph_id=graph_model.graph_id)
             graph_widget.replicate_requested.connect(self._on_replicate_graph)
+            graph_widget.customize_requested.connect(self._show_or_switch_customize_dialog)
 
             # Connect to properties_changed signal to update ViewModel when graph properties change
             if hasattr(graph_widget, 'properties_changed'):
@@ -1484,6 +1528,11 @@ class VWorkspaceGraphs(QWidget):
     
     def clear_workspace(self):
         """Clear workspace."""
+        # Close singleton customize dialog
+        if self._customize_dialog is not None:
+            self._customize_dialog.close()
+            self._customize_dialog = None
+        
         # Close and remove all MDI subwindows
         for sub_window in self.mdi_area.subWindowList():
             sub_window.close()

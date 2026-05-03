@@ -93,10 +93,28 @@ class CustomizeGraphDialog(QDialog):
 
     def open_axis_tab(self):
         """Open the dialog and switch to the AXIS tab."""
-        self.tabs.setCurrentIndex(0) # Switch to Legend tab (index 1)
+        self.tabs.setCurrentIndex(0) # Switch to Axis tab (index 0)
         self.show()
         self.raise_()
         self.activateWindow()
+    
+    def switch_graph(self, graph_widget, graph_id):
+        """Switch the dialog to a different graph widget.
+        
+        Re-binds all child widgets (legend, annotations, axis) to the new
+        graph and reloads their content.
+        """
+        if self.graph_id == graph_id:
+            return  # Already showing this graph
+        
+        self.graph_widget = graph_widget
+        self.graph_id = graph_id
+        self.setWindowTitle(f"Customize Graph {graph_id}")
+        
+        # Switch each child widget to the new graph
+        self.legend_widget.switch_graph(graph_widget)
+        self.annotations_widget.switch_graph(graph_widget)
+        self.axis_widget.switch_graph(graph_widget)
 
 
 class CustomizeLegend(QWidget):
@@ -110,6 +128,12 @@ class CustomizeLegend(QWidget):
         self._setup_ui()
         
         # Load initial properties
+        self.load_legend_properties()
+    
+    def switch_graph(self, graph_widget):
+        """Switch to a different graph widget and reload legend properties."""
+        self.graph_widget = graph_widget
+        self.original_legend_properties = None
         self.load_legend_properties()
     
     def _setup_ui(self):
@@ -294,6 +318,22 @@ class CustomizeAnnotations(QWidget):
         self.graph_widget.annotation_position_changed.connect(self._on_annotation_dragged)
         
         # Load initial annotations
+        self.load_annotations()
+    
+    def switch_graph(self, graph_widget):
+        """Switch to a different graph widget and reload annotations."""
+        # Disconnect from old graph's signal
+        try:
+            self.graph_widget.annotation_position_changed.disconnect(self._on_annotation_dragged)
+        except (RuntimeError, TypeError):
+            pass  # Already disconnected or never connected
+        
+        self.graph_widget = graph_widget
+        
+        # Connect to new graph's signal
+        self.graph_widget.annotation_position_changed.connect(self._on_annotation_dragged)
+        
+        # Reload annotations for the new graph
         self.load_annotations()
     
     def _setup_ui(self):
@@ -542,6 +582,11 @@ class CustomizeAxis(QWidget):
         self._setup_ui()
         
         # Load current settings
+        self.load_axis_settings()
+    
+    def switch_graph(self, graph_widget):
+        """Switch to a different graph widget and reload axis settings."""
+        self.graph_widget = graph_widget
         self.load_axis_settings()
     
     def _setup_ui(self):

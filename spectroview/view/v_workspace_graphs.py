@@ -681,7 +681,7 @@ class VWorkspaceGraphs(QWidget):
         if not self._validate_plot_request():
             return
         
-        plot_config = self._collect_plot_config()
+        plot_config = self._collect_plot_config(include_labels=False)
         if not plot_config['x'] or not plot_config['y']:
             QMessageBox.warning(self, "Missing Axes", "Please select X and Y axes.")
             return
@@ -1043,7 +1043,7 @@ class VWorkspaceGraphs(QWidget):
         if wafer_index >= 0:
             self.cbb_plot_style.setCurrentIndex(wafer_index)
         
-        plot_config = self._collect_plot_config()
+        plot_config = self._collect_plot_config(include_labels=False)
         plot_config['plot_style'] = 'wafer'
         
         created_graphs = self.vm.create_multi_wafer_graphs(
@@ -1304,8 +1304,13 @@ class VWorkspaceGraphs(QWidget):
     # Plotting Helper Methods
     # ═════════════════════════════════════════════════════════════════════
     
-    def _collect_plot_config(self) -> dict:
-        """Collect plot configuration."""
+    def _collect_plot_config(self, include_labels: bool = True) -> dict:
+        """Collect plot configuration.
+        
+        Args:
+            include_labels: If True, includes custom title and axis labels from GUI.
+                          If False, sets them to None so graph auto-generates them.
+        """
         plot_style = self.cbb_plot_style.currentText()
         z_value = self.cbb_z.currentText() if self.cbb_z.currentText() != "None" else None
         
@@ -1320,10 +1325,10 @@ class VWorkspaceGraphs(QWidget):
             'z': z_value,
             'xlogscale': self.cb_xlog.isChecked(),
             'ylogscale': self.cb_ylog.isChecked(),
-            'plot_title': self.edit_plot_title.text() or None,
-            'xlabel': self.edit_xlabel.text() or None,
-            'ylabel': self.edit_ylabel.text() or None,
-            'zlabel': self.edit_zlabel.text() or None,
+            'plot_title': (self.edit_plot_title.text() or None) if include_labels else None,
+            'xlabel': (self.edit_xlabel.text() or None) if include_labels else None,
+            'ylabel': (self.edit_ylabel.text() or None) if include_labels else None,
+            'zlabel': (self.edit_zlabel.text() or None) if include_labels else None,
             'color_palette': self.cbb_colormap.currentText() if use_palette else 'jet',
             'wafer_size': float(self.cbb_wafer_size.currentText()),
             'wafer_stats': self.cb_wafer_stats.isChecked(),

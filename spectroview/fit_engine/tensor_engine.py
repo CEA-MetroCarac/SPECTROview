@@ -20,6 +20,9 @@ from spectroview.viewmodel.utils import apply_custom_fit_model
 
 class TensorFittingEngine:
     """High-performance tensor fitting engine for hyperspectral data."""
+    
+    def __init__(self):
+        self.timings = {}
 
     def fit_spectra(
         self,
@@ -50,7 +53,7 @@ class TensorFittingEngine:
         if apply_model_to_spectra:
             t0 = time.perf_counter()
             self._apply_model_to_all(spectra, fit_model)
-            print(f"  [TensorEngine] Step 1 - apply_model: {time.perf_counter()-t0:.3f}s")
+            self.timings["Step 1 - apply_model"] = f"{time.perf_counter()-t0:.3f}s"
 
         # ─── 2. Build evaluator ───
         evaluator = TensorEvaluator.from_fit_model(fit_model)
@@ -65,7 +68,7 @@ class TensorFittingEngine:
         for spectrum in spectra:
             if not getattr(spectrum, 'is_preprocessed', False):
                 spectrum.preprocess()
-        print(f"  [TensorEngine] Step 2 - preprocess: {time.perf_counter()-t0:.3f}s")
+        self.timings["Step 2 - preprocess"] = f"{time.perf_counter()-t0:.3f}s"
 
         # Build weights matrix to match lmfit masking behavior
         weights_matrix = self._build_fit_weights(spectra, fit_params)
@@ -105,7 +108,7 @@ class TensorFittingEngine:
             p0 = evaluator.build_p0_matrix(spectra, x_array)
             
         evaluator.apply_noise_threshold(spectra, p0, fit_params)
-        print(f"  [TensorEngine] Step 3 - build p0: {time.perf_counter()-t0:.3f}s")
+        self.timings["Step 3 - build p0"] = f"{time.perf_counter()-t0:.3f}s"
 
         # ─── 6. Parse fit parameters ───
         if fit_params is None:
@@ -132,9 +135,7 @@ class TensorFittingEngine:
             cancel_check=cancel_check,
         )
         fit_time = time.perf_counter() - t0
-        print(f"  [TensorEngine] Step 4 - tensor fit: {fit_time:.3f}s  "
-              f"({fit_time/n_spectra*1000:.1f} ms/spectrum, "
-              f"{success.sum()}/{n_spectra} converged)")
+        self.timings["Step 4 - tensor fit"] = f"{fit_time:.3f}s ({fit_time/n_spectra*1000:.1f} ms/spectrum, {success.sum()}/{n_spectra} converged)"
 
         evaluator.apply_noise_threshold(spectra, p_opt, fit_params)
         
@@ -149,7 +150,7 @@ class TensorFittingEngine:
                 fr.best_fit[weights_matrix[i] == 0] = 0.0
             evaluator.write_back_to_spectrum(spectrum, fr)
             fit_results.append(fr)
-        print(f"  [TensorEngine] Step 5 - write_back: {time.perf_counter()-t0:.3f}s")
+        self.timings["Step 5 - write_back"] = f"{time.perf_counter()-t0:.3f}s"
 
         return fit_results
 

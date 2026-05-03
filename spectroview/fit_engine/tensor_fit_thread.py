@@ -13,13 +13,15 @@ from spectroview.fit_engine.tensor_engine import TensorFittingEngine
 class TensorFitThread(QThread):
     """Run the TensorFittingEngine on a background thread.
 
-    Signals:
+    signals:
         progress_changed(current, total, percent, elapsed)
+        timings_ready(str)
         finished()
     """
     progress_changed = Signal(int, int, int, float)
+    timings_ready = Signal(str)
 
-    def __init__(self, spectrums, fit_model, fnames, ncpus=1,
+    def __init__(self, spectrums, fit_model, fnames,
                  coords=None, apply_model_to_spectra=True):
         super().__init__()
         
@@ -32,7 +34,6 @@ class TensorFitThread(QThread):
         self._spectrums = spectrums      # MSpectra collection
         self._fit_model = fit_model
         self._fnames = fnames
-        self._ncpus = ncpus
         self._coords = coords
         self._apply_model_to_spectra = apply_model_to_spectra
         self._is_cancelled = False
@@ -48,8 +49,7 @@ class TensorFitThread(QThread):
         spectra = [s for s in self._spectrums if s.fname in fname_set]
 
         n = len(spectra)
-        print(f"[TensorFitThread] Starting: {n} spectra, "
-              f"apply_model={self._apply_model_to_spectra}")
+        n = len(spectra)
 
         if not spectra:
             return
@@ -84,6 +84,8 @@ class TensorFitThread(QThread):
         if not self._is_cancelled:
             elapsed = time.perf_counter() - t_start
             self.progress_changed.emit(n, n, 100, elapsed)
-
-        elapsed = time.perf_counter() - t_start
-        print(f"[TensorFitThread] DONE in {elapsed:.2f}s")
+            
+            # Emit timings string
+            timings_str = f"Fit time: {elapsed:.2f}s\n"
+            timings_str += "\n".join([f"  {k}: {v}" for k, v in engine.timings.items()])
+            self.timings_ready.emit(timings_str)

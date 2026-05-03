@@ -41,6 +41,7 @@ class VMWorkspaceSpectra(QObject):
     
     fit_in_progress = Signal(bool)  # Enable/disable fit buttons
     fit_progress_updated = Signal(int, int, int, float)  # To show fitting progress in GUI
+    fit_timings_ready = Signal(str)  # Tooltip with timings
     
     # Fit results signals
     fit_results_updated = Signal(object)  # pd.DataFrame
@@ -679,6 +680,7 @@ class VMWorkspaceSpectra(QObject):
 
 
     def fit(self, apply_all: bool = False):
+        """Fitting action for selected spectra with current existing peak models."""
         # Prevent concurrent fit operations
         if self._is_fitting:
             self.notify.emit("Fit already in progress. Please wait...")
@@ -823,7 +825,6 @@ class VMWorkspaceSpectra(QObject):
 
         fnames = [s.fname for s in spectra]
         fit_settings = self.settings.load_fit_settings()
-        ncpu = fit_settings.get("ncpu", 1)
 
         # Ensure the latest settings are passed to the fit engine
         if "fit_params" not in fit_model:
@@ -846,7 +847,6 @@ class VMWorkspaceSpectra(QObject):
                 self.spectra,
                 fit_model,
                 fnames,
-                ncpus=ncpu,
                 coords=None,  # No spatial propagation for discrete spectra
                 apply_model_to_spectra=apply_model_to_spectra,
             )
@@ -857,10 +857,14 @@ class VMWorkspaceSpectra(QObject):
                 self.spectra,
                 fit_model,
                 fnames,
-                ncpu
+                ncpu=1  # Hardcode ncpu to 1 since old setting was removed
             )
 
         self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
+
+        if isinstance(self._fit_thread, TensorFitThread):
+            self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
+            
         self._fit_thread.finished.connect(self._on_fit_finished)
         self._fit_thread.start()
 

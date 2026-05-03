@@ -164,6 +164,7 @@ class VWorkspaceSpectra(QWidget):
             # Reset to default state
             self.progress_bar.setValue(100)
             self.progress_bar.setFormat("")
+            self.progress_bar.setToolTip("")
     
     def _on_spectra_list_changed(self, spectra: list):
         """Handle spectra list update from ViewModel."""
@@ -280,6 +281,7 @@ class VWorkspaceSpectra(QWidget):
         vm.fit_in_progress.connect(lambda in_progress: self.v_fit_model_builder.set_fit_buttons_enabled(not in_progress))
         vm.fit_in_progress.connect(self.btn_stop_fit.setVisible)  # Show/hide Stop button
         vm.fit_progress_updated.connect(self._update_progress_bar)
+        vm.fit_timings_ready.connect(self.progress_bar.setToolTip)
         
         # Send DataFrame to Graphs workspace
         vm.send_df_to_graphs.connect(self._send_df_to_graphs)

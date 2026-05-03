@@ -352,7 +352,13 @@ class Main(QMainWindow):
         dlg.exec()
 
     def manual(self):
-        """Open user manual PDF using system's default PDF viewer (cross-platform)."""
+        """Open user manual PDF or web documentation."""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers & Qt.ControlModifier:
+            url = QUrl("https://cea-metrocarac.github.io/SPECTROview/user-guide/")
+            QDesktopServices.openUrl(url)
+            return
+
         if not os.path.exists(USER_MANUAL_PDF):
             QMessageBox.warning(
                 self, 

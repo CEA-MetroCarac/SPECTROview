@@ -1,4 +1,5 @@
 [![PyPI version](https://badge.fury.io/py/spectroview.svg)](https://badge.fury.io/py/spectroview)
+[![Doc](https://img.shields.io/badge/%F0%9F%95%AE-docs-green.svg)](https://CEA-MetroCarac.github.io/SPECTROview/)
 [![Github](https://img.shields.io/badge/GitHub-GPL--3.0-informational)](https://github.com/CEA-MetroCarac/spectroview)
 [![Downloads](https://img.shields.io/pypi/dm/spectroview.svg)](https://pypi.org/project/spectroview/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14148070.svg)](https://doi.org/10.5281/zenodo.14147172) 
@@ -13,11 +14,12 @@ SPECTROview is free, open-source software designed for spectroscopic data analys
 
 With its built-in visualization tools, SPECTROview streamlines your workflow by combining data processing and visualization into a single, efficient application. 
 
+- Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**](https://CEA-MetroCarac.github.io/SPECTROview/). A PDF manual is also available [here](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/resources/SPECTROview_UserManual.pdf) or from within the application.
 - **Installation**: Instructions can be found at the bottom of this page.
 - Check out [**Releases**](https://github.com/CEA-MetroCarac/SPECTROview/releases) page for the latest updates and new features.
 - **Getting Started**: Check out [this folder](https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples) to see the supported data formats and find example datasets for practice.
 
-- **Documentation**: A detailed manual is available [here](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/resources/SPECTROview_UserManual.pdf) or can be accessed directly within the application.
+
 
 
 ___
@@ -25,7 +27,9 @@ ___
 
 - Cross-platform compatibility (Windows, macOS, Linux).
 - Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps)*. 
+- **Tensor Fit Engine**: 10–15× faster fitting using batched matrix operations
 - Ability to fit multiple spectra or 2Dmaps using predefined models or by creating custom fit models*.
+
 - Collect all best-fit results with one click.
 - Optimized user inferface for easy and quick inspection and comparison of spectra.
 - Dedicated module for effortless, fast, and easy data visualization. 

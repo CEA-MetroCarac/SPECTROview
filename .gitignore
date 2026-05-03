@@ -14,3 +14,6 @@ app/.DS_Store
 env_spectroview/
 .vscode/
 .github/workflows/
+
+# MkDocs build output
+site/

@@ -864,7 +864,7 @@ class VMWorkspaceSpectra(QObject):
 
         if isinstance(self._fit_thread, TensorFitThread):
             self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
-            
+
         self._fit_thread.finished.connect(self._on_fit_finished)
         self._fit_thread.start()
 
@@ -1100,19 +1100,7 @@ class VMWorkspaceSpectra(QObject):
             
             # Load all spectra
             for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
-                saved_metadata = spectrum_data.pop('metadata', None)
-                spectrum = MSpectrum()
-                spectrum.set_attributes(spectrum_data)
-                
-                if saved_metadata:
-                    spectrum.metadata = saved_metadata
-                    
-                # Decompress x0 and y0 for non-map spectra
-                if 'x0' in spectrum_data:
-                    spectrum.x0 = MSpectra._decompress(spectrum_data['x0'])
-                if 'y0' in spectrum_data:
-                    spectrum.y0 = MSpectra._decompress(spectrum_data['y0'])
-                spectrum.preprocess()
+                spectrum = self._create_spectrum_from_dict(spectrum_data)
                 self.spectra.append(spectrum)
             
             # Restore fit results DataFrame (including computed columns)
@@ -1135,6 +1123,47 @@ class VMWorkspaceSpectra(QObject):
             
         except Exception as e:
             QMessageBox.critical(None, "Load Error", f"Error loading spectra workspace:\n{str(e)}")
+
+    def _create_spectrum_from_dict(self, spectrum_data: dict, x0_array=None, y0_array=None) -> MSpectrum:
+        """Helper to safely instantiate and preprocess an MSpectrum from saved dict.
+        
+        Args:
+            spectrum_data: The dictionary representation of the spectrum
+            x0_array: Optional pre-decompressed x0 array (used by Maps workspace)
+            y0_array: Optional pre-decompressed y0 array (used by Maps workspace)
+        """
+        saved_metadata = spectrum_data.pop('metadata', None)
+        
+        # Pop compressed x0/y0 BEFORE set_attributes, because Fitspy's
+        # set_attributes calls np.array(self.x0) which would turn the
+        # base64 string into a garbage 0-d string array.
+        compressed_x0 = spectrum_data.pop('x0', None)
+        compressed_y0 = spectrum_data.pop('y0', None)
+        
+        spectrum = MSpectrum()
+        spectrum.set_attributes(spectrum_data)
+        
+        if saved_metadata:
+            spectrum.metadata = saved_metadata
+            
+        # Prioritize explicit arrays if provided (used by Maps Workspace)
+        if x0_array is not None and y0_array is not None:
+            spectrum.x0 = x0_array + spectrum.xcorrection_value
+            spectrum.y0 = y0_array
+        # Fall back to decompressing from dict (used by Spectra Workspace)
+        elif compressed_x0 is not None and compressed_y0 is not None:
+            spectrum.x0 = MSpectra._decompress(compressed_x0)
+            spectrum.y0 = MSpectra._decompress(compressed_y0)
+        else:
+            spectrum.x0 = None
+            spectrum.y0 = None
+            
+        # Force preprocess to recreate x and y arrays from x0 and y0
+        # This applies cropping ranges, evaluates baselines, and applies normalization
+        spectrum.is_preprocessed = False
+        spectrum.preprocess()
+        
+        return spectrum
 
     def clear_workspace(self):
         """Clear all spectra and reset workspace to initial state."""

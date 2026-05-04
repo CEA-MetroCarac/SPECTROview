@@ -617,31 +617,8 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             
             # 3. Instantiate spectra with pre-matched variables directly
             for spectrum_id, spectrum_data in spectrums_data.items():
-                # Pop metadata before setting attributes to prevent Fitspy crashes on dict
-                saved_metadata = spectrum_data.pop('metadata', None)
-                
-                spectrum = MSpectrum()
-                spectrum.set_attributes(spectrum_data)
-                
-                if saved_metadata:
-                    spectrum.metadata = saved_metadata
-                
-                # Assign precalculated spatial data
                 x0_base, y0_base = precalculated_data.get(spectrum_id, (None, None))
-                if x0_base is not None and y0_base is not None:
-                    spectrum.x0 = x0_base + spectrum.xcorrection_value
-                    spectrum.y0 = y0_base
-                    
-                    # Ensure base arrays exist for preprocess() to use or GUI to render
-                    spectrum.x = spectrum.x0.copy()
-                    spectrum.y = spectrum.y0.copy()
-                else:
-                    spectrum.x0 = None
-                    spectrum.y0 = None
-                    spectrum.x = None
-                    spectrum.y = None
-                    
-                spectrum.preprocess()
+                spectrum = self._create_spectrum_from_dict(spectrum_data, x0_base, y0_base)
                 self.spectra.append(spectrum)
             
             # Restore metadata from maps_metadata (stored per-map, not per-spectrum)

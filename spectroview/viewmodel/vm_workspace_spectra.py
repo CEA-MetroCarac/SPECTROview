@@ -732,7 +732,7 @@ class VMWorkspaceSpectra(QObject):
         self._fitmodel_clipboard = deepcopy(spectrum.save())
 
     def paste_fit_model(self, apply_all: bool = False):
-        if not hasattr(self, "_fitmodel_clipboard"):
+        if not hasattr(self, "_fitmodel_clipboard") or self._fitmodel_clipboard is None:
             self.notify.emit("No fit model copied.")
             return
         spectra = self._get_active_spectra() if apply_all else self._get_selected_spectra()
@@ -841,7 +841,16 @@ class VMWorkspaceSpectra(QObject):
         self._is_fitting = True
         self.fit_in_progress.emit(True)
 
-        if self._use_batch_engine:
+        # Tensor engine safety check: all spectra must have identical X-axis lengths for batching
+        use_tensor = self._use_batch_engine
+        if use_tensor:
+            lengths = [len(s.x) if s.x is not None else 0 for s in spectra]
+            if len(set(lengths)) > 1:
+                # Mismatched lengths detected. Tensor engine cannot vstack these.
+                self.notify.emit("Mismatched spectra lengths detected. Falling back to Legacy Fit engine...")
+                use_tensor = False
+
+        if use_tensor:
             # High-performance batch engine (no spatial coords for spectra)
             self._fit_thread = TensorFitThread(
                 self.spectra,

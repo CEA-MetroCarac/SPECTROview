@@ -679,45 +679,7 @@ class VMWorkspaceSpectra(QObject):
         self._emit_list_update()  # Refresh list colors after clear peaks
 
 
-    def fit(self, apply_all: bool = False):
-        """Fitting action for selected spectra with current existing peak models."""
-        # Prevent concurrent fit operations
-        if self._is_fitting:
-            self.notify.emit("Fit already in progress. Please wait...")
-            return
-
-        spectra = self._get_active_spectra() if apply_all else self._get_selected_spectra()
-        
-        if not spectra:
-            return
-
-        # Check if any spectrum has peak models
-        has_peaks = any(s.peak_models for s in spectra)
-        if not has_peaks:
-            self.notify.emit("No peaks to fit.")
-            return
-
-        if self._use_batch_engine:
-            # Use batch engine: extract fit model from first fitted spectrum
-            ref_spectrum = next(s for s in spectra if s.peak_models)
-            fit_model = ref_spectrum.save()
-            # Re-fitting: reapply the saved model to ensure peak/baseline state is canonical
-            self._run_fit_thread(fit_model, spectra,
-                                apply_model_to_spectra=True)
-        else:
-            # Legacy fallback: use FitThread (fitspy)
-            # Cancel any existing thread
-            if self._fit_thread and self._fit_thread.isRunning():
-                self._fit_thread.terminate()
-                self._fit_thread.wait()
-
-            self._is_fitting = True
-            self.fit_in_progress.emit(True)
-
-            self._fit_thread = FitThread(spectra)
-            self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
-            self._fit_thread.finished.connect(self._on_fit_finished)
-            self._fit_thread.start()
+    
     
     def copy_fit_model(self):
         if not self.selected_fnames:
@@ -807,6 +769,47 @@ class VMWorkspaceSpectra(QObject):
 
         self._run_fit_thread(fit_model, spectra)
 
+    def fit(self, apply_all: bool = False):
+        """Fitting action for selected spectra with current existing peak models."""
+        # Prevent concurrent fit operations
+        if self._is_fitting:
+            self.notify.emit("Fit already in progress. Please wait...")
+            return
+
+        spectra = self._get_active_spectra() if apply_all else self._get_selected_spectra()
+        
+        if not spectra:
+            return
+
+        # Check if any spectrum has peak models
+        has_peaks = any(s.peak_models for s in spectra)
+        if not has_peaks:
+            self.notify.emit("No peaks to fit.")
+            return
+
+        if self._use_batch_engine:
+            # Use batch engine: extract fit model from first fitted spectrum
+            ref_spectrum = next(s for s in spectra if s.peak_models)
+            fit_model = ref_spectrum.save()
+            # Re-fitting: reapply the saved model to ensure peak/baseline state is canonical
+            self._run_fit_thread(fit_model, spectra,
+                                apply_model_to_spectra=True)
+        else:
+            # Legacy fallback: use FitThread (fitspy)
+            # Cancel any existing thread
+            if self._fit_thread and self._fit_thread.isRunning():
+                self._fit_thread.terminate()
+                self._fit_thread.wait()
+
+            self._is_fitting = True
+            self.fit_in_progress.emit(True)
+
+            self._fit_thread = FitThread(spectra)
+            self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
+            self._fit_thread.finished.connect(self._on_fit_finished)
+            self._fit_thread.start()
+
+
     def _run_fit_thread(self, fit_model: dict, spectra,
                         apply_model_to_spectra=True):
         # Prevent concurrent fit operations
@@ -841,16 +844,7 @@ class VMWorkspaceSpectra(QObject):
         self._is_fitting = True
         self.fit_in_progress.emit(True)
 
-        # Tensor engine safety check: all spectra must have identical X-axis lengths for batching
-        use_tensor = self._use_batch_engine
-        if use_tensor:
-            lengths = [len(s.x) if s.x is not None else 0 for s in spectra]
-            if len(set(lengths)) > 1:
-                # Mismatched lengths detected. Tensor engine cannot vstack these.
-                self.notify.emit("Mismatched spectra lengths detected. Falling back to Legacy Fit engine...")
-                use_tensor = False
-
-        if use_tensor:
+        if self._use_batch_engine:
             # High-performance batch engine (no spatial coords for spectra)
             self._fit_thread = TensorFitThread(
                 self.spectra,

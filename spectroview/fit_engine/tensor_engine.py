@@ -70,21 +70,21 @@ class TensorFittingEngine:
                 spectrum.preprocess()
         self.timings["Step 2 - preprocess"] = f"{time.perf_counter()-t0:.3f}s"
 
-        # Build weights matrix to match lmfit masking behavior
-        weights_matrix = self._build_fit_weights(spectra, fit_params)
-
         # ─── 4. Extract data matrix ───
-        x_array = spectra[0].x
-        if x_array is None:
+        max_M = max((len(s.x) if s.x is not None else 0) for s in spectra)
+        if max_M == 0:
             return [FitResult(False, {}, np.array([])) for _ in spectra]
 
-        M = len(x_array)
-        Y_matrix = np.empty((n_spectra, M), dtype=np.float64)
+        X_matrix = np.zeros((n_spectra, max_M), dtype=np.float64)
+        Y_matrix = np.zeros((n_spectra, max_M), dtype=np.float64)
         for i, s in enumerate(spectra):
-            if s.y is not None and len(s.y) == M:
-                Y_matrix[i] = s.y
-            else:
-                Y_matrix[i] = 0.0
+            if s.x is not None and s.y is not None:
+                M_s = len(s.x)
+                X_matrix[i, :M_s] = s.x
+                Y_matrix[i, :M_s] = s.y
+
+        # Build weights matrix to match lmfit masking behavior
+        weights_matrix = self._build_fit_weights(spectra, fit_params, max_M)
 
         # ─── 5. Build initial parameter matrix ───
         t0 = time.perf_counter()
@@ -105,7 +105,7 @@ class TensorFittingEngine:
             p0 = np.clip(p0, evaluator.lower_bounds, evaluator.upper_bounds)
         else:
             # First fit: scale amplitudes per spectrum
-            p0 = evaluator.build_p0_matrix(spectra, x_array)
+            p0 = evaluator.build_p0_matrix(spectra)
             
         evaluator.apply_noise_threshold(spectra, p0, fit_params)
         self.timings["Step 3 - build p0"] = f"{time.perf_counter()-t0:.3f}s"
@@ -120,7 +120,7 @@ class TensorFittingEngine:
         # ─── 7. TENSOR FIT ───
         t0 = time.perf_counter()
         p_opt, success, cost = batched_levenberg_marquardt(
-            x=x_array,
+            x=X_matrix,
             Y_data=Y_matrix,
             evaluate_fn=evaluator.evaluate,
             jacobian_fn=evaluator.jacobian,
@@ -143,11 +143,12 @@ class TensorFittingEngine:
         t0 = time.perf_counter()
         fit_results = []
         for i, spectrum in enumerate(spectra):
-            w = weights_matrix[i] if weights_matrix is not None else None
+            M_s = len(spectrum.x) if spectrum.x is not None else 0
+            w = weights_matrix[i, :M_s] if weights_matrix is not None else None
             fr = evaluator.build_result(p_opt[i], spectrum.x, spectrum.y, bool(success[i]), weights=w)
-            if weights_matrix is not None:
+            if weights_matrix is not None and w is not None:
                 fr.best_fit = fr.best_fit.copy()
-                fr.best_fit[weights_matrix[i] == 0] = 0.0
+                fr.best_fit[w == 0] = 0.0
             evaluator.write_back_to_spectrum(spectrum, fr)
             fit_results.append(fr)
         self.timings["Step 5 - write_back"] = f"{time.perf_counter()-t0:.3f}s"
@@ -159,7 +160,7 @@ class TensorFittingEngine:
         for spectrum in spectra:
             apply_custom_fit_model(spectrum, fit_model, spectrum.fname)
 
-    def _build_fit_weights(self, spectra, fit_params):
+    def _build_fit_weights(self, spectra, fit_params, max_M):
         """Build a weights matrix that mimics lmfit's masking behavior."""
         
 
@@ -172,7 +173,7 @@ class TensorFittingEngine:
 
         for spectrum in spectra:
             if spectrum.y is None:
-                weights.append(np.zeros_like(spectrum.x if spectrum.x is not None else np.array([], dtype=np.float64)))
+                weights.append(np.zeros(max_M, dtype=np.float64))
                 continue
 
             w = np.ones_like(spectrum.y, dtype=np.float64)
@@ -193,6 +194,8 @@ class TensorFittingEngine:
             if spectrum.weights is not None:
                 w = w * spectrum.weights
 
-            weights.append(w)
+            w_padded = np.zeros(max_M, dtype=np.float64)
+            w_padded[:len(w)] = w
+            weights.append(w_padded)
 
         return np.vstack(weights)

@@ -185,14 +185,14 @@ class TensorEvaluator:
         """Evaluate the composite model for all spectra.
 
         Args:
-            x: (M,)
+            x: (M,) or (N, M)  — shared or per-spectrum x-axis
             p_free: (N, K_free)  free parameters
 
         Returns: (N, M)
         """
         p_full = self._to_full(p_free)
         N = p_full.shape[0] if p_full.ndim == 2 else 1
-        M = len(x)
+        M = x.shape[-1] if hasattr(x, 'shape') else len(x)
         Y = np.zeros((N, M))
 
         for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
@@ -207,7 +207,7 @@ class TensorEvaluator:
         """
         p_full = self._to_full(p_free)
         N = p_full.shape[0]
-        M = len(x)
+        M = x.shape[-1] if hasattr(x, 'shape') else len(x)
         J_full = np.zeros((N, M, self._n_total))
 
         for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
@@ -321,7 +321,7 @@ class TensorEvaluator:
 
         return p0_full[self._free_idx]
 
-    def build_p0_matrix(self, spectra, x):
+    def build_p0_matrix(self, spectra):
         """Build (N, K_free) initial guess matrix with per-spectrum amplitude scaling.
 
         For each spectrum, scales the amplitude parameters proportionally
@@ -350,20 +350,24 @@ class TensorEvaluator:
                             x0_val = self._param_values[slc.start + local_j]
                             break
 
-                    if x0_val is not None and x0_val >= x[0] and x0_val <= x[-1]:
-                        closest = np.argmin(np.abs(x - x0_val))
+                    for n in range(N):
+                        spectrum = spectra[n]
+                        x_n = spectrum.x
+                        if x_n is None or x0_val is None or x0_val < x_n[0] or x0_val > x_n[-1]:
+                            continue
+                            
+                        closest = np.argmin(np.abs(x_n - x0_val))
                         low = max(0, closest - 1)
-                        high = min(len(x), closest + 2)
-                        for n in range(N):
-                            spectrum = spectra[n]
-                            y = getattr(spectrum, 'y_no_outliers', spectrum.y)
-                            if y is not None and len(y) > closest:
-                                window = np.maximum(np.abs(y[low:high]), 1e-6)
-                                data_amp = float(np.max(window))
-                                model_amp = max(abs(p0_base[free_i]), 1e-6)
-                                ratio = data_amp / model_amp
-                                if 0.01 < ratio < 100:
-                                    p0_matrix[n, free_i] = data_amp
+                        high = min(len(x_n), closest + 2)
+                        
+                        y = getattr(spectrum, 'y_no_outliers', spectrum.y)
+                        if y is not None and len(y) > closest:
+                            window = np.maximum(np.abs(y[low:high]), 1e-6)
+                            data_amp = float(np.max(window))
+                            model_amp = max(abs(p0_base[free_i]), 1e-6)
+                            ratio = data_amp / model_amp
+                            if 0.01 < ratio < 100:
+                                p0_matrix[n, free_i] = data_amp
 
         return p0_matrix
 
@@ -417,13 +421,17 @@ class TensorEvaluator:
 # ── Helpers ──────────────────────────────────────────────────────────────
 
 def _make_batched_scalar(scalar_fn, n_params):
-    """Wrap a scalar model function as a batched function."""
+    """Wrap a scalar model function as a batched function.
+
+    Handles both 1D x (shared axis) and 2D x (per-spectrum axis).
+    """
     def batched_fn(x, params):
         N = params.shape[0]
-        M = len(x)
+        M = x.shape[-1] if hasattr(x, 'shape') else len(x)
         Y = np.empty((N, M))
         for i in range(N):
             args = [params[i, j] for j in range(n_params)]
-            Y[i] = scalar_fn(x, *args)
+            xi = x[i] if (hasattr(x, 'ndim') and x.ndim == 2) else x
+            Y[i] = scalar_fn(xi, *args)
         return Y
     return batched_fn

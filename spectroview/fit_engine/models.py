@@ -25,7 +25,10 @@ def batched_lorentzian(x, params):
     a = params[:, 0:1]          # (N,1)
     w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     c = params[:, 2:3]
-    dx = x[None, :] - c         # (N,M)
+    if x.ndim == 1:
+        dx = x[None, :] - c         # (N,M)
+    else:
+        dx = x - c
     w2 = w * w
     D = 1.0 + 4.0 * dx * dx / w2
     return a / D                # (N,M)
@@ -35,7 +38,10 @@ def batched_lorentzian_jac(x, params):
     a = params[:, 0:1]
     w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     c = params[:, 2:3]
-    dx = x[None, :] - c
+    if x.ndim == 1:
+        dx = x[None, :] - c
+    else:
+        dx = x - c
     w2 = w * w
     dx2 = dx * dx
     D = 1.0 + 4.0 * dx2 / w2
@@ -59,7 +65,10 @@ def batched_gaussian(x, params):
     a = params[:, 0:1]
     w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     c = params[:, 2:3]
-    dx = x[None, :] - c
+    if x.ndim == 1:
+        dx = x[None, :] - c
+    else:
+        dx = x - c
     t2 = dx * dx / (w * w)
     return a * np.exp(-_4LOG2 * t2)
 
@@ -68,7 +77,10 @@ def batched_gaussian_jac(x, params):
     a = params[:, 0:1]
     w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     c = params[:, 2:3]
-    dx = x[None, :] - c
+    if x.ndim == 1:
+        dx = x[None, :] - c
+    else:
+        dx = x - c
     w2 = w * w
     w3 = w2 * w
     t2 = dx * dx / w2
@@ -131,7 +143,7 @@ def numerical_jacobian(model_func, x, params, eps=1e-7):
     parameter, ensuring accurate gradients regardless of parameter scale.
     """
     N, K = params.shape
-    M = len(x)
+    M = x.shape[-1] if hasattr(x, 'shape') else len(x)
     J = np.empty((N, M, K))
     for k in range(K):
         # Relative perturbation: scale eps by the parameter magnitude

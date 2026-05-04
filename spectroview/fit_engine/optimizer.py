@@ -87,7 +87,8 @@ def batched_levenberg_marquardt(
         p_active = p[active]                # (Na, K)
         r_active = residuals[active]        # (Na, M)
 
-        J_active = jacobian_fn(x, p_active)  # (Na, M, K)
+        x_active = x[active] if x.ndim == 2 else x
+        J_active = jacobian_fn(x_active, p_active)  # (Na, M, K)
 
         # Replace any NaN/Inf in Jacobian with zero
         np.nan_to_num(J_active, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
@@ -127,7 +128,7 @@ def batched_levenberg_marquardt(
         p_trial_active = np.clip(p_active + dp, lo, hi)
 
         # Evaluate only the active spectra
-        Y_trial_active = evaluate_fn(x, p_trial_active)
+        Y_trial_active = evaluate_fn(x_active, p_trial_active)
         r_trial_active = Y_trial_active - Y_data[active]
         cost_trial_active = np.sum(r_trial_active * r_trial_active, axis=1)
 

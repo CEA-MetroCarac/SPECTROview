@@ -1272,6 +1272,13 @@
 <p>This guide covers the technical architecture, code organization, and development patterns of SPECTROview.</p>
 <h2 id="architecture-mvvm-pattern">Architecture: MVVM Pattern<a class="headerlink" href="#architecture-mvvm-pattern" title="Permanent link">&para;</a></h2>
 <p>SPECTROview uses a strict <strong>Model-View-ViewModel</strong> architecture:</p>
+<pre class="mermaid"><code>graph LR
+    A[User Action] --&gt; B[View]
+    B --&gt;|method call| C[ViewModel]
+    C --&gt;|method call| D[Model]
+    D --&gt;|return data| C
+    C --&gt;|emit Signal| B
+    B --&gt;|update UI| A</code></pre>
 <h3 id="file-naming-convention">File Naming Convention<a class="headerlink" href="#file-naming-convention" title="Permanent link">&para;</a></h3>
 <table>
 <thead>

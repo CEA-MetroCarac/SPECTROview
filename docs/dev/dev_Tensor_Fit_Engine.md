@@ -17,6 +17,8 @@ The **Tensor Fit Engine** achieves massive speedups (~10x to 15x faster) through
     - The linear systems for all spectra are solved in a single call to `np.linalg.solve`, which dispatches to LAPACK.
 3.  **Analytical Jacobians**: Instead of estimating derivatives numerically, the engine uses exact analytical formulas for common peak shapes (Lorentzian, Gaussian, PseudoVoigt). This eliminates the \(2K\) extra evaluations entirely.
 4.  **No Spatial Propagation**: Unlike older map-fitting approaches that used spiral traversal to propagate guesses from neighbor to neighbor (forcing sequential execution), the tensor engine initializes all pixels independently using amplitude scaling, allowing purely parallel tensor math.
+5.  **Variable Length Support**: Spectra with different lengths (e.g. differently cropped) are padded with zeros to fit into a uniform 2D tensor, while a boolean `weights` mask ensures padded regions are ignored during optimization.
+6.  **Expression Support**: Supports complex mathematical relationships between parameters across the batch by evaluating mathematical constraints symbolically before mapping to free parameters.
 
 ---
 
@@ -59,8 +61,8 @@ When a user triggers a fit (e.g., via the "Fit" button in the Maps workspace), t
 
 1.  **Thread Invocation**: `VMWorkspaceMaps._run_fit_thread()` instantiates and starts `TensorFitThread`.
 2.  **Engine Initialization**: `TensorFittingEngine.fit_spectra()` is called.
-3.  **Model Application (Optional)**: If `apply_model_to_spectra=True`, the `fit_model` dictionary is applied to all `MSpectrum` objects, ensuring they have the correct number and type of peaks.
-4.  **Preprocessing**: `spectrum.preprocess()` is called for all spectra (applying spectral ranges, evaluating and subtracting baselines).
+3.  **Model Application (Optional)**: If `apply_model_to_spectra=True`, the `fit_model` dictionary is applied to all `MSpectrum` objects, ensuring they have the correct number and type of peaks. If `False` (like in the Spectra workspace), the engine groups spectra by their existing model signatures and processes batches sequentially, preserving individual spectrum customizations.
+4.  **Preprocessing**: `spectrum.preprocess()` is called for all spectra (applying spectral ranges, evaluating and subtracting baselines). Spectra are then zero-padded into a uniform 2D matrix.
 5.  **Evaluator Construction**: `TensorEvaluator.from_fit_model()` parses the model, determining which parameters are free vs. fixed, and mapping them to a flat vector space.
 6.  **Data Extraction**: The \((N, M)\) data matrix \(\mathbf{Y}\) and initial parameter matrix \(\mathbf{p_0}\) are extracted. If it's a first fit, \(\mathbf{p_0}\) amplitudes are scaled to the actual data. If it's a re-fit, \(\mathbf{p_0}\) is extracted from the existing fits (warm start) with slight noise added to prevent premature convergence.
 7.  **Optimization**: `batched_levenberg_marquardt()` runs the iterations until all spectra converge or `max_iter` is reached.

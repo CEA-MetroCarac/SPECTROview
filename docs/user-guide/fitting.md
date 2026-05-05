@@ -12,6 +12,7 @@ The Tensor Fit Engine is SPECTROview's high-performance fitting backend. Instead
 | Numerical Jacobians (slow) | Analytical Jacobians (fast) |
 | Python function call overhead | Vectorized NumPy/LAPACK operations |
 | Sequential execution | Batched tensor math |
+| Single global model forced on all spectra | **Individual models, crops, and baselines preserved** |
 
 **Result**: Typically **10–15× faster**. A 1000-spectrum map that would take 30+ seconds now fits in < 3 seconds.
 

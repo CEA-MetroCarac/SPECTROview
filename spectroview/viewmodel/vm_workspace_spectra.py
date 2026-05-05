@@ -769,31 +769,83 @@ class VMWorkspaceSpectra(QObject):
 
         self._run_fit_thread(fit_model, spectra)
 
+    @staticmethod
+    def _peak_model_signature(spectrum):
+        """Return a hashable signature describing the peak model structure.
+
+        Two spectra with the same signature can be batched together by the
+        tensor engine because they share the same number of peaks, model
+        types, parameter names and constraint layout (vary/expr flags).
+        """
+        sig = []
+        for pm in spectrum.peak_models:
+            model_name = spectrum.get_model_name(pm)
+            # Include parameter constraint layout (vary, expr) but NOT values
+            param_sig = []
+            for pname in sorted(pm.param_hints.keys()):
+                h = pm.param_hints[pname]
+                param_sig.append((
+                    pname,
+                    h.get("vary", True),
+                    str(h.get("expr", "") or "").strip(),
+                ))
+            sig.append((model_name, tuple(param_sig)))
+        return tuple(sig)
+
     def fit(self, apply_all: bool = False):
-        """Fitting action for selected spectra with current existing peak models."""
+        """Fitting action for selected spectra with their current individual models.
+
+        Each spectrum is fitted using its own crop, baseline, and peak
+        configuration.  Spectra that share the same peak-model structure
+        are batched together for tensor-engine performance.
+        """
         # Prevent concurrent fit operations
         if self._is_fitting:
             self.notify.emit("Fit already in progress. Please wait...")
             return
 
         spectra = self._get_active_spectra() if apply_all else self._get_selected_spectra()
-        
+
         if not spectra:
             return
 
-        # Check if any spectrum has peak models
-        has_peaks = any(s.peak_models for s in spectra)
-        if not has_peaks:
+        # Only include spectra that already have peak models
+        spectra_with_peaks = [s for s in spectra if s.peak_models]
+        if not spectra_with_peaks:
             self.notify.emit("No peaks to fit.")
             return
 
         if self._use_batch_engine:
-            # Use batch engine: extract fit model from first fitted spectrum
-            ref_spectrum = next(s for s in spectra if s.peak_models)
-            fit_model = ref_spectrum.save()
-            # Re-fitting: reapply the saved model to ensure peak/baseline state is canonical
-            self._run_fit_thread(fit_model, spectra,
-                                apply_model_to_spectra=True)
+            # Group spectra by peak-model structure so that each group
+            # can be processed as a single tensor batch.
+            from collections import OrderedDict
+            groups = OrderedDict()
+            for s in spectra_with_peaks:
+                sig = self._peak_model_signature(s)
+                groups.setdefault(sig, []).append(s)
+
+            # Build (fit_model, spectra_list) batches
+            fit_settings = self.settings.load_fit_settings()
+            batches = []
+            for sig, grp in groups.items():
+                # Build a fit_model dict from the first spectrum in the
+                # group – only the *structure* matters (the evaluator
+                # ignores crop/baseline when apply_model=False).
+                fit_model = grp[0].save()
+                if "fit_params" not in fit_model:
+                    fit_model["fit_params"] = {}
+                fit_model["fit_params"].update({
+                    "xtol": fit_settings.get("xtol", 1e-4),
+                    "ftol": fit_settings.get("ftol", 1e-4),
+                    "max_ite": fit_settings.get("max_ite", 200),
+                    "fit_negative": fit_settings.get("fit_negative", False),
+                    "fit_outliers": fit_settings.get("fit_outliers", True),
+                    "coef_noise": fit_settings.get("coef_noise", 0.0),
+                })
+                batches.append((fit_model, grp))
+
+            # Launch tensor fit thread with per-spectrum models
+            self._run_fit_thread_batches(batches)
         else:
             # Legacy fallback: use FitThread (fitspy)
             # Cancel any existing thread
@@ -804,7 +856,7 @@ class VMWorkspaceSpectra(QObject):
             self._is_fitting = True
             self.fit_in_progress.emit(True)
 
-            self._fit_thread = FitThread(spectra)
+            self._fit_thread = FitThread(spectra_with_peaks)
             self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
             self._fit_thread.finished.connect(self._on_fit_finished)
             self._fit_thread.start()
@@ -870,6 +922,42 @@ class VMWorkspaceSpectra(QObject):
 
         self._fit_thread.finished.connect(self._on_fit_finished)
         self._fit_thread.start()
+
+    def _run_fit_thread_batches(self, batches):
+        """Launch the tensor engine on grouped batches of spectra.
+
+        Each batch is a (fit_model, spectra_list) tuple where spectra in
+        the same batch share an identical peak-model structure and can be
+        processed in parallel by the tensor engine.
+
+        Spectra are NOT overwritten with a common model — each spectrum
+        keeps its own crop, baseline and parameter values.
+        """
+        if self._is_fitting:
+            self.notify.emit("Fit already in progress. Please wait...")
+            return
+
+        # Cancel any existing thread
+        if self._fit_thread and self._fit_thread.isRunning():
+            self._fit_thread.terminate()
+            self._fit_thread.wait()
+
+        self._is_fitting = True
+        self.fit_in_progress.emit(True)
+
+        self._fit_thread = TensorFitThread(
+            self.spectra,
+            fit_model=None,
+            fnames=None,
+            coords=None,
+            apply_model_to_spectra=False,
+            batches=batches,
+        )
+        self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
+        self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
+        self._fit_thread.finished.connect(self._on_fit_finished)
+        self._fit_thread.start()
+
 
     def _on_fit_finished(self):
         """Handle fit thread completion."""

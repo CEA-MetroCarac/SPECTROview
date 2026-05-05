@@ -272,8 +272,8 @@ class VMWorkspaceSpectra(QObject):
         
         peak_model = spectrum.peak_models[-1]
         
-        # Enforce global bounds (minfwhm, maxintensity) from settings across all peaks
-        spectrum.synchronize_peak_limits(fit_settings)
+        # Enforce global bounds (minfwhm, maxintensity) from settings across the NEW peak only
+        spectrum.synchronize_peak_limits(fit_settings, target_model=peak_model)
 
         # Initialize decay model parameters with reasonable values
         if peak_shape in ["DecaySingleExp", "DecayBiExp"]:
@@ -1052,7 +1052,7 @@ class VMWorkspaceSpectra(QObject):
 
         # Enforce global bounds from settings
         fit_settings = self.settings.load_fit_settings()
-        s.synchronize_peak_limits(fit_settings)
+        s.synchronize_peak_limits(fit_settings, target_model=new_pm)
 
         s.result_fit = None
         self._emit_selected_spectra()

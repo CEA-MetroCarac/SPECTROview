@@ -98,8 +98,10 @@ class MSpectrum(FitspySpectrum):
             self.y = self.y * self.intensity_norm_factor
             self.intensity_norm_factor = 1.0
 
-    def synchronize_peak_limits(self, fit_settings: dict):
-        """Apply global bounds from settings to all peak models' param_hints."""
+    def synchronize_peak_limits(self, fit_settings: dict, target_model=None):
+        """Apply global bounds from settings to peak models' param_hints.
+        If target_model is provided, only applies to that specific model.
+        """
         if not fit_settings:
             return
             
@@ -107,7 +109,9 @@ class MSpectrum(FitspySpectrum):
         maxfwhm = float(fit_settings.get("maxfwhm", 200.0))
         maxintensity = float(fit_settings.get("maxintensity", 1e6))
         
-        for pm in self.peak_models:
+        models_to_sync = [target_model] if target_model else self.peak_models
+        
+        for pm in models_to_sync:
             # Synchronize FWHM limits. 
             # Note: For Gaussian/Voigt in fitspy, the free parameter is 'sigma'
             # and 'fwhm' is an expression (e.g. 2.3548 * sigma).

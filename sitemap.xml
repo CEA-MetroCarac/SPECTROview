@@ -2,62 +2,82 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/changelog/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
+    </url>
+    <url>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/dev/computed_columns_feature/</loc>
+         <lastmod>2026-05-05</lastmod>
+    </url>
+    <url>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/dev/dev_MVA/</loc>
+         <lastmod>2026-05-05</lastmod>
+    </url>
+    <url>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/dev/dev_Tensor_Fit_Engine/</loc>
+         <lastmod>2026-05-05</lastmod>
+    </url>
+    <url>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/dev/dev_intructions/</loc>
+         <lastmod>2026-05-05</lastmod>
+    </url>
+    <url>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/dev/user_manual/</loc>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/mva/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/tensor-engine/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user-guide/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user-guide/calculators/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user-guide/fitting/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user-guide/graphs/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user-guide/installation/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user-guide/maps/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user-guide/mva/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user-guide/shortcuts/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user-guide/spectra/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user-guide/supported-data/</loc>
-         <lastmod>2026-05-03</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
 </urlset>

@@ -12,13 +12,9 @@
         <meta name="author" content="Van Hoan Le">
       
       
-        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/user-guide/fitting/">
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/dev/dev_MVA/">
       
       
-        <link rel="prev" href="../graphs/">
-      
-      
-        <link rel="next" href="../mva/">
       
       
         
@@ -29,7 +25,7 @@
     
     
       
-        <title>Tensor Fit Engine - SPECTROview Documentation</title>
+        <title>Multivariate Analysis (MVA) of Raman Spectroscopic Data - SPECTROview Documentation</title>
       
     
     
@@ -80,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tensor-fit-engine" class="md-skip">
+        <a href="#multivariate-analysis-mva-of-raman-spectroscopic-data" class="md-skip">
           Skip to content
         </a>
       
@@ -113,7 +109,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Tensor Fit Engine
+              Multivariate Analysis (MVA) of Raman Spectroscopic Data
             
           </span>
         </div>
@@ -243,13 +239,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../user-guide/" class="md-tabs__link">
           
   
   
@@ -375,31 +369,28 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
             
   
   
@@ -417,7 +408,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -435,7 +426,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../" class="md-nav__link">
+      <a href="../../user-guide/" class="md-nav__link">
         
   
   
@@ -463,7 +454,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../installation/" class="md-nav__link">
+      <a href="../../user-guide/installation/" class="md-nav__link">
         
   
   
@@ -491,7 +482,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../supported-data/" class="md-nav__link">
+      <a href="../../user-guide/supported-data/" class="md-nav__link">
         
   
   
@@ -519,7 +510,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../spectra/" class="md-nav__link">
+      <a href="../../user-guide/spectra/" class="md-nav__link">
         
   
   
@@ -547,7 +538,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../maps/" class="md-nav__link">
+      <a href="../../user-guide/maps/" class="md-nav__link">
         
   
   
@@ -575,7 +566,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../graphs/" class="md-nav__link">
+      <a href="../../user-guide/graphs/" class="md-nav__link">
         
   
   
@@ -600,37 +591,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Tensor Fit Engine
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../user-guide/fitting/" class="md-nav__link">
         
   
   
@@ -646,81 +610,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#what-is-it" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What Is It?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-is-it-faster" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why Is It Faster?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-use-it" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How to Use It
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tuning-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tuning Parameters
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#supported-peak-models" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Supported Peak Models
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -733,7 +622,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../mva/" class="md-nav__link">
+      <a href="../../user-guide/mva/" class="md-nav__link">
         
   
   
@@ -761,7 +650,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../calculators/" class="md-nav__link">
+      <a href="../../user-guide/calculators/" class="md-nav__link">
         
   
   
@@ -789,7 +678,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../shortcuts/" class="md-nav__link">
+      <a href="../../user-guide/shortcuts/" class="md-nav__link">
         
   
   
@@ -1016,10 +905,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-it" class="md-nav__link">
+  <a href="#architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What Is It?
+        Architecture
       
     </span>
   </a>
@@ -1027,43 +916,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-is-it-faster" class="md-nav__link">
+  <a href="#implemented-methods" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why Is It Faster?
+        Implemented Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implemented Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-principal-component-analysis-pca" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Principal Component Analysis (PCA)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-use-it" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#2-non-negative-matrix-factorization-nmf" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to Use It
+        2. Non-negative Matrix Factorization (NMF)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#tuning-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tuning Parameters
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#supported-peak-models" class="md-nav__link">
+  <a href="#data-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Supported Peak Models
+        Data Pipeline
       
     </span>
   </a>
@@ -1090,135 +985,44 @@
   
 
 
-<h1 id="tensor-fit-engine">Tensor Fit Engine<a class="headerlink" href="#tensor-fit-engine" title="Permanent link">&para;</a></h1>
-<h2 id="what-is-it">What Is It?<a class="headerlink" href="#what-is-it" title="Permanent link">&para;</a></h2>
-<p>The Tensor Fit Engine is SPECTROview's high-performance fitting backend. Instead of fitting spectra one at a time, it <strong>fits all spectra simultaneously</strong> using batched matrix operations.</p>
-<h2 id="why-is-it-faster">Why Is It Faster?<a class="headerlink" href="#why-is-it-faster" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Traditional Approach</th>
-<th>Tensor Engine</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Fits spectra one-by-one</td>
-<td>Fits all N spectra at once</td>
-</tr>
-<tr>
-<td>Numerical Jacobians (slow)</td>
-<td>Analytical Jacobians (fast)</td>
-</tr>
-<tr>
-<td>Python function call overhead</td>
-<td>Vectorized NumPy/LAPACK operations</td>
-</tr>
-<tr>
-<td>Sequential execution</td>
-<td>Batched tensor math</td>
-</tr>
-<tr>
-<td>Single global model forced on all spectra</td>
-<td><strong>Individual models, crops, and baselines preserved</strong></td>
-</tr>
-<tr>
-<td>Cannot link parameters across peaks</td>
-<td><strong>Full parameter expression support</strong></td>
-</tr>
-</tbody>
-</table>
-<p><strong>Result</strong>: Typically <strong>10–15× faster</strong>. A 1000-spectrum map that would take 30+ seconds now fits in &lt; 3 seconds.</p>
-<h2 id="how-to-use-it">How to Use It<a class="headerlink" href="#how-to-use-it" title="Permanent link">&para;</a></h2>
-<p>The Tensor Engine is the <strong>default</strong> — no special action needed. When you click <strong>Fit</strong> in either workspace, SPECTROview uses it automatically.</p>
-<h2 id="tuning-parameters">Tuning Parameters<a class="headerlink" href="#tuning-parameters" title="Permanent link">&para;</a></h2>
-<p>Access via <strong>Settings → Fit Parameters</strong>:</p>
-<table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Default</th>
-<th>Fast Preview</th>
-<th>Precision</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>xtol</code></td>
-<td>1e-4</td>
-<td>1e-2</td>
-<td>1e-6</td>
-</tr>
-<tr>
-<td><code>ftol</code></td>
-<td>1e-4</td>
-<td>1e-2</td>
-<td>1e-6</td>
-</tr>
-<tr>
-<td><code>max_ite</code></td>
-<td>200</td>
-<td>50</td>
-<td>500</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition tip">
-<p class="admonition-title">Quick Preview</p>
-<p>For rapid previews during model building, increase <code>xtol</code> and <code>ftol</code> to <code>1e-2</code>. The optimizer will converge much faster with only a small accuracy trade-off.</p>
-</div>
-<div class="admonition tip">
-<p class="admonition-title">Publication Quality</p>
-<p>For final results, decrease <code>xtol</code> and <code>ftol</code> to <code>1e-6</code> and increase <code>max_ite</code> to 500.</p>
-</div>
-<h2 id="supported-peak-models">Supported Peak Models<a class="headerlink" href="#supported-peak-models" title="Permanent link">&para;</a></h2>
-<p>The tensor engine includes optimized (analytical Jacobian) implementations for:</p>
-<table>
-<thead>
-<tr>
-<th>Model</th>
-<th>Speed</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Gaussian</strong></td>
-<td>⚡ Analytical</td>
-</tr>
-<tr>
-<td><strong>Lorentzian</strong></td>
-<td>⚡ Analytical</td>
-</tr>
-<tr>
-<td><strong>PseudoVoigt</strong></td>
-<td>⚡ Analytical</td>
-</tr>
-<tr>
-<td>GaussianAsym</td>
-<td>Numerical fallback</td>
-</tr>
-<tr>
-<td>LorentzianAsym</td>
-<td>Numerical fallback</td>
-</tr>
-<tr>
-<td>Fano</td>
-<td>Numerical fallback</td>
-</tr>
-<tr>
-<td>DecaySingleExp</td>
-<td>Numerical fallback</td>
-</tr>
-<tr>
-<td>DecayBiExp</td>
-<td>Numerical fallback</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Models without analytical Jacobians use a numerical finite-difference approximation, which is slower but still benefits from the batched architecture.</p>
-</div>
+<h1 id="multivariate-analysis-mva-of-raman-spectroscopic-data">Multivariate Analysis (MVA) of Raman Spectroscopic Data<a class="headerlink" href="#multivariate-analysis-mva-of-raman-spectroscopic-data" title="Permanent link">&para;</a></h1>
+<p>This document provides a technical overview of the Multivariate Analysis (MVA) features implemented in SPECTROview.</p>
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<p>The MVA feature follows the MVVM (Model-View-ViewModel) architectural pattern:</p>
+<ul>
+<li><strong>Model</strong> (<code>spectroview/model/m_mva.py</code>): Contains the core mathematics for MVA techniques, specifically Principal Component Analysis (PCA) and Non-negative Matrix Factorization (NMF). Uses standard numerical libraries (<code>numpy</code>, <code>scipy</code>) without requiring extra dependencies like <code>scikit-learn</code>.</li>
+<li><strong>ViewModel</strong> (<code>spectroview/viewmodel/vm_mva.py</code>): Orchestrates the data flow. It extracts preprocessed data from active spectra, invokes the Model to perform calculations, and caches results.</li>
+<li><strong>View</strong> (<code>spectroview/view/components/v_mva.py</code>): Provides the user interface, including parameter input controls, method selection, and <code>matplotlib</code>-based plotting capabilities (scree plots, loadings, scores). </li>
+</ul>
+<h2 id="implemented-methods">Implemented Methods<a class="headerlink" href="#implemented-methods" title="Permanent link">&para;</a></h2>
+<h3 id="1-principal-component-analysis-pca">1. Principal Component Analysis (PCA)<a class="headerlink" href="#1-principal-component-analysis-pca" title="Permanent link">&para;</a></h3>
+<p>PCA is a dimensionality reduction technique that transforms spectra into a new coordinate system such that the greatest variance by any projection of the data comes to lie on the first coordinate (the first principal component).</p>
+<ul>
+<li><strong>Implementation Details</strong>: Implemented using Singular Value Decomposition (<code>numpy.linalg.svd</code>) on mean-centered data.</li>
+<li><strong>Visualizations</strong>: </li>
+<li><em>Scree Plot</em>: Displays the percentage of variance explained by each principal component and the cumulative variance.</li>
+<li><em>Loadings</em>: Visualizes the spectral contribution to each principal component.</li>
+<li><em>Scores</em>: Provides a 2D scatter plot of the spectra projected onto the principal components.</li>
+</ul>
+<h3 id="2-non-negative-matrix-factorization-nmf">2. Non-negative Matrix Factorization (NMF)<a class="headerlink" href="#2-non-negative-matrix-factorization-nmf" title="Permanent link">&para;</a></h3>
+<p>NMF factors the data matrix into two non-negative matrices (typically W and H). This is particularly useful for spectroscopic data as it yields additive, non-negative components that often correspond to physical endmembers.</p>
+<ul>
+<li><strong>Implementation Details</strong>: Uses the Lee &amp; Seung multiplicative update rules. It iteratively updates the matrices to minimize the Frobenius norm of the reconstruction error.</li>
+<li><strong>Parameters</strong>: </li>
+<li><em>Components</em>: Number of non-negative components to extract.</li>
+<li><em>Max Iterations</em>: Limit on the number of update iterations.</li>
+<li><em>Tolerance</em>: Convergence threshold based on the relative change in reconstruction error.</li>
+<li><strong>Visualizations</strong>:</li>
+<li><em>Loadings</em>: Displays the non-negative spectral components (endmembers).</li>
+<li><em>Scores</em>: Provides a 2D scatter plot of the concentration/abundances of these components across the dataset.</li>
+</ul>
+<h2 id="data-pipeline">Data Pipeline<a class="headerlink" href="#data-pipeline" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Selection</strong>: MVA operates exclusively on the <em>active</em> (checked) spectra in the SPECTROview workspace.</li>
+<li><strong>Preprocessing</strong>: The analysis uses the <code>spectrum.y</code> attribute, meaning it operates on data that has already undergone preprocessing steps (baseline subtraction, normalization, cropping) configured by the user.</li>
+<li><strong>Interpolation</strong>: If the selected spectra have varying wavenumber axes, they are automatically interpolated onto a common grid (the grid of the first active spectrum) to build a consistent data matrix.</li>
+<li><strong>Export</strong>: The results (scores for PCA, W matrix for NMF) can be exported directly to the Graphs workspace for further visualization and comparison.</li>
+</ol>
 
 
 

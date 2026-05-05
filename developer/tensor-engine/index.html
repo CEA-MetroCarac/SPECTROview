@@ -1227,7 +1227,7 @@
 <h1 id="developer-guide-tensor-fit-engine">Developer Guide: Tensor Fit Engine<a class="headerlink" href="#developer-guide-tensor-fit-engine" title="Permanent link">&para;</a></h1>
 <p>This document provides a deep dive into the inner workings, architecture, and performance characteristics of the Tensor Fit Engine located in <code>spectroview/fit_engine/</code>.</p>
 <h2 id="1-why-the-tensor-engine-is-much-faster">1. Why the Tensor Engine is Much Faster<a class="headerlink" href="#1-why-the-tensor-engine-is-much-faster" title="Permanent link">&para;</a></h2>
-<p>The legacy fit engines (based on <code>fitspy</code> and <code>lmfit</code>/<code>scipy.optimize.least_squares</code>) operate on a <strong>per-spectrum</strong> basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
+<p>The legacy fit engines (based on <code>lmfit</code>/<code>scipy.optimize.least_squares</code>) operate on a <strong>per-spectrum</strong> basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
 - <strong>Python Function Call Overhead</strong>: Calling the objective function and Jacobian estimator thousands of times per iteration.
 - <strong>Finite-Difference Jacobians</strong>: Approximating the Jacobian numerically requires <code>2 * K</code> (where K is the number of parameters) additional function evaluations per iteration, per spectrum.
 - <strong>Sequential Execution</strong>: Even with multiprocessing, the overhead of serialization and inter-process communication creates bottlenecks.</p>
@@ -1241,6 +1241,8 @@
 </li>
 <li><strong>Analytical Jacobians</strong>: Instead of estimating derivatives numerically, the engine uses exact analytical formulas for common peak shapes (Lorentzian, Gaussian, PseudoVoigt). This eliminates the <span class="arithmatex">\(2K\)</span> extra evaluations entirely.</li>
 <li><strong>No Spatial Propagation</strong>: Unlike older map-fitting approaches that used spiral traversal to propagate guesses from neighbor to neighbor (forcing sequential execution), the tensor engine initializes all pixels independently using amplitude scaling, allowing purely parallel tensor math.</li>
+<li><strong>Variable Length Support</strong>: Spectra with different lengths (e.g. differently cropped) are padded with zeros to fit into a uniform 2D tensor, while a boolean <code>weights</code> mask ensures padded regions are ignored during optimization.</li>
+<li><strong>Expression Support</strong>: Supports complex mathematical relationships between parameters across the batch by evaluating mathematical constraints symbolically before mapping to free parameters.</li>
 </ol>
 <hr />
 <h2 id="2-code-logic-and-core-implementation-principles">2. Code Logic and Core Implementation Principles<a class="headerlink" href="#2-code-logic-and-core-implementation-principles" title="Permanent link">&para;</a></h2>
@@ -1275,8 +1277,8 @@
 <ol>
 <li><strong>Thread Invocation</strong>: <code>VMWorkspaceMaps._run_fit_thread()</code> instantiates and starts <code>TensorFitThread</code>.</li>
 <li><strong>Engine Initialization</strong>: <code>TensorFittingEngine.fit_spectra()</code> is called.</li>
-<li><strong>Model Application (Optional)</strong>: If <code>apply_model_to_spectra=True</code>, the <code>fit_model</code> dictionary is applied to all <code>MSpectrum</code> objects, ensuring they have the correct number and type of peaks.</li>
-<li><strong>Preprocessing</strong>: <code>spectrum.preprocess()</code> is called for all spectra (applying spectral ranges, evaluating and subtracting baselines).</li>
+<li><strong>Model Application (Optional)</strong>: If <code>apply_model_to_spectra=True</code>, the <code>fit_model</code> dictionary is applied to all <code>MSpectrum</code> objects, ensuring they have the correct number and type of peaks. If <code>False</code> (like in the Spectra workspace), the engine groups spectra by their existing model signatures and processes batches sequentially, preserving individual spectrum customizations.</li>
+<li><strong>Preprocessing</strong>: <code>spectrum.preprocess()</code> is called for all spectra (applying spectral ranges, evaluating and subtracting baselines). Spectra are then zero-padded into a uniform 2D matrix.</li>
 <li><strong>Evaluator Construction</strong>: <code>TensorEvaluator.from_fit_model()</code> parses the model, determining which parameters are free vs. fixed, and mapping them to a flat vector space.</li>
 <li><strong>Data Extraction</strong>: The <span class="arithmatex">\((N, M)\)</span> data matrix <span class="arithmatex">\(\mathbf{Y}\)</span> and initial parameter matrix <span class="arithmatex">\(\mathbf{p_0}\)</span> are extracted. If it's a first fit, <span class="arithmatex">\(\mathbf{p_0}\)</span> amplitudes are scaled to the actual data. If it's a re-fit, <span class="arithmatex">\(\mathbf{p_0}\)</span> is extracted from the existing fits (warm start) with slight noise added to prevent premature convergence.</li>
 <li><strong>Optimization</strong>: <code>batched_levenberg_marquardt()</code> runs the iterations until all spectra converge or <code>max_iter</code> is reached.</li>

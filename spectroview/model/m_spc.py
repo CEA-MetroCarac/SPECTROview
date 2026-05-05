@@ -1,6 +1,7 @@
 import struct
 import numpy as np
 import datetime
+import re
 
 class SpcReader:
     """
@@ -119,7 +120,6 @@ class SpcReader:
         """Parse Key=Value pairs from log block."""
         self.log_metadata = {}
         # Filter strings to avoid binary garbage
-        import re
         # Pattern: look for printable keys followed by = and value
         # Allow alphanumeric, spaces, and typical punctuation in unit labels like (cm-1)
         # Reject keys with control chars or extended ASCII if it looks like garbage

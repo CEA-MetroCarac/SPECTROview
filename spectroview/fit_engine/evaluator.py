@@ -10,8 +10,9 @@ Handles:
 """
 
 import numpy as np
-from spectroview.fit_engine.scalar_models import FitResult, ParamValue
+from spectroview.fit_engine.scalar_models import FitResult, ParamValue, PEAK_MODEL_REGISTRY
 from spectroview.fit_engine.models import BATCHED_MODELS, numerical_jacobian
+from fitspy.core.utils import eval_noise_amplitude
 
 
 class TensorEvaluator:
@@ -58,7 +59,6 @@ class TensorEvaluator:
                     has_analytical_jac = True
                 else:
                     # Fallback: use scalar model from core, wrap it
-                    from spectroview.fit_engine.scalar_models import PEAK_MODEL_REGISTRY
                     if model_name not in PEAK_MODEL_REGISTRY:
                         raise ValueError(f"Unknown peak model: {model_name}")
                     scalar_fn, canonical_params = PEAK_MODEL_REGISTRY[model_name]
@@ -379,8 +379,6 @@ class TensorEvaluator:
         coef_noise = float(fit_params.get("coef_noise", 0))
         if coef_noise <= 0:
             return
-
-        from fitspy.core.utils import eval_noise_amplitude
 
         for i, spectrum in enumerate(spectra):
             y = spectrum.y

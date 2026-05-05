@@ -9,7 +9,7 @@ import matplotlib.patches as patches
 from matplotlib.collections import PatchCollection
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-from scipy.interpolate import griddata
+from scipy.interpolate import griddata, RegularGridInterpolator
 from superqt import QLabeledDoubleRangeSlider
 
 from PySide6.QtWidgets import (
@@ -1246,7 +1246,6 @@ class VMapViewer(QWidget):
         z_values = heatmap_pivot.values
         
         # Interpolate Z values at the sampled points along the profile
-        from scipy.interpolate import RegularGridInterpolator
         interpolator = RegularGridInterpolator((y_values, x_values), z_values)
         
         num_samples = 100

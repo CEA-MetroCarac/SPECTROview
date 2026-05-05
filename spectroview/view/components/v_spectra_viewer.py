@@ -22,6 +22,8 @@ from matplotlib.backends.backend_qtagg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT
 )
+import matplotlib as mpl
+from PySide6.QtWidgets import QApplication
 
 from PySide6.QtWidgets import QLabel, QApplication
 from PySide6.QtGui import QCursor
@@ -930,7 +932,6 @@ class VSpectraViewer(QWidget):
         style_path = PLOT_POLICY_LIGHT if style_name != "Dark Mode" else PLOT_POLICY_DARK
         
         # Parse the style file without modifying global rcParams
-        import matplotlib as mpl
         style_dict = mpl.rc_params_from_file(style_path)
             
         self.figure.patch.set_facecolor(style_dict.get('figure.facecolor', 'white'))
@@ -984,10 +985,9 @@ class VSpectraViewer(QWidget):
 
 
     def _emit_copy(self):
-        from PySide6.QtWidgets import QApplication
-        ctrl = QApplication.keyboardModifiers() & Qt.ControlModifier
+        modifiers = QApplication.keyboardModifiers() & Qt.ControlModifier
         
-        if ctrl:
+        if modifiers:
             # Request ViewModel to copy spectrum data
             self.copy_data_requested.emit()
         else:

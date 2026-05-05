@@ -3,7 +3,7 @@ import os
 import json
 from copy import deepcopy
 from pathlib import Path
-from copy import deepcopy
+from collections import OrderedDict
         
 import numpy as np
 import pandas as pd
@@ -818,7 +818,6 @@ class VMWorkspaceSpectra(QObject):
         if self._use_batch_engine:
             # Group spectra by peak-model structure so that each group
             # can be processed as a single tensor batch.
-            from collections import OrderedDict
             groups = OrderedDict()
             for s in spectra_with_peaks:
                 sig = self._peak_model_signature(s)

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem, QAbstractItemView, QPushButton, QCheckBox
 )
 from PySide6.QtCore import Qt, Signal, QSize, QTimer, QItemSelection, QItemSelectionModel
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QFont
 
 from spectroview import ICON_DIR
 from spectroview.viewmodel.utils import set_spectrum_item_color
@@ -195,7 +195,7 @@ class VMapsList(QWidget):
             placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
             
             # Set larger font size
-            from PySide6.QtGui import QFont
+            
             font = QFont()
             font.setPointSize(12)  # Increase font size
             placeholder.setFont(font)

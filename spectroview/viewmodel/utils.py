@@ -20,7 +20,7 @@ import pandas as pd
 import warnings
 from io import BytesIO
 
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed, wait, FIRST_COMPLETED
 from multiprocessing import Manager
 from openpyxl.styles import PatternFill
 from copy import deepcopy
@@ -152,7 +152,6 @@ class ApplyFitModelThread(QThread):
                 initargs=(queue_incr,),
                 max_workers=self.ncpus
             ) as executor:
-                from concurrent.futures import wait, FIRST_COMPLETED
                 
                 self.futures = set()
                 future_to_spectrum = {}

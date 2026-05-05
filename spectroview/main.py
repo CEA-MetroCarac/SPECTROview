@@ -27,6 +27,12 @@ from spectroview.viewmodel.utils import dark_palette, light_palette
 
 from spectroview import LOGO_APPLI, USER_MANUAL_PDF
 
+try:
+    from renishawWiRE import WDFReader
+    WDF_AVAILABLE = True
+except ImportError:
+    WDF_AVAILABLE = False
+
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -173,8 +179,9 @@ class Main(QMainWindow):
                 spectra_files.append(str(path))
             elif ext == '.wdf':
                 # Renishaw WiRE native format - detect if it's a map or single spectrum
-                from renishawWiRE import WDFReader
                 try:
+                    if not WDF_AVAILABLE:
+                        raise ImportError("renishawWiRE library is not installed.")
                     reader = WDFReader(str(path))
                     # Check measurement type: Mapping = hyperspectral, Single = spectrum
                     # measurement_type is an enum, so convert to string for comparison

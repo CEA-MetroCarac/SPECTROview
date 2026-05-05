@@ -1,6 +1,7 @@
 # spectroview/view/components/v_spectra_list.py
 from PySide6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QFont
 
 from spectroview.viewmodel.utils import set_spectrum_item_color
 
@@ -45,7 +46,7 @@ class VSpectraList(QListWidget):
             placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
             
             # Set larger font size
-            from PySide6.QtGui import QFont
+            
             font = QFont()
             font.setPointSize(12)  # Increase font size
             placeholder.setFont(font)

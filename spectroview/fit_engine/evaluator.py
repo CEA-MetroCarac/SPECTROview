@@ -292,9 +292,10 @@ class TensorEvaluator:
             if i >= len(self._peaks):
                 break
             for key in peak_model.param_names:
-                if key in fit_result.params:
-                    name = key[4:]  # remove prefix 'mXX_'
-                    peak_model.set_param_hint(name, value=fit_result.params[key].value)
+                name = key[4:]  # remove actual prefix 'mXX_' from fitspy
+                tensor_key = f"m{i+1:02d}_{name}" # use the sequentially generated prefix from the evaluator
+                if tensor_key in fit_result.params:
+                    peak_model.set_param_hint(name, value=fit_result.params[tensor_key].value)
 
         if spectrum.bkg_model is not None:
             for key in spectrum.bkg_model.param_names:

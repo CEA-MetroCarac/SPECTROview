@@ -1,0 +1,2600 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A Tool for Spectroscopic Data Processing and Visualization">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../developer/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>User Manual - SPECTROview Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="red">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#table-of-contents" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="SPECTROview Documentation" class="md-header__button md-logo" aria-label="SPECTROview Documentation" data-md-component="logo">
+      
+  <img src="../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SPECTROview Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              User Manual
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="red"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="red" data-md-color-accent="red"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  User Manual
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../developer/" class="md-tabs__link">
+          
+  
+  
+  Developer Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="SPECTROview Documentation" class="md-nav__button md-logo" aria-label="SPECTROview Documentation" data-md-component="logo">
+      
+  <img src="../assets/icon.png" alt="logo">
+
+    </a>
+    SPECTROview Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Manual
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Manual
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Introduction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Installation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-pypi-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From PyPI (recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-github-latest-development-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From GitHub (latest development version)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#launch-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Launch &amp; Update
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-supported-data-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Supported Data Formats
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Supported Data Formats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-wdf-renishaw-and-spc-horiba-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 .wdf (Renishaw) and .spc (HORIBA) Formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-spectroscopic-data-txt-csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Spectroscopic Data (.txt, .csv)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-hyperspectral-data-txt-csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Hyperspectral Data (.txt, .csv)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-datasheet-excel-or-csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Datasheet (Excel or CSV)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-formats-saved-by-spectroview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Formats saved by SPECTROview
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-user-interface-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. User Interface Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. User Interface Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#toolbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toolbar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-spectra-and-maps-workspaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Spectra and Maps Workspaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Spectra and Maps Workspaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-spectralist-maplist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 SpectraList &amp; MapList
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-spectra-viewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Spectra Viewer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 Spectra Viewer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#toolbar-buttons-view-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toolbar Buttons &amp; View Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mouse-interactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mouse Interactions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-fit-model-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Fit Model Builder
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.3 Fit Model Builder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#531-fitting-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.1 Fitting Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#532-peaktable-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.2 PeakTable Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#533-fitmodelcontrol-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.3 FitModelControl Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-collect-save-fit-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Collect &amp; Save Fit Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.4 Collect &amp; Save Fit Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#541-splitting-filename-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.1 Splitting Filename Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#542-compute-and-add-new-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.2 Compute and Add New Columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#543-saving-or-visualizing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.3 Saving or Visualizing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-more-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 More Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-graphs-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Graphs Workspace
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Graphs Workspace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-loading-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Loading Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-add-a-new-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Add a New Plot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-modify-existing-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Modify Existing Plot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-data-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Data Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-annotation-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Annotation Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-tensor-fit-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Tensor Fit Engine
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Tensor Fit Engine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is it?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-is-it-faster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why is it faster?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tuning-for-performance-vs-accuracy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tuning for Performance vs. Accuracy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-multivariate-analysis-mva" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Multivariate Analysis (MVA)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Multivariate Analysis (MVA)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-quick-calculators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Quick Calculators
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Quick Calculators">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-laser-spot-size-calculator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Laser Spot Size Calculator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-penetration-depth-calculator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 Penetration Depth Calculator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-unit-converter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 Unit Converter
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-settings-preferences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Settings &amp; Preferences
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-save-load-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Save &amp; Load Workspace
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Save &amp; Load Workspace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#saving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-keyboard-shortcuts-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Keyboard Shortcuts &amp; Tips
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. Keyboard Shortcuts &amp; Tips">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#global-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global Shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer/tensor-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tensor Fit Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MVA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Introduction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Installation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-pypi-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From PyPI (recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-github-latest-development-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From GitHub (latest development version)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#launch-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Launch &amp; Update
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-supported-data-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Supported Data Formats
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Supported Data Formats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-wdf-renishaw-and-spc-horiba-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 .wdf (Renishaw) and .spc (HORIBA) Formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-spectroscopic-data-txt-csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Spectroscopic Data (.txt, .csv)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-hyperspectral-data-txt-csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Hyperspectral Data (.txt, .csv)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-datasheet-excel-or-csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Datasheet (Excel or CSV)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-formats-saved-by-spectroview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Formats saved by SPECTROview
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-user-interface-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. User Interface Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. User Interface Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#toolbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toolbar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-spectra-and-maps-workspaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Spectra and Maps Workspaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Spectra and Maps Workspaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-spectralist-maplist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 SpectraList &amp; MapList
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-spectra-viewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Spectra Viewer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 Spectra Viewer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#toolbar-buttons-view-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toolbar Buttons &amp; View Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mouse-interactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mouse Interactions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-fit-model-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Fit Model Builder
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.3 Fit Model Builder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#531-fitting-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.1 Fitting Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#532-peaktable-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.2 PeakTable Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#533-fitmodelcontrol-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.3 FitModelControl Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-collect-save-fit-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Collect &amp; Save Fit Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.4 Collect &amp; Save Fit Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#541-splitting-filename-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.1 Splitting Filename Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#542-compute-and-add-new-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.2 Compute and Add New Columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#543-saving-or-visualizing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.3 Saving or Visualizing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-more-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 More Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-graphs-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Graphs Workspace
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Graphs Workspace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-loading-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Loading Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-add-a-new-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Add a New Plot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-modify-existing-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Modify Existing Plot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-data-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Data Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-annotation-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Annotation Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-tensor-fit-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Tensor Fit Engine
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Tensor Fit Engine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is it?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-is-it-faster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why is it faster?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tuning-for-performance-vs-accuracy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tuning for Performance vs. Accuracy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-multivariate-analysis-mva" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Multivariate Analysis (MVA)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Multivariate Analysis (MVA)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-quick-calculators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Quick Calculators
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Quick Calculators">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-laser-spot-size-calculator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Laser Spot Size Calculator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-penetration-depth-calculator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 Penetration Depth Calculator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-unit-converter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 Unit Converter
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-settings-preferences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Settings &amp; Preferences
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-save-load-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Save &amp; Load Workspace
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Save &amp; Load Workspace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#saving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-keyboard-shortcuts-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Keyboard Shortcuts &amp; Tips
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. Keyboard Shortcuts &amp; Tips">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#global-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global Shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 align="center">SPECTROview User Manual</h1>
+<p align="center">
+  <img src="user_manual_images/imageFile2.png" alt="SPECTROview Logo">
+</p>
+<p align="center"><b>Last updated: May 2026</b></p>
+
+<hr />
+<h2 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h2>
+<ol>
+<li><a href="#1-introduction">Introduction</a></li>
+<li><a href="#2-installation">Installation</a></li>
+<li><a href="#3-supported-data-formats">Supported Data Formats</a></li>
+<li><a href="#4-user-interface-overview">User Interface Overview</a></li>
+<li><a href="#5-spectra-and-maps-workspaces">Spectra and Maps Workspaces</a><ul>
+<li>5.1 <a href="#51-spectralist-maplist">SpectraList &amp; MapList</a></li>
+<li>5.2 <a href="#52-spectra-viewer">Spectra Viewer</a></li>
+<li>5.3 <a href="#53-fit-model-builder">Fit Model Builder</a></li>
+<li>5.4 <a href="#54-collect-save-fit-results">Collect &amp; Save Fit Results</a></li>
+<li>5.5 <a href="#55-more-tab">More Tab</a></li>
+</ul>
+</li>
+<li><a href="#6-graphs-workspace">Graphs Workspace</a></li>
+<li><a href="#7-tensor-fit-engine">Tensor Fit Engine</a></li>
+<li><a href="#8-multivariate-analysis-mva">Multivariate Analysis (MVA)</a></li>
+<li><a href="#9-quick-calculators">Quick Calculators</a></li>
+<li><a href="#10-settings-preferences">Settings &amp; Preferences</a></li>
+<li><a href="#11-save-load-workspace">Save &amp; Load Workspace</a></li>
+<li><a href="#12-keyboard-shortcuts-tips">Keyboard Shortcuts &amp; Tips</a></li>
+</ol>
+<hr />
+<h2 id="1-introduction">1. Introduction<a class="headerlink" href="#1-introduction" title="Permanent link">&para;</a></h2>
+<p>Spectroscopy techniques (such as Raman, Photoluminescence, XRD, XPS, etc.) are widely used in various fields, including materials science, chemistry, biology, and geology. In recent years, these techniques have increasingly found their place in cleanroom environments, particularly within the microelectronics industry, where they serve as critical metrology tools for wafer-scale measurements. </p>
+<p>The data collected from these in-line measurements (wafer data) require specific processing, but existing software solutions are often not optimized for this type of data and typically lack advanced plotting and visualization capabilities. Additionally, the licensing requirements of these software solutions can restrict access for a broader community of users.</p>
+<p><strong>SPECTROview</strong> addresses these gaps by offering free, open-source software that is compatible with both in-line data (wafer maps) as well as standard spectroscopic data (discrete spectra, 2D maps). It also features a built-in visualization tool, enabling users to streamline both data processing and visualization in a single application, making the workflow more efficient.</p>
+<blockquote>
+<p><strong>GitHub Repository</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview">https://github.com/CEA-MetroCarac/SPECTROview</a></p>
+<p><strong>Citation</strong>: Don't forget to cite the tool when it is used for your data processing, data visualization on your publication:
+Le, V.-H., &amp; Quéméré, P. (2025). SPECTROview: A Tool for Spectroscopic Data Processing and Visualization. Zenodo. <a href="https://doi.org/10.5281/zenodo.14147172">https://doi.org/10.5281/zenodo.14147172</a></p>
+</blockquote>
+<p><strong>Highlighted features:</strong>
+- Cross-platform compatibility (Windows, macOS, Linux).
+- Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps).
+- Ability to fit multiple spectra or 2D maps using predefined custom fit models.
+- Collect all best-fit results with one click.
+- Optimized user interface for easy and quick inspection and comparison of spectra.
+- Dedicated module for effortless, fast, and easy data visualization.</p>
+<hr />
+<h2 id="2-installation">2. Installation<a class="headerlink" href="#2-installation" title="Permanent link">&para;</a></h2>
+<p>Ensure that Python (version between v3.8 and v3.12) is already installed on your PC. The installation of SPECTROview can be performed via the command line (CMD).</p>
+<h3 id="from-pypi-recommended">From PyPI (recommended)<a class="headerlink" href="#from-pypi-recommended" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
+</code></pre></div>
+<h3 id="from-github-latest-development-version">From GitHub (latest development version)<a class="headerlink" href="#from-github-latest-development-version" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/CEA-MetroCarac/SPECTROview.git
+</code></pre></div>
+<h3 id="launch-update">Launch &amp; Update<a class="headerlink" href="#launch-update" title="Permanent link">&para;</a></h3>
+<p>To open SPECTROview, type in CMD:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>spectroview
+</code></pre></div>
+To update to the newest version:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>spectroview
+</code></pre></div>
+Or update to a specific version (example: <code>26.6.1</code>):
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span><span class="nv">spectroview</span><span class="o">==</span><span class="m">26</span>.6.1
+</code></pre></div></p>
+<hr />
+<h2 id="3-supported-data-formats">3. Supported Data Formats<a class="headerlink" href="#3-supported-data-formats" title="Permanent link">&para;</a></h2>
+<p>Examples of all supported data types can be found in the <a href="https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples"><code>/examples</code></a> folder within the GitHub repository. Users can download these files to understand the supported file formats, data structures, and practice using the SPECTROview application with real examples.</p>
+<h3 id="31-wdf-renishaw-and-spc-horiba-formats">3.1 .wdf (Renishaw) and .spc (HORIBA) Formats<a class="headerlink" href="#31-wdf-renishaw-and-spc-horiba-formats" title="Permanent link">&para;</a></h3>
+<p>Since version 26.7.1, SPECTROview natively supports:
+- <strong><code>.wdf</code></strong> — Recorded with WiRE software from Renishaw instruments
+- <strong><code>.spc</code></strong> — Recorded with LabSpec 6 software from HORIBA instruments</p>
+<p>Both discrete spectra and hyperspectral datasets (2D maps) are fully supported. These files can be opened directly without any prior conversion. In addition to spectroscopic data, SPECTROview also reads and imports the associated <strong>metadata</strong>, including: excitation wavelength (nm), gratings (gr/mm), objective used, laser power, slit/hole, acquisition timestamp, etc. This ensures full access to both measurement data and experimental conditions within a single workflow.</p>
+<h3 id="32-spectroscopic-data-txt-csv">3.2 Spectroscopic Data (.txt, .csv)<a class="headerlink" href="#32-spectroscopic-data-txt-csv" title="Permanent link">&para;</a></h3>
+<p>SPECTROview supports spectroscopic data in TXT or CSV format. Files must consist of <strong>two columns</strong> separated by semicolons, spaces, or tabs. Files can contain column headers or not:
+- <strong>Column 1</strong>: X-axis values (e.g., Raman shift in cm⁻¹, wavelength in nm)
+- <strong>Column 2</strong>: Corresponding intensity values (a.u.)</p>
+<h3 id="33-hyperspectral-data-txt-csv">3.3 Hyperspectral Data (.txt, .csv)<a class="headerlink" href="#33-hyperspectral-data-txt-csv" title="Permanent link">&para;</a></h3>
+<p>SPECTROview supports hyperspectral data (2D maps or wafer maps) in TXT or CSV format, with the data structure arranged as follows:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th>R1</th>
+<th>R2</th>
+<th>R3</th>
+<th>...</th>
+<th>Rn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>X1</strong></td>
+<td><strong>Y1</strong></td>
+<td>I1</td>
+<td>I1</td>
+<td>I1</td>
+<td>...</td>
+<td>I1</td>
+</tr>
+<tr>
+<td><strong>X2</strong></td>
+<td><strong>Y2</strong></td>
+<td>I2</td>
+<td>I2</td>
+<td>I2</td>
+<td>...</td>
+<td>I2</td>
+</tr>
+<tr>
+<td><strong>...</strong></td>
+<td><strong>...</strong></td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr>
+<td><strong>Xn</strong></td>
+<td><strong>Yn</strong></td>
+<td>In</td>
+<td>In</td>
+<td>In</td>
+<td>...</td>
+<td>In</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>The <strong>first row</strong> (R1 → Rn) is the X-axis values (e.g., Raman shift in cm⁻¹) of all spectra.</li>
+<li>The <strong>first two columns</strong> list the X and Y coordinates of the spectrum within the map.</li>
+<li>The <strong>remaining columns</strong> contain the corresponding intensity values for each spectrum (I1 → In), from the second row to the last.</li>
+</ul>
+<blockquote>
+<p><strong>Note</strong>: 2D map formats from Renishaw tools must be converted before they can be used in SPECTROview. An integrated conversion tool is provided in the SPECTROview application for this purpose (see Section 4, File Convert Tool).</p>
+</blockquote>
+<h3 id="34-datasheet-excel-or-csv">3.4 Datasheet (Excel or CSV)<a class="headerlink" href="#34-datasheet-excel-or-csv" title="Permanent link">&para;</a></h3>
+<p>Excel files (<code>.xlsx</code>, <code>.xls</code>) containing one or multiple sheets, or CSV files can be directly loaded into the <strong>Graphs Workspace</strong> for visualization.</p>
+<h3 id="35-formats-saved-by-spectroview">3.5 Formats saved by SPECTROview<a class="headerlink" href="#35-formats-saved-by-spectroview" title="Permanent link">&para;</a></h3>
+<p>Depending on the active workspace, SPECTROview saves files with specific extensions so work can be resumed later:
+- <strong>Maps workspace</strong> → <code>.maps</code>
+- <strong>Spectra workspace</strong> → <code>.spectra</code>
+- <strong>Graphs workspace</strong> → <code>.graphs</code></p>
+<hr />
+<h2 id="4-user-interface-overview">4. User Interface Overview<a class="headerlink" href="#4-user-interface-overview" title="Permanent link">&para;</a></h2>
+<p>The SPECTROview application is designed for the efficient processing of spectroscopic data and the easy visualization of fitted results. The interface features three main workspaces, each developed for a specific purpose:</p>
+<p><img alt="Interface Workspaces" src="../user_manual_images/imageFile6.png" /></p>
+<ul>
+<li><strong>Spectra</strong>: For processing one or multiple discrete spectra.</li>
+<li><strong>Maps</strong>: For processing one or multiple hyperspectral datasets, including wafer data and 2D maps.</li>
+<li><strong>Graphs</strong>: For plotting and visualizing data.</li>
+</ul>
+<blockquote>
+<p><strong>Tooltip</strong>: Most GUI elements in SPECTROview (buttons, text boxes, dropdowns, etc.) feature tooltips. Hover the mouse cursor over an element for 1 second to see a brief explanation of its function.</p>
+</blockquote>
+<h3 id="toolbar">Toolbar<a class="headerlink" href="#toolbar" title="Permanent link">&para;</a></h3>
+<p>A horizontal toolbar is located at the top edge of the application containing the following buttons:</p>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>Function</th>
+<th>Image</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="Open" src="../user_manual_images/imageFile7.png" /></td>
+<td><strong>Open</strong>: Loads all supported data types. The application will automatically switch to the appropriate workspace based on the loaded file type.</td>
+<td></td>
+</tr>
+<tr>
+<td><img alt="Save" src="../user_manual_images/imageFile8.png" /></td>
+<td><strong>Save</strong>: Saves the current active workspace to a file (<code>.maps</code>, <code>.spectra</code>, or <code>.graphs</code>), allowing the user to reopen it later and resume work.</td>
+<td></td>
+</tr>
+<tr>
+<td><img alt="Clear" src="../user_manual_images/imageFile9.png" /></td>
+<td><strong>Clear</strong>: Clears the current active workspace to start a new session. All loaded data will be removed.</td>
+<td></td>
+</tr>
+<tr>
+<td><img alt="Convert" src="../user_manual_images/imageFile10.png" /></td>
+<td><strong>File Convert Tool</strong>: Opens the tool to convert hyperspectral data (2D maps) from the Renishaw WiRE format into a format supported by SPECTROview.</td>
+<td><img alt="Converter" src="../user_manual_images/imageFile13.png" /><br><em>Figure 1: Interface of "Hyperspectral Data Converter". Load file(s) → Click "Convert" → New file created with <code>_converted</code> suffix.</em></td>
+</tr>
+<tr>
+<td><img alt="Settings" src="../user_manual_images/imageFile11.png" /></td>
+<td><strong>Settings</strong>: Opens the Settings Panel to adjust fitting parameters and define the storage folder for user-defined fitting models.</td>
+<td><img alt="Settings Panel" src="../user_manual_images/imageFile14.png" /><br><em>Figure 2: Setting Panel</em></td>
+</tr>
+<tr>
+<td><img alt="Theme" src="../user_manual_images/imageFile15.png" /></td>
+<td><strong>Theme Toggle</strong>: Switches the application GUI between Dark and Light modes.</td>
+<td></td>
+</tr>
+<tr>
+<td><img alt="User Manual" src="../user_manual_images/imageFile16.png" /></td>
+<td><strong>User Manual</strong>: Opens this User Manual document.</td>
+<td></td>
+</tr>
+<tr>
+<td><img alt="About" src="../user_manual_images/imageFile17.png" /></td>
+<td><strong>About</strong>: Displays version information and details about the application.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-spectra-and-maps-workspaces">5. Spectra and Maps Workspaces<a class="headerlink" href="#5-spectra-and-maps-workspaces" title="Permanent link">&para;</a></h2>
+<p>The Maps and Spectra workspaces are very similar. They share many common features, with the Maps workspace containing additional specific features designed to handle multiple hyperspectral datasets.</p>
+<p><img alt="Overview Spectra and Maps" src="../user_manual_images/imageFile19.png" />
+<img alt="Overview Spectra and Maps" src="../user_manual_images/imageFile20.png" />
+<em>Figure 3: Interface overview of Spectra (left) and Maps (right) workspaces. The interface is divided into three main sections. Section 1 (SpectraViewer) and 2 (FitModelBuilder) are identical in both workspaces, whereas section 3 (SpectraList / MapList) differs slightly.</em></p>
+<h3 id="51-spectralist-maplist">5.1 SpectraList &amp; MapList<a class="headerlink" href="#51-spectralist-maplist" title="Permanent link">&para;</a></h3>
+<p>These sections are designed to efficiently navigate between spectral or hyperspectral data.</p>
+<p><img alt="MapList and MapViewer" src="../user_manual_images/imageFile22.png" />
+<em>Figure 4: (Left) MapList section within the Maps workspace. On the right: MapViewer module and More Options to adjust the heatmap display.</em></p>
+<p><strong>MapList</strong>: Displays all loaded map files, including wafer maps and 2D map types. Three buttons located on the right side allow the user to (1) view the selected map data, (2) delete the selected map, or (3) save the selected map to an Excel file.</p>
+<p><strong>SpectraList</strong>: Displays all loaded spectra in the Spectra workspace, or all spectra associated with the selected map in the Maps workspace. Users can select one or multiple spectra simultaneously. The selected spectra are displayed in the SpectraViewer. Buttons allow the user to select all available spectra, reset the selection, display the fit statistic report, or send selected spectra to the Spectra workspace.</p>
+<p><strong>MapViewer</strong>: Displays the heatmap of the selected map. Several options are available to customize the heatmap:
+- <strong>Map type</strong>: 2D map or wafer map with different diameters.
+- <strong>Color palette</strong>: Selection for the heatmap.
+- <strong>Displayed parameter</strong>: Maximum intensity, area, or any fitted parameter.
+- <strong>Range sliders</strong>: Adjust the X-axis range and the color bar limits.
+- <strong>Mask feature</strong>: Define specific regions of the heatmap based on user-defined filters.
+- <strong>Copy button</strong>: Copies the heatmap to the clipboard.
+- <strong>Multiple MapViewers</strong>: Add additional MapViewer windows as floating windows for comparison.</p>
+<p><img alt="SpectraList and ProgressBar" src="../user_manual_images/imageFile24.png" />
+<em>Figure 5: SpectraList and ProgressBar. Displays fitting progress (% and elapsed time). The Stop button halts fitting.</em></p>
+<h3 id="52-spectra-viewer">5.2 Spectra Viewer<a class="headerlink" href="#52-spectra-viewer" title="Permanent link">&para;</a></h3>
+<p>The SpectraViewer plots all spectra (and best-fit curves) selected via the SpectraList.</p>
+<p><img alt="Spectra Viewer" src="../user_manual_images/imageFile25.png" />
+<em>Figure 6: Spectra Viewer (left) widget and View Options Menu (right).</em></p>
+<h4 id="toolbar-buttons-view-options">Toolbar Buttons &amp; View Options<a class="headerlink" href="#toolbar-buttons-view-options" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="Rescale" src="../user_manual_images/imageFile26.png" /></td>
+<td><strong>Rescale</strong>: To rescale the spectra plot. Shortcut: <code>Ctrl + R</code></td>
+</tr>
+<tr>
+<td><img alt="Zoom" src="../user_manual_images/imageFile27.png" /></td>
+<td><strong>Zoom</strong>: When active, enables the "zoom" feature using left mouse click &amp; drag.</td>
+</tr>
+<tr>
+<td><img alt="Baseline" src="../user_manual_images/imageFile28.png" /></td>
+<td><strong>Baseline</strong>: When active, allows the user to define baseline point(s) using left mouse click.</td>
+</tr>
+<tr>
+<td><img alt="Peaks" src="../user_manual_images/imageFile29.png" /></td>
+<td><strong>Peaks</strong>: When active, allows the user to define peak(s) on the spectra using left mouse click.</td>
+</tr>
+<tr>
+<td><img alt="Normalization" src="../user_manual_images/imageFile31.png" /> <img alt="Normalization Max" src="../user_manual_images/imageFile32.png" /> <img alt="Normalization Range" src="../user_manual_images/imageFile33.png" /></td>
+<td><strong>Normalization</strong>: Displays selected spectra normalized to the maximum peak intensity. Type into 'min' and 'max' to normalize to a specific spectral range.<br><img alt="Normalization Example" src="../user_manual_images/imageFile34.png" /><br><em>Figure 7: Raw spectra (left) vs. normalized spectra (right) to inspect peak shifts.</em></td>
+</tr>
+<tr>
+<td><img alt="Legend" src="../user_manual_images/imageFile35.png" /></td>
+<td><strong>Legend</strong>: Displays legend for selected spectra. Click on legend box to change color/labels (Zoom must be disabled).<br><img alt="Legend Customization" src="../user_manual_images/imageFile36.png" /></td>
+</tr>
+<tr>
+<td><img alt="Copy" src="../user_manual_images/imageFile37.png" /></td>
+<td><strong>Copy</strong>: Copies the plot to the clipboard as an image. <code>Ctrl + Click</code> (or <code>Cmd + click</code> on macOS): Copies numerical data to the clipboard.</td>
+</tr>
+<tr>
+<td><img alt="More Options" src="../user_manual_images/imageFile38.png" /></td>
+<td><strong>More options</strong>: Opens view options (X/Y units, Log scale, Plot style, Raw/Residual visibility, Grids, Line width, Figure size).<br><img alt="More Options Panel" src="../user_manual_images/imageFile39.png" /></td>
+</tr>
+</tbody>
+</table>
+<h4 id="mouse-interactions">Mouse Interactions<a class="headerlink" href="#mouse-interactions" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Show Peak Parameters</strong>: Hover over a peak to display a pop-up with its parameters.</li>
+<li><strong>Add/Remove Peaks</strong>: Right-click to remove the current peak, or left-click to add a new peak (Peak button must be active).</li>
+<li><strong>Adjust peak</strong>: Drag the peak with the mouse.</li>
+<li><strong>Quick rescale Y-axis</strong>: Use the mouse wheel.
+<img alt="Quick rescale" src="../user_manual_images/imageFile41.png" /></li>
+</ul>
+<h3 id="53-fit-model-builder">5.3 Fit Model Builder<a class="headerlink" href="#53-fit-model-builder" title="Permanent link">&para;</a></h3>
+<p>The FitModelBuilder Tab contains three main panels: Fitting, PeakTable, and FitModelControl.</p>
+<p><img alt="FitModelBuilder Tab" src="../user_manual_images/imageFile42.png" />
+<em>Figure 8: FitModelBuilder tab widget containing: (1) Fitting, (2) PeakTable and (3) FitModelControl.</em></p>
+<h4 id="531-fitting-panel">5.3.1 Fitting Panel<a class="headerlink" href="#531-fitting-panel" title="Permanent link">&para;</a></h4>
+<p>The FittingPanel is divided into four sections:</p>
+<p><strong>Step 1: X-axis Correction (optional)</strong>
+Perform an X-axis correction based on measurements from a well-known reference sample (e.g., Silicon at 520.7 cm⁻¹). Fit the reference, enter the measured position, and apply the correction to shift the X-axis accordingly.</p>
+<p><strong>Step 2: Define the fitting range</strong>
+Define the X-axis range used for the fitting process.</p>
+<p><strong>Step 3: Baseline definition</strong>
+Two baseline modes (Manual or Auto) can be chosen:</p>
+<p><img alt="Baseline Modes" src="../user_manual_images/imageFile44.png" />
+<em>Figure 9: Baseline mode selection: Manual (left) vs. Auto (right)</em></p>
+<ul>
+<li><strong>Manual mode (Linear or Polynomial)</strong>: Define baseline anchor points by clicking in the SpectraViewer. Check <em>Attached</em> to snap points to the curve. Check <em>Correct noise</em> to calculate points as an average of neighboring data.
+<img alt="Manual Baseline Example" src="../user_manual_images/imageFile45.png" /></li>
+<li><strong>Auto mode (airPLS or asLS)</strong>: Baseline curve is automatically defined. Adjust the slider to fine-tune.</li>
+<li><strong>airPLS</strong>: Aggressive, great for high-fluorescence. Validated for Raman data.</li>
+<li><strong>asLS</strong>: Stable but doesn't distinguish noise/peaks well. Best for clean spectra.</li>
+</ul>
+<p><strong>Step 4: Peak definition</strong>
+- Add peaks directly in the SpectraViewer by left-clicking (Peak button enabled). Adjust interactively by dragging.
+- Added peaks are listed in the <strong>PeakTable</strong>.
+- Supported shapes: Lorentzian, Gaussian, PseudoVoigt, LorentzianAsym, GaussianAsym, Fano, DecaySingleExp, DecayBiExp.
+<img alt="Peak definition" src="../user_manual_images/imageFile46.png" /></p>
+<h4 id="532-peaktable-panel">5.3.2 PeakTable Panel<a class="headerlink" href="#532-peaktable-panel" title="Permanent link">&para;</a></h4>
+<p>Displays all peaks defined for the selected spectrum. Peak properties are dynamically updated.</p>
+<p><img alt="PeakTable Panel" src="../user_manual_images/imageFile48.png" />
+<em>Figure 10: PeakTable panel</em></p>
+<p><strong>Constraints</strong>:
+- <strong>Fix</strong>: Keeps the parameter value constant.
+- <strong>Limits</strong>: Displays min/max columns to restrict parameter variations.
+- <strong>Expression</strong>: Links parameters via mathematical expressions.</p>
+<p><img alt="Expression Limit" src="../user_manual_images/imageFile49.png" />
+<em>Example 1: Constrain <code>m02_x0</code> to be <code>m01_x0 - 17</code>.</em></p>
+<p><img alt="Expression Intensity" src="../user_manual_images/imageFile50.png" />
+<em>Example 2: Constrain <code>m03_ampli</code> to be <code>m02_ampli / 2</code>.</em></p>
+<h4 id="533-fitmodelcontrol-panel">5.3.3 FitModelControl Panel<a class="headerlink" href="#533-fitmodelcontrol-panel" title="Permanent link">&para;</a></h4>
+<p>Click the <strong>Fit</strong> button to start the fitting process.</p>
+<p><img alt="FitModelControl Interface" src="../user_manual_images/imageFile52.png" />
+<em>Figure 11: Interface of FitModelControl</em></p>
+<p><strong>Copy / Paste Fit Models</strong>: The entire fit model can be copied and pasted between spectra.
+<img alt="Copy Fit" src="../user_manual_images/imageFile53.png" />
+<img alt="Paste Fit" src="../user_manual_images/imageFile54.png" />
+<img alt="Paste Example" src="../user_manual_images/imageFile55.png" /></p>
+<p><strong>Saving / Loading Fit Models</strong>:
+Save the fit model for later use. Stored models can be accessed using the dropdown menu.
+<img alt="Fit Model Dropdown" src="../user_manual_images/imageFile56.png" />
+<img alt="Load Fit Model" src="../user_manual_images/imageFile57.png" /></p>
+<h3 id="54-collect-save-fit-results">5.4 Collect &amp; Save Fit Results<a class="headerlink" href="#54-collect-save-fit-results" title="Permanent link">&para;</a></h3>
+<p>To collect best-fit results from all fitted spectra/maps:
+- Switch to the <strong>Fit Results</strong> tab.
+- Click the <strong>Collect</strong> button. Results are aggregated into a table.</p>
+<p><img alt="Collect Fit Results 1" src="../user_manual_images/imageFile58.png" />
+<img alt="Collect Fit Results 2" src="../user_manual_images/imageFile59.png" />
+<em>Figure 12: Collect_fit_results panel</em></p>
+<h4 id="541-splitting-filename-features">5.4.1 Splitting Filename Features<a class="headerlink" href="#541-splitting-filename-features" title="Permanent link">&para;</a></h4>
+<p>Extracts metadata from filenames separated by underscores (e.g., <code>Sample1_ProcessA_Temp25</code>) and adds them as new columns.</p>
+<p><img alt="Filename Splitting" src="../user_manual_images/imageFile61.png" /></p>
+<h4 id="542-compute-and-add-new-columns">5.4.2 Compute and Add New Columns<a class="headerlink" href="#542-compute-and-add-new-columns" title="Permanent link">&para;</a></h4>
+<p>Create new columns via mathematical expressions using existing columns (e.g., <code>x0_p1 - x0_p2</code>).
+Supported operations: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>**</code>, <code>%</code>, <code>()</code>.</p>
+<blockquote>
+<p><strong>Important</strong>: For column names with special characters, wrap them in backticks (<code>). Example: ``</code>x0_LO(M)` ``</p>
+</blockquote>
+<h4 id="543-saving-or-visualizing">5.4.3 Saving or Visualizing<a class="headerlink" href="#543-saving-or-visualizing" title="Permanent link">&para;</a></h4>
+<p>Name the best-fit dataset and send it to the Graphs workspace for plotting, or export as Excel.</p>
+<p><img alt="Send to Graph" src="../user_manual_images/imageFile63.png" />
+<img alt="Export to Excel" src="../user_manual_images/imageFile64.png" /></p>
+<h3 id="55-more-tab">5.5 More Tab<a class="headerlink" href="#55-more-tab" title="Permanent link">&para;</a></h3>
+<p>Contains three sections:
+- <strong>Left</strong>: Metadata showing settings/parameters of loaded <code>.wdf</code> or <code>.spc</code> files.
+- <strong>Middle</strong>: Information about the selected spectrum.
+- <strong>Right</strong>: Additional processing features (intensity normalization, cosmic ray detection).</p>
+<p><img alt="More Tab" src="../user_manual_images/imageFile65.png" />
+<em>Figure 13: More Tab’s user interface.</em></p>
+<hr />
+<h2 id="6-graphs-workspace">6. Graphs Workspace<a class="headerlink" href="#6-graphs-workspace" title="Permanent link">&para;</a></h2>
+<p>The Graphs Workspace is dedicated to data visualization, with an emphasis on simplicity and speed.</p>
+<p><img alt="Graphs Workspace" src="../user_manual_images/imageFile67.png" />
+<em>Figure 14: Graphs Workspace’s interface. Control Panel on the right, Graph Viewer on the left.</em></p>
+<h3 id="61-loading-data">6.1 Loading Data<a class="headerlink" href="#61-loading-data" title="Permanent link">&para;</a></h3>
+<p>Datasets can be sent directly from other workspaces or loaded from Excel/CSV files. All loaded datasets are displayed in a list widget.
+Buttons available: <strong>View</strong>, <strong>Delete</strong>, <strong>Save</strong>, <strong>Refresh</strong> (reloads CSV/Excel file if modified externally).</p>
+<p><img alt="Dataset List" src="../user_manual_images/imageFile69.png" />
+<em>Figure 15: List of loaded dataframe(s).</em></p>
+<h3 id="62-add-a-new-plot">6.2 Add a New Plot<a class="headerlink" href="#62-add-a-new-plot" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Select dataset.</li>
+<li>Select X, Y, Z columns from the dropdown menus.</li>
+<li>Select plot style (scatter, point, bar, box, line, 2Dmap, wafer).</li>
+<li>Specify labels, limits, and wafer size (if applicable).</li>
+<li>Click <strong>Add plot</strong>.</li>
+</ol>
+<p><img alt="Add New Plot" src="../user_manual_images/imageFile70.png" /></p>
+<h3 id="63-modify-existing-plot">6.3 Modify Existing Plot<a class="headerlink" href="#63-modify-existing-plot" title="Permanent link">&para;</a></h3>
+<p><img alt="Plot Widget" src="../user_manual_images/imageFile71.png" />
+<img alt="Plot Customize" src="../user_manual_images/imageFile72.png" />
+<em>Figure 16: Example of a plot widget. Click "Customize" to open the Customize Dialog.</em></p>
+<p><img alt="Toolbar Buttons" src="../user_manual_images/imageFile73.png" /></p>
+<ul>
+<li>Click <strong>Customize</strong> to open the Customize Dialog (Legend, Annotation, Axis, General).</li>
+<li><strong>Double-click</strong> the legend box or annotation to edit its content directly.</li>
+<li>
+<p>Adjust settings via the right ControlPanel and click <strong>Update</strong>.
+<img alt="Update Button" src="../user_manual_images/imageFile75.png" /></p>
+</li>
+<li>
+<p>Click <strong>Copy</strong> to copy the figure to the clipboard.
+<img alt="Copy Button" src="../user_manual_images/imageFile76.png" /></p>
+</li>
+</ul>
+<h3 id="64-data-filtering">6.4 Data Filtering<a class="headerlink" href="#64-data-filtering" title="Permanent link">&para;</a></h3>
+<p>Filter rows using a boolean expression in the <strong>Filter</strong> field: <code>(column_name) (operator) (value)</code>
+String values must be enclosed in double quotes. Column headers with spaces must be enclosed in backticks (<code>`</code>).</p>
+<p><img alt="Filter Example" src="../user_manual_images/imageFile77.png" />
+<em>Figure 17: Example of using filters.</em></p>
+<table>
+<thead>
+<tr>
+<th>Filter Expression</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Confocal != "high"</code></td>
+<td>Values in "Confocal" not equal to "high"</td>
+</tr>
+<tr>
+<td><code>Thickness == "1ML" or Thickness == "3ML"</code></td>
+<td>"Thickness" equals 1ML or 3ML</td>
+</tr>
+<tr>
+<td><code>`Laser Power` &lt;= 5</code></td>
+<td>"Laser Power" is less than or equal to 5</td>
+</tr>
+</tbody>
+</table>
+<h3 id="65-annotation-features">6.5 Annotation Features<a class="headerlink" href="#65-annotation-features" title="Permanent link">&para;</a></h3>
+<p>Customize annotations (lines and text) in the <strong>MoreOptions</strong> tab or by clicking directly on the plot.</p>
+<p><img alt="MoreOptions" src="../user_manual_images/imageFile79.png" />
+<em>Figure 18: MoreOptions Panel</em></p>
+<p><img alt="Annotation Panel" src="../user_manual_images/imageFile80.png" />
+<em>Figure 19: Annotation (line &amp; text) Customization Panel.</em></p>
+<hr />
+<h2 id="7-tensor-fit-engine">7. Tensor Fit Engine<a class="headerlink" href="#7-tensor-fit-engine" title="Permanent link">&para;</a></h2>
+<h3 id="what-is-it">What is it?<a class="headerlink" href="#what-is-it" title="Permanent link">&para;</a></h3>
+<p>The Tensor Fit Engine is SPECTROview's high-performance fitting backend. Instead of fitting spectra one at a time, it <strong>fits all spectra simultaneously</strong> using batched matrix operations.</p>
+<h3 id="why-is-it-faster">Why is it faster?<a class="headerlink" href="#why-is-it-faster" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Fits all N spectra at once (Batched tensor math).</li>
+<li>Uses Analytical Jacobians instead of slow Numerical Jacobians.</li>
+<li>Vectorized NumPy/LAPACK operations eliminate Python function call overhead.
+<strong>Result</strong>: Typically <strong>10–15× faster</strong>. A 1000-spectrum map that would take 30+ seconds now fits in &lt; 3 seconds.</li>
+</ul>
+<h3 id="tuning-for-performance-vs-accuracy">Tuning for Performance vs. Accuracy<a class="headerlink" href="#tuning-for-performance-vs-accuracy" title="Permanent link">&para;</a></h3>
+<p>Access fitting parameters in <strong>Settings → Fit Parameters</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Default</th>
+<th>Fast Preview</th>
+<th>Precision Fitting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>xtol</code> / <code>ftol</code></td>
+<td>1e-4</td>
+<td>1e-2</td>
+<td>1e-6</td>
+</tr>
+<tr>
+<td><code>max_ite</code></td>
+<td>200</td>
+<td>50</td>
+<td>500</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-multivariate-analysis-mva">8. Multivariate Analysis (MVA)<a class="headerlink" href="#8-multivariate-analysis-mva" title="Permanent link">&para;</a></h2>
+<p>Built-in MVA tools are accessible from the <strong>MVA tab</strong> in Spectra and Maps workspaces. Requires at least 2 active spectra. </p>
+<h3 id="supported-methods">Supported Methods<a class="headerlink" href="#supported-methods" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Principal Component Analysis (PCA)</strong>: Reduces spectral data dimensions to reveal main patterns of variance. Visualizations: Scree plot, Loadings, Scores.</li>
+<li><strong>Non-negative Matrix Factorization (NMF)</strong>: Decomposes data into additive, non-negative components (endmembers). Visualizations: Loadings, Scores.</li>
+</ul>
+<hr />
+<h2 id="9-quick-calculators">9. Quick Calculators<a class="headerlink" href="#9-quick-calculators" title="Permanent link">&para;</a></h2>
+<p>Accessible from the <strong>Quick Calc</strong> button in the toolbar, or <strong>Tools → Quick Calculators</strong>.</p>
+<h3 id="91-laser-spot-size-calculator">9.1 Laser Spot Size Calculator<a class="headerlink" href="#91-laser-spot-size-calculator" title="Permanent link">&para;</a></h3>
+<p>Calculates diffraction-limited spot size, depth of focus, and power density.
+- <strong>Spot Size</strong>: <code>1.22 × λ / NA</code> (μm)
+- <strong>Depth of Focus</strong>: <code>4 × n × λ / NA²</code> (μm)</p>
+<h3 id="92-penetration-depth-calculator">9.2 Penetration Depth Calculator<a class="headerlink" href="#92-penetration-depth-calculator" title="Permanent link">&para;</a></h3>
+<p>Calculates optical penetration depth from the extinction coefficient.
+- <strong>Penetration Depth d</strong>: <code>λ / (4πk)</code> (nm)</p>
+<h3 id="93-unit-converter">9.3 Unit Converter<a class="headerlink" href="#93-unit-converter" title="Permanent link">&para;</a></h3>
+<p>Converts between spectroscopic units (e.g., nm to eV, nm to cm⁻¹, Raman shift).</p>
+<hr />
+<h2 id="10-settings-preferences">10. Settings &amp; Preferences<a class="headerlink" href="#10-settings-preferences" title="Permanent link">&para;</a></h2>
+<p>Access via the <strong>Settings</strong> button in the toolbar.
+- <strong>Theme</strong>: Dark / Light mode.
+- <strong>Default Directory</strong>: Default folder for file dialogs.
+- <strong>Fit Parameters</strong>: xtol, ftol, max_ite, coef_noise.
+- <strong>Fit Model Path</strong>: Default folder for saved fit models.
+- <strong>Peak Limits</strong>: Minimum FWHM, maximum FWHM, maximum shift.</p>
+<hr />
+<h2 id="11-save-load-workspace">11. Save &amp; Load Workspace<a class="headerlink" href="#11-save-load-workspace" title="Permanent link">&para;</a></h2>
+<h3 id="saving">Saving<a class="headerlink" href="#saving" title="Permanent link">&para;</a></h3>
+<p>Click the <strong>Save</strong> button in the toolbar to save the current workspace:
+<img alt="Save Workspace" src="../user_manual_images/imageFile81.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Workspace</th>
+<th>Extension</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Spectra</strong></td>
+<td><code>.spectra</code></td>
+<td>Loaded spectra, fit models, baseline settings, results</td>
+</tr>
+<tr>
+<td><strong>Maps</strong></td>
+<td><code>.maps</code></td>
+<td>Map data, all spectra with fit results, metadata</td>
+</tr>
+<tr>
+<td><strong>Graphs</strong></td>
+<td><code>.graphs</code></td>
+<td>All datasets and plot configurations</td>
+</tr>
+</tbody>
+</table>
+<h3 id="loading">Loading<a class="headerlink" href="#loading" title="Permanent link">&para;</a></h3>
+<p>Click the <strong>Open</strong> button and select a <code>.spectra</code>, <code>.maps</code>, or <code>.graphs</code> file. SPECTROview will automatically restore all data in the correct tab.</p>
+<hr />
+<h2 id="12-keyboard-shortcuts-tips">12. Keyboard Shortcuts &amp; Tips<a class="headerlink" href="#12-keyboard-shortcuts-tips" title="Permanent link">&para;</a></h2>
+<h3 id="global-shortcuts">Global Shortcuts<a class="headerlink" href="#global-shortcuts" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Shortcut</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Ctrl + R</code></td>
+<td>Rescale spectra plot</td>
+</tr>
+<tr>
+<td><code>Ctrl + Click</code> on Copy</td>
+<td>Copy numerical data to clipboard</td>
+</tr>
+<tr>
+<td><code>Mouse wheel</code></td>
+<td>Quick Y-axis rescale in Spectra Viewer</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Tooltips everywhere</strong>: Hover over any GUI element for 1 second.</li>
+<li><strong>Drag peaks</strong>: Click and drag peaks directly in the Spectra Viewer.</li>
+<li><strong>Quick re-fit</strong>: After adjusting parameters, click Fit again — it warm-starts from previous results.</li>
+<li><strong>Column names with spaces</strong>: Use backticks (<code>`</code>) in Filters or Computed Columns.</li>
+<li><strong>Profile extraction</strong>: In Maps workspace, select exactly 2 points to extract an intensity profile.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

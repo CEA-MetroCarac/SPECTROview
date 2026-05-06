@@ -25,3 +25,7 @@ To install or downgrade to a specific version (e.g., `26.6.1`):
 ```bash
 pip install --upgrade spectroview==26.6.1
 ```
+
+### Documentation
+
+Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**](https://CEA-MetroCarac.github.io/SPECTROview/). A user manual is also available [here](https://cea-metrocarac.github.io/SPECTROview/user-manual/) or can be accessed directly within the application.

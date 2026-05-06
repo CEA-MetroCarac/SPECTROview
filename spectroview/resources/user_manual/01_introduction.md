@@ -15,7 +15,11 @@ With its built-in visualization tools, SPECTROview streamlines your workflow by 
 - Optimized user interface for quick inspection and comparison of spectra.
 - Dedicated module for effortless, fast, and professional data visualization.
 
-For more information, please visit the **GitHub Repository**: [https://github.com/CEA-MetroCarac/SPECTROview](https://github.com/CEA-MetroCarac/SPECTROview)
+>For more information, please visit the [GitHub Repository](https://github.com/CEA-MetroCarac/SPECTROview).
+
+## Acknowledgements
+
+This work, carried out on the CEA - Platform for Nanocharacterisation (PFNC), was supported by the “Recherche Technologique de Base” program of the French National Research Agency (ANR).
 ____
 
 **Citation**: If you use SPECTROview for data processing or visualization in your research, please cite the following publication:

@@ -363,7 +363,7 @@ class Main(QMainWindow):
         """Open integrated user manual MD viewer or web documentation."""
         modifiers = QApplication.keyboardModifiers()
         if modifiers & Qt.ControlModifier:
-            url = QUrl("https://cea-metrocarac.github.io/SPECTROview/user_manual/")
+            url = QUrl("https://cea-metrocarac.github.io/SPECTROview/user-manual/")
             QDesktopServices.openUrl(url)
             return
 

@@ -22,5 +22,8 @@ With its built-in visualization tools, SPECTROview streamlines your workflow by 
 This work, carried out on the CEA - Platform for Nanocharacterisation (PFNC), was supported by the “Recherche Technologique de Base” program of the French National Research Agency (ANR).
 ____
 
-**Citation**: If you use SPECTROview for data processing or visualization in your research, please cite the following publication:
+## Citation
+
+If you use SPECTROview for data processing or visualization in your research, please cite the following publication:
+
 > Le, V.-H., & Quéméré, P. (2025). SPECTROview: A Tool for Spectroscopic Data Processing and Visualization. Zenodo. [https://doi.org/10.5281/zenodo.14147172](https://doi.org/10.5281/zenodo.14147172)

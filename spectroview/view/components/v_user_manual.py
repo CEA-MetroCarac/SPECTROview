@@ -5,8 +5,7 @@ from PySide6.QtCore import Qt, QUrl
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QSplitter,
     QTreeWidget, QTreeWidgetItem, QTextBrowser,
-    QLineEdit, QWidget, QListWidget, QListWidgetItem, QLabel,
-    QPushButton
+    QLineEdit, QWidget, QListWidget, QListWidgetItem, QLabel
 )
 from PySide6.QtGui import (
     QDesktopServices, QFont, QTextDocument, QImage,
@@ -148,28 +147,10 @@ class VUserManualDialog(QDialog):
 
         self.splitter.addWidget(left_widget)
 
-        # ---- Center panel: Content viewer + nav buttons ----
-        center_widget = QWidget()
-        center_layout = QVBoxLayout(center_widget)
-        center_layout.setContentsMargins(0, 0, 0, 0)
-
+        # ---- Center panel: Content viewer ----
         self.content_browser = FitImageTextBrowser()
         self.content_browser.anchorClicked.connect(self._on_anchor_clicked)
-        center_layout.addWidget(self.content_browser)
-
-        # Navigation buttons
-        nav_bar = QHBoxLayout()
-        nav_bar.setContentsMargins(4, 2, 4, 2)
-        self.btn_prev = QPushButton("← Previous")
-        self.btn_next = QPushButton("Next →")
-        self.btn_prev.clicked.connect(self._go_previous_section)
-        self.btn_next.clicked.connect(self._go_next_section)
-        nav_bar.addWidget(self.btn_prev)
-        nav_bar.addStretch()
-        nav_bar.addWidget(self.btn_next)
-        center_layout.addLayout(nav_bar)
-
-        self.splitter.addWidget(center_widget)
+        self.splitter.addWidget(self.content_browser)
 
         # ---- Right panel: Subsection TOC ----
         right_widget = QWidget()
@@ -264,9 +245,6 @@ class VUserManualDialog(QDialog):
             self._populate_toc(toc_tokens, self.toc_tree)
             self.toc_tree.expandAll()
 
-        # Update prev/next navigation buttons
-        self._update_nav_buttons()
-
     def _populate_toc(self, tokens, parent_item):
         for token in tokens:
             item = QTreeWidgetItem(parent_item)
@@ -329,88 +307,63 @@ class VUserManualDialog(QDialog):
             self._set_search_style(False)
 
     def _on_search_return_pressed(self):
-        """Pressing Enter cycles through every match across all sections:
-        1. Try find() forward in the current section.
-        2. If exhausted, jump to the next section that contains the text.
-        3. If all other sections exhausted, wrap back to the top of the
-           current section.
-        """
+        """Pressing Enter cycles through every match across all sections."""
         text = self.search_bar.text()
         if not text:
             return
 
+        # Ensure search bar keeps focus so the user can keep hitting Enter
+        self.search_bar.setFocus()
+
         # Try to find the next match forward in the current section
-        found = self.content_browser.find(text)
+        # Use FindFlag(0) for case-insensitive search
+        from PySide6.QtGui import QTextDocument
+        found = self.content_browser.find(text, QTextDocument.FindFlag(0))
         if found:
             self._set_search_style(False)
             return
 
-        # No more forward matches → try other sections (NOT the current one)
+        # No more forward matches → try other sections
         current_row = self.section_list.currentRow()
         total = self.section_list.count()
         text_lower = text.lower()
 
+        # Iterate through other sections to find the next match
         for offset in range(1, total):
             idx = (current_row + offset) % total
             item = self.section_list.item(idx)
             filename = item.data(Qt.UserRole)
             filepath = os.path.join(self.manual_dir, filename)
+            
             if not os.path.exists(filepath):
                 continue
+                
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
+                
             if text_lower not in content.lower():
                 continue
 
-            # Switch to this section and highlight the first match
+            # Switch to this section
             self.section_list.setCurrentItem(item)
             self._render_section(filename)
+            
+            # Reset cursor to top and highlight the first match
             cursor = self.content_browser.textCursor()
             cursor.setPosition(0)
             self.content_browser.setTextCursor(cursor)
-            self.content_browser.find(text)
-            self._set_search_style(False)
-            return
+            
+            if self.content_browser.find(text, QTextDocument.FindFlag(0)):
+                self._set_search_style(False)
+                return
 
-        # All other sections exhausted → wrap within the current section
+        # If we exhausted all OTHER sections, wrap around within the CURRENT section
         cursor = self.content_browser.textCursor()
         cursor.setPosition(0)
         self.content_browser.setTextCursor(cursor)
-        found = self.content_browser.find(text)
+        
+        found = self.content_browser.find(text, QTextDocument.FindFlag(0))
         self._set_search_style(not found)
-
-    # ------------------------------------------------------------------
-    # Previous / Next section navigation
-    # ------------------------------------------------------------------
-    def _go_previous_section(self):
-        current = self.section_list.currentRow()
-        if current > 0:
-            self.section_list.setCurrentRow(current - 1)
-            self._on_section_clicked(self.section_list.item(current - 1))
-
-    def _go_next_section(self):
-        current = self.section_list.currentRow()
-        if current < self.section_list.count() - 1:
-            self.section_list.setCurrentRow(current + 1)
-            self._on_section_clicked(self.section_list.item(current + 1))
-
-    def _update_nav_buttons(self):
-        """Enable/disable prev/next buttons based on current position."""
-        current = self.section_list.currentRow()
-        total = self.section_list.count()
-        self.btn_prev.setEnabled(current > 0)
-        self.btn_next.setEnabled(current < total - 1)
-        # Show the target section name in the button text
-        if current > 0:
-            prev_title = self.section_list.item(current - 1).text()
-            self.btn_prev.setText(f"← {prev_title}")
-        else:
-            self.btn_prev.setText("← Previous")
-        if current < total - 1:
-            next_title = self.section_list.item(current + 1).text()
-            self.btn_next.setText(f"{next_title} →")
-        else:
-            self.btn_next.setText("Next →")
 
     # ------------------------------------------------------------------
     # Search helpers

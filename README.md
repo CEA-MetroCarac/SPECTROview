@@ -20,21 +20,16 @@ With its built-in visualization tools, SPECTROview streamlines your workflow by 
 - **Getting Started**: Check out [this folder](https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples) to see the supported data formats and find example datasets for practice.
 
 
-
-
 ___
 ## Features: 
 
-- Cross-platform compatibility (Windows, macOS, Linux).
-- Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps)*. 
-- **Tensor Fit Engine**: 10–15× faster fitting using batched matrix operations
-- Ability to fit multiple spectra or 2Dmaps using predefined models or by creating custom fit models*.
-
-- Collect all best-fit results with one click.
-- Optimized user inferface for easy and quick inspection and comparison of spectra.
-- Dedicated module for effortless, fast, and easy data visualization. 
-
-**Fitting features are powered by the *fitspy* and *lmfit* open-source packages.*
+- Cross-Platform compatibility (Windows, macOS, Linux).
+- Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps).
+- **Tensor Fit Engine**: 10–20× faster fitting using batched matrix operations and ability to fit multiple spectra or 2Dmaps.
+- Build customized fit models for different spectroscopic profiles and reuse them for quickly fitting other datasets.
+- Collect and compile all best-fit results with a single click.
+- Optimized user interface for quick inspection and comparison of spectra.
+- Dedicated module for effortless, fast, and professional data visualization.
 
 ______
 ### Three separate tabs for processing discrete spectra, hyperspectral data, and data visualization:

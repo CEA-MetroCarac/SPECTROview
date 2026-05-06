@@ -12,9 +12,13 @@
         <meta name="author" content="Van Hoan Le">
       
       
-        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/dev/dev_Tensor_Fit_Engine/">
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/user-manual/05_spectra_maps/">
       
       
+        <link rel="prev" href="../04_ui_overview/">
+      
+      
+        <link rel="next" href="../06_graphs/">
       
       
         
@@ -25,7 +29,7 @@
     
     
       
-        <title>Developer Guide: Tensor Fit Engine - SPECTROview Documentation</title>
+        <title>Spectra & Maps - SPECTROview Documentation</title>
       
     
     
@@ -76,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#developer-guide-tensor-fit-engine" class="md-skip">
+        <a href="#5-spectra-and-maps-workspaces" class="md-skip">
           Skip to content
         </a>
       
@@ -109,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Developer Guide: Tensor Fit Engine
+              Spectra & Maps
             
           </span>
         </div>
@@ -239,11 +243,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../user-manual/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -369,28 +375,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
             
   
   
@@ -408,7 +417,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -426,7 +435,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
@@ -454,7 +463,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/01_introduction/" class="md-nav__link">
+      <a href="../01_introduction/" class="md-nav__link">
         
   
   
@@ -482,7 +491,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/02_installation/" class="md-nav__link">
+      <a href="../02_installation/" class="md-nav__link">
         
   
   
@@ -510,7 +519,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/03_supported_data/" class="md-nav__link">
+      <a href="../03_supported_data/" class="md-nav__link">
         
   
   
@@ -538,7 +547,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/04_ui_overview/" class="md-nav__link">
+      <a href="../04_ui_overview/" class="md-nav__link">
         
   
   
@@ -563,10 +572,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../user-manual/05_spectra_maps/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spectra & Maps
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -582,6 +616,202 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#5-spectra-and-maps-workspaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Spectra and Maps Workspaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Spectra and Maps Workspaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-spectralist-maplist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 SpectraList &amp; MapList
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-spectra-viewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Spectra Viewer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 Spectra Viewer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#toolbar-buttons-view-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toolbar Buttons &amp; View Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mouse-interactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mouse Interactions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-fit-model-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Fit Model Builder
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.3 Fit Model Builder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#531-fitting-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.1 Fitting Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#532-peaktable-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.2 PeakTable Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#533-fitmodelcontrol-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.3 FitModelControl Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-collect-save-fit-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Collect &amp; Save Fit Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.4 Collect &amp; Save Fit Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#541-splitting-filename-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.1 Splitting Filename Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#542-compute-and-add-new-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.2 Compute and Add New Columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#543-saving-or-visualizing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.3 Saving or Visualizing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-more-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 More Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -594,7 +824,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/06_graphs/" class="md-nav__link">
+      <a href="../06_graphs/" class="md-nav__link">
         
   
   
@@ -622,7 +852,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/07_tensor_fit/" class="md-nav__link">
+      <a href="../07_tensor_fit/" class="md-nav__link">
         
   
   
@@ -650,7 +880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/08_mva/" class="md-nav__link">
+      <a href="../08_mva/" class="md-nav__link">
         
   
   
@@ -678,7 +908,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/09_calculators/" class="md-nav__link">
+      <a href="../09_calculators/" class="md-nav__link">
         
   
   
@@ -706,7 +936,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/10_settings/" class="md-nav__link">
+      <a href="../10_settings/" class="md-nav__link">
         
   
   
@@ -734,7 +964,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/11_save_load/" class="md-nav__link">
+      <a href="../11_save_load/" class="md-nav__link">
         
   
   
@@ -762,7 +992,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-manual/12_shortcuts/" class="md-nav__link">
+      <a href="../12_shortcuts/" class="md-nav__link">
         
   
   
@@ -979,8 +1209,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -989,33 +1217,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-why-the-tensor-engine-is-much-faster" class="md-nav__link">
+  <a href="#5-spectra-and-maps-workspaces" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Why the Tensor Engine is Much Faster
+        5. Spectra and Maps Workspaces
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-code-logic-and-core-implementation-principles" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Code Logic and Core Implementation Principles
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="2. Code Logic and Core Implementation Principles">
+    <nav class="md-nav" aria-label="5. Spectra and Maps Workspaces">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#the-mathematics-of-batched-lm" class="md-nav__link">
+  <a href="#51-spectralist-maplist" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Mathematics of Batched LM
+        5.1 SpectraList &amp; MapList
       
     </span>
   </a>
@@ -1023,10 +1240,33 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#independent-convergence" class="md-nav__link">
+  <a href="#52-spectra-viewer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Independent Convergence
+        5.2 Spectra Viewer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 Spectra Viewer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#toolbar-buttons-view-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toolbar Buttons &amp; View Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mouse-interactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mouse Interactions
       
     </span>
   </a>
@@ -1037,46 +1277,24 @@
     </nav>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#3-folder-and-class-structure" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#53-fit-model-builder" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Folder and Class Structure
+        5.3 Fit Model Builder
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-processing-pipeline-execution-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Processing Pipeline / Execution Flow
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-optimization-parameters-and-adjustments" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Optimization Parameters and Adjustments
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5. Optimization Parameters and Adjustments">
+    <nav class="md-nav" aria-label="5.3 Fit Model Builder">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#key-parameters" class="md-nav__link">
+  <a href="#531-fitting-panel" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Parameters
+        5.3.1 Fitting Panel
       
     </span>
   </a>
@@ -1084,10 +1302,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tuning-for-performance-vs-accuracy" class="md-nav__link">
+  <a href="#532-peaktable-panel" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tuning for Performance vs. Accuracy
+        5.3.2 PeakTable Panel
       
     </span>
   </a>
@@ -1095,10 +1313,76 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#adding-new-peak-models" class="md-nav__link">
+  <a href="#533-fitmodelcontrol-panel" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Adding New Peak Models
+        5.3.3 FitModelControl Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-collect-save-fit-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Collect &amp; Save Fit Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.4 Collect &amp; Save Fit Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#541-splitting-filename-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.1 Splitting Filename Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#542-compute-and-add-new-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.2 Compute and Add New Columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#543-saving-or-visualizing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.3 Saving or Visualizing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-more-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 More Tab
       
     </span>
   </a>
@@ -1130,86 +1414,161 @@
   
 
 
-<h1 id="developer-guide-tensor-fit-engine">Developer Guide: Tensor Fit Engine<a class="headerlink" href="#developer-guide-tensor-fit-engine" title="Permanent link">&para;</a></h1>
-<p>This document provides a deep dive into the inner workings, architecture, and performance characteristics of the Tensor Fit Engine located in <code>spectroview/fit_engine/</code>.</p>
-<h2 id="1-why-the-tensor-engine-is-much-faster">1. Why the Tensor Engine is Much Faster<a class="headerlink" href="#1-why-the-tensor-engine-is-much-faster" title="Permanent link">&para;</a></h2>
-<p>The legacy fit engines (based on <code>fitspy</code> and <code>lmfit</code>/<code>scipy.optimize.least_squares</code>) operate on a <strong>per-spectrum</strong> basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
-- <strong>Python Function Call Overhead</strong>: Calling the objective function and Jacobian estimator thousands of times per iteration.
-- <strong>Finite-Difference Jacobians</strong>: Approximating the Jacobian numerically requires <code>2 * K</code> (where K is the number of parameters) additional function evaluations per iteration, per spectrum.
-- <strong>Sequential Execution</strong>: Even with multiprocessing, the overhead of serialization and inter-process communication creates bottlenecks.</p>
-<p>The <strong>Tensor Fit Engine</strong> achieves massive speedups (~10x to 15x faster) through the following core principles:</p>
-<ol>
-<li><strong>All-at-Once Optimization</strong>: It optimizes all <span class="arithmatex">\(N\)</span> spectra simultaneously. The parameter matrices, data arrays, and residuals are manipulated as large 2D or 3D tensors.</li>
-<li><strong>Vectorized Operations (BLAS/LAPACK)</strong>: By framing the problem as tensors, the heavy lifting is offloaded to highly optimized C/Fortran libraries.<ul>
-<li>Matrix multiplications and transpositions for the normal equations (<span class="arithmatex">\(J^T J\)</span> and <span class="arithmatex">\(J^T r\)</span>) are performed using <code>np.einsum</code>.</li>
-<li>The linear systems for all spectra are solved in a single call to <code>np.linalg.solve</code>, which dispatches to LAPACK.</li>
-</ul>
-</li>
-<li><strong>Analytical Jacobians</strong>: Instead of estimating derivatives numerically, the engine uses exact analytical formulas for common peak shapes (Lorentzian, Gaussian, PseudoVoigt). This eliminates the <span class="arithmatex">\(2K\)</span> extra evaluations entirely.</li>
-<li><strong>No Spatial Propagation</strong>: Unlike older map-fitting approaches that used spiral traversal to propagate guesses from neighbor to neighbor (forcing sequential execution), the tensor engine initializes all pixels independently using amplitude scaling, allowing purely parallel tensor math.</li>
-<li><strong>Variable Length Support</strong>: Spectra with different lengths (e.g. differently cropped) are padded with zeros to fit into a uniform 2D tensor, while a boolean <code>weights</code> mask ensures padded regions are ignored during optimization.</li>
-<li><strong>Expression Support</strong>: Supports complex mathematical relationships between parameters across the batch by evaluating mathematical constraints symbolically before mapping to free parameters.</li>
-</ol>
-<hr />
-<h2 id="2-code-logic-and-core-implementation-principles">2. Code Logic and Core Implementation Principles<a class="headerlink" href="#2-code-logic-and-core-implementation-principles" title="Permanent link">&para;</a></h2>
-<p>The engine implements a <strong>Batched Levenberg-Marquardt</strong> algorithm.</p>
-<h3 id="the-mathematics-of-batched-lm">The Mathematics of Batched LM<a class="headerlink" href="#the-mathematics-of-batched-lm" title="Permanent link">&para;</a></h3>
-<p>For <span class="arithmatex">\(N\)</span> spectra, each with <span class="arithmatex">\(M\)</span> wavelength points and <span class="arithmatex">\(K\)</span> free parameters:</p>
-<ol>
-<li><strong>Evaluate Model</strong>: <span class="arithmatex">\(\mathbf{Y}_{pred} = f(\mathbf{x}, \mathbf{p})\)</span>, returning an <span class="arithmatex">\((N, M)\)</span> tensor.</li>
-<li><strong>Calculate Residuals</strong>: <span class="arithmatex">\(\mathbf{r} = \mathbf{W} \circ (\mathbf{Y}_{pred} - \mathbf{Y}_{data})\)</span>, returning an <span class="arithmatex">\((N, M)\)</span> tensor.</li>
-<li><strong>Calculate Jacobian</strong>: <span class="arithmatex">\(\mathbf{J} = \frac{\partial f}{\partial \mathbf{p}}\)</span>, returning an <span class="arithmatex">\((N, M, K)\)</span> tensor.</li>
-<li><strong>Normal Equations</strong>: Assemble <span class="arithmatex">\(J^T J\)</span> (size <span class="arithmatex">\(N \times K \times K\)</span>) and <span class="arithmatex">\(J^T r\)</span> (size <span class="arithmatex">\(N \times K\)</span>).</li>
-<li><strong>Damping (Marquardt step)</strong>: Add a damping factor <span class="arithmatex">\(\lambda_i\)</span> to the diagonal of <span class="arithmatex">\(J^T J\)</span> for each spectrum <span class="arithmatex">\(i\)</span>.</li>
-<li><strong>Solve</strong>: Solve <span class="arithmatex">\((J^T J + \lambda \text{diag}(J^T J)) \delta \mathbf{p} = -J^T r\)</span> for all <span class="arithmatex">\(N\)</span> spectra simultaneously.</li>
-<li><strong>Evaluate Step</strong>: Update <span class="arithmatex">\(\mathbf{p} \leftarrow \mathbf{p} + \delta \mathbf{p}\)</span> (with projection to bounds) and evaluate the new cost. Adjust <span class="arithmatex">\(\lambda\)</span> per spectrum based on success/failure.</li>
-</ol>
-<h3 id="independent-convergence">Independent Convergence<a class="headerlink" href="#independent-convergence" title="Permanent link">&para;</a></h3>
-<p>Even though the math is batched, each spectrum converges independently. The optimizer uses a boolean mask (<code>active = ~converged</code>) to skip Jacobian calculations and linear solves for spectra that have already reached the tolerance limits, progressively speeding up the later iterations.</p>
-<hr />
-<h2 id="3-folder-and-class-structure">3. Folder and Class Structure<a class="headerlink" href="#3-folder-and-class-structure" title="Permanent link">&para;</a></h2>
-<p>The engine is contained within <code>spectroview/fit_engine/</code> and consists of the following modules:</p>
+  <h1>Spectra & Maps</h1>
+
+<h2 id="5-spectra-and-maps-workspaces">5. Spectra and Maps Workspaces<a class="headerlink" href="#5-spectra-and-maps-workspaces" title="Permanent link">&para;</a></h2>
+<p>The Maps and Spectra workspaces are very similar. They share many common features, with the Maps workspace containing additional specific features designed to handle multiple hyperspectral datasets.</p>
+<p><img alt="Overview Spectra and Maps" src="../../user_manual_images/imageFile19.png" />
+<img alt="Overview Spectra and Maps" src="../../user_manual_images/imageFile20.png" />
+<em>Figure 3: Interface overview of Spectra (left) and Maps (right) workspaces. The interface is divided into three main sections. Section 1 (SpectraViewer) and 2 (FitModelBuilder) are identical in both workspaces, whereas section 3 (SpectraList / MapList) differs slightly.</em></p>
+<h3 id="51-spectralist-maplist">5.1 SpectraList &amp; MapList<a class="headerlink" href="#51-spectralist-maplist" title="Permanent link">&para;</a></h3>
+<p>These sections are designed to efficiently navigate between spectral or hyperspectral data.</p>
+<p><img alt="MapList and MapViewer" src="../../user_manual_images/imageFile22.png" />
+<em>Figure 4: (Left) MapList section within the Maps workspace. On the right: MapViewer module and More Options to adjust the heatmap display.</em></p>
+<p><strong>MapList</strong>: Displays all loaded map files, including wafer maps and 2D map types. Three buttons located on the right side allow the user to (1) view the selected map data, (2) delete the selected map, or (3) save the selected map to an Excel file.</p>
+<p><strong>SpectraList</strong>: Displays all loaded spectra in the Spectra workspace, or all spectra associated with the selected map in the Maps workspace. Users can select one or multiple spectra simultaneously. The selected spectra are displayed in the SpectraViewer. Buttons allow the user to select all available spectra, reset the selection, display the fit statistic report, or send selected spectra to the Spectra workspace.</p>
+<p><strong>MapViewer</strong>: Displays the heatmap of the selected map. Several options are available to customize the heatmap:
+- <strong>Map type</strong>: 2D map or wafer map with different diameters.
+- <strong>Color palette</strong>: Selection for the heatmap.
+- <strong>Displayed parameter</strong>: Maximum intensity, area, or any fitted parameter.
+- <strong>Range sliders</strong>: Adjust the X-axis range and the color bar limits.
+- <strong>Mask feature</strong>: Define specific regions of the heatmap based on user-defined filters.
+- <strong>Copy button</strong>: Copies the heatmap to the clipboard.
+- <strong>Multiple MapViewers</strong>: Add additional MapViewer windows as floating windows for comparison.</p>
+<p><img alt="SpectraList and ProgressBar" src="../../user_manual_images/imageFile24.png" />
+<em>Figure 5: SpectraList and ProgressBar. Displays fitting progress (% and elapsed time). The Stop button halts fitting.</em></p>
+<h3 id="52-spectra-viewer">5.2 Spectra Viewer<a class="headerlink" href="#52-spectra-viewer" title="Permanent link">&para;</a></h3>
+<p>The SpectraViewer plots all spectra (and best-fit curves) selected via the SpectraList.</p>
+<p><img alt="Spectra Viewer" src="../../user_manual_images/imageFile25.png" />
+<em>Figure 6: Spectra Viewer (left) widget and View Options Menu (right).</em></p>
+<h4 id="toolbar-buttons-view-options">Toolbar Buttons &amp; View Options<a class="headerlink" href="#toolbar-buttons-view-options" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="Rescale" src="../../user_manual_images/imageFile26.png" /></td>
+<td><strong>Rescale</strong>: To rescale the spectra plot. Shortcut: <code>Ctrl + R</code></td>
+</tr>
+<tr>
+<td><img alt="Zoom" src="../../user_manual_images/imageFile27.png" /></td>
+<td><strong>Zoom</strong>: When active, enables the "zoom" feature using left mouse click &amp; drag.</td>
+</tr>
+<tr>
+<td><img alt="Baseline" src="../../user_manual_images/imageFile28.png" /></td>
+<td><strong>Baseline</strong>: When active, allows the user to define baseline point(s) using left mouse click.</td>
+</tr>
+<tr>
+<td><img alt="Peaks" src="../../user_manual_images/imageFile29.png" /></td>
+<td><strong>Peaks</strong>: When active, allows the user to define peak(s) on the spectra using left mouse click.</td>
+</tr>
+<tr>
+<td><img alt="Normalization" src="../../user_manual_images/imageFile31.png" /> <img alt="Normalization Max" src="../../user_manual_images/imageFile32.png" /> <img alt="Normalization Range" src="../../user_manual_images/imageFile33.png" /></td>
+<td><strong>Normalization</strong>: Displays selected spectra normalized to the maximum peak intensity. Type into 'min' and 'max' to normalize to a specific spectral range.<br><img alt="Normalization Example" src="../../user_manual_images/imageFile34.png" /><br><em>Figure 7: Raw spectra (left) vs. normalized spectra (right) to inspect peak shifts.</em></td>
+</tr>
+<tr>
+<td><img alt="Legend" src="../../user_manual_images/imageFile35.png" /></td>
+<td><strong>Legend</strong>: Displays legend for selected spectra. Click on legend box to change color/labels (Zoom must be disabled).<br><img alt="Legend Customization" src="../../user_manual_images/imageFile36.png" /></td>
+</tr>
+<tr>
+<td><img alt="Copy" src="../../user_manual_images/imageFile37.png" /></td>
+<td><strong>Copy</strong>: Copies the plot to the clipboard as an image. <code>Ctrl + Click</code> (or <code>Cmd + click</code> on macOS): Copies numerical data to the clipboard.</td>
+</tr>
+<tr>
+<td><img alt="More Options" src="../../user_manual_images/imageFile38.png" /></td>
+<td><strong>More options</strong>: Opens view options (X/Y units, Log scale, Plot style, Raw/Residual visibility, Grids, Line width, Figure size).<br><img alt="More Options Panel" src="../../user_manual_images/imageFile39.png" /></td>
+</tr>
+</tbody>
+</table>
+<h4 id="mouse-interactions">Mouse Interactions<a class="headerlink" href="#mouse-interactions" title="Permanent link">&para;</a></h4>
 <ul>
-<li><strong><code>tensor_engine.py</code></strong>: Contains the orchestrator class <code>TensorFittingEngine</code>. It manages the high-level workflow: preprocessing spectra, extracting matrices, calling the optimizer, and writing results back to the GUI objects.</li>
-<li><strong><code>optimizer.py</code></strong>: Contains the core mathematical workhorse <code>batched_levenberg_marquardt</code>. This is purely numerical and agnostic to the GUI objects.</li>
-<li><strong><code>evaluator.py</code></strong>: Contains <code>TensorEvaluator</code>. This class acts as the bridge between the flexible dictionary-based <code>fit_model</code> (which supports fixed parameters, bounds, and mixed peak types) and the rigid, flat, free-parameter tensors required by the optimizer.</li>
-<li><strong><code>models.py</code></strong>: Defines the batched model evaluation functions (e.g., <code>batched_lorentzian</code>) and their corresponding analytical Jacobian functions (e.g., <code>batched_lorentzian_jac</code>).</li>
-<li><strong><code>scalar_models.py</code></strong>: Contains fallback scalar models and the <code>FitResult</code> data class.</li>
-<li><strong><code>tensor_fit_thread.py</code></strong>: Contains <code>TensorFitThread</code>, a <code>QThread</code> wrapper that runs the engine asynchronously to prevent GUI freezing, and emits progress signals.</li>
+<li><strong>Show Peak Parameters</strong>: Hover over a peak to display a pop-up with its parameters.</li>
+<li><strong>Add/Remove Peaks</strong>: Right-click to remove the current peak, or left-click to add a new peak (Peak button must be active).</li>
+<li><strong>Adjust peak</strong>: Drag the peak with the mouse.</li>
+<li><strong>Quick rescale Y-axis</strong>: Use the mouse wheel.
+<img alt="Quick rescale" src="../../user_manual_images/imageFile41.png" /></li>
 </ul>
-<hr />
-<h2 id="4-processing-pipeline-execution-flow">4. Processing Pipeline / Execution Flow<a class="headerlink" href="#4-processing-pipeline-execution-flow" title="Permanent link">&para;</a></h2>
-<p>When a user triggers a fit (e.g., via the "Fit" button in the Maps workspace), the following pipeline executes:</p>
-<ol>
-<li><strong>Thread Invocation</strong>: <code>VMWorkspaceMaps._run_fit_thread()</code> instantiates and starts <code>TensorFitThread</code>.</li>
-<li><strong>Engine Initialization</strong>: <code>TensorFittingEngine.fit_spectra()</code> is called.</li>
-<li><strong>Model Application (Optional)</strong>: If <code>apply_model_to_spectra=True</code>, the <code>fit_model</code> dictionary is applied to all <code>MSpectrum</code> objects, ensuring they have the correct number and type of peaks. If <code>False</code> (like in the Spectra workspace), the engine groups spectra by their existing model signatures and processes batches sequentially, preserving individual spectrum customizations.</li>
-<li><strong>Preprocessing</strong>: <code>spectrum.preprocess()</code> is called for all spectra (applying spectral ranges, evaluating and subtracting baselines). Spectra are then zero-padded into a uniform 2D matrix.</li>
-<li><strong>Evaluator Construction</strong>: <code>TensorEvaluator.from_fit_model()</code> parses the model, determining which parameters are free vs. fixed, and mapping them to a flat vector space.</li>
-<li><strong>Data Extraction</strong>: The <span class="arithmatex">\((N, M)\)</span> data matrix <span class="arithmatex">\(\mathbf{Y}\)</span> and initial parameter matrix <span class="arithmatex">\(\mathbf{p_0}\)</span> are extracted. If it's a first fit, <span class="arithmatex">\(\mathbf{p_0}\)</span> amplitudes are scaled to the actual data. If it's a re-fit, <span class="arithmatex">\(\mathbf{p_0}\)</span> is extracted exactly from the existing fits (warm start) to allow continued optimization.</li>
-<li><strong>Optimization</strong>: <code>batched_levenberg_marquardt()</code> runs the iterations until all spectra converge or <code>max_iter</code> is reached.</li>
-<li><strong>Result Writeback</strong>: The optimized free parameters are reconstructed into full parameter sets by the evaluator, and written back to the <code>spectrum.result_fit</code> and <code>param_hints</code> of each <code>MSpectrum</code>.</li>
-</ol>
-<hr />
-<h2 id="5-optimization-parameters-and-adjustments">5. Optimization Parameters and Adjustments<a class="headerlink" href="#5-optimization-parameters-and-adjustments" title="Permanent link">&para;</a></h2>
-<p>The engine behavior can be tuned via the <code>fit_params</code> dictionary passed to <code>fit_spectra()</code>.</p>
-<h3 id="key-parameters">Key Parameters<a class="headerlink" href="#key-parameters" title="Permanent link">&para;</a></h3>
+<h3 id="53-fit-model-builder">5.3 Fit Model Builder<a class="headerlink" href="#53-fit-model-builder" title="Permanent link">&para;</a></h3>
+<p>The FitModelBuilder Tab contains three main panels: Fitting, PeakTable, and FitModelControl.</p>
+<p><img alt="FitModelBuilder Tab" src="../../user_manual_images/imageFile42.png" />
+<em>Figure 8: FitModelBuilder tab widget containing: (1) Fitting, (2) PeakTable and (3) FitModelControl.</em></p>
+<h4 id="531-fitting-panel">5.3.1 Fitting Panel<a class="headerlink" href="#531-fitting-panel" title="Permanent link">&para;</a></h4>
+<p>The FittingPanel is divided into four sections:</p>
+<p><strong>Step 1: X-axis Correction (optional)</strong>
+Perform an X-axis correction based on measurements from a well-known reference sample (e.g., Silicon at 520.7 cm⁻¹). Fit the reference, enter the measured position, and apply the correction to shift the X-axis accordingly.</p>
+<p><strong>Step 2: Define the fitting range</strong>
+Define the X-axis range used for the fitting process.</p>
+<p><strong>Step 3: Baseline definition</strong>
+Two baseline modes (Manual or Auto) can be chosen:</p>
+<p><img alt="Baseline Modes" src="../../user_manual_images/imageFile44.png" />
+<em>Figure 9: Baseline mode selection: Manual (left) vs. Auto (right)</em></p>
 <ul>
-<li><strong><code>max_ite</code> (default: 200)</strong>: The maximum number of Levenberg-Marquardt iterations. Increasing this might help extremely difficult spectra converge but will increase total execution time.</li>
-<li><strong><code>xtol</code> (default: 1e-4)</strong>: The relative tolerance for the parameter step size <span class="arithmatex">\(\delta p\)</span>. If the relative change in all parameters is less than <code>xtol</code>, the spectrum is considered converged.</li>
-<li><strong><code>ftol</code> (default: 1e-4)</strong>: The relative tolerance for the cost function (sum of squared residuals). If the relative change in the cost is less than <code>ftol</code>, the spectrum is considered converged.</li>
+<li><strong>Manual mode (Linear or Polynomial)</strong>: Define baseline anchor points by clicking in the SpectraViewer. Check <em>Attached</em> to snap points to the curve. Check <em>Correct noise</em> to calculate points as an average of neighboring data.
+<img alt="Manual Baseline Example" src="../../user_manual_images/imageFile45.png" /></li>
+<li><strong>Auto mode (airPLS or asLS)</strong>: Baseline curve is automatically defined. Adjust the slider to fine-tune.</li>
+<li><strong>airPLS</strong>: Aggressive, great for high-fluorescence. Validated for Raman data.</li>
+<li><strong>asLS</strong>: Stable but doesn't distinguish noise/peaks well. Best for clean spectra.</li>
 </ul>
-<h3 id="tuning-for-performance-vs-accuracy">Tuning for Performance vs. Accuracy<a class="headerlink" href="#tuning-for-performance-vs-accuracy" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Fast Mapping</strong>: For rapid previews, you can increase <code>xtol</code> and <code>ftol</code> to <code>1e-3</code> or <code>1e-2</code>. The optimizer will exit much earlier, providing a rough fit in a fraction of the time.</li>
-<li><strong>Precision Fitting</strong>: For publication-quality results, decrease <code>xtol</code> and <code>ftol</code> to <code>1e-5</code> or <code>1e-6</code>.</li>
-<li><strong>Handling "Stuck" Spectra</strong>: The optimizer tracks <code>consecutive_rejects</code>. If a spectrum's cost fails to improve for 15 consecutive iterations (despite damping adjustments), it is marked as converged (stuck) to prevent it from holding back the rest of the batch. This threshold (<code>MAX_REJECTS</code> in <code>optimizer.py</code>) can be adjusted if needed.</li>
-</ul>
-<h3 id="adding-new-peak-models">Adding New Peak Models<a class="headerlink" href="#adding-new-peak-models" title="Permanent link">&para;</a></h3>
-<p>To add a new peak shape to the fast tensor engine:
-1.  Define the <code>batched_newshape(x, params)</code> function in <code>models.py</code>.
-2.  (Crucial for speed) Derive and define the analytical Jacobian <code>batched_newshape_jac(x, params)</code>.
-3.  Register the model in the <code>BATCHED_MODELS</code> dictionary at the bottom of <code>models.py</code>. If you skip the Jacobian, the engine will fall back to <code>numerical_jacobian</code>, drastically reducing performance.</p>
+<p><strong>Step 4: Peak definition</strong>
+- Add peaks directly in the SpectraViewer by left-clicking (Peak button enabled). Adjust interactively by dragging.
+- Added peaks are listed in the <strong>PeakTable</strong>.
+- Supported shapes: Lorentzian, Gaussian, PseudoVoigt, LorentzianAsym, GaussianAsym, Fano, DecaySingleExp, DecayBiExp.
+<img alt="Peak definition" src="../../user_manual_images/imageFile46.png" /></p>
+<h4 id="532-peaktable-panel">5.3.2 PeakTable Panel<a class="headerlink" href="#532-peaktable-panel" title="Permanent link">&para;</a></h4>
+<p>Displays all peaks defined for the selected spectrum. Peak properties are dynamically updated.</p>
+<p><img alt="PeakTable Panel" src="../../user_manual_images/imageFile48.png" />
+<em>Figure 10: PeakTable panel</em></p>
+<p><strong>Constraints</strong>:
+- <strong>Fix</strong>: Keeps the parameter value constant.
+- <strong>Limits</strong>: Displays min/max columns to restrict parameter variations.
+- <strong>Expression</strong>: Links parameters via mathematical expressions.</p>
+<p><img alt="Expression Limit" src="../../user_manual_images/imageFile49.png" />
+<em>Example 1: Constrain <code>m02_x0</code> to be <code>m01_x0 - 17</code>.</em></p>
+<p><img alt="Expression Intensity" src="../../user_manual_images/imageFile50.png" />
+<em>Example 2: Constrain <code>m03_ampli</code> to be <code>m02_ampli / 2</code>.</em></p>
+<h4 id="533-fitmodelcontrol-panel">5.3.3 FitModelControl Panel<a class="headerlink" href="#533-fitmodelcontrol-panel" title="Permanent link">&para;</a></h4>
+<p>Click the <strong>Fit</strong> button to start the fitting process.</p>
+<p><img alt="FitModelControl Interface" src="../../user_manual_images/imageFile52.png" />
+<em>Figure 11: Interface of FitModelControl</em></p>
+<p><strong>Copy / Paste Fit Models</strong>: The entire fit model can be copied and pasted between spectra.
+<img alt="Copy Fit" src="../../user_manual_images/imageFile53.png" />
+<img alt="Paste Fit" src="../../user_manual_images/imageFile54.png" />
+<img alt="Paste Example" src="../../user_manual_images/imageFile55.png" /></p>
+<p><strong>Saving / Loading Fit Models</strong>:
+Save the fit model for later use. Stored models can be accessed using the dropdown menu.
+<img alt="Fit Model Dropdown" src="../../user_manual_images/imageFile56.png" />
+<img alt="Load Fit Model" src="../../user_manual_images/imageFile57.png" /></p>
+<h3 id="54-collect-save-fit-results">5.4 Collect &amp; Save Fit Results<a class="headerlink" href="#54-collect-save-fit-results" title="Permanent link">&para;</a></h3>
+<p>To collect best-fit results from all fitted spectra/maps:
+- Switch to the <strong>Fit Results</strong> tab.
+- Click the <strong>Collect</strong> button. Results are aggregated into a table.</p>
+<p><img alt="Collect Fit Results 1" src="../../user_manual_images/imageFile58.png" />
+<img alt="Collect Fit Results 2" src="../../user_manual_images/imageFile59.png" />
+<em>Figure 12: Collect_fit_results panel</em></p>
+<h4 id="541-splitting-filename-features">5.4.1 Splitting Filename Features<a class="headerlink" href="#541-splitting-filename-features" title="Permanent link">&para;</a></h4>
+<p>Extracts metadata from filenames separated by underscores (e.g., <code>Sample1_ProcessA_Temp25</code>) and adds them as new columns.</p>
+<p><img alt="Filename Splitting" src="../../user_manual_images/imageFile61.png" /></p>
+<h4 id="542-compute-and-add-new-columns">5.4.2 Compute and Add New Columns<a class="headerlink" href="#542-compute-and-add-new-columns" title="Permanent link">&para;</a></h4>
+<p>Create new columns via mathematical expressions using existing columns (e.g., <code>x0_p1 - x0_p2</code>).
+Supported operations: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>**</code>, <code>%</code>, <code>()</code>.</p>
+<blockquote>
+<p><strong>Important</strong>: For column names with special characters, wrap them in backticks (<code>). Example: ``</code>x0_LO(M)` ``</p>
+</blockquote>
+<h4 id="543-saving-or-visualizing">5.4.3 Saving or Visualizing<a class="headerlink" href="#543-saving-or-visualizing" title="Permanent link">&para;</a></h4>
+<p>Name the best-fit dataset and send it to the Graphs workspace for plotting, or export as Excel.</p>
+<p><img alt="Send to Graph" src="../../user_manual_images/imageFile63.png" />
+<img alt="Export to Excel" src="../../user_manual_images/imageFile64.png" /></p>
+<h3 id="55-more-tab">5.5 More Tab<a class="headerlink" href="#55-more-tab" title="Permanent link">&para;</a></h3>
+<p>Contains three sections:
+- <strong>Left</strong>: Metadata showing settings/parameters of loaded <code>.wdf</code> or <code>.spc</code> files.
+- <strong>Middle</strong>: Information about the selected spectrum.
+- <strong>Right</strong>: Additional processing features (intensity normalization, cosmic ray detection).</p>
+<p><img alt="More Tab" src="../../user_manual_images/imageFile65.png" />
+<em>Figure 13: More Tab's user interface.</em></p>
 
 
 

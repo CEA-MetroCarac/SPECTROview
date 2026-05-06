@@ -41,22 +41,28 @@ theme:
 
 nav:
   - Home: index.md
-  - User Guide:
-    - Overview: user-guide/index.md
-    - Installation: user-guide/installation.md
-    - Supported Data: user-guide/supported-data.md
-    - Spectra Workspace: user-guide/spectra.md
-    - Maps Workspace: user-guide/maps.md
-    - Graphs Workspace: user-guide/graphs.md
-    - Tensor Fit Engine: user-guide/fitting.md
-    - Multivariate Analysis: user-guide/mva.md
-    - Quick Calculators: user-guide/calculators.md
-    - Shortcuts & Tips: user-guide/shortcuts.md
+  - User Manual:
+    - Overview: user-manual/index.md
+    - Introduction: user-manual/01_introduction.md
+    - Installation: user-manual/02_installation.md
+    - Supported Data: user-manual/03_supported_data.md
+    - UI Overview: user-manual/04_ui_overview.md
+    - Spectra & Maps: user-manual/05_spectra_maps.md
+    - Graphs: user-manual/06_graphs.md
+    - Tensor Fit Engine: user-manual/07_tensor_fit.md
+    - MVA: user-manual/08_mva.md
+    - Quick Calculators: user-manual/09_calculators.md
+    - Settings: user-manual/10_settings.md
+    - Save & Load: user-manual/11_save_load.md
+    - Shortcuts & Tips: user-manual/12_shortcuts.md
   - Developer Guide:
     - Architecture: developer/index.md
     - Tensor Fit Engine: developer/tensor-engine.md
     - MVA: developer/mva.md
   - Changelog: changelog.md
+
+hooks:
+  - docs_hooks.py
 
 markdown_extensions:
   - admonition

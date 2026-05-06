@@ -119,8 +119,8 @@ PLOT_POLICY_DARK = resource_path("spectroview/resources/plotpolicy_dark.mplstyle
 UI_FILE = resource_path("spectroview/config/gui/gui.ui")
 LOGO_APPLI = resource_path("spectroview/resources/icons/logo_spectroview.png")
 
-USER_MANUAL_PDF = resource_path(
-    "spectroview/resources/SPECTROview_UserManual.pdf"
+USER_MANUAL_DIR = resource_path(
+    "spectroview/resources/user_manual"
 )
 
 

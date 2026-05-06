@@ -11,7 +11,7 @@ SPECTROview is free, open-source software designed for spectroscopic data analys
 
 With its built-in visualization tools, SPECTROview streamlines your workflow by combining data processing and visualization into a single, efficient application.
 
-For more information, please visit the **GitHub Repository**: [https://github.com/CEA-MetroCarac/SPECTROview](https://github.com/CEA-MetroCarac/SPECTROview)
+>For more information, please visit the [GitHub Repository](https://github.com/CEA-MetroCarac/SPECTROview).
 
 ---
 
@@ -25,8 +25,6 @@ For more information, please visit the **GitHub Repository**: [https://github.co
 - Collect all best-fit results with one click.
 - Optimized user interface for easy and quick inspection and comparison of spectra.
 - Dedicated module for effortless, fast, and easy data visualization. 
-
-**Fitting features are powered by the *fitspy* and *lmfit* open-source packages.*
 
 ---
 

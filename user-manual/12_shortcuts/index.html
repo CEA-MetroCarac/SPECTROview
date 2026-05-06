@@ -850,10 +850,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tips" class="md-nav__link">
+  <a href="#advanced-user-tips" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tips
+        Advanced User Tips
       
     </span>
   </a>
@@ -1101,10 +1101,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tips" class="md-nav__link">
+  <a href="#advanced-user-tips" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tips
+        Advanced User Tips
       
     </span>
   </a>
@@ -1139,36 +1139,37 @@
   <h1>Shortcuts & Tips</h1>
 
 <h2 id="12-keyboard-shortcuts-tips">12. Keyboard Shortcuts &amp; Tips<a class="headerlink" href="#12-keyboard-shortcuts-tips" title="Permanent link">&para;</a></h2>
+<p>To maximize your efficiency within SPECTROview, a variety of keyboard shortcuts and power-user tips have been integrated directly into the application.</p>
 <h3 id="global-shortcuts">Global Shortcuts<a class="headerlink" href="#global-shortcuts" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Shortcut</th>
-<th>Action</th>
+<th>Keyboard Shortcut</th>
+<th>Resulting Action</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>Ctrl + R</code></td>
-<td>Rescale spectra plot</td>
+<td>Instantly rescales the axes of the current spectra plot to perfectly fit the visible data.</td>
 </tr>
 <tr>
-<td><code>Ctrl + Click</code> on Copy</td>
-<td>Copy numerical data to clipboard</td>
+<td><code>Ctrl + Click</code> (on the Copy button)</td>
+<td>Copies the raw numerical dataset of the current plot directly to your system clipboard (instead of an image). On macOS, use <code>Cmd + Click</code>.</td>
 </tr>
 <tr>
-<td><code>Mouse wheel</code></td>
-<td>Quick Y-axis rescale in Spectra Viewer</td>
+<td><code>Mouse Wheel</code></td>
+<td>Quickly zooms and rescales the Y-axis interactively while hovering over the Spectra Viewer.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h3>
+<h3 id="advanced-user-tips">Advanced User Tips<a class="headerlink" href="#advanced-user-tips" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Tooltips everywhere</strong>: Hover over any GUI element for 1 second.</li>
-<li><strong>Drag peaks</strong>: Click and drag peaks directly in the Spectra Viewer.</li>
-<li><strong>Quick re-fit</strong>: After adjusting parameters, click Fit again — it warm-starts from previous results.</li>
-<li><strong>Column names with spaces</strong>: Use backticks (<code>`</code>) in Filters or Computed Columns.</li>
-<li><strong>Profile extraction</strong>: In Maps workspace, select exactly 2 points to extract an intensity profile.</li>
+<li><strong>Tooltips Everywhere</strong>: If you are ever unsure what a specific button or parameter does, simply hover your mouse cursor over the GUI element for 1 second to reveal a descriptive tooltip.</li>
+<li><strong>Interactive Peak Dragging</strong>: You do not need to manually type in initial peak parameters. You can directly click and drag the center point or the width of any peak inside the Spectra Viewer to adjust its initial guess dynamically.</li>
+<li><strong>Quick Re-fit (Warm Starting)</strong>: If a fit does not converge perfectly, you can manually adjust the peak bounds and simply click the "Fit" button again. The engine will "warm-start" using the results of the previous optimization, making subsequent fits drastically faster.</li>
+<li><strong>Handling Complex Column Names</strong>: If you are using the Data Filter or Computed Columns features and your target column name contains spaces or special characters, you must enclose the column name in backticks (<code>`</code>) (e.g., <code>`Laser Power` &lt;= 5</code>).</li>
+<li><strong>Spatial Profile Extraction</strong>: While inside the Maps workspace, if you select exactly 2 distinct spatial points on the MapViewer heatmap, SPECTROview will automatically extract and plot an interpolated intensity profile between those two coordinates.</li>
 </ul>
 
 

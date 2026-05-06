@@ -699,10 +699,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#what-is-it" class="md-nav__link">
+  <a href="#what-is-the-tensor-fit-engine" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What is it?
+        What is the Tensor Fit Engine?
       
     </span>
   </a>
@@ -710,10 +710,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#why-is-it-faster" class="md-nav__link">
+  <a href="#why-is-it-significantly-faster" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why is it faster?
+        Why is it significantly faster?
       
     </span>
   </a>
@@ -1101,10 +1101,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#what-is-it" class="md-nav__link">
+  <a href="#what-is-the-tensor-fit-engine" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What is it?
+        What is the Tensor Fit Engine?
       
     </span>
   </a>
@@ -1112,10 +1112,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#why-is-it-faster" class="md-nav__link">
+  <a href="#why-is-it-significantly-faster" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why is it faster?
+        Why is it significantly faster?
       
     </span>
   </a>
@@ -1161,35 +1161,35 @@
   <h1>Tensor Fit Engine</h1>
 
 <h2 id="7-tensor-fit-engine">7. Tensor Fit Engine<a class="headerlink" href="#7-tensor-fit-engine" title="Permanent link">&para;</a></h2>
-<h3 id="what-is-it">What is it?<a class="headerlink" href="#what-is-it" title="Permanent link">&para;</a></h3>
-<p>The Tensor Fit Engine is SPECTROview's high-performance fitting backend. Instead of fitting spectra one at a time, it <strong>fits all spectra simultaneously</strong> using batched matrix operations.</p>
-<h3 id="why-is-it-faster">Why is it faster?<a class="headerlink" href="#why-is-it-faster" title="Permanent link">&para;</a></h3>
+<h3 id="what-is-the-tensor-fit-engine">What is the Tensor Fit Engine?<a class="headerlink" href="#what-is-the-tensor-fit-engine" title="Permanent link">&para;</a></h3>
+<p>The Tensor Fit Engine is SPECTROview's proprietary, high-performance mathematical fitting backend. Instead of looping through and fitting spectra one at a time sequentially, it <strong>fits the entire dataset simultaneously</strong> by leveraging batched matrix and tensor operations.</p>
+<h3 id="why-is-it-significantly-faster">Why is it significantly faster?<a class="headerlink" href="#why-is-it-significantly-faster" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Fits all N spectra at once (Batched tensor math).</li>
-<li>Uses Analytical Jacobians instead of slow Numerical Jacobians.</li>
-<li>Vectorized NumPy/LAPACK operations eliminate Python function call overhead.
-<strong>Result</strong>: Typically <strong>10–15× faster</strong>. A 1000-spectrum map that would take 30+ seconds now fits in &lt; 3 seconds.</li>
+<li><strong>Batched Optimization</strong>: It processes all <span class="arithmatex">\(N\)</span> spectra in a single, parallelized mathematical pass.</li>
+<li><strong>Analytical Jacobians</strong>: It relies on exact analytical Jacobian formulations rather than computationally expensive numerical approximations.</li>
+<li><strong>Vectorized Execution</strong>: By executing core logic entirely through vectorized NumPy and LAPACK libraries, it completely eliminates slow Python loop and function call overhead.</li>
 </ul>
+<p><strong>The Result</strong>: The engine operates typically <strong>10–15× faster</strong> than traditional fitting libraries. For instance, a 1000-spectrum hyperspectral map that would traditionally take 30+ seconds to process can now be fitted in under 3 seconds.</p>
 <h3 id="tuning-for-performance-vs-accuracy">Tuning for Performance vs. Accuracy<a class="headerlink" href="#tuning-for-performance-vs-accuracy" title="Permanent link">&para;</a></h3>
-<p>Access fitting parameters in <strong>Settings → Fit Parameters</strong>:</p>
+<p>You can dynamically adjust the strictness of the fitting algorithms by navigating to <strong>Settings → Fit Parameters</strong>.</p>
 <table>
 <thead>
 <tr>
-<th>Setting</th>
-<th>Default</th>
-<th>Fast Preview</th>
-<th>Precision Fitting</th>
+<th>Parameter</th>
+<th>Default Value</th>
+<th>Recommended for Fast Preview</th>
+<th>Recommended for High Precision</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>xtol</code> / <code>ftol</code></td>
+<td><code>xtol</code> / <code>ftol</code> (Tolerance)</td>
 <td>1e-4</td>
 <td>1e-2</td>
 <td>1e-6</td>
 </tr>
 <tr>
-<td><code>max_ite</code></td>
+<td><code>max_ite</code> (Maximum Iterations)</td>
 <td>200</td>
 <td>50</td>
 <td>500</td>

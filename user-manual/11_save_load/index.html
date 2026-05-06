@@ -811,10 +811,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#saving" class="md-nav__link">
+  <a href="#saving-your-work" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Saving
+        Saving Your Work
       
     </span>
   </a>
@@ -822,10 +822,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#loading" class="md-nav__link">
+  <a href="#loading-your-work" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Loading
+        Loading Your Work
       
     </span>
   </a>
@@ -1090,10 +1090,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#saving" class="md-nav__link">
+  <a href="#saving-your-work" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Saving
+        Saving Your Work
       
     </span>
   </a>
@@ -1101,10 +1101,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#loading" class="md-nav__link">
+  <a href="#loading-your-work" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Loading
+        Loading Your Work
       
     </span>
   </a>
@@ -1139,37 +1139,39 @@
   <h1>Save & Load</h1>
 
 <h2 id="11-save-load-workspace">11. Save &amp; Load Workspace<a class="headerlink" href="#11-save-load-workspace" title="Permanent link">&para;</a></h2>
-<h3 id="saving">Saving<a class="headerlink" href="#saving" title="Permanent link">&para;</a></h3>
-<p>Click the <strong>Save</strong> button in the toolbar to save the current workspace:</p>
-<p><img alt="Save Workspace" src="../../user_manual_images/imageFile81.png" /></p>
+<p>SPECTROview uses dedicated native file formats to allow you to seamlessly pause, save, and resume your data analysis sessions without losing any configurations or fit results.</p>
+<h3 id="saving-your-work">Saving Your Work<a class="headerlink" href="#saving-your-work" title="Permanent link">&para;</a></h3>
+<p>To save your current progress, click the <strong>Save</strong> button located in the main application toolbar:</p>
+<p><img alt="Save Workspace" src="../../user_manual_images/imageFile81.png" /><br></p>
+<p>The application will generate a specific file extension based on which workspace is currently active:</p>
 <table>
 <thead>
 <tr>
-<th>Workspace</th>
-<th>Extension</th>
-<th>Contents</th>
+<th>Active Workspace</th>
+<th>Native Extension</th>
+<th>Stored Contents</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>Spectra</strong></td>
 <td><code>.spectra</code></td>
-<td>Loaded spectra, fit models, baseline settings, results</td>
+<td>All loaded 1D spectra, custom baseline configurations, mathematical fit models, and aggregate fit results.</td>
 </tr>
 <tr>
 <td><strong>Maps</strong></td>
 <td><code>.maps</code></td>
-<td>Map data, all spectra with fit results, metadata</td>
+<td>The raw 2D/wafer map data, instrument metadata, all associated spectra, and all point-by-point fit results.</td>
 </tr>
 <tr>
 <td><strong>Graphs</strong></td>
 <td><code>.graphs</code></td>
-<td>All datasets and plot configurations</td>
+<td>All loaded mathematical datasets, customized plot configurations, and drawn annotations.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="loading">Loading<a class="headerlink" href="#loading" title="Permanent link">&para;</a></h3>
-<p>Click the <strong>Open</strong> button and select a <code>.spectra</code>, <code>.maps</code>, or <code>.graphs</code> file. SPECTROview will automatically restore all data in the correct tab.</p>
+<h3 id="loading-your-work">Loading Your Work<a class="headerlink" href="#loading-your-work" title="Permanent link">&para;</a></h3>
+<p>To resume a previous session, simply click the <strong>Open</strong> button in the main toolbar and select any previously saved <code>.spectra</code>, <code>.maps</code>, or <code>.graphs</code> file. SPECTROview will automatically detect the file format, reconstruct your dataset exactly as you left it, and instantly open the appropriate workspace tab.</p>
 
 
 

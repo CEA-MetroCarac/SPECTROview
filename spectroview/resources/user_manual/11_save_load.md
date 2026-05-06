@@ -1,16 +1,21 @@
 ## 11. Save & Load Workspace
 
-### Saving
+SPECTROview uses dedicated native file formats to allow you to seamlessly pause, save, and resume your data analysis sessions without losing any configurations or fit results.
 
-Click the **Save** button in the toolbar to save the current workspace:
+### Saving Your Work
 
-![Save Workspace](../user_manual_images/imageFile81.png)
+To save your current progress, click the **Save** button located in the main application toolbar:
 
-| Workspace | Extension | Contents |
+![Save Workspace](../user_manual_images/imageFile81.png)<br>
+
+The application will generate a specific file extension based on which workspace is currently active:
+
+| Active Workspace | Native Extension | Stored Contents |
 |-----------|-----------|----------|
-| **Spectra** | `.spectra` | Loaded spectra, fit models, baseline settings, results |
-| **Maps** | `.maps` | Map data, all spectra with fit results, metadata |
-| **Graphs** | `.graphs` | All datasets and plot configurations |
+| **Spectra** | `.spectra` | All loaded 1D spectra, custom baseline configurations, mathematical fit models, and aggregate fit results. |
+| **Maps** | `.maps` | The raw 2D/wafer map data, instrument metadata, all associated spectra, and all point-by-point fit results. |
+| **Graphs** | `.graphs` | All loaded mathematical datasets, customized plot configurations, and drawn annotations. |
 
-### Loading
-Click the **Open** button and select a `.spectra`, `.maps`, or `.graphs` file. SPECTROview will automatically restore all data in the correct tab.
+### Loading Your Work
+
+To resume a previous session, simply click the **Open** button in the main toolbar and select any previously saved `.spectra`, `.maps`, or `.graphs` file. SPECTROview will automatically detect the file format, reconstruct your dataset exactly as you left it, and instantly open the appropriate workspace tab.

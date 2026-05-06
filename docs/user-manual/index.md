@@ -1,6 +1,6 @@
 <h1 align="center">SPECTROview User Manual</h1>
 <p align="center">
-  <img src="../user_manual_images/imageFile2.png" alt="SPECTROview Logo">
+  <img src="../user_manual_images/imageFile2.png" alt="SPECTROview Logo" width="100">
 </p>
 <p align="center"><b>Last updated: May 2026</b></p>
 

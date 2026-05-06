@@ -50,7 +50,7 @@ nav:
     - Spectra & Maps Workspace: user-manual/05_spectra_maps.md
     - Graphs Workspace: user-manual/06_graphs.md
     - Tensor Fit Engine: user-manual/07_tensor_fit.md
-    - MMultivariate Analysis (MVA): user-manual/08_mva.md
+    - Multivariate Analysis (MVA): user-manual/08_mva.md
     - Quick Calculators: user-manual/09_calculators.md
     - Settings: user-manual/10_settings.md
     - Save & Load: user-manual/11_save_load.md

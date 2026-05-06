@@ -5,7 +5,8 @@ from PySide6.QtCore import Qt, QUrl
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QSplitter,
     QTreeWidget, QTreeWidgetItem, QTextBrowser,
-    QLineEdit, QWidget, QListWidget, QListWidgetItem, QLabel
+    QLineEdit, QWidget, QListWidget, QListWidgetItem, QLabel,
+    QPushButton
 )
 from PySide6.QtGui import (
     QDesktopServices, QFont, QTextDocument, QImage,
@@ -147,10 +148,33 @@ class VUserManualDialog(QDialog):
 
         self.splitter.addWidget(left_widget)
 
-        # ---- Center panel: Content viewer ----
+        # ---- Center panel: Content viewer + nav buttons ----
+        center_widget = QWidget()
+        center_layout = QVBoxLayout(center_widget)
+        center_layout.setContentsMargins(0, 0, 0, 0)
+
         self.content_browser = FitImageTextBrowser()
         self.content_browser.anchorClicked.connect(self._on_anchor_clicked)
-        self.splitter.addWidget(self.content_browser)
+        center_layout.addWidget(self.content_browser)
+
+        # Navigation buttons
+        nav_bar = QHBoxLayout()
+        nav_bar.setContentsMargins(4, 2, 4, 2)
+        self.btn_prev = QPushButton("← Previous")
+        self.btn_prev.setFocusPolicy(Qt.NoFocus)  # Prevent focus stealing
+        
+        self.btn_next = QPushButton("Next →")
+        self.btn_next.setFocusPolicy(Qt.NoFocus)  # Prevent focus stealing
+        
+        self.btn_prev.clicked.connect(self._go_previous_section)
+        self.btn_next.clicked.connect(self._go_next_section)
+        
+        nav_bar.addWidget(self.btn_prev)
+        nav_bar.addStretch()
+        nav_bar.addWidget(self.btn_next)
+        center_layout.addLayout(nav_bar)
+
+        self.splitter.addWidget(center_widget)
 
         # ---- Right panel: Subsection TOC ----
         right_widget = QWidget()
@@ -244,6 +268,9 @@ class VUserManualDialog(QDialog):
         if toc_tokens:
             self._populate_toc(toc_tokens, self.toc_tree)
             self.toc_tree.expandAll()
+
+        # Update prev/next navigation buttons
+        self._update_nav_buttons()
 
     def _populate_toc(self, tokens, parent_item):
         for token in tokens:
@@ -378,6 +405,41 @@ class VUserManualDialog(QDialog):
                     if text_lower in f.read().lower():
                         return True
         return False
+
+    # ------------------------------------------------------------------
+    # Previous / Next section navigation
+    # ------------------------------------------------------------------
+    def _go_previous_section(self):
+        current = self.section_list.currentRow()
+        if current > 0:
+            self.section_list.setCurrentRow(current - 1)
+            self._on_section_clicked(self.section_list.item(current - 1))
+
+    def _go_next_section(self):
+        current = self.section_list.currentRow()
+        if current < self.section_list.count() - 1:
+            self.section_list.setCurrentRow(current + 1)
+            self._on_section_clicked(self.section_list.item(current + 1))
+
+    def _update_nav_buttons(self):
+        """Enable/disable prev/next buttons based on current position."""
+        current = self.section_list.currentRow()
+        total = self.section_list.count()
+        self.btn_prev.setEnabled(current > 0)
+        self.btn_next.setEnabled(current < total - 1)
+        
+        # Show the target section name in the button text
+        if current > 0:
+            prev_title = self.section_list.item(current - 1).text()
+            self.btn_prev.setText(f"← {prev_title}")
+        else:
+            self.btn_prev.setText("← Previous")
+            
+        if current < total - 1:
+            next_title = self.section_list.item(current + 1).text()
+            self.btn_next.setText(f"{next_title} →")
+        else:
+            self.btn_next.setText("Next →")
 
     def _set_search_style(self, not_found):
         if not_found:

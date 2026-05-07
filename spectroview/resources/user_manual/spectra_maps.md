@@ -9,57 +9,70 @@ The Maps and Spectra workspaces share a unified design and many core features. H
 *Interface overview of the Spectra and Maps workspaces. Both interfaces are divided into three primary sections: Top-left section (SpectraViewer), bottom-left section (FitModelBuilder), and right section (SpectraList / MapList).*
 
 ### MapList and MapViewer
-These components are engineered for efficient navigation and management of your spectral or hyperspectral datasets. User can navigate between loaded 2D maps via a listbox (MapList). The 2Dmap plot of the selected map is displayed in the MapViewer.
+MapList and MapViewer widgets are engineered for efficient navigation and management of your hyperspectral datasets. 
+
+**MapList**: Displays all loaded map files, including wafer maps and 2D map types. 
+
+Three utility buttons located on the right side of MapList allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Maps_switching" width="250">
+  <img src="../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Maps_switching" width="250"><br>
 </div>
 
+*User can navigate between loaded 2D maps via a listbox (MapList). The 2Dmap plot of the selected map is displayed in the MapViewer. By defaut MapViewer displays heatmap of "Intensity" or "Area" for the selected map. If the 2Dmap is fitted, the user can select to display the heatmap of any fitted parameter.*
 
-- By defaut MapViewer displays heatmap of "Intensity" or "Area" for the selected map.
-- User can select the spectral range to display the heatmap of the integrated intensity within that range.
-- If the 2Dmap is fitted, the user can select to display the heatmap of any fitted parameter.
-- User can add several Mapviewer for comparision purpose.
+
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/maps_intensity_range.gif" alt="Maps_intensity_range" width="250">
+  <img src="../user_manual_images/Spectra_Maps/mapviewer_sliders.gif" alt="mapviewer_sliders" width="5000">
 </div>
 
-
-
-![MapList and MapViewer](../user_manual_images/Spectra_Maps/imageFile22.png)<br>
-*Figure 4: (Left) The MapList section within the Maps workspace. (Right) The MapViewer module and 'More Options' panel used to adjust the heatmap display.*
-
-**MapList**: Displays all loaded map files, including wafer maps and 2D map types. Three utility buttons located on the right allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.
-
-
-**MapViewer**: Visualizes the heatmap of the selected map. Several interactive options are available to fully customize the heatmap representation:
-
-- **Map Type**: Toggle between a standard 2D map or a wafer map with configurable diameters.
-- **Color Palette**: Choose from a variety of colormaps for the heatmap.
-- **Displayed Parameter**: Visualize the maximum intensity, peak area, or any specific fitted parameter across the map.
-- **Range Sliders**: Dynamically adjust the X-axis spectral range and the color bar intensity limits.
+- Two sliders for adjusting the spectral range and the data range of heatmap plot.
+- User can add several Mapviewers for comparing with different fitted parameters.
 - **Mask Feature**: Isolate specific regions of the heatmap by defining custom, parameter-based filters.
-- **Copy Button**: Instantly copies the heatmap to your clipboard.
-- **Multiple MapViewers**: Launch additional MapViewer windows as floating widgets to easily compare different parameters side-by-side.
 
-### MapList
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/mask.png" alt="mask" width="300">
+</div>
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/masked_map.png" alt="masked_map" width="300">
+</div>
+
+*Example for mask feature for 2D maps: 2Dmap of MoS2 flake using a mask (intensity of peak A1g > 40 a.u) to filter out all region except the flake.* 
 
 
 ### SpectraList
 
-**SpectraList**: Displays all loaded discrete spectra in the Spectra workspace, or all spectra associated with the currently selected map in the Maps workspace. You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the SpectraViewer. Dedicated buttons allow you to select all spectra, clear your selection, display a comprehensive fit statistic report, or send the currently selected spectra to the Spectra workspace for isolated analysis.
+**SpectraList**: Displays all loaded discrete spectra in the Spectra workspace, or all spectra associated with the currently selected map in the Maps workspace. 
 
+You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the SpectraViewer. Dedicated buttons allow you to select all spectra, clear your selection, display a comprehensive fit statistic report, or send the currently selected spectra to the Spectra workspace for isolated analysis.
 
-![SpectraList and ProgressBar](../user_manual_images/Spectra_Maps/imageFile24.png)<br>
-*Figure 5: SpectraList alongside the ProgressBar. The progress bar displays real-time fitting progress (percentage and elapsed time). A 'Stop' button is provided to safely halt an ongoing fitting process.*
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/spectralist.png" alt="spectralist" width="400">
+</div>
+
+*SpectraList alongside the ProgressBar (within Maps Workspace). The progress bar displays real-time fitting progress (percentage and elapsed time). A 'Stop' button is provided to safely halt an ongoing fitting process.*
 
 ### Spectra Viewer
 
-The SpectraViewer is the central plotting widget where all spectra (and their best-fit curves) selected via the SpectraList are visualized.
+The SpectraViewer is the central plotting widget where all spectra selected via the SpectraList (and their best-fit curves) are visualized.
 
-![Spectra Viewer](../user_manual_images/Spectra_Maps/imageFile25.png)<br>
-*Figure 6: The Spectra Viewer widget (left) and its View Options Menu (right).*
+
+
+Hovering the cursor over any fitted peak will display a tooltip showing the precise parameters of that peak.
+
+
+
+
+Several view options availables :
+
+
+
+
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/peak_tooltip.png" alt="peak_tooltip" width="300">
+</div>
+
 
 #### Toolbar Buttons & View Options
 

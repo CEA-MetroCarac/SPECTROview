@@ -1,21 +1,37 @@
-## Spectra and Maps Workspaces
+## Spectra/Maps Workspaces
 
 The Maps and Spectra workspaces share a unified design and many core features. However, the Maps workspace includes additional, specialized tools specifically engineered for handling large hyperspectral datasets.
 
-![Overview Spectra and Maps](../user_manual_images/Spectra_Maps/imageFile19.png)<br>
-![Overview Spectra and Maps](../user_manual_images/Spectra_Maps/imageFile20.png)<br>
-*Figure 3: Interface overview of the Spectra (left) and Maps (right) workspaces. Both interfaces are divided into three primary sections. Section 1 (SpectraViewer) and Section 2 (FitModelBuilder) are identical in both workspaces, whereas Section 3 (SpectraList / MapList) is tailored to the specific data type.*
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/sepctra_maps_ws.gif" alt="Maps_spectra_ws" width="800">
+</div>
 
-### SpectraList & MapList
+*Interface overview of the Spectra and Maps workspaces. Both interfaces are divided into three primary sections: Top-left section (SpectraViewer), bottom-left section (FitModelBuilder), and right section (SpectraList / MapList).*
 
-These components are engineered for efficient navigation and management of your spectral or hyperspectral datasets.
+### MapList and MapViewer
+These components are engineered for efficient navigation and management of your spectral or hyperspectral datasets. User can navigate between loaded 2D maps via a listbox (MapList). The 2Dmap plot of the selected map is displayed in the MapViewer.
+
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Maps_switching" width="250">
+</div>
+
+
+- By defaut MapViewer displays heatmap of "Intensity" or "Area" for the selected map.
+- User can select the spectral range to display the heatmap of the integrated intensity within that range.
+- If the 2Dmap is fitted, the user can select to display the heatmap of any fitted parameter.
+- User can add several Mapviewer for comparision purpose.
+
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/maps_intensity_range.gif" alt="Maps_intensity_range" width="250">
+</div>
+
+
 
 ![MapList and MapViewer](../user_manual_images/Spectra_Maps/imageFile22.png)<br>
 *Figure 4: (Left) The MapList section within the Maps workspace. (Right) The MapViewer module and 'More Options' panel used to adjust the heatmap display.*
 
 **MapList**: Displays all loaded map files, including wafer maps and 2D map types. Three utility buttons located on the right allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.
 
-**SpectraList**: Displays all loaded discrete spectra in the Spectra workspace, or all spectra associated with the currently selected map in the Maps workspace. You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the SpectraViewer. Dedicated buttons allow you to select all spectra, clear your selection, display a comprehensive fit statistic report, or send the currently selected spectra to the Spectra workspace for isolated analysis.
 
 **MapViewer**: Visualizes the heatmap of the selected map. Several interactive options are available to fully customize the heatmap representation:
 
@@ -26,6 +42,14 @@ These components are engineered for efficient navigation and management of your 
 - **Mask Feature**: Isolate specific regions of the heatmap by defining custom, parameter-based filters.
 - **Copy Button**: Instantly copies the heatmap to your clipboard.
 - **Multiple MapViewers**: Launch additional MapViewer windows as floating widgets to easily compare different parameters side-by-side.
+
+### MapList
+
+
+### SpectraList
+
+**SpectraList**: Displays all loaded discrete spectra in the Spectra workspace, or all spectra associated with the currently selected map in the Maps workspace. You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the SpectraViewer. Dedicated buttons allow you to select all spectra, clear your selection, display a comprehensive fit statistic report, or send the currently selected spectra to the Spectra workspace for isolated analysis.
+
 
 ![SpectraList and ProgressBar](../user_manual_images/Spectra_Maps/imageFile24.png)<br>
 *Figure 5: SpectraList alongside the ProgressBar. The progress bar displays real-time fitting progress (percentage and elapsed time). A 'Stop' button is provided to safely halt an ongoing fitting process.*

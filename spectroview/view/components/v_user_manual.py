@@ -19,7 +19,7 @@ class FitImageTextBrowser(QTextBrowser):
     via QLabel overlays."""
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setOpenExternalLinks(False)
+        self.setOpenLinks(False)
         self._orig_sizes = {}
         self._movies = {}             # name -> QMovie
         self._gif_labels = {}         # name -> QLabel overlay

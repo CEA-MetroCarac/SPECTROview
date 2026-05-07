@@ -36,8 +36,9 @@ class FitImageTextBrowser(QTextBrowser):
         max_width = self.viewport().width() - 30
         if max_width <= 0: return
         
-        # Save the browser's cursor so search position is preserved
-        saved_cursor = self.textCursor()
+        # Save scroll positions to prevent jumping
+        v_scroll = self.verticalScrollBar().value()
+        h_scroll = self.horizontalScrollBar().value()
         
         cursor = QTextCursor(doc)
         cursor.setPosition(0)
@@ -90,8 +91,9 @@ class FitImageTextBrowser(QTextBrowser):
                 it += 1
             block = block.next()
         
-        # Restore the browser's cursor position
-        self.setTextCursor(saved_cursor)
+        # Restore the scroll positions
+        self.verticalScrollBar().setValue(v_scroll)
+        self.horizontalScrollBar().setValue(h_scroll)
 
     # ------------------------------------------------------------------
     # Animated GIF support  (QLabel overlay approach)

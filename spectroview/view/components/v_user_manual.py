@@ -380,21 +380,23 @@ class VUserManualDialog(QDialog):
             body { font-family: -apple-system, BlinkMacSystemFont,
                    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
                    line-height: 1.6; padding: 10px; }
+            h1, h2, h3, h4 { margin-top: 1.2em; margin-bottom: 0.5em; }
+            p { margin-top: 0; margin-bottom: 0.8em; }
+            img { max-width: 100%; height: auto; }
             code { background-color: rgba(128,128,128,0.15);
                    padding: 2px 4px; border-radius: 4px;
                    font-family: monospace; }
             pre  { background-color: rgba(128,128,128,0.15);
                    padding: 10px; border-radius: 4px;
-                   overflow-x: auto; }
+                   overflow-x: auto; margin: 1em 0; }
             pre code { background-color: transparent; padding: 0; }
             table { border-collapse: collapse; width: 100%;
-                    margin-bottom: 1em; }
+                    margin: 1em 0; }
             th, td { border: 1px solid gray; padding: 8px;
                      text-align: left; }
             th { background-color: rgba(128,128,128,0.2); }
             blockquote { border-left: 4px solid gray;
-                         margin-left: 0; padding-left: 16px; }
-            img { max-width: 100%; height: auto; }
+                         margin: 1em 0; padding-left: 16px; }
         </style>
         """
         self.content_browser.cleanup_movies()              # stop any playing GIFs

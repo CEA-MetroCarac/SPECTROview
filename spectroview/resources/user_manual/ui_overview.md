@@ -1,5 +1,7 @@
 ## User Interface Overview
 
+### Three workspaces
+
 SPECTROview is meticulously designed for the efficient processing of spectroscopic data and the seamless visualization of fitted results. The interface is built around three primary workspaces, each tailored for a specific workflow:
 
 
@@ -12,9 +14,11 @@ SPECTROview is meticulously designed for the efficient processing of spectroscop
 </div>
 
 
-**Tooltip**: Most GUI elements in SPECTROview (buttons, text boxes, dropdowns, etc.) include built-in tooltips. Simply hover your mouse cursor over an element for 1 second to view a brief explanation of its function.
+### Tooltips
+
+Most GUI elements in SPECTROview (buttons, text boxes, dropdowns, etc.) include built-in tooltips. Simply hover your mouse cursor over an element for 1 second to view a brief explanation of its function.
 
 <div align="center">
-  <img src="../user_manual_images/UI_Overview/Tooltips.gif" alt="Three Workspaces" width="500">
+  <img src="../user_manual_images/UI_Overview/Tooltips.gif" alt="Tooltips" width="500">
 </div>
 

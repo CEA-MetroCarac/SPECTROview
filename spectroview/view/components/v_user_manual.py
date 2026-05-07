@@ -10,20 +10,27 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import (
     QDesktopServices, QFont, QTextDocument, QImage,
-    QTextImageFormat, QTextCursor
+    QTextImageFormat, QTextCursor, QMovie
 )
 
 class FitImageTextBrowser(QTextBrowser):
-    """A QTextBrowser that automatically scales down large images to fit the viewport width."""
+    """A QTextBrowser that automatically scales down large images
+    to fit the viewport width and supports animated GIF playback
+    via QLabel overlays."""
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setOpenExternalLinks(False)
         self._orig_sizes = {}
+        self._movies = {}             # name -> QMovie
+        self._gif_labels = {}         # name -> QLabel overlay
+        self._gif_doc_positions = {}  # name -> char position in doc
+        self._scroll_connected = False
     
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._resize_images()
-        
+        self._reposition_gif_labels()
+
     def _resize_images(self):
         doc = self.document()
         max_width = self.viewport().width() - 30
@@ -60,7 +67,22 @@ class FitImageTextBrowser(QTextBrowser):
                             if img_fmt.width() != new_width:
                                 img_fmt.setWidth(new_width)
                                 aspect = orig_size.height() / orig_size.width()
-                                img_fmt.setHeight(new_width * aspect)
+                                new_height = new_width * aspect
+                                img_fmt.setHeight(new_height)
+                                
+                                # For static images, add a smooth-scaled resource
+                                if not name.lower().endswith('.gif'):
+                                    url = QUrl(name)
+                                    if url.isRelative():
+                                        url = doc.baseUrl().resolved(url)
+                                    img = QImage(url.toLocalFile())
+                                    if not img.isNull():
+                                        scaled_img = img.scaled(
+                                            new_width, int(new_height),
+                                            Qt.AspectRatioMode.KeepAspectRatio,
+                                            Qt.TransformationMode.SmoothTransformation
+                                        )
+                                        doc.addResource(QTextDocument.ResourceType.ImageResource, url, scaled_img)
                                 
                                 cursor.setPosition(fragment.position())
                                 cursor.setPosition(fragment.position() + fragment.length(), QTextCursor.MoveMode.KeepAnchor)
@@ -70,6 +92,109 @@ class FitImageTextBrowser(QTextBrowser):
         
         # Restore the browser's cursor position
         self.setTextCursor(saved_cursor)
+
+    # ------------------------------------------------------------------
+    # Animated GIF support  (QLabel overlay approach)
+    # ------------------------------------------------------------------
+    def cleanup_movies(self):
+        """Stop all movies and destroy overlay labels."""
+        for label in self._gif_labels.values():
+            label.hide()
+            label.deleteLater()
+        for movie in self._movies.values():
+            movie.stop()
+        self._movies.clear()
+        self._gif_labels.clear()
+        self._gif_doc_positions.clear()
+
+    def setup_gif_animations(self):
+        """Scan the rendered document for .gif images.  For each one,
+        create a QLabel + QMovie overlay on top of the static
+        placeholder so the animation plays natively via Qt."""
+        doc = self.document()
+        base_url = doc.baseUrl()
+
+        block = doc.begin()
+        while block.isValid():
+            it = block.begin()
+            while not it.atEnd():
+                fragment = it.fragment()
+                if fragment.isValid():
+                    fmt = fragment.charFormat()
+                    if fmt.isImageFormat():
+                        img_fmt = fmt.toImageFormat()
+                        name = img_fmt.name()
+
+                        if name.lower().endswith('.gif') and name not in self._movies:
+                            url = QUrl(name)
+                            if url.isRelative():
+                                url = base_url.resolved(url)
+                            filepath = url.toLocalFile()
+
+                            if filepath and os.path.exists(filepath):
+                                movie = QMovie(filepath, parent=self)
+                                if movie.isValid():
+                                    self._movies[name] = movie
+                                    self._gif_doc_positions[name] = fragment.position()
+
+                                    movie.jumpToFrame(0)
+                                    first_frame = movie.currentPixmap()
+                                    if not first_frame.isNull():
+                                        self._orig_sizes[name] = first_frame.size()
+
+                                    # Overlay QLabel on the viewport
+                                    label = QLabel(self.viewport())
+                                    label.setMovie(movie)
+                                    label.setScaledContents(True)
+                                    self._gif_labels[name] = label
+
+                                    movie.start()
+                                    label.show()
+                it += 1
+            block = block.next()
+
+        # Position labels and connect scroll updates
+        self._reposition_gif_labels()
+        if not self._scroll_connected:
+            self.verticalScrollBar().valueChanged.connect(
+                self._reposition_gif_labels)
+            self._scroll_connected = True
+
+    def _reposition_gif_labels(self):
+        """Move each GIF overlay label so it sits exactly on top of
+        the static placeholder image in the document."""
+        doc = self.document()
+        for name, label in self._gif_labels.items():
+            pos = self._gif_doc_positions.get(name)
+            if pos is None:
+                continue
+
+            # cursorRect gives viewport-relative coordinates
+            cursor = QTextCursor(doc)
+            cursor.setPosition(pos)
+            rect = self.cursorRect(cursor)
+
+            # Read current scaled dimensions from the image format
+            width = height = 0
+            block = doc.findBlock(pos)
+            if block.isValid():
+                it = block.begin()
+                while not it.atEnd():
+                    frag = it.fragment()
+                    if (frag.isValid()
+                            and frag.position() <= pos
+                            < frag.position() + frag.length()):
+                        f = frag.charFormat()
+                        if f.isImageFormat():
+                            ifmt = f.toImageFormat()
+                            width = int(ifmt.width()) if ifmt.width() > 0 else 0
+                            height = int(ifmt.height()) if ifmt.height() > 0 else 0
+                        break
+                    it += 1
+
+            if width > 0 and height > 0:
+                label.setFixedSize(width, height)
+                label.move(rect.x(), rect.y())
 
 
 
@@ -92,10 +217,10 @@ MANUAL_SECTIONS = [
 
 
 class VUserManualDialog(QDialog):
-    """Dialog displaying the User Manual with a 3-panel layout:
-    Left: Section list + search bar
-    Center: Markdown content viewer
-    Right: Subsection TOC for the active section
+    """Dialog displaying the User Manual with a 2-panel layout:
+    Left: Sections & Sub-sections (TOC)
+    Right: Markdown content viewer
+    (Search bar is at the top)
     """
 
     def __init__(self, manual_dir, parent=None):
@@ -146,6 +271,18 @@ class VUserManualDialog(QDialog):
         self.section_list.itemClicked.connect(self._on_section_clicked)
         left_layout.addWidget(self.section_list)
 
+        # ---- Sub-sections (TOC) ----
+        lbl2 = QLabel("Sub-sections")
+        font2 = lbl2.font()
+        font2.setBold(True)
+        lbl2.setFont(font2)
+        left_layout.addWidget(lbl2)
+
+        self.toc_tree = QTreeWidget()
+        self.toc_tree.setHeaderHidden(True)
+        self.toc_tree.itemClicked.connect(self._on_toc_clicked)
+        left_layout.addWidget(self.toc_tree)
+
         self.splitter.addWidget(left_widget)
 
         # ---- Center panel: Content viewer + nav buttons ----
@@ -176,27 +313,8 @@ class VUserManualDialog(QDialog):
 
         self.splitter.addWidget(center_widget)
 
-        # ---- Right panel: Subsection TOC ----
-        right_widget = QWidget()
-        right_layout = QVBoxLayout(right_widget)
-        right_layout.setContentsMargins(0, 0, 0, 0)
-
-        lbl2 = QLabel("On this page")
-        font2 = lbl2.font()
-        font2.setBold(True)
-        lbl2.setFont(font2)
-        right_layout.addWidget(lbl2)
-
-        self.toc_tree = QTreeWidget()
-        self.toc_tree.setHeaderHidden(True)
-        self.toc_tree.itemClicked.connect(self._on_toc_clicked)
-        right_layout.addWidget(self.toc_tree)
-
-        self.splitter.addWidget(right_widget)
-
-
-        # Set proportions: left 200, center 750, right 200
-        self.splitter.setSizes([200, 750, 200])
+        # Set proportions: left 250, right 950
+        self.splitter.setSizes([250, 950])
         layout.addWidget(self.splitter)
 
     # ------------------------------------------------------------------
@@ -260,8 +378,10 @@ class VUserManualDialog(QDialog):
             img { max-width: 100%; height: auto; }
         </style>
         """
+        self.content_browser.cleanup_movies()              # stop any playing GIFs
         self.content_browser.setHtml(css + html)
         self.content_browser._resize_images()
+        self.content_browser.setup_gif_animations()        # start GIF playback
 
         # Populate right-panel TOC
         self.toc_tree.clear()

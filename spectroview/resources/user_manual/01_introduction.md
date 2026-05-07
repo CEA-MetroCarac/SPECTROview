@@ -27,3 +27,16 @@ ____
 If you use SPECTROview for data processing or visualization in your research, please cite the following publication:
 
 > Le, V.-H., & Quéméré, P. (2025). SPECTROview: A Tool for Spectroscopic Data Processing and Visualization. Zenodo. [https://doi.org/10.5281/zenodo.14147172](https://doi.org/10.5281/zenodo.14147172)
+
+---
+
+### Mini-Tutorials
+
+![Open](../user_manual_images/Introduction/1.png)<br>
+
+![Axis Limits](../user_manual_images/Introduction/Axis%20limits.gif)<br>
+*Example: Dynamically adjusting axis limits.*
+
+![Full Dark Mode](../user_manual_images/Introduction/Full%20Dark%20Mode.gif)<br>
+*Example: Switching to Dark Mode for enhanced visualization.*
+

@@ -1,4 +1,4 @@
-## 11. Save & Load Workspace
+## 12. Save & Load Workspace
 
 SPECTROview uses dedicated native file formats to allow you to seamlessly pause, save, and resume your data analysis sessions without losing any configurations or fit results.
 

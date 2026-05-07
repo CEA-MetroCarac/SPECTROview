@@ -1,4 +1,4 @@
-## 5. Spectra and Maps Workspaces
+## 6. Spectra and Maps Workspaces
 
 The Maps and Spectra workspaces share a unified design and many core features. However, the Maps workspace includes additional, specialized tools specifically engineered for handling large hyperspectral datasets.
 

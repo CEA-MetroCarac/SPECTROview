@@ -17,6 +17,14 @@ With its built-in visualization tools, SPECTROview streamlines your workflow by 
 
 >For more information, please visit the [GitHub Repository](https://github.com/CEA-MetroCarac/SPECTROview).
 
+### Documentation
+
+Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**](https://CEA-MetroCarac.github.io/SPECTROview/) :
+
+- For users: A user manual is available [here](https://cea-metrocarac.github.io/SPECTROview/user_manual/) or can be accessed directly within the application.
+- For developers: A developer guide is available [here](https://cea-metrocarac.github.io/SPECTROview/developer/).
+- A changelog is available [here](https://github.com/CEA-MetroCarac/SPECTROview/releases).
+
 ## Acknowledgements
 
 This work, carried out on the CEA - Platform for Nanocharacterisation (PFNC), was supported by the “Recherche Technologique de Base” program of the French National Research Agency (ANR).
@@ -30,13 +38,4 @@ If you use SPECTROview for data processing or visualization in your research, pl
 
 ---
 
-### Mini-Tutorials
-
-![Open](../user_manual_images/Introduction/1.png)<br>
-
-![Axis Limits](../user_manual_images/Introduction/Axis%20limits.gif)<br>
-*Example: Dynamically adjusting axis limits.*
-
-![Full Dark Mode](../user_manual_images/Introduction/Full%20Dark%20Mode.gif)<br>
-*Example: Switching to Dark Mode for enhanced visualization.*
 

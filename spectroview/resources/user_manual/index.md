@@ -13,18 +13,19 @@
       
       <h3>Table of Contents</h3>
       <ol>
-        <li><b><a href="01_introduction.md">Introduction</a></b></li>
-        <li><b><a href="02_installation.md">Installation</a></b></li>
-        <li><b><a href="03_supported_data.md">Supported Data Formats</a></b></li>
-        <li><b><a href="04_ui_overview.md">User Interface Overview</a></b></li>
-        <li><b><a href="05_spectra_maps.md">Spectra and Maps Workspaces</a></b></li>
-        <li><b><a href="06_graphs.md">Graphs Workspace</a></b></li>
-        <li><b><a href="07_tensor_fit.md">Tensor Fit Engine</a></b></li>
-        <li><b><a href="08_mva.md">Multivariate Analysis (MVA)</a></b></li>
-        <li><b><a href="09_calculators.md">Quick Calculators</a></b></li>
-        <li><b><a href="10_settings.md">Settings & Preferences</a></b></li>
-        <li><b><a href="11_save_load.md">Save & Load Workspace</a></b></li>
-        <li><b><a href="12_shortcuts.md">Keyboard Shortcuts & Tips</a></b></li>
+        <li><b><a href="introduction.md">Introduction</a></b></li>
+        <li><b><a href="installation.md">Installation</a></b></li>
+        <li><b><a href="supported_data.md">Supported Data Formats</a></b></li>
+        <li><b><a href="ui_overview.md">User Interface Overview</a></b></li>
+        <li><b><a href="menu_bar.md">Menu Bar</a></b></li>
+        <li><b><a href="spectra_maps.md">Spectra and Maps Workspaces</a></b></li>
+        <li><b><a href="graphs.md">Graphs Workspace</a></b></li>
+        <li><b><a href="tensor_fit.md">Tensor Fit Engine</a></b></li>
+        <li><b><a href="mva.md">Multivariate Analysis (MVA)</a></b></li>
+        <li><b><a href="calculators.md">Quick Calculators</a></b></li>
+        <li><b><a href="settings.md">Settings & Preferences</a></b></li>
+        <li><b><a href="save_load.md">Save & Load Workspace</a></b></li>
+        <li><b><a href="shortcuts.md">Keyboard Shortcuts & Tips</a></b></li>
       </ol>
     </td>
   </tr>

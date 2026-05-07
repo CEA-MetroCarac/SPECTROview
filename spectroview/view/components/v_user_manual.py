@@ -217,18 +217,19 @@ class FitImageTextBrowser(QTextBrowser):
 # Ordered list of section files and their display titles
 MANUAL_SECTIONS = [
     ("index.md",            "Home"),
-    ("01_introduction.md",  "1. Introduction"),
-    ("02_installation.md",  "2. Installation"),
-    ("03_supported_data.md","3. Supported Data Formats"),
-    ("04_ui_overview.md",   "4. User Interface Overview"),
-    ("05_spectra_maps.md",  "5. Spectra & Maps Workspaces"),
-    ("06_graphs.md",        "6. Graphs Workspace"),
-    ("07_tensor_fit.md",    "7. Tensor Fit Engine"),
-    ("08_mva.md",           "8. Multivariate Analysis"),
-    ("09_calculators.md",   "9. Quick Calculators"),
-    ("10_settings.md",      "10. Settings & Preferences"),
-    ("11_save_load.md",     "11. Save & Load Workspace"),
-    ("12_shortcuts.md",     "12. Shortcuts & Tips"),
+    ("introduction.md",     "1. Introduction"),
+    ("installation.md",     "2. Installation"),
+    ("supported_data.md",   "3. Supported Data"),
+    ("ui_overview.md",      "4. UI Overview"),
+    ("menu_bar.md",         "5. Menu Bar"),
+    ("spectra_maps.md",     "6. Spectra & Maps Workspaces"),
+    ("graphs.md",           "7. Graphs Workspace"),
+    ("tensor_fit.md",       "8. Tensor Fit Engine"),
+    ("mva.md",              "9. Multivariate Analysis"),
+    ("calculators.md",      "10. Quick Calculators"),
+    ("settings.md",         "11. Settings & Preferences"),
+    ("save_load.md",        "12. Save & Load Workspace"),
+    ("shortcuts.md",        "13. Shortcuts & Tips"),
 ]
 
 

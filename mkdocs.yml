@@ -43,18 +43,19 @@ nav:
   - Home: index.md
   - User Manual:
     - Table of contents: user_manual/index.md
-    - Introduction: user_manual/01_introduction.md
-    - Installation: user_manual/02_installation.md
-    - Supported Data: user_manual/03_supported_data.md
-    - UI Overview: user_manual/04_ui_overview.md
-    - Spectra & Maps Workspace: user_manual/05_spectra_maps.md
-    - Graphs Workspace: user_manual/06_graphs.md
-    - Tensor Fit Engine: user_manual/07_tensor_fit.md
-    - Multivariate Analysis (MVA): user_manual/08_mva.md
-    - Quick Calculators: user_manual/09_calculators.md
-    - Settings: user_manual/10_settings.md
-    - Save & Load: user_manual/11_save_load.md
-    - Shortcuts & Tips: user_manual/12_shortcuts.md
+    - Introduction: user_manual/introduction.md
+    - Installation: user_manual/installation.md
+    - Supported Data: user_manual/supported_data.md
+    - UI Overview: user_manual/ui_overview.md
+    - Menu Bar: user_manual/menu_bar.md
+    - Spectra & Maps Workspace: user_manual/spectra_maps.md
+    - Graphs Workspace: user_manual/graphs.md
+    - Tensor Fit Engine: user_manual/tensor_fit.md
+    - Multivariate Analysis (MVA): user_manual/mva.md
+    - Quick Calculators: user_manual/calculators.md
+    - Settings: user_manual/settings.md
+    - Save & Load: user_manual/save_load.md
+    - Shortcuts & Tips: user_manual/shortcuts.md
   - Developer Guide:
     - Architecture: developer/index.md
     - Tensor Fit Engine: developer/tensor-engine.md

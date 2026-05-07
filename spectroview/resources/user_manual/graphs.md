@@ -1,4 +1,4 @@
-## 6. Graphs Workspace
+## 7. Graphs Workspace
 
 The Graphs Workspace is exclusively dedicated to data visualization, engineered with a strong emphasis on simplicity, speed, and customization.
 

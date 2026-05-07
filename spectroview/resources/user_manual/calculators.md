@@ -1,4 +1,4 @@
-## 9. Quick Calculators
+## 10. Quick Calculators
 
 A suite of utility calculators is integrated directly into the application. You can access them via the **Quick Calc** button on the main toolbar, or by navigating to **Tools → Quick Calculators** in the menu bar.
 

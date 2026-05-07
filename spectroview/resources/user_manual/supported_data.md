@@ -22,6 +22,7 @@ SPECTROview supports 1D spectroscopic data in TXT or CSV formats. Files must con
 
 SPECTROview supports hyperspectral data (2D maps or wafer maps) in TXT or CSV formats, provided the data is structured as follows:
 
+
 | X    | Y    | R1 | R2 | R3 | ... | Rn |
 |------|------|----|----|----|-----|----|
 | **X1** | **Y1** | i1 | i1 | i1 | ... | i1 |

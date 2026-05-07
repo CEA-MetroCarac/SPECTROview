@@ -8,7 +8,7 @@ pip install spectroview
 ```
 
 <div align="center">
-  <img src="../user_manual_images/Installation/installation.gif" alt="Three Workspaces" width="800">
+  <img src="../user_manual_images/Installation/installation.gif" alt="Three Workspaces" width="500">
 </div>
 
 ### From GitHub (Latest Development Version)

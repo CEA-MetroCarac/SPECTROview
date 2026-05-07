@@ -1,43 +1,125 @@
 import os
 import shutil
+import re
+
+
+# Keep track of symlinks created so on_post_build can clean them up.
+_created_symlinks: list[str] = []
+
+
+def on_page_content(html, page, config, files):
+    """
+    Hook to fix raw HTML links in the generated HTML content.
+    
+    MkDocs normally doesn't rewrite links inside raw HTML <a> tags.
+    This hook finds relative href="filename.md" links in the user manual
+    and rewrites them to href="filename/" so they match MkDocs' 
+    directory-style URL structure.
+    """
+    if page.file.src_path.startswith("user_manual/"):
+        # Determine if we are at the user_manual/ root (index.md)
+        # or in a sub-directory (e.g. user_manual/01_introduction/)
+        is_index = page.file.src_path.endswith("index.md")
+        prefix = "" if is_index else "../"
+
+        def replace_link(match):
+            filename = match.group(1)
+            anchor = match.group(2)
+            # Special case for index.md: link to the directory root
+            if filename == "index":
+                return f'href="{prefix or "./"}{anchor}"'
+            # General case: link to the file's directory URL
+            return f'href="{prefix}{filename}/{anchor}"'
+
+        # Match href="filename.md" or href="filename.md#anchor"
+        # but ignore external (http) or absolute (/) links.
+        html = re.sub(
+            r'href="(?!(?:https?://|/))([^"#]+)\.md(#?[^"]*)"',
+            replace_link,
+            html
+        )
+    return html
+
 
 def on_pre_build(config, **kwargs):
     """
     Hook that runs before the MkDocs build process starts.
-    It automatically copies the application's built-in User Manual section
-    files and images into the MkDocs documentation directory, ensuring the
-    website is always 100% in sync with the application's internal manual.
+
+    Creates temporary symbolic links inside the docs directory so MkDocs can
+    read the User Manual content directly from the canonical source in
+    ``spectroview/resources/``.  The symlinks are removed automatically in
+    :func:`on_post_build` so they never linger in the working tree.
+
+    On platforms where symlinks are not supported (or permission-restricted),
+    the hook falls back to a full directory copy.
     """
     docs_dir = config['docs_dir']
+    project_root = os.path.dirname(docs_dir)  # one level above docs/
 
-    # Source paths (from the spectroview package)
-    src_manual_dir = "spectroview/resources/user_manual"
-    src_img = "spectroview/resources/user_manual_images"
+    # Source paths (canonical, inside the spectroview package)
+    src_manual_dir = os.path.join(project_root,
+                                  "spectroview", "resources", "user_manual")
+    src_img_dir = os.path.join(project_root,
+                               "spectroview", "resources",
+                               "user_manual_images")
 
-    # Destination paths (in the MkDocs docs folder)
-    dest_manual_dir = os.path.join(docs_dir, "user-manual")
-    dest_img = os.path.join(docs_dir, "user_manual_images")
+    # Destination paths (inside the MkDocs docs folder)
+    dest_manual_dir = os.path.join(docs_dir, "user_manual")
+    dest_img_dir = os.path.join(docs_dir, "user_manual_images")
 
-    print(f"Synchronizing user manual sections to: {dest_manual_dir}")
+    _ensure_link(src_manual_dir, dest_manual_dir, label="user manual")
+    _ensure_link(src_img_dir, dest_img_dir, label="user manual images")
 
-    # Copy all section markdown files
-    if os.path.isdir(src_manual_dir):
-        if os.path.exists(dest_manual_dir):
-            shutil.rmtree(dest_manual_dir)
-        shutil.copytree(src_manual_dir, dest_manual_dir)
 
-        # Fix image paths: section files use ../user_manual_images/
-        # but MkDocs expects paths relative to docs/ root.
-        # Since dest is docs/user-manual/ and images are at
-        # docs/user_manual_images/, the ../user_manual_images/ path
-        # resolves correctly. No rewriting needed.
-    else:
-        print(f"Warning: Source manual directory not found at {src_manual_dir}")
+def on_post_build(config, **kwargs):
+    """
+    Hook that runs after the MkDocs build (or gh-deploy) finishes.
 
-    # Copy images folder to docs/user_manual_images/
-    if os.path.isdir(src_img):
-        if os.path.exists(dest_img):
-            shutil.rmtree(dest_img)
-        shutil.copytree(src_img, dest_img)
-    else:
-        print(f"Warning: Source images not found at {src_img}")
+    Removes the temporary symlinks (or copied directories) that were created
+    in :func:`on_pre_build`, keeping the working tree clean.
+    """
+    for path in _created_symlinks:
+        if os.path.islink(path):
+            os.unlink(path)
+            print(f"  Cleaned up symlink: {path}")
+        elif os.path.isdir(path):
+            shutil.rmtree(path)
+            print(f"  Cleaned up copied dir: {path}")
+    _created_symlinks.clear()
+
+
+# ---------------------------------------------------------------------- #
+# Helper
+# ---------------------------------------------------------------------- #
+
+def _ensure_link(src: str, dest: str, *, label: str = "") -> None:
+    """Create a directory symlink *dest* → *src*.
+
+    If *dest* already exists as a correct symlink nothing is re-created.
+    If it exists as a real directory (e.g. leftover from a previous copy-based
+    workflow) it is removed first.
+    Falls back to ``shutil.copytree`` when ``os.symlink`` is unavailable.
+    """
+    if not os.path.isdir(src):
+        print(f"  Warning: source {label} directory not found at {src}")
+        return
+
+    # Remove stale destination (real dir or broken/wrong symlink)
+    if os.path.islink(dest):
+        if os.readlink(dest) == src:
+            # Already correct – still register for cleanup
+            _created_symlinks.append(dest)
+            return
+        os.unlink(dest)
+    elif os.path.isdir(dest):
+        shutil.rmtree(dest)
+
+    # Try creating a symlink; fall back to a copy on failure
+    try:
+        os.symlink(src, dest, target_is_directory=True)
+        print(f"  Linked {label}: {dest} -> {src}")
+    except (OSError, NotImplementedError):
+        shutil.copytree(src, dest)
+        print(f"  Copied {label}: {src} -> {dest}  (symlink unavailable)")
+
+    _created_symlinks.append(dest)

@@ -705,10 +705,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#toolbar-buttons-view-options" class="md-nav__link">
+  <a href="#spectraviewer-with-interactive-mouse-controls" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Toolbar Buttons &amp; View Options
+        SpectraViewer with Interactive Mouse Controls
       
     </span>
   </a>
@@ -716,10 +716,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#interactive-mouse-controls" class="md-nav__link">
+  <a href="#toolbar-buttons-and-view-options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Interactive Mouse Controls
+        Toolbar Buttons and View Options
       
     </span>
   </a>
@@ -1302,10 +1302,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#toolbar-buttons-view-options" class="md-nav__link">
+  <a href="#spectraviewer-with-interactive-mouse-controls" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Toolbar Buttons &amp; View Options
+        SpectraViewer with Interactive Mouse Controls
       
     </span>
   </a>
@@ -1313,10 +1313,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#interactive-mouse-controls" class="md-nav__link">
+  <a href="#toolbar-buttons-and-view-options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Interactive Mouse Controls
+        Toolbar Buttons and View Options
       
     </span>
   </a>
@@ -1474,14 +1474,13 @@
 
 <p><em>Interface overview of the Spectra and Maps workspaces. Both interfaces are divided into three primary sections: Top-left section (SpectraViewer), bottom-left section (FitModelBuilder), and right section (SpectraList / MapList).</em></p>
 <h3 id="maplist-and-mapviewer">MapList and MapViewer<a class="headerlink" href="#maplist-and-mapviewer" title="Permanent link">&para;</a></h3>
-<p>MapList and MapViewer widgets are engineered for efficient navigation and management of your hyperspectral datasets. </p>
-<p><strong>MapList</strong>: Displays all loaded map files, including wafer maps and 2D map types. </p>
+<p><strong>MapList</strong>: and <strong>MapViewer</strong> widgets are engineered for efficient navigation and management of your hyperspectral datasets. MapList displays all loaded map files, including wafer maps and 2D map types. </p>
 <p>Three utility buttons located on the right side of MapList allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.</p>
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Maps_switching" width="250"><br>
 </div>
 
-<p><em>User can navigate between loaded 2D maps via a listbox (MapList). The 2Dmap plot of the selected map is displayed in the MapViewer. By defaut MapViewer displays heatmap of "Intensity" or "Area" for the selected map. If the 2Dmap is fitted, the user can select to display the heatmap of any fitted parameter.</em></p>
+<p>User can navigate between loaded 2D maps via a listbox (MapList). The 2Dmap plot of the selected map is displayed in the MapViewer. By defaut MapViewer displays heatmap of "Intensity" or "Area" for the selected map. If the 2Dmap is fitted, the user can select to display the heatmap of any fitted parameter.</p>
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/mapviewer_sliders.gif" alt="mapviewer_sliders" width="5000">
 </div>
@@ -1509,13 +1508,18 @@
 <p><em>SpectraList alongside the ProgressBar (within Maps Workspace). The progress bar displays real-time fitting progress (percentage and elapsed time). A 'Stop' button is provided to safely halt an ongoing fitting process.</em></p>
 <h3 id="spectra-viewer">Spectra Viewer<a class="headerlink" href="#spectra-viewer" title="Permanent link">&para;</a></h3>
 <p>The SpectraViewer is the central plotting widget where all spectra selected via the SpectraList (and their best-fit curves) are visualized.</p>
-<p>Hovering the cursor over any fitted peak will display a tooltip showing the precise parameters of that peak.</p>
-<p>Several view options availables :</p>
+<h4 id="spectraviewer-with-interactive-mouse-controls">SpectraViewer with Interactive Mouse Controls<a class="headerlink" href="#spectraviewer-with-interactive-mouse-controls" title="Permanent link">&para;</a></h4>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/peak_tooltip.png" alt="peak_tooltip" width="300">
+  <img src="../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="spectraviewer_interactive" width="600">
 </div>
 
-<h4 id="toolbar-buttons-view-options">Toolbar Buttons &amp; View Options<a class="headerlink" href="#toolbar-buttons-view-options" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Show Peak Parameters</strong>: Hover your cursor over any fitted peak to display a tooltip containing its precise parameters.</li>
+<li><strong>Add/Remove Peaks</strong>: With the 'Peak' button enabled, left-click to drop a new peak, or right-click near an existing peak to remove it.</li>
+<li><strong>Adjust Peak Initial Guesses</strong>: Click and drag the center or width of an initial peak guess to adjust it manually before fitting.</li>
+<li><strong>Quick Rescale Y-axis</strong>: Use your mouse wheel to rapidly scale the Y-axis up or down.</li>
+</ul>
+<h4 id="toolbar-buttons-and-view-options">Toolbar Buttons and View Options<a class="headerlink" href="#toolbar-buttons-and-view-options" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -1525,128 +1529,125 @@
 </thead>
 <tbody>
 <tr>
-<td><img alt="Rescale" src="../../user_manual_images/Spectra_Maps/imageFile26.png" /></td>
+<td><img alt="Rescale" src="../../user_manual_images/Spectra_Maps/rescale.png" /></td>
 <td><strong>Rescale</strong>: Automatically rescales the plot axes to fit the current data perfectly. Shortcut: <code>Ctrl + R</code>.</td>
 </tr>
 <tr>
-<td><img alt="Zoom" src="../../user_manual_images/Spectra_Maps/imageFile27.png" /></td>
+<td><img alt="Zoom" src="../../user_manual_images/Spectra_Maps/zoom.png" /></td>
 <td><strong>Zoom</strong>: When toggled on, enables a click-and-drag box zoom feature using the left mouse button.</td>
 </tr>
 <tr>
-<td><img alt="Baseline" src="../../user_manual_images/Spectra_Maps/imageFile28.png" /></td>
+<td><img alt="Baseline" src="../../user_manual_images/Spectra_Maps/add_baseline.png" /></td>
 <td><strong>Baseline</strong>: When toggled on, allows you to manually define baseline anchor points by clicking directly on the spectra.</td>
 </tr>
 <tr>
-<td><img alt="Peaks" src="../../user_manual_images/Spectra_Maps/imageFile29.png" /></td>
+<td><img alt="Peaks" src="../../user_manual_images/Spectra_Maps/add_peaks.png" /></td>
 <td><strong>Peaks</strong>: When toggled on, allows you to manually add initial peak guesses by clicking directly on the spectra.</td>
 </tr>
 <tr>
-<td><img alt="Normalization" src="../../user_manual_images/Spectra_Maps/imageFile31.png" /> <img alt="Normalization Max" src="../../user_manual_images/Spectra_Maps/imageFile32.png" /> <img alt="Normalization Range" src="../../user_manual_images/Spectra_Maps/imageFile33.png" /></td>
-<td><strong>Normalization</strong>: Displays the selected spectra normalized to their maximum peak intensity. Enter values into the 'min' and 'max' fields to normalize based on a specific, targeted spectral range.<br><img alt="Normalization Example" src="../../user_manual_images/Spectra_Maps/imageFile34.png" /><br><em>Figure 7: Raw spectra (left) vs. normalized spectra (right), highly useful for inspecting subtle peak shifts.</em></td>
+<td><img alt="Normalization" src="../../user_manual_images/Spectra_Maps/normalize.png" /></td>
+<td><strong>Normalization</strong>: Displays the selected spectra normalized to their maximum peak intensity. Enter values into the 'min' and 'max' fields to normalize based on a specific, targeted spectral range.<br><img alt="Normalization Example" src="../../user_manual_images/Spectra_Maps/ex_normalization.png" /><br><em>Raw spectra (left) vs. normalized spectra (right), highly useful for inspecting subtle peak shifts.</em></td>
 </tr>
 <tr>
-<td><img alt="Legend" src="../../user_manual_images/Spectra_Maps/imageFile35.png" /></td>
-<td><strong>Legend</strong>: Toggles the display of the legend box. When the 'Zoom' tool is disabled, you can click directly on the legend box to customize colors and labels.<br><img alt="Legend Customization" src="../../user_manual_images/Spectra_Maps/imageFile36.png" /></td>
+<td><img alt="Bestfit" src="../../user_manual_images/Spectra_Maps/show_bestfit.png" /></td>
+<td><strong>Show Bestfit</strong>: Toggles the display of the best-fit curve(s).</td>
 </tr>
 <tr>
-<td><img alt="Copy" src="../../user_manual_images/Spectra_Maps/imageFile37.png" /></td>
+<td><img alt="Legend" src="../../user_manual_images/Spectra_Maps/show_legend.png" /></td>
+<td><strong>Legend</strong>: Toggles the display of the legend box. When the 'Zoom' tool is disabled, you can click directly on the legend box to customize colors and labels.<br></td>
+</tr>
+<tr>
+<td><img alt="Copy" src="../../user_manual_images/Spectra_Maps/copy.png" /></td>
 <td><strong>Copy</strong>: Copies the plot to your clipboard as a high-quality image. Use <code>Ctrl + Click</code> (or <code>Cmd + Click</code> on macOS) to copy the raw numerical plot data to your clipboard instead.</td>
 </tr>
 <tr>
-<td><img alt="More Options" src="../../user_manual_images/Spectra_Maps/imageFile38.png" /></td>
-<td><strong>More Options</strong>: Opens a comprehensive configuration panel allowing you to adjust X/Y units, toggle Log scales, change plot styles, toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions.<br><img alt="More Options Panel" src="../../user_manual_images/Spectra_Maps/imageFile39.png" /></td>
+<td><img alt="More View Options" src="../../user_manual_images/Spectra_Maps/view_options.png" /></td>
+<td><strong>More Options</strong>: Open a comprehensive configuration panel allowing you to adjust X/Y units, toggle Log scales, change plot styles, toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions, etc.<br><img alt="More Options Panel" src="../../user_manual_images/Spectra_Maps/menu_view_options.png" /></td>
 </tr>
 </tbody>
 </table>
-<h4 id="interactive-mouse-controls">Interactive Mouse Controls<a class="headerlink" href="#interactive-mouse-controls" title="Permanent link">&para;</a></h4>
-<ul>
-<li><strong>Show Peak Parameters</strong>: Hover your cursor over any fitted peak to display a tooltip containing its precise parameters.</li>
-<li><strong>Add/Remove Peaks</strong>: With the 'Peak' button enabled, left-click to drop a new peak, or right-click near an existing peak to remove it.</li>
-<li><strong>Adjust Peak Initial Guesses</strong>: Click and drag the center or width of an initial peak guess to adjust it manually before fitting.</li>
-<li><strong>Quick Rescale Y-axis</strong>: Use your mouse wheel to rapidly scale the Y-axis up or down.
-<img alt="Quick rescale" src="../../user_manual_images/Spectra_Maps/imageFile41.png" /><br></li>
-</ul>
 <h3 id="fit-model-builder">Fit Model Builder<a class="headerlink" href="#fit-model-builder" title="Permanent link">&para;</a></h3>
 <p>The FitModelBuilder tab is where you configure your spectral fitting models. It is divided into three main panels: Fitting, PeakTable, and FitModelControl.</p>
-<p><img alt="FitModelBuilder Tab" src="../../user_manual_images/Spectra_Maps/imageFile42.png" /><br>
-<em>Figure 8: The FitModelBuilder tab featuring: (1) The Fitting Panel, (2) The PeakTable Panel, and (3) The FitModelControl Panel.</em></p>
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="fit_model_builder" width="700">
+</div>
+
+<p><em>The FitModelBuilder tab featuring: (1) The Fitting Panel (left), (2) The PeakTable Panel (top-right), and (3) The FitModelControl Panel (bottom-right).</em></p>
 <h4 id="fitting-panel">Fitting Panel<a class="headerlink" href="#fitting-panel" title="Permanent link">&para;</a></h4>
 <p>The Fitting Panel guides you through the process of building a robust model in four logical steps:</p>
-<p><strong>Step 1: X-axis Correction (Optional)</strong>
-Perform an empirical X-axis correction based on measurements from a known reference sample (e.g., a Silicon peak at exactly 520.7 cm⁻¹). Simply fit your reference data, input the theoretically correct position, and apply the shift to correct calibration offsets globally.</p>
-<p><strong>Step 2: Define the Fitting Range</strong>
-Restrict the mathematical fitting process to a specific X-axis region of interest.</p>
-<p><strong>Step 3: Baseline Definition</strong>
-SPECTROview offers two distinct modes for defining spectral baselines (Manual or Auto):</p>
-<p><img alt="Baseline Modes" src="../../user_manual_images/Spectra_Maps/imageFile44.png" /><br>
-<em>Figure 9: Baseline mode selection: Manual mode (left) vs. Auto mode (right).</em></p>
-<ul>
-<li>
-<p><strong>Manual Mode (Linear or Polynomial)</strong>: Define baseline anchor points by clicking directly in the SpectraViewer. Check <em>Attached</em> to automatically snap your clicked points to the nearest data curve. Check <em>Correct noise</em> to calculate the point's intensity as a local average of neighboring data, making it robust against high noise.
-<img alt="Manual Baseline Example" src="../../user_manual_images/Spectra_Maps/imageFile45.png" /><br></p>
-</li>
-<li>
-<p><strong>Auto Mode (airPLS or asLS)</strong>: Let advanced algorithms automatically generate the baseline curve. Use the slider to fine-tune the algorithm's aggressiveness.</p>
-</li>
-<li><strong>airPLS</strong>: A highly aggressive algorithm, excellent for removing strong, complex fluorescence backgrounds. Highly recommended and validated for Raman data.</li>
-<li><strong>asLS</strong>: A very stable algorithm, though it can sometimes struggle to distinguish between noise and broad peaks. Best suited for relatively clean spectra.</li>
-</ul>
+<p><strong>Step 1: X-axis Correction (Optional)</strong> : Perform an empirical X-axis correction based on measurements from a known reference sample (e.g., a Silicon peak at exactly 520.7 cm⁻¹). Simply fit your reference data, input the theoretically correct position, and apply the shift to correct calibration offsets globally.</p>
+<p><strong>Step 2: Define the Fitting Range</strong>: Restrict the mathematical fitting process to a specific X-axis region of interest.</p>
+<p><strong>Step 3: Baseline Definition</strong>:  SPECTROview offers two distinct modes for defining spectral baselines (Manual or Auto):</p>
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/baseline_widget.png" alt="baseline_widget" width="500"><br>
+   <i>Baseline mode selection: Manual mode (left) vs. Auto mode (right).</i>
+</div>
+
+<p><strong>Manual Mode (Linear or Polynomial)</strong>: Define baseline anchor points by clicking directly in the SpectraViewer. Check <em>Attached</em> to automatically snap your clicked points to the nearest data curve. Check <em>Correct noise</em> to calculate the point's intensity as a local average of neighboring data, making it robust against high noise.</p>
+<p><strong>Auto Mode (airPLS or asLS)</strong>: Let advanced algorithms automatically generate the baseline curve. Use the slider to fine-tune the algorithm's aggressiveness.
+  - <strong>airPLS</strong>: A highly aggressive algorithm, excellent for removing strong, complex fluorescence backgrounds. Highly recommended and validated for Raman data.
+  - <strong>asLS</strong>: A very stable algorithm, though it can sometimes struggle to distinguish between noise and broad peaks. Best suited for relatively clean spectra.</p>
 <p><strong>Step 4: Peak Definition</strong></p>
 <ul>
 <li>Add peaks directly inside the SpectraViewer by left-clicking (ensure the Peak toggle button is active). You can interactively adjust their initial guesses by dragging them with the mouse.</li>
 <li>Every peak added to the plot is immediately listed in the <strong>PeakTable</strong>.</li>
-<li>Supported peak profiles include: Lorentzian, Gaussian, PseudoVoigt, LorentzianAsym, GaussianAsym, Fano, DecaySingleExp, and DecayBiExp.
-<img alt="Peak definition" src="../../user_manual_images/Spectra_Maps/imageFile46.png" /><br></li>
+<li>Supported peak profiles include: Lorentzian, Gaussian, PseudoVoigt, LorentzianAsym, GaussianAsym, Fano, DecaySingleExp, and DecayBiExp.</li>
 </ul>
 <h4 id="peaktable-panel">PeakTable Panel<a class="headerlink" href="#peaktable-panel" title="Permanent link">&para;</a></h4>
 <p>The PeakTable displays all the mathematical parameters for the peaks you have defined. When you drag a peak in the viewer, these properties update dynamically.</p>
-<p><img alt="PeakTable Panel" src="../../user_manual_images/Spectra_Maps/imageFile48.png" /><br>
-<em>Figure 10: The PeakTable panel displaying peak parameters and constraints.</em></p>
-<p><strong>Constraints System</strong>:</p>
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/peak_table.png" alt="peak_table" width="700"><br>
+   <i>The PeakTable panel displaying peak parameters and constraints.</i>
+</div>
+
+<p><strong>Add Constraints for fit model</strong>:</p>
 <ul>
 <li><strong>Fix</strong>: Check this box to freeze the parameter value, preventing the optimizer from changing it during the fit.</li>
 <li><strong>Limits</strong>: Enter minimum and maximum boundary values to restrict how far the optimizer can move the parameter.</li>
 <li><strong>Expression</strong>: Define complex mathematical relationships between parameters.</li>
 </ul>
-<p><img alt="Expression Limit" src="../../user_manual_images/Spectra_Maps/imageFile49.png" /><br>
-<em>Example 1: Using an expression to constrain the position (<code>x0</code>) of <code>m02</code> to always remain exactly 17 units away from the position of <code>m01</code>.</em></p>
-<p><img alt="Expression Intensity" src="../../user_manual_images/Spectra_Maps/imageFile50.png" /><br>
-<em>Example 2: Using an expression to constrain the amplitude of <code>m03</code> to always be exactly half the amplitude of <code>m02</code>.</em></p>
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/peak_table_max_min.png" alt="peak_table_max_min" width="700"><br>
+   <i>Example 1: Using an expression to constrain the position (`x0`) of `m02` to always remain exactly 17 units away from the position of `m01`.</i>
+</div>
+
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/peak_table_expression.png" alt="peak_table_expression" width="700"><br>
+   <i>Example 2: Using an expression to constrain the amplitude of `m03` to always be exactly half the amplitude of `m02`.</i>
+</div>
+
 <h4 id="fitmodelcontrol-panel">FitModelControl Panel<a class="headerlink" href="#fitmodelcontrol-panel" title="Permanent link">&para;</a></h4>
-<p>Once your model is fully defined, click the <strong>Fit</strong> button to execute the optimization algorithm.</p>
-<p><img alt="FitModelControl Interface" src="../../user_manual_images/Spectra_Maps/imageFile52.png" /><br>
-<em>Figure 11: The FitModelControl interface.</em></p>
+<p>Once your model is fully defined, click the <strong>Fit</strong> button to execute the fitting action.</p>
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/fit_control_panel.png" alt="fit_control_panel" width="600"><br>
+   <i>Fit model control panel.</i>
+</div>
+
 <p><strong>Copy / Paste Fit Models</strong>: 
-A fully configured fit model can be copied from one spectrum and pasted onto another, making it easy to replicate complex setups.
-<img alt="Copy Fit" src="../../user_manual_images/Spectra_Maps/imageFile53.png" /><br>
-<img alt="Paste Fit" src="../../user_manual_images/Spectra_Maps/imageFile54.png" /><br>
-<img alt="Paste Example" src="../../user_manual_images/Spectra_Maps/imageFile55.png" /><br></p>
+A fully configured fit model can be copied from one spectrum and pasted onto another, making it easy to replicate complex setups.</p>
 <p><strong>Saving / Loading Fit Models</strong>:
-If you intend to use a model frequently, you can save it as a template. Stored models can easily be accessed and applied to new data using the dropdown menu.
-<img alt="Fit Model Dropdown" src="../../user_manual_images/Spectra_Maps/imageFile56.png" /><br>
-<img alt="Load Fit Model" src="../../user_manual_images/Spectra_Maps/imageFile57.png" /><br></p>
+If you intend to use a model frequently, you can save it as a template. Stored models can easily be accessed and applied to new data using the dropdown menu.</p>
 <h3 id="collect-save-fit-results">Collect &amp; Save Fit Results<a class="headerlink" href="#collect-save-fit-results" title="Permanent link">&para;</a></h3>
-<p>Once fitting is complete across your spectra or maps, you need to aggregate the mathematical results:</p>
+<p>Once fitting is complete across your spectra or maps, we need to aggregate the bestfit results:</p>
 <ul>
 <li>Navigate to the <strong>Fit Results</strong> tab.</li>
 <li>Click the <strong>Collect</strong> button. SPECTROview will instantly aggregate all best-fit parameters into a unified, sortable table.</li>
 </ul>
-<p><img alt="Collect Fit Results 1" src="../../user_manual_images/Spectra_Maps/imageFile58.png" /><br>
-<img alt="Collect Fit Results 2" src="../../user_manual_images/Spectra_Maps/imageFile59.png" /><br>
-<em>Figure 12: The Collect Fit Results interface and aggregated data table.</em></p>
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/collect_fit_results.gif" alt="collect_fit_results" width="800"><br>
+   <i>The Collect Fit Results interface and aggregated data table.</i>
+</div>
+
 <h4 id="splitting-filename-features">Splitting Filename Features<a class="headerlink" href="#splitting-filename-features" title="Permanent link">&para;</a></h4>
-<p>This tool allows you to automatically extract metadata embedded in your filenames. For example, if your files are named <code>Sample1_ProcessA_Temp25</code>, the tool can split the filename by underscores (<code>_</code>) and assign the extracted values into distinct new columns in your dataset.
-<img alt="Filename Splitting" src="../../user_manual_images/Spectra_Maps/imageFile61.png" /><br></p>
+<p>This tool allows you to automatically extract metadata embedded in your filenames. For example, if your files are named <code>Sample1_ProcessA_Temp25</code>, the tool can split the filename by underscores (<code>_</code>) and assign the extracted values into distinct new columns in your dataset (see video above).</p>
 <h4 id="compute-and-add-new-columns">Compute and Add New Columns<a class="headerlink" href="#compute-and-add-new-columns" title="Permanent link">&para;</a></h4>
-<p>You can easily create new columns derived from mathematical combinations of existing fitted parameters (e.g., calculating a peak shift via <code>x0_p1 - x0_p2</code>).
+<p>You can easily create new columns derived from mathematical combinations of existing fitted parameters (e.g., calculating a peak shift via <code>x0_p1 - x0_p2</code>) (see video above).
 Supported mathematical operations include: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>**</code>, <code>%</code>, and <code>()</code>.</p>
 <blockquote>
 <p><strong>Important Note</strong>: If your column names contain spaces or special characters, you must enclose them in backticks. Example: <code>`x0_LO(M)`</code></p>
 </blockquote>
 <h4 id="saving-or-visualizing">Saving or Visualizing<a class="headerlink" href="#saving-or-visualizing" title="Permanent link">&para;</a></h4>
 <p>Once your data table is finalized, give it a descriptive name and either send it directly to the Graphs workspace for immediate plotting or export it to an Excel/CSV spreadsheet for external use.</p>
-<p><img alt="Send to Graph" src="../../user_manual_images/Spectra_Maps/imageFile63.png" /><br>
-<img alt="Export to Excel" src="../../user_manual_images/Spectra_Maps/imageFile64.png" /><br></p>
 <h3 id="more-tab">More Tab<a class="headerlink" href="#more-tab" title="Permanent link">&para;</a></h3>
 <p>The 'More' tab provides access to auxiliary tools and metadata, divided into three sections:</p>
 <ul>
@@ -1654,8 +1655,9 @@ Supported mathematical operations include: <code>+</code>, <code>-</code>, <code
 <li><strong>Middle</strong>: Displays detailed properties and statistical information about the currently selected spectrum.</li>
 <li><strong>Right</strong>: Provides access to additional pre-processing utilities, such as global intensity normalization algorithms and cosmic ray artifact detection.</li>
 </ul>
-<p><img alt="More Tab" src="../../user_manual_images/Spectra_Maps/imageFile65.png" /><br>
-<em>Figure 13: The user interface of the More Tab.</em></p>
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/moretab.png" alt="moretab" width="800"><br>
+</div>
 
 
 

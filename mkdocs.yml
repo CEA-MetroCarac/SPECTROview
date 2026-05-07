@@ -62,7 +62,7 @@ nav:
   - Changelog: changelog.md
 
 hooks:
-  - docs_hooks.py
+  - docs/docs_hooks.py
 
 markdown_extensions:
   - admonition

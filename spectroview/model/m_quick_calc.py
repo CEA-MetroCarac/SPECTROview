@@ -433,7 +433,7 @@ class UnitConverterCalculator(QFrame):
 class MQuickCalc(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Quick Calculation")
+        self.setWindowTitle("Quick Calculators")
         self.resize(850, 650)
         
         dialog_layout = QVBoxLayout(self)

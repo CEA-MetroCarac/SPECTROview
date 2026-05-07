@@ -50,7 +50,6 @@ nav:
     - Menu Bar: user_manual/menu_bar.md
     - Spectra & Maps Workspace: user_manual/spectra_maps.md
     - Graphs Workspace: user_manual/graphs.md
-    - Tensor Fit Engine: user_manual/tensor_fit.md
     - Multivariate Analysis (MVA): user_manual/mva.md
     - Quick Calculators: user_manual/calculators.md
     - Settings: user_manual/settings.md

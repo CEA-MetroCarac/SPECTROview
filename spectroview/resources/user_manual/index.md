@@ -20,7 +20,6 @@
         <li><b><a href="menu_bar.md">Menu Bar</a></b></li>
         <li><b><a href="spectra_maps.md">Spectra and Maps Workspaces</a></b></li>
         <li><b><a href="graphs.md">Graphs Workspace</a></b></li>
-        <li><b><a href="tensor_fit.md">Tensor Fit Engine</a></b></li>
         <li><b><a href="mva.md">Multivariate Analysis (MVA)</a></b></li>
         <li><b><a href="calculators.md">Quick Calculators</a></b></li>
         <li><b><a href="settings.md">Settings & Preferences</a></b></li>

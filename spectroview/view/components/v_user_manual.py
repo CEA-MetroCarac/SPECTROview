@@ -226,7 +226,6 @@ MANUAL_SECTIONS = [
     ("menu_bar.md",         "Menu Bar"),
     ("spectra_maps.md",     "Spectra & Maps Workspaces"),
     ("graphs.md",           "Graphs Workspace"),
-    ("tensor_fit.md",       "Tensor Fit Engine"),
     ("mva.md",              "Multivariate Analysis"),
     ("calculators.md",      "Quick Calculators"),
     ("settings.md",         "Settings & Preferences"),

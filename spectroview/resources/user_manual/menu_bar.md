@@ -29,9 +29,11 @@ Opens a utility by clicking to icon "Convert" as described above.
 To convert a hyperspectral data (2D maps) from Renishaw WiRE into a format natively supported by SPECTROview, load your file(s) and click "Convert". The converted file will have a `_converted` suffix and be saved in the same folder as the original file.
 
 ![Hyperspectral Data Converter Tool](../user_manual_images/menu_bar/ui_converter.png)
+
+
 ### Quick Calculation Tool
 
-Click to the "Calculator" icon to open  A suite suite of utility calculators : 
+Click to the "Calculator" icon to open  a suite suite of utility calculators : 
 
 ![Quick Calculation Tool](../user_manual_images/menu_bar/ui_quick_calculation.png)
 #### 1. Calculation of laser spot size, depth of field and laser power density

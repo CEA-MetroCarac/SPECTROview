@@ -6,7 +6,7 @@ SPECTROview uses dedicated native file formats to allow you to seamlessly pause,
 
 To save your current progress, click the **Save** button located in the main application toolbar:
 
-![Save Workspace](../user_manual_images/imageFile81.png)<br>
+![Save Workspace](../user_manual_images/Save_Load/imageFile81.png)<br>
 
 The application will generate a specific file extension based on which workspace is currently active:
 

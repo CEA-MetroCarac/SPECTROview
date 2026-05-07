@@ -98,11 +98,16 @@ class FitImageTextBrowser(QTextBrowser):
     # ------------------------------------------------------------------
     def cleanup_movies(self):
         """Stop all movies and destroy overlay labels."""
-        for label in self._gif_labels.values():
+        # Use list() to avoid issues with modification during iteration
+        for name in list(self._gif_labels.keys()):
+            label = self._gif_labels.pop(name)
             label.hide()
+            label.setParent(None)
             label.deleteLater()
-        for movie in self._movies.values():
+        
+        for movie in list(self._movies.values()):
             movie.stop()
+        
         self._movies.clear()
         self._gif_labels.clear()
         self._gif_doc_positions.clear()
@@ -164,9 +169,20 @@ class FitImageTextBrowser(QTextBrowser):
         """Move each GIF overlay label so it sits exactly on top of
         the static placeholder image in the document."""
         doc = self.document()
-        for name, label in self._gif_labels.items():
+        doc_len = doc.characterCount()
+        
+        # Iterating over a copy of items to be safe
+        for name, label in list(self._gif_labels.items()):
+            # Safety check: ensure label hasn't been deleted
+            try:
+                if not label or label.isHidden():
+                    continue
+            except RuntimeError:
+                continue
+
             pos = self._gif_doc_positions.get(name)
-            if pos is None:
+            if pos is None or pos >= doc_len:
+                label.hide()
                 continue
 
             # cursorRect gives viewport-relative coordinates

@@ -1,20 +1,34 @@
-<h1 align="center">SPECTROview User Manual</h1>
-<p align="center">
-  <img src="../user_manual_images/imageFile2.png" alt="SPECTROview Logo" width="100">
-</p>
-<p align="center"><b>Last updated: May 2026</b></p>
+<table border="0" cellspacing="0" cellpadding="20">
+  <tr>
+    <td valign="top" width="200" style="border-right: 1px solid rgba(128,128,128,0.3);">
+      <div align="center">
+        <img src="../user_manual_images/Home/imageFile2.png" alt="SPECTROview Logo" width="150">
+        <br><br>
+        <p align="center"><b>Last updated:</b> May 2026</p>
+      </div>
+    </td>
+    <td valign="top">
+      <h1 style="margin-top: 0;">SPECTROview User Manual</h1>
+      <p>Welcome to the official documentation for SPECTROview. Explore the sections below to learn about the features and capabilities of the software.</p>
+      
+      <h3>Table of Contents</h3>
+      <ol>
+        <li><b><a href="01_introduction.md">Introduction</a></b></li>
+        <li><b><a href="02_installation.md">Installation</a></b></li>
+        <li><b><a href="03_supported_data.md">Supported Data Formats</a></b></li>
+        <li><b><a href="04_ui_overview.md">User Interface Overview</a></b></li>
+        <li><b><a href="05_spectra_maps.md">Spectra and Maps Workspaces</a></b></li>
+        <li><b><a href="06_graphs.md">Graphs Workspace</a></b></li>
+        <li><b><a href="07_tensor_fit.md">Tensor Fit Engine</a></b></li>
+        <li><b><a href="08_mva.md">Multivariate Analysis (MVA)</a></b></li>
+        <li><b><a href="09_calculators.md">Quick Calculators</a></b></li>
+        <li><b><a href="10_settings.md">Settings & Preferences</a></b></li>
+        <li><b><a href="11_save_load.md">Save & Load Workspace</a></b></li>
+        <li><b><a href="12_shortcuts.md">Keyboard Shortcuts & Tips</a></b></li>
+      </ol>
+    </td>
+  </tr>
+</table>
 
----
+![Axis Limits](../user_manual_images/Home/Three_Workspaces.gif)<br>
 
-1. [Introduction](01_introduction.md)
-2. [Installation](02_installation.md)
-3. [Supported Data Formats](03_supported_data.md)
-4. [User Interface Overview](04_ui_overview.md)
-5. [Spectra and Maps Workspaces](05_spectra_maps.md)
-6. [Graphs Workspace](06_graphs.md)
-7. [Tensor Fit Engine](07_tensor_fit.md)
-8. [Multivariate Analysis (MVA)](08_mva.md)
-9. [Quick Calculators](09_calculators.md)
-10. [Settings & Preferences](10_settings.md)
-11. [Save & Load Workspace](11_save_load.md)
-12. [Keyboard Shortcuts & Tips](12_shortcuts.md)

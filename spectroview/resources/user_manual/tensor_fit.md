@@ -1,4 +1,4 @@
-## 8. Tensor Fit Engine
+## Tensor Fit Engine
 
 ### What is the Tensor Fit Engine?
 The Tensor Fit Engine is SPECTROview's proprietary, high-performance mathematical fitting backend. Instead of looping through and fitting spectra one at a time sequentially, it **fits the entire dataset simultaneously** by leveraging batched matrix and tensor operations.

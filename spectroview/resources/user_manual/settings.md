@@ -1,4 +1,4 @@
-## 11. Settings & Preferences
+## Settings & Preferences
 
 You can customize the core behavior of the SPECTROview application by accessing the **Settings** menu via the gear icon in the main toolbar.
 

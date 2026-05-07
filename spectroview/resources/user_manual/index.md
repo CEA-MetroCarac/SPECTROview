@@ -4,7 +4,7 @@
       <div align="center">
         <img src="../user_manual_images/Home/imageFile2.png" alt="SPECTROview Logo" width="150">
         <br><br>
-        <p align="center"><b>Last updated:</b> May 2026</p>
+        <p align="center"><b>Last updated:</b> 09 May 2026</p>
       </div>
     </td>
     <td valign="top">
@@ -12,7 +12,7 @@
       <p>Welcome to the official documentation for SPECTROview. Explore the sections below to learn about the features and capabilities of the software.</p>
       
       <h3>Table of Contents</h3>
-      <ol>
+      <ul>
         <li><b><a href="introduction.md">Introduction</a></b></li>
         <li><b><a href="installation.md">Installation</a></b></li>
         <li><b><a href="supported_data.md">Supported Data Formats</a></b></li>
@@ -26,7 +26,7 @@
         <li><b><a href="settings.md">Settings & Preferences</a></b></li>
         <li><b><a href="save_load.md">Save & Load Workspace</a></b></li>
         <li><b><a href="shortcuts.md">Keyboard Shortcuts & Tips</a></b></li>
-      </ol>
+      </ul>
     </td>
   </tr>
 </table>

@@ -1,4 +1,4 @@
-## 4. User Interface Overview
+## User Interface Overview
 
 SPECTROview is meticulously designed for the efficient processing of spectroscopic data and the seamless visualization of fitted results. The interface is built around three primary workspaces, each tailored for a specific workflow:
 

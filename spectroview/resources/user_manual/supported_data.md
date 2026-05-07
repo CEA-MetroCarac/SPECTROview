@@ -1,8 +1,8 @@
-## 3. Supported Data Formats
+## Supported Data Formats
 
 Examples of all supported data types can be found in the [`/examples`](https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples) folder of the GitHub repository. Users can download these files to familiarize themselves with supported file formats, data structures, and to practice using SPECTROview with real-world data.
 
-### 3.1 .wdf (Renishaw) and .spc (HORIBA) Formats
+### .wdf (Renishaw) and .spc (HORIBA) Formats
 
 Since version 26.7.1, SPECTROview natively supports:
 
@@ -11,14 +11,14 @@ Since version 26.7.1, SPECTROview natively supports:
 
 Both discrete spectra and hyperspectral datasets (2D maps) are fully supported and can be opened directly without prior conversion. In addition to the raw spectroscopic data, SPECTROview automatically parses and imports associated **metadata**, such as excitation wavelength (nm), gratings (gr/mm), objective lens, laser power, slit/hole size, and acquisition timestamps. This provides comprehensive access to both measurement data and experimental conditions in a unified workflow.
 
-### 3.2 Spectroscopic Data (.txt, .csv)
+### Spectroscopic Data (.txt, .csv)
 
 SPECTROview supports 1D spectroscopic data in TXT or CSV formats. Files must consist of **two columns** separated by semicolons, spaces, or tabs. Column headers are optional but supported:
 
 - **Column 1**: X-axis values (e.g., Raman shift in cm⁻¹, wavelength in nm).
 - **Column 2**: Corresponding intensity values (a.u.).
 
-### 3.3 Hyperspectral Data (.txt, .csv)
+### Hyperspectral Data (.txt, .csv)
 
 SPECTROview supports hyperspectral data (2D maps or wafer maps) in TXT or CSV formats, provided the data is structured as follows:
 
@@ -36,11 +36,11 @@ SPECTROview supports hyperspectral data (2D maps or wafer maps) in TXT or CSV fo
 
 > **Note**: Text-exported 2D map formats from Renishaw tools often use a different structure and must be converted before they can be loaded into SPECTROview. An integrated conversion tool is provided within the application for this exact purpose (see Section 4, File Convert Tool).
 
-### 3.4 Datasheet (Excel or CSV)
+### Datasheet (Excel or CSV)
 
 Excel files (`.xlsx`, `.xls`) containing one or multiple sheets, as well as CSV files, can be directly imported into the **Graphs Workspace** for immediate visualization and plotting.
 
-### 3.5 Native SPECTROview Formats
+### Native SPECTROview Formats
 
 To ensure workflows can be saved and resumed later, SPECTROview uses specific file extensions corresponding to the active workspace:
 

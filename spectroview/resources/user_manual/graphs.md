@@ -1,11 +1,11 @@
-## 7. Graphs Workspace
+## Graphs Workspace
 
 The Graphs Workspace is exclusively dedicated to data visualization, engineered with a strong emphasis on simplicity, speed, and customization.
 
 ![Graphs Workspace](../user_manual_images/Graphs/imageFile67.png)<br>
 *Figure 14: The Graphs Workspace interface. The main Graph Viewer is situated on the left, with the comprehensive Control Panel on the right.*
 
-### 6.1 Loading Data
+### Loading Data
 
 Datasets can be passed seamlessly from the Spectra and Maps workspaces, or imported directly from external Excel/CSV files. All available datasets are dynamically tracked and displayed in the dataset list widget.
 Available utility buttons include: **View** (inspect the data table), **Delete** (remove the dataset), **Save** (export the dataset), and **Refresh** (dynamically reload the CSV/Excel file if it has been modified externally).
@@ -13,7 +13,7 @@ Available utility buttons include: **View** (inspect the data table), **Delete**
 ![Dataset List](../user_manual_images/Graphs/imageFile69.png)<br>
 *Figure 15: The list widget displaying all loaded dataframes.*
 
-### 6.2 Adding a New Plot
+### Adding a New Plot
 
 1. Select your target dataset from the list.
 2. Choose the appropriate columns for the X, Y, and Z axes using the provided dropdown menus.
@@ -23,7 +23,7 @@ Available utility buttons include: **View** (inspect the data table), **Delete**
 
 ![Add New Plot](../user_manual_images/Graphs/imageFile70.png)<br>
 
-### 6.3 Modifying an Existing Plot
+### Modifying an Existing Plot
 
 ![Plot Widget](../user_manual_images/Graphs/imageFile71.png)<br>
 ![Plot Customize](../user_manual_images/Graphs/imageFile72.png)<br>
@@ -39,7 +39,7 @@ Available utility buttons include: **View** (inspect the data table), **Delete**
 - Click **Copy** to export a high-resolution snapshot of the figure directly to your clipboard.
 ![Copy Button](../user_manual_images/Graphs/imageFile76.png)<br>
 
-### 6.4 Data Filtering
+### Data Filtering
 
 You can dynamically filter the plotted data by applying boolean logic expressions in the **Filter** field using the format: `(column_name) (operator) (value)`.
 > **Note**: String values must be enclosed in double quotes (`"text"`). Column headers containing spaces must be enclosed in backticks (`` `column name` ``).
@@ -53,7 +53,7 @@ You can dynamically filter the plotted data by applying boolean logic expression
 | `Thickness == "1ML" or Thickness == "3ML"` | Includes only the data points where the "Thickness" column equals exactly "1ML" or "3ML". |
 | `` `Laser Power` <= 5 `` | Includes data points where the "Laser Power" column is strictly less than or equal to 5. |
 
-### 6.5 Annotation Features
+### Annotation Features
 
 You can draw and fully customize annotations (such as boundary lines and explanatory text) using the **MoreOptions** tab, or by clicking interactively directly on the active plot.
 

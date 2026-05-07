@@ -1,4 +1,4 @@
-## 13. Keyboard Shortcuts & Tips
+## Keyboard Shortcuts & Tips
 
 To maximize your efficiency within SPECTROview, a variety of keyboard shortcuts and power-user tips have been integrated directly into the application.
 

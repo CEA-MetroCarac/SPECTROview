@@ -1,4 +1,4 @@
-## 6. Spectra and Maps Workspaces
+## Spectra and Maps Workspaces
 
 The Maps and Spectra workspaces share a unified design and many core features. However, the Maps workspace includes additional, specialized tools specifically engineered for handling large hyperspectral datasets.
 
@@ -6,7 +6,7 @@ The Maps and Spectra workspaces share a unified design and many core features. H
 ![Overview Spectra and Maps](../user_manual_images/Spectra_Maps/imageFile20.png)<br>
 *Figure 3: Interface overview of the Spectra (left) and Maps (right) workspaces. Both interfaces are divided into three primary sections. Section 1 (SpectraViewer) and Section 2 (FitModelBuilder) are identical in both workspaces, whereas Section 3 (SpectraList / MapList) is tailored to the specific data type.*
 
-### 5.1 SpectraList & MapList
+### SpectraList & MapList
 
 These components are engineered for efficient navigation and management of your spectral or hyperspectral datasets.
 
@@ -30,7 +30,7 @@ These components are engineered for efficient navigation and management of your 
 ![SpectraList and ProgressBar](../user_manual_images/Spectra_Maps/imageFile24.png)<br>
 *Figure 5: SpectraList alongside the ProgressBar. The progress bar displays real-time fitting progress (percentage and elapsed time). A 'Stop' button is provided to safely halt an ongoing fitting process.*
 
-### 5.2 Spectra Viewer
+### Spectra Viewer
 
 The SpectraViewer is the central plotting widget where all spectra (and their best-fit curves) selected via the SpectraList are visualized.
 
@@ -58,14 +58,14 @@ The SpectraViewer is the central plotting widget where all spectra (and their be
 - **Quick Rescale Y-axis**: Use your mouse wheel to rapidly scale the Y-axis up or down.
 ![Quick rescale](../user_manual_images/Spectra_Maps/imageFile41.png)<br>
 
-### 5.3 Fit Model Builder
+### Fit Model Builder
 
 The FitModelBuilder tab is where you configure your spectral fitting models. It is divided into three main panels: Fitting, PeakTable, and FitModelControl.
 
 ![FitModelBuilder Tab](../user_manual_images/Spectra_Maps/imageFile42.png)<br>
 *Figure 8: The FitModelBuilder tab featuring: (1) The Fitting Panel, (2) The PeakTable Panel, and (3) The FitModelControl Panel.*
 
-#### 5.3.1 Fitting Panel
+#### Fitting Panel
 
 The Fitting Panel guides you through the process of building a robust model in four logical steps:
 
@@ -95,7 +95,7 @@ SPECTROview offers two distinct modes for defining spectral baselines (Manual or
 - Supported peak profiles include: Lorentzian, Gaussian, PseudoVoigt, LorentzianAsym, GaussianAsym, Fano, DecaySingleExp, and DecayBiExp.
 ![Peak definition](../user_manual_images/Spectra_Maps/imageFile46.png)<br>
 
-#### 5.3.2 PeakTable Panel
+#### PeakTable Panel
 
 The PeakTable displays all the mathematical parameters for the peaks you have defined. When you drag a peak in the viewer, these properties update dynamically.
 
@@ -114,7 +114,7 @@ The PeakTable displays all the mathematical parameters for the peaks you have de
 ![Expression Intensity](../user_manual_images/Spectra_Maps/imageFile50.png)<br>
 *Example 2: Using an expression to constrain the amplitude of `m03` to always be exactly half the amplitude of `m02`.*
 
-#### 5.3.3 FitModelControl Panel
+#### FitModelControl Panel
 
 Once your model is fully defined, click the **Fit** button to execute the optimization algorithm.
 
@@ -132,7 +132,7 @@ If you intend to use a model frequently, you can save it as a template. Stored m
 ![Fit Model Dropdown](../user_manual_images/Spectra_Maps/imageFile56.png)<br>
 ![Load Fit Model](../user_manual_images/Spectra_Maps/imageFile57.png)<br>
 
-### 5.4 Collect & Save Fit Results
+### Collect & Save Fit Results
 
 Once fitting is complete across your spectra or maps, you need to aggregate the mathematical results:
 
@@ -143,22 +143,22 @@ Once fitting is complete across your spectra or maps, you need to aggregate the 
 ![Collect Fit Results 2](../user_manual_images/Spectra_Maps/imageFile59.png)<br>
 *Figure 12: The Collect Fit Results interface and aggregated data table.*
 
-#### 5.4.1 Splitting Filename Features
+#### Splitting Filename Features
 This tool allows you to automatically extract metadata embedded in your filenames. For example, if your files are named `Sample1_ProcessA_Temp25`, the tool can split the filename by underscores (`_`) and assign the extracted values into distinct new columns in your dataset.
 ![Filename Splitting](../user_manual_images/Spectra_Maps/imageFile61.png)<br>
 
-#### 5.4.2 Compute and Add New Columns
+#### Compute and Add New Columns
 You can easily create new columns derived from mathematical combinations of existing fitted parameters (e.g., calculating a peak shift via `x0_p1 - x0_p2`).
 Supported mathematical operations include: `+`, `-`, `*`, `/`, `**`, `%`, and `()`.
 > **Important Note**: If your column names contain spaces or special characters, you must enclose them in backticks. Example: `` `x0_LO(M)` ``
 
-#### 5.4.3 Saving or Visualizing
+#### Saving or Visualizing
 Once your data table is finalized, give it a descriptive name and either send it directly to the Graphs workspace for immediate plotting or export it to an Excel/CSV spreadsheet for external use.
 
 ![Send to Graph](../user_manual_images/Spectra_Maps/imageFile63.png)<br>
 ![Export to Excel](../user_manual_images/Spectra_Maps/imageFile64.png)<br>
 
-### 5.5 More Tab
+### More Tab
 
 The 'More' tab provides access to auxiliary tools and metadata, divided into three sections:
 

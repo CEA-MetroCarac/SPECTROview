@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#spectra-and-maps-workspaces" class="md-skip">
+        <a href="#spectramaps-workspaces" class="md-skip">
           Skip to content
         </a>
       
@@ -659,22 +659,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#spectra-and-maps-workspaces" class="md-nav__link">
+  <a href="#spectramaps-workspaces" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Spectra and Maps Workspaces
+        Spectra/Maps Workspaces
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Spectra and Maps Workspaces">
+    <nav class="md-nav" aria-label="Spectra/Maps Workspaces">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#spectralist-maplist" class="md-nav__link">
+  <a href="#maplist-and-mapviewer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        SpectraList &amp; MapList
+        MapList and MapViewer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maplist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MapList
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spectralist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SpectraList
       
     </span>
   </a>
@@ -1245,22 +1267,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#spectra-and-maps-workspaces" class="md-nav__link">
+  <a href="#spectramaps-workspaces" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Spectra and Maps Workspaces
+        Spectra/Maps Workspaces
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Spectra and Maps Workspaces">
+    <nav class="md-nav" aria-label="Spectra/Maps Workspaces">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#spectralist-maplist" class="md-nav__link">
+  <a href="#maplist-and-mapviewer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        SpectraList &amp; MapList
+        MapList and MapViewer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maplist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MapList
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spectralist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SpectraList
       
     </span>
   </a>
@@ -1444,17 +1488,32 @@
 
   <h1>Spectra & Maps Workspace</h1>
 
-<h2 id="spectra-and-maps-workspaces">Spectra and Maps Workspaces<a class="headerlink" href="#spectra-and-maps-workspaces" title="Permanent link">&para;</a></h2>
+<h2 id="spectramaps-workspaces">Spectra/Maps Workspaces<a class="headerlink" href="#spectramaps-workspaces" title="Permanent link">&para;</a></h2>
 <p>The Maps and Spectra workspaces share a unified design and many core features. However, the Maps workspace includes additional, specialized tools specifically engineered for handling large hyperspectral datasets.</p>
-<p><img alt="Overview Spectra and Maps" src="../../user_manual_images/Spectra_Maps/imageFile19.png" /><br>
-<img alt="Overview Spectra and Maps" src="../../user_manual_images/Spectra_Maps/imageFile20.png" /><br>
-<em>Figure 3: Interface overview of the Spectra (left) and Maps (right) workspaces. Both interfaces are divided into three primary sections. Section 1 (SpectraViewer) and Section 2 (FitModelBuilder) are identical in both workspaces, whereas Section 3 (SpectraList / MapList) is tailored to the specific data type.</em></p>
-<h3 id="spectralist-maplist">SpectraList &amp; MapList<a class="headerlink" href="#spectralist-maplist" title="Permanent link">&para;</a></h3>
-<p>These components are engineered for efficient navigation and management of your spectral or hyperspectral datasets.</p>
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/sepctra_maps_ws.gif" alt="Maps_spectra_ws" width="800">
+</div>
+
+<p><em>Interface overview of the Spectra and Maps workspaces. Both interfaces are divided into three primary sections: Top-left section (SpectraViewer), bottom-left section (FitModelBuilder), and right section (SpectraList / MapList).</em></p>
+<h3 id="maplist-and-mapviewer">MapList and MapViewer<a class="headerlink" href="#maplist-and-mapviewer" title="Permanent link">&para;</a></h3>
+<p>These components are engineered for efficient navigation and management of your spectral or hyperspectral datasets. User can navigate between loaded 2D maps via a listbox (MapList). The 2Dmap plot of the selected map is displayed in the MapViewer.</p>
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Maps_switching" width="250">
+</div>
+
+<ul>
+<li>By defaut MapViewer displays heatmap of "Intensity" or "Area" for the selected map.</li>
+<li>User can select the spectral range to display the heatmap of the integrated intensity within that range.</li>
+<li>If the 2Dmap is fitted, the user can select to display the heatmap of any fitted parameter.</li>
+<li>User can add several Mapviewer for comparision purpose.</li>
+</ul>
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/maps_intensity_range.gif" alt="Maps_intensity_range" width="250">
+</div>
+
 <p><img alt="MapList and MapViewer" src="../../user_manual_images/Spectra_Maps/imageFile22.png" /><br>
 <em>Figure 4: (Left) The MapList section within the Maps workspace. (Right) The MapViewer module and 'More Options' panel used to adjust the heatmap display.</em></p>
 <p><strong>MapList</strong>: Displays all loaded map files, including wafer maps and 2D map types. Three utility buttons located on the right allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.</p>
-<p><strong>SpectraList</strong>: Displays all loaded discrete spectra in the Spectra workspace, or all spectra associated with the currently selected map in the Maps workspace. You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the SpectraViewer. Dedicated buttons allow you to select all spectra, clear your selection, display a comprehensive fit statistic report, or send the currently selected spectra to the Spectra workspace for isolated analysis.</p>
 <p><strong>MapViewer</strong>: Visualizes the heatmap of the selected map. Several interactive options are available to fully customize the heatmap representation:</p>
 <ul>
 <li><strong>Map Type</strong>: Toggle between a standard 2D map or a wafer map with configurable diameters.</li>
@@ -1465,6 +1524,9 @@
 <li><strong>Copy Button</strong>: Instantly copies the heatmap to your clipboard.</li>
 <li><strong>Multiple MapViewers</strong>: Launch additional MapViewer windows as floating widgets to easily compare different parameters side-by-side.</li>
 </ul>
+<h3 id="maplist">MapList<a class="headerlink" href="#maplist" title="Permanent link">&para;</a></h3>
+<h3 id="spectralist">SpectraList<a class="headerlink" href="#spectralist" title="Permanent link">&para;</a></h3>
+<p><strong>SpectraList</strong>: Displays all loaded discrete spectra in the Spectra workspace, or all spectra associated with the currently selected map in the Maps workspace. You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the SpectraViewer. Dedicated buttons allow you to select all spectra, clear your selection, display a comprehensive fit statistic report, or send the currently selected spectra to the Spectra workspace for isolated analysis.</p>
 <p><img alt="SpectraList and ProgressBar" src="../../user_manual_images/Spectra_Maps/imageFile24.png" /><br>
 <em>Figure 5: SpectraList alongside the ProgressBar. The progress bar displays real-time fitting progress (percentage and elapsed time). A 'Stop' button is provided to safely halt an ongoing fitting process.</em></p>
 <h3 id="spectra-viewer">Spectra Viewer<a class="headerlink" href="#spectra-viewer" title="Permanent link">&para;</a></h3>

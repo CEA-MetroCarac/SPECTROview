@@ -41,51 +41,55 @@
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/01_introduction/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/calculators/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/02_installation/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/graphs/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/03_supported_data/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/installation/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/04_ui_overview/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/introduction/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/05_spectra_maps/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/menu_bar/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/06_graphs/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/mva/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/07_tensor_fit/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/save_load/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/08_mva/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/settings/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/09_calculators/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/shortcuts/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/10_settings/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/spectra_maps/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/11_save_load/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/supported_data/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/12_shortcuts/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/tensor_fit/</loc>
+         <lastmod>2026-05-07</lastmod>
+    </url>
+    <url>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/ui_overview/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
 </urlset>

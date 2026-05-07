@@ -182,7 +182,7 @@ You can easily create new columns derived from mathematical combinations of exis
 Supported mathematical operations include: `+`, `-`, `*`, `/`, `**`, `%`, and `()`.
 > **Important Note**: If your column names contain spaces or special characters, you must enclose them in backticks. Example: `` `x0_LO(M)` ``
 
-#### Saving or Visualizing
+#### Save and Visualize
 Once your data table is finalized, give it a descriptive name and either send it directly to the Graphs workspace for immediate plotting or export it to an Excel/CSV spreadsheet for external use.
 
 

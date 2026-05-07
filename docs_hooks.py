@@ -1,9 +1,44 @@
 import os
 import shutil
+import re
 
 
 # Keep track of symlinks created so on_post_build can clean them up.
 _created_symlinks: list[str] = []
+
+
+def on_page_content(html, page, config, files):
+    """
+    Hook to fix raw HTML links in the generated HTML content.
+    
+    MkDocs normally doesn't rewrite links inside raw HTML <a> tags.
+    This hook finds relative href="filename.md" links in the user manual
+    and rewrites them to href="filename/" so they match MkDocs' 
+    directory-style URL structure.
+    """
+    if page.file.src_path.startswith("user_manual/"):
+        # Determine if we are at the user_manual/ root (index.md)
+        # or in a sub-directory (e.g. user_manual/01_introduction/)
+        is_index = page.file.src_path.endswith("index.md")
+        prefix = "" if is_index else "../"
+
+        def replace_link(match):
+            filename = match.group(1)
+            anchor = match.group(2)
+            # Special case for index.md: link to the directory root
+            if filename == "index":
+                return f'href="{prefix or "./"}{anchor}"'
+            # General case: link to the file's directory URL
+            return f'href="{prefix}{filename}/{anchor}"'
+
+        # Match href="filename.md" or href="filename.md#anchor"
+        # but ignore external (http) or absolute (/) links.
+        html = re.sub(
+            r'href="(?!(?:https?://|/))([^"#]+)\.md(#?[^"]*)"',
+            replace_link,
+            html
+        )
+    return html
 
 
 def on_pre_build(config, **kwargs):

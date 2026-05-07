@@ -30,5 +30,7 @@
   </tr>
 </table>
 
-![Axis Limits](../user_manual_images/Home/Three_Workspaces.gif)<br>
+<div align="center">
+  <img src="../user_manual_images/Home/Three_Workspaces.gif" alt="Three Workspaces" width="800">
+</div>
 

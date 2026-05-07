@@ -38,6 +38,19 @@ def on_page_content(html, page, config, files):
             replace_link,
             html
         )
+
+        # Fix image src attributes inside HTML tags.
+        # MkDocs automatically fixes relative paths for Markdown images ![alt](path),
+        # but leaves raw HTML <img src="..."> untouched.
+        # Images are symlinked to site/user_manual_images/
+        # From site/user_manual/index.html (is_index=True), "../user_manual_images/" is correct.
+        # From site/user_manual/page_name/index.html (is_index=False), we need "../../user_manual_images/"
+        if not is_index:
+            html = re.sub(
+                r'src="\.\./user_manual_images/',
+                r'src="../../user_manual_images/',
+                html
+            )
     return html
 
 

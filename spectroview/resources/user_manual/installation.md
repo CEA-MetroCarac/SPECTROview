@@ -1,4 +1,4 @@
-## 2. Installation
+## Installation
 
 Ensure that Python (versions 3.8 through 3.12 are supported) is installed on your system. SPECTROview can be easily installed and managed via the command line interface (for example : **CMD** on windows or **Terminal** on macOS).
 

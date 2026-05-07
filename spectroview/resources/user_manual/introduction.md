@@ -1,4 +1,4 @@
-## 1. Introduction
+## Introduction
 
 SPECTROview is free, open-source software designed for spectroscopic data analysis. It supports a wide range of data types, including discrete spectra and hyperspectral data (such as 2D maps and wafer maps).
 
@@ -17,7 +17,7 @@ With its built-in visualization tools, SPECTROview streamlines your workflow by 
 
 >For more information, please visit the [GitHub Repository](https://github.com/CEA-MetroCarac/SPECTROview).
 
-### Documentation
+## Documentation
 
 Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**](https://CEA-MetroCarac.github.io/SPECTROview/) :
 

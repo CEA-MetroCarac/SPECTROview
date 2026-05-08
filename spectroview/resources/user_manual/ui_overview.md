@@ -22,7 +22,7 @@ _____
 Most GUI elements in SPECTROview (buttons, text boxes, dropdowns, etc.) include built-in tooltips. Simply hover your mouse cursor over an element for 1 second to view a brief explanation of its function.
 
 <div align="center">
-  <img src="../user_manual_images/UI_Overview/Tooltips.gif" alt="Tooltips" width="600"><br>
+  <img src="../user_manual_images/UI_Overview/Tooltips.gif" alt="Tooltips" width="650"><br>
   <i>Demo of tooltips.</i>
 </div>
 

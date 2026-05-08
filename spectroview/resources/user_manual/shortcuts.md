@@ -28,12 +28,12 @@ _________
 **Extract profile from 2Dmap plot**: Whenever 2 points are selected on the 2D map, the intensity profile between these 2 points will be calculated and ploted directly on heatmap:
 
 <div align="center">
-  <img src="../user_manual_images/Tips_Shortcuts/profil.gif" alt="spectraviewer_interactive" width="250"><br>
+  <img src="../user_manual_images/Tips_Shortcuts/profil.gif" alt="spectraviewer_interactive" width="350"><br>
   <i>Profil is displayed on map when two points are selected, automatically disappears when more than two points are selected.</i>
 </div>
 
 <div align="center">
-  <img src="../user_manual_images/Tips_Shortcuts/extract_profil.gif" alt="spectraviewer_interactive" width="250"><br>
+  <img src="../user_manual_images/Tips_Shortcuts/extract_profil.gif" alt="spectraviewer_interactive" width="350"><br>
   <i>You can define the profile_name in ViewOption menus, then click Extract to plot in the Graph Workspace.</i>
 </div>
 
@@ -50,7 +50,7 @@ _________
 - Hover the mouse over a baseline anchor point or a peak and right click to remove it.
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="spectraviewer_interactive" width="600">
+  <img src="../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="spectraviewer_interactive" width="650">
 </div>
 <br>
 

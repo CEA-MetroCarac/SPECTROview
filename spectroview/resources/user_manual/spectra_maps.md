@@ -111,7 +111,7 @@ The Fitting Panel guides you through the process of building a robust model in f
 **Step 3: Baseline Definition**:  SPECTROview offers two distinct modes for defining spectral baselines (Manual or Auto):
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/baseline_widget.png" alt="baseline_widget" width="500"><br>
+  <img src="../user_manual_images/Spectra_Maps/baseline_widget.png" alt="baseline_widget" width="600"><br>
    <i>Baseline mode selection: Manual mode (left) vs. Auto mode (right).</i>
 </div>
 
@@ -161,7 +161,7 @@ The PeakTable displays all the mathematical parameters for the peaks you have de
 Once your model is fully defined, click the **Fit** button to execute the fitting action.
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/fit_control_panel.png" alt="fit_control_panel" width="600"><br>
+  <img src="../user_manual_images/Spectra_Maps/fit_control_panel.png" alt="fit_control_panel" width="500"><br>
    <i>Fit model control panel.</i>
 </div>
 

@@ -710,10 +710,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#adding-a-new-plot" class="md-nav__link">
+  <a href="#add-a-new-plot-or-update-existing-plot" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Adding a New Plot
+        Add a new plot or update existing plot:
       
     </span>
   </a>
@@ -724,7 +724,7 @@
   <a href="#modifying-an-existing-plot" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Modifying an Existing Plot
+        Modifying an existing plot :
       
     </span>
   </a>
@@ -736,17 +736,6 @@
     <span class="md-ellipsis">
       
         Data Filtering
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#annotation-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Annotation Features
       
     </span>
   </a>
@@ -1134,10 +1123,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#adding-a-new-plot" class="md-nav__link">
+  <a href="#add-a-new-plot-or-update-existing-plot" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Adding a New Plot
+        Add a new plot or update existing plot:
       
     </span>
   </a>
@@ -1148,7 +1137,7 @@
   <a href="#modifying-an-existing-plot" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Modifying an Existing Plot
+        Modifying an existing plot :
       
     </span>
   </a>
@@ -1160,17 +1149,6 @@
     <span class="md-ellipsis">
       
         Data Filtering
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#annotation-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Annotation Features
       
     </span>
   </a>
@@ -1206,14 +1184,24 @@
 
 <h2 id="graphs-workspace">Graphs Workspace<a class="headerlink" href="#graphs-workspace" title="Permanent link">&para;</a></h2>
 <p>The Graphs Workspace is exclusively dedicated to data visualization, engineered with a strong emphasis on simplicity, speed, and customization.</p>
-<p><img alt="Graphs Workspace" src="../../user_manual_images/Graphs/imageFile67.png" /><br>
-<em>Figure 14: The Graphs Workspace interface. The main Graph Viewer is situated on the left, with the comprehensive Control Panel on the right.</em></p>
+<div align="center">
+  <img src="../../user_manual_images/Graphs/ui_graph.gif" alt="ui_graph" width="800"><br>
+  <i>Overview of the Graphs Workspace's UI.</i>
+</div>
+<p><br></p>
+<hr />
 <h3 id="loading-data">Loading Data<a class="headerlink" href="#loading-data" title="Permanent link">&para;</a></h3>
-<p>Datasets can be passed seamlessly from the Spectra and Maps workspaces, or imported directly from external Excel/CSV files. All available datasets are dynamically tracked and displayed in the dataset list widget.
-Available utility buttons include: <strong>View</strong> (inspect the data table), <strong>Delete</strong> (remove the dataset), <strong>Save</strong> (export the dataset), and <strong>Refresh</strong> (dynamically reload the CSV/Excel file if it has been modified externally).</p>
-<p><img alt="Dataset List" src="../../user_manual_images/Graphs/imageFile69.png" /><br>
-<em>Figure 15: The list widget displaying all loaded dataframes.</em></p>
-<h3 id="adding-a-new-plot">Adding a New Plot<a class="headerlink" href="#adding-a-new-plot" title="Permanent link">&para;</a></h3>
+<p>Datasets can be passed seamlessly from the Spectra and Maps workspaces, or imported directly from external Excel/CSV files. All available datasets are dynamically tracked and displayed in the dataset list widget.</p>
+<p><img alt="Dataset List" src="../../user_manual_images/Graphs/df_list.png" /><br>
+Available four utility buttons include: </p>
+<ul>
+<li><strong>View</strong> : inspect the data table, </li>
+<li><strong>Delete</strong> : remove the dataset, </li>
+<li><strong>Save</strong> : export the dataset, </li>
+<li><strong>Refresh</strong> : dynamically reload the CSV/Excel file if it has been modified externally.</li>
+</ul>
+<hr />
+<h3 id="add-a-new-plot-or-update-existing-plot">Add a new plot or update existing plot:<a class="headerlink" href="#add-a-new-plot-or-update-existing-plot" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Select your target dataset from the list.</li>
 <li>Choose the appropriate columns for the X, Y, and Z axes using the provided dropdown menus.</li>
@@ -1221,31 +1209,47 @@ Available utility buttons include: <strong>View</strong> (inspect the data table
 <li>Define your plot labels, axis limits, and wafer diameter dimensions (if applicable).</li>
 <li>Click <strong>Add Plot</strong> to generate the visualization.</li>
 </ol>
-<p><img alt="Add New Plot" src="../../user_manual_images/Graphs/imageFile70.png" /><br></p>
-<h3 id="modifying-an-existing-plot">Modifying an Existing Plot<a class="headerlink" href="#modifying-an-existing-plot" title="Permanent link">&para;</a></h3>
-<p><img alt="Plot Widget" src="../../user_manual_images/Graphs/imageFile71.png" /><br>
-<img alt="Plot Customize" src="../../user_manual_images/Graphs/imageFile72.png" /><br>
-<em>Figure 16: An example of an active plot widget. Click the "Customize" button to launch the advanced Customize Dialog.</em></p>
-<p><img alt="Toolbar Buttons" src="../../user_manual_images/Graphs/imageFile73.png" /><br></p>
-<ul>
-<li>Click <strong>Customize</strong> to open the comprehensive Customize Dialog, giving you deep control over the Legend, Annotations, Axes, and General aesthetics.</li>
-<li><strong>Double-click</strong> directly on a legend box or an annotation within the plot to edit its text interactively.</li>
-<li>
-<p>Quickly adjust core visual settings via the right-hand ControlPanel, then click <strong>Update</strong> to apply the changes instantly.
-<img alt="Update Button" src="../../user_manual_images/Graphs/imageFile75.png" /><br></p>
-</li>
-<li>
-<p>Click <strong>Copy</strong> to export a high-resolution snapshot of the figure directly to your clipboard.
-<img alt="Copy Button" src="../../user_manual_images/Graphs/imageFile76.png" /><br></p>
-</li>
-</ul>
+<div align="center">
+  <img src="../../user_manual_images/Graphs/add_plot.gif" alt="add_plot" width="800"><br>
+  <i>Adding a new plot or updating existing plot.</i>
+</div>
+
+<hr />
+<h3 id="modifying-an-existing-plot">Modifying an existing plot :<a class="headerlink" href="#modifying-an-existing-plot" title="Permanent link">&para;</a></h3>
+<p>Modify the <strong>labels</strong> of axes, <strong>title</strong> of the plot can be done via the Right Panel as follows. Click to the "Update Plot" button to apply the changes:</p>
+<div align="center">
+  <img src="../../user_manual_images/Graphs/labels.png" alt="labels" width="300"><br>
+  <i>Customize selected plot via the Right Panel. Click to Update plot button to apply the changes.</i>
+</div>
+
+<p><br></p>
+<p>Click <strong>Customize</strong> button to open the Customize Dialog, giving you deep control over the Legend, Annotations, Axes, and General aesthetics.</p>
+<div align="center">
+  <img src="../../user_manual_images/Graphs/adjust_axis_limits.gif" alt="adjust_axis_limits" width="600"><br>
+  <i>Adjusting axis limits of the selected plot.</i>
+</div>
+
+<div align="center">
+  <img src="../../user_manual_images/Graphs/adjust_legends.gif" alt="adjust_legends" width="600"><br>
+  <i>Adjusting legends/colors of the selected plot.</i>
+</div>
+<p><br></p>
+<div align="center">
+  <img src="../../user_manual_images/Graphs/annotation.gif" alt="annotation" width="600"><br>
+  <i>Add and adjust annotations of the selected plot.</i>
+</div>
+<p><br></p>
+<hr />
 <h3 id="data-filtering">Data Filtering<a class="headerlink" href="#data-filtering" title="Permanent link">&para;</a></h3>
 <p>You can dynamically filter the plotted data by applying boolean logic expressions in the <strong>Filter</strong> field using the format: <code>(column_name) (operator) (value)</code>.</p>
 <blockquote>
 <p><strong>Note</strong>: String values must be enclosed in double quotes (<code>"text"</code>). Column headers containing spaces must be enclosed in backticks (<code>`column name`</code>).</p>
 </blockquote>
-<p><img alt="Filter Example" src="../../user_manual_images/Graphs/imageFile77.png" /><br>
-<em>Figure 17: An example demonstrating how to apply filters to a dataset.</em></p>
+<div align="center">
+  <img src="../../user_manual_images/Graphs/data_filter.png" alt="data_filter" width="350"><br>
+  <i>An example demonstrating how to apply filters to a dataset.</i>
+</div>
+<p><br></p>
 <table>
 <thead>
 <tr>
@@ -1268,12 +1272,6 @@ Available utility buttons include: <strong>View</strong> (inspect the data table
 </tr>
 </tbody>
 </table>
-<h3 id="annotation-features">Annotation Features<a class="headerlink" href="#annotation-features" title="Permanent link">&para;</a></h3>
-<p>You can draw and fully customize annotations (such as boundary lines and explanatory text) using the <strong>MoreOptions</strong> tab, or by clicking interactively directly on the active plot.</p>
-<p><img alt="MoreOptions" src="../../user_manual_images/Graphs/imageFile79.png" /><br>
-<em>Figure 18: The MoreOptions Panel.</em></p>
-<p><img alt="Annotation Panel" src="../../user_manual_images/Graphs/imageFile80.png" /><br>
-<em>Figure 19: The Annotation Customization Panel for configuring drawn lines and text.</em></p>
 
 
 

@@ -8,6 +8,9 @@ The Maps and Spectra workspaces share a unified design and many core features. H
 
 *Interface overview of the Spectra and Maps workspaces. Both interfaces are divided into three primary sections: Top-left section (SpectraViewer), bottom-left section (FitModelBuilder), and right section (SpectraList / MapList).*
 
+_______
+
+
 ### MapList and MapViewer
 **MapList**: and **MapViewer** widgets are engineered for efficient navigation and management of your hyperspectral datasets. MapList displays all loaded map files, including wafer maps and 2D map types. 
 
@@ -38,6 +41,8 @@ User can navigate between loaded 2D maps via a listbox (MapList). The 2Dmap plot
 
 *Example for mask feature for 2D maps: 2Dmap of MoS2 flake using a mask (intensity of peak A1g > 40 a.u) to filter out all region except the flake.* 
 
+_________
+
 
 ### SpectraList
 
@@ -50,6 +55,10 @@ You can select one or multiple spectra simultaneously; the selected spectra are 
 </div>
 
 *SpectraList alongside the ProgressBar (within Maps Workspace). The progress bar displays real-time fitting progress (percentage and elapsed time). A 'Stop' button is provided to safely halt an ongoing fitting process.*
+
+
+_______
+
 
 ### Spectra Viewer
 
@@ -80,6 +89,7 @@ The SpectraViewer is the central plotting widget where all spectra selected via 
 | ![Copy](../user_manual_images/Spectra_Maps/copy.png) | **Copy**: Copies the plot to your clipboard as a high-quality image. Use `Ctrl + Click` (or `Cmd + Click` on macOS) to copy the raw numerical plot data to your clipboard instead. |
 | ![More View Options](../user_manual_images/Spectra_Maps/view_options.png) | **More Options**: Open a comprehensive configuration panel allowing you to adjust X/Y units, toggle Log scales, change plot styles, toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions, etc.<br>![More Options Panel](../user_manual_images/Spectra_Maps/menu_view_options.png) |
 
+_______
 
 ### Fit Model Builder
 
@@ -161,6 +171,9 @@ A fully configured fit model can be copied from one spectrum and pasted onto ano
 
 **Saving / Loading Fit Models**:
 If you intend to use a model frequently, you can save it as a template. Stored models can easily be accessed and applied to new data using the dropdown menu.
+
+
+_______
 
 ### Collect & Save Fit Results
 

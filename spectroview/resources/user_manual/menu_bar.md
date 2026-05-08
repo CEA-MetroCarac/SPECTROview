@@ -22,20 +22,32 @@ Opens a Settings Panel by clicking to icon "Settings" as described above, where 
 - Adjust all fittings parameters.
 - Define a defaut folder where all fit_models (JSON format) are stored. The application will automatically scan this folder and load all fit_models for easy selection in the fitting windows.
 
-![Settings Panel](../user_manual_images/menu_bar/ui_settings.png)
+<div align="center">
+  <img src="../user_manual_images/menu_bar/ui_settings.png" alt="ui_settings.png" width="350"><br>
+   <i>UI of the Settings Panel.</i>
+</div>
+
+
 ### Hyperspectral Data Converter Tool
 Opens a utility by clicking to icon "Convert" as described above. 
 
 To convert a hyperspectral data (2D maps) from Renishaw WiRE into a format natively supported by SPECTROview, load your file(s) and click "Convert". The converted file will have a `_converted` suffix and be saved in the same folder as the original file.
 
-![Hyperspectral Data Converter Tool](../user_manual_images/menu_bar/ui_converter.png)
 
+<div align="center">
+  <img src="../user_manual_images/menu_bar/ui_converter.png" alt="ui_converter.png" width="500"><br>
+   <i>UI of the Hyperspectral Data Converter tool.</i>
+</div>
 
 ### Quick Calculation Tool
 
 Click to the "Calculator" icon to open  a suite suite of utility calculators : 
 
-![Quick Calculation Tool](../user_manual_images/menu_bar/ui_quick_calculation.png)
+<div align="center">
+  <img src="../user_manual_images/menu_bar/ui_quick_calculation.png" alt="ui_quick_calculation" width="800"><br>
+   <i>UI of the Quick Calculators.</i>
+</div>
+
 #### 1. Calculation of laser spot size, depth of field and laser power density
 This tool estimates the theoretical, diffraction-limited spatial resolution of your optical setup, including spot size, depth of focus, and laser power density.
 

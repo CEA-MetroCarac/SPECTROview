@@ -8,7 +8,8 @@ pip install spectroview
 ```
 
 <div align="center">
-  <img src="../user_manual_images/Installation/installation.gif" alt="Three Workspaces" width="500">
+  <img src="../user_manual_images/Installation/installation.gif" alt="Three Workspaces" width="500"><br>
+  <i>Successfully installed SPECTROview-26.19.1.</i>
 </div>
 
 ### From GitHub (Latest Development Version)

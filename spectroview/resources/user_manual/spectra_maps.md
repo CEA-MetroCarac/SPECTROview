@@ -95,7 +95,7 @@ _______
 
 The FitModelBuilder tab is where you configure your spectral fitting models. It is divided into three main panels: Fitting, PeakTable, and FitModelControl.
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="fit_model_builder" width="700">
+  <img src="../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="fit_model_builder" width="800">
 </div>
 
 *The FitModelBuilder tab featuring: (1) The Fitting Panel (left), (2) The PeakTable Panel (top-right), and (3) The FitModelControl Panel (bottom-right).*
@@ -135,7 +135,7 @@ The PeakTable displays all the mathematical parameters for the peaks you have de
 
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/peak_table.png" alt="peak_table" width="700"><br>
+  <img src="../user_manual_images/Spectra_Maps/peak_table.png" alt="peak_table" width="800"><br>
    <i>The PeakTable panel displaying peak parameters and constraints.</i>
 </div>
 
@@ -147,12 +147,12 @@ The PeakTable displays all the mathematical parameters for the peaks you have de
 - **Expression**: Define complex mathematical relationships between parameters.
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/peak_table_max_min.png" alt="peak_table_max_min" width="700"><br>
+  <img src="../user_manual_images/Spectra_Maps/peak_table_max_min.png" alt="peak_table_max_min" width="800"><br>
    <i>Example 1: Using an expression to constrain the position (`x0`) of `m02` to always remain exactly 17 units away from the position of `m01`.</i>
 </div>
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/peak_table_expression.png" alt="peak_table_expression" width="700"><br>
+  <img src="../user_manual_images/Spectra_Maps/peak_table_expression.png" alt="peak_table_expression" width="800"><br>
    <i>Example 2: Using an expression to constrain the amplitude of `m03` to always be exactly half the amplitude of `m02`.</i>
 </div>
 
@@ -196,8 +196,20 @@ Supported mathematical operations include: `+`, `-`, `*`, `/`, `**`, `%`, and `(
 > **Important Note**: If your column names contain spaces or special characters, you must enclose them in backticks. Example: `` `x0_LO(M)` ``
 
 #### Save and Visualize
-Once your data table is finalized, give it a descriptive name and either send it directly to the Graphs workspace for immediate plotting or export it to an Excel/CSV spreadsheet for external use.
+Once your data table is finalized, you can :
 
+- **Save it with a descriptive name**, then **send it directly to the Graphs workspace** for immediate plotting.
+
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/send_to_graph.png" alt="send_to_graph" width="300"><br>
+</div>
+<br>
+
+- **Export it to an Excel/CSV spreadsheet** for external use.
+
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/export_to_csv.png" alt="export_to_csv" width="300"><br>
+</div>
 
 ### More Tab
 

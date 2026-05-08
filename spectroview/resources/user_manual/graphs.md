@@ -68,12 +68,10 @@ Click **Customize** button to open the Customize Dialog, giving you deep control
 <br>
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/annotation.gif" alt="annotation" width="600"><br>
-  <i>Add and adjust annotations of the selected plot.</i>
+  <img src="../user_manual_images/Graphs/adjust_annotation.gif" alt="adjust_annotation" width="600"><br>
+  <i>Adjusting position and appearance of annotations on the selected plot.</i>
 </div>
 <br>
-
-
 
 _____
 

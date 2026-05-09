@@ -1235,54 +1235,54 @@
 <tbody>
 <tr>
 <td><code>Ctrl + R</code></td>
-<td>When you are in Spectra or Maps Workspace, this shortcuts rescales the axes of the current spectra plot to perfectly fit the visible data.</td>
+<td>When active in the Spectra or Maps workspace, this shortcut automatically rescales the axes of the current plot to perfectly fit the visible data.</td>
 </tr>
 <tr>
 <td><code>Ctrl + Click</code></td>
-<td>Under a figure canvas, there is alway a Copy button. Simply click to copy PNG images. Hold Ctrl + click to copy the raw numerical dataset of the current plot directly to your system clipboard (instead of an image). On macOS, use <code>Cmd + Click</code>.</td>
+<td>Under a figure canvas, there is always a Copy button. Simply click it to copy the plot as a PNG image. Hold <code>Ctrl</code> and click to copy the raw numerical dataset of the current plot directly to your system clipboard (instead of an image). On macOS, use <code>Cmd + Click</code>.</td>
 </tr>
 </tbody>
 </table>
 <h3 id="advanced-user-tips">Advanced User Tips<a class="headerlink" href="#advanced-user-tips" title="Permanent link">&para;</a></h3>
-<p><strong>Tooltips Everywhere</strong>: If you are ever unsure what a specific button or parameter does, simply hover your mouse cursor over the GUI element for 1 second to reveal a descriptive tooltip.</p>
+<p><strong>Tooltips Everywhere</strong>: If you are ever unsure what a specific button or parameter does, simply hover your mouse cursor over the GUI element for a moment to reveal a descriptive tooltip.</p>
 <div align="center">
-  <img src="../../user_manual_images/UI_Overview/Tooltips.gif" alt="Tooltips" width="600"><br>
+  <img src="../../user_manual_images/UI_Overview/Tooltips.gif" alt="Tooltips demonstration" width="600"><br>
 </div>
 
 <p><br></p>
 <hr />
-<p><strong>Extract profile from 2Dmap plot</strong>: Whenever 2 points are selected on the 2D map, the intensity profile between these 2 points will be calculated and ploted directly on heatmap:</p>
+<p><strong>Extract Profile from 2D Map Plot</strong>: Whenever two distinct points are selected on the 2D map, the intensity profile between these two coordinates will be calculated and plotted directly on the heatmap:</p>
 <div align="center">
-  <img src="../../user_manual_images/Tips_Shortcuts/profil.gif" alt="spectraviewer_interactive" width="350"><br>
-  <i>Profil is displayed on map when two points are selected, automatically disappears when more than two points are selected.</i>
+  <img src="../../user_manual_images/Tips_Shortcuts/profil.gif" alt="Map Profile Extraction" width="350"><br>
+  <i>The profile is displayed on the map when two points are selected, and it automatically disappears when more than two points are selected.</i>
 </div>
 
 <div align="center">
-  <img src="../../user_manual_images/Tips_Shortcuts/extract_profil.gif" alt="spectraviewer_interactive" width="350"><br>
-  <i>You can define the profile_name in ViewOption menus, then click Extract to plot in the Graph Workspace.</i>
+  <img src="../../user_manual_images/Tips_Shortcuts/extract_profil.gif" alt="Export Profile" width="350"><br>
+  <i>You can define a profile name in the `View Options` menu, then click `Extract` to send it directly to the `Graphs` workspace for plotting.</i>
 </div>
 
 <p><br></p>
 <hr />
-<p><strong>Mouse interactive with SpectraViewer</strong>: In SpectraViewer, you can interact with the spectra plot using the mouse: </p>
+<p><strong>Mouse Interactivity within SpectraViewer</strong>: In the SpectraViewer, you can interact with the spectra plot using your mouse: </p>
 <ul>
-<li>First, you need to select the mouse tools (baseline or peaks) from the toolbar.</li>
-<li>You can then directly click and drag the center point or the width of any peak inside the Spectra Viewer to adjust its initial guess dynamically. This is a much faster way to set up the initial parameters for your fit.</li>
-<li>You can also directly click and drag the baseline anchor points inside the Spectra Viewer to adjust its initial guess dynamically.</li>
-<li>Hover the mouse over a baseline anchor point or a peak and right click to remove it.</li>
+<li>First, select the mouse tools (<code>Baseline</code> or <code>Peaks</code>) from the toolbar.</li>
+<li>You can directly click and drag the center point or the width of any peak inside the <code>SpectraViewer</code> to adjust its initial guess dynamically. This is a much faster way to set up the initial parameters for your fit.</li>
+<li>You can also directly click and drag the baseline anchor points inside the <code>SpectraViewer</code> to adjust the baseline dynamically.</li>
+<li>Hover your mouse over a baseline anchor point or a peak and right-click to remove it instantly.</li>
 </ul>
 <div align="center">
-  <img src="../../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="spectraviewer_interactive" width="650">
+  <img src="../../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="SpectraViewer Interactive Controls" width="650">
 </div>
 <p><br></p>
 <hr />
-<p><strong>Quick Re-fit (Warm Starting)</strong>: If a fit does not converge perfectly, you can manually adjust the peak bounds and simply click the "Fit" button again. The engine will "warm-start" using the results of the previous optimization, making subsequent fits drastically faster.</p>
+<p><strong>Quick Re-fit (Warm Starting)</strong>: If a fit does not converge perfectly, you can manually adjust the peak bounds and simply click the <strong>Fit</strong> button again. The engine will "warm-start" using the results of the previous optimization, making subsequent fits drastically faster.</p>
 <p><br></p>
 <hr />
-<p><strong>Handling Complex Column Names</strong>: If you are using the Data Filter or Computed Columns features and your target column name contains spaces or special characters, you must enclose the column name in backticks (<code>`</code>) (e.g., <code>`Laser Power` &lt;= 5</code>).</p>
+<p><strong>Handling Complex Column Names</strong>: If you are using the <code>Data Filter</code> or <code>Computed Columns</code> features and your target column name contains spaces or special characters, you must enclose the column name in backticks (<code>`</code>) (e.g., <code>`Laser Power` &lt;= 5</code>).</p>
 <p><br></p>
 <hr />
-<p><strong>Spatial Profile Extraction</strong>: While inside the Maps workspace, if you select exactly 2 distinct spatial points on the MapViewer heatmap, SPECTROview will automatically extract and plot an interpolated intensity profile between those two coordinates.</p>
+<p><strong>Spatial Profile Extraction</strong>: While inside the Maps workspace, if you select exactly two distinct spatial points on the <code>MapViewer</code> heatmap, SPECTROview will automatically extract and plot an interpolated intensity profile between those two coordinates.</p>
 
 
 

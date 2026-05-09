@@ -2243,7 +2243,7 @@ When spectra have different peak configurations, the ViewModel groups them by mo
 <li><strong><code>xtol</code> (default: 1e-4)</strong>: The relative tolerance for the parameter step size <span class="arithmatex">\(\delta p\)</span>. If the relative change in all parameters is less than <code>xtol</code>, the spectrum is considered converged.</li>
 <li><strong><code>ftol</code> (default: 1e-4)</strong>: The relative tolerance for the cost function (sum of squared residuals). If the relative change in the cost is less than <code>ftol</code>, the spectrum is considered converged.</li>
 <li><strong><code>fit_negative</code> (default: <code>False</code>)</strong>: Whether to include negative intensity values in the fit. When <code>False</code>, negative points get zero weight.</li>
-<li><strong><code>fit_outliers</code> (default: <code>True</code>)</strong>: Whether to include statistical outlier points. When <code>False</code>, outliers detected by <code>spectrum.calculate_outliers()</code> get zero weight.</li>
+<li><strong><code>fit_outliers</code> (default: <code>False</code>)</strong>: Whether to include statistical outlier points. When <code>False</code>, outliers detected by <code>spectrum.calculate_outliers()</code> get zero weight.</li>
 <li><strong><code>coef_noise</code> (default: 0)</strong>: Noise coefficient multiplier. When &gt; 0, points where the smoothed signal is below <code>coef_noise × noise_amplitude</code> get zero weight, and peaks in those regions have their amplitude/FWHM forced to zero.</li>
 </ul>
 <h3 id="tuning-for-performance-vs-accuracy">Tuning for Performance vs. Accuracy<a class="headerlink" href="#tuning-for-performance-vs-accuracy" title="Permanent link">&para;</a></h3>

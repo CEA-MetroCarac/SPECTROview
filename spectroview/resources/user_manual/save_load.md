@@ -1,13 +1,13 @@
 ## Save & Load Workspace
 
-SPECTROview uses dedicated native file formats to allow you to seamlessly pause, save, and resume your data analysis sessions without losing any configurations or fit results.
+SPECTROview utilizes dedicated native file formats to allow you to seamlessly pause, save, and resume your data analysis sessions without losing any configurations or fit results.
 
 ### Saving Your Work
 
 To save your current progress, click the **Save** button located in the main application toolbar:
 
 <div align="center">
-  <img src="../user_manual_images/Save_Load/save_load_clear.png" alt="save_load_clear" width="120"><br>
+  <img src="../user_manual_images/Save_Load/save_load_clear.png" alt="Save, Load, and Clear Buttons" width="120"><br>
 </div>
 
 The application will generate a specific file extension based on which workspace is currently active:

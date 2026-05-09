@@ -8,42 +8,42 @@
     <img width=100 src="docs/assets/icon.png">
 </p>
 
-## SPECTROview : A Tool for Spectroscopic Data Processing and Visualization.
+## SPECTROview: A Tool for Spectroscopic Data Processing and Visualization
 
-SPECTROview is free, open-source software designed for spectroscopic data analysis. It supports a wide range of data types, including discrete spectra and hyperspectral data (such as 2D maps and wafer maps).
+SPECTROview is a free, open-source software application designed for advanced spectroscopic data analysis. It supports a diverse array of data types, including discrete spectra and hyperspectral datasets such as 2D maps and wafer maps.
 
-With its built-in visualization tools, SPECTROview streamlines your workflow by combining data processing and visualization into a single, efficient application. 
+With its integrated visualization tools, SPECTROview streamlines your analytical workflow by consolidating data processing and visualization into a single, cohesive application.
 
-- Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**](https://CEA-MetroCarac.github.io/SPECTROview/). A user manual is also available [here](https://cea-metrocarac.github.io/SPECTROview/user-manual/) or from within the application.
+- Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**](https://CEA-MetroCarac.github.io/SPECTROview/). A comprehensive user manual is also available [online](https://cea-metrocarac.github.io/SPECTROview/user_manual/) or directly within the application.
 - **Installation**: Instructions can be found at the bottom of this page.
-- Check out [**Releases**](https://github.com/CEA-MetroCarac/SPECTROview/releases) page for the latest updates and new features.
-- **Getting Started**: Check out [this folder](https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples) to see the supported data formats and find example datasets for practice.
+- Check out the [**Releases**](https://github.com/CEA-MetroCarac/SPECTROview/releases) page for the latest updates and new features.
+- **Getting Started**: Explore the [`/examples`](https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples) folder to familiarize yourself with supported data formats and find example datasets for practice.
 
 
 ___
-## Features: 
+## Key Features
 
-- Cross-Platform compatibility (Windows, macOS, Linux).
-- Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps).
-- **Tensor Fit Engine**: 10–20× faster fitting using batched matrix operations and ability to fit multiple spectra or 2Dmaps.
-- Build customized fit models for different spectroscopic profiles and reuse them for quickly fitting other datasets.
-- Collect and compile all best-fit results with a single click.
-- Optimized user interface for quick inspection and comparison of spectra.
-- Dedicated module for effortless, fast, and professional data visualization.
+- **Cross-Platform Compatibility:** Fully supported on Windows, macOS, and Linux.
+- **Versatile Data Processing:** Seamlessly process both 1D spectral data and 2D hyperspectral data.
+- **High-Performance Tensor Fit Engine:** Achieve 10–20× faster fitting speeds utilizing batched matrix operations, capable of simultaneously fitting multiple spectra or large 2D maps.
+- **Custom Fit Models:** Construct customized fit models for specific spectroscopic profiles and reuse them to rapidly analyze new datasets.
+- **Unified Results:** Collect and compile all best-fit results with a single click.
+- **Optimized User Interface:** Designed for quick inspection, filtering, and comparison of large spectral datasets.
+- **Advanced Visualization:** Dedicated workspace for generating fast, publication-ready data visualizations.
 
 ______
-### Three separate tabs for processing discrete spectra, hyperspectral data, and data visualization:
+### Three distinct workspaces for processing discrete spectra, hyperspectral data, and data visualization:
 <p align="center">
     <img src="docs/assets/general_demo.gif">
 </p>
 
-### Build a fit model for later use, copy/paste to others, fit multiple spectra or maps, collect all best-fit results with one click:
+### Build custom fit models, replicate them across datasets, fit multiple spectra simultaneously, and aggregate all best-fit results with a single click:
 
 <p align="center">
     <img src="docs/assets/fitting_demo.gif">
 </p>
 
-### Plot and visualize data radpily and easily:
+### Rapidly and easily plot your data to generate professional visualizations:
 
 <p align="center">
     <img src="docs/assets/plotting_demo.gif">
@@ -51,31 +51,36 @@ ______
 
 ____
 
-## Installation from PyPI:
+## Installation from PyPI
 
-Make sure that Python (version between 3.8 and 3.12) is already installed.
+SPECTROview requires Python (versions 3.8 through 3.12).
 
 ```bash
 pip install spectroview
 ```
 
-## Installation from Github:
+## Installation from GitHub
+
+To install the latest development version directly from the source repository:
 
 ```bash
 pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
 ```
 
 
-## To launch SPECTROview:
+## Launch SPECTROview
+Open your terminal or command prompt and execute:
 ```bash
 spectroview
 ```
 
 ## Acknowledgements
 
-This work, carried out on the CEA - Platform for Nanocharacterisation (PFNC), was supported by the “Recherche Technologique de Base” program of the French National Research Agency (ANR).
+This work was carried out at the CEA - Platform for Nanocharacterisation (PFNC) and supported by the "Recherche Technologique de Base" program of the French National Research Agency (ANR).
 
 ---
 ## Citation
 
-Le, V.-H., & Quéméré, P. (2025). SPECTROview : A Tool for Spectroscopic Data Processing and Visualization. Zenodo. https://doi.org/10.5281/zenodo.14147172
+If you use SPECTROview for data processing or visualization in your research, please cite the following publication:
+
+> Le, V.-H., & Quéméré, P. (2025). SPECTROview: A Tool for Spectroscopic Data Processing and Visualization. Zenodo. [https://doi.org/10.5281/zenodo.14147172](https://doi.org/10.5281/zenodo.14147172)

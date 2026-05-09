@@ -2,6 +2,8 @@
 
 This document provides a deep dive into the inner workings, architecture, and performance characteristics of the Tensor Fit Engine located in `spectroview/fit_engine/`.
 
+---
+
 ## 1. Why the Tensor Engine is Much Faster
 
 The legacy fit engines (based on `lmfit`/`scipy.optimize.least_squares`) operate on a **per-spectrum** basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
@@ -44,33 +46,228 @@ Even though the math is batched, each spectrum converges independently. The opti
 
 ## 3. Folder and Class Structure
 
-The engine is contained within `spectroview/fit_engine/` and consists of the following modules:
+```mermaid
+graph TD
+    TFT["TensorFitThread"] -->|"instantiates"| TE["TensorFittingEngine"]
+    TE -->|"builds"| EV["TensorEvaluator"]
+    TE -->|"calls"| OPT["batched_LM()"]
+    EV -->|"routes to"| MOD["models.py"]
+    EV -->|"fallback"| SM["scalar_models.py"]
+    OPT -->|"evaluate / jacobian"| EV
+```
 
-*   **`tensor_engine.py`**: Contains the orchestrator class `TensorFittingEngine`. It manages the high-level workflow: preprocessing spectra, extracting matrices, calling the optimizer, and writing results back to the GUI objects.
-*   **`optimizer.py`**: Contains the core mathematical workhorse `batched_levenberg_marquardt`. This is purely numerical and agnostic to the GUI objects.
-*   **`evaluator.py`**: Contains `TensorEvaluator`. This class acts as the bridge between the flexible dictionary-based `fit_model` (which supports fixed parameters, bounds, and mixed peak types) and the rigid, flat, free-parameter tensors required by the optimizer.
-*   **`models.py`**: Defines the batched model evaluation functions (e.g., `batched_lorentzian`) and their corresponding analytical Jacobian functions (e.g., `batched_lorentzian_jac`).
-*   **`scalar_models.py`**: Contains fallback scalar models and the `FitResult` data class.
-*   **`tensor_fit_thread.py`**: Contains `TensorFitThread`, a `QThread` wrapper that runs the engine asynchronously to prevent GUI freezing, and emits progress signals.
+| Module | Class / Function | Responsibility |
+|--------|-----------------|----------------|
+| `tensor_fit_thread.py` | `TensorFitThread` | QThread wrapper. Supports single-model and batched modes. Emits `progress_changed` and `timings_ready` signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults. |
+| `tensor_engine.py` | `TensorFittingEngine` | Public API orchestrator. Manages the 8-step pipeline: apply model → preprocess → extract matrices → build p0 → build weights → optimize → write back results. Records step-level timings. |
+| `evaluator.py` | `TensorEvaluator` | Bridge between the dictionary-based `fit_model` and the flat tensor API. Parses peak definitions, manages free/fixed parameter indexing, evaluates expressions, routes to correct batched model functions, builds `FitResult` objects. |
+| `optimizer.py` | `batched_levenberg_marquardt()` | Pure numerical optimizer. Solves N independent least-squares problems simultaneously using `np.einsum` for normal equations and `np.linalg.solve` for the linear system. GUI-agnostic. |
+| `models.py` | `batched_*()` functions | Vectorized peak shape functions and their analytical Jacobians. Contains the `BATCHED_MODELS` registry. Includes `numerical_jacobian()` fallback. |
+| `scalar_models.py` | `FitResult`, `ParamValue`, scalar functions | Lightweight result classes compatible with lmfit's interface. Scalar peak functions used as fallbacks when no batched implementation exists. Contains `PEAK_MODEL_REGISTRY`. |
 
 ---
 
 ## 4. Processing Pipeline / Execution Flow
 
-When a user triggers a fit (e.g., via the "Fit" button in the Maps workspace), the following pipeline executes:
+When a user triggers a fit (e.g., via the "Fit" button), the following pipeline executes:
 
-1.  **Thread Invocation**: `VMWorkspaceMaps._run_fit_thread()` instantiates and starts `TensorFitThread`.
-2.  **Engine Initialization**: `TensorFittingEngine.fit_spectra()` is called.
-3.  **Model Application (Optional)**: If `apply_model_to_spectra=True`, the `fit_model` dictionary is applied to all `MSpectrum` objects, ensuring they have the correct number and type of peaks. If `False` (like in the Spectra workspace), the engine groups spectra by their existing model signatures and processes batches sequentially, preserving individual spectrum customizations.
-4.  **Preprocessing**: `spectrum.preprocess()` is called for all spectra (applying spectral ranges, evaluating and subtracting baselines). Spectra are then zero-padded into a uniform 2D matrix.
-5.  **Evaluator Construction**: `TensorEvaluator.from_fit_model()` parses the model, determining which parameters are free vs. fixed, and mapping them to a flat vector space.
-6.  **Data Extraction**: The \((N, M)\) data matrix \(\mathbf{Y}\) and initial parameter matrix \(\mathbf{p_0}\) are extracted. If it's a first fit, \(\mathbf{p_0}\) amplitudes are scaled to the actual data. If it's a re-fit, \(\mathbf{p_0}\) is extracted exactly from the existing fits (warm start) to allow continued optimization.
-7.  **Optimization**: `batched_levenberg_marquardt()` runs the iterations until all spectra converge or `max_iter` is reached.
-8.  **Result Writeback**: The optimized free parameters are reconstructed into full parameter sets by the evaluator, and written back to the `spectrum.result_fit` and `param_hints` of each `MSpectrum`.
+```mermaid
+sequenceDiagram
+    participant VM as ViewModel
+    participant TFT as FitThread
+    participant TE as Engine
+    participant EV as Evaluator
+
+    VM->>TFT: start()
+    TFT->>TE: fit_spectra()
+    TE->>EV: from_fit_model()
+    TE->>TE: preprocess + extract matrices
+    TE->>TE: build p0 + weights
+    TE->>TE: batched_LM()
+    TE->>EV: write_back_to_spectrum()
+    TE-->>TFT: fit_results
+    TFT-->>VM: finished + timings
+```
+
+### Step-by-Step Details
+
+**Step 1 — Model Application** (`apply_model_to_spectra=True`):
+The `fit_model` dictionary is applied to all `MSpectrum` objects via `apply_custom_fit_model()`, ensuring they have the correct number and type of peaks. When `False` (Spectra workspace with per-spectrum models), the `TensorFitThread` pre-groups spectra by model signature and processes each group as a separate batch.
+
+**Step 2 — Evaluator Construction**:
+`TensorEvaluator.from_fit_model()` iterates over `peak_models` in the fit model dict. For each peak, it:
+
+- Looks up the model name in `BATCHED_MODELS` (fast path) or `PEAK_MODEL_REGISTRY` (scalar fallback)
+- Extracts `param_hints` (value, min, max, vary, expr) for each parameter
+- Assigns a sequential prefix (`m01_`, `m02_`, ...) to parameter names
+- Builds `_free_idx` / `_fixed_idx` arrays for the free ↔ full parameter mapping
+- Parses expression strings (e.g., `m01_fwhm`) and marks linked parameters as fixed
+
+**Step 3 — Preprocessing**:
+Calls `spectrum.preprocess()` on spectra that haven't been preprocessed yet (baseline evaluation, spectral range cropping).
+
+**Step 4 — Data Extraction**:
+Spectra with different lengths are zero-padded to `max_M` (the longest spectrum). The weights matrix is built by `_build_fit_weights()`, which handles:
+
+| Weight Rule | Condition | Effect |
+|------------|-----------|--------|
+| Negative masking | `fit_negative=False` | `w[y < 0] = 0` |
+| Outlier masking | `fit_outliers=False` | `w[outlier_positions] = 0` |
+| Noise threshold | `coef_noise > 0` | `w[smoothed_y < noise_level] = 0` |
+| Zero-padding | Padded region | `w[M_s:] = 0` (automatic) |
+
+**Step 5 — Initial Parameters (p0)**:
+
+- **First fit** (`apply_model_to_spectra=True`): `build_p0_matrix()` tiles the model's initial values and scales each spectrum's amplitudes proportionally to the actual data intensity at the peak center position. Ratio is clamped to `[0.01, 100]` to prevent extreme initial guesses.
+- **Re-fit** (`apply_model_to_spectra=False`): `extract_p0_from_spectrum()` reads the existing fitted `param_hints` values from each spectrum (warm start).
+
+After p0 construction, `apply_noise_threshold()` zeros out amplitude and FWHM for peaks located in regions below the noise floor.
+
+**Step 6 — Optimization**: See Section 2 for the LM algorithm details.
+
+**Step 7 — Result Writeback**:
+For each spectrum, `build_result()` reconstructs the full parameter vector, evaluates the best-fit curve, and computes R². Then `write_back_to_spectrum()` writes the optimized values back to each `peak_model.param_hints` and sets `spectrum.result_fit`.
 
 ---
 
-## 5. Optimization Parameters and Adjustments
+## 5. The TensorEvaluator in Detail
+
+The `TensorEvaluator` is the most complex class in the engine. It serves as the **bridge** between the flexible, dictionary-based world of the GUI and the rigid, flat-tensor world of the optimizer.
+
+### Parameter Space Mapping
+
+```
+fit_model dict                    TensorEvaluator                  Optimizer
+┌─────────────────┐     ┌────────────────────────────┐     ┌──────────────┐
+│ peak_models:    │     │ _param_names:              │     │              │
+│   "0":          │     │   ["m01_ampli",            │     │  p_free      │
+│     Gaussian:   │ ──► │    "m01_fwhm",             │ ──► │  (N, K_free) │
+│       ampli: .. │     │    "m01_x0",               │     │              │
+│       fwhm:  .. │     │    "m02_ampli", ...]       │     │              │
+│       x0:    .. │     │                            │     │              │
+│   "1":          │     │ _free_idx:  [0, 1, 2, 3]   │     │              │
+│     Lorentzian: │     │ _fixed_idx: [4]             │     │              │
+│       ampli: .. │     │ _fixed_values: [0.5]        │     │              │
+│       ...       │     │                            │     │              │
+└─────────────────┘     └────────────────────────────┘     └──────────────┘
+```
+
+### Expression Support
+
+Parameters can reference other parameters via mathematical expressions (e.g., `m01_fwhm = m02_fwhm` or `m01_x0 + 10`). The evaluator handles this in `_to_full()`:
+
+1. Parameters with expressions are marked as **fixed** (not optimized directly)
+2. During `_to_full()`, expressions are evaluated using Python's `eval()` with a restricted namespace containing all parameter names, `np`, and common math functions
+3. A **multi-pass resolution** loop handles expression chains (e.g., `a = b`, `b = c`) by retrying failed evaluations until all dependencies are resolved
+4. The Jacobian accounts for expressions via the **chain rule**: a numerical `J_expr` matrix is computed by perturbing each free parameter and observing how the full parameter vector changes, then the true Jacobian is `J_full @ J_expr`
+
+### Model Routing
+
+The evaluator's `evaluate()` and `jacobian()` methods iterate over all registered peaks and sum their contributions:
+
+```python
+def evaluate(self, x, p_free):
+    p_full = self._to_full(p_free)           # (N, K_total)
+    Y = np.zeros((N, M))
+    for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
+        Y += eval_fn(x, p_full[:, slc])      # Each peak adds its contribution
+    return Y
+```
+
+For the Jacobian, if a peak has an analytical Jacobian (`has_jac=True`), it's used directly. Otherwise, `numerical_jacobian()` is called as a fallback with central differences and relative perturbation scaling.
+
+---
+
+## 6. Batched Peak Models and Analytical Jacobians
+
+### Tensor Conventions
+
+All batched functions follow the same signature:
+
+```python
+def batched_shape(x, params):
+    """
+    x:      (M,) shared axis  OR  (N, M) per-spectrum axis
+    params: (N, n_p) parameter matrix
+    Returns: (N, M) predicted values
+    """
+
+def batched_shape_jac(x, params):
+    """Returns: (N, M, n_p) Jacobian tensor"""
+```
+
+### Registered Models (`BATCHED_MODELS`)
+
+| Model | Parameters | Jacobian | Formula |
+|-------|-----------|----------|---------|
+| `Gaussian` | `ampli, fwhm, x0` | ✓ Analytical | \(a \cdot \exp\left(-4\ln 2 \cdot \frac{(x-x_0)^2}{w^2}\right)\) |
+| `Lorentzian` | `ampli, fwhm, x0` | ✓ Analytical | \(\frac{a}{1 + 4(x-x_0)^2/w^2}\) |
+| `PseudoVoigt` | `ampli, fwhm, x0, alpha` | ✓ Analytical | \(\alpha \cdot G + (1-\alpha) \cdot L\) |
+
+### Scalar Fallback Models (`PEAK_MODEL_REGISTRY`)
+
+These models lack batched implementations and are wrapped via `_make_batched_scalar()`, which loops over spectra individually. They use `numerical_jacobian()` (central differences):
+
+| Model | Parameters | Notes |
+|-------|-----------|-------|
+| `GaussianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise left/right FWHM |
+| `LorentzianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise left/right FWHM |
+| `Fano` | `ampli, fwhm, x0, q` | Fano lineshape for asymmetric resonances |
+| `DecaySingleExp` | `A, tau, B` | Single exponential decay (TRPL) |
+| `DecayBiExp` | `A1, tau1, A2, tau2, B` | Bi-exponential decay (TRPL) |
+
+### Numerical Jacobian Fallback
+
+When no analytical Jacobian is available, `numerical_jacobian()` uses **central differences** with relative perturbation:
+
+```python
+h = max(|param| * eps, eps)          # Scale step to parameter magnitude
+J[:,:,k] = (f(p+h) - f(p-h)) / 2h  # Central difference
+```
+
+This is ~`2K` times slower than analytical Jacobians per iteration but ensures correctness for any model shape.
+
+---
+
+## 7. The TensorFitThread
+
+### Two Operating Modes
+
+```mermaid
+graph TD
+    TFT["TensorFitThread"] --> Check{"batches?"}
+    Check -->|"Yes"| B["_run_batched()"]
+    Check -->|"No"| S["_run_single()"]
+    B --> G1["Group 1"]
+    B --> G2["Group 2"]
+    B --> G3["Group 3"]
+    S --> All["All spectra"]
+```
+
+**Single-model mode** (Maps workspace / Apply Fit Model):
+All spectra share one `fit_model`. The engine processes them in one tensor batch.
+
+**Batched mode** (Spectra workspace / individual models):
+When spectra have different peak configurations, the ViewModel groups them by model signature (same number and types of peaks). Each group is processed sequentially through the engine, but spectra *within* each group are optimized in parallel.
+
+### macOS Stack Size
+
+The thread sets an 8 MB stack size on macOS (`setStackSize(8 * 1024 * 1024)`) because:
+
+- macOS defaults QThread stack to 512 KB
+- `np.linalg.solve` dispatches to LAPACK, which allocates workspace arrays on the stack
+- For large K (many parameters), the stack allocation can exceed 512 KB, causing segfaults
+
+### Signals
+
+| Signal | Payload | Purpose |
+|--------|---------|---------|
+| `progress_changed` | `(current, total, percent, elapsed)` | Updates progress bar in the View |
+| `timings_ready` | `str` | Formatted timing breakdown for console/debug |
+
+---
+
+## 8. Optimization Parameters and Adjustments
 
 The engine behavior can be tuned via the `fit_params` dictionary passed to `fit_spectra()`.
 
@@ -78,14 +275,134 @@ The engine behavior can be tuned via the `fit_params` dictionary passed to `fit_
 *   **`max_ite` (default: 200)**: The maximum number of Levenberg-Marquardt iterations. Increasing this might help extremely difficult spectra converge but will increase total execution time.
 *   **`xtol` (default: 1e-4)**: The relative tolerance for the parameter step size \(\delta p\). If the relative change in all parameters is less than `xtol`, the spectrum is considered converged.
 *   **`ftol` (default: 1e-4)**: The relative tolerance for the cost function (sum of squared residuals). If the relative change in the cost is less than `ftol`, the spectrum is considered converged.
+*   **`fit_negative` (default: `False`)**: Whether to include negative intensity values in the fit. When `False`, negative points get zero weight.
+*   **`fit_outliers` (default: `False`)**: Whether to include statistical outlier points. When `False`, outliers detected by `spectrum.calculate_outliers()` get zero weight.
+*   **`coef_noise` (default: 0)**: Noise coefficient multiplier. When > 0, points where the smoothed signal is below `coef_noise × noise_amplitude` get zero weight, and peaks in those regions have their amplitude/FWHM forced to zero.
 
 ### Tuning for Performance vs. Accuracy
 - **Fast Mapping**: For rapid previews, you can increase `xtol` and `ftol` to `1e-3` or `1e-2`. The optimizer will exit much earlier, providing a rough fit in a fraction of the time.
 - **Precision Fitting**: For publication-quality results, decrease `xtol` and `ftol` to `1e-5` or `1e-6`.
 - **Handling "Stuck" Spectra**: The optimizer tracks `consecutive_rejects`. If a spectrum's cost fails to improve for 15 consecutive iterations (despite damping adjustments), it is marked as converged (stuck) to prevent it from holding back the rest of the batch. This threshold (`MAX_REJECTS` in `optimizer.py`) can be adjusted if needed.
 
-### Adding New Peak Models
-To add a new peak shape to the fast tensor engine:
-1.  Define the `batched_newshape(x, params)` function in `models.py`.
-2.  (Crucial for speed) Derive and define the analytical Jacobian `batched_newshape_jac(x, params)`.
-3.  Register the model in the `BATCHED_MODELS` dictionary at the bottom of `models.py`. If you skip the Jacobian, the engine will fall back to `numerical_jacobian`, drastically reducing performance.
+### Damping Schedule
+
+The per-spectrum damping factor \(\lambda\) is initialized at `1e-2` and adjusted after each iteration:
+
+| Outcome | λ adjustment | Effect |
+|---------|-------------|--------|
+| Cost improved | `λ /= 3.0` (floor `1e-10`) | Trust the Gauss-Newton direction more |
+| Cost worsened | `λ *= 2.5` (ceiling `1e10`) | Shift toward gradient descent |
+
+---
+
+## 9. Adding New Peak Models
+
+### Fast Path: Analytical Jacobian (Recommended)
+
+To add a new peak shape with maximum performance:
+
+**Step 1** — Define the batched evaluation function in `models.py`:
+
+```python
+def batched_newshape(x, params):
+    """
+    x:      (M,) or (N, M)
+    params: (N, n_p) where columns are [param1, param2, ...]
+    Returns: (N, M)
+    """
+    p1 = params[:, 0:1]    # (N, 1) — broadcasts over M
+    p2 = params[:, 1:2]
+    if x.ndim == 1:
+        dx = x[None, :] - p2    # (N, M)
+    else:
+        dx = x - p2
+    return p1 * some_function(dx)
+```
+
+**Step 2** — Derive and define the analytical Jacobian:
+
+```python
+def batched_newshape_jac(x, params):
+    """Returns: (N, M, n_p) — partial derivatives w.r.t. each parameter."""
+    # ... compute intermediates ...
+    N, M = result.shape
+    J = np.empty((N, M, n_p))
+    J[:, :, 0] = d_result_d_p1
+    J[:, :, 1] = d_result_d_p2
+    return J
+```
+
+**Step 3** — Register in the `BATCHED_MODELS` dictionary:
+
+```python
+BATCHED_MODELS = {
+    # ... existing ...
+    "NewShape": (batched_newshape, batched_newshape_jac, ["param1", "param2", ...]),
+}
+```
+
+### Slow Path: Scalar Fallback
+
+If deriving an analytical Jacobian is impractical:
+
+**Step 1** — Define a scalar function in `scalar_models.py`:
+
+```python
+def newshape(x, param1, param2):
+    """x is a 1D array, params are scalars. Returns 1D array."""
+    return param1 * some_function(x - param2)
+```
+
+**Step 2** — Register in `PEAK_MODEL_REGISTRY`:
+
+```python
+PEAK_MODEL_REGISTRY = {
+    # ... existing ...
+    "NewShape": (newshape, ["param1", "param2"]),
+}
+```
+
+The evaluator will automatically wrap it via `_make_batched_scalar()` and use `numerical_jacobian()`. This is functional but significantly slower (~10-50× per peak per iteration).
+
+### Registration in the Application
+
+After adding the model to the engine, register it in `spectroview/__init__.py`:
+
+```python
+PEAK_MODELS = [
+    "Gaussian", "Lorentzian", "PseudoVoigt",
+    # ... existing ...
+    "NewShape",  # Add here to appear in the UI dropdown
+]
+```
+
+---
+
+## 10. Timing and Diagnostics
+
+The `TensorFittingEngine` records wall-clock timings for each step in `self.timings`:
+
+```
+Step 1 - apply_model:  0.012s
+Step 2 - preprocess:   0.045s
+Step 3 - build p0:     0.003s
+Step 4 - tensor fit:   1.234s (0.6 ms/spectrum, 1950/2000 converged)
+Step 5 - write_back:   0.089s
+```
+
+These timings are emitted via `TensorFitThread.timings_ready` and printed to the console. They are invaluable for diagnosing performance bottlenecks:
+
+- If **Step 1** dominates → too many spectra to apply model to; consider caching
+- If **Step 4** dominates → normal; this is the actual optimization
+- If **Step 4** shows low convergence → check initial guesses, bounds, or model suitability
+- If **Step 5** dominates → many spectra with complex write-back; usually negligible
+
+### R² Computation
+
+The goodness-of-fit metric R² is computed during `build_result()`:
+
+\[
+R^2 = 1 - \frac{\sum_i w_i (y_i - \hat{y}_i)^2}{\sum_i w_i (y_i - \bar{y}_w)^2}
+\]
+
+Where \(\bar{y}_w\) is the weighted mean. When weights are present, only non-zero-weight points contribute to both numerator and denominator, ensuring that masked regions (negative values, outliers, padding) don't artificially inflate or deflate the reported quality.

@@ -57,6 +57,9 @@ nav:
     - Shortcuts & Tips: user_manual/shortcuts.md
   - Developer Guide:
     - Architecture: developer/index.md
+    - Spectra Workspace: developer/spectra.md
+    - Maps Workspace: developer/maps.md
+    - Graphs Workspace: developer/graphs.md
     - Tensor Fit Engine: developer/tensor-engine.md
     - Multivariate Analysis (MVA): developer/mva.md
   - Changelog: changelog.md

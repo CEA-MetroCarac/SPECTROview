@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/tensor-engine/">
       
       
-        <link rel="prev" href="../">
+        <link rel="prev" href="../graphs/">
       
       
         <link rel="next" href="../mva/">
@@ -885,6 +885,90 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spectra Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maps Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graphs Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1017,18 +1101,196 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-optimization-parameters-and-adjustments" class="md-nav__link">
+    <nav class="md-nav" aria-label="4. Processing Pipeline / Execution Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-by-step-details" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Optimization Parameters and Adjustments
+        Step-by-Step Details
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="5. Optimization Parameters and Adjustments">
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-the-tensorevaluator-in-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. The TensorEvaluator in Detail
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. The TensorEvaluator in Detail">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameter-space-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Space Mapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expression-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expression Support
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model Routing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-batched-peak-models-and-analytical-jacobians" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Batched Peak Models and Analytical Jacobians
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Batched Peak Models and Analytical Jacobians">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tensor-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tensor Conventions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registered-models-batched_models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registered Models (BATCHED_MODELS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scalar-fallback-models-peak_model_registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scalar Fallback Models (PEAK_MODEL_REGISTRY)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#numerical-jacobian-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Numerical Jacobian Fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-the-tensorfitthread" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. The TensorFitThread
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. The TensorFitThread">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#two-operating-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two Operating Modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macos-stack-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        macOS Stack Size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-optimization-parameters-and-adjustments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Optimization Parameters and Adjustments
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Optimization Parameters and Adjustments">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1054,10 +1316,88 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#adding-new-peak-models" class="md-nav__link">
+  <a href="#damping-schedule" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Adding New Peak Models
+        Damping Schedule
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-adding-new-peak-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Adding New Peak Models
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Adding New Peak Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fast-path-analytical-jacobian-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fast Path: Analytical Jacobian (Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slow-path-scalar-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Slow Path: Scalar Fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registration-in-the-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registration in the Application
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-timing-and-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Timing and Diagnostics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Timing and Diagnostics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#r2-computation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        R² Computation
       
     </span>
   </a>
@@ -1236,18 +1576,196 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-optimization-parameters-and-adjustments" class="md-nav__link">
+    <nav class="md-nav" aria-label="4. Processing Pipeline / Execution Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-by-step-details" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Optimization Parameters and Adjustments
+        Step-by-Step Details
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="5. Optimization Parameters and Adjustments">
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-the-tensorevaluator-in-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. The TensorEvaluator in Detail
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. The TensorEvaluator in Detail">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameter-space-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Space Mapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expression-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expression Support
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model Routing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-batched-peak-models-and-analytical-jacobians" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Batched Peak Models and Analytical Jacobians
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Batched Peak Models and Analytical Jacobians">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tensor-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tensor Conventions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registered-models-batched_models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registered Models (BATCHED_MODELS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scalar-fallback-models-peak_model_registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scalar Fallback Models (PEAK_MODEL_REGISTRY)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#numerical-jacobian-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Numerical Jacobian Fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-the-tensorfitthread" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. The TensorFitThread
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. The TensorFitThread">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#two-operating-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two Operating Modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macos-stack-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        macOS Stack Size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-optimization-parameters-and-adjustments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Optimization Parameters and Adjustments
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Optimization Parameters and Adjustments">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1273,10 +1791,88 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#adding-new-peak-models" class="md-nav__link">
+  <a href="#damping-schedule" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Adding New Peak Models
+        Damping Schedule
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-adding-new-peak-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Adding New Peak Models
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Adding New Peak Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fast-path-analytical-jacobian-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fast Path: Analytical Jacobian (Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slow-path-scalar-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Slow Path: Scalar Fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registration-in-the-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registration in the Application
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-timing-and-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Timing and Diagnostics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Timing and Diagnostics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#r2-computation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        R² Computation
       
     </span>
   </a>
@@ -1310,6 +1906,7 @@
 
 <h1 id="developer-guide-tensor-fit-engine">Developer Guide: Tensor Fit Engine<a class="headerlink" href="#developer-guide-tensor-fit-engine" title="Permanent link">&para;</a></h1>
 <p>This document provides a deep dive into the inner workings, architecture, and performance characteristics of the Tensor Fit Engine located in <code>spectroview/fit_engine/</code>.</p>
+<hr />
 <h2 id="1-why-the-tensor-engine-is-much-faster">1. Why the Tensor Engine is Much Faster<a class="headerlink" href="#1-why-the-tensor-engine-is-much-faster" title="Permanent link">&para;</a></h2>
 <p>The legacy fit engines (based on <code>lmfit</code>/<code>scipy.optimize.least_squares</code>) operate on a <strong>per-spectrum</strong> basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
 - <strong>Python Function Call Overhead</strong>: Calling the objective function and Jacobian estimator thousands of times per iteration.
@@ -1346,36 +1943,343 @@
 <p>Even though the math is batched, each spectrum converges independently. The optimizer uses a boolean mask (<code>active = ~converged</code>) to skip Jacobian calculations and linear solves for spectra that have already reached the tolerance limits, progressively speeding up the later iterations.</p>
 <hr />
 <h2 id="3-folder-and-class-structure">3. Folder and Class Structure<a class="headerlink" href="#3-folder-and-class-structure" title="Permanent link">&para;</a></h2>
-<p>The engine is contained within <code>spectroview/fit_engine/</code> and consists of the following modules:</p>
-<ul>
-<li><strong><code>tensor_engine.py</code></strong>: Contains the orchestrator class <code>TensorFittingEngine</code>. It manages the high-level workflow: preprocessing spectra, extracting matrices, calling the optimizer, and writing results back to the GUI objects.</li>
-<li><strong><code>optimizer.py</code></strong>: Contains the core mathematical workhorse <code>batched_levenberg_marquardt</code>. This is purely numerical and agnostic to the GUI objects.</li>
-<li><strong><code>evaluator.py</code></strong>: Contains <code>TensorEvaluator</code>. This class acts as the bridge between the flexible dictionary-based <code>fit_model</code> (which supports fixed parameters, bounds, and mixed peak types) and the rigid, flat, free-parameter tensors required by the optimizer.</li>
-<li><strong><code>models.py</code></strong>: Defines the batched model evaluation functions (e.g., <code>batched_lorentzian</code>) and their corresponding analytical Jacobian functions (e.g., <code>batched_lorentzian_jac</code>).</li>
-<li><strong><code>scalar_models.py</code></strong>: Contains fallback scalar models and the <code>FitResult</code> data class.</li>
-<li><strong><code>tensor_fit_thread.py</code></strong>: Contains <code>TensorFitThread</code>, a <code>QThread</code> wrapper that runs the engine asynchronously to prevent GUI freezing, and emits progress signals.</li>
-</ul>
+<pre class="mermaid"><code>graph TD
+    subgraph "fit_engine/"
+        TFT["tensor_fit_thread.py&lt;br/&gt;&lt;b&gt;TensorFitThread&lt;/b&gt; (QThread)"]
+        TE["tensor_engine.py&lt;br/&gt;&lt;b&gt;TensorFittingEngine&lt;/b&gt;"]
+        EV["evaluator.py&lt;br/&gt;&lt;b&gt;TensorEvaluator&lt;/b&gt;"]
+        OPT["optimizer.py&lt;br/&gt;&lt;b&gt;batched_levenberg_marquardt()&lt;/b&gt;"]
+        MOD["models.py&lt;br/&gt;Batched peak functions&lt;br/&gt;+ analytical Jacobians"]
+        SM["scalar_models.py&lt;br/&gt;Scalar fallbacks&lt;br/&gt;+ FitResult / ParamValue"]
+    end
+
+    TFT --&gt;|"instantiates"| TE
+    TE --&gt;|"builds"| EV
+    TE --&gt;|"calls"| OPT
+    EV --&gt;|"routes to"| MOD
+    EV --&gt;|"fallback"| SM
+    OPT --&gt;|"calls evaluate/jacobian via"| EV</code></pre>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Class / Function</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tensor_fit_thread.py</code></td>
+<td><code>TensorFitThread</code></td>
+<td>QThread wrapper. Supports single-model and batched modes. Emits <code>progress_changed</code> and <code>timings_ready</code> signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults.</td>
+</tr>
+<tr>
+<td><code>tensor_engine.py</code></td>
+<td><code>TensorFittingEngine</code></td>
+<td>Public API orchestrator. Manages the 8-step pipeline: apply model → preprocess → extract matrices → build p0 → build weights → optimize → write back results. Records step-level timings.</td>
+</tr>
+<tr>
+<td><code>evaluator.py</code></td>
+<td><code>TensorEvaluator</code></td>
+<td>Bridge between the dictionary-based <code>fit_model</code> and the flat tensor API. Parses peak definitions, manages free/fixed parameter indexing, evaluates expressions, routes to correct batched model functions, builds <code>FitResult</code> objects.</td>
+</tr>
+<tr>
+<td><code>optimizer.py</code></td>
+<td><code>batched_levenberg_marquardt()</code></td>
+<td>Pure numerical optimizer. Solves N independent least-squares problems simultaneously using <code>np.einsum</code> for normal equations and <code>np.linalg.solve</code> for the linear system. GUI-agnostic.</td>
+</tr>
+<tr>
+<td><code>models.py</code></td>
+<td><code>batched_*()</code> functions</td>
+<td>Vectorized peak shape functions and their analytical Jacobians. Contains the <code>BATCHED_MODELS</code> registry. Includes <code>numerical_jacobian()</code> fallback.</td>
+</tr>
+<tr>
+<td><code>scalar_models.py</code></td>
+<td><code>FitResult</code>, <code>ParamValue</code>, scalar functions</td>
+<td>Lightweight result classes compatible with lmfit's interface. Scalar peak functions used as fallbacks when no batched implementation exists. Contains <code>PEAK_MODEL_REGISTRY</code>.</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 id="4-processing-pipeline-execution-flow">4. Processing Pipeline / Execution Flow<a class="headerlink" href="#4-processing-pipeline-execution-flow" title="Permanent link">&para;</a></h2>
-<p>When a user triggers a fit (e.g., via the "Fit" button in the Maps workspace), the following pipeline executes:</p>
-<ol>
-<li><strong>Thread Invocation</strong>: <code>VMWorkspaceMaps._run_fit_thread()</code> instantiates and starts <code>TensorFitThread</code>.</li>
-<li><strong>Engine Initialization</strong>: <code>TensorFittingEngine.fit_spectra()</code> is called.</li>
-<li><strong>Model Application (Optional)</strong>: If <code>apply_model_to_spectra=True</code>, the <code>fit_model</code> dictionary is applied to all <code>MSpectrum</code> objects, ensuring they have the correct number and type of peaks. If <code>False</code> (like in the Spectra workspace), the engine groups spectra by their existing model signatures and processes batches sequentially, preserving individual spectrum customizations.</li>
-<li><strong>Preprocessing</strong>: <code>spectrum.preprocess()</code> is called for all spectra (applying spectral ranges, evaluating and subtracting baselines). Spectra are then zero-padded into a uniform 2D matrix.</li>
-<li><strong>Evaluator Construction</strong>: <code>TensorEvaluator.from_fit_model()</code> parses the model, determining which parameters are free vs. fixed, and mapping them to a flat vector space.</li>
-<li><strong>Data Extraction</strong>: The <span class="arithmatex">\((N, M)\)</span> data matrix <span class="arithmatex">\(\mathbf{Y}\)</span> and initial parameter matrix <span class="arithmatex">\(\mathbf{p_0}\)</span> are extracted. If it's a first fit, <span class="arithmatex">\(\mathbf{p_0}\)</span> amplitudes are scaled to the actual data. If it's a re-fit, <span class="arithmatex">\(\mathbf{p_0}\)</span> is extracted exactly from the existing fits (warm start) to allow continued optimization.</li>
-<li><strong>Optimization</strong>: <code>batched_levenberg_marquardt()</code> runs the iterations until all spectra converge or <code>max_iter</code> is reached.</li>
-<li><strong>Result Writeback</strong>: The optimized free parameters are reconstructed into full parameter sets by the evaluator, and written back to the <code>spectrum.result_fit</code> and <code>param_hints</code> of each <code>MSpectrum</code>.</li>
-</ol>
+<p>When a user triggers a fit (e.g., via the "Fit" button), the following pipeline executes:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant VM as ViewModel
+    participant TFT as TensorFitThread
+    participant TE as TensorFittingEngine
+    participant EV as TensorEvaluator
+    participant OPT as batched_LM()
+
+    VM-&gt;&gt;TFT: start()
+    TFT-&gt;&gt;TE: fit_spectra(spectra, fit_model, fit_params)
+
+    Note over TE: Step 1: Apply fit_model to all spectra
+    TE-&gt;&gt;TE: _apply_model_to_all()
+
+    Note over TE: Step 2: Build evaluator
+    TE-&gt;&gt;EV: TensorEvaluator.from_fit_model(fit_model)
+    EV--&gt;&gt;TE: evaluator (free/fixed indexing ready)
+
+    Note over TE: Step 3: Preprocess spectra
+    TE-&gt;&gt;TE: spectrum.preprocess() for each
+
+    Note over TE: Step 4: Extract data matrices
+    TE-&gt;&gt;TE: Build X_matrix (N,M), Y_matrix (N,M)
+    TE-&gt;&gt;TE: _build_fit_weights() → weights (N,M)
+
+    Note over TE: Step 5: Build initial parameters
+    TE-&gt;&gt;EV: build_p0_matrix() or extract_p0_from_spectrum()
+    EV--&gt;&gt;TE: p0 (N, K_free)
+
+    Note over TE: Step 6: Run optimizer
+    TE-&gt;&gt;OPT: batched_levenberg_marquardt(X, Y, p0, ...)
+    OPT-&gt;&gt;EV: evaluate(x, p) → Y_pred (N,M)
+    OPT-&gt;&gt;EV: jacobian(x, p) → J (N,M,K)
+    OPT--&gt;&gt;TE: p_opt (N,K), success (N,), cost (N,)
+
+    Note over TE: Step 7: Write back results
+    TE-&gt;&gt;EV: build_result() + write_back_to_spectrum()
+    TE--&gt;&gt;TFT: fit_results
+    TFT--&gt;&gt;VM: finished signal + timings</code></pre>
+<h3 id="step-by-step-details">Step-by-Step Details<a class="headerlink" href="#step-by-step-details" title="Permanent link">&para;</a></h3>
+<p><strong>Step 1 — Model Application</strong> (<code>apply_model_to_spectra=True</code>):
+The <code>fit_model</code> dictionary is applied to all <code>MSpectrum</code> objects via <code>apply_custom_fit_model()</code>, ensuring they have the correct number and type of peaks. When <code>False</code> (Spectra workspace with per-spectrum models), the <code>TensorFitThread</code> pre-groups spectra by model signature and processes each group as a separate batch.</p>
+<p><strong>Step 2 — Evaluator Construction</strong>:
+<code>TensorEvaluator.from_fit_model()</code> iterates over <code>peak_models</code> in the fit model dict. For each peak, it:</p>
+<ul>
+<li>Looks up the model name in <code>BATCHED_MODELS</code> (fast path) or <code>PEAK_MODEL_REGISTRY</code> (scalar fallback)</li>
+<li>Extracts <code>param_hints</code> (value, min, max, vary, expr) for each parameter</li>
+<li>Assigns a sequential prefix (<code>m01_</code>, <code>m02_</code>, ...) to parameter names</li>
+<li>Builds <code>_free_idx</code> / <code>_fixed_idx</code> arrays for the free ↔ full parameter mapping</li>
+<li>Parses expression strings (e.g., <code>m01_fwhm</code>) and marks linked parameters as fixed</li>
+</ul>
+<p><strong>Step 3 — Preprocessing</strong>:
+Calls <code>spectrum.preprocess()</code> on spectra that haven't been preprocessed yet (baseline evaluation, spectral range cropping).</p>
+<p><strong>Step 4 — Data Extraction</strong>:
+Spectra with different lengths are zero-padded to <code>max_M</code> (the longest spectrum). The weights matrix is built by <code>_build_fit_weights()</code>, which handles:</p>
+<table>
+<thead>
+<tr>
+<th>Weight Rule</th>
+<th>Condition</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Negative masking</td>
+<td><code>fit_negative=False</code></td>
+<td><code>w[y &lt; 0] = 0</code></td>
+</tr>
+<tr>
+<td>Outlier masking</td>
+<td><code>fit_outliers=False</code></td>
+<td><code>w[outlier_positions] = 0</code></td>
+</tr>
+<tr>
+<td>Noise threshold</td>
+<td><code>coef_noise &gt; 0</code></td>
+<td><code>w[smoothed_y &lt; noise_level] = 0</code></td>
+</tr>
+<tr>
+<td>Zero-padding</td>
+<td>Padded region</td>
+<td><code>w[M_s:] = 0</code> (automatic)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Step 5 — Initial Parameters (p0)</strong>:</p>
+<ul>
+<li><strong>First fit</strong> (<code>apply_model_to_spectra=True</code>): <code>build_p0_matrix()</code> tiles the model's initial values and scales each spectrum's amplitudes proportionally to the actual data intensity at the peak center position. Ratio is clamped to <code>[0.01, 100]</code> to prevent extreme initial guesses.</li>
+<li><strong>Re-fit</strong> (<code>apply_model_to_spectra=False</code>): <code>extract_p0_from_spectrum()</code> reads the existing fitted <code>param_hints</code> values from each spectrum (warm start).</li>
+</ul>
+<p>After p0 construction, <code>apply_noise_threshold()</code> zeros out amplitude and FWHM for peaks located in regions below the noise floor.</p>
+<p><strong>Step 6 — Optimization</strong>: See Section 2 for the LM algorithm details.</p>
+<p><strong>Step 7 — Result Writeback</strong>:
+For each spectrum, <code>build_result()</code> reconstructs the full parameter vector, evaluates the best-fit curve, and computes R². Then <code>write_back_to_spectrum()</code> writes the optimized values back to each <code>peak_model.param_hints</code> and sets <code>spectrum.result_fit</code>.</p>
 <hr />
-<h2 id="5-optimization-parameters-and-adjustments">5. Optimization Parameters and Adjustments<a class="headerlink" href="#5-optimization-parameters-and-adjustments" title="Permanent link">&para;</a></h2>
+<h2 id="5-the-tensorevaluator-in-detail">5. The TensorEvaluator in Detail<a class="headerlink" href="#5-the-tensorevaluator-in-detail" title="Permanent link">&para;</a></h2>
+<p>The <code>TensorEvaluator</code> is the most complex class in the engine. It serves as the <strong>bridge</strong> between the flexible, dictionary-based world of the GUI and the rigid, flat-tensor world of the optimizer.</p>
+<h3 id="parameter-space-mapping">Parameter Space Mapping<a class="headerlink" href="#parameter-space-mapping" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>fit_model dict                    TensorEvaluator                  Optimizer
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>┌─────────────────┐     ┌────────────────────────────┐     ┌──────────────┐
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│ peak_models:    │     │ _param_names:              │     │              │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   &quot;0&quot;:          │     │   [&quot;m01_ampli&quot;,            │     │  p_free      │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│     Gaussian:   │ ──► │    &quot;m01_fwhm&quot;,             │ ──► │  (N, K_free) │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│       ampli: .. │     │    &quot;m01_x0&quot;,               │     │              │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│       fwhm:  .. │     │    &quot;m02_ampli&quot;, ...]       │     │              │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│       x0:    .. │     │                            │     │              │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   &quot;1&quot;:          │     │ _free_idx:  [0, 1, 2, 3]   │     │              │
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│     Lorentzian: │     │ _fixed_idx: [4]             │     │              │
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│       ampli: .. │     │ _fixed_values: [0.5]        │     │              │
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│       ...       │     │                            │     │              │
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>└─────────────────┘     └────────────────────────────┘     └──────────────┘
+</code></pre></div>
+<h3 id="expression-support">Expression Support<a class="headerlink" href="#expression-support" title="Permanent link">&para;</a></h3>
+<p>Parameters can reference other parameters via mathematical expressions (e.g., <code>m01_fwhm = m02_fwhm</code> or <code>m01_x0 + 10</code>). The evaluator handles this in <code>_to_full()</code>:</p>
+<ol>
+<li>Parameters with expressions are marked as <strong>fixed</strong> (not optimized directly)</li>
+<li>During <code>_to_full()</code>, expressions are evaluated using Python's <code>eval()</code> with a restricted namespace containing all parameter names, <code>np</code>, and common math functions</li>
+<li>A <strong>multi-pass resolution</strong> loop handles expression chains (e.g., <code>a = b</code>, <code>b = c</code>) by retrying failed evaluations until all dependencies are resolved</li>
+<li>The Jacobian accounts for expressions via the <strong>chain rule</strong>: a numerical <code>J_expr</code> matrix is computed by perturbing each free parameter and observing how the full parameter vector changes, then the true Jacobian is <code>J_full @ J_expr</code></li>
+</ol>
+<h3 id="model-routing">Model Routing<a class="headerlink" href="#model-routing" title="Permanent link">&para;</a></h3>
+<p>The evaluator's <code>evaluate()</code> and <code>jacobian()</code> methods iterate over all registered peaks and sum their contributions:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">p_free</span><span class="p">):</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">p_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_full</span><span class="p">(</span><span class="n">p_free</span><span class="p">)</span>           <span class="c1"># (N, K_total)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">))</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="k">for</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">slc</span><span class="p">,</span> <span class="n">eval_fn</span><span class="p">,</span> <span class="n">jac_fn</span><span class="p">,</span> <span class="n">has_jac</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_peaks</span><span class="p">:</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="n">Y</span> <span class="o">+=</span> <span class="n">eval_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">p_full</span><span class="p">[:,</span> <span class="n">slc</span><span class="p">])</span>      <span class="c1"># Each peak adds its contribution</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="k">return</span> <span class="n">Y</span>
+</code></pre></div>
+<p>For the Jacobian, if a peak has an analytical Jacobian (<code>has_jac=True</code>), it's used directly. Otherwise, <code>numerical_jacobian()</code> is called as a fallback with central differences and relative perturbation scaling.</p>
+<hr />
+<h2 id="6-batched-peak-models-and-analytical-jacobians">6. Batched Peak Models and Analytical Jacobians<a class="headerlink" href="#6-batched-peak-models-and-analytical-jacobians" title="Permanent link">&para;</a></h2>
+<h3 id="tensor-conventions">Tensor Conventions<a class="headerlink" href="#tensor-conventions" title="Permanent link">&para;</a></h3>
+<p>All batched functions follow the same signature:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span> <span class="nf">batched_shape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="sd">    x:      (M,) shared axis  OR  (N, M) per-spectrum axis</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="sd">    params: (N, n_p) parameter matrix</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="sd">    Returns: (N, M) predicted values</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="k">def</span> <span class="nf">batched_shape_jac</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns: (N, M, n_p) Jacobian tensor&quot;&quot;&quot;</span>
+</code></pre></div>
+<h3 id="registered-models-batched_models">Registered Models (<code>BATCHED_MODELS</code>)<a class="headerlink" href="#registered-models-batched_models" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Parameters</th>
+<th>Jacobian</th>
+<th>Formula</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Gaussian</code></td>
+<td><code>ampli, fwhm, x0</code></td>
+<td>✓ Analytical</td>
+<td><span class="arithmatex">\(a \cdot \exp\left(-4\ln 2 \cdot \frac{(x-x_0)^2}{w^2}\right)\)</span></td>
+</tr>
+<tr>
+<td><code>Lorentzian</code></td>
+<td><code>ampli, fwhm, x0</code></td>
+<td>✓ Analytical</td>
+<td><span class="arithmatex">\(\frac{a}{1 + 4(x-x_0)^2/w^2}\)</span></td>
+</tr>
+<tr>
+<td><code>PseudoVoigt</code></td>
+<td><code>ampli, fwhm, x0, alpha</code></td>
+<td>✓ Analytical</td>
+<td><span class="arithmatex">\(\alpha \cdot G + (1-\alpha) \cdot L\)</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="scalar-fallback-models-peak_model_registry">Scalar Fallback Models (<code>PEAK_MODEL_REGISTRY</code>)<a class="headerlink" href="#scalar-fallback-models-peak_model_registry" title="Permanent link">&para;</a></h3>
+<p>These models lack batched implementations and are wrapped via <code>_make_batched_scalar()</code>, which loops over spectra individually. They use <code>numerical_jacobian()</code> (central differences):</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Parameters</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GaussianAsym</code></td>
+<td><code>ampli, fwhm_l, fwhm_r, x0</code></td>
+<td>Piecewise left/right FWHM</td>
+</tr>
+<tr>
+<td><code>LorentzianAsym</code></td>
+<td><code>ampli, fwhm_l, fwhm_r, x0</code></td>
+<td>Piecewise left/right FWHM</td>
+</tr>
+<tr>
+<td><code>Fano</code></td>
+<td><code>ampli, fwhm, x0, q</code></td>
+<td>Fano lineshape for asymmetric resonances</td>
+</tr>
+<tr>
+<td><code>DecaySingleExp</code></td>
+<td><code>A, tau, B</code></td>
+<td>Single exponential decay (TRPL)</td>
+</tr>
+<tr>
+<td><code>DecayBiExp</code></td>
+<td><code>A1, tau1, A2, tau2, B</code></td>
+<td>Bi-exponential decay (TRPL)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="numerical-jacobian-fallback">Numerical Jacobian Fallback<a class="headerlink" href="#numerical-jacobian-fallback" title="Permanent link">&para;</a></h3>
+<p>When no analytical Jacobian is available, <code>numerical_jacobian()</code> uses <strong>central differences</strong> with relative perturbation:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">h</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">|</span><span class="n">param</span><span class="o">|</span> <span class="o">*</span> <span class="n">eps</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>          <span class="c1"># Scale step to parameter magnitude</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">J</span><span class="p">[:,:,</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="o">+</span><span class="n">h</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="o">-</span><span class="n">h</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="n">h</span>  <span class="c1"># Central difference</span>
+</code></pre></div>
+<p>This is ~<code>2K</code> times slower than analytical Jacobians per iteration but ensures correctness for any model shape.</p>
+<hr />
+<h2 id="7-the-tensorfitthread">7. The TensorFitThread<a class="headerlink" href="#7-the-tensorfitthread" title="Permanent link">&para;</a></h2>
+<h3 id="two-operating-modes">Two Operating Modes<a class="headerlink" href="#two-operating-modes" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>graph TD
+    TFT["TensorFitThread.run()"]
+    TFT --&gt; Check{batches?}
+    Check --&gt;|"Yes"| Batched["_run_batched()&lt;br/&gt;Sequential groups,&lt;br/&gt;parallel within each"]
+    Check --&gt;|"No"| Single["_run_single()&lt;br/&gt;One fit_model for all"]
+
+    Batched --&gt; G1["Group 1: Gaussian×2&lt;br/&gt;(500 spectra)"]
+    Batched --&gt; G2["Group 2: PseudoVoigt×3&lt;br/&gt;(200 spectra)"]
+    Batched --&gt; G3["Group 3: Fano×1&lt;br/&gt;(50 spectra)"]
+
+    Single --&gt; All["All spectra&lt;br/&gt;same model"]</code></pre>
+<p><strong>Single-model mode</strong> (Maps workspace / Apply Fit Model):
+All spectra share one <code>fit_model</code>. The engine processes them in one tensor batch.</p>
+<p><strong>Batched mode</strong> (Spectra workspace / individual models):
+When spectra have different peak configurations, the ViewModel groups them by model signature (same number and types of peaks). Each group is processed sequentially through the engine, but spectra <em>within</em> each group are optimized in parallel.</p>
+<h3 id="macos-stack-size">macOS Stack Size<a class="headerlink" href="#macos-stack-size" title="Permanent link">&para;</a></h3>
+<p>The thread sets an 8 MB stack size on macOS (<code>setStackSize(8 * 1024 * 1024)</code>) because:</p>
+<ul>
+<li>macOS defaults QThread stack to 512 KB</li>
+<li><code>np.linalg.solve</code> dispatches to LAPACK, which allocates workspace arrays on the stack</li>
+<li>For large K (many parameters), the stack allocation can exceed 512 KB, causing segfaults</li>
+</ul>
+<h3 id="signals">Signals<a class="headerlink" href="#signals" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Payload</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>progress_changed</code></td>
+<td><code>(current, total, percent, elapsed)</code></td>
+<td>Updates progress bar in the View</td>
+</tr>
+<tr>
+<td><code>timings_ready</code></td>
+<td><code>str</code></td>
+<td>Formatted timing breakdown for console/debug</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-optimization-parameters-and-adjustments">8. Optimization Parameters and Adjustments<a class="headerlink" href="#8-optimization-parameters-and-adjustments" title="Permanent link">&para;</a></h2>
 <p>The engine behavior can be tuned via the <code>fit_params</code> dictionary passed to <code>fit_spectra()</code>.</p>
 <h3 id="key-parameters">Key Parameters<a class="headerlink" href="#key-parameters" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>max_ite</code> (default: 200)</strong>: The maximum number of Levenberg-Marquardt iterations. Increasing this might help extremely difficult spectra converge but will increase total execution time.</li>
 <li><strong><code>xtol</code> (default: 1e-4)</strong>: The relative tolerance for the parameter step size <span class="arithmatex">\(\delta p\)</span>. If the relative change in all parameters is less than <code>xtol</code>, the spectrum is considered converged.</li>
 <li><strong><code>ftol</code> (default: 1e-4)</strong>: The relative tolerance for the cost function (sum of squared residuals). If the relative change in the cost is less than <code>ftol</code>, the spectrum is considered converged.</li>
+<li><strong><code>fit_negative</code> (default: <code>False</code>)</strong>: Whether to include negative intensity values in the fit. When <code>False</code>, negative points get zero weight.</li>
+<li><strong><code>fit_outliers</code> (default: <code>True</code>)</strong>: Whether to include statistical outlier points. When <code>False</code>, outliers detected by <code>spectrum.calculate_outliers()</code> get zero weight.</li>
+<li><strong><code>coef_noise</code> (default: 0)</strong>: Noise coefficient multiplier. When &gt; 0, points where the smoothed signal is below <code>coef_noise × noise_amplitude</code> get zero weight, and peaks in those regions have their amplitude/FWHM forced to zero.</li>
 </ul>
 <h3 id="tuning-for-performance-vs-accuracy">Tuning for Performance vs. Accuracy<a class="headerlink" href="#tuning-for-performance-vs-accuracy" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1383,11 +2287,108 @@
 <li><strong>Precision Fitting</strong>: For publication-quality results, decrease <code>xtol</code> and <code>ftol</code> to <code>1e-5</code> or <code>1e-6</code>.</li>
 <li><strong>Handling "Stuck" Spectra</strong>: The optimizer tracks <code>consecutive_rejects</code>. If a spectrum's cost fails to improve for 15 consecutive iterations (despite damping adjustments), it is marked as converged (stuck) to prevent it from holding back the rest of the batch. This threshold (<code>MAX_REJECTS</code> in <code>optimizer.py</code>) can be adjusted if needed.</li>
 </ul>
-<h3 id="adding-new-peak-models">Adding New Peak Models<a class="headerlink" href="#adding-new-peak-models" title="Permanent link">&para;</a></h3>
-<p>To add a new peak shape to the fast tensor engine:
-1.  Define the <code>batched_newshape(x, params)</code> function in <code>models.py</code>.
-2.  (Crucial for speed) Derive and define the analytical Jacobian <code>batched_newshape_jac(x, params)</code>.
-3.  Register the model in the <code>BATCHED_MODELS</code> dictionary at the bottom of <code>models.py</code>. If you skip the Jacobian, the engine will fall back to <code>numerical_jacobian</code>, drastically reducing performance.</p>
+<h3 id="damping-schedule">Damping Schedule<a class="headerlink" href="#damping-schedule" title="Permanent link">&para;</a></h3>
+<p>The per-spectrum damping factor <span class="arithmatex">\(\lambda\)</span> is initialized at <code>1e-2</code> and adjusted after each iteration:</p>
+<table>
+<thead>
+<tr>
+<th>Outcome</th>
+<th>λ adjustment</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cost improved</td>
+<td><code>λ /= 3.0</code> (floor <code>1e-10</code>)</td>
+<td>Trust the Gauss-Newton direction more</td>
+</tr>
+<tr>
+<td>Cost worsened</td>
+<td><code>λ *= 2.5</code> (ceiling <code>1e10</code>)</td>
+<td>Shift toward gradient descent</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-adding-new-peak-models">9. Adding New Peak Models<a class="headerlink" href="#9-adding-new-peak-models" title="Permanent link">&para;</a></h2>
+<h3 id="fast-path-analytical-jacobian-recommended">Fast Path: Analytical Jacobian (Recommended)<a class="headerlink" href="#fast-path-analytical-jacobian-recommended" title="Permanent link">&para;</a></h3>
+<p>To add a new peak shape with maximum performance:</p>
+<p><strong>Step 1</strong> — Define the batched evaluation function in <code>models.py</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span> <span class="nf">batched_newshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="sd">    x:      (M,) or (N, M)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="sd">    params: (N, n_p) where columns are [param1, param2, ...]</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="sd">    Returns: (N, M)</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">p1</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>    <span class="c1"># (N, 1) — broadcasts over M</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">p2</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>        <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">p2</span>    <span class="c1"># (N, M)</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>        <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">p2</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="k">return</span> <span class="n">p1</span> <span class="o">*</span> <span class="n">some_function</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Step 2</strong> — Derive and define the analytical Jacobian:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">def</span> <span class="nf">batched_newshape_jac</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns: (N, M, n_p) — partial derivatives w.r.t. each parameter.&quot;&quot;&quot;</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="c1"># ... compute intermediates ...</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">N</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">shape</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">n_p</span><span class="p">))</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">J</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_result_d_p1</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">J</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_result_d_p2</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="k">return</span> <span class="n">J</span>
+</code></pre></div>
+<p><strong>Step 3</strong> — Register in the <code>BATCHED_MODELS</code> dictionary:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">BATCHED_MODELS</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="c1"># ... existing ...</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="s2">&quot;NewShape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">batched_newshape</span><span class="p">,</span> <span class="n">batched_newshape_jac</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;param1&quot;</span><span class="p">,</span> <span class="s2">&quot;param2&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">]),</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="slow-path-scalar-fallback">Slow Path: Scalar Fallback<a class="headerlink" href="#slow-path-scalar-fallback" title="Permanent link">&para;</a></h3>
+<p>If deriving an analytical Jacobian is impractical:</p>
+<p><strong>Step 1</strong> — Define a scalar function in <code>scalar_models.py</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">def</span> <span class="nf">newshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">param1</span><span class="p">,</span> <span class="n">param2</span><span class="p">):</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;x is a 1D array, params are scalars. Returns 1D array.&quot;&quot;&quot;</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="k">return</span> <span class="n">param1</span> <span class="o">*</span> <span class="n">some_function</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">param2</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Step 2</strong> — Register in <code>PEAK_MODEL_REGISTRY</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">PEAK_MODEL_REGISTRY</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="c1"># ... existing ...</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="s2">&quot;NewShape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">newshape</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;param1&quot;</span><span class="p">,</span> <span class="s2">&quot;param2&quot;</span><span class="p">]),</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>The evaluator will automatically wrap it via <code>_make_batched_scalar()</code> and use <code>numerical_jacobian()</code>. This is functional but significantly slower (~10-50× per peak per iteration).</p>
+<h3 id="registration-in-the-application">Registration in the Application<a class="headerlink" href="#registration-in-the-application" title="Permanent link">&para;</a></h3>
+<p>After adding the model to the engine, register it in <code>spectroview/__init__.py</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">PEAK_MODELS</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="s2">&quot;Gaussian&quot;</span><span class="p">,</span> <span class="s2">&quot;Lorentzian&quot;</span><span class="p">,</span> <span class="s2">&quot;PseudoVoigt&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="c1"># ... existing ...</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="s2">&quot;NewShape&quot;</span><span class="p">,</span>  <span class="c1"># Add here to appear in the UI dropdown</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">]</span>
+</code></pre></div>
+<hr />
+<h2 id="10-timing-and-diagnostics">10. Timing and Diagnostics<a class="headerlink" href="#10-timing-and-diagnostics" title="Permanent link">&para;</a></h2>
+<p>The <code>TensorFittingEngine</code> records wall-clock timings for each step in <code>self.timings</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Step 1 - apply_model:  0.012s
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>Step 2 - preprocess:   0.045s
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>Step 3 - build p0:     0.003s
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>Step 4 - tensor fit:   1.234s (0.6 ms/spectrum, 1950/2000 converged)
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>Step 5 - write_back:   0.089s
+</code></pre></div>
+<p>These timings are emitted via <code>TensorFitThread.timings_ready</code> and printed to the console. They are invaluable for diagnosing performance bottlenecks:</p>
+<ul>
+<li>If <strong>Step 1</strong> dominates → too many spectra to apply model to; consider caching</li>
+<li>If <strong>Step 4</strong> dominates → normal; this is the actual optimization</li>
+<li>If <strong>Step 4</strong> shows low convergence → check initial guesses, bounds, or model suitability</li>
+<li>If <strong>Step 5</strong> dominates → many spectra with complex write-back; usually negligible</li>
+</ul>
+<h3 id="r2-computation">R² Computation<a class="headerlink" href="#r2-computation" title="Permanent link">&para;</a></h3>
+<p>The goodness-of-fit metric R² is computed during <code>build_result()</code>:</p>
+<div class="arithmatex">\[
+R^2 = 1 - \frac{\sum_i w_i (y_i - \hat{y}_i)^2}{\sum_i w_i (y_i - \bar{y}_w)^2}
+\]</div>
+<p>Where <span class="arithmatex">\(\bar{y}_w\)</span> is the weighted mean. When weights are present, only non-zero-weight points contribute to both numerator and denominator, ensuring that masked regions (negative values, outliers, padding) don't artificially inflate or deflate the reported quality.</p>
 
 
 

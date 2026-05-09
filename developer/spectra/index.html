@@ -1753,45 +1753,18 @@
 <hr />
 <h2 id="architecture-overview">Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>graph TD
-    subgraph View Layer
-        VWS["VWorkspaceSpectra"]
-        SV["VSpectraViewer&lt;br/&gt;(Matplotlib canvas)"]
-        FMB["VFitModelBuilder&lt;br/&gt;(Baseline / Peaks / Fit)"]
-        SL["VSpectraList&lt;br/&gt;(Checkbox list)"]
-        FR["VFitResults&lt;br/&gt;(Results table)"]
-        MVA["VMVA&lt;br/&gt;(PCA / NMF panel)"]
-    end
+    VWS["VWorkspaceSpectra"] --&gt; SV["SpectraViewer"]
+    VWS --&gt; FMB["FitModelBuilder"]
+    VWS --&gt; SL["SpectraList"]
+    VWS --&gt; FR["FitResults"]
+    VWS --&gt; MVA["MVA Panel"]
 
-    subgraph ViewModel Layer
-        VMWS["VMWorkspaceSpectra"]
-    end
-
-    subgraph Model Layer
-        MS["MSpectrum"]
-        MSS["MSpectra&lt;br/&gt;(collection)"]
-        IO["m_io&lt;br/&gt;(file loaders)"]
-    end
-
-    subgraph Fit Engine
-        TFT["TensorFitThread"]
-        TFE["TensorFittingEngine"]
-    end
-
-    VWS --&gt; SV
-    VWS --&gt; FMB
-    VWS --&gt; SL
-    VWS --&gt; FR
-    VWS --&gt; MVA
-
-    VWS --&gt;|"method calls"| VMWS
+    VWS --&gt;|"calls"| VMWS["VMWorkspaceSpectra"]
     VMWS --&gt;|"signals"| VWS
 
-    VMWS --&gt; MSS
-    MSS --&gt; MS
-    VMWS --&gt; IO
-
-    VMWS --&gt; TFT
-    TFT --&gt; TFE</code></pre>
+    VMWS --&gt; MSS["MSpectra"]
+    VMWS --&gt; IO["m_io"]
+    VMWS --&gt; TFT["TensorFitThread"]</code></pre>
 <hr />
 <h2 id="key-classes">Key Classes<a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
 <h3 id="vmworkspacespectra-the-viewmodel"><code>VMWorkspaceSpectra</code> — The ViewModel<a class="headerlink" href="#vmworkspacespectra-the-viewmodel" title="Permanent link">&para;</a></h3>

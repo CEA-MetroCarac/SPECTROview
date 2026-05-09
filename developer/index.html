@@ -1752,15 +1752,15 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <hr />
 <h2 id="application-entry-point">Application Entry Point<a class="headerlink" href="#application-entry-point" title="Permanent link">&para;</a></h2>
 <p><code>spectroview/main.py</code> creates the <code>QMainWindow</code> and instantiates all workspaces as tabs in a <code>QTabWidget</code>:</p>
-<pre class="mermaid"><code>graph TD
-    Main["main.py → QMainWindow"] --&gt; TabWidget["QTabWidget"]
-    TabWidget --&gt; Spectra["VWorkspaceSpectra"]
-    TabWidget --&gt; Maps["VWorkspaceMaps"]
-    TabWidget --&gt; Graphs["VWorkspaceGraphs"]
-    Main --&gt; Wire["setup_connections()"]
-    Wire --&gt;|"inject graphs_workspace ref"| MapsVM["VMWorkspaceMaps"]
-    Wire --&gt;|"connect send_spectra signal"| SpectraVM["VMWorkspaceSpectra"]
-    Wire --&gt;|"connect switch_tab signal"| TabWidget</code></pre>
+<pre class="mermaid"><code>graph LR
+    Main["main.py"] --&gt; Tabs["QTabWidget"]
+    Tabs --&gt; S["Spectra"]
+    Tabs --&gt; M["Maps"]
+    Tabs --&gt; G["Graphs"]
+    Main --&gt; W["setup_connections()"]
+    W --&gt;|"inject ref"| M
+    W --&gt;|"signal"| S
+    W --&gt;|"signal"| Tabs</code></pre>
 <p>The <code>setup_connections()</code> method in <code>main.py</code> wires cross-workspace dependencies:</p>
 <ul>
 <li><strong>Maps → Graphs</strong>: <code>VMWorkspaceMaps.set_graphs_workspace(v_graphs)</code> injects a reference so Maps can send profiles and DataFrames directly to the Graphs workspace.</li>
@@ -1771,87 +1771,54 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <h2 id="data-lifecycle">Data Lifecycle<a class="headerlink" href="#data-lifecycle" title="Permanent link">&para;</a></h2>
 <h3 id="spectra-loading-processing-fitting-results">Spectra: Loading → Processing → Fitting → Results<a class="headerlink" href="#spectra-loading-processing-fitting-results" title="Permanent link">&para;</a></h3>
 <pre class="mermaid"><code>sequenceDiagram
-    participant User
-    participant View as VWorkspaceSpectra
-    participant VM as VMWorkspaceSpectra
-    participant IO as m_io
-    participant Model as MSpectrum
-    participant Engine as TensorFitEngine
-    participant Thread as TensorFitThread
+    participant View
+    participant VM as ViewModel
+    participant Engine as FitEngine
 
-    User-&gt;&gt;View: Open file(s)
     View-&gt;&gt;VM: load_spectra(paths)
-    VM-&gt;&gt;IO: load_spectrum_file(path)
-    IO--&gt;&gt;VM: MSpectrum (x0, y0, x, y)
-    VM-&gt;&gt;VM: spectra.add(spectrum)
-    VM--&gt;&gt;View: spectra_list_changed.emit()
+    VM--&gt;&gt;View: spectra_list_changed
 
-    User-&gt;&gt;View: Set baseline / peaks
     View-&gt;&gt;VM: subtract_baseline(), add_peak()
-    VM-&gt;&gt;Model: baseline.eval(), peak_models.append()
 
-    User-&gt;&gt;View: Click "Fit"
-    View-&gt;&gt;VM: fit(apply_all=True)
-    VM-&gt;&gt;Thread: start()
-    Thread-&gt;&gt;Engine: fit_spectra(spectra, fit_params)
-    Engine-&gt;&gt;Engine: preprocess → build tensors → LM optimize
-    Engine--&gt;&gt;Thread: results
-    Thread--&gt;&gt;VM: fit_finished signal
-    VM-&gt;&gt;VM: collect_fit_results()
-    VM--&gt;&gt;View: fit_results_updated.emit(DataFrame)</code></pre>
+    View-&gt;&gt;VM: fit(apply_all)
+    VM-&gt;&gt;Engine: fit_spectra()
+    Engine--&gt;&gt;VM: results
+    VM--&gt;&gt;View: fit_results_updated</code></pre>
 <h3 id="maps-loading-extraction-heatmap-profile">Maps: Loading → Extraction → Heatmap → Profile<a class="headerlink" href="#maps-loading-extraction-heatmap-profile" title="Permanent link">&para;</a></h3>
 <pre class="mermaid"><code>sequenceDiagram
-    participant User
-    participant View as VWorkspaceMaps
-    participant VM as VMWorkspaceMaps
-    participant IO as m_io
-    participant MapViewer as VMapViewer
+    participant View
+    participant VM as ViewModel
+    participant Viewer as MapViewer
 
-    User-&gt;&gt;View: Open .wdf / .csv map file
     View-&gt;&gt;VM: load_map_files(paths)
-    VM-&gt;&gt;IO: load_wdf_map(path) → DataFrame + metadata
-    VM-&gt;&gt;VM: _extract_spectra_from_map() → N × MSpectrum
-    VM--&gt;&gt;View: maps_list_changed.emit()
+    VM--&gt;&gt;View: maps_list_changed
 
-    User-&gt;&gt;View: Select map from list
     View-&gt;&gt;VM: select_map(name)
-    VM-&gt;&gt;VM: _show_map_spectra(name)
-    VM--&gt;&gt;View: spectra_list_changed.emit(), map_data_updated.emit()
-    View-&gt;&gt;MapViewer: set_map_data(df, name, fit_results)
-    MapViewer-&gt;&gt;MapViewer: plot_heatmap()
+    VM--&gt;&gt;View: map_data_updated
+    View-&gt;&gt;Viewer: plot_heatmap()
 
-    User-&gt;&gt;View: Select 2 points → Extract profile
-    View-&gt;&gt;VM: extract_and_send_profile_to_graphs()
-    VM-&gt;&gt;VM: graphs_workspace.vm.add_dataframe()
-    VM--&gt;&gt;View: switch_to_graphs_tab.emit()</code></pre>
+    View-&gt;&gt;VM: extract_profile()
+    VM--&gt;&gt;View: switch_to_graphs_tab</code></pre>
 <hr />
 <h2 id="workspace-inheritance">Workspace Inheritance<a class="headerlink" href="#workspace-inheritance" title="Permanent link">&para;</a></h2>
 <p><code>VMWorkspaceMaps</code> <strong>extends</strong> <code>VMWorkspaceSpectra</code>. This means every fitting, baseline, peak, and serialization feature available in the Spectra workspace is automatically available in the Maps workspace, with additional map-specific overrides:</p>
 <pre class="mermaid"><code>classDiagram
     class VMWorkspaceSpectra {
-        +spectra: MSpectra
-        +load_spectra(paths)
-        +fit(apply_all)
-        +collect_fit_results()
-        +save_work() / load_work()
-        +reinit_spectra()
+        +spectra
+        +fit()
+        +save_work()
     }
 
     class VMWorkspaceMaps {
-        +maps: dict~str, DataFrame~
-        +load_map_files(paths)
-        +select_map(name)
-        +extract_and_send_profile_to_graphs()
-        +collect_fit_results() // adds X,Y columns
-        +save_work() // binary format
+        +maps
+        +load_map_files()
+        +select_map()
     }
 
     class VMWorkspaceGraphs {
-        +dataframes: dict~str, DataFrame~
-        +graphs: dict~int, MGraph~
-        +create_graph(config)
-        +apply_filters(df_name, filters)
-        +save_workspace() / load_workspace()
+        +dataframes
+        +graphs
+        +create_graph()
     }
 
     VMWorkspaceSpectra &lt;|-- VMWorkspaceMaps</code></pre>

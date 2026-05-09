@@ -1777,31 +1777,14 @@
 <hr />
 <h2 id="architecture-overview">Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>graph TD
-    subgraph View Layer
-        VWG["VWorkspaceGraphs"]
-        MDI["QMdiArea&lt;br/&gt;(plot windows)"]
-        VG["VGraph&lt;br/&gt;(per-plot widget)"]
-        DF["VDataFilter&lt;br/&gt;(query builder)"]
-        CGD["CustomizeGraphDialog&lt;br/&gt;(singleton)"]
-    end
+    VWG["VWorkspaceGraphs"] --&gt; MDI["QMdiArea"]
+    MDI --&gt; VG["VGraph"]
+    VWG --&gt; DF["DataFilter"]
+    VWG --&gt; CGD["CustomizeDialog"]
 
-    subgraph ViewModel Layer
-        VMWG["VMWorkspaceGraphs"]
-    end
-
-    subgraph Model Layer
-        MG["MGraph&lt;br/&gt;(plot configuration)"]
-    end
-
-    VWG --&gt; MDI
-    MDI --&gt; VG
-    VWG --&gt; DF
-    VWG --&gt; CGD
-
-    VWG --&gt;|"method calls"| VMWG
+    VWG --&gt;|"calls"| VMWG["VMWorkspaceGraphs"]
     VMWG --&gt;|"signals"| VWG
-
-    VMWG --&gt; MG</code></pre>
+    VMWG --&gt; MG["MGraph"]</code></pre>
 <hr />
 <h2 id="key-classes">Key Classes<a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
 <h3 id="vmworkspacegraphs-the-viewmodel"><code>VMWorkspaceGraphs</code> — The ViewModel<a class="headerlink" href="#vmworkspacegraphs-the-viewmodel" title="Permanent link">&para;</a></h3>
@@ -2141,10 +2124,9 @@
 <h2 id="mdi-area-management">MDI Area Management<a class="headerlink" href="#mdi-area-management" title="Permanent link">&para;</a></h2>
 <p>The Graphs workspace uses a <code>QMdiArea</code> to display multiple plots simultaneously:</p>
 <pre class="mermaid"><code>graph LR
-    MDI["QMdiArea"] --&gt; SW1["QMdiSubWindow&lt;br/&gt;(Graph 1)"]
-    MDI --&gt; SW2["QMdiSubWindow&lt;br/&gt;(Graph 2)"]
-    MDI --&gt; SW3["QMdiSubWindow&lt;br/&gt;(Graph 3)"]
-
+    MDI["QMdiArea"] --&gt; SW1["SubWindow 1"]
+    MDI --&gt; SW2["SubWindow 2"]
+    MDI --&gt; SW3["SubWindow 3"]
     SW1 --&gt; VG1["VGraph"]
     SW2 --&gt; VG2["VGraph"]
     SW3 --&gt; VG3["VGraph"]</code></pre>

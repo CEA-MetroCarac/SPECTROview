@@ -1944,21 +1944,12 @@
 <hr />
 <h2 id="3-folder-and-class-structure">3. Folder and Class Structure<a class="headerlink" href="#3-folder-and-class-structure" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>graph TD
-    subgraph "fit_engine/"
-        TFT["tensor_fit_thread.py&lt;br/&gt;&lt;b&gt;TensorFitThread&lt;/b&gt; (QThread)"]
-        TE["tensor_engine.py&lt;br/&gt;&lt;b&gt;TensorFittingEngine&lt;/b&gt;"]
-        EV["evaluator.py&lt;br/&gt;&lt;b&gt;TensorEvaluator&lt;/b&gt;"]
-        OPT["optimizer.py&lt;br/&gt;&lt;b&gt;batched_levenberg_marquardt()&lt;/b&gt;"]
-        MOD["models.py&lt;br/&gt;Batched peak functions&lt;br/&gt;+ analytical Jacobians"]
-        SM["scalar_models.py&lt;br/&gt;Scalar fallbacks&lt;br/&gt;+ FitResult / ParamValue"]
-    end
-
-    TFT --&gt;|"instantiates"| TE
-    TE --&gt;|"builds"| EV
-    TE --&gt;|"calls"| OPT
-    EV --&gt;|"routes to"| MOD
-    EV --&gt;|"fallback"| SM
-    OPT --&gt;|"calls evaluate/jacobian via"| EV</code></pre>
+    TFT["TensorFitThread"] --&gt;|"instantiates"| TE["TensorFittingEngine"]
+    TE --&gt;|"builds"| EV["TensorEvaluator"]
+    TE --&gt;|"calls"| OPT["batched_LM()"]
+    EV --&gt;|"routes to"| MOD["models.py"]
+    EV --&gt;|"fallback"| SM["scalar_models.py"]
+    OPT --&gt;|"evaluate / jacobian"| EV</code></pre>
 <table>
 <thead>
 <tr>
@@ -2005,42 +1996,19 @@
 <p>When a user triggers a fit (e.g., via the "Fit" button), the following pipeline executes:</p>
 <pre class="mermaid"><code>sequenceDiagram
     participant VM as ViewModel
-    participant TFT as TensorFitThread
-    participant TE as TensorFittingEngine
-    participant EV as TensorEvaluator
-    participant OPT as batched_LM()
+    participant TFT as FitThread
+    participant TE as Engine
+    participant EV as Evaluator
 
     VM-&gt;&gt;TFT: start()
-    TFT-&gt;&gt;TE: fit_spectra(spectra, fit_model, fit_params)
-
-    Note over TE: Step 1: Apply fit_model to all spectra
-    TE-&gt;&gt;TE: _apply_model_to_all()
-
-    Note over TE: Step 2: Build evaluator
-    TE-&gt;&gt;EV: TensorEvaluator.from_fit_model(fit_model)
-    EV--&gt;&gt;TE: evaluator (free/fixed indexing ready)
-
-    Note over TE: Step 3: Preprocess spectra
-    TE-&gt;&gt;TE: spectrum.preprocess() for each
-
-    Note over TE: Step 4: Extract data matrices
-    TE-&gt;&gt;TE: Build X_matrix (N,M), Y_matrix (N,M)
-    TE-&gt;&gt;TE: _build_fit_weights() → weights (N,M)
-
-    Note over TE: Step 5: Build initial parameters
-    TE-&gt;&gt;EV: build_p0_matrix() or extract_p0_from_spectrum()
-    EV--&gt;&gt;TE: p0 (N, K_free)
-
-    Note over TE: Step 6: Run optimizer
-    TE-&gt;&gt;OPT: batched_levenberg_marquardt(X, Y, p0, ...)
-    OPT-&gt;&gt;EV: evaluate(x, p) → Y_pred (N,M)
-    OPT-&gt;&gt;EV: jacobian(x, p) → J (N,M,K)
-    OPT--&gt;&gt;TE: p_opt (N,K), success (N,), cost (N,)
-
-    Note over TE: Step 7: Write back results
-    TE-&gt;&gt;EV: build_result() + write_back_to_spectrum()
+    TFT-&gt;&gt;TE: fit_spectra()
+    TE-&gt;&gt;EV: from_fit_model()
+    TE-&gt;&gt;TE: preprocess + extract matrices
+    TE-&gt;&gt;TE: build p0 + weights
+    TE-&gt;&gt;TE: batched_LM()
+    TE-&gt;&gt;EV: write_back_to_spectrum()
     TE--&gt;&gt;TFT: fit_results
-    TFT--&gt;&gt;VM: finished signal + timings</code></pre>
+    TFT--&gt;&gt;VM: finished + timings</code></pre>
 <h3 id="step-by-step-details">Step-by-Step Details<a class="headerlink" href="#step-by-step-details" title="Permanent link">&para;</a></h3>
 <p><strong>Step 1 — Model Application</strong> (<code>apply_model_to_spectra=True</code>):
 The <code>fit_model</code> dictionary is applied to all <code>MSpectrum</code> objects via <code>apply_custom_fit_model()</code>, ensuring they have the correct number and type of peaks. When <code>False</code> (Spectra workspace with per-spectrum models), the <code>TensorFitThread</code> pre-groups spectra by model signature and processes each group as a separate batch.</p>
@@ -2226,16 +2194,13 @@ For each spectrum, <code>build_result()</code> reconstructs the full parameter v
 <h2 id="7-the-tensorfitthread">7. The TensorFitThread<a class="headerlink" href="#7-the-tensorfitthread" title="Permanent link">&para;</a></h2>
 <h3 id="two-operating-modes">Two Operating Modes<a class="headerlink" href="#two-operating-modes" title="Permanent link">&para;</a></h3>
 <pre class="mermaid"><code>graph TD
-    TFT["TensorFitThread.run()"]
-    TFT --&gt; Check{batches?}
-    Check --&gt;|"Yes"| Batched["_run_batched()&lt;br/&gt;Sequential groups,&lt;br/&gt;parallel within each"]
-    Check --&gt;|"No"| Single["_run_single()&lt;br/&gt;One fit_model for all"]
-
-    Batched --&gt; G1["Group 1: Gaussian×2&lt;br/&gt;(500 spectra)"]
-    Batched --&gt; G2["Group 2: PseudoVoigt×3&lt;br/&gt;(200 spectra)"]
-    Batched --&gt; G3["Group 3: Fano×1&lt;br/&gt;(50 spectra)"]
-
-    Single --&gt; All["All spectra&lt;br/&gt;same model"]</code></pre>
+    TFT["TensorFitThread"] --&gt; Check{"batches?"}
+    Check --&gt;|"Yes"| B["_run_batched()"]
+    Check --&gt;|"No"| S["_run_single()"]
+    B --&gt; G1["Group 1"]
+    B --&gt; G2["Group 2"]
+    B --&gt; G3["Group 3"]
+    S --&gt; All["All spectra"]</code></pre>
 <p><strong>Single-model mode</strong> (Maps workspace / Apply Fit Model):
 All spectra share one <code>fit_model</code>. The engine processes them in one tensor batch.</p>
 <p><strong>Batched mode</strong> (Spectra workspace / individual models):

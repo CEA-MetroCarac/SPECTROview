@@ -1865,33 +1865,15 @@
 <hr />
 <h2 id="architecture-overview">Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>graph TD
-    subgraph View Layer
-        VWM["VWorkspaceMaps&lt;br/&gt;(extends VWorkspaceSpectra)"]
-        ML["VMapList&lt;br/&gt;(loaded maps panel)"]
-        MV["VMapViewer&lt;br/&gt;(heatmap canvas)"]
-        MVD["VMapViewerDialog&lt;br/&gt;(detachable window)"]
-    end
+    VWM["VWorkspaceMaps"] --&gt; ML["MapList"]
+    VWM --&gt; MV["MapViewer"]
+    VWM --&gt; MVD["ViewerDialog"]
 
-    subgraph ViewModel Layer
-        VMWM["VMWorkspaceMaps&lt;br/&gt;(extends VMWorkspaceSpectra)"]
-    end
-
-    subgraph Model Layer
-        MS["MSpectrum"]
-        MSS["MSpectra"]
-        IO["m_io&lt;br/&gt;(load_map_file, load_wdf_map, load_spc_map)"]
-    end
-
-    VWM --&gt; ML
-    VWM --&gt; MV
-    VWM --&gt; MVD
-
-    VWM --&gt;|"method calls"| VMWM
+    VWM --&gt;|"calls"| VMWM["VMWorkspaceMaps"]
     VMWM --&gt;|"signals"| VWM
 
-    VMWM --&gt; MSS
-    MSS --&gt; MS
-    VMWM --&gt; IO</code></pre>
+    VMWM --&gt; MSS["MSpectra"]
+    VMWM --&gt; IO["m_io"]</code></pre>
 <hr />
 <h2 id="key-design-decision-inheritance">Key Design Decision: Inheritance<a class="headerlink" href="#key-design-decision-inheritance" title="Permanent link">&para;</a></h2>
 <p><code>VMWorkspaceMaps</code> extends <code>VMWorkspaceSpectra</code> rather than composing a separate spectra handler. This means:</p>
@@ -2094,16 +2076,15 @@
 </table>
 <h4 id="data-pipeline-for-heatmap">Data Pipeline for Heatmap<a class="headerlink" href="#data-pipeline-for-heatmap" title="Permanent link">&para;</a></h4>
 <pre class="mermaid"><code>graph LR
-    A["Map DataFrame"] --&gt; B["X-range filter&lt;br/&gt;(x_range_slider)"]
-    B --&gt; C{Z parameter?}
-    C --&gt;|Intensity/Area| D["Compute from&lt;br/&gt;filtered columns"]
-    C --&gt;|Fit param| E["Look up in&lt;br/&gt;df_fit_results"]
-    D --&gt; F["Remove outliers&lt;br/&gt;(IQR method)"]
+    A["Map DataFrame"] --&gt; B["X-range filter"]
+    B --&gt; C{"Z param?"}
+    C --&gt;|"Intensity"| D["Compute"]
+    C --&gt;|"Fit param"| E["Lookup"]
+    D --&gt; F["Outlier removal"]
     E --&gt; F
-    F --&gt; G["Apply mask&lt;br/&gt;(optional)"]
-    G --&gt; H{Map type?}
-    H --&gt;|2Dmap| I["pivot_table →&lt;br/&gt;imshow()"]
-    H --&gt;|Wafer| J["griddata →&lt;br/&gt;imshow()"]</code></pre>
+    F --&gt; G{"Map type?"}
+    G --&gt;|"2D"| H["imshow"]
+    G --&gt;|"Wafer"| I["griddata"]</code></pre>
 <h4 id="caching-strategy">Caching Strategy<a class="headerlink" href="#caching-strategy" title="Permanent link">&para;</a></h4>
 <p>Computing <code>scipy.griddata</code> for wafer maps is expensive (~100ms+ per call). The <code>VMapViewer</code> uses a <strong>multi-key cache</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">cache_key</span> <span class="o">=</span> <span class="p">(</span>

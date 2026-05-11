@@ -58,7 +58,9 @@ spectroview = [
     "resources/*.png", 
     "resources/icons/*.png",
     "resources/icons/*.ico",
-    "resources/*.pdf"
+    "resources/*.pdf",
+    "resources/user_manual/*",
+    "resources/user_manual_images/*"
 ]
 
 [project.scripts]

@@ -277,7 +277,7 @@ The engine behavior can be tuned via the `fit_params` dictionary passed to `fit_
 *   **`ftol` (default: 1e-4)**: The relative tolerance for the cost function (sum of squared residuals). If the relative change in the cost is less than `ftol`, the spectrum is considered converged.
 *   **`fit_negative` (default: `False`)**: Whether to include negative intensity values in the fit. When `False`, negative points get zero weight.
 *   **`fit_outliers` (default: `False`)**: Whether to include statistical outlier points. When `False`, outliers detected by `spectrum.calculate_outliers()` get zero weight.
-*   **`coef_noise` (default: 0)**: Noise coefficient multiplier. When > 0, points where the smoothed signal is below `coef_noise × noise_amplitude` get zero weight, and peaks in those regions have their amplitude/FWHM forced to zero.
+*   **`coef_noise` (default: 1)**: Noise coefficient multiplier. When > 0, activates noise-based weight masking and peak suppression. See [Section 9](#9-noise-amplitude-estimation-and-noise-threshold) for a detailed explanation.
 
 ### Tuning for Performance vs. Accuracy
 - **Fast Mapping**: For rapid previews, you can increase `xtol` and `ftol` to `1e-3` or `1e-2`. The optimizer will exit much earlier, providing a rough fit in a fraction of the time.
@@ -295,7 +295,122 @@ The per-spectrum damping factor \(\lambda\) is initialized at `1e-2` and adjuste
 
 ---
 
-## 9. Adding New Peak Models
+## 9. Noise Amplitude Estimation and Noise Threshold
+
+The `coef_noise` parameter controls a noise-aware filtering system that can significantly improve both the **performance** and **precision** of fitting, especially on hyperspectral maps where many pixels may contain weak or absent peaks.
+
+### How Noise Amplitude Is Estimated (`eval_noise_amplitude`)
+
+The noise amplitude is estimated by the `eval_noise_amplitude()` function from the `fitspy` library (`fitspy.core.utils`). It quantifies the **high-frequency oscillation amplitude** of the spectrum — i.e., the typical point-to-point noise — while being robust to real spectral features.
+
+```python
+def eval_noise_amplitude(y):
+    delta = np.diff(y)                              # δ[i] = y[i+1] − y[i]
+    delta1, delta2 = delta[:-1], delta[1:]          # adjacent difference pairs
+    mask = np.sign(delta1) * np.sign(delta2) == -1  # sign-alternating (zigzag)
+    ampli_noise = np.median(np.abs(delta1[mask] - delta2[mask]) / 2)
+    return ampli_noise
+```
+
+**Step-by-step logic:**
+
+| Step | Operation | Purpose |
+|------|-----------|--------|
+| 1 | `np.diff(y)` | Computes consecutive differences \(\delta_i = y_{i+1} - y_i\) |
+| 2 | Pair adjacent deltas | Creates overlapping pairs \((\delta_i, \delta_{i+1})\) |
+| 3 | Sign-alternation mask | Selects only **zigzag** points where the signal goes up-then-down or down-then-up on consecutive steps — the signature of random noise |
+| 4 | Half peak-to-peak | For each zigzag, \(\|\delta_i - \delta_{i+1}\| / 2\) measures the half-amplitude of the oscillation |
+| 5 | Median | Takes the **median** over all zigzag points, making the estimate robust to outliers and real peaks |
+
+**Why this works:** Real spectral peaks are broad features that create **sustained** positive or negative runs in the difference vector. They are excluded by the sign-alternation mask (step 3). Only rapid up-down oscillations characteristic of noise pass through, so the estimate cleanly separates noise from signal even if 30–50% of the spectrum contains strong peaks.
+
+### How `coef_noise` Activates Noise Thresholding
+
+When `coef_noise > 0`, the engine computes a **noise level threshold**:
+
+\[
+\text{noise\_level} = \text{coef\_noise} \times \text{ampli\_noise}
+\]
+
+This threshold activates **two complementary mechanisms**:
+
+#### Mechanism A — Weight Masking (`_build_fit_weights`)
+
+During weight matrix construction in `tensor_engine.py`, a 5-point moving average smooths the spectrum, and any data point where the smoothed signal falls below the noise level is **excluded from the fit** by setting its weight to zero:
+
+```python
+ymean = np.convolve(y, np.ones(5) / 5.0, mode='same')  # 5-point moving average
+noise_level = coef_noise * ampli_noise
+w[ymean < noise_level] = 0.0   # zero weight → ignored by optimizer
+```
+
+The optimizer's residual calculation \(\mathbf{r} = \mathbf{W} \circ (\mathbf{Y}_{pred} - \mathbf{Y}_{data})\) naturally ignores these masked points, so the fit focuses only on regions with meaningful signal.
+
+#### Mechanism B — Peak Suppression (`apply_noise_threshold`)
+
+In the `TensorEvaluator`, any peak whose **center position** (`x0`) falls in a below-threshold region has its initial parameters forcibly set to zero:
+
+```python
+for each peak:
+    x0_val = peak center position
+    if ymean[at x0] < noise_level:
+        ampli = 0.0    # force amplitude to zero
+        fwhm  = 0.0    # force width to zero
+```
+
+This runs **twice** during the pipeline:
+
+1. **Before optimization** (Step 5 in the pipeline) — sets a clean initial guess, preventing the optimizer from trying to fit noise fluctuations as peaks.
+2. **After optimization** (Step 7) — cleans up any peaks that may have drifted into noise regions during the LM iterations.
+
+### Performance and Precision Benefits
+
+#### Performance
+
+| Aspect | How it helps |
+|--------|-------------|
+| Faster convergence | Zeroed-out peaks in noise regions start and stay at zero, effectively reducing the active parameter count |
+| Fewer wasted iterations | Without noise masking, the optimizer spends many iterations fitting random noise with tiny ghost peaks |
+| Better initial guess | Pre-zeroing noise-region peaks brings \(p_0\) closer to the true solution, so LM converges in fewer iterations |
+
+#### Precision
+
+| Aspect | How it helps |
+|--------|-------------|
+| Eliminates ghost peaks | In maps, some pixels have weak or absent peaks. Without thresholding, noise fluctuations are fitted as tiny false peaks, producing artifacts in parameter maps |
+| Stabilizes correlated parameters | Near the noise floor, amplitude, width, and position become highly correlated — small noise perturbations cause large parameter swings. Suppression avoids this instability |
+| Prevents cross-talk | A ghost peak in a noise region can "steal" intensity from a real neighboring peak, biasing its fitted amplitude. Suppression prevents this |
+| Cleaner R² values | Masked noise regions don't contribute to the R² calculation, so the reported goodness-of-fit reflects only meaningful signal regions |
+
+### Practical Example
+
+Consider a Raman map with 3 defined peaks, where for some pixels peak #2 sits in a flat baseline region:
+
+```
+Without coef_noise (= 0):
+  Peak #2 → ampli = 0.3 (noise artifact), fwhm = 2.1 (meaningless), x0 = 520.3 (drifted)
+  Peak #1 → ampli = 18.2 (slightly biased — peak #2 stealing intensity)
+
+With coef_noise = 1:
+  Peak #2 → ampli = 0.0, fwhm = 0.0   (correctly suppressed)
+  Peak #1 → ampli = 19.1              (accurate, no cross-talk)
+```
+
+### Choosing the Right `coef_noise` Value
+
+| Value | Behavior |
+|-------|----------|
+| `0` | **Disabled** — all peaks are fitted everywhere, no noise masking |
+| `0.5 – 1.0` | **Conservative** — only suppresses peaks/regions well below the noise floor |
+| `1.0 – 2.0` | **Moderate** — good default for most datasets |
+| `3.0 – 5.0` | **Aggressive** — may suppress real weak peaks; use with caution |
+| `> 5.0` | **Very aggressive** — only strong, unambiguous peaks survive |
+
+The default value in `spectroview/__init__.py` is `1`. The Settings UI exposes it as a spin box with range `[0, 100]` and step `0.5`.
+
+---
+
+## 10. Adding New Peak Models
 
 ### Fast Path: Analytical Jacobian (Recommended)
 
@@ -378,7 +493,7 @@ PEAK_MODELS = [
 
 ---
 
-## 10. Timing and Diagnostics
+## 11. Timing and Diagnostics
 
 The `TensorFittingEngine` records wall-clock timings for each step in `self.timings`:
 

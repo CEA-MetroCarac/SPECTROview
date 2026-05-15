@@ -190,7 +190,7 @@ class TensorFittingEngine:
             fit_params = {}
         fit_negative = bool(fit_params.get("fit_negative", False))
         fit_outliers = bool(fit_params.get("fit_outliers", False))
-        coef_noise = float(fit_params.get("coef_noise", 0))
+        coef_noise = float(fit_params.get("coef_noise", 1))
 
         for spectrum in spectra:
             if spectrum.y is None:

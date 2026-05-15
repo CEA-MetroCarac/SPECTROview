@@ -42,7 +42,7 @@ class VMenuBar(QToolBar):
         self.actionConvert= self.addAction(QIcon(os.path.join(ICON_DIR, "FileConvert.png")), "Convert 2Dmap format")
         self.actionConvert.triggered.connect(self.convert_requested.emit)
 
-        self.actionCalc = self.addAction(QIcon(os.path.join(ICON_DIR, "calc.png")), "Quick Calculation")
+        self.actionCalc = self.addAction(QIcon(os.path.join(ICON_DIR, "calc.png")), "Quick Calculators")
         self.actionCalc.triggered.connect(self.calc_requested.emit)
 
         self.addSeparator()

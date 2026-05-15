@@ -284,6 +284,79 @@ class TensorEvaluator:
 
         return FitResult(success=success, params_dict=params_dict, best_fit=best_fit, rsquared=rsquared)
 
+    def build_results_batch(self, p_opt, x, Y_data, success, weights, shared_x, spectra):
+        """Build FitResults for all spectra in one vectorized pass.
+
+        Replaces the per-spectrum build_result + write_back_to_spectrum loop
+        with a single batched evaluate call and vectorized R² computation.
+
+        Args:
+            p_opt: (N, K_free) optimised parameters
+            x: (M,) or (N, M) x-axis
+            Y_data: (N, M) measured data
+            success: (N,) bool
+            weights: (N, M) or None
+            shared_x: bool — whether all spectra share the same x-axis
+            spectra: list of spectrum objects for write-back
+        """
+        N = p_opt.shape[0]
+
+        # ── One batched evaluation for all spectra ──
+        best_fits = self.evaluate(x, p_opt)  # (N, M)
+
+        # ── Build full parameter matrix once ──
+        p_full = self._to_full(p_opt)  # (N, K_total)
+
+        # ── Vectorized R² ──
+        if weights is not None:
+            residuals = weights * (Y_data - best_fits)
+            ss_res = np.sum(residuals * residuals, axis=1)  # (N,)
+            w_sum = weights.sum(axis=1)
+            # Weighted mean
+            y_mean = np.where(
+                w_sum > 0,
+                np.sum(weights * Y_data, axis=1) / np.maximum(w_sum, 1e-30),
+                0.0
+            )
+            ss_tot = np.sum(weights * (Y_data - y_mean[:, None])**2, axis=1)
+        else:
+            ss_res = np.sum((Y_data - best_fits)**2, axis=1)
+            y_mean = Y_data.mean(axis=1)
+            ss_tot = np.sum((Y_data - y_mean[:, None])**2, axis=1)
+
+        rsquared = np.where(ss_tot > 0, 1.0 - ss_res / ss_tot, 0.0)
+
+        # ── Apply weight masking to best_fit ──
+        if weights is not None:
+            best_fits = best_fits.copy()
+            best_fits[weights == 0] = 0.0
+
+        # ── Build results and write back ──
+        fit_results = []
+        for i, spectrum in enumerate(spectra):
+            # Build params_dict from full parameter vector
+            params_dict = {}
+            for j, name in enumerate(self._param_names):
+                params_dict[name] = p_full[i, j]
+
+            bf = best_fits[i]
+            if not shared_x and spectrum.x is not None:
+                M_s = len(spectrum.x)
+                bf = bf[:M_s]
+
+            fr = FitResult(
+                success=bool(success[i]),
+                params_dict=params_dict,
+                best_fit=bf,
+                rsquared=float(rsquared[i]),
+            )
+
+            # Write back to spectrum
+            self.write_back_to_spectrum(spectrum, fr)
+            fit_results.append(fr)
+
+        return fit_results
+
     def write_back_to_spectrum(self, spectrum, fit_result):
         """Write fit result back to MSpectrum (same interface as core)."""
         spectrum.result_fit = fit_result
@@ -372,7 +445,7 @@ class TensorEvaluator:
 
         return p0_matrix
 
-    def apply_noise_threshold(self, spectra, p_matrix, fit_params):
+    def apply_noise_threshold(self, spectra, p_matrix, fit_params, p0_matrix=None):
         """Force ampli=0 and fwhm=0 for peaks located in noisy areas."""
         if fit_params is None:
             return
@@ -405,7 +478,7 @@ class TensorEvaluator:
                         x0_val = self._param_values[global_idx]
                         if global_idx in self._free_idx:
                             free_idx = np.searchsorted(self._free_idx, global_idx)
-                            x0_val = p_matrix[i, free_idx]
+                            x0_val = (p0_matrix if p0_matrix is not None else p_matrix)[i, free_idx]
                         break
 
                 if x0_val is None or x0_val < x_array[0] or x0_val > x_array[-1]:
@@ -414,11 +487,14 @@ class TensorEvaluator:
                 ind = np.argmin(np.abs(x_array - x0_val))
                 if ymean[ind] < noise_level:
                     for local_j, pname_j in enumerate(peak_pnames):
-                        if "ampli" in pname_j or "fwhm" in pname_j:
-                            global_idx = slc.start + local_j
-                            if global_idx in self._free_idx:
-                                free_idx = np.searchsorted(self._free_idx, global_idx)
+                        global_idx = slc.start + local_j
+                        if global_idx in self._free_idx:
+                            free_idx = np.searchsorted(self._free_idx, global_idx)
+                            if "ampli" in pname_j or "fwhm" in pname_j:
                                 p_matrix[i, free_idx] = 0.0
+                            elif p0_matrix is not None:
+                                # Restore position/shape parameters to initial guess to prevent map fluctuations
+                                p_matrix[i, free_idx] = p0_matrix[i, free_idx]
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────

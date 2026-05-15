@@ -8,14 +8,161 @@ Usage:
     results = engine.fit_spectra(spectra, fit_model, ...)
 """
 
+import os
 import time
+import itertools
 import numpy as np
+from copy import deepcopy
+
 from fitspy.core.utils import eval_noise_amplitude
+from fitspy.core.baseline import BaseLine
 
 from spectroview.fit_engine.evaluator import TensorEvaluator
 from spectroview.fit_engine.optimizer import batched_levenberg_marquardt
 from spectroview.fit_engine.scalar_models import FitResult
 from spectroview.viewmodel.utils import apply_custom_fit_model
+
+# Import fitspy model infrastructure for fast model creation
+import fitspy
+from fitspy.core.spectrum import create_model
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Per-spectrum attributes that must be preserved during batch model apply
+# ═══════════════════════════════════════════════════════════════════════════
+_SPECTRUM_OWN_ATTRS = (
+    "xcorrection_value",
+    "intensity_norm_factor",
+    "label",
+    "color",
+    "metadata",
+)
+
+
+def _prepare_fit_model_template(fit_model):
+    """Pre-compute a reusable template from a fit_model dict.
+
+    This avoids per-spectrum deepcopy, migrate_model_dict, and create_model calls.
+    Returns a template dict containing pre-built model objects and pre-cleaned
+    parameter hints.
+    """
+    # Sanitise fwhm/sigma once (same logic as apply_custom_fit_model)
+    peak_models_dict = fit_model.get("peak_models", {})
+    cleaned_peak_hints = {}
+    for p_idx, p_model in peak_models_dict.items():
+        for model_name, params in p_model.items():
+            hints = deepcopy(params)
+            for pn in ("fwhm", "sigma"):
+                if pn in hints:
+                    if hints[pn].get("value", 1) <= 0:
+                        hints[pn]["value"] = 1e-6
+                    if hints[pn].get("min", 0) <= 0:
+                        hints[pn]["min"] = 1e-6
+            cleaned_peak_hints[p_idx] = (model_name, hints)
+
+    # Pre-build one set of lmfit Model objects as templates
+    peak_model_templates = []
+    peak_counter = itertools.count(start=1)
+    for p_idx in sorted(cleaned_peak_hints.keys(), key=lambda k: int(k)):
+        model_name, hints = cleaned_peak_hints[p_idx]
+        index = next(peak_counter)
+        prefix = f"m{index:02d}_"
+        model_obj = create_model(fitspy.PEAK_MODELS[model_name], model_name, prefix)
+        # We'll clone param_hints per spectrum, but the model object itself can be shallow-copied
+        peak_model_templates.append((model_obj, hints))
+
+    # Pre-process background model
+    bkg_template = None
+    bkg_dict = fit_model.get("bkg_model")
+    if bkg_dict:
+        bkg_model_name, bkg_hints = list(bkg_dict.items())[0]
+        bkg_model = create_model(fitspy.BKG_MODELS[bkg_model_name], bkg_model_name)
+        bkg_model.name2 = bkg_model_name
+        bkg_template = (bkg_model, deepcopy(bkg_hints))
+
+    # Pre-extract scalar attributes from fit_model
+    scalar_attrs = {}
+    skip_keys = {"peak_models", "bkg_model", "baseline", "fname", "x0", "y0",
+                 "weights0", "result_fit_success", "schema_version", "peak_labels"}
+    skip_keys.update(_SPECTRUM_OWN_ATTRS)
+    for key, val in fit_model.items():
+        if key not in skip_keys:
+            scalar_attrs[key] = val
+
+    # Baseline config
+    baseline_config = fit_model.get("baseline", {})
+
+    # Peak labels
+    peak_labels = fit_model.get("peak_labels", [])
+    if not peak_labels:
+        peak_labels = [str(i + 1) for i in range(len(peak_model_templates))]
+
+    return {
+        "peak_templates": peak_model_templates,
+        "bkg_template": bkg_template,
+        "scalar_attrs": scalar_attrs,
+        "baseline_config": baseline_config,
+        "peak_labels": list(peak_labels),
+    }
+
+
+def _apply_template_to_spectrum(spectrum, template):
+    """Apply a pre-computed template to a single spectrum (fast path).
+
+    This replaces apply_custom_fit_model + set_attributes with minimal work:
+    - No deepcopy of the full model dict
+    - No migrate_model_dict
+    - No create_model / inspect.signature per spectrum
+    """
+    # Set scalar attributes (range_min, range_max, normalize, etc.)
+    for key, val in template["scalar_attrs"].items():
+        setattr(spectrum, key, val)
+
+    # Clone peak models: reuse the pre-built Model objects, deepcopy only param_hints
+    spectrum.peak_index = itertools.count(start=len(template["peak_templates"]) + 1)
+    spectrum.peak_models = []
+    for model_obj, hints in template["peak_templates"]:
+        # Shallow copy the model, deepcopy only the mutable param_hints
+        cloned = model_obj.__class__.__new__(model_obj.__class__)
+        cloned.__dict__.update(model_obj.__dict__)
+        cloned.param_hints = deepcopy(hints)
+        spectrum.peak_models.append(cloned)
+
+    # Background model
+    if template["bkg_template"] is not None:
+        bkg_obj, bkg_hints = template["bkg_template"]
+        cloned_bkg = bkg_obj.__class__.__new__(bkg_obj.__class__)
+        cloned_bkg.__dict__.update(bkg_obj.__dict__)
+        cloned_bkg.param_hints = deepcopy(bkg_hints)
+        spectrum.bkg_model = cloned_bkg
+    else:
+        spectrum.bkg_model = None
+
+    # Peak labels
+    spectrum.peak_labels = list(template["peak_labels"])
+
+    # Baseline configuration
+    bl_config = template["baseline_config"]
+    if bl_config:
+        bl = spectrum.baseline
+        for key in ("mode", "coef", "order_max", "sigma", "attached"):
+            if key in bl_config:
+                setattr(bl, key, bl_config[key])
+        if "points" in bl_config:
+            bl.points = deepcopy(bl_config["points"])
+        # Always reset: baseline will be recomputed from raw data by preprocess
+        bl.is_subtracted = False
+        bl.y_eval = None
+
+    # Ensure x0/y0 are numpy arrays (usually already are, avoid redundant conversion)
+    if spectrum.x0 is not None and not isinstance(spectrum.x0, np.ndarray):
+        spectrum.x0 = np.asarray(spectrum.x0)
+    if spectrum.y0 is not None and not isinstance(spectrum.y0, np.ndarray):
+        spectrum.y0 = np.asarray(spectrum.y0)
+
+    spectrum.fname = os.path.normpath(spectrum.fname) if spectrum.fname else spectrum.fname
+    spectrum.is_preprocessed = False
+    spectrum.result_fit = lambda: None
 
 
 class TensorFittingEngine:
@@ -63,11 +210,9 @@ class TensorFittingEngine:
                 progress_callback(n_spectra, n_spectra)
             return [FitResult(True, {}, np.array([])) for _ in spectra]
 
-        # ─── 3. Preprocess all spectra (only when needed) ───
+        # ─── 3. Preprocess all spectra (batch-optimized) ───
         t0 = time.perf_counter()
-        for spectrum in spectra:
-            if not getattr(spectrum, 'is_preprocessed', False):
-                spectrum.preprocess()
+        self._batch_preprocess(spectra, fit_model)
         self.timings["Step 2 - preprocess"] = f"{time.perf_counter()-t0:.3f}s"
 
         # ─── 4. Extract data matrix ───
@@ -146,26 +291,13 @@ class TensorFittingEngine:
         fit_time = time.perf_counter() - t0
         self.timings["Step 4 - tensor fit"] = f"{fit_time:.3f}s ({fit_time/n_spectra*1000:.1f} ms/spectrum, {success.sum()}/{n_spectra} converged)"
 
-        evaluator.apply_noise_threshold(spectra, p_opt, fit_params)
+        evaluator.apply_noise_threshold(spectra, p_opt, fit_params, p0_matrix=p0)
         
-        # ─── 8. Write back results ───
+        # ─── 8. Write back results (batch-optimized) ───
         t0 = time.perf_counter()
-        fit_results = []
-        for i, spectrum in enumerate(spectra):
-            if weights_matrix is not None:
-                if shared_x:
-                    w = weights_matrix[i]
-                else:
-                    M_s = len(spectrum.x) if spectrum.x is not None else 0
-                    w = weights_matrix[i, :M_s]
-            else:
-                w = None
-            fr = evaluator.build_result(p_opt[i], spectrum.x, spectrum.y, bool(success[i]), weights=w)
-            if w is not None:
-                fr.best_fit = fr.best_fit.copy()
-                fr.best_fit[w == 0] = 0.0
-            evaluator.write_back_to_spectrum(spectrum, fr)
-            fit_results.append(fr)
+        fit_results = evaluator.build_results_batch(
+            p_opt, x_input, Y_matrix, success, weights_matrix, shared_x, spectra
+        )
         self.timings["Step 5 - write_back"] = f"{time.perf_counter()-t0:.3f}s"
         
         # Cleanup cached noise parameters
@@ -178,9 +310,165 @@ class TensorFittingEngine:
         return fit_results
 
     def _apply_model_to_all(self, spectra, fit_model):
-        """Apply fit model dict to all spectra (set peak_models, baseline, etc.)."""
+        """Apply fit model dict to all spectra (optimized batch path).
+        
+        Pre-computes a template once and applies it to each spectrum,
+        avoiding per-spectrum deepcopy/migrate/create_model overhead.
+        """
+        template = _prepare_fit_model_template(fit_model)
         for spectrum in spectra:
-            apply_custom_fit_model(spectrum, fit_model, spectrum.fname)
+            _apply_template_to_spectrum(spectrum, template)
+
+    def _batch_preprocess(self, spectra, fit_model):
+        """Batch-optimized preprocessing for map spectra sharing the same config.
+        
+        When all spectra share the same x0 length, range, baseline config,
+        and have no outliers, we pre-compute shared work once (range mask,
+        baseline point indices) and apply efficiently to all spectra.
+        Falls back to per-spectrum preprocess() otherwise.
+        """
+        if not spectra:
+            return
+
+        # Check if batch preprocessing is possible
+        first = spectra[0]
+        can_batch = (
+            first.x0 is not None
+            and not first.normalize  # No normalization (rare in maps)
+            and (first.outliers_limit is None)
+            and len(first.outliers_inds) == 0
+        )
+
+        if not can_batch:
+            # Fallback to per-spectrum
+            for s in spectra:
+                if not getattr(s, 'is_preprocessed', False):
+                    s.preprocess()
+            return
+
+        # ── Compute range mask once ──
+        x0 = first.x0
+        range_min = first.range_min
+        range_max = first.range_max
+        
+        if range_min is not None or range_max is not None:
+            mask = np.logical_and(
+                x0 >= (range_min if range_min is not None else -np.inf),
+                x0 <= (range_max if range_max is not None else np.inf)
+            )
+            x = x0[mask].copy()
+        else:
+            mask = None
+            x = x0.copy()
+
+        # ── Prepare baseline computation ──
+        bl = first.baseline
+        baseline_mode = bl.mode
+        baseline_attached = bl.attached
+        
+        # Pre-compute baseline strategy
+        baseline_strategy = None  # 'none', 'static', 'per_spectrum_linear', 'per_spectrum_poly', 'fallback'
+        baseline_static = None  # shared baseline array (for non-attached modes)
+        bl_point_indices = None  # indices of baseline points in x array
+        bl_points_x = None
+        bl_sigma = bl.sigma
+
+        if baseline_mode is None:
+            baseline_strategy = 'none'
+        elif not baseline_attached:
+            # Non-attached baseline: same for all spectra → compute once
+            baseline_strategy = 'static'
+            y_first = first.y0[mask].copy() if mask is not None else first.y0.copy()
+            baseline_static = bl.eval(x, y_first, attached=False)
+        elif baseline_attached and baseline_mode == 'Linear' and len(bl.points[0]) >= 1:
+            # Attached Linear baseline: points are projected onto each spectrum's y
+            # Pre-compute the indices of baseline points in the x array
+            baseline_strategy = 'per_spectrum_linear'
+            bl_points_x = np.array(bl.points[0])
+            bl_point_indices = np.array([np.argmin(np.abs(x - xp)) for xp in bl_points_x])
+        elif baseline_attached and baseline_mode == 'Polynomial' and len(bl.points[0]) >= 2:
+            baseline_strategy = 'per_spectrum_poly'
+            bl_points_x = np.array(bl.points[0])
+            bl_point_indices = np.array([np.argmin(np.abs(x - xp)) for xp in bl_points_x])
+        else:
+            # Complex baseline modes (arpls, pybaselines, etc.) — fall back
+            baseline_strategy = 'fallback'
+
+        if baseline_strategy == 'fallback':
+            # Can't batch-optimize this baseline mode — fall back
+            for s in spectra:
+                if not getattr(s, 'is_preprocessed', False):
+                    s.preprocess()
+            return
+
+        # ── Apply to all spectra ──
+        from scipy.interpolate import interp1d
+        from scipy.ndimage import gaussian_filter1d
+
+        for s in spectra:
+            if getattr(s, 'is_preprocessed', False):
+                continue
+
+            # Clear cached noise parameters so they are re-evaluated on the fresh y data
+            if hasattr(s, '_fit_ampli_noise'):
+                delattr(s, '_fit_ampli_noise')
+            if hasattr(s, '_fit_ymean'):
+                delattr(s, '_fit_ymean')
+
+            # load_profile + apply_range equivalent
+            if mask is not None:
+                s.x = x.copy()
+                s.y = s.y0[mask].copy()
+                if s.weights0 is not None:
+                    s.weights = s.weights0[mask].copy()
+            else:
+                s.x = s.x0.copy()
+                s.y = s.y0.copy()
+                if s.weights0 is not None:
+                    s.weights = s.weights0.copy()
+
+            # Compute and subtract baseline
+            if baseline_strategy == 'static':
+                s.baseline.y_eval = baseline_static
+                s.y = s.y - baseline_static
+                s.baseline.is_subtracted = True
+
+            elif baseline_strategy == 'per_spectrum_linear':
+                # Attached linear baseline: get y-values at baseline point positions
+                y_at_points = s.y[bl_point_indices]
+                if bl_sigma > 0:
+                    y_smooth = gaussian_filter1d(s.y, sigma=bl_sigma)
+                    y_at_points = y_smooth[bl_point_indices]
+                    
+                if len(bl_point_indices) == 1:
+                    s.baseline.y_eval = y_at_points[0] * np.ones_like(x)
+                else:
+                    pts_x = x[bl_point_indices]
+                    # Check if baseline x-coords match spectrum x-coords exactly
+                    if set(pts_x.tolist()).issubset(set(x.tolist())) and len(pts_x) == len(x):
+                        d = dict(zip(pts_x, y_at_points))
+                        s.baseline.y_eval = np.array([d[xi] for xi in x])
+                    else:
+                        func_interp = interp1d(pts_x, y_at_points, fill_value="extrapolate")
+                        s.baseline.y_eval = func_interp(x)
+                s.y = s.y - s.baseline.y_eval
+                s.baseline.is_subtracted = True
+
+            elif baseline_strategy == 'per_spectrum_poly':
+                y_at_points = s.y[bl_point_indices]
+                if bl_sigma > 0:
+                    y_smooth = gaussian_filter1d(s.y, sigma=bl_sigma)
+                    y_at_points = y_smooth[bl_point_indices]
+                pts_x = x[bl_point_indices]
+                order = min(bl.order_max, len(pts_x) - 1)
+                coefs = np.polyfit(pts_x, y_at_points, order)
+                s.baseline.y_eval = np.polyval(coefs, x)
+                s.y = s.y - s.baseline.y_eval
+                s.baseline.is_subtracted = True
+
+            # 'none' strategy: nothing to do
+
+            s.is_preprocessed = True
 
     def _build_fit_weights(self, spectra, fit_params, shared_x):
         """Build a weights matrix that mimics lmfit's masking behavior."""

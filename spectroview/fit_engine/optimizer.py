@@ -66,6 +66,8 @@ def batched_levenberg_marquardt(
     # Per-spectrum damping factor
     lam = np.full(N, 1e-2)
     converged = np.zeros(N, dtype=bool)
+    if weights is not None:
+        converged |= (weights.sum(axis=1) == 0)
 
     # Track consecutive rejections to detect stuck spectra
     consecutive_rejects = np.zeros(N, dtype=int)
@@ -129,7 +131,7 @@ def batched_levenberg_marquardt(
 
         # Evaluate only the active spectra
         Y_trial_active = evaluate_fn(x_active, p_trial_active)
-        r_trial_active = Y_trial_active - Y_data[active]
+        r_trial_active = weights[active] * (Y_trial_active - Y_data[active])
         cost_trial_active = np.sum(r_trial_active * r_trial_active, axis=1)
 
         improved_active = cost_trial_active <= cost[active]
@@ -142,7 +144,7 @@ def batched_levenberg_marquardt(
         # Accept improved steps
         if improved_active.any():
             p[improved_idx] = p_trial_active[improved_active]
-            residuals[improved_idx] = r_trial_active[improved_active]
+            residuals[improved_idx] = r_trial_active[improved_active]  # already weighted
             old_cost_improved = cost[improved_idx].copy()
             cost[improved_idx] = cost_trial_active[improved_active]
         else:

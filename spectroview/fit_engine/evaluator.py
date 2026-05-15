@@ -324,7 +324,7 @@ class TensorEvaluator:
             y_mean = Y_data.mean(axis=1)
             ss_tot = np.sum((Y_data - y_mean[:, None])**2, axis=1)
 
-        rsquared = np.where(ss_tot > 0, 1.0 - ss_res / ss_tot, 0.0)
+        rsquared = np.where(ss_tot > 0, 1.0 - ss_res / np.maximum(ss_tot, 1e-30), 0.0)
 
         # ── Apply weight masking to best_fit ──
         if weights is not None:

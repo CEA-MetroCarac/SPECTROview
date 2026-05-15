@@ -1397,6 +1397,8 @@ class VWorkspaceGraphs(QWidget):
         graph_widget.show_trendline_eq = model.show_trendline_eq
         graph_widget.show_bar_plot_error_bar = model.show_bar_plot_error_bar
         graph_widget.join_for_point_plot = model.join_for_point_plot
+        graph_widget.scatter_size = getattr(model, 'scatter_size', 70)
+        graph_widget.scatter_edgecolor = getattr(model, 'scatter_edgecolor', 'black')
         
         # Annotations (with backward compatibility for old .graphs files)
         if hasattr(model, 'annotations') and model.annotations is not None:

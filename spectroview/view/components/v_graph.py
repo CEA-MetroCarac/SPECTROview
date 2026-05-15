@@ -98,6 +98,8 @@ class VGraph(QWidget):
         self.show_trendline_eq = True
         self.show_bar_plot_error_bar = True
         self.join_for_point_plot = False
+        self.scatter_size = 70  # Marker size for scatter plots
+        self.scatter_edgecolor = 'black'  # Edge color for scatter plot markers
         
         # Annotations
         self.annotations = []
@@ -354,12 +356,13 @@ class VGraph(QWidget):
                 if self.z:
                     sns.scatterplot(
                         data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                        s=70, edgecolor='black', palette=colors
+                        s=self.scatter_size, edgecolor=self.scatter_edgecolor,
+                        palette=colors
                     )
                 else:
                     sns.scatterplot(
                         data=df, x=self.x, y=y, ax=self.ax,
-                        s=70, edgecolor='black'
+                        s=self.scatter_size, edgecolor=self.scatter_edgecolor
                     )
             elif self.plot_style == 'box':
                 # Only pass palette if hue is provided
@@ -709,7 +712,8 @@ class VGraph(QWidget):
             elif self.plot_style == 'scatter':
                 sns.scatterplot(
                     data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
-                    s=100, edgecolor='black', color='red'
+                    s=self.scatter_size, edgecolor=self.scatter_edgecolor,
+                    color='red'
                 )
             else:
                 self.ax2.remove()
@@ -743,7 +747,8 @@ class VGraph(QWidget):
             elif self.plot_style == 'scatter':
                 sns.scatterplot(
                     data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
-                    s=100, edgecolor='black', color='green'
+                    s=self.scatter_size, edgecolor=self.scatter_edgecolor,
+                    color='green'
                 )
             else:
                 self.ax3.remove()

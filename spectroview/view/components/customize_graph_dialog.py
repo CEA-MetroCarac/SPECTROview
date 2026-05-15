@@ -8,7 +8,8 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QListWidget, QListWidgetItem, QLabel,
     QDialogButtonBox, QMessageBox, QTabWidget, QWidget,
     QColorDialog, QComboBox, QSpinBox,
-    QDoubleSpinBox, QCheckBox, QLineEdit, QFormLayout, QStyledItemDelegate)
+    QDoubleSpinBox, QCheckBox, QLineEdit, QFormLayout, QStyledItemDelegate,
+    QGroupBox)
 
 from spectroview import DEFAULT_COLORS, MARKERS
 from spectroview import ICON_DIR
@@ -152,6 +153,37 @@ class CustomizeLegend(QWidget):
         self.legend_layout.setContentsMargins(0, 0, 0, 0)
         
         self.main_layout.addWidget(self.legend_container)
+        
+        # ───── Scatter-specific settings ─────
+        self.scatter_group = QGroupBox("Scatter plot settings")
+        scatter_layout = QHBoxLayout(self.scatter_group)
+        
+        # Marker size
+        scatter_layout.addWidget(QLabel("Marker size:"))
+        self.spin_scatter_size = QSpinBox()
+        self.spin_scatter_size.setRange(5, 500)
+        self.spin_scatter_size.setSingleStep(10)
+        self.spin_scatter_size.setValue(70)
+        scatter_layout.addWidget(self.spin_scatter_size)
+        
+        scatter_layout.addSpacing(10)
+        
+        # Edge color
+        scatter_layout.addWidget(QLabel("Edge color:"))
+        self.btn_scatter_edgecolor = QPushButton()
+        self.btn_scatter_edgecolor.setFixedWidth(80)
+        self._set_color_button(self.btn_scatter_edgecolor, 'black')
+        self.btn_scatter_edgecolor.clicked.connect(self._pick_scatter_edgecolor)
+        scatter_layout.addWidget(self.btn_scatter_edgecolor)
+        
+        scatter_layout.addStretch()
+        self.main_layout.addWidget(self.scatter_group)
+        
+        # Only show scatter group when plot is scatter style
+        self.scatter_group.setVisible(
+            self.graph_widget.plot_style == 'scatter'
+        )
+        
         self.main_layout.addStretch()
         
         # Apply / Cancel buttons
@@ -190,10 +222,22 @@ class CustomizeLegend(QWidget):
         if not legend_properties:
             no_legend_label = QLabel("No legend available for this plot.")
             self.legend_layout.addWidget(no_legend_label)
-            return
+        else:
+            # Build legend customization widgets
+            self._build_legend_widgets(legend_properties)
         
-        # Build legend customization widgets
-        self._build_legend_widgets(legend_properties)
+        # Load scatter settings
+        self.spin_scatter_size.setValue(
+            getattr(self.graph_widget, 'scatter_size', 70)
+        )
+        self._set_color_button(
+            self.btn_scatter_edgecolor,
+            getattr(self.graph_widget, 'scatter_edgecolor', 'black')
+        )
+        # Show/hide scatter group based on plot style
+        self.scatter_group.setVisible(
+            self.graph_widget.plot_style == 'scatter'
+        )
     
     def _build_legend_widgets(self, legend_properties):
         """Build the legend customization widgets (label, marker, color)."""
@@ -280,6 +324,19 @@ class CustomizeLegend(QWidget):
         combobox.setPalette(palette)
         combobox.update()
     
+    def _set_color_button(self, button, color_name):
+        """Set a QPushButton background and text to a given color."""
+        qc = QColor(color_name)
+        button.setStyleSheet(f"background-color: {qc.name()};")
+        button.setText(qc.name())
+    
+    def _pick_scatter_edgecolor(self):
+        """Open color picker for scatter marker edge color."""
+        current = QColor(self.btn_scatter_edgecolor.text())
+        color = QColorDialog.getColor(current, self, "Select Marker Edge Color")
+        if color.isValid():
+            self._set_color_button(self.btn_scatter_edgecolor, color.name())
+    
     def apply_changes(self):
         """Apply legend changes by doing a full replot."""
         # Full replot to ensure all changes are committed
@@ -291,9 +348,23 @@ class CustomizeLegend(QWidget):
         # Update the backup so Cancel won't revert applied changes
         self.original_legend_properties = copy.deepcopy(self.graph_widget.get_legend_properties())
         
+        # Apply scatter-specific properties
+        if self.graph_widget.plot_style == 'scatter':
+            self.graph_widget.scatter_size = self.spin_scatter_size.value()
+            self.graph_widget.scatter_edgecolor = self.btn_scatter_edgecolor.text()
+            # Replot to reflect changes
+            if self.graph_widget.df is not None:
+                self.graph_widget.plot(self.graph_widget.df)
+        
         # Connect to properties_changed signal to update ViewModel when graph properties change
         if hasattr(self.graph_widget, 'properties_changed'):
-            self.graph_widget.properties_changed.emit(self.graph_widget.graph_id, {'legend_properties': self.graph_widget.legend_properties})
+            props = {'legend_properties': self.graph_widget.legend_properties}
+            if self.graph_widget.plot_style == 'scatter':
+                props['scatter_size'] = self.graph_widget.scatter_size
+                props['scatter_edgecolor'] = self.graph_widget.scatter_edgecolor
+            self.graph_widget.properties_changed.emit(
+                self.graph_widget.graph_id, props
+            )
         
     def cancel_changes(self):
         """Cancel legend changes and restore original properties."""

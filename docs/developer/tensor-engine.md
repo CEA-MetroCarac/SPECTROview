@@ -198,27 +198,22 @@ def batched_shape_jac(x, params):
 
 ### Registered Models (`BATCHED_MODELS`)
 
-| Model | Parameters | Jacobian | Formula |
-|-------|-----------|----------|---------|
-| `Gaussian` | `ampli, fwhm, x0` | ✓ Analytical | \(a \cdot \exp\left(-4\ln 2 \cdot \frac{(x-x_0)^2}{w^2}\right)\) |
-| `Lorentzian` | `ampli, fwhm, x0` | ✓ Analytical | \(\frac{a}{1 + 4(x-x_0)^2/w^2}\) |
-| `PseudoVoigt` | `ampli, fwhm, x0, alpha` | ✓ Analytical | \(\alpha \cdot G + (1-\alpha) \cdot L\) |
+All peak models have vectorized batched implementations with **analytical Jacobians**, ensuring maximum performance for every model type:
 
-### Scalar Fallback Models (`PEAK_MODEL_REGISTRY`)
-
-These models lack batched implementations and are wrapped via `_make_batched_scalar()`, which loops over spectra individually. They use `numerical_jacobian()` (central differences):
-
-| Model | Parameters | Notes |
-|-------|-----------|-------|
-| `GaussianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise left/right FWHM |
-| `LorentzianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise left/right FWHM |
-| `Fano` | `ampli, fwhm, x0, q` | Fano lineshape for asymmetric resonances |
-| `DecaySingleExp` | `A, tau, B` | Single exponential decay (TRPL) |
-| `DecayBiExp` | `A1, tau1, A2, tau2, B` | Bi-exponential decay (TRPL) |
+| Model | Parameters | Formula |
+|-------|-----------|---------|
+| `Gaussian` | `ampli, fwhm, x0` | \(a \cdot \exp\left(-4\ln 2 \cdot \frac{(x-x_0)^2}{w^2}\right)\) |
+| `Lorentzian` | `ampli, fwhm, x0` | \(\frac{a}{1 + 4(x-x_0)^2/w^2}\) |
+| `PseudoVoigt` | `ampli, fwhm, x0, alpha` | \(\alpha \cdot G + (1-\alpha) \cdot L\) |
+| `GaussianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise Gaussian with left/right FWHM |
+| `LorentzianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise Lorentzian with left/right FWHM |
+| `Fano` | `ampli, fwhm, x0, q` | \(a \cdot \frac{(q + \varepsilon)^2}{1 + \varepsilon^2}\), \(\varepsilon = \frac{2(x-x_0)}{w}\) |
+| `DecaySingleExp` | `A, tau, B` | \(A \cdot e^{-x/\tau} + B\) |
+| `DecayBiExp` | `A1, tau1, A2, tau2, B` | \(A_1 e^{-x/\tau_1} + A_2 e^{-x/\tau_2} + B\) |
 
 ### Numerical Jacobian Fallback
 
-When no analytical Jacobian is available, `numerical_jacobian()` uses **central differences** with relative perturbation:
+For future custom models registered only in `PEAK_MODEL_REGISTRY` (without a batched implementation), `numerical_jacobian()` uses **central differences** with relative perturbation as a fallback:
 
 ```python
 h = max(|param| * eps, eps)          # Scale step to parameter magnitude

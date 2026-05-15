@@ -88,6 +88,7 @@ class VSettingsDialog(QDialog):
         self.spin_coef_noise.setDecimals(2)
         self.spin_coef_noise.setRange(0, 100)
         self.spin_coef_noise.setSingleStep(0.5)
+        self.spin_coef_noise.setValue(1.0)
         row.addWidget(self.spin_coef_noise)
         main_layout.addLayout(row)
 

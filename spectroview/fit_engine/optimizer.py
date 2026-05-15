@@ -132,7 +132,7 @@ def batched_levenberg_marquardt(
         r_trial_active = Y_trial_active - Y_data[active]
         cost_trial_active = np.sum(r_trial_active * r_trial_active, axis=1)
 
-        improved_active = cost_trial_active < cost[active]
+        improved_active = cost_trial_active <= cost[active]
         worsened_active = ~improved_active
 
         active_idx = np.where(active)[0]

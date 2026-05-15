@@ -385,9 +385,13 @@ class TensorEvaluator:
             if y is None:
                 continue
 
-            ampli_noise = eval_noise_amplitude(y)
+            if not hasattr(spectrum, '_fit_ampli_noise'):
+                spectrum._fit_ampli_noise = eval_noise_amplitude(y)
+                spectrum._fit_ymean = np.convolve(y, np.ones(5, dtype=np.float64) / 5.0, mode='same')
+                
+            ampli_noise = spectrum._fit_ampli_noise
+            ymean = spectrum._fit_ymean
             noise_level = coef_noise * ampli_noise
-            ymean = np.convolve(y, np.ones(5, dtype=np.float64) / 5.0, mode='same')
             x_array = spectrum.x
             if x_array is None:
                 continue

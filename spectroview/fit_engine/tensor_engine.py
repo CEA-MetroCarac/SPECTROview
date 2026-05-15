@@ -71,20 +71,39 @@ class TensorFittingEngine:
         self.timings["Step 2 - preprocess"] = f"{time.perf_counter()-t0:.3f}s"
 
         # ─── 4. Extract data matrix ───
-        max_M = max((len(s.x) if s.x is not None else 0) for s in spectra)
-        if max_M == 0:
+        x_ref = spectra[0].x
+        if x_ref is None or len(x_ref) == 0:
             return [FitResult(False, {}, np.array([])) for _ in spectra]
 
-        X_matrix = np.zeros((n_spectra, max_M), dtype=np.float64)
-        Y_matrix = np.zeros((n_spectra, max_M), dtype=np.float64)
-        for i, s in enumerate(spectra):
-            if s.x is not None and s.y is not None:
-                M_s = len(s.x)
-                X_matrix[i, :M_s] = s.x
-                Y_matrix[i, :M_s] = s.y
+        # Detect shared x-axis (common case for maps) → use fast 1D path
+        shared_x = all(
+            s.x is not None and len(s.x) == len(x_ref) and np.array_equal(s.x, x_ref)
+            for s in spectra
+        )
+
+        if shared_x:
+            # Fast path: all spectra share the same x-axis
+            x_input = x_ref  # 1D (M,)
+            M = len(x_ref)
+            Y_matrix = np.empty((n_spectra, M), dtype=np.float64)
+            for i, s in enumerate(spectra):
+                if s.y is not None and len(s.y) == M:
+                    Y_matrix[i] = s.y
+                else:
+                    Y_matrix[i] = 0.0
+        else:
+            # Fallback: variable-length spectra, pad to 2D
+            max_M = max((len(s.x) if s.x is not None else 0) for s in spectra)
+            x_input = np.zeros((n_spectra, max_M), dtype=np.float64)
+            Y_matrix = np.zeros((n_spectra, max_M), dtype=np.float64)
+            for i, s in enumerate(spectra):
+                if s.x is not None and s.y is not None:
+                    M_s = len(s.x)
+                    x_input[i, :M_s] = s.x
+                    Y_matrix[i, :M_s] = s.y
 
         # Build weights matrix to match lmfit masking behavior
-        weights_matrix = self._build_fit_weights(spectra, fit_params, max_M)
+        weights_matrix = self._build_fit_weights(spectra, fit_params, shared_x)
 
         # ─── 5. Build initial parameter matrix ───
         t0 = time.perf_counter()
@@ -110,7 +129,7 @@ class TensorFittingEngine:
         # ─── 7. TENSOR FIT ───
         t0 = time.perf_counter()
         p_opt, success, cost = batched_levenberg_marquardt(
-            x=X_matrix,
+            x=x_input,
             Y_data=Y_matrix,
             evaluate_fn=evaluator.evaluate,
             jacobian_fn=evaluator.jacobian,
@@ -133,15 +152,28 @@ class TensorFittingEngine:
         t0 = time.perf_counter()
         fit_results = []
         for i, spectrum in enumerate(spectra):
-            M_s = len(spectrum.x) if spectrum.x is not None else 0
-            w = weights_matrix[i, :M_s] if weights_matrix is not None else None
+            if weights_matrix is not None:
+                if shared_x:
+                    w = weights_matrix[i]
+                else:
+                    M_s = len(spectrum.x) if spectrum.x is not None else 0
+                    w = weights_matrix[i, :M_s]
+            else:
+                w = None
             fr = evaluator.build_result(p_opt[i], spectrum.x, spectrum.y, bool(success[i]), weights=w)
-            if weights_matrix is not None and w is not None:
+            if w is not None:
                 fr.best_fit = fr.best_fit.copy()
                 fr.best_fit[w == 0] = 0.0
             evaluator.write_back_to_spectrum(spectrum, fr)
             fit_results.append(fr)
         self.timings["Step 5 - write_back"] = f"{time.perf_counter()-t0:.3f}s"
+        
+        # Cleanup cached noise parameters
+        for s in spectra:
+            if hasattr(s, '_fit_ampli_noise'):
+                del s._fit_ampli_noise
+            if hasattr(s, '_fit_ymean'):
+                del s._fit_ymean
 
         return fit_results
 
@@ -150,9 +182,8 @@ class TensorFittingEngine:
         for spectrum in spectra:
             apply_custom_fit_model(spectrum, fit_model, spectrum.fname)
 
-    def _build_fit_weights(self, spectra, fit_params, max_M):
+    def _build_fit_weights(self, spectra, fit_params, shared_x):
         """Build a weights matrix that mimics lmfit's masking behavior."""
-        
 
         weights = []
         if fit_params is None:
@@ -163,7 +194,8 @@ class TensorFittingEngine:
 
         for spectrum in spectra:
             if spectrum.y is None:
-                weights.append(np.zeros(max_M, dtype=np.float64))
+                M = len(spectra[0].x) if spectra[0].x is not None else 0
+                weights.append(np.zeros(M, dtype=np.float64))
                 continue
 
             w = np.ones_like(spectrum.y, dtype=np.float64)
@@ -176,16 +208,24 @@ class TensorFittingEngine:
                     w[np.isin(spectrum.x, x_outliers)] = 0.0
 
             if coef_noise > 0:
-                ampli_noise = eval_noise_amplitude(spectrum.y)
+                if not hasattr(spectrum, '_fit_ampli_noise'):
+                    spectrum._fit_ampli_noise = eval_noise_amplitude(spectrum.y)
+                    spectrum._fit_ymean = np.convolve(spectrum.y, np.ones(5, dtype=np.float64) / 5.0, mode='same')
+                
+                ampli_noise = spectrum._fit_ampli_noise
+                ymean = spectrum._fit_ymean
                 noise_level = coef_noise * ampli_noise
-                ymean = np.convolve(spectrum.y, np.ones(5, dtype=np.float64) / 5.0, mode='same')
                 w[ymean < noise_level] = 0.0
 
             if spectrum.weights is not None:
                 w = w * spectrum.weights
 
-            w_padded = np.zeros(max_M, dtype=np.float64)
-            w_padded[:len(w)] = w
-            weights.append(w_padded)
+            if shared_x:
+                weights.append(w)
+            else:
+                max_M = max((len(s.x) if s.x is not None else 0) for s in spectra)
+                w_padded = np.zeros(max_M, dtype=np.float64)
+                w_padded[:len(w)] = w
+                weights.append(w_padded)
 
         return np.vstack(weights)

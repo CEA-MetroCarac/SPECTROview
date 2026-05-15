@@ -2,6 +2,8 @@
 import warnings
 from copy import deepcopy
 import numpy as np
+from PySide6.QtCore import QSettings
+from fitspy.core.utils import eval_noise_amplitude
 
 # Suppress harmless Matplotlib constrained_layout warning on 0-size UI initialization
 warnings.filterwarnings("ignore", message=".*constrained_layout not applied because axes sizes collapsed to zero.*")
@@ -334,6 +336,12 @@ class VSpectraViewer(QWidget):
         self._add_checkbox(menu, "Residual")
         self._add_checkbox(menu, "Grid")
 
+        # Show noise level
+        self.act_noise_level = menu.addAction("Show noise level")
+        self.act_noise_level.setCheckable(True)
+        self.act_noise_level.setChecked(False)
+        self.act_noise_level.toggled.connect(self._emit_view_options)
+
         menu.addSeparator()
 
         
@@ -593,6 +601,23 @@ class VSpectraViewer(QWidget):
                     self.ax.plot(
                         xr + x_offset, residual + y_offset,
                         "r-", lw=1.0, label="residual"
+                    )
+                except Exception:
+                    pass
+
+            # ── Noise level — horizontal line at coef_noise × noise_amplitude
+            if self.act_noise_level.isChecked() and y is not None and len(y) > 0:
+                try:
+                    coef_noise = QSettings("CEA-Leti", "SPECTROview").value(
+                        "fit_settings/coef_noise", 1.0, float
+                    )
+                    ampli_noise = eval_noise_amplitude(spectrum.y)
+                    noise_level = coef_noise * ampli_noise
+                    noise_label = f"noise ({coef_noise}×{ampli_noise:.1f})" if spec_idx == 0 else None
+                    self.ax.axhline(
+                        y=noise_level + y_offset,
+                        color="orange", ls="--", lw=1.0, alpha=0.8,
+                        label=noise_label,
                     )
                 except Exception:
                     pass
@@ -884,6 +909,7 @@ class VSpectraViewer(QWidget):
             "show_peak_label": self.act_show_peak_label.isChecked() if hasattr(self, "act_show_peak_label") else False,
             "residual": self.act_residual.isChecked() if hasattr(self, "act_residual") else False,
             "grid": self.act_grid.isChecked() if hasattr(self, "act_grid") else False,
+            "noise_level": self.act_noise_level.isChecked() if hasattr(self, "act_noise_level") else False,
             "width": self.width_entry.text() if hasattr(self, "width_entry") else "5.5",
             "height": self.height_entry.text() if hasattr(self, "height_entry") else "4.0",
             "legend": self.btn_legend.isChecked() if hasattr(self, "btn_legend") else False,
@@ -918,6 +944,8 @@ class VSpectraViewer(QWidget):
         _update(self.act_show_peak_label, self.act_show_peak_label.setChecked, state.get("show_peak_label"))
         _update(self.act_residual, self.act_residual.setChecked, state.get("residual"))
         _update(self.act_grid, self.act_grid.setChecked, state.get("grid"))
+        if hasattr(self, "act_noise_level"):
+            _update(self.act_noise_level, self.act_noise_level.setChecked, state.get("noise_level"))
         _update(self.width_entry, self.width_entry.setText, state.get("width"))
         _update(self.height_entry, self.height_entry.setText, state.get("height"))
         _update(self.btn_legend, self.btn_legend.setChecked, state.get("legend"))
@@ -971,6 +999,7 @@ class VSpectraViewer(QWidget):
             "bestfit_colorful": self.act_bestfit_colorful.isChecked(),
             "show_peak_label": self.act_show_peak_label.isChecked(),
             "residual": self.act_residual.isChecked(),
+            "noise_level": self.act_noise_level.isChecked(),
             "x_unit": self.cbb_xaxis.currentText(),
             "y_scale": self.cbb_yscale.currentText(),
             "linewidth": self.spin_lw.value(),

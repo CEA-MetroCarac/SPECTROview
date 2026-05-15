@@ -45,6 +45,7 @@ class MSettings:
             "show_peak_label": self.settings.value("view_options/show_peak_label", False, bool),
             "residual": self.settings.value("view_options/residual", False, bool),
             "grid": self.settings.value("view_options/grid", False, bool),
+            "noise_level": self.settings.value("view_options/noise_level", False, bool),
             "width": self.settings.value("view_options/width", "5.5", str),
             "height": self.settings.value("view_options/height", "4.0", str),
             "legend": self.settings.value("view_options/legend", False, bool),

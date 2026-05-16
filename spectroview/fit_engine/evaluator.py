@@ -358,14 +358,14 @@ class TensorEvaluator:
         return fit_results
 
     def write_back_to_spectrum(self, spectrum, fit_result):
-        """Write fit result back to MSpectrum (same interface as core)."""
+        """Write fit result back to MSpectrum."""
         spectrum.result_fit = fit_result
 
         for i, peak_model in enumerate(spectrum.peak_models):
             if i >= len(self._peaks):
                 break
             for key in peak_model.param_names:
-                name = key[4:]  # remove actual prefix 'mXX_' from fitspy
+                name = key[4:]  # remove actual prefix 'mXX_'
                 tensor_key = f"m{i+1:02d}_{name}" # use the sequentially generated prefix from the evaluator
                 if tensor_key in fit_result.params:
                     peak_model.set_param_hint(name, value=fit_result.params[tensor_key].value)

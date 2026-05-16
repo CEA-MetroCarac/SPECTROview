@@ -179,6 +179,7 @@ class TensorFittingEngine:
         progress_callback=None,
         cancel_check=None,
         apply_model_to_spectra: bool = True,
+        print_benchmark: bool = True, #To print the benchmark fitting times.
     ):
         """Fit all spectra simultaneously using the tensor engine.
 
@@ -200,7 +201,10 @@ class TensorFittingEngine:
         if apply_model_to_spectra:
             t0 = time.perf_counter()
             self._apply_model_to_all(spectra, fit_model)
-            self.timings["Step 1 - apply_model"] = f"{time.perf_counter()-t0:.3f}s"
+            t_step1 = time.perf_counter() - t0
+            self.timings["Step 1 - apply_model"] = f"{t_step1:.3f}s"
+            if print_benchmark:
+                print(f"[TensorEngine] Step 1 - apply_model: {t_step1:.3f}s")
 
         # ─── 2. Build evaluator ───
         evaluator = TensorEvaluator.from_fit_model(fit_model)
@@ -213,7 +217,10 @@ class TensorFittingEngine:
         # ─── 3. Preprocess all spectra (batch-optimized) ───
         t0 = time.perf_counter()
         self._batch_preprocess(spectra, fit_model)
-        self.timings["Step 2 - preprocess"] = f"{time.perf_counter()-t0:.3f}s"
+        t_step2 = time.perf_counter() - t0
+        self.timings["Step 2 - preprocess"] = f"{t_step2:.3f}s"
+        if print_benchmark:
+            print(f"[TensorEngine] Step 2 - preprocess: {t_step2:.3f}s")
 
         # ─── 4. Extract data matrix ───
         x_ref = spectra[0].x
@@ -262,7 +269,10 @@ class TensorFittingEngine:
             p0 = evaluator.build_p0_matrix(spectra)
             
         evaluator.apply_noise_threshold(spectra, p0, fit_params)
-        self.timings["Step 3 - build p0"] = f"{time.perf_counter()-t0:.3f}s"
+        t_step3 = time.perf_counter() - t0
+        self.timings["Step 3 - build p0"] = f"{t_step3:.3f}s"
+        if print_benchmark:
+            print(f"[TensorEngine] Step 3 - build p0: {t_step3:.3f}s")
 
         # ─── 6. Parse fit parameters ───
         if fit_params is None:
@@ -289,7 +299,9 @@ class TensorFittingEngine:
             cancel_check=cancel_check,
         )
         fit_time = time.perf_counter() - t0
-        self.timings["Step 4 - tensor fit"] = f"{fit_time:.3f}s ({fit_time/n_spectra*1000:.1f} ms/spectrum, {success.sum()}/{n_spectra} converged)"
+        self.timings["Step 4 - tensor fit"] = f"{fit_time:.3f}s ({fit_time/n_spectra*1000:.3f} ms/spectrum, {success.sum()}/{n_spectra} converged)"
+        if print_benchmark:
+            print(f"[TensorEngine] Step 4 - tensor fit: {fit_time:.3f}s ({fit_time/n_spectra*1000:.1f} ms/spectrum, {success.sum()}/{n_spectra} converged)")
 
         evaluator.apply_noise_threshold(spectra, p_opt, fit_params, p0_matrix=p0)
         
@@ -298,7 +310,11 @@ class TensorFittingEngine:
         fit_results = evaluator.build_results_batch(
             p_opt, x_input, Y_matrix, success, weights_matrix, shared_x, spectra
         )
-        self.timings["Step 5 - write_back"] = f"{time.perf_counter()-t0:.3f}s"
+        t_step5 = time.perf_counter() - t0
+        self.timings["Step 5 - write_back"] = f"{t_step5:.3f}s"
+        if print_benchmark:
+            print(f"[TensorEngine] Step 5 - write_back: {t_step5:.3f}s")
+            print(f"[TensorEngine] TOTAL: {time.perf_counter()-t_total:.3f}s")
         
         # Cleanup cached noise parameters
         for s in spectra:

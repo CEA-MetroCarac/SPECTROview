@@ -1043,6 +1043,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#15-performance-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Performance Optimizations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#2-code-logic-and-core-implementation-principles" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1635,6 +1646,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#15-performance-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Performance Optimizations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#2-code-logic-and-core-implementation-principles" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2160,6 +2182,16 @@
 <li><strong>Expression Support</strong>: Supports complex mathematical relationships between parameters across the batch by evaluating mathematical constraints symbolically before mapping to free parameters.</li>
 </ol>
 <hr />
+<h2 id="15-performance-optimizations">1.5 Performance Optimizations<a class="headerlink" href="#15-performance-optimizations" title="Permanent link">&para;</a></h2>
+<p>Recent optimizations have achieved a 2.2x to 5x speedup across various datasets:</p>
+<ol>
+<li><strong>Template Model Application (11.9x speedup)</strong>: <code>_prepare_fit_model_template()</code> pre-computes lmfit Models and bounds sanitization <em>once</em>. Per-spectrum application only clones the lightweight <code>param_hints</code> dictionary.</li>
+<li><strong>Batch Preprocessing (3.0x speedup)</strong>: <code>_batch_preprocess()</code> computes range masks and baseline indices once for all spectra sharing the same x-axis, using vectorized subtraction instead of per-spectrum calls.</li>
+<li><strong>Adaptive Batched Solver (up to 5x speedup)</strong>: The solver dynamically chooses between NumPy's batched <code>np.linalg.solve</code> (best for large N) and SciPy's <code>cho_solve</code> (Cholesky decomposition, best for small N / large K, exploiting symmetric positive-definite normal equations).</li>
+<li><strong>Mean-Based Convergence Criteria</strong>: The convergence check uses <code>mean(|Δp| / |p|) &lt; xtol</code> rather than <code>max()</code>, preventing a single slowly-converging parameter in multi-peak models from stalling the entire batch.</li>
+<li><strong>Vectorized Write-Back (3.5x speedup)</strong>: <code>build_results_batch()</code> evaluates all best-fit curves and computes R² simultaneously across all spectra using a single <code>_to_full()</code> expansion.</li>
+<li><strong>Zero-Weight Early Exit</strong>: Spectra identified as purely noise (all weights zero) are marked as converged instantly, saving all Levenberg-Marquardt iterations.</li>
+</ol>
 <h2 id="2-code-logic-and-core-implementation-principles">2. Code Logic and Core Implementation Principles<a class="headerlink" href="#2-code-logic-and-core-implementation-principles" title="Permanent link">&para;</a></h2>
 <p>The engine implements a <strong>Batched Levenberg-Marquardt</strong> algorithm.</p>
 <h3 id="the-mathematics-of-batched-lm">The Mathematics of Batched LM<a class="headerlink" href="#the-mathematics-of-batched-lm" title="Permanent link">&para;</a></h3>
@@ -2211,7 +2243,7 @@
 <tr>
 <td><code>optimizer.py</code></td>
 <td><code>batched_levenberg_marquardt()</code></td>
-<td>Pure numerical optimizer. Solves N independent least-squares problems simultaneously using <code>np.einsum</code> for normal equations and <code>np.linalg.solve</code> for the linear system. GUI-agnostic.</td>
+<td>Pure numerical optimizer. Solves N independent least-squares problems simultaneously using <code>np.einsum</code>. Uses an adaptive solver (<code>cho_solve</code> or <code>np.linalg.solve</code>) depending on matrix size. GUI-agnostic.</td>
 </tr>
 <tr>
 <td><code>models.py</code></td>
@@ -2245,18 +2277,15 @@
     TFT--&gt;&gt;VM: finished + timings</code></pre>
 <h3 id="step-by-step-details">Step-by-Step Details<a class="headerlink" href="#step-by-step-details" title="Permanent link">&para;</a></h3>
 <p><strong>Step 1 — Model Application</strong> (<code>apply_model_to_spectra=True</code>):
-The <code>fit_model</code> dictionary is applied to all <code>MSpectrum</code> objects via <code>apply_custom_fit_model()</code>, ensuring they have the correct number and type of peaks. When <code>False</code> (Spectra workspace with per-spectrum models), the <code>TensorFitThread</code> pre-groups spectra by model signature and processes each group as a separate batch.</p>
+Instead of a slow per-spectrum deepcopy, <code>_prepare_fit_model_template()</code> creates a highly optimized template. It builds lmfit Model objects and sanitizes parameter bounds exactly once. Then, <code>_apply_template_to_spectrum()</code> merely copies the lightweight <code>param_hints</code> dictionary. When <code>False</code> (Spectra workspace with per-spectrum models), spectra are grouped by model signature and processed as separate batches.</p>
 <p><strong>Step 2 — Evaluator Construction</strong>:
-<code>TensorEvaluator.from_fit_model()</code> iterates over <code>peak_models</code> in the fit model dict. For each peak, it:</p>
-<ul>
-<li>Looks up the model name in <code>BATCHED_MODELS</code> (fast path) or <code>PEAK_MODEL_REGISTRY</code> (scalar fallback)</li>
-<li>Extracts <code>param_hints</code> (value, min, max, vary, expr) for each parameter</li>
-<li>Assigns a sequential prefix (<code>m01_</code>, <code>m02_</code>, ...) to parameter names</li>
-<li>Builds <code>_free_idx</code> / <code>_fixed_idx</code> arrays for the free ↔ full parameter mapping</li>
-<li>Parses expression strings (e.g., <code>m01_fwhm</code>) and marks linked parameters as fixed</li>
-</ul>
+<code>TensorEvaluator.from_fit_model()</code> parses the model. For each peak:
+- Looks up the model name in <code>BATCHED_MODELS</code> (fast path) or <code>PEAK_MODEL_REGISTRY</code> (scalar fallback).
+- Assigns a sequential prefix (<code>m01_</code>, <code>m02_</code>, ...) and extracts <code>param_hints</code>.
+- Builds <code>_free_idx</code> / <code>_fixed_idx</code> mappings between optimized free parameters and the full parameter set.
+- Parses expression strings (e.g., <code>m01_fwhm = m02_fwhm</code>) and maps dependencies.</p>
 <p><strong>Step 3 — Preprocessing</strong>:
-Calls <code>spectrum.preprocess()</code> on spectra that haven't been preprocessed yet (baseline evaluation, spectral range cropping).</p>
+<code>_batch_preprocess()</code> uses a batched strategy. For spectra sharing the same x-axis (e.g. hyperspectral maps), it computes the range crop mask and evaluates the baseline indexing <strong>once</strong>. This mask and baseline are then rapidly applied via NumPy array slicing and subtraction to all spectra. For complex modes (like arpls) or variable lengths, it falls back to per-spectrum <code>spectrum.preprocess()</code>.</p>
 <p><strong>Step 4 — Data Extraction</strong>:
 Spectra with different lengths are zero-padded to <code>max_M</code> (the longest spectrum). The weights matrix is built by <code>_build_fit_weights()</code>, which handles:</p>
 <table>
@@ -2298,7 +2327,7 @@ Spectra with different lengths are zero-padded to <code>max_M</code> (the longes
 <p>After p0 construction, <code>apply_noise_threshold()</code> zeros out amplitude and FWHM for peaks located in regions below the noise floor.</p>
 <p><strong>Step 6 — Optimization</strong>: See Section 2 for the LM algorithm details.</p>
 <p><strong>Step 7 — Result Writeback</strong>:
-For each spectrum, <code>build_result()</code> reconstructs the full parameter vector, evaluates the best-fit curve, and computes R². Then <code>write_back_to_spectrum()</code> writes the optimized values back to each <code>peak_model.param_hints</code> and sets <code>spectrum.result_fit</code>.</p>
+<code>evaluator.build_results_batch()</code> uses a vectorized approach. It performs a single <code>_to_full()</code> expansion for the entire <span class="arithmatex">\(N    imes K\)</span> parameter matrix, calls <code>evaluate()</code> once to generate all best-fit curves, and calculates <span class="arithmatex">\(R^2\)</span> via array operations. The data is then packaged into <code>FitResult</code> objects and assigned to <code>spectrum.result_fit</code>.</p>
 <hr />
 <h2 id="5-the-tensorevaluator-in-detail">5. The TensorEvaluator in Detail<a class="headerlink" href="#5-the-tensorevaluator-in-detail" title="Permanent link">&para;</a></h2>
 <p>The <code>TensorEvaluator</code> is the most complex class in the engine. It serves as the <strong>bridge</strong> between the flexible, dictionary-based world of the GUI and the rigid, flat-tensor world of the optimizer.</p>
@@ -2458,7 +2487,7 @@ When spectra have different peak configurations, the ViewModel groups them by mo
 <h3 id="key-parameters">Key Parameters<a class="headerlink" href="#key-parameters" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>max_ite</code> (default: 200)</strong>: The maximum number of Levenberg-Marquardt iterations. Increasing this might help extremely difficult spectra converge but will increase total execution time.</li>
-<li><strong><code>xtol</code> (default: 1e-4)</strong>: The relative tolerance for the parameter step size <span class="arithmatex">\(\delta p\)</span>. If the relative change in all parameters is less than <code>xtol</code>, the spectrum is considered converged.</li>
+<li><strong><code>xtol</code> (default: 1e-4)</strong>: The relative tolerance for the parameter step size <span class="arithmatex">\(\delta p\)</span>. Convergence is reached when the <strong>mean</strong> relative change across all parameters (<span class="arithmatex">\(\operatorname{mean}(|\delta p| / |p|)\)</span>) is less than <code>xtol</code>. This mean-based criterion ensures that a single slowly oscillating parameter does not artificially delay convergence for the entire spectrum.</li>
 <li><strong><code>ftol</code> (default: 1e-4)</strong>: The relative tolerance for the cost function (sum of squared residuals). If the relative change in the cost is less than <code>ftol</code>, the spectrum is considered converged.</li>
 <li><strong><code>fit_negative</code> (default: <code>False</code>)</strong>: Whether to include negative intensity values in the fit. When <code>False</code>, negative points get zero weight.</li>
 <li><strong><code>fit_outliers</code> (default: <code>False</code>)</strong>: Whether to include statistical outlier points. When <code>False</code>, outliers detected by <code>spectrum.calculate_outliers()</code> get zero weight.</li>
@@ -2557,12 +2586,14 @@ When spectra have different peak configurations, the ViewModel groups them by mo
 </code></pre></div>
 <p>The optimizer's residual calculation <span class="arithmatex">\(\mathbf{r} = \mathbf{W} \circ (\mathbf{Y}_{pred} - \mathbf{Y}_{data})\)</span> naturally ignores these masked points, so the fit focuses only on regions with meaningful signal.</p>
 <h4 id="mechanism-b-peak-suppression-apply_noise_threshold">Mechanism B — Peak Suppression (<code>apply_noise_threshold</code>)<a class="headerlink" href="#mechanism-b-peak-suppression-apply_noise_threshold" title="Permanent link">&para;</a></h4>
-<p>In the <code>TensorEvaluator</code>, any peak whose <strong>center position</strong> (<code>x0</code>) falls in a below-threshold region has its initial parameters forcibly set to zero:</p>
+<p>In the <code>TensorEvaluator</code>, any peak whose <strong>center position</strong> (<code>x0</code>) falls in a below-threshold region has its amplitude and shape parameters suppressed, and its positional parameters restored to the initial guess:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">for</span> <span class="n">each</span> <span class="n">peak</span><span class="p">:</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">x0_val</span> <span class="o">=</span> <span class="n">peak</span> <span class="n">center</span> <span class="n">position</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="k">if</span> <span class="n">ymean</span><span class="p">[</span><span class="n">at</span> <span class="n">x0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">noise_level</span><span class="p">:</span>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        <span class="n">ampli</span> <span class="o">=</span> <span class="mf">0.0</span>    <span class="c1"># force amplitude to zero</span>
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>        <span class="n">fwhm</span>  <span class="o">=</span> <span class="mf">0.0</span>    <span class="c1"># force width to zero</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="c1"># Additionally, x0 and other shape parameters are restored </span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        <span class="c1"># to p0_matrix (initial guesses) to prevent random fluctuation mapping</span>
 </code></pre></div>
 <p>This runs <strong>twice</strong> during the pipeline:</p>
 <ol>

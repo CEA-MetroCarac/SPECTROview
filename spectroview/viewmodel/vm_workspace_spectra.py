@@ -748,7 +748,6 @@ class VMWorkspaceSpectra(QObject):
             return
 
         model_path = self._vm_fit_model_builder.get_current_model_path()
-        
         if model_path is None or not model_path.exists():
             self.notify.emit("No fit model selected.")
             return

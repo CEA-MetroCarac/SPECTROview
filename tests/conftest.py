@@ -22,12 +22,7 @@ sys.path.insert(0, str(project_root))
 
 try:
     import spectroview.fit_engine.tensor_engine as _tensor_engine
-    core2_pkg = types.ModuleType("spectroview.core2")
-    core2_pkg.__path__ = []
-    core2_pkg.tensor_engine = _tensor_engine
-    sys.modules["spectroview.core2"] = core2_pkg
-    sys.modules["spectroview.core2.tensor_engine"] = _tensor_engine
-except Exception:
+except ImportError:
     pass
 
 from PySide6.QtWidgets import QApplication
@@ -64,12 +59,6 @@ def examples_dir(project_root):
     return project_root / "examples"
 
 
-@pytest.fixture(scope="session")
-def spectroscopic_data_dir(examples_dir):
-    """Return path to spectroscopic_data directory."""
-    return examples_dir / "spectroscopic_data"
-
-
 @pytest.fixture
 def temp_workspace(tmp_path):
     """Create temporary workspace directory for save/load tests."""
@@ -83,52 +72,52 @@ def temp_workspace(tmp_path):
 # ============================================================================
 
 @pytest.fixture(scope="session")
-def single_spectrum_file(spectroscopic_data_dir):
+def single_spectrum_file(examples_dir):
     """Return path to a single spectrum test file."""
-    return spectroscopic_data_dir / "spectrum1_1ML.txt"
+    return examples_dir / "fit_benchmarking_data" / "spectrum1_1ML.txt"
 
 
 @pytest.fixture(scope="session")
-def multiple_spectra_files(spectroscopic_data_dir):
+def multiple_spectra_files(examples_dir):
     """Return list of spectrum file paths."""
     return [
-        spectroscopic_data_dir / "spectrum1_1ML.txt",
-        spectroscopic_data_dir / "XRDspectra.txt",
+        examples_dir / "fit_benchmarking_data" / "spectrum1_1ML.txt",
+        examples_dir / "fit_benchmarking_data" / "XRDspectra.txt",
     ]
 
 
 @pytest.fixture(scope="session")
-def map_2d_file(spectroscopic_data_dir):
+def map_2d_file(examples_dir):
     """Return path to a 2D map test file."""
-    return spectroscopic_data_dir / "2Dmap_Si.txt"
+    return examples_dir / "fit_benchmarking_data" / "2Dmap_Si.txt"
 
 
 @pytest.fixture(scope="session")
-def multiple_map_files(spectroscopic_data_dir):
+def multiple_map_files(examples_dir):
     """Return list of 2D map file paths for batch testing."""
     return [
-        spectroscopic_data_dir / "2Dmap_Si.txt",
-        spectroscopic_data_dir / "wafer1_process1.csv",
-        spectroscopic_data_dir / "wafer4_newformat.csv",
+        examples_dir / "fit_benchmarking_data" / "2Dmap_Si.txt",
+        examples_dir / "fit_benchmarking_data" / "wafer1_process1.csv",
+        examples_dir / "fit_benchmarking_data" / "wafer4_newformat.csv",
     ]
 
 
 @pytest.fixture(scope="session")
-def wafer_file(spectroscopic_data_dir):
+def wafer_file(examples_dir):
     """Return path to a wafer data test file."""
-    return spectroscopic_data_dir / "wafer4_newformat.csv"
+    return examples_dir / "fit_benchmarking_data" / "wafer4_newformat.csv"
 
 
 @pytest.fixture(scope="session")
-def wafer4_file(spectroscopic_data_dir):
+def wafer4_file(examples_dir):
     """Return path to wafer4_process1 test file."""
-    return spectroscopic_data_dir / "wafer1_process1.csv"
+    return examples_dir / "fit_benchmarking_data" / "wafer1_process1.csv"
 
 
 @pytest.fixture(scope="session")
 def fit_model_file(examples_dir):
     """Return path to a fit model JSON file."""
-    return examples_dir / "predefined_fit_models" / "fit_model_Si_.json"
+    return examples_dir / "fit_benchmarking_data" / "predefined_fit_models" / "fit_model_Si_.json"
 
 
 @pytest.fixture(scope="session")
@@ -140,19 +129,19 @@ def dataframe_excel_file(examples_dir):
 @pytest.fixture(scope="session")
 def saved_spectra_workspace(examples_dir):
     """Return path to a saved spectra workspace file."""
-    return examples_dir / "spectra.spectra"
+    return examples_dir / "fit_benchmarking_data" / "SPECTRA.spectra"
 
 
 @pytest.fixture(scope="session")
 def saved_maps_workspace(examples_dir):
     """Return path to a saved maps workspace file."""
-    return examples_dir / "wafers.maps"
+    return examples_dir / "fit_benchmarking_data" / "WAFERS.maps"
 
 
 @pytest.fixture(scope="session")
 def saved_graphs_workspace(examples_dir):
     """Return path to a saved graphs workspace file."""
-    return examples_dir / "graphs.graphs"
+    return examples_dir / "fit_benchmarking_data" / "GRAPHS.graphs"
 
 
 # ============================================================================

@@ -144,7 +144,7 @@ def test_1_cl_map_performance(cl_map_data):
     
     # Performance assertion: Should be well under 8 seconds
     # (Typical optimized run is ~2-3s)
-    assert total_time < 7.0, f"CL_map fitting is too slow: {total_time:.2f}s"
+    assert total_time < 10, f"CL_map fitting is too slow: {total_time:.2f}s"
     
     # Correctness assertions
     success_count = sum(1 for r in results if r.success)

@@ -357,6 +357,12 @@ class TensorFittingEngine:
                 x0 <= (range_max if range_max is not None else np.inf)
             )
             x = x0[mask].copy()
+            if len(x) == 0:
+                # Range mask produces empty x — fall back to per-spectrum
+                for s in spectra:
+                    if not getattr(s, 'is_preprocessed', False):
+                        s.preprocess()
+                return
         else:
             mask = None
             x = x0.copy()

@@ -1,0 +1,60 @@
+{
+   "0": {
+      "fname": "REF_6",
+      "range_min": 460.0,
+      "range_max": 570.0,
+      "normalize": false,
+      "normalize_range_min": null,
+      "normalize_range_max": null,
+      "peak_labels": ["Si"],
+      "fit_params": {
+         "method": "Leastsq",
+         "fit_negative": false,
+         "fit_outliers": false,
+         "max_ite": 500,
+         "coef_noise": 1,
+         "xtol": 9.999999747378752e-05,
+         "ncpus": 1
+      },
+      "is_corrected": false,
+      "correction_value": 0,
+      "baseline": {
+         "mode": "Linear",
+         "coef": 5,
+         "points": [[460.6702169878947, 568.8419912888185],
+            [1.8264804387197842, -0.8027723385864789]],
+         "order_max": 1,
+         "sigma": 5.0,
+         "attached": true,
+         "is_subtracted": true
+      },
+      "peak_models": {
+         "0": {
+            "Lorentzian": {
+               "ampli": {
+                  "value": 748.0702362825826,
+                  "min": 0,
+                  "max": Infinity,
+                  "vary": true,
+                  "expr": null
+               },
+               "fwhm": {
+                  "value": 3.370829912544737,
+                  "min": 0,
+                  "max": 200,
+                  "vary": true,
+                  "expr": null
+               },
+               "x0": {
+                  "value": 525.6014403315743,
+                  "min": 501.21892114938817,
+                  "max": 541.2189211493882,
+                  "vary": true,
+                  "expr": null
+               }
+            }
+         }
+      },
+      "result_fit_success": true
+   }
+}

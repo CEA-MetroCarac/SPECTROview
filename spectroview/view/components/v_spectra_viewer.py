@@ -253,6 +253,9 @@ class VSpectraViewer(QWidget):
         # R²
         self.lbl_r2 = QLabel("R²=0")
         layout.addWidget(self.lbl_r2)
+        # Noise level
+        self.lbl_noise = QLabel("Noise=0")
+        layout.addWidget(self.lbl_noise)
 
         return bar
 
@@ -802,9 +805,10 @@ class VSpectraViewer(QWidget):
         self.lbl_r2.setText(f"R²={value:.4f}")
     
     def _update_r2_display(self):
-        """Display R² value from the first selected spectrum."""
+        """Display R² value and noise level from the first selected spectrum."""
         if not self._current_spectra:
             self.lbl_r2.setText("R²=0")
+            self.lbl_noise.setText("Noise=0")
             return
         
         # Get first spectrum
@@ -818,6 +822,20 @@ class VSpectraViewer(QWidget):
             self.lbl_r2.setText(f"R²={rsquared}")
         else:
             self.lbl_r2.setText("R²=0")
+        
+        # Update noise level
+        try:
+            if spectrum.y is not None and len(spectrum.y) > 0:
+                coef_noise = QSettings("CEA-Leti", "SPECTROview").value(
+                    "fit_settings/coef_noise", 1.0, float
+                )
+                ampli_noise = eval_noise_amplitude(spectrum.y)
+                noise_val = coef_noise * ampli_noise
+                self.lbl_noise.setText(f"Noise={noise_val:.1f}")
+            else:
+                self.lbl_noise.setText("Noise=0")
+        except Exception:
+            self.lbl_noise.setText("Noise=0")
 
     def _on_legend_double_click(self, event):
         """Handle double-click on legend text or marker to edit label/color."""

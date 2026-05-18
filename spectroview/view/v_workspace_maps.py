@@ -143,7 +143,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(4)
         
-        self.lbl_count.setText("0 spectra loaded")
+        self.lbl_count.setText("0 spectra")
         self.progress_bar.setFixedHeight(15)
         
         # Stop button is inherited from parent but needs to be added to layout

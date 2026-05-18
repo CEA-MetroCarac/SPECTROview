@@ -128,7 +128,7 @@ class VWorkspaceSpectra(QWidget):
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(4)
         
-        self.lbl_count = QLabel("0 spectra loaded")
+        self.lbl_count = QLabel("0 spectra")
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(100)
         self.progress_bar.setFixedHeight(15)

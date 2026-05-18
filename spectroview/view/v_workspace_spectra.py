@@ -252,7 +252,7 @@ class VWorkspaceSpectra(QWidget):
         vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
         vm.spectra_selection_changed.connect(self._update_metadata_display)
         vm.spectra_selection_changed.connect(self.v_fit_model_builder.update_baseline_ui)
-        vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
+        vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra"))
         vm.notify.connect(self._show_toast_notification)
 
         # MetaData connections

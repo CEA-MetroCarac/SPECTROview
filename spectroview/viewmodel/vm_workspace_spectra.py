@@ -16,6 +16,7 @@ from spectroview.model.m_io import load_spectrum_file, load_TRPL_data, load_wdf_
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
+from spectroview.model.workspace_io import WorkspaceIO
 from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
 from spectroview.viewmodel.utils import (
     ApplyFitModelThread, FitThread,
@@ -1150,7 +1151,7 @@ class VMWorkspaceSpectra(QObject):
         df.to_clipboard(index=False)
 
     def save_work(self):
-        """Save current workspace to .spectra file."""
+        """Save current workspace to .spectra file using high-performance ZIP format."""
         
         file_path, _ = QFileDialog.getSaveFileName(
             None,
@@ -1163,39 +1164,62 @@ class VMWorkspaceSpectra(QObject):
             return
         
         try:
-            data_to_save = {'spectrums': self.spectra.save(is_map=False)}
+            spectrums_meta = {}
+            arrays = {}
+            for i, spectrum in enumerate(self.spectra):
+                spectrum_dict = spectrum.save(save_data=False)
+                
+                # Remove redundant baseline fields to reduce payload
+                if 'baseline' in spectrum_dict:
+                    spectrum_dict['baseline'].pop('y_eval', None)
+                
+                # Store x0/y0 arrays directly in binary format
+                if spectrum.x0 is not None:
+                    arrays[f"x0_{i}"] = spectrum.x0
+                if spectrum.y0 is not None:
+                    arrays[f"y0_{i}"] = spectrum.y0
+                    
+                spectrums_meta[i] = spectrum_dict
+                
+            metadata = {
+                'format_version': 3,  # signals zipped binary format
+                'spectrums_meta': spectrums_meta
+            }
             
-            # Save fit results DataFrame (including computed columns)
+            dataframes = {}
             if self.df_fit_results is not None and not self.df_fit_results.empty:
-                data_to_save['df_fit_results'] = self.df_fit_results.to_dict('records')
-            else:
-                data_to_save['df_fit_results'] = None
+                dataframes['df_fit_results'] = self.df_fit_results
             
-            with open(file_path, 'w') as f:
-                json.dump(data_to_save, f, indent=2)
+            WorkspaceIO.save_workspace(file_path, metadata, arrays, dataframes)
             self.notify.emit("Work saved successfully.")
         except Exception as e:
             QMessageBox.critical(None, "Save Error", f"Error saving work:\n{str(e)}")
 
     def load_work(self, file_path: str):
-        """Load previously saved workspace from .spectra file."""
+        """Load previously saved workspace from .spectra file (supports ZIP and legacy JSON)."""
         
         try:
-            with open(file_path, 'r') as f:
-                load = json.load(f)
+            metadata, arrays, dataframes, is_legacy = WorkspaceIO.load_workspace(file_path)
+            
+            if is_legacy:
+                self.load_work_legacy(file_path)
+                return
             
             # Clear existing data
             self.spectra = MSpectra()
             
             # Load all spectra
-            for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
-                spectrum = self._create_spectrum_from_dict(spectrum_data)
+            spectrums_meta = metadata.get('spectrums_meta', {})
+            for spectrum_id, spectrum_data in spectrums_meta.items():
+                i = int(spectrum_id)
+                x0_arr = arrays.get(f"x0_{i}")
+                y0_arr = arrays.get(f"y0_{i}")
+                spectrum = self._create_spectrum_from_dict(spectrum_data, x0_arr, y0_arr)
                 self.spectra.append(spectrum)
             
-            # Restore fit results DataFrame (including computed columns)
-            if 'df_fit_results' in load and load['df_fit_results'] is not None:
-                self.df_fit_results = pd.DataFrame(load['df_fit_results'])
-
+            # Restore fit results DataFrame
+            if dataframes and 'df_fit_results' in dataframes:
+                self.df_fit_results = dataframes['df_fit_results']
                 # Emit signal to update fit results table
                 self.fit_results_updated.emit(self.df_fit_results)
             else:
@@ -1212,6 +1236,40 @@ class VMWorkspaceSpectra(QObject):
             
         except Exception as e:
             QMessageBox.critical(None, "Load Error", f"Error loading spectra workspace:\n{str(e)}")
+
+    def load_work_legacy(self, file_path: str):
+        """Legacy JSON loader for backward compatibility with old .spectra workspaces."""
+        
+        try:
+            with open(file_path, 'r') as f:
+                load = json.load(f)
+            
+            # Clear existing data
+            self.spectra = MSpectra()
+            
+            # Load all spectra
+            for spectrum_id, spectrum_data in load.get('spectrums', {}).items():
+                spectrum = self._create_spectrum_from_dict(spectrum_data)
+                self.spectra.append(spectrum)
+            
+            # Restore fit results DataFrame (including computed columns)
+            if 'df_fit_results' in load and load['df_fit_results'] is not None:
+                self.df_fit_results = pd.DataFrame(load['df_fit_results'])
+                self.fit_results_updated.emit(self.df_fit_results)
+            else:
+                self.df_fit_results = None
+            
+            # Update UI
+            self._emit_list_update()
+            if len(self.spectra) > 0:
+                self.selected_fnames = [self.spectra[0].fname]
+                self._emit_selected_spectra()
+            else:
+                self.selected_fnames = []
+                self.spectra_selection_changed.emit([])
+            
+        except Exception as e:
+            QMessageBox.critical(None, "Load Error", f"Error loading legacy spectra workspace:\n{str(e)}")
 
     def _create_spectrum_from_dict(self, spectrum_data: dict, x0_array=None, y0_array=None) -> MSpectrum:
         """Helper to safely instantiate and preprocess an MSpectrum from saved dict.

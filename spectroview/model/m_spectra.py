@@ -49,12 +49,16 @@ class MSpectra(FitspySpectra):
         
         # Process each spectrum directly to avoid Fitspy core O(N^2) get_objects loop
         for i, spectrum in enumerate(self):
-            # spectrum.save() creates the base dict using vars(self) -> capturing all custom attrs natively
-            spectrum_dict = spectrum.save(save_data=False)
-            
-            # Remove redundant baseline fields to reduce payload
-            if 'baseline' in spectrum_dict:
-                spectrum_dict['baseline'].pop('y_eval', None)
+            # If the spectrum is lazy loaded and hasn't been modified, just use its cached metadata!
+            if hasattr(spectrum, '_lazy_meta'):
+                spectrum_dict = spectrum._lazy_meta.copy()
+            else:
+                # spectrum.save() creates the base dict using vars(self) -> capturing all custom attrs natively
+                spectrum_dict = spectrum.save(save_data=False)
+                
+                # Remove redundant baseline fields to reduce payload
+                if 'baseline' in spectrum_dict:
+                    spectrum_dict['baseline'].pop('y_eval', None)
             
             # Save x0, y0 only if it's not a map
             if not is_map:

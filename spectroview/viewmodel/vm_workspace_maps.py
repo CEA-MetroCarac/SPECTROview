@@ -20,6 +20,7 @@ from spectroview.model.m_spectrum import MSpectrum
 from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
+from spectroview.model.workspace_io import WorkspaceIO
 
 
 
@@ -45,6 +46,60 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
         # Reference to Graphs workspace (injected after construction)
         self.graphs_workspace = None
+        self._maps_arrays_cache = {}
+        
+    def _ensure_spectrum_loaded(self, spectrum: MSpectrum):
+        """Lazily load x0 and y0 arrays for a spectrum from the map cache if not already loaded."""
+        if getattr(spectrum, '_is_lazy_loaded', False):
+            return
+            
+        if spectrum.x0 is not None and spectrum.y0 is not None and not hasattr(spectrum, '_lazy_meta'):
+            spectrum._is_lazy_loaded = True
+            return
+
+        # 1. Lazily apply heavy metadata (peak models, etc.)
+        if hasattr(spectrum, '_lazy_meta'):
+            spectrum.set_attributes(spectrum._lazy_meta)
+            del spectrum._lazy_meta
+
+        fname = spectrum.fname
+        try:
+            # Parse map name and coordinates from fname: "map_name_(x, y)"
+            map_name, coord_str = fname.rsplit('_', 1)
+            coord_str = coord_str.strip('()')
+            coord = tuple(map(float, coord_str.split(',')))
+            
+            # Check if we have cached arrays for this map
+            if hasattr(self, '_maps_arrays_cache') and map_name in self._maps_arrays_cache:
+                cache = self._maps_arrays_cache[map_name]
+                # Find matching coordinate index
+                coords = cache['coords']
+                distances = np.sum((coords - np.array(coord))**2, axis=1)
+                idx = np.argmin(distances)
+                if distances[idx] < 1e-4:
+                    spectrum.x0 = cache['x0'].copy() + spectrum.xcorrection_value
+                    spectrum.y0 = cache['y0'][idx].copy()
+                    
+                    # Apply preprocessing now that arrays are loaded
+                    spectrum.is_preprocessed = False
+                    spectrum.preprocess()
+                    spectrum._is_lazy_loaded = True
+        except Exception as e:
+            pass
+
+    def _get_spectra_by_fnames(self, fnames: list[str]) -> list[MSpectrum]:
+        """Override to ensure requested spectra are lazily loaded."""
+        spectra = super()._get_spectra_by_fnames(fnames)
+        for s in spectra:
+            self._ensure_spectrum_loaded(s)
+        return spectra
+        
+    def _get_active_spectra(self) -> list:
+        """Override to ensure active spectra are lazily loaded."""
+        spectra = super()._get_active_spectra()
+        for s in spectra:
+            self._ensure_spectrum_loaded(s)
+        return spectra
     
     def _get_selected_spectra(self) -> list[MSpectrum]:
         """Get currently selected spectra that are also active (checked).
@@ -503,54 +558,150 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             return pd.DataFrame(arr, columns=entry['cols'], dtype=np.float64)
 
     def save_work(self):
-        """Save current maps workspace to .maps file."""
+        """Save maps workspace using ultra-fast ZIP+NPZ+Pickle architecture."""
         file_path, _ = QFileDialog.getSaveFileName(
-            None,
-            "Save work",
-            "",
-            "SPECTROview Files (*.maps)"
+            None, "Save work", "", "SPECTROview Files (*.maps)"
         )
-        
         if not file_path:
             return
-        
+            
         try:
-            # Convert all spectra to dict format (is_map=True for map spectra)
-            spectrums_data = self.spectra.save(is_map=True)
+            # 1. Separate light metadata from heavy arrays
+            spectrums_meta = self.spectra.save(is_map=True)
             
-            # Compress map DataFrames using fast numpy binary storage
-            maps_binary = {
-                map_name: self._map_df_to_binary(map_df)
-                for map_name, map_df in self.maps.items()
-            }
-            
-            # Prepare data structure
-            data_to_save = {
-                'format_version': 2,              # signals new binary map format
-                'spectrums_data': spectrums_data,
-                'maps': maps_binary,
+            metadata = {
+                'format_version': 3,  # Version 3 represents high-performance ZIP format
+                'spectrums_meta': spectrums_meta,
                 'maps_metadata': self.maps_metadata,
             }
             
-            # Save fit results DataFrame (including computed columns)
+            # 2. Package coordinate/spectral arrays into npz (shared x0 wavenumber axis!)
+            arrays = {}
+            for map_name, map_df in self.maps.items():
+                wavenumber_cols = [col for col in map_df.columns if col not in ['X', 'Y']]
+                
+                coords = map_df[['X', 'Y']].to_numpy(dtype=np.float64)
+                wavenumbers = np.asarray(pd.to_numeric(wavenumber_cols, errors='coerce'), dtype=np.float64)
+                intensities = map_df[wavenumber_cols].to_numpy(dtype=np.float32) # float32 saves 50% space!
+                
+                arrays[f'map_{map_name}_coords'] = coords
+                arrays[f'map_{map_name}_x0'] = wavenumbers
+                arrays[f'map_{map_name}_y0'] = intensities
+
+            # 3. Pickle DataFrames (preserves multi-indexes, column names, float precision)
+            dataframes = {}
             if self.df_fit_results is not None and not self.df_fit_results.empty:
-                # Revert to standard dictionary records for df_fit_results to prevent NumPy Pickling errors on Strings
-                data_to_save['df_fit_results'] = self.df_fit_results.to_dict('records')
-            else:
-                data_to_save['df_fit_results'] = None
+                dataframes['df_fit_results'] = self.df_fit_results
             
-            # Save to JSON file instantly via memory buffer (avoids 4M+ python I/O write stalls)
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(json.dumps(data_to_save))
-            
+            # Save using WorkspaceIO helper
+            WorkspaceIO.save_workspace(file_path, metadata, arrays, dataframes)
             self.notify.emit("Maps workspace saved successfully.")
             
         except Exception as e:
             QMessageBox.critical(None, "Save Error", f"Error saving maps workspace:\n{str(e)}")
-    
+
     def load_work(self, file_path: str):
-        """Load maps workspace from .maps file (supports v1 CSV and v2 binary formats)."""
-        
+        """Load maps workspace supporting both legacy formats and new ZIP formats."""
+        try:
+            # Attempt to load ZIP workspace
+            metadata, arrays, dataframes, is_legacy = WorkspaceIO.load_workspace(file_path)
+            
+            if is_legacy:
+                # Fall back to legacy loader
+                self.load_work_legacy(file_path)
+                return
+                
+            self.clear_workspace()
+            
+            # 1. Restore map DataFrames from coordinate and intensity arrays
+            self.maps = {}
+            self._maps_arrays_cache = {}
+            
+            for k in arrays.keys():
+                if k.endswith('_coords'):
+                    map_name = k[4:-7]
+                    coords = arrays[f'map_{map_name}_coords']
+                    wavenumbers = arrays[f'map_{map_name}_x0']
+                    intensities = arrays[f'map_{map_name}_y0']
+                    
+                    # Drop the last column for spectra mapping (following legacy behavior of skipping the last/computed column)
+                    if len(wavenumbers) > 1:
+                        x0_spectra = wavenumbers[:-1]
+                        y0_spectra = intensities[:, :-1]
+                    else:
+                        x0_spectra = wavenumbers
+                        y0_spectra = intensities
+                    
+                    self._maps_arrays_cache[map_name] = {
+                        'coords': coords,
+                        'x0': x0_spectra,
+                        'y0': y0_spectra
+                    }
+                    
+                    # Reconstruct Pandas DataFrame instantly (retains all columns)
+                    col_names = ['X', 'Y'] + [str(w) for w in wavenumbers]
+                    data_combined = np.hstack([coords, intensities])
+                    self.maps[map_name] = pd.DataFrame(data_combined, columns=col_names, dtype=np.float64)
+            
+            self.maps_metadata = metadata.get('maps_metadata', {})
+            
+            # 2. Reconstruct spectra configurations in memory (LAZY INITIALIZATION)
+            self.spectra = MSpectra()
+            spectrums_meta = metadata.get('spectrums_meta', {})
+            
+            for i, (spec_id, spec_meta) in enumerate(spectrums_meta.items()):
+                # Create a placeholder shell without heavy arrays or eager preprocessing
+                spectrum = MSpectrum()
+                
+                # Pop compressed x0/y0 arrays if present (should not be in ZIP metadata, but to be safe)
+                spec_meta.pop('x0', None)
+                spec_meta.pop('y0', None)
+                
+                # Extract essential UI properties instantly
+                spectrum.fname = spec_meta.get('fname', '')
+                spectrum.is_active = spec_meta.get('is_active', True)
+                spectrum.color = spec_meta.get('color', None)
+                spectrum.label = spec_meta.get('label', None)
+                
+                # Defer heavy model parsing to lazy load
+                spectrum._lazy_meta = spec_meta
+                
+                # Apply map-specific metadata once
+                map_name = spectrum.fname.rsplit('_', 1)[0]
+                map_metadata = self.maps_metadata.get(map_name, {})
+                if map_metadata:
+                    spectrum.metadata = map_metadata.copy()
+                
+                # Defer actual array loading and baseline subtraction!
+                spectrum.is_preprocessed = False
+                spectrum._is_lazy_loaded = False
+                self.spectra.append(spectrum)
+            
+            # 3. Restore DataFrames
+            if dataframes and 'df_fit_results' in dataframes:
+                self.df_fit_results = dataframes['df_fit_results']
+            else:
+                self.df_fit_results = None
+            
+            # Select first map and refresh View
+            map_names = list(self.maps.keys())
+            if map_names:
+                self.select_map(map_names[0])
+                
+            self.maps_list_changed.emit(map_names)
+            self.count_changed.emit(len(self.spectra))
+            if self.df_fit_results is not None:
+                self.fit_results_updated.emit(self.df_fit_results)
+                
+            self.notify.emit("Maps workspace loaded successfully.")
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(None, "Load Error", f"Error loading maps workspace:\n{str(e)}")
+
+    def load_work_legacy(self, file_path: str):
+        """Legacy JSON loader for maps workspace."""
         try:
             with open(file_path, 'r') as f:
                 data = json.load(f)
@@ -559,8 +710,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             self.clear_workspace()
             
             # Load and decompress map DataFrames
-            # Supports both legacy CSV+gzip (format_version absent or 1)
-            # and new numpy binary format (format_version == 2)
             self.maps = {}
             self.maps_metadata = {}
             
@@ -628,7 +777,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 if map_metadata:
                     spectrum.metadata = map_metadata.copy()
             
-            
             # Restore fit results DataFrame (including computed columns)
             if 'df_fit_results_binary' in data and data['df_fit_results_binary'] is not None:
                 self.df_fit_results = self._binary_to_map_df(data['df_fit_results_binary'])
@@ -651,11 +799,11 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             if self.df_fit_results is not None and not self.df_fit_results.empty:
                 self.fit_results_updated.emit(self.df_fit_results)
             
-            #self.notify.emit(f"Loaded {len(self.maps)} map(s) with {len(self.spectra)} spectra")
+            self.notify.emit("Legacy maps workspace loaded successfully.")
             
         except Exception as e:
-            QMessageBox.critical(None, "Load Error", f"Error loading maps workspace:\n{str(e)}")
-    
+            QMessageBox.critical(None, "Load Error", f"Error loading legacy maps workspace:\n{str(e)}")
+
     def clear_workspace(self):
         """Clear all maps, spectra, and reset workspace to initial state."""
         # Stop any running fit thread first (via parent)
@@ -663,6 +811,8 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         # Clear Maps-specific data structures
         self.maps.clear()
+        if hasattr(self, '_maps_arrays_cache'):
+            self._maps_arrays_cache.clear()
         self.current_map_name = None
         self.current_map_df = None
         

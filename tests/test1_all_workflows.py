@@ -495,6 +495,7 @@ class TestMapsWorkflow:
         
         # Verify first spectrum fit results persisted
         loaded_first_spectrum = vm2.spectra[0]
+        vm2._ensure_spectrum_loaded(loaded_first_spectrum)
         if hasattr(loaded_first_spectrum, 'result_fit') and loaded_first_spectrum.result_fit:
             assert loaded_first_spectrum.result_fit.success, "Loaded spectrum fit result not successful"
             assert len(loaded_first_spectrum.peak_models) >= 1, "Peak models not persisted"

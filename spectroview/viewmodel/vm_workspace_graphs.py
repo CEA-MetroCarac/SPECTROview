@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from spectroview.model.m_graph import MGraph
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_io import load_dataframe_file
+from spectroview.model.workspace_io import WorkspaceIO
 
 
 class VMWorkspaceGraphs(QObject):
@@ -338,7 +339,7 @@ class VMWorkspaceGraphs(QObject):
     # ═════════════════════════════════════════════════════════════════════
     
     def save_workspace(self):
-        """Save workspace to file."""
+        """Save workspace to file using high-performance ZIP + Pickle architecture."""
         file_path, _ = QFileDialog.getSaveFileName(
             None,
             "Save Graphs Workspace",
@@ -353,29 +354,66 @@ class VMWorkspaceGraphs(QObject):
             # Serialize graphs
             plots_data = {graph_id: graph.save() for graph_id, graph in self.graphs.items()}
             
-            # Compress DataFrames
-            compressed_dfs = {
-                k: gzip.compress(v.to_csv(index=False).encode('utf-8'))
-                for k, v in self.dataframes.items()
-            }
-            
-            # Prepare data to save
-            data_to_save = {
+            # Prepare metadata (light config)
+            metadata = {
+                'format_version': 3,  # signals ZIP binary format
                 'plots': plots_data,
-                'original_dfs': {k: v.hex() for k, v in compressed_dfs.items()},
-                'dataframe_sources': self.dataframe_sources,  # Save source file paths
+                'dataframe_sources': self.dataframe_sources,
             }
             
-            # Save to JSON file
-            with open(file_path, 'w') as f:
-                json.dump(data_to_save, f, indent=4)
+            # Pack original_dfs into dataframes pickle
+            dataframes = {
+                'original_dfs': self.dataframes
+            }
+            
+            # Save using WorkspaceIO
+            WorkspaceIO.save_workspace(file_path, metadata, dataframes=dataframes)
             
             self.notify.emit(f"Workspace saved: {Path(file_path).name}")
         except Exception as e:
             QMessageBox.critical(None, "Error", f"Error saving workspace: {e}")
     
     def load_workspace(self, file_path: str):
-        """Load workspace from file."""
+        """Load workspace supporting both legacy JSON and new ZIP formats."""
+        try:
+            # Attempt to load ZIP workspace
+            metadata, _, dataframes, is_legacy = WorkspaceIO.load_workspace(file_path)
+            
+            if is_legacy:
+                self.load_workspace_legacy(file_path)
+                return
+            
+            self.graphs.clear()
+            self.dataframes.clear()
+            self.dataframe_sources.clear()
+            
+            # Restore DataFrames instantly from pickle
+            if dataframes and 'original_dfs' in dataframes:
+                self.dataframes = dataframes['original_dfs']
+            
+            # Load source file paths
+            self.dataframe_sources = metadata.get('dataframe_sources', {})
+            
+            # Load graphs
+            for graph_id_str, graph_data in metadata.get('plots', {}).items():
+                graph_id = int(graph_id_str)
+                graph = MGraph(graph_id=graph_id)
+                graph.load(graph_data)
+                self.graphs[graph_id] = graph
+            
+            # Update next graph ID
+            self._next_graph_id = max(self.graphs.keys()) + 1 if self.graphs else 1
+            
+            # Emit updates
+            self._emit_dataframes_list()
+            self._emit_graphs_list()
+            
+            #self.notify.emit(f"Loaded {len(self.graphs)} graphs, {len(self.dataframes)} DataFrames")
+        except Exception as e:
+            QMessageBox.critical(None, "Error", f"Error loading workspace: {e}")
+            
+    def load_workspace_legacy(self, file_path: str):
+        """Legacy JSON loader for backward compatibility with old .graphs files."""
         try:
             with open(file_path, 'r') as f:
                 data = json.load(f)
@@ -390,7 +428,7 @@ class VMWorkspaceGraphs(QObject):
                 csv_data = gzip.decompress(compressed_data).decode('utf-8')
                 self.dataframes[k] = pd.read_csv(StringIO(csv_data))
             
-            # Load source file paths (if available)
+            # Load source file paths
             if 'dataframe_sources' in data:
                 self.dataframe_sources = data['dataframe_sources']
             
@@ -408,9 +446,8 @@ class VMWorkspaceGraphs(QObject):
             self._emit_dataframes_list()
             self._emit_graphs_list()
             
-            #self.notify.emit(f"Loaded {len(self.graphs)} graphs, {len(self.dataframes)} DataFrames")
         except Exception as e:
-            QMessageBox.critical(None, "Error", f"Error loading workspace: {e}")
+            QMessageBox.critical(None, "Error", f"Error loading legacy workspace: {e}")
     
     def clear_workspace(self):
         """Clear workspace."""

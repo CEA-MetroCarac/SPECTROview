@@ -242,9 +242,8 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         df = self.maps[self.current_map_name]
         
-        # Filter by active spectra
-        active_spectra = self._get_active_spectra()
-        active_fnames = {s.fname for s in active_spectra}
+        # Filter by active spectra without triggering full spectrum instantiation
+        active_fnames = {s.fname for s in self.spectra if s.is_active and s.fname.startswith(f"{self.current_map_name}_(")}
         
         # Filter DataFrame to only include active spectra
         # Match based on fname format: "map_name_(x, y)"

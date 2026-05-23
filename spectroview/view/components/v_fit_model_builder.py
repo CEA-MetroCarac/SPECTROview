@@ -508,16 +508,17 @@ class VFitModelBuilder(QWidget):
 
     # ── Public: sync UI from selected spectrum ─────────────────────────────
 
-    def update_baseline_ui(self, spectra: list):
+    def update_baseline_ui(self, spectra):
         """Reflect the first selected spectrum's baseline settings in the GUI.
 
         Called whenever the spectrum selection changes so the panel always shows
         the parameters currently stored on the selected spectrum's baseline object.
         Signals are blocked during the update to avoid feedback loops.
         """
-        if not spectra:
+        specs = spectra.get("proxies", []) if isinstance(spectra, dict) else spectra
+        if not specs:
             return
-        bl = spectra[0].baseline
+        bl = specs[0].baseline
 
         keys = VFitModelBuilder._BASELINE_MODE_KEYS
         mode = bl.mode  # e.g. "Linear", "arpls", None …

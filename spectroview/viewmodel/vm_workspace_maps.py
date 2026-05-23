@@ -202,7 +202,74 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         # Emit single signal to update view
         self.map_data_updated.emit(self.current_map_df)
-    
+
+    def _emit_selected_spectra(self):
+        """Override parent to emit tensor batch data for Maps instead of just MSpectrum lists."""
+        if not self.selected_fnames:
+            self.spectra_selection_changed.emit([])
+            return
+
+        selected_spectra = self._get_spectra_by_fnames(self.selected_fnames)
+        
+        if self.current_map_name and self.store.get_map_data(self.current_map_name) is not None:
+            map_name = self.current_map_name
+            md = self.store.get_map_data(map_name)
+            
+            # Find indices for the selected fnames
+            fnames_array = np.array(md.fnames)
+            # np.isin is order-independent, we want to preserve selection order
+            # but for rendering it doesn't strictly matter except for cascading colors.
+            # Using list comprehension is fine for < 20,000 items
+            # To be safe and fast:
+            idx_map = {name: i for i, name in enumerate(md.fnames)}
+            indices = [idx_map[name] for name in self.selected_fnames if name in idx_map]
+            
+            if indices:
+                indices = np.array(indices)
+                x, Y = self.store.get_xy_batch(map_name, indices)
+                
+                # Fetch raw data for the viewer
+                x0 = md.x0
+                Y0 = md.Y0[indices]
+                
+                # The viewer will still need MSpectrum proxies for peak editing/heavy overlays (max 50)
+                # Since we still have self.spectra in Phase 1, we can just pass them directly
+                proxies = selected_spectra[:50]
+                
+                # If batch preprocessing hasn't run yet, harvest from lazy-loaded proxies
+                if md.Y is None and proxies and proxies[0].x is not None:
+                    x = proxies[0].x
+                    Y_proc = np.empty((len(indices), len(x)), dtype=np.float64)
+                    for i, p in enumerate(proxies):
+                        if p.y is not None and len(p.y) == len(x):
+                            Y_proc[i] = p.y
+                        else:
+                            # Fallback if preprocessing failed or lengths mismatch
+                            Y_proc[i] = 0.0
+                    Y = Y_proc
+
+                data = {
+                    "type": "tensor",
+                    "x": x,
+                    "y": Y,
+                    "x0": x0,
+                    "y0": Y0,
+                    "colors": [md.colors[i] for i in indices],
+                    "labels": [md.labels[i] for i in indices],
+                    "proxies": proxies
+                }
+                
+                self.spectra_selection_changed.emit(data)
+            else:
+                self.spectra_selection_changed.emit(selected_spectra)
+        else:
+            # Fallback for Spectra workspace
+            self.spectra_selection_changed.emit(selected_spectra)
+            
+        if selected_spectra:
+            self.show_xcorrection_value.emit(selected_spectra[0].xcorrection_value)
+            self.spectral_range_changed.emit(float(selected_spectra[0].x[0]), float(selected_spectra[0].x[-1]))
+            
     def _extract_spectra_from_map(self, map_name: str, map_df: pd.DataFrame):
         """Extract all individual spectra from a hyperspectral map dataframe.
 
@@ -369,31 +436,80 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.reinit_spectra(apply_all)
     
     def reinit_spectra(self, apply_all: bool = False):
-        """Override parent to refresh map-specific list after reinit."""
-        # Call parent implementation
+        """Override parent to clear preprocess data in SpectraStore."""
         super().reinit_spectra(apply_all)
-        
-        # Refresh current map's spectra list with updated colors
         if self.current_map_name:
+            self.store.clear_preprocess(self.current_map_name)
             self._show_map_spectra(self.current_map_name)
+            self._emit_selected_spectra()
     
+    def subtract_baseline(self, apply_all: bool = False):
+        """Override parent to batch subtract baseline in SpectraStore."""
+        super().subtract_baseline(apply_all)
+        if self.current_map_name:
+            self._update_store_preprocessing()
+            self._emit_selected_spectra()
+
+    def preview_baseline(self, settings: dict):
+        """Override parent to preview baseline on the tensor data."""
+        super().preview_baseline(settings)
+        if self.current_map_name:
+            rmin, rmax = None, None
+            fname_prefix = f"{self.current_map_name}_("
+            template = next((s for s in self.spectra if s.fname.startswith(fname_prefix) and s.is_active), None)
+            if template:
+                rmin, rmax = template.range_min, template.range_max
+            self.store.batch_preprocess(self.current_map_name, settings, rmin, rmax)
+            self._emit_selected_spectra()
+
     def delete_baseline(self, apply_all: bool = False):
         """Override parent to refresh map-specific list after baseline deletion."""
-        # Call parent implementation
         super().delete_baseline(apply_all)
-        
-        # Refresh current map's spectra list with updated colors
         if self.current_map_name:
+            self._update_store_preprocessing()
             self._show_map_spectra(self.current_map_name)
+            self._emit_selected_spectra()
     
     def delete_peaks(self, apply_all: bool = False):
         """Override parent to refresh map-specific list after peaks deletion."""
-        # Call parent implementation
         super().delete_peaks(apply_all)
-        
-        # Refresh current map's spectra list with updated colors
         if self.current_map_name:
             self._show_map_spectra(self.current_map_name)
+            self._emit_selected_spectra()
+
+    def apply_x_range_all(self, apply_all: bool = False):
+        """Override to update store preprocessing range."""
+        super().apply_x_range_all(apply_all)
+        if self.current_map_name:
+            self._update_store_preprocessing()
+            self._emit_selected_spectra()
+            
+    def _update_store_preprocessing(self):
+        """Helper to sync the first spectrum's baseline and crop settings to the Store."""
+        if not self.current_map_name: return
+        
+        # We find the first active spectrum of the map to use as the template
+        fname_prefix = f"{self.current_map_name}_("
+        template_spectrum = next((s for s in self.spectra if s.fname.startswith(fname_prefix) and s.is_active), None)
+        
+        if not template_spectrum:
+            self.store.clear_preprocess(self.current_map_name)
+            return
+            
+        from spectroview.viewmodel.vm_workspace_spectra import baseline_to_dict
+        b_dict = baseline_to_dict(template_spectrum)
+        
+        # Check if the template actually has a subtracted baseline or a crop range
+        is_subtracted = template_spectrum.baseline.is_subtracted
+        rmin, rmax = template_spectrum.range_min, template_spectrum.range_max
+        
+        if not is_subtracted and rmin is None and rmax is None:
+            self.store.clear_preprocess(self.current_map_name)
+        else:
+            if not is_subtracted:
+                # pass an empty baseline dict so it only crops
+                b_dict = {}
+            self.store.batch_preprocess(self.current_map_name, b_dict, rmin, rmax)
     
     def send_selected_spectra_to_spectra_workspace(self):
         """Send selected spectra to the Spectra workspace tab for comparison."""

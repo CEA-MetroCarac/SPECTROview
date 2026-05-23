@@ -72,10 +72,11 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Call parent's setup_connections which will connect to self.vm (now VMWorkspaceMaps)
         super().setup_connections()
     
-    def _update_metadata_display(self, selected_spectra: list):
+    def _update_metadata_display(self, selected_spectra):
         """Override: In Maps workspace, show spectrum metadata if selected, else map metadata."""
-        if selected_spectra and len(selected_spectra) > 0:
-            spectrum = selected_spectra[0]
+        specs = selected_spectra.get("proxies", []) if isinstance(selected_spectra, dict) else selected_spectra
+        if specs and len(specs) > 0:
+            spectrum = specs[0]
             self.v_more_tab.show_metadata(spectrum)
         else:
             if self.vm and self.vm.current_map_name:

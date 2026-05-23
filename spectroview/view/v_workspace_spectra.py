@@ -311,7 +311,10 @@ class VWorkspaceSpectra(QWidget):
         # Selection → PeakTable
         vm.spectra_selection_changed.connect(
             lambda specs:
-            pt.set_spectrum(specs[0] if specs else None)
+            pt.set_spectrum(
+                (specs.get("proxies", [])[0] if isinstance(specs, dict) and specs.get("proxies") else None)
+                if isinstance(specs, dict) else (specs[0] if specs else None)
+            )
         )
         
         # ═════════════════════════════════════════════════════════════════
@@ -335,10 +338,11 @@ class VWorkspaceSpectra(QWidget):
         else:
             self.v_fit_results.clear_results()
     
-    def _update_metadata_display(self, selected_spectra: list):
+    def _update_metadata_display(self, selected_spectra):
         """Update metadata display with first selected spectrum's metadata."""
-        if selected_spectra and len(selected_spectra) > 0:
-            spectrum = selected_spectra[0]
+        specs = selected_spectra.get("proxies", []) if isinstance(selected_spectra, dict) else selected_spectra
+        if specs and len(specs) > 0:
+            spectrum = specs[0]
             self.v_more_tab.show_metadata(spectrum)
         else:
             self.v_more_tab.clear_metadata()

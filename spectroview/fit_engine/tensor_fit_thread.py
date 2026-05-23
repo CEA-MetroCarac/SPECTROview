@@ -157,6 +157,37 @@ class TensorFitThread(QThread):
 
         if not self._is_cancelled:
             elapsed = time.perf_counter() - t_start
+            
+            # ── Harvest preprocessed arrays to SpectraStore ──
+            if hasattr(self, 'map_name') and self.map_name and self.store and spectra:
+                try:
+                    s_ref = spectra[0]
+                    if getattr(s_ref, 'is_preprocessed', False) and s_ref.x is not None:
+                        md = self.store.get_map_data(self.map_name)
+                        if md is not None:
+                            x_proc = s_ref.x
+                            # Only safely update if length matches
+                            Y_proc = np.empty((len(spectra), len(x_proc)), dtype=np.float32)
+                            valid = True
+                            for i, s in enumerate(spectra):
+                                if s.y is None or len(s.y) != len(x_proc):
+                                    valid = False
+                                    break
+                                Y_proc[i] = s.y
+                            
+                            if valid:
+                                if len(spectra) == md.n_spectra:
+                                    md.x = x_proc
+                                    md.Y = Y_proc
+                                elif hasattr(self, 'map_indices') and self.map_indices is not None:
+                                    if md.x is None or not np.array_equal(md.x, x_proc):
+                                        md.x = x_proc
+                                        md.Y = np.empty((md.n_spectra, len(x_proc)), dtype=np.float32)
+                                        md.Y[:] = np.nan
+                                    md.Y[self.map_indices] = Y_proc
+                except Exception:
+                    pass
+
             self.progress_changed.emit(n, n, 100, elapsed)
             
             # Emit timings string

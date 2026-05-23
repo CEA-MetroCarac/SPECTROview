@@ -57,6 +57,9 @@ class MapData:
     colors: list              # list[str|None][N]
     labels: list              # list[str|None][N]
 
+    Y: Optional[np.ndarray] = None  # float32[N, M_proc] processed intensities
+    x: Optional[np.ndarray] = None  # float64[M_proc] processed wavenumber axis
+
     # Fit results (filled after TensorEngine.fit())
     peak_params: Optional[np.ndarray] = None   # float64[N, K]
     fit_success: Optional[np.ndarray] = None   # bool[N]
@@ -257,15 +260,98 @@ class SpectraStore:
 
     # ── Raw data accessors (per-map) ──────────────────────────────────────
 
-    def get_raw_batch(self, map_name: str, indices: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """Return (x0, Y0_subset) for the given local indices within a map."""
+    def get_xy_batch(self, map_name: str, indices: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Return X, Y arrays for a subset of spectra in a map.
+        Returns processed (x, Y) if available, otherwise raw (x0, Y0).
+        """
         md = self._maps[map_name]
-        return md.x0, md.Y0[indices].astype(np.float64)
+        x = md.x if md.x is not None else md.x0
+        Y = md.Y if md.Y is not None else md.Y0
+        return x, Y[indices].astype(np.float64)
 
     def get_processed_batch(self, map_name: str, indices: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Return (x0, Y_proc) for given indices. Falls back to raw if not set."""
         md = self._maps[map_name]
         return md.x0, md.Y0[indices].astype(np.float64)
+
+    # ── Preprocessing (Phase 5 Vectorized) ────────────────────────────────
+
+    def clear_preprocess(self, map_name: str):
+        """Clear preprocessed data (Y and x) for a map, reverting to raw Y0 and x0."""
+        md = self._maps.get(map_name)
+        if md:
+            md.Y = None
+            md.x = None
+
+    def batch_preprocess(self, map_name: str, baseline_config: dict, range_min: float = None, range_max: float = None):
+        """Apply range cropping and baseline subtraction to the entire map using matrix operations."""
+        md = self._maps.get(map_name)
+        if not md: return
+
+        x = md.x0
+        # 1. Apply range cropping
+        if range_min is not None or range_max is not None:
+            mask = np.logical_and(
+                x >= (range_min if range_min is not None else -np.inf),
+                x <= (range_max if range_max is not None else np.inf)
+            )
+            x_proc = x[mask]
+            Y_proc = md.Y0[:, mask].copy()
+        else:
+            x_proc = x.copy()
+            Y_proc = md.Y0.copy()
+
+        if len(x_proc) == 0:
+            return # Empty range, abort preprocessing
+
+        # 2. Vectorized Baseline Subtraction
+        bl_mode = baseline_config.get("mode")
+        bl_attached = baseline_config.get("attached", False)
+        
+        if bl_mode is not None:
+            if not bl_attached:
+                # Static mode: compute on first spectrum, subtract from all
+                try:
+                    from fitspy.core.baseline import BaseLine
+                    bl = BaseLine()
+                    for k, v in baseline_config.items():
+                        setattr(bl, k, v)
+                    y_static = bl.eval(x_proc, Y_proc[0], attached=False)
+                    Y_proc -= y_static
+                except Exception:
+                    pass
+            elif bl_attached and bl_mode == 'Linear':
+                # Fast matrix-based linear interpolation between attached points
+                points = baseline_config.get("points", [[], []])
+                if points and len(points[0]) >= 1:
+                    pts_x = np.array(points[0])
+                    # Find indices in x_proc
+                    pt_indices = np.array([np.argmin(np.abs(x_proc - px)) for px in pts_x])
+                    
+                    if len(pt_indices) == 1:
+                        # Single point constant subtraction
+                        Y_proc -= Y_proc[:, pt_indices[0]][:, None]
+                    else:
+                        # Multi-point linear interpolation for each row (vectorized)
+                        # We use scipy interp1d over the axis
+                        try:
+                            from scipy.interpolate import interp1d
+                            y_pts = Y_proc[:, pt_indices]
+                            # interpolate for each row. 
+                            func = interp1d(x_proc[pt_indices], y_pts, axis=1, fill_value="extrapolate")
+                            y_baseline = func(x_proc)
+                            Y_proc -= y_baseline
+                        except Exception:
+                            pass
+            else:
+                # For more complex baseline algorithms (like polynomial or arPLS), 
+                # we could apply them per-row, but for performance we leave it as is or fallback.
+                # In Phase 5, the TensorFitThread will handle complex modes via its own loop, 
+                # but for instant GUI preview, linear/static are fast enough.
+                pass
+                
+        md.x = x_proc
+        md.Y = Y_proc
 
     # ── Fit result accessors ──────────────────────────────────────────────
 

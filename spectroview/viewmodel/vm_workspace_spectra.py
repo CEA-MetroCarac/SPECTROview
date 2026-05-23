@@ -17,6 +17,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
 from spectroview.model.workspace_io import WorkspaceIO
+from spectroview.model.spectra_store import SpectraStore
 from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
 from spectroview.viewmodel.utils import (
     ApplyFitModelThread, FitThread,
@@ -55,6 +56,7 @@ class VMWorkspaceSpectra(QObject):
         super().__init__()
         self.settings = settings
         self.spectra = MSpectra()
+        self.store = SpectraStore()
 
         self.selected_fnames = []  # Changed from indices to fnames for robust identification
         self._baseline_clipboard = None  # for copy/paste baseline
@@ -138,8 +140,24 @@ class VMWorkspaceSpectra(QObject):
                 if isinstance(spectrum, list):
                     for s in spectrum:
                         self.spectra.add(s)
+                        self.store.add_map(
+                            name=s.fname,
+                            x0=s.x0.copy(),
+                            Y0=np.asarray(s.y0, dtype=np.float32).reshape(1, -1),
+                            coords=np.array([[0.0, 0.0]], dtype=np.float64),
+                            fnames=[s.fname],
+                            is_active=np.array([s.is_active], dtype=bool)
+                        )
                 else:
                     self.spectra.add(spectrum)
+                    self.store.add_map(
+                        name=spectrum.fname,
+                        x0=spectrum.x0.copy(),
+                        Y0=np.asarray(spectrum.y0, dtype=np.float32).reshape(1, -1),
+                        coords=np.array([[0.0, 0.0]], dtype=np.float64),
+                        fnames=[spectrum.fname],
+                        is_active=np.array([spectrum.is_active], dtype=bool)
+                    )
                     
                 loaded_files.append(path.name)
                 last_valid_path = path  # Track last successfully loaded file
@@ -231,6 +249,12 @@ class VMWorkspaceSpectra(QObject):
         
         # Remove from model
         self.spectra.remove(indices_to_remove)
+        for idx in indices_to_remove:
+            fname = getattr(self.spectra[idx], 'fname', None) if idx < len(self.spectra) else None
+            # Actually indices_to_remove corresponds to the original list.
+            # We can remove from store using the fnames directly:
+        for fname in self.selected_fnames:
+            self.store.remove_map(fname)
         
         new_count = len(self.spectra)
         self._emit_list_update()
@@ -958,10 +982,59 @@ class VMWorkspaceSpectra(QObject):
         self._fit_thread.start()
 
 
+    def _sync_fit_results_to_store(self):
+        """Harvest fit parameters from MSpectrum objects into SpectraStore.
+        Overridden by Maps Workspace.
+        """
+        fnames = [s.fname for s in self._get_active_spectra()]
+        for map_name in fnames:
+            s = self._get_spectrum_by_fname(map_name)
+            if not s or not hasattr(s, 'result_fit') or not hasattr(s.result_fit, 'params') or not s.result_fit.params:
+                continue
+                
+            param_names = list(s.result_fit.params.keys())
+            if not param_names:
+                continue
+                
+            K = len(param_names)
+            peak_params = np.zeros((1, K), dtype=np.float64)
+            
+            for j, pname in enumerate(param_names):
+                pval = s.result_fit.params.get(pname)
+                if pval is not None:
+                    if hasattr(pval, 'value'):
+                        peak_params[0, j] = float(pval.value)
+                    else:
+                        try:
+                            peak_params[0, j] = float(pval)
+                        except (TypeError, ValueError):
+                            pass
+                            
+            fit_success = np.array([bool(getattr(s.result_fit, 'success', False))], dtype=bool)
+            fit_r2 = np.array([float(getattr(s.result_fit, 'rsquared', 0.0))], dtype=np.float64)
+            fit_model_ref = s.save(save_data=False) if hasattr(s, 'peak_models') and s.peak_models else {}
+            
+            md = self.store.get_map_data(map_name)
+            if md is not None:
+                md.is_active[0] = s.is_active
+                
+            self.store.set_fit_results(
+                map_name=map_name,
+                indices=np.array([0]),
+                peak_params=peak_params,
+                success=fit_success,
+                r2=fit_r2,
+                param_names=param_names,
+                fit_model=fit_model_ref,
+            )
+
     def _on_fit_finished(self):
         """Handle fit thread completion."""
         self._is_fitting = False
         self.fit_in_progress.emit(False)
+        
+        # Write fitted parameters from MSpectrum objects into SpectraStore
+        self._sync_fit_results_to_store()
         
         # Don't reset progress bar - let final state (X/X 100%) remain visible
         self._emit_selected_spectra()
@@ -1173,7 +1246,7 @@ class VMWorkspaceSpectra(QObject):
                 if 'baseline' in spectrum_dict:
                     spectrum_dict['baseline'].pop('y_eval', None)
                 
-                # Store x0/y0 arrays directly in binary format
+                # Format v4: Store x0/y0 arrays directly in NPZ instead of base64 JSON
                 if spectrum.x0 is not None:
                     arrays[f"x0_{i}"] = spectrum.x0
                 if spectrum.y0 is not None:
@@ -1182,7 +1255,7 @@ class VMWorkspaceSpectra(QObject):
                 spectrums_meta[i] = spectrum_dict
                 
             metadata = {
-                'format_version': 3,  # signals zipped binary format
+                'format_version': 4,  # Version 4 signals NPZ array storage
                 'spectrums_meta': spectrums_meta
             }
             
@@ -1207,15 +1280,36 @@ class VMWorkspaceSpectra(QObject):
             
             # Clear existing data
             self.spectra = MSpectra()
+            self.store = SpectraStore()
             
             # Load all spectra
+            fmt = metadata.get('format_version', 3)
             spectrums_meta = metadata.get('spectrums_meta', {})
             for spectrum_id, spectrum_data in spectrums_meta.items():
                 i = int(spectrum_id)
-                x0_arr = arrays.get(f"x0_{i}")
-                y0_arr = arrays.get(f"y0_{i}")
+                if fmt >= 4:
+                    x0_arr = arrays.get(f"x0_{i}")
+                    y0_arr = arrays.get(f"y0_{i}")
+                else:
+                    compressed_x0 = spectrum_data.pop('x0', None)
+                    compressed_y0 = spectrum_data.pop('y0', None)
+                    x0_arr = MSpectra._decompress(compressed_x0) if compressed_x0 else None
+                    y0_arr = MSpectra._decompress(compressed_y0) if compressed_y0 else None
+
                 spectrum = self._create_spectrum_from_dict(spectrum_data, x0_arr, y0_arr)
                 self.spectra.append(spectrum)
+                
+                if x0_arr is not None and y0_arr is not None:
+                    self.store.add_map(
+                        name=spectrum.fname,
+                        x0=spectrum.x0.copy(),
+                        Y0=np.asarray(spectrum.y0, dtype=np.float32).reshape(1, -1),
+                        coords=np.array([[0.0, 0.0]], dtype=np.float64),
+                        fnames=[spectrum.fname],
+                        is_active=np.array([spectrum.is_active], dtype=bool)
+                    )
+            
+            self._sync_fit_results_to_store()
             
             # Restore fit results DataFrame
             if dataframes and 'df_fit_results' in dataframes:
@@ -1316,6 +1410,8 @@ class VMWorkspaceSpectra(QObject):
         """Clear all spectra and reset workspace to initial state."""
         # Clear data model
         self.spectra = MSpectra()
+        
+        self.store = SpectraStore()
         self.selected_fnames = []
         
         # Clear clipboard data

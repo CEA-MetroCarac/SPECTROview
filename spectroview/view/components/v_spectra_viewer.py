@@ -20,6 +20,7 @@ from PySide6.QtGui import QIcon, QShortcut, QKeySequence
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+import matplotlib.collections as mcoll
 from matplotlib.backends.backend_qtagg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT
@@ -403,8 +404,19 @@ class VSpectraViewer(QWidget):
     # Public API
     # ─────────────────────────────────────────
     def set_plot_data(self, selected_spectra):
-        # Limit to 50 spectra maximum to prevent Matplotlib lag
-        self._current_spectra = (selected_spectra or [])[:50]
+        selected = selected_spectra or []
+        MAX_PLOT_LINES = 500
+        if len(selected) > MAX_PLOT_LINES:
+            # Visually decimate to MAX_PLOT_LINES evenly distributed spectra
+            step = len(selected) / MAX_PLOT_LINES
+            indices = [int(i * step) for i in range(MAX_PLOT_LINES)]
+            self._current_spectra = [selected[i] for i in indices]
+            # Ensure the last selected spectrum is included
+            if self._current_spectra[-1] != selected[-1]:
+                self._current_spectra[-1] = selected[-1]
+        else:
+            self._current_spectra = selected
+            
         self._plot()
 
     def _compute_shift_steps(self):
@@ -463,167 +475,193 @@ class VSpectraViewer(QWidget):
         # Compute per-spectrum shift offsets from sliders
         x_shift_step, y_shift_step = self._compute_shift_steps()
 
+        # ── Bulk Data Collections
+        main_segments = []
+        main_colors = []
+        raw_segments = []
+        raw_colors = []
+        
+        all_x_dots = []
+        all_y_dots = []
+        all_c_dots = []
+        
+        plot_style = self.cbb_plotstyle.currentText()
+        lw = self.spin_lw.value()
+        dot_size = self.spin_dotsize.value()
+        
+        MAX_HEAVY_OVERLAYS = 50
+        
+        prop_cycle = plt.rcParams.get('axes.prop_cycle')
+        colors_cycle = prop_cycle.by_key()['color'] if prop_cycle else ['#E31A1C', '#33A02C', '#FF7F00', '#1F78B4', '#6A3D9A', '#FB9A99', '#B2DF8A', '#FDBF6F', '#A6CEE3', '#CAB2D6']
+
         for spec_idx, spectrum in enumerate(self._current_spectra):
             x = spectrum.x
             y_raw = spectrum.y
             y = self._get_normalized_y(x, y_raw)
-            lw = self.spin_lw.value()
 
             # Per-spectrum cascading offset (waterfall)
             x_offset = spec_idx * x_shift_step
             y_offset = spec_idx * y_shift_step
+            
+            spec_color = spectrum.color if spectrum.color else colors_cycle[spec_idx % len(colors_cycle)]
 
             # ── RAW data (original x0 / y0)
             if self.act_raw.isChecked() and hasattr(spectrum, "x0") and hasattr(spectrum, "y0"):
                 try:
-                    self.ax.plot(
-                        spectrum.x0 + x_offset,
-                        spectrum.y0 + y_offset,
-                        "o-",
-                        ms=3,
-                        lw=0.8,
-                        alpha=0.8,
-                        color=fg_color,
-                        label="raw", 
-                    )
+                    raw_segments.append(np.column_stack([spectrum.x0 + x_offset, spectrum.y0 + y_offset]))
+                    raw_colors.append(fg_color)
                 except Exception:
                     pass
 
-            # ── Main spectrum (always shown)
-            plot_style = self.cbb_plotstyle.currentText()
+            # ── Main spectrum
             if plot_style == "dot":
-                dot_size = self.spin_dotsize.value()
-                line, = self.ax.plot(
-                    x + x_offset, y + y_offset,
-                    'o',
-                    ms=dot_size,
-                    label=spectrum.label or spectrum.fname,
-                    color=spectrum.color
-                )
+                all_x_dots.append(x + x_offset)
+                all_y_dots.append(y + y_offset)
+                all_c_dots.extend([spec_color] * len(x))
             else:  # "line"
-                line, = self.ax.plot(
-                    x + x_offset, y + y_offset,
-                    lw=lw,
-                    label=spectrum.label or spectrum.fname,
-                    color=spectrum.color
-                )
-            line._spectrum_ref = spectrum
+                main_segments.append(np.column_stack([x + x_offset, y + y_offset]))
+                main_colors.append(spec_color)
+            
+            # Add proxy artist for legend (limited to MAX_HEAVY_OVERLAYS)
+            if spec_idx < MAX_HEAVY_OVERLAYS:
+                proxy_line = mlines.Line2D([], [], color=spec_color, label=spectrum.label or spectrum.fname, lw=lw)
+                proxy_line._spectrum_ref = spectrum
+                self.ax.add_line(proxy_line)
 
-            # ── Baseline (independent of bestfit toggle)
-            y_base = self._plot_baseline(spectrum, x_offset, y_offset)
+            # ── Heavy Overlays (limited to MAX_HEAVY_OVERLAYS to maintain performance)
+            if spec_idx < MAX_HEAVY_OVERLAYS:
+                # ── Baseline (independent of bestfit toggle)
+                y_base = self._plot_baseline(spectrum, x_offset, y_offset)
 
-
-            # ── Peaks + Bestfit 
-            if (
-                self.btn_bestfit.isChecked()  # Now using toolbar button
-                and getattr(spectrum, "peak_models", None)
-                and spectrum.peak_models
-            ):
-                # Create dense interpolation grid for SMOOTH curves
-                x_fine = np.linspace(x.min(), x.max(), 1000)
-                y_peaks_fine = np.zeros_like(x_fine)
-                
-                # Also keep track on original grid for residual calculation
-                y_peaks_orig = np.zeros_like(x)
-
-                for i, peak_model in enumerate(spectrum.peak_models):
-                    # Evaluate on FINE grid for smooth plotting
-                    y_peak_fine = self._eval_peak_model_safe(peak_model, x_fine)
-                    y_peaks_fine += y_peak_fine
+                # ── Peaks + Bestfit 
+                if (
+                    self.btn_bestfit.isChecked()
+                    and getattr(spectrum, "peak_models", None)
+                    and spectrum.peak_models
+                ):
+                    # Create dense interpolation grid for SMOOTH curves
+                    x_fine = np.linspace(x.min(), x.max(), 1000)
+                    y_peaks_fine = np.zeros_like(x_fine)
                     
-                    # Also evaluate on original grid (needed for residuals)
-                    y_peak_orig = self._eval_peak_model_safe(peak_model, x)
-                    y_peaks_orig += y_peak_orig
+                    # Also keep track on original grid for residual calculation
+                    y_peaks_orig = np.zeros_like(x)
 
-                    # ── Individual peak curve (SMOOTH) — with offset
-                    color_kwargs = {}
-                    if hasattr(self, "act_bestfit_colorful") and not self.act_bestfit_colorful.isChecked():
-                        color_kwargs["color"] = fg_color
+                    for i, peak_model in enumerate(spectrum.peak_models):
+                        # Evaluate on FINE grid for smooth plotting
+                        y_peak_fine = self._eval_peak_model_safe(peak_model, x_fine)
+                        y_peaks_fine += y_peak_fine
+                        
+                        # Also evaluate on original grid (needed for residuals)
+                        y_peak_orig = self._eval_peak_model_safe(peak_model, x)
+                        y_peaks_orig += y_peak_orig
 
-                    peak_line, = self.ax.plot(
-                        x_fine + x_offset, y_peak_fine + y_offset,
-                        lw=(lw*0.6),  **color_kwargs
-                    )
+                        # ── Individual peak curve (SMOOTH) — with offset
+                        color_kwargs = {}
+                        if hasattr(self, "act_bestfit_colorful") and not self.act_bestfit_colorful.isChecked():
+                            color_kwargs["color"] = fg_color
 
-                    peak_info = {
-                        "peak_label": (
-                            spectrum.peak_labels[i]
-                            if i < len(spectrum.peak_labels)
-                            else f"Peak {i+1}"
-                        ),
-                        "peak_model": peak_model,
-                    }
-
-                    for pname in getattr(peak_model, "param_names", []):
-                        key = pname.split("_", 1)[1]
-                        if key in peak_model.param_hints:
-                            peak_info[key] = peak_model.param_hints[key].get("value")
-
-                    self._fitted_lines.append((peak_line, peak_info))
-
-                    # ── Peak label ──
-                    if hasattr(self, "act_show_peak_label") and self.act_show_peak_label.isChecked():
-                        idx = np.argmax(np.abs(y_peak_fine))
-                        px = x_fine[idx]
-                        py = y_peak_fine[idx]
-                        txt_color = fg_color if not self.act_bestfit_colorful.isChecked() else peak_line.get_color()
-                        self.ax.text(
-                            px + x_offset, py + y_offset,
-                            peak_info["peak_label"],
-                            color=txt_color,
-                            fontsize=9,
-                            ha="center", va="bottom" if py >= 0 else "top"
+                        peak_line, = self.ax.plot(
+                            x_fine + x_offset, y_peak_fine + y_offset,
+                            lw=(lw*0.6),  **color_kwargs
                         )
 
-                # ── Best-fit curve (SMOOTH) — with offset
-                if (
-                    hasattr(spectrum, "result_fit")
-                    and getattr(spectrum.result_fit, "success", False)
-                ):
-                    # Evaluate baseline on fine grid for smooth bestfit
-                    if y_base is not None:
-                        baseline = spectrum.baseline
-                        try:
-                            y_base_fine = baseline.eval(x_fine, None, attached=False)
-                        except Exception:
-                            y_base_fine = np.zeros_like(x_fine)
-                        y_fit_fine = y_peaks_fine + y_base_fine
-                    else:
-                        y_fit_fine = y_peaks_fine
-                    
-                    self.ax.plot(
-                        x_fine + x_offset, y_fit_fine + y_offset,
-                        lw=(lw*0.6), color=fg_color
-                    )
+                        peak_info = {
+                            "peak_label": (
+                                spectrum.peak_labels[i]
+                                if i < len(spectrum.peak_labels)
+                                else f"Peak {i+1}"
+                            ),
+                            "peak_model": peak_model,
+                        }
 
+                        for pname in getattr(peak_model, "param_names", []):
+                            key = pname.split("_", 1)[1]
+                            if key in peak_model.param_hints:
+                                peak_info[key] = peak_model.param_hints[key].get("value")
 
-            # ── Residual — with offset
-            if self.act_residual.isChecked():
-                try:
-                    xr, residual = self._compute_residual(spectrum)
-                    self.ax.plot(
-                        xr + x_offset, residual + y_offset,
-                        "r-", lw=1.0, label="residual"
-                    )
-                except Exception:
-                    pass
+                        self._fitted_lines.append((peak_line, peak_info))
 
-            # ── Noise level — horizontal line at coef_noise × noise_amplitude
-            if self.act_noise_level.isChecked() and y is not None and len(y) > 0:
-                try:
-                    coef_noise = QSettings("CEA-Leti", "SPECTROview").value(
-                        "fit_settings/coef_noise", 1.0, float
-                    )
-                    ampli_noise = eval_noise_amplitude(spectrum.y)
-                    noise_level = coef_noise * ampli_noise
-                    noise_label = f"noise ({coef_noise}×{ampli_noise:.1f})" if spec_idx == 0 else None
-                    self.ax.axhline(
-                        y=noise_level + y_offset,
-                        color="orange", ls="--", lw=1.0, alpha=0.8,
-                        label=noise_label,
-                    )
-                except Exception:
-                    pass
+                        # ── Peak label ──
+                        if hasattr(self, "act_show_peak_label") and self.act_show_peak_label.isChecked():
+                            idx = np.argmax(np.abs(y_peak_fine))
+                            px = x_fine[idx]
+                            py = y_peak_fine[idx]
+                            txt_color = fg_color if not self.act_bestfit_colorful.isChecked() else peak_line.get_color()
+                            self.ax.text(
+                                px + x_offset, py + y_offset,
+                                peak_info["peak_label"],
+                                color=txt_color,
+                                fontsize=9,
+                                ha="center", va="bottom" if py >= 0 else "top"
+                            )
+
+                    # ── Best-fit curve (SMOOTH) — with offset
+                    if (
+                        hasattr(spectrum, "result_fit")
+                        and getattr(spectrum.result_fit, "success", False)
+                    ):
+                        # Evaluate baseline on fine grid for smooth bestfit
+                        if y_base is not None:
+                            baseline = spectrum.baseline
+                            try:
+                                y_base_fine = baseline.eval(x_fine, None, attached=False)
+                            except Exception:
+                                y_base_fine = np.zeros_like(x_fine)
+                            y_fit_fine = y_peaks_fine + y_base_fine
+                        else:
+                            y_fit_fine = y_peaks_fine
+                        
+                        self.ax.plot(
+                            x_fine + x_offset, y_fit_fine + y_offset,
+                            lw=(lw*0.6), color=fg_color
+                        )
+
+                # ── Residual — with offset
+                if self.act_residual.isChecked():
+                    try:
+                        xr, residual = self._compute_residual(spectrum)
+                        self.ax.plot(
+                            xr + x_offset, residual + y_offset,
+                            "r-", lw=1.0, label="residual"
+                        )
+                    except Exception:
+                        pass
+
+                # ── Noise level — horizontal line at coef_noise × noise_amplitude
+                if self.act_noise_level.isChecked() and y is not None and len(y) > 0:
+                    try:
+                        coef_noise = QSettings("CEA-Leti", "SPECTROview").value(
+                            "fit_settings/coef_noise", 1.0, float
+                        )
+                        ampli_noise = eval_noise_amplitude(spectrum.y)
+                        noise_level = coef_noise * ampli_noise
+                        noise_label = f"noise ({coef_noise}×{ampli_noise:.1f})" if spec_idx == 0 else None
+                        self.ax.axhline(
+                            y=noise_level + y_offset,
+                            color="orange", ls="--", lw=1.0, alpha=0.8,
+                            label=noise_label,
+                        )
+                    except Exception:
+                        pass
+
+        # ── Render Bulk Collections ──
+        if plot_style == "dot" and all_x_dots:
+            self.ax.scatter(np.concatenate(all_x_dots), np.concatenate(all_y_dots), s=dot_size, c=all_c_dots, marker='o', edgecolors='none')
+            all_points = np.column_stack([np.concatenate(all_x_dots), np.concatenate(all_y_dots)])
+            self.ax.update_datalim(all_points)
+        elif main_segments:
+            lc = mcoll.LineCollection(main_segments, colors=main_colors, linewidths=lw)
+            self.ax.add_collection(lc)
+            all_points = np.vstack(main_segments)
+            self.ax.update_datalim(all_points)
+            
+        if raw_segments:
+            lc_raw = mcoll.LineCollection(raw_segments, colors=raw_colors, linewidths=0.8, alpha=0.8)
+            self.ax.add_collection(lc_raw)
+            raw_points = np.vstack(raw_segments)
+            self.ax.update_datalim(raw_points)
+
+        self.ax.autoscale_view()
 
         # ── Legend / axes / grid
         if self.btn_legend.isChecked():

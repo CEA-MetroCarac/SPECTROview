@@ -1,4 +1,5 @@
 """ViewModel for Maps Workspace - extends Spectra Workspace with hyperspectral map functionality."""
+import traceback
 import io
 import json
 import gzip
@@ -18,8 +19,10 @@ from spectroview.model.m_settings import MSettings
 from spectroview.model.m_spectra import MSpectra
 from spectroview.model.m_spectrum import MSpectrum
 from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
+from spectroview.model.spectra_store import SpectraStore
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
+from spectroview.fit_engine.scalar_models import FitResult
 from spectroview.model.workspace_io import WorkspaceIO
 
 
@@ -47,6 +50,12 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Reference to Graphs workspace (injected after construction)
         self.graphs_workspace = None
         self._maps_arrays_cache = {}
+
+        # ── Phase-1: Tensor-centric data store ──────────────────────────
+        # SpectraStore owns all heavy numerical data as contiguous NumPy arrays.
+        # self.spectra (legacy MSpectrum list) is kept in parallel for GUI
+        # compatibility until Phase 4 removes it entirely.
+        self.store = SpectraStore()
         
     def _ensure_spectrum_loaded(self, spectrum: MSpectrum):
         """Lazily load x0 and y0 arrays for a spectrum from the map cache if not already loaded."""
@@ -83,6 +92,28 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                     # Apply preprocessing now that arrays are loaded
                     spectrum.is_preprocessed = False
                     spectrum.preprocess()
+
+                    # ── Restore fit result and peak_models from SpectraStore ──────
+                    # The store holds fitted params; reconstruct a lightweight
+                    # FitResult so downstream code (.result_fit.success, .params) works.
+                    md = self.store.get_map_data(map_name)
+                    if md is not None and md.has_fit_results() and md.fit_success is not None:
+                        if md.fit_success[idx]:
+                            params_dict = {
+                                pname: float(md.peak_params[idx, j])
+                                for j, pname in enumerate(md.param_names)
+                            }
+                            spectrum.result_fit = FitResult(
+                                success=True,
+                                params_dict=params_dict,
+                                best_fit=spectrum.y,  # approximate
+                                rsquared=float(md.fit_r2[idx]),
+                            )
+
+                        # Restore peak_models from stored fit_model definition
+                        if md.fit_model:
+                            spectrum.set_attributes(md.fit_model)
+
                     spectrum._is_lazy_loaded = True
         except Exception as e:
             pass
@@ -173,7 +204,11 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.map_data_updated.emit(self.current_map_df)
     
     def _extract_spectra_from_map(self, map_name: str, map_df: pd.DataFrame):
-        """Extract all individual spectra from a hyperspectral map dataframe."""
+        """Extract all individual spectra from a hyperspectral map dataframe.
+
+        Phase 1: Dual-write — populates both self.spectra (legacy MSpectrum list)
+        and self.store (new SpectraStore) in parallel.
+        """
         # Extract wavenumber columns (all columns except X, Y)
         wavenumber_cols = [col for col in map_df.columns if col not in ['X', 'Y']]
         
@@ -192,9 +227,32 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         # Check if this map has metadata (WDF files)
         map_metadata = self.maps_metadata.get(map_name, {})
-        
-        # Create spectra for each row (spatial point) and add to main collection
-        for idx in range(len(map_df)):
+
+        # ── Phase-1: Register in SpectraStore (vectorized) ──────────────
+        N = len(map_df)
+        coords = np.column_stack([x_positions, y_positions]).astype(np.float64)
+        Y0 = intensity_data.astype(np.float32)
+        fnames = [
+            f"{map_name}_({float(x_positions[i])}, {float(y_positions[i])})"
+            for i in range(N)
+        ]
+        self.store.add_map(
+            name=map_name,
+            x0=x_data,
+            Y0=Y0,
+            coords=coords,
+            fnames=fnames,
+            is_active=np.ones(N, dtype=bool),
+        )
+        # Also populate the lazy-load arrays cache (used by _ensure_spectrum_loaded)
+        self._maps_arrays_cache[map_name] = {
+            'coords': coords,
+            'x0': x_data,
+            'y0': Y0,
+        }
+
+        # ── Legacy MSpectrum objects (kept for GUI compat in Phase 1) ───
+        for idx in range(N):
             x_pos = float(x_positions[idx])
             y_pos = float(y_positions[idx])
             y_data = np.asarray(intensity_data[idx], dtype=np.float64)
@@ -428,77 +486,180 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
         return np.array(coords, dtype=np.float64) if coords else None
 
+    def _sync_fit_results_to_store(self):
+        """Override: harvest fitted parameters into SpectraStore for the current map."""
+        if self.current_map_name and self.store.get_map_info(self.current_map_name):
+            self._writeback_fit_results_to_store(self.current_map_name)
+
     def _on_fit_finished(self):
-        """Override to invalidate cache when fitting completes."""
+        """Override: harvest fitted parameters into SpectraStore, then update heatmap."""
         super()._on_fit_finished()
-        
+
         # Re-emit map data to update heatmap with new fit results
         if self.current_map_name:
             self.map_data_updated.emit(self.current_map_df)
-            # Signal View to clear griddata cache for this map (data has changed)
             self.clear_map_cache_requested.emit(self.current_map_name)
+
+    def _writeback_fit_results_to_store(self, map_name: str):
+        """Harvest fit parameters from MSpectrum objects into SpectraStore arrays.
+
+        Iterates only over spectra belonging to `map_name` and collects their
+        `result_fit.params` into contiguous (N, K) matrices so that
+        collect_fit_results() can use the fast SpectraStore tensor path.
+        """
+        fname_prefix = f"{map_name}_("
+        map_spectra = [
+            s for s in self.spectra
+            if s.fname.startswith(fname_prefix)
+        ]
+
+        # Determine parameter schema from first successfully fitted spectrum
+        param_names = []
+        fit_model_ref = None
+        for s in map_spectra:
+            if hasattr(s, 'result_fit') and hasattr(s.result_fit, 'params') and s.result_fit.params:
+                param_names = list(s.result_fit.params.keys())
+                # Also capture the fit model for serialization
+                if hasattr(s, 'peak_models') and s.peak_models:
+                    fit_model_ref = s.save(save_data=False)
+                break
+
+        if not param_names:
+            return  # No fitted spectra — nothing to write back
+
+        N = len(map_spectra)
+        K = len(param_names)
+        peak_params = np.zeros((N, K), dtype=np.float64)
+        fit_success = np.zeros(N, dtype=bool)
+        fit_r2 = np.zeros(N, dtype=np.float64)
+
+        for i, spectrum in enumerate(map_spectra):
+            rf = getattr(spectrum, 'result_fit', None)
+            if rf is not None and hasattr(rf, 'params') and rf.params:
+                for j, pname in enumerate(param_names):
+                    pval = rf.params.get(pname)
+                    if pval is not None:
+                        # Support both ParamValue(.value) and raw float/lmfit Parameter
+                        if hasattr(pval, 'value'):
+                            peak_params[i, j] = float(pval.value)
+                        else:
+                            try:
+                                peak_params[i, j] = float(pval)
+                            except (TypeError, ValueError):
+                                pass
+                fit_success[i] = bool(getattr(rf, 'success', False))
+                fit_r2[i] = float(getattr(rf, 'rsquared', 0.0))
+
+        # Build local indices (0..N-1) for this map
+        info = self.store.get_map_info(map_name)
+        indices = np.arange(info.n_spectra)
+
+        # Sync is_active flags from MSpectrum objects into store
+        md = self.store.get_map_data(map_name)
+        if md is not None:
+            for i, spectrum in enumerate(map_spectra):
+                md.is_active[i] = spectrum.is_active
+
+        self.store.set_fit_results(
+            map_name=map_name,
+            indices=indices,
+            peak_params=peak_params,
+            success=fit_success,
+            r2=fit_r2,
+            param_names=param_names,
+            fit_model=fit_model_ref or {},
+        )
     
     def collect_fit_results(self):
-        """Override parent to add X and Y coordinate columns for map data."""
+        """Collect fit results, delegating to SpectraStore when possible.
 
-        
-        # Call parent's collect_fit_results to generate base DataFrame
-        super().collect_fit_results()
-        
-        # If no fit results, nothing to do
-        if self.df_fit_results is None or self.df_fit_results.empty:
-            return
-        
-        # Extract map_name, X, and Y using vectorized regex on Filename column
-        # Expected format: "map_name_(X, Y)"
-        extracted = self.df_fit_results['Filename'].str.extract(r'^(.*?)\_\(([^,]+),\s*([^)]+)\)$')
-        
-        # extracted[0] is map_name, extracted[1] is X, extracted[2] is Y
-        map_names = extracted[0].fillna(self.df_fit_results['Filename'])
-        x_coords = pd.to_numeric(extracted[1], errors='coerce')
-        y_coords = pd.to_numeric(extracted[2], errors='coerce')
+        Phase-1 fast path: if the store has fit results for the current map,
+        build the DataFrame entirely from tensor arrays (no Python object loop).
+        Fallback: call parent's collect_fit_results (per-object loop) for the
+        Spectra workspace or when the store has no results yet.
+        """
+        if (
+            self.current_map_name
+            and self.store.has_fit_results(self.current_map_name)
+            and self.store.get_map_info(self.current_map_name) is not None
+        ):
+            # ── Fast tensor path ──────────────────────────────────────────
+            # Ensure _fitmodel_clipboard is populated (so peak labels are available)
+            # Use the first fitted spectrum in the current map
+            if not self._fitmodel_clipboard:
+                map_prefix = f"{self.current_map_name}_("
+                for s in self.spectra:
+                    if s.fname.startswith(map_prefix):
+                        # Trigger lazy load so peak_models are available
+                        self._ensure_spectrum_loaded(s)
+                        if hasattr(s, 'peak_models') and s.peak_models:
+                            self._fitmodel_clipboard = deepcopy(s.save())
+                            break
 
-        # Replace Filename column with map_name only
-        self.df_fit_results['Filename'] = map_names
-        
-        # Insert X and Y columns after Filename (at positions 1 and 2)
-        self.df_fit_results.insert(1, 'X', x_coords)
-        self.df_fit_results.insert(2, 'Y', y_coords)
-        
-        # Add Zone and Quadrant columns if map type is not 2Dmap
-        if self.map_type != '2Dmap':
-            # Determine radius based on map_type (assumes diameter in name, e.g., 'Wafer_300mm')
-            # Default to 150 (300mm wafer) if parsing fails
-            radius = 150
-            if '300' in self.map_type:
+            peak_labels = None
+            if self._fitmodel_clipboard:
+                peak_labels = self._fitmodel_clipboard.get('peak_labels', None)
+
+            df = self.store.build_fit_results_df(
+                name=self.current_map_name,
+                map_type=self.map_type,
+                peak_labels=peak_labels,
+            )
+            if df is None or df.empty:
+                self.notify.emit("No fit results to collect.")
+                return
+
+            self.df_fit_results = df
+        else:
+            # ── Legacy per-object path (Spectra workspace or no store results) ──
+            # Call parent's collect_fit_results to generate base DataFrame
+            super().collect_fit_results()
+
+            # If no fit results, nothing to do
+            if self.df_fit_results is None or self.df_fit_results.empty:
+                return
+
+            # Extract map_name, X, and Y using vectorized regex on Filename column
+            # Expected format: "map_name_(X, Y)"
+            extracted = self.df_fit_results['Filename'].str.extract(r'^(.*?)\_\(([^,]+),\s*([^)]+)\)$')
+
+            map_names = extracted[0].fillna(self.df_fit_results['Filename'])
+            x_coords = pd.to_numeric(extracted[1], errors='coerce')
+            y_coords = pd.to_numeric(extracted[2], errors='coerce')
+
+            self.df_fit_results['Filename'] = map_names
+            self.df_fit_results.insert(1, 'X', x_coords)
+            self.df_fit_results.insert(2, 'Y', y_coords)
+
+            if self.map_type != '2Dmap':
                 radius = 150
-            elif '200' in self.map_type:
-                radius = 100
-            elif '100' in self.map_type:
-                radius = 50
-                
-            x = self.df_fit_results['X']
-            y = self.df_fit_results['Y']
-            
-            # Vectorized Quadrant calculation
-            quadrant = np.full(len(self.df_fit_results), np.nan, dtype=object)
-            quadrant[(x < 0) & (y < 0)] = 'Q1'
-            quadrant[(x < 0) & (y > 0)] = 'Q2'
-            quadrant[(x > 0) & (y > 0)] = 'Q3'
-            quadrant[(x > 0) & (y < 0)] = 'Q4'
-            self.df_fit_results['Quadrant'] = quadrant
-            
-            # Vectorized Zone calculation
-            dist = np.sqrt(x**2 + y**2)
-            zone = np.full(len(self.df_fit_results), np.nan, dtype=object)
-            zone[dist <= radius * 0.35] = 'Center'
-            zone[(dist > radius * 0.35) & (dist < radius * 0.8)] = 'Mid-Radius'
-            zone[dist >= radius * 0.8] = 'Edge'
-            self.df_fit_results['Zone'] = zone
-        
+                if '300' in self.map_type:
+                    radius = 150
+                elif '200' in self.map_type:
+                    radius = 100
+                elif '100' in self.map_type:
+                    radius = 50
+
+                x = self.df_fit_results['X']
+                y = self.df_fit_results['Y']
+
+                quadrant_arr = np.full(len(self.df_fit_results), np.nan, dtype=object)
+                quadrant_arr[(x < 0) & (y < 0)] = 'Q1'
+                quadrant_arr[(x < 0) & (y > 0)] = 'Q2'
+                quadrant_arr[(x > 0) & (y > 0)] = 'Q3'
+                quadrant_arr[(x > 0) & (y < 0)] = 'Q4'
+                self.df_fit_results['Quadrant'] = quadrant_arr
+
+                dist = np.sqrt(x**2 + y**2)
+                zone_arr = np.full(len(self.df_fit_results), np.nan, dtype=object)
+                zone_arr[dist <= radius * 0.35] = 'Center'
+                zone_arr[(dist > radius * 0.35) & (dist < radius * 0.8)] = 'Mid-Radius'
+                zone_arr[dist >= radius * 0.8] = 'Edge'
+                self.df_fit_results['Zone'] = zone_arr
+
         # Emit updated DataFrame
         self.fit_results_updated.emit(self.df_fit_results)
-        
+
         # Trigger heatmap refresh with new fit results
         # This ensures the map viewer uses fresh data instead of cache
         if self.current_map_name:
@@ -544,147 +705,240 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             return pd.DataFrame(arr, columns=entry['cols'], dtype=np.float64)
 
     def save_work(self):
-        """Save maps workspace using ultra-fast ZIP+NPZ+Pickle architecture."""
+        """Save maps workspace using ultra-fast ZIP+NPZ+Pickle architecture (format v4).
+
+        v4 change: Spectral data is stored exclusively in the SpectraStore arrays.
+        The heavy per-spectrum metadata dict (spectrums_meta) is replaced by
+        lightweight per-map metadata stored in store_meta_{map_name}.
+        """
         file_path, _ = QFileDialog.getSaveFileName(
             None, "Save work", "", "SPECTROview Files (*.maps)"
         )
         if not file_path:
             return
-            
-        try:
-            # 1. Separate light metadata from heavy arrays
-            spectrums_meta = self.spectra.save(is_map=True)
-            
-            metadata = {
-                'format_version': 3,  # Version 3 represents high-performance ZIP format
-                'spectrums_meta': spectrums_meta,
-                'maps_metadata': self.maps_metadata,
-            }
-            
-            # 2. Package coordinate/spectral arrays into npz (shared x0 wavenumber axis!)
-            arrays = {}
-            for map_name, map_df in self.maps.items():
-                wavenumber_cols = [col for col in map_df.columns if col not in ['X', 'Y']]
-                
-                coords = map_df[['X', 'Y']].to_numpy(dtype=np.float64)
-                wavenumbers = np.asarray(pd.to_numeric(wavenumber_cols, errors='coerce'), dtype=np.float64)
-                intensities = map_df[wavenumber_cols].to_numpy(dtype=np.float32) # float32 saves 50% space!
-                
-                arrays[f'map_{map_name}_coords'] = coords
-                arrays[f'map_{map_name}_x0'] = wavenumbers
-                arrays[f'map_{map_name}_y0'] = intensities
 
-            # 3. Pickle DataFrames (preserves multi-indexes, column names, float precision)
+        try:
+            # 1. Build per-map lightweight metadata for JSON
+            store_meta = {}
+            for map_name in self.store.map_names:
+                store_meta[map_name] = self.store.to_metadata_dict(map_name)
+
+            # Per-spectrum state not in store (xcorrection, color, label) is
+            # captured from MSpectrum objects and stored in store_meta already
+            # (colors/labels are synced into the store during normal operation).
+
+            def _sanitize_for_json(obj):
+                """Recursively convert numpy types to JSON-serializable equivalents."""
+                if isinstance(obj, dict):
+                    return {k: _sanitize_for_json(v) for k, v in obj.items()}
+                if isinstance(obj, (list, tuple)):
+                    return [_sanitize_for_json(v) for v in obj]
+                if isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                if isinstance(obj, (np.integer,)):
+                    return int(obj)
+                if isinstance(obj, (np.floating,)):
+                    return float(obj)
+                if isinstance(obj, (np.bool_,)):
+                    return bool(obj)
+                return obj
+
+            metadata = {
+                'format_version': 4,
+                'store_meta': _sanitize_for_json(store_meta),
+                'maps_metadata': _sanitize_for_json(self.maps_metadata),
+                'map_type': self.map_type,
+            }
+
+            # 2. Store arrays: SpectraStore owns all heavy numerical data
+            arrays = {}
+            for map_name in self.store.map_names:
+                arrays.update(self.store.to_npz_dict(map_name))
+
+            # 3. Pickle DataFrames (fit results)
             dataframes = {}
             if self.df_fit_results is not None and not self.df_fit_results.empty:
                 dataframes['df_fit_results'] = self.df_fit_results
-            
-            # Save using WorkspaceIO helper
+
             WorkspaceIO.save_workspace(file_path, metadata, arrays, dataframes)
             self.notify.emit("Maps workspace saved successfully.")
-            
+
         except Exception as e:
             QMessageBox.critical(None, "Save Error", f"Error saving maps workspace:\n{str(e)}")
 
     def load_work(self, file_path: str):
-        """Load maps workspace supporting both legacy formats and new ZIP formats."""
+        """Load maps workspace — auto-detects format version (v4, v3, or legacy)."""
         try:
-            # Attempt to load ZIP workspace
             metadata, arrays, dataframes, is_legacy = WorkspaceIO.load_workspace(file_path)
-            
+
             if is_legacy:
-                # Fall back to legacy loader
                 self.load_work_legacy(file_path)
                 return
-                
+
             self.clear_workspace()
-            
-            # 1. Restore map DataFrames from coordinate and intensity arrays
-            self.maps = {}
-            self._maps_arrays_cache = {}
-            
-            for k in arrays.keys():
-                if k.endswith('_coords'):
-                    map_name = k[4:-7]
-                    coords = arrays[f'map_{map_name}_coords']
-                    wavenumbers = arrays[f'map_{map_name}_x0']
-                    intensities = arrays[f'map_{map_name}_y0']
-                    
-                    # Drop the last column for spectra mapping (following legacy behavior of skipping the last/computed column)
-                    if len(wavenumbers) > 1:
-                        x0_spectra = wavenumbers[:-1]
-                        y0_spectra = intensities[:, :-1]
-                    else:
-                        x0_spectra = wavenumbers
-                        y0_spectra = intensities
-                    
-                    self._maps_arrays_cache[map_name] = {
-                        'coords': coords,
-                        'x0': x0_spectra,
-                        'y0': y0_spectra
-                    }
-                    
-                    # Reconstruct Pandas DataFrame instantly (retains all columns)
-                    col_names = ['X', 'Y'] + [str(w) for w in wavenumbers]
-                    data_combined = np.hstack([coords, intensities])
-                    self.maps[map_name] = pd.DataFrame(data_combined, columns=col_names, dtype=np.float64)
-            
-            self.maps_metadata = metadata.get('maps_metadata', {})
-            
-            # 2. Reconstruct spectra configurations in memory (LAZY INITIALIZATION)
-            self.spectra = MSpectra()
-            spectrums_meta = metadata.get('spectrums_meta', {})
-            
-            for i, (spec_id, spec_meta) in enumerate(spectrums_meta.items()):
-                # Create a placeholder shell without heavy arrays or eager preprocessing
-                spectrum = MSpectrum()
-                
-                # Pop compressed x0/y0 arrays if present (should not be in ZIP metadata, but to be safe)
-                spec_meta.pop('x0', None)
-                spec_meta.pop('y0', None)
-                
-                # Extract essential UI properties instantly
-                spectrum.fname = spec_meta.get('fname', '')
-                spectrum.is_active = spec_meta.get('is_active', True)
-                spectrum.color = spec_meta.get('color', None)
-                spectrum.label = spec_meta.get('label', None)
-                
-                # Defer heavy model parsing to lazy load
-                spectrum._lazy_meta = spec_meta
-                
-                # Apply map-specific metadata once
-                map_name = spectrum.fname.rsplit('_', 1)[0]
-                map_metadata = self.maps_metadata.get(map_name, {})
-                if map_metadata:
-                    spectrum.metadata = map_metadata.copy()
-                
-                # Defer actual array loading and baseline subtraction!
-                spectrum.is_preprocessed = False
-                spectrum._is_lazy_loaded = False
-                self.spectra.append(spectrum)
-            
-            # 3. Restore DataFrames
-            if dataframes and 'df_fit_results' in dataframes:
-                self.df_fit_results = dataframes['df_fit_results']
+            fmt = metadata.get('format_version', 3)
+
+            if fmt >= 4:
+                self._load_work_v4(metadata, arrays, dataframes)
             else:
-                self.df_fit_results = None
-            
-            # Select first map and refresh View
-            map_names = list(self.maps.keys())
-            if map_names:
-                self.select_map(map_names[0])
-                
-            self.maps_list_changed.emit(map_names)
-            self.count_changed.emit(len(self.spectra))
-            if self.df_fit_results is not None:
-                self.fit_results_updated.emit(self.df_fit_results)
-                
-            self.notify.emit("Maps workspace loaded successfully.")
-            
+                self._load_work_v3(metadata, arrays, dataframes)
+
         except Exception as e:
-            import traceback
             traceback.print_exc()
             QMessageBox.critical(None, "Load Error", f"Error loading maps workspace:\n{str(e)}")
+
+    def _load_work_v4(self, metadata: dict, arrays: dict, dataframes: dict):
+        """Restore workspace from format v4 (SpectraStore-backed)."""
+        self.maps_metadata = metadata.get('maps_metadata', {})
+        self.map_type = metadata.get('map_type', '2Dmap')
+        store_meta = metadata.get('store_meta', {})
+
+        # 1. Restore SpectraStore from arrays + per-map metadata
+        self.store = SpectraStore()
+        for map_name, meta in store_meta.items():
+            SpectraStore.load_map_from_npz(arrays, meta, map_name, store=self.store)
+
+        # 2. Rebuild legacy DataFrames for heatmap rendering using per-map MapData
+        self.maps = {}
+        self._maps_arrays_cache = {}
+        for map_name in self.store.map_names:
+            md = self.store.get_map_data(map_name)
+            x0 = md.x0
+            coords = md.coords
+            intensities = md.Y0
+
+            col_names = ['X', 'Y'] + [str(float(w)) for w in x0]
+            data_combined = np.hstack([coords, intensities.astype(np.float64)])
+            self.maps[map_name] = pd.DataFrame(data_combined, columns=col_names)
+
+            # Populate lazy-load cache for _ensure_spectrum_loaded.
+            # In v4, the store x0 is already the correctly-cropped wavenumber axis
+            # (the last-element-drop happened in _extract_spectra_from_map), so
+            # use it directly without further slicing.
+            self._maps_arrays_cache[map_name] = {
+                'coords': coords,
+                'x0': x0,
+                'y0': intensities,
+            }
+
+        # 3. Reconstruct lightweight MSpectrum shells (lazy-loaded on demand)
+        self.spectra = MSpectra()
+        for map_name, meta in store_meta.items():
+            md = self.store.get_map_data(map_name)
+            fnames = md.fnames
+            colors = md.colors
+            labels = md.labels
+            is_active_arr = md.is_active
+            map_metadata = self.maps_metadata.get(map_name, {})
+
+            for i, fname in enumerate(fnames):
+                spectrum = MSpectrum()
+                spectrum.fname = fname
+                spectrum.is_active = bool(is_active_arr[i])
+                spectrum.color = colors[i]
+                spectrum.label = labels[i]
+                if map_metadata:
+                    spectrum.metadata = map_metadata.copy()
+                spectrum.is_preprocessed = False
+                spectrum._is_lazy_loaded = False
+                # Attach a minimal _lazy_meta so _ensure_spectrum_loaded can
+                # inject arrays from the cache when needed
+                spectrum._lazy_meta = {'fname': fname}
+                self.spectra.append(spectrum)
+
+        # 4. Restore DataFrames
+        self.df_fit_results = dataframes.get('df_fit_results') if dataframes else None
+
+        # 5. Refresh View
+        map_names = self.store.map_names
+        if map_names:
+            self.select_map(map_names[0])
+        self.maps_list_changed.emit(map_names)
+        self.count_changed.emit(len(self.spectra))
+        if self.df_fit_results is not None:
+            self.fit_results_updated.emit(self.df_fit_results)
+        self.notify.emit("Maps workspace loaded successfully.")
+
+    def _load_work_v3(self, metadata: dict, arrays: dict, dataframes: dict):
+        """Restore workspace from format v3 (legacy spectrums_meta dict)."""
+        self.maps = {}
+        self._maps_arrays_cache = {}
+
+        for k in arrays.keys():
+            if k.endswith('_coords'):
+                map_name = k[4:-7]
+                coords = arrays[f'map_{map_name}_coords']
+                wavenumbers = arrays[f'map_{map_name}_x0']
+                intensities = arrays[f'map_{map_name}_y0']
+
+                if len(wavenumbers) > 1:
+                    x0_spectra = wavenumbers[:-1]
+                    y0_spectra = intensities[:, :-1]
+                else:
+                    x0_spectra = wavenumbers
+                    y0_spectra = intensities
+
+                self._maps_arrays_cache[map_name] = {
+                    'coords': coords,
+                    'x0': x0_spectra,
+                    'y0': y0_spectra,
+                }
+
+                col_names = ['X', 'Y'] + [str(w) for w in wavenumbers]
+                data_combined = np.hstack([coords, intensities.astype(np.float64)])
+                self.maps[map_name] = pd.DataFrame(data_combined, columns=col_names)
+
+                # Also populate SpectraStore for consistency
+                N = len(coords)
+                fnames = [
+                    f"{map_name}_({float(coords[i, 0])}, {float(coords[i, 1])})"
+                    for i in range(N)
+                ]
+                self.store.add_map(
+                    name=map_name,
+                    x0=x0_spectra,
+                    Y0=y0_spectra,
+                    coords=coords,
+                    fnames=fnames,
+                    is_active=np.ones(N, dtype=bool),
+                )
+
+        self.maps_metadata = metadata.get('maps_metadata', {})
+
+        # Reconstruct lazy MSpectrum shells
+        self.spectra = MSpectra()
+        spectrums_meta = metadata.get('spectrums_meta', {})
+
+        for i, (spec_id, spec_meta) in enumerate(spectrums_meta.items()):
+            spec_meta.pop('x0', None)
+            spec_meta.pop('y0', None)
+
+            spectrum = MSpectrum()
+            spectrum.fname = spec_meta.get('fname', '')
+            spectrum.is_active = spec_meta.get('is_active', True)
+            spectrum.color = spec_meta.get('color', None)
+            spectrum.label = spec_meta.get('label', None)
+            spectrum._lazy_meta = spec_meta
+
+            map_name = spectrum.fname.rsplit('_', 1)[0]
+            map_metadata = self.maps_metadata.get(map_name, {})
+            if map_metadata:
+                spectrum.metadata = map_metadata.copy()
+
+            spectrum.is_preprocessed = False
+            spectrum._is_lazy_loaded = False
+            self.spectra.append(spectrum)
+
+        self.df_fit_results = dataframes.get('df_fit_results') if dataframes else None
+
+        map_names = list(self.maps.keys())
+        if map_names:
+            self.select_map(map_names[0])
+        self.maps_list_changed.emit(map_names)
+        self.count_changed.emit(len(self.spectra))
+        if self.df_fit_results is not None:
+            self.fit_results_updated.emit(self.df_fit_results)
+        self.notify.emit("Maps workspace loaded successfully.")
 
     def load_work_legacy(self, file_path: str):
         """Legacy JSON loader for maps workspace."""
@@ -794,14 +1048,18 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         """Clear all maps, spectra, and reset workspace to initial state."""
         # Stop any running fit thread first (via parent)
         super().clear_workspace()
-        
+
         # Clear Maps-specific data structures
         self.maps.clear()
         if hasattr(self, '_maps_arrays_cache'):
             self._maps_arrays_cache.clear()
         self.current_map_name = None
         self.current_map_df = None
-        
+
+        # Reset SpectraStore
+        if hasattr(self, 'store'):
+            self.store.clear()
+
         # Emit updates to View
         self.maps_list_changed.emit([])
         self.map_data_updated.emit(pd.DataFrame())

@@ -13,6 +13,8 @@ import time
 import itertools
 import numpy as np
 from copy import deepcopy
+from scipy.interpolate import interp1d
+from scipy.ndimage import gaussian_filter1d
 
 from fitspy.core.utils import eval_noise_amplitude
 from fitspy.core.baseline import BaseLine
@@ -422,10 +424,6 @@ class TensorFittingEngine:
                 if not getattr(s, 'is_preprocessed', False):
                     s.preprocess()
             return
-
-        # ── Apply to all spectra ──
-        from scipy.interpolate import interp1d
-        from scipy.ndimage import gaussian_filter1d
 
         for s in spectra:
             if getattr(s, 'is_preprocessed', False):

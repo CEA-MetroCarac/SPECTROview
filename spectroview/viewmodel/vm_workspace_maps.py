@@ -449,32 +449,15 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if self.df_fit_results is None or self.df_fit_results.empty:
             return
         
-        map_names = []
-        x_coords = []
-        y_coords = []
+        # Extract map_name, X, and Y using vectorized regex on Filename column
+        # Expected format: "map_name_(X, Y)"
+        extracted = self.df_fit_results['Filename'].str.extract(r'^(.*?)\_\(([^,]+),\s*([^)]+)\)$')
         
-        for fname in self.df_fit_results['Filename']:
-            # Extract coordinates from fname: "map_name_(x, y)"
-            if '(' in fname and ')' in fname:
-                # Extract map_name (everything before last '_(')
-                map_name = fname[:fname.rfind('_(')]
-                map_names.append(map_name)
-                
-                # Extract coordinates
-                coords_str = fname[fname.rfind('(')+1:fname.rfind(')')]
-                try:
-                    x_str, y_str = coords_str.split(',')
-                    x_coords.append(float(x_str.strip()))
-                    y_coords.append(float(y_str.strip()))
-                except (ValueError, AttributeError):
-                    x_coords.append(None)
-                    y_coords.append(None)
-            else:
-                # Fallback if format is unexpected
-                map_names.append(fname)
-                x_coords.append(None)
-                y_coords.append(None)
-        
+        # extracted[0] is map_name, extracted[1] is X, extracted[2] is Y
+        map_names = extracted[0].fillna(self.df_fit_results['Filename'])
+        x_coords = pd.to_numeric(extracted[1], errors='coerce')
+        y_coords = pd.to_numeric(extracted[2], errors='coerce')
+
         # Replace Filename column with map_name only
         self.df_fit_results['Filename'] = map_names
         
@@ -484,7 +467,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         # Add Zone and Quadrant columns if map type is not 2Dmap
         if self.map_type != '2Dmap':
-            
             # Determine radius based on map_type (assumes diameter in name, e.g., 'Wafer_300mm')
             # Default to 150 (300mm wafer) if parsing fails
             radius = 150
@@ -495,19 +477,24 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             elif '100' in self.map_type:
                 radius = 50
                 
-            def safe_zone(row):
-                if pd.isna(row.get('X')) or pd.isna(row.get('Y')):
-                    return np.nan
-                return zone(row, radius)
-                
-            def safe_quadrant(row):
-                if pd.isna(row.get('X')) or pd.isna(row.get('Y')):
-                    return np.nan
-                return quadrant(row)
-
-            # Insert at the end of the dataframe
-            self.df_fit_results['Zone'] = self.df_fit_results.apply(safe_zone, axis=1)
-            self.df_fit_results['Quadrant'] = self.df_fit_results.apply(safe_quadrant, axis=1)
+            x = self.df_fit_results['X']
+            y = self.df_fit_results['Y']
+            
+            # Vectorized Quadrant calculation
+            quadrant = np.full(len(self.df_fit_results), np.nan, dtype=object)
+            quadrant[(x < 0) & (y < 0)] = 'Q1'
+            quadrant[(x < 0) & (y > 0)] = 'Q2'
+            quadrant[(x > 0) & (y > 0)] = 'Q3'
+            quadrant[(x > 0) & (y < 0)] = 'Q4'
+            self.df_fit_results['Quadrant'] = quadrant
+            
+            # Vectorized Zone calculation
+            dist = np.sqrt(x**2 + y**2)
+            zone = np.full(len(self.df_fit_results), np.nan, dtype=object)
+            zone[dist <= radius * 0.35] = 'Center'
+            zone[(dist > radius * 0.35) & (dist < radius * 0.8)] = 'Mid-Radius'
+            zone[dist >= radius * 0.8] = 'Edge'
+            self.df_fit_results['Zone'] = zone
         
         # Emit updated DataFrame
         self.fit_results_updated.emit(self.df_fit_results)

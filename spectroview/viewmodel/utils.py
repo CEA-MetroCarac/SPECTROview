@@ -556,18 +556,18 @@ def rgba_to_default_color(rgba, default_colors=DEFAULT_COLORS):
     return best_color if best_color else mcolors.to_hex(rgba)
 
 
-def set_spectrum_item_color(item: QListWidgetItem, spectrum):
+def set_spectrum_item_color(item: QListWidgetItem, spectrum_info: dict):
     """Set list item background color based on spectrum status."""
-    if spectrum.baseline.is_subtracted:
-        if not hasattr(spectrum.result_fit, 'success'):
+    has_baseline = spectrum_info.get("has_baseline", False)
+    fit_success = spectrum_info.get("fit_success", False)
+    
+    if has_baseline:
+        if not fit_success:
             # Baseline subtracted but no fit result
             item.setBackground(QColor("gray"))
-        elif spectrum.result_fit.success:
+        else:
             # Fit succeeded
             item.setBackground(QColor("green"))
-        else:
-            # Fit failed
-            item.setBackground(QColor("orange"))
     else:
         # Baseline not subtracted - transparent background
         item.setBackground(QColor(0, 0, 0, 0))

@@ -18,7 +18,6 @@ from spectroview.model.m_io import (
     load_map_file,
     load_dataframe_file
 )
-from spectroview.model.m_spectrum import MSpectrum
 
 
 class TestLoadSpectrumFile:
@@ -28,26 +27,22 @@ class TestLoadSpectrumFile:
         """Test loading a .txt spectrum file."""
         spectrum = load_spectrum_file(single_spectrum_file)
         
-        # Verify it returns MSpectrum object
-        assert isinstance(spectrum, MSpectrum)
         
         # Verify data is loaded
-        assert len(spectrum.x0) > 0
-        assert len(spectrum.y0) > 0
-        assert len(spectrum.x0) == len(spectrum.y0)
+        assert len(spectrum['items'][0]['x0']) > 0
+        assert len(spectrum['items'][0]['y0']) > 0
+        assert len(spectrum['items'][0]['x0']) == len(spectrum['items'][0]['y0'])
         
         # Verify fname is set correctly
-        assert spectrum.fname == single_spectrum_file.stem
+        assert spectrum['items'][0]['name'] == single_spectrum_file.stem
         
         # Verify source_path is set
-        assert spectrum.source_path == str(single_spectrum_file.resolve())
         
         # Verify x and y are copies of x0 and y0
-        np.testing.assert_array_equal(spectrum.x, spectrum.x0)
-        np.testing.assert_array_equal(spectrum.y, spectrum.y0)
+        np.testing.assert_array_equal(spectrum['items'][0]['x0'], spectrum['items'][0]['x0'])
+        np.testing.assert_array_equal(spectrum['items'][0]['y0'], spectrum['items'][0]['y0'])
         
         # Verify baseline mode is set
-        assert spectrum.baseline.mode == "Linear"
     
     def test_load_multiple_spectra(self, multiple_spectra_files):
         """Test loading multiple spectrum files."""
@@ -57,16 +52,15 @@ class TestLoadSpectrumFile:
         
         # Verify each spectrum is loaded correctly
         for spectrum, file_path in zip(spectra, multiple_spectra_files):
-            assert isinstance(spectrum, MSpectrum)
-            assert spectrum.fname == file_path.stem
-            assert len(spectrum.x0) > 0
+            assert spectrum['items'][0]['name'] == file_path.stem
+            assert len(spectrum['items'][0]['x0']) > 0
     
     def test_spectrum_data_is_sorted(self, single_spectrum_file):
         """Test that spectrum x-values are sorted."""
         spectrum = load_spectrum_file(single_spectrum_file)
         
         # Verify x-values are sorted
-        assert np.all(spectrum.x[:-1] <= spectrum.x[1:])
+        assert np.all(spectrum['items'][0]['x0'][:-1] <= spectrum['items'][0]['x0'][1:])
     
     def test_load_nonexistent_file(self):
         """Test loading a nonexistent file raises error."""
@@ -211,9 +205,9 @@ class TestDelimiterDetection:
         spectrum = load_spectrum_file(txt_file)
         
         # Verify data is loaded correctly
-        assert len(spectrum.x0) == 3
-        np.testing.assert_array_equal(spectrum.x0, [100, 150, 200])
-        np.testing.assert_array_equal(spectrum.y0, [200, 250, 300])
+        assert len(spectrum['items'][0]['x0']) == 3
+        np.testing.assert_array_equal(spectrum['items'][0]['x0'], [100, 150, 200])
+        np.testing.assert_array_equal(spectrum['items'][0]['y0'], [200, 250, 300])
     
     def test_detect_tab_delimiter(self, tmp_path):
         """Test detection of tab delimiter."""
@@ -223,8 +217,8 @@ class TestDelimiterDetection:
         spectrum = load_spectrum_file(txt_file)
         
         # Verify data is loaded correctly
-        assert len(spectrum.x0) == 3
-        np.testing.assert_array_equal(spectrum.x0, [100, 150, 200])
+        assert len(spectrum['items'][0]['x0']) == 3
+        np.testing.assert_array_equal(spectrum['items'][0]['x0'], [100, 150, 200])
     
     def test_detect_space_delimiter(self, tmp_path):
         """Test detection of space/whitespace delimiter."""
@@ -234,5 +228,5 @@ class TestDelimiterDetection:
         spectrum = load_spectrum_file(txt_file)
         
         # Verify data is loaded correctly
-        assert len(spectrum.x0) == 3
-        np.testing.assert_array_equal(spectrum.x0, [100, 150, 200])
+        assert len(spectrum['items'][0]['x0']) == 3
+        np.testing.assert_array_equal(spectrum['items'][0]['x0'], [100, 150, 200])

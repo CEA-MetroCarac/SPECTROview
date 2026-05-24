@@ -242,7 +242,7 @@ class VMapsList(QWidget):
         """Replace spectra list for currently selected map.
         
         Args:
-            spectra: List of MSpectrum objects for the current map
+            spectra: List of dicts with keys: fname, is_active, has_baseline, fit_success
         """
         # Save current selection positions before clearing
         self._last_selected_positions = self.get_selected_spectra_indices()
@@ -252,14 +252,21 @@ class VMapsList(QWidget):
         
         self.spectra_list.clear()
         for i, spectrum in enumerate(spectra):
-            item = QListWidgetItem(spectrum.fname)
+            fname = spectrum["fname"] if isinstance(spectrum, dict) else spectrum.fname
+            is_active = spectrum["is_active"] if isinstance(spectrum, dict) else spectrum.is_active
+
+            item = QListWidgetItem(fname)
             item.setData(Qt.UserRole, i)  # Store index
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            # Set checkbox state from spectrum.is_active
-            item.setCheckState(Qt.Checked if spectrum.is_active else Qt.Unchecked)
+            # Set checkbox state from is_active
+            item.setCheckState(Qt.Checked if is_active else Qt.Unchecked)
             
-            # Set background color based on spectrum status
-            set_spectrum_item_color(item, spectrum)
+            # Set background color based on spectrum status (expects dict)
+            info = spectrum if isinstance(spectrum, dict) else {
+                "has_baseline": False,
+                "fit_success": getattr(spectrum, "result_fit", None) is not None,
+            }
+            set_spectrum_item_color(item, info)
             
             self.spectra_list.addItem(item)
         

@@ -1,196 +1,125 @@
-"""QThread wrapper for the Tensor Fitting Engine.
-
-Drop-in replacement for HyperFitThread from core/.
-"""
-
+"""QThread wrapper for the Tensor Fitting Engine."""
 import time
 import numpy as np
 import sys
 from PySide6.QtCore import QThread, Signal
 from spectroview.fit_engine.tensor_engine import TensorFittingEngine
 
-
 class TensorFitThread(QThread):
-    """Run the TensorFittingEngine on a background thread.
-
-    Supports two modes:
-        1. **Single-model mode** (legacy): all spectra share one fit_model.
-        2. **Batched mode**: spectra are pre-grouped by model structure.
-           Each batch is a (fit_model, spectra_list) tuple and is processed
-           sequentially through the tensor engine while spectra within a
-           batch are optimised in parallel.
-
-    signals:
-        progress_changed(current, total, percent, elapsed)
-        timings_ready(str)
-        finished()
-    """
     progress_changed = Signal(int, int, int, float)
     timings_ready = Signal(str)
 
-    def __init__(self, spectrums, fit_model, fnames,
-                 coords=None, apply_model_to_spectra=True,
-                 batches=None):
+    def __init__(self, store, tasks: list[dict]):
         super().__init__()
-        
-        # Increase stack size to 8MB (macOS defaults to 512KB for QThread)
-        # Prevents segmentation faults when LAPACK (np.linalg.solve) allocates 
-        # large arrays on the stack during batched tensor operations.
         if sys.platform == "darwin":
             self.setStackSize(8 * 1024 * 1024)
             
-        self._spectrums = spectrums      # MSpectra collection
-        self._fit_model = fit_model
-        self._fnames = fnames
-        self._coords = coords
-        self._apply_model_to_spectra = apply_model_to_spectra
-        self._batches = batches          # list of (fit_model, spectra_list)
+        self.store = store
+        self.tasks = tasks
         self._is_cancelled = False
 
     def stop(self):
         self._is_cancelled = True
 
     def run(self):
-        if self._batches:
-            self._run_batched()
-        else:
-            self._run_single()
-
-    # ── Batched mode (fit() with per-spectrum models) ────────────────────
-
-    def _run_batched(self):
-        """Process multiple groups of spectra, each with its own fit model.
-
-        Spectra within each group share the same peak-model structure and
-        are optimised in parallel by the tensor engine.  Groups are
-        processed sequentially.
-        """
         t_start = time.perf_counter()
+        
+        # Calculate total spectra to process across all tasks
+        total_spectra = sum(len(task["indices"]) for task in self.tasks)
+        processed_spectra = 0
+        
+        timings = []
 
-        total = sum(len(grp) for _, grp in self._batches)
-        processed = 0
-
-        engine = TensorFittingEngine()
-
-        for fit_model, spectra in self._batches:
+        for task in self.tasks:
             if self._is_cancelled:
                 break
-
+                
+            map_name = task["map_name"]
+            indices = task["indices"]
+            fit_model = task["fit_model"]
+            
+            md = self.store.get_map_data(map_name)
+            if md is None:
+                continue
+                
+            x = md.x if md.x is not None else md.x0
+            Y = md.Y if md.Y is not None else md.Y0
+            
+            Y_sub = Y[indices]
+            N = len(indices)
+            
             fit_params = fit_model.get("fit_params", {})
-            batch_size = len(spectra)
-
-            # Progress callback that accounts for previously processed groups
-            def on_progress(current, batch_total, _offset=processed):
+            
+            # Construct vectorized fit weights (negative-masking and noise-masking)
+            N_fit, M_fit = Y_sub.shape
+            weights = np.ones((N_fit, M_fit), dtype=np.float64)
+            
+            fit_negative = bool(fit_params.get("fit_negative", False))
+            if not fit_negative:
+                weights[Y_sub < 0] = 0.0
+                
+            coef_noise = float(fit_params.get("coef_noise", 0))
+            if coef_noise > 0:
+                dy = np.diff(Y_sub, axis=1)
+                ampli_noise = np.median(np.abs(dy), axis=1) / 0.6745 * np.sqrt(2) # (N,)
+                Y_padded = np.pad(Y_sub, ((0, 0), (2, 2)), mode='edge')
+                ymean = (Y_padded[:, 0:-4] + Y_padded[:, 1:-3] + Y_padded[:, 2:-2] + Y_padded[:, 3:-1] + Y_padded[:, 4:]) / 5.0
+                noise_level = coef_noise * ampli_noise # (N,)
+                weights[ymean < noise_level[:, None]] = 0.0
+            
+            def on_progress(current, total):
                 elapsed = time.perf_counter() - t_start
-                done = _offset + current
-                pct = int(100 * done / max(total, 1))
-                self.progress_changed.emit(done, total, pct, elapsed)
+                # Map task progress to overall progress
+                overall_current = processed_spectra + current
+                pct = int(100 * overall_current / max(total_spectra, 1))
+                self.progress_changed.emit(overall_current, total_spectra, pct, elapsed)
 
+            engine = TensorFittingEngine()
             try:
-                engine.fit_spectra(
-                    spectra=spectra,
+                p_full, success, rsquared, best_fits, Y_peaks, param_names = engine.fit_spectra(
+                    x=x,
+                    Y=Y_sub,
                     fit_model=fit_model,
+                    weights=weights,
                     fit_params=fit_params,
                     progress_callback=on_progress,
                     cancel_check=lambda: self._is_cancelled,
-                    apply_model_to_spectra=False,
                 )
             except Exception as e:
-                print(f"[TensorFitThread] batch failed: {e}")
-
-            processed += batch_size
-
-        if not self._is_cancelled:
-            elapsed = time.perf_counter() - t_start
-            self.progress_changed.emit(total, total, 100, elapsed)
-
-            timings_str = f"Fit time: {elapsed:.2f}s\n"
-            timings_str += "\n".join(
-                [f"  {k}: {v}" for k, v in engine.timings.items()]
-            )
-            n_groups = len(self._batches)
-            if n_groups > 1:
-                timings_str += f"\n  Groups: {n_groups}"
-            self.timings_ready.emit(timings_str)
-
-    # ── Single-model mode (apply_fit_model / Maps) ───────────────────────
-
-    def _run_single(self):
-        """Original behaviour: one fit_model applied to all spectra."""
-        t_start = time.perf_counter()
-
-        # Build fname → spectrum lookup
-        fname_set = set(self._fnames)
-        spectra = [s for s in self._spectrums if s.fname in fname_set]
-
-        n = len(spectra)
-
-        if not spectra:
-            return
-
-        # Extract fit_params from the fit model or from the first spectrum
-        fit_params = None
-        if isinstance(self._fit_model, dict):
-            fit_params = self._fit_model.get("fit_params", None)
-        if fit_params is None and spectra:
-            fit_params = getattr(spectra[0], "fit_params", None)
-        if fit_params is None:
-            fit_params = {"method": "leastsq", "xtol": 1e-4, "max_ite": 500}
-
-        # Progress callback
-        def on_progress(current, total):
-            elapsed = time.perf_counter() - t_start
-            pct = int(100 * current / max(total, 1))
-            self.progress_changed.emit(current, total, pct, elapsed)
-
-        # Run tensor engine
-
-        engine = TensorFittingEngine()
-        fit_results = engine.fit_spectra(
-            spectra=spectra,
-            fit_model=self._fit_model,
-            fit_params=fit_params,
-            progress_callback=on_progress,
-            cancel_check=lambda: self._is_cancelled,
-            apply_model_to_spectra=self._apply_model_to_spectra,
-        )
-
-        if not self._is_cancelled:
-            elapsed = time.perf_counter() - t_start
+                print(f"[TensorFitThread] fit failed for {map_name}: {e}")
+                processed_spectra += N
+                continue
+                
+            if not self._is_cancelled:
+                self.store.set_fit_results(
+                    map_name=map_name,
+                    indices=indices,
+                    peak_params=p_full,
+                    success=success,
+                    r2=rsquared,
+                    param_names=param_names,
+                    fit_model=fit_model,
+                )
+                
+                if md.Y_bestfit is None:
+                    md.Y_bestfit = np.zeros_like(Y)
+                if md.Y_baseline is None:
+                    md.Y_baseline = np.zeros_like(Y)
+                
+                md.Y_bestfit[indices] = best_fits
+                
+                if Y_peaks:
+                    if md.Y_peaks is None or len(md.Y_peaks) != len(Y_peaks):
+                        md.Y_peaks = [np.zeros_like(Y) for _ in Y_peaks]
+                    for p_idx, p_arr in enumerate(Y_peaks):
+                        md.Y_peaks[p_idx][indices] = p_arr
+                        
+                timings.append(f"[{map_name}] Fit time: {time.perf_counter() - t_start:.2f}s")
+                
+            processed_spectra += N
             
-            # ── Harvest preprocessed arrays to SpectraStore ──
-            if hasattr(self, 'map_name') and self.map_name and self.store and spectra:
-                try:
-                    s_ref = spectra[0]
-                    if getattr(s_ref, 'is_preprocessed', False) and s_ref.x is not None:
-                        md = self.store.get_map_data(self.map_name)
-                        if md is not None:
-                            x_proc = s_ref.x
-                            # Only safely update if length matches
-                            Y_proc = np.empty((len(spectra), len(x_proc)), dtype=np.float32)
-                            valid = True
-                            for i, s in enumerate(spectra):
-                                if s.y is None or len(s.y) != len(x_proc):
-                                    valid = False
-                                    break
-                                Y_proc[i] = s.y
-                            
-                            if valid:
-                                if len(spectra) == md.n_spectra:
-                                    md.x = x_proc
-                                    md.Y = Y_proc
-                                elif hasattr(self, 'map_indices') and self.map_indices is not None:
-                                    if md.x is None or not np.array_equal(md.x, x_proc):
-                                        md.x = x_proc
-                                        md.Y = np.empty((md.n_spectra, len(x_proc)), dtype=np.float32)
-                                        md.Y[:] = np.nan
-                                    md.Y[self.map_indices] = Y_proc
-                except Exception:
-                    pass
-
-            self.progress_changed.emit(n, n, 100, elapsed)
-            
-            # Emit timings string
-            timings_str = f"Fit time: {elapsed:.2f}s\n"
-            timings_str += "\n".join([f"  {k}: {v}" for k, v in engine.timings.items()])
-            self.timings_ready.emit(timings_str)
+        elapsed = time.perf_counter() - t_start
+        self.progress_changed.emit(total_spectra, total_spectra, 100, elapsed)
+        
+        timings_str = f"Total Fit time: {elapsed:.2f}s\n" + "\n".join(timings)
+        self.timings_ready.emit(timings_str)

@@ -515,13 +515,38 @@ class VFitModelBuilder(QWidget):
         the parameters currently stored on the selected spectrum's baseline object.
         Signals are blocked during the update to avoid feedback loops.
         """
-        specs = spectra.get("proxies", []) if isinstance(spectra, dict) else spectra
-        if not specs:
-            return
-        bl = specs[0].baseline
+        mode = None
+        attached = True
+        sigma = 0
+        order_max = 2
+        coef = 5.0
+
+        if isinstance(spectra, dict):
+            # Tensor / new architecture mode
+            bl_configs = spectra.get("baseline_config", [])
+            bl_config = bl_configs[0] if bl_configs else {}
+            if bl_config is None:
+                bl_config = {}
+            mode = bl_config.get("mode")
+            attached = bool(bl_config.get("attached", True))
+            sigma = int(bl_config.get("sigma", 0))
+            order_max = int(bl_config.get("order_max", 2))
+            coef = float(bl_config.get("coef", 5.0))
+        else:
+            # Legacy list of Spectrum objects
+            specs = spectra or []
+            if not specs:
+                return
+            bl = specs[0].baseline
+            if bl is None:
+                return
+            mode = bl.mode
+            attached = bool(bl.attached)
+            sigma = int(bl.sigma) if bl.sigma else 0
+            order_max = int(bl.order_max) if bl.order_max else 2
+            coef = float(bl.coef) if bl.coef else 5.0
 
         keys = VFitModelBuilder._BASELINE_MODE_KEYS
-        mode = bl.mode  # e.g. "Linear", "arpls", None …
 
         # Find the combobox index for this mode key
         try:
@@ -540,15 +565,15 @@ class VFitModelBuilder(QWidget):
         try:
             self.cbb_baseline_mode.setCurrentIndex(idx)
             # Update attached / sigma for manual modes
-            self.chk_attached.setChecked(bool(bl.attached))
-            self.spin_noise.setValue(int(bl.sigma) if bl.sigma else 0)
-            self.spin_poly.setValue(int(bl.order_max) if bl.order_max else 2)
+            self.chk_attached.setChecked(attached)
+            self.spin_noise.setValue(sigma)
+            self.spin_poly.setValue(order_max)
             # Update coef slider for auto modes
-            coef_int = max(10, min(100, round(bl.coef * 10)))
+            coef_int = max(10, min(100, round(coef * 10)))
             self.sld_coef.setValue(coef_int)
-            lam = 10 ** bl.coef
+            lam = 10 ** coef
             if lam >= 1e6:
-                self.lbl_coef.setText(f"λ=1e{bl.coef:.0f}")
+                self.lbl_coef.setText(f"λ=1e{coef:.0f}")
             else:
                 self.lbl_coef.setText(f"λ={lam:.0f}")
         finally:

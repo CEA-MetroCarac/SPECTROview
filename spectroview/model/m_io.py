@@ -5,13 +5,13 @@ import pandas as pd
 from renishawWiRE import WDFReader
 
 from pathlib import Path
-from spectroview.model.m_spectrum import MSpectrum
+
 from spectroview.viewmodel.utils import parse_wdf_metadata
 from spectroview.model.m_spc import SpcReader
 from collections import OrderedDict
 
 
-def load_spectrum_file(path: Path) -> MSpectrum:
+def load_spectrum_file(path: Path) -> dict:
     """Load TXT or CSV spectrum file.
     
     For TXT files, automatically detects delimiter (semicolon, tab, or space).
@@ -60,17 +60,18 @@ def load_spectrum_file(path: Path) -> MSpectrum:
 
     df = df.sort_values(df.columns[0])
 
-    s = MSpectrum()
-    s.source_path = str(path.resolve()) 
-    s.fname = path.stem
-    s.x0 = df.iloc[:, 0].to_numpy(dtype=np.float64)
-    s.y0 = df.iloc[:, 1].to_numpy(dtype=np.float64)
-    s.x = s.x0.copy()
-    s.y = s.y0.copy()
-    s.baseline.mode = "Linear"
-    s.baseline.sigma = 4
+    x0 = df.iloc[:, 0].to_numpy(dtype=np.float64)
+    y0 = df.iloc[:, 1].to_numpy(dtype=np.float64)
 
-    return s
+    return {
+        "type": "spectra",
+        "items": [{
+            "name": path.stem,
+            "x0": x0,
+            "y0": y0,
+            "metadata": {}
+        }]
+    }
 
 def load_map_file(path: Path) -> pd.DataFrame:
     """Load hyperspectral map file (CSV or TXT). """
@@ -138,7 +139,7 @@ def load_map_file(path: Path) -> pd.DataFrame:
     return map_df
 
 
-def load_wdf_spectrum(path: Path) -> MSpectrum | list[MSpectrum]:
+def load_wdf_spectrum(path: Path) -> dict:
     """Load spectrum/spectra from Renishaw .wdf file.
     
     Uses renishawWIRE package to read native WiRE software files.
@@ -183,29 +184,23 @@ def load_wdf_spectrum(path: Path) -> MSpectrum | list[MSpectrum]:
             if sort_inds is not None:
                 intensities = intensities[sort_inds]
                 
-            s = MSpectrum()
-            s.source_path = str(path.resolve())
-            
-            # Format fname with timestamp if available, otherwise index
-            suffix = f"_{i+1}"
+            item_metadata = metadata.copy()
             if timestamps is not None and i < len(timestamps):
-                suffix = f"_{timestamps[i]:.2f}"
+                item_metadata["Time (s)"] = round(timestamps[i], 2)
                 
-            s.fname = f"{path.stem}{suffix}"
-            s.x0 = wavenumbers.copy()
-            s.y0 = intensities
-            s.x = s.x0.copy()
-            s.y = s.y0.copy()
-            s.baseline.mode = "Linear"
-            s.baseline.sigma = 4
-            s.metadata = metadata.copy()
-            if timestamps is not None and i < len(timestamps):
-                s.metadata["Time (s)"] = round(timestamps[i], 2)
-            
-            spectra_list.append(s)
+            fname = f"{path.stem}{suffix}"
+            spectra_list.append({
+                "name": fname,
+                "x0": wavenumbers.copy(),
+                "y0": intensities,
+                "metadata": item_metadata
+            })
             
         reader.close()
-        return spectra_list
+        return {
+            "type": "spectra",
+            "items": spectra_list
+        }
 
     else:
         # Handle different array dimensions for standard single or average spectrum
@@ -219,20 +214,16 @@ def load_wdf_spectrum(path: Path) -> MSpectrum | list[MSpectrum]:
         if sort_inds is not None:
             intensities = intensities[sort_inds]
         
-        # Create MSpectrum object
-        s = MSpectrum()
-        s.source_path = str(path.resolve())
-        s.fname = path.stem
-        s.x0 = wavenumbers.copy()
-        s.y0 = intensities
-        s.x = s.x0.copy()
-        s.y = s.y0.copy()
-        s.baseline.mode = "Linear"
-        s.baseline.sigma = 4
-        s.metadata = metadata
-        
         reader.close()
-        return s
+        return {
+            "type": "spectra",
+            "items": [{
+                "name": path.stem,
+                "x0": wavenumbers.copy(),
+                "y0": intensities,
+                "metadata": metadata
+            }]
+        }
 
 def load_wdf_map(path: Path) -> pd.DataFrame:
     """Load 2D hyperspectral map from Renishaw .wdf file.
@@ -347,13 +338,9 @@ def load_dataframe_file(path: Path) -> dict[str, pd.DataFrame]:
         raise ValueError(f"Unsupported file type: {ext}")
 
 
-def load_spc_spectrum(path: Path) -> MSpectrum:
+def load_spc_spectrum(path: Path) -> dict:
     """Load single spectrum from Galactic .spc file."""
     reader = SpcReader(str(path))
-    
-    # Create MSpectrum object
-    s = MSpectrum()
-    s.fname = path.stem
     
     # Use the first spectrum if multiple exist, or the only one
     if reader.header['fnsub'] > 1:
@@ -361,12 +348,8 @@ def load_spc_spectrum(path: Path) -> MSpectrum:
     else:
         y_data = reader.y_data
         
-    s.x0 = np.array(reader.x_data, dtype=np.float64)
-    s.y0 = np.array(y_data, dtype=np.float64)
-    s.x = s.x0.copy()
-    s.y = s.y0.copy()
-    s.baseline.mode = "Linear"
-    s.baseline.sigma = 4
+    x0 = np.array(reader.x_data, dtype=np.float64)
+    y0 = np.array(y_data, dtype=np.float64)
     
     # Determine X-axis Unit
     x_unit = _extract_spc_x_unit(reader) 
@@ -384,10 +367,17 @@ def load_spc_spectrum(path: Path) -> MSpectrum:
         mapped_log = _map_spc_metadata(reader.log_metadata)
         metadata.update(mapped_log)
         
-    # Reorder keys to match standard WDF structure
-    s.metadata = _reorder_metadata(metadata)
+    metadata = _reorder_metadata(metadata)
     
-    return s
+    return {
+        "type": "spectra",
+        "items": [{
+            "name": path.stem,
+            "x0": x0,
+            "y0": y0,
+            "metadata": metadata
+        }]
+    }
 
 
 def load_spc_map(path: Path) -> tuple[pd.DataFrame, dict]:
@@ -628,7 +618,7 @@ def _reorder_metadata(metadata: dict) -> dict:
     return new_metadata
 
 
-def load_TRPL_data(path: Path) -> MSpectrum:
+def load_TRPL_data(path: Path) -> dict:
     """Load TRPL .dat file (Time-Resolved Photoluminescence).
     
     Extracts:
@@ -675,18 +665,17 @@ def load_TRPL_data(path: Path) -> MSpectrum:
     # Generate x-values (time in ns), starting from 0 at the peak
     x_values = [i * bin_value for i in range(len(extracted_y))]
     
-    # Create MSpectrum object
-    s = MSpectrum()
-    s.source_path = str(path.resolve())
-    s.fname = path.stem
     # Explicitly use float64 for both x and y to ensure compatibility with save/load
     # (decompress always uses float64, so we must match that dtype)
-    s.x0 = np.array(x_values, dtype=np.float64)
-    s.y0 = np.array(extracted_y, dtype=np.float64)
-    s.x = s.x0.copy()
-    s.y = s.y0.copy()
-    s.baseline.mode = "Linear"
-    s.baseline.is_subtracted = False  
-    s.baseline.sigma = 4
+    x0 = np.array(x_values, dtype=np.float64)
+    y0 = np.array(extracted_y, dtype=np.float64)
     
-    return s
+    return {
+        "type": "spectra",
+        "items": [{
+            "name": path.stem,
+            "x0": x0,
+            "y0": y0,
+            "metadata": {}
+        }]
+    }

@@ -12,7 +12,7 @@ Handles:
 import numpy as np
 from spectroview.fit_engine.scalar_models import FitResult, ParamValue, PEAK_MODEL_REGISTRY
 from spectroview.fit_engine.models import BATCHED_MODELS, numerical_jacobian
-from fitspy.core.utils import eval_noise_amplitude
+from spectroview.fit_engine.noise import detect_noise_level
 
 
 class TensorEvaluator:
@@ -248,47 +248,8 @@ class TensorEvaluator:
 
     # ── Result construction ──────────────────────────────────────────────
 
-    def build_result(self, p_free, x, y, success, weights=None):
-        """Build a FitResult for a single spectrum.
-
-        Args:
-            p_free: (K_free,) optimised free parameters
-            x: (M,) x-axis
-            y: (M,) measured data
-            success: bool
-            weights: (M,) weights mask (optional)
-        """
-        p_full = self._to_full(p_free)
-        best_fit = self.evaluate(x, p_free[None, :])[0]
-
-        params_dict = {}
-        for i, name in enumerate(self._param_names):
-            params_dict[name] = p_full[i]
-
-        rsquared = 0.0
-        if y is not None:
-            if weights is not None:
-                residuals = weights * (y - best_fit)
-                ss_res = np.sum(residuals**2)
-                if weights.sum() > 0:
-                    y_mean = np.average(y, weights=weights)
-                    ss_tot = np.sum(weights * (y - y_mean)**2)
-                else:
-                    ss_tot = 0.0
-            else:
-                ss_res = np.sum((y - best_fit)**2)
-                ss_tot = np.sum((y - np.mean(y))**2)
-                
-            if ss_tot > 0:
-                rsquared = 1.0 - (ss_res / ss_tot)
-
-        return FitResult(success=success, params_dict=params_dict, best_fit=best_fit, rsquared=rsquared)
-
-    def build_results_batch(self, p_opt, x, Y_data, success, weights, shared_x, spectra):
+    def build_results_batch(self, p_opt, x, Y_data, success, weights, shared_x):
         """Build FitResults for all spectra in one vectorized pass.
-
-        Replaces the per-spectrum build_result + write_back_to_spectrum loop
-        with a single batched evaluate call and vectorized R² computation.
 
         Args:
             p_opt: (N, K_free) optimised parameters
@@ -297,7 +258,13 @@ class TensorEvaluator:
             success: (N,) bool
             weights: (N, M) or None
             shared_x: bool — whether all spectra share the same x-axis
-            spectra: list of spectrum objects for write-back
+            
+        Returns:
+            p_full: (N, K_total) full parameters
+            success: (N,) bool array
+            rsquared: (N,) r2 array
+            best_fits: (N, M) best fit array
+            Y_peaks: list of (N, M) for each peak model
         """
         N = p_opt.shape[0]
 
@@ -330,94 +297,31 @@ class TensorEvaluator:
         if weights is not None:
             best_fits = best_fits.copy()
             best_fits[weights == 0] = 0.0
+            
+        # ── Evaluate individual peaks ──
+        Y_peaks = []
+        for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
+            Y_p = eval_fn(x, p_full[:, slc] if p_full.ndim == 2 else p_full[slc][None, :])
+            if weights is not None:
+                Y_p = Y_p.copy()
+                Y_p[weights == 0] = 0.0
+            Y_peaks.append(Y_p)
 
-        # ── Build results and write back ──
-        fit_results = []
-        for i, spectrum in enumerate(spectra):
-            # Build params_dict from full parameter vector
-            params_dict = {}
-            for j, name in enumerate(self._param_names):
-                params_dict[name] = p_full[i, j]
+        return p_full, success, rsquared, best_fits, Y_peaks
 
-            bf = best_fits[i]
-            if not shared_x and spectrum.x is not None:
-                M_s = len(spectrum.x)
-                bf = bf[:M_s]
-
-            fr = FitResult(
-                success=bool(success[i]),
-                params_dict=params_dict,
-                best_fit=bf,
-                rsquared=float(rsquared[i]),
-            )
-
-            # Write back to spectrum
-            self.write_back_to_spectrum(spectrum, fr)
-            fit_results.append(fr)
-
-        return fit_results
-
-    def write_back_to_spectrum(self, spectrum, fit_result):
-        """Write fit result back to MSpectrum."""
-        spectrum.result_fit = fit_result
-
-        for i, peak_model in enumerate(spectrum.peak_models):
-            if i >= len(self._peaks):
-                break
-            for key in peak_model.param_names:
-                name = key[4:]  # remove actual prefix 'mXX_'
-                tensor_key = f"m{i+1:02d}_{name}" # use the sequentially generated prefix from the evaluator
-                if tensor_key in fit_result.params:
-                    peak_model.set_param_hint(name, value=fit_result.params[tensor_key].value)
-
-        if spectrum.bkg_model is not None:
-            for key in spectrum.bkg_model.param_names:
-                if key in fit_result.params:
-                    spectrum.bkg_model.set_param_hint(
-                        key, value=fit_result.params[key].value
-                    )
-
-    def extract_p0_from_spectrum(self, spectrum):
-        """Extract free parameter array from an already-fitted MSpectrum."""
-        p0_full = np.array(self._param_values, dtype=np.float64)
-
-        for i, peak_model in enumerate(spectrum.peak_models):
-            if i >= len(self._peaks):
-                break
-            for key, hint in peak_model.param_hints.items():
-                full_name = f"m{i+1:02d}_{key}"
-                try:
-                    idx = self._param_names.index(full_name)
-                    if 'value' in hint and hint['value'] is not None:
-                        p0_full[idx] = hint['value']
-                except ValueError:
-                    pass
-
-        return p0_full[self._free_idx]
-
-    def build_p0_matrix(self, spectra):
-        """Build (N, K_free) initial guess matrix with per-spectrum amplitude scaling.
-
-        For each spectrum, scales the amplitude parameters proportionally
-        to the spectrum's actual intensity at the peak position.
-        """
-        N = len(spectra)
+    def build_p0_matrix(self, x: np.ndarray, Y: np.ndarray):
+        """Build (N, K_free) initial guess matrix with per-spectrum amplitude scaling."""
+        N = Y.shape[0]
         K = self.n_params_free
         p0_base = self.initial_params.copy()
         p0_matrix = np.tile(p0_base, (N, 1))  # (N, K)
 
-        # Find amplitude indices and their associated x0 values
         for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
-            # Get parameter names for this peak
             peak_pnames = self._param_names[slc]
-
-            # Find ampli index in the FREE param space
             for local_i, pname in enumerate(peak_pnames):
                 global_i = slc.start + local_i
                 if "ampli" in pname and global_i in self._free_idx:
                     free_i = np.searchsorted(self._free_idx, global_i)
-
-                    # Find corresponding x0
                     x0_val = None
                     for local_j, pname_j in enumerate(peak_pnames):
                         if "x0" in pname_j:
@@ -425,17 +329,16 @@ class TensorEvaluator:
                             break
 
                     for n in range(N):
-                        spectrum = spectra[n]
-                        x_n = spectrum.x
-                        if x_n is None or x0_val is None or x0_val < x_n[0] or x0_val > x_n[-1]:
+                        x_n = x[n] if x.ndim == 2 else x
+                        y = Y[n]
+                        if x0_val is None or x0_val < x_n[0] or x0_val > x_n[-1]:
                             continue
                             
                         closest = np.argmin(np.abs(x_n - x0_val))
                         low = max(0, closest - 1)
                         high = min(len(x_n), closest + 2)
                         
-                        y = getattr(spectrum, 'y_no_outliers', spectrum.y)
-                        if y is not None and len(y) > closest:
+                        if len(y) > closest:
                             window = np.maximum(np.abs(y[low:high]), 1e-6)
                             data_amp = float(np.max(window))
                             model_amp = max(abs(p0_base[free_i]), 1e-6)
@@ -445,56 +348,65 @@ class TensorEvaluator:
 
         return p0_matrix
 
-    def apply_noise_threshold(self, spectra, p_matrix, fit_params, p0_matrix=None):
-        """Force ampli=0 and fwhm=0 for peaks located in noisy areas."""
+    def apply_noise_threshold(self, x: np.ndarray, Y: np.ndarray, p_matrix: np.ndarray, fit_params: dict, p0_matrix=None):
+        """Force ampli=0 and fwhm=0 for peaks located in noisy areas (highly vectorized)."""
         if fit_params is None:
             return
         coef_noise = float(fit_params.get("coef_noise", 0))
         if coef_noise <= 0:
             return
 
-        for i, spectrum in enumerate(spectra):
-            y = spectrum.y
-            if y is None:
-                continue
+        N = Y.shape[0]
+        
+        # Vectorized noise level estimation and smoothing
+        if Y.ndim == 2:
+            dy = np.diff(Y, axis=1)
+            ampli_noise = np.median(np.abs(dy), axis=1) / 0.6745 * np.sqrt(2) # (N,)
+            Y_padded = np.pad(Y, ((0, 0), (2, 2)), mode='edge')
+            ymean = (Y_padded[:, 0:-4] + Y_padded[:, 1:-3] + Y_padded[:, 2:-2] + Y_padded[:, 3:-1] + Y_padded[:, 4:]) / 5.0
+        else:
+            dy = np.diff(Y)
+            ampli_noise = np.median(np.abs(dy)) / 0.6745 * np.sqrt(2)
+            ymean = np.convolve(Y, np.ones(5, dtype=np.float64) / 5.0, mode='same')
+            
+        noise_level = coef_noise * ampli_noise # (N,) or float
 
-            if not hasattr(spectrum, '_fit_ampli_noise'):
-                spectrum._fit_ampli_noise = eval_noise_amplitude(y)
-                spectrum._fit_ymean = np.convolve(y, np.ones(5, dtype=np.float64) / 5.0, mode='same')
+        for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
+            peak_pnames = self._param_names[slc]
+            x0_global_idx = None
+            for local_j, pname_j in enumerate(peak_pnames):
+                if "x0" in pname_j:
+                    x0_global_idx = slc.start + local_j
+                    break
+            
+            if x0_global_idx is None:
+                continue
                 
-            ampli_noise = spectrum._fit_ampli_noise
-            ymean = spectrum._fit_ymean
-            noise_level = coef_noise * ampli_noise
-            x_array = spectrum.x
-            if x_array is None:
-                continue
+            if x0_global_idx in self._free_idx:
+                free_idx = np.searchsorted(self._free_idx, x0_global_idx)
+                x0_vals = (p0_matrix if p0_matrix is not None else p_matrix)[:, free_idx] # (N,)
+            else:
+                x0_vals = np.full(N, self._param_values[x0_global_idx]) # (N,)
 
-            for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
-                x0_val = None
-                peak_pnames = self._param_names[slc]
-                for local_j, pname_j in enumerate(peak_pnames):
-                    if "x0" in pname_j:
-                        global_idx = slc.start + local_j
-                        x0_val = self._param_values[global_idx]
-                        if global_idx in self._free_idx:
-                            free_idx = np.searchsorted(self._free_idx, global_idx)
-                            x0_val = (p0_matrix if p0_matrix is not None else p_matrix)[i, free_idx]
-                        break
+            # Find closest index in x
+            if x.ndim == 1:
+                dists = np.abs(x[None, :] - x0_vals[:, None]) # (N, M)
+                inds = np.argmin(dists, axis=1) # (N,)
+            else:
+                dists = np.abs(x - x0_vals[:, None]) # (N, M)
+                inds = np.argmin(dists, axis=1) # (N,)
+                
+            ymean_at_x0 = ymean[np.arange(N), inds] if Y.ndim == 2 else ymean[inds]
+            below_noise = ymean_at_x0 < noise_level # (N,) bool array
 
-                if x0_val is None or x0_val < x_array[0] or x0_val > x_array[-1]:
-                    continue
-
-                ind = np.argmin(np.abs(x_array - x0_val))
-                if ymean[ind] < noise_level:
-                    for local_j, pname_j in enumerate(peak_pnames):
-                        global_idx = slc.start + local_j
-                        if global_idx in self._free_idx:
-                            free_idx = np.searchsorted(self._free_idx, global_idx)
-                            if "ampli" in pname_j or "fwhm" in pname_j:
-                                p_matrix[i, free_idx] = 0.0
-                            elif p0_matrix is not None:
-                                # Restore position/shape parameters to initial guess to prevent map fluctuations
-                                p_matrix[i, free_idx] = p0_matrix[i, free_idx]
+            for local_j, pname_j in enumerate(peak_pnames):
+                global_idx = slc.start + local_j
+                if global_idx in self._free_idx:
+                    free_idx = np.searchsorted(self._free_idx, global_idx)
+                    if "ampli" in pname_j or "fwhm" in pname_j:
+                        p_matrix[below_noise, free_idx] = 0.0
+                    elif p0_matrix is not None:
+                        p_matrix[below_noise, free_idx] = p0_matrix[below_noise, free_idx]
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────
@@ -514,3 +426,25 @@ def _make_batched_scalar(scalar_fn, n_params):
             Y[i] = scalar_fn(xi, *args)
         return Y
     return batched_fn
+
+
+def eval_peak_initial(x, p_model):
+    """Evaluate a peak model dictionary (from fit_model['peak_models']) on x.
+    
+    p_model is of format: {shape_name: {param_name: {'value': float, ...}}}
+    """
+    shape_name = list(p_model.keys())[0]
+    param_hints = p_model[shape_name]
+    
+    if shape_name not in PEAK_MODEL_REGISTRY:
+        return np.zeros_like(x)
+        
+    func, param_names = PEAK_MODEL_REGISTRY[shape_name]
+    args = []
+    for pname in param_names:
+        hints = param_hints.get(pname, {})
+        val = hints.get("value", 1.0)
+        args.append(val)
+        
+    return func(x, *args)
+

@@ -36,7 +36,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "fitspy < 2026.4",
     "numpy < 2.0.0",
     "openpyxl >=3.1.5",
     "pandas",

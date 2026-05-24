@@ -27,8 +27,7 @@ except ImportError:
 
 from PySide6.QtWidgets import QApplication
 from spectroview.model.m_settings import MSettings
-from spectroview.model.m_spectrum import MSpectrum
-
+from spectroview.model.m_settings import MSettings
 
 # ============================================================================
 # Qt Application Setup
@@ -221,23 +220,6 @@ def mock_message_box(monkeypatch):
 # ============================================================================
 # Mock Data Generators
 # ============================================================================
-
-@pytest.fixture
-def sample_spectrum():
-    """Create a sample MSpectrum object for testing."""
-    x = np.linspace(100, 500, 100)
-    y = np.exp(-((x - 300) ** 2) / 1000) + 0.1 * np.random.randn(100)
-    
-    spectrum = MSpectrum()
-    spectrum.fname = "test_spectrum"
-    spectrum.x0 = x
-    spectrum.y0 = y
-    spectrum.x = x.copy()
-    spectrum.y = y.copy()
-    spectrum.baseline.mode = "Linear"
-    
-    return spectrum
-
 
 @pytest.fixture
 def sample_dataframe():

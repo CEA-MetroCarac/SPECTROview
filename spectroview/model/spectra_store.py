@@ -67,6 +67,23 @@ class MapData:
     param_names: list = field(default_factory=list)
     fit_model: Optional[dict] = None
 
+    # ── NEW: Baseline configuration (shared) ──
+    baseline_config: Optional[dict] = None  # {mode, sigma, attached, points, order_max, ...}
+    
+    # ── NEW: Preprocessing state ──
+    is_baseline_subtracted: bool = False
+    range_min: Optional[float] = None
+    range_max: Optional[float] = None
+    xcorrection_value: float = 0.0
+    intensity_norm_factor: float = 1.0
+    
+    # ── NEW: Per-spectrum metadata ──
+    map_metadata: dict = field(default_factory=dict)  # acquisition metadata (WDF, SPC)
+    
+    # ── NEW: Best-fit curves (for SpectraViewer) ──
+    Y_bestfit: Optional[np.ndarray] = None    # float32[N, M_proc]  composite model
+    Y_baseline: Optional[np.ndarray] = None   # float32[N, M_proc]  baseline curves
+    Y_peaks: Optional[list] = None            # list of float32[N, M_proc] per-peak curves
     @property
     def n_spectra(self) -> int:
         return len(self.fnames)
@@ -176,6 +193,19 @@ class SpectraStore:
     def remove_map(self, name: str):
         """Remove a map and its data from the store."""
         self._maps.pop(name, None)
+        
+    def reorder_maps(self, new_order: list[int]):
+        """Reorder maps based on a list of indices."""
+        keys = list(self._maps.keys())
+        if len(keys) != len(new_order):
+            return
+        
+        new_maps = {}
+        for idx in new_order:
+            if 0 <= idx < len(keys):
+                key = keys[idx]
+                new_maps[key] = self._maps[key]
+        self._maps = new_maps
 
     # ── Map-level helpers ─────────────────────────────────────────────────
 
@@ -404,6 +434,45 @@ class SpectraStore:
             return md is not None and md.has_fit_results()
         return any(md.has_fit_results() for md in self._maps.values())
 
+    def set_baseline_config(self, map_name: str, config_dict: dict):
+        """Store baseline configuration for a map."""
+        md = self._maps.get(map_name)
+        if md:
+            md.baseline_config = config_dict
+            
+    def set_bestfit_curves(
+        self,
+        map_name: str,
+        Y_bestfit: np.ndarray,
+        Y_baseline: np.ndarray,
+        Y_peaks: list,
+    ):
+        """Store best-fit, baseline, and individual peak curves after fitting."""
+        md = self._maps.get(map_name)
+        if md:
+            md.Y_bestfit = Y_bestfit
+            md.Y_baseline = Y_baseline
+            md.Y_peaks = Y_peaks
+
+    def get_bestfit_for_spectrum(self, map_name: str, local_idx: int) -> tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray], Optional[list]]:
+        """Return (x, y_bestfit, y_baseline, y_peaks_list) for one spectrum.
+        If no fit exists, returns (None, None, None, None).
+        """
+        md = self._maps.get(map_name)
+        if not md or md.Y_bestfit is None or local_idx >= md.Y_bestfit.shape[0]:
+            return None, None, None, None
+            
+        x = md.x if md.x is not None else md.x0
+        if x is None:
+            return None, None, None, None
+            
+        y_bestfit = md.Y_bestfit[local_idx]
+        y_baseline = md.Y_baseline[local_idx] if md.Y_baseline is not None else None
+        y_peaks = [p[local_idx] for p in md.Y_peaks] if md.Y_peaks else None
+        
+        return x, y_bestfit, y_baseline, y_peaks
+
+
     def get_fit_r2_for_map(self, name: str) -> Optional[np.ndarray]:
         md = self._maps.get(name)
         return md.fit_r2 if md else None
@@ -435,6 +504,7 @@ class SpectraStore:
         name: str,
         map_type: str = '2Dmap',
         peak_labels: Optional[list] = None,
+        only_converged: bool = True,
     ) -> Optional[pd.DataFrame]:
         """Build the full fit results DataFrame for a map (vectorized).
 
@@ -447,8 +517,11 @@ class SpectraStore:
         if md is None or not md.has_fit_results():
             return None
 
-        # Filter to active spectra that converged
-        mask = md.is_active & md.fit_success
+        # Filter to active spectra
+        mask = md.is_active
+        if only_converged and md.fit_success is not None:
+            mask = mask & md.fit_success
+
         if not mask.any():
             return None
 
@@ -544,6 +617,14 @@ class SpectraStore:
             result[f'{pfx}_fit_success'] = md.fit_success
             result[f'{pfx}_fit_r2'] = md.fit_r2
 
+        if md.Y_bestfit is not None:
+            result[f'{pfx}_Y_bestfit'] = md.Y_bestfit
+            if md.Y_baseline is not None:
+                result[f'{pfx}_Y_baseline'] = md.Y_baseline
+            if md.Y_peaks is not None:
+                for i, p_arr in enumerate(md.Y_peaks):
+                    result[f'{pfx}_Y_peak_{i}'] = p_arr
+
         return result
 
     def to_metadata_dict(self, map_name: str) -> dict:
@@ -563,6 +644,12 @@ class SpectraStore:
             'labels': md.labels,
             'param_names': md.param_names,
             'fit_model': md.fit_model or {},
+            'baseline_config': md.baseline_config,
+            'range_min': md.range_min,
+            'range_max': md.range_max,
+            'xcorrection_value': md.xcorrection_value,
+            'intensity_norm_factor': md.intensity_norm_factor,
+            'map_metadata': md.map_metadata,
         }
 
     @classmethod
@@ -619,6 +706,30 @@ class SpectraStore:
                 param_names=param_names,
                 fit_model=meta.get('fit_model', {}),
             )
+
+        md = store.get_map_data(map_name)
+        if md:
+            md.baseline_config = meta.get('baseline_config')
+            md.range_min = meta.get('range_min')
+            md.range_max = meta.get('range_max')
+            md.xcorrection_value = meta.get('xcorrection_value', 0.0)
+            md.intensity_norm_factor = meta.get('intensity_norm_factor', 1.0)
+            md.map_metadata = meta.get('map_metadata', {})
+            md.fit_model = meta.get('fit_model', {})
+            
+            if f'{pfx}_Y_bestfit' in arrays:
+                md.Y_bestfit = arrays[f'{pfx}_Y_bestfit']
+            if f'{pfx}_Y_baseline' in arrays:
+                md.Y_baseline = arrays[f'{pfx}_Y_baseline']
+            
+            # Reconstruct Y_peaks
+            peak_arrays = []
+            i = 0
+            while f'{pfx}_Y_peak_{i}' in arrays:
+                peak_arrays.append(arrays[f'{pfx}_Y_peak_{i}'])
+                i += 1
+            if peak_arrays:
+                md.Y_peaks = peak_arrays
 
         return store
 

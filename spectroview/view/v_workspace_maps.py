@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from PySide6.QtCore import Qt, Signal, QTimer
@@ -162,26 +163,29 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         """Handle spectra list update from ViewModel."""
         self.v_maps_list.set_spectra_names(spectra)
         
-        # Pre-build coordinate lookup cache for fast selection syncing (Fix 5)
+        # Pre-build coordinate lookup cache for fast selection syncing
         self._spectra_coords_cache = {}
         for i, s in enumerate(spectra):
-            coords = self._extract_coords_from_fname(s.fname)
+            fname = s["fname"] if isinstance(s, dict) else s.fname
+            coords = self._extract_coords_from_fname(fname)
             if coords:
                 self._spectra_coords_cache[i] = coords
     
     def _on_checkbox_changed(self, item):
-        """Update spectrum.is_active when checkbox state changes."""
+        """Update is_active in SpectraStore when checkbox state changes."""
         if item is None or not self.vm.current_map_name:
             return
-            
+
         fname = item.text()
-        spectrum = self.vm._get_spectrum_by_fname(fname)
-        
-        if spectrum:
-            is_checked = item.checkState() == Qt.Checked
-            if spectrum.is_active != is_checked:
-                spectrum.is_active = is_checked
-                
+        is_checked = item.checkState() == Qt.Checked
+
+        # Update SpectraStore directly
+        md = self.vm.store.get_map_data(self.vm.current_map_name)
+        if md is not None and fname in md.fnames:
+            idx = md.fnames.index(fname)
+            if bool(md.is_active[idx]) != is_checked:
+                md.is_active[idx] = is_checked
+
                 # Invalidate fit results cache and trigger map data update
                 self.vm._fit_results_cache_dirty = True
                 updated_df = self.vm.get_current_map_dataframe()
@@ -191,25 +195,22 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         """Handle check all checkbox toggle for current map."""
         if not self.vm.current_map_name:
             return
-        
+
         # Block signals temporarily to avoid triggering individual checkbox handlers
         self.v_maps_list.spectra_list.blockSignals(True)
-        
-        # Get current map's spectra
-        fname_prefix = f"{self.vm.current_map_name}_("
-        map_spectra = [s for s in self.vm.spectra if s.fname.startswith(fname_prefix)]
-        
+
         # Update all checkboxes in the list
         for i in range(self.v_maps_list.spectra_list.count()):
             item = self.v_maps_list.spectra_list.item(i)
             item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
-        
-        # Update all current map spectra is_active state
-        for spectrum in map_spectra:
-            spectrum.is_active = checked
-        
+
+        # Update SpectraStore is_active flags directly
+        md = self.vm.store.get_map_data(self.vm.current_map_name)
+        if md is not None:
+            md.is_active[:] = checked
+
         self.v_maps_list.spectra_list.blockSignals(False)
-        
+
         # Invalidate cache and trigger map data update
         self.vm._fit_results_cache_dirty = True
         updated_df = self.vm.get_current_map_dataframe()
@@ -235,6 +236,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_map_viewer.multi_viewer_requested.connect(self._on_add_viewer_requested)
         self.v_map_viewer.cbb_map_type.currentTextChanged.connect(self._on_map_type_changed)
         self.v_map_viewer.extract_profile_requested.connect(self._on_extract_profile_requested)
+
+        # ── VSpectraViewer → ViewModel connections ──
+        # (Connected in parent class VWorkspaceSpectra to self.vm methods)
         
         # ── ViewModel → VMapsList connections ──
         self.vm.maps_list_changed.connect(self.v_maps_list.set_maps_names)
@@ -259,9 +263,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Connect spectra selection to viewer (inherited from parent)
         self.vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
-        
-        # Connect send to spectra workspace signal to parent's spectra workspace
-        self.vm.send_spectra_to_workspace.connect(self._receive_spectra_from_maps)
     
     def _on_map_viewer_selection(self, selected_points: list):
         """Handle spectrum selection from map viewer."""
@@ -275,11 +276,11 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             for x, y in selected_points
         ]
         
-        # Get list of current map's spectra
+        # Get list of current map's fnames from SpectraStore
         fname_prefix = f"{self.vm.current_map_name}_("
-        current_map_fnames = [
-            s.fname for s in self.vm.spectra 
-            if s.fname.startswith(fname_prefix)
+        md = self.vm.store.get_map_data(self.vm.current_map_name)
+        current_map_fnames = list(md.fnames) if md else [
+            s.fname for s in self.vm.spectra if s.fname.startswith(fname_prefix)
         ]
         
         # Find list indices
@@ -388,11 +389,11 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             self.vm.set_selected_fnames([])
             return
         
-        # Get list of current map's spectra
+        # Get list of current map's fnames from SpectraStore
         fname_prefix = f"{self.vm.current_map_name}_("
-        current_map_fnames = [
-            s.fname for s in self.vm.spectra 
-            if s.fname.startswith(fname_prefix)
+        md = self.vm.store.get_map_data(self.vm.current_map_name)
+        current_map_fnames = list(md.fnames) if md else [
+            s.fname for s in self.vm.spectra if s.fname.startswith(fname_prefix)
         ]
         
         # Convert list indices to fnames
@@ -497,10 +498,10 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                     selected_points.append(coords)
         else:
             # Fallback: build coords from fnames (slower path)
+            md_fb = self.vm.store.get_map_data(self.vm.current_map_name)
             fname_prefix = f"{self.vm.current_map_name}_("
-            current_map_fnames = [
-                s.fname for s in self.vm.spectra 
-                if s.fname.startswith(fname_prefix)
+            current_map_fnames = list(md_fb.fnames) if md_fb else [
+                s.fname for s in self.vm.spectra if s.fname.startswith(fname_prefix)
             ]
             for idx in selected_indices:
                 if 0 <= idx < len(current_map_fnames):
@@ -604,21 +605,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     def _on_send_to_spectra(self):
         """Send selected spectra to the Spectra workspace."""
         self.vm.send_selected_spectra_to_spectra_workspace()
-    
-    def _receive_spectra_from_maps(self, spectra_list: list):
-        """Receive spectra from Maps workspace and add to parent's Spectra workspace."""
-        # Access the parent window's Spectra workspace
-        parent_window = self.window()
-        if not hasattr(parent_window, 'v_spectra_workspace'):
-            return
-        
-        # Add spectra to the Spectra workspace
-        spectra_workspace = parent_window.v_spectra_workspace
-        for spectrum in spectra_list:
-            spectra_workspace.vm.spectra.add(spectrum)
-        
-        # Update the Spectra workspace view
-        spectra_workspace.vm._emit_list_update()
     
     def _on_extract_profile_requested(self, profile_name: str):
         """Handle profile extraction request from map viewer."""

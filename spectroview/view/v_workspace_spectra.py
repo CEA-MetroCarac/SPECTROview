@@ -175,10 +175,12 @@ class VWorkspaceSpectra(QWidget):
         if item is None:
             return
         
-        idx = self.v_spectra_list.row(item)
-        if 0 <= idx < len(self.vm.spectra):
+        fname = item.data(Qt.UserRole + 1)
+        if fname:
             is_checked = item.checkState() == Qt.Checked
-            self.vm.spectra[idx].is_active = is_checked
+            md = self.vm.store.get_map_data(fname)
+            if md:
+                md.is_active[0] = is_checked
     
     def _on_check_all_toggled(self, checked: bool):
         """Handle check all checkbox toggle."""
@@ -189,11 +191,15 @@ class VWorkspaceSpectra(QWidget):
         for i in range(self.v_spectra_list.count()):
             item = self.v_spectra_list.item(i)
             item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
-        
-        # Update all spectra is_active state
-        for spectrum in self.vm.spectra:
-            spectrum.is_active = checked
-        
+            
+            # Update store
+            fname = item.data(Qt.UserRole + 1)
+            if fname:
+                md = self.vm.store.get_map_data(fname)
+                if md:
+                    md.is_active[0] = checked
+                    
+        # Restore signals
         self.v_spectra_list.blockSignals(False)
 
     def setup_connections(self):
@@ -252,6 +258,7 @@ class VWorkspaceSpectra(QWidget):
         vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
         vm.spectra_selection_changed.connect(self._update_metadata_display)
         vm.spectra_selection_changed.connect(self.v_fit_model_builder.update_baseline_ui)
+        vm.spectra_selection_changed.connect(self._update_peak_table)
         vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra"))
         vm.notify.connect(self._show_toast_notification)
 
@@ -309,13 +316,7 @@ class VWorkspaceSpectra(QWidget):
         pt.peak_deleted.connect(vm.delete_peak)
 
         # Selection → PeakTable
-        vm.spectra_selection_changed.connect(
-            lambda specs:
-            pt.set_spectrum(
-                (specs.get("proxies", [])[0] if isinstance(specs, dict) and specs.get("proxies") else None)
-                if isinstance(specs, dict) else (specs[0] if specs else None)
-            )
-        )
+        vm.spectra_selection_changed.connect(self._update_peak_table)
         
         # ═════════════════════════════════════════════════════════════════
         # Fit Results connections
@@ -378,4 +379,19 @@ class VWorkspaceSpectra(QWidget):
             message=message,
             duration=3000
         )
+
+    def _update_peak_table(self, spectra):
+        """Update the peak table with the first selected spectrum."""
+        if not spectra:
+            self.v_fit_model_builder.peak_table.clear()
+            return
+        
+        if isinstance(spectra, dict):
+            # Tensor dictionary payload
+            self.v_fit_model_builder.peak_table.set_spectrum(spectra)
+        elif isinstance(spectra, list) and len(spectra) > 0:
+            # Legacy list of objects
+            self.v_fit_model_builder.peak_table.set_spectrum(spectra[0])
+        else:
+            self.v_fit_model_builder.peak_table.clear()
 

@@ -13,7 +13,7 @@ from scipy.spatial import KDTree
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
-from spectroview.viewmodel.utils import zone, quadrant, closest_index
+from spectroview.viewmodel.utils import zone, quadrant, closest_index, LazyMapDict
 
 from spectroview.model.m_settings import MSettings
 
@@ -39,8 +39,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     
     def __init__(self, settings: MSettings):
         super().__init__(settings)
-        # Maps storage: {map_name: DataFrame}
-        self.maps: dict[str, pd.DataFrame] = {}
+        self.maps = LazyMapDict(self.store)
         self.current_map_name: str | None = None
         self.current_map_df = None
         
@@ -1013,14 +1012,14 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
 
     def _load_legacy_maps(self, file_path: str):
-        """Load legacy JSON-based .maps or .map workspace."""
+        """Load legacy JSON-based .maps workspace (OLD version)."""
         import gzip, io, re
         
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         self.store = SpectraStore()
-        self.maps = {}
+        self.maps = LazyMapDict(self.store)
         
         spectrums_data = data.get("spectrums_data", {})
         
@@ -1160,10 +1159,12 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
                 self._restore_preprocessed_state(md)
 
-            # Rebuild legacy maps entry for visual heatmap representation
-            col_names = ['X', 'Y'] + [str(float(w)) for w in x0]
-            data_combined = np.hstack([coords, Y0.astype(np.float64)])
-            self.maps[map_name] = pd.DataFrame(data_combined, columns=col_names)
+            # Rebuild legacy maps entry for visual heatmap representation (highly optimized)
+            col_names = list(map(str, x0))
+            df = pd.DataFrame(Y0, columns=col_names)
+            df.insert(0, 'Y', coords[:, 1])
+            df.insert(0, 'X', coords[:, 0])
+            self.maps[map_name] = df
 
         # Restore df_fit_results
         legacy_results = data.get("df_fit_results")

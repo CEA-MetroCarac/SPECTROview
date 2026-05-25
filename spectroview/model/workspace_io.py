@@ -1,8 +1,6 @@
 # spectroview/model/workspace_io.py
-import io
 import json
 import zipfile
-import pickle
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -12,13 +10,13 @@ class WorkspaceIO:
     
     @staticmethod
     def save_workspace(file_path: str, metadata: dict, arrays: dict = None, dataframes: dict = None):
-        """Save workspace to a compressed ZIP archive.
+        """Save workspace to a compressed ZIP archive in direct-streaming format (v2).
         
         Args:
             file_path: Absolute destination file path.
             metadata: Lightweight settings/GUI/peak dictionary.
-            arrays: Dict of numpy arrays to store in arrays.npz.
-            dataframes: Dict of pandas DataFrames to store in dataframes.pkl.
+            arrays: Dict of numpy arrays to store.
+            dataframes: Dict of pandas DataFrames to store.
         """
         # Ensure parent directory exists
         Path(file_path).parent.mkdir(parents=True, exist_ok=True)
@@ -28,22 +26,22 @@ class WorkspaceIO:
             # 1. Serialize lightweight metadata to JSON
             zf.writestr('metadata.json', json.dumps(metadata, indent=2))
             
-            # 2. Serialize numpy arrays using fast uncompressed np.savez 
-            # (let ZIP handle compression for maximum I/O performance)
+            # 2. Serialize numpy arrays by streaming them directly to zip as individual .npy files
+            # (let ZIP handle compression for maximum I/O performance and minimal RAM footprint)
             if arrays:
-                array_buf = io.BytesIO()
-                np.savez(array_buf, **arrays)
-                zf.writestr('arrays.npz', array_buf.getvalue())
+                for name, arr in arrays.items():
+                    with zf.open(f'arrays/{name}.npy', 'w', force_zip64=True) as f:
+                        np.save(f, arr, allow_pickle=False)
                 
-            # 3. Serialize DataFrames using highly optimized python pickle protocol
+            # 3. Serialize DataFrames using highly optimized Parquet format streamed directly to zip
             if dataframes:
-                df_buf = io.BytesIO()
-                pickle.dump(dataframes, df_buf, protocol=pickle.HIGHEST_PROTOCOL)
-                zf.writestr('dataframes.pkl', df_buf.getvalue())
+                for name, df in dataframes.items():
+                    with zf.open(f'dataframes/{name}.parquet', 'w', force_zip64=True) as f:
+                        df.to_parquet(f, index=False)
 
     @staticmethod
     def load_workspace(file_path: str) -> tuple:
-        """Load workspace from a compressed ZIP archive.
+        """Load workspace from a compressed ZIP archive (v2) or fallback to legacy raw JSON (v1).
         
         Sniffs magic bytes to determine if the file is a ZIP archive or a legacy raw JSON.
         
@@ -63,7 +61,7 @@ class WorkspaceIO:
             
         # Standard ZIP magic number is 0x04034b50 ("PK\x03\x04")
         if magic != b'PK\x03\x04':
-            # Signal loader to fall back to legacy JSON parser
+            # Signal loader to fall back to legacy JSON parser (v1)
             return None, None, None, True
             
         metadata = {}
@@ -77,16 +75,18 @@ class WorkspaceIO:
             if 'metadata.json' in names:
                 metadata = json.loads(zf.read('metadata.json').decode('utf-8'))
                 
-            # 2. Load arrays NPZ
-            if 'arrays.npz' in names:
-                array_data = io.BytesIO(zf.read('arrays.npz'))
-                # Must load with allow_pickle=False for security and speed
-                with np.load(array_data, allow_pickle=False) as npz:
-                    arrays = {k: npz[k] for k in npz.files}
+            # 2. Load arrays: support flat .npy stream
+            for name in names:
+                if name.startswith('arrays/') and name.endswith('.npy'):
+                    arr_name = name[len('arrays/'):-len('.npy')]
+                    with zf.open(name, 'r') as f:
+                        arrays[arr_name] = np.load(f, allow_pickle=False)
                     
-            # 3. Load DataFrames pickle
-            if 'dataframes.pkl' in names:
-                df_data = io.BytesIO(zf.read('dataframes.pkl'))
-                dataframes = pickle.load(df_data)
+            # 3. Load DataFrames: support Parquet streams
+            for name in names:
+                if name.startswith('dataframes/') and name.endswith('.parquet'):
+                    df_name = name[len('dataframes/'):-len('.parquet')]
+                    with zf.open(name, 'r') as f:
+                        dataframes[df_name] = pd.read_parquet(f)
                 
         return metadata, arrays, dataframes, False

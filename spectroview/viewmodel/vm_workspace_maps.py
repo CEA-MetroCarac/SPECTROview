@@ -364,74 +364,41 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.reinit_spectra(apply_all)
         
     def reinit_spectra(self, apply_all: bool = False):
-        """Override parent to selectively or globally reinitialize spectra."""
+        """Override parent to selectively or globally reinitialize spectra.
+        - Single click (apply_all=False): Reinit all spectra within the currently selected map.
+        - Ctrl + click (apply_all=True): Reinit all spectra across all loaded maps.
+        """
+        maps_to_reset = self.store.map_names if apply_all else ([self.current_map_name] if self.current_map_name else [])
+        
+        for name in maps_to_reset:
+            md = self.store.get_map_data(name)
+            if md:
+                if md.x0 is not None:
+                    md.x = md.x0.copy()
+                if md.Y0 is not None:
+                    md.Y = md.Y0.copy()
+                md.baseline_config = None
+                md.Y_baseline = None
+                md.peak_params = None
+                md.fit_model = None
+                md.Y_peaks = None
+                md.Y_bestfit = None
+                md.is_baseline_subtracted = False
+                md.range_min = None
+                md.range_max = None
+                md.fit_success = None
+                md.fit_r2 = None
+                self.store.clear_preprocess(name)
+                # Clear cache for the map in the viewer
+                self.clear_map_cache_requested.emit(name)
+        
         if apply_all:
-            for name in self.store.map_names:
-                md = self.store.get_map_data(name)
-                if md:
-                    if md.x0 is not None:
-                        md.x = md.x0.copy()
-                    if md.Y0 is not None:
-                        md.Y = md.Y0.copy()
-                    md.baseline_config = None
-                    md.Y_baseline = None
-                    md.peak_params = None
-                    md.fit_model = None
-                    md.Y_peaks = None
-                    md.Y_bestfit = None
-                    md.is_baseline_subtracted = False
-                    md.range_min = None
-                    md.range_max = None
-                    md.fit_success = None
-                    md.fit_r2 = None
-                    self.store.clear_preprocess(name)
+            # Clear all fit results globally
+            self.df_fit_results = None
+            self.fit_results_updated.emit(None)
         else:
-            if not self.selected_fnames:
-                self.notify.emit("No spectrum selected.")
-                return
-            md = self.store.get_map_data(self.current_map_name)
-            if not md:
-                return
-            
-            fnames = self._get_selected_spectra()
-            indices = [md.fnames.index(f) for f in fnames if f in md.fnames]
-            if not indices:
-                return
-
-            N = md.Y0.shape[0] if md.Y0 is not None else 1
-            if md.x is None and md.x0 is not None:
-                md.x = md.x0.copy()
-            if md.Y is None and md.Y0 is not None:
-                md.Y = md.Y0.copy()
-
-            # Revert Y for selected indices to cropped/raw Y0
-            if md.Y0 is not None and md.Y is not None:
-                if md.x is not None and md.x0 is not None and len(md.x) < len(md.x0):
-                    xmin, xmax = md.x[0], md.x[-1]
-                    i_min = closest_index(md.x0, xmin)
-                    i_max = closest_index(md.x0, xmax)
-                    if i_min > i_max: i_min, i_max = i_max, i_min
-                    md.Y[indices] = md.Y0[indices, i_min:i_max+1].copy()
-                else:
-                    md.Y[indices] = md.Y0[indices].copy()
-
-            if not isinstance(md.is_baseline_subtracted, np.ndarray):
-                md.is_baseline_subtracted = np.full(N, bool(md.is_baseline_subtracted), dtype=bool)
-            md.is_baseline_subtracted[indices] = False
-
-            if md.Y_baseline is not None:
-                md.Y_baseline[indices] = 0.0
-            if md.Y_bestfit is not None:
-                md.Y_bestfit[indices] = 0.0
-            if md.peak_params is not None:
-                md.peak_params[indices] = 0.0
-            if md.fit_success is not None:
-                md.fit_success[indices] = False
-            if md.fit_r2 is not None:
-                md.fit_r2[indices] = 0.0
-            if md.Y_peaks is not None:
-                for peak_curve in md.Y_peaks:
-                    peak_curve[indices] = 0.0
+            # Rebuild the fit results DataFrame and refresh views/caches for the current map
+            self.collect_fit_results()
 
         if self.current_map_name:
             self._show_map_spectra(self.current_map_name)

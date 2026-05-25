@@ -1645,9 +1645,11 @@
 
 <ul>
 <li><strong>Manual Mode (Linear or Polynomial)</strong>: Define baseline anchor points by clicking directly in the SpectraViewer. Check <em>Attached</em> to automatically snap your clicked points to the nearest data curve. Check <em>Correct noise</em> to calculate the point's intensity as a local average of neighboring data, making the anchor placement robust against high noise.</li>
-<li><strong>Auto Mode (airPLS or asLS)</strong>: Let advanced algorithms automatically generate the baseline curve. Use the slider to fine-tune the algorithm's aggressiveness.</li>
+<li><strong>Auto Mode</strong>: Let advanced algorithms automatically generate the baseline curve. Use the slider to fine-tune the algorithm's aggressiveness.</li>
+<li><strong>arPLS</strong>: Asymmetrically Reweighted PLS. A gold standard algorithm for typical Raman and IR baselines.</li>
 <li><strong>airPLS</strong>: A highly aggressive algorithm, excellent for removing strong, complex fluorescence backgrounds. Highly recommended and validated for Raman data.</li>
-<li><strong>asLS</strong>: A very stable algorithm, though it can sometimes struggle to distinguish between noise and broad peaks. Best suited for relatively clean spectra.</li>
+<li><strong>AsLS</strong>: A very stable algorithm, though it can sometimes struggle to distinguish between noise and broad peaks. Best suited for relatively clean spectra.</li>
+<li><strong>ModPoly</strong>: Modified Polynomial. Extremely popular and effective for simple polynomial fluorescence backgrounds.</li>
 </ul>
 <p><strong>Step 4: Peak Definition</strong>:</p>
 <ul>

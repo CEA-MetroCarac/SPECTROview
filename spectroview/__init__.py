@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-VERSION = "26.23.2"
+VERSION = "26.23.3"
 
 TEXT_EXPIRE = (
     "The current SPECTROview version has expired. Checkout the SPECTROview's "

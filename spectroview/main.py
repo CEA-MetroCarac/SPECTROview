@@ -338,7 +338,12 @@ class Main(QMainWindow):
         """   Open settings dialog. """
         vm = VMSettings()
         dlg = VSettingsDialog(vm, self)
-        dlg.exec()
+        if dlg.exec():
+            # Refresh viewers to reflect settings changes (e.g. coef_noise)
+            if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
+                self.v_spectra_workspace.v_spectra_viewer._plot()
+            if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
+                self.v_maps_workspace.v_spectra_viewer._plot()
 
     def file_converter(self):
         """Open file converter dialog for hyperspectral data."""

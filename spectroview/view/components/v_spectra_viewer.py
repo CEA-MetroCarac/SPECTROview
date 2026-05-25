@@ -1158,8 +1158,12 @@ class VSpectraViewer(QWidget):
             if y_vals is not None and len(y_vals) > 0:
                 y0 = y_vals[0] if not isinstance(y_vals, list) else y_vals[0]
                 try:
+                    coef_noise = QSettings("CEA-Leti", "SPECTROview").value(
+                        "fit_settings/coef_noise", 1.0, float
+                    )
                     noise = detect_noise_level(y0)
-                    self.lbl_noise.setText(f"Noise={noise:.2f}")
+                    noise_val = coef_noise * noise
+                    self.lbl_noise.setText(f"Noise={noise_val:.1f}")
                 except Exception:
                     self.lbl_noise.setText("Noise=0")
             return

@@ -137,6 +137,63 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
 
 def eval_baseline_batch(x: np.ndarray, Y: np.ndarray, config: dict) -> np.ndarray:
     """Evaluate baseline for a batch of spectra (N, M)."""
+    mode = config.get("mode")
+    if not mode:
+        return np.zeros_like(Y)
+
+    attached = config.get("attached", False)
+    points = config.get("points", [[], []])
+
+    # Fully vectorize Linear and Polynomial modes across the entire map
+    if mode in ["Linear", "Polynomial"]:
+        bl_points_x = np.array(points[0])
+        if len(bl_points_x) == 0:
+            return np.zeros_like(Y)
+
+        bl_point_indices = np.array([np.argmin(np.abs(x - xp)) for xp in bl_points_x])
+
+        if attached:
+            sigma = config.get("sigma", 4)
+            if sigma > 0:
+                # gaussian_filter1d vectorizes natively along axis=-1 (M dimension)
+                y_smooth = gaussian_filter1d(Y, sigma=sigma, axis=-1)
+                y_at_points = y_smooth[:, bl_point_indices]
+            else:
+                y_at_points = Y[:, bl_point_indices]
+        else:
+            y_at_points = np.array(points[1])
+            # Broadcast to match batch shape (N, K)
+            y_at_points = np.tile(y_at_points, (Y.shape[0], 1))
+
+        if mode == "Linear":
+            if len(bl_point_indices) == 1:
+                return np.tile(y_at_points[:, 0:1], (1, len(x)))
+            else:
+                pts_x = x[bl_point_indices]
+                if set(pts_x.tolist()).issubset(set(x.tolist())) and len(pts_x) == len(x):
+                    return y_at_points
+                else:
+                    # interp1d vectorizes naturally if provided a 2D array, interpolating along axis=-1
+                    func_interp = interp1d(pts_x, y_at_points, axis=-1, fill_value="extrapolate")
+                    return func_interp(x).astype(np.float32)
+
+        elif mode == "Polynomial":
+            pts_x = x[bl_point_indices]
+            order_max = config.get("order_max", 3)
+            order = min(order_max, len(pts_x) - 1)
+            if order < 0:
+                return np.zeros_like(Y)
+            
+            # np.polyfit can fit N polynomials simultaneously if y is shape (K, N)
+            coefs = np.polyfit(pts_x, y_at_points.T, order) # shape: (order + 1, N)
+            
+            # Evaluate optimally via Vandermonde matrix dot product
+            V = np.vander(x, order + 1) # shape: (M, order + 1)
+            Y_baseline = (V @ coefs).T # output shape: (N, M)
+            return Y_baseline.astype(np.float32)
+
+    # For iterative solvers like pybaselines (arpls, airpls) which strictly require 1D arrays,
+    # we must fall back to evaluating them sequentially per spectrum.
     N = Y.shape[0]
     Y_baseline = np.empty_like(Y)
     for i in range(N):

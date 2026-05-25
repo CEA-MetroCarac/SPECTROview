@@ -1,8 +1,7 @@
 """SpectraStore — tensor-centric data backbone for SPECTROview.
 
 Owns all heavy numerical data for a collection of spectra (typically one or
-more hyperspectral maps) as contiguous NumPy arrays per map. Replaces the
-per-spectrum Python-object iteration pattern inherited from Fitspy.
+more hyperspectral maps) as contiguous NumPy arrays per map.
 
 Architecture
 ------------
@@ -36,6 +35,77 @@ import pandas as pd
 from dataclasses import dataclass, field
 from typing import Optional
 
+from scipy.interpolate import interp1d
+from spectroview.fit_engine.baseline import eval_baseline, eval_baseline_batch
+
+
+class BaselineProxy:
+    """A lightweight read-only proxy exposing the baseline status and configuration of a single spectrum.
+    
+    This proxy facilitates decoupling between the visual/rendering layers (such as VSpectraViewer)
+    and the core tensor structures in SpectraStore.
+    """
+    def __init__(self, config, is_subtracted):
+        self.mode = config.get("mode", "") if config else ""
+        self.coef = config.get("coef", 5) if config else 5
+        self.points = config.get("points", [[], []]) if config else [[], []]
+        self.is_subtracted = is_subtracted
+
+class SpectrumProxy:
+    """A read-write proxy that presents a single spectrum view out of a MapData tensor block.
+    
+    Acts as a bridge to retrieve or update metadata, labels, colors, and x-correction values
+    for individual spatial coordinates or list items without duplicating raw tensor data.
+    """
+    def __init__(self, md, idx=0, fname=""):
+        self.md = md
+        self.idx = idx
+        self.fname = fname
+        self.metadata = md.map_metadata or {}
+        self.xcorrection_value = getattr(md, "xcorrection_value", 0.0)
+        self.source_path = md.map_metadata.get("filepath", md.map_metadata.get("source_path", fname))
+        self.intensity_norm_factor = getattr(md, "intensity_norm_factor", 1.0)
+        is_sub = getattr(md, "is_baseline_subtracted", False)
+        if isinstance(is_sub, np.ndarray):
+            is_sub_val = bool(is_sub[idx])
+        else:
+            is_sub_val = bool(is_sub)
+        self.baseline = BaselineProxy(md.baseline_config, is_sub_val)
+
+    @property
+    def label(self):
+        idx = self.idx
+        if self.md.labels and idx < len(self.md.labels):
+            return self.md.labels[idx]
+        return self.fname
+
+    @label.setter
+    def label(self, val):
+        idx = self.idx
+        # Ensure labels list is long enough
+        if self.md.labels is None:
+            self.md.labels = []
+        while len(self.md.labels) <= idx:
+            self.md.labels.append(None)
+        self.md.labels[idx] = val
+
+    @property
+    def color(self):
+        idx = self.idx
+        if self.md.colors and idx < len(self.md.colors):
+            return self.md.colors[idx]
+        return ""
+
+    @color.setter
+    def color(self, val):
+        idx = self.idx
+        # Ensure colors list is long enough
+        if self.md.colors is None:
+            self.md.colors = []
+        while len(self.md.colors) <= idx:
+            self.md.colors.append(None)
+        self.md.colors[idx] = val
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # MapData — tensor block for a single hyperspectral map
@@ -43,6 +113,12 @@ from typing import Optional
 
 @dataclass
 class MapData:
+    """A data container that encapsulates all numerical arrays, configurations, and state
+    for a single hyperspectral map or single-spectrum session.
+    
+    This includes raw spectral data, processed intensity grids, coordinate geometry,
+    fitted peak profiles, R² scores, and custom formatting overlays (e.g., color, active status).
+    """
     """All numerical data for a single hyperspectral map."""
     name: str
 
@@ -84,6 +160,7 @@ class MapData:
     Y_bestfit: Optional[np.ndarray] = None    # float32[N, M_proc]  composite model
     Y_baseline: Optional[np.ndarray] = None   # float32[N, M_proc]  baseline curves
     Y_peaks: Optional[list] = None            # list of float32[N, M_proc] per-peak curves
+
     @property
     def n_spectra(self) -> int:
         return len(self.fnames)
@@ -102,6 +179,11 @@ class MapData:
 
 @dataclass
 class MapInfo:
+    """A lightweight descriptor summarizing basic dimensional metadata for a MapData block.
+    
+    Maintains compatibility with legacy workspace APIs that require map boundaries,
+    spectra counts, and wavenumber resolutions.
+    """
     """Lightweight descriptor returned by get_map_info()."""
     name: str
     row_start: int   # always 0 for per-map storage (kept for API compat)
@@ -122,13 +204,7 @@ class SpectraStore:
     - Multiple maps with different x-axis lengths (heterogeneous datasets).
     - O(1) per-map access (no global index arithmetic needed).
     - Efficient save/load via per-map NPZ blocks.
-
-    Phase-1 usage: SpectraStore coexists with self.spectra (the legacy
-    MSpectrum list) in VMWorkspaceMaps. Phase-4 will remove self.spectra.
     """
-
-    # ── Construction ──────────────────────────────────────────────────────
-
     def __init__(self):
         self.clear()
 
@@ -342,11 +418,7 @@ class SpectraStore:
             if not bl_attached:
                 # Static mode: compute on first spectrum, subtract from all
                 try:
-                    from fitspy.core.baseline import BaseLine
-                    bl = BaseLine()
-                    for k, v in baseline_config.items():
-                        setattr(bl, k, v)
-                    y_static = bl.eval(x_proc, Y_proc[0], attached=False)
+                    y_static = eval_baseline(x_proc, Y_proc[0], baseline_config)
                     Y_proc -= y_static
                 except Exception:
                     pass
@@ -365,7 +437,6 @@ class SpectraStore:
                         # Multi-point linear interpolation for each row (vectorized)
                         # We use scipy interp1d over the axis
                         try:
-                            from scipy.interpolate import interp1d
                             y_pts = Y_proc[:, pt_indices]
                             # interpolate for each row. 
                             func = interp1d(x_proc[pt_indices], y_pts, axis=1, fill_value="extrapolate")
@@ -374,11 +445,12 @@ class SpectraStore:
                         except Exception:
                             pass
             else:
-                # For more complex baseline algorithms (like polynomial or arPLS), 
-                # we could apply them per-row, but for performance we leave it as is or fallback.
-                # In Phase 5, the TensorFitThread will handle complex modes via its own loop, 
-                # but for instant GUI preview, linear/static are fast enough.
-                pass
+                # Fallback to eval_baseline_batch which handles all modes (Polynomial, etc.) beautifully!
+                try:
+                    y_baseline = eval_baseline_batch(x_proc, Y_proc, baseline_config)
+                    Y_proc -= y_baseline
+                except Exception:
+                    pass
                 
         md.x = x_proc
         md.Y = Y_proc
@@ -647,6 +719,7 @@ class SpectraStore:
             'baseline_config': md.baseline_config,
             'range_min': md.range_min,
             'range_max': md.range_max,
+            'is_baseline_subtracted': md.is_baseline_subtracted.tolist() if isinstance(md.is_baseline_subtracted, np.ndarray) else md.is_baseline_subtracted,
             'xcorrection_value': md.xcorrection_value,
             'intensity_norm_factor': md.intensity_norm_factor,
             'map_metadata': md.map_metadata,
@@ -712,6 +785,11 @@ class SpectraStore:
             md.baseline_config = meta.get('baseline_config')
             md.range_min = meta.get('range_min')
             md.range_max = meta.get('range_max')
+            is_sub_val = meta.get('is_baseline_subtracted', False)
+            if isinstance(is_sub_val, list):
+                md.is_baseline_subtracted = np.array(is_sub_val, dtype=bool)
+            else:
+                md.is_baseline_subtracted = is_sub_val
             md.xcorrection_value = meta.get('xcorrection_value', 0.0)
             md.intensity_norm_factor = meta.get('intensity_norm_factor', 1.0)
             md.map_metadata = meta.get('map_metadata', {})

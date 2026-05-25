@@ -59,6 +59,7 @@ class VSpectraViewer(QWidget):
     peak_drag_started = Signal(object)   # optional (advanced)
     peak_dragged = Signal(float, float)
     peak_drag_finished = Signal()
+    spectrumCustomized = Signal()
 
 
     def __init__(self, parent=None):
@@ -570,10 +571,13 @@ class VSpectraViewer(QWidget):
             
             t_labels = self._tensor_data.get("labels", [])
             t_fnames = self._tensor_data.get("fnames", [])
+            proxies = self._tensor_data.get("proxies", [])
             for spec_idx in range(min(N, MAX_HEAVY_OVERLAYS)):
                 spec_color = main_colors[spec_idx]
                 label_str = t_labels[spec_idx] if spec_idx < len(t_labels) and t_labels[spec_idx] else (t_fnames[spec_idx] if spec_idx < len(t_fnames) else f"Spectrum {spec_idx+1}")
                 proxy_line = mlines.Line2D([], [], color=spec_color, label=label_str, lw=lw)
+                if spec_idx < len(proxies):
+                    proxy_line._spectrum_ref = proxies[spec_idx]
                 self.ax.add_line(proxy_line)
 
         # ── Legacy Object Rendering (if not tensor mode) ──
@@ -632,7 +636,13 @@ class VSpectraViewer(QWidget):
                     y_base = y_baseline_list[spec_idx] if y_baseline_list is not None and len(y_baseline_list) > spec_idx else None
 
                 if y_base is not None:
-                    self.ax.plot(x + x_offset, y_base + y_offset, 'g--', lw=1.5, label="baseline")
+                    is_sub = False
+                    if spec_idx < len(proxies):
+                        is_sub = getattr(proxies[spec_idx].baseline, "is_subtracted", False)
+                        if isinstance(is_sub, np.ndarray):
+                            is_sub = bool(is_sub.any())
+                    if not is_sub:
+                        self.ax.plot(x + x_offset, y_base + y_offset, 'g--', lw=1.5, label="baseline")
                     
                 # Plot baseline anchor points
                 bl_configs = self._tensor_data.get("baseline_config", [])
@@ -685,9 +695,11 @@ class VSpectraViewer(QWidget):
                             def __init__(self, name):
                                 self.name2 = name
 
+                        y_fit_fine = np.zeros_like(x_fine)
                         for i, k in enumerate(sorted_keys):
                             p_model = fit_model["peak_models"][k]
                             y_peak_fine = eval_peak_initial(x_fine, p_model)
+                            y_fit_fine += y_peak_fine
                             
                             peak_line, = self.ax.plot(x_fine + x_offset, y_peak_fine + y_offset, lw=(lw*0.6), **color_kwargs)
                             
@@ -718,6 +730,15 @@ class VSpectraViewer(QWidget):
                                 px, py = x_fine[idx], y_peak_fine[idx]
                                 txt_color = fg_color if not self.act_bestfit_colorful.isChecked() else peak_line.get_color()
                                 self.ax.text(px + x_offset, py + y_offset, peak_label, color=txt_color, fontsize=9, ha="center", va="bottom" if py >= 0 else "top")
+                        
+                        # Add interpolated baseline for perfectly smooth composite curve
+                        if y_base is not None:
+                            y_base_fine = np.interp(x_fine, x, y_base)
+                            y_fit_fine += y_base_fine
+                        
+                        # Plot smooth composite bestfit
+                        self.ax.plot(x_fine + x_offset, y_fit_fine + y_offset, lw=(lw*0.6), color=fg_color)
+
                     elif y_peaks is not None:
                         # Fallback to discrete plotting if fit_model is missing
                         for i, y_peak in enumerate(y_peaks):
@@ -758,7 +779,8 @@ class VSpectraViewer(QWidget):
                         y_bestfit = y_bestfit_list[spec_idx] if y_bestfit_list is not None and len(y_bestfit_list) > spec_idx else None
 
                     if y_bestfit is not None:
-                        self.ax.plot(x + x_offset, y_bestfit + y_offset, lw=(lw*0.6), color=fg_color)
+                        if not (fit_model and fit_model.get("peak_models")):
+                            self.ax.plot(x + x_offset, y_bestfit + y_offset, lw=(lw*0.6), color=fg_color)
                         
                 # Residual
                 if self.act_residual.isChecked():
@@ -1192,10 +1214,14 @@ class VSpectraViewer(QWidget):
                 return
 
         # Hit-test legend handles
-        for handle in legend.legend_handles:
+        for handle_idx, handle in enumerate(legend.legend_handles):
             contains, _ = handle.contains(event)
             if contains:
-                self._edit_legend_color(handle)
+                if handle_idx < len(legend.get_texts()):
+                    text_artist = legend.get_texts()[handle_idx]
+                    self._edit_legend_color_with_label(handle, text_artist.get_text())
+                else:
+                    self._edit_legend_color(handle)
                 return
 
     def _edit_legend_label(self, artist):
@@ -1222,6 +1248,7 @@ class VSpectraViewer(QWidget):
                     line._spectrum_ref.label = new_label
                 break
 
+        self.spectrumCustomized.emit()
         self.canvas.draw_idle()
 
     def _edit_legend_color(self, artist):
@@ -1242,6 +1269,28 @@ class VSpectraViewer(QWidget):
                     line._spectrum_ref.color = hex_color
                 break
 
+        self.spectrumCustomized.emit()
+        self.canvas.draw_idle()
+
+    def _edit_legend_color_with_label(self, artist, label):
+        """Open color picker to change the spectrum color using text label as key."""
+        color = QColorDialog.getColor()
+
+        if not color.isValid():
+            return
+
+        hex_color = color.name()
+        artist.set_color(hex_color)
+
+        for line in self.ax.get_lines():
+            if line.get_label() == label:
+                line.set_color(hex_color)
+
+                if hasattr(line, "_spectrum_ref"):
+                    line._spectrum_ref.color = hex_color
+                break
+
+        self.spectrumCustomized.emit()
         self.canvas.draw_idle()
 
 

@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
 
-from fitspy.core.baseline_methods import (
+from spectroview.fit_engine.baseline import (
     _INTERNAL_METHODS, _PYBASELINES_WHITELIST, get_baseline_method_meta
 )
 
@@ -404,7 +404,7 @@ class VFitModelBuilder(QWidget):
         cbb.setCurrentIndex(0)
 
     def _current_mode_key(self):
-        """Return the fitspy mode key for the current combobox selection."""
+        """Return the baseline mode key for the current combobox selection."""
         idx = self.cbb_baseline_mode.currentIndex()
         keys = VFitModelBuilder._BASELINE_MODE_KEYS
         if 0 <= idx < len(keys):

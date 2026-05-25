@@ -29,7 +29,7 @@ graph LR
 |-------|--------|---------| 
 | View | `v_` | `v_workspace_spectra.py` |
 | ViewModel | `vm_` | `vm_workspace_spectra.py` |
-| Model | `m_` | `m_spectrum.py` |
+| Model | `m_` | `spectra_store.py` |
 
 ### Import Rules
 
@@ -65,8 +65,7 @@ spectroview/
 ├── main.py                 # Entry point, QMainWindow, cross-workspace wiring
 │
 ├── model/                  # Data models (no Qt deps)
-│   ├── m_spectrum.py       # Single spectrum (extends fitspy.Spectrum)
-│   ├── m_spectra.py        # Spectrum collection with multiprocessing
+│   ├── spectra_store.py    # Tensor-centric SpectraStore & MapData structures
 │   ├── m_graph.py          # Plot configuration model
 │   ├── m_settings.py       # Persistent app settings (QSettings wrapper)
 │   ├── m_io.py             # File loaders (TXT, CSV, WDF, SPC, TRPL, DAT)
@@ -84,7 +83,7 @@ spectroview/
 │   ├── vm_fit_model_builder.py   # Fit model file management orchestration
 │   ├── vm_mva.py                 # MVA orchestration
 │   ├── vm_settings.py            # Settings persistence
-│   └── utils.py                  # FitThread, helpers, toast notifications
+│   └── utils.py                  # Helpers, toast notifications
 │
 ├── view/                   # Qt widgets and UI layout
 │   ├── v_workspace_spectra.py    # Spectra workspace View
@@ -200,7 +199,7 @@ sequenceDiagram
 ```mermaid
 classDiagram
     class VMWorkspaceSpectra {
-        +spectra
+        +store
         +fit()
         +save_work()
     }
@@ -247,26 +246,30 @@ Each workspace has its own save/load format:
 
 | Workspace | File Extension | Key Strategy |
 |-----------|---------------|-------------|
-| Spectra | `.spectra` | JSON with `zlib+base64` compressed arrays per spectrum |
-| Maps | `.maps` | JSON with `numpy+gzip` binary DataFrames (format v2). Legacy CSV+gzip (v1) auto-detected on load. |
+| Spectra | `.spectra` | ZIP archive with metadata JSON, NPZ arrays per spectrum (v4+). Backward-compatible loader parses legacy base64 JSON formats. |
+| Maps | `.maps` | ZIP archive with metadata JSON, NPZ arrays, and pickled DataFrames (v4+). Backward-compatible loader parses legacy hex/gzip-compressed JSON formats. |
 | Graphs | `.graphs` | JSON with `gzip+hex` compressed DataFrames and `MGraph.save()` serialized plots |
 
 ### Spectrum Serialization Flow
 
 ```python
-# Save: MSpectrum → dict
-spectrum_data = {
-    "fname": "sample_001",
-    "x0": compress(x0),       # zlib + base64 encoded float64
-    "y0": compress(y0),
-    "peak_models": [...],     # param_hints dicts
-    "baseline": {...},
-    "xcorrection_value": 0.5,
-    ...
+# Save (v4+): SpectraStore → ZIP archive (metadata.json + arrays.npz)
+metadata = {
+    "format_version": 5,
+    "spectrums_meta": {
+        "0": {
+            "fname": "sample_001",
+            "is_active": [True],
+            "baseline_config": {...},
+            "peak_params": [...],
+            ...
+        }
+    }
 }
-
-# Load: dict → MSpectrum
-spectrum = _create_spectrum_from_dict(data, x0_base, y0_base)
+arrays = {
+    "x0_0": x0_array, # float64 axis
+    "y0_0": y0_array  # float32 raw intensities
+}
 ```
 
 ---
@@ -279,8 +282,6 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 | Thread Class | Location | Purpose |
 |-------------|----------|---------|
 | `TensorFitThread` | `fit_engine/tensor_fit_thread.py` | Batched tensor fitting (primary engine) |
-| `FitThread` | `viewmodel/utils.py` | Legacy per-spectrum `lmfit` fitting (fallback) |
-| `ApplyFitModelThread` | `viewmodel/utils.py` | Apply saved model to spectra in background |
 
 **Thread lifecycle**:
 
@@ -361,7 +362,6 @@ mkdocs serve
 
 | Package | Constraint | Purpose |
 |---------|-----------|---------|
-| `fitspy` | `< 2026.4` | Core spectrum classes (Baseline, Spectrum) |
 | `PySide6` | — | Qt 6 bindings (**not** PyQt) |
 | `matplotlib` | `< 3.10.9` | Plotting backend for spectra and maps |
 | `numpy` | `< 2.0.0` | Numerical array operations |

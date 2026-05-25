@@ -8,7 +8,7 @@ from PySide6.QtGui import QIcon, QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication,
     QPushButton, QCheckBox, QProgressBar, QSplitter, QTabWidget,
-    QMessageBox, QFrame
+    QFrame
 )
 
 from spectroview import ICON_DIR
@@ -221,6 +221,8 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_viewer.baseline_add_requested.connect(vm.add_baseline_point)
         self.v_spectra_viewer.baseline_remove_requested.connect(vm.remove_baseline_point)
         self.v_spectra_viewer.copy_data_requested.connect(vm.copy_spectrum_data_to_clipboard)
+        self.v_spectra_viewer.spectrumCustomized.connect(vm._emit_selected_spectra)
+        self.v_spectra_viewer.spectrumCustomized.connect(vm._emit_list_update)
         
         # Peak dragging
         self.v_spectra_viewer.peak_dragged.connect(vm.update_dragged_peak)
@@ -300,7 +302,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.refresh_fit_models_requested.connect(self.vm_fit_model_builder.refresh_models)
         self.v_fit_model_builder.load_fit_models_requested.connect(self.vm_fit_model_builder.pick_and_load_model)
         self.v_fit_model_builder.cbb_model.currentTextChanged.connect(self.vm_fit_model_builder.set_current_model)
-        self.v_fit_model_builder.apply_loaded_fit_model_requested.connect(vm.apply_loaded_fit_model)
+        self.v_fit_model_builder.apply_loaded_fit_model_requested.connect(vm.apply_fit_model)
 
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.clear)
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.addItems)

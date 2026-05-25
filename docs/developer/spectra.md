@@ -17,7 +17,7 @@ graph TD
     VWS -->|"calls"| VMWS["VMWorkspaceSpectra"]
     VMWS -->|"signals"| VWS
 
-    VMWS --> MSS["MSpectra"]
+    VMWS --> MSS["SpectraStore"]
     VMWS --> IO["m_io"]
     VMWS --> TFT["TensorFitThread"]
 ```
@@ -28,64 +28,62 @@ graph TD
 
 ### `VMWorkspaceSpectra` — The ViewModel
 
-**File**: `spectroview/viewmodel/vm_workspace_spectra.py` (~1050 lines)
+**File**: `spectroview/viewmodel/vm_workspace_spectra.py`
 
-This is the largest and most critical ViewModel. It owns the `MSpectra` collection and orchestrates every operation on spectra. Key responsibilities:
+This is the largest and most critical ViewModel. It owns the `SpectraStore` instance and orchestrates every operation on spectra. Key responsibilities:
 
 | Responsibility | Methods |
 |---------------|---------|
-| **Loading** | `load_spectra(paths)`, `_load_single_file()` |
-| **Selection** | `select_spectra(fnames)`, `_get_selected_spectra()`, `_get_active_spectra()` |
-| **Preprocessing** | `crop_spectra(xmin, xmax)`, `apply_xcorrection()` |
+| **Loading** | `load_files(paths)` |
+| **Selection** | `set_selected_fnames(fnames)`, `_get_selected_spectra()`, `_get_active_spectra()` |
+| **Preprocessing** | `apply_spectral_range(xmin, xmax)`, `apply_x_correction()` |
 | **Baseline** | `set_baseline_settings()`, `subtract_baseline()`, `delete_baseline()` |
 | **Peaks** | `add_peak_at(x)`, `remove_peak_at(x)`, `copy/paste_peaks()` |
 | **Fitting** | `fit(apply_all)`, `_run_fit_thread()`, `_on_fit_finished()` |
-| **Results** | `collect_fit_results()`, `save_fit_results_to_excel()` |
-| **Persistence** | `save_work()`, `load_work()`, `_create_spectrum_from_dict()` |
-| **Model management** | `copy/paste_fit_model()`, `save_fit_model()`, `apply_loaded_fit_model()` |
+| **Results** | `collect_fit_results()`, `save_spectra_data()` |
+| **Persistence** | `save_work()`, `load_work()`, `_load_legacy_spectra()` |
+| **Model management** | `copy/paste_fit_model()`, `save_fit_model()`, `apply_fit_model()` |
 | **Workspace reset** | `reinit_spectra()`, `clear_workspace()` |
 
 #### Signals (ViewModel → View)
 
 ```python
 spectra_list_changed = Signal(list)         # Full list refresh
-spectra_selection_changed = Signal(list)     # Selected subset changed
+spectra_selection_changed = Signal(object)   # Selected subset changed (tensor_list payload)
 fit_progress_updated = Signal(int, int, int, float)  # (current, total, converged, R²)
 fit_results_updated = Signal(object)        # pd.DataFrame of fit results
 count_changed = Signal(int)                 # Total spectrum count
 notify = Signal(str)                        # Toast notification message
 ```
 
-### `MSpectrum` — The Data Object
+### `SpectraStore` & `MapData` — Unified Models
 
-**File**: `spectroview/model/m_spectrum.py` (~134 lines)
+**File**: `spectroview/model/spectra_store.py`
 
-Extends `fitspy.Spectrum` with SPECTROview-specific attributes:
+SPECTROview uses a unified, tensor-centric architecture where all numerical data is stored in contiguous NumPy arrays per map. 
+
+#### `MapData` Structure
+
+Each map or individual spectrum in the store is wrapped by a `MapData` dataclass:
 
 | Attribute | Type | Purpose |
 |-----------|------|---------|
-| `fname` | `str` | Unique identifier / display name |
-| `x0`, `y0` | `ndarray` | Original (immutable) data |
-| `x`, `y` | `ndarray` | Working data (after crop, baseline subtraction) |
-| `baseline` | `Baseline` | Baseline object with mode, anchor points, coefficients |
-| `peak_models` | `list[Model]` | lmfit peak model objects |
-| `peak_labels` | `list[str]` | User-defined peak labels |
-| `result_fit` | `FitResult` | Fitting results (R², parameters, residuals) |
-| `xcorrection_value` | `float` | X-axis shift applied |
-| `metadata` | `dict` | Instrument metadata (from WDF/SPC) |
-| `color` | `str` | Display color in the spectra viewer |
-| `is_active` | `bool` | Checkbox state (checked = active) |
-| `is_preprocessed` | `bool` | Whether `preprocess()` has been called |
-
-### `MSpectra` — The Collection
-
-**File**: `spectroview/model/m_spectra.py` (~130 lines)
-
-A list-like container for `MSpectrum` objects. Provides:
-
-- `add(spectrum)` / `remove(indices)` — Collection management
-- `save(is_map=False)` — Serialize all spectra to dict (with `zlib+base64` compression)
-- Iteration support: `for spectrum in spectra: ...`
+| `name` | `str` | Name of the map or spectrum |
+| `x0` | `ndarray` | Original (immutable) wavenumber axis [M] |
+| `Y0` | `ndarray` | Original (immutable) raw intensities [N, M] |
+| `coords` | `ndarray` | Spatial positions [N, 2] |
+| `is_active` | `ndarray` | Active checkbox state per spectrum [N] |
+| `fnames` | `list[str]` | Unique filename identifiers per spectrum [N] |
+| `colors` | `list[str|None]`| Display color per spectrum [N] |
+| `labels` | `list[str|None]`| User-defined display label per spectrum [N] |
+| `baseline_config` | `dict` | Baseline settings (`mode`, `attached`, `points`, `order_max`) |
+| `fit_model` | `dict` | Peak model metadata dictionary (`peak_labels`, `peak_models`) |
+| `peak_params` | `ndarray` | Optimized parameters array [N, K] |
+| `fit_success` | `ndarray` | Converged state per spectrum [N] |
+| `fit_r2` | `ndarray` | R² values per spectrum [N] |
+| `Y_bestfit` | `ndarray` | Composite best-fit curves [N, M_proc] |
+| `Y_baseline` | `ndarray` | Evaluated baseline curves [N, M_proc] |
+| `Y_peaks` | `list[ndarray]`| Evaluated individual peak curves [N, M_proc] |
 
 ---
 
@@ -93,7 +91,7 @@ A list-like container for `MSpectrum` objects. Provides:
 
 ### 1. Loading
 
-The `m_io` module detects file format by extension and returns `MSpectrum` objects:
+The `m_io` module detects file formats by extension and parses raw arrays and metadata into native Python dictionaries:
 
 | Format | Loader Function | Notes |
 |--------|----------------|-------|
@@ -103,150 +101,80 @@ The `m_io` module detects file format by extension and returns `MSpectrum` objec
 | `.spc` | `load_spc_spectrum()` | Galactic SPC binary format |
 | `.dat` | `load_TRPL_data()` | Time-Resolved Photoluminescence |
 
-After loading, the ViewModel adds the spectrum to `self.spectra` and emits `spectra_list_changed`.
+Loaded spectra are dynamically added to the `SpectraStore` via `self.store.add_map()` which initializes the numerical coordinates and active flags.
 
 ### 2. Preprocessing Pipeline
 
-When a user modifies baseline, spectral range, or X-correction, the spectrum goes through preprocessing:
+When a user modifies baseline, spectral range, or X-correction, the spectrum goes through a fully vectorized preprocessing pipeline on `SpectraStore`:
 
 ```mermaid
 graph LR
-    A["x0, y0<br/>(original)"] --> B["crop<br/>(spectral range)"]
-    B --> C["x-correction<br/>(shift x)"]
-    C --> D["baseline eval<br/>(compute baseline)"]
-    D --> E["baseline subtract<br/>(y = y - baseline)"]
-    E --> F["x, y<br/>(working data)"]
+    A["x0, Y0<br/>(original arrays)"] --> B["crop<br/>(spectral range)"]
+    B --> C["x-correction<br/>(vectorized shift)"]
+    C --> D["baseline eval<br/>(native solver)"]
+    D --> E["baseline subtract<br/>(Y = Y - Y_baseline)"]
+    E --> F["x, Y<br/>(working arrays)"]
     F --> G["peak fitting<br/>(Tensor Engine)"]
 ```
 
-!!! note "Key Design Decision"
-    The original arrays `x0` and `y0` are **never modified** after initial loading. All transformations operate on `x` and `y`, and `reinit_spectra()` restores them from `x0/y0` at any time.
+!!! note "Vectorized Preprocessing"
+    The original raw arrays `x0` and `Y0` are preserved unchanged. Preprocessing operations are vectorized across the entire map, and the resulting working coordinates `x` and `Y` are computed dynamically.
 
 ### 3. Baseline Processing
 
-The `VFitModelBuilder` provides two families of baseline methods:
+Manual baseline anchor points and smooth automatic baselines are evaluated in batch layouts:
 
-**Manual Modes** (`Linear`, `Polynomial`):
-
-- User places anchor points on the plot by clicking in "baseline" tool mode.
-- The `VSpectraViewer.baseline_add_requested` signal passes `(x, y)` coordinates to the ViewModel.
-- The ViewModel calls `spectrum.baseline.add_point()` and triggers a replot.
-- When "Subtract" is clicked, `baseline.eval()` computes the interpolated baseline and `y = y - baseline`.
-
-**Automatic Modes** (`airPLS`, `asLS`):
-
-- Smoothness is controlled by a slider mapped to λ = 10^coef.
-- The `baseline_preview_requested` signal provides live preview without committing.
-- On "Subtract", the ViewModel calls `baseline.eval(x, y)` which uses the selected `pybaselines` algorithm.
+- **Manual Modes** (`Linear`, `Polynomial`): Anchor points `(x, y)` are registered into `baseline_config`. Linear/Polynomial fits are evaluated in batch over coordinates.
+- **Automatic Modes** (`airPLS`, `asLS`, `arPLS`): Live previews are calculated instantly using pure NumPy/SciPy or Whittaker solvers, and subtracted in a single operation.
 
 ### 4. Peak Model Assignment
 
-Peaks are added interactively (click on spectrum in "peak" mode) or programmatically (paste/apply model):
+Peaks are registered into the map's `fit_model` dictionary:
 
-1. `VSpectraViewer.peak_add_requested.emit(x_position)` → ViewModel
-2. ViewModel creates an `lmfit.Model` with the selected peak shape (from `__init__.PEAK_MODELS`)
-3. Initial parameters (`center`, `fwhm`, `amplitude`) are estimated from the data
-4. The model is appended to `spectrum.peak_models`
-5. The View's `VPeakTable` updates to show the new peak's editable parameters
+1. `VSpectraViewer.peak_add_requested.emit(x_position)` updates the `fit_model` in the store.
+2. Initial parameter guesses (center, fwhm, amplitude) are calculated dynamically.
+3. The View's `VPeakTable` updates showing parameters with 3-decimal precision.
 
 ### 5. Fitting
 
-When "Fit" is triggered:
-
-1. **ViewModel** instantiates `TensorFitThread` with the list of spectra to fit
-2. **TensorFitThread.run()** calls `TensorFittingEngine.fit_spectra()`
-3. The engine groups spectra by **peak model signature** (same number/types of peaks → same batch)
-4. Each batch is optimized using the **Batched Levenberg-Marquardt** algorithm
-5. On completion, `_on_fit_finished()` writes results back to each `MSpectrum` object
-6. `collect_fit_results()` builds a `pd.DataFrame` with all fitted parameters
+1. **ViewModel** instantiates `TensorFitThread` with the store and map tasks.
+2. **TensorFitThread** invokes `TensorFittingEngine.fit()` which compiles Jacobians and optimizes parameter vectors in batch using vectorized Levenberg-Marquardt solvers.
+3. Optimized parameters are written back to `md.peak_params`, and composite fit envelopes (`md.Y_bestfit`, `md.Y_peaks`) are evaluated.
 
 ### 6. Fit Results Collection
 
-`collect_fit_results()` iterates over all active spectra and extracts:
+`collect_fit_results()` iterates over all active spectra in `SpectraStore` and constructs a single DataFrame:
 
 | Column | Source |
 |--------|--------|
-| `Filename` | `spectrum.fname` |
-| `{peak_label}_center` | `param_hints["center"]["value"]` |
-| `{peak_label}_fwhm` | `param_hints["fwhm"]["value"]` |
-| `{peak_label}_amplitude` | `param_hints["amplitude"]["value"]` |
-| `{peak_label}_area` | Computed from `param_hints` |
-| `R²` | `spectrum.result_fit.rsquared` |
-
-The resulting DataFrame is emitted via `fit_results_updated` and displayed in the `VFitResults` table.
+| `Filename` | `md.fnames[i]` |
+| `{peak_label}_center` | `md.peak_params[i, col_center]` |
+| `{peak_label}_fwhm` | `md.peak_params[i, col_fwhm]` |
+| `{peak_label}_amplitude` | `md.peak_params[i, col_amplitude]` |
+| `{peak_label}_area` | Computed area |
+| `R²` | `md.fit_r2[i]` |
 
 ---
 
 ## Fit Model Management
 
-### Copy / Paste
-
-- **Copy** serializes the current spectrum's baseline settings, peak models, and their `param_hints` into a clipboard dict stored on the ViewModel.
-- **Paste** applies the clipboard to the selected spectrum(s) or all spectra (Ctrl+Click → `apply_all=True`).
-
-### Save / Load
-
-- **Save** writes the model to a `.json` file in the user's configured model folder (`MSettings.get_model_folder()`).
-- **Load** populates the model dropdown (`cbb_model`). Selecting and clicking "Apply" applies the saved model.
-
-### Model Structure (JSON)
-
-```json
-{
-  "baseline": {
-    "mode": "Linear",
-    "attached": true,
-    "sigma": 4,
-    "points": [[x1, x2, ...], [y1, y2, ...]]
-  },
-  "peak_models": [
-    {
-      "model_name": "PseudoVoigtModel",
-      "peak_label": "Si",
-      "param_hints": {
-        "center": {"value": 520.7, "min": 518, "max": 523, "vary": true, "expr": ""},
-        "fwhm": {"value": 3.2, "min": 0.1, "max": 200, "vary": true, "expr": ""},
-        "amplitude": {"value": 1000, "min": 0, "max": 100000, "vary": true, "expr": ""},
-        "fraction": {"value": 0.5, "min": 0, "max": 1, "vary": true, "expr": ""}
-      }
-    }
-  ]
-}
-```
+- **Copy/Paste**: Deep copies the `fit_model` and `baseline_config` to clipboard.
+- **Save/Load**: Writes the fitting configuration to standard JSON structures.
 
 ---
 
 ## Persistence: Save/Load Work
 
-### Save Flow
+### Modern Save Format (ZIP-backed)
+- Light metadata (settings, GUI configurations, peak parameters) are saved to `metadata.json`.
+- Heavy coordinates and raw intensity arrays (`x0`, `Y0`) are stored in a compressed `arrays.npz` archive.
+- Statistics are dumped to `dataframes.pkl`.
 
-```python
-def save_work(self):
-    spectrums_data = self.spectra.save()  # Compresses x0/y0 with zlib+base64
-    data = {
-        'spectrums_data': spectrums_data,
-        'df_fit_results': self.df_fit_results.to_dict('records') if df else None,
-    }
-    json.dump(data, file)
-```
-
-### Load Flow
-
-```python
-def load_work(self, file_path):
-    data = json.load(file)
-    for spectrum_id, spectrum_data in data['spectrums_data'].items():
-        spectrum = self._create_spectrum_from_dict(spectrum_data, x0, y0)
-        self.spectra.append(spectrum)
-```
-
-The `_create_spectrum_from_dict()` method is the **shared reconstruction helper** used by both Spectra and Maps workspaces. It handles:
-
-- Decompressing `x0`/`y0` arrays from `zlib+base64`
-- Restoring baseline settings and re-evaluating if needed
-- Re-applying spectral range cropping
-- Restoring peak models from `param_hints`
-- Setting `xcorrection_value` and other custom attributes
+### Backward-Compatible Loading
+To support legacy workspaces saved with older SPECTROview versions (raw JSON formats < v4), `VMWorkspaceSpectra` implements a robust backward-compatible JSON loader:
+- Decodes and decompresses base64/zlib encoded `x0` and `y0` arrays.
+- Reconstructs `baseline_config` and evaluates `md.Y_baseline`.
+- Iterates and parses legacy peak models, evaluating and rendering component curves (`md.Y_peaks`, `md.Y_bestfit`) automatically.
 
 ---
 

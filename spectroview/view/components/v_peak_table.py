@@ -153,7 +153,8 @@ class VPeakTable(QWidget):
             cols["del"].addWidget(btn)
 
             # label
-            le_text = labels[i] if i < len(labels) else f"Peak {int(pm.key)+1}"
+            k_int = int(pm.key)
+            le_text = labels[k_int] if k_int < len(labels) and labels[k_int] is not None else f"Peak {k_int+1}"
             le = QLineEdit(le_text)
             le.setFixedSize(60, ROW_HEIGHT)
             le.editingFinished.connect(

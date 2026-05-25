@@ -64,13 +64,12 @@ graph TD
     TE -->|"builds"| EV["TensorEvaluator"]
     TE -->|"calls"| OPT["batched_LM()"]
     EV -->|"routes to"| MOD["models.py"]
-    EV -->|"fallback"| SM["scalar_models.py"]
     OPT -->|"evaluate / jacobian"| EV
 ```
 
 | Module | Class / Function | Responsibility |
 |--------|-----------------|----------------|
-| `tensor_fit_thread.py` | `TensorFitThread` | QThread wrapper. Supports single-model and batched modes. Emits `progress_changed` and `timings_ready` signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults. |
+| `tensor_fit_thread.py` | `TensorFitThread` | QThread wrapper. Supports batched modes. Emits `progress_changed` and `timings_ready` signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults. |
 | `tensor_engine.py` | `TensorFittingEngine` | Public API orchestrator. Manages the 8-step pipeline: apply model → preprocess → extract matrices → build p0 → build weights → optimize → write back results. Records step-level timings. |
 | `evaluator.py` | `TensorEvaluator` | Bridge between the dictionary-based `fit_model` and the flat tensor API. Parses peak definitions, manages free/fixed parameter indexing, evaluates expressions, routes to correct batched model functions, builds `FitResult` objects. |
 | `optimizer.py` | `batched_levenberg_marquardt()` | Pure numerical optimizer. Solves N independent least-squares problems simultaneously using `np.einsum`. Uses an adaptive solver (`cho_solve` or `np.linalg.solve`) depending on matrix size. GUI-agnostic. |
@@ -300,16 +299,16 @@ The per-spectrum damping factor \(\lambda\) is initialized at `1e-2` and adjuste
 
 ---
 
-## 9. Noise Amplitude Estimation and Noise Threshold
+## 9. Noise Level Estimation and Noise Threshold
 
 The `coef_noise` parameter controls a noise-aware filtering system that can significantly improve both the **performance** and **precision** of fitting, especially on hyperspectral maps where many pixels may contain weak or absent peaks.
 
-### How Noise Amplitude Is Estimated (`eval_noise_amplitude`)
+### How Noise Level Is Estimated (`detect_noise_level`)
 
-The noise amplitude is estimated by the `eval_noise_amplitude()` function from the `fitspy` library (`fitspy.core.utils`). It quantifies the **high-frequency oscillation amplitude** of the spectrum — i.e., the typical point-to-point noise — while being robust to real spectral features.
+The noise level is estimated by the native `detect_noise_level()` function. It quantifies the **high-frequency oscillation amplitude** of the spectrum — i.e., the typical point-to-point noise — while being robust to real spectral features.
 
 ```python
-def eval_noise_amplitude(y):
+def detect_noise_level(y):
     delta = np.diff(y)                              # δ[i] = y[i+1] − y[i]
     delta1, delta2 = delta[:-1], delta[1:]          # adjacent difference pairs
     mask = np.sign(delta1) * np.sign(delta2) == -1  # sign-alternating (zigzag)

@@ -3,7 +3,6 @@
 The Maps Workspace handles **hyperspectral map data** — spatially resolved spectral datasets where each pixel contains a full spectrum. It extends the Spectra Workspace, inheriting all fitting and preprocessing capabilities while adding spatial awareness, heatmap visualization, and coordinate-based operations.
 
 ---
-
 ## Architecture Overview
 
 ```mermaid
@@ -15,7 +14,7 @@ graph TD
     VWM -->|"calls"| VMWM["VMWorkspaceMaps"]
     VMWM -->|"signals"| VWM
 
-    VMWM --> MSS["MSpectra"]
+    VMWM --> MSS["SpectraStore"]
     VMWM --> IO["m_io"]
 ```
 
@@ -35,18 +34,17 @@ graph TD
 
 ### `VMWorkspaceMaps` — The ViewModel
 
-**File**: `spectroview/viewmodel/vm_workspace_maps.py` (~719 lines)
+**File**: `spectroview/viewmodel/vm_workspace_maps.py`
 
 | Responsibility | Methods |
 |---------------|---------|
 | **Map loading** | `load_map_files(paths)` |
 | **Map selection** | `select_map(name)`, `_show_map_spectra(name)` |
-| **Spectra extraction** | `_extract_spectra_from_map(name, df)` |
 | **Map deletion** | `delete_current_map()`, `remove_map(name)` |
 | **Fit results** | `collect_fit_results()` — overrides parent to add X, Y, Zone, Quadrant columns |
 | **Heatmap data** | `get_fit_results_dataframe()`, `get_current_map_dataframe()` |
 | **Cross-workspace** | `send_selected_spectra_to_spectra_workspace()`, `extract_and_send_profile_to_graphs()` |
-| **Persistence** | `save_work()`, `load_work()` — binary format v2 with numpy+gzip |
+| **Persistence** | `save_work()`, `load_work()` — ZIP archive with numpy+gzip arrays and dataframes |
 
 #### Signals
 
@@ -85,34 +83,19 @@ Every map is stored as a `pd.DataFrame` with this structure:
 - All remaining columns are wavenumber values (as strings), each containing intensity data.
 - Each row represents one spatial point (one spectrum).
 
-### Extraction Pipeline
+### Tensor Registration Pipeline
 
-```mermaid
-sequenceDiagram
-    participant VM as VMWorkspaceMaps
-    participant IO as m_io
-    participant MS as MSpectrum
-
-    VM->>IO: load_wdf_map(path)
-    IO-->>VM: DataFrame (N rows × [X, Y, wn1, wn2, ...]) + metadata
-
-    loop For each row in DataFrame
-        VM->>MS: Create MSpectrum()
-        VM->>MS: fname = "mapname_(x, y)"
-        VM->>MS: x = wavenumber_values[:-1]
-        VM->>MS: y = intensity_values[:-1]
-        VM->>MS: x0 = x.copy(), y0 = y.copy()
-        VM->>MS: metadata = map_metadata.copy()
-        VM->>VM: spectra.add(spectrum)
-    end
-```
+When maps are loaded, raw coordinates, wavenumber grids, and spectral matrices are registered directly into `SpectraStore` in a single batched operation:
+1. `self.store.add_map(name, x0, Y0, coords, fnames, is_active)` allocates contiguous NumPy arrays.
+2. Individual spectrum filenames are auto-generated following the coordinate pattern: `{map_name}_(x_pos, y_pos)`.
+3. Working copies and results are computed vectorially, avoiding any legacy row-by-row instance overhead.
 
 !!! important "Filename Convention"
-    Map spectra use the format `{map_name}_(x_pos, y_pos)` as their `fname`. This naming convention is **critical** — it's used to:
+    Map spectra use the format `{map_name}_(x_pos, y_pos)` as their `fname`. This naming convention is used to:
     
     - Filter spectra belonging to a specific map (`fname.startswith(prefix)`)
     - Extract (X, Y) coordinates from the filename for fit results
-    - Match spectra back to DataFrame rows during heatmap rendering
+    - Match spectra back to DataFrame rows during heatmap rendering and coordinate querieseatmap rendering
 
 ---
 
@@ -259,49 +242,21 @@ When a user selects exactly 2 points on a 2D map and clicks "Extract profile":
 
 ---
 
-## Persistence: Binary Format v2
+## Persistence: Workspace Save/Load
 
-Maps workspace uses a high-performance binary serialization for DataFrames:
+Maps workspace uses the shared ZIP-backed serialization strategy for saving/loading work, which splits metadata and arrays to achieve maximum performance.
 
-### Save
+### Save (v4+)
+- Lightweight per-map metadata (such as `baseline_config`, `fit_model`, and `range_min`) is serialized to JSON inside `metadata.json`.
+- Heavy multi-spectrum coordinate matrices and raw intensities are serialized directly into `arrays.npz` as binary NumPy matrices under `store_{map_name}_coords`, `store_{map_name}_x0`, and `store_{map_name}_y0`.
+- Best-fit curves and statistics DataFrames are serialized to `dataframes.pkl` using highly optimized Python pickles.
 
-```python
-def _map_df_to_binary(self, map_df):
-    arr = map_df.to_numpy(copy=False)
-    cols = list(map_df.columns.astype(str))
-    buf = io.BytesIO()
-    np.save(buf, arr)
-    # compresslevel=1 for massive speedup (~70s → ~3s)
-    return {'cols': cols, 'data': gzip.compress(buf.getvalue(), compresslevel=1).hex()}
-```
-
-### Load (with legacy fallback)
-
-```python
-@staticmethod
-def _binary_to_map_df(entry):
-    if isinstance(entry, str):
-        # Legacy v1: gzip-compressed CSV as hex
-        csv_data = gzip.decompress(bytes.fromhex(entry)).decode('utf-8')
-        return pd.read_csv(StringIO(csv_data))
-    else:
-        # v2: numpy binary
-        raw = gzip.decompress(bytes.fromhex(entry['data']))
-        arr = np.load(io.BytesIO(raw))
-        return pd.DataFrame(arr, columns=entry['cols'], dtype=np.float64)
-```
-
-### KDTree-Based Spectrum Reconstruction
-
-During `load_work()`, spectra must be matched back to their map DataFrame rows. Rather than iterating row-by-row, the loader uses a **batched KDTree** approach:
-
-1. Group all spectrum coordinates by map name
-2. Build a `scipy.KDTree` from the map's (X, Y) positions
-3. Batch-query all spectrum coordinates at once
-4. Use squared distance threshold (`< 1e-4`) to validate matches
-5. Assign `x0` and `y0` from the matched DataFrame row
-
-This achieves O(N log N) reconstruction instead of O(N²).
+### Backward-Compatible Loading
+To support legacy workspaces saved with older versions of SPECTROview (which are raw JSON `.map`/`.maps` files containing alternating hex/gzip strings), a custom parser parses and upgrades them:
+1. **Gzip CSV Decompression**: Decodes hex strings and decompresses the gzip streams to load map DataFrames directly into memory.
+2. **Fast Coordinate Mapping**: Builds an O(N) lookup dictionary of individual row properties indexed by `(map_name, round(X, 3), round(Y, 3))` to link coordinates back to active flags, baseline anchor points, and peak definitions.
+3. **Contiguous Allocation**: Packs the data into `SpectraStore` in batch layouts.
+4. **Vectorized Curve Restoration**: Batch evaluates legacy baselines and peak functions to immediately render the fits in the viewer without needing to refit the raw data.
 
 ---
 

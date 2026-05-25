@@ -1,38 +1,36 @@
 """ViewModel for Spectra Workspace - handles business logic and data management."""
 import os
+import re
 import json
+import base64
+import zlib
+import traceback
 from copy import deepcopy
 from pathlib import Path
-from collections import OrderedDict
         
 import numpy as np
 import pandas as pd
 from lmfit import fit_report
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QFileDialog
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
-from spectroview.viewmodel.utils import closest_index
 from spectroview.model.m_io import load_spectrum_file, load_TRPL_data, load_wdf_spectrum, load_spc_spectrum
 from spectroview.model.m_settings import MSettings
-
 from spectroview.model.workspace_io import WorkspaceIO
-from spectroview.model.spectra_store import SpectraStore
+from spectroview.model.spectra_store import SpectraStore, BaselineProxy, SpectrumProxy
 from spectroview.model.peak_model import initialize_peak_params
 from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
-
 from spectroview.fit_engine.baseline import eval_baseline_batch
+from spectroview.fit_engine.evaluator import eval_peak_initial
 from spectroview.viewmodel.utils import (
-    ApplyFitModelThread, FitThread,
     baseline_to_dict,
     calc_area,
     closest_index,
     dict_to_baseline,
-
     replace_peak_labels,
     save_df_to_excel,
     view_text,
 )
-
 
 
 class VMWorkspaceSpectra(QObject):
@@ -57,7 +55,6 @@ class VMWorkspaceSpectra(QObject):
     def __init__(self, settings: MSettings):
         super().__init__()
         self.settings = settings
-        self.store = SpectraStore()
         self.store = SpectraStore()
 
         self.selected_fnames = []  # Changed from indices to fnames for robust identification
@@ -225,6 +222,12 @@ class VMWorkspaceSpectra(QObject):
             y_baseline_list.append(md.Y_baseline[0] if md.Y_baseline is not None else None)
             fit_model_list.append(md.fit_model)
 
+        proxies = []
+        for fname in active_fnames:
+            md = self.store.get_map_data(fname)
+            if md:
+                proxies.append(SpectrumProxy(md, 0, fname))
+
         # In Spectra Workspace, different spectra might have different x axes.
         # VSpectraViewer will need to handle a list of arrays for x, y, x0, y0.
         data = {
@@ -236,6 +239,7 @@ class VMWorkspaceSpectra(QObject):
             "colors": colors,
             "labels": labels,
             "fnames": active_fnames,
+            "proxies": proxies,
             "baseline_config": bl_params,
             "peak_params": pk_params,
             "y_bestfit": y_bestfit_list,
@@ -272,37 +276,152 @@ class VMWorkspaceSpectra(QObject):
         sorted_keys = sorted(peak_models.keys(), key=lambda k: int(k))
         
         for p_name, val in zip(param_names, peak_params):
-            if "_" in p_name and p_name.startswith("m"):
+            if "_" in p_name:
                 try:
                     parts = p_name.split("_", 1)
-                    m_prefix = parts[0]
+                    prefix = parts[0]
                     pname = parts[1]
                     
-                    peak_num_1based = int(m_prefix[1:])
-                    peak_num_0based = peak_num_1based - 1
-                    
-                    if peak_num_0based < len(sorted_keys):
-                        key = sorted_keys[peak_num_0based]
-                        pdict = peak_models[key]
-                        shape = list(pdict.keys())[0]
+                    digits = re.findall(r'\d+', prefix)
+                    if digits:
+                        peak_num_1based = int(digits[0])
+                        peak_num_0based = peak_num_1based - 1
                         
-                        if pname in pdict[shape]:
-                            pdict[shape][pname]["value"] = float(val)
+                        if peak_num_0based < len(sorted_keys):
+                            key = sorted_keys[peak_num_0based]
+                            pdict = peak_models[key]
+                            shape = list(pdict.keys())[0]
+                            
+                            pname_key = pname
+                            if pname == "amplitude" and "ampli" in pdict[shape]:
+                                pname_key = "ampli"
+                            elif pname == "ampli" and "amplitude" in pdict[shape]:
+                                pname_key = "amplitude"
+                                
+                            if pname_key in pdict[shape]:
+                                pdict[shape][pname_key]["value"] = float(val)
                 except Exception as e:
                     print(f"Error updating parameter {p_name} from fit: {e}")
 
-    def _reconstruct_y_peaks(self, md):
+    def _reconstruct_y_peaks(self, md, indices=None):
         """Reconstruct md.Y_peaks from current fit_model."""
         if not md or not md.fit_model or not md.fit_model.get("peak_models"):
             md.Y_peaks = None
             return
-        from spectroview.fit_engine.evaluator import eval_peak_initial
-        md.Y_peaks = []
+        
         x_arr = md.x if md.x is not None else md.x0
         N = md.Y.shape[0] if md.Y is not None else md.Y0.shape[0]
-        for p_model in md.fit_model["peak_models"].values():
-            y_curve = eval_peak_initial(x_arr, p_model)
-            md.Y_peaks.append(np.tile(y_curve, (N, 1)))
+        M = len(x_arr)
+        
+        peak_models = list(md.fit_model["peak_models"].values())
+        num_peaks = len(peak_models)
+        
+        if indices is None:
+            md.Y_peaks = []
+            for p_model in peak_models:
+                y_curve = eval_peak_initial(x_arr, p_model)
+                md.Y_peaks.append(np.tile(y_curve, (N, 1)).astype(np.float32))
+        else:
+            if md.Y_peaks is None or len(md.Y_peaks) != num_peaks:
+                md.Y_peaks = [np.zeros((N, M), dtype=np.float32) for _ in range(num_peaks)]
+            for p_idx, p_model in enumerate(peak_models):
+                y_curve = eval_peak_initial(x_arr, p_model)
+                md.Y_peaks[p_idx][indices] = y_curve
+
+    def _restore_preprocessed_state(self, md):
+        """Restore cropped, baseline-subtracted, and peak states for MapData."""
+        # Restore baseline_config from fit_model if missing (handles older/saved files)
+        if not md.baseline_config and md.fit_model and isinstance(md.fit_model, dict) and "baseline" in md.fit_model:
+            md.baseline_config = md.fit_model["baseline"]
+
+        # 1. Apply range cropping
+        if md.range_min is not None or md.range_max is not None:
+            mask = np.logical_and(
+                md.x0 >= (md.range_min if md.range_min is not None else -np.inf),
+                md.x0 <= (md.range_max if md.range_max is not None else np.inf)
+            )
+            md.x = md.x0[mask].copy()
+            md.Y = md.Y0[:, mask].copy()
+        else:
+            md.x = md.x0.copy()
+            md.Y = md.Y0.copy()
+
+        # 2. Apply xcorrection if any
+        if md.xcorrection_value != 0.0:
+            md.x += md.xcorrection_value
+
+        # 3. Apply intensity norm if any
+        if md.intensity_norm_factor != 1.0:
+            md.Y = md.Y * md.intensity_norm_factor
+
+        # 4. Evaluate baseline on cropped x/Y
+        if md.baseline_config:
+            md.Y_baseline = eval_baseline_batch(md.x, md.Y, md.baseline_config)
+
+        # 5. If baseline was subtracted in saved session, subtract it now!
+        is_sub = md.is_baseline_subtracted
+        is_sub_any = is_sub.any() if isinstance(is_sub, np.ndarray) else bool(is_sub)
+        if is_sub_any and md.Y_baseline is not None:
+            if isinstance(is_sub, np.ndarray):
+                sub_indices = np.where(is_sub)[0]
+                if len(sub_indices) > 0:
+                    md.Y[sub_indices] = md.Y[sub_indices] - md.Y_baseline[sub_indices]
+                    md.Y_baseline[sub_indices] = 0.0
+            else:
+                md.Y = md.Y - md.Y_baseline
+                md.Y_baseline = None
+
+        # 6. Reconstruct Y_peaks and Y_bestfit
+        if md.Y_bestfit is None and md.fit_model and "peak_models" in md.fit_model:
+            from spectroview.fit_engine.evaluator import eval_peak_initial
+            md.Y_peaks = []
+            x_arr = md.x
+            N = md.Y.shape[0]
+            total_peaks = np.zeros_like(md.Y)
+            for p_model in md.fit_model["peak_models"].values():
+                y_curve = eval_peak_initial(x_arr, p_model)
+                y_curve_batch = np.tile(y_curve, (N, 1))
+                md.Y_peaks.append(y_curve_batch.astype(np.float32))
+                total_peaks += y_curve_batch
+            
+            is_sub_all = is_sub.all() if isinstance(is_sub, np.ndarray) else bool(is_sub)
+            if not is_sub_all and md.Y_baseline is not None:
+                md.Y_bestfit = (total_peaks + md.Y_baseline).astype(np.float32)
+            else:
+                md.Y_bestfit = total_peaks.astype(np.float32)
+
+    def _reindex_fit_model(self, md):
+        """Re-index all peak models to consecutive keys and update default labels accordingly."""
+        if not md or not md.fit_model:
+            return
+
+        old_models = md.fit_model.get("peak_models", {})
+        old_labels = md.fit_model.get("peak_labels", [])
+
+        if not old_models:
+            return
+
+        sorted_keys = sorted(old_models.keys(), key=lambda k: int(k))
+
+        new_models = {}
+        new_labels = []
+
+        for new_idx, k in enumerate(sorted_keys):
+            pdict = old_models[k]
+            new_models[str(new_idx)] = pdict
+
+            orig_label = ""
+            k_int = int(k)
+            if k_int < len(old_labels):
+                orig_label = old_labels[k_int]
+
+            if not orig_label or orig_label.strip() == "" or re.match(r"^Peak\s*\d+$", orig_label, re.IGNORECASE):
+                new_labels.append(f"Peak {new_idx + 1}")
+            else:
+                new_labels.append(orig_label)
+
+        md.fit_model["peak_models"] = new_models
+        md.fit_model["peak_labels"] = new_labels
 
     def reorder_spectra(self, new_order: list[int]):
         """new_order = list of old indices in new visual order"""
@@ -407,7 +526,11 @@ class VMWorkspaceSpectra(QObject):
         if y_val <= 0: y_val = 1e-10
 
         # Create new peak dict
-        peak_idx = str(len(md.fit_model["peak_labels"]))
+        if md.fit_model["peak_models"]:
+            next_idx = max(int(k) for k in md.fit_model["peak_models"].keys()) + 1
+        else:
+            next_idx = 0
+        peak_idx = str(next_idx)
         peak_model = {}
         y_arr = md.Y[0] if md.Y is not None else md.Y0[0]
         self._initialize_peak_params(peak_model, peak_shape, x, y_val, minfwhm, maxfwhm, maxshift, y_arr)
@@ -417,7 +540,6 @@ class VMWorkspaceSpectra(QObject):
 
         # Quickly evaluate and append to Y_peaks for instant preview
         x_arr = md.x if md.x is not None else md.x0
-        from spectroview.fit_engine.evaluator import eval_peak_initial
         y_curve = eval_peak_initial(x_arr, {peak_shape: peak_model})
         
         if md.Y_peaks is None:
@@ -472,24 +594,9 @@ class VMWorkspaceSpectra(QObject):
                     closest_k = k
         
         if closest_k is not None:
-            # Rebuild dictionary without the deleted peak to keep indices contiguous
-            old_models = md.fit_model["peak_models"]
-            old_labels = md.fit_model["peak_labels"]
-            idx_to_del = int(closest_k)
+            # Simply remove the peak from the dictionary without reindexing!
+            md.fit_model["peak_models"].pop(closest_k, None)
             
-            new_models = {}
-            new_labels = []
-            new_idx = 0
-            for k, pdict in old_models.items():
-                if int(k) == idx_to_del:
-                    continue
-                new_models[str(new_idx)] = pdict
-                if int(k) < len(old_labels):
-                    new_labels.append(old_labels[int(k)])
-                new_idx += 1
-            
-            md.fit_model["peak_models"] = new_models
-            md.fit_model["peak_labels"] = new_labels
             md.peak_params = None
             md.param_names = None
             md.fit_success = None
@@ -503,7 +610,9 @@ class VMWorkspaceSpectra(QObject):
         md = self._get_interactive_map_data()
         if not md: return
 
-        if getattr(md, "is_baseline_subtracted", False):
+        is_sub = getattr(md, "is_baseline_subtracted", False)
+        is_sub_any = is_sub.any() if isinstance(is_sub, np.ndarray) else bool(is_sub)
+        if is_sub_any:
             self.notify.emit("Baseline already subtracted. Please reinit first.")
             return
 
@@ -743,62 +852,80 @@ class VMWorkspaceSpectra(QObject):
 
     def subtract_baseline(self, apply_all: bool = False):
         if apply_all:
-            fnames = self._get_active_spectra()
+            mds = [self.store.get_map_data(name) for name in self.store.map_names]
         else:
             if not self.selected_fnames:
                 self.notify.emit("No spectrum selected.")
                 return
             fnames = self._get_selected_spectra()
+            mds = self._get_unique_map_data(fnames)
 
-        any_subtracted = False
-        for md in self._get_unique_map_data(fnames):
-            if getattr(md, "is_baseline_subtracted", False):
-                any_subtracted = True
-                break
-        if any_subtracted:
-            self.notify.emit("Baseline already subtracted. Please delete baseline or reinit first.")
-            return
+        subtracted_any = False
+        for md in mds:
+            if md and md.baseline_config is not None and md.Y_baseline is not None:
+                is_sub = getattr(md, "is_baseline_subtracted", False)
+                
+                # Support both vector/array state (Maps Workspace) and scalar state (Spectra Workspace)
+                if isinstance(is_sub, np.ndarray):
+                    # Maps Workspace: subtract only for the unsubtracted pixel indices
+                    indices_to_sub = [i for i in range(len(is_sub)) if not is_sub[i]]
+                    if indices_to_sub:
+                        if md.Y is None:
+                            md.Y = md.Y0.copy()
+                        if md.x is None:
+                            md.x = md.x0.copy()
+                        md.Y[indices_to_sub] = md.Y[indices_to_sub] - md.Y_baseline[indices_to_sub]
+                        md.Y_baseline[indices_to_sub] = 0.0
+                        md.is_baseline_subtracted[indices_to_sub] = True
+                        subtracted_any = True
+                else:
+                    # Spectra Workspace (or scalar mode): subtract if not already subtracted
+                    if not is_sub:
+                        if md.Y is None:
+                            md.Y = md.Y0.copy()
+                        if md.x is None:
+                            md.x = md.x0.copy()
+                        md.Y = md.Y - md.Y_baseline
+                        md.Y_baseline = None
+                        md.is_baseline_subtracted = True
+                        subtracted_any = True
 
-        for md in self._get_unique_map_data(fnames):
-            if md.baseline_config is not None and md.Y_baseline is not None:
-                # Execute subtraction
-                md.Y = md.Y - md.Y_baseline
-                # Clear baseline config/curve since it's now subtracted into Y
-                md.baseline_config = None
-                md.Y_baseline = None
-                md.is_baseline_subtracted = True
-
-        self._emit_selected_spectra()
-        self._emit_list_update()  # Refresh list colors after baseline subtraction
+        if subtracted_any:
+            self._emit_selected_spectra()
+            self._emit_list_update()  # Refresh list colors after baseline subtraction
+        else:
+            self.notify.emit("Baseline already subtracted for all selected spectra.")
 
     def delete_baseline(self, apply_all: bool = False):
         """Undo baseline subtraction: reinitialise spectrum data, re-apply crop range."""
         if apply_all:
-            fnames = self.store.map_names
+            mds = [self.store.get_map_data(name) for name in self.store.map_names]
         else:
             if not self.selected_fnames:
                 self.notify.emit("No spectrum selected.")
                 return
             fnames = self._get_selected_spectra()
+            mds = self._get_unique_map_data(fnames)
 
-        for md in self._get_unique_map_data(fnames):
-            md.baseline_config = None
-            md.Y_baseline = None
-            md.is_baseline_subtracted = False
-            
-            # Undo baseline subtraction by reverting to Y0, but maintaining x crop
-            if md.x is not None:
-                # Find indices of current x in x0
-                xmin = md.x[0]
-                xmax = md.x[-1]
-                i_min = closest_index(md.x0, xmin)
-                i_max = closest_index(md.x0, xmax)
-                if i_min > i_max:
-                    i_min, i_max = i_max, i_min
+        for md in mds:
+            if md:
+                md.baseline_config = None
+                md.Y_baseline = None
+                md.is_baseline_subtracted = False
                 
-                md.Y = md.Y0[:, i_min:i_max + 1].copy()
-            else:
-                md.Y = md.Y0.copy()
+                # Undo baseline subtraction by reverting to Y0, but maintaining x crop
+                if md.x is not None:
+                    # Find indices of current x in x0
+                    xmin = md.x[0]
+                    xmax = md.x[-1]
+                    i_min = closest_index(md.x0, xmin)
+                    i_max = closest_index(md.x0, xmax)
+                    if i_min > i_max:
+                        i_min, i_max = i_max, i_min
+                    
+                    md.Y = md.Y0[:, i_min:i_max + 1].copy()
+                else:
+                    md.Y = md.Y0.copy()
 
         self._emit_selected_spectra()
         self._emit_list_update()
@@ -858,50 +985,53 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No peaks to copy.")
             return
         self._peaks_clipboard = deepcopy(md.fit_model)
+        self.notify.emit("Peaks copied to clipboard.")
 
     def paste_peaks(self, apply_all: bool = False):
         if not hasattr(self, "_peaks_clipboard") or self._peaks_clipboard is None:
             self.notify.emit("No peaks copied.")
             return
 
-        fnames = (
-            self._get_active_spectra()
-            if apply_all
-            else self._get_selected_spectra()
-        )
+        if apply_all:
+            mds = [self.store.get_map_data(name) for name in self.store.map_names]
+        else:
+            if not self.selected_fnames:
+                self.notify.emit("No spectrum selected.")
+                return
+            fnames = self._get_selected_spectra()
+            mds = self._get_unique_map_data(fnames)
 
-        from spectroview.fit_engine.evaluator import eval_peak_initial
-        for md in self._get_unique_map_data(fnames):
-            md.fit_model = deepcopy(self._peaks_clipboard)
-            
-            # Dynamically reconstruct Y_peaks for instant preview
-            md.Y_peaks = []
-            x_arr = md.x if md.x is not None else md.x0
-            N = md.Y.shape[0] if md.Y is not None else md.Y0.shape[0]
-            
-            for p_model in md.fit_model.get("peak_models", {}).values():
-                y_curve = eval_peak_initial(x_arr, p_model)
-                md.Y_peaks.append(np.tile(y_curve, (N, 1)))
+        for md in mds:
+            if md:
+                md.fit_model = deepcopy(self._peaks_clipboard)
+                
+                # Dynamically reconstruct Y_peaks for instant preview
+                md.Y_peaks = []
+                x_arr = md.x if md.x is not None else md.x0
+                N = md.Y.shape[0] if md.Y is not None else md.Y0.shape[0]
+                
+                for p_model in md.fit_model.get("peak_models", {}).values():
+                    y_curve = eval_peak_initial(x_arr, p_model)
+                    md.Y_peaks.append(np.tile(y_curve, (N, 1)))
 
         self._emit_selected_spectra()
         self._emit_list_update()  # Refresh list colors after paste peaks
 
-
     def delete_peaks(self, apply_all: bool = False):
-        fnames = (
-            self._get_active_spectra()
-            if apply_all
-            else self._get_selected_spectra()
-        )
+        if apply_all:
+            mds = [self.store.get_map_data(name) for name in self.store.map_names]
+        else:
+            if not self.selected_fnames:
+                self.notify.emit("No spectrum selected.")
+                return
+            fnames = self._get_selected_spectra()
+            mds = self._get_unique_map_data(fnames)
 
-        if not fnames:
-            self.notify.emit("No spectrum selected.")
-            return
-
-        for md in self._get_unique_map_data(fnames):
-            md.fit_model = None
-            md.Y_peaks = None
-            md.Y_bestfit = None
+        for md in mds:
+            if md:
+                md.fit_model = None
+                md.Y_peaks = None
+                md.Y_bestfit = None
 
         self._emit_selected_spectra()
         self._emit_list_update()  # Refresh list colors after clear peaks
@@ -909,6 +1039,115 @@ class VMWorkspaceSpectra(QObject):
 
     
     
+    def _apply_fit_model_to_mapdata(self, md, fit_model, indices=None):
+        """Cleanly resets and applies a fit model (cropping, baseline, and peaks) to MapData."""
+        if not md:
+            return
+
+        N = md.Y0.shape[0] if md.Y0 is not None else 1
+        M = md.Y.shape[1] if md.Y is not None else (md.Y0.shape[1] if md.Y0 is not None else 0)
+
+        # 1. Clean reset
+        if indices is None:
+            if md.x0 is not None:
+                md.x = md.x0.copy()
+            if md.Y0 is not None:
+                md.Y = md.Y0.copy()
+            
+            md.baseline_config = None
+            md.Y_baseline = None
+            md.peak_params = None
+            md.Y_peaks = None
+            md.Y_bestfit = None
+            md.is_baseline_subtracted = False
+            md.range_min = None
+            md.range_max = None
+        else:
+            if md.x is None and md.x0 is not None:
+                md.x = md.x0.copy()
+            if md.Y is None and md.Y0 is not None:
+                md.Y = md.Y0.copy()
+
+            # For the given indices, revert Y to raw Y0 (cropped to current md.x if needed)
+            if md.Y0 is not None and md.Y is not None:
+                if md.x is not None and md.x0 is not None and len(md.x) < len(md.x0):
+                    xmin, xmax = md.x[0], md.x[-1]
+                    i_min = closest_index(md.x0, xmin)
+                    i_max = closest_index(md.x0, xmax)
+                    if i_min > i_max:
+                        i_min, i_max = i_max, i_min
+                    md.Y[indices] = md.Y0[indices, i_min:i_max+1].copy()
+                else:
+                    md.Y[indices] = md.Y0[indices].copy()
+
+            if not isinstance(md.is_baseline_subtracted, np.ndarray):
+                md.is_baseline_subtracted = np.full(N, bool(md.is_baseline_subtracted), dtype=bool)
+            md.is_baseline_subtracted[indices] = False
+
+            if md.Y_baseline is not None:
+                md.Y_baseline[indices] = 0.0
+            if md.Y_bestfit is not None:
+                md.Y_bestfit[indices] = 0.0
+            if md.peak_params is not None:
+                md.peak_params[indices] = 0.0
+            if md.Y_peaks is not None:
+                for peak_curve in md.Y_peaks:
+                    peak_curve[indices] = 0.0
+
+        # 2. Apply range cropping
+        xmin = fit_model.get("range_min")
+        xmax = fit_model.get("range_max")
+        if xmin is not None and xmax is not None:
+            if xmin > xmax:
+                xmin, xmax = xmax, xmin
+            curr_x = md.x if md.x is not None else md.x0
+            curr_y = md.Y if md.Y is not None else md.Y0
+            
+            i_min = closest_index(curr_x, xmin)
+            i_max = closest_index(curr_x, xmax)
+            if i_min > i_max:
+                i_min, i_max = i_max, i_min
+            
+            md.x = curr_x[i_min:i_max+1].copy()
+            md.Y = curr_y[:, i_min:i_max+1].copy()
+            md.range_min = float(md.x[0])
+            md.range_max = float(md.x[-1])
+
+        # Recalculate processed wavenumber axis length M
+        M = md.Y.shape[1] if md.Y is not None else (md.Y0.shape[1] if md.Y0 is not None else 0)
+
+        # 3. Apply baseline config
+        bl_info = fit_model.get("baseline")
+        if bl_info and bl_info.get("mode"):
+            md.baseline_config = deepcopy(bl_info)
+            x_arr = md.x if md.x is not None else md.x0
+            y_arr = md.Y if md.Y is not None else md.Y0
+            
+            if indices is None:
+                md.Y_baseline = eval_baseline_batch(x_arr, y_arr, md.baseline_config)
+                
+                if bl_info.get("is_subtracted", False):
+                    md.Y = md.Y - md.Y_baseline
+                    # Clear Y_baseline curve since it is subtracted into Y, but preserve config
+                    md.Y_baseline = None
+                    md.is_baseline_subtracted = True
+            else:
+                y_baseline_sel = eval_baseline_batch(x_arr, y_arr[indices], md.baseline_config)
+                if md.Y_baseline is None:
+                    md.Y_baseline = np.zeros((N, M), dtype=np.float32)
+                md.Y_baseline[indices] = y_baseline_sel
+                
+                if bl_info.get("is_subtracted", False):
+                    md.Y[indices] = md.Y[indices] - md.Y_baseline[indices]
+                    md.Y_baseline[indices] = 0.0
+                    md.is_baseline_subtracted[indices] = True
+
+        # 4. Attach fit model dictionary
+        md.fit_model = deepcopy(fit_model)
+
+        # 5. Reconstruct peak curves for preview
+        self._reconstruct_y_peaks(md, indices=indices)
+
     def copy_fit_model(self):
         if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
@@ -921,20 +1160,37 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No fit results to copy.")
             return
 
+        # Ensure current crop range and baseline config are written into fit_model before copy
+        md.fit_model["range_min"] = md.range_min
+        md.fit_model["range_max"] = md.range_max
+        if md.baseline_config:
+            bl = md.baseline_config
+            is_sub = getattr(md, "is_baseline_subtracted", False)
+            is_sub_val = bool(is_sub[0]) if isinstance(is_sub, np.ndarray) else bool(is_sub)
+            md.fit_model["baseline"] = {
+                "mode": bl.get("mode"),
+                "coef": bl.get("coef", 5.0),
+                "points": bl.get("points", [[], []]),
+                "attached": bl.get("attached", True),
+                "is_subtracted": is_sub_val
+            }
+        else:
+            md.fit_model["baseline"] = None
+
         self._fitmodel_clipboard = deepcopy(md.fit_model)
+        self.notify.emit("Fit model copied to clipboard.")
 
     def paste_fit_model(self, apply_all: bool = False):
         if not hasattr(self, "_fitmodel_clipboard") or self._fitmodel_clipboard is None:
             self.notify.emit("No fit model copied.")
             return
         fnames = self._get_active_spectra() if apply_all else self._get_selected_spectra()
+        if not fnames:
+            self.notify.emit("No spectrum selected.")
+            return
 
         for md in self._get_unique_map_data(fnames):
-            md.x = md.x0.copy()
-            md.Y = md.Y0.copy()
-            md.baseline_config = None
-            md.peak_params = None
-            md.fit_model = deepcopy(self._fitmodel_clipboard)
+            self._apply_fit_model_to_mapdata(md, self._fitmodel_clipboard)
 
         # In Maps workspace, _run_fit_thread expects the map names, not point names
         unique_fnames = [md.name for md in self._get_unique_map_data(fnames)]
@@ -951,6 +1207,23 @@ class VMWorkspaceSpectra(QObject):
         if not md.fit_model:
             self.notify.emit("No fit model to save.")
             return
+
+        # Ensure current crop range and baseline config are written into fit_model before save
+        md.fit_model["range_min"] = md.range_min
+        md.fit_model["range_max"] = md.range_max
+        if md.baseline_config:
+            bl = md.baseline_config
+            is_sub = getattr(md, "is_baseline_subtracted", False)
+            is_sub_val = bool(is_sub[0]) if isinstance(is_sub, np.ndarray) else bool(is_sub)
+            md.fit_model["baseline"] = {
+                "mode": bl.get("mode"),
+                "coef": bl.get("coef", 5.0),
+                "points": bl.get("points", [[], []]),
+                "attached": bl.get("attached", True),
+                "is_subtracted": is_sub_val
+            }
+        else:
+            md.fit_model["baseline"] = None
 
         default_dir = ""
         if hasattr(self, "_vm_fit_model_builder") and self._vm_fit_model_builder is not None:
@@ -979,7 +1252,7 @@ class VMWorkspaceSpectra(QObject):
 
         self.notify.emit("Fit model saved successfully.")
 
-    def apply_loaded_fit_model(self, apply_all: bool = False):
+    def apply_fit_model(self, apply_all: bool = False):
         if not hasattr(self, "_vm_fit_model_builder"):
             self.notify.emit("Fit model manager not connected.")
             return
@@ -1003,60 +1276,7 @@ class VMWorkspaceSpectra(QObject):
             return
 
         for md in self._get_unique_map_data(fnames):
-            # 1. Reinit first to cleanly reset state
-            if md.x0 is not None:
-                md.x = md.x0.copy()
-            if md.Y0 is not None:
-                md.Y = md.Y0.copy()
-            
-            md.baseline_config = None
-            md.Y_baseline = None
-            md.peak_params = None
-            md.Y_peaks = None
-            md.Y_bestfit = None
-            md.is_baseline_subtracted = False
-            md.range_min = None
-            md.range_max = None
-
-            # 2. Apply range cropping if present in model
-            xmin = fit_model.get("range_min")
-            xmax = fit_model.get("range_max")
-            if xmin is not None and xmax is not None:
-                if xmin > xmax:
-                    xmin, xmax = xmax, xmin
-                curr_x = md.x if md.x is not None else md.x0
-                curr_y = md.Y if md.Y is not None else md.Y0
-                
-                i_min = closest_index(curr_x, xmin)
-                i_max = closest_index(curr_x, xmax)
-                if i_min > i_max:
-                    i_min, i_max = i_max, i_min
-                
-                md.x = curr_x[i_min:i_max+1].copy()
-                md.Y = curr_y[:, i_min:i_max+1].copy()
-                md.range_min = float(md.x[0])
-                md.range_max = float(md.x[-1])
-
-            # 3. Apply baseline configuration and subtraction
-            bl_info = fit_model.get("baseline")
-            if bl_info and bl_info.get("mode"):
-                md.baseline_config = deepcopy(bl_info)
-                x_arr = md.x if md.x is not None else md.x0
-                y_arr = md.Y if md.Y is not None else md.Y0
-                md.Y_baseline = eval_baseline_batch(x_arr, y_arr, md.baseline_config)
-                
-                if bl_info.get("is_subtracted", False):
-                    # Subtract baseline
-                    md.Y = md.Y - md.Y_baseline
-                    md.baseline_config = None
-                    md.Y_baseline = None
-                    md.is_baseline_subtracted = True
-
-            # 4. Attach fit model dictionary
-            md.fit_model = deepcopy(fit_model)
-            
-            # Reconstruct initial peak curves (Y_peaks) for plotting preview
-            self._reconstruct_y_peaks(md)
+            self._apply_fit_model_to_mapdata(md, fit_model)
 
         unique_fnames = [md.name for md in self._get_unique_map_data(fnames)]
         self._run_fit_thread(fit_model, unique_fnames)
@@ -1077,6 +1297,7 @@ class VMWorkspaceSpectra(QObject):
         for fname in spectra_fnames:
             md = self.store.get_map_data(fname)
             if md and md.fit_model:
+                self._reindex_fit_model(md)
                 tasks.append({
                     "map_name": fname,
                     "indices": np.array([0]),
@@ -1186,9 +1407,15 @@ class VMWorkspaceSpectra(QObject):
 
     def update_peak_label(self, index, text):
         md = self._get_unique_map_data(self._get_selected_spectra())[0]
-        if md and md.fit_model and "peak_labels" in md.fit_model:
-            if index < len(md.fit_model["peak_labels"]):
-                md.fit_model["peak_labels"][index] = text
+        if md and md.fit_model and "peak_models" in md.fit_model:
+            if "peak_labels" not in md.fit_model:
+                md.fit_model["peak_labels"] = []
+            
+            # Make sure list is large enough to hold index
+            while len(md.fit_model["peak_labels"]) <= index:
+                md.fit_model["peak_labels"].append(f"Peak {len(md.fit_model['peak_labels']) + 1}")
+                
+            md.fit_model["peak_labels"][index] = text
         self._emit_selected_spectra()
 
     def update_peak_model(self, index, model_name):
@@ -1251,14 +1478,14 @@ class VMWorkspaceSpectra(QObject):
         
         new_models = {}
         new_labels = []
-        new_idx = 0
         for k, pdict in old_models.items():
             if int(k) == index:
                 continue
-            new_models[str(new_idx)] = pdict
+            new_models[k] = pdict
             if int(k) < len(old_labels):
                 new_labels.append(old_labels[int(k)])
-            new_idx += 1
+            else:
+                new_labels.append(f"Peak {int(k)+1}")
             
         md.fit_model["peak_models"] = new_models
         md.fit_model["peak_labels"] = new_labels
@@ -1382,112 +1609,259 @@ class VMWorkspaceSpectra(QObject):
         if not file_path:
             return
         
+    def save_work(self):
+        """Save workspace using high-performance ZIP format (SpectraStore-backed)."""
+        is_maps = hasattr(self, 'maps')
+        file_path, _ = QFileDialog.getSaveFileName(
+            None,
+            "Save work",
+            "",
+            "SPECTROview Maps (*.maps)" if is_maps else "SPECTROview Files (*.spectra)"
+        )
+        if not file_path:
+            return
+
         try:
-            spectrums_meta = {}
+            # 1. Export entire store to NPZ and metadata
             arrays = {}
-            for i, fname in enumerate(self.store.map_names):
-                md = self.store.get_map_data(fname)
-                if not md: continue
-                
-                spectrum_dict = {
-                    "fname": fname,
-                    "is_active": md.is_active.tolist() if md.is_active is not None else [True],
-                    "metadata": md.map_metadata,
-                    "baseline_config": md.baseline_config,
-                    "peak_params": md.peak_params,
-                    "colors": md.colors,
-                    "labels": md.labels
-                }
-                
-                # Format v4: Store x0/y0 arrays directly in NPZ instead of base64 JSON
-                if md.x0 is not None:
-                    arrays[f"x0_{i}"] = md.x0
-                if md.Y0 is not None:
-                    arrays[f"y0_{i}"] = md.Y0[0]
-                    
-                spectrums_meta[i] = spectrum_dict
-                
+            store_meta = {}
+            for map_name in self.store.map_names:
+                # Add arrays
+                arrays.update(self.store.to_npz_dict(map_name))
+                # Add metadata
+                store_meta[map_name] = self.store.to_metadata_dict(map_name)
+
+            def _sanitize_for_json(obj):
+                """Recursively convert numpy types to JSON-serializable equivalents."""
+                if isinstance(obj, dict):
+                    return {k: _sanitize_for_json(v) for k, v in obj.items()}
+                if isinstance(obj, (list, tuple)):
+                    return [_sanitize_for_json(v) for v in obj]
+                if isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                if isinstance(obj, (np.integer,)):
+                    return int(obj)
+                if isinstance(obj, (np.floating,)):
+                    return float(obj)
+                if isinstance(obj, (np.bool_,)):
+                    return bool(obj)
+                return obj
+
             metadata = {
-                'format_version': 5,  # Version 5 signals TensorStore based save format
-                'spectrums_meta': spectrums_meta
+                'format_version': 5,  # Version 5 signals unified SpectraStore format
+                'store_meta': _sanitize_for_json(store_meta),
             }
-            
+
+            # If it is Maps workspace, save maps-specific metadata
+            if is_maps:
+                metadata['maps_metadata'] = _sanitize_for_json(getattr(self, 'maps_metadata', {}))
+                metadata['map_type'] = getattr(self, 'map_type', '2Dmap')
+
             dataframes = {}
             if self.df_fit_results is not None and not self.df_fit_results.empty:
                 dataframes['df_fit_results'] = self.df_fit_results
-            
+
             WorkspaceIO.save_workspace(file_path, metadata, arrays, dataframes)
             self.notify.emit("Work saved successfully.")
         except Exception as e:
+            traceback.print_exc()
             QMessageBox.critical(None, "Save Error", f"Error saving work:\n{str(e)}")
 
     def load_work(self, file_path: str):
-        """Load previously saved workspace from .spectra file (supports ZIP)."""
-        
+        """Load previously saved workspace from format v4/v5 (unified SpectraStore-backed)."""
         try:
             metadata, arrays, dataframes, is_legacy = WorkspaceIO.load_workspace(file_path)
-            
+
             if is_legacy or metadata.get('format_version', 3) < 4:
-                QMessageBox.critical(None, "Load Error", "Legacy formats (< v4) are no longer supported in Tensor Engine mode.")
+                self.clear_workspace()
+                if hasattr(self, 'maps'):
+                    self._load_legacy_maps(file_path)
+                else:
+                    self._load_legacy_spectra(file_path)
                 return
+
+            self.clear_workspace()
             
-            # Clear existing data
+            # 1. Restore SpectraStore from arrays + per-map metadata
             self.store = SpectraStore()
-            self.selected_fnames = []
-            
-            # Load all spectra
-            fmt = metadata.get('format_version', 5)
-            spectrums_meta = metadata.get('spectrums_meta', {})
-            for spectrum_id, spectrum_data in spectrums_meta.items():
-                i = int(spectrum_id)
-                x0_arr = arrays.get(f"x0_{i}")
-                y0_arr = arrays.get(f"y0_{i}")
-                
-                if x0_arr is None or y0_arr is None:
-                    continue
-                    
-                fname = spectrum_data.get("fname", f"spectrum_{i}")
-                is_active = np.array(spectrum_data.get("is_active", [True]), dtype=bool)
-                
-                self.store.add_map(
-                    name=fname,
-                    x0=x0_arr.copy(),
-                    Y0=y0_arr.astype(np.float32).reshape(1, -1),
-                    coords=np.array([[0.0, 0.0]], dtype=np.float64),
-                    fnames=[fname],
-                    is_active=is_active
-                )
-                
-                md = self.store.get_map_data(fname)
+            store_meta = metadata.get('store_meta', {})
+            for map_name, meta in store_meta.items():
+                SpectraStore.load_map_from_npz(arrays, meta, map_name, store=self.store)
+                md = self.store.get_map_data(map_name)
                 if md:
-                    md.map_metadata = spectrum_data.get("metadata", {})
-                    md.baseline_config = spectrum_data.get("baseline_config")
-                    md.peak_params = spectrum_data.get("peak_params")
-                    md.colors = spectrum_data.get("colors", [None])
-                    md.labels = spectrum_data.get("labels", [None])
-            
-            self._sync_fit_results_to_store()
-            
-            # Restore fit results DataFrame
-            if dataframes and 'df_fit_results' in dataframes:
-                self.df_fit_results = dataframes['df_fit_results']
-                # Emit signal to update fit results table
+                    self._restore_preprocessed_state(md)
+
+            # 2. If Maps workspace, rebuild legacy DataFrames for heatmap rendering
+            if hasattr(self, 'maps'):
+                self.maps = {}
+                self.maps_metadata = metadata.get('maps_metadata', {})
+                self.map_type = metadata.get('map_type', '2Dmap')
+                
+                for map_name in self.store.map_names:
+                    md = self.store.get_map_data(map_name)
+                    x0 = md.x0
+                    coords = md.coords
+                    intensities = md.Y0
+
+                    col_names = ['X', 'Y'] + [str(float(w)) for w in x0]
+                    data_combined = np.hstack([coords, intensities.astype(np.float64)])
+                    self.maps[map_name] = pd.DataFrame(data_combined, columns=col_names)
+
+            # 3. Restore DataFrames
+            self.df_fit_results = dataframes.get('df_fit_results') if dataframes else None
+
+            # 4. Refresh View
+            if hasattr(self, 'maps'):
+                map_names = self.store.map_names
+                if map_names:
+                    self.select_map(map_names[0])
+                self.maps_list_changed.emit(map_names)
+                self.count_changed.emit(sum(md.n_spectra for md in self.store._maps.values()))
+            else:
+                self._emit_list_update()
+                map_names = self.store.map_names
+                if len(map_names) > 0:
+                    self.selected_fnames = [map_names[0]]
+                    self._emit_selected_spectra()
+                else:
+                    self.selected_fnames = []
+                    self.spectra_selection_changed.emit([])
+
+            if self.df_fit_results is not None:
                 self.fit_results_updated.emit(self.df_fit_results)
-            else:
-                self.df_fit_results = None
-            
-            # Update UI
-            self._emit_list_update()
-            map_names = self.store.map_names
-            if len(map_names) > 0:
-                self.selected_fnames = [map_names[0]]
-                self._emit_selected_spectra()
-            else:
-                self.selected_fnames = []
-                self.spectra_selection_changed.emit([])
-            
+                
+            self.notify.emit("Work loaded successfully.")
+
         except Exception as e:
-            QMessageBox.critical(None, "Load Error", f"Error loading spectra workspace:\n{str(e)}")
+            traceback.print_exc()
+            QMessageBox.critical(None, "Load Error", f"Error loading workspace:\n{str(e)}")
+
+    def _load_legacy_spectra(self, file_path: str):
+        """Load legacy JSON-based .spectra workspace."""
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        self.store = SpectraStore()
+        self.selected_fnames = []
+
+        def decompress_array(base64_str, dtype=np.float64):
+            if not base64_str:
+                return None
+            decoded = base64.b64decode(base64_str.encode('utf-8'))
+            decompressed = zlib.decompress(decoded)
+            return np.frombuffer(decompressed, dtype=dtype)
+
+        spectrums = data.get("spectrums", {})
+        sorted_keys = sorted(spectrums.keys(), key=lambda x: int(x))
+        for skey in sorted_keys:
+            sdata = spectrums[skey]
+            fname = sdata.get("fname", f"spectrum_{skey}")
+            
+            x0_arr = decompress_array(sdata.get("x0"), np.float64)
+            y0_arr = decompress_array(sdata.get("y0"), np.float64)
+            if x0_arr is None or y0_arr is None:
+                continue
+
+            is_active = sdata.get("is_active", True)
+
+            self.store.add_map(
+                name=fname,
+                x0=x0_arr.copy(),
+                Y0=y0_arr.astype(np.float32).reshape(1, -1),
+                coords=np.array([[0.0, 0.0]], dtype=np.float64),
+                fnames=[fname],
+                is_active=np.array([is_active], dtype=bool)
+            )
+
+            md = self.store.get_map_data(fname)
+            if md:
+                md.map_metadata = sdata.get("metadata", {})
+                md.colors = [sdata.get("color")]
+                md.labels = [sdata.get("label")]
+                md.xcorrection_value = float(sdata.get("xcorrection_value", 0.0))
+                md.intensity_norm_factor = float(sdata.get("intensity_norm_factor", 1.0))
+                md.is_baseline_subtracted = sdata.get("is_baseline_subtracted", False)
+                md.range_min = sdata.get("range_min")
+                md.range_max = sdata.get("range_max")
+
+                # Crop range if min/max are defined
+                if md.range_min is not None or md.range_max is not None:
+                    mask = np.logical_and(
+                        md.x0 >= md.range_min,
+                        md.x0 <= md.range_max
+                    )
+                    md.x = md.x0[mask].copy()
+                    md.Y = md.Y0[:, mask].copy()
+                else:
+                    md.x = md.x0.copy()
+                    md.Y = md.Y0.copy()
+
+                # Apply xcorrection if any
+                if md.xcorrection_value != 0.0:
+                    md.x += md.xcorrection_value
+
+                # Apply intensity norm if any
+                if md.intensity_norm_factor != 1.0:
+                    md.Y = md.Y * md.intensity_norm_factor
+
+                legacy_bl = sdata.get("baseline")
+                if legacy_bl:
+                    md.baseline_config = {
+                        "mode": legacy_bl.get("mode", "Linear"),
+                        "points": legacy_bl.get("points", [[], []]),
+                        "attached": legacy_bl.get("attached", False),
+                        "coef": legacy_bl.get("coef", 5),
+                    }
+                    # Batch evaluate baseline on cropped x/Y
+                    md.Y_baseline = eval_baseline_batch(md.x, md.Y, md.baseline_config)
+
+                # If baseline was subtracted in saved session, subtract it now!
+                if md.is_baseline_subtracted and md.Y_baseline is not None:
+                    md.Y = md.Y - md.Y_baseline
+                    md.Y_baseline = None
+
+                legacy_peaks = sdata.get("peak_models")
+                legacy_labels = sdata.get("peak_labels", [])
+                if legacy_peaks:
+                    md.fit_model = {
+                        "peak_labels": legacy_labels,
+                        "peak_models": legacy_peaks
+                    }
+                    
+                    # Reconstruct Y_peaks and Y_bestfit
+                    md.Y_peaks = []
+                    x_arr = md.x
+                    N = md.Y.shape[0]
+                    total_peaks = np.zeros_like(md.Y)
+                    for p_model in md.fit_model["peak_models"].values():
+                        y_curve = eval_peak_initial(x_arr, p_model)
+                        y_curve_batch = np.tile(y_curve, (N, 1))
+                        md.Y_peaks.append(y_curve_batch.astype(np.float32))
+                        total_peaks += y_curve_batch
+                    
+                    if md.Y_baseline is not None:
+                        md.Y_bestfit = (total_peaks + md.Y_baseline).astype(np.float32)
+                    else:
+                        md.Y_bestfit = total_peaks.astype(np.float32)
+
+                    md.fit_success = np.array([sdata.get("result_fit_success", False)], dtype=bool)
+
+        legacy_results = data.get("df_fit_results")
+        if legacy_results:
+            self.df_fit_results = pd.DataFrame(legacy_results)
+            self.fit_results_updated.emit(self.df_fit_results)
+        else:
+            self.df_fit_results = None
+
+        self._emit_list_update()
+        map_names = self.store.map_names
+        if len(map_names) > 0:
+            self.selected_fnames = [map_names[0]]
+            self._emit_selected_spectra()
+        else:
+            self.selected_fnames = []
+            self.spectra_selection_changed.emit([])
+        self.notify.emit("Legacy spectra workspace loaded successfully.")
 
     def clear_workspace(self):
         """Clear all spectra and reset workspace to initial state."""

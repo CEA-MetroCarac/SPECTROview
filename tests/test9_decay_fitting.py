@@ -57,33 +57,6 @@ def test_decay_single_exp_direct_lmfit(synthetic_decay_data):
     assert abs(result.params['B'].value - data['B_true']) / data['B_true'] < 0.1
 
 
-def test_decay_single_exp_fitspy_create_model(synthetic_decay_data):
-    """Test 2: Fitspy's create_model approach for DecaySingleExp."""
-    from fitspy.core.spectrum import create_model
-    
-    data = synthetic_decay_data
-    
-    # Create model with fitspy
-    model = create_model(decay_single_exp, "DecaySingleExp", prefix="m01_")
-    
-    # Set parameter hints
-    model.set_param_hint("A", value=np.max(data['y']), min=0)
-    model.set_param_hint("tau", value=5.0, min=0.1, max=100)
-    model.set_param_hint("B", value=np.min(data['y']), min=0)
-    
-    # Make params
-    params = model.make_params()
-    
-    # Fit
-    result = model.fit(data['y'], params, x=data['t'])
-    
-    # Assertions
-    assert result.success, f"Fit failed: {result.message}"
-    
-    # Check fitted values (with prefix)
-    assert abs(result.params['m01_A'].value - data['A_true']) / data['A_true'] < 0.1
-    assert abs(result.params['m01_tau'].value - data['tau_true']) / data['tau_true'] < 0.1
-    assert abs(result.params['m01_B'].value - data['B_true']) / data['B_true'] < 0.1
 
 
 def test_decay_with_baseline_composite(synthetic_decay_data):

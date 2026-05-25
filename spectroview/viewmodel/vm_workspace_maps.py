@@ -714,22 +714,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         """Emit updated list of map names."""
         map_names = list(self.maps.keys())
         self.maps_list_changed.emit(map_names)
-    
-    
-    def get_fit_results_dataframe(self):
-        """Get fit results DataFrame for the current map.
-        
-        This method returns a simplified version of the fit results for heatmap visualization.
-        It reuses self.df_fit_results (created by collect_fit_results) to avoid redundancy.
-        """
-        # If we have collected fit results (from collect_fit_results), use them
-        if self.df_fit_results is not None and not self.df_fit_results.empty:
-            return self.df_fit_results
-        
-        # Otherwise return empty DataFrame
-        return pd.DataFrame()
-    
-
 
 
     def _extract_coords_for_spectra(self, spectra):
@@ -928,14 +912,28 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     def _sync_fit_results_to_store(self):
         """Override: No-op for Maps since TensorFitThread writes directly to Store."""
         pass
+
+
+    def get_fit_results_dataframe(self):
+        """Get fit results DataFrame for the current map.
+        
+        This method returns a simplified version of the fit results for heatmap visualization.
+        It reuses self.df_fit_results (created by collect_fit_results) to avoid redundancy.
+        """
+        # If we have collected fit results (from collect_fit_results), use them
+        if self.df_fit_results is not None and not self.df_fit_results.empty:
+            return self.df_fit_results
+        return pd.DataFrame()
+    
     
     def collect_fit_results(self):
         """Collect fit results, delegating to SpectraStore via parent class and post-processing wafer coords."""
-        if not self.current_map_name:
-            self.notify.emit("No active map to collect results from.")
+        map_names = self.store.map_names
+        if not map_names:
+            self.notify.emit("No maps loaded to collect results from.")
             return
 
-        super().collect_fit_results(map_names=[self.current_map_name])
+        super().collect_fit_results(map_names=map_names)
 
         if self.df_fit_results is None or self.df_fit_results.empty:
             return
@@ -973,9 +971,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Trigger heatmap refresh with new fit results
         # This ensures the map viewer uses fresh data instead of cache
         if self.current_map_name:
-            # Clear VMapViewer's griddata cache to force recomputation
             self.clear_map_cache_requested.emit(self.current_map_name)
-            # Emit map data update to trigger plot refresh
             self.map_data_updated.emit(self.current_map_df)
     
     # ─────────────────────────────────────────────────────────────────

@@ -1901,10 +1901,10 @@ class VMWorkspaceSpectra(QObject):
     def collect_fit_results(self, map_names: list[str] = None):
         """Collect best-fit results from target maps and create DataFrame."""
         if map_names is None:
-            map_names = self._get_active_spectra()
+            map_names = self.store.map_names
             
         if not map_names:
-            self.notify.emit("No active spectra to collect results from.")
+            self.notify.emit("No loaded spectra to collect results from.")
             return
 
         dfs = []
@@ -1934,6 +1934,13 @@ class VMWorkspaceSpectra(QObject):
 
         # Concatenate all DataFrames
         df_all = pd.concat(dfs, ignore_index=True)
+        
+        # Drop X and Y columns for Spectra Workspace only
+        if type(self).__name__ == 'VMWorkspaceSpectra':
+            for col in ['X', 'Y']:
+                if col in df_all.columns:
+                    df_all.drop(columns=[col], inplace=True)
+                    
         # Round only non-coordinate float columns to 3 decimal places to preserve precision of coordinates (X, Y)
         cols_to_round = [col for col in df_all.columns if col not in ['Filename', 'X', 'Y', 'Quadrant', 'Zone']]
         df_all[cols_to_round] = df_all[cols_to_round].round(3)

@@ -2164,7 +2164,7 @@
 <p>This document provides a deep dive into the inner workings, architecture, and performance characteristics of the Tensor Fit Engine located in <code>spectroview/fit_engine/</code>.</p>
 <hr />
 <h2 id="1-why-the-tensor-engine-is-much-faster">1. Why the Tensor Engine is Much Faster<a class="headerlink" href="#1-why-the-tensor-engine-is-much-faster" title="Permanent link">&para;</a></h2>
-<p>The legacy fit engines (based on <code>lmfit</code>/<code>scipy.optimize.least_squares</code>) operate on a <strong>per-spectrum</strong> basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
+<p>The legacy fit engines operate on a <strong>per-spectrum</strong> basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
 - <strong>Python Function Call Overhead</strong>: Calling the objective function and Jacobian estimator thousands of times per iteration.
 - <strong>Finite-Difference Jacobians</strong>: Approximating the Jacobian numerically requires <code>2 * K</code> (where K is the number of parameters) additional function evaluations per iteration, per spectrum.
 - <strong>Sequential Execution</strong>: Even with multiprocessing, the overhead of serialization and inter-process communication creates bottlenecks.</p>
@@ -2185,7 +2185,7 @@
 <h2 id="15-performance-optimizations">1.5 Performance Optimizations<a class="headerlink" href="#15-performance-optimizations" title="Permanent link">&para;</a></h2>
 <p>Recent optimizations have achieved a 2.2x to 5x speedup across various datasets:</p>
 <ol>
-<li><strong>Template Model Application (11.9x speedup)</strong>: <code>_prepare_fit_model_template()</code> pre-computes lmfit Models and bounds sanitization <em>once</em>. Per-spectrum application only clones the lightweight <code>param_hints</code> dictionary.</li>
+<li><strong>Template Model Application (11.9x speedup)</strong>: <code>_prepare_fit_model_template()</code> pre-computes python Models and bounds sanitization <em>once</em>. Per-spectrum application only clones the lightweight <code>param_hints</code> dictionary.</li>
 <li><strong>Batch Preprocessing (3.0x speedup)</strong>: <code>_batch_preprocess()</code> computes range masks and baseline indices once for all spectra sharing the same x-axis, using vectorized subtraction instead of per-spectrum calls.</li>
 <li><strong>Adaptive Batched Solver (up to 5x speedup)</strong>: The solver dynamically chooses between NumPy's batched <code>np.linalg.solve</code> (best for large N) and SciPy's <code>cho_solve</code> (Cholesky decomposition, best for small N / large K, exploiting symmetric positive-definite normal equations).</li>
 <li><strong>Mean-Based Convergence Criteria</strong>: The convergence check uses <code>mean(|Δp| / |p|) &lt; xtol</code> rather than <code>max()</code>, preventing a single slowly-converging parameter in multi-peak models from stalling the entire batch.</li>
@@ -2252,7 +2252,7 @@
 <tr>
 <td><code>scalar_models.py</code></td>
 <td><code>FitResult</code>, <code>ParamValue</code>, scalar functions</td>
-<td>Lightweight result classes compatible with lmfit's interface. Scalar peak functions used as fallbacks when no batched implementation exists. Contains <code>PEAK_MODEL_REGISTRY</code>.</td>
+<td>Lightweight result classes compatible with legacy interfaces. Scalar peak functions used as fallbacks when no batched implementation exists. Contains <code>PEAK_MODEL_REGISTRY</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -2276,7 +2276,7 @@
     TFT--&gt;&gt;VM: finished + timings</code></pre>
 <h3 id="step-by-step-details">Step-by-Step Details<a class="headerlink" href="#step-by-step-details" title="Permanent link">&para;</a></h3>
 <p><strong>Step 1 — Model Application</strong> (<code>apply_model_to_spectra=True</code>):
-Instead of a slow per-spectrum deepcopy, <code>_prepare_fit_model_template()</code> creates a highly optimized template. It builds lmfit Model objects and sanitizes parameter bounds exactly once. Then, <code>_apply_template_to_spectrum()</code> merely copies the lightweight <code>param_hints</code> dictionary. When <code>False</code> (Spectra workspace with per-spectrum models), spectra are grouped by model signature and processed as separate batches.</p>
+Instead of a slow per-spectrum deepcopy, <code>_prepare_fit_model_template()</code> creates a highly optimized template. It builds Model objects and sanitizes parameter bounds exactly once. Then, <code>_apply_template_to_spectrum()</code> merely copies the lightweight <code>param_hints</code> dictionary. When <code>False</code> (Spectra workspace with per-spectrum models), spectra are grouped by model signature and processed as separate batches.</p>
 <p><strong>Step 2 — Evaluator Construction</strong>:
 <code>TensorEvaluator.from_fit_model()</code> parses the model. For each peak:
 - Looks up the model name in <code>BATCHED_MODELS</code> (fast path) or <code>PEAK_MODEL_REGISTRY</code> (scalar fallback).

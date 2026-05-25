@@ -557,9 +557,15 @@ class VMWorkspaceSpectra(QObject):
         minfwhm = fit_settings.get("minfwhm", 0.0)
         peak_shape = self._current_peak_shape or "Lorentzian"
 
+        # Determine which spectrum index to use
+        spec_idx = 0
+        if self.selected_fnames and self.selected_fnames[0] in md.fnames:
+            spec_idx = md.fnames.index(self.selected_fnames[0])
+
         # Determine y value
         idx = closest_index(md.x if md.x is not None else md.x0, x)
-        y_val = float(md.Y[0][idx] if md.Y is not None else md.Y0[0][idx])
+        y_arr = md.Y[spec_idx] if md.Y is not None else md.Y0[spec_idx]
+        y_val = float(y_arr[idx])
         if y_val <= 0: y_val = 1e-10
 
         # Create new peak dict
@@ -575,7 +581,6 @@ class VMWorkspaceSpectra(QObject):
         peak_idx = str(next_idx)
         
         peak_model = {}
-        y_arr = md.Y[0] if md.Y is not None else md.Y0[0]
         self._initialize_peak_params(peak_model, peak_shape, x, y_val, minfwhm, maxfwhm, maxshift, y_arr)
 
         while len(md.fit_model["peak_labels"]) <= next_idx:
@@ -1189,15 +1194,14 @@ class VMWorkspaceSpectra(QObject):
             bl = md.baseline_config
             is_sub = getattr(md, "is_baseline_subtracted", False)
             is_sub_val = bool(is_sub[0]) if isinstance(is_sub, np.ndarray) else bool(is_sub)
-            md.fit_model["baseline"] = {
-                "mode": bl.get("mode"),
-                "coef": bl.get("coef", 5.0),
-                "points": bl.get("points", [[], []]),
-                "attached": bl.get("attached", True),
-                "is_subtracted": is_sub_val
-            }
+            
+            md.fit_model["baseline"] = deepcopy(bl)
+            md.fit_model["baseline"]["is_subtracted"] = is_sub_val
         else:
             md.fit_model["baseline"] = None
+
+        # Inject current fit settings
+        md.fit_model["fit_params"] = self.settings.load_fit_settings()
 
         self._fitmodel_clipboard = deepcopy(md.fit_model)
         self.notify.emit("Fit model copied to clipboard.")
@@ -1237,15 +1241,14 @@ class VMWorkspaceSpectra(QObject):
             bl = md.baseline_config
             is_sub = getattr(md, "is_baseline_subtracted", False)
             is_sub_val = bool(is_sub[0]) if isinstance(is_sub, np.ndarray) else bool(is_sub)
-            md.fit_model["baseline"] = {
-                "mode": bl.get("mode"),
-                "coef": bl.get("coef", 5.0),
-                "points": bl.get("points", [[], []]),
-                "attached": bl.get("attached", True),
-                "is_subtracted": is_sub_val
-            }
+            
+            md.fit_model["baseline"] = deepcopy(bl)
+            md.fit_model["baseline"]["is_subtracted"] = is_sub_val
         else:
             md.fit_model["baseline"] = None
+
+        # Inject current fit settings
+        md.fit_model["fit_params"] = self.settings.load_fit_settings()
 
         default_dir = ""
         if hasattr(self, "_vm_fit_model_builder") and self._vm_fit_model_builder is not None:
@@ -1320,6 +1323,10 @@ class VMWorkspaceSpectra(QObject):
             md = self.store.get_map_data(fname)
             if md and md.fit_model:
                 self._reindex_fit_model(md)
+                
+                # Inject current fit settings
+                md.fit_model["fit_params"] = self.settings.load_fit_settings()
+                
                 tasks.append({
                     "map_name": fname,
                     "indices": np.array([0]),
@@ -1354,6 +1361,10 @@ class VMWorkspaceSpectra(QObject):
         if not fnames:
             self.notify.emit("No spectra selected.")
             return
+
+        # Ensure fit_model has fit_params before running
+        if "fit_params" not in fit_model:
+            fit_model["fit_params"] = self.settings.load_fit_settings()
 
         tasks = []
         for fname in fnames:
@@ -1464,7 +1475,13 @@ class VMWorkspaceSpectra(QObject):
         minfwhm = fit_settings.get("minfwhm", 0.0)
         
         new_params = {}
-        y_arr = md.Y[0] if md.Y is not None else md.Y0[0]
+        
+        # Determine which spectrum index to use
+        spec_idx = 0
+        if self.selected_fnames and self.selected_fnames[0] in md.fnames:
+            spec_idx = md.fnames.index(self.selected_fnames[0])
+            
+        y_arr = md.Y[spec_idx] if md.Y is not None else md.Y0[spec_idx]
         self._initialize_peak_params(new_params, model_name, x0, ampli, minfwhm, maxfwhm, maxshift, y_arr)
 
         md.fit_model["peak_models"][str(index)] = {model_name: new_params}

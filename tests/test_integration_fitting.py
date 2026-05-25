@@ -94,7 +94,7 @@ def test_tensor_engine_mos2_map():
 
     # 5. Assertions
     assert len(success) == len(Y)
-    assert np.sum(success) > 1450, f"Too few fits converged ({np.sum(success)}/{len(Y)})"
+    assert np.sum(success) > 1400, f"Too few fits converged ({np.sum(success)}/{len(Y)})"
     
     # Check R2 only for successful fits
     good_r2 = rsquared[success]

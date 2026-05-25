@@ -2391,17 +2391,17 @@ Spectra with different lengths are zero-padded to <code>max_M</code> (the longes
 <tr>
 <td><code>Gaussian</code></td>
 <td><code>ampli, fwhm, x0</code></td>
-<td><span class="arithmatex">\(a \cdot \exp\left(-4\ln 2 \cdot \frac{(x-x_0)^2}{w^2}\right)\)</span></td>
+<td><i>a</i> &middot; exp(-4 ln(2) &middot; (x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>)</td>
 </tr>
 <tr>
 <td><code>Lorentzian</code></td>
 <td><code>ampli, fwhm, x0</code></td>
-<td><span class="arithmatex">\(\frac{a}{1 + 4(x-x_0)^2/w^2}\)</span></td>
+<td><i>a</i> / [1 + 4(x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>]</td>
 </tr>
 <tr>
 <td><code>PseudoVoigt</code></td>
 <td><code>ampli, fwhm, x0, alpha</code></td>
-<td><span class="arithmatex">\(\alpha \cdot G + (1-\alpha) \cdot L\)</span></td>
+<td>&alpha; &middot; G + (1-&alpha;) &middot; L</td>
 </tr>
 <tr>
 <td><code>GaussianAsym</code></td>
@@ -2416,17 +2416,17 @@ Spectra with different lengths are zero-padded to <code>max_M</code> (the longes
 <tr>
 <td><code>Fano</code></td>
 <td><code>ampli, fwhm, x0, q</code></td>
-<td><span class="arithmatex">\(a \cdot \frac{(q + \varepsilon)^2}{1 + \varepsilon^2}\)</span>, <span class="arithmatex">\(\varepsilon = \frac{2(x-x_0)}{w}\)</span></td>
+<td><i>a</i> &middot; (q + &epsilon;)<sup>2</sup> / (1 + &epsilon;<sup>2</sup>), &epsilon; = 2(x-x<sub>0</sub>)/w</td>
 </tr>
 <tr>
 <td><code>DecaySingleExp</code></td>
 <td><code>A, tau, B</code></td>
-<td><span class="arithmatex">\(A \cdot e^{-x/\tau} + B\)</span></td>
+<td><i>A</i> &middot; e<sup>-x/&tau;</sup> + B</td>
 </tr>
 <tr>
 <td><code>DecayBiExp</code></td>
 <td><code>A1, tau1, A2, tau2, B</code></td>
-<td><span class="arithmatex">\(A_1 e^{-x/\tau_1} + A_2 e^{-x/\tau_2} + B\)</span></td>
+<td><i>A</i><sub>1</sub> &middot; e<sup>-x/&tau;<sub>1</sub></sup> + <i>A</i><sub>2</sub> &middot; e<sup>-x/&tau;<sub>2</sub></sup> + B</td>
 </tr>
 </tbody>
 </table>

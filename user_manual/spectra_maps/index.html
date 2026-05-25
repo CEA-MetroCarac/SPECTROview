@@ -772,6 +772,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#supported-peak-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Peak Profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#peaktable-panel" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1442,6 +1453,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#supported-peak-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Peak Profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#peaktable-panel" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1701,6 +1723,59 @@
 <li>Every peak added to the plot is immediately listed in the <strong>PeakTable</strong>.</li>
 <li>Supported peak profiles include: Lorentzian, Gaussian, PseudoVoigt, LorentzianAsym, GaussianAsym, Fano, DecaySingleExp, and DecayBiExp.</li>
 </ul>
+<h4 id="supported-peak-profiles">Supported Peak Profiles<a class="headerlink" href="#supported-peak-profiles" title="Permanent link">&para;</a></h4>
+<p>SPECTROview’s tensor fit engine provides heavily optimized implementations for the following mathematical peak profiles:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Parameters</th>
+<th>Formula</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Gaussian</code></td>
+<td><code>ampli, fwhm, x0</code></td>
+<td><i>a</i> &middot; exp(-4 ln(2) &middot; (x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>)</td>
+</tr>
+<tr>
+<td><code>Lorentzian</code></td>
+<td><code>ampli, fwhm, x0</code></td>
+<td><i>a</i> / [1 + 4(x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>]</td>
+</tr>
+<tr>
+<td><code>PseudoVoigt</code></td>
+<td><code>ampli, fwhm, x0, alpha</code></td>
+<td>&alpha; &middot; G + (1-&alpha;) &middot; L</td>
+</tr>
+<tr>
+<td><code>GaussianAsym</code></td>
+<td><code>ampli, fwhm_l, fwhm_r, x0</code></td>
+<td>Piecewise Gaussian with left/right FWHM</td>
+</tr>
+<tr>
+<td><code>LorentzianAsym</code></td>
+<td><code>ampli, fwhm_l, fwhm_r, x0</code></td>
+<td>Piecewise Lorentzian with left/right FWHM</td>
+</tr>
+<tr>
+<td><code>Fano</code></td>
+<td><code>ampli, fwhm, x0, q</code></td>
+<td><i>a</i> &middot; (q + &epsilon;)<sup>2</sup> / (1 + &epsilon;<sup>2</sup>), &epsilon; = 2(x-x<sub>0</sub>)/w</td>
+</tr>
+<tr>
+<td><code>DecaySingleExp</code></td>
+<td><code>A, tau, B</code></td>
+<td><i>A</i> &middot; e<sup>-t/&tau;</sup> + B</td>
+</tr>
+<tr>
+<td><code>DecayBiExp</code></td>
+<td><code>A1, tau1, A2, tau2, B</code></td>
+<td><i>A</i><sub>1</sub> &middot; e<sup>-t/&tau;<sub>1</sub></sup> + <i>A</i><sub>2</sub> &middot; e<sup>-t/&tau;<sub>2</sub></sup> + B</td>
+</tr>
+</tbody>
+</table>
 <h4 id="peaktable-panel">PeakTable Panel<a class="headerlink" href="#peaktable-panel" title="Permanent link">&para;</a></h4>
 <p>The PeakTable displays all mathematical parameters for the peaks you have defined. When you drag a peak in the viewer, these properties update dynamically.</p>
 <p><strong>Dynamic Peak Indexing</strong>: Every peak is automatically indexed with a suffix (e.g., <code>_1</code>, <code>_2</code>) indicating its order of creation. When you add, delete, or re-order peaks, SPECTROview automatically re-indexes them to maintain consecutive numbering (e.g., if you delete peak 2, peak 3 becomes the new peak 2). This ensures your expressions and fit results remain organized.</p>

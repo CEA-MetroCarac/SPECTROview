@@ -134,18 +134,23 @@ The PeakTable displays all mathematical parameters for the peaks you have define
 
 **Add Constraints for Fit Model**:
 
-- **Fix**: Check this box to freeze the parameter value, preventing the optimizer from changing it during the fit.
-- **Limits**: Enter minimum and maximum boundary values to restrict how far the optimizer can move the parameter.
-- **Expression**: Define complex mathematical relationships between parameters.
+**Fix**: Check "fix" box to freeze the parameter value, preventing the optimizer from changing it during the fit.
 
+
+**Limits**: Enter minimum and maximum boundary values to restrict how far the optimizer can move the parameter.
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/peak_table_max_min.png" alt="Peak Table Constraints" width="800"><br>
-   <i>Example 1: Using an expression to constrain the position (`x0`) of `m02` to always remain exactly 17 units away from the position of `m01`.</i>
+   <i>Example 1: Activate the "Limits" under the peak table and set 'min' and 'max' values for each fit parameter.</i>
 </div>
+
+
+**Expression**: Define complex mathematical relationships between parameters.
+
+
 
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/peak_table_expression.png" alt="Peak Table Expressions" width="800"><br>
-   <i>Example 2: Using an expression to constrain the amplitude of `m03` to always be exactly half the amplitude of `m02`.</i>
+   <i>Example 2: Using an expression to constrain that (1) the peak position of peak E (P2) is 17 smaller than peak A (P1) or (2) the amplitude of peak E (P2) is exactly half the amplitude of  A (P1).</i>
 </div>
 
 #### FitModelControl Panel

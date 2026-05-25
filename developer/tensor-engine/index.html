@@ -1332,22 +1332,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#9-noise-amplitude-estimation-and-noise-threshold" class="md-nav__link">
+  <a href="#9-noise-level-estimation-and-noise-threshold" class="md-nav__link">
     <span class="md-ellipsis">
       
-        9. Noise Amplitude Estimation and Noise Threshold
+        9. Noise Level Estimation and Noise Threshold
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="9. Noise Amplitude Estimation and Noise Threshold">
+    <nav class="md-nav" aria-label="9. Noise Level Estimation and Noise Threshold">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#how-noise-amplitude-is-estimated-eval_noise_amplitude" class="md-nav__link">
+  <a href="#how-noise-level-is-estimated-detect_noise_level" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How Noise Amplitude Is Estimated (eval_noise_amplitude)
+        How Noise Level Is Estimated (detect_noise_level)
       
     </span>
   </a>
@@ -1935,22 +1935,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#9-noise-amplitude-estimation-and-noise-threshold" class="md-nav__link">
+  <a href="#9-noise-level-estimation-and-noise-threshold" class="md-nav__link">
     <span class="md-ellipsis">
       
-        9. Noise Amplitude Estimation and Noise Threshold
+        9. Noise Level Estimation and Noise Threshold
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="9. Noise Amplitude Estimation and Noise Threshold">
+    <nav class="md-nav" aria-label="9. Noise Level Estimation and Noise Threshold">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#how-noise-amplitude-is-estimated-eval_noise_amplitude" class="md-nav__link">
+  <a href="#how-noise-level-is-estimated-detect_noise_level" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How Noise Amplitude Is Estimated (eval_noise_amplitude)
+        How Noise Level Is Estimated (detect_noise_level)
       
     </span>
   </a>
@@ -2214,7 +2214,6 @@
     TE --&gt;|"builds"| EV["TensorEvaluator"]
     TE --&gt;|"calls"| OPT["batched_LM()"]
     EV --&gt;|"routes to"| MOD["models.py"]
-    EV --&gt;|"fallback"| SM["scalar_models.py"]
     OPT --&gt;|"evaluate / jacobian"| EV</code></pre>
 <table>
 <thead>
@@ -2228,7 +2227,7 @@
 <tr>
 <td><code>tensor_fit_thread.py</code></td>
 <td><code>TensorFitThread</code></td>
-<td>QThread wrapper. Supports single-model and batched modes. Emits <code>progress_changed</code> and <code>timings_ready</code> signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults.</td>
+<td>QThread wrapper. Supports batched modes. Emits <code>progress_changed</code> and <code>timings_ready</code> signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults.</td>
 </tr>
 <tr>
 <td><code>tensor_engine.py</code></td>
@@ -2523,11 +2522,11 @@ When spectra have different peak configurations, the ViewModel groups them by mo
 </tbody>
 </table>
 <hr />
-<h2 id="9-noise-amplitude-estimation-and-noise-threshold">9. Noise Amplitude Estimation and Noise Threshold<a class="headerlink" href="#9-noise-amplitude-estimation-and-noise-threshold" title="Permanent link">&para;</a></h2>
+<h2 id="9-noise-level-estimation-and-noise-threshold">9. Noise Level Estimation and Noise Threshold<a class="headerlink" href="#9-noise-level-estimation-and-noise-threshold" title="Permanent link">&para;</a></h2>
 <p>The <code>coef_noise</code> parameter controls a noise-aware filtering system that can significantly improve both the <strong>performance</strong> and <strong>precision</strong> of fitting, especially on hyperspectral maps where many pixels may contain weak or absent peaks.</p>
-<h3 id="how-noise-amplitude-is-estimated-eval_noise_amplitude">How Noise Amplitude Is Estimated (<code>eval_noise_amplitude</code>)<a class="headerlink" href="#how-noise-amplitude-is-estimated-eval_noise_amplitude" title="Permanent link">&para;</a></h3>
-<p>The noise amplitude is estimated by the <code>eval_noise_amplitude()</code> function from the <code>fitspy</code> library (<code>fitspy.core.utils</code>). It quantifies the <strong>high-frequency oscillation amplitude</strong> of the spectrum — i.e., the typical point-to-point noise — while being robust to real spectral features.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span> <span class="nf">eval_noise_amplitude</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+<h3 id="how-noise-level-is-estimated-detect_noise_level">How Noise Level Is Estimated (<code>detect_noise_level</code>)<a class="headerlink" href="#how-noise-level-is-estimated-detect_noise_level" title="Permanent link">&para;</a></h3>
+<p>The noise level is estimated by the native <code>detect_noise_level()</code> function. It quantifies the <strong>high-frequency oscillation amplitude</strong> of the spectrum — i.e., the typical point-to-point noise — while being robust to real spectral features.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span> <span class="nf">detect_noise_level</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>                              <span class="c1"># δ[i] = y[i+1] − y[i]</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">delta1</span><span class="p">,</span> <span class="n">delta2</span> <span class="o">=</span> <span class="n">delta</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">delta</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>          <span class="c1"># adjacent difference pairs</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">delta1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">delta2</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># sign-alternating (zigzag)</span>

@@ -1077,10 +1077,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#extraction-pipeline" class="md-nav__link">
+  <a href="#tensor-registration-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Extraction Pipeline
+        Tensor Registration Pipeline
       
     </span>
   </a>
@@ -1260,22 +1260,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#persistence-binary-format-v2" class="md-nav__link">
+  <a href="#persistence-workspace-saveload" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Persistence: Binary Format v2
+        Persistence: Workspace Save/Load
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Persistence: Binary Format v2">
+    <nav class="md-nav" aria-label="Persistence: Workspace Save/Load">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#save" class="md-nav__link">
+  <a href="#save-v4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Save
+        Save (v4+)
       
     </span>
   </a>
@@ -1283,21 +1283,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#load-with-legacy-fallback" class="md-nav__link">
+  <a href="#backward-compatible-loading" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Load (with legacy fallback)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#kdtree-based-spectrum-reconstruction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        KDTree-Based Spectrum Reconstruction
+        Backward-Compatible Loading
       
     </span>
   </a>
@@ -1586,10 +1575,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#extraction-pipeline" class="md-nav__link">
+  <a href="#tensor-registration-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Extraction Pipeline
+        Tensor Registration Pipeline
       
     </span>
   </a>
@@ -1769,22 +1758,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#persistence-binary-format-v2" class="md-nav__link">
+  <a href="#persistence-workspace-saveload" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Persistence: Binary Format v2
+        Persistence: Workspace Save/Load
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Persistence: Binary Format v2">
+    <nav class="md-nav" aria-label="Persistence: Workspace Save/Load">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#save" class="md-nav__link">
+  <a href="#save-v4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Save
+        Save (v4+)
       
     </span>
   </a>
@@ -1792,21 +1781,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#load-with-legacy-fallback" class="md-nav__link">
+  <a href="#backward-compatible-loading" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Load (with legacy fallback)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#kdtree-based-spectrum-reconstruction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        KDTree-Based Spectrum Reconstruction
+        Backward-Compatible Loading
       
     </span>
   </a>
@@ -1872,7 +1850,7 @@
     VWM --&gt;|"calls"| VMWM["VMWorkspaceMaps"]
     VMWM --&gt;|"signals"| VWM
 
-    VMWM --&gt; MSS["MSpectra"]
+    VMWM --&gt; MSS["SpectraStore"]
     VMWM --&gt; IO["m_io"]</code></pre>
 <hr />
 <h2 id="key-design-decision-inheritance">Key Design Decision: Inheritance<a class="headerlink" href="#key-design-decision-inheritance" title="Permanent link">&para;</a></h2>
@@ -1885,7 +1863,7 @@
 <hr />
 <h2 id="key-classes">Key Classes<a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
 <h3 id="vmworkspacemaps-the-viewmodel"><code>VMWorkspaceMaps</code> — The ViewModel<a class="headerlink" href="#vmworkspacemaps-the-viewmodel" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/viewmodel/vm_workspace_maps.py</code> (~719 lines)</p>
+<p><strong>File</strong>: <code>spectroview/viewmodel/vm_workspace_maps.py</code></p>
 <table>
 <thead>
 <tr>
@@ -1901,10 +1879,6 @@
 <tr>
 <td><strong>Map selection</strong></td>
 <td><code>select_map(name)</code>, <code>_show_map_spectra(name)</code></td>
-</tr>
-<tr>
-<td><strong>Spectra extraction</strong></td>
-<td><code>_extract_spectra_from_map(name, df)</code></td>
 </tr>
 <tr>
 <td><strong>Map deletion</strong></td>
@@ -1924,7 +1898,7 @@
 </tr>
 <tr>
 <td><strong>Persistence</strong></td>
-<td><code>save_work()</code>, <code>load_work()</code> — binary format v2 with numpy+gzip</td>
+<td><code>save_work()</code>, <code>load_work()</code> — ZIP archive with numpy+gzip arrays and dataframes</td>
 </tr>
 </tbody>
 </table>
@@ -2014,31 +1988,18 @@
 <li>All remaining columns are wavenumber values (as strings), each containing intensity data.</li>
 <li>Each row represents one spatial point (one spectrum).</li>
 </ul>
-<h3 id="extraction-pipeline">Extraction Pipeline<a class="headerlink" href="#extraction-pipeline" title="Permanent link">&para;</a></h3>
-<pre class="mermaid"><code>sequenceDiagram
-    participant VM as VMWorkspaceMaps
-    participant IO as m_io
-    participant MS as MSpectrum
-
-    VM-&gt;&gt;IO: load_wdf_map(path)
-    IO--&gt;&gt;VM: DataFrame (N rows × [X, Y, wn1, wn2, ...]) + metadata
-
-    loop For each row in DataFrame
-        VM-&gt;&gt;MS: Create MSpectrum()
-        VM-&gt;&gt;MS: fname = "mapname_(x, y)"
-        VM-&gt;&gt;MS: x = wavenumber_values[:-1]
-        VM-&gt;&gt;MS: y = intensity_values[:-1]
-        VM-&gt;&gt;MS: x0 = x.copy(), y0 = y.copy()
-        VM-&gt;&gt;MS: metadata = map_metadata.copy()
-        VM-&gt;&gt;VM: spectra.add(spectrum)
-    end</code></pre>
+<h3 id="tensor-registration-pipeline">Tensor Registration Pipeline<a class="headerlink" href="#tensor-registration-pipeline" title="Permanent link">&para;</a></h3>
+<p>When maps are loaded, raw coordinates, wavenumber grids, and spectral matrices are registered directly into <code>SpectraStore</code> in a single batched operation:
+1. <code>self.store.add_map(name, x0, Y0, coords, fnames, is_active)</code> allocates contiguous NumPy arrays.
+2. Individual spectrum filenames are auto-generated following the coordinate pattern: <code>{map_name}_(x_pos, y_pos)</code>.
+3. Working copies and results are computed vectorially, avoiding any legacy row-by-row instance overhead.</p>
 <div class="admonition important">
 <p class="admonition-title">Filename Convention</p>
-<p>Map spectra use the format <code>{map_name}_(x_pos, y_pos)</code> as their <code>fname</code>. This naming convention is <strong>critical</strong> — it's used to:</p>
+<p>Map spectra use the format <code>{map_name}_(x_pos, y_pos)</code> as their <code>fname</code>. This naming convention is used to:</p>
 <ul>
 <li>Filter spectra belonging to a specific map (<code>fname.startswith(prefix)</code>)</li>
 <li>Extract (X, Y) coordinates from the filename for fit results</li>
-<li>Match spectra back to DataFrame rows during heatmap rendering</li>
+<li>Match spectra back to DataFrame rows during heatmap rendering and coordinate querieseatmap rendering</li>
 </ul>
 </div>
 <hr />
@@ -2212,40 +2173,20 @@
 <li>The <code>switch_to_graphs_tab</code> signal triggers a tab switch</li>
 </ol>
 <hr />
-<h2 id="persistence-binary-format-v2">Persistence: Binary Format v2<a class="headerlink" href="#persistence-binary-format-v2" title="Permanent link">&para;</a></h2>
-<p>Maps workspace uses a high-performance binary serialization for DataFrames:</p>
-<h3 id="save">Save<a class="headerlink" href="#save" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">def</span> <span class="nf">_map_df_to_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">map_df</span><span class="p">):</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">arr</span> <span class="o">=</span> <span class="n">map_df</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">map_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="c1"># compresslevel=1 for massive speedup (~70s → ~3s)</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;cols&#39;</span><span class="p">:</span> <span class="n">cols</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">gzip</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(),</span> <span class="n">compresslevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">hex</span><span class="p">()}</span>
-</code></pre></div>
-<h3 id="load-with-legacy-fallback">Load (with legacy fallback)<a class="headerlink" href="#load-with-legacy-fallback" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nd">@staticmethod</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">def</span> <span class="nf">_binary_to_map_df</span><span class="p">(</span><span class="n">entry</span><span class="p">):</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        <span class="c1"># Legacy v1: gzip-compressed CSV as hex</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>        <span class="n">csv_data</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">entry</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="n">csv_data</span><span class="p">))</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        <span class="c1"># v2: numpy binary</span>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        <span class="n">raw</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]))</span>
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">raw</span><span class="p">))</span>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">entry</span><span class="p">[</span><span class="s1">&#39;cols&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-</code></pre></div>
-<h3 id="kdtree-based-spectrum-reconstruction">KDTree-Based Spectrum Reconstruction<a class="headerlink" href="#kdtree-based-spectrum-reconstruction" title="Permanent link">&para;</a></h3>
-<p>During <code>load_work()</code>, spectra must be matched back to their map DataFrame rows. Rather than iterating row-by-row, the loader uses a <strong>batched KDTree</strong> approach:</p>
-<ol>
-<li>Group all spectrum coordinates by map name</li>
-<li>Build a <code>scipy.KDTree</code> from the map's (X, Y) positions</li>
-<li>Batch-query all spectrum coordinates at once</li>
-<li>Use squared distance threshold (<code>&lt; 1e-4</code>) to validate matches</li>
-<li>Assign <code>x0</code> and <code>y0</code> from the matched DataFrame row</li>
-</ol>
-<p>This achieves O(N log N) reconstruction instead of O(N²).</p>
+<h2 id="persistence-workspace-saveload">Persistence: Workspace Save/Load<a class="headerlink" href="#persistence-workspace-saveload" title="Permanent link">&para;</a></h2>
+<p>Maps workspace uses the shared ZIP-backed serialization strategy for saving/loading work, which splits metadata and arrays to achieve maximum performance.</p>
+<h3 id="save-v4">Save (v4+)<a class="headerlink" href="#save-v4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Lightweight per-map metadata (such as <code>baseline_config</code>, <code>fit_model</code>, and <code>range_min</code>) is serialized to JSON inside <code>metadata.json</code>.</li>
+<li>Heavy multi-spectrum coordinate matrices and raw intensities are serialized directly into <code>arrays.npz</code> as binary NumPy matrices under <code>store_{map_name}_coords</code>, <code>store_{map_name}_x0</code>, and <code>store_{map_name}_y0</code>.</li>
+<li>Best-fit curves and statistics DataFrames are serialized to <code>dataframes.pkl</code> using highly optimized Python pickles.</li>
+</ul>
+<h3 id="backward-compatible-loading">Backward-Compatible Loading<a class="headerlink" href="#backward-compatible-loading" title="Permanent link">&para;</a></h3>
+<p>To support legacy workspaces saved with older versions of SPECTROview (which are raw JSON <code>.map</code>/<code>.maps</code> files containing alternating hex/gzip strings), a custom parser parses and upgrades them:
+1. <strong>Gzip CSV Decompression</strong>: Decodes hex strings and decompresses the gzip streams to load map DataFrames directly into memory.
+2. <strong>Fast Coordinate Mapping</strong>: Builds an O(N) lookup dictionary of individual row properties indexed by <code>(map_name, round(X, 3), round(Y, 3))</code> to link coordinates back to active flags, baseline anchor points, and peak definitions.
+3. <strong>Contiguous Allocation</strong>: Packs the data into <code>SpectraStore</code> in batch layouts.
+4. <strong>Vectorized Curve Restoration</strong>: Batch evaluates legacy baselines and peak functions to immediately render the fits in the viewer without needing to refit the raw data.</p>
 <hr />
 <h2 id="method-overrides">Method Overrides<a class="headerlink" href="#method-overrides" title="Permanent link">&para;</a></h2>
 <p>The Maps ViewModel overrides several parent methods to maintain map-specific state:</p>

@@ -312,19 +312,36 @@ def rgba_to_default_color(rgba, default_colors=DEFAULT_COLORS):
 
 
 def set_spectrum_item_color(item: QListWidgetItem, spectrum_info: dict):
-    """Set list item background color based on spectrum status."""
-    has_baseline = spectrum_info.get("has_baseline", False)
-    fit_success = spectrum_info.get("fit_success", False)
+    """Set list item background color based on spectrum status.
     
-    if has_baseline:
-        if not fit_success:
-            # Baseline subtracted but no fit result
-            item.setBackground(QColor("gray"))
+    Status hierarchy:
+    1. Fitted (has_fit):
+       - Converged: Color 4 (Soft Success Green)
+       - Not Converged: Color 3 (Soft Warning Orange)
+    2. Baselined (has_baseline): Color 2 (Soft Purple)
+    3. Cropped (is_cropped): Color 1 (Soft Blue)
+    4. Original/Reinit: Transparent (no color)
+    """
+    is_cropped = spectrum_info.get("is_cropped", False)
+    has_baseline = spectrum_info.get("has_baseline", False)
+    has_fit = spectrum_info.get("has_fit", False)
+    fit_success = spectrum_info.get("fit_success", False)
+
+    if has_fit:
+        if fit_success:
+            # Color 4: Converged Fit (Soft Green)
+            item.setBackground(QColor(39, 174, 96, 65))
         else:
-            # Fit succeeded
-            item.setBackground(QColor("green"))
+            # Color 3: Unconverged Fit (Soft Orange/Red)
+            item.setBackground(QColor(230, 126, 34, 65))
+    elif has_baseline:
+        # Color 2: Baselined (Soft Purple)
+        item.setBackground(QColor(142, 68, 173, 60))
+    elif is_cropped:
+        # Color 1: Cropped (Soft Blue)
+        item.setBackground(QColor(41, 128, 185, 60))
     else:
-        # Baseline not subtracted - transparent background
+        # Original/Reinit: Transparent
         item.setBackground(QColor(0, 0, 0, 0))
 
 def show_alert(message):

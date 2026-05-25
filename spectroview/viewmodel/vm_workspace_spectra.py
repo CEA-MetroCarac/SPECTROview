@@ -472,7 +472,6 @@ class VMWorkspaceSpectra(QObject):
         # self.store.remove_cosmic_rays()
         self.notify.emit("Cosmic ray detection completed.")
 
-    # Internal helpers
     def _emit_list_update(self):
         """Emit updated list of spectra dicts and count."""
         spectra_info = []
@@ -480,14 +479,27 @@ class VMWorkspaceSpectra(QObject):
             md = self.store.get_map_data(name)
             if not md: continue
             
-            has_fit = md.peak_params is not None and len(md.peak_params) > 0
+            # Crop status
+            is_cropped = md.range_min is not None or md.range_max is not None
+            
+            # Baseline status
             has_baseline = md.baseline_config is not None
+            
+            # Fit status
+            has_fit = False
+            fit_converged = False
+            if md.peak_params is not None and len(md.peak_params) > 0:
+                has_fit = np.any(md.peak_params[0] != 0.0)
+                if has_fit and md.fit_success is not None:
+                    fit_converged = bool(md.fit_success[0])
             
             spectra_info.append({
                 "fname": name,
                 "is_active": bool(md.is_active[0]),
+                "is_cropped": is_cropped,
                 "has_baseline": has_baseline,
-                "fit_success": has_fit,
+                "has_fit": has_fit,
+                "fit_success": fit_converged,
             })
             
         self.spectra_list_changed.emit(spectra_info)
@@ -1032,12 +1044,13 @@ class VMWorkspaceSpectra(QObject):
                 md.fit_model = None
                 md.Y_peaks = None
                 md.Y_bestfit = None
+                md.peak_params = None
+                md.fit_success = None
+                md.fit_r2 = None
 
         self._emit_selected_spectra()
         self._emit_list_update()  # Refresh list colors after clear peaks
 
-
-    
     
     def _apply_fit_model_to_mapdata(self, md, fit_model, indices=None):
         """Cleanly resets and applies a fit model (cropping, baseline, and peaks) to MapData."""

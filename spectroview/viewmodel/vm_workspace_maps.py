@@ -248,16 +248,35 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             self.count_changed.emit(0)
             return
 
-        has_fit = md.peak_params is not None and len(md.peak_params) > 0
+        # Crop status
+        is_cropped = md.range_min is not None or md.range_max is not None
+
+        # Baseline status
+        has_baseline_config = md.baseline_config is not None
 
         spectra_info = []
         for i, fname in enumerate(md.fnames):
-            fit_ok = bool(md.fit_success[i]) if (has_fit and md.fit_success is not None) else False
+            has_baseline = has_baseline_config
+            if has_baseline and isinstance(md.is_baseline_subtracted, np.ndarray):
+                has_baseline = bool(md.is_baseline_subtracted[i])
+            elif has_baseline:
+                has_baseline = bool(md.is_baseline_subtracted)
+            
+            # Fit status
+            has_fit = False
+            fit_converged = False
+            if md.peak_params is not None:
+                has_fit = np.any(md.peak_params[i] != 0.0)
+                if has_fit and md.fit_success is not None:
+                    fit_converged = bool(md.fit_success[i])
+
             spectra_info.append({
                 "fname": fname,
                 "is_active": bool(md.is_active[i]),
-                "has_baseline": False,   # baseline state not yet stored in MapData
-                "fit_success": fit_ok,
+                "is_cropped": is_cropped,
+                "has_baseline": has_baseline,
+                "has_fit": has_fit,
+                "fit_success": fit_converged,
             })
 
         self.spectra_list_changed.emit(spectra_info)

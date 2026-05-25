@@ -430,10 +430,37 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
             return
+            
+        md = self.store.get_map_data(self.current_map_name)
+        if not md: return
         
-        # For Phase 6: We will send fnames and map_names to Spectra Workspace.
-        # But for now, we just pass since Spectra workspace will also use the store.
-        self.notify.emit(f"Sent {len(self.selected_fnames)} spectra to Spectra workspace.")
+        fname_set = set(self.selected_fnames)
+        indices = [i for i, f in enumerate(md.fnames) if f in fname_set]
+        
+        from copy import deepcopy
+        spectra_payloads = []
+        for i in indices:
+            fname = md.fnames[i]
+            new_name = fname
+            
+            is_sub = md.is_baseline_subtracted[i] if isinstance(md.is_baseline_subtracted, np.ndarray) else bool(md.is_baseline_subtracted)
+            
+            payload = {
+                'name': new_name,
+                'x0': md.x0.copy(),
+                'Y0': md.Y0[i:i+1].copy(),
+                'baseline_config': deepcopy(md.baseline_config),
+                'fit_model': deepcopy(md.fit_model),
+                'range_min': md.range_min,
+                'range_max': md.range_max,
+                'is_subtracted': is_sub
+            }
+            spectra_payloads.append(payload)
+            
+        if spectra_payloads:
+            # Emit signal to notify view to pass data to parent spectra list
+            self.send_spectra_to_workspace.emit(spectra_payloads) 
+            self.notify.emit(f"Sent {len(spectra_payloads)} spectra to Spectra workspace.")
     
     def remove_map(self, map_name: str):
         """Remove a map and its spectra from the loaded maps."""

@@ -4,21 +4,15 @@ from scipy.ndimage import gaussian_filter1d
 
 _INTERNAL_METHODS = {
     None: {'label': 'None', 'use_points': False}, 
-    'arpls': {'label': 'arPLS ⭐', 'coef_kwarg': 'smoothing_factor', 'use_points': False, 'category': 'Whittaker', 'help': 'Asymmetrically Reweighted PLS. The standard for Raman/IR.'}, 
     'Linear': {'label': 'Linear Interpolation', 'use_points': True, 'sigma_kwarg': 'sigma', 'category': 'Manual'}, 
-    'Polynomial': {'label': 'Polynomial Fit', 'use_points': True, 'order_kwarg': 'order_max', 'sigma_kwarg': 'sigma', 'category': 'Manual'}, 
-    'sonneveld_vesser': {'label': 'Sonneveld-Vesser', 'coef_kwarg': 'niter', 'category': 'Smoothing', 'help': 'Sonneveld-Vesser baseline correction algorithm.'}
+    'Polynomial': {'label': 'Polynomial Fit', 'use_points': True, 'order_kwarg': 'order_max', 'sigma_kwarg': 'sigma', 'category': 'Manual'},
+    'arpls': {'label': 'arPLS ⭐', 'coef_kwarg': 'smoothing_factor', 'use_points': False, 'category': 'Whittaker', 'help': 'Asymmetrically Reweighted PLS.'}
 }
+
 _PYBASELINES_WHITELIST = {
-    'modpoly': {'label': 'ModPoly', 'category': 'Polynomial', 'order_kwarg': 'poly_order', 'help': 'Modified Polynomial. Good for simple baselines.'}, 
-    'imodpoly': {'label': 'IModPoly', 'category': 'Polynomial', 'order_kwarg': 'poly_order', 'help': 'Improved ModPoly. More robust against noise.'}, 
     'airpls': {'label': 'airPLS', 'category': 'Whittaker', 'coef_kwarg': 'lam', 'help': 'Adaptive Iterative PLS. Excellent for varying noise levels.'}, 
     'asls': {'label': 'AsLS', 'category': 'Whittaker', 'coef_kwarg': 'lam', 'help': 'Asymmetric Least Squares. The classic algorithm.'}, 
-    'mor': {'label': 'Mor', 'category': 'Morphological', 'help': 'Traditional Morphological baseline.'}, 
-    'rolling_ball': {'label': 'Rolling Ball', 'category': 'Morphological', 'help': 'Good for backgrounds with varying curvature.'}, 
-    'snip': {'label': 'SNIP', 'category': 'Smoothing', 'order_kwarg': 'filter_order', 'help': 'Statistics-sensitive Non-linear Iterative Peak-clipping.'}, 
-    'noise_median': {'label': 'Noise Median', 'category': 'Smoothing', 'sigma_kwarg': 'sigma', 'help': 'Simple median-based estimation.'}, 
-    'rubberband': {'label': 'Rubberband', 'category': 'Misc', 'coef_kwarg': 'lam', 'help': 'Convex hull of the data.'}
+    'modpoly': {'label': 'ModPoly', 'category': 'Polynomial', 'order_kwarg': 'poly_order', 'help': 'Modified Polynomial. Good for simple baselines.'}
 }
 
 def get_baseline_method_meta(mode: str) -> dict:
@@ -46,7 +40,7 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
         
         if attached:
             y_at_points = y[bl_point_indices]
-            sigma = config.get("sigma", 0)
+            sigma = config.get("sigma", 4)
             if sigma > 0:
                 y_smooth = gaussian_filter1d(y, sigma=sigma)
                 y_at_points = y_smooth[bl_point_indices]
@@ -73,7 +67,7 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
         
         if attached:
             y_at_points = y[bl_point_indices]
-            sigma = config.get("sigma", 0)
+            sigma = config.get("sigma", 4)
             if sigma > 0:
                 y_smooth = gaussian_filter1d(y, sigma=sigma)
                 y_at_points = y_smooth[bl_point_indices]

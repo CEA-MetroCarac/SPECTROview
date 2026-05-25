@@ -655,7 +655,7 @@ class VSpectraViewer(QWidget):
                             xs_arr = np.asarray(pts[0], dtype=float)
                             if bl_config.get("attached", False):
                                 inds = [np.argmin(np.abs(x - xp)) for xp in xs_arr]
-                                sigma = bl_config.get("sigma", 0)
+                                sigma = bl_config.get("sigma", 4)
                                 if sigma > 0:
                                     from scipy.ndimage import gaussian_filter1d
                                     y_curve = gaussian_filter1d(y_raw, sigma=sigma)

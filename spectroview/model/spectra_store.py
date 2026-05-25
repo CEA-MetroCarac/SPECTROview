@@ -411,6 +411,7 @@ class SpectraStore:
             return # Empty range, abort preprocessing
 
         # 2. Vectorized Baseline Subtraction
+        baseline_config = baseline_config or {}
         bl_mode = baseline_config.get("mode")
         bl_attached = baseline_config.get("attached", False)
         

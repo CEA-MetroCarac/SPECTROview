@@ -389,11 +389,12 @@ class VFitModelBuilder(QWidget):
         cbb.insertSeparator(len(VFitModelBuilder._BASELINE_MODE_KEYS))
         VFitModelBuilder._BASELINE_MODE_KEYS.append("__sep__")
 
-        # ── Auto methods: only these three methods
+        # ── Auto methods: only these methods
         _AUTO_WHITELIST = {
             "airpls": "airPLS",
+            "arpls":  "arPLS",
             "asls":   "asLS",
-            #"arpls":  "arPLS", # Remove because the performance not good.
+            "modpoly": "ModPoly",
         }
 
         for key, label in _AUTO_WHITELIST.items():
@@ -529,7 +530,7 @@ class VFitModelBuilder(QWidget):
                 bl_config = {}
             mode = bl_config.get("mode")
             attached = bool(bl_config.get("attached", True))
-            sigma = int(bl_config.get("sigma", 0))
+            sigma = int(bl_config.get("sigma", 4))
             order_max = int(bl_config.get("order_max", 2))
             coef = float(bl_config.get("coef", 5.0))
         else:

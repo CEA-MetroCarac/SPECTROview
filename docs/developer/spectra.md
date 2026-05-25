@@ -125,7 +125,7 @@ graph LR
 Manual baseline anchor points and smooth automatic baselines are evaluated in batch layouts:
 
 - **Manual Modes** (`Linear`, `Polynomial`): Anchor points `(x, y)` are registered into `baseline_config`. Linear/Polynomial fits are evaluated in batch over coordinates.
-- **Automatic Modes** (`airPLS`, `asLS`, `arPLS`): Live previews are calculated instantly using pure NumPy/SciPy or Whittaker solvers, and subtracted in a single operation.
+- **Automatic Modes** (`airPLS`, `asLS`, `arPLS`, `modpoly`): Live previews are calculated instantly using pure NumPy/SciPy or Whittaker solvers, and subtracted in a single operation.
 
 ### 4. Peak Model Assignment
 

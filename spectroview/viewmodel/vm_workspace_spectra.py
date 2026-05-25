@@ -88,6 +88,33 @@ class VMWorkspaceSpectra(QObject):
                 active_selected.append(fname)
         return active_selected
 
+    # ═════════════════════════════════════════════════════════════════════
+    # Hooks for Bulk Operations (Template Method Pattern)
+    # ═════════════════════════════════════════════════════════════════════
+
+    def _get_target_mds(self, apply_all: bool) -> list:
+        """Get the target MapData objects for bulk operations.
+        
+        - apply_all=True: returns all MapData objects in the store.
+        - apply_all=False: returns unique MapData objects corresponding to selected spectra.
+        """
+        if apply_all:
+            return [self.store.get_map_data(name) for name in self.store.map_names]
+        else:
+            if not self.selected_fnames:
+                return []
+            fnames = self._get_selected_spectra()
+            return self._get_unique_map_data(fnames)
+
+    def _on_map_data_changed(self, md, action: str):
+        """Hook for subclasses to execute code after a MapData is modified."""
+        pass
+
+    def _post_bulk_action(self, apply_all: bool, action: str):
+        """Hook for subclasses to execute code after a bulk action is completed."""
+        self._emit_selected_spectra()
+        self._emit_list_update()
+
 
     # View → ViewModel slots
     def load_files(self, paths: list[str]):
@@ -748,15 +775,12 @@ class VMWorkspaceSpectra(QObject):
 
     def reinit_spectra(self, apply_all: bool = False):
         """Reinitialize spectra to original data."""
-        if apply_all:
-            fnames = self._get_active_spectra()
-        else:
-            if not self.selected_fnames:
-                self.notify.emit("No spectrum selected.")
-                return
-            fnames = self._get_selected_spectra()
+        mds = self._get_target_mds(apply_all)
+        if not mds:
+            if not apply_all: self.notify.emit("No spectrum selected.")
+            return
 
-        for md in self._get_unique_map_data(fnames):
+        for md in mds:
             if md.x0 is not None:
                 md.x = md.x0.copy()
             if md.Y0 is not None:
@@ -770,9 +794,9 @@ class VMWorkspaceSpectra(QObject):
             md.is_baseline_subtracted = False
             md.range_min = None
             md.range_max = None
+            self._on_map_data_changed(md, "reinit_spectra")
             
-        self._emit_selected_spectra() # Refresh plot 
-        self._emit_list_update()  # Refresh list colors after reinit
+        self._post_bulk_action(apply_all, "reinit_spectra")
 
 
     def _get_unique_map_data(self, fnames: list[str]) -> list:
@@ -787,19 +811,15 @@ class VMWorkspaceSpectra(QObject):
         return list(mds.values())
 
     def apply_spectral_range(self, xmin: float, xmax: float, apply_all: bool):
-        if not self.selected_fnames:
+        mds = self._get_target_mds(apply_all)
+        if not mds:
+            if not apply_all: self.notify.emit("No spectrum selected.")
             return
 
         if xmin > xmax:
             xmin, xmax = xmax, xmin
 
-        fnames = (
-            self._get_active_spectra()
-            if apply_all
-            else self._get_selected_spectra()
-        )
-
-        for md in self._get_unique_map_data(fnames):
+        for md in mds:
             # 1) Reinit completely to avoid dimension mismatches if previously cropped with baseline/peaks
             if md.x0 is not None:
                 md.x = md.x0.copy()
@@ -830,9 +850,9 @@ class VMWorkspaceSpectra(QObject):
             md.Y = curr_y[:, i_min:i_max+1].copy()
             md.range_min = float(md.x[0])
             md.range_max = float(md.x[-1])
+            self._on_map_data_changed(md, "apply_spectral_range")
 
-        self._emit_selected_spectra()
-        self._emit_list_update()  # Refresh list colors after range change
+        self._post_bulk_action(apply_all, "apply_spectral_range")
 
     def copy_baseline(self):
         if not self.selected_fnames:
@@ -849,34 +869,28 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No baseline copied.")
             return
 
-        if apply_all:
-            fnames = self._get_active_spectra()
-        else:
-            if not self.selected_fnames:
-                self.notify.emit("No spectrum selected.")
-                return
-            fnames = self._get_selected_spectra()
+        mds = self._get_target_mds(apply_all)
+        if not mds:
+            if not apply_all: self.notify.emit("No spectrum selected.")
+            return
 
         # Apply baseline to selected spectra
         baseline_data = deepcopy(self._baseline_clipboard)
-        for md in self._get_unique_map_data(fnames):
+        for md in mds:
             md.baseline_config = deepcopy(baseline_data)
             
             x_arr = md.x if md.x is not None else md.x0
             y_arr = md.Y if md.Y is not None else md.Y0
             md.Y_baseline = eval_baseline_batch(x_arr, y_arr, md.baseline_config)
+            self._on_map_data_changed(md, "paste_baseline")
 
-        self._emit_selected_spectra()
+        self._post_bulk_action(apply_all, "paste_baseline")
 
     def subtract_baseline(self, apply_all: bool = False):
-        if apply_all:
-            mds = [self.store.get_map_data(name) for name in self.store.map_names]
-        else:
-            if not self.selected_fnames:
-                self.notify.emit("No spectrum selected.")
-                return
-            fnames = self._get_selected_spectra()
-            mds = self._get_unique_map_data(fnames)
+        mds = self._get_target_mds(apply_all)
+        if not mds:
+            if not apply_all: self.notify.emit("No spectrum selected.")
+            return
 
         subtracted_any = False
         for md in mds:
@@ -896,6 +910,7 @@ class VMWorkspaceSpectra(QObject):
                         md.Y_baseline[indices_to_sub] = 0.0
                         md.is_baseline_subtracted[indices_to_sub] = True
                         subtracted_any = True
+                        self._on_map_data_changed(md, "subtract_baseline")
                 else:
                     # Spectra Workspace (or scalar mode): subtract if not already subtracted
                     if not is_sub:
@@ -907,23 +922,19 @@ class VMWorkspaceSpectra(QObject):
                         md.Y_baseline = None
                         md.is_baseline_subtracted = True
                         subtracted_any = True
+                        self._on_map_data_changed(md, "subtract_baseline")
 
         if subtracted_any:
-            self._emit_selected_spectra()
-            self._emit_list_update()  # Refresh list colors after baseline subtraction
+            self._post_bulk_action(apply_all, "subtract_baseline")
         else:
             self.notify.emit("Baseline already subtracted for all selected spectra.")
 
     def delete_baseline(self, apply_all: bool = False):
         """Undo baseline subtraction: reinitialise spectrum data, re-apply crop range."""
-        if apply_all:
-            mds = [self.store.get_map_data(name) for name in self.store.map_names]
-        else:
-            if not self.selected_fnames:
-                self.notify.emit("No spectrum selected.")
-                return
-            fnames = self._get_selected_spectra()
-            mds = self._get_unique_map_data(fnames)
+        mds = self._get_target_mds(apply_all)
+        if not mds:
+            if not apply_all: self.notify.emit("No spectrum selected.")
+            return
 
         for md in mds:
             if md:
@@ -944,9 +955,9 @@ class VMWorkspaceSpectra(QObject):
                     md.Y = md.Y0[:, i_min:i_max + 1].copy()
                 else:
                     md.Y = md.Y0.copy()
+                self._on_map_data_changed(md, "delete_baseline")
 
-        self._emit_selected_spectra()
-        self._emit_list_update()
+        self._post_bulk_action(apply_all, "delete_baseline")
 
 
     # ── Baseline mode / settings helpers ──────────────────────────────────
@@ -956,7 +967,7 @@ class VMWorkspaceSpectra(QObject):
         mode     = settings.get("mode")       
         coef     = float(settings.get("coef",     5.0))
         order    = int(settings.get("order_max", 1))
-        sigma    = int(settings.get("sigma",     0))
+        sigma    = int(settings.get("sigma",     4))
         attached = bool(settings.get("attached", True))
 
         for md in self._get_unique_map_data(fnames):
@@ -1010,14 +1021,10 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No peaks copied.")
             return
 
-        if apply_all:
-            mds = [self.store.get_map_data(name) for name in self.store.map_names]
-        else:
-            if not self.selected_fnames:
-                self.notify.emit("No spectrum selected.")
-                return
-            fnames = self._get_selected_spectra()
-            mds = self._get_unique_map_data(fnames)
+        mds = self._get_target_mds(apply_all)
+        if not mds:
+            if not apply_all: self.notify.emit("No spectrum selected.")
+            return
 
         for md in mds:
             if md:
@@ -1031,19 +1038,15 @@ class VMWorkspaceSpectra(QObject):
                 for p_model in md.fit_model.get("peak_models", {}).values():
                     y_curve = eval_peak_initial(x_arr, p_model)
                     md.Y_peaks.append(np.tile(y_curve, (N, 1)))
+                self._on_map_data_changed(md, "paste_peaks")
 
-        self._emit_selected_spectra()
-        self._emit_list_update()  # Refresh list colors after paste peaks
+        self._post_bulk_action(apply_all, "paste_peaks")
 
     def delete_peaks(self, apply_all: bool = False):
-        if apply_all:
-            mds = [self.store.get_map_data(name) for name in self.store.map_names]
-        else:
-            if not self.selected_fnames:
-                self.notify.emit("No spectrum selected.")
-                return
-            fnames = self._get_selected_spectra()
-            mds = self._get_unique_map_data(fnames)
+        mds = self._get_target_mds(apply_all)
+        if not mds:
+            if not apply_all: self.notify.emit("No spectrum selected.")
+            return
 
         for md in mds:
             if md:
@@ -1053,9 +1056,9 @@ class VMWorkspaceSpectra(QObject):
                 md.peak_params = None
                 md.fit_success = None
                 md.fit_r2 = None
+                self._on_map_data_changed(md, "delete_peaks")
 
-        self._emit_selected_spectra()
-        self._emit_list_update()  # Refresh list colors after clear peaks
+        self._post_bulk_action(apply_all, "delete_peaks")
 
     
     def _apply_fit_model_to_mapdata(self, md, fit_model, indices=None):

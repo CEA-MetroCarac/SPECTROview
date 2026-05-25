@@ -328,23 +328,51 @@ class TensorEvaluator:
                             x0_val = self._param_values[slc.start + local_j]
                             break
 
-                    for n in range(N):
-                        x_n = x[n] if x.ndim == 2 else x
-                        y = Y[n]
-                        if x0_val is None or x0_val < x_n[0] or x0_val > x_n[-1]:
+                    if x.ndim == 1:
+                        # [NORMAL CASE - 99% of datasets] 
+                        # All spectra share the exact same X-axis. This means the index `closest` 
+                        # for `x0` is identical for all spectra. We can compute the window bounds 
+                        # once and slice the entire 2D Y matrix in a single, highly vectorized 
+                        # Numpy operation, making this practically instantaneous.
+                        if x0_val is None or x0_val < x[0] or x0_val > x[-1]:
                             continue
-                            
-                        closest = np.argmin(np.abs(x_n - x0_val))
-                        low = max(0, closest - 1)
-                        high = min(len(x_n), closest + 2)
                         
-                        if len(y) > closest:
-                            window = np.maximum(np.abs(y[low:high]), 1e-6)
-                            data_amp = float(np.max(window))
+                        closest = np.argmin(np.abs(x - x0_val))
+                        low = max(0, closest - 1)
+                        high = min(len(x), closest + 2)
+                        
+                        if Y.shape[1] > closest:
+                            window = np.maximum(np.abs(Y[:, low:high]), 1e-6)
+                            data_amp = np.max(window, axis=1) # shape: (N,)
                             model_amp = max(abs(p0_base[free_i]), 1e-6)
                             ratio = data_amp / model_amp
-                            if 0.01 < ratio < 100:
-                                p0_matrix[n, free_i] = data_amp
+                            
+                            mask = (ratio > 0.01) & (ratio < 100)
+                            p0_matrix[mask, free_i] = data_amp[mask]
+                    else:
+                        # [EDGE CASE - Uncalibrated/Raw datasets]
+                        # Every single spectrum has its own unique X-axis calibration (x is a 2D matrix).
+                        # Because the X-axis varies per row, `x0` might land at index 150 for Spectrum 1, 
+                        # but index 154 for Spectrum 2. Since the window slice boundaries (`low:high`) vary 
+                        # per row, we cannot easily vector-slice the 2D matrix. We fall back to a safe 
+                        # sequential loop to guarantee correct initial guesses without crashing.
+                        for n in range(N):
+                            x_n = x[n]
+                            y = Y[n]
+                            if x0_val is None or x0_val < x_n[0] or x0_val > x_n[-1]:
+                                continue
+                                
+                            closest = np.argmin(np.abs(x_n - x0_val))
+                            low = max(0, closest - 1)
+                            high = min(len(x_n), closest + 2)
+                            
+                            if len(y) > closest:
+                                window = np.maximum(np.abs(y[low:high]), 1e-6)
+                                data_amp = float(np.max(window))
+                                model_amp = max(abs(p0_base[free_i]), 1e-6)
+                                ratio = data_amp / model_amp
+                                if 0.01 < ratio < 100:
+                                    p0_matrix[n, free_i] = data_amp
 
         return p0_matrix
 

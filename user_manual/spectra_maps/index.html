@@ -690,6 +690,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="SpectraList">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cross-workspace-transfer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Workspace Transfer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1343,6 +1360,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="SpectraList">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cross-workspace-transfer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Workspace Transfer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1559,6 +1593,16 @@
 <h3 id="spectralist">SpectraList<a class="headerlink" href="#spectralist" title="Permanent link">&para;</a></h3>
 <p><strong>SpectraList</strong>: Displays all loaded discrete spectra in the Spectra workspace, or all spectra associated with the currently selected map in the Maps workspace.</p>
 <p>You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the SpectraViewer. Dedicated buttons allow you to select all spectra, clear your selection, display a comprehensive fit statistics report, or send the currently selected spectra to the Spectra workspace for isolated analysis.</p>
+<ul>
+<li><strong>Coloring Rules</strong>: Each spectrum in the list is automatically assigned a unique, consistent color indicator. These colors are strictly preserved even when you use the search/filter box to narrow down the list, ensuring you never lose track of which spectrum corresponds to which curve in the viewer.</li>
+</ul>
+<h4 id="cross-workspace-transfer">Cross-Workspace Transfer<a class="headerlink" href="#cross-workspace-transfer" title="Permanent link">&para;</a></h4>
+<p>When sending selected spectra from the Maps workspace to the Spectra workspace, the system uses deep-copied payload dictionaries. This means that:
+- The raw intensity and coordinate arrays are perfectly preserved.
+- The <code>baseline_config</code> (including anchor points and calculation modes) is transferred exactly as you configured it.
+- Your entire <code>fit_model</code> (including all peak limits, expressions, and initial guesses) is retained.
+- The active spectral cropping bounds and baseline subtraction states are kept identical.</p>
+<p>This ensures that transferred spectra retain their full interactive and analytical states in the new workspace tab without affecting the original map.</p>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/spectralist.png" alt="SpectraList Widget" width="400">
 </div>

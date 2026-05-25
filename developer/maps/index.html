@@ -1272,10 +1272,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#save-v4" class="md-nav__link">
+  <a href="#save-v5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Save (v4+)
+        Save (v5+)
       
     </span>
   </a>
@@ -1770,10 +1770,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#save-v4" class="md-nav__link">
+  <a href="#save-v5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Save (v4+)
+        Save (v5+)
       
     </span>
   </a>
@@ -2159,10 +2159,12 @@
 <h2 id="cross-workspace-features">Cross-Workspace Features<a class="headerlink" href="#cross-workspace-features" title="Permanent link">&para;</a></h2>
 <h3 id="send-spectra-to-spectra-workspace">Send Spectra to Spectra Workspace<a class="headerlink" href="#send-spectra-to-spectra-workspace" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span> <span class="nf">send_selected_spectra_to_spectra_workspace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">spectra_copies</span> <span class="o">=</span> <span class="p">[</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">spectrum</span><span class="p">)</span> <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="n">selected_spectra</span><span class="p">]</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">send_spectra_to_workspace</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">spectra_copies</span><span class="p">)</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="c1"># Builds a list of payload dicts representing raw data and state</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">spectra_payloads</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="c1"># ...</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">send_spectra_to_workspace</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">spectra_payloads</span><span class="p">)</span>
 </code></pre></div>
-<p>Deep copies ensure that modifications in the Spectra tab don't affect the Maps workspace.</p>
+<p>Deep copies of <code>fit_model</code> and <code>baseline_config</code> are packed into dictionaries ensuring that modifications in the Spectra tab don't affect the Maps workspace.</p>
 <h3 id="extract-profile-to-graphs">Extract Profile to Graphs<a class="headerlink" href="#extract-profile-to-graphs" title="Permanent link">&para;</a></h3>
 <p>When a user selects exactly 2 points on a 2D map and clicks "Extract profile":</p>
 <ol>
@@ -2174,9 +2176,10 @@
 </ol>
 <hr />
 <h2 id="persistence-workspace-saveload">Persistence: Workspace Save/Load<a class="headerlink" href="#persistence-workspace-saveload" title="Permanent link">&para;</a></h2>
-<p>Maps workspace uses the shared ZIP-backed serialization strategy for saving/loading work, which splits metadata and arrays to achieve maximum performance.</p>
-<h3 id="save-v4">Save (v4+)<a class="headerlink" href="#save-v4" title="Permanent link">&para;</a></h3>
+<p>Maps workspace delegates all saving/loading logic to <code>WorkspaceIO</code>. It uses a shared ZIP-backed serialization strategy which splits metadata and arrays to achieve maximum performance.</p>
+<h3 id="save-v5">Save (v5+)<a class="headerlink" href="#save-v5" title="Permanent link">&para;</a></h3>
 <ul>
+<li>Handled by <code>WorkspaceIO.save_maps_workspace()</code>.</li>
 <li>Lightweight per-map metadata (such as <code>baseline_config</code>, <code>fit_model</code>, and <code>range_min</code>) is serialized to JSON inside <code>metadata.json</code>.</li>
 <li>Heavy multi-spectrum coordinate matrices and raw intensities are serialized directly into <code>arrays.npz</code> as binary NumPy matrices under <code>store_{map_name}_coords</code>, <code>store_{map_name}_x0</code>, and <code>store_{map_name}_y0</code>.</li>
 <li>Best-fit curves and statistics DataFrames are serialized to <code>dataframes.pkl</code> using highly optimized Python pickles.</li>

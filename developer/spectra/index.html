@@ -1055,10 +1055,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-preprocessing-pipeline" class="md-nav__link">
+  <a href="#2-preprocessing-bulk-actions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Preprocessing Pipeline
+        2. Preprocessing &amp; Bulk Actions
       
     </span>
   </a>
@@ -1203,6 +1203,17 @@
     <span class="md-ellipsis">
       
         VSpectraList
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-workspace-communication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Workspace Communication
       
     </span>
   </a>
@@ -1503,10 +1514,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-preprocessing-pipeline" class="md-nav__link">
+  <a href="#2-preprocessing-bulk-actions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Preprocessing Pipeline
+        2. Preprocessing &amp; Bulk Actions
       
     </span>
   </a>
@@ -1651,6 +1662,17 @@
     <span class="md-ellipsis">
       
         VSpectraList
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-workspace-communication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Workspace Communication
       
     </span>
   </a>
@@ -1899,8 +1921,11 @@
 </tbody>
 </table>
 <p>Loaded spectra are dynamically added to the <code>SpectraStore</code> via <code>self.store.add_map()</code> which initializes the numerical coordinates and active flags.</p>
-<h3 id="2-preprocessing-pipeline">2. Preprocessing Pipeline<a class="headerlink" href="#2-preprocessing-pipeline" title="Permanent link">&para;</a></h3>
-<p>When a user modifies baseline, spectral range, or X-correction, the spectrum goes through a fully vectorized preprocessing pipeline on <code>SpectraStore</code>:</p>
+<h3 id="2-preprocessing-bulk-actions">2. Preprocessing &amp; Bulk Actions<a class="headerlink" href="#2-preprocessing-bulk-actions" title="Permanent link">&para;</a></h3>
+<p>When a user modifies baseline, spectral range, or clicks action buttons, the spectrum goes through a fully vectorized preprocessing pipeline on <code>SpectraStore</code>.</p>
+<p>The bulk action methods (<code>reinit_spectra()</code>, <code>subtract_baseline()</code>, <code>delete_baseline()</code>, <code>apply_spectral_range()</code>, <code>paste_peaks()</code>, <code>delete_peaks()</code>) follow a uniform execution pattern:
+- <strong>Single click</strong> applies the action to the currently selected spectra.
+- <strong>Ctrl + click</strong> applies the action to <em>all</em> spectra across all loaded map layers or spectra lists.</p>
 <pre class="mermaid"><code>graph LR
     A["x0, Y0&lt;br/&gt;(original arrays)"] --&gt; B["crop&lt;br/&gt;(spectral range)"]
     B --&gt; C["x-correction&lt;br/&gt;(vectorized shift)"]
@@ -1915,8 +1940,9 @@
 <h3 id="3-baseline-processing">3. Baseline Processing<a class="headerlink" href="#3-baseline-processing" title="Permanent link">&para;</a></h3>
 <p>Manual baseline anchor points and smooth automatic baselines are evaluated in batch layouts:</p>
 <ul>
-<li><strong>Manual Modes</strong> (<code>Linear</code>, <code>Polynomial</code>): Anchor points <code>(x, y)</code> are registered into <code>baseline_config</code>. Linear/Polynomial fits are evaluated in batch over coordinates.</li>
+<li><strong>Manual Modes</strong> (<code>Linear</code>, <code>Polynomial</code>): Anchor points <code>(x, y)</code> are registered into <code>baseline_config</code>. Linear/Polynomial fits are evaluated in batch over coordinates. The default "Corr. noise" is automatically configured.</li>
 <li><strong>Automatic Modes</strong> (<code>airPLS</code>, <code>asLS</code>, <code>arPLS</code>, <code>modpoly</code>): Live previews are calculated instantly using pure NumPy/SciPy or Whittaker solvers, and subtracted in a single operation.</li>
+<li><strong>Substract / Delete Baseline</strong>: <code>delete_baseline()</code> properly undoes the baseline subtraction while preserving spectral cropping and range bounds.</li>
 </ul>
 <h3 id="4-peak-model-assignment">4. Peak Model Assignment<a class="headerlink" href="#4-peak-model-assignment" title="Permanent link">&para;</a></h3>
 <p>Peaks are registered into the map's <code>fit_model</code> dictionary:</p>
@@ -1924,6 +1950,7 @@
 <li><code>VSpectraViewer.peak_add_requested.emit(x_position)</code> updates the <code>fit_model</code> in the store.</li>
 <li>Initial parameter guesses (center, fwhm, amplitude) are calculated dynamically.</li>
 <li>The View's <code>VPeakTable</code> updates showing parameters with 3-decimal precision.</li>
+<li><strong>Re-indexing &amp; Expressions</strong>: Peak table indices (prefix numbering) are automatically re-indexed when peaks are added/deleted. Mathematical expression features seamlessly link to these re-indexed peaks.</li>
 </ol>
 <h3 id="5-fitting">5. Fitting<a class="headerlink" href="#5-fitting" title="Permanent link">&para;</a></h3>
 <ol>
@@ -2033,11 +2060,18 @@
 <h3 id="vspectralist">VSpectraList<a class="headerlink" href="#vspectralist" title="Permanent link">&para;</a></h3>
 <p>A <code>QListWidget</code> with:</p>
 <ul>
-<li>Checkboxes per spectrum (checked = active for fitting)</li>
-<li>Color indicators </li>
-<li>Context menu for rename, delete, copy</li>
-<li>Multi-selection support (Ctrl/Shift+Click)</li>
+<li>Checkboxes per spectrum (checked = active for fitting).</li>
+<li><strong>New Coloring Rules</strong>: Spectral list items are colored consistently. When filtering/searching, the UI gracefully retains the original color indices.</li>
+<li>Context menu for rename, delete, copy.</li>
+<li>Multi-selection support (Ctrl/Shift+Click).</li>
 </ul>
+<h3 id="cross-workspace-communication">Cross-Workspace Communication<a class="headerlink" href="#cross-workspace-communication" title="Permanent link">&para;</a></h3>
+<p>Selected spectra can be sent across workspaces (e.g., Maps → Spectra). The <code>spectra_payloads</code> dictionary contains:
+- Raw <code>x0</code>, <code>Y0</code> arrays
+- A deep copy of <code>baseline_config</code> and <code>fit_model</code>
+- Current <code>range_min</code> / <code>range_max</code> bounding box constraints
+- The <code>is_subtracted</code> Boolean state</p>
+<p>This ensures that transferred spectra retain their full interactive and analytical states in the new workspace tab.</p>
 
 
 

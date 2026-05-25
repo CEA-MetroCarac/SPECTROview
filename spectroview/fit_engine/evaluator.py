@@ -50,8 +50,8 @@ class TensorEvaluator:
         for peak_key in sorted_keys:
             peak_def = peak_models_dict[peak_key]
             for model_name, param_hints in peak_def.items():
-                peak_num = len(ev._peaks) + 1
-                prefix = f"m{peak_num:02d}_"
+                peak_num = int(peak_key) + 1
+                prefix = f"P{peak_num}_"
 
                 # Look up batched model
                 if model_name in BATCHED_MODELS:

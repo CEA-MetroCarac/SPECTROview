@@ -47,7 +47,7 @@ class VFitModelBuilder(QWidget):
     #PeakTable signals: 
     peak_label_changed = Signal(int, str)
     peak_model_changed = Signal(int, str)
-    peak_param_changed = Signal(int, str, str, float)
+    peak_param_changed = Signal(int, str, str, object)
     peak_deleted = Signal(int)
 
 

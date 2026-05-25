@@ -273,7 +273,6 @@ class VMWorkspaceSpectra(QObject):
         param_names = md.param_names
         
         peak_models = md.fit_model.get("peak_models", {})
-        sorted_keys = sorted(peak_models.keys(), key=lambda k: int(k))
         
         for p_name, val in zip(param_names, peak_params):
             if "_" in p_name:
@@ -285,10 +284,9 @@ class VMWorkspaceSpectra(QObject):
                     digits = re.findall(r'\d+', prefix)
                     if digits:
                         peak_num_1based = int(digits[0])
-                        peak_num_0based = peak_num_1based - 1
+                        key = str(peak_num_1based - 1)
                         
-                        if peak_num_0based < len(sorted_keys):
-                            key = sorted_keys[peak_num_0based]
+                        if key in peak_models:
                             pdict = peak_models[key]
                             shape = list(pdict.keys())[0]
                             

@@ -190,7 +190,7 @@ class VPeakTable(QWidget):
                 
                 val = QLineEdit(f"{display_val:.3f}")
                 val.setAlignment(Qt.AlignRight)
-                val.setFixedSize(60, ROW_HEIGHT)
+                val.setFixedSize(72, ROW_HEIGHT)
                 
                 def make_editing_finished_cb(i_idx, p_key, w_val, model_name, peak_model):
                     def cb():
@@ -276,7 +276,7 @@ class VPeakTable(QWidget):
             
         le = QLineEdit(f"{display_val:.3f}")
         # le.setFixedWidth(60)
-        le.setFixedSize(60, ROW_HEIGHT)
+        le.setFixedSize(72, ROW_HEIGHT)
         le.setAlignment(Qt.AlignRight)
 
         pal = le.palette()

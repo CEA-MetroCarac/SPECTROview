@@ -6,7 +6,7 @@ This document provides a deep dive into the inner workings, architecture, and pe
 
 ## 1. Why the Tensor Engine is Much Faster
 
-The legacy fit engines (based on `lmfit`/`scipy.optimize.least_squares`) operate on a **per-spectrum** basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
+The legacy fit engines operate on a **per-spectrum** basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
 - **Python Function Call Overhead**: Calling the objective function and Jacobian estimator thousands of times per iteration.
 - **Finite-Difference Jacobians**: Approximating the Jacobian numerically requires `2 * K` (where K is the number of parameters) additional function evaluations per iteration, per spectrum.
 - **Sequential Execution**: Even with multiprocessing, the overhead of serialization and inter-process communication creates bottlenecks.
@@ -29,7 +29,7 @@ The **Tensor Fit Engine** achieves massive speedups (~10x to 15x faster) through
 
 Recent optimizations have achieved a 2.2x to 5x speedup across various datasets:
 
-1. **Template Model Application (11.9x speedup)**: `_prepare_fit_model_template()` pre-computes lmfit Models and bounds sanitization *once*. Per-spectrum application only clones the lightweight `param_hints` dictionary.
+1. **Template Model Application (11.9x speedup)**: `_prepare_fit_model_template()` pre-computes python Models and bounds sanitization *once*. Per-spectrum application only clones the lightweight `param_hints` dictionary.
 2. **Batch Preprocessing (3.0x speedup)**: `_batch_preprocess()` computes range masks and baseline indices once for all spectra sharing the same x-axis, using vectorized subtraction instead of per-spectrum calls.
 3. **Adaptive Batched Solver (up to 5x speedup)**: The solver dynamically chooses between NumPy's batched `np.linalg.solve` (best for large N) and SciPy's `cho_solve` (Cholesky decomposition, best for small N / large K, exploiting symmetric positive-definite normal equations).
 4. **Mean-Based Convergence Criteria**: The convergence check uses `mean(|Δp| / |p|) < xtol` rather than `max()`, preventing a single slowly-converging parameter in multi-peak models from stalling the entire batch.
@@ -74,7 +74,7 @@ graph TD
 | `evaluator.py` | `TensorEvaluator` | Bridge between the dictionary-based `fit_model` and the flat tensor API. Parses peak definitions, manages free/fixed parameter indexing, evaluates expressions, routes to correct batched model functions, builds `FitResult` objects. |
 | `optimizer.py` | `batched_levenberg_marquardt()` | Pure numerical optimizer. Solves N independent least-squares problems simultaneously using `np.einsum`. Uses an adaptive solver (`cho_solve` or `np.linalg.solve`) depending on matrix size. GUI-agnostic. |
 | `models.py` | `batched_*()` functions | Vectorized peak shape functions and their analytical Jacobians. Contains the `BATCHED_MODELS` registry. Includes `numerical_jacobian()` fallback. |
-| `scalar_models.py` | `FitResult`, `ParamValue`, scalar functions | Lightweight result classes compatible with lmfit's interface. Scalar peak functions used as fallbacks when no batched implementation exists. Contains `PEAK_MODEL_REGISTRY`. |
+| `scalar_models.py` | `FitResult`, `ParamValue`, scalar functions | Lightweight result classes compatible with legacy interfaces. Scalar peak functions used as fallbacks when no batched implementation exists. Contains `PEAK_MODEL_REGISTRY`. |
 
 ---
 
@@ -103,7 +103,7 @@ sequenceDiagram
 ### Step-by-Step Details
 
 **Step 1 — Model Application** (`apply_model_to_spectra=True`):
-Instead of a slow per-spectrum deepcopy, `_prepare_fit_model_template()` creates a highly optimized template. It builds lmfit Model objects and sanitizes parameter bounds exactly once. Then, `_apply_template_to_spectrum()` merely copies the lightweight `param_hints` dictionary. When `False` (Spectra workspace with per-spectrum models), spectra are grouped by model signature and processed as separate batches.
+Instead of a slow per-spectrum deepcopy, `_prepare_fit_model_template()` creates a highly optimized template. It builds Model objects and sanitizes parameter bounds exactly once. Then, `_apply_template_to_spectrum()` merely copies the lightweight `param_hints` dictionary. When `False` (Spectra workspace with per-spectrum models), spectra are grouped by model signature and processed as separate batches.
 
 **Step 2 — Evaluator Construction**:
 `TensorEvaluator.from_fit_model()` parses the model. For each peak:
@@ -211,14 +211,14 @@ All peak models have vectorized batched implementations with **analytical Jacobi
 
 | Model | Parameters | Formula |
 |-------|-----------|---------|
-| `Gaussian` | `ampli, fwhm, x0` | \(a \cdot \exp\left(-4\ln 2 \cdot \frac{(x-x_0)^2}{w^2}\right)\) |
-| `Lorentzian` | `ampli, fwhm, x0` | \(\frac{a}{1 + 4(x-x_0)^2/w^2}\) |
-| `PseudoVoigt` | `ampli, fwhm, x0, alpha` | \(\alpha \cdot G + (1-\alpha) \cdot L\) |
+| `Gaussian` | `ampli, fwhm, x0` | <i>a</i> &middot; exp(-4 ln(2) &middot; (x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>) |
+| `Lorentzian` | `ampli, fwhm, x0` | <i>a</i> / [1 + 4(x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>] |
+| `PseudoVoigt` | `ampli, fwhm, x0, alpha` | &alpha; &middot; G + (1-&alpha;) &middot; L |
 | `GaussianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise Gaussian with left/right FWHM |
 | `LorentzianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise Lorentzian with left/right FWHM |
-| `Fano` | `ampli, fwhm, x0, q` | \(a \cdot \frac{(q + \varepsilon)^2}{1 + \varepsilon^2}\), \(\varepsilon = \frac{2(x-x_0)}{w}\) |
-| `DecaySingleExp` | `A, tau, B` | \(A \cdot e^{-x/\tau} + B\) |
-| `DecayBiExp` | `A1, tau1, A2, tau2, B` | \(A_1 e^{-x/\tau_1} + A_2 e^{-x/\tau_2} + B\) |
+| `Fano` | `ampli, fwhm, x0, q` | <i>a</i> &middot; (q + &epsilon;)<sup>2</sup> / (1 + &epsilon;<sup>2</sup>), &epsilon; = 2(x-x<sub>0</sub>)/w |
+| `DecaySingleExp` | `A, tau, B` | <i>A</i> &middot; e<sup>-x/&tau;</sup> + B |
+| `DecayBiExp` | `A1, tau1, A2, tau2, B` | <i>A</i><sub>1</sub> &middot; e<sup>-x/&tau;<sub>1</sub></sup> + <i>A</i><sub>2</sub> &middot; e<sup>-x/&tau;<sub>2</sub></sup> + B |
 
 ### Numerical Jacobian Fallback
 

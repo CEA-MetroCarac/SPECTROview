@@ -4,7 +4,8 @@ from copy import deepcopy
 import numpy as np
 from PySide6.QtCore import QSettings
 from spectroview.fit_engine.noise import detect_noise_level
-
+from scipy.ndimage import gaussian_filter1d
+from spectroview.fit_engine.evaluator import eval_peak_initial
 # Suppress harmless Matplotlib constrained_layout warning on 0-size UI initialization
 warnings.filterwarnings("ignore", message=".*constrained_layout not applied because axes sizes collapsed to zero.*")
 
@@ -657,7 +658,6 @@ class VSpectraViewer(QWidget):
                                 inds = [np.argmin(np.abs(x - xp)) for xp in xs_arr]
                                 sigma = bl_config.get("sigma", 4)
                                 if sigma > 0:
-                                    from scipy.ndimage import gaussian_filter1d
                                     y_curve = gaussian_filter1d(y_raw, sigma=sigma)
                                 else:
                                     y_curve = y_raw
@@ -688,7 +688,6 @@ class VSpectraViewer(QWidget):
                     if fit_model and fit_model.get("peak_models") and len(x) > 1:
                         # Draw high-resolution smooth curves using eval_peak_initial
                         x_fine = np.linspace(x.min(), x.max(), 1000)
-                        from spectroview.fit_engine.evaluator import eval_peak_initial
                         
                         sorted_keys = sorted(fit_model["peak_models"].keys(), key=lambda k: int(k))
                         class MockPeakModelObj:
@@ -958,7 +957,7 @@ class VSpectraViewer(QWidget):
     def _eval_peak_model_safe(self, peak_model, x):
         """
         Evaluate a peak model for plotting purposes.
-        Expressions are temporarily disabled to avoid lmfit NameError.
+        Expressions are temporarily disabled to avoid NameError.
         """
         # Backup param_hints
         param_hints_orig = deepcopy(peak_model.param_hints)

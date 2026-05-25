@@ -103,9 +103,13 @@ The `m_io` module detects file formats by extension and parses raw arrays and me
 
 Loaded spectra are dynamically added to the `SpectraStore` via `self.store.add_map()` which initializes the numerical coordinates and active flags.
 
-### 2. Preprocessing Pipeline
+### 2. Preprocessing & Bulk Actions
 
-When a user modifies baseline, spectral range, or X-correction, the spectrum goes through a fully vectorized preprocessing pipeline on `SpectraStore`:
+When a user modifies baseline, spectral range, or clicks action buttons, the spectrum goes through a fully vectorized preprocessing pipeline on `SpectraStore`.
+
+The bulk action methods (`reinit_spectra()`, `subtract_baseline()`, `delete_baseline()`, `apply_spectral_range()`, `paste_peaks()`, `delete_peaks()`) follow a uniform execution pattern:
+- **Single click** applies the action to the currently selected spectra.
+- **Ctrl + click** applies the action to *all* spectra across all loaded map layers or spectra lists.
 
 ```mermaid
 graph LR
@@ -124,8 +128,9 @@ graph LR
 
 Manual baseline anchor points and smooth automatic baselines are evaluated in batch layouts:
 
-- **Manual Modes** (`Linear`, `Polynomial`): Anchor points `(x, y)` are registered into `baseline_config`. Linear/Polynomial fits are evaluated in batch over coordinates.
+- **Manual Modes** (`Linear`, `Polynomial`): Anchor points `(x, y)` are registered into `baseline_config`. Linear/Polynomial fits are evaluated in batch over coordinates. The default "Corr. noise" is automatically configured.
 - **Automatic Modes** (`airPLS`, `asLS`, `arPLS`, `modpoly`): Live previews are calculated instantly using pure NumPy/SciPy or Whittaker solvers, and subtracted in a single operation.
+- **Substract / Delete Baseline**: `delete_baseline()` properly undoes the baseline subtraction while preserving spectral cropping and range bounds.
 
 ### 4. Peak Model Assignment
 
@@ -134,6 +139,7 @@ Peaks are registered into the map's `fit_model` dictionary:
 1. `VSpectraViewer.peak_add_requested.emit(x_position)` updates the `fit_model` in the store.
 2. Initial parameter guesses (center, fwhm, amplitude) are calculated dynamically.
 3. The View's `VPeakTable` updates showing parameters with 3-decimal precision.
+4. **Re-indexing & Expressions**: Peak table indices (prefix numbering) are automatically re-indexed when peaks are added/deleted. Mathematical expression features seamlessly link to these re-indexed peaks.
 
 ### 5. Fitting
 
@@ -214,7 +220,17 @@ All actions support **Ctrl+Click** for "apply to all spectra" via the `_emit_wit
 
 A `QListWidget` with:
 
-- Checkboxes per spectrum (checked = active for fitting)
-- Color indicators 
-- Context menu for rename, delete, copy
-- Multi-selection support (Ctrl/Shift+Click)
+- Checkboxes per spectrum (checked = active for fitting).
+- **New Coloring Rules**: Spectral list items are colored consistently. When filtering/searching, the UI gracefully retains the original color indices.
+- Context menu for rename, delete, copy.
+- Multi-selection support (Ctrl/Shift+Click).
+
+### Cross-Workspace Communication
+
+Selected spectra can be sent across workspaces (e.g., Maps → Spectra). The `spectra_payloads` dictionary contains:
+- Raw `x0`, `Y0` arrays
+- A deep copy of `baseline_config` and `fit_model`
+- Current `range_min` / `range_max` bounding box constraints
+- The `is_subtracted` Boolean state
+
+This ensures that transferred spectra retain their full interactive and analytical states in the new workspace tab.

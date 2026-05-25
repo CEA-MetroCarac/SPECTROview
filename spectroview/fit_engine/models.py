@@ -95,7 +95,7 @@ def batched_gaussian_jac(x, params):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# PseudoVoigt:  PV = alpha·G + (1-alpha)·L   (fitspy convention)
+# PseudoVoigt:  PV = alpha·G + (1-alpha)·L   (legacy convention)
 #   params[:, 0] = ampli,  params[:, 1] = fwhm,  params[:, 2] = x0,
 #   params[:, 3] = alpha
 # ═══════════════════════════════════════════════════════════════════════════

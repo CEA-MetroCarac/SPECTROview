@@ -151,7 +151,7 @@ def load_wdf_spectrum(path: Path) -> dict:
     # Extract data
     wavenumbers = reader.xdata  # Wavenumber axis (cm^-1)
     
-    # Ensure x-axis is ascending (Fitspy requirement)
+    # Ensure x-axis is ascending
     # WDF files often have descending wavenumbers (e.g. 3200 -> 100)
     wavenumbers = np.array(wavenumbers, dtype=np.float64)
     sort_inds = None
@@ -249,7 +249,7 @@ def load_wdf_map(path: Path) -> pd.DataFrame:
         # Already 2D
         spectra_matrix = spectra_data
         
-    # Ensure x-axis is ascending (Fitspy requirement)
+    # Ensure x-axis is ascending
     # WDF files often have descending wavenumbers
     wavenumbers = np.array(wavenumbers)
     if len(wavenumbers) > 1 and wavenumbers[0] > wavenumbers[-1]:

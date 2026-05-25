@@ -66,11 +66,12 @@ spectroview/
 │
 ├── model/                  # Data models (no Qt deps)
 │   ├── spectra_store.py    # Tensor-centric SpectraStore & MapData structures
+│   ├── workspace_io.py     # Unified serialization for Workspaces
+│   ├── peak_model.py       # Helper functions for peak parameters
 │   ├── m_graph.py          # Plot configuration model
 │   ├── m_settings.py       # Persistent app settings (QSettings wrapper)
 │   ├── m_io.py             # File loaders (TXT, CSV, WDF, SPC, TRPL, DAT)
 │   ├── m_mva.py            # PCA + NMF engine
-│   ├── m_fit_models.py     # Custom peak shapes (Fano, Decay, AsymmetricLorentzian)
 │   ├── m_fit_model_manager.py # Saved fit model file management
 │   ├── m_file_converter.py # Batch file format converter
 │   ├── m_quick_calc.py     # Scientific calculators (Spot Size, Depth, Unit conversion)
@@ -116,7 +117,9 @@ spectroview/
 │   ├── optimizer.py             # Batched Levenberg-Marquardt
 │   ├── models.py                # Batched peak functions + Jacobians
 │   ├── scalar_models.py         # Fallback scalar functions + FitResult
-│   └── tensor_fit_thread.py     # QThread wrapper
+│   ├── tensor_fit_thread.py     # QThread wrapper
+│   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
+│   └── noise.py                 # Noise estimation functions
 │
 └── resources/              # Icons, stylesheets, user manual assets
     ├── icons/
@@ -242,13 +245,13 @@ Workspaces are composed from **shared components** that follow the same signal-b
 
 ## Persistence & Serialization
 
-Each workspace has its own save/load format:
+SPECTROview delegates all loading and saving operations to the unified `WorkspaceIO` class (`workspace_io.py`), which isolates IO logic from the ViewModels. Each workspace uses its own save/load format via `WorkspaceIO`:
 
 | Workspace | File Extension | Key Strategy |
 |-----------|---------------|-------------|
-| Spectra | `.spectra` | ZIP archive with metadata JSON, NPZ arrays per spectrum (v4+). Backward-compatible loader parses legacy base64 JSON formats. |
-| Maps | `.maps` | ZIP archive with metadata JSON, NPZ arrays, and pickled DataFrames (v4+). Backward-compatible loader parses legacy hex/gzip-compressed JSON formats. |
-| Graphs | `.graphs` | JSON with `gzip+hex` compressed DataFrames and `MGraph.save()` serialized plots |
+| Spectra | `.spectra` | ZIP archive with metadata JSON, NPZ arrays per spectrum (v5+). Handled by `WorkspaceIO.save_spectra_workspace()`. |
+| Maps | `.maps` | ZIP archive with metadata JSON, NPZ arrays, and pickled DataFrames (v5+). Handled by `WorkspaceIO.save_maps_workspace()`. |
+| Graphs | `.graphs` | JSON with `gzip+hex` compressed DataFrames and `MGraph.save()` serialized plots. |
 
 ### Spectrum Serialization Flow
 
@@ -365,7 +368,6 @@ mkdocs serve
 | `PySide6` | — | Qt 6 bindings (**not** PyQt) |
 | `matplotlib` | `< 3.10.9` | Plotting backend for spectra and maps |
 | `numpy` | `< 2.0.0` | Numerical array operations |
-| `lmfit` | — | Peak model definitions and legacy fitting |
 | `scipy` | — | Interpolation, KDTree, SVD |
 | `pandas` | — | DataFrame management |
 | `seaborn` | — | Statistical plotting in Graphs workspace |

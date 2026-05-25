@@ -224,11 +224,13 @@ For wafer maps, the viewer:
 
 ```python
 def send_selected_spectra_to_spectra_workspace(self):
-    spectra_copies = [deepcopy(spectrum) for spectrum in selected_spectra]
-    self.send_spectra_to_workspace.emit(spectra_copies)
+    # Builds a list of payload dicts representing raw data and state
+    spectra_payloads = []
+    # ...
+    self.send_spectra_to_workspace.emit(spectra_payloads)
 ```
 
-Deep copies ensure that modifications in the Spectra tab don't affect the Maps workspace.
+Deep copies of `fit_model` and `baseline_config` are packed into dictionaries ensuring that modifications in the Spectra tab don't affect the Maps workspace.
 
 ### Extract Profile to Graphs
 
@@ -244,9 +246,10 @@ When a user selects exactly 2 points on a 2D map and clicks "Extract profile":
 
 ## Persistence: Workspace Save/Load
 
-Maps workspace uses the shared ZIP-backed serialization strategy for saving/loading work, which splits metadata and arrays to achieve maximum performance.
+Maps workspace delegates all saving/loading logic to `WorkspaceIO`. It uses a shared ZIP-backed serialization strategy which splits metadata and arrays to achieve maximum performance.
 
-### Save (v4+)
+### Save (v5+)
+- Handled by `WorkspaceIO.save_maps_workspace()`.
 - Lightweight per-map metadata (such as `baseline_config`, `fit_model`, and `range_min`) is serialized to JSON inside `metadata.json`.
 - Heavy multi-spectrum coordinate matrices and raw intensities are serialized directly into `arrays.npz` as binary NumPy matrices under `store_{map_name}_coords`, `store_{map_name}_x0`, and `store_{map_name}_y0`.
 - Best-fit curves and statistics DataFrames are serialized to `dataframes.pkl` using highly optimized Python pickles.

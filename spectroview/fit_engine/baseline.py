@@ -2,6 +2,17 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter1d
 
+
+try:
+    from pybaselines import Baseline
+except ImportError:
+    pass
+
+try:
+    from pybaselines.classification import Classification
+except ImportError:
+    pass
+
 _INTERNAL_METHODS = {
     None: {'label': 'None', 'use_points': False}, 
     'Linear': {'label': 'Linear Interpolation', 'use_points': True, 'sigma_kwarg': 'sigma', 'category': 'Manual'}, 
@@ -84,7 +95,6 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
         
     elif mode == 'arpls':
         try:
-            from pybaselines import Baseline
             baseline_fitter = Baseline(x_data=x)
             lam = 10 ** config.get("coef", 5.0)
             b, _ = baseline_fitter.arpls(y, lam=lam)
@@ -93,7 +103,6 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
             return np.zeros_like(x)
     elif mode == 'sonneveld_vesser':
         try:
-            from pybaselines.classification import Classification
             baseline_fitter = Classification(x_data=x)
             niter = config.get("coef", 100)
             b, _ = baseline_fitter.dietrich(y, num_iter=int(niter)) # Just an approximation for Sonneveld-Vesser
@@ -102,7 +111,6 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
             return np.zeros_like(x)
     else:
         try:
-            from pybaselines import Baseline
             baseline_fitter = Baseline(x_data=x)
             meta = get_baseline_method_meta(mode)
             kwargs = {}

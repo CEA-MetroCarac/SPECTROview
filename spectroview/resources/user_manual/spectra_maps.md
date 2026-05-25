@@ -48,6 +48,18 @@ _________
 
 You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the SpectraViewer. Dedicated buttons allow you to select all spectra, clear your selection, display a comprehensive fit statistics report, or send the currently selected spectra to the Spectra workspace for isolated analysis.
 
+- **Coloring Rules**: Each spectrum in the list is automatically assigned a unique, consistent color indicator. These colors are strictly preserved even when you use the search/filter box to narrow down the list, ensuring you never lose track of which spectrum corresponds to which curve in the viewer.
+
+#### Cross-Workspace Transfer
+
+When sending selected spectra from the Maps workspace to the Spectra workspace, the system uses deep-copied payload dictionaries. This means that:
+- The raw intensity and coordinate arrays are perfectly preserved.
+- The `baseline_config` (including anchor points and calculation modes) is transferred exactly as you configured it.
+- Your entire `fit_model` (including all peak limits, expressions, and initial guesses) is retained.
+- The active spectral cropping bounds and baseline subtraction states are kept identical.
+
+This ensures that transferred spectra retain their full interactive and analytical states in the new workspace tab without affecting the original map.
+
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/spectralist.png" alt="SpectraList Widget" width="400">
 </div>
@@ -125,9 +137,26 @@ The Fitting Panel guides you through the process of building a robust model in f
 - Every peak added to the plot is immediately listed in the **PeakTable**.
 - Supported peak profiles include: Lorentzian, Gaussian, PseudoVoigt, LorentzianAsym, GaussianAsym, Fano, DecaySingleExp, and DecayBiExp.
 
+#### Supported Peak Profiles
+
+SPECTROview’s tensor fit engine provides heavily optimized implementations for the following mathematical peak profiles:
+
+| Model | Parameters | Formula |
+|-------|-----------|---------|
+| `Gaussian` | `ampli, fwhm, x0` | <i>a</i> &middot; exp(-4 ln(2) &middot; (x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>) |
+| `Lorentzian` | `ampli, fwhm, x0` | <i>a</i> / [1 + 4(x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>] |
+| `PseudoVoigt` | `ampli, fwhm, x0, alpha` | &alpha; &middot; G + (1-&alpha;) &middot; L |
+| `GaussianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise Gaussian with left/right FWHM |
+| `LorentzianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise Lorentzian with left/right FWHM |
+| `Fano` | `ampli, fwhm, x0, q` | <i>a</i> &middot; (q + &epsilon;)<sup>2</sup> / (1 + &epsilon;<sup>2</sup>), &epsilon; = 2(x-x<sub>0</sub>)/w |
+| `DecaySingleExp` | `A, tau, B` | <i>A</i> &middot; e<sup>-t/&tau;</sup> + B |
+| `DecayBiExp` | `A1, tau1, A2, tau2, B` | <i>A</i><sub>1</sub> &middot; e<sup>-t/&tau;<sub>1</sub></sup> + <i>A</i><sub>2</sub> &middot; e<sup>-t/&tau;<sub>2</sub></sup> + B |
+
 #### PeakTable Panel
 
 The PeakTable displays all mathematical parameters for the peaks you have defined. When you drag a peak in the viewer, these properties update dynamically.
+
+**Dynamic Peak Indexing**: Every peak is automatically indexed with a suffix (e.g., `_1`, `_2`) indicating its order of creation. When you add, delete, or re-order peaks, SPECTROview automatically re-indexes them to maintain consecutive numbering (e.g., if you delete peak 2, peak 3 becomes the new peak 2). This ensures your expressions and fit results remain organized.
 
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/peak_table.png" alt="Peak Table Panel" width="800"><br>
@@ -146,7 +175,7 @@ The PeakTable displays all mathematical parameters for the peaks you have define
 </div>
 
 
-**Expression**: Define complex mathematical relationships between parameters.
+**Expression**: Define complex mathematical relationships between parameters. SPECTROview's tensor engine robustly evaluates these expressions mathematically before mapping them to the optimizer. If peaks are re-indexed due to deletions, their references in your mathematical expressions are automatically updated to prevent broken models!
 
 
 

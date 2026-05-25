@@ -10,7 +10,7 @@ from pathlib import Path
         
 import numpy as np
 import pandas as pd
-from lmfit import fit_report
+
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
@@ -23,6 +23,7 @@ from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
 from spectroview.fit_engine.baseline import eval_baseline_batch
 from spectroview.fit_engine.evaluator import eval_peak_initial
 from spectroview.viewmodel.utils import (
+    generate_fit_report,
     baseline_to_dict,
     calc_area,
     closest_index,
@@ -398,7 +399,6 @@ class VMWorkspaceSpectra(QObject):
 
         # 6. Reconstruct Y_peaks and Y_bestfit
         if md.Y_bestfit is None and md.fit_model and "peak_models" in md.fit_model:
-            from spectroview.fit_engine.evaluator import eval_peak_initial
             md.Y_peaks = []
             x_arr = md.x
             N = md.Y.shape[0]
@@ -1269,7 +1269,7 @@ class VMWorkspaceSpectra(QObject):
             raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
 
         with open(path, 'w', encoding='utf-8') as f:
-            # fitspy's load_model expects integer indexing (e.g. key '0')
+            # legacy model loaders expected integer indexing (e.g. key '0')
             json.dump({'0': md.fit_model}, f, indent=2, default=default_encoder)
 
         self.notify.emit("Fit model saved successfully.")
@@ -2163,7 +2163,7 @@ class VMWorkspaceSpectra(QObject):
             hasattr(spectrum.result_fit, 'params') and
             spectrum.result_fit.params is not None):
             try:
-                text = fit_report(spectrum.result_fit)
+                text = generate_fit_report(spectrum.result_fit)
                 view_text(parent_widget, title, text)
             except Exception as e:
                 self.notify.emit(f"Error generating fit report: {str(e)}")

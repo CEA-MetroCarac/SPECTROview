@@ -36,7 +36,26 @@ except ImportError:
     TOAST_AVAILABLE = False
 
 
+def generate_fit_report(fit_result):
+    """Generate a lightweight text report of the fit result mimicking legacy output."""
+    if not fit_result or not hasattr(fit_result, 'params'):
+        return "No fit result available."
+    
+    report = ["[[Fit Statistics]]"]
+    report.append(f"    success    = {fit_result.success}")
+    if hasattr(fit_result, 'rsquared'):
+        report.append(f"    R-squared  = {fit_result.rsquared:.6f}")
+    
+    report.append("\n[[Variables]]")
+    for name, param in fit_result.params.items():
+        if hasattr(param, 'value'):
+            report.append(f"    {name:15s}: {param.value:.6g}")
+        else:
+            report.append(f"    {name:15s}: {param}")
             
+    return "\n".join(report)
+
+
 def parse_wdf_metadata(reader):
     """Extract comprehensive metadata from WDF file's WXIS and WXCS blocks.
     

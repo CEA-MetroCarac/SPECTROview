@@ -484,7 +484,6 @@ class VUserManualDialog(QDialog):
 
         # Try to find the next match forward in the current section
         # Use FindFlag(0) for case-insensitive search
-        from PySide6.QtGui import QTextDocument
         found = self.content_browser.find(text, QTextDocument.FindFlag(0))
         if found:
             self._set_search_style(False)

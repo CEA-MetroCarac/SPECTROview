@@ -2,7 +2,7 @@
 Vectorized peak model evaluation for the batch fitting engine.
 
 Provides pure-NumPy implementations of all supported peak shapes that match
-the exact functional forms used by lmfit/fitspy. Handles the mapping between
+the exact functional forms used by the lmfit engine. Handles the mapping between
 structured param_hints dicts and flat parameter vectors for scipy.optimize.
 """
 
@@ -10,7 +10,7 @@ import numpy as np
 from copy import deepcopy
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Pure-NumPy peak model functions (matching lmfit/fitspy definitions exactly)
+# Pure-NumPy peak model functions
 # ═══════════════════════════════════════════════════════════════════════════
 
 _LOG2 = np.log(2.0)
@@ -109,7 +109,7 @@ BKG_MODEL_REGISTRY = {
 # ═══════════════════════════════════════════════════════════════════════════
 
 class ParamValue:
-    """Mimics lmfit Parameter with a .value attribute."""
+    """Mimics a Parameter with a .value attribute."""
     __slots__ = ("value",)
 
     def __init__(self, value):

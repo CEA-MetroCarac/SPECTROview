@@ -3,6 +3,7 @@ import traceback
 import io
 import json
 import gzip
+import re
 from io import StringIO
 from copy import deepcopy
 import numpy as np
@@ -14,12 +15,9 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from spectroview.viewmodel.utils import closest_index
-
 from spectroview.model.m_settings import MSettings
-
-
 from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
-from spectroview.model.spectra_store import SpectraStore
+from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
 from spectroview.fit_engine.scalar_models import FitResult
@@ -159,7 +157,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 x0 = md.x0
                 Y0 = md.Y0[indices]
                 
-                from spectroview.model.spectra_store import SpectrumProxy
                 proxies = []
                 for idx in indices:
                     proxies.append(SpectrumProxy(md, idx, md.fnames[idx]))
@@ -437,7 +434,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         fname_set = set(self.selected_fnames)
         indices = [i for i, f in enumerate(md.fnames) if f in fname_set]
         
-        from copy import deepcopy
         spectra_payloads = []
         for i in indices:
             fname = md.fnames[i]
@@ -540,9 +536,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             self.notify.emit("No fit model selected.")
             return
             
-        import json
-        from PySide6.QtWidgets import QMessageBox
-        
         try:
             with open(model_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -795,8 +788,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
     def _load_legacy_maps(self, file_path: str):
         """Load legacy JSON-based .maps workspace (OLD version)."""
-        import gzip, io, re
-        
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
@@ -937,7 +928,16 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                     md.range_max = first_s.get("range_max")
                     md.xcorrection_value = float(first_s.get("xcorrection_value", 0.0))
                     md.intensity_norm_factor = float(first_s.get("intensity_norm_factor", 1.0))
-                    md.is_baseline_subtracted = first_s.get("is_baseline_subtracted", False)
+                    
+                    is_sub_list = []
+                    for sdata in map_spectra_sdata:
+                        if "is_baseline_subtracted" in sdata:
+                            is_sub_list.append(sdata["is_baseline_subtracted"])
+                        elif "baseline" in sdata and isinstance(sdata["baseline"], dict):
+                            is_sub_list.append(sdata["baseline"].get("is_subtracted", False))
+                        else:
+                            is_sub_list.append(False)
+                    md.is_baseline_subtracted = np.array(is_sub_list, dtype=bool)
 
                 self._restore_preprocessed_state(md)
 

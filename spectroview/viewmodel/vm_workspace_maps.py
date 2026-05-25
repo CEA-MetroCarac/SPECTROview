@@ -13,7 +13,7 @@ from scipy.spatial import KDTree
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
-from spectroview.viewmodel.utils import zone, quadrant, closest_index, LazyMapDict
+from spectroview.viewmodel.utils import closest_index
 
 from spectroview.model.m_settings import MSettings
 
@@ -39,7 +39,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     
     def __init__(self, settings: MSettings):
         super().__init__(settings)
-        self.maps = LazyMapDict(self.store)
+        self.maps = {}
         self.current_map_name: str | None = None
         self.current_map_df = None
         
@@ -1019,7 +1019,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             data = json.load(f)
 
         self.store = SpectraStore()
-        self.maps = LazyMapDict(self.store)
+        self.maps = {}
         
         spectrums_data = data.get("spectrums_data", {})
         

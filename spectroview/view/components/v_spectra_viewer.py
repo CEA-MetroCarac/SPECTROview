@@ -703,7 +703,7 @@ class VSpectraViewer(QWidget):
                             
                             peak_line, = self.ax.plot(x_fine + x_offset, y_peak_fine + y_offset, lw=(lw*0.6), **color_kwargs)
                             
-                            peak_label = f"Peak {i+1}"
+                            peak_label = f"Peak{i+1}"
                             if 'peak_labels' in fit_model and i < len(fit_model['peak_labels']):
                                 peak_label = fit_model['peak_labels'][i]
                             
@@ -744,7 +744,7 @@ class VSpectraViewer(QWidget):
                         for i, y_peak in enumerate(y_peaks):
                             peak_line, = self.ax.plot(x + x_offset, y_peak + y_offset, lw=(lw*0.6), **color_kwargs)
                             
-                            peak_label = f"Peak {i+1}"
+                            peak_label = f"Peak{i+1}"
                             if fit_model and 'peak_labels' in fit_model and i < len(fit_model['peak_labels']):
                                 peak_label = fit_model['peak_labels'][i]
                             
@@ -843,7 +843,7 @@ class VSpectraViewer(QWidget):
                         )
 
                         peak_info = {
-                            "peak_label": (spectrum.peak_labels[i] if i < len(spectrum.peak_labels) else f"Peak {i+1}"),
+                            "peak_label": (spectrum.peak_labels[i] if i < len(spectrum.peak_labels) else f"Peak{i+1}"),
                             "peak_model": peak_model,
                         }
                         for pname in getattr(peak_model, "param_names", []):

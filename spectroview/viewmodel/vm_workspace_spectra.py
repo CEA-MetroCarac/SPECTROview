@@ -416,7 +416,7 @@ class VMWorkspaceSpectra(QObject):
                 orig_label = old_labels[k_int]
 
             if not orig_label or orig_label.strip() == "" or re.match(r"^Peak\s*\d+$", orig_label, re.IGNORECASE):
-                new_labels.append(f"Peak {new_idx + 1}")
+                new_labels.append(f"Peak{new_idx + 1}")
             else:
                 new_labels.append(orig_label)
 
@@ -539,15 +539,23 @@ class VMWorkspaceSpectra(QObject):
 
         # Create new peak dict
         if md.fit_model["peak_models"]:
-            next_idx = max(int(k) for k in md.fit_model["peak_models"].keys()) + 1
+            max_k = max(int(k) for k in md.fit_model["peak_models"].keys())
         else:
-            next_idx = 0
+            max_k = -1
+            
+        if "peak_labels" not in md.fit_model:
+            md.fit_model["peak_labels"] = []
+            
+        next_idx = max(max_k + 1, len(md.fit_model["peak_labels"]))
         peak_idx = str(next_idx)
+        
         peak_model = {}
         y_arr = md.Y[0] if md.Y is not None else md.Y0[0]
         self._initialize_peak_params(peak_model, peak_shape, x, y_val, minfwhm, maxfwhm, maxshift, y_arr)
 
-        md.fit_model["peak_labels"].append(f"Peak {int(peak_idx) + 1}")
+        while len(md.fit_model["peak_labels"]) <= next_idx:
+            md.fit_model["peak_labels"].append(f"Peak{len(md.fit_model['peak_labels']) + 1}")
+
         md.fit_model["peak_models"][peak_idx] = {peak_shape: peak_model}
 
         # Quickly evaluate and append to Y_peaks for instant preview
@@ -1426,7 +1434,7 @@ class VMWorkspaceSpectra(QObject):
             
             # Make sure list is large enough to hold index
             while len(md.fit_model["peak_labels"]) <= index:
-                md.fit_model["peak_labels"].append(f"Peak {len(md.fit_model['peak_labels']) + 1}")
+                md.fit_model["peak_labels"].append(f"Peak{len(md.fit_model['peak_labels']) + 1}")
                 
             md.fit_model["peak_labels"][index] = text
         self._emit_selected_spectra()
@@ -1487,21 +1495,9 @@ class VMWorkspaceSpectra(QObject):
         if not md or not md.fit_model: return
 
         old_models = md.fit_model.get("peak_models", {})
-        old_labels = md.fit_model.get("peak_labels", [])
-        
-        new_models = {}
-        new_labels = []
-        for k, pdict in old_models.items():
-            if int(k) == index:
-                continue
-            new_models[k] = pdict
-            if int(k) < len(old_labels):
-                new_labels.append(old_labels[int(k)])
-            else:
-                new_labels.append(f"Peak {int(k)+1}")
-            
-        md.fit_model["peak_models"] = new_models
-        md.fit_model["peak_labels"] = new_labels
+        if str(index) in old_models:
+            del old_models[str(index)]
+
         md.peak_params = None
         md.param_names = None
         md.fit_success = None
@@ -1598,7 +1594,7 @@ class VMWorkspaceSpectra(QObject):
                 if hasattr(spectrum, 'peak_labels') and i < len(spectrum.peak_labels):
                     label = spectrum.peak_labels[i]
                 else:
-                    label = f"Peak {i + 1}"
+                    label = f"Peak{i + 1}"
 
                 data[label] = y_peak
             except Exception as e:

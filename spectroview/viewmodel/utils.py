@@ -506,35 +506,6 @@ def calc_area(model_name, params):
             area_r = (np.pi * ampli * fwhm_r / 2)/2
             return area_l + area_r
     return None  # default if parameters missing
-
-
-def quadrant(row):
-        """Define 4 quadrant of a wafer"""
-        if row['X'] < 0 and row['Y'] < 0:
-            return 'Q1'
-        elif row['X'] < 0 and row['Y'] > 0:
-            return 'Q2'
-        elif row['X'] > 0 and row['Y'] > 0:
-            return 'Q3'
-        elif row['X'] > 0 and row['Y'] < 0:
-            return 'Q4'
-        else:
-            return np.nan
-
-def zone(row, radius):
-    """Define 3 zones (Center, Mid-Radius, Edge)"""
-    r = radius
-    x = row['X']
-    y = row['Y']
-    distance_to_center = np.sqrt(x ** 2 + y ** 2)
-    if distance_to_center <= r * 0.35:
-        return 'Center'
-    elif distance_to_center > r * 0.35 and distance_to_center < r * 0.8:
-        return 'Mid-Radius'
-    elif distance_to_center >= 0.8 * r:
-        return 'Edge'
-    else:
-        return np.nan
     
 def dark_palette():
     """Dark palette tuned for SPECTROview UI"""

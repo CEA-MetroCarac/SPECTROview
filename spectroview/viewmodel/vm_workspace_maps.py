@@ -186,8 +186,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 self.spectra_selection_changed.emit(batch_data)
                 
                 if x is not None and len(x) > 0:
-                    # Maps don't have xcorrection implemented yet, emit 0.0
-                    self.show_xcorrection_value.emit(0.0)
+                    self.show_xcorrection_value.emit(md.xcorrection_value)
                     self.spectral_range_changed.emit(float(x[0]), float(x[-1]))
                     
                 return

@@ -83,4 +83,4 @@ This work was carried out at the CEA - Platform for Nanocharacterisation (PFNC) 
 
 If you use SPECTROview for data processing or visualization in your research, please cite the following publication:
 
-*holding place*
+Le, V.-H., & Quéméré, P. (2025). SPECTROview : A Tool for Spectroscopic Data Processing and Visualization. Zenodo. https://doi.org/10.5281/zenodo.14147172

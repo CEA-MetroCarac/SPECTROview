@@ -49,7 +49,7 @@ class VAboutDialog(QDialog):
         <hr>
         <h3>Citation:</h3>
         <p style="text-align: justify;">
-            *holding place*
+            Le, V.-H., & Quéméré, P. (2025). SPECTROview : A Tool for Spectroscopic Data Processing and Visualization. Zenodo. https://doi.org/10.5281/zenodo.14147172
         </p>
         """
 

@@ -284,7 +284,7 @@ class VMWorkspaceSpectra(QObject):
 
         # For x-correction, we could read it from md.map_metadata or store it.
         md0 = self.store.get_map_data(active_fnames[0])
-        xcorr = md0.map_metadata.get('xcorrection_value', 0.0) if md0 else 0.0
+        xcorr = md0.xcorrection_value if md0 else 0.0
         self.show_xcorrection_value.emit(xcorr)
 
         # emit spectral range of first selected spectrum to show in GUI
@@ -724,14 +724,23 @@ class VMWorkspaceSpectra(QObject):
         delta_x = SI_REF - measured_peak 
 
         for md in self._get_unique_map_data(fnames):
+            prev_delta = md.xcorrection_value
+            if prev_delta != 0.0:
+                if md.x is not None:
+                    md.x = md.x - prev_delta
+                md.x0 = md.x0 - prev_delta
+
             if md.x is not None:
                 md.x = md.x + delta_x
             md.x0 = md.x0 + delta_x
-            md.map_metadata['xcorrection_value'] = md.map_metadata.get('xcorrection_value', 0.0) + delta_x
+            md.xcorrection_value = delta_x
+            
+            if 'xcorrection_value' in md.map_metadata:
+                del md.map_metadata['xcorrection_value']
 
         # Trigger plot refresh
         md0 = self._get_unique_map_data(fnames)[0]
-        self.show_xcorrection_value.emit(md0.map_metadata.get('xcorrection_value', 0.0))
+        self.show_xcorrection_value.emit(md0.xcorrection_value)
         self._emit_selected_spectra()
 
 
@@ -744,12 +753,15 @@ class VMWorkspaceSpectra(QObject):
         fnames = self._get_selected_spectra()
 
         for md in self._get_unique_map_data(fnames):
-            delta = md.map_metadata.get('xcorrection_value', 0.0)
+            delta = md.xcorrection_value
             if delta != 0.0:
                 if md.x is not None:
                     md.x = md.x - delta
                 md.x0 = md.x0 - delta
-                md.map_metadata['xcorrection_value'] = 0.0
+                md.xcorrection_value = 0.0
+            
+            if 'xcorrection_value' in md.map_metadata:
+                del md.map_metadata['xcorrection_value']
 
         self.show_xcorrection_value.emit(0.0)
         self._emit_selected_spectra()

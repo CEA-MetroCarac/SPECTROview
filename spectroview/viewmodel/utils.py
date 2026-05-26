@@ -348,17 +348,17 @@ def set_spectrum_item_color(item: QListWidgetItem, spectrum_info: dict):
 
     if has_fit:
         if fit_success:
-            # Color 4: Converged Fit (Soft Green)
-            item.setBackground(QColor(39, 174, 96, 65))
+            # Color 4: Converged Fit (Distinct Green)
+            item.setBackground(QColor(76, 175, 80, 120))
         else:
-            # Color 3: Unconverged Fit (Soft Orange/Red)
-            item.setBackground(QColor(230, 126, 34, 65))
+            # Color 3: Unconverged Fit (Distinct Red)
+            item.setBackground(QColor(244, 67, 54, 120))
     elif has_baseline:
-        # Color 2: Baselined (Soft Purple)
-        item.setBackground(QColor(142, 68, 173, 60))
+        # Color 2: Baselined (Distinct Purple)
+        item.setBackground(QColor(156, 39, 176, 120))
     elif is_cropped:
-        # Color 1: Cropped (Soft Blue)
-        item.setBackground(QColor(41, 128, 185, 60))
+        # Color 1: Cropped (Distinct Blue)
+        item.setBackground(QColor(33, 150, 243, 120))
     else:
         # Original/Reinit: Transparent
         item.setBackground(QColor(0, 0, 0, 0))

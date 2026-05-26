@@ -1,7 +1,6 @@
 # spectroview/view/components/v_map_list.py
 """View component for Maps list - two-level navigation (Maps → Spectra)."""
 import os 
-from typing import List
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
     QListWidgetItem, QAbstractItemView, QPushButton, QCheckBox

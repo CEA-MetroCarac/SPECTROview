@@ -1,5 +1,4 @@
 """ViewModel for Maps Workspace - extends Spectra Workspace with hyperspectral map functionality."""
-import traceback
 import io
 import json
 import gzip
@@ -9,20 +8,15 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from scipy.spatial import KDTree
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtWidgets import QMessageBox
 
-from spectroview.viewmodel.utils import closest_index
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
 from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
-from spectroview.fit_engine.scalar_models import FitResult
-from spectroview.model.workspace_io import WorkspaceIO
-from spectroview.fit_engine.baseline import eval_baseline_batch
 
 
 

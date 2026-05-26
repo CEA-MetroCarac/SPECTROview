@@ -1,5 +1,4 @@
 import os
-import re
 import markdown
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtWidgets import (
@@ -9,8 +8,8 @@ from PySide6.QtWidgets import (
     QPushButton
 )
 from PySide6.QtGui import (
-    QDesktopServices, QFont, QTextDocument, QImage,
-    QTextImageFormat, QTextCursor, QMovie
+    QDesktopServices, QTextDocument, QImage,
+    QTextCursor, QMovie
 )
 
 class FitImageTextBrowser(QTextBrowser):

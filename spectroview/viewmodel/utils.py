@@ -1,8 +1,8 @@
 # spectroview/viewmodel/utils.py
-from PySide6.QtGui import QPalette, QColor, QIcon, QPixmap, QImage, QTextCursor
-from PySide6.QtCore import Qt, Signal, QThread, QSize
+from PySide6.QtGui import QPalette, QColor, QPixmap, QImage, QTextCursor
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QComboBox, QMessageBox, QApplication, QListWidgetItem,
+    QMessageBox, QApplication, QListWidgetItem,
     QDialog, QTextBrowser, QVBoxLayout
 )    
 
@@ -10,30 +10,14 @@ import os
 import datetime
 import struct
 import re
-import json
-import time
 import numpy as np
-import pandas as pd
-import warnings
+import numpy as np
 from io import BytesIO
 
-from concurrent.futures import ProcessPoolExecutor, as_completed, wait, FIRST_COMPLETED
-from multiprocessing import Manager
-from openpyxl.styles import PatternFill
 from copy import deepcopy
 
-import matplotlib.colors as mcolors
-import matplotlib.cm as cm
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
+from spectroview import DEFAULT_COLORS
 
-from spectroview import PALETTE, DEFAULT_COLORS
-
-try:
-    from pyqttoast import Toast, ToastPreset
-    TOAST_AVAILABLE = True
-except ImportError:
-    TOAST_AVAILABLE = False
 
 
 def generate_fit_report(fit_result):
@@ -314,6 +298,7 @@ def rgba_to_default_color(rgba, default_colors=DEFAULT_COLORS):
     Convert an RGBA tuple to the closest color in DEFAULT_COLORS.
     If no DEFAULT_COLORS are given, falls back to hex.
     """
+    import matplotlib.colors as mcolors
     # Convert input to RGB array
     rgb = np.array(mcolors.to_rgb(rgba)) # drops alpha
 
@@ -374,7 +359,9 @@ def show_alert(message):
 
 def show_toast_notification(parent, message, title=None, duration=3000, preset=None):
     """Show an auto-dismissing toast notification"""
-    if not TOAST_AVAILABLE:
+    try:
+        from pyqttoast import Toast, ToastPreset
+    except ImportError:
         # Fallback to console print if pyqttoast not available
         prefix = f"[{title}] " if title else ""
         print(f"{prefix}{message}")
@@ -417,6 +404,8 @@ def save_df_to_excel(save_path, df):
         return False, "No save path provided."
 
     try:
+        import pandas as pd
+        from openpyxl.styles import PatternFill
         if df.empty:
             return False, "DataFrame is empty. Nothing to save."
         with pd.ExcelWriter(save_path, engine='openpyxl') as writer:

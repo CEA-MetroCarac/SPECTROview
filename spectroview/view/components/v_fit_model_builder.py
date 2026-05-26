@@ -3,14 +3,13 @@ from spectroview import ICON_DIR, PEAK_MODELS
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QGroupBox, QLabel, QPushButton, QComboBox,
-    QDoubleSpinBox, QSpinBox, QRadioButton,
-    QScrollArea, QCheckBox, QApplication, QSlider
+    QDoubleSpinBox, QSpinBox, QScrollArea, QCheckBox, QApplication, QSlider
 )
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
 
 from spectroview.fit_engine.baseline import (
-    _INTERNAL_METHODS, _PYBASELINES_WHITELIST, get_baseline_method_meta
+    get_baseline_method_meta
 )
 
 from spectroview import ICON_DIR, PEAK_MODELS

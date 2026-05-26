@@ -1,7 +1,6 @@
 #spectroview/model/m_settings.py
 
 from PySide6.QtCore import QSettings
-import os
 
 class MSettings:
     """Model: persistent application settings"""

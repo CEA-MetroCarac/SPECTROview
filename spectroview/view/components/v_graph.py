@@ -1,11 +1,10 @@
 """Matplotlib graph visualization widget for MVVM pattern."""
 
 import numpy as np
-import seaborn as sns
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-from scipy.interpolate import griddata
 from matplotlib.ticker import FuncFormatter
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -16,7 +15,7 @@ from PySide6.QtGui import QIcon
 
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR, PLOT_POLICY_LIGHT
 from spectroview.view.components.customize_graph_dialog import (
-    CustomizeGraphDialog, EditLineDialog, EditTextDialog
+    EditLineDialog, EditTextDialog
 )
 from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb
 
@@ -350,16 +349,19 @@ class VGraph(QWidget):
                     point_kwargs['hue'] = self.z
                     point_kwargs['palette'] = colors
                     point_kwargs['marker'] = markers
+                import seaborn as sns
                 sns.pointplot(**point_kwargs)
 
             elif self.plot_style == 'scatter':
                 if self.z:
+                    import seaborn as sns
                     sns.scatterplot(
                         data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
                         s=self.scatter_size, edgecolor=self.scatter_edgecolor,
                         palette=colors
                     )
                 else:
+                    import seaborn as sns
                     sns.scatterplot(
                         data=df, x=self.x, y=y, ax=self.ax,
                         s=self.scatter_size, edgecolor=self.scatter_edgecolor
@@ -370,6 +372,7 @@ class VGraph(QWidget):
                 if self.z:
                     box_kwargs['hue'] = self.z
                     box_kwargs['palette'] = colors
+                import seaborn as sns
                 sns.boxplot(**box_kwargs)
             elif self.plot_style == 'line':
                 # Only pass palette if hue is provided
@@ -377,6 +380,7 @@ class VGraph(QWidget):
                 if self.z:
                     line_kwargs['hue'] = self.z
                     line_kwargs['palette'] = colors
+                import seaborn as sns
                 sns.lineplot(**line_kwargs)
             elif self.plot_style == 'bar':
                 # Only pass palette if hue is provided
@@ -388,8 +392,10 @@ class VGraph(QWidget):
                 if self.z:
                     bar_kwargs['hue'] = self.z
                     bar_kwargs['palette'] = colors
+                import seaborn as sns
                 sns.barplot(**bar_kwargs)
             elif self.plot_style == 'trendline':
+                import seaborn as sns
                 sns.regplot(
                     data=df, x=self.x, y=y, ax=self.ax,
                     scatter=True, order=self.trendline_order
@@ -699,8 +705,10 @@ class VGraph(QWidget):
             self.ax2 = self.ax.twinx()
             
             if self.plot_style == 'line':
+                import seaborn as sns
                 sns.lineplot(data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2, color='red')
             elif self.plot_style == 'point':
+                import seaborn as sns
                 sns.pointplot(
                     data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
                     linestyles='-' if self.join_for_point_plot else 'none',
@@ -710,6 +718,7 @@ class VGraph(QWidget):
                     capsize=0.02
                 )
             elif self.plot_style == 'scatter':
+                import seaborn as sns
                 sns.scatterplot(
                     data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
                     s=self.scatter_size, edgecolor=self.scatter_edgecolor,
@@ -734,8 +743,10 @@ class VGraph(QWidget):
             self.ax3.spines["right"].set_position(("outward", 100))
             
             if self.plot_style == 'line':
+                import seaborn as sns
                 sns.lineplot(data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3, color='green')
             elif self.plot_style == 'point':
+                import seaborn as sns
                 sns.pointplot(
                     data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
                     linestyles='-' if self.join_for_point_plot else 'none',
@@ -745,6 +756,7 @@ class VGraph(QWidget):
                     capsize=0.02
                 )
             elif self.plot_style == 'scatter':
+                import seaborn as sns
                 sns.scatterplot(
                     data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
                     s=self.scatter_size, edgecolor=self.scatter_edgecolor,
@@ -1218,6 +1230,7 @@ class WaferPlot:
     def plot(self, ax, x, y, z, cmap="jet", r=100, vmax=None, vmin=None, stats=True):
         """Plot wafer map with interpolated data."""
         xi, yi = np.meshgrid(np.linspace(-r, r, 600), np.linspace(-r, r, 600))
+        from scipy.interpolate import griddata
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
         
         im = ax.imshow(

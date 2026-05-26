@@ -8,7 +8,6 @@ import pandas as pd
 from pathlib import Path
 
 from spectroview.model.m_io import load_map_file, load_wdf_map
-from spectroview.model.spectra_store import SpectraStore
 from spectroview.model.m_settings import MSettings
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.fit_engine.tensor_fit_thread import TensorFitThread

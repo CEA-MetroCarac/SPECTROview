@@ -1,4 +1,4 @@
-import os
+
 import sys
 from pathlib import Path
 VERSION = "26.23.3"

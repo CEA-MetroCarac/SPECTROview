@@ -42,7 +42,6 @@ a = Analysis(
     binaries=[],
     datas=[
         ('spectroview/resources', 'spectroview/resources'),
-        ('doc', 'doc'),
     ],
     hiddenimports=[],
     hookspath=[],

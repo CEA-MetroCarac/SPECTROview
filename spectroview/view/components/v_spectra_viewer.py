@@ -4,7 +4,6 @@ from copy import deepcopy
 import numpy as np
 from PySide6.QtCore import QSettings
 from spectroview.fit_engine.noise import detect_noise_level
-from scipy.ndimage import gaussian_filter1d
 from spectroview.fit_engine.evaluator import eval_peak_initial
 # Suppress harmless Matplotlib constrained_layout warning on 0-size UI initialization
 warnings.filterwarnings("ignore", message=".*constrained_layout not applied because axes sizes collapsed to zero.*")
@@ -17,14 +16,13 @@ from PySide6.QtWidgets import (
     QSlider, QGroupBox
 )
 from PySide6.QtCore import Qt, Signal, QSize
-from PySide6.QtGui import QIcon, QShortcut, QKeySequence
+from PySide6.QtGui import QIcon
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import matplotlib.collections as mcoll
 from matplotlib.backends.backend_qtagg import (
-    FigureCanvasQTAgg as FigureCanvas,
-    NavigationToolbar2QT
+    FigureCanvasQTAgg as FigureCanvas
 )
 import matplotlib as mpl
 from PySide6.QtWidgets import QApplication
@@ -34,9 +32,8 @@ from PySide6.QtGui import QCursor
 from PySide6.QtCore import QPoint
 
 import matplotlib.lines as mlines
-import matplotlib.text as mtext
 
-from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
+from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
 from spectroview.viewmodel.utils import copy_fig_to_clb
 from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
 
@@ -658,6 +655,7 @@ class VSpectraViewer(QWidget):
                                 inds = [np.argmin(np.abs(x - xp)) for xp in xs_arr]
                                 sigma = bl_config.get("sigma", 4)
                                 if sigma > 0:
+                                    from scipy.ndimage import gaussian_filter1d
                                     y_curve = gaussian_filter1d(y_raw, sigma=sigma)
                                 else:
                                     y_curve = y_raw

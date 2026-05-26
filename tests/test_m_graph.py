@@ -8,7 +8,6 @@ Tests cover:
 - Property validation
 """
 
-import pytest
 from spectroview.model.m_graph import MGraph
 
 

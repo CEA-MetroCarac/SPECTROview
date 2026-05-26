@@ -2,7 +2,7 @@ import time
 import os
 import copy
 
-from PySide6.QtCore import Qt, QSize, Signal
+from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon, QColor, QPalette
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGroupBox, 
     QPushButton, QListWidget, QListWidgetItem, QLabel,

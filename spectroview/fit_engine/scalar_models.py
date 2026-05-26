@@ -7,7 +7,6 @@ structured param_hints dicts and flat parameter vectors for scipy.optimize.
 """
 
 import numpy as np
-from copy import deepcopy
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Pure-NumPy peak model functions

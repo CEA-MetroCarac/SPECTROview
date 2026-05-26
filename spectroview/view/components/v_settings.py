@@ -1,8 +1,7 @@
 # spectroview/view/components/v_settings.py
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QCheckBox, QSpinBox, QComboBox,
-    QDoubleSpinBox, QLineEdit, QDialogButtonBox,
+    QPushButton, QCheckBox, QSpinBox, QDoubleSpinBox, QLineEdit, QDialogButtonBox,
     QSpacerItem, QSizePolicy
 )
 from PySide6.QtGui import QFont

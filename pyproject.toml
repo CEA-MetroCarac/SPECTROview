@@ -47,8 +47,6 @@ dependencies = [
     "pywin32; platform_system == 'Windows'",
     "superqt",
     "renishawwire",
-    "qtbot",
-    "pytest-qt",
     "markdown"
 ]
 

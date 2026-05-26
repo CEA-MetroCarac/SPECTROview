@@ -1,4 +1,3 @@
-dill>=0.3.8
 matplotlib<3.10.9
 openpyxl>=3.1.2
 pandas>=3.0.1
@@ -11,7 +10,5 @@ renishawWiRE==0.1.16
 scipy==1.17.1
 seaborn<0.13.3
 superqt==0.7.8
-qtbot==0.0.1
-pytest-qt
 
 markdown>=3.6.0

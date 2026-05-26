@@ -1,6 +1,5 @@
 import struct
 import numpy as np
-import datetime
 import re
 
 class SpcReader:

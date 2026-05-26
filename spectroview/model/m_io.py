@@ -8,7 +8,6 @@ from pathlib import Path
 
 from spectroview.viewmodel.utils import parse_wdf_metadata
 from spectroview.model.m_spc import SpcReader
-from collections import OrderedDict
 
 
 def load_spectrum_file(path: Path) -> dict:

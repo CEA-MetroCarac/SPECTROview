@@ -10,9 +10,8 @@ Handles:
 """
 
 import numpy as np
-from spectroview.fit_engine.scalar_models import FitResult, ParamValue, PEAK_MODEL_REGISTRY
+from spectroview.fit_engine.scalar_models import PEAK_MODEL_REGISTRY
 from spectroview.fit_engine.models import BATCHED_MODELS, numerical_jacobian
-from spectroview.fit_engine.noise import detect_noise_level
 
 
 class TensorEvaluator:

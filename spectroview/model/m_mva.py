@@ -3,7 +3,7 @@
 Provides PCA (via numpy SVD) and NMF (multiplicative update rules) for
 Raman / PL spectroscopic datasets.
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 from scipy.interpolate import interp1d

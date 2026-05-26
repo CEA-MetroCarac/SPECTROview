@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog, QMessageBox
-from PySide6.QtCore import Qt, QSettings, QFileInfo, QUrl
+from PySide6.QtCore import Qt, QFileInfo, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter

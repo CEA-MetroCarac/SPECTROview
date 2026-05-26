@@ -17,18 +17,14 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from spectroview.model.m_io import load_spectrum_file, load_TRPL_data, load_wdf_spectrum, load_spc_spectrum
 from spectroview.model.m_settings import MSettings
 from spectroview.model.workspace_io import WorkspaceIO
-from spectroview.model.spectra_store import SpectraStore, BaselineProxy, SpectrumProxy
+from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.model.peak_model import initialize_peak_params
 from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
 from spectroview.fit_engine.baseline import eval_baseline_batch
 from spectroview.fit_engine.evaluator import eval_peak_initial
 from spectroview.viewmodel.utils import (
     generate_fit_report,
-    baseline_to_dict,
-    calc_area,
     closest_index,
-    dict_to_baseline,
-    replace_peak_labels,
     save_df_to_excel,
     view_text,
 )

@@ -1,17 +1,4 @@
 import numpy as np
-from scipy.interpolate import interp1d
-from scipy.ndimage import gaussian_filter1d
-
-
-try:
-    from pybaselines import Baseline
-except ImportError:
-    pass
-
-try:
-    from pybaselines.classification import Classification
-except ImportError:
-    pass
 
 _INTERNAL_METHODS = {
     None: {'label': 'None', 'use_points': False}, 
@@ -53,6 +40,7 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
             y_at_points = y[bl_point_indices]
             sigma = config.get("sigma", 4)
             if sigma > 0:
+                from scipy.ndimage import gaussian_filter1d
                 y_smooth = gaussian_filter1d(y, sigma=sigma)
                 y_at_points = y_smooth[bl_point_indices]
         else:
@@ -66,6 +54,7 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
                 d = dict(zip(pts_x, y_at_points))
                 return np.array([d[xi] for xi in x])
             else:
+                from scipy.interpolate import interp1d
                 func_interp = interp1d(pts_x, y_at_points, fill_value="extrapolate")
                 return func_interp(x)
                 
@@ -80,6 +69,7 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
             y_at_points = y[bl_point_indices]
             sigma = config.get("sigma", 4)
             if sigma > 0:
+                from scipy.ndimage import gaussian_filter1d
                 y_smooth = gaussian_filter1d(y, sigma=sigma)
                 y_at_points = y_smooth[bl_point_indices]
         else:
@@ -95,6 +85,7 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
         
     elif mode == 'arpls':
         try:
+            from pybaselines import Baseline
             baseline_fitter = Baseline(x_data=x)
             lam = 10 ** config.get("coef", 5.0)
             b, _ = baseline_fitter.arpls(y, lam=lam)
@@ -103,6 +94,7 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
             return np.zeros_like(x)
     elif mode == 'sonneveld_vesser':
         try:
+            from pybaselines.classification import Classification
             baseline_fitter = Classification(x_data=x)
             niter = config.get("coef", 100)
             b, _ = baseline_fitter.dietrich(y, num_iter=int(niter)) # Just an approximation for Sonneveld-Vesser
@@ -111,6 +103,7 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
             return np.zeros_like(x)
     else:
         try:
+            from pybaselines import Baseline
             baseline_fitter = Baseline(x_data=x)
             meta = get_baseline_method_meta(mode)
             kwargs = {}
@@ -156,6 +149,7 @@ def eval_baseline_batch(x: np.ndarray, Y: np.ndarray, config: dict) -> np.ndarra
             sigma = config.get("sigma", 4)
             if sigma > 0:
                 # gaussian_filter1d vectorizes natively along axis=-1 (M dimension)
+                from scipy.ndimage import gaussian_filter1d
                 y_smooth = gaussian_filter1d(Y, sigma=sigma, axis=-1)
                 y_at_points = y_smooth[:, bl_point_indices]
             else:
@@ -173,6 +167,7 @@ def eval_baseline_batch(x: np.ndarray, Y: np.ndarray, config: dict) -> np.ndarra
                 if set(pts_x.tolist()).issubset(set(x.tolist())) and len(pts_x) == len(x):
                     return y_at_points
                 else:
+                    from scipy.interpolate import interp1d
                     # interp1d vectorizes naturally if provided a 2D array, interpolating along axis=-1
                     func_interp = interp1d(pts_x, y_at_points, axis=-1, fill_value="extrapolate")
                     return func_interp(x).astype(np.float32)

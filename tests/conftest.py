@@ -10,8 +10,7 @@ This module provides:
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, Mock
-import types
+from unittest.mock import MagicMock
 import pytest
 import numpy as np
 import pandas as pd
@@ -20,13 +19,8 @@ import pandas as pd
 project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 
-try:
-    import spectroview.fit_engine.tensor_engine as _tensor_engine
-except ImportError:
-    pass
 
 from PySide6.QtWidgets import QApplication
-from spectroview.model.m_settings import MSettings
 from spectroview.model.m_settings import MSettings
 
 # ============================================================================

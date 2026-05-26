@@ -1,9 +1,8 @@
 """View for Graphs Workspace - main UI coordinator for graph plotting and visualization."""
-import time
 import os
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
-    QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QLineEdit, QSplitter,
+    QComboBox, QSpinBox, QCheckBox, QLineEdit, QSplitter,
     QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame, QScrollArea,
     QDialog, QGridLayout, QApplication, QListWidgetItem, QCompleter
 )

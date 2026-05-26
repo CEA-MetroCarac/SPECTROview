@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from PySide6.QtCore import Qt, Signal, QTimer
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QFrame, QScrollArea, QDialog, QApplication, QFileDialog
 )

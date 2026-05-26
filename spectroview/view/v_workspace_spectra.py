@@ -279,7 +279,7 @@ class VWorkspaceSpectra(QWidget):
         # ═════════════════════════════════════════════════════════════════
         # MVA connections
         # ═════════════════════════════════════════════════════════════════
-        self.vm_mva.set_spectra(lambda: self.vm.spectra)  # inject spectra getter
+        self.vm_mva.set_store(self.vm.store)  # inject SpectraStore reference
         self.v_mva.run_pca_requested.connect(self.vm_mva.run_pca)
         self.v_mva.run_nmf_requested.connect(self.vm_mva.run_nmf)
         self.v_mva.send_to_graphs_requested.connect(self.vm_mva.send_to_graphs)

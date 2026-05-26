@@ -1,9 +1,14 @@
-"""ViewModel for Multivariate Analysis (MVA) — bridges UI signals to model computations."""
+"""ViewModel for Multivariate Analysis (MVA) — bridges UI signals to model computations.
+
+Updated for the SpectraStore tensor-centric architecture.
+"""
 import numpy as np
 import pandas as pd
+from scipy.interpolate import interp1d
 from PySide6.QtCore import QObject, Signal
 
 from spectroview.model.m_mva import MMVA, PCAResult, NMFResult
+from spectroview.model.spectra_store import SpectraStore
 
 
 class VMMVA(QObject):
@@ -20,8 +25,8 @@ class VMMVA(QObject):
         self.m_settings = m_settings
         self.model = MMVA()
 
-        # Injected reference getter — set by VWorkspaceSpectra after construction
-        self._get_spectra = None
+        # Injected SpectraStore reference — set by VWorkspaceSpectra after construction
+        self._store: SpectraStore | None = None
 
         # Cache last results for export
         self._last_pca_result: PCAResult | None = None
@@ -31,21 +36,69 @@ class VMMVA(QObject):
 
     # ── Dependency injection ──────────────────────────────────────────
 
-    def set_spectra(self, spectra_getter):
-        """Inject a getter function for the MSpectra list from VMWorkspaceSpectra."""
-        self._get_spectra = spectra_getter
+    def set_store(self, store: SpectraStore):
+        """Inject the SpectraStore reference from VMWorkspaceSpectra."""
+        self._store = store
+
+    # ── Data matrix construction from SpectraStore ────────────────────
+
+    def _build_data_matrix(self) -> tuple[np.ndarray, np.ndarray, list[str]]:
+        """Build (X, x_axis, fnames) from active spectra in the store.
+
+        Iterates over all maps, picks active spectra (is_active[0]),
+        and stacks their processed (or raw) y-vectors into an (N, M) matrix.
+        If spectra have different x-axes, they are interpolated onto the
+        first active spectrum's axis.
+
+        Returns:
+            (X, x_axis, fnames):
+                X       — (n, p) float64 data matrix
+                x_axis  — (p,) common wavenumber axis
+                fnames  — list[str] of spectrum identifiers
+
+        Raises:
+            ValueError: if fewer than 2 active spectra are available.
+        """
+        if self._store is None:
+            raise ValueError("No store available.")
+
+        rows: list[np.ndarray] = []
+        fnames: list[str] = []
+        x_ref: np.ndarray | None = None
+
+        for name in self._store.map_names:
+            md = self._store.get_map_data(name)
+            if md is None or not md.is_active[0]:
+                continue
+
+            # Use processed arrays when available, else raw
+            x = (md.x if md.x is not None else md.x0).astype(np.float64)
+            y = (md.Y[0] if md.Y is not None else md.Y0[0]).astype(np.float64)
+
+            if x_ref is None:
+                x_ref = x.copy()
+                rows.append(y.copy())
+            elif x.shape == x_ref.shape and np.allclose(x, x_ref, atol=0.01):
+                rows.append(y.copy())
+            else:
+                # Interpolate onto reference grid
+                f = interp1d(x, y, kind="linear", fill_value="extrapolate")
+                rows.append(f(x_ref))
+
+            fnames.append(name)
+
+        if len(rows) < 2:
+            raise ValueError("At least 2 active spectra are required for MVA.")
+
+        X = np.vstack(rows).astype(np.float64)
+        return X, x_ref, fnames
 
     # ── PCA ───────────────────────────────────────────────────────────
 
     def run_pca(self, n_components: int):
         """Slot: build data matrix from active spectra and run PCA."""
-        spectra = self._get_spectra() if self._get_spectra else None
-        if spectra is None or len(spectra) == 0:
-            self.notify.emit("No spectra loaded.")
-            return
-
         try:
-            X, x_axis, fnames = self.model.build_data_matrix(spectra)
+            X, x_axis, fnames = self._build_data_matrix()
         except ValueError as e:
             self.notify.emit(str(e))
             return
@@ -78,13 +131,8 @@ class VMMVA(QObject):
 
     def run_nmf(self, n_components: int, max_iter: int = 500, tol: float = 1e-4):
         """Slot: build data matrix from active spectra and run NMF."""
-        spectra = self._get_spectra() if self._get_spectra else None
-        if spectra is None or len(spectra) == 0:
-            self.notify.emit("No spectra loaded.")
-            return
-
         try:
-            X, x_axis, fnames = self.model.build_data_matrix(spectra)
+            X, x_axis, fnames = self._build_data_matrix()
         except ValueError as e:
             self.notify.emit(str(e))
             return

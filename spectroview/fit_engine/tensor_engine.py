@@ -30,7 +30,7 @@ class TensorFittingEngine:
         fit_params: dict = None,
         progress_callback=None,
         cancel_check=None,
-        print_benchmark: bool = True,
+        print_benchmark: bool = False,  # Set to True for debugging/benchmarking
     ):
         """Fit all spectra simultaneously using the tensor engine.
 

@@ -116,8 +116,10 @@ class VMWorkspaceSpectra(QObject):
         self._emit_selected_spectra()
         self._emit_list_update()
 
-
+    # ═════════════════════════════════════════════════════════════════════
     # View → ViewModel slots
+    # ═════════════════════════════════════════════════════════════════════
+
     def load_files(self, paths: list[str]):
         """Load spectrum files from disk directly into SpectraStore."""
         existing_fnames = set(self.store.map_names)
@@ -372,13 +374,8 @@ class VMWorkspaceSpectra(QObject):
             md.x = md.x0.copy()
             md.Y = md.Y0.copy()
 
-        # 2. Apply xcorrection if any
-        if md.xcorrection_value != 0.0:
-            md.x += md.xcorrection_value
-
-        # 3. Apply intensity norm if any
-        if md.intensity_norm_factor != 1.0:
-            md.Y = md.Y * md.intensity_norm_factor
+        # NOTE: md.x0 and md.Y0 already contain xcorrection and intensity_norm
+        # because those operations modify the raw arrays before saving.
 
         # 4. Evaluate baseline on cropped x/Y
         if md.baseline_config:
@@ -766,17 +763,40 @@ class VMWorkspaceSpectra(QObject):
         )
 
         for md in self._get_unique_map_data(fnames):
-            if md.Y is not None:
-                md.Y = md.Y * norm_factor
-            md.Y0 = md.Y0 * norm_factor
+            # Undo existing normalization if there is one
+            if getattr(md, 'intensity_norm_factor', 1.0) != 1.0 and getattr(md, 'intensity_norm_factor', 1.0) != 0:
+                if md.Y is not None:
+                    md.Y = md.Y * md.intensity_norm_factor
+                if md.Y0 is not None:
+                    md.Y0 = md.Y0 * md.intensity_norm_factor
+            
+            # Apply new normalization (divide by factor)
+            md.intensity_norm_factor = norm_factor
+            if norm_factor != 0:
+                if md.Y is not None:
+                    md.Y = md.Y / norm_factor
+                if md.Y0 is not None:
+                    md.Y0 = md.Y0 / norm_factor
 
         self._emit_selected_spectra()
 
     def undo_y_normalization(self, apply_all: bool = False):
         """Undo intensity normalization for selected spectra."""
-        # Tensor engine manages normalization in the view layer predominantly.
-        # Restoring from disk or reinit is required if Y0 was permanently altered.
-        pass
+        fnames = (
+            self._get_active_spectra()
+            if apply_all
+            else self._get_selected_spectra()
+        )
+
+        for md in self._get_unique_map_data(fnames):
+            if getattr(md, 'intensity_norm_factor', 1.0) != 1.0 and getattr(md, 'intensity_norm_factor', 1.0) != 0:
+                if md.Y is not None:
+                    md.Y = md.Y * md.intensity_norm_factor
+                if md.Y0 is not None:
+                    md.Y0 = md.Y0 * md.intensity_norm_factor
+                md.intensity_norm_factor = 1.0
+
+        self._emit_selected_spectra()
 
     def reinit_spectra(self, apply_all: bool = False):
         """Reinitialize spectra to original data."""
@@ -790,6 +810,7 @@ class VMWorkspaceSpectra(QObject):
                 md.x = md.x0.copy()
             if md.Y0 is not None:
                 md.Y = md.Y0.copy()
+                
             md.baseline_config = None
             md.Y_baseline = None
             md.peak_params = None
@@ -799,6 +820,9 @@ class VMWorkspaceSpectra(QObject):
             md.is_baseline_subtracted = False
             md.range_min = None
             md.range_max = None
+            md.colors = [None] * len(md.fnames)
+            md.labels = [None] * len(md.fnames)
+            
             self._on_map_data_changed(md, "reinit_spectra")
             
         self._post_bulk_action(apply_all, "reinit_spectra")
@@ -1388,22 +1412,10 @@ class VMWorkspaceSpectra(QObject):
         self._fit_thread.finished.connect(self._on_fit_finished)
         self._fit_thread.start()
 
-    def _run_fit_thread_batches(self, batches):
-        """No longer used since TensorFitThread natively handles iterative tasks."""
-        pass
-
-
-    def _sync_fit_results_to_store(self):
-        """Harvest fit parameters. In tensor mode, results are already in store, so this is a no-op."""
-        pass
-
     def _on_fit_finished(self):
         """Handle fit thread completion."""
         self._is_fitting = False
         self.fit_in_progress.emit(False)
-        
-        # Write fitted parameters from MSpectrum objects into SpectraStore
-        self._sync_fit_results_to_store()
         
         # Don't reset progress bar - let final state (X/X 100%) remain visible
         self._emit_selected_spectra()
@@ -1582,44 +1594,39 @@ class VMWorkspaceSpectra(QObject):
         if not self.selected_fnames:
             return
 
-        selected_spectra = self._get_selected_spectra()
-        if not selected_spectra:
+        fnames = self._get_selected_spectra()
+        if not fnames:
             return
 
-        spectrum = selected_spectra[0]
-        x_values = spectrum.x
-        y_values = spectrum.y
+        md = self.store.get_map_data(fnames[0])
+        if not md: return
 
-        # Create a dictionary for the DataFrame
+        local_idx = md.fnames.index(fnames[0])
+        x_values = md.x if md.x is not None else md.x0
+        y_values = md.Y[local_idx] if md.Y is not None else md.Y0[local_idx]
+
         data = {
             "X values": x_values,
             "Y values": y_values
         }
 
-        # Add each peak model's evaluated Y values as a new column
-        for i, peak_model in enumerate(spectrum.peak_models):
-            # Evaluate peak model
-            try:
-                param_hints_orig = deepcopy(peak_model.param_hints)
-                for key in peak_model.param_hints.keys():
-                    peak_model.param_hints[key]["vary"] = False
-                
-                params = peak_model.make_params()
-                peak_model.param_hints = param_hints_orig
-                
-                y_peak = peak_model.eval(params, x=x_values)
+        if md.fit_model and md.fit_model.get("peak_models"):
+            peak_models = list(md.fit_model["peak_models"].values())
+            peak_labels = md.fit_model.get("peak_labels", [])
+            for i, p_model in enumerate(peak_models):
+                try:
+                    self._update_fit_model_from_params(md, local_idx)
+                    y_peak = eval_peak_initial(x_values, p_model)
 
-                if hasattr(spectrum, 'peak_labels') and i < len(spectrum.peak_labels):
-                    label = spectrum.peak_labels[i]
-                else:
-                    label = f"Peak{i + 1}"
+                    if i < len(peak_labels):
+                        label = peak_labels[i]
+                    else:
+                        label = f"Peak{i + 1}"
 
-                data[label] = y_peak
-            except Exception as e:
-                # Skip peaks that fail to evaluate
-                continue
+                    data[label] = y_peak
+                except Exception:
+                    continue
 
-        # Create DataFrame and copy to clipboard
         df = pd.DataFrame(data)
         df.to_clipboard(index=False)
 
@@ -1814,13 +1821,7 @@ class VMWorkspaceSpectra(QObject):
                     md.x = md.x0.copy()
                     md.Y = md.Y0.copy()
 
-                # Apply xcorrection if any
-                if md.xcorrection_value != 0.0:
-                    md.x += md.xcorrection_value
-
-                # Apply intensity norm if any
-                if md.intensity_norm_factor != 1.0:
-                    md.Y = md.Y * md.intensity_norm_factor
+                # NOTE: legacy y0 and x0 already contain xcorrection and intensity_norm
 
                 legacy_bl = sdata.get("baseline")
                 if legacy_bl:

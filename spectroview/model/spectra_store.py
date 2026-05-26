@@ -3,29 +3,6 @@
 Owns all heavy numerical data for a collection of spectra (typically one or
 more hyperspectral maps) as contiguous NumPy arrays per map.
 
-Architecture
-------------
-Data is organized per map in a `MapData` structure:
-
-    ┌────────────────────────────────────────────────────────┐
-    │  MapData (per-map tensor block)                        │
-    │  ─────────────────────────                             │
-    │  x0        : float64[M]      wavenumber axis           │
-    │  Y0        : float32[N, M]   raw intensities           │
-    │  coords    : float64[N, 2]   spatial (X, Y)            │
-    │  is_active : bool[N]         checkbox state            │
-    │  fnames    : list[str]       unique identifiers        │
-    │  colors    : list[str|None]                            │
-    │  labels    : list[str|None]                            │
-    │  peak_params: float64[N, K]  fitted parameters         │
-    │  fit_success: bool[N]                                  │
-    │  fit_r2    : float64[N]                                │
-    │  param_names: list[str]      K param names             │
-    │  fit_model  : dict           shared peak model def     │
-    └────────────────────────────────────────────────────────┘
-
-Multiple maps can coexist in the same SpectraStore (each with independent
-x-axis length, enabling the Maps workspace to hold heterogeneous datasets).
 """
 
 from __future__ import annotations
@@ -116,8 +93,27 @@ class MapData:
     """A data container that encapsulates all numerical arrays, configurations, and state
     for a single hyperspectral map or single-spectrum session.
     
-    This includes raw spectral data, processed intensity grids, coordinate geometry,
-    fitted peak profiles, R² scores, and custom formatting overlays (e.g., color, active status).
+    Data is organized per map in a `MapData` structure:
+
+    ┌────────────────────────────────────────────────────────┐
+    │  MapData (per-map tensor block)                        │
+    │  ─────────────────────────                             │
+    │  x0        : float64[M]      wavenumber axis           │
+    │  Y0        : float32[N, M]   raw intensities           │
+    │  coords    : float64[N, 2]   spatial (X, Y)            │
+    │  is_active : bool[N]         checkbox state            │
+    │  fnames    : list[str]       unique identifiers        │
+    │  colors    : list[str|None]                            │
+    │  labels    : list[str|None]                            │
+    │  peak_params: float64[N, K]  fitted parameters         │
+    │  fit_success: bool[N]                                  │
+    │  fit_r2    : float64[N]                                │
+    │  param_names: list[str]      K param names             │
+    │  fit_model  : dict           shared peak model def     │
+    └────────────────────────────────────────────────────────┘
+
+    Multiple maps can coexist in the same SpectraStore (each with independent
+    x-axis length, enabling the Maps workspace to hold heterogeneous datasets).
     """
     """All numerical data for a single hyperspectral map."""
     name: str

@@ -354,11 +354,28 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if md:
             self.selected_fnames = list(md.fnames)
         self._emit_selected_spectra()
+
+    def apply_y_normalization(self, norm_factor: float, apply_all: bool = False):
+        """Override to update map visualizer after applying normalization."""
+        super().apply_y_normalization(norm_factor, apply_all)
+        if self.current_map_name:
+            self.clear_map_cache_requested.emit(self.current_map_name)
+        self.map_data_updated.emit(self.get_current_map_dataframe())
+
+    def undo_y_normalization(self, apply_all: bool = False):
+        """Override to update map visualizer after undoing normalization."""
+        super().undo_y_normalization(apply_all)
+        if self.current_map_name:
+            self.clear_map_cache_requested.emit(self.current_map_name)
+        self.map_data_updated.emit(self.get_current_map_dataframe())
     
     def reinit_current_map_spectra(self, apply_all: bool = False):
-        """Reinitialize selected spectra or all spectra from all maps."""
-        # Delegate to our reinit_spectra which handles fname-based selection
-        self.reinit_spectra(apply_all)
+        """Reinitialize spectra and emit map update."""
+        super().reinit_spectra(apply_all)
+        if self.current_map_name:
+            self.clear_map_cache_requested.emit(self.current_map_name)
+        self._fit_results_cache_dirty = True
+        self.map_data_updated.emit(self.get_current_map_dataframe())
         
     # ═════════════════════════════════════════════════════════════════════
     # Hooks for Bulk Operations (Template Method Pattern) inherited from Spectra
@@ -682,11 +699,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
         self._fit_thread.finished.connect(self._on_fit_finished)
         self._fit_thread.start()
-
-    def _sync_fit_results_to_store(self):
-        """Override: No-op for Maps since TensorFitThread writes directly to Store."""
-        pass
-
 
     def get_fit_results_dataframe(self):
         """Get fit results DataFrame for the current map.

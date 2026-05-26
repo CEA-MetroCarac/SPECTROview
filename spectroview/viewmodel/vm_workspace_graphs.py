@@ -361,13 +361,8 @@ class VMWorkspaceGraphs(QObject):
                 'dataframe_sources': self.dataframe_sources,
             }
             
-            # Pack original_dfs into dataframes pickle
-            dataframes = {
-                'original_dfs': self.dataframes
-            }
-            
             # Save using WorkspaceIO
-            WorkspaceIO.save_workspace(file_path, metadata, dataframes=dataframes)
+            WorkspaceIO.save_workspace(file_path, metadata, dataframes=self.dataframes)
             
             self.notify.emit(f"Workspace saved: {Path(file_path).name}")
         except Exception as e:
@@ -387,9 +382,9 @@ class VMWorkspaceGraphs(QObject):
             self.dataframes.clear()
             self.dataframe_sources.clear()
             
-            # Restore DataFrames instantly from pickle
-            if dataframes and 'original_dfs' in dataframes:
-                self.dataframes = dataframes['original_dfs']
+            # Restore DataFrames
+            if dataframes:
+                self.dataframes = dataframes
             
             # Load source file paths
             self.dataframe_sources = metadata.get('dataframe_sources', {})

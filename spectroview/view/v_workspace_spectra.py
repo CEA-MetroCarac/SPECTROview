@@ -209,6 +209,7 @@ class VWorkspaceSpectra(QWidget):
         self.btn_select_all.clicked.connect(self.v_spectra_list.select_all)
         self.btn_remove.clicked.connect(vm.remove_selected_spectra)
         self.btn_reinit.clicked.connect(lambda: self._apply_with_ctrl(vm.reinit_spectra))
+        self.btn_reinit.clicked.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after reinit
         self.btn_stats.clicked.connect(lambda: vm.view_stats(parent_widget=self))
         self.btn_save_spectra_data.clicked.connect(lambda: vm.save_spectra_data(parent_widget=self))
 
@@ -238,6 +239,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.baseline_copy_requested.connect(vm.copy_baseline)
         self.v_fit_model_builder.baseline_paste_requested.connect(vm.paste_baseline)
         self.v_fit_model_builder.baseline_subtract_requested.connect(vm.subtract_baseline)
+        self.v_fit_model_builder.baseline_subtract_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after subtract
         self.v_fit_model_builder.baseline_delete_requested.connect(vm.delete_baseline)
 
         self.v_fit_model_builder.peaks_copy_requested.connect(vm.copy_peaks)
@@ -249,6 +251,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.fit_requested.connect(vm.fit)
         self.v_fit_model_builder.fitmodel_copy_requested.connect(vm.copy_fit_model)
         self.v_fit_model_builder.fitmodel_paste_requested.connect(vm.paste_fit_model)
+        self.v_fit_model_builder.fitmodel_paste_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after paste
         self.v_fit_model_builder.fitmodel_save_requested.connect(vm.save_fit_model)
 
         # Check all checkbox
@@ -303,6 +306,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.load_fit_models_requested.connect(self.vm_fit_model_builder.pick_and_load_model)
         self.v_fit_model_builder.cbb_model.currentTextChanged.connect(self.vm_fit_model_builder.set_current_model)
         self.v_fit_model_builder.apply_loaded_fit_model_requested.connect(vm.apply_fit_model)
+        self.v_fit_model_builder.apply_loaded_fit_model_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after apply
 
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.clear)
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.addItems)

@@ -228,6 +228,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_maps_list.save_requested.connect(self._on_save_map_requested)
         self.v_maps_list.select_all_requested.connect(self._on_select_all_spectra)
         self.v_maps_list.reinitialize_requested.connect(self._on_reinit_spectra)
+        self.v_maps_list.reinitialize_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after reinit
         self.v_maps_list.stats_requested.connect(lambda: self.vm.view_stats(parent_widget=self))
         self.v_maps_list.send_to_spectra_requested.connect(self._on_send_to_spectra)
         

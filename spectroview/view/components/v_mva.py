@@ -51,7 +51,7 @@ class VMVA(QWidget):
         left_layout.setSpacing(4)
 
         # Warning label
-        lbl_warning = QLabel("(MVA features are under developement. Do not use !)")
+        lbl_warning = QLabel("(MVA features are still under developement!)")
         lbl_warning.setStyleSheet("color: red;")
         lbl_warning.setAlignment(Qt.AlignCenter)
         lbl_warning.setWordWrap(True)
@@ -380,14 +380,6 @@ class VMVA(QWidget):
         y_data = scores[:, iy]
 
         self.ax.scatter(x_data, y_data, s=50, c="#5B9BD5", edgecolors="#2E6EA6", zorder=3)
-
-        # Label each point
-        for i, fname in enumerate(fnames):
-            self.ax.annotate(
-                fname, (x_data[i], y_data[i]),
-                textcoords="offset points", xytext=(5, 5),
-                fontsize=7, alpha=0.8,
-            )
 
         self.ax.set_xlabel(f"{prefix}{ix+1}")
         self.ax.set_ylabel(f"{prefix}{iy+1}")

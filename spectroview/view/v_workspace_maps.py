@@ -563,6 +563,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             map_name = map_names[index]
             self.vm.select_map(map_name)
             
+            # Tell MVA to operate on this map's spectra
+            self.vm_mva.set_current_map_name(map_name)
+            
             # Display metadata for the selected map (not per-spectrum)
             map_metadata = self.vm.maps_metadata.get(map_name, {})
             self.v_more_tab.show_metadata(map_metadata)
@@ -702,6 +705,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             dialog.close()
         self.viewer_dialogs.clear()
         self.next_viewer_number = 2
+        
+        # Reset MVA map reference
+        self.vm_mva.set_current_map_name(None)
         
         # Delegate to ViewModel for data clearing
         self.vm.clear_workspace()

@@ -1,6 +1,11 @@
 """ViewModel for Multivariate Analysis (MVA) — bridges UI signals to model computations.
 
 Updated for the SpectraStore tensor-centric architecture.
+
+Supports two modes:
+  • Spectra workspace  – each MapData holds 1 spectrum → MVA across all maps.
+  • Maps workspace     – a single MapData holds N spectra → MVA within the
+                         currently selected map (set via set_current_map_name).
 """
 import numpy as np
 import pandas as pd
@@ -28,6 +33,11 @@ class VMMVA(QObject):
         # Injected SpectraStore reference — set by VWorkspaceSpectra after construction
         self._store: SpectraStore | None = None
 
+        # Maps workspace: analyse spectra within a single map
+        # When set, _build_data_matrix uses all active rows of this map.
+        # When None (Spectra workspace), it iterates over all maps (1 spectrum per map).
+        self._current_map_name: str | None = None
+
         # Cache last results for export
         self._last_pca_result: PCAResult | None = None
         self._last_nmf_result: NMFResult | None = None
@@ -40,21 +50,29 @@ class VMMVA(QObject):
         """Inject the SpectraStore reference from VMWorkspaceSpectra."""
         self._store = store
 
+    def set_current_map_name(self, name: str | None):
+        """Set the active map for Maps-workspace MVA.
+
+        When *name* is set, `_build_data_matrix` will pull **all active
+        spectra** from that single MapData block instead of iterating
+        across maps.
+        """
+        self._current_map_name = name
+
     # ── Data matrix construction from SpectraStore ────────────────────
 
     def _build_data_matrix(self) -> tuple[np.ndarray, np.ndarray, list[str]]:
-        """Build (X, x_axis, fnames) from active spectra in the store.
+        """Build (X, x_axis, fnames) from the store.
 
-        Iterates over all maps, picks active spectra (is_active[0]),
-        and stacks their processed (or raw) y-vectors into an (N, M) matrix.
-        If spectra have different x-axes, they are interpolated onto the
-        first active spectrum's axis.
+        Behaviour depends on ``_current_map_name``:
+
+        * **None  (Spectra workspace)**  — one spectrum per map, iterate
+          over all maps and pick ``Y[0]``.
+        * **set   (Maps workspace)**     — many spectra in one map, iterate
+          over all *active* rows inside that MapData.
 
         Returns:
-            (X, x_axis, fnames):
-                X       — (n, p) float64 data matrix
-                x_axis  — (p,) common wavenumber axis
-                fnames  — list[str] of spectrum identifiers
+            (X, x_axis, fnames)
 
         Raises:
             ValueError: if fewer than 2 active spectra are available.
@@ -62,6 +80,15 @@ class VMMVA(QObject):
         if self._store is None:
             raise ValueError("No store available.")
 
+        if self._current_map_name is not None:
+            return self._build_from_single_map(self._current_map_name)
+        else:
+            return self._build_from_all_maps()
+
+    # ── Private builders ──────────────────────────────────────────────
+
+    def _build_from_all_maps(self) -> tuple[np.ndarray, np.ndarray, list[str]]:
+        """Spectra-workspace mode: 1 spectrum per map, varying x-axes."""
         rows: list[np.ndarray] = []
         fnames: list[str] = []
         x_ref: np.ndarray | None = None
@@ -71,7 +98,6 @@ class VMMVA(QObject):
             if md is None or not md.is_active[0]:
                 continue
 
-            # Use processed arrays when available, else raw
             x = (md.x if md.x is not None else md.x0).astype(np.float64)
             y = (md.Y[0] if md.Y is not None else md.Y0[0]).astype(np.float64)
 
@@ -81,7 +107,6 @@ class VMMVA(QObject):
             elif x.shape == x_ref.shape and np.allclose(x, x_ref, atol=0.01):
                 rows.append(y.copy())
             else:
-                # Interpolate onto reference grid
                 f = interp1d(x, y, kind="linear", fill_value="extrapolate")
                 rows.append(f(x_ref))
 
@@ -90,8 +115,31 @@ class VMMVA(QObject):
         if len(rows) < 2:
             raise ValueError("At least 2 active spectra are required for MVA.")
 
-        X = np.vstack(rows).astype(np.float64)
-        return X, x_ref, fnames
+        return np.vstack(rows).astype(np.float64), x_ref, fnames
+
+    def _build_from_single_map(self, map_name: str) -> tuple[np.ndarray, np.ndarray, list[str]]:
+        """Maps-workspace mode: all active spectra from one MapData."""
+        md = self._store.get_map_data(map_name)
+        if md is None:
+            raise ValueError(f"Map '{map_name}' not found in store.")
+
+        # Active mask
+        active = md.is_active  # bool[N]
+        active_indices = np.where(active)[0]
+
+        if len(active_indices) < 2:
+            raise ValueError(
+                f"At least 2 active spectra are required for MVA "
+                f"(map '{map_name}' has {len(active_indices)} active)."
+            )
+
+        # Use processed arrays when available, else raw
+        x = (md.x if md.x is not None else md.x0).astype(np.float64)
+        Y = (md.Y if md.Y is not None else md.Y0)[active_indices].astype(np.float64)
+
+        fnames = [md.fnames[i] for i in active_indices]
+
+        return Y, x, fnames
 
     # ── PCA ───────────────────────────────────────────────────────────
 

@@ -1,11 +1,11 @@
-"""QThread wrapper for the Tensor Fitting Engine."""
+"""QThread wrapper for the Batch Fitting Engine."""
 import time
 import numpy as np
 import sys
 from PySide6.QtCore import QThread, Signal
-from spectroview.fit_engine.tensor_engine import TensorFittingEngine
+from spectroview.fit_engine.vbf_fit_engine import VBFengine
 
-class TensorFitThread(QThread):
+class VBFthread(QThread):
     progress_changed = Signal(int, int, int, float)
     timings_ready = Signal(str)
 
@@ -74,7 +74,7 @@ class TensorFitThread(QThread):
                 pct = int(100 * overall_current / max(total_spectra, 1))
                 self.progress_changed.emit(overall_current, total_spectra, pct, elapsed)
 
-            engine = TensorFittingEngine()
+            engine = VBFengine()
             try:
                 p_full, success, rsquared, best_fits, Y_peaks, param_names = engine.fit_spectra(
                     x=x,
@@ -86,7 +86,7 @@ class TensorFitThread(QThread):
                     cancel_check=lambda: self._is_cancelled,
                 )
             except Exception as e:
-                print(f"[TensorFitThread] fit failed for {map_name}: {e}")
+                print(f"[VBFthread] fit failed for {map_name}: {e}")
                 processed_spectra += N
                 continue
                 

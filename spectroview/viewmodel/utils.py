@@ -597,4 +597,36 @@ def light_palette():
 
     return p
 
+def build_clean_fit_model(fit_model):
+    """Build a clean, consistently ordered fit model dict for serialization.
 
+    Key order: fit_params, range_min, range_max, baseline, peak_labels, peak_models.
+    Also rounds float values in fit_params to avoid QSettings float32 precision artifacts
+    (e.g. 9.999999747378752e-06 -> 1e-05).
+    """
+    # Round fit_params floats to 6 significant digits to avoid float32 artifacts
+    fit_params = fit_model.get("fit_params", {})
+    if fit_params:
+        cleaned_params = {}
+        for k, v in fit_params.items():
+            cleaned_params[k] = float(f"{v:.6g}") if isinstance(v, float) else v
+        fit_params = cleaned_params
+
+    # Clean baseline: strip fields not needed for the current mode
+    baseline = fit_model.get("baseline")
+    if baseline and isinstance(baseline, dict):
+        baseline = deepcopy(baseline)
+        baseline.pop("y_eval", None)
+        if baseline.get("mode") == "Linear":
+            baseline.pop("coef", None)
+            baseline.pop("order_max", None)
+
+    # Build ordered dict
+    return {
+        "fit_params": fit_params,
+        "range_min": fit_model.get("range_min"),
+        "range_max": fit_model.get("range_max"),
+        "baseline": baseline,
+        "peak_labels": fit_model.get("peak_labels", []),
+        "peak_models": fit_model.get("peak_models", {}),
+    }

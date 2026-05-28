@@ -111,13 +111,13 @@ spectroview/
 │       ├── customize_graph_dialog.py  # Graph customization dialog
 │       └── customized_widgets.py      # Palette combobox, custom toolbar
 │
-├── fit_engine/             # High-performance tensor fitting
-│   ├── tensor_engine.py         # Orchestrator (TensorFittingEngine)
-│   ├── evaluator.py             # Parameter mapping (TensorEvaluator)
+├── fit_engine/             # High-performance batch fitting
+│   ├── vbf_fit_engine.py        # Orchestrator (VBFengine)
+│   ├── evaluator.py             # Parameter mapping (VBFevaluator)
 │   ├── optimizer.py             # Batched Levenberg-Marquardt
 │   ├── models.py                # Batched peak functions + Jacobians
 │   ├── scalar_models.py         # Fallback scalar functions + FitResult
-│   ├── tensor_fit_thread.py     # QThread wrapper
+│   ├── vbf_fit_thread.py        # QThread wrapper
 │   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
 │   └── noise.py                 # Noise estimation functions
 │
@@ -284,7 +284,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 
 | Thread Class | Location | Purpose |
 |-------------|----------|---------|
-| `TensorFitThread` | `fit_engine/tensor_fit_thread.py` | Batched tensor fitting (primary engine) |
+| `VBFthread` | `fit_engine/vbf_fit_thread.py` | Batched batch fitting (primary engine) |
 
 **Thread lifecycle**:
 
@@ -338,7 +338,7 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 | **Spectra Workspace** | [spectra.md](spectra.md) | VMWorkspaceSpectra, spectrum lifecycle, baseline/peak pipeline, fit model management |
 | **Maps Workspace** | [maps.md](maps.md) | VMWorkspaceMaps, hyperspectral data loading, heatmap rendering, coordinate handling |
 | **Graphs Workspace** | [graphs.md](graphs.md) | VMWorkspaceGraphs, DataFrame management, plot creation, VGraph rendering |
-| **Tensor Fit Engine** | [tensor-engine.md](tensor-engine.md) | Batched LM optimizer, analytical Jacobians, adding new peak models |
+| **Vectorized Batch Fit Engine (VBF Engine)** | [vbf-engine.md](vbf-engine.md) | Batched LM optimizer, analytical Jacobians, adding new peak models |
 | **Multivariate Analysis** | [mva.md](mva.md) | PCA/NMF implementation, data pipeline, export to Graphs |
 
 ---

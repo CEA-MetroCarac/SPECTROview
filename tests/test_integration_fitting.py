@@ -10,8 +10,8 @@ from pathlib import Path
 from spectroview.model.m_io import load_map_file, load_wdf_map
 from spectroview.model.m_settings import MSettings
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
-from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
-from spectroview.fit_engine.tensor_engine import TensorFittingEngine
+from spectroview.fit_engine.vbf_fit_thread import VBFthread
+from spectroview.fit_engine.vbf_fit_engine import VBFengine
 
 # Paths to the benchmarking data
 DATA_DIR = Path(__file__).parent.parent / "examples" / "fit_benchmarking_data"
@@ -34,7 +34,7 @@ def load_fit_model(json_path: Path) -> dict:
     return data
 
 @pytest.mark.skipif(not (DATA_DIR / "2_MoS2_map.txt").exists(), reason="Benchmarking data not found")
-def test_tensor_engine_mos2_map():
+def test_vbf_fit_engine_mos2_map():
     """Test convergence on MoS2 TXT map data."""
     # 1. Setup VM and Store
     settings = MSettings()
@@ -59,7 +59,7 @@ def test_tensor_engine_mos2_map():
         "indices": np.arange(len(Y)),
         "fit_model": fit_model
     }]
-    thread = TensorFitThread(store, tasks)
+    thread = VBFthread(store, tasks)
     thread.run()  # Run synchronously for test
 
     # 5. Extract results from store
@@ -101,7 +101,7 @@ def test_tensor_engine_mos2_map():
 
 
 @pytest.mark.skipif(not (DATA_DIR / "3_3721map.wdf").exists(), reason="Benchmarking data not found")
-def test_tensor_engine_wdf_map():
+def test_vbf_fit_engine_wdf_map():
     """Test convergence on WDF map data."""
     # 1. Load data
     map_df, _ = load_wdf_map(DATA_DIR / "3_3721map.wdf")
@@ -123,7 +123,7 @@ def test_tensor_engine_wdf_map():
             Y_sub = Y_sub - y_eval
             
     # 3. Fit
-    engine = TensorFittingEngine()
+    engine = VBFengine()
     p_full, success, rsquared, best_fits, Y_peaks, param_names = engine.fit_spectra(
         x=x,
         Y=Y_sub,

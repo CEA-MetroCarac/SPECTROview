@@ -28,7 +28,7 @@ pytest tests/ -v
 
 ### Run Performance Benchmarks
 
-Performance tests use large datasets and are marked with `@pytest.mark.slow`. They are useful for verifying the performance optimizations in the Tensor Fit Engine.
+Performance tests use large datasets and are marked with `@pytest.mark.slow`. They are useful for verifying the performance optimizations in the Vectorized Batch Fit Engine (VBF Engine).
 
 ```bash
 # Run only performance benchmarks
@@ -109,7 +109,7 @@ End-to-end workflow tests:
   - Edge cases and robustness tests
 
 - **test_fitting_performance.py**:
-  - Validates tensor engine speed against established baselines.
+  - Validates VBF engine speed against established baselines.
   - Benchmarks high-parameter counts (K=18 multi-peak).
   - Validates noise restoration and memory/time scaling.
 

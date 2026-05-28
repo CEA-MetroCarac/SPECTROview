@@ -1,22 +1,22 @@
-"""Tensor Fitting Engine — public API.
+"""Vectorized Batch Fitting Engine.
 
 Fits all spectra in a hyperspectral map simultaneously using a custom
 batched Levenberg-Marquardt optimizer.
 
 Usage:
-    engine = TensorFittingEngine()
+    engine = VBFengine()
     results = engine.fit_spectra(x, Y, fit_model, ...)
 """
 
 import time
 import numpy as np
 
-from spectroview.fit_engine.evaluator import TensorEvaluator
+from spectroview.fit_engine.evaluator import VBFevaluator
 from spectroview.fit_engine.optimizer import batched_levenberg_marquardt
 
 
-class TensorFittingEngine:
-    """High-performance tensor fitting engine for hyperspectral data."""
+class VBFengine:
+    """High-performance batch fitting engine for hyperspectral data."""
     
     def __init__(self):
         self.timings = {}
@@ -32,7 +32,7 @@ class TensorFittingEngine:
         cancel_check=None,
         print_benchmark: bool = False,  # Set to True for debugging/benchmarking
     ):
-        """Fit all spectra simultaneously using the tensor engine.
+        """Fit all spectra simultaneously using the VBF engine.
 
         Args:
             x: (M,) or (N, M) wavenumber axis
@@ -56,7 +56,7 @@ class TensorFittingEngine:
         t_total = time.perf_counter()
 
         # ─── 1. Build evaluator ───
-        evaluator = TensorEvaluator.from_fit_model(fit_model)
+        evaluator = VBFevaluator.from_fit_model(fit_model)
         param_names = evaluator._param_names
 
         if evaluator.n_params_free == 0:
@@ -82,7 +82,7 @@ class TensorFittingEngine:
         t_step3 = time.perf_counter() - t0
         self.timings["Step 3 - build p0"] = f"{t_step3:.3f}s"
         if print_benchmark:
-            print(f"[TensorEngine] Step 3 - build p0: {t_step3:.3f}s")
+            print(f"[VBFengine] Step 3 - build p0: {t_step3:.3f}s")
 
         # ─── 3. Parse fit parameters ───
         if fit_params is None:
@@ -109,9 +109,9 @@ class TensorFittingEngine:
             cancel_check=cancel_check,
         )
         fit_time = time.perf_counter() - t0
-        self.timings["Step 4 - tensor fit"] = f"{fit_time:.3f}s ({fit_time/N*1000:.3f} ms/spectrum, {success.sum()}/{N} converged)"
+        self.timings["Step 4 - batch fit"] = f"{fit_time:.3f}s ({fit_time/N*1000:.3f} ms/spectrum, {success.sum()}/{N} converged)"
         if print_benchmark:
-            print(f"[TensorEngine] Step 4 - tensor fit: {fit_time:.3f}s ({fit_time/N*1000:.1f} ms/spectrum, {success.sum()}/{N} converged)")
+            print(f"[VBFengine] Step 4 - batch fit: {fit_time:.3f}s ({fit_time/N*1000:.1f} ms/spectrum, {success.sum()}/{N} converged)")
 
         evaluator.apply_noise_threshold(x, Y, p_opt, fit_params, p0_matrix=p0)
         
@@ -123,7 +123,7 @@ class TensorFittingEngine:
         t_step5 = time.perf_counter() - t0
         self.timings["Step 5 - write_back"] = f"{t_step5:.3f}s"
         if print_benchmark:
-            print(f"[TensorEngine] Step 5 - write_back: {t_step5:.3f}s")
-            print(f"[TensorEngine] TOTAL: {time.perf_counter()-t_total:.3f}s")
+            print(f"[VBFengine] Step 5 - write_back: {t_step5:.3f}s")
+            print(f"[VBFengine] TOTAL: {time.perf_counter()-t_total:.3f}s")
         
         return p_full, success, rsquared, best_fits, Y_peaks, param_names

@@ -1,24 +1,24 @@
-# Developer Guide: Tensor Fit Engine
+# Developer Guide: Vectorized Batch Fit Engine (VBF Engine)
 
-This document provides a deep dive into the inner workings, architecture, and performance characteristics of the Tensor Fit Engine located in `spectroview/fit_engine/`.
+This document provides a deep dive into the inner workings, architecture, and performance characteristics of the Vectorized Batch Fit Engine (VBF Engine) located in `spectroview/fit_engine/`.
 
 ---
 
-## 1. Why the Tensor Engine is Much Faster
+## 1. Why the VBF Engine is Much Faster
 
 The legacy fit engines operate on a **per-spectrum** basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
 - **Python Function Call Overhead**: Calling the objective function and Jacobian estimator thousands of times per iteration.
 - **Finite-Difference Jacobians**: Approximating the Jacobian numerically requires `2 * K` (where K is the number of parameters) additional function evaluations per iteration, per spectrum.
 - **Sequential Execution**: Even with multiprocessing, the overhead of serialization and inter-process communication creates bottlenecks.
 
-The **Tensor Fit Engine** achieves massive speedups (~10x to 15x faster) through the following core principles:
+The **Vectorized Batch Fit Engine (VBF Engine)** achieves massive speedups (~10x to 15x faster) through the following core principles:
 
 1.  **All-at-Once Optimization**: It optimizes all \(N\) spectra simultaneously. The parameter matrices, data arrays, and residuals are manipulated as large 2D or 3D tensors.
 2.  **Vectorized Operations (BLAS/LAPACK)**: By framing the problem as tensors, the heavy lifting is offloaded to highly optimized C/Fortran libraries.
     - Matrix multiplications and transpositions for the normal equations (\(J^T J\) and \(J^T r\)) are performed using `np.einsum`.
     - The linear systems for all spectra are solved in a single call to `np.linalg.solve`, which dispatches to LAPACK.
 3.  **Analytical Jacobians**: Instead of estimating derivatives numerically, the engine uses exact analytical formulas for common peak shapes (Lorentzian, Gaussian, PseudoVoigt). This eliminates the \(2K\) extra evaluations entirely.
-4.  **No Spatial Propagation**: Unlike older map-fitting approaches that used spiral traversal to propagate guesses from neighbor to neighbor (forcing sequential execution), the tensor engine initializes all pixels independently using amplitude scaling, allowing purely parallel tensor math.
+4.  **No Spatial Propagation**: Unlike older map-fitting approaches that used spiral traversal to propagate guesses from neighbor to neighbor (forcing sequential execution), the VBF engine initializes all pixels independently using amplitude scaling, allowing purely parallel tensor math.
 5.  **Variable Length Support**: Spectra with different lengths (e.g. differently cropped) are padded with zeros to fit into a uniform 2D tensor, while a boolean `weights` mask ensures padded regions are ignored during optimization.
 6.  **Expression Support**: Supports complex mathematical relationships between parameters across the batch by evaluating mathematical constraints symbolically before mapping to free parameters.
 
@@ -60,8 +60,8 @@ Even though the math is batched, each spectrum converges independently. The opti
 
 ```mermaid
 graph TD
-    TFT["TensorFitThread"] -->|"instantiates"| TE["TensorFittingEngine"]
-    TE -->|"builds"| EV["TensorEvaluator"]
+    TFT["VBFthread"] -->|"instantiates"| TE["VBFengine"]
+    TE -->|"builds"| EV["VBFevaluator"]
     TE -->|"calls"| OPT["batched_LM()"]
     EV -->|"routes to"| MOD["models.py"]
     OPT -->|"evaluate / jacobian"| EV
@@ -69,9 +69,9 @@ graph TD
 
 | Module | Class / Function | Responsibility |
 |--------|-----------------|----------------|
-| `tensor_fit_thread.py` | `TensorFitThread` | QThread wrapper. Supports batched modes. Emits `progress_changed` and `timings_ready` signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults. |
-| `tensor_engine.py` | `TensorFittingEngine` | Public API orchestrator. Manages the 8-step pipeline: apply model → preprocess → extract matrices → build p0 → build weights → optimize → write back results. Records step-level timings. |
-| `evaluator.py` | `TensorEvaluator` | Bridge between the dictionary-based `fit_model` and the flat tensor API. Parses peak definitions, manages free/fixed parameter indexing, evaluates expressions, routes to correct batched model functions, builds `FitResult` objects. |
+| `vbf_fit_thread.py` | `VBFthread` | QThread wrapper. Supports batched modes. Emits `progress_changed` and `timings_ready` signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults. |
+| `vbf_fit_engine.py` | `VBFengine` | Public API orchestrator. Manages the 8-step pipeline: apply model → preprocess → extract matrices → build p0 → build weights → optimize → write back results. Records step-level timings. |
+| `evaluator.py` | `VBFevaluator` | Bridge between the dictionary-based `fit_model` and the flat tensor API. Parses peak definitions, manages free/fixed parameter indexing, evaluates expressions, routes to correct batched model functions, builds `FitResult` objects. |
 | `optimizer.py` | `batched_levenberg_marquardt()` | Pure numerical optimizer. Solves N independent least-squares problems simultaneously using `np.einsum`. Uses an adaptive solver (`cho_solve` or `np.linalg.solve`) depending on matrix size. GUI-agnostic. |
 | `models.py` | `batched_*()` functions | Vectorized peak shape functions and their analytical Jacobians. Contains the `BATCHED_MODELS` registry. Includes `numerical_jacobian()` fallback. |
 | `scalar_models.py` | `FitResult`, `ParamValue`, scalar functions | Lightweight result classes compatible with legacy interfaces. Scalar peak functions used as fallbacks when no batched implementation exists. Contains `PEAK_MODEL_REGISTRY`. |
@@ -106,7 +106,7 @@ sequenceDiagram
 Instead of a slow per-spectrum deepcopy, `_prepare_fit_model_template()` creates a highly optimized template. It builds Model objects and sanitizes parameter bounds exactly once. Then, `_apply_template_to_spectrum()` merely copies the lightweight `param_hints` dictionary. When `False` (Spectra workspace with per-spectrum models), spectra are grouped by model signature and processed as separate batches.
 
 **Step 2 — Evaluator Construction**:
-`TensorEvaluator.from_fit_model()` parses the model. For each peak:
+`VBFevaluator.from_fit_model()` parses the model. For each peak:
 - Looks up the model name in `BATCHED_MODELS` (fast path) or `PEAK_MODEL_REGISTRY` (scalar fallback).
 - Assigns a sequential prefix (`m01_`, `m02_`, ...) and extracts `param_hints`.
 - Builds `_free_idx` / `_fixed_idx` mappings between optimized free parameters and the full parameter set.
@@ -139,14 +139,14 @@ After p0 construction, `apply_noise_threshold()` zeros out amplitude and FWHM fo
 
 ---
 
-## 5. The TensorEvaluator in Detail
+## 5. The VBFevaluator in Detail
 
-The `TensorEvaluator` is the most complex class in the engine. It serves as the **bridge** between the flexible, dictionary-based world of the GUI and the rigid, flat-tensor world of the optimizer.
+The `VBFevaluator` is the most complex class in the engine. It serves as the **bridge** between the flexible, dictionary-based world of the GUI and the rigid, flat-tensor world of the optimizer.
 
 ### Parameter Space Mapping
 
 ```
-fit_model dict                    TensorEvaluator                  Optimizer
+fit_model dict                    VBFevaluator                  Optimizer
 ┌─────────────────┐     ┌────────────────────────────┐     ┌──────────────┐
 │ peak_models:    │     │ _param_names:              │     │              │
 │   "0":          │     │   ["m01_ampli",            │     │  p_free      │
@@ -233,13 +233,13 @@ This is ~`2K` times slower than analytical Jacobians per iteration but ensures c
 
 ---
 
-## 7. The TensorFitThread
+## 7. The VBFthread
 
 ### Two Operating Modes
 
 ```mermaid
 graph TD
-    TFT["TensorFitThread"] --> Check{"batches?"}
+    TFT["VBFthread"] --> Check{"batches?"}
     Check -->|"Yes"| B["_run_batched()"]
     Check -->|"No"| S["_run_single()"]
     B --> G1["Group 1"]
@@ -340,7 +340,7 @@ This threshold activates **two complementary mechanisms**:
 
 #### Mechanism A — Weight Masking (`_build_fit_weights`)
 
-During weight matrix construction in `tensor_engine.py`, a 5-point moving average smooths the spectrum, and any data point where the smoothed signal falls below the noise level is **excluded from the fit** by setting its weight to zero:
+During weight matrix construction in `vbf_fit_engine.py`, a 5-point moving average smooths the spectrum, and any data point where the smoothed signal falls below the noise level is **excluded from the fit** by setting its weight to zero:
 
 ```python
 ymean = np.convolve(y, np.ones(5) / 5.0, mode='same')  # 5-point moving average
@@ -352,7 +352,7 @@ The optimizer's residual calculation \(\mathbf{r} = \mathbf{W} \circ (\mathbf{Y}
 
 #### Mechanism B — Peak Suppression (`apply_noise_threshold`)
 
-In the `TensorEvaluator`, any peak whose **center position** (`x0`) falls in a below-threshold region has its amplitude and shape parameters suppressed, and its positional parameters restored to the initial guess:
+In the `VBFevaluator`, any peak whose **center position** (`x0`) falls in a below-threshold region has its amplitude and shape parameters suppressed, and its positional parameters restored to the initial guess:
 
 ```python
 for each peak:
@@ -501,17 +501,17 @@ PEAK_MODELS = [
 
 ## 11. Timing and Diagnostics
 
-The `TensorFittingEngine` records wall-clock timings for each step in `self.timings`:
+The `VBFengine` records wall-clock timings for each step in `self.timings`:
 
 ```
 Step 1 - apply_model:  0.012s
 Step 2 - preprocess:   0.045s
 Step 3 - build p0:     0.003s
-Step 4 - tensor fit:   1.234s (0.6 ms/spectrum, 1950/2000 converged)
+Step 4 - batch fit:   1.234s (0.6 ms/spectrum, 1950/2000 converged)
 Step 5 - write_back:   0.089s
 ```
 
-These timings are emitted via `TensorFitThread.timings_ready` and printed to the console. They are invaluable for diagnosing performance bottlenecks:
+These timings are emitted via `VBFthread.timings_ready` and printed to the console. They are invaluable for diagnosing performance bottlenecks:
 
 - If **Step 1** dominates → too many spectra to apply model to; consider caching
 - If **Step 4** dominates → normal; this is the actual optimization

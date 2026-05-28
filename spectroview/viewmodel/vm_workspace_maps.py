@@ -16,7 +16,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
 from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
-from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
+from spectroview.fit_engine.vbf_fit_thread import VBFthread
 
 
 
@@ -647,7 +647,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
         self._is_fitting = True
         self.fit_in_progress.emit(True)
-        self._fit_thread = TensorFitThread(self.store, tasks)
+        self._fit_thread = VBFthread(self.store, tasks)
         self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
         self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
         self._fit_thread.finished.connect(self._on_fit_finished)
@@ -687,7 +687,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
         self._is_fitting = True
         self.fit_in_progress.emit(True)
-        self._fit_thread = TensorFitThread(self.store, tasks)
+        self._fit_thread = VBFthread(self.store, tasks)
         self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
         self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
         self._fit_thread.finished.connect(self._on_fit_finished)

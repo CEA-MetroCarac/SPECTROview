@@ -1,4 +1,3 @@
-# spectroview/core2/evaluator.py
 """Tensor Evaluator — maps a fit_model dict to the batched tensor API.
 
 Handles:
@@ -14,7 +13,7 @@ from spectroview.fit_engine.scalar_models import PEAK_MODEL_REGISTRY
 from spectroview.fit_engine.models import BATCHED_MODELS, numerical_jacobian
 
 
-class TensorEvaluator:
+class VBFevaluator:
     """Manages the mapping between a fit_model dict and tensor parameter matrices.
 
     After construction, provides:

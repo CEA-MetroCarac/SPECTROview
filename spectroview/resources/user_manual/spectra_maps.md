@@ -139,7 +139,7 @@ The Fitting Panel guides you through the process of building a robust model in f
 
 #### Supported Peak Profiles
 
-SPECTROview’s tensor fit engine provides heavily optimized implementations for the following mathematical peak profiles:
+SPECTROview’s VBF engine provides heavily optimized implementations for the following mathematical peak profiles:
 
 | Model | Parameters | Formula |
 |-------|-----------|---------|
@@ -175,7 +175,7 @@ The PeakTable displays all mathematical parameters for the peaks you have define
 </div>
 
 
-**Expression**: Define complex mathematical relationships between parameters. SPECTROview's tensor engine robustly evaluates these expressions mathematically before mapping them to the optimizer. If peaks are re-indexed due to deletions, their references in your mathematical expressions are automatically updated to prevent broken models!
+**Expression**: Define complex mathematical relationships between parameters. SPECTROview's VBF engine robustly evaluates these expressions mathematically before mapping them to the optimizer. If peaks are re-indexed due to deletions, their references in your mathematical expressions are automatically updated to prevent broken models!
 
 
 

@@ -60,7 +60,7 @@ nav:
     - Spectra Workspace: developer/spectra.md
     - Maps Workspace: developer/maps.md
     - Graphs Workspace: developer/graphs.md
-    - Tensor Fit Engine: developer/tensor-engine.md
+    - Vectorized Batch Fit Engine (VBF Engine): developer/vbf-engine.md
     - Multivariate Analysis (MVA): developer/mva.md
   - Changelog: changelog.md
 

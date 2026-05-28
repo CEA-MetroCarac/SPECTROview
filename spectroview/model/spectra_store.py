@@ -132,7 +132,7 @@ class MapData:
     Y: Optional[np.ndarray] = None  # float32[N, M_proc] processed intensities
     x: Optional[np.ndarray] = None  # float64[M_proc] processed wavenumber axis
 
-    # Fit results (filled after TensorEngine.fit())
+    # Fit results (filled after VBFengine.fit())
     peak_params: Optional[np.ndarray] = None   # float64[N, K]
     fit_success: Optional[np.ndarray] = None   # bool[N]
     fit_r2: Optional[np.ndarray] = None        # float64[N]
@@ -467,7 +467,7 @@ class SpectraStore:
         """Write batch fit results into a specific map's data block.
 
         Called by VMWorkspaceMaps._writeback_fit_results_to_store() after
-        TensorFitThread finishes.
+        VBFthread finishes.
 
         Args:
             map_name:    The target map name.

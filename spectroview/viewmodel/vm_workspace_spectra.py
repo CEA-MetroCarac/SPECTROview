@@ -19,7 +19,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.model.workspace_io import WorkspaceIO
 from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.model.peak_model import initialize_peak_params
-from spectroview.fit_engine.tensor_fit_thread import TensorFitThread
+from spectroview.fit_engine.vbf_fit_thread import VBFthread
 from spectroview.fit_engine.baseline import eval_baseline_batch
 from spectroview.fit_engine.evaluator import eval_peak_initial
 from spectroview.viewmodel.utils import (
@@ -27,6 +27,7 @@ from spectroview.viewmodel.utils import (
     closest_index,
     save_df_to_excel,
     view_text,
+    build_clean_fit_model,
 )
 
 
@@ -1235,7 +1236,7 @@ class VMWorkspaceSpectra(QObject):
         # Inject current fit settings
         md.fit_model["fit_params"] = self.settings.load_fit_settings()
 
-        self._fitmodel_clipboard = deepcopy(md.fit_model)
+        self._fitmodel_clipboard = deepcopy(build_clean_fit_model(md.fit_model))
         self.notify.emit("Fit model copied to clipboard.")
 
     def paste_fit_model(self, apply_all: bool = False):
@@ -1298,14 +1299,15 @@ class VMWorkspaceSpectra(QObject):
         if not path:
             return
 
+        clean_model = build_clean_fit_model(md.fit_model)
+
         def default_encoder(obj):
             if hasattr(obj, 'tolist'):
                 return obj.tolist()
             raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
 
         with open(path, 'w', encoding='utf-8') as f:
-            # legacy model loaders expected integer indexing (e.g. key '0')
-            json.dump({'0': md.fit_model}, f, indent=2, default=default_encoder)
+            json.dump({'0': clean_model}, f, indent=2, default=default_encoder)
 
         self.notify.emit("Fit model saved successfully.")
 
@@ -1377,7 +1379,7 @@ class VMWorkspaceSpectra(QObject):
         self._is_fitting = True
         self.fit_in_progress.emit(True)
 
-        self._fit_thread = TensorFitThread(self.store, tasks)
+        self._fit_thread = VBFthread(self.store, tasks)
         self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
         self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
         self._fit_thread.finished.connect(self._on_fit_finished)
@@ -1414,7 +1416,7 @@ class VMWorkspaceSpectra(QObject):
         self._is_fitting = True
         self.fit_in_progress.emit(True)
 
-        self._fit_thread = TensorFitThread(self.store, tasks)
+        self._fit_thread = VBFthread(self.store, tasks)
         self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
         self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
         self._fit_thread.finished.connect(self._on_fit_finished)

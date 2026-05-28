@@ -19,7 +19,7 @@ graph TD
 
     VMWS --> MSS["SpectraStore"]
     VMWS --> IO["m_io"]
-    VMWS --> TFT["TensorFitThread"]
+    VMWS --> TFT["VBFthread"]
 ```
 
 ---
@@ -118,7 +118,7 @@ graph LR
     C --> D["baseline eval<br/>(native solver)"]
     D --> E["baseline subtract<br/>(Y = Y - Y_baseline)"]
     E --> F["x, Y<br/>(working arrays)"]
-    F --> G["peak fitting<br/>(Tensor Engine)"]
+    F --> G["peak fitting<br/>(VBF Engine)"]
 ```
 
 !!! note "Vectorized Preprocessing"
@@ -143,8 +143,8 @@ Peaks are registered into the map's `fit_model` dictionary:
 
 ### 5. Fitting
 
-1. **ViewModel** instantiates `TensorFitThread` with the store and map tasks.
-2. **TensorFitThread** invokes `TensorFittingEngine.fit()` which compiles Jacobians and optimizes parameter vectors in batch using vectorized Levenberg-Marquardt solvers.
+1. **ViewModel** instantiates `VBFthread` with the store and map tasks.
+2. **VBFthread** invokes `VBFengine.fit()` which compiles Jacobians and optimizes parameter vectors in batch using vectorized Levenberg-Marquardt solvers.
 3. Optimized parameters are written back to `md.peak_params`, and composite fit envelopes (`md.Y_bestfit`, `md.Y_peaks`) are evaluated.
 
 ### 6. Fit Results Collection

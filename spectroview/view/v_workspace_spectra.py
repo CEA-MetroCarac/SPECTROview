@@ -153,13 +153,13 @@ class VWorkspaceSpectra(QWidget):
         apply_all = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
         fn(apply_all)
 
-    def _update_progress_bar(self, current: int, total: int, percentage: int, elapsed_time: float):
+    def _update_progress_bar(self, current: int, total: int, percentage: int, elapsed_time: float, converged: int = 0):
         """Update progress bar with fitting progress and elapsed time."""
         if total > 0:
             self.progress_bar.setValue(percentage)
             # Format elapsed time in seconds with 2 decimal places
             time_str = f"{elapsed_time:.2f}s"
-            self.progress_bar.setFormat(f"Fitting: {current}/{total} ({percentage}%) - {time_str}")
+            self.progress_bar.setFormat(f"Fitting: ({percentage}%) converged {converged}/{total} - {time_str}")
         else:
             # Reset to default state
             self.progress_bar.setValue(100)

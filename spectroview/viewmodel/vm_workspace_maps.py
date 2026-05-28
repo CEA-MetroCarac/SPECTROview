@@ -563,7 +563,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 self.clear_map_cache_requested.emit(name)
 
         if self.current_map_name:
-            self._update_store_preprocessing()
             self._emit_selected_spectra()
             self._emit_list_update()
 
@@ -593,7 +592,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 self.clear_map_cache_requested.emit(name)
 
         if self.current_map_name:
-            self._update_store_preprocessing()
+            # Skip _update_store_preprocessing() — see apply_fit_model comment.
             self._emit_selected_spectra()
             self._emit_list_update()
 
@@ -654,21 +653,53 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self._fit_thread.start()
 
     def _run_fit_thread(self, fit_model: dict, fnames: list[str], apply_all: bool = False):
-        """Override: Run fit thread for Maps workspace loaded fit models."""
+        """Override: Run fit thread for Maps workspace loaded fit models.
+        
+        When apply_all=True, all maps' spectra are merged into a single batch
+        (grouped by x-axis length) so the engine fits everything in one vectorized
+        call for maximum speed.
+        """
         if self._is_fitting:
             self.notify.emit("Fit already in progress. Please wait...")
             return
 
         tasks = []
+
+        # Ensure fit_model has fit_params before running
+        if "fit_params" not in fit_model:
+            fit_model["fit_params"] = self.settings.load_fit_settings()
+
         if apply_all:
+            # Group all maps by x-axis length so we can merge compatible ones
+            # into a single mega-batch for maximum fitting throughput.
+            groups = {}  # x_len -> list of (map_name, md)
             for map_name in self.store.map_names:
                 md = self.store.get_map_data(map_name)
                 if md:
-                    tasks.append({
-                        "map_name": map_name,
-                        "indices": np.arange(md.n_spectra),
-                        "fit_model": fit_model
-                    })
+                    x_arr = md.x if md.x is not None else md.x0
+                    x_len = len(x_arr)
+                    if x_len not in groups:
+                        groups[x_len] = []
+                    groups[x_len].append((map_name, md))
+
+            for x_len, group in groups.items():
+                # Stack all Y matrices from all maps in this group into one batch
+                Y_parts = []
+                index_parts = []
+                map_boundaries = []  # (map_name, start_row, end_row) for result scatter
+                offset = 0
+                for map_name, md in group:
+                    n = md.n_spectra
+                    Y_parts.append(np.arange(n))
+                    map_boundaries.append((map_name, offset, offset + n))
+                    offset += n
+
+                tasks.append({
+                    "grouped_2d_maps": [item[0] for item in group],
+                    "map_boundaries": map_boundaries,
+                    "indices": np.arange(offset),
+                    "fit_model": fit_model
+                })
         else:
             md = self.store.get_map_data(self.current_map_name)
             if not md: return

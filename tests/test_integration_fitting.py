@@ -49,7 +49,7 @@ def test_vbf_fit_engine_mos2_map():
     store.add_map("2_MoS2_map", x, Y, coords, fnames)
 
     # 3. Load model and apply
-    fit_model = load_fit_model(DATA_DIR / "2_MoS2_map.json")
+    fit_model = load_fit_model(DATA_DIR / "2_fit_MoS2map_NEW.json")
     md = store.get_map_data("2_MoS2_map")
     vm._apply_fit_model_to_mapdata(md, fit_model)
 
@@ -76,20 +76,20 @@ def test_vbf_fit_engine_mos2_map():
         p_dict = {name: val for name, val in zip(param_names, p_opt)}
         print(f"Index {target_idx} actual values: {p_dict}")
         
-        # Peak 1 (Lorentzian): GUI benchmarking values: x0 = 384.221, fwhm = 2.421, ampli = 382.285
-        assert abs(p_dict['P1_x0'] - 384.221) < 0.1, f"Peak 1 x0 mismatch: {p_dict['P1_x0']} != 384.221"
-        assert abs(p_dict['P1_fwhm'] - 2.421) < 0.3, f"Peak 1 fwhm mismatch: {p_dict['P1_fwhm']} != 2.421"
-        assert abs(p_dict['P1_ampli'] - 382.285) < 25.0, f"Peak 1 ampli mismatch: {p_dict['P1_ampli']} != 382.285"
+        # Peak 1 (Lorentzian)
+        assert abs(p_dict['P1_x0'] - 384.24) < 0.1
+        assert abs(p_dict['P1_fwhm'] - 2.17) < 0.1
+        assert abs(p_dict['P1_ampli'] - 404.98) < 25.0
         
-        # Peak 2 (Lorentzian): GUI benchmarking values: x0 = 403.847, fwhm = 5.217, ampli = 395.882
-        assert abs(p_dict['P2_x0'] - 403.847) < 0.1, f"Peak 2 x0 mismatch: {p_dict['P2_x0']} != 403.847"
-        assert abs(p_dict['P2_fwhm'] - 5.217) < 0.3, f"Peak 2 fwhm mismatch: {p_dict['P2_fwhm']} != 5.217"
-        assert abs(p_dict['P2_ampli'] - 395.882) < 15.0, f"Peak 2 ampli mismatch: {p_dict['P2_ampli']} != 395.882"
+        # Peak 2 (Lorentzian)
+        assert abs(p_dict['P2_x0'] - 403.84) < 0.1
+        assert abs(p_dict['P2_fwhm'] - 5.06) < 0.1
+        assert abs(p_dict['P2_ampli'] - 393.86) < 15.0
 
-        # Peak 3 (Lorentzian): GUI benchmarking values: x0 = 443.985, fwhm = 26.251, ampli = 40.070
-        assert abs(p_dict['P3_x0'] - 443.985) < 0.5, f"Peak 3 x0 mismatch: {p_dict['P3_x0']} != 443.985"
-        assert abs(p_dict['P3_fwhm'] - 26.251) < 15.0, f"Peak 3 fwhm mismatch: {p_dict['P3_fwhm']} != 26.251"
-        assert abs(p_dict['P3_ampli'] - 40.070) < 10.0, f"Peak 3 ampli mismatch: {p_dict['P3_ampli']} != 40.070"
+        # Peak 3 (Lorentzian)
+        assert abs(p_dict['P3_x0'] - 446.33) < 0.1
+        assert abs(p_dict['P3_fwhm'] - 18.95) < 15.0
+        assert abs(p_dict['P3_ampli'] - 34.61) < 10.0
 
     # 5. Assertions
     assert len(success) == len(Y)

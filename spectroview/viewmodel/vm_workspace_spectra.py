@@ -40,7 +40,7 @@ class VMWorkspaceSpectra(QObject):
     spectral_range_changed = Signal(float, float)
     
     fit_in_progress = Signal(bool)  # Enable/disable fit buttons
-    fit_progress_updated = Signal(int, int, int, float)  # To show fitting progress in GUI
+    fit_progress_updated = Signal(int, int, int, float, int)  # (converged, total, pct, elapsed, converged_count)
     fit_timings_ready = Signal(str)  # Tooltip with timings
     
     # Fit results signals

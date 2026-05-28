@@ -1400,13 +1400,11 @@ class VMWorkspaceSpectra(QObject):
         if "fit_params" not in fit_model:
             fit_model["fit_params"] = self.settings.load_fit_settings()
 
-        tasks = []
-        for fname in fnames:
-            tasks.append({
-                "map_name": fname,
-                "indices": np.array([0]),
-                "fit_model": fit_model
-            })
+        tasks = [{
+            "map_names": fnames,
+            "indices": np.arange(len(fnames)),
+            "fit_model": fit_model
+        }]
 
         # Cancel any existing thread
         if self._fit_thread and self._fit_thread.isRunning():

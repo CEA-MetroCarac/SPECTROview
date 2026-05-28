@@ -131,11 +131,11 @@ class VWorkspaceSpectra(QWidget):
         self.lbl_count = QLabel("0 spectra")
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(100)
-        self.progress_bar.setFixedHeight(15)
+        self.progress_bar.setFixedHeight(17)
         
         self.btn_stop_fit = QPushButton("Stop")
         self.btn_stop_fit.setIcon(QIcon(os.path.join(ICON_DIR, "stop.png")))
-        self.btn_stop_fit.setFixedHeight(15)
+        self.btn_stop_fit.setFixedHeight(17)
         self.btn_stop_fit.setFixedWidth(50)
         self.btn_stop_fit.setVisible(False)  # Hidden by default
 

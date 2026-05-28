@@ -146,10 +146,10 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         footer_layout.setSpacing(4)
         
         self.lbl_count.setText("0 spectra")
-        self.progress_bar.setFixedHeight(15)
+        self.progress_bar.setFixedHeight(17)
         
         # Stop button is inherited from parent but needs to be added to layout
-        self.btn_stop_fit.setFixedHeight(15)
+        self.btn_stop_fit.setFixedHeight(17)
         self.btn_stop_fit.setFixedWidth(50)
         
         footer_layout.addWidget(self.lbl_count)

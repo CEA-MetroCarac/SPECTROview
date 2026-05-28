@@ -20,6 +20,7 @@ class VBFthread(QThread):
 
     def stop(self):
         self._is_cancelled = True
+    
 
     def run(self):
         t_start = time.perf_counter()
@@ -69,34 +70,11 @@ class VBFthread(QThread):
                 Y_sub = np.vstack(Y_list)
                 N = Y_sub.shape[0]
 
-                fit_params = fit_model.get("fit_params", {})
-                N_fit, M_fit = Y_sub.shape
-                weights = np.ones((N_fit, M_fit), dtype=np.float64)
-
-                fit_negative = bool(fit_params.get("fit_negative", False))
-                if not fit_negative: weights[Y_sub < 0] = 0.0
-
-                coef_noise = float(fit_params.get("coef_noise", 0))
-                if coef_noise > 0:
-                    dy = np.diff(Y_sub, axis=1)
-                    ampli_noise = np.median(np.abs(dy), axis=1) / 0.6745 * np.sqrt(2)
-                    Y_padded = np.pad(Y_sub, ((0, 0), (2, 2)), mode='edge')
-                    ymean = (Y_padded[:, 0:-4] + Y_padded[:, 1:-3] + Y_padded[:, 2:-2] + Y_padded[:, 3:-1] + Y_padded[:, 4:]) / 5.0
-                    noise_level = coef_noise * ampli_noise
-                    weights[ymean < noise_level[:, None]] = 0.0
-
-                def on_progress(current, total, current_processed=processed_spectra):
-                    elapsed = time.perf_counter() - t_start
-                    overall_current = current_processed + current
-                    pct = int(100 * overall_current / max(total_spectra, 1))
-                    self.progress_changed.emit(overall_current, total_spectra, pct, elapsed, overall_current)
-
-                engine = VBFengine()
+                weights = self._prepare_weights(Y_sub, fit_model.get("fit_params", {}))
+                
                 try:
-                    p_full, success, rsquared, best_fits, Y_peaks, param_names = engine.fit_spectra(
-                        x=x, Y=Y_sub, fit_model=fit_model, weights=weights, fit_params=fit_params,
-                        progress_callback=on_progress, cancel_check=lambda: self._is_cancelled,
-                        print_benchmark=True,
+                    p_full, success, rsquared, best_fits, Y_peaks, param_names = self._execute_fit(
+                        x, Y_sub, fit_model, weights, total_spectra, processed_spectra, t_start
                     )
                 except Exception as e:
                     print(f"[VBFthread] grouped 2D-maps fit failed: {e}")
@@ -104,37 +82,19 @@ class VBFthread(QThread):
                     continue
 
                 if not self._is_cancelled:
-                    # Scatter results back to each map's MapData
                     md_idx = 0
                     for name, start, end in map_boundaries:
-                        if md_idx >= len(md_list):
-                            break
+                        if md_idx >= len(md_list): break
                         md = md_list[md_idx]
                         md_idx += 1
                         n_local = end - start
-                        local_indices = np.arange(n_local)
-
-                        self.store.set_fit_results(
-                            map_name=name, indices=local_indices,
-                            peak_params=p_full[start:end],
-                            success=success[start:end],
-                            r2=rsquared[start:end],
-                            param_names=param_names, fit_model=fit_model,
+                        
+                        self._write_results(
+                            md, name, np.arange(n_local),
+                            p_full[start:end], success[start:end], rsquared[start:end],
+                            best_fits[start:end], [p[start:end] for p in Y_peaks] if Y_peaks else None,
+                            param_names, fit_model
                         )
-
-                        y_full = md.Y if md.Y is not None else md.Y0
-                        if md.Y_bestfit is None:
-                            md.Y_bestfit = np.zeros_like(y_full)
-                        if md.Y_baseline is None:
-                            md.Y_baseline = np.zeros_like(y_full)
-                        md.Y_bestfit[local_indices] = best_fits[start:end]
-
-                        if Y_peaks:
-                            if md.Y_peaks is None or len(md.Y_peaks) != len(Y_peaks):
-                                md.Y_peaks = [np.zeros_like(y_full) for _ in Y_peaks]
-                            for p_idx, p_arr in enumerate(Y_peaks):
-                                md.Y_peaks[p_idx][local_indices] = p_arr[start:end]
-
                     timings.append(f"[Grouped 2D Maps] Fit time: {time.perf_counter() - t_start:.2f}s ({N} spectra across {len(map_boundaries)} maps)")
                 processed_spectra += N
 
@@ -159,34 +119,11 @@ class VBFthread(QThread):
                     Y_sub = np.vstack(grp["Y_list"])
                     N = len(grp["valid_names"])
                     
-                    fit_params = fit_model.get("fit_params", {})
-                    N_fit, M_fit = Y_sub.shape
-                    weights = np.ones((N_fit, M_fit), dtype=np.float64)
+                    weights = self._prepare_weights(Y_sub, fit_model.get("fit_params", {}))
                     
-                    fit_negative = bool(fit_params.get("fit_negative", False))
-                    if not fit_negative: weights[Y_sub < 0] = 0.0
-                        
-                    coef_noise = float(fit_params.get("coef_noise", 0))
-                    if coef_noise > 0:
-                        dy = np.diff(Y_sub, axis=1)
-                        ampli_noise = np.median(np.abs(dy), axis=1) / 0.6745 * np.sqrt(2)
-                        Y_padded = np.pad(Y_sub, ((0, 0), (2, 2)), mode='edge')
-                        ymean = (Y_padded[:, 0:-4] + Y_padded[:, 1:-3] + Y_padded[:, 2:-2] + Y_padded[:, 3:-1] + Y_padded[:, 4:]) / 5.0
-                        noise_level = coef_noise * ampli_noise
-                        weights[ymean < noise_level[:, None]] = 0.0
-                    
-                    def on_progress(current, total, current_processed=processed_spectra):
-                        elapsed = time.perf_counter() - t_start
-                        overall_current = current_processed + current
-                        pct = int(100 * overall_current / max(total_spectra, 1))
-                        self.progress_changed.emit(overall_current, total_spectra, pct, elapsed, overall_current)
-
-                    engine = VBFengine()
                     try:
-                        p_full, success, rsquared, best_fits, Y_peaks, param_names = engine.fit_spectra(
-                            x=x, Y=Y_sub, fit_model=fit_model, weights=weights, fit_params=fit_params,
-                            progress_callback=on_progress, cancel_check=lambda: self._is_cancelled,
-                            print_benchmark=True,
+                        p_full, success, rsquared, best_fits, Y_peaks, param_names = self._execute_fit(
+                            x, Y_sub, fit_model, weights, total_spectra, processed_spectra, t_start
                         )
                     except Exception as e:
                         print(f"[VBFthread] grouped fit failed: {e}")
@@ -196,25 +133,12 @@ class VBFthread(QThread):
                     if not self._is_cancelled:
                         for i, name in enumerate(grp["valid_names"]):
                             md = grp["md_list"][i]
-                            self.store.set_fit_results(
-                                map_name=name, indices=np.array([0]),
-                                peak_params=p_full[i:i+1], success=success[i:i+1], r2=rsquared[i:i+1],
-                                param_names=param_names, fit_model=fit_model,
+                            self._write_results(
+                                md, name, np.array([0]),
+                                p_full[i:i+1], success[i:i+1], rsquared[i:i+1],
+                                best_fits[i:i+1], [p[i:i+1] for p in Y_peaks] if Y_peaks else None,
+                                param_names, fit_model
                             )
-                            
-                            if md.Y_bestfit is None:
-                                md.Y_bestfit = np.zeros((1, Y_sub.shape[1]), dtype=np.float32)
-                            if md.Y_baseline is None:
-                                md.Y_baseline = np.zeros((1, Y_sub.shape[1]), dtype=np.float32)
-                                
-                            md.Y_bestfit[0] = best_fits[i]
-                            
-                            if Y_peaks:
-                                if md.Y_peaks is None or len(md.Y_peaks) != len(Y_peaks):
-                                    md.Y_peaks = [np.zeros((1, Y_sub.shape[1]), dtype=np.float32) for _ in Y_peaks]
-                                for p_idx, p_arr in enumerate(Y_peaks):
-                                    md.Y_peaks[p_idx][0] = p_arr[i]
-                        
                         timings.append(f"[Batch Spectra Fit] Fit time: {time.perf_counter() - t_start:.2f}s ({N} spectra)")
                     processed_spectra += N
             else:
@@ -228,41 +152,11 @@ class VBFthread(QThread):
                 Y_sub = Y[indices]
                 N = len(indices)
                 
-                fit_params = fit_model.get("fit_params", {})
+                weights = self._prepare_weights(Y_sub, fit_model.get("fit_params", {}))
                 
-                N_fit, M_fit = Y_sub.shape
-                weights = np.ones((N_fit, M_fit), dtype=np.float64)
-                
-                fit_negative = bool(fit_params.get("fit_negative", False))
-                if not fit_negative:
-                    weights[Y_sub < 0] = 0.0
-                    
-                coef_noise = float(fit_params.get("coef_noise", 0))
-                if coef_noise > 0:
-                    dy = np.diff(Y_sub, axis=1)
-                    ampli_noise = np.median(np.abs(dy), axis=1) / 0.6745 * np.sqrt(2)
-                    Y_padded = np.pad(Y_sub, ((0, 0), (2, 2)), mode='edge')
-                    ymean = (Y_padded[:, 0:-4] + Y_padded[:, 1:-3] + Y_padded[:, 2:-2] + Y_padded[:, 3:-1] + Y_padded[:, 4:]) / 5.0
-                    noise_level = coef_noise * ampli_noise
-                    weights[ymean < noise_level[:, None]] = 0.0
-                
-                def on_progress(current, total, current_processed=processed_spectra):
-                    elapsed = time.perf_counter() - t_start
-                    overall_current = current_processed + current
-                    pct = int(100 * overall_current / max(total_spectra, 1))
-                    self.progress_changed.emit(overall_current, total_spectra, pct, elapsed, overall_current)
-
-                engine = VBFengine()
                 try:
-                    p_full, success, rsquared, best_fits, Y_peaks, param_names = engine.fit_spectra(
-                        x=x,
-                        Y=Y_sub,
-                        fit_model=fit_model,
-                        weights=weights,
-                        fit_params=fit_params,
-                        progress_callback=on_progress,
-                        cancel_check=lambda: self._is_cancelled,
-                        print_benchmark=True,
+                    p_full, success, rsquared, best_fits, Y_peaks, param_names = self._execute_fit(
+                        x, Y_sub, fit_model, weights, total_spectra, processed_spectra, t_start
                     )
                 except Exception as e:
                     print(f"[VBFthread] fit failed for {map_name}: {e}")
@@ -270,29 +164,11 @@ class VBFthread(QThread):
                     continue
                     
                 if not self._is_cancelled:
-                    self.store.set_fit_results(
-                        map_name=map_name,
-                        indices=indices,
-                        peak_params=p_full,
-                        success=success,
-                        r2=rsquared,
-                        param_names=param_names,
-                        fit_model=fit_model,
+                    self._write_results(
+                        md, map_name, indices,
+                        p_full, success, rsquared, best_fits, Y_peaks,
+                        param_names, fit_model
                     )
-                    
-                    if md.Y_bestfit is None:
-                        md.Y_bestfit = np.zeros_like(Y)
-                    if md.Y_baseline is None:
-                        md.Y_baseline = np.zeros_like(Y)
-                    
-                    md.Y_bestfit[indices] = best_fits
-                    
-                    if Y_peaks:
-                        if md.Y_peaks is None or len(md.Y_peaks) != len(Y_peaks):
-                            md.Y_peaks = [np.zeros_like(Y) for _ in Y_peaks]
-                        for p_idx, p_arr in enumerate(Y_peaks):
-                            md.Y_peaks[p_idx][indices] = p_arr
-                            
                     timings.append(f"[{map_name}] Fit time: {time.perf_counter() - t_start:.2f}s")
                     
                 processed_spectra += N
@@ -302,3 +178,59 @@ class VBFthread(QThread):
         
         timings_str = f"Total Fit time: {elapsed:.2f}s\n" + "\n".join(timings)
         self.timings_ready.emit(timings_str)
+
+    def _prepare_weights(self, Y_sub, fit_params):
+        N_fit, M_fit = Y_sub.shape
+        weights = np.ones((N_fit, M_fit), dtype=np.float64)
+        
+        fit_negative = bool(fit_params.get("fit_negative", False))
+        if not fit_negative: 
+            weights[Y_sub < 0] = 0.0
+            
+        coef_noise = float(fit_params.get("coef_noise", 0))
+        if coef_noise > 0:
+            dy = np.diff(Y_sub, axis=1)
+            ampli_noise = np.median(np.abs(dy), axis=1) / 0.6745 * np.sqrt(2)
+            Y_padded = np.pad(Y_sub, ((0, 0), (2, 2)), mode='edge')
+            ymean = (Y_padded[:, 0:-4] + Y_padded[:, 1:-3] + Y_padded[:, 2:-2] + Y_padded[:, 3:-1] + Y_padded[:, 4:]) / 5.0
+            noise_level = coef_noise * ampli_noise
+            weights[ymean < noise_level[:, None]] = 0.0
+            
+        return weights
+
+    def _execute_fit(self, x, Y_sub, fit_model, weights, total_spectra, current_processed, t_start):
+        def on_progress(current, total):
+            elapsed = time.perf_counter() - t_start
+            overall_current = current_processed + current
+            pct = int(100 * overall_current / max(total_spectra, 1))
+            self.progress_changed.emit(overall_current, total_spectra, pct, elapsed, overall_current)
+
+        engine = VBFengine()
+        return engine.fit_spectra(
+            x=x, Y=Y_sub, fit_model=fit_model, weights=weights, fit_params=fit_model.get("fit_params", {}),
+            progress_callback=on_progress, cancel_check=lambda: self._is_cancelled,
+        )
+
+    def _write_results(self, md, map_name, indices, p_full, success, rsquared, best_fits, Y_peaks, param_names, fit_model):
+        self.store.set_fit_results(
+            map_name=map_name, indices=indices,
+            peak_params=p_full,
+            success=success,
+            r2=rsquared,
+            param_names=param_names, fit_model=fit_model,
+        )
+
+        y_full = md.Y if md.Y is not None else md.Y0
+        if md.Y_bestfit is None:
+            md.Y_bestfit = np.zeros_like(y_full)
+        if md.Y_baseline is None:
+            md.Y_baseline = np.zeros_like(y_full)
+        md.Y_bestfit[indices] = best_fits
+
+        if Y_peaks:
+            if md.Y_peaks is None or len(md.Y_peaks) != len(Y_peaks):
+                md.Y_peaks = [np.zeros_like(y_full) for _ in Y_peaks]
+            for p_idx, p_arr in enumerate(Y_peaks):
+                md.Y_peaks[p_idx][indices] = p_arr
+
+   

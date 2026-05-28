@@ -19,7 +19,7 @@ With its integrated visualization tools, SPECTROview streamlines your analytical
 
 - **Cross-Platform Compatibility:** Fully supported on Windows, macOS, and Linux.
 - **Versatile Data Processing:** Seamlessly process both 1D spectral data and 2D hyperspectral data.
-- **High-Performance Vectorized Batch Fit Engine (VBF Engine):** Achieve 30× faster fitting speeds utilizing batched matrix operations, capable of simultaneously fitting multiple spectra or large 2D maps.
+- **High-Performance Vectorized Batch Fit Engine (VBF Engine):** Very fast fitting speeds utilizing batched matrix operations, capable of simultaneously fitting multiple spectra or large 2D maps.
 - **Custom Fit Models:** Construct customized fit models for specific spectroscopic profiles and reuse them to rapidly analyze new datasets.
 - **Unified Results:** Collect and compile all best-fit results with a single click.
 - **Optimized User Interface:** Designed for quick inspection, filtering, and comparison of large spectral datasets.

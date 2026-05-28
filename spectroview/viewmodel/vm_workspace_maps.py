@@ -243,30 +243,38 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Baseline status
         has_baseline_config = md.baseline_config is not None
 
-        spectra_info = []
-        for i, fname in enumerate(md.fnames):
-            has_baseline = has_baseline_config
-            if has_baseline and isinstance(md.is_baseline_subtracted, np.ndarray):
-                has_baseline = bool(md.is_baseline_subtracted[i])
-            elif has_baseline:
-                has_baseline = bool(md.is_baseline_subtracted)
-            
-            # Fit status
-            has_fit = False
-            fit_converged = False
-            if md.peak_params is not None:
-                has_fit = np.any(md.peak_params[i] != 0.0)
-                if has_fit and md.fit_success is not None:
-                    fit_converged = bool(md.fit_success[i])
+        if has_baseline_config and isinstance(md.is_baseline_subtracted, np.ndarray):
+            baseline_status = md.is_baseline_subtracted
+        else:
+            baseline_status = np.full(md.n_spectra, bool(has_baseline_config and md.is_baseline_subtracted))
 
-            spectra_info.append({
+        # Fit status
+        if md.peak_params is not None:
+            has_fit_array = np.any(md.peak_params != 0.0, axis=1)
+        else:
+            has_fit_array = np.zeros(md.n_spectra, dtype=bool)
+
+        if md.fit_success is not None:
+            if isinstance(md.fit_success, np.ndarray):
+                fit_success_array = md.fit_success
+            else:
+                fit_success_array = np.array([bool(x) for x in md.fit_success])
+        else:
+            fit_success_array = np.zeros(md.n_spectra, dtype=bool)
+
+        spectra_info = [
+            {
                 "fname": fname,
-                "is_active": bool(md.is_active[i]),
+                "is_active": bool(is_act),
                 "is_cropped": is_cropped,
-                "has_baseline": has_baseline,
-                "has_fit": has_fit,
-                "fit_success": fit_converged,
-            })
+                "has_baseline": bool(has_bl),
+                "has_fit": bool(hf),
+                "fit_success": bool(fs),
+            }
+            for fname, is_act, has_bl, hf, fs in zip(
+                md.fnames, md.is_active, baseline_status, has_fit_array, fit_success_array
+            )
+        ]
 
         self.spectra_list_changed.emit(spectra_info)
         self.count_changed.emit(len(spectra_info))
@@ -407,8 +415,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if self.current_map_name:
             self._show_map_spectra(self.current_map_name)
             self._emit_selected_spectra()
-            if action in ("subtract_baseline", "delete_baseline", "paste_peaks", "reinit_spectra", "delete_peaks", "apply_spectral_range"):
-                self._emit_list_update()
             
     def _update_store_preprocessing(self):
         """Helper to sync the first spectrum's baseline and crop settings to the Store."""

@@ -159,7 +159,7 @@ class VWorkspaceSpectra(QWidget):
             self.progress_bar.setValue(percentage)
             # Format elapsed time in seconds with 2 decimal places
             time_str = f"{elapsed_time:.2f}s"
-            self.progress_bar.setFormat(f"Fitting: ({percentage}%) converged {converged}/{total} - {time_str}")
+            self.progress_bar.setFormat(f"({percentage}%) converged {converged}/{total} - {time_str}")
         else:
             # Reset to default state
             self.progress_bar.setValue(100)

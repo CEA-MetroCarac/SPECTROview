@@ -1581,7 +1581,7 @@
 <h2 id="spectra-and-maps-workspaces">Spectra and Maps Workspaces<a class="headerlink" href="#spectra-and-maps-workspaces" title="Permanent link">&para;</a></h2>
 <p>The Maps and Spectra workspaces share a unified design and many core features. However, the Maps workspace includes specialized tools engineered for handling large hyperspectral datasets.</p>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/sepctra_maps_ws.gif" alt="Spectra and Maps Workspaces" width="800">
+  <img src="../../user_manual_images/Spectra_Maps/sepctra_maps_ws.gif" alt="Spectra and Maps Workspaces" width="800">
 </div>
 
 <p><em>Interface overview of the Spectra and Maps workspaces. Both interfaces are divided into three primary sections: Top-left (SpectraViewer), bottom-left (FitModelBuilder), and right (SpectraList / MapList).</em></p>
@@ -1590,12 +1590,12 @@
 <p><strong>MapList and MapViewer</strong> are widgets designed for the efficient navigation and management of your hyperspectral datasets. The MapList displays all loaded map files, including wafer maps and standard 2D maps.</p>
 <p>Three utility buttons located on the right side of the MapList allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.</p>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Switching Maps" width="250"><br>
+  <img src="../../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Switching Maps" width="250"><br>
 </div>
 
 <p>You can easily navigate between loaded 2D maps using the MapList. The selected map is rendered in the MapViewer. By default, the MapViewer displays a heatmap of signal "Intensity" or "Area". If the map has been fitted, you can select and visualize the heatmap of any fitted parameter.</p>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/mapviewer_sliders.gif" alt="MapViewer Sliders" width="500"><br>
+  <img src="../../user_manual_images/Spectra_Maps/mapviewer_sliders.gif" alt="MapViewer Sliders" width="500"><br>
 </div>
 
 <ul>
@@ -1604,10 +1604,10 @@
 <li><strong>Mask Feature</strong>: Isolate specific regions of the heatmap by defining custom, parameter-based numerical filters.</li>
 </ul>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/mask.png" alt="Mask configuration" width="300">
+  <img src="../../user_manual_images/Spectra_Maps/mask.png" alt="Mask configuration" width="300">
 </div>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/masked_map.png" alt="Masked map output" width="300">
+  <img src="../../user_manual_images/Spectra_Maps/masked_map.png" alt="Masked map output" width="300">
 </div>
 
 <p><em>Example of the mask feature for 2D maps: An MoS2 flake is isolated by applying a mask (intensity of peak A1g &gt; 40 a.u.) to filter out the surrounding substrate.</em></p>
@@ -1626,7 +1626,7 @@
 - The active spectral cropping bounds and baseline subtraction states are kept identical.</p>
 <p>This ensures that transferred spectra retain their full interactive and analytical states in the new workspace tab without affecting the original map.</p>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/spectralist.png" alt="SpectraList Widget" width="400">
+  <img src="../../user_manual_images/Spectra_Maps/spectralist.png" alt="SpectraList Widget" width="400">
 </div>
 
 <p><em>The SpectraList alongside the progress bar (within the Maps Workspace). The progress bar displays real-time fitting progress (percentage and elapsed time). A 'Stop' button is provided to safely halt an ongoing fitting process.</em></p>
@@ -1635,7 +1635,7 @@
 <p>The SpectraViewer is the central plotting widget where all spectra selected via the SpectraList (along with their best-fit curves) are visualized.</p>
 <h4 id="spectraviewer-with-interactive-mouse-controls">SpectraViewer with Interactive Mouse Controls<a class="headerlink" href="#spectraviewer-with-interactive-mouse-controls" title="Permanent link">&para;</a></h4>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="SpectraViewer Interactive Controls" width="600">
+  <img src="../../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="SpectraViewer Interactive Controls" width="600">
 </div>
 
 <ul>
@@ -1695,7 +1695,7 @@
 <h3 id="fit-model-builder">Fit Model Builder<a class="headerlink" href="#fit-model-builder" title="Permanent link">&para;</a></h3>
 <p>The FitModelBuilder tab is where you configure your spectral fitting models. It is divided into three main panels: Fitting, PeakTable, and FitModelControl.</p>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="Fit Model Builder UI" width="800">
+  <img src="../../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="Fit Model Builder UI" width="800">
 </div>
 
 <p><em>The FitModelBuilder tab featuring: (1) The Fitting Panel (left), (2) The PeakTable Panel (top-right), and (3) The FitModelControl Panel (bottom-right).</em></p>
@@ -1705,7 +1705,7 @@
 <p><strong>Step 2: Define the Fitting Range</strong>: Restrict the mathematical fitting process to a specific X-axis region of interest.</p>
 <p><strong>Step 3: Baseline Definition</strong>: SPECTROview offers two distinct modes for defining spectral baselines (Manual or Auto):</p>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/baseline_widget.png" alt="Baseline Widget" width="600"><br>
+  <img src="../../user_manual_images/Spectra_Maps/baseline_widget.png" alt="Baseline Widget" width="600"><br>
    <i>Baseline mode selection: Manual mode (left) vs. Auto mode (right).</i>
 </div>
 
@@ -1780,7 +1780,7 @@
 <p>The PeakTable displays all mathematical parameters for the peaks you have defined. When you drag a peak in the viewer, these properties update dynamically.</p>
 <p><strong>Dynamic Peak Indexing</strong>: Every peak is automatically indexed with a suffix (e.g., <code>_1</code>, <code>_2</code>) indicating its order of creation. When you add, delete, or re-order peaks, SPECTROview automatically re-indexes them to maintain consecutive numbering (e.g., if you delete peak 2, peak 3 becomes the new peak 2). This ensures your expressions and fit results remain organized.</p>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/peak_table.png" alt="Peak Table Panel" width="800"><br>
+  <img src="../../user_manual_images/Spectra_Maps/peak_table.png" alt="Peak Table Panel" width="800"><br>
    <i>The PeakTable panel displaying peak parameters and constraints.</i>
 </div>
 
@@ -1788,20 +1788,20 @@
 <p><strong>Fix</strong>: Check "fix" box to freeze the parameter value, preventing the optimizer from changing it during the fit.</p>
 <p><strong>Limits</strong>: Enter minimum and maximum boundary values to restrict how far the optimizer can move the parameter.</p>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/peak_table_max_min.png" alt="Peak Table Constraints" width="800"><br>
+  <img src="../../user_manual_images/Spectra_Maps/peak_table_max_min.png" alt="Peak Table Constraints" width="800"><br>
    <i>Example 1: Activate the "Limits" under the peak table and set 'min' and 'max' values for each fit parameter.</i>
 </div>
 
 <p><strong>Expression</strong>: Define complex mathematical relationships between parameters. SPECTROview's VBF engine robustly evaluates these expressions mathematically before mapping them to the optimizer. If peaks are re-indexed due to deletions, their references in your mathematical expressions are automatically updated to prevent broken models!</p>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/peak_table_expression.png" alt="Peak Table Expressions" width="800"><br>
+  <img src="../../user_manual_images/Spectra_Maps/peak_table_expression.png" alt="Peak Table Expressions" width="800"><br>
    <i>Example 2: Using an expression to constrain that (1) the peak position of peak E (P2) is 17 smaller than peak A (P1) or (2) the amplitude of peak E (P2) is exactly half the amplitude of  A (P1).</i>
 </div>
 
 <h4 id="fitmodelcontrol-panel">FitModelControl Panel<a class="headerlink" href="#fitmodelcontrol-panel" title="Permanent link">&para;</a></h4>
 <p>Once your model is fully defined, click the <strong>Fit</strong> button to execute the optimization.</p>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/fit_control_panel.png" alt="Fit Model Control Panel" width="500"><br>
+  <img src="../../user_manual_images/Spectra_Maps/fit_control_panel.png" alt="Fit Model Control Panel" width="500"><br>
    <i>The FitModelControl panel.</i>
 </div>
 
@@ -1817,7 +1817,7 @@ If you intend to use a model frequently, you can save it as a template. Stored m
 <li>Click the <strong>Collect</strong> button. SPECTROview will instantly aggregate all best-fit parameters into a unified, sortable table.</li>
 </ul>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/collect_fit_results.gif" alt="Collect Fit Results" width="800"><br>
+  <img src="../../user_manual_images/Spectra_Maps/collect_fit_results.gif" alt="Collect Fit Results" width="800"><br>
    <i>The Collect Fit Results interface and aggregated data table.</i>
 </div>
 
@@ -1835,14 +1835,14 @@ Supported mathematical operations include: <code>+</code>, <code>-</code>, <code
 <li><strong>Save it with a descriptive name</strong>, then <strong>send it directly to the Graphs workspace</strong> for immediate plotting.</li>
 </ul>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/send_to_graph.png" alt="Send to Graphs Button" width="300"><br>
+  <img src="../../user_manual_images/Spectra_Maps/send_to_graph.png" alt="Send to Graphs Button" width="300"><br>
 </div>
 <p><br></p>
 <ul>
 <li><strong>Export it to an Excel/CSV spreadsheet</strong> for external use.</li>
 </ul>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/export_to_csv.png" alt="Export to CSV Button" width="300"><br>
+  <img src="../../user_manual_images/Spectra_Maps/export_to_csv.png" alt="Export to CSV Button" width="300"><br>
 </div>
 
 <h3 id="more-tab">More Tab<a class="headerlink" href="#more-tab" title="Permanent link">&para;</a></h3>
@@ -1853,7 +1853,7 @@ Supported mathematical operations include: <code>+</code>, <code>-</code>, <code
 <li><strong>Right</strong>: Provides access to additional pre-processing utilities, such as global intensity normalization algorithms and cosmic ray artifact detection.</li>
 </ul>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/moretab.png" alt="More Tab Overview" width="800"><br>
+  <img src="../../user_manual_images/Spectra_Maps/moretab.png" alt="More Tab Overview" width="800"><br>
 </div>
 
 

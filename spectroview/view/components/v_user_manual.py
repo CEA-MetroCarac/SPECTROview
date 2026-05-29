@@ -383,7 +383,7 @@ class VUserManualDialog(QDialog):
             img { max-width: 100%; height: auto; }
             code { background-color: rgba(128,128,128,0.15);
                    padding: 2px 4px; border-radius: 4px;
-                   font-family: monospace; }
+                   font-family: "Courier New", Menlo, Consolas; }
             pre  { background-color: rgba(128,128,128,0.15);
                    padding: 10px; border-radius: 4px;
                    overflow-x: auto; margin: 1em 0; }

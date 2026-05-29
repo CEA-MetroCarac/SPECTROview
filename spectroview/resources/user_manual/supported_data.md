@@ -2,6 +2,14 @@
 
 Examples of all supported data types can be found in the [`/examples`](https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples) folder of the GitHub repository. Users can download these files to familiarize themselves with supported file formats, data structures, and to practice using SPECTROview with real-world data.
 
+| Format | Extension | Loader | Data type |
+|---|---|---|---|
+| Delimited text | `.txt`, `.csv` | Auto-detected delimiter | Single spectra and maps |
+| Renishaw WiRE | `.wdf` | renishawWiRE library | Single spectra and maps |
+| SPC | `.spc` | Built-in binary reader | Single spectra and maps |
+| TRPL | `.dat` | Built-in parser | Time-resolved decays |
+| Tabular data | `.xlsx`, `.csv` | Pandas & Openpyxl | DataFrames for plotting |
+
 ### .wdf (Renishaw) and .spc (HORIBA) Formats
 
 Since version 26.7.1, SPECTROview natively supports:

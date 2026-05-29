@@ -1297,14 +1297,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tensor-engine/" class="md-nav__link">
+      <a href="../vbf_engine/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Tensor Fit Engine
+    Vectorized Batch Fit Engine (VBF Engine)
   
 
     
@@ -1720,7 +1720,7 @@
 
     VMWS --&gt; MSS["SpectraStore"]
     VMWS --&gt; IO["m_io"]
-    VMWS --&gt; TFT["TensorFitThread"]</code></pre>
+    VMWS --&gt; TFT["VBFthread"]</code></pre>
 <hr />
 <h2 id="key-classes">Key Classes<a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
 <h3 id="vmworkspacespectra-the-viewmodel"><code>VMWorkspaceSpectra</code> — The ViewModel<a class="headerlink" href="#vmworkspacespectra-the-viewmodel" title="Permanent link">&para;</a></h3>
@@ -1932,7 +1932,7 @@
     C --&gt; D["baseline eval&lt;br/&gt;(native solver)"]
     D --&gt; E["baseline subtract&lt;br/&gt;(Y = Y - Y_baseline)"]
     E --&gt; F["x, Y&lt;br/&gt;(working arrays)"]
-    F --&gt; G["peak fitting&lt;br/&gt;(Tensor Engine)"]</code></pre>
+    F --&gt; G["peak fitting&lt;br/&gt;(VBF Engine)"]</code></pre>
 <div class="admonition note">
 <p class="admonition-title">Vectorized Preprocessing</p>
 <p>The original raw arrays <code>x0</code> and <code>Y0</code> are preserved unchanged. Preprocessing operations are vectorized across the entire map, and the resulting working coordinates <code>x</code> and <code>Y</code> are computed dynamically.</p>
@@ -1954,8 +1954,8 @@
 </ol>
 <h3 id="5-fitting">5. Fitting<a class="headerlink" href="#5-fitting" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>ViewModel</strong> instantiates <code>TensorFitThread</code> with the store and map tasks.</li>
-<li><strong>TensorFitThread</strong> invokes <code>TensorFittingEngine.fit()</code> which compiles Jacobians and optimizes parameter vectors in batch using vectorized Levenberg-Marquardt solvers.</li>
+<li><strong>ViewModel</strong> instantiates <code>VBFthread</code> with the store and map tasks.</li>
+<li><strong>VBFthread</strong> invokes <code>VBFengine.fit()</code> which compiles Jacobians and optimizes parameter vectors in batch using vectorized Levenberg-Marquardt solvers.</li>
 <li>Optimized parameters are written back to <code>md.peak_params</code>, and composite fit envelopes (<code>md.Y_bestfit</code>, <code>md.Y_peaks</code>) are evaluated.</li>
 </ol>
 <h3 id="6-fit-results-collection">6. Fit Results Collection<a class="headerlink" href="#6-fit-results-collection" title="Permanent link">&para;</a></h3>

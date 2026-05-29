@@ -1246,14 +1246,14 @@
   
   
     <li class="md-nav__item">
-      <a href="tensor-engine/" class="md-nav__link">
+      <a href="vbf_engine/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Tensor Fit Engine
+    Vectorized Batch Fit Engine (VBF Engine)
   
 
     
@@ -1739,13 +1739,13 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>│       ├── customize_graph_dialog.py  # Graph customization dialog
 <a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>│       └── customized_widgets.py      # Palette combobox, custom toolbar
 <a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>│
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>├── fit_engine/             # High-performance tensor fitting
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>│   ├── tensor_engine.py         # Orchestrator (TensorFittingEngine)
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>│   ├── evaluator.py             # Parameter mapping (TensorEvaluator)
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>├── fit_engine/             # High-performance batch fitting
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>│   ├── vbf_engine.py            # Orchestrator (VBFengine)
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>│   ├── evaluator.py             # Parameter mapping (VBFevaluator)
 <a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>│   ├── optimizer.py             # Batched Levenberg-Marquardt
 <a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>│   ├── models.py                # Batched peak functions + Jacobians
 <a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>│   ├── scalar_models.py         # Fallback scalar functions + FitResult
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>│   ├── tensor_fit_thread.py     # QThread wrapper
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>│   ├── vbf_thread.py            # QThread wrapper
 <a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>│   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
 <a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>│   └── noise.py                 # Noise estimation functions
 <a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>│
@@ -1953,9 +1953,9 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 </thead>
 <tbody>
 <tr>
-<td><code>TensorFitThread</code></td>
-<td><code>fit_engine/tensor_fit_thread.py</code></td>
-<td>Batched tensor fitting (primary engine)</td>
+<td><code>VBFthread</code></td>
+<td><code>fit_engine/vbf_thread.py</code></td>
+<td>Batched batch fitting (primary engine)</td>
 </tr>
 </tbody>
 </table>
@@ -2049,8 +2049,8 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <td>VMWorkspaceGraphs, DataFrame management, plot creation, VGraph rendering</td>
 </tr>
 <tr>
-<td><strong>Tensor Fit Engine</strong></td>
-<td><a href="tensor-engine/">tensor-engine.md</a></td>
+<td><strong>Vectorized Batch Fit Engine (VBF Engine)</strong></td>
+<td><a href="vbf_engine/">vbf_engine.md</a></td>
 <td>Batched LM optimizer, analytical Jacobians, adding new peak models</td>
 </tr>
 <tr>

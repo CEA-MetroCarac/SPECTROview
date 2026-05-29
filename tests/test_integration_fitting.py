@@ -1,5 +1,5 @@
 """
-Integration tests for the TensorFit engine using real benchmarking data.
+Integration tests for the VBF engine using real benchmarking data.
 """
 import json
 import pytest
@@ -10,8 +10,8 @@ from pathlib import Path
 from spectroview.model.m_io import load_map_file, load_wdf_map
 from spectroview.model.m_settings import MSettings
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
-from spectroview.fit_engine.vbf_fit_thread import VBFthread
-from spectroview.fit_engine.vbf_fit_engine import VBFengine
+from spectroview.fit_engine.vbf_thread import VBFthread
+from spectroview.fit_engine.vbf_engine import VBFengine
 
 # Paths to the benchmarking data
 DATA_DIR = Path(__file__).parent.parent / "examples" / "fit_benchmarking_data"
@@ -34,7 +34,7 @@ def load_fit_model(json_path: Path) -> dict:
     return data
 
 @pytest.mark.skipif(not (DATA_DIR / "2_MoS2_map.txt").exists(), reason="Benchmarking data not found")
-def test_vbf_fit_engine_mos2_map():
+def test_vbf_engine_mos2_map():
     """Test convergence on MoS2 TXT map data."""
     # 1. Setup VM and Store
     settings = MSettings()
@@ -101,7 +101,7 @@ def test_vbf_fit_engine_mos2_map():
 
 
 @pytest.mark.skipif(not (DATA_DIR / "3_3721map.wdf").exists(), reason="Benchmarking data not found")
-def test_vbf_fit_engine_wdf_map():
+def test_vbf_engine_wdf_map():
     """Test convergence on WDF map data."""
     # 1. Load data
     map_df, _ = load_wdf_map(DATA_DIR / "3_3721map.wdf")

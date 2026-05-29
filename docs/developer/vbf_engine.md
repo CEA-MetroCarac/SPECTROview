@@ -69,8 +69,8 @@ graph TD
 
 | Module | Class / Function | Responsibility |
 |--------|-----------------|----------------|
-| `vbf_fit_thread.py` | `VBFthread` | QThread wrapper. Supports batched modes. Emits `progress_changed` and `timings_ready` signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults. |
-| `vbf_fit_engine.py` | `VBFengine` | Public API orchestrator. Manages the 8-step pipeline: apply model → preprocess → extract matrices → build p0 → build weights → optimize → write back results. Records step-level timings. |
+| `vbf_thread.py` | `VBFthread` | QThread wrapper. Supports batched modes. Emits `progress_changed` and `timings_ready` signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults. |
+| `vbf_engine.py` | `VBFengine` | Public API orchestrator. Manages the 8-step pipeline: apply model → preprocess → extract matrices → build p0 → build weights → optimize → write back results. Records step-level timings. |
 | `evaluator.py` | `VBFevaluator` | Bridge between the dictionary-based `fit_model` and the flat tensor API. Parses peak definitions, manages free/fixed parameter indexing, evaluates expressions, routes to correct batched model functions, builds `FitResult` objects. |
 | `optimizer.py` | `batched_levenberg_marquardt()` | Pure numerical optimizer. Solves N independent least-squares problems simultaneously using `np.einsum`. Uses an adaptive solver (`cho_solve` or `np.linalg.solve`) depending on matrix size. GUI-agnostic. |
 | `models.py` | `batched_*()` functions | Vectorized peak shape functions and their analytical Jacobians. Contains the `BATCHED_MODELS` registry. Includes `numerical_jacobian()` fallback. |
@@ -340,7 +340,7 @@ This threshold activates **two complementary mechanisms**:
 
 #### Mechanism A — Weight Masking (`_build_fit_weights`)
 
-During weight matrix construction in `vbf_fit_engine.py`, a 5-point moving average smooths the spectrum, and any data point where the smoothed signal falls below the noise level is **excluded from the fit** by setting its weight to zero:
+During weight matrix construction in `vbf_engine.py`, a 5-point moving average smooths the spectrum, and any data point where the smoothed signal falls below the noise level is **excluded from the fit** by setting its weight to zero:
 
 ```python
 ymean = np.convolve(y, np.ones(5) / 5.0, mode='same')  # 5-point moving average

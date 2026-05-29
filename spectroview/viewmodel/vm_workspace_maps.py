@@ -16,7 +16,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
 from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
-from spectroview.fit_engine.vbf_fit_thread import VBFthread
+from spectroview.fit_engine.vbf_thread import VBFthread
 
 
 

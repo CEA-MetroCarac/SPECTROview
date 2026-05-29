@@ -19,7 +19,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.model.workspace_io import WorkspaceIO
 from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.model.peak_model import initialize_peak_params
-from spectroview.fit_engine.vbf_fit_thread import VBFthread
+from spectroview.fit_engine.vbf_thread import VBFthread
 from spectroview.fit_engine.baseline import eval_baseline_batch
 from spectroview.fit_engine.evaluator import eval_peak_initial
 from spectroview.viewmodel.utils import (

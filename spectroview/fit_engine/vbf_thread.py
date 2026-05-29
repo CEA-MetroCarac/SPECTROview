@@ -3,7 +3,7 @@ import time
 import numpy as np
 import sys
 from PySide6.QtCore import QThread, Signal
-from spectroview.fit_engine.vbf_fit_engine import VBFengine
+from spectroview.fit_engine.vbf_engine import VBFengine
 
 class VBFthread(QThread):
     progress_changed = Signal(int, int, int, float, int)

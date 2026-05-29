@@ -4,7 +4,7 @@
 Fits all spectra in a hyperspectral map simultaneously using a custom
 Batched Levenberg-Marquardt optimizer with analytical Jacobians.
 """
-from spectroview.fit_engine.vbf_fit_engine import VBFengine
-from spectroview.fit_engine.vbf_fit_thread import VBFthread
+from spectroview.fit_engine.vbf_engine import VBFengine
+from spectroview.fit_engine.vbf_thread import VBFthread
 
 __all__ = ["VBFengine", "VBFthread"]

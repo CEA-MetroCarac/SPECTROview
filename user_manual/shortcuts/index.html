@@ -850,10 +850,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#advanced-user-tips" class="md-nav__link">
+  <a href="#tooltips-everywhere" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Advanced User Tips
+        Tooltips Everywhere
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips-with-spectraviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips with SpectraViewer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips-with-mapsviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips with MapsViewer
       
     </span>
   </a>
@@ -1185,10 +1207,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#advanced-user-tips" class="md-nav__link">
+  <a href="#tooltips-everywhere" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Advanced User Tips
+        Tooltips Everywhere
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips-with-spectraviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips with SpectraViewer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips-with-mapsviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips with MapsViewer
       
     </span>
   </a>
@@ -1234,8 +1278,8 @@
 </thead>
 <tbody>
 <tr>
-<td><code>Ctrl + R</code></td>
-<td>When active in the Spectra or Maps workspace, this shortcut automatically rescales the axes of the current plot to perfectly fit the visible data.</td>
+<td></td>
+<td></td>
 </tr>
 <tr>
 <td><code>Ctrl + Click</code></td>
@@ -1243,14 +1287,45 @@
 </tr>
 </tbody>
 </table>
-<h3 id="advanced-user-tips">Advanced User Tips<a class="headerlink" href="#advanced-user-tips" title="Permanent link">&para;</a></h3>
-<p><strong>Tooltips Everywhere</strong>: If you are ever unsure what a specific button or parameter does, simply hover your mouse cursor over the GUI element for a moment to reveal a descriptive tooltip.</p>
+<h3 id="tooltips-everywhere">Tooltips Everywhere<a class="headerlink" href="#tooltips-everywhere" title="Permanent link">&para;</a></h3>
+<p>If you are ever unsure what a specific button or parameter does, simply hover your mouse cursor over the GUI element for a moment to reveal a descriptive tooltip.</p>
 <div align="center">
   <img src="../../user_manual_images/UI_Overview/Tooltips.gif" alt="Tooltips demonstration" width="600"><br>
 </div>
 
 <p><br></p>
 <hr />
+<h3 id="tips-with-spectraviewer">Tips with SpectraViewer<a class="headerlink" href="#tips-with-spectraviewer" title="Permanent link">&para;</a></h3>
+<p>In the SpectraViewer, you can <strong>interact</strong> with the spectra plot using your mouse: </p>
+<div align="center">
+  <img src="../../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="SpectraViewer Interactive Controls" width="650">
+</div>
+<p><br></p>
+<ul>
+<li><code>Ctrl + R</code> : When active in the Spectra or Maps workspace, this shortcut automatically rescales the axes of the current plot to perfectly fit the visible data.</li>
+<li>You can use the mouse wheel to adjust y zoom.</li>
+<li>Adjust vertical X, Y sliders on the right of the plot to shift spectra along the X or Y axis for improved visual clarity.</li>
+<li>You can directly click and drag the center point or the width of any peak inside the <code>SpectraViewer</code> to adjust its parameters dynamically. This is a much faster way to set up the initial parameters for your fit.</li>
+<li>Hover your mouse over a peak, and it will show you the parameters of the peak (position, width, amplitude). </li>
+<li>
+<p>Hover the mouse over a peak and right-click to remove it.</p>
+</li>
+<li>
+<p>As defining a baseline (Linear or Polynomial), once baseline points are added, you can also hover your mouse over a baseline anchor point and right-click to remove it instantly.</p>
+</li>
+<li>User shortcut key <code>Ctrl + R</code> to rescales the the spectra plot to fit the visible data.</li>
+</ul>
+<div align="center">
+  <img src="../../user_manual_images/Tips_Shortcuts/tip_spectraviewer_2.gif" alt="SpectraViewer Interactive Controls" width="650">
+</div>
+<p><br></p>
+<ul>
+<li>No matter the current global theme is (dark or light), you can change the theme of the spectra plot in the <code>View Options</code> button. Similary, when you copy the figure to the clipboard, you can specify the theme (dark or light) for the copied figure.</li>
+<li>You can show or deasctivate best-fit curves or legend box anytime by clicking to corresponding buttons in the Spectra Viewer's toolbar.</li>
+<li>When legend box is shown in the plot, double-click on any label to change its display name. double click on the color to change the color of the line.</li>
+</ul>
+<hr />
+<h3 id="tips-with-mapsviewer">Tips with MapsViewer<a class="headerlink" href="#tips-with-mapsviewer" title="Permanent link">&para;</a></h3>
 <p><strong>Extract Profile from 2D Map Plot</strong>: Whenever two distinct points are selected on the 2D map, the intensity profile between these two coordinates will be calculated and plotted directly on the heatmap:</p>
 <div align="center">
   <img src="../../user_manual_images/Tips_Shortcuts/profil.gif" alt="Map Profile Extraction" width="350"><br>
@@ -1262,18 +1337,6 @@
   <i>You can define a profile name in the `View Options` menu, then click `Extract` to send it directly to the `Graphs` workspace for plotting.</i>
 </div>
 
-<p><br></p>
-<hr />
-<p><strong>Mouse Interactivity within SpectraViewer</strong>: In the SpectraViewer, you can interact with the spectra plot using your mouse: </p>
-<ul>
-<li>First, select the mouse tools (<code>Baseline</code> or <code>Peaks</code>) from the toolbar.</li>
-<li>You can directly click and drag the center point or the width of any peak inside the <code>SpectraViewer</code> to adjust its initial guess dynamically. This is a much faster way to set up the initial parameters for your fit.</li>
-<li>You can also directly click and drag the baseline anchor points inside the <code>SpectraViewer</code> to adjust the baseline dynamically.</li>
-<li>Hover your mouse over a baseline anchor point or a peak and right-click to remove it instantly.</li>
-</ul>
-<div align="center">
-  <img src="../../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="SpectraViewer Interactive Controls" width="650">
-</div>
 <p><br></p>
 <hr />
 <p><strong>Quick Re-fit (Warm Starting)</strong>: If a fit does not converge perfectly, you can manually adjust the peak bounds and simply click the <strong>Fit</strong> button again. The engine will "warm-start" using the results of the previous optimization, making subsequent fits drastically faster.</p>

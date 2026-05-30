@@ -6,13 +6,12 @@ To maximize your efficiency within SPECTROview, a variety of keyboard shortcuts 
 
 | Keyboard Shortcut | Resulting Action |
 |----------|--------|
-| `Ctrl + R` | When active in the Spectra or Maps workspace, this shortcut automatically rescales the axes of the current plot to perfectly fit the visible data. |
+|  |
 | `Ctrl + Click` | Under a figure canvas, there is always a Copy button. Simply click it to copy the plot as a PNG image. Hold `Ctrl` and click to copy the raw numerical dataset of the current plot directly to your system clipboard (instead of an image). On macOS, use `Cmd + Click`. |
 
+### **Tooltips Everywhere** : 
 
-### Advanced User Tips
-
-**Tooltips Everywhere**: If you are ever unsure what a specific button or parameter does, simply hover your mouse cursor over the GUI element for a moment to reveal a descriptive tooltip.
+If you are ever unsure what a specific button or parameter does, simply hover your mouse cursor over the GUI element for a moment to reveal a descriptive tooltip.
 
 <div align="center">
   <img src="../user_manual_images/UI_Overview/Tooltips.gif" alt="Tooltips demonstration" width="600"><br>
@@ -20,8 +19,38 @@ To maximize your efficiency within SPECTROview, a variety of keyboard shortcuts 
 
 <br>
 
-________   
+________ 
 
+### Tips with SpectraViewer :
+In the SpectraViewer, you can **interact** with the spectra plot using your mouse: 
+
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="SpectraViewer Interactive Controls" width="650">
+</div>
+<br>
+
+
+- `Ctrl + R` : When active in the Spectra or Maps workspace, this shortcut automatically rescales the axes of the current plot to perfectly fit the visible data.
+- You can use the mouse wheel to adjust y zoom.
+- Adjust vertical X, Y sliders on the right of the plot to shift spectra along the X or Y axis for improved visual clarity.
+- You can directly click and drag the center point or the width of any peak inside the `SpectraViewer` to adjust its parameters dynamically. This is a much faster way to set up the initial parameters for your fit.
+- Hover your mouse over a peak, and it will show you the parameters of the peak (position, width, amplitude). 
+- Hover the mouse over a peak and right-click to remove it.
+
+- As defining a baseline (Linear or Polynomial), once baseline points are added, you can also hover your mouse over a baseline anchor point and right-click to remove it instantly.
+- User shortcut key `Ctrl + R` to rescales the the spectra plot to fit the visible data.
+
+<div align="center">
+  <img src="../user_manual_images/Tips_Shortcuts/tip_spectraviewer_2.gif" alt="SpectraViewer Interactive Controls" width="650">
+</div>
+<br>
+
+- No matter the current global theme is (dark or light), you can change the theme of the spectra plot in the `View Options` button. Similary, when you copy the figure to the clipboard, you can specify the theme (dark or light) for the copied figure.
+- You can show or deasctivate best-fit curves or legend box anytime by clicking to corresponding buttons in the Spectra Viewer's toolbar.
+- When legend box is shown in the plot, double-click on any label to change its display name. double click on the color to change the color of the line.
+
+________   
+### Tips with MapsViewer :
 
 **Extract Profile from 2D Map Plot**: Whenever two distinct points are selected on the 2D map, the intensity profile between these two coordinates will be calculated and plotted directly on the heatmap:
 
@@ -37,20 +66,6 @@ ________
 
 <br>
 
-________ 
-
-
-**Mouse Interactivity within SpectraViewer**: In the SpectraViewer, you can interact with the spectra plot using your mouse: 
-
-- First, select the mouse tools (`Baseline` or `Peaks`) from the toolbar.
-- You can directly click and drag the center point or the width of any peak inside the `SpectraViewer` to adjust its initial guess dynamically. This is a much faster way to set up the initial parameters for your fit.
-- You can also directly click and drag the baseline anchor points inside the `SpectraViewer` to adjust the baseline dynamically.
-- Hover your mouse over a baseline anchor point or a peak and right-click to remove it instantly.
-
-<div align="center">
-  <img src="../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="SpectraViewer Interactive Controls" width="650">
-</div>
-<br>
 
 ________ 
 

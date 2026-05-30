@@ -1278,14 +1278,14 @@
 <td><code>xtol</code></td>
 <td>1×10⁻⁴</td>
 <td>1×10⁻⁶ – 1×10⁻¹</td>
-<td>Relative tolerance for the parameter step size. Convergence requires: <br> <span class="arithmatex">\(\text{mean}(\vert\delta p\vert/\vert p\vert) &lt; \text{xtol}\)</span></td>
+<td>Relative tolerance for the parameter step size. Convergence requires: <br> mean(|&delta;<i>p</i>| / |<i>p</i>|) &lt; xtol</td>
 </tr>
 <tr>
 <td><strong>f-tolerance</strong></td>
 <td><code>ftol</code></td>
 <td>1×10⁻⁴</td>
 <td>1×10⁻⁶ – 1×10⁻¹</td>
-<td>Relative tolerance for the cost function. Convergence requires: <br> <span class="arithmatex">\(\vert\text{cost}_{n} - \text{cost}_{n-1}\vert/\vert\text{cost}_{n}\vert &lt; \text{ftol}\)</span></td>
+<td>Relative tolerance for the cost function. Convergence requires: <br> |cost<sub>n</sub> - cost<sub>n-1</sub>| / |cost<sub>n</sub>| &lt; ftol</td>
 </tr>
 <tr>
 <td><strong>Noise Threshold Coefficient</strong></td>
@@ -1330,7 +1330,7 @@
 <td><strong>Max Peak Shift</strong></td>
 <td>20</td>
 <td>0 – 100</td>
-<td>Maximum allowed displacement of a peak center (<code>x0</code>) from its initial value. <br><span class="arithmatex">\(x_0 - \text{maxshift} \leq x_0^{\text{fitted}} \leq x_0 + \text{maxshift}\)</span></td>
+<td>Maximum allowed displacement of a peak center (<code>x0</code>) from its initial value. <br><i>x</i><sub>0</sub> - maxshift &le; <i>x</i><sub>0</sub><sup>fitted</sup> &le; <i>x</i><sub>0</sub> + maxshift</td>
 </tr>
 <tr>
 <td><strong>Min Peak FWHM</strong></td>

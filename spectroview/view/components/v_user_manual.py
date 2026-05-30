@@ -228,7 +228,7 @@ MANUAL_SECTIONS = [
     ("mva.md",              "Multivariate Analysis (MVA)"),
     ("calculators.md",      "Quick Calculators"),
     ("settings.md",         "Settings"),
-    ("save_load.md",        "Save & Load Workspace"),
+    ("save_load.md",        "Save & Load"),
     ("shortcuts.md",        "Shortcuts & Tips"),
 ]
 

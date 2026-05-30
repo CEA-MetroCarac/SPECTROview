@@ -17,13 +17,10 @@ A horizontal toolbar located at the top of the application provides quick access
 
 
 ### Settings Panel
-Click the **Settings** icon to open the Settings Panel, where you can:
-
-- Adjust global fitting parameters.
-- Define a default folder where all fit models (JSON format) are stored. The application will automatically scan this folder and load all models for easy selection in the fitting interface.
+Click the **Settings** icon to open the Settings Panel. See "Settings and Preferences" section for details.
 
 <div align="center">
-  <img src="../user_manual_images/menu_bar/ui_settings.png" alt="Settings Panel UI" width="350"><br>
+  <img src="../user_manual_images/settings/settings.png" alt="Settings Panel UI" width="400"><br>
    <i>The Settings Panel interface.</i>
 </div>
 
@@ -39,23 +36,9 @@ To convert hyperspectral data (2D maps) from Renishaw WiRE into a format nativel
 </div>
 
 ### Quick Calculation Tool
-Click the **Calculator** icon to open a suite of utility calculators:
+Click the **Calculator** icon to open a suite of utility calculators. See "Quick Calculators" section for details.
 
 <div align="center">
   <img src="../user_manual_images/menu_bar/ui_quick_calculation.png" alt="Quick Calculators UI" width="800"><br>
    <i>The Quick Calculators interface.</i>
 </div>
-
-#### 1. Laser Spot Size, Depth of Field, and Laser Power Density
-This tool estimates the theoretical, diffraction-limited spatial resolution of your optical setup, including the spot size, depth of focus, and laser power density.
-
-- **Spot Size**: Calculated as $1.22 \times \lambda / \text{NA}$ ($\mu\text{m}$)
-- **Depth of Focus**: Calculated as $4 \times n \times \lambda / \text{NA}^2$ ($\mu\text{m}$)
-
-#### 2. Penetration Depth
-This tool calculates the theoretical optical penetration depth of a laser into a specific material, derived from its complex refractive index (extinction coefficient).
-
-- **Penetration Depth ($d$)**: Calculated as $\lambda / (4 \pi k)$ ($\text{nm}$)
-
-#### 3. Unit Converter
-A rapid utility to convert between various standard spectroscopic units, ensuring flawless consistency during data analysis (e.g., converting wavelength in $\text{nm}$ to energy in $\text{eV}$, or calculating Raman shift in $\text{cm}^{-1}$ from excitation wavelengths).

@@ -2,7 +2,7 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QCheckBox, QSpinBox, QDoubleSpinBox, QLineEdit, QDialogButtonBox,
-    QSpacerItem, QSizePolicy, QFrame
+    QSpacerItem, QSizePolicy, QFrame, QGroupBox
 )
 from PySide6.QtGui import QFont
 
@@ -33,10 +33,9 @@ class VSettingsDialog(QDialog):
         bold = QFont()
         bold.setBold(True)
 
-        # ───── Optimization Settings ─────
-        lbl_opt = QLabel("Fitting Settings:")
-        lbl_opt.setFont(bold)
-        main_layout.addWidget(lbl_opt)
+        # ───── Fitting & Data Settings ─────
+        grp_fitting = QGroupBox("Fit Parameters")
+        fitting_layout = QVBoxLayout(grp_fitting)
 
         # Max iterations
         row = QHBoxLayout()
@@ -45,7 +44,7 @@ class VSettingsDialog(QDialog):
         self.spin_max_iter.setRange(1, 10000)
         self.spin_max_iter.setSingleStep(20)
         row.addWidget(self.spin_max_iter)
-        main_layout.addLayout(row)
+        fitting_layout.addLayout(row)
 
         # x-tolerance
         row = QHBoxLayout()
@@ -55,7 +54,7 @@ class VSettingsDialog(QDialog):
         self.spin_x_tol.setRange(1e-6, 1e-1)
         self.spin_x_tol.setSingleStep(1e-5)
         row.addWidget(self.spin_x_tol)
-        main_layout.addLayout(row)
+        fitting_layout.addLayout(row)
 
         # f-tolerance
         row = QHBoxLayout()
@@ -65,20 +64,7 @@ class VSettingsDialog(QDialog):
         self.spin_f_tol.setRange(1e-6, 1e-1)
         self.spin_f_tol.setSingleStep(1e-5)
         row.addWidget(self.spin_f_tol)
-        main_layout.addLayout(row)
-
-        main_layout.addSpacing(10)
-
-        # ───── Data Treatment ─────
-        lbl_data = QLabel("Data Treatment:")
-        lbl_data.setFont(bold)
-        main_layout.addWidget(lbl_data)
-
-        self.chk_fit_negative = QCheckBox("Fit negative values")
-        main_layout.addWidget(self.chk_fit_negative)
-
-        self.chk_fit_outliers = QCheckBox("Include outliers in fit")
-        main_layout.addWidget(self.chk_fit_outliers)
+        fitting_layout.addLayout(row)
 
         # Noise coeff
         row = QHBoxLayout()
@@ -89,14 +75,21 @@ class VSettingsDialog(QDialog):
         self.spin_coef_noise.setSingleStep(0.5)
         self.spin_coef_noise.setValue(1.0)
         row.addWidget(self.spin_coef_noise)
-        main_layout.addLayout(row)
+        fitting_layout.addLayout(row)
+
+        self.chk_fit_negative = QCheckBox("Fit negative values")
+        fitting_layout.addWidget(self.chk_fit_negative)
+
+        self.chk_fit_outliers = QCheckBox("Include outliers in fit")
+        fitting_layout.addWidget(self.chk_fit_outliers)
+
+        main_layout.addWidget(grp_fitting)
 
         main_layout.addSpacing(10)
 
         # ───── Peak Bounds ─────
-        lbl_bounds = QLabel("Peak Assignment Bounds:")
-        lbl_bounds.setFont(bold)
-        main_layout.addWidget(lbl_bounds)
+        grp_bounds = QGroupBox("Global Peak Limits")
+        bounds_layout = QVBoxLayout(grp_bounds)
 
         # Max peak shift
         row = QHBoxLayout()
@@ -106,7 +99,7 @@ class VSettingsDialog(QDialog):
         self.spin_maxshift.setSingleStep(5)
         self.spin_maxshift.setDecimals(2)
         row.addWidget(self.spin_maxshift)
-        main_layout.addLayout(row)
+        bounds_layout.addLayout(row)
 
         # Min peak fwhm
         row = QHBoxLayout()
@@ -116,7 +109,7 @@ class VSettingsDialog(QDialog):
         self.spin_minfwhm.setSingleStep(1)
         self.spin_minfwhm.setDecimals(2)
         row.addWidget(self.spin_minfwhm)
-        main_layout.addLayout(row)
+        bounds_layout.addLayout(row)
 
         # Max peak fwhm
         row = QHBoxLayout()
@@ -126,7 +119,7 @@ class VSettingsDialog(QDialog):
         self.spin_maxfwhm.setSingleStep(20)
         self.spin_maxfwhm.setDecimals(2)
         row.addWidget(self.spin_maxfwhm)
-        main_layout.addLayout(row)
+        bounds_layout.addLayout(row)
 
         # Max intensity
         row = QHBoxLayout()
@@ -136,7 +129,9 @@ class VSettingsDialog(QDialog):
         self.spin_maxintensity.setSingleStep(1000)
         self.spin_maxintensity.setDecimals(0)
         row.addWidget(self.spin_maxintensity)
-        main_layout.addLayout(row)
+        bounds_layout.addLayout(row)
+
+        main_layout.addWidget(grp_bounds)
 
         # Spacer
         main_layout.addSpacerItem(

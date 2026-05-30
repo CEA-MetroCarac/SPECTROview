@@ -101,7 +101,9 @@ _______
 
 ### Fit Model Builder
 
-The FitModelBuilder tab is where you configure your spectral fitting models. It is divided into three main panels: Fitting, PeakTable, and FitModelControl.
+The FitModelBuilder tab is where you configure your spectral fit models. It is divided into three main panels: Fitting, PeakTable, and FitModelControl that will be explained in the following sections.
+
+You can use global fitting parameters or adjust fitting parameters in the Settings Panel (see "Settings and Preferences" section for details).
 
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="Fit Model Builder UI" width="800">

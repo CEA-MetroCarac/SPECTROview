@@ -1,91 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/changelog/</loc>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/changelog/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/home/</loc>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/graphs/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/maps/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/mva/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/spectra/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/vbf_engine/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/realease_notes/v26.34.1/</loc>
-         <lastmod>2026-05-29</lastmod>
-    </url>
-    <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/calculators/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/graphs/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
+    </url>
+    <url>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/home/</loc>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/installation/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/introduction/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/menu_bar/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/mva/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/save_load/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/settings/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/shortcuts/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/spectra_maps/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/supported_data/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/ui_overview/</loc>
-         <lastmod>2026-05-29</lastmod>
+         <lastmod>2026-05-30</lastmod>
     </url>
 </urlset>

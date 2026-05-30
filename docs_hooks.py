@@ -17,16 +17,16 @@ def on_page_content(html, page, config, files):
     directory-style URL structure.
     """
     if page.file.src_path.startswith("user_manual/"):
-        # Determine if we are at the user_manual/ root (index.md)
+        # Determine if we are at the user_manual/ root (home.md)
         # or in a sub-directory (e.g. user_manual/01_introduction/)
-        is_index = page.file.src_path.endswith("index.md")
+        is_index = page.file.src_path.endswith("home.md")
         prefix = "" if is_index else "../"
 
         def replace_link(match):
             filename = match.group(1)
             anchor = match.group(2)
-            # Special case for index.md: link to the directory root
-            if filename == "index":
+            # Special case for home.md: link to the directory root
+            if filename == "home" or filename == "index":
                 return f'href="{prefix or "./"}{anchor}"'
             # General case: link to the file's directory URL
             return f'href="{prefix}{filename}/{anchor}"'

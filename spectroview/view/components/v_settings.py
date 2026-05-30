@@ -2,7 +2,7 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QCheckBox, QSpinBox, QDoubleSpinBox, QLineEdit, QDialogButtonBox,
-    QSpacerItem, QSizePolicy
+    QSpacerItem, QSizePolicy, QFrame
 )
 from PySide6.QtGui import QFont
 
@@ -34,7 +34,7 @@ class VSettingsDialog(QDialog):
         bold.setBold(True)
 
         # ───── Optimization Settings ─────
-        lbl_opt = QLabel("Optimization Settings:")
+        lbl_opt = QLabel("Fitting Settings:")
         lbl_opt.setFont(bold)
         main_layout.addWidget(lbl_opt)
 
@@ -143,14 +143,21 @@ class VSettingsDialog(QDialog):
             QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Expanding)
         )
 
+        # Separation line
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        main_layout.addWidget(line)
+        main_layout.addSpacing(10)
+
         # ───── Fit model management ─────
-        lbl_model = QLabel("Fit model management:")
+        lbl_model = QLabel("Fit Model Path:")
         lbl_model.setFont(bold)
         main_layout.addWidget(lbl_model)
 
         folder_row = QHBoxLayout()
-        self.btn_model_folder = QPushButton("Path:")
-        self.btn_model_folder.setMaximumWidth(40)
+        self.btn_model_folder = QPushButton("Browse")
+        self.btn_model_folder.setMaximumWidth(60)
         self.le_model_folder = QLineEdit()
 
         folder_row.addWidget(self.btn_model_folder)

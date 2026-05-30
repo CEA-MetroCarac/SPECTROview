@@ -155,8 +155,8 @@ fit_model dict                    VBFevaluator                  Optimizer
 │       fwhm:  .. │     │    "m02_ampli", ...]       │     │              │
 │       x0:    .. │     │                            │     │              │
 │   "1":          │     │ _free_idx:  [0, 1, 2, 3]   │     │              │
-│     Lorentzian: │     │ _fixed_idx: [4]             │     │              │
-│       ampli: .. │     │ _fixed_values: [0.5]        │     │              │
+│     Lorentzian: │     │ _fixed_idx: [4]            │     │              │
+│       ampli: .. │     │ _fixed_values: [0.5]       │     │              │
 │       ...       │     │                            │     │              │
 └─────────────────┘     └────────────────────────────┘     └──────────────┘
 ```

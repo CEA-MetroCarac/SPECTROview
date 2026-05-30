@@ -9,7 +9,7 @@ To maximize your efficiency within SPECTROview, a variety of keyboard shortcuts 
 |  |
 | `Ctrl + Click` | Under a figure canvas, there is always a Copy button. Simply click it to copy the plot as a PNG image. Hold `Ctrl` and click to copy the raw numerical dataset of the current plot directly to your system clipboard (instead of an image). On macOS, use `Cmd + Click`. |
 
-### **Tooltips Everywhere** : 
+### Tooltips Everywhere
 
 If you are ever unsure what a specific button or parameter does, simply hover your mouse cursor over the GUI element for a moment to reveal a descriptive tooltip.
 
@@ -21,7 +21,7 @@ If you are ever unsure what a specific button or parameter does, simply hover yo
 
 ________ 
 
-### Tips with SpectraViewer :
+### Tips with SpectraViewer
 In the SpectraViewer, you can **interact** with the spectra plot using your mouse: 
 
 <div align="center">
@@ -50,7 +50,7 @@ In the SpectraViewer, you can **interact** with the spectra plot using your mous
 - When legend box is shown in the plot, double-click on any label to change its display name. double click on the color to change the color of the line.
 
 ________   
-### Tips with MapsViewer :
+### Tips with MapsViewer
 
 **Extract Profile from 2D Map Plot**: Whenever two distinct points are selected on the 2D map, the intensity profile between these two coordinates will be calculated and plotted directly on the heatmap:
 

@@ -3,7 +3,7 @@
 Accessing the **Settings** menu via the gear icon in the main toolbar.
 
 <div align="center">
-  <img src="../user_manual_images/settings/settings.png" alt="Settings Panel" width="420"><br>
+  <img src="../user_manual_images/Settings/settings.png" alt="Settings Panel" width="420"><br>
 </div>
 
 <br>

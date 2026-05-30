@@ -20,7 +20,7 @@ A horizontal toolbar located at the top of the application provides quick access
 Click the **Settings** icon to open the Settings Panel. See "Settings and Preferences" section for details.
 
 <div align="center">
-  <img src="../user_manual_images/settings/settings.png" alt="Settings Panel UI" width="400"><br>
+  <img src="../user_manual_images/Settings/settings.png" alt="Settings Panel UI" width="400"><br>
    <i>The Settings Panel interface.</i>
 </div>
 

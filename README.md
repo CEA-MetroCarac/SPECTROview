@@ -33,19 +33,19 @@ ___
 ______
 ### Three distinct workspaces for processing discrete spectra, hyperspectral data, and data visualization:
 <p align="center">
-    <img src="docs/assets/general_demo.gif">
+    <img src="docs/assets/overview.gif">
 </p>
 
 ### Build custom fit models, replicate them across datasets, fit multiple spectra simultaneously, and aggregate all best-fit results with a single click:
 
 <p align="center">
-    <img src="docs/assets/fitting_demo.gif">
+    <img src="docs/assets/fitting.gif">
 </p>
 
 ### Rapidly and easily plot your data to generate professional visualizations:
 
 <p align="center">
-    <img src="docs/assets/plotting_demo.gif">
+    <img src="docs/assets/graphs.gif">
 </p>
 
 ____

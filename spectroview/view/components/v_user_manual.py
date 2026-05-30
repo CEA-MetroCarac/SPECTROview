@@ -227,7 +227,7 @@ MANUAL_SECTIONS = [
     ("graphs.md",           "Graphs Workspace"),
     ("mva.md",              "Multivariate Analysis (MVA)"),
     ("calculators.md",      "Quick Calculators"),
-    ("settings.md",         "Settings & Preferences"),
+    ("settings.md",         "Settings"),
     ("save_load.md",        "Save & Load Workspace"),
     ("shortcuts.md",        "Shortcuts & Tips"),
 ]

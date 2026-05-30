@@ -1083,10 +1083,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#visualization-enhancements-inspired-by-pyfasma" class="md-nav__link">
+  <a href="#visualization-enhancements" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Visualization Enhancements Inspired by PyFASMA
+        Visualization Enhancements
       
     </span>
   </a>
@@ -1291,10 +1291,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#visualization-enhancements-inspired-by-pyfasma" class="md-nav__link">
+  <a href="#visualization-enhancements" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Visualization Enhancements Inspired by PyFASMA
+        Visualization Enhancements
       
     </span>
   </a>
@@ -1436,20 +1436,20 @@
 <li><strong>View</strong> (<code>spectroview/view/components/v_mva.py</code>): Provides the user interface with a tabbed plot panel (Scree Plot, Loadings, Scores, Residuals), interactive parameter controls, and <code>matplotlib</code> navigation toolbars for each plot. </li>
 </ul>
 <h2 id="algorithm-implementation">Algorithm Implementation<a class="headerlink" href="#algorithm-implementation" title="Permanent link">&para;</a></h2>
-<p>The PCA implementation in SPECTROview uses Singular Value Decomposition (SVD) on mean-centred data. This implements the same logic code and is mathematically identical to the approach used by <a href="https://pyfasma-def3fa.gitlab.io/">PyFASMA</a> (E. Pavlou &amp; N. Kourkoumelis, <em>Analyst</em>, 2025, DOI: <a href="https://doi.org/10.1039/D5AN00452G">10.1039/D5AN00452G</a>). Both approaches yield the exact same numerical results.</p>
-<h3 id="visualization-enhancements-inspired-by-pyfasma">Visualization Enhancements Inspired by PyFASMA<a class="headerlink" href="#visualization-enhancements-inspired-by-pyfasma" title="Permanent link">&para;</a></h3>
-<p>PyFASMA's summary plot approach inspired SPECTROview's tabbed plot interface:</p>
+<p>The PCA implementation in SPECTROview uses Singular Value Decomposition (SVD) on mean-centred data.</p>
+<h3 id="visualization-enhancements">Visualization Enhancements<a class="headerlink" href="#visualization-enhancements" title="Permanent link">&para;</a></h3>
+<p>SPECTROview features a comprehensive tabbed plot interface for visualizing results:</p>
 <ul>
-<li><strong>Scree Plot</strong>: Bar chart of individual variance + cumulative line (both packages)</li>
+<li><strong>Scree Plot</strong>: Bar chart of individual variance + cumulative line</li>
 <li><strong>Loadings</strong>: Spectral loading overlays with fill-between for visual clarity</li>
 <li><strong>Scores</strong>: 2D scatter with interactive axis selection</li>
-<li><strong>Residuals</strong>: Per-spectrum reconstruction error (new, for model quality assessment)</li>
+<li><strong>Residuals</strong>: Per-spectrum reconstruction error for model quality assessment</li>
 </ul>
 <h2 id="implemented-methods">Implemented Methods<a class="headerlink" href="#implemented-methods" title="Permanent link">&para;</a></h2>
 <h3 id="1-principal-component-analysis-pca">1. Principal Component Analysis (PCA)<a class="headerlink" href="#1-principal-component-analysis-pca" title="Permanent link">&para;</a></h3>
 <p>PCA is a dimensionality reduction technique that transforms spectra into a new coordinate system such that the greatest variance by any projection of the data comes to lie on the first coordinate (the first principal component).</p>
 <ul>
-<li><strong>Implementation Details</strong>: Implemented using Singular Value Decomposition (<code>numpy.linalg.svd</code>) on optionally mean-centered data. The approach is equivalent to <code>sklearn.decomposition.PCA</code> as used by PyFASMA [1].</li>
+<li><strong>Implementation Details</strong>: Implemented using Singular Value Decomposition (<code>numpy.linalg.svd</code>) on optionally mean-centered data.</li>
 <li><strong>Parameters</strong>:</li>
 <li><em>Components</em>: Number of principal components to retain (2–50).</li>
 <li><em>Mean centering</em>: Whether to subtract the mean spectrum before SVD (default: on). This is standard practice for spectral PCA.</li>
@@ -1502,7 +1502,7 @@ Unlike PCA, which strictly orders orthogonal components by the maximum variance 
 </ol>
 <h2 id="citations-and-references">Citations and References<a class="headerlink" href="#citations-and-references" title="Permanent link">&para;</a></h2>
 <p>If these features are used to generate results for publication, users are kindly requested to cite the relevant literature for the implemented algorithms:</p>
-<p>[1] <strong>PyFASMA &amp; PCA logic</strong>: E. Pavlou and N. Kourkoumelis, "PyFasma: an open-source, modular Python package for preprocessing and multivariate analysis of Raman spectroscopy data", <em>Analyst</em>, 2025. DOI: <a href="https://doi.org/10.1039/D5AN00452G">10.1039/D5AN00452G</a></p>
+<p>[1] <strong>PCA algorithm</strong>: Wold, S., Esbensen, K., and Geladi, P., "Principal component analysis." <em>Chemometrics and intelligent laboratory systems</em> 2.1-3 (1987): 37-52.</p>
 <p>[2] <strong>NMF algorithm</strong>: Lee, Daniel D., and H. Sebastian Seung, "Learning the parts of objects by non-negative matrix factorization." <em>Nature</em> 401.6755 (1999): 788-791.</p>
 
 

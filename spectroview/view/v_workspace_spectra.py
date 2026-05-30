@@ -74,7 +74,7 @@ class VWorkspaceSpectra(QWidget):
         self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(self.v_fit_results, "Fit Results")
         self.bottom_tabs.addTab(self.v_more_tab, "More")
-        self.bottom_tabs.addTab(self.v_mva, "MVA")
+        self.bottom_tabs.addTab(self.v_mva, "MVA (beta)")
         
         left_splitter.addWidget(self.v_spectra_viewer)
         left_splitter.addWidget(self.bottom_tabs)

@@ -1,6 +1,6 @@
-# Developer Guide: Vectorized Batch Fit Engine (VBF Engine)
+# Developer Guide: Vectorized Batch Fit Engine (VBF)
 
-This document provides a deep dive into the inner workings, architecture, and performance characteristics of the Vectorized Batch Fit Engine (VBF Engine) located in `spectroview/fit_engine/`.
+This document provides a deep dive into the inner workings, architecture, and performance characteristics of the Vectorized Batch Fit Engine (VBF) located in `spectroview/fit_engine/`.
 
 ---
 

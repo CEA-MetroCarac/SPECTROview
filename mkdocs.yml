@@ -42,7 +42,7 @@ theme:
 nav:
   - Home: index.md
   - User Manual:
-    - Table of contents: user_manual/index.md
+    - Home: user_manual/index.md
     - Introduction: user_manual/introduction.md
     - Installation: user_manual/installation.md
     - Supported Data: user_manual/supported_data.md

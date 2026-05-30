@@ -43,6 +43,7 @@ class VMMVA(QObject):
         self._last_nmf_result: NMFResult | None = None
         self._last_x_axis: np.ndarray | None = None
         self._last_fnames: list[str] | None = None
+        self._last_data_matrix: np.ndarray | None = None
 
     # ── Dependency injection ──────────────────────────────────────────
 
@@ -143,8 +144,13 @@ class VMMVA(QObject):
 
     # ── PCA ───────────────────────────────────────────────────────────
 
-    def run_pca(self, n_components: int):
-        """Slot: build data matrix from active spectra and run PCA."""
+    def run_pca(self, n_components: int, center: bool = True):
+        """Slot: build data matrix from active spectra and run PCA.
+
+        Args:
+            n_components: number of principal components to retain.
+            center: whether to mean-centre the data before SVD.
+        """
         try:
             X, x_axis, fnames = self._build_data_matrix()
         except ValueError as e:
@@ -152,22 +158,31 @@ class VMMVA(QObject):
             return
 
         try:
-            result = self.model.run_pca(X, n_components)
+            result = self.model.run_pca(X, n_components, center=center)
         except Exception as e:
             self.notify.emit(f"PCA failed: {e}")
             return
+
+        # Compute per-spectrum reconstruction error
+        recon_errors = self.model.reconstruction_error_per_spectrum(
+            X, result.scores, result.loadings,
+            mean_spectrum=result.mean_spectrum if center else None,
+        )
 
         # Cache for export
         self._last_pca_result = result
         self._last_nmf_result = None
         self._last_x_axis = x_axis
         self._last_fnames = fnames
+        self._last_data_matrix = X
 
         # Emit to View
         payload = {
             "result": result,
             "x_axis": x_axis,
             "fnames": fnames,
+            "reconstruction_errors": recon_errors,
+            "data_matrix": X,
         }
         self.pca_results_ready.emit(payload)
         self.notify.emit(
@@ -177,8 +192,16 @@ class VMMVA(QObject):
 
     # ── NMF ───────────────────────────────────────────────────────────
 
-    def run_nmf(self, n_components: int, max_iter: int = 500, tol: float = 1e-4):
-        """Slot: build data matrix from active spectra and run NMF."""
+    def run_nmf(self, n_components: int, max_iter: int = 500, tol: float = 1e-4,
+                seed: int = 42):
+        """Slot: build data matrix from active spectra and run NMF.
+
+        Args:
+            n_components: number of NMF components.
+            max_iter: maximum number of multiplicative update iterations.
+            tol: convergence tolerance.
+            seed: random seed for reproducibility.
+        """
         try:
             X, x_axis, fnames = self._build_data_matrix()
         except ValueError as e:
@@ -186,22 +209,31 @@ class VMMVA(QObject):
             return
 
         try:
-            result = self.model.run_nmf(X, n_components, max_iter=max_iter, tol=tol)
+            result = self.model.run_nmf(X, n_components, max_iter=max_iter,
+                                        tol=tol, seed=seed)
         except Exception as e:
             self.notify.emit(f"NMF failed: {e}")
             return
+
+        # Compute per-spectrum reconstruction error
+        recon_errors = self.model.reconstruction_error_per_spectrum(
+            X, result.W, result.H, mean_spectrum=None,
+        )
 
         # Cache for export
         self._last_nmf_result = result
         self._last_pca_result = None
         self._last_x_axis = x_axis
         self._last_fnames = fnames
+        self._last_data_matrix = X
 
         # Emit to View
         payload = {
             "result": result,
             "x_axis": x_axis,
             "fnames": fnames,
+            "reconstruction_errors": recon_errors,
+            "data_matrix": X,
         }
         self.nmf_results_ready.emit(payload)
         self.notify.emit(

@@ -287,6 +287,7 @@ class VWorkspaceSpectra(QWidget):
         self.vm_mva.nmf_results_ready.connect(self.v_mva.display_nmf_results)
         self.vm_mva.send_df_to_graphs.connect(self._send_df_to_graphs)
         self.vm_mva.notify.connect(self._show_toast_notification)
+        self.vm_mva.notify.connect(self.v_mva.set_status)
 
         vm.show_xcorrection_value.connect(self.v_fit_model_builder.set_xcorrection_value)        
         vm.spectral_range_changed.connect(self.v_fit_model_builder.set_spectral_range)

@@ -1292,7 +1292,7 @@
 <td><code>coef_noise</code></td>
 <td>1.0</td>
 <td>0 – 100</td>
-<td>Multiplier for the auto-estimated noise level (<span class="arithmatex">\(\text{coef\_noise} \times \text{estimated\_noise\_amplitude}\)</span>). Masks noisy data and suppresses ghost peaks.<br>• <strong>0</strong>: Disabled<br>• <strong>0.5-1.0</strong>: Conservative<br>• <strong>1.0-2.0</strong>: Moderate (Default)<br>• <strong>3.0+</strong>: Aggressive</td>
+<td>Multiplier for the auto-estimated noise level (coef_noise &times; estimated_noise_amplitude). Masks noisy data and suppresses ghost peaks.<br>• <strong>0</strong>: Disabled<br>• <strong>0.5-1.0</strong>: Conservative<br>• <strong>1.0-2.0</strong>: Moderate (Default)<br>• <strong>3.0+</strong>: Aggressive<br><br><em>Note: You can refer to the noise level displayed in the toolbar or activate the "Show noise level" checkbox within the View Options of the SpectraViewer to see the noise level directly on the spectra plot.</em></td>
 </tr>
 <tr>
 <td><strong>Fit Negative Values</strong></td>
@@ -1300,13 +1300,6 @@
 <td>Unchecked</td>
 <td>-</td>
 <td>When checked, negative intensity values are included in the fit. When unchecked, they are assigned zero weight.</td>
-</tr>
-<tr>
-<td><strong>Include Outliers in Fit</strong></td>
-<td>-</td>
-<td>Unchecked</td>
-<td>-</td>
-<td>When checked, statistical outlier points are included in the fit. When unchecked, they are assigned zero weight.</td>
 </tr>
 </tbody>
 </table>
@@ -1316,6 +1309,9 @@
 <hr />
 <h3 id="global-peak-limits">Global Peak Limits<a class="headerlink" href="#global-peak-limits" title="Permanent link">&para;</a></h3>
 <p>These parameters define <strong>absolute boundary conditions</strong> that are applied globally to all peaks across the application. When you add a new peak to a fit model, these limits are used to set the initial parameter bounds automatically.</p>
+<blockquote>
+<p><strong>Note</strong>: User can check the "Limits" checkbox under the PeakTable to display the actual bounds of each peak.</p>
+</blockquote>
 <table>
 <thead>
 <tr>

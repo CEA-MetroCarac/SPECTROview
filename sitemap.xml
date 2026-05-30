@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/changelog/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/</loc>
          <lastmod>2026-05-30</lastmod>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/home/</loc>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/changelog/</loc>
          <lastmod>2026-05-30</lastmod>
     </url>
     <url>
@@ -37,15 +37,15 @@
          <lastmod>2026-05-30</lastmod>
     </url>
     <url>
+         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/</loc>
+         <lastmod>2026-05-30</lastmod>
+    </url>
+    <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/calculators/</loc>
          <lastmod>2026-05-30</lastmod>
     </url>
     <url>
          <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/graphs/</loc>
-         <lastmod>2026-05-30</lastmod>
-    </url>
-    <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/home/</loc>
          <lastmod>2026-05-30</lastmod>
     </url>
     <url>

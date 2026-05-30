@@ -185,7 +185,7 @@ class VBFthread(QThread):
         
         fit_negative = bool(fit_params.get("fit_negative", False))
         if not fit_negative: 
-            weights[Y_sub < 0] = 0.0
+            weights[Y_sub < 0] = 0.0 # <--- Excludes negative points by setting weight to 0
             
         coef_noise = float(fit_params.get("coef_noise", 0))
         if coef_noise > 0:

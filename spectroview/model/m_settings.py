@@ -15,7 +15,6 @@ class MSettings:
             "max_ite": self.settings.value("fit_settings/max_ite", 200, int),
             "xtol": self.settings.value("fit_settings/xtol", 1e-4, float),
             "ftol": self.settings.value("fit_settings/ftol", 1e-4, float),
-            "fit_outliers": self.settings.value("fit_settings/fit_outliers", True, bool),
             "coef_noise": self.settings.value("fit_settings/coef_noise", 0.0, float),
             "maxshift": self.settings.value("fit_settings/maxshift", 20.0, float),
             "maxfwhm": self.settings.value("fit_settings/maxfwhm", 200.0, float),
@@ -32,7 +31,7 @@ class MSettings:
     def load_view_options(self) -> dict:
         """Load view options of spectra viewer from settings"""
         return {
-            "theme": self.settings.value("view_options/theme", "Light Mode", str),
+            "theme": self.settings.value("view_options/theme", "Dark Mode", str),
             "xaxis": self.settings.value("view_options/xaxis", "Wavenumber (cm⁻¹)", str),
             "yaxis": self.settings.value("view_options/yaxis", "Intensity (a.u.)", str),
             "yscale": self.settings.value("view_options/yscale", "Linear", str),

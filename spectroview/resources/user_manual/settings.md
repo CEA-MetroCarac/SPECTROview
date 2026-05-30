@@ -23,7 +23,6 @@ These parameters control the behavior of the **Vectorized Batch Fit (VBF)** engi
 | **f-tolerance** | `ftol` | 1×10⁻⁴ | 1×10⁻⁶ – 1×10⁻¹ | Relative tolerance for the cost function. Convergence requires: <br> \|cost<sub>n</sub> - cost<sub>n-1</sub>\| / \|cost<sub>n</sub>\| &lt; ftol |
 | **Noise Threshold Coefficient** | `coef_noise` | 1.0 | 0 – 100 | Multiplier for the auto-estimated noise level (coef_noise &times; estimated_noise_amplitude). Masks noisy data and suppresses ghost peaks.<br>• **0**: Disabled<br>• **0.5-1.0**: Conservative<br>• **1.0-2.0**: Moderate (Default)<br>• **3.0+**: Aggressive<br><br>*Note: You can refer to the noise level displayed in the toolbar or activate the "Show noise level" checkbox within the View Options of the SpectraViewer to see the noise level directly on the spectra plot.* |
 | **Fit Negative Values** | - | Unchecked | - | When checked, negative intensity values are included in the fit. When unchecked, they are assigned zero weight. |
-| **Include Outliers in Fit** | - | Unchecked | - | When checked, statistical outlier points are included in the fit. When unchecked, they are assigned zero weight. |
 
 > **Note**: A spectrum is considered converged only when **both** `xtol` and `ftol` criteria are simultaneously satisfied.
 

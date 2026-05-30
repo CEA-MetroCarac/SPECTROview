@@ -80,9 +80,6 @@ class VSettingsDialog(QDialog):
         self.chk_fit_negative = QCheckBox("Fit negative values")
         fitting_layout.addWidget(self.chk_fit_negative)
 
-        self.chk_fit_outliers = QCheckBox("Include outliers in fit")
-        fitting_layout.addWidget(self.chk_fit_outliers)
-
         main_layout.addWidget(grp_fitting)
 
         main_layout.addSpacing(10)
@@ -192,7 +189,6 @@ class VSettingsDialog(QDialog):
     # ──────────────────────────────────────────────
     def _apply_settings(self, data: dict):
         self.chk_fit_negative.setChecked(data.get("fit_negative", False))
-        self.chk_fit_outliers.setChecked(data.get("fit_outliers", True))
         
         self.spin_max_iter.setValue(data.get("max_ite", 200))
         self.spin_x_tol.setValue(data.get("xtol", 1e-4))
@@ -209,7 +205,6 @@ class VSettingsDialog(QDialog):
     def _on_accept(self):
         self.vm.save({
             "fit_negative": self.chk_fit_negative.isChecked(),
-            "fit_outliers": self.chk_fit_outliers.isChecked(),
             "max_ite": self.spin_max_iter.value(),
             "xtol": self.spin_x_tol.value(),
             "ftol": self.spin_f_tol.value(),

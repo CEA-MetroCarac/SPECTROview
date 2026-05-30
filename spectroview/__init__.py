@@ -3,11 +3,6 @@ import sys
 from pathlib import Path
 VERSION = "26.24.1"
 
-TEXT_EXPIRE = (
-    "The current SPECTROview version has expired. Checkout the SPECTROview's "
-    "Github page (cf. About) to update newest version."
-)
-
 # Predefined axis labels for autocomplete
 AXIS_LABELS = [
     "Si peak position (cm$^{-1}$)",
@@ -22,23 +17,6 @@ PEAK_MODELS = [
     "GaussianAsym", "LorentzianAsym", "Fano",
     "DecaySingleExp", "DecayBiExp"
 ]
-
-FIT_PARAMS = {
-    'method': 'leastsq',
-    'fit_negative': False,
-    'fit_outliers': False,
-    'max_ite': 200,
-    'coef_noise': 1,
-    'xtol': 1.e-4,
-    'ncpus': 'auto'
-}
-
-FIT_METHODS = {
-    'Leastsq': 'leastsq',
-    'Least_squares': 'least_squares',
-    'Nelder-Mead': 'nelder',
-    'SLSQP': 'slsqp'
-}
 
 PALETTE = [
     'jet', 'viridis', 'plasma', 'magma',
@@ -62,12 +40,6 @@ MARKERS = [
 ]
 
 DEFAULT_MARKERS = ['o'] * len(MARKERS)
-
-LEGEND_LOCATION = [
-    'best', 'upper right', 'upper left', 'lower left', 'lower right',
-    'center left', 'center right', 'lower center',
-    'upper center', 'center'
-]
 
 X_AXIS_UNIT = [
     'Wavenumber (cm⁻¹)',

@@ -779,6 +779,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Settings &amp; Preferences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fit-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fit Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#global-peak-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global Peak Limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fit-model-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fit Model Path
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1142,6 +1181,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Settings &amp; Preferences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fit-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fit Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#global-peak-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global Peak Limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fit-model-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fit Model Path
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1167,23 +1245,117 @@
   <h1>Settings</h1>
 
 <h2 id="settings-preferences">Settings &amp; Preferences<a class="headerlink" href="#settings-preferences" title="Permanent link">&para;</a></h2>
-<p>You can customize the core behavior of the SPECTROview application by accessing the <strong>Settings</strong> menu via the gear icon in the main toolbar.</p>
+<p>Accessing the <strong>Settings</strong> menu via the gear icon in the main toolbar.</p>
 <div align="center">
-  <img src="../../user_manual_images/Settings/settings.png" alt="Tooltips demonstration" width="420"><br>
+  <img src="../../user_manual_images/settings/settings.png" alt="Settings Panel" width="420"><br>
 </div>
 
 <p><br></p>
-<ul>
-<li>
-<p><strong>Fit Parameters</strong>: Granular control over the mathematical optimization algorithms. You can precisely adjust tolerances (<code>xtol</code>, <code>ftol</code>), cap the maximum number of iterations (<code>max_ite</code>), and define the noise coefficient limit (<code>coef_noise</code>).</p>
-</li>
-<li>
-<p><strong>Global Peak Limits</strong>: Set absolute global boundary conditions for all fitted peaks across the software, including the absolute Minimum FWHM, Maximum FWHM, and Maximum Peak Shift allowed during optimization.</p>
-</li>
-<li>
-<p><strong>Fit Model Path</strong>: Specify the default storage directory for your custom, user-defined mathematical fit models.</p>
-</li>
-</ul>
+<p>The Settings panel is organized into three sections: <strong>Fit Parameters</strong>, <strong>Global Peak Limits</strong>, and <strong>Fit Model Path</strong>.</p>
+<hr />
+<h3 id="fit-parameters">Fit Parameters<a class="headerlink" href="#fit-parameters" title="Permanent link">&para;</a></h3>
+<p>These parameters control the behavior of the <strong>Vectorized Batch Fit (VBF)</strong> engine — the mathematical optimizer that performs curve fitting on your spectra. Adjusting these values directly affects fitting speed, precision, and convergence.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Setting</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description &amp; Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Maximum Iterations</strong></td>
+<td><code>max_ite</code></td>
+<td>200</td>
+<td>1 – 10,000</td>
+<td>The max number of Levenberg-Marquardt iterations per spectrum. <br>• <strong>Lower (50-100)</strong>: Faster fitting for previews.<br>• <strong>Higher (200+)</strong>: Better convergence for complex spectra.</td>
+</tr>
+<tr>
+<td><strong>x-tolerance</strong></td>
+<td><code>xtol</code></td>
+<td>1×10⁻⁴</td>
+<td>1×10⁻⁶ – 1×10⁻¹</td>
+<td>Relative tolerance for the parameter step size. Convergence requires: <br> <span class="arithmatex">\(\text{mean}(\vert\delta p\vert/\vert p\vert) &lt; \text{xtol}\)</span></td>
+</tr>
+<tr>
+<td><strong>f-tolerance</strong></td>
+<td><code>ftol</code></td>
+<td>1×10⁻⁴</td>
+<td>1×10⁻⁶ – 1×10⁻¹</td>
+<td>Relative tolerance for the cost function. Convergence requires: <br> <span class="arithmatex">\(\vert\text{cost}_{n} - \text{cost}_{n-1}\vert/\vert\text{cost}_{n}\vert &lt; \text{ftol}\)</span></td>
+</tr>
+<tr>
+<td><strong>Noise Threshold Coefficient</strong></td>
+<td><code>coef_noise</code></td>
+<td>1.0</td>
+<td>0 – 100</td>
+<td>Multiplier for the auto-estimated noise level (<span class="arithmatex">\(\text{coef\_noise} \times \text{estimated\_noise\_amplitude}\)</span>). Masks noisy data and suppresses ghost peaks.<br>• <strong>0</strong>: Disabled<br>• <strong>0.5-1.0</strong>: Conservative<br>• <strong>1.0-2.0</strong>: Moderate (Default)<br>• <strong>3.0+</strong>: Aggressive</td>
+</tr>
+<tr>
+<td><strong>Fit Negative Values</strong></td>
+<td>-</td>
+<td>Unchecked</td>
+<td>-</td>
+<td>When checked, negative intensity values are included in the fit. When unchecked, they are assigned zero weight.</td>
+</tr>
+<tr>
+<td><strong>Include Outliers in Fit</strong></td>
+<td>-</td>
+<td>Unchecked</td>
+<td>-</td>
+<td>When checked, statistical outlier points are included in the fit. When unchecked, they are assigned zero weight.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note</strong>: A spectrum is considered converged only when <strong>both</strong> <code>xtol</code> and <code>ftol</code> criteria are simultaneously satisfied.</p>
+</blockquote>
+<hr />
+<h3 id="global-peak-limits">Global Peak Limits<a class="headerlink" href="#global-peak-limits" title="Permanent link">&para;</a></h3>
+<p>These parameters define <strong>absolute boundary conditions</strong> that are applied globally to all peaks across the application. When you add a new peak to a fit model, these limits are used to set the initial parameter bounds automatically.</p>
+<table>
+<thead>
+<tr>
+<th>Limit</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description &amp; Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Max Peak Shift</strong></td>
+<td>20</td>
+<td>0 – 100</td>
+<td>Maximum allowed displacement of a peak center (<code>x0</code>) from its initial value. <br><span class="arithmatex">\(x_0 - \text{maxshift} \leq x_0^{\text{fitted}} \leq x_0 + \text{maxshift}\)</span></td>
+</tr>
+<tr>
+<td><strong>Min Peak FWHM</strong></td>
+<td>0.1</td>
+<td>0.01 – 500</td>
+<td>Minimum allowed Full Width at Half Maximum (FWHM). Prevents peaks from collapsing into delta-function artifacts.</td>
+</tr>
+<tr>
+<td><strong>Max Peak FWHM</strong></td>
+<td>200</td>
+<td>1 – 1,000</td>
+<td>Maximum allowed FWHM. Prevents peaks from broadening into flat baselines.</td>
+</tr>
+<tr>
+<td><strong>Max Peak Intensity</strong></td>
+<td>100,000</td>
+<td>1 – 1×10⁹</td>
+<td>Upper bound for peak amplitude. Prevents unrealistically high intensity values.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="fit-model-path">Fit Model Path<a class="headerlink" href="#fit-model-path" title="Permanent link">&para;</a></h3>
+<p>Specify the default storage directory for your custom fit models (saved in JSON format). The application will automatically scan this folder and load all available models for easy selection in the Fit Model Builder interface.</p>
+<p>Click <strong>Browse</strong> to select a folder, or type the path directly.</p>
 
 
 

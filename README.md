@@ -87,5 +87,5 @@ If you use SPECTROview for data processing or visualization in your research, pl
 
 Additionally, if you use the Multivariate Analysis (MVA) features to generate results for a publication, we kindly ask that you cite the following papers describing the core algorithms:
 
-- **PyFASMA & PCA logic**: E. Pavlou and N. Kourkoumelis, "PyFasma: an open-source, modular Python package for preprocessing and multivariate analysis of Raman spectroscopy data", *Analyst*, 2025. DOI: [10.1039/D5AN00452G](https://doi.org/10.1039/D5AN00452G)
+- **PCA algorithm**: Wold, S., Esbensen, K., and Geladi, P., "Principal component analysis." *Chemometrics and intelligent laboratory systems* 2.1-3 (1987): 37-52.
 - **NMF algorithm**: Lee, Daniel D., and H. Sebastian Seung, "Learning the parts of objects by non-negative matrix factorization." *Nature* 401.6755 (1999): 788-791.

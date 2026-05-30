@@ -6,9 +6,9 @@ matplotlib navigation toolbar for interactive plot exploration.
 
 References
 ----------
-.. [1] E. Pavlou and N. Kourkoumelis, "PyFasma: an open-source, modular
-       spectroscopy data", *Analyst*, 2025.
-       DOI: 10.1039/D5AN00452G
+.. [1] S. Wold, K. Esbensen, and P. Geladi, "Principal component analysis,"
+       *Chemometrics and intelligent laboratory systems*, vol. 2, no. 1-3,
+       pp. 37-52, 1987.
 .. [2] D. D. Lee and H. S. Seung, "Learning the parts of objects by
        non-negative matrix factorization," *Nature*, vol. 401, no. 6755,
        pp. 788-791, 1999.

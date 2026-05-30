@@ -7,7 +7,8 @@ SPECTROview features built-in Multivariate Analysis (MVA) tools, easily accessib
 ### Supported Algorithms
 
 #### **Principal Component Analysis (PCA)**: 
-A statistical procedure that orthogonally transforms and reduces the dimensionality of complex spectral datasets, revealing the most significant patterns of variance. The implementation uses Singular Value Decomposition (SVD), equivalent to the approach used in [PyFASMA](https://doi.org/10.1039/D5AN00452G).
+A statistical procedure that orthogonally transforms and reduces the dimensionality of complex spectral datasets, revealing the most significant patterns of variance. The implementation uses Singular Value Decomposition (SVD).
+
   - **Parameters**:
     - *Components* (2–50): Number of principal components to retain.
     - *Mean centering* (on/off): Whether to subtract the mean spectrum before analysis. Default: on.
@@ -15,6 +16,7 @@ A statistical procedure that orthogonally transforms and reduces the dimensional
 
 #### **Non-negative Matrix Factorization (NMF)**: 
 A powerful decomposition algorithm that factors the spectral data into distinct, additive, non-negative components, often representing pure chemical endmembers.
+
   - **Parameters**:
     - *Components* (2–50): Number of non-negative components to extract.
     - *Max Iterations* (50–5000): Maximum number of update iterations.
@@ -41,7 +43,7 @@ Results are displayed across multiple tabs, each with its own interactive matplo
 
 | Tab | PCA | NMF | Description |
 |-----|-----|-----|-------------|
-| **Summary** | ✅ | ✅ | A combined dashboard plot inspired by PyFASMA showing Scree, Loadings, and Scores all at once |
+| **Summary** | ✅ | ✅ | A combined dashboard plot showing Scree, Loadings, and Scores all at once |
 | **Scree Plot** | ✅ | — | Bar chart of explained variance per component with cumulative line |
 | **Loadings** | ✅ | ✅ | Spectral loading profiles overlaid on the wavenumber axis |
 | **Scores** | ✅ | ✅ | 2D scatter plot with selectable X/Y component axes |
@@ -61,5 +63,5 @@ Results are displayed across multiple tabs, each with its own interactive matplo
 
 If you use these MVA features to generate results for a publication, we kindly ask that you cite the following papers describing the underlying implementations and core algorithms:
 
-- **PyFASMA & PCA logic**: E. Pavlou and N. Kourkoumelis, "PyFasma: an open-source, modular Python package for preprocessing and multivariate analysis of Raman spectroscopy data", *Analyst*, 2025. DOI: [10.1039/D5AN00452G](https://doi.org/10.1039/D5AN00452G)
+- **PCA algorithm**: Wold, S., Esbensen, K., and Geladi, P., "Principal component analysis." *Chemometrics and intelligent laboratory systems* 2.1-3 (1987): 37-52.
 - **NMF algorithm**: Lee, Daniel D., and H. Sebastian Seung, "Learning the parts of objects by non-negative matrix factorization." *Nature* 401.6755 (1999): 788-791.

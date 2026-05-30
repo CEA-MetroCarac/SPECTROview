@@ -15,6 +15,7 @@ With its integrated visualization tools, SPECTROview streamlines your analytical
 
 ---
 
+___
 ## Key Features
 
 - **Cross-Platform Compatibility:** Fully supported on Windows, macOS, and Linux.
@@ -25,25 +26,23 @@ With its integrated visualization tools, SPECTROview streamlines your analytical
 - **Optimized User Interface:** Designed for quick inspection, filtering, and comparison of large spectral datasets.
 - **Advanced Visualization:** Dedicated workspace for generating fast, publication-ready data visualizations.
 
+
 ---
 
 ## Demo
 
 ### Three distinct workspaces for processing discrete spectra, hyperspectral data, and data visualization
 
-![General overview of SPECTROview](assets/general_demo.gif)
+![General overview of SPECTROview](assets/overview.gif)
 
 ### Build custom fit models, replicate them across datasets, fit multiple spectra simultaneously, and aggregate all best-fit results with a single click
 
-![Fitting workflow demo](assets/fitting_demo.gif)
+![Fitting workflow demo](assets/fitting.gif)
 
-### Process hyperspectral maps and wafer data with high-performance batch fitting
-
-![Map workspace demo](assets/map_demo.gif)
 
 ### Rapidly and easily plot your data to generate professional visualizations
 
-![Plotting and visualization demo](assets/plotting_demo.gif)
+![Plotting and visualization demo](assets/graphs.gif)
 
 ---
 

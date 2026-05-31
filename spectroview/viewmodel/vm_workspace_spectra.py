@@ -2172,35 +2172,49 @@ class VMWorkspaceSpectra(QObject):
     
     def view_stats(self, parent_widget=None):
         """Show statistical fitting results of the selected spectrum."""
-        selected_spectra = self._get_selected_spectra()
+        fnames = self._get_selected_spectra()
         
-        if not selected_spectra:
+        if not fnames:
             self.notify.emit("No spectrum selected.")
             return
         
         # Show the 'report' of the first selected spectrum
-        spectrum = selected_spectra[0]
-        fnames = [s.fname for s in selected_spectra]
-        title = f"Fitting Report - {fnames}"
+        fname = fnames[0]
+        md = self.store.get_map_data(fname)
         
-        # Check if result_fit exists and has the necessary params attribute
-        if (hasattr(spectrum, 'result_fit') and 
-            spectrum.result_fit is not None and
-            hasattr(spectrum.result_fit, 'params') and
-            spectrum.result_fit.params is not None):
-            try:
-                text = generate_fit_report(spectrum.result_fit)
-                view_text(parent_widget, title, text)
-            except Exception as e:
-                self.notify.emit(f"Error generating fit report: {str(e)}")
-        else:
+        if not md or not md.has_fit_results():
             self.notify.emit("No fit results available for the selected spectrum. Please fit the spectrum first.")
+            return
+            
+        try:
+            local_idx = md.fnames.index(fname)
+            success = bool(md.fit_success[local_idx])
+            r2 = float(md.fit_r2[local_idx])
+            
+            report = ["[[Fit Statistics]]"]
+            report.append(f"    success    = {success}")
+            report.append(f"    R-squared  = {r2:.6f}")
+            report.append("\n[[Variables]]")
+            
+            # Apply user-defined peak labels if available
+            col_names = list(md.param_names)
+            if md.fit_model and md.fit_model.get("peak_labels"):
+                col_names = self.store._apply_peak_labels(col_names, md.fit_model["peak_labels"])
+            
+            for name, val in zip(col_names, md.peak_params[local_idx]):
+                report.append(f"    {name:15s}: {val:.6g}")
+                
+            text = "\n".join(report)
+            title = f"Fitting Report - {fname}"
+            view_text(parent_widget, title, text)
+        except Exception as e:
+            self.notify.emit(f"Error generating fit report: {str(e)}")
 
     def save_spectra_data(self, parent_widget=None):
         """Save selected spectra data (x, y) to separate txt files."""
-        selected_spectra = self._get_selected_spectra()
+        fnames = self._get_selected_spectra()
         
-        if not selected_spectra:
+        if not fnames:
             self.notify.emit("No spectrum selected.")
             return
             
@@ -2216,9 +2230,9 @@ class VMWorkspaceSpectra(QObject):
             return
             
         saved_count = 0
-        for spectrum in selected_spectra:
+        for fname in fnames:
             # Create a safe filename based on the spectrum's fname
-            base_name = str(spectrum.fname)
+            base_name = str(fname)
             # Replace invalid path characters if necessary (though usually fname is already safe)
             safe_name = "".join([c for c in base_name if c.isalpha() or c.isdigit() or c in (' ', '.', '_', '-')]).rstrip()
             if not safe_name.lower().endswith('.txt'):
@@ -2227,10 +2241,14 @@ class VMWorkspaceSpectra(QObject):
             file_path = os.path.join(dir_path, safe_name)
             
             try:
-                # spectrum.x and spectrum.y are the data arrays
-                data = np.column_stack((spectrum.x, spectrum.y))
-                np.savetxt(file_path, data, fmt='%.6f', delimiter='\t', comments='')
-                saved_count += 1
+                md = self.store.get_map_data(fname)
+                if md:
+                    local_idx = md.fnames.index(fname)
+                    x = md.x if md.x is not None else md.x0
+                    y = md.Y[local_idx] if md.Y is not None else md.Y0[local_idx]
+                    data = np.column_stack((x, y))
+                    np.savetxt(file_path, data, fmt='%.6f', delimiter='\t', comments='')
+                    saved_count += 1
             except Exception as e:
                 self.notify.emit(f"Error saving {safe_name}: {e}")
                 

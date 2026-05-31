@@ -323,17 +323,42 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         mask = idx.isin(list(active_coords))
         return df[mask]
     
-    def save_current_map_to_excel(self, file_path: str):
-        """Save the currently selected map to an Excel file."""
+    def save_current_map_to_csv(self, file_path: str):
+        """Save the currently selected map to a CSV file (readable by m_io.py)."""
         if not self.current_map_name or self.current_map_name not in self.maps:
             self.notify.emit("No map selected.")
             return
         
         try:
-            df = self.maps[self.current_map_name]
-            df.to_excel(file_path, index=False)
-            self.notify.emit(f"Map '{self.current_map_name}' saved to Excel.")
+            md = self.store.get_map_data(self.current_map_name)
+            if not md:
+                self.notify.emit("Map data not found.")
+                return
+
+            # Use processed data if available, otherwise raw data
+            x_axis = md.x if md.x is not None else md.x0
+            y_matrix = md.Y if md.Y is not None else md.Y0
+            
+            # Build DataFrame with X, Y columns followed by wavenumber columns
+            col_names = ['X', 'Y'] + [str(float(w)) for w in x_axis]
+            
+            import numpy as np
+            import pandas as pd
+            data = np.hstack([md.coords, y_matrix.astype(np.float64)])
+            df = pd.DataFrame(data, columns=col_names)
+            
+            # Ensure file has .csv extension
+            if not file_path.lower().endswith('.csv'):
+                file_path += '.csv'
+                
+            # m_io.py requires a dummy header line and semicolon separation for the 'new format'
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write("SPECTROview Map Data\n")
+            df.to_csv(file_path, sep=';', index=False, mode='a')
+            
+            self.notify.emit(f"Map '{self.current_map_name}' saved to CSV.")
         except Exception as e:
+            from PySide6.QtWidgets import QMessageBox
             QMessageBox.critical(None, "Error", f"Error saving map: {e}")
     
     def delete_current_map(self):

@@ -596,7 +596,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         dialog.exec()
     
     def _on_save_map_requested(self):
-        """Save the current map to an Excel file."""
+        """Save the current map to a CSV file."""
         
         if not self.vm.current_map_name:
             return
@@ -604,12 +604,12 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Save Map Data",
-            f"{self.vm.current_map_name}.xlsx",
-            "Excel Files (*.xlsx)"
+            f"{self.vm.current_map_name}.csv",
+            "CSV Files (*.csv)"
         )
         
         if file_path:
-            self.vm.save_current_map_to_excel(file_path)
+            self.vm.save_current_map_to_csv(file_path)
     
     def _on_select_all_spectra(self):
         """Select all spectra in the current map."""

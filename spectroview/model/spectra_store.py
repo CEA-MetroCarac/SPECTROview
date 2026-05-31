@@ -16,74 +16,6 @@ from scipy.interpolate import interp1d
 from spectroview.fit_engine.baseline import eval_baseline, eval_baseline_batch
 
 
-class BaselineProxy:
-    """A lightweight read-only proxy exposing the baseline status and configuration of a single spectrum.
-    
-    This proxy facilitates decoupling between the visual/rendering layers (such as VSpectraViewer)
-    and the core tensor structures in SpectraStore.
-    """
-    def __init__(self, config, is_subtracted):
-        self.mode = config.get("mode", "") if config else ""
-        self.coef = config.get("coef", 5) if config else 5
-        self.points = config.get("points", [[], []]) if config else [[], []]
-        self.is_subtracted = is_subtracted
-
-class SpectrumProxy:
-    """A read-write proxy that presents a single spectrum view out of a MapData tensor block.
-    
-    Acts as a bridge to retrieve or update metadata, labels, colors, and x-correction values
-    for individual spatial coordinates or list items without duplicating raw tensor data.
-    """
-    def __init__(self, md, idx=0, fname=""):
-        self.md = md
-        self.idx = idx
-        self.fname = fname
-        self.metadata = md.map_metadata or {}
-        self.xcorrection_value = getattr(md, "xcorrection_value", 0.0)
-        self.source_path = md.map_metadata.get("filepath", md.map_metadata.get("source_path", fname))
-        self.intensity_norm_factor = getattr(md, "intensity_norm_factor", 1.0)
-        is_sub = getattr(md, "is_baseline_subtracted", False)
-        if isinstance(is_sub, np.ndarray):
-            is_sub_val = bool(is_sub[idx])
-        else:
-            is_sub_val = bool(is_sub)
-        self.baseline = BaselineProxy(md.baseline_config, is_sub_val)
-
-    @property
-    def label(self):
-        idx = self.idx
-        if self.md.labels and idx < len(self.md.labels):
-            return self.md.labels[idx]
-        return self.fname
-
-    @label.setter
-    def label(self, val):
-        idx = self.idx
-        # Ensure labels list is long enough
-        if self.md.labels is None:
-            self.md.labels = []
-        while len(self.md.labels) <= idx:
-            self.md.labels.append(None)
-        self.md.labels[idx] = val
-
-    @property
-    def color(self):
-        idx = self.idx
-        if self.md.colors and idx < len(self.md.colors):
-            return self.md.colors[idx]
-        return ""
-
-    @color.setter
-    def color(self, val):
-        idx = self.idx
-        # Ensure colors list is long enough
-        if self.md.colors is None:
-            self.md.colors = []
-        while len(self.md.colors) <= idx:
-            self.md.colors.append(None)
-        self.md.colors[idx] = val
-
-
 # ═══════════════════════════════════════════════════════════════════════════
 # MapData — tensor block for a single hyperspectral map
 # ═══════════════════════════════════════════════════════════════════════════
@@ -883,3 +815,71 @@ class SpectraStore:
             area_cols[area_name] = area.round(4)
 
         return area_cols
+
+
+class BaselineProxy:
+    """A lightweight read-only proxy exposing the baseline status and configuration of a single spectrum.
+    
+    This proxy facilitates decoupling between the visual/rendering layers (such as VSpectraViewer)
+    and the core tensor structures in SpectraStore.
+    """
+    def __init__(self, config, is_subtracted):
+        self.mode = config.get("mode", "") if config else ""
+        self.coef = config.get("coef", 5) if config else 5
+        self.points = config.get("points", [[], []]) if config else [[], []]
+        self.is_subtracted = is_subtracted
+
+class SpectrumProxy:
+    """A read-write proxy that presents a single spectrum view out of a MapData tensor block.
+    
+    Acts as a bridge to retrieve or update metadata, labels, colors, and x-correction values
+    for individual spatial coordinates or list items without duplicating raw tensor data.
+    """
+    def __init__(self, md, idx=0, fname=""):
+        self.md = md
+        self.idx = idx
+        self.fname = fname
+        self.metadata = md.map_metadata or {}
+        self.xcorrection_value = getattr(md, "xcorrection_value", 0.0)
+        self.source_path = md.map_metadata.get("filepath", md.map_metadata.get("source_path", fname))
+        self.intensity_norm_factor = getattr(md, "intensity_norm_factor", 1.0)
+        is_sub = getattr(md, "is_baseline_subtracted", False)
+        if isinstance(is_sub, np.ndarray):
+            is_sub_val = bool(is_sub[idx])
+        else:
+            is_sub_val = bool(is_sub)
+        self.baseline = BaselineProxy(md.baseline_config, is_sub_val)
+
+    @property
+    def label(self):
+        idx = self.idx
+        if self.md.labels and idx < len(self.md.labels):
+            return self.md.labels[idx]
+        return self.fname
+
+    @label.setter
+    def label(self, val):
+        idx = self.idx
+        # Ensure labels list is long enough
+        if self.md.labels is None:
+            self.md.labels = []
+        while len(self.md.labels) <= idx:
+            self.md.labels.append(None)
+        self.md.labels[idx] = val
+
+    @property
+    def color(self):
+        idx = self.idx
+        if self.md.colors and idx < len(self.md.colors):
+            return self.md.colors[idx]
+        return ""
+
+    @color.setter
+    def color(self, val):
+        idx = self.idx
+        # Ensure colors list is long enough
+        if self.md.colors is None:
+            self.md.colors = []
+        while len(self.md.colors) <= idx:
+            self.md.colors.append(None)
+        self.md.colors[idx] = val

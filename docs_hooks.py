@@ -97,11 +97,13 @@ def on_pre_build(config, **kwargs):
                 return f"![image]({src})"
             body = re.sub(r'<img[^>]*?src=[\'"]([^\'"]+)[\'"][^>]*?>', fix_img, body)
             
-            # Demote headers to keep TOC clean
-            body = body.replace("\n## ", "\n### ")
-            body = body.replace("\n# ", "\n### ")
-            if body.startswith("## "): body = "### " + body[3:]
-            elif body.startswith("# "): body = "### " + body[2:]
+            # Demote headers to keep TOC clean (demote to h5 so they bypass toc_depth: 4)
+            body = body.replace("\n### ", "\n##### ")
+            body = body.replace("\n## ", "\n##### ")
+            body = body.replace("\n# ", "\n##### ")
+            if body.startswith("### "): body = "##### " + body[4:]
+            elif body.startswith("## "): body = "##### " + body[3:]
+            elif body.startswith("# "): body = "##### " + body[2:]
             
             # Prevent text immediately preceding '---' from becoming an H2
             body = re.sub(r'\n-{3,}', '\n\n---', body)

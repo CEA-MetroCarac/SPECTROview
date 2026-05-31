@@ -1,4 +1,4 @@
-# Workspace: Maps
+# **Workspace: Maps**
 
 The `Maps` workspace handles **hyperspectral map data** — spatially resolved spectral datasets where each pixel corresponds to a full spectrum. It extends the [Spectra workspace](spectra.md) via inheritance, gaining all fitting, baseline, peak-editing, and persistence capabilities for free, and adds spatial awareness, heatmap visualization, and coordinate-based operations on top.
 

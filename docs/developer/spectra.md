@@ -1,4 +1,4 @@
-# Workspace: Spectra
+# **Workspace: Spectra**
 
 The `Spectra` workspace is the core analytical environment for individual spectrum management. It handles loading, preprocessing, peak modeling, fitting, and exporting spectral data. It also serves as the **base class** that the [Maps workspace](maps.md) extends via inheritance.
 

@@ -1589,20 +1589,20 @@
 <h3 id="1-maplist-and-mapviewer"><strong>1. <code>MapList</code> and <code>MapViewer</code></strong><a class="headerlink" href="#1-maplist-and-mapviewer" title="Permanent link">&para;</a></h3>
 <p><code>MapList</code> and <code>MapViewer</code> are widgets designed for the efficient navigation and management of your hyperspectral datasets. The <code>MapList</code> displays all loaded map files, including wafer maps and standard 2D maps.</p>
 <p>Three utility buttons located on the right side of the <code>MapList</code> allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.</p>
-<div align="center">
-  <img src="../../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Switching Maps" width="250"><br>
-</div>
-
 <p>You can easily navigate between loaded 2D maps using the <code>MapList</code>. The selected map is rendered in the <code>MapViewer</code>. By default, the <code>MapViewer</code> displays a heatmap of signal "Intensity" or "Area". If the map has been fitted, you can select and visualize the heatmap of any fitted parameter.</p>
 <div align="center">
-  <img src="../../user_manual_images/Spectra_Maps/mapviewer_sliders.gif" alt="MapViewer Sliders" width="500"><br>
+  <img src="../../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Switching Maps" width="250"><br>
 </div>
 
 <ul>
 <li>Dual sliders allow you to quickly adjust the spectral range and the data range of the heatmap plot.</li>
 <li>You can open several <code>MapViewer</code> instances simultaneously to compare different fitted parameters.</li>
-<li><strong>Mask Feature</strong>: Isolate specific regions of the heatmap by defining custom, parameter-based numerical filters.</li>
 </ul>
+<div align="center">
+  <img src="../../user_manual_images/Spectra_Maps/mapviewer_sliders.gif" alt="MapViewer Sliders" width="500"><br>
+</div>
+
+<p><strong>Mask Feature</strong>: Isolate specific regions of the heatmap by defining custom, parameter-based numerical filters.</p>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/mask.png" alt="Mask configuration" width="300">
 </div>
@@ -1614,16 +1614,14 @@
 <hr />
 <h3 id="2-spectralist"><strong>2. <code>SpectraList</code></strong><a class="headerlink" href="#2-spectralist" title="Permanent link">&para;</a></h3>
 <p>The <code>SpectraList</code> displays all loaded discrete spectra (in the <code>Spectra</code> workspace) or all spectra for the currently selected map (in the <code>Maps</code> workspace) (see fig below).</p>
+<p>You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the <code>SpectraViewer</code>. Dedicated buttons allow you to select all spectra, clear your selection, display a comprehensive fit statistics report, or send the currently selected spectra to the <code>Spectra</code> workspace for isolated analysis.</p>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/spectralist.png" alt="SpectraList Widget" width="400"><br>
   <i>The <code>SpectraList</code> alongside the progress bar in the <code>Maps</code> workspace.</i>
 </div>
-<p><br></p>
-<p>The progress bar under the <code>SpectraList</code> displays real-time fitting progress (%), number of converged spectra, and elapsed time (s). A "Stop" button is provided to safely halt an ongoing fitting process.</p>
-<p>You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the <code>SpectraViewer</code>. Dedicated buttons allow you to select all spectra, clear your selection, display a comprehensive fit statistics report, or send the currently selected spectra to the <code>Spectra</code> workspace for isolated analysis.</p>
-<ul>
-<li><strong>Coloring Rules</strong>: Each spectrum in the list is automatically assigned a unique, consistent color indicator. These colors are strictly preserved even when you use the search/filter box to narrow down the list, ensuring you never lose track of which spectrum corresponds to which curve in the viewer.</li>
-</ul>
+
+<p><strong>Coloring Rules</strong>: Each spectrum in the list is automatically assigned a unique, consistent color indicator. These colors are strictly preserved even when you use the search/filter box to narrow down the list, ensuring you never lose track of which spectrum corresponds to which curve in the viewer.</p>
+<p>The <strong>Progress Bar</strong> under the <code>SpectraList</code> displays real-time fitting progress (%), number of converged spectra, and elapsed time (s). A "Stop" button is provided to safely halt an ongoing fitting process.</p>
 <h4 id="21-cross-workspace-transfer"><strong>2.1. Cross-Workspace Transfer</strong><a class="headerlink" href="#21-cross-workspace-transfer" title="Permanent link">&para;</a></h4>
 <p>When sending selected spectra from the <code>Maps</code> workspace to the <code>Spectra</code> workspace, the system uses deep-copied payload dictionaries. This means that:</p>
 <ul>
@@ -1699,10 +1697,10 @@
 <p>The <code>FitModelBuilder</code> tab is where you configure your spectral fit models. It is divided into three main panels: <code>Fitting</code>, <code>PeakTable</code>, and <code>FitModelControl</code>, each explained in the following sections.</p>
 <p>You can use global fitting parameters or adjust fitting parameters in the <code>Settings Panel</code> (see the "Settings" section for details).</p>
 <div align="center">
-  <img src="../../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="Fit Model Builder UI" width="800">
+  <img src="../../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="Fit Model Builder UI" width="800"><br>
+  <i>The <code>FitModelBuilder</code> tab featuring: (1) The <code>Fitting</code> panel (left), (2) The <code>PeakTable</code> panel (top-right), and (3) The <code>FitModelControl</code> panel (bottom-right).</i>
 </div>
 
-<p><em>The <code>FitModelBuilder</code> tab featuring: (1) The <code>Fitting</code> panel (left), (2) The <code>PeakTable</code> panel (top-right), and (3) The <code>FitModelControl</code> panel (bottom-right).</em></p>
 <h4 id="41-fitting-panel"><strong>4.1. <code>Fitting</code> Panel</strong><a class="headerlink" href="#41-fitting-panel" title="Permanent link">&para;</a></h4>
 <p>The <code>Fitting</code> panel guides you through the process of building a robust model in four logical steps:</p>
 <p><strong>Step 1: X-axis Correction (Optional)</strong>: Perform an empirical X-axis correction based on measurements from a known reference sample (e.g., a Silicon peak at exactly 520.7 cm⁻¹). Simply fit your reference data, input the theoretically correct position, and apply the shift to correct calibration offsets globally.</p>

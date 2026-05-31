@@ -218,7 +218,6 @@ class FitImageTextBrowser(QTextBrowser):
 # Ordered list of section files and their display titles
 MANUAL_SECTIONS = [
     ("index.md",            "Home"),
-    ("introduction.md",     "Introduction"),
     ("installation.md",     "Installation"),
     ("supported_data.md",   "Supported Data"),
     ("ui_overview.md",      "UI Overview"),

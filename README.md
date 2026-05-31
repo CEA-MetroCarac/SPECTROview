@@ -13,9 +13,13 @@
 
 With its integrated visualization tools, `SPECTROview` streamlines your analytical workflow by consolidating data processing and visualization into a single, cohesive application.
 
-- Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**](https://CEA-MetroCarac.github.io/SPECTROview/). A comprehensive user manual is also available [online](https://cea-metrocarac.github.io/SPECTROview/user_manual/) or directly within the application.
-- **Installation**: Instructions can be found at the bottom of this page.
-- Check out the [**Releases**](https://github.com/CEA-MetroCarac/SPECTROview/releases) page for the latest updates and new features.
+## **Documentation**
+
+Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**](https://CEA-MetroCarac.github.io/SPECTROview/):
+
+- **For Users:** A comprehensive user manual is available [online](https://cea-metrocarac.github.io/SPECTROview/user_manual/) and can also be accessed directly within the application.
+- **For Developers:** A detailed developer guide is available [here](https://cea-metrocarac.github.io/SPECTROview/developer/).
+- **Changelog:** Review the latest updates and release notes [here](https://github.com/CEA-MetroCarac/SPECTROview/releases).
 - **Getting Started**: Explore the [`/examples`](https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples) folder to familiarize yourself with supported data formats and find example datasets for practice.
 
 ---

@@ -10,16 +10,20 @@ copyright: Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
 
 theme:
   name: material
+  custom_dir: docs/overrides
+  font:
+    text: Roboto
+    code: Fira Code
   palette:
     - scheme: default
-      primary: red
-      accent: red
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: red
-      accent: red
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -28,6 +32,10 @@ theme:
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - navigation.tracking
+    - navigation.indexes
+    - navigation.footer
+    - toc.integrate
     - search.highlight
     - search.suggest
     - content.code.copy
@@ -39,10 +47,9 @@ theme:
 
 nav:
   - Home: index.md
+  - Installation: user_manual/installation.md
   - User Manual:
     - Home: user_manual/index.md
-    - Introduction: user_manual/introduction.md
-    - Installation: user_manual/installation.md
     - Supported Data: user_manual/supported_data.md
     - UI Overview: user_manual/ui_overview.md
     - Menu Bar: user_manual/menu_bar.md
@@ -92,9 +99,14 @@ markdown_extensions:
   - md_in_html
   - toc:
       permalink: true
+      toc_depth: 4
 
 plugins:
   - search
+  - minify:
+      minify_html: true
+      minify_css: true
+      minify_js: true
 
 extra:
   social:
@@ -102,6 +114,9 @@ extra:
       link: https://github.com/CEA-MetroCarac/SPECTROview
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/spectroview/
+
+extra_css:
+  - stylesheets/extra.css
 
 extra_javascript:
   - javascripts/mathjax.js

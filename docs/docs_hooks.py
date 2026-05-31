@@ -62,11 +62,60 @@ def on_pre_build(config, **kwargs):
     read the User Manual content directly from the canonical source in
     ``spectroview/resources/``.  The symlinks are removed automatically in
     :func:`on_post_build` so they never linger in the working tree.
-
-    On platforms where symlinks are not supported (or permission-restricted),
-    the hook falls back to a full directory copy.
+    
+    It also dynamically fetches GitHub releases and writes them to docs/changelog.md
     """
     docs_dir = config['docs_dir']
+    
+    # --- GitHub Releases Sync ---
+    try:
+        import urllib.request
+        import json
+        import ssl
+        import os
+        changelog_path = os.path.join(docs_dir, "changelog.md")
+        context = ssl._create_unverified_context()
+        req = urllib.request.Request("https://api.github.com/repos/CEA-MetroCarac/SPECTROview/releases")
+        req.add_header('User-Agent', 'MkDocs-Hook')
+        with urllib.request.urlopen(req, context=context, timeout=10) as response:
+            releases = json.loads(response.read().decode())
+            
+        new_markdown = "# Changelog\n\n*(Dynamically synchronized from [GitHub Releases](https://github.com/CEA-MetroCarac/SPECTROview/releases))*\n\n---\n\n"
+        for release in releases:
+            tag = release.get("tag_name", "Unknown")
+            name = release.get("name", tag)
+            date = release.get("published_at", "")[:10]
+            url = release.get("html_url", "")
+            body = release.get("body", "")
+            if body is None: body = ""
+            
+            # Convert raw <img src="..."> tags to Markdown format
+            # This ensures MkDocs properly styles, lazy-loads, and displays them.
+            import re
+            def fix_img(m):
+                src = m.group(1).replace("\\", "/")
+                return f"![image]({src})"
+            body = re.sub(r'<img[^>]*?src=[\'"]([^\'"]+)[\'"][^>]*?>', fix_img, body)
+            
+            # Demote headers to keep TOC clean (demote to h5 so they bypass toc_depth: 4)
+            body = body.replace("\n### ", "\n##### ")
+            body = body.replace("\n## ", "\n##### ")
+            body = body.replace("\n# ", "\n##### ")
+            if body.startswith("### "): body = "##### " + body[4:]
+            elif body.startswith("## "): body = "##### " + body[3:]
+            elif body.startswith("# "): body = "##### " + body[2:]
+            
+            # Prevent text immediately preceding '---' from becoming an H2
+            body = re.sub(r'\n-{3,}', '\n\n---', body)
+            
+            new_markdown += f"## [{name}]({url}) - {date}\n\n{body}\n\n---\n\n"
+            
+        with open(changelog_path, 'w', encoding='utf-8') as f:
+            f.write(new_markdown)
+    except Exception as e:
+        print(f"Failed to fetch GitHub releases: {e}")
+    # ---------------------------
+
     project_root = os.path.dirname(docs_dir)  # one level above docs/
 
     # Source paths (canonical, inside the spectroview package)

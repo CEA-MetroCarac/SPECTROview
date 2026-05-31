@@ -335,6 +335,7 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 
 | Topic | Page | Summary |
 |-------|------|---------|
+| **Data Architecture: SpectraStore** | [spectra_store.md](spectra_store.md) | `MapData`, `MapInfo`, `SpectrumProxy`, data hierarchy, preprocessing pipeline, persistence |
 | **Spectra Workspace** | [spectra.md](spectra.md) | `VMWorkspaceSpectra`, spectrum lifecycle, baseline/peak pipeline, fit model management |
 | **Maps Workspace** | [maps.md](maps.md) | `VMWorkspaceMaps`, hyperspectral data loading, heatmap rendering, coordinate handling |
 | **Graphs Workspace** | [graphs.md](graphs.md) | `VMWorkspaceGraphs`, DataFrame management, plot creation, `VGraph` rendering |

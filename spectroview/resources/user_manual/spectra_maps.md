@@ -1,4 +1,4 @@
-## **Spectra and Maps Workspaces**
+## **Workspace: Spectra and Maps**
 
 The `Maps` and `Spectra` workspaces share a unified design and many core features. However, the `Maps` workspace includes specialized tools engineered for handling large hyperspectral datasets.
 

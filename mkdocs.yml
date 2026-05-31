@@ -11,15 +11,13 @@ copyright: Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
 theme:
   name: material
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
+    - scheme: default
       primary: red
       accent: red
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
+    - scheme: slate
       primary: red
       accent: red
       toggle:
@@ -48,8 +46,8 @@ nav:
     - Supported Data: user_manual/supported_data.md
     - UI Overview: user_manual/ui_overview.md
     - Menu Bar: user_manual/menu_bar.md
-    - Spectra & Maps Workspace: user_manual/spectra_maps.md
-    - Graphs Workspace: user_manual/graphs.md
+    - Workspace Spectra & Maps: user_manual/spectra_maps.md
+    - Workspace Graphs: user_manual/graphs.md
     - Multivariate Analysis (MVA): user_manual/mva.md
     - Quick Calculators: user_manual/calculators.md
     - Settings: user_manual/settings.md
@@ -57,9 +55,10 @@ nav:
     - Shortcuts & Tips: user_manual/shortcuts.md
   - Developer Guide:
     - Architecture: developer/index.md
-    - Spectra Workspace: developer/spectra.md
-    - Maps Workspace: developer/maps.md
-    - Graphs Workspace: developer/graphs.md
+    - Data Architecture SpectraStore: developer/spectra_store.md
+    - Workspace Spectra: developer/spectra.md
+    - Workspace Maps: developer/maps.md
+    - Workspace Graphs: developer/graphs.md
     - Vectorized Batch Fit Engine (VBF): developer/vbf_engine.md
     - Multivariate Analysis (MVA): developer/mva.md
   - Changelog: changelog.md

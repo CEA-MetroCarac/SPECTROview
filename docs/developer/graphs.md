@@ -1,4 +1,4 @@
-# **Graphs Workspace**
+# **Workspace: Graphs**
 
 The `Graphs` workspace is a standalone statistical plotting environment. It manages DataFrames (from file or cross-workspace injection), applies dynamic filters, and creates publication-quality plots using `Seaborn` and `Matplotlib` inside an MDI (Multiple Document Interface) area.
 
@@ -82,33 +82,14 @@ Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure`
 
 ## **Data Flow: Creating a Plot**
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant View as VWorkspaceGraphs
-    participant VM as VMWorkspaceGraphs
-    participant VG as VGraph
-    participant MG as MGraph
-
-    User->>View: Select DataFrame, set X/Y/Z, click "Add plot"
-    View->>View: _collect_plot_config() → dict
-    View->>VM: create_graph(plot_config)
-    VM->>MG: MGraph(graph_id) + apply config
-    VM-->>View: graph model
-
-    View->>VG: VGraph(graph_id)
-    View->>VG: create_plot_widget(dpi)
-    View->>VM: apply_filters(df_name, filters)
-    VM-->>View: filtered DataFrame
-
-    View->>VG: plot(filtered_df)
-    VG->>VG: _plot_primary_axis() → seaborn
-    VG->>VG: _set_limits, _set_labels, _set_legend
-    VG-->>View: canvas rendered
-
-    View->>View: Wrap in QMdiSubWindow
-    View->>View: Add to mdi_area
-```
+1. **User Action**: The user selects a DataFrame, configures the X/Y/Z axes, and clicks "Add plot" in the `VWorkspaceGraphs` UI.
+2. **Configuration Capture**: The View calls `_collect_plot_config()` to gather all UI settings into a configuration dictionary.
+3. **Model Creation**: The View calls `vm.create_graph(plot_config)`. The ViewModel instantiates an `MGraph(graph_id)`, applies the configuration, and returns the graph model.
+4. **Widget Initialization**: The View instantiates a `VGraph(graph_id)` widget and calls `create_plot_widget(dpi)` to set up the Matplotlib canvas.
+5. **Data Filtering**: The View requests the `filtered_df` from the ViewModel by calling `vm.apply_filters(df_name, filters)`.
+6. **Rendering**: The View calls `VGraph.plot(filtered_df)`. 
+7. **Plot Execution**: `VGraph` calls `_plot_primary_axis()` to draw the data using Seaborn, then applies limits, labels, and legends before returning the rendered canvas.
+8. **UI Integration**: The View wraps the new `VGraph` widget in a `QMdiSubWindow` and adds it to the MDI area.
 
 ---
 

@@ -1,4 +1,4 @@
-## **Graphs Workspace**
+## **Workspace: Graphs**
 
 The `Graphs` workspace is exclusively dedicated to data visualization, engineered with a strong emphasis on simplicity, speed, and customization.
 

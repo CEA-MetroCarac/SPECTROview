@@ -332,9 +332,9 @@ def detect_noise_level(y):
 
 When `coef_noise > 0`, the engine computes a **noise level threshold**:
 
-\[
+$$
 \text{noise\_level} = \text{coef\_noise} \times \text{ampli\_noise}
-\]
+$$
 
 This threshold activates **two complementary mechanisms**:
 
@@ -522,8 +522,8 @@ These timings are emitted via `VBFthread.timings_ready` and printed to the conso
 
 The goodness-of-fit metric R² is computed during `build_result()`:
 
-\[
+$$
 R^2 = 1 - \frac{\sum_i w_i (y_i - \hat{y}_i)^2}{\sum_i w_i (y_i - \bar{y}_w)^2}
-\]
+$$
 
 Where \(\bar{y}_w\) is the weighted mean. When weights are present, only non-zero-weight points contribute to both the numerator and denominator, ensuring that masked regions (negative values, outliers, padding) do not artificially inflate or deflate the reported quality.

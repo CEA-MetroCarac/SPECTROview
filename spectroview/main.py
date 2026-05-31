@@ -368,7 +368,7 @@ class Main(QMainWindow):
         """Open integrated user manual MD viewer or web documentation."""
         modifiers = QApplication.keyboardModifiers()
         if modifiers & Qt.ControlModifier:
-            url = QUrl("https://cea-metrocarac.github.io/SPECTROview/user_manual/")
+            url = QUrl("https://cea-metrocarac.github.io/SPECTROview/")
             QDesktopServices.openUrl(url)
             return
 
@@ -393,7 +393,7 @@ class Main(QMainWindow):
 
     def open_releases(self):
         """Open the project's releases page."""
-        url = QUrl("https://github.com/CEA-MetroCarac/SPECTROview/releases")
+        url = QUrl("https://cea-metrocarac.github.io/SPECTROview/changelog/")
         QDesktopServices.openUrl(url)
 
     def toggle_theme(self, theme=None):

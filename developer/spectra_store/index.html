@@ -2226,19 +2226,15 @@ The <strong>dual-array design</strong> (<code>x0/Y0</code> vs <code>x/Y</code>) 
 <hr />
 <h2 id="preprocessing-pipeline">Preprocessing Pipeline<a class="headerlink" href="#preprocessing-pipeline" title="Permanent link">&para;</a></h2>
 <p>All preprocessing is <strong>non-destructive</strong>. <code>x0</code> and <code>Y0</code> are always preserved.</p>
-<pre class="mermaid"><code>graph LR
-    A["x0, Y0&lt;br/&gt;(original, immutable)"]
-    B["spectral range crop&lt;br/&gt;md.range_min, md.range_max"]
-    C["x-correction&lt;br/&gt;md.xcorrection_value"]
-    D["baseline evaluation&lt;br/&gt;batch_preprocess()"]
-    E["baseline subtract&lt;br/&gt;Y = Y – Y_baseline"]
-    F["x, Y&lt;br/&gt;(working arrays)"]
-    G["VBF Engine&lt;br/&gt;(fitting)"]
-
-    A --&gt; B --&gt; C --&gt; D --&gt; E --&gt; F --&gt; G
-
-    style A fill:#334,color:#ccc
-    style F fill:#334,color:#ccc</code></pre>
+<ol>
+<li><strong>Raw Data</strong>: <code>x0</code> and <code>Y0</code> (immutable).</li>
+<li><strong>Range Crop</strong>: Arrays are sliced between <code>md.range_min</code> and <code>md.range_max</code>.</li>
+<li><strong>X-Correction</strong>: <code>md.xcorrection_value</code> is added to the wavenumber axis.</li>
+<li><strong>Baseline Evaluation</strong>: <code>SpectraStore.batch_preprocess()</code> evaluates the baseline model for the entire tensor.</li>
+<li><strong>Baseline Subtraction</strong>: The evaluated baseline is subtracted from the cropped intensities.</li>
+<li><strong>Working Arrays</strong>: The final results are stored in <code>md.x</code> and <code>md.Y</code>.</li>
+<li><strong>Downstream Usage</strong>: These working arrays are used for all visualization and fitting operations.</li>
+</ol>
 <p><code>SpectraStore.batch_preprocess()</code> applies range crop and baseline subtraction to the entire N×M matrix in a single vectorized call. For the Spectra workspace (N=1), this processes one spectrum. For the Maps workspace (N=2500), it processes the entire map tensor in one call.</p>
 <hr />
 <h2 id="persistence">Persistence<a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h2>

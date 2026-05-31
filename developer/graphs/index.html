@@ -1953,31 +1953,16 @@
 <p>Each plot in the MDI area is a <code>VGraph</code> instance. It holds a Matplotlib <code>Figure</code> + <code>FigureCanvas</code> and renders using Seaborn plotting functions.</p>
 <hr />
 <h2 id="data-flow-creating-a-plot"><strong>Data Flow: Creating a Plot</strong><a class="headerlink" href="#data-flow-creating-a-plot" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>sequenceDiagram
-    participant User
-    participant View as VWorkspaceGraphs
-    participant VM as VMWorkspaceGraphs
-    participant VG as VGraph
-    participant MG as MGraph
-
-    User-&gt;&gt;View: Select DataFrame, set X/Y/Z, click "Add plot"
-    View-&gt;&gt;View: _collect_plot_config() → dict
-    View-&gt;&gt;VM: create_graph(plot_config)
-    VM-&gt;&gt;MG: MGraph(graph_id) + apply config
-    VM--&gt;&gt;View: graph model
-
-    View-&gt;&gt;VG: VGraph(graph_id)
-    View-&gt;&gt;VG: create_plot_widget(dpi)
-    View-&gt;&gt;VM: apply_filters(df_name, filters)
-    VM--&gt;&gt;View: filtered DataFrame
-
-    View-&gt;&gt;VG: plot(filtered_df)
-    VG-&gt;&gt;VG: _plot_primary_axis() → seaborn
-    VG-&gt;&gt;VG: _set_limits, _set_labels, _set_legend
-    VG--&gt;&gt;View: canvas rendered
-
-    View-&gt;&gt;View: Wrap in QMdiSubWindow
-    View-&gt;&gt;View: Add to mdi_area</code></pre>
+<ol>
+<li><strong>User Action</strong>: The user selects a DataFrame, configures the X/Y/Z axes, and clicks "Add plot" in the <code>VWorkspaceGraphs</code> UI.</li>
+<li><strong>Configuration Capture</strong>: The View calls <code>_collect_plot_config()</code> to gather all UI settings into a configuration dictionary.</li>
+<li><strong>Model Creation</strong>: The View calls <code>vm.create_graph(plot_config)</code>. The ViewModel instantiates an <code>MGraph(graph_id)</code>, applies the configuration, and returns the graph model.</li>
+<li><strong>Widget Initialization</strong>: The View instantiates a <code>VGraph(graph_id)</code> widget and calls <code>create_plot_widget(dpi)</code> to set up the Matplotlib canvas.</li>
+<li><strong>Data Filtering</strong>: The View requests the <code>filtered_df</code> from the ViewModel by calling <code>vm.apply_filters(df_name, filters)</code>.</li>
+<li><strong>Rendering</strong>: The View calls <code>VGraph.plot(filtered_df)</code>. </li>
+<li><strong>Plot Execution</strong>: <code>VGraph</code> calls <code>_plot_primary_axis()</code> to draw the data using Seaborn, then applies limits, labels, and legends before returning the rendered canvas.</li>
+<li><strong>UI Integration</strong>: The View wraps the new <code>VGraph</code> widget in a <code>QMdiSubWindow</code> and adds it to the MDI area.</li>
+</ol>
 <hr />
 <h2 id="plot-styles"><strong>Plot Styles</strong><a class="headerlink" href="#plot-styles" title="Permanent link">&para;</a></h2>
 <p>Each plot style maps to a specific Seaborn or custom rendering function:</p>

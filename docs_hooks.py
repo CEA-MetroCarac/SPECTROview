@@ -136,3 +136,34 @@ def _ensure_link(src: str, dest: str, *, label: str = "") -> None:
         print(f"  Copied {label}: {src} -> {dest}  (symlink unavailable)")
 
     _created_symlinks.append(dest)
+
+def on_page_markdown(markdown, page, config, files):
+    """
+    Hook to dynamically fetch GitHub releases for the changelog page.
+    """
+    if page.file.src_path == "changelog.md":
+        import urllib.request
+        import json
+        import ssl
+        try:
+            context = ssl._create_unverified_context()
+            req = urllib.request.Request("https://api.github.com/repos/CEA-MetroCarac/SPECTROview/releases")
+            req.add_header('User-Agent', 'MkDocs-Hook')
+            with urllib.request.urlopen(req, context=context, timeout=10) as response:
+                releases = json.loads(response.read().decode())
+                
+            new_markdown = "# Changelog\n\n"
+            new_markdown += "*(Dynamically synchronized from [GitHub Releases](https://github.com/CEA-MetroCarac/SPECTROview/releases))*\n\n---\n\n"
+            for release in releases:
+                tag = release.get("tag_name", "Unknown")
+                name = release.get("name", tag)
+                date = release.get("published_at", "")[:10]
+                url = release.get("html_url", "")
+                body = release.get("body", "")
+                
+                new_markdown += f"## [{name}]({url}) - {date}\n\n{body}\n\n---\n\n"
+            return new_markdown
+        except Exception as e:
+            print(f"Failed to fetch GitHub releases: {e}")
+            return markdown
+    return markdown

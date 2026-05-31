@@ -1,15 +1,27 @@
 /* docs/stylesheets/extra.css */
 :root {
-  /* Tweak the primary red to be a bit more modern/elegant */
-  --md-primary-fg-color: #D32F2F; /* Material Red 700 */
-  --md-primary-fg-color--light: #EF5350;
-  --md-primary-fg-color--dark: #B71C1C;
+  /* Tech Blue matching the banner's deep navy/blue theme */
+  --md-primary-fg-color: #0056b3;
+  --md-primary-fg-color--light: #3385ff;
+  --md-primary-fg-color--dark: #003d82;
+
+  --md-accent-fg-color: #0056b3;
+}
+
+/* Override Top Menu Bar color */
+.md-header {
+  background-color: #000819 !important;
+}
+.md-tabs {
+  background-color: #000819 !important;
 }
 
 [data-md-color-scheme="slate"] {
-  --md-primary-fg-color: #E53935;
-  --md-primary-fg-color--light: #EF5350;
-  --md-primary-fg-color--dark: #C62828;
+  --md-primary-fg-color: #3385ff;
+  --md-primary-fg-color--light: #66a3ff;
+  --md-primary-fg-color--dark: #0056b3;
+
+  --md-accent-fg-color: #3385ff;
 }
 
 /* Rounded corners for images and code blocks */
@@ -18,7 +30,7 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.md-typeset pre > code {
+.md-typeset pre>code {
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
@@ -32,15 +44,15 @@
 }
 
 /* Enhance grid cards if they use them */
-.md-typeset .grid.cards > :is(ul, ol) > li,
-.md-typeset .grid > :is(ul, ol) > li {
+.md-typeset .grid.cards> :is(ul, ol)>li,
+.md-typeset .grid> :is(ul, ol)>li {
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.md-typeset .grid.cards > :is(ul, ol) > li:hover,
-.md-typeset .grid > :is(ul, ol) > li:hover {
+.md-typeset .grid.cards> :is(ul, ol)>li:hover,
+.md-typeset .grid> :is(ul, ol)>li:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
@@ -48,8 +60,8 @@
 /* Hero Section Custom Styles */
 .tx-hero {
   margin: 0;
-  background-color: var(--md-primary-fg-color);
-  color: var(--md-primary-bg-color);
+  background-color: #000819;
+  color: #ffffff;
 }
 
 .tx-hero h1 {
@@ -66,7 +78,7 @@
 
 .tx-hero__content {
   padding-bottom: 3rem;
-  padding-top: 3rem;
+  padding-top: 0.5rem;
   text-align: center;
 }
 
@@ -74,28 +86,27 @@
   margin-top: 1.5rem;
   margin-right: 0.5rem;
   margin-left: 0.5rem;
-  color: var(--md-primary-bg-color);
+  color: #ffffff;
   background-color: transparent;
-  border: 2px solid var(--md-primary-bg-color);
+  border: 2px solid #ffffff;
   transition: background-color 0.2s, color 0.2s;
 }
 
 .tx-hero .md-button:hover,
 .tx-hero .md-button:focus {
   background-color: rgba(255, 255, 255, 0.1);
-  color: var(--md-primary-bg-color);
+  color: #ffffff;
 }
 
 .tx-hero .md-button--primary {
-  background-color: var(--md-primary-bg-color);
-  color: var(--md-primary-fg-color);
-  border-color: var(--md-primary-bg-color);
+  background-color: #ffffff;
+  color: #021f64;
+  border-color: #ffffff;
 }
 
 .tx-hero .md-button--primary:hover,
 .tx-hero .md-button--primary:focus {
-  background-color: var(--md-primary-bg-color);
-  color: var(--md-primary-fg-color--dark);
-  border-color: var(--md-primary-bg-color);
-  opacity: 0.9;
+  background-color: transparent;
+  color: #ffffff;
+  border-color: #ffffff;
 }

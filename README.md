@@ -4,7 +4,7 @@
 [![Downloads](https://img.shields.io/pypi/dm/spectroview.svg)](https://pypi.org/project/spectroview/)
 
 <p align="center">
-    <img width=100 src="docs/assets/icon.png">
+    <img width=100 src="https://raw.githubusercontent.com/CEA-MetroCarac/SPECTROview/main/docs/assets/icon.png">
 </p>
     
 ## **SPECTROview: A Tool for Spectroscopic Data Processing and Visualization**
@@ -37,19 +37,19 @@ Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**
 
 ### **Three distinct workspaces for processing discrete spectra, hyperspectral data, and data visualization:**
 <p align="center">
-    <img src="docs/assets/overview.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/SPECTROview/main/docs/assets/overview.gif">
 </p>
 
 ### **Build custom fit models, replicate them across datasets, fit multiple spectra simultaneously, and aggregate all best-fit results with a single click:**
 
 <p align="center">
-    <img src="docs/assets/fitting.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/SPECTROview/main/docs/assets/fitting.gif">
 </p>
 
 ### **Rapidly and easily plot your data to generate professional visualizations:**
 
 <p align="center">
-    <img src="docs/assets/graphs.gif">
+    <img src="https://raw.githubusercontent.com/CEA-MetroCarac/SPECTROview/main/docs/assets/graphs.gif">
 </p>
 
 ---

@@ -110,3 +110,20 @@
   color: #ffffff;
   border-color: #ffffff;
 }
+/* Force exactly 2 columns for specific card grids */
+.md-typeset .grid.cards.cards-2col > :is(ul, ol) {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* Increase text size inside these cards */
+.md-typeset .grid.cards.cards-2col > :is(ul, ol) > li {
+  font-size: 1.05em;
+  padding: 1.5rem;
+}
+
+/* On mobile, stack them into a single column */
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .grid.cards.cards-2col > :is(ul, ol) {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -9,13 +9,45 @@ hide:
 
 ### **Key Features**
 
-- **Cross-Platform Compatibility:** Fully supported on Windows, macOS, and Linux.
-- **Versatile Data Processing:** Seamlessly process both 1D spectral data and 2D hyperspectral data.
-- **High-Performance Vectorized Batch Fit Engine (`VBF Engine`):** Achieves very fast fitting speeds through batched matrix operations, capable of simultaneously fitting multiple spectra or large 2D maps.
-- **Custom Fit Models:** Construct customized fit models for specific spectroscopic profiles and reuse them to rapidly analyze new datasets.
-- **Unified Results:** Collect and compile all best-fit results with a single click.
-- **Optimized User Interface:** Designed for quick inspection, filtering, and comparison of large spectral datasets.
-- **Advanced Visualization:** Dedicated workspace for generating fast, publication-ready data visualizations.
+<div class="grid cards cards-2col" markdown>
+
+-   :material-chart-bell-curve-cumulative: __Versatile Data Processing__
+
+    ---
+
+    Seamlessly process both 1D spectral data and 2D hyperspectral data.
+
+-   :material-speedometer: __High-Performance Vectorized Batch Fit Engine (`VBF Engine`)__
+
+    ---
+
+    Achieves very fast fitting speeds through batched matrix operations, capable of simultaneously fitting multiple spectra or large 2D maps.
+
+-   :material-chart-multiline: __Custom Fit Models__
+
+    ---
+
+    Construct customized fit models for specific spectroscopic profiles and reuse them to rapidly analyze new datasets.
+
+-   :material-table-large-plus: __Unified Results__
+
+    ---
+
+    Collect and compile all best-fit results with a single click.
+
+-   :material-gesture-tap-button: __Optimized User Interface__
+
+    ---
+
+    Designed for quick inspection, filtering, and comparison of large spectral datasets.
+
+-   :material-chart-scatter-plot: __Advanced Visualization__
+
+    ---
+
+    Dedicated workspace for generating fast, publication-ready data visualizations.
+
+</div>
 
 ---
 

@@ -126,7 +126,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="red"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="red"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -136,7 +136,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="red" data-md-color-accent="red"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="red" data-md-color-accent="red"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
     
       <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -2129,25 +2129,13 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 <hr />
 <h2 id="data-flow">Data Flow<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h2>
 <h3 id="loading-spectra">Loading Spectra<a class="headerlink" href="#loading-spectra" title="Permanent link">&para;</a></h3>
-<pre class="mermaid"><code>sequenceDiagram
-    participant User
-    participant VWS as VWorkspaceSpectra
-    participant VM as VMWorkspaceSpectra
-    participant IO as m_io
-    participant SS as SpectraStore
-
-    User-&gt;&gt;VWS: drag-drop files
-    VWS-&gt;&gt;VM: load_files(paths)
-
-    loop for each file
-        VM-&gt;&gt;IO: load_spectrum_file / load_wdf_spectrum / ...
-        IO--&gt;&gt;VM: {name, x0, y0, metadata}
-        VM-&gt;&gt;SS: add_map(name, x0, Y0, coords, fnames)
-        note over SS: MapData created,&lt;br/&gt;x/Y = None (raw only)
-    end
-
-    VM--&gt;&gt;VWS: spectra_list_changed (list of dicts)
-    VWS-&gt;&gt;VWS: v_spectra_list.set_spectra_names()</code></pre>
+<ol>
+<li><strong>User Action</strong>: The user drag-and-drops files into the <code>VWorkspaceSpectra</code> UI.</li>
+<li><strong>View → ViewModel</strong>: The View calls <code>vm.load_files(paths)</code>.</li>
+<li><strong>File Parsing</strong>: For each file, the ViewModel delegates to the <code>m_io</code> module (<code>load_spectrum_file</code>, <code>load_wdf_spectrum</code>, etc.). The IO module returns a dictionary containing raw arrays (<code>x0</code>, <code>y0</code>) and metadata.</li>
+<li><strong>Data Storage</strong>: The ViewModel registers the data in the <code>SpectraStore</code> by calling <code>add_map(name, x0, Y0, coords, fnames)</code>. A new <code>MapData</code> block is created with <code>x</code> and <code>Y</code> set to <code>None</code> (raw data only).</li>
+<li><strong>UI Update</strong>: The ViewModel emits the <code>spectra_list_changed</code> signal. The View catches this and updates the <code>VSpectraList</code> sidebar.</li>
+</ol>
 <p>The <code>m_io</code> module auto-detects format from file extension. Every loader returns a uniform dict:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;spectra&quot;</span><span class="p">,</span>
@@ -2159,44 +2147,24 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 </code></pre></div>
 <p>WDF files may return multiple items (temporal series). All items are registered as separate MapData blocks.</p>
 <h3 id="selecting-spectra">Selecting Spectra<a class="headerlink" href="#selecting-spectra" title="Permanent link">&para;</a></h3>
-<pre class="mermaid"><code>sequenceDiagram
-    participant VList as VSpectraList
-    participant VM as VMWorkspaceSpectra
-    participant VViewer as VSpectraViewer
-
-    VList-&gt;&gt;VM: selection_changed(indices)
-    VM-&gt;&gt;VM: set_selected_indices() → stores fnames
-    VM-&gt;&gt;VM: _emit_selected_spectra()
-    note over VM: builds tensor payload dict&lt;br/&gt;from all selected MapData blocks
-    VM--&gt;&gt;VViewer: spectra_selection_changed(data_dict)
-    VViewer-&gt;&gt;VViewer: set_plot_data() → redraws canvas</code></pre>
+<ol>
+<li><strong>User Action</strong>: The user clicks a spectrum in <code>VSpectraList</code>.</li>
+<li><strong>View → ViewModel</strong>: The list widget emits a selection signal which calls <code>vm.set_selected_indices()</code>.</li>
+<li><strong>State Update</strong>: The ViewModel resolves indices to unique <code>fnames</code> and stores the active selection.</li>
+<li><strong>Payload Construction</strong>: The ViewModel calls <code>_emit_selected_spectra()</code>, which queries <code>SpectraStore</code> to build a <code>"type": "tensor_list"</code> payload containing the arrays for all selected spectra.</li>
+<li><strong>UI Update</strong>: The ViewModel emits <code>spectra_selection_changed(data_dict)</code>. <code>VSpectraViewer</code> receives it, calls <code>set_plot_data()</code>, and redraws the Matplotlib canvas.</li>
+</ol>
 <p>The selection payload (<code>data_dict</code>) contains pre-extracted arrays keyed by <code>"type": "tensor_list"</code> for the Spectra workspace (list of independent arrays, each potentially with a different x-axis). The Maps workspace <a href="../maps/#_emit_selected_spectra-override">overrides this</a> to emit <code>"type": "tensor"</code> (shared x-axis matrix).</p>
 <h3 id="fitting-workflow">Fitting Workflow<a class="headerlink" href="#fitting-workflow" title="Permanent link">&para;</a></h3>
-<pre class="mermaid"><code>sequenceDiagram
-    participant VFit as VFitModelBuilder
-    participant VM as VMWorkspaceSpectra
-    participant Thread as VBFthread
-    participant Engine as VBFengine
-    participant SS as SpectraStore
-
-    VFit-&gt;&gt;VM: fit_requested (or Ctrl+fit_requested)
-    VM-&gt;&gt;VM: builds task list [{map_name, indices, fit_model}]
-    VM-&gt;&gt;Thread: VBFthread(store, tasks).start()
-    VM--&gt;&gt;VFit: fit_in_progress(True) → disable buttons
-
-    loop per task
-        Thread-&gt;&gt;Engine: fit_spectra(x, Y_sub, fit_model, weights)
-        Engine--&gt;&gt;Thread: p_full, success, r2, best_fits, Y_peaks
-        Thread-&gt;&gt;SS: set_fit_results(map_name, indices, ...)
-        Thread-&gt;&gt;Thread: write Y_bestfit, Y_peaks to md
-        Thread--&gt;&gt;VM: progress_changed(current, total, pct, elapsed)
-        VM--&gt;&gt;VFit: fit_progress_updated → progress bar
-    end
-
-    Thread--&gt;&gt;VM: finished()
-    VM-&gt;&gt;VM: _on_fit_finished()
-    VM--&gt;&gt;VFit: fit_in_progress(False)
-    VM--&gt;&gt;VViewer: spectra_selection_changed → redraws</code></pre>
+<ol>
+<li><strong>User Action</strong>: The user clicks "Fit" in <code>VFitModelBuilder</code>.</li>
+<li><strong>Task Construction</strong>: The ViewModel builds a list of tasks (one per map/spectrum) containing <code>indices</code> and the <code>fit_model</code> dictionary.</li>
+<li><strong>Thread Launch</strong>: The ViewModel instantiates <code>VBFthread(store, tasks)</code> and starts it. The UI buttons are disabled via the <code>fit_in_progress(True)</code> signal.</li>
+<li><strong>Engine Execution (Background)</strong>: For each task, the thread calls the <code>VBFengine.fit_spectra(x, Y_sub, fit_model, weights)</code>.</li>
+<li><strong>Result Storage (Background)</strong>: As fits complete, the thread directly writes results to the <code>SpectraStore</code> via <code>set_fit_results()</code> and updates the <code>Y_bestfit</code> and <code>Y_peaks</code> arrays on the <code>MapData</code> object.</li>
+<li><strong>Progress Updates</strong>: The thread emits progress signals which the ViewModel relays to the View's progress bar.</li>
+<li><strong>Completion</strong>: The thread emits <code>finished()</code>. The ViewModel catches this, calls <code>_on_fit_finished()</code>, re-enables the UI, and triggers a canvas redraw.</li>
+</ol>
 <blockquote>
 <p>[!NOTE]
 <code>VBFthread</code> calls <code>store.set_fit_results()</code> directly from the worker thread. This is safe because PySide6 allows writes to pure Python/NumPy objects from non-GUI threads, as long as no Qt widget operations occur. The <code>finished()</code> signal then triggers UI updates on the main thread.</p>

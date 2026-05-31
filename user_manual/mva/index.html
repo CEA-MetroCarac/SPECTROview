@@ -742,7 +742,7 @@
   <a href="#principal-component-analysis-pca" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Principal Component Analysis (PCA):
+        Principal Component Analysis (PCA)
       
     </span>
   </a>
@@ -753,7 +753,7 @@
   <a href="#non-negative-matrix-factorization-nmf" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Non-negative Matrix Factorization (NMF):
+        Non-negative Matrix Factorization (NMF)
       
     </span>
   </a>
@@ -1267,7 +1267,7 @@
   <a href="#principal-component-analysis-pca" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Principal Component Analysis (PCA):
+        Principal Component Analysis (PCA)
       
     </span>
   </a>
@@ -1278,7 +1278,7 @@
   <a href="#non-negative-matrix-factorization-nmf" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Non-negative Matrix Factorization (NMF):
+        Non-negative Matrix Factorization (NMF)
       
     </span>
   </a>
@@ -1378,13 +1378,13 @@
 
   <h1>Multivariate Analysis (MVA)</h1>
 
-<h2 id="multivariate-analysis-mva">Multivariate Analysis (MVA)<a class="headerlink" href="#multivariate-analysis-mva" title="Permanent link">&para;</a></h2>
-<p>SPECTROview features built-in Multivariate Analysis (MVA) tools, easily accessible from the dedicated <strong>MVA tab</strong> located within both the Spectra and Maps workspaces.</p>
+<h2 id="multivariate-analysis-mva"><strong>Multivariate Analysis (MVA)</strong><a class="headerlink" href="#multivariate-analysis-mva" title="Permanent link">&para;</a></h2>
+<p><code>SPECTROview</code> features built-in Multivariate Analysis (MVA) tools, easily accessible from the dedicated <strong>MVA tab</strong> located within both the <code>Spectra</code> and <code>Maps</code> workspaces.</p>
 <blockquote>
 <p><strong>Note</strong>: MVA algorithms require a minimum of 2 active spectra to run.</p>
 </blockquote>
-<h3 id="supported-algorithms">Supported Algorithms<a class="headerlink" href="#supported-algorithms" title="Permanent link">&para;</a></h3>
-<h4 id="principal-component-analysis-pca"><strong>Principal Component Analysis (PCA)</strong>:<a class="headerlink" href="#principal-component-analysis-pca" title="Permanent link">&para;</a></h4>
+<h3 id="supported-algorithms"><strong>Supported Algorithms</strong><a class="headerlink" href="#supported-algorithms" title="Permanent link">&para;</a></h3>
+<h4 id="principal-component-analysis-pca"><strong>Principal Component Analysis (PCA)</strong><a class="headerlink" href="#principal-component-analysis-pca" title="Permanent link">&para;</a></h4>
 <p>A statistical procedure that orthogonally transforms and reduces the dimensionality of complex spectral datasets, revealing the most significant patterns of variance. The implementation uses Singular Value Decomposition (SVD).</p>
 <ul>
 <li><strong>Parameters</strong>:<ul>
@@ -1394,7 +1394,7 @@
 </li>
 <li><strong>Available Visualizations</strong>: Scree plots (variance explained), Principal Component Loadings, Score plots, and Residual reconstruction error plots.</li>
 </ul>
-<h4 id="non-negative-matrix-factorization-nmf"><strong>Non-negative Matrix Factorization (NMF)</strong>:<a class="headerlink" href="#non-negative-matrix-factorization-nmf" title="Permanent link">&para;</a></h4>
+<h4 id="non-negative-matrix-factorization-nmf"><strong>Non-negative Matrix Factorization (NMF)</strong><a class="headerlink" href="#non-negative-matrix-factorization-nmf" title="Permanent link">&para;</a></h4>
 <p>A powerful decomposition algorithm that factors the spectral data into distinct, additive, non-negative components, often representing pure chemical endmembers.</p>
 <ul>
 <li><strong>Parameters</strong>:<ul>
@@ -1411,17 +1411,17 @@
 Unlike PCA, which strictly orders orthogonal components by the maximum variance they explain, NMF finds non-orthogonal, additive components (endmembers) that mix together. Because NMF components are not orthogonal and are not sequentially ordered by variance, an isolated percentage of "variance explained" cannot be calculated for each individual component. To evaluate an NMF model, rely on the <strong>Residuals</strong> plot to assess reconstruction quality, and the <strong>Loadings</strong> to ensure components correspond to physically meaningful spectra.</p>
 </blockquote>
 <hr />
-<h3 id="user-interface">User Interface<a class="headerlink" href="#user-interface" title="Permanent link">&para;</a></h3>
+<h3 id="user-interface"><strong>User Interface</strong><a class="headerlink" href="#user-interface" title="Permanent link">&para;</a></h3>
 <p>The MVA tab features a <strong>split-panel layout</strong>:</p>
-<h4 id="left-panel-controls">Left Panel — Controls<a class="headerlink" href="#left-panel-controls" title="Permanent link">&para;</a></h4>
+<h4 id="left-panel-controls"><strong>Left Panel — Controls</strong><a class="headerlink" href="#left-panel-controls" title="Permanent link">&para;</a></h4>
 <ul>
-<li><strong>Method Selection</strong>: Choose between PCA and NMF using radio buttons.</li>
+<li><strong>Method Selection</strong>: Choose between <code>PCA</code> and <code>NMF</code> using radio buttons.</li>
 <li><strong>Parameter Controls</strong>: All adjustable parameters are available as interactive GUI elements (spinboxes, checkboxes). Only the parameters relevant to the selected method are displayed.</li>
 <li><strong>Run Button</strong>: Click "▶ Run Analysis" to execute the analysis with the current parameters.</li>
-<li><strong>Export</strong>: Send results (scores) to the Graphs workspace for further analysis.</li>
+<li><strong>Export</strong>: Send results (scores) to the <code>Graphs</code> workspace for further analysis.</li>
 </ul>
-<h4 id="right-panel-tabbed-plots">Right Panel — Tabbed Plots<a class="headerlink" href="#right-panel-tabbed-plots" title="Permanent link">&para;</a></h4>
-<p>Results are displayed across multiple tabs, each with its own interactive matplotlib toolbar (zoom, pan, save):</p>
+<h4 id="right-panel-tabbed-plots"><strong>Right Panel — Tabbed Plots</strong><a class="headerlink" href="#right-panel-tabbed-plots" title="Permanent link">&para;</a></h4>
+<p>Results are displayed across multiple tabs, each with its own interactive <code>matplotlib</code> toolbar (zoom, pan, save):</p>
 <table>
 <thead>
 <tr>
@@ -1464,16 +1464,16 @@ Unlike PCA, which strictly orders orthogonal components by the maximum variance 
 </tr>
 </tbody>
 </table>
-<h3 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h3>
+<h3 id="tips"><strong>Tips</strong><a class="headerlink" href="#tips" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Use the <strong>Scree Plot</strong> to determine the optimal number of components (look for the "elbow" in the cumulative variance curve).</li>
 <li>The <strong>Loadings</strong> plot shows which spectral features contribute most to each component.</li>
 <li>The <strong>Scores</strong> plot reveals groupings and outliers in your dataset.</li>
 <li>The <strong>Residuals</strong> tab helps identify spectra that are poorly reconstructed by the model.</li>
-<li>Each plot tab includes a <strong>matplotlib toolbar</strong> for zooming, panning, and saving figures.</li>
+<li>Each plot tab includes a <strong><code>matplotlib</code> toolbar</strong> for zooming, panning, and saving figures.</li>
 </ul>
 <hr />
-<h3 id="citations-and-references">Citations and References<a class="headerlink" href="#citations-and-references" title="Permanent link">&para;</a></h3>
+<h3 id="citations-and-references"><strong>Citations and References</strong><a class="headerlink" href="#citations-and-references" title="Permanent link">&para;</a></h3>
 <p>If you use these MVA features to generate results for a publication, we kindly ask that you cite the following papers describing the underlying implementations and core algorithms:</p>
 <ul>
 <li><strong>PCA algorithm</strong>: Wold, S., Esbensen, K., and Geladi, P., "Principal component analysis." <em>Chemometrics and intelligent laboratory systems</em> 2.1-3 (1987): 37-52.</li>

@@ -1426,44 +1426,44 @@
   
 
 
-<h1 id="multivariate-analysis-mva-of-raman-spectroscopic-data">Multivariate Analysis (MVA) of Raman Spectroscopic Data<a class="headerlink" href="#multivariate-analysis-mva-of-raman-spectroscopic-data" title="Permanent link">&para;</a></h1>
-<p>This document provides a technical overview of the Multivariate Analysis (MVA) features implemented in SPECTROview.</p>
-<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<h1 id="multivariate-analysis-mva-of-raman-spectroscopic-data"><strong>Multivariate Analysis (MVA) of Raman Spectroscopic Data</strong><a class="headerlink" href="#multivariate-analysis-mva-of-raman-spectroscopic-data" title="Permanent link">&para;</a></h1>
+<p>This document provides a technical overview of the Multivariate Analysis (MVA) features implemented in <code>SPECTROview</code>.</p>
+<h2 id="architecture"><strong>Architecture</strong><a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
 <p>The MVA feature follows the MVVM (Model-View-ViewModel) architectural pattern:</p>
 <ul>
 <li><strong>Model</strong> (<code>spectroview/model/m_mva.py</code>): Contains the core mathematics for MVA techniques, specifically Principal Component Analysis (PCA) and Non-negative Matrix Factorization (NMF). Uses standard numerical libraries (<code>numpy</code>, <code>scipy</code>) without requiring extra dependencies like <code>scikit-learn</code>.</li>
 <li><strong>ViewModel</strong> (<code>spectroview/viewmodel/vm_mva.py</code>): Orchestrates the data flow. It extracts preprocessed data from active spectra, invokes the Model to perform calculations, caches results, and computes per-spectrum reconstruction errors.</li>
-<li><strong>View</strong> (<code>spectroview/view/components/v_mva.py</code>): Provides the user interface with a tabbed plot panel (Scree Plot, Loadings, Scores, Residuals), interactive parameter controls, and <code>matplotlib</code> navigation toolbars for each plot. </li>
+<li><strong>View</strong> (<code>spectroview/view/components/v_mva.py</code>): Provides the user interface with a tabbed plot panel (Scree Plot, Loadings, Scores, Residuals), interactive parameter controls, and <code>matplotlib</code> navigation toolbars for each plot.</li>
 </ul>
-<h2 id="algorithm-implementation">Algorithm Implementation<a class="headerlink" href="#algorithm-implementation" title="Permanent link">&para;</a></h2>
-<p>The PCA implementation in SPECTROview uses Singular Value Decomposition (SVD) on mean-centred data.</p>
-<h3 id="visualization-enhancements">Visualization Enhancements<a class="headerlink" href="#visualization-enhancements" title="Permanent link">&para;</a></h3>
-<p>SPECTROview features a comprehensive tabbed plot interface for visualizing results:</p>
+<h2 id="algorithm-implementation"><strong>Algorithm Implementation</strong><a class="headerlink" href="#algorithm-implementation" title="Permanent link">&para;</a></h2>
+<p>The PCA implementation in <code>SPECTROview</code> uses Singular Value Decomposition (SVD) on mean-centered data.</p>
+<h3 id="visualization-enhancements"><strong>Visualization Enhancements</strong><a class="headerlink" href="#visualization-enhancements" title="Permanent link">&para;</a></h3>
+<p><code>SPECTROview</code> features a comprehensive tabbed plot interface for visualizing results:</p>
 <ul>
 <li><strong>Scree Plot</strong>: Bar chart of individual variance + cumulative line</li>
 <li><strong>Loadings</strong>: Spectral loading overlays with fill-between for visual clarity</li>
 <li><strong>Scores</strong>: 2D scatter with interactive axis selection</li>
 <li><strong>Residuals</strong>: Per-spectrum reconstruction error for model quality assessment</li>
 </ul>
-<h2 id="implemented-methods">Implemented Methods<a class="headerlink" href="#implemented-methods" title="Permanent link">&para;</a></h2>
-<h3 id="1-principal-component-analysis-pca">1. Principal Component Analysis (PCA)<a class="headerlink" href="#1-principal-component-analysis-pca" title="Permanent link">&para;</a></h3>
-<p>PCA is a dimensionality reduction technique that transforms spectra into a new coordinate system such that the greatest variance by any projection of the data comes to lie on the first coordinate (the first principal component).</p>
+<h2 id="implemented-methods"><strong>Implemented Methods</strong><a class="headerlink" href="#implemented-methods" title="Permanent link">&para;</a></h2>
+<h3 id="1-principal-component-analysis-pca"><strong>1. Principal Component Analysis (PCA)</strong><a class="headerlink" href="#1-principal-component-analysis-pca" title="Permanent link">&para;</a></h3>
+<p>PCA is a dimensionality reduction technique that transforms spectra into a new coordinate system such that the greatest variance by any projection of the data lies on the first coordinate (the first principal component).</p>
 <ul>
 <li><strong>Implementation Details</strong>: Implemented using Singular Value Decomposition (<code>numpy.linalg.svd</code>) on optionally mean-centered data.</li>
 <li><strong>Parameters</strong>:</li>
 <li><em>Components</em>: Number of principal components to retain (2–50).</li>
 <li><em>Mean centering</em>: Whether to subtract the mean spectrum before SVD (default: on). This is standard practice for spectral PCA.</li>
-<li><strong>Visualizations</strong>: </li>
+<li><strong>Visualizations</strong>:</li>
 <li><em>Scree Plot</em>: Displays the percentage of variance explained by each principal component and the cumulative variance.</li>
 <li><em>Loadings</em>: Visualizes the spectral contribution to each principal component, with percentage of explained variance in the legend.</li>
 <li><em>Scores</em>: Provides a 2D scatter plot of the spectra projected onto the principal components, with interactive axis selection.</li>
 <li><em>Residuals</em>: Per-spectrum L2 reconstruction error for model quality assessment.</li>
 </ul>
-<h3 id="2-non-negative-matrix-factorization-nmf">2. Non-negative Matrix Factorization (NMF)<a class="headerlink" href="#2-non-negative-matrix-factorization-nmf" title="Permanent link">&para;</a></h3>
-<p>NMF factors the data matrix into two non-negative matrices (typically W and H). This is particularly useful for spectroscopic data as it yields additive, non-negative components that often correspond to physical endmembers.</p>
+<h3 id="2-non-negative-matrix-factorization-nmf"><strong>2. Non-negative Matrix Factorization (NMF)</strong><a class="headerlink" href="#2-non-negative-matrix-factorization-nmf" title="Permanent link">&para;</a></h3>
+<p>NMF factors the data matrix into two non-negative matrices (typically W and H). This is particularly useful for spectroscopic data, as it yields additive, non-negative components that often correspond to physical endmembers.</p>
 <ul>
 <li><strong>Implementation Details</strong>: Uses the Lee &amp; Seung multiplicative update rules. It iteratively updates the matrices to minimize the Frobenius norm of the reconstruction error.</li>
-<li><strong>Parameters</strong>: </li>
+<li><strong>Parameters</strong>:</li>
 <li><em>Components</em>: The number of non-negative components (or endmembers) to extract from the dataset.</li>
 <li><em>Max Iterations</em>: The maximum number of multiplicative update iterations the algorithm is allowed to perform. If the algorithm does not converge within this limit, it will stop.</li>
 <li><em>Tolerance</em>: The convergence threshold. The algorithm stops early if the relative change in the reconstruction error between successive iterations falls below this value.</li>
@@ -1477,30 +1477,30 @@
 <p><strong>Why doesn't NMF have a Scree Plot?</strong><br />
 Unlike PCA, which strictly orders orthogonal components by the maximum variance they explain, NMF finds non-orthogonal, additive components (endmembers) that mix together. Because NMF components are not orthogonal and are not sequentially ordered by variance, an isolated percentage of "variance explained" cannot be calculated for each individual component. To evaluate an NMF model, rely on the <strong>Residuals</strong> plot to assess reconstruction quality, and the <strong>Loadings</strong> to ensure components correspond to physically meaningful spectra.</p>
 </blockquote>
-<h2 id="user-interface">User Interface<a class="headerlink" href="#user-interface" title="Permanent link">&para;</a></h2>
+<h2 id="user-interface"><strong>User Interface</strong><a class="headerlink" href="#user-interface" title="Permanent link">&para;</a></h2>
 <p>The MVA view uses a split-panel layout:</p>
-<h3 id="left-panel-controls">Left Panel (Controls)<a class="headerlink" href="#left-panel-controls" title="Permanent link">&para;</a></h3>
+<h3 id="left-panel-controls"><strong>Left Panel (Controls)</strong><a class="headerlink" href="#left-panel-controls" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Method Selection</strong>: Radio buttons to switch between PCA and NMF</li>
-<li><strong>Parameter Groups</strong>: Separate group boxes for PCA and NMF parameters, showing only the relevant parameters for the selected method</li>
-<li><strong>Run Button</strong>: Executes the analysis</li>
-<li><strong>Export Section</strong>: Send scores to the Graphs workspace</li>
+<li><strong>Method Selection</strong>: Radio buttons to switch between <code>PCA</code> and <code>NMF</code>.</li>
+<li><strong>Parameter Groups</strong>: Separate group boxes for PCA and NMF parameters, showing only the relevant parameters for the selected method.</li>
+<li><strong>Run Button</strong>: Executes the analysis.</li>
+<li><strong>Export Section</strong>: Sends scores to the <code>Graphs</code> workspace.</li>
 </ul>
-<h3 id="right-panel-tabbed-plots">Right Panel (Tabbed Plots)<a class="headerlink" href="#right-panel-tabbed-plots" title="Permanent link">&para;</a></h3>
+<h3 id="right-panel-tabbed-plots"><strong>Right Panel (Tabbed Plots)</strong><a class="headerlink" href="#right-panel-tabbed-plots" title="Permanent link">&para;</a></h3>
 <p>Each plot type occupies its own tab in a <code>QTabWidget</code>:
-- <strong>Scree Plot</strong> (PCA only): Variance explained per component
-- <strong>Loadings</strong>: Spectral loading profiles
-- <strong>Scores</strong>: Interactive 2D scatter with axis selection
-- <strong>Residuals</strong>: Per-spectrum reconstruction quality</p>
-<p>Each tab includes a <code>matplotlib NavigationToolbar</code> for zoom, pan, and save operations.</p>
-<h2 id="data-pipeline">Data Pipeline<a class="headerlink" href="#data-pipeline" title="Permanent link">&para;</a></h2>
+- <strong>Scree Plot</strong> (PCA only): Variance explained per component.
+- <strong>Loadings</strong>: Spectral loading profiles.
+- <strong>Scores</strong>: Interactive 2D scatter with axis selection.
+- <strong>Residuals</strong>: Per-spectrum reconstruction quality.</p>
+<p>Each tab includes a <code>matplotlib</code> <code>NavigationToolbar</code> for zoom, pan, and save operations.</p>
+<h2 id="data-pipeline"><strong>Data Pipeline</strong><a class="headerlink" href="#data-pipeline" title="Permanent link">&para;</a></h2>
 <ol>
-<li><strong>Selection</strong>: MVA operates exclusively on the <em>active</em> (checked) spectra in the SPECTROview workspace.</li>
-<li><strong>Preprocessing</strong>: The analysis uses the <code>spectrum.y</code> attribute, meaning it operates on data that has already undergone preprocessing steps (baseline subtraction, normalization, cropping) configured by the user.</li>
+<li><strong>Selection</strong>: MVA operates exclusively on the <em>active</em> (checked) spectra in the <code>SPECTROview</code> workspace.</li>
+<li><strong>Preprocessing</strong>: The analysis uses the <code>spectrum.y</code> attribute, meaning it operates on data that has already undergone preprocessing steps (<code>baseline</code> subtraction, normalization, cropping) configured by the user.</li>
 <li><strong>Interpolation</strong>: If the selected spectra have varying wavenumber axes, they are automatically interpolated onto a common grid (the grid of the first active spectrum) to build a consistent data matrix.</li>
-<li><strong>Export</strong>: The results (scores for PCA, W matrix for NMF) can be exported directly to the Graphs workspace for further visualization and comparison.</li>
+<li><strong>Export</strong>: The results (scores for PCA, W matrix for NMF) can be exported directly to the <code>Graphs</code> workspace for further visualization and comparison.</li>
 </ol>
-<h2 id="citations-and-references">Citations and References<a class="headerlink" href="#citations-and-references" title="Permanent link">&para;</a></h2>
+<h2 id="citations-and-references"><strong>Citations and References</strong><a class="headerlink" href="#citations-and-references" title="Permanent link">&para;</a></h2>
 <p>If these features are used to generate results for publication, users are kindly requested to cite the relevant literature for the implemented algorithms:</p>
 <p>[1] <strong>PCA algorithm</strong>: Wold, S., Esbensen, K., and Geladi, P., "Principal component analysis." <em>Chemometrics and intelligent laboratory systems</em> 2.1-3 (1987): 37-52.</p>
 <p>[2] <strong>NMF algorithm</strong>: Lee, Daniel D., and H. Sebastian Seung, "Learning the parts of objects by non-negative matrix factorization." <em>Nature</em> 401.6755 (1999): 788-791.</p>

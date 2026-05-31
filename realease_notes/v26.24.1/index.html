@@ -1086,7 +1086,7 @@
   <a href="#intelligent-noise-filtering" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Intelligent Noise Filtering:
+        Intelligent Noise Filtering
       
     </span>
   </a>
@@ -1102,7 +1102,7 @@
   <a href="#intuitive-built-in-user-manual" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📖 Intuitive Built-in User Manual:
+        📖 Intuitive Built-in User Manual
       
     </span>
   </a>
@@ -1113,7 +1113,7 @@
   <a href="#quick-calculators" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧮 Quick calculators
+        🧮 Quick Calculators
       
     </span>
   </a>
@@ -1164,42 +1164,41 @@
 
   <h1>V26.24.1</h1>
 
-<p>This release marks a fundamental milestone in the evolution of SPECTROview. At the heart of this update is the brand-new <strong>Vectorized Batch Fit</strong> engine (VBF), delivering unprecedented fitting performance, stability and precision for both hyperspectral map data and individual spectra.</p>
-<h2 id="key-highlights-performance-boosts">🚀 Key Highlights &amp; Performance Boosts<a class="headerlink" href="#key-highlights-performance-boosts" title="Permanent link">&para;</a></h2>
+<p>This release marks a fundamental milestone in the evolution of <code>SPECTROview</code>. At the heart of this update is the brand-new <strong>Vectorized Batch Fit (<code>VBF</code>) engine</strong>, delivering unprecedented fitting performance, stability, and precision for both hyperspectral map data and individual spectra.</p>
+<h2 id="key-highlights-performance-boosts">🚀 <strong>Key Highlights &amp; Performance Boosts</strong><a class="headerlink" href="#key-highlights-performance-boosts" title="Permanent link">&para;</a></h2>
 <ul>
-<li>The new container <code>SpectraStore</code> and <code>MapData</code> models now store all spectroscopic &amp; numerical data natively as contiguous NumPy arrays, eliminating the overhead of legacy per-row instances and allowing for fully vectorized preprocessing.</li>
-<li><strong>Astounding Fit Speeds (Up to 70x Faster)</strong>: The new VBF engine combined with the new tensor-centric container  <code>SpectraStore</code> can now process all spectra simultaneously as 2D/3D tensors, radically accelerates fitting times. Fitting a 2D map with several thousands of pixels is now virtually instantaneous. Massive maps with tens of thousands of pixels are handled seamlessly all on a standard CPU (tested on an Intel Core i5 8th Gen, 16GB RAM, no dedicated GPU required).</li>
-<li><strong>Reduced Workspace Size &amp; Faster Loading</strong>: The new architecture utilizes a highly optimized, ZIP-backed serialization format (NumPy <code>.npz</code> arrays + JSON metadata). This reduces <code>.maps</code>, <code>.spectra</code>, and <code>.graphs</code> file sizes by <strong>&gt;50%</strong> and cuts workspace load times in half.</li>
-<li><strong>Faster Application Startup</strong>: Through optimized library imports and core refactoring, application start-up time has been reduced by <strong>&gt;60%</strong> (launching in under 4 seconds on a standard PC).</li>
+<li><strong>Vectorized Preprocessing:</strong> The new <code>SpectraStore</code> and <code>MapData</code> models store all spectroscopic and numerical data natively as contiguous NumPy arrays. This eliminates the overhead of legacy per-row instances and allows for fully vectorized preprocessing.</li>
+<li><strong>Astounding Fit Speeds:</strong> Combined with the tensor-centric <code>SpectraStore</code>, the <code>VBF Engine</code> processes all spectra simultaneously as 2D/3D tensors. Fitting a 2D map with several thousand pixels is now virtually instantaneous (up to 70× faster than the previous version). Massive maps with tens of thousands of pixels are handled seamlessly on a standard CPU (tested on an Intel Core i5 8th Gen, 16GB RAM; no dedicated GPU required).</li>
+<li><strong>Reduced Workspace Size &amp; Faster Loading:</strong> The new architecture utilizes a highly optimized, ZIP-backed serialization format (NumPy <code>.npz</code> arrays + JSON metadata). This reduces <code>.maps</code>, <code>.spectra</code>, and <code>.graphs</code> file sizes by <strong>&gt;50%</strong> and cuts workspace load times in half.</li>
+<li><strong>Faster Application Startup:</strong> Through optimized library imports and core refactoring, application start-up time has been reduced by <strong>&gt;60%</strong> (launching in under 4 seconds on a standard PC).</li>
 </ul>
 <hr />
-<h3 id="intelligent-noise-filtering">Intelligent Noise Filtering:<a class="headerlink" href="#intelligent-noise-filtering" title="Permanent link">&para;</a></h3>
-<p>The <code>VBF</code> engine features a native noise detection capability (<code>coef_noise</code> threshold that user can adjust via <code>SettingPanel</code>):
-- Automatically detects pixel regions that contain only baseline noise or substrate signals and filters them out of the active fit.
-- By skipping LM iterations on pure noise, the optimizer avoids calculating "ghost peaks," prevents parameter cross-talk, stabilizes the fit, and produces much cleaner maps without any post-procssing.</p>
+<h3 id="intelligent-noise-filtering"><strong>Intelligent Noise Filtering</strong><a class="headerlink" href="#intelligent-noise-filtering" title="Permanent link">&para;</a></h3>
+<p>The <code>VBF Engine</code> features native noise detection capabilities (the <code>coef_noise</code> threshold, adjustable via the <code>Settings Panel</code>):</p>
+<ul>
+<li>Automatically detects pixel regions containing only baseline noise or substrate signals and filters them out of the active fit.</li>
+<li>By skipping Levenberg-Marquardt (LM) iterations on pure noise, the optimizer avoids calculating "ghost peaks," prevents parameter cross-talk, stabilizes the fit, and produces much cleaner parameter maps without requiring post-processing.</li>
+</ul>
 <p><img width="800" alt="demo noise filtering" src="https://github.com/user-attachments/assets/cf811099-71a6-4b92-bfcf-8a3e7eb3bfef" /></p>
-<p><em>Fig : </em><em>(Left)</em><em> Fitted without noise filtering (<code>coef_noise</code>=0); the user need manually mask regions of pure noise or substrate signal. </em><em>(Right)</em><em> With noise filtering enabled (<code>coef_noise</code> &gt;0), pixels in the substrate (noise) region are automatically detected and ignored, resulting in a cleaner map and faster fit.</em></p>
+<p><em>Fig: </em><em>(Left)</em><em> Fitted without noise filtering (<code>coef_noise</code> = 0); the user must manually mask regions of pure noise or substrate signal. </em><em>(Right)</em><em> With noise filtering enabled (<code>coef_noise</code> &gt; 0), pixels in the substrate (noise) region are automatically detected and ignored, resulting in a cleaner map and faster fit.</em></p>
 <hr />
-<h2 id="intuitive-built-in-user-manual">📖 <strong>Intuitive Built-in User Manual</strong>:<a class="headerlink" href="#intuitive-built-in-user-manual" title="Permanent link">&para;</a></h2>
-<p>A completely revamped, highly intuitive User Manual is now integrated directly into the application, featuring animated guides and workflows. An online version is also available <a href="https://cea-metrocarac.github.io/SPECTROview/user_manual/">here</a>.</p>
+<h2 id="intuitive-built-in-user-manual">📖 <strong>Intuitive Built-in User Manual</strong><a class="headerlink" href="#intuitive-built-in-user-manual" title="Permanent link">&para;</a></h2>
+<p>A completely revamped, highly intuitive <code>user manual</code> is now integrated directly into the application, featuring animated guides and workflows. An online version is also available <a href="https://cea-metrocarac.github.io/SPECTROview/user_manual/">here</a>.</p>
 <p><img width="1394" height="956" alt="user_manual" src="https://github.com/user-attachments/assets/4d23b1b1-4d55-4270-ae06-b88c81164c36" /></p>
 <hr />
-<h2 id="quick-calculators">🧮 Quick calculators<a class="headerlink" href="#quick-calculators" title="Permanent link">&para;</a></h2>
-<p>Accessible from the Menu Bar, users can now quickly calculate several experimental parameters on the fly, including laser spot size, depth of focus (DOF), penetration depth, laser power conversion, and unit conversions. </p>
+<h2 id="quick-calculators">🧮 <strong>Quick Calculators</strong><a class="headerlink" href="#quick-calculators" title="Permanent link">&para;</a></h2>
+<p>Accessible from the <code>Menu Bar</code>, users can now quickly calculate several experimental parameters on the fly, including laser spot size, depth of focus (DOF), penetration depth, laser power conversion, and unit conversions. </p>
 <p><img width="854" height="779" alt="ui_quick_calculation" src="https://github.com/user-attachments/assets/f58a34f6-f85f-42be-819d-6dfc83cd8d03" /></p>
-<h2 id="user-experience-workflow-improvements">🎨 User Experience &amp; Workflow Improvements<a class="headerlink" href="#user-experience-workflow-improvements" title="Permanent link">&para;</a></h2>
+<hr />
+<h2 id="user-experience-workflow-improvements">🎨 <strong>User Experience &amp; Workflow Improvements</strong><a class="headerlink" href="#user-experience-workflow-improvements" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p><strong>Graphs Workspace - Smart Customize Dialog</strong>: The Customize Dialog now intelligently and automatically switches contexts when navigating between plots. Users no longer need to manually open and close the dialog for each individual plot.</p>
-</li>
-<li>
-<p><strong>Ergonomic Tweaks</strong>: Several minor UI/UX adjustments have been introduced for a smoother, more premium interaction experience.</p>
-</li>
+<li><strong>Graphs Workspace — Smart Customize Dialog:</strong> The <code>Customize Dialog</code> now intelligently and automatically switches contexts when navigating between plots. Users no longer need to manually open and close the dialog for each individual plot.</li>
+<li><strong>Ergonomic Tweaks:</strong> Several minor UI/UX adjustments have been introduced for a smoother, more premium interaction experience.</li>
 </ul>
 <hr />
-<h2 id="for-developers">🛠 For Developers<a class="headerlink" href="#for-developers" title="Permanent link">&para;</a></h2>
+<h2 id="for-developers">🛠 <strong>For Developers</strong><a class="headerlink" href="#for-developers" title="Permanent link">&para;</a></h2>
 <ul>
-<li>For users interested in contributing to this open-source project, a detailed developer guide is now available <a href="https://cea-metrocarac.github.io/SPECTROview/developer/">here</a>.</li>
+<li>For users or developers interested in contributing to this open-source project or understanding its architecture, a detailed <code>Developer Guide</code> is now available <a href="https://cea-metrocarac.github.io/SPECTROview/developer/">here</a>.</li>
 </ul>
 
 

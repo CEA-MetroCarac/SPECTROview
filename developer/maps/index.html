@@ -1838,10 +1838,10 @@
   
 
 
-<h1 id="maps-workspace">Maps Workspace<a class="headerlink" href="#maps-workspace" title="Permanent link">&para;</a></h1>
-<p>The Maps Workspace handles <strong>hyperspectral map data</strong> — spatially resolved spectral datasets where each pixel contains a full spectrum. It extends the Spectra Workspace, inheriting all fitting and preprocessing capabilities while adding spatial awareness, heatmap visualization, and coordinate-based operations.</p>
+<h1 id="maps-workspace"><strong>Maps Workspace</strong><a class="headerlink" href="#maps-workspace" title="Permanent link">&para;</a></h1>
+<p>The <code>Maps</code> workspace handles <strong>hyperspectral map data</strong> — spatially resolved spectral datasets where each pixel contains a full spectrum. It extends the <code>Spectra</code> workspace, inheriting all fitting and preprocessing capabilities while adding spatial awareness, heatmap visualization, and coordinate-based operations.</p>
 <hr />
-<h2 id="architecture-overview">Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
+<h2 id="architecture-overview"><strong>Architecture Overview</strong><a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>graph TD
     VWM["VWorkspaceMaps"] --&gt; ML["MapList"]
     VWM --&gt; MV["MapViewer"]
@@ -1853,16 +1853,16 @@
     VMWM --&gt; MSS["SpectraStore"]
     VMWM --&gt; IO["m_io"]</code></pre>
 <hr />
-<h2 id="key-design-decision-inheritance">Key Design Decision: Inheritance<a class="headerlink" href="#key-design-decision-inheritance" title="Permanent link">&para;</a></h2>
+<h2 id="key-design-decision-inheritance"><strong>Key Design Decision: Inheritance</strong><a class="headerlink" href="#key-design-decision-inheritance" title="Permanent link">&para;</a></h2>
 <p><code>VMWorkspaceMaps</code> extends <code>VMWorkspaceSpectra</code> rather than composing a separate spectra handler. This means:</p>
 <ul>
 <li>All spectral operations (baseline, peaks, fitting, model management, persistence helpers) are <strong>inherited directly</strong>.</li>
 <li>Maps-specific behavior is added through <strong>method overrides</strong> (e.g., <code>collect_fit_results()</code> adds X/Y coordinate columns, <code>_on_fit_finished()</code> also refreshes the heatmap).</li>
-<li>The View (<code>VWorkspaceMaps</code>) similarly extends <code>VWorkspaceSpectra</code>, adding the map list panel and map viewer but reusing the spectra list, spectra viewer, and fit model builder.</li>
+<li>The View (<code>VWorkspaceMaps</code>) similarly extends <code>VWorkspaceSpectra</code>, adding the <code>MapList</code> panel and <code>MapViewer</code> but reusing the <code>SpectraList</code>, <code>SpectraViewer</code>, and <code>FitModelBuilder</code>.</li>
 </ul>
 <hr />
-<h2 id="key-classes">Key Classes<a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
-<h3 id="vmworkspacemaps-the-viewmodel"><code>VMWorkspaceMaps</code> — The ViewModel<a class="headerlink" href="#vmworkspacemaps-the-viewmodel" title="Permanent link">&para;</a></h3>
+<h2 id="key-classes"><strong>Key Classes</strong><a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
+<h3 id="vmworkspacemaps-the-viewmodel"><strong><code>VMWorkspaceMaps</code> — The ViewModel</strong><a class="headerlink" href="#vmworkspacemaps-the-viewmodel" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/viewmodel/vm_workspace_maps.py</code></p>
 <table>
 <thead>
@@ -1886,7 +1886,7 @@
 </tr>
 <tr>
 <td><strong>Fit results</strong></td>
-<td><code>collect_fit_results()</code> — overrides parent to add X, Y, Zone, Quadrant columns</td>
+<td><code>collect_fit_results()</code> — overrides parent to add <code>X</code>, <code>Y</code>, <code>Zone</code>, <code>Quadrant</code> columns</td>
 </tr>
 <tr>
 <td><strong>Heatmap data</strong></td>
@@ -1898,11 +1898,11 @@
 </tr>
 <tr>
 <td><strong>Persistence</strong></td>
-<td><code>save_work()</code>, <code>load_work()</code> — ZIP archive with numpy+gzip arrays and dataframes</td>
+<td><code>save_work()</code>, <code>load_work()</code> — ZIP archive with NumPy+gzip arrays and DataFrames</td>
 </tr>
 </tbody>
 </table>
-<h4 id="signals">Signals<a class="headerlink" href="#signals" title="Permanent link">&para;</a></h4>
+<h4 id="signals"><strong>Signals</strong><a class="headerlink" href="#signals" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">maps_list_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>         <span class="c1"># Map names list updated</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">map_data_updated</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>        <span class="c1"># Current map DataFrame changed</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">send_spectra_to_workspace</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span> <span class="c1"># Send copies to Spectra tab</span>
@@ -1910,8 +1910,8 @@
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">switch_to_graphs_tab</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>          <span class="c1"># Request tab switch to Graphs</span>
 </code></pre></div>
 <hr />
-<h2 id="data-flow-loading-a-map">Data Flow: Loading a Map<a class="headerlink" href="#data-flow-loading-a-map" title="Permanent link">&para;</a></h2>
-<h3 id="supported-formats">Supported Formats<a class="headerlink" href="#supported-formats" title="Permanent link">&para;</a></h3>
+<h2 id="data-flow-loading-a-map"><strong>Data Flow: Loading a Map</strong><a class="headerlink" href="#data-flow-loading-a-map" title="Permanent link">&para;</a></h2>
+<h3 id="supported-formats"><strong>Supported Formats</strong><a class="headerlink" href="#supported-formats" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1948,7 +1948,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="the-map-dataframe">The Map DataFrame<a class="headerlink" href="#the-map-dataframe" title="Permanent link">&para;</a></h3>
+<h3 id="the-map-dataframe"><strong>The Map DataFrame</strong><a class="headerlink" href="#the-map-dataframe" title="Permanent link">&para;</a></h3>
 <p>Every map is stored as a <code>pd.DataFrame</code> with this structure:</p>
 <table>
 <thead>
@@ -1988,7 +1988,7 @@
 <li>All remaining columns are wavenumber values (as strings), each containing intensity data.</li>
 <li>Each row represents one spatial point (one spectrum).</li>
 </ul>
-<h3 id="tensor-registration-pipeline">Tensor Registration Pipeline<a class="headerlink" href="#tensor-registration-pipeline" title="Permanent link">&para;</a></h3>
+<h3 id="tensor-registration-pipeline"><strong>Tensor Registration Pipeline</strong><a class="headerlink" href="#tensor-registration-pipeline" title="Permanent link">&para;</a></h3>
 <p>When maps are loaded, raw coordinates, wavenumber grids, and spectral matrices are registered directly into <code>SpectraStore</code> in a single batched operation:
 1. <code>self.store.add_map(name, x0, Y0, coords, fnames, is_active)</code> allocates contiguous NumPy arrays.
 2. Individual spectrum filenames are auto-generated following the coordinate pattern: <code>{map_name}_(x_pos, y_pos)</code>.
@@ -1999,15 +1999,15 @@
 <ul>
 <li>Filter spectra belonging to a specific map (<code>fname.startswith(prefix)</code>)</li>
 <li>Extract (X, Y) coordinates from the filename for fit results</li>
-<li>Match spectra back to DataFrame rows during heatmap rendering and coordinate querieseatmap rendering</li>
+<li>Match spectra back to DataFrame rows during heatmap rendering and coordinate queries</li>
 </ul>
 </div>
 <hr />
-<h2 id="heatmap-visualization">Heatmap Visualization<a class="headerlink" href="#heatmap-visualization" title="Permanent link">&para;</a></h2>
-<h3 id="vmapviewer">VMapViewer<a class="headerlink" href="#vmapviewer" title="Permanent link">&para;</a></h3>
+<h2 id="heatmap-visualization"><strong>Heatmap Visualization</strong><a class="headerlink" href="#heatmap-visualization" title="Permanent link">&para;</a></h2>
+<h3 id="vmapviewer"><strong><code>VMapViewer</code></strong><a class="headerlink" href="#vmapviewer" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/view/components/v_map_viewer.py</code> (~1273 lines)</p>
 <p>The <code>VMapViewer</code> is the most complex View component. It renders both <strong>2D maps</strong> (rectangular grids) and <strong>wafer maps</strong> (circular die-site layouts).</p>
-<h4 id="z-parameter-selection">Z-Parameter Selection<a class="headerlink" href="#z-parameter-selection" title="Permanent link">&para;</a></h4>
+<h4 id="z-parameter-selection"><strong>Z-Parameter Selection</strong><a class="headerlink" href="#z-parameter-selection" title="Permanent link">&para;</a></h4>
 <p>The Z-axis (color dimension) of the heatmap can display:</p>
 <table>
 <thead>
@@ -2035,7 +2035,7 @@
 </tr>
 </tbody>
 </table>
-<h4 id="data-pipeline-for-heatmap">Data Pipeline for Heatmap<a class="headerlink" href="#data-pipeline-for-heatmap" title="Permanent link">&para;</a></h4>
+<h4 id="data-pipeline-for-heatmap"><strong>Data Pipeline for Heatmap</strong><a class="headerlink" href="#data-pipeline-for-heatmap" title="Permanent link">&para;</a></h4>
 <pre class="mermaid"><code>graph LR
     A["Map DataFrame"] --&gt; B["X-range filter"]
     B --&gt; C{"Z param?"}
@@ -2046,7 +2046,7 @@
     F --&gt; G{"Map type?"}
     G --&gt;|"2D"| H["imshow"]
     G --&gt;|"Wafer"| I["griddata"]</code></pre>
-<h4 id="caching-strategy">Caching Strategy<a class="headerlink" href="#caching-strategy" title="Permanent link">&para;</a></h4>
+<h4 id="caching-strategy"><strong>Caching Strategy</strong><a class="headerlink" href="#caching-strategy" title="Permanent link">&para;</a></h4>
 <p>Computing <code>scipy.griddata</code> for wafer maps is expensive (~100ms+ per call). The <code>VMapViewer</code> uses a <strong>multi-key cache</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">cache_key</span> <span class="o">=</span> <span class="p">(</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">map_name</span><span class="p">,</span>          <span class="c1"># Which map</span>
@@ -2059,8 +2059,8 @@
 </code></pre></div>
 <p>The cache is:
 - <strong>Preserved</strong> across map switches (for fast switching between maps).
-- <strong>Invalidated</strong> after fitting completes via <code>clear_map_cache_requested</code> signal.</p>
-<h4 id="interactive-selection">Interactive Selection<a class="headerlink" href="#interactive-selection" title="Permanent link">&para;</a></h4>
+- <strong>Invalidated</strong> after fitting completes via the <code>clear_map_cache_requested</code> signal.</p>
+<h4 id="interactive-selection"><strong>Interactive Selection</strong><a class="headerlink" href="#interactive-selection" title="Permanent link">&para;</a></h4>
 <p>The map viewer supports three selection modes:</p>
 <table>
 <thead>
@@ -2074,7 +2074,7 @@
 <tr>
 <td><strong>Single click</strong></td>
 <td>Left-click on heatmap</td>
-<td>Selects the nearest spectrum point, highlights with red rectangle</td>
+<td>Selects the nearest spectrum point, highlights with a red rectangle</td>
 </tr>
 <tr>
 <td><strong>Rectangle drag</strong></td>
@@ -2090,8 +2090,8 @@
 </table>
 <p>Selected points are overlaid using <code>PatchCollection</code> for O(1) rendering performance (compared to individual <code>add_patch()</code> calls).</p>
 <hr />
-<h2 id="coordinate-handling">Coordinate Handling<a class="headerlink" href="#coordinate-handling" title="Permanent link">&para;</a></h2>
-<h3 id="extracting-coordinates-from-filenames">Extracting Coordinates from Filenames<a class="headerlink" href="#extracting-coordinates-from-filenames" title="Permanent link">&para;</a></h3>
+<h2 id="coordinate-handling"><strong>Coordinate Handling</strong><a class="headerlink" href="#coordinate-handling" title="Permanent link">&para;</a></h2>
+<h3 id="extracting-coordinates-from-filenames"><strong>Extracting Coordinates from Filenames</strong><a class="headerlink" href="#extracting-coordinates-from-filenames" title="Permanent link">&para;</a></h3>
 <p>Since map spectra encode their position in <code>fname</code>, coordinate extraction is done via string parsing:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span> <span class="nf">_extract_coords_for_spectra</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spectra</span><span class="p">):</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2102,13 +2102,13 @@
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x_str</span><span class="o">.</span><span class="n">strip</span><span class="p">()),</span> <span class="nb">float</span><span class="p">(</span><span class="n">y_str</span><span class="o">.</span><span class="n">strip</span><span class="p">())])</span>
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 </code></pre></div>
-<h3 id="fit-results-with-spatial-columns">Fit Results with Spatial Columns<a class="headerlink" href="#fit-results-with-spatial-columns" title="Permanent link">&para;</a></h3>
+<h3 id="fit-results-with-spatial-columns"><strong>Fit Results with Spatial Columns</strong><a class="headerlink" href="#fit-results-with-spatial-columns" title="Permanent link">&para;</a></h3>
 <p><code>collect_fit_results()</code> overrides the parent to:</p>
 <ol>
-<li>Call <code>super().collect_fit_results()</code> to build the base DataFrame</li>
-<li>Parse <code>(x, y)</code> from each <code>Filename</code> entry</li>
-<li>Insert <code>X</code> and <code>Y</code> columns at positions 1 and 2</li>
-<li>For wafer maps (<code>map_type != '2Dmap'</code>), add <code>Zone</code> and <code>Quadrant</code> columns using spatial utility functions</li>
+<li>Call <code>super().collect_fit_results()</code> to build the base DataFrame.</li>
+<li>Parse <code>(x, y)</code> from each <code>Filename</code> entry.</li>
+<li>Insert <code>X</code> and <code>Y</code> columns at positions 1 and 2.</li>
+<li>For wafer maps (<code>map_type != '2Dmap'</code>), add <code>Zone</code> and <code>Quadrant</code> columns using spatial utility functions.</li>
 </ol>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># After override, the DataFrame looks like:</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># | Filename | X   | Y   | Si_center | Si_fwhm | ... | Zone   | Quadrant |</span>
@@ -2116,7 +2116,7 @@
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># | map1     | 0.0 | 0.0 | 520.7     | 3.2     | ... | Center | NE       |</span>
 </code></pre></div>
 <hr />
-<h2 id="map-types-and-wafer-rendering">Map Types and Wafer Rendering<a class="headerlink" href="#map-types-and-wafer-rendering" title="Permanent link">&para;</a></h2>
+<h2 id="map-types-and-wafer-rendering"><strong>Map Types and Wafer Rendering</strong><a class="headerlink" href="#map-types-and-wafer-rendering" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2150,49 +2150,49 @@
 </table>
 <p>For wafer maps, the viewer:</p>
 <ol>
-<li>Draws a wafer circle outline</li>
-<li>Shows all measurement sites as gray <code>×</code> markers</li>
-<li>Interpolates Z-values onto a regular grid using <code>scipy.griddata</code></li>
-<li>Renders with <code>imshow()</code> using bilinear interpolation for smoothness</li>
+<li>Draws a wafer circle outline.</li>
+<li>Shows all measurement sites as gray <code>×</code> markers.</li>
+<li>Interpolates Z-values onto a regular grid using <code>scipy.griddata</code>.</li>
+<li>Renders with <code>imshow()</code> using bilinear interpolation for smoothness.</li>
 </ol>
 <hr />
-<h2 id="cross-workspace-features">Cross-Workspace Features<a class="headerlink" href="#cross-workspace-features" title="Permanent link">&para;</a></h2>
-<h3 id="send-spectra-to-spectra-workspace">Send Spectra to Spectra Workspace<a class="headerlink" href="#send-spectra-to-spectra-workspace" title="Permanent link">&para;</a></h3>
+<h2 id="cross-workspace-features"><strong>Cross-Workspace Features</strong><a class="headerlink" href="#cross-workspace-features" title="Permanent link">&para;</a></h2>
+<h3 id="send-spectra-to-spectra-workspace"><strong>Send Spectra to <code>Spectra</code> Workspace</strong><a class="headerlink" href="#send-spectra-to-spectra-workspace" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span> <span class="nf">send_selected_spectra_to_spectra_workspace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="c1"># Builds a list of payload dicts representing raw data and state</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">spectra_payloads</span> <span class="o">=</span> <span class="p">[]</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="c1"># ...</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">send_spectra_to_workspace</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">spectra_payloads</span><span class="p">)</span>
 </code></pre></div>
-<p>Deep copies of <code>fit_model</code> and <code>baseline_config</code> are packed into dictionaries ensuring that modifications in the Spectra tab don't affect the Maps workspace.</p>
-<h3 id="extract-profile-to-graphs">Extract Profile to Graphs<a class="headerlink" href="#extract-profile-to-graphs" title="Permanent link">&para;</a></h3>
+<p>Deep copies of <code>fit_model</code> and <code>baseline_config</code> are packed into dictionaries, ensuring that modifications in the <code>Spectra</code> tab do not affect the <code>Maps</code> workspace.</p>
+<h3 id="extract-profile-to-graphs"><strong>Extract Profile to <code>Graphs</code></strong><a class="headerlink" href="#extract-profile-to-graphs" title="Permanent link">&para;</a></h3>
 <p>When a user selects exactly 2 points on a 2D map and clicks "Extract profile":</p>
 <ol>
-<li>The <code>VMapViewer</code> computes a height profile (Z values along the line between the two points)</li>
-<li>The profile is packaged as a <code>pd.DataFrame</code> with columns <code>distance</code> and <code>values</code></li>
-<li><code>VMWorkspaceMaps.extract_and_send_profile_to_graphs()</code> injects the DataFrame into <code>VMWorkspaceGraphs</code></li>
-<li>A line plot is auto-created in the Graphs workspace</li>
-<li>The <code>switch_to_graphs_tab</code> signal triggers a tab switch</li>
+<li>The <code>VMapViewer</code> computes a height profile (Z values along the line between the two points).</li>
+<li>The profile is packaged as a <code>pd.DataFrame</code> with columns <code>distance</code> and <code>values</code>.</li>
+<li><code>VMWorkspaceMaps.extract_and_send_profile_to_graphs()</code> injects the DataFrame into <code>VMWorkspaceGraphs</code>.</li>
+<li>A line plot is auto-created in the <code>Graphs</code> workspace.</li>
+<li>The <code>switch_to_graphs_tab</code> signal triggers a tab switch.</li>
 </ol>
 <hr />
-<h2 id="persistence-workspace-saveload">Persistence: Workspace Save/Load<a class="headerlink" href="#persistence-workspace-saveload" title="Permanent link">&para;</a></h2>
-<p>Maps workspace delegates all saving/loading logic to <code>WorkspaceIO</code>. It uses a shared ZIP-backed serialization strategy which splits metadata and arrays to achieve maximum performance.</p>
-<h3 id="save-v5">Save (v5+)<a class="headerlink" href="#save-v5" title="Permanent link">&para;</a></h3>
+<h2 id="persistence-workspace-saveload"><strong>Persistence: Workspace Save/Load</strong><a class="headerlink" href="#persistence-workspace-saveload" title="Permanent link">&para;</a></h2>
+<p>The <code>Maps</code> workspace delegates all saving/loading logic to <code>WorkspaceIO</code>. It uses a shared ZIP-backed serialization strategy that splits metadata and arrays to achieve maximum performance.</p>
+<h3 id="save-v5"><strong>Save (v5+)</strong><a class="headerlink" href="#save-v5" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Handled by <code>WorkspaceIO.save_maps_workspace()</code>.</li>
 <li>Lightweight per-map metadata (such as <code>baseline_config</code>, <code>fit_model</code>, and <code>range_min</code>) is serialized to JSON inside <code>metadata.json</code>.</li>
 <li>Heavy multi-spectrum coordinate matrices and raw intensities are serialized directly into <code>arrays.npz</code> as binary NumPy matrices under <code>store_{map_name}_coords</code>, <code>store_{map_name}_x0</code>, and <code>store_{map_name}_y0</code>.</li>
 <li>Best-fit curves and statistics DataFrames are serialized to <code>dataframes.pkl</code> using highly optimized Python pickles.</li>
 </ul>
-<h3 id="backward-compatible-loading">Backward-Compatible Loading<a class="headerlink" href="#backward-compatible-loading" title="Permanent link">&para;</a></h3>
-<p>To support legacy workspaces saved with older versions of SPECTROview (which are raw JSON <code>.map</code>/<code>.maps</code> files containing alternating hex/gzip strings), a custom parser parses and upgrades them:
+<h3 id="backward-compatible-loading"><strong>Backward-Compatible Loading</strong><a class="headerlink" href="#backward-compatible-loading" title="Permanent link">&para;</a></h3>
+<p>To support legacy workspaces saved with older versions of <code>SPECTROview</code> (which are raw JSON <code>.map</code>/<code>.maps</code> files containing alternating hex/gzip strings), a custom parser parses and upgrades them:
 1. <strong>Gzip CSV Decompression</strong>: Decodes hex strings and decompresses the gzip streams to load map DataFrames directly into memory.
 2. <strong>Fast Coordinate Mapping</strong>: Builds an O(N) lookup dictionary of individual row properties indexed by <code>(map_name, round(X, 3), round(Y, 3))</code> to link coordinates back to active flags, baseline anchor points, and peak definitions.
 3. <strong>Contiguous Allocation</strong>: Packs the data into <code>SpectraStore</code> in batch layouts.
-4. <strong>Vectorized Curve Restoration</strong>: Batch evaluates legacy baselines and peak functions to immediately render the fits in the viewer without needing to refit the raw data.</p>
+4. <strong>Vectorized Curve Restoration</strong>: Batch-evaluates legacy baselines and peak functions to immediately render the fits in the viewer without needing to refit the raw data.</p>
 <hr />
-<h2 id="method-overrides">Method Overrides<a class="headerlink" href="#method-overrides" title="Permanent link">&para;</a></h2>
-<p>The Maps ViewModel overrides several parent methods to maintain map-specific state:</p>
+<h2 id="method-overrides"><strong>Method Overrides</strong><a class="headerlink" href="#method-overrides" title="Permanent link">&para;</a></h2>
+<p>The <code>Maps</code> ViewModel overrides several parent methods to maintain map-specific state:</p>
 <table>
 <thead>
 <tr>
@@ -2207,15 +2207,15 @@
 </tr>
 <tr>
 <td><code>reinit_spectra()</code></td>
-<td>Calls parent, then refreshes <code>_show_map_spectra()</code> for current map</td>
+<td>Calls parent, then refreshes <code>_show_map_spectra()</code> for the current map</td>
 </tr>
 <tr>
 <td><code>delete_baseline()</code></td>
-<td>Calls parent, then refreshes map spectra list</td>
+<td>Calls parent, then refreshes the map spectra list</td>
 </tr>
 <tr>
 <td><code>delete_peaks()</code></td>
-<td>Calls parent, then refreshes map spectra list</td>
+<td>Calls parent, then refreshes the map spectra list</td>
 </tr>
 <tr>
 <td><code>_on_fit_finished()</code></td>
@@ -2223,23 +2223,23 @@
 </tr>
 <tr>
 <td><code>collect_fit_results()</code></td>
-<td>Calls parent, then adds X, Y, Zone, Quadrant columns</td>
+<td>Calls parent, then adds <code>X</code>, <code>Y</code>, <code>Zone</code>, <code>Quadrant</code> columns</td>
 </tr>
 <tr>
 <td><code>clear_workspace()</code></td>
-<td>Calls parent, then clears <code>maps</code> dict and emits empty signals</td>
+<td>Calls parent, then clears the <code>maps</code> dict and emits empty signals</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="vmapviewerdialog">VMapViewerDialog<a class="headerlink" href="#vmapviewerdialog" title="Permanent link">&para;</a></h2>
+<h2 id="vmapviewerdialog"><strong><code>VMapViewerDialog</code></strong><a class="headerlink" href="#vmapviewerdialog" title="Permanent link">&para;</a></h2>
 <p><strong>File</strong>: <code>spectroview/view/components/v_map_viewer_dialog.py</code></p>
 <p>A thin <code>QDialog</code> wrapper around <code>VMapViewer</code> that:</p>
 <ul>
-<li>Uses <code>Qt.WindowStaysOnTopHint</code> to remain visible while interacting with the main window</li>
-<li>Synchronizes data from the primary map viewer</li>
-<li>Allows multiple simultaneous views of the same map with different Z-parameters</li>
-<li>Enables side-by-side comparison of different fit parameters on the same spatial data</li>
+<li>Uses <code>Qt.WindowStaysOnTopHint</code> to remain visible while interacting with the main window.</li>
+<li>Synchronizes data from the primary map viewer.</li>
+<li>Allows multiple simultaneous views of the same map with different Z-parameters.</li>
+<li>Enables side-by-side comparison of different fit parameters on the same spatial data.</li>
 </ul>
 
 

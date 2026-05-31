@@ -1602,11 +1602,11 @@
   
 
 
-<h1 id="application-architecture">Application Architecture<a class="headerlink" href="#application-architecture" title="Permanent link">&para;</a></h1>
-<p>This guide covers the technical architecture, code organization, and development patterns of SPECTROview. It is intended for developers who want to understand, maintain, or extend the application.</p>
+<h1 id="application-architecture"><strong>Application Architecture</strong><a class="headerlink" href="#application-architecture" title="Permanent link">&para;</a></h1>
+<p>This guide covers the technical architecture, code organization, and development patterns of <code>SPECTROview</code>. It is intended for developers who want to understand, maintain, or extend the application.</p>
 <hr />
-<h2 id="mvvm-pattern">MVVM Pattern<a class="headerlink" href="#mvvm-pattern" title="Permanent link">&para;</a></h2>
-<p>SPECTROview enforces a strict <strong>Model-View-ViewModel</strong> architecture.
+<h2 id="mvvm-pattern"><strong>MVVM Pattern</strong><a class="headerlink" href="#mvvm-pattern" title="Permanent link">&para;</a></h2>
+<p><code>SPECTROview</code> enforces a strict <strong>Model-View-ViewModel</strong> architecture.
 Every workspace follows the same three-layer separation of concerns:</p>
 <ul>
 <li><strong>Model</strong> — Pure data containers and domain logic. Models hold no references to Qt widgets and can be tested independently.</li>
@@ -1620,7 +1620,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
     D --&gt;|"return data"| C
     C --&gt;|"emit Signal"| B
     B --&gt;|"update UI"| A</code></pre>
-<h3 id="file-naming-convention">File Naming Convention<a class="headerlink" href="#file-naming-convention" title="Permanent link">&para;</a></h3>
+<h3 id="file-naming-convention"><strong>File Naming Convention</strong><a class="headerlink" href="#file-naming-convention" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1647,7 +1647,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 </tr>
 </tbody>
 </table>
-<h3 id="import-rules">Import Rules<a class="headerlink" href="#import-rules" title="Permanent link">&para;</a></h3>
+<h3 id="import-rules"><strong>Import Rules</strong><a class="headerlink" href="#import-rules" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1664,7 +1664,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 </tr>
 <tr>
 <td><strong>ViewModel</strong></td>
-<td>Model, fit_engine</td>
+<td>Model, <code>fit_engine</code></td>
 <td>View</td>
 </tr>
 <tr>
@@ -1674,7 +1674,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 </tr>
 </tbody>
 </table>
-<h3 id="signalslot-communication">Signal/Slot Communication<a class="headerlink" href="#signalslot-communication" title="Permanent link">&para;</a></h3>
+<h3 id="signalslot-communication"><strong>Signal/Slot Communication</strong><a class="headerlink" href="#signalslot-communication" title="Permanent link">&para;</a></h3>
 <p>Views and ViewModels communicate <strong>exclusively via Qt signals and slots</strong>. A ViewModel must never call View methods directly, and a View must never modify Model state without going through its ViewModel.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># ── ViewModel defines signals ──</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span> <span class="nc">VMWorkspaceSpectra</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
@@ -1687,7 +1687,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">spectra_list_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_list</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<h2 id="project-structure">Project Structure<a class="headerlink" href="#project-structure" title="Permanent link">&para;</a></h2>
+<h2 id="project-structure"><strong>Project Structure</strong><a class="headerlink" href="#project-structure" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>spectroview/
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── __init__.py             # Constants, peak models, resource paths
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├── main.py                 # Entry point, QMainWindow, cross-workspace wiring
@@ -1755,7 +1755,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>    └── user_manual/
 </code></pre></div>
 <hr />
-<h2 id="application-entry-point">Application Entry Point<a class="headerlink" href="#application-entry-point" title="Permanent link">&para;</a></h2>
+<h2 id="application-entry-point"><strong>Application Entry Point</strong><a class="headerlink" href="#application-entry-point" title="Permanent link">&para;</a></h2>
 <p><code>spectroview/main.py</code> creates the <code>QMainWindow</code> and instantiates all workspaces as tabs in a <code>QTabWidget</code>:</p>
 <pre class="mermaid"><code>graph LR
     Main["main.py"] --&gt; Tabs["QTabWidget"]
@@ -1768,13 +1768,13 @@ Every workspace follows the same three-layer separation of concerns:</p>
     W --&gt;|"signal"| Tabs</code></pre>
 <p>The <code>setup_connections()</code> method in <code>main.py</code> wires cross-workspace dependencies:</p>
 <ul>
-<li><strong>Maps → Graphs</strong>: <code>VMWorkspaceMaps.set_graphs_workspace(v_graphs)</code> injects a reference so Maps can send profiles and DataFrames directly to the Graphs workspace.</li>
-<li><strong>Maps → Spectra</strong>: The <code>send_spectra_to_workspace</code> signal passes deep copies of selected map spectra to the Spectra tab.</li>
-<li><strong>Fit Results → Graphs</strong>: Both Spectra and Maps emit <code>fit_results_updated</code> with a <code>pd.DataFrame</code> that can be forwarded to the Graphs workspace for statistical plotting.</li>
+<li><strong>Maps → Graphs</strong>: <code>VMWorkspaceMaps.set_graphs_workspace(v_graphs)</code> injects a reference so <code>Maps</code> can send profiles and DataFrames directly to the <code>Graphs</code> workspace.</li>
+<li><strong>Maps → Spectra</strong>: The <code>send_spectra_to_workspace</code> signal passes deep copies of selected map spectra to the <code>Spectra</code> tab.</li>
+<li><strong>Fit Results → Graphs</strong>: Both <code>Spectra</code> and <code>Maps</code> emit <code>fit_results_updated</code> with a <code>pd.DataFrame</code> that can be forwarded to the <code>Graphs</code> workspace for statistical plotting.</li>
 </ul>
 <hr />
-<h2 id="data-lifecycle">Data Lifecycle<a class="headerlink" href="#data-lifecycle" title="Permanent link">&para;</a></h2>
-<h3 id="spectra-loading-processing-fitting-results">Spectra: Loading → Processing → Fitting → Results<a class="headerlink" href="#spectra-loading-processing-fitting-results" title="Permanent link">&para;</a></h3>
+<h2 id="data-lifecycle"><strong>Data Lifecycle</strong><a class="headerlink" href="#data-lifecycle" title="Permanent link">&para;</a></h2>
+<h3 id="spectra-loading-processing-fitting-results"><strong>Spectra: Loading → Processing → Fitting → Results</strong><a class="headerlink" href="#spectra-loading-processing-fitting-results" title="Permanent link">&para;</a></h3>
 <pre class="mermaid"><code>sequenceDiagram
     participant View
     participant VM as ViewModel
@@ -1789,7 +1789,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
     VM-&gt;&gt;Engine: fit_spectra()
     Engine--&gt;&gt;VM: results
     VM--&gt;&gt;View: fit_results_updated</code></pre>
-<h3 id="maps-loading-extraction-heatmap-profile">Maps: Loading → Extraction → Heatmap → Profile<a class="headerlink" href="#maps-loading-extraction-heatmap-profile" title="Permanent link">&para;</a></h3>
+<h3 id="maps-loading-extraction-heatmap-profile"><strong>Maps: Loading → Extraction → Heatmap → Profile</strong><a class="headerlink" href="#maps-loading-extraction-heatmap-profile" title="Permanent link">&para;</a></h3>
 <pre class="mermaid"><code>sequenceDiagram
     participant View
     participant VM as ViewModel
@@ -1805,8 +1805,8 @@ Every workspace follows the same three-layer separation of concerns:</p>
     View-&gt;&gt;VM: extract_profile()
     VM--&gt;&gt;View: switch_to_graphs_tab</code></pre>
 <hr />
-<h2 id="workspace-inheritance">Workspace Inheritance<a class="headerlink" href="#workspace-inheritance" title="Permanent link">&para;</a></h2>
-<p><code>VMWorkspaceMaps</code> <strong>extends</strong> <code>VMWorkspaceSpectra</code>. This means every fitting, baseline, peak, and serialization feature available in the Spectra workspace is automatically available in the Maps workspace, with additional map-specific overrides:</p>
+<h2 id="workspace-inheritance"><strong>Workspace Inheritance</strong><a class="headerlink" href="#workspace-inheritance" title="Permanent link">&para;</a></h2>
+<p><code>VMWorkspaceMaps</code> <strong>extends</strong> <code>VMWorkspaceSpectra</code>. This means every fitting, baseline, peak, and serialization feature available in the <code>Spectra</code> workspace is automatically available in the <code>Maps</code> workspace, with additional map-specific overrides:</p>
 <pre class="mermaid"><code>classDiagram
     class VMWorkspaceSpectra {
         +store
@@ -1828,7 +1828,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 
     VMWorkspaceSpectra &lt;|-- VMWorkspaceMaps</code></pre>
 <hr />
-<h2 id="reusable-component-system">Reusable Component System<a class="headerlink" href="#reusable-component-system" title="Permanent link">&para;</a></h2>
+<h2 id="reusable-component-system"><strong>Reusable Component System</strong><a class="headerlink" href="#reusable-component-system" title="Permanent link">&para;</a></h2>
 <p>Workspaces are composed from <strong>shared components</strong> that follow the same signal-based pattern:</p>
 <table>
 <thead>
@@ -1872,7 +1872,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <tr>
 <td><code>VDataFilter</code></td>
 <td><code>v_data_filter.py</code></td>
-<td>Dynamic pandas <code>.query()</code> filter builder</td>
+<td>Dynamic <code>pandas</code> <code>.query()</code> filter builder</td>
 </tr>
 <tr>
 <td><code>VFitResults</code></td>
@@ -1892,8 +1892,8 @@ Every workspace follows the same three-layer separation of concerns:</p>
 </tbody>
 </table>
 <hr />
-<h2 id="persistence-serialization">Persistence &amp; Serialization<a class="headerlink" href="#persistence-serialization" title="Permanent link">&para;</a></h2>
-<p>SPECTROview delegates all loading and saving operations to the unified <code>WorkspaceIO</code> class (<code>workspace_io.py</code>), which isolates IO logic from the ViewModels. Each workspace uses its own save/load format via <code>WorkspaceIO</code>:</p>
+<h2 id="persistence-serialization"><strong>Persistence &amp; Serialization</strong><a class="headerlink" href="#persistence-serialization" title="Permanent link">&para;</a></h2>
+<p><code>SPECTROview</code> delegates all loading and saving operations to the unified <code>WorkspaceIO</code> class (<code>workspace_io.py</code>), which isolates IO logic from the ViewModels. Each workspace uses its own save/load format via <code>WorkspaceIO</code>:</p>
 <table>
 <thead>
 <tr>
@@ -1904,23 +1904,23 @@ Every workspace follows the same three-layer separation of concerns:</p>
 </thead>
 <tbody>
 <tr>
-<td>Spectra</td>
+<td><code>Spectra</code></td>
 <td><code>.spectra</code></td>
 <td>ZIP archive with metadata JSON, NPZ arrays per spectrum (v5+). Handled by <code>WorkspaceIO.save_spectra_workspace()</code>.</td>
 </tr>
 <tr>
-<td>Maps</td>
+<td><code>Maps</code></td>
 <td><code>.maps</code></td>
 <td>ZIP archive with metadata JSON, NPZ arrays, and pickled DataFrames (v5+). Handled by <code>WorkspaceIO.save_maps_workspace()</code>.</td>
 </tr>
 <tr>
-<td>Graphs</td>
+<td><code>Graphs</code></td>
 <td><code>.graphs</code></td>
 <td>JSON with <code>gzip+hex</code> compressed DataFrames and <code>MGraph.save()</code> serialized plots.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="spectrum-serialization-flow">Spectrum Serialization Flow<a class="headerlink" href="#spectrum-serialization-flow" title="Permanent link">&para;</a></h3>
+<h3 id="spectrum-serialization-flow"><strong>Spectrum Serialization Flow</strong><a class="headerlink" href="#spectrum-serialization-flow" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Save (v4+): SpectraStore → ZIP archive (metadata.json + arrays.npz)</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="s2">&quot;format_version&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
@@ -1940,7 +1940,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
-<h2 id="threading-model">Threading Model<a class="headerlink" href="#threading-model" title="Permanent link">&para;</a></h2>
+<h2 id="threading-model"><strong>Threading Model</strong><a class="headerlink" href="#threading-model" title="Permanent link">&para;</a></h2>
 <p>Long-running operations run on <code>QThread</code> subclasses to prevent UI freezing.
 All threads emit progress signals that the ViewModel relays to the View's progress bar:</p>
 <table>
@@ -1955,20 +1955,20 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <tr>
 <td><code>VBFthread</code></td>
 <td><code>fit_engine/vbf_thread.py</code></td>
-<td>Batched batch fitting (primary engine)</td>
+<td>Batched fitting (primary engine)</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Thread lifecycle</strong>:</p>
 <ol>
-<li>ViewModel instantiates thread, connects <code>finished</code> / <code>progress</code> signals.</li>
+<li>ViewModel instantiates the thread and connects <code>finished</code> / <code>progress</code> signals.</li>
 <li>Thread <code>.start()</code> — runs <code>run()</code> on a separate OS thread.</li>
-<li>On completion, <code>finished</code> signal triggers <code>_on_fit_finished()</code> in the ViewModel.</li>
+<li>On completion, the <code>finished</code> signal triggers <code>_on_fit_finished()</code> in the ViewModel.</li>
 <li>ViewModel emits result signals → View updates UI.</li>
 </ol>
 <hr />
-<h2 id="cross-workspace-communication">Cross-Workspace Communication<a class="headerlink" href="#cross-workspace-communication" title="Permanent link">&para;</a></h2>
-<p>SPECTROview avoids a global event bus. Instead, <code>main.py</code> uses <strong>dependency injection</strong> and <strong>direct signal connections</strong>:</p>
+<h2 id="cross-workspace-communication"><strong>Cross-Workspace Communication</strong><a class="headerlink" href="#cross-workspace-communication" title="Permanent link">&para;</a></h2>
+<p><code>SPECTROview</code> avoids a global event bus. Instead, <code>main.py</code> uses <strong>dependency injection</strong> and <strong>direct signal connections</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># main.py → setup_connections()</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># 1. Inject reference: Maps VM can call Graphs workspace methods</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="bp">self</span><span class="o">.</span><span class="n">v_maps_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">set_graphs_workspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v_graphs_workspace</span><span class="p">)</span>
@@ -1982,7 +1982,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1"># self.vm.send_spectra_to_workspace.connect(self._receive_spectra_from_maps)</span>
 </code></pre></div>
 <hr />
-<h2 id="global-constants-__init__py">Global Constants (<code>__init__.py</code>)<a class="headerlink" href="#global-constants-__init__py" title="Permanent link">&para;</a></h2>
+<h2 id="global-constants-__init__py"><strong>Global Constants (<code>__init__.py</code>)</strong><a class="headerlink" href="#global-constants-__init__py" title="Permanent link">&para;</a></h2>
 <p><code>spectroview/__init__.py</code> defines application-wide constants:</p>
 <table>
 <thead>
@@ -2023,7 +2023,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 </tbody>
 </table>
 <hr />
-<h2 id="deep-dive-documentation">Deep-Dive Documentation<a class="headerlink" href="#deep-dive-documentation" title="Permanent link">&para;</a></h2>
+<h2 id="deep-dive-documentation"><strong>Deep-Dive Documentation</strong><a class="headerlink" href="#deep-dive-documentation" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2036,32 +2036,32 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <tr>
 <td><strong>Spectra Workspace</strong></td>
 <td><a href="spectra/">spectra.md</a></td>
-<td>VMWorkspaceSpectra, spectrum lifecycle, baseline/peak pipeline, fit model management</td>
+<td><code>VMWorkspaceSpectra</code>, spectrum lifecycle, baseline/peak pipeline, fit model management</td>
 </tr>
 <tr>
 <td><strong>Maps Workspace</strong></td>
 <td><a href="maps/">maps.md</a></td>
-<td>VMWorkspaceMaps, hyperspectral data loading, heatmap rendering, coordinate handling</td>
+<td><code>VMWorkspaceMaps</code>, hyperspectral data loading, heatmap rendering, coordinate handling</td>
 </tr>
 <tr>
 <td><strong>Graphs Workspace</strong></td>
 <td><a href="graphs/">graphs.md</a></td>
-<td>VMWorkspaceGraphs, DataFrame management, plot creation, VGraph rendering</td>
+<td><code>VMWorkspaceGraphs</code>, DataFrame management, plot creation, <code>VGraph</code> rendering</td>
 </tr>
 <tr>
-<td><strong>Vectorized Batch Fit Engine (VBF Engine)</strong></td>
+<td><strong>Vectorized Batch Fit Engine (<code>VBF Engine</code>)</strong></td>
 <td><a href="vbf_engine/">vbf_engine.md</a></td>
 <td>Batched LM optimizer, analytical Jacobians, adding new peak models</td>
 </tr>
 <tr>
 <td><strong>Multivariate Analysis</strong></td>
 <td><a href="mva/">mva.md</a></td>
-<td>PCA/NMF implementation, data pipeline, export to Graphs</td>
+<td>PCA/NMF implementation, data pipeline, export to <code>Graphs</code></td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="running-testing">Running &amp; Testing<a class="headerlink" href="#running-testing" title="Permanent link">&para;</a></h2>
+<h2 id="running-testing"><strong>Running &amp; Testing</strong><a class="headerlink" href="#running-testing" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Run from source</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>python<span class="w"> </span>-m<span class="w"> </span>spectroview.main
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
@@ -2075,7 +2075,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>mkdocs<span class="w"> </span>serve
 </code></pre></div>
 <hr />
-<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
+<h2 id="dependencies"><strong>Dependencies</strong><a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2113,7 +2113,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <tr>
 <td><code>seaborn</code></td>
 <td>—</td>
-<td>Statistical plotting in Graphs workspace</td>
+<td>Statistical plotting in <code>Graphs</code> workspace</td>
 </tr>
 <tr>
 <td><code>renishawWiRE</code></td>

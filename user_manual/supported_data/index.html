@@ -1288,15 +1288,15 @@
 
   <h1>Supported Data</h1>
 
-<h2 id="supported-data-formats">Supported Data Formats<a class="headerlink" href="#supported-data-formats" title="Permanent link">&para;</a></h2>
-<p>Examples of all supported data types can be found in the <a href="https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples"><code>/examples</code></a> folder of the GitHub repository. Users can download these files to familiarize themselves with supported file formats, data structures, and to practice using SPECTROview with real-world data.</p>
+<h2 id="supported-data-formats"><strong>Supported Data Formats</strong><a class="headerlink" href="#supported-data-formats" title="Permanent link">&para;</a></h2>
+<p>Examples of all supported data types can be found in the <a href="https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples"><code>/examples</code></a> folder of the GitHub repository. Users can download these files to familiarize themselves with supported file formats, data structures, and to practice using <code>SPECTROview</code> with real-world data.</p>
 <table>
 <thead>
 <tr>
 <th>Format</th>
 <th>Extension</th>
 <th>Loader</th>
-<th>Data type</th>
+<th>Data Type</th>
 </tr>
 </thead>
 <tbody>
@@ -1309,7 +1309,7 @@
 <tr>
 <td>Renishaw WiRE</td>
 <td><code>.wdf</code></td>
-<td>renishawWiRE library</td>
+<td><code>renishawWiRE</code> library</td>
 <td>Single spectra and maps</td>
 </tr>
 <tr>
@@ -1327,26 +1327,26 @@
 <tr>
 <td>Tabular data</td>
 <td><code>.xlsx</code>, <code>.csv</code></td>
-<td>Pandas &amp; Openpyxl</td>
+<td><code>Pandas</code> &amp; <code>Openpyxl</code></td>
 <td>DataFrames for plotting</td>
 </tr>
 </tbody>
 </table>
-<h3 id="wdf-renishaw-and-spc-horiba-formats">.wdf (Renishaw) and .spc (HORIBA) Formats<a class="headerlink" href="#wdf-renishaw-and-spc-horiba-formats" title="Permanent link">&para;</a></h3>
-<p>Since version 26.7.1, SPECTROview natively supports:</p>
+<h3 id="wdf-renishaw-and-spc-horiba-formats"><strong><code>.wdf</code> (Renishaw) and <code>.spc</code> (HORIBA) Formats</strong><a class="headerlink" href="#wdf-renishaw-and-spc-horiba-formats" title="Permanent link">&para;</a></h3>
+<p>Since version 26.7.1, <code>SPECTROview</code> natively supports:</p>
 <ul>
 <li><strong><code>.wdf</code></strong> — Data recorded using WiRE software on Renishaw instruments.</li>
 <li><strong><code>.spc</code></strong> — Data recorded using LabSpec 6 software on HORIBA instruments.</li>
 </ul>
-<p>Both discrete spectra and hyperspectral datasets (2D maps) are fully supported and can be opened directly without prior conversion. In addition to the raw spectroscopic data, SPECTROview automatically parses and imports associated <strong>metadata</strong>, such as excitation wavelength (nm), gratings (gr/mm), objective lens, laser power, slit/hole size, and acquisition timestamps. This provides comprehensive access to both measurement data and experimental conditions in a unified workflow.</p>
-<h3 id="spectroscopic-data-txt-csv">Spectroscopic Data (.txt, .csv)<a class="headerlink" href="#spectroscopic-data-txt-csv" title="Permanent link">&para;</a></h3>
-<p>SPECTROview supports 1D spectroscopic data in TXT or CSV formats. Files must consist of <strong>two columns</strong> separated by semicolons, spaces, or tabs. Column headers are optional but supported:</p>
+<p>Both discrete spectra and hyperspectral datasets (2D maps) are fully supported and can be opened directly without prior conversion. In addition to the raw spectroscopic data, <code>SPECTROview</code> automatically parses and imports associated <strong>metadata</strong>, such as excitation wavelength (nm), gratings (gr/mm), objective lens, laser power, slit/hole size, and acquisition timestamps. This provides comprehensive access to both measurement data and experimental conditions in a unified workflow.</p>
+<h3 id="spectroscopic-data-txt-csv"><strong>Spectroscopic Data (<code>.txt</code>, <code>.csv</code>)</strong><a class="headerlink" href="#spectroscopic-data-txt-csv" title="Permanent link">&para;</a></h3>
+<p><code>SPECTROview</code> supports 1D spectroscopic data in TXT or CSV formats. Files must consist of <strong>two columns</strong> separated by semicolons, spaces, or tabs. Column headers are optional but supported:</p>
 <ul>
 <li><strong>Column 1</strong>: X-axis values (e.g., Raman shift in cm⁻¹, wavelength in nm).</li>
 <li><strong>Column 2</strong>: Corresponding intensity values (a.u.).</li>
 </ul>
-<h3 id="hyperspectral-data-txt-csv">Hyperspectral Data (.txt, .csv)<a class="headerlink" href="#hyperspectral-data-txt-csv" title="Permanent link">&para;</a></h3>
-<p>SPECTROview supports hyperspectral data (2D maps or wafer maps) in TXT or CSV formats, provided the data is structured as follows:</p>
+<h3 id="hyperspectral-data-txt-csv"><strong>Hyperspectral Data (<code>.txt</code>, <code>.csv</code>)</strong><a class="headerlink" href="#hyperspectral-data-txt-csv" title="Permanent link">&para;</a></h3>
+<p><code>SPECTROview</code> supports hyperspectral data (2D maps or wafer maps) in TXT or CSV formats, provided the data is structured as follows:</p>
 <table>
 <thead>
 <tr>
@@ -1404,16 +1404,16 @@
 <li>The <strong>remaining columns</strong> contain the corresponding intensity values for each spectrum (I1 → In), extending from the second row to the last.</li>
 </ul>
 <blockquote>
-<p><strong>Note</strong>: Text-exported 2D map formats from Renishaw tools often use a different structure and must be converted before they can be loaded into SPECTROview. An integrated conversion tool is provided within the application for this exact purpose (see Section 4, File Convert Tool).</p>
+<p><strong>Note</strong>: Text-exported 2D map formats from Renishaw tools often use a different structure and must be converted before they can be loaded into <code>SPECTROview</code>. An integrated conversion tool is provided within the application for this exact purpose (see the <code>Hyperspectral Data Converter Tool</code> section).</p>
 </blockquote>
-<h3 id="datasheet-excel-or-csv">Datasheet (Excel or CSV)<a class="headerlink" href="#datasheet-excel-or-csv" title="Permanent link">&para;</a></h3>
-<p>Excel files (<code>.xlsx</code>, <code>.xls</code>) containing one or multiple sheets, as well as CSV files, can be directly imported into the <strong>Graphs Workspace</strong> for immediate visualization and plotting.</p>
-<h3 id="native-spectroview-formats">Native SPECTROview Formats<a class="headerlink" href="#native-spectroview-formats" title="Permanent link">&para;</a></h3>
-<p>To ensure workflows can be saved and resumed later, SPECTROview uses specific file extensions corresponding to the active workspace:</p>
+<h3 id="datasheet-excel-or-csv"><strong>Datasheet (Excel or CSV)</strong><a class="headerlink" href="#datasheet-excel-or-csv" title="Permanent link">&para;</a></h3>
+<p>Excel files (<code>.xlsx</code>, <code>.xls</code>) containing one or multiple sheets, as well as CSV files, can be directly imported into the <strong><code>Graphs</code></strong> workspace for immediate visualization and plotting.</p>
+<h3 id="native-spectroview-formats"><strong>Native <code>SPECTROview</code> Formats</strong><a class="headerlink" href="#native-spectroview-formats" title="Permanent link">&para;</a></h3>
+<p>To ensure workflows can be saved and resumed later, <code>SPECTROview</code> uses specific file extensions corresponding to the active workspace:</p>
 <ul>
-<li><strong>Maps Workspace</strong> → <code>.maps</code></li>
-<li><strong>Spectra Workspace</strong> → <code>.spectra</code></li>
-<li><strong>Graphs Workspace</strong> → <code>.graphs</code></li>
+<li><strong><code>Maps</code> Workspace</strong> → <code>.maps</code></li>
+<li><strong><code>Spectra</code> Workspace</strong> → <code>.spectra</code></li>
+<li><strong><code>Graphs</code> Workspace</strong> → <code>.graphs</code></li>
 </ul>
 
 

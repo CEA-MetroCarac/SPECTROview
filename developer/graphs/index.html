@@ -1772,10 +1772,10 @@
   
 
 
-<h1 id="graphs-workspace">Graphs Workspace<a class="headerlink" href="#graphs-workspace" title="Permanent link">&para;</a></h1>
-<p>The Graphs Workspace is a standalone statistical plotting environment. It manages DataFrames (from file or cross-workspace injection), applies dynamic filters, and creates publication-quality plots using Seaborn and Matplotlib inside an MDI (Multiple Document Interface) area.</p>
+<h1 id="graphs-workspace"><strong>Graphs Workspace</strong><a class="headerlink" href="#graphs-workspace" title="Permanent link">&para;</a></h1>
+<p>The <code>Graphs</code> workspace is a standalone statistical plotting environment. It manages DataFrames (from file or cross-workspace injection), applies dynamic filters, and creates publication-quality plots using <code>Seaborn</code> and <code>Matplotlib</code> inside an MDI (Multiple Document Interface) area.</p>
 <hr />
-<h2 id="architecture-overview">Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
+<h2 id="architecture-overview"><strong>Architecture Overview</strong><a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>graph TD
     VWG["VWorkspaceGraphs"] --&gt; MDI["QMdiArea"]
     MDI --&gt; VG["VGraph"]
@@ -1786,10 +1786,10 @@
     VMWG --&gt;|"signals"| VWG
     VMWG --&gt; MG["MGraph"]</code></pre>
 <hr />
-<h2 id="key-classes">Key Classes<a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
-<h3 id="vmworkspacegraphs-the-viewmodel"><code>VMWorkspaceGraphs</code> — The ViewModel<a class="headerlink" href="#vmworkspacegraphs-the-viewmodel" title="Permanent link">&para;</a></h3>
+<h2 id="key-classes"><strong>Key Classes</strong><a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
+<h3 id="vmworkspacegraphs-the-viewmodel"><strong><code>VMWorkspaceGraphs</code> — The ViewModel</strong><a class="headerlink" href="#vmworkspacegraphs-the-viewmodel" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/viewmodel/vm_workspace_graphs.py</code> (~438 lines)</p>
-<p>Manages DataFrames and graph models. Unlike the Spectra/Maps ViewModels, this ViewModel is relatively lightweight — the heavy rendering logic lives in the <code>VGraph</code> widget.</p>
+<p>Manages DataFrames and graph models. Unlike the <code>Spectra</code>/<code>Maps</code> ViewModels, this ViewModel is relatively lightweight — the heavy rendering logic lives in the <code>VGraph</code> widget.</p>
 <table>
 <thead>
 <tr>
@@ -1816,7 +1816,7 @@
 </tr>
 <tr>
 <td><strong>Multi-wafer</strong></td>
-<td><code>create_multi_wafer_graphs()</code> — Batch-create one wafer plot per slot</td>
+<td><code>create_multi_wafer_graphs()</code> — Batch-creates one wafer plot per slot</td>
 </tr>
 <tr>
 <td><strong>Persistence</strong></td>
@@ -1824,13 +1824,13 @@
 </tr>
 </tbody>
 </table>
-<h4 id="signals">Signals<a class="headerlink" href="#signals" title="Permanent link">&para;</a></h4>
+<h4 id="signals"><strong>Signals</strong><a class="headerlink" href="#signals" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">dataframes_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>           <span class="c1"># List of DataFrame names updated</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">dataframe_columns_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>    <span class="c1"># Column names of selected DataFrame</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">graphs_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>               <span class="c1"># List of graph IDs updated</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">notify</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>                        <span class="c1"># Toast notification</span>
 </code></pre></div>
-<h3 id="mgraph-the-plot-configuration-model"><code>MGraph</code> — The Plot Configuration Model<a class="headerlink" href="#mgraph-the-plot-configuration-model" title="Permanent link">&para;</a></h3>
+<h3 id="mgraph-the-plot-configuration-model"><strong><code>MGraph</code> — The Plot Configuration Model</strong><a class="headerlink" href="#mgraph-the-plot-configuration-model" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/model/m_graph.py</code> (~157 lines)</p>
 <p>A pure data class that stores everything needed to recreate a plot:</p>
 <table>
@@ -1855,7 +1855,7 @@
 <tr>
 <td><code>plot_style</code></td>
 <td><code>str</code></td>
-<td>One of <code>PLOT_STYLES</code> (point, scatter, box, bar, line, wafer, 2Dmap, trendline)</td>
+<td>One of <code>PLOT_STYLES</code> (<code>point</code>, <code>scatter</code>, <code>box</code>, <code>bar</code>, <code>line</code>, <code>wafer</code>, <code>2Dmap</code>, <code>trendline</code>)</td>
 </tr>
 <tr>
 <td><code>x</code>, <code>y</code>, <code>z</code></td>
@@ -1873,7 +1873,7 @@
 <td>Label overrides</td>
 </tr>
 <tr>
-<td><code>xmin/xmax</code>, <code>ymin/ymax</code>, <code>zmin/zmax</code></td>
+<td><code>xmin</code>/<code>xmax</code>, <code>ymin</code>/<code>ymax</code>, <code>zmin</code>/<code>zmax</code></td>
 <td><code>float</code></td>
 <td>Axis limits</td>
 </tr>
@@ -1913,18 +1913,18 @@
 <td>Figure DPI</td>
 </tr>
 <tr>
-<td><code>plot_width/height</code></td>
+<td><code>plot_width</code>/<code>height</code></td>
 <td><code>int</code></td>
 <td>Window dimensions</td>
 </tr>
 </tbody>
 </table>
 <p><code>MGraph</code> provides <code>save()</code> and <code>load(data)</code> methods for complete serialization.</p>
-<h3 id="vgraph-the-rendering-widget"><code>VGraph</code> — The Rendering Widget<a class="headerlink" href="#vgraph-the-rendering-widget" title="Permanent link">&para;</a></h3>
+<h3 id="vgraph-the-rendering-widget"><strong><code>VGraph</code> — The Rendering Widget</strong><a class="headerlink" href="#vgraph-the-rendering-widget" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/view/components/v_graph.py</code> (~1275 lines)</p>
 <p>Each plot in the MDI area is a <code>VGraph</code> instance. It holds a Matplotlib <code>Figure</code> + <code>FigureCanvas</code> and renders using Seaborn plotting functions.</p>
 <hr />
-<h2 id="data-flow-creating-a-plot">Data Flow: Creating a Plot<a class="headerlink" href="#data-flow-creating-a-plot" title="Permanent link">&para;</a></h2>
+<h2 id="data-flow-creating-a-plot"><strong>Data Flow: Creating a Plot</strong><a class="headerlink" href="#data-flow-creating-a-plot" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>sequenceDiagram
     participant User
     participant View as VWorkspaceGraphs
@@ -1951,7 +1951,7 @@
     View-&gt;&gt;View: Wrap in QMdiSubWindow
     View-&gt;&gt;View: Add to mdi_area</code></pre>
 <hr />
-<h2 id="plot-styles">Plot Styles<a class="headerlink" href="#plot-styles" title="Permanent link">&para;</a></h2>
+<h2 id="plot-styles"><strong>Plot Styles</strong><a class="headerlink" href="#plot-styles" title="Permanent link">&para;</a></h2>
 <p>Each plot style maps to a specific Seaborn or custom rendering function:</p>
 <table>
 <thead>
@@ -2013,7 +2013,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="multi-axis-support">Multi-Axis Support<a class="headerlink" href="#multi-axis-support" title="Permanent link">&para;</a></h3>
+<h3 id="multi-axis-support"><strong>Multi-Axis Support</strong><a class="headerlink" href="#multi-axis-support" title="Permanent link">&para;</a></h3>
 <p><code>VGraph</code> supports up to <strong>3 Y-axes</strong>:</p>
 <ul>
 <li><strong>Primary Y</strong> (<code>self.ax</code>): Standard left axis</li>
@@ -2022,16 +2022,16 @@
 </ul>
 <p>Each axis can use a different column and plot style.</p>
 <hr />
-<h2 id="dataframe-management">DataFrame Management<a class="headerlink" href="#dataframe-management" title="Permanent link">&para;</a></h2>
-<h3 id="loading">Loading<a class="headerlink" href="#loading" title="Permanent link">&para;</a></h3>
+<h2 id="dataframe-management"><strong>DataFrame Management</strong><a class="headerlink" href="#dataframe-management" title="Permanent link">&para;</a></h2>
+<h3 id="loading"><strong>Loading</strong><a class="headerlink" href="#loading" title="Permanent link">&para;</a></h3>
 <p><code>VMWorkspaceGraphs.load_dataframes()</code> uses <code>m_io.load_dataframe_file()</code>:</p>
 <ul>
 <li><strong>Excel</strong> (<code>.xlsx</code>/<code>.xls</code>): Single sheet → <code>{filename: df}</code>. Multiple sheets → <code>{filename_sheetname: df}</code> per sheet.</li>
-<li><strong>CSV</strong>: Auto-detects semicolon vs comma delimiter.</li>
+<li><strong>CSV</strong>: Auto-detects semicolon vs. comma delimiter.</li>
 </ul>
-<h3 id="source-tracking-and-refresh">Source Tracking and Refresh<a class="headerlink" href="#source-tracking-and-refresh" title="Permanent link">&para;</a></h3>
+<h3 id="source-tracking-and-refresh"><strong>Source Tracking and Refresh</strong><a class="headerlink" href="#source-tracking-and-refresh" title="Permanent link">&para;</a></h3>
 <p>Every loaded DataFrame's source file path is stored in <code>self.dataframe_sources</code>. The "Refresh" button re-reads the file from disk, enabling iterative workflows where external tools modify the data.</p>
-<h3 id="programmatic-injection">Programmatic Injection<a class="headerlink" href="#programmatic-injection" title="Permanent link">&para;</a></h3>
+<h3 id="programmatic-injection"><strong>Programmatic Injection</strong><a class="headerlink" href="#programmatic-injection" title="Permanent link">&para;</a></h3>
 <p>Other workspaces can inject DataFrames directly:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># From Maps workspace:</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">graphs_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">add_dataframe</span><span class="p">(</span><span class="n">profile_name</span><span class="p">,</span> <span class="n">profile_df</span><span class="p">)</span>
@@ -2040,7 +2040,7 @@
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="bp">self</span><span class="o">.</span><span class="n">graphs_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">add_dataframe</span><span class="p">(</span><span class="s2">&quot;fit_results&quot;</span><span class="p">,</span> <span class="n">df_fit_results</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<h2 id="filter-system">Filter System<a class="headerlink" href="#filter-system" title="Permanent link">&para;</a></h2>
+<h2 id="filter-system"><strong>Filter System</strong><a class="headerlink" href="#filter-system" title="Permanent link">&para;</a></h2>
 <p>The <code>VDataFilter</code> widget provides a dynamic query builder:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Each filter is a dict:</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">{</span>
@@ -2057,17 +2057,17 @@
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="k">return</span> <span class="n">df</span>
 </code></pre></div>
 <p>Filters are <strong>saved per-graph</strong> in <code>MGraph.filters</code>, so each plot can have different active filters.</p>
-<h3 id="multi-wafer-workflow">Multi-Wafer Workflow<a class="headerlink" href="#multi-wafer-workflow" title="Permanent link">&para;</a></h3>
+<h3 id="multi-wafer-workflow"><strong>Multi-Wafer Workflow</strong><a class="headerlink" href="#multi-wafer-workflow" title="Permanent link">&para;</a></h3>
 <p>When a DataFrame contains a <code>Slot</code> column (common in semiconductor datasets):</p>
 <ol>
-<li>The View shows slot checkboxes and the "Add Multi-Wafer" button</li>
-<li>User selects slots (e.g., 1, 3, 5, 7)</li>
-<li><code>create_multi_wafer_graphs()</code> creates one wafer plot per slot, each with a <code>Slot == N</code> filter merged into the base filters</li>
-<li>All wafer plots appear simultaneously in the MDI area</li>
+<li>The View shows slot checkboxes and the "Add Multi-Wafer" button.</li>
+<li>The user selects slots (e.g., 1, 3, 5, 7).</li>
+<li><code>create_multi_wafer_graphs()</code> creates one wafer plot per slot, each with a <code>Slot == N</code> filter merged into the base filters.</li>
+<li>All wafer plots appear simultaneously in the MDI area.</li>
 </ol>
 <hr />
-<h2 id="graph-customization">Graph Customization<a class="headerlink" href="#graph-customization" title="Permanent link">&para;</a></h2>
-<h3 id="customizegraphdialog-singleton">CustomizeGraphDialog (Singleton)<a class="headerlink" href="#customizegraphdialog-singleton" title="Permanent link">&para;</a></h3>
+<h2 id="graph-customization"><strong>Graph Customization</strong><a class="headerlink" href="#graph-customization" title="Permanent link">&para;</a></h2>
+<h3 id="customizegraphdialog-singleton"><strong><code>CustomizeGraphDialog</code> (Singleton)</strong><a class="headerlink" href="#customizegraphdialog-singleton" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/view/components/customize_graph_dialog.py</code> (~1000+ lines)</p>
 <p>A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow. Features:</p>
 <table>
@@ -2100,7 +2100,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="legend-customization">Legend Customization<a class="headerlink" href="#legend-customization" title="Permanent link">&para;</a></h3>
+<h3 id="legend-customization"><strong>Legend Customization</strong><a class="headerlink" href="#legend-customization" title="Permanent link">&para;</a></h3>
 <p>Legend properties are stored in <code>VGraph.legend_properties</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">[</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Group A&quot;</span><span class="p">,</span> <span class="s2">&quot;marker&quot;</span><span class="p">:</span> <span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;#1f77b4&quot;</span><span class="p">,</span> <span class="s2">&quot;rgba&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.12</span><span class="p">,</span> <span class="mf">0.47</span><span class="p">,</span> <span class="mf">0.71</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)},</span>
@@ -2108,7 +2108,7 @@
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">]</span>
 </code></pre></div>
 <p>These are synchronized to <code>MGraph.legend_properties</code> via the <code>properties_changed</code> signal, ensuring they persist across save/load cycles.</p>
-<h3 id="annotation-system">Annotation System<a class="headerlink" href="#annotation-system" title="Permanent link">&para;</a></h3>
+<h3 id="annotation-system"><strong>Annotation System</strong><a class="headerlink" href="#annotation-system" title="Permanent link">&para;</a></h3>
 <p>Annotations are stored as dicts in <code>MGraph.annotations</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Vertical line</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;vline&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;vl_1&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mf">520.7</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;linestyle&quot;</span><span class="p">:</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="s2">&quot;linewidth&quot;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">}</span>
@@ -2119,10 +2119,10 @@
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># Text</span>
 <a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;txt_1&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;Peak A&quot;</span><span class="p">,</span> <span class="s2">&quot;fontsize&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">}</span>
 </code></pre></div>
-<p>Annotations support <strong>drag interaction</strong> — clicking and dragging a vertical/horizontal line updates its position in real-time and emits <code>annotation_position_changed</code>.</p>
+<p>Annotations support <strong>drag interaction</strong> — clicking and dragging a vertical/horizontal line updates its position in real time and emits <code>annotation_position_changed</code>.</p>
 <hr />
-<h2 id="mdi-area-management">MDI Area Management<a class="headerlink" href="#mdi-area-management" title="Permanent link">&para;</a></h2>
-<p>The Graphs workspace uses a <code>QMdiArea</code> to display multiple plots simultaneously:</p>
+<h2 id="mdi-area-management"><strong>MDI Area Management</strong><a class="headerlink" href="#mdi-area-management" title="Permanent link">&para;</a></h2>
+<p>The <code>Graphs</code> workspace uses a <code>QMdiArea</code> to display multiple plots simultaneously:</p>
 <pre class="mermaid"><code>graph LR
     MDI["QMdiArea"] --&gt; SW1["SubWindow 1"]
     MDI --&gt; SW2["SubWindow 2"]
@@ -2136,19 +2136,19 @@
 <li>"Minimize All" collapses all windows for a clean workspace.</li>
 <li>Graph selection in the combobox activates the corresponding subwindow and syncs the right panel controls.</li>
 </ul>
-<h3 id="graph-storage">Graph Storage<a class="headerlink" href="#graph-storage" title="Permanent link">&para;</a></h3>
+<h3 id="graph-storage"><strong>Graph Storage</strong><a class="headerlink" href="#graph-storage" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># VWorkspaceGraphs maintains a lookup:</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">graph_widgets</span> <span class="o">=</span> <span class="p">{</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">graph_id</span><span class="p">:</span> <span class="p">(</span><span class="n">VGraph</span><span class="p">,</span> <span class="n">QDialog</span><span class="p">,</span> <span class="n">QMdiSubWindow</span><span class="p">)</span>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">}</span>
 </code></pre></div>
 <p>When a graph is selected via the combobox or by clicking its subwindow:
-1. <code>_on_subwindow_activated()</code> identifies the <code>graph_id</code>
-2. The ViewModel's <code>MGraph</code> is loaded
-3. The right panel controls (X/Y/Z comboboxes, labels, style) are synced to match</p>
+1. <code>_on_subwindow_activated()</code> identifies the <code>graph_id</code>.
+2. The ViewModel's <code>MGraph</code> is loaded.
+3. The right panel controls (X/Y/Z comboboxes, labels, style) are synced to match.</p>
 <hr />
-<h2 id="persistence">Persistence<a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h2>
-<h3 id="save-format-graphs">Save Format (<code>.graphs</code>)<a class="headerlink" href="#save-format-graphs" title="Permanent link">&para;</a></h3>
+<h2 id="persistence"><strong>Persistence</strong><a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h2>
+<h3 id="save-format-graphs"><strong>Save Format (<code>.graphs</code>)</strong><a class="headerlink" href="#save-format-graphs" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="nt">&quot;plots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">        </span><span class="nt">&quot;1&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -2174,18 +2174,18 @@
 <a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="p">}</span>
 </code></pre></div>
-<p>DataFrames are stored as gzip-compressed CSV encoded as hex strings. On load, they're decompressed and reconstructed:</p>
+<p>DataFrames are stored as gzip-compressed CSV encoded as hex strings. On load, they are decompressed and reconstructed:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">csv_data</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">hex_string</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="n">csv_data</span><span class="p">))</span>
 </code></pre></div>
 <hr />
-<h2 id="plot-replication">Plot Replication<a class="headerlink" href="#plot-replication" title="Permanent link">&para;</a></h2>
+<h2 id="plot-replication"><strong>Plot Replication</strong><a class="headerlink" href="#plot-replication" title="Permanent link">&para;</a></h2>
 <p>The "Replicate" button on each graph toolbar creates a deep copy of the plot:</p>
 <ol>
-<li>Serializes the current <code>MGraph</code> via <code>save()</code></li>
-<li>Removes <code>graph_id</code> (ViewModel assigns a new one)</li>
-<li>Captures the current subwindow size for the replica</li>
-<li>Calls <code>_create_and_display_plot()</code> with the cloned config</li>
+<li>Serializes the current <code>MGraph</code> via <code>save()</code>.</li>
+<li>Removes <code>graph_id</code> (the ViewModel assigns a new one).</li>
+<li>Captures the current subwindow size for the replica.</li>
+<li>Calls <code>_create_and_display_plot()</code> with the cloned config.</li>
 </ol>
 <p>This enables rapid A/B comparison of the same data with different visual settings.</p>
 

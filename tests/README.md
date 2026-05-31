@@ -13,7 +13,8 @@ tests/
 ├── test_m_graph.py                    # Model: Graph configuration
 ├── test_vm_workspace_spectra.py       # ViewModel: Spectra workspace
 ├── test_vm_workspace_graphs.py        # ViewModel: Graphs workspace
-└── test_integration_workflows.py      # Integration & end-to-end tests
+├── test_integration_workflows.py      # Integration & end-to-end tests
+└── test_fitting_performance.py        # Performance & regression benchmarking
 ```
 
 ## Running Tests
@@ -23,6 +24,18 @@ tests/
 ```bash
 # From project root
 pytest tests/ -v
+```
+
+### Run Performance Benchmarks
+
+Performance tests use large datasets and are marked with `@pytest.mark.slow`. They are useful for verifying the performance optimizations in the Vectorized Batch Fit Engine (VBF Engine).
+
+```bash
+# Run only performance benchmarks
+pytest tests/test_fitting_performance.py -v
+
+# Run fast tests only (skip benchmarks)
+pytest tests/ -v -m "not slow"
 ```
 
 ### Run Specific Test File
@@ -94,6 +107,11 @@ End-to-end workflow tests:
   - Batch processing multiple spectra
   - Data integrity tests
   - Edge cases and robustness tests
+
+- **test_fitting_performance.py**:
+  - Validates VBF engine speed against established baselines.
+  - Benchmarks high-parameter counts (K=18 multi-peak).
+  - Validates noise restoration and memory/time scaling.
 
 ## Test Fixtures
 

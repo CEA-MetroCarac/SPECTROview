@@ -1,9 +1,19 @@
-"""ViewModel for Multivariate Analysis (MVA) — bridges UI signals to model computations."""
+"""ViewModel for Multivariate Analysis (MVA) — bridges UI signals to model computations.
+
+Updated for the SpectraStore tensor-centric architecture.
+
+Supports two modes:
+  • Spectra workspace  – each MapData holds 1 spectrum → MVA across all maps.
+  • Maps workspace     – a single MapData holds N spectra → MVA within the
+                         currently selected map (set via set_current_map_name).
+"""
 import numpy as np
 import pandas as pd
+from scipy.interpolate import interp1d
 from PySide6.QtCore import QObject, Signal
 
 from spectroview.model.m_mva import MMVA, PCAResult, NMFResult
+from spectroview.model.spectra_store import SpectraStore
 
 
 class VMMVA(QObject):
@@ -20,53 +30,159 @@ class VMMVA(QObject):
         self.m_settings = m_settings
         self.model = MMVA()
 
-        # Injected reference getter — set by VWorkspaceSpectra after construction
-        self._get_spectra = None
+        # Injected SpectraStore reference — set by VWorkspaceSpectra after construction
+        self._store: SpectraStore | None = None
+
+        # Maps workspace: analyse spectra within a single map
+        # When set, _build_data_matrix uses all active rows of this map.
+        # When None (Spectra workspace), it iterates over all maps (1 spectrum per map).
+        self._current_map_name: str | None = None
 
         # Cache last results for export
         self._last_pca_result: PCAResult | None = None
         self._last_nmf_result: NMFResult | None = None
         self._last_x_axis: np.ndarray | None = None
         self._last_fnames: list[str] | None = None
+        self._last_data_matrix: np.ndarray | None = None
 
     # ── Dependency injection ──────────────────────────────────────────
 
-    def set_spectra(self, spectra_getter):
-        """Inject a getter function for the MSpectra list from VMWorkspaceSpectra."""
-        self._get_spectra = spectra_getter
+    def set_store(self, store: SpectraStore):
+        """Inject the SpectraStore reference from VMWorkspaceSpectra."""
+        self._store = store
+
+    def set_current_map_name(self, name: str | None):
+        """Set the active map for Maps-workspace MVA.
+
+        When *name* is set, `_build_data_matrix` will pull **all active
+        spectra** from that single MapData block instead of iterating
+        across maps.
+        """
+        self._current_map_name = name
+
+    # ── Data matrix construction from SpectraStore ────────────────────
+
+    def _build_data_matrix(self) -> tuple[np.ndarray, np.ndarray, list[str]]:
+        """Build (X, x_axis, fnames) from the store.
+
+        Behaviour depends on ``_current_map_name``:
+
+        * **None  (Spectra workspace)**  — one spectrum per map, iterate
+          over all maps and pick ``Y[0]``.
+        * **set   (Maps workspace)**     — many spectra in one map, iterate
+          over all *active* rows inside that MapData.
+
+        Returns:
+            (X, x_axis, fnames)
+
+        Raises:
+            ValueError: if fewer than 2 active spectra are available.
+        """
+        if self._store is None:
+            raise ValueError("No store available.")
+
+        if self._current_map_name is not None:
+            return self._build_from_single_map(self._current_map_name)
+        else:
+            return self._build_from_all_maps()
+
+    # ── Private builders ──────────────────────────────────────────────
+
+    def _build_from_all_maps(self) -> tuple[np.ndarray, np.ndarray, list[str]]:
+        """Spectra-workspace mode: 1 spectrum per map, varying x-axes."""
+        rows: list[np.ndarray] = []
+        fnames: list[str] = []
+        x_ref: np.ndarray | None = None
+
+        for name in self._store.map_names:
+            md = self._store.get_map_data(name)
+            if md is None or not md.is_active[0]:
+                continue
+
+            x = (md.x if md.x is not None else md.x0).astype(np.float64)
+            y = (md.Y[0] if md.Y is not None else md.Y0[0]).astype(np.float64)
+
+            if x_ref is None:
+                x_ref = x.copy()
+                rows.append(y.copy())
+            elif x.shape == x_ref.shape and np.allclose(x, x_ref, atol=0.01):
+                rows.append(y.copy())
+            else:
+                f = interp1d(x, y, kind="linear", fill_value="extrapolate")
+                rows.append(f(x_ref))
+
+            fnames.append(name)
+
+        if len(rows) < 2:
+            raise ValueError("At least 2 active spectra are required for MVA.")
+
+        return np.vstack(rows).astype(np.float64), x_ref, fnames
+
+    def _build_from_single_map(self, map_name: str) -> tuple[np.ndarray, np.ndarray, list[str]]:
+        """Maps-workspace mode: all active spectra from one MapData."""
+        md = self._store.get_map_data(map_name)
+        if md is None:
+            raise ValueError(f"Map '{map_name}' not found in store.")
+
+        # Active mask
+        active = md.is_active  # bool[N]
+        active_indices = np.where(active)[0]
+
+        if len(active_indices) < 2:
+            raise ValueError(
+                f"At least 2 active spectra are required for MVA "
+                f"(map '{map_name}' has {len(active_indices)} active)."
+            )
+
+        # Use processed arrays when available, else raw
+        x = (md.x if md.x is not None else md.x0).astype(np.float64)
+        Y = (md.Y if md.Y is not None else md.Y0)[active_indices].astype(np.float64)
+
+        fnames = [md.fnames[i] for i in active_indices]
+
+        return Y, x, fnames
 
     # ── PCA ───────────────────────────────────────────────────────────
 
-    def run_pca(self, n_components: int):
-        """Slot: build data matrix from active spectra and run PCA."""
-        spectra = self._get_spectra() if self._get_spectra else None
-        if spectra is None or len(spectra) == 0:
-            self.notify.emit("No spectra loaded.")
-            return
+    def run_pca(self, n_components: int, center: bool = True):
+        """Slot: build data matrix from active spectra and run PCA.
 
+        Args:
+            n_components: number of principal components to retain.
+            center: whether to mean-centre the data before SVD.
+        """
         try:
-            X, x_axis, fnames = self.model.build_data_matrix(spectra)
+            X, x_axis, fnames = self._build_data_matrix()
         except ValueError as e:
             self.notify.emit(str(e))
             return
 
         try:
-            result = self.model.run_pca(X, n_components)
+            result = self.model.run_pca(X, n_components, center=center)
         except Exception as e:
             self.notify.emit(f"PCA failed: {e}")
             return
+
+        # Compute per-spectrum reconstruction error
+        recon_errors = self.model.reconstruction_error_per_spectrum(
+            X, result.scores, result.loadings,
+            mean_spectrum=result.mean_spectrum if center else None,
+        )
 
         # Cache for export
         self._last_pca_result = result
         self._last_nmf_result = None
         self._last_x_axis = x_axis
         self._last_fnames = fnames
+        self._last_data_matrix = X
 
         # Emit to View
         payload = {
             "result": result,
             "x_axis": x_axis,
             "fnames": fnames,
+            "reconstruction_errors": recon_errors,
+            "data_matrix": X,
         }
         self.pca_results_ready.emit(payload)
         self.notify.emit(
@@ -76,36 +192,48 @@ class VMMVA(QObject):
 
     # ── NMF ───────────────────────────────────────────────────────────
 
-    def run_nmf(self, n_components: int, max_iter: int = 500, tol: float = 1e-4):
-        """Slot: build data matrix from active spectra and run NMF."""
-        spectra = self._get_spectra() if self._get_spectra else None
-        if spectra is None or len(spectra) == 0:
-            self.notify.emit("No spectra loaded.")
-            return
+    def run_nmf(self, n_components: int, max_iter: int = 500, tol: float = 1e-4,
+                seed: int = 42):
+        """Slot: build data matrix from active spectra and run NMF.
 
+        Args:
+            n_components: number of NMF components.
+            max_iter: maximum number of multiplicative update iterations.
+            tol: convergence tolerance.
+            seed: random seed for reproducibility.
+        """
         try:
-            X, x_axis, fnames = self.model.build_data_matrix(spectra)
+            X, x_axis, fnames = self._build_data_matrix()
         except ValueError as e:
             self.notify.emit(str(e))
             return
 
         try:
-            result = self.model.run_nmf(X, n_components, max_iter=max_iter, tol=tol)
+            result = self.model.run_nmf(X, n_components, max_iter=max_iter,
+                                        tol=tol, seed=seed)
         except Exception as e:
             self.notify.emit(f"NMF failed: {e}")
             return
+
+        # Compute per-spectrum reconstruction error
+        recon_errors = self.model.reconstruction_error_per_spectrum(
+            X, result.W, result.H, mean_spectrum=None,
+        )
 
         # Cache for export
         self._last_nmf_result = result
         self._last_pca_result = None
         self._last_x_axis = x_axis
         self._last_fnames = fnames
+        self._last_data_matrix = X
 
         # Emit to View
         payload = {
             "result": result,
             "x_axis": x_axis,
             "fnames": fnames,
+            "reconstruction_errors": recon_errors,
+            "data_matrix": X,
         }
         self.nmf_results_ready.emit(payload)
         self.notify.emit(

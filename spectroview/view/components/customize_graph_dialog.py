@@ -2,13 +2,14 @@ import time
 import os
 import copy
 
-from PySide6.QtCore import Qt, QSize, Signal
+from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon, QColor, QPalette
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGroupBox, 
     QPushButton, QListWidget, QListWidgetItem, QLabel,
     QDialogButtonBox, QMessageBox, QTabWidget, QWidget,
     QColorDialog, QComboBox, QSpinBox,
-    QDoubleSpinBox, QCheckBox, QLineEdit, QFormLayout, QStyledItemDelegate)
+    QDoubleSpinBox, QCheckBox, QLineEdit, QFormLayout, QStyledItemDelegate,
+    QGroupBox)
 
 from spectroview import DEFAULT_COLORS, MARKERS
 from spectroview import ICON_DIR
@@ -93,10 +94,28 @@ class CustomizeGraphDialog(QDialog):
 
     def open_axis_tab(self):
         """Open the dialog and switch to the AXIS tab."""
-        self.tabs.setCurrentIndex(0) # Switch to Legend tab (index 1)
+        self.tabs.setCurrentIndex(0) # Switch to Axis tab (index 0)
         self.show()
         self.raise_()
         self.activateWindow()
+    
+    def switch_graph(self, graph_widget, graph_id):
+        """Switch the dialog to a different graph widget.
+        
+        Re-binds all child widgets (legend, annotations, axis) to the new
+        graph and reloads their content.
+        """
+        if self.graph_id == graph_id:
+            return  # Already showing this graph
+        
+        self.graph_widget = graph_widget
+        self.graph_id = graph_id
+        self.setWindowTitle(f"Customize Graph {graph_id}")
+        
+        # Switch each child widget to the new graph
+        self.legend_widget.switch_graph(graph_widget)
+        self.annotations_widget.switch_graph(graph_widget)
+        self.axis_widget.switch_graph(graph_widget)
 
 
 class CustomizeLegend(QWidget):
@@ -110,6 +129,12 @@ class CustomizeLegend(QWidget):
         self._setup_ui()
         
         # Load initial properties
+        self.load_legend_properties()
+    
+    def switch_graph(self, graph_widget):
+        """Switch to a different graph widget and reload legend properties."""
+        self.graph_widget = graph_widget
+        self.original_legend_properties = None
         self.load_legend_properties()
     
     def _setup_ui(self):
@@ -128,6 +153,37 @@ class CustomizeLegend(QWidget):
         self.legend_layout.setContentsMargins(0, 0, 0, 0)
         
         self.main_layout.addWidget(self.legend_container)
+        
+        # ───── Scatter-specific settings ─────
+        self.scatter_group = QGroupBox("Scatter plot settings")
+        scatter_layout = QHBoxLayout(self.scatter_group)
+        
+        # Marker size
+        scatter_layout.addWidget(QLabel("Marker size:"))
+        self.spin_scatter_size = QSpinBox()
+        self.spin_scatter_size.setRange(5, 500)
+        self.spin_scatter_size.setSingleStep(10)
+        self.spin_scatter_size.setValue(70)
+        scatter_layout.addWidget(self.spin_scatter_size)
+        
+        scatter_layout.addSpacing(10)
+        
+        # Edge color
+        scatter_layout.addWidget(QLabel("Edge color:"))
+        self.btn_scatter_edgecolor = QPushButton()
+        self.btn_scatter_edgecolor.setFixedWidth(80)
+        self._set_color_button(self.btn_scatter_edgecolor, 'black')
+        self.btn_scatter_edgecolor.clicked.connect(self._pick_scatter_edgecolor)
+        scatter_layout.addWidget(self.btn_scatter_edgecolor)
+        
+        scatter_layout.addStretch()
+        self.main_layout.addWidget(self.scatter_group)
+        
+        # Only show scatter group when plot is scatter style
+        self.scatter_group.setVisible(
+            self.graph_widget.plot_style == 'scatter'
+        )
+        
         self.main_layout.addStretch()
         
         # Apply / Cancel buttons
@@ -166,10 +222,22 @@ class CustomizeLegend(QWidget):
         if not legend_properties:
             no_legend_label = QLabel("No legend available for this plot.")
             self.legend_layout.addWidget(no_legend_label)
-            return
+        else:
+            # Build legend customization widgets
+            self._build_legend_widgets(legend_properties)
         
-        # Build legend customization widgets
-        self._build_legend_widgets(legend_properties)
+        # Load scatter settings
+        self.spin_scatter_size.setValue(
+            getattr(self.graph_widget, 'scatter_size', 70)
+        )
+        self._set_color_button(
+            self.btn_scatter_edgecolor,
+            getattr(self.graph_widget, 'scatter_edgecolor', 'black')
+        )
+        # Show/hide scatter group based on plot style
+        self.scatter_group.setVisible(
+            self.graph_widget.plot_style == 'scatter'
+        )
     
     def _build_legend_widgets(self, legend_properties):
         """Build the legend customization widgets (label, marker, color)."""
@@ -256,6 +324,19 @@ class CustomizeLegend(QWidget):
         combobox.setPalette(palette)
         combobox.update()
     
+    def _set_color_button(self, button, color_name):
+        """Set a QPushButton background and text to a given color."""
+        qc = QColor(color_name)
+        button.setStyleSheet(f"background-color: {qc.name()};")
+        button.setText(qc.name())
+    
+    def _pick_scatter_edgecolor(self):
+        """Open color picker for scatter marker edge color."""
+        current = QColor(self.btn_scatter_edgecolor.text())
+        color = QColorDialog.getColor(current, self, "Select Marker Edge Color")
+        if color.isValid():
+            self._set_color_button(self.btn_scatter_edgecolor, color.name())
+    
     def apply_changes(self):
         """Apply legend changes by doing a full replot."""
         # Full replot to ensure all changes are committed
@@ -267,9 +348,23 @@ class CustomizeLegend(QWidget):
         # Update the backup so Cancel won't revert applied changes
         self.original_legend_properties = copy.deepcopy(self.graph_widget.get_legend_properties())
         
+        # Apply scatter-specific properties
+        if self.graph_widget.plot_style == 'scatter':
+            self.graph_widget.scatter_size = self.spin_scatter_size.value()
+            self.graph_widget.scatter_edgecolor = self.btn_scatter_edgecolor.text()
+            # Replot to reflect changes
+            if self.graph_widget.df is not None:
+                self.graph_widget.plot(self.graph_widget.df)
+        
         # Connect to properties_changed signal to update ViewModel when graph properties change
         if hasattr(self.graph_widget, 'properties_changed'):
-            self.graph_widget.properties_changed.emit(self.graph_widget.graph_id, {'legend_properties': self.graph_widget.legend_properties})
+            props = {'legend_properties': self.graph_widget.legend_properties}
+            if self.graph_widget.plot_style == 'scatter':
+                props['scatter_size'] = self.graph_widget.scatter_size
+                props['scatter_edgecolor'] = self.graph_widget.scatter_edgecolor
+            self.graph_widget.properties_changed.emit(
+                self.graph_widget.graph_id, props
+            )
         
     def cancel_changes(self):
         """Cancel legend changes and restore original properties."""
@@ -294,6 +389,22 @@ class CustomizeAnnotations(QWidget):
         self.graph_widget.annotation_position_changed.connect(self._on_annotation_dragged)
         
         # Load initial annotations
+        self.load_annotations()
+    
+    def switch_graph(self, graph_widget):
+        """Switch to a different graph widget and reload annotations."""
+        # Disconnect from old graph's signal
+        try:
+            self.graph_widget.annotation_position_changed.disconnect(self._on_annotation_dragged)
+        except (RuntimeError, TypeError):
+            pass  # Already disconnected or never connected
+        
+        self.graph_widget = graph_widget
+        
+        # Connect to new graph's signal
+        self.graph_widget.annotation_position_changed.connect(self._on_annotation_dragged)
+        
+        # Reload annotations for the new graph
         self.load_annotations()
     
     def _setup_ui(self):
@@ -542,6 +653,11 @@ class CustomizeAxis(QWidget):
         self._setup_ui()
         
         # Load current settings
+        self.load_axis_settings()
+    
+    def switch_graph(self, graph_widget):
+        """Switch to a different graph widget and reload axis settings."""
+        self.graph_widget = graph_widget
         self.load_axis_settings()
     
     def _setup_ui(self):

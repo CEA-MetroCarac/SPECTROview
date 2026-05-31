@@ -1,20 +1,22 @@
 """Matplotlib graph visualization widget for MVVM pattern."""
 
 import numpy as np
-import seaborn as sns
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-from scipy.interpolate import griddata
+from matplotlib.ticker import FuncFormatter
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from PySide6.QtWidgets import QVBoxLayout, QWidget, QPushButton, QHBoxLayout
+from PySide6.QtWidgets import QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QDialog
 from PySide6.QtCore import QSize, Signal
 from PySide6.QtGui import QIcon
 
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR, PLOT_POLICY_LIGHT
-from spectroview.view.components.customize_graph_dialog import CustomizeGraphDialog
+from spectroview.view.components.customize_graph_dialog import (
+    EditLineDialog, EditTextDialog
+)
 from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb
 
 
@@ -26,6 +28,8 @@ class VGraph(QWidget):
     annotation_position_changed = Signal(int, str, float, float)
     # Signal emitted when replicate is requested
     replicate_requested = Signal(int)
+    # Signal emitted when customize dialog is requested (graph_id)
+    customize_requested = Signal(int)
     
     def __init__(self, graph_id=None):
         super().__init__()
@@ -93,6 +97,8 @@ class VGraph(QWidget):
         self.show_trendline_eq = True
         self.show_bar_plot_error_bar = True
         self.join_for_point_plot = False
+        self.scatter_size = 70  # Marker size for scatter plots
+        self.scatter_edgecolor = 'black'  # Edge color for scatter plot markers
         
         # Annotations
         self.annotations = []
@@ -160,7 +166,7 @@ class VGraph(QWidget):
         self.btn_customize.setIconSize(QSize(26, 26))
         self.btn_customize.setFixedSize(30, 30)
         self.btn_customize.setToolTip("Customize graph")
-        self.btn_customize.clicked.connect(self._show_customize_dialog)
+        self.btn_customize.clicked.connect(lambda: self.customize_requested.emit(self.graph_id))
         
         # Create Copy button
         self.btn_copy_figure = QPushButton()
@@ -181,8 +187,7 @@ class VGraph(QWidget):
         toolbar_layout.addWidget(self.btn_copy_figure)
         
         # Create container widget for toolbar layout
-        from PySide6.QtWidgets import QWidget as QWidgetContainer
-        toolbar_container = QWidgetContainer()
+        toolbar_container = QWidget()
         toolbar_container.setLayout(toolbar_layout)
         toolbar_container.setFixedHeight(35)
         
@@ -300,12 +305,8 @@ class VGraph(QWidget):
         # Check if it's a double-click on the legend
         legend = self.ax.get_legend()
         if legend and artist == legend and event.mouseevent.dblclick:
-            # Open CustomizeGraphDialog with Legend tab
-            if not hasattr(self, '_customize_dialog') or self._customize_dialog is None:
-                self._customize_dialog = CustomizeGraphDialog(self, self.graph_id, parent=self)
-            
-            # Open the Legend tab
-            self._customize_dialog.open_legend_tab()
+            # Emit signal to let workspace handle the dialog
+            self.customize_requested.emit(self.graph_id)
     
     def _plot_primary_axis(self, df):
         """Plots data on the primary axis based on the current plot style."""
@@ -348,18 +349,22 @@ class VGraph(QWidget):
                     point_kwargs['hue'] = self.z
                     point_kwargs['palette'] = colors
                     point_kwargs['marker'] = markers
+                import seaborn as sns
                 sns.pointplot(**point_kwargs)
 
             elif self.plot_style == 'scatter':
                 if self.z:
+                    import seaborn as sns
                     sns.scatterplot(
                         data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                        s=70, edgecolor='black', palette=colors
+                        s=self.scatter_size, edgecolor=self.scatter_edgecolor,
+                        palette=colors
                     )
                 else:
+                    import seaborn as sns
                     sns.scatterplot(
                         data=df, x=self.x, y=y, ax=self.ax,
-                        s=70, edgecolor='black'
+                        s=self.scatter_size, edgecolor=self.scatter_edgecolor
                     )
             elif self.plot_style == 'box':
                 # Only pass palette if hue is provided
@@ -367,6 +372,7 @@ class VGraph(QWidget):
                 if self.z:
                     box_kwargs['hue'] = self.z
                     box_kwargs['palette'] = colors
+                import seaborn as sns
                 sns.boxplot(**box_kwargs)
             elif self.plot_style == 'line':
                 # Only pass palette if hue is provided
@@ -374,6 +380,7 @@ class VGraph(QWidget):
                 if self.z:
                     line_kwargs['hue'] = self.z
                     line_kwargs['palette'] = colors
+                import seaborn as sns
                 sns.lineplot(**line_kwargs)
             elif self.plot_style == 'bar':
                 # Only pass palette if hue is provided
@@ -385,8 +392,10 @@ class VGraph(QWidget):
                 if self.z:
                     bar_kwargs['hue'] = self.z
                     bar_kwargs['palette'] = colors
+                import seaborn as sns
                 sns.barplot(**bar_kwargs)
             elif self.plot_style == 'trendline':
+                import seaborn as sns
                 sns.regplot(
                     data=df, x=self.x, y=y, ax=self.ax,
                     scatter=True, order=self.trendline_order
@@ -696,8 +705,10 @@ class VGraph(QWidget):
             self.ax2 = self.ax.twinx()
             
             if self.plot_style == 'line':
+                import seaborn as sns
                 sns.lineplot(data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2, color='red')
             elif self.plot_style == 'point':
+                import seaborn as sns
                 sns.pointplot(
                     data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
                     linestyles='-' if self.join_for_point_plot else 'none',
@@ -707,9 +718,11 @@ class VGraph(QWidget):
                     capsize=0.02
                 )
             elif self.plot_style == 'scatter':
+                import seaborn as sns
                 sns.scatterplot(
                     data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
-                    s=100, edgecolor='black', color='red'
+                    s=self.scatter_size, edgecolor=self.scatter_edgecolor,
+                    color='red'
                 )
             else:
                 self.ax2.remove()
@@ -730,8 +743,10 @@ class VGraph(QWidget):
             self.ax3.spines["right"].set_position(("outward", 100))
             
             if self.plot_style == 'line':
+                import seaborn as sns
                 sns.lineplot(data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3, color='green')
             elif self.plot_style == 'point':
+                import seaborn as sns
                 sns.pointplot(
                     data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
                     linestyles='-' if self.join_for_point_plot else 'none',
@@ -741,9 +756,11 @@ class VGraph(QWidget):
                     capsize=0.02
                 )
             elif self.plot_style == 'scatter':
+                import seaborn as sns
                 sns.scatterplot(
                     data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
-                    s=100, edgecolor='black', color='green'
+                    s=self.scatter_size, edgecolor=self.scatter_edgecolor,
+                    color='green'
                 )
             else:
                 self.ax3.remove()
@@ -879,8 +896,6 @@ class VGraph(QWidget):
                     
     def _edit_annotation_direct(self, annotation):
         """Open edit dialog for annotation (called from double-click)."""
-        from .customize_graph_dialog import EditLineDialog, EditTextDialog
-        from PySide6.QtWidgets import QDialog
         
         # Open appropriate edit dialog based on type
         if annotation['type'] in ['vline', 'hline']:
@@ -1027,7 +1042,6 @@ class VGraph(QWidget):
                 xdata = line.get_xdata()
                 ydata = line.get_ydata()
                 
-                import numpy as np
                 xdata = np.asarray(xdata)
                 ydata = np.asarray(ydata)
                 
@@ -1039,7 +1053,6 @@ class VGraph(QWidget):
                 line.set_data(xdata_new[keep_mask], ydata[keep_mask])
                 
             for collection in self.ax.collections:
-                import numpy as np
                 offsets = collection.get_offsets()
                 if offsets is not None and len(offsets) > 0:
                     xdata = offsets[:, 0]
@@ -1093,7 +1106,6 @@ class VGraph(QWidget):
             self._break_markers.extend([p1, p2, p3, p4])
             
             # Correct tick labels
-            from matplotlib.ticker import FuncFormatter
             def break_formatter_x(x, pos):
                 if x > break_start + gap_size / 2:
                     return f"{x + break_range - gap_size:g}"
@@ -1130,7 +1142,6 @@ class VGraph(QWidget):
                 xdata = line.get_xdata()
                 ydata = line.get_ydata()
                 
-                import numpy as np
                 xdata = np.asarray(xdata)
                 ydata = np.asarray(ydata)
                 
@@ -1142,7 +1153,6 @@ class VGraph(QWidget):
                 line.set_data(xdata[keep_mask], ydata_new[keep_mask])
                 
             for collection in self.ax.collections:
-                import numpy as np
                 offsets = collection.get_offsets()
                 if offsets is not None and len(offsets) > 0:
                     xdata = offsets[:, 0]
@@ -1196,7 +1206,6 @@ class VGraph(QWidget):
             self._break_markers.extend([p1, p2, p3, p4])
             
             # Correct tick labels
-            from matplotlib.ticker import FuncFormatter
             def break_formatter_y(y, pos):
                 if y > break_start + gap_size / 2:
                     return f"{y + break_range - gap_size:g}"
@@ -1204,15 +1213,12 @@ class VGraph(QWidget):
             self.ax.yaxis.set_major_formatter(FuncFormatter(break_formatter_y))
     
     def _show_customize_dialog(self):
-        """Show customize dialog for this graph."""
-        # Check if dialog already exists
-        if not hasattr(self, '_customize_dialog') or self._customize_dialog is None:
-            self._customize_dialog = CustomizeGraphDialog(self, self.graph_id, parent=self)
+        """Show customize dialog for this graph.
         
-        # Show non-modal dialog
-        self._customize_dialog.show()
-        self._customize_dialog.raise_()
-        self._customize_dialog.activateWindow()
+        Note: This is kept for backward compatibility but now delegates to the
+        customize_requested signal so the workspace can manage a singleton dialog.
+        """
+        self.customize_requested.emit(self.graph_id)
 
 
 class WaferPlot:
@@ -1224,6 +1230,7 @@ class WaferPlot:
     def plot(self, ax, x, y, z, cmap="jet", r=100, vmax=None, vmin=None, stats=True):
         """Plot wafer map with interpolated data."""
         xi, yi = np.meshgrid(np.linspace(-r, r, 600), np.linspace(-r, r, 600))
+        from scipy.interpolate import griddata
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
         
         im = ax.imshow(

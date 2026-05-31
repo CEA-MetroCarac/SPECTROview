@@ -42,7 +42,7 @@ class VMenuBar(QToolBar):
         self.actionConvert= self.addAction(QIcon(os.path.join(ICON_DIR, "FileConvert.png")), "Convert 2Dmap format")
         self.actionConvert.triggered.connect(self.convert_requested.emit)
 
-        self.actionCalc = self.addAction(QIcon(os.path.join(ICON_DIR, "calc.png")), "Quick Calculation")
+        self.actionCalc = self.addAction(QIcon(os.path.join(ICON_DIR, "calc.png")), "Quick Calculators")
         self.actionCalc.triggered.connect(self.calc_requested.emit)
 
         self.addSeparator()
@@ -58,6 +58,7 @@ class VMenuBar(QToolBar):
         self.actionTheme.triggered.connect(self.theme_requested.emit)
 
         self.actionManual= self.addAction(QIcon(os.path.join(ICON_DIR, "manual.png")), "Open User Manual")
+        self.actionManual.setToolTip("Open User Manual PDF\n(Ctrl + Click to open online web manual)")
         self.actionManual.triggered.connect(self.manual_requested.emit)
 
         self.actionGithub= self.addAction(QIcon(os.path.join(ICON_DIR, "github_yellow.png")), "Open Github repository")

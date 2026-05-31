@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog, QMessageBox
-from PySide6.QtCore import Qt, QSettings, QFileInfo, QUrl
+from PySide6.QtCore import Qt, QFileInfo, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter
@@ -25,7 +25,14 @@ from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 
 from spectroview.viewmodel.utils import dark_palette, light_palette
 
-from spectroview import LOGO_APPLI, USER_MANUAL_PDF
+from spectroview import LOGO_APPLI, USER_MANUAL_DIR
+from spectroview.view.components.v_user_manual import VUserManualDialog
+
+try:
+    from renishawWiRE import WDFReader
+    WDF_AVAILABLE = True
+except ImportError:
+    WDF_AVAILABLE = False
 
 class Main(QMainWindow):
     def __init__(self):
@@ -173,8 +180,9 @@ class Main(QMainWindow):
                 spectra_files.append(str(path))
             elif ext == '.wdf':
                 # Renishaw WiRE native format - detect if it's a map or single spectrum
-                from renishawWiRE import WDFReader
                 try:
+                    if not WDF_AVAILABLE:
+                        raise ImportError("renishawWiRE library is not installed.")
                     reader = WDFReader(str(path))
                     # Check measurement type: Mapping = hyperspectral, Single = spectrum
                     # measurement_type is an enum, so convert to string for comparison
@@ -330,7 +338,12 @@ class Main(QMainWindow):
         """   Open settings dialog. """
         vm = VMSettings()
         dlg = VSettingsDialog(vm, self)
-        dlg.exec()
+        if dlg.exec():
+            # Refresh viewers to reflect settings changes (e.g. coef_noise)
+            if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
+                self.v_spectra_workspace.v_spectra_viewer._plot()
+            if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
+                self.v_maps_workspace.v_spectra_viewer._plot()
 
     def file_converter(self):
         """Open file converter dialog for hyperspectral data."""
@@ -352,24 +365,26 @@ class Main(QMainWindow):
         dlg.exec()
 
     def manual(self):
-        """Open user manual PDF using system's default PDF viewer (cross-platform)."""
-        if not os.path.exists(USER_MANUAL_PDF):
+        """Open integrated user manual MD viewer or web documentation."""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers & Qt.ControlModifier:
+            url = QUrl("https://cea-metrocarac.github.io/SPECTROview/")
+            QDesktopServices.openUrl(url)
+            return
+
+        if not os.path.exists(USER_MANUAL_DIR):
             QMessageBox.warning(
                 self, 
                 "Manual Not Found", 
-                f"User manual not found at:\n{USER_MANUAL_PDF}"
+                f"User manual not found at:\n{USER_MANUAL_DIR}"
             )
             return
-        
-        # Use Qt's QDesktopServices for cross-platform file opening
-        pdf_url = QUrl.fromLocalFile(USER_MANUAL_PDF)
-        if not QDesktopServices.openUrl(pdf_url):
-            QMessageBox.critical(
-                self,
-                "Cannot Open Manual",
-                f"Failed to open the user manual.\n\n"
-                f"Please open it manually:\n{USER_MANUAL_PDF}"
-            )
+            
+        if not hasattr(self, '_manual_dlg') or self._manual_dlg is None:
+            self._manual_dlg = VUserManualDialog(USER_MANUAL_DIR, self)
+        self._manual_dlg.show()
+        self._manual_dlg.raise_()
+        self._manual_dlg.activateWindow()
 
     def open_github_repo(self):
         """Open the project's GitHub repository."""
@@ -378,7 +393,7 @@ class Main(QMainWindow):
 
     def open_releases(self):
         """Open the project's releases page."""
-        url = QUrl("https://github.com/CEA-MetroCarac/SPECTROview/releases")
+        url = QUrl("https://cea-metrocarac.github.io/SPECTROview/changelog/")
         QDesktopServices.openUrl(url)
 
     def toggle_theme(self, theme=None):

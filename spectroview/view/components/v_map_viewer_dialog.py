@@ -24,7 +24,7 @@ class VMapViewerDialog(QDialog):
         
         # Dialog setup
         self.setWindowTitle(f"Map Viewer {viewer_number}")
-        self.setWindowFlags(Qt.Window)  # Independent window
+        self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)  # Independent window, always on top
         self.resize(450, 550)
         
         # Create layout

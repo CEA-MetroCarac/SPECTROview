@@ -14,3 +14,10 @@ app/.DS_Store
 env_spectroview/
 .vscode/
 .github/workflows/
+
+# MkDocs build output
+site/
+
+# User Manual docs are symlinked from spectroview/resources/ at build time
+docs/user_manual/
+docs/user_manual_images/

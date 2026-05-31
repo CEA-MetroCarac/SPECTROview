@@ -1,7 +1,6 @@
 #spectroview/model/m_settings.py
 
 from PySide6.QtCore import QSettings
-import os
 
 class MSettings:
     """Model: persistent application settings"""
@@ -13,12 +12,14 @@ class MSettings:
     def load_fit_settings(self) -> dict:
         return {
             "fit_negative": self.settings.value("fit_settings/fit_negative", False, bool),
-            "method": self.settings.value("fit_settings/method", "Leastsq"),
             "max_ite": self.settings.value("fit_settings/max_ite", 200, int),
-            "xtol": self.settings.value("fit_settings/xtol", 1e-5, float),
-            "ncpu": self.settings.value("fit_settings/ncpu", 1, int),
+            "xtol": self.settings.value("fit_settings/xtol", 1e-4, float),
+            "ftol": self.settings.value("fit_settings/ftol", 1e-4, float),
+            "coef_noise": self.settings.value("fit_settings/coef_noise", 0.0, float),
             "maxshift": self.settings.value("fit_settings/maxshift", 20.0, float),
             "maxfwhm": self.settings.value("fit_settings/maxfwhm", 200.0, float),
+            "minfwhm": self.settings.value("fit_settings/minfwhm", 0.1, float),
+            "maxintensity": self.settings.value("fit_settings/maxintensity", 100000.0, float),
         }
 
     def save_fit_settings(self, data: dict):
@@ -30,7 +31,7 @@ class MSettings:
     def load_view_options(self) -> dict:
         """Load view options of spectra viewer from settings"""
         return {
-            "theme": self.settings.value("view_options/theme", "Light Mode", str),
+            "theme": self.settings.value("view_options/theme", "Dark Mode", str),
             "xaxis": self.settings.value("view_options/xaxis", "Wavenumber (cm⁻¹)", str),
             "yaxis": self.settings.value("view_options/yaxis", "Intensity (a.u.)", str),
             "yscale": self.settings.value("view_options/yscale", "Linear", str),
@@ -42,6 +43,7 @@ class MSettings:
             "show_peak_label": self.settings.value("view_options/show_peak_label", False, bool),
             "residual": self.settings.value("view_options/residual", False, bool),
             "grid": self.settings.value("view_options/grid", False, bool),
+            "noise_level": self.settings.value("view_options/noise_level", False, bool),
             "width": self.settings.value("view_options/width", "5.5", str),
             "height": self.settings.value("view_options/height", "4.0", str),
             "legend": self.settings.value("view_options/legend", False, bool),

@@ -3,14 +3,13 @@ from spectroview import ICON_DIR, PEAK_MODELS
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QGroupBox, QLabel, QPushButton, QComboBox,
-    QDoubleSpinBox, QSpinBox, QRadioButton,
-    QScrollArea, QCheckBox, QApplication, QSlider
+    QDoubleSpinBox, QSpinBox, QScrollArea, QCheckBox, QApplication, QSlider
 )
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
 
-from fitspy.core.baseline_methods import (
-    _INTERNAL_METHODS, _PYBASELINES_WHITELIST, get_baseline_method_meta
+from spectroview.fit_engine.baseline import (
+    get_baseline_method_meta
 )
 
 from spectroview import ICON_DIR, PEAK_MODELS
@@ -47,7 +46,7 @@ class VFitModelBuilder(QWidget):
     #PeakTable signals: 
     peak_label_changed = Signal(int, str)
     peak_model_changed = Signal(int, str)
-    peak_param_changed = Signal(int, str, str, float)
+    peak_param_changed = Signal(int, str, str, object)
     peak_deleted = Signal(int)
 
 
@@ -389,11 +388,12 @@ class VFitModelBuilder(QWidget):
         cbb.insertSeparator(len(VFitModelBuilder._BASELINE_MODE_KEYS))
         VFitModelBuilder._BASELINE_MODE_KEYS.append("__sep__")
 
-        # ── Auto methods: only these three methods
+        # ── Auto methods: only these methods
         _AUTO_WHITELIST = {
             "airpls": "airPLS",
+            "arpls":  "arPLS",
             "asls":   "asLS",
-            #"arpls":  "arPLS", # Remove because the performance not good.
+            "modpoly": "ModPoly",
         }
 
         for key, label in _AUTO_WHITELIST.items():
@@ -404,7 +404,7 @@ class VFitModelBuilder(QWidget):
         cbb.setCurrentIndex(0)
 
     def _current_mode_key(self):
-        """Return the fitspy mode key for the current combobox selection."""
+        """Return the baseline mode key for the current combobox selection."""
         idx = self.cbb_baseline_mode.currentIndex()
         keys = VFitModelBuilder._BASELINE_MODE_KEYS
         if 0 <= idx < len(keys):
@@ -508,19 +508,45 @@ class VFitModelBuilder(QWidget):
 
     # ── Public: sync UI from selected spectrum ─────────────────────────────
 
-    def update_baseline_ui(self, spectra: list):
+    def update_baseline_ui(self, spectra):
         """Reflect the first selected spectrum's baseline settings in the GUI.
 
         Called whenever the spectrum selection changes so the panel always shows
         the parameters currently stored on the selected spectrum's baseline object.
         Signals are blocked during the update to avoid feedback loops.
         """
-        if not spectra:
-            return
-        bl = spectra[0].baseline
+        mode = None
+        attached = True
+        sigma = 0
+        order_max = 2
+        coef = 5.0
+
+        if isinstance(spectra, dict):
+            # Tensor / new architecture mode
+            bl_configs = spectra.get("baseline_config", [])
+            bl_config = bl_configs[0] if bl_configs else {}
+            if bl_config is None:
+                bl_config = {}
+            mode = bl_config.get("mode")
+            attached = bool(bl_config.get("attached", True))
+            sigma = int(bl_config.get("sigma", 4))
+            order_max = int(bl_config.get("order_max", 2))
+            coef = float(bl_config.get("coef", 5.0))
+        else:
+            # Legacy list of Spectrum objects
+            specs = spectra or []
+            if not specs:
+                return
+            bl = specs[0].baseline
+            if bl is None:
+                return
+            mode = bl.mode
+            attached = bool(bl.attached)
+            sigma = int(bl.sigma) if bl.sigma else 0
+            order_max = int(bl.order_max) if bl.order_max else 2
+            coef = float(bl.coef) if bl.coef else 5.0
 
         keys = VFitModelBuilder._BASELINE_MODE_KEYS
-        mode = bl.mode  # e.g. "Linear", "arpls", None …
 
         # Find the combobox index for this mode key
         try:
@@ -539,15 +565,15 @@ class VFitModelBuilder(QWidget):
         try:
             self.cbb_baseline_mode.setCurrentIndex(idx)
             # Update attached / sigma for manual modes
-            self.chk_attached.setChecked(bool(bl.attached))
-            self.spin_noise.setValue(int(bl.sigma) if bl.sigma else 0)
-            self.spin_poly.setValue(int(bl.order_max) if bl.order_max else 2)
+            self.chk_attached.setChecked(attached)
+            self.spin_noise.setValue(sigma)
+            self.spin_poly.setValue(order_max)
             # Update coef slider for auto modes
-            coef_int = max(10, min(100, round(bl.coef * 10)))
+            coef_int = max(10, min(100, round(coef * 10)))
             self.sld_coef.setValue(coef_int)
-            lam = 10 ** bl.coef
+            lam = 10 ** coef
             if lam >= 1e6:
-                self.lbl_coef.setText(f"λ=1e{bl.coef:.0f}")
+                self.lbl_coef.setText(f"λ=1e{coef:.0f}")
             else:
                 self.lbl_coef.setText(f"λ={lam:.0f}")
         finally:

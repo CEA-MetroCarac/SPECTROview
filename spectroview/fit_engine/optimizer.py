@@ -1,0 +1,219 @@
+# spectroview/core2/optimizer.py
+"""Batched Levenberg-Marquardt optimizer.
+
+Solves N independent least-squares problems simultaneously using
+NumPy tensor operations.  All N normal-equation systems are assembled
+and solved via Cholesky factorisation (scipy cho_factor/cho_solve),
+which exploits the symmetric positive-definite structure of the
+normal equations for optimal performance.
+
+Bound handling uses simple projection (clipping) after each step.
+"""
+
+import numpy as np
+
+
+def _batched_solve(A, b):
+    """Solve A @ x = b for each spectrum.
+
+    Adaptive strategy:
+    - For large N (many spectra), np.linalg.solve is faster because NumPy's
+      batched LAPACK dispatch amortises the overhead.
+    - For small N with large K (few spectra, many parameters), a per-matrix
+      Cholesky decomposition is faster because it exploits the symmetric
+      positive-definite structure of the normal equations (JᵀJ + λI).
+
+    Args:
+        A: (Na, K, K) symmetric positive-definite matrices
+        b: (Na, K) right-hand-side vectors
+
+    Returns:
+        x: (Na, K) solution vectors
+    """
+    Na, K = b.shape
+
+    # Crossover heuristic: cho_solve loop wins when Na is small and K is large.
+    # For Na > ~500 or K < ~10, np.linalg.solve's batched path is faster.
+    if Na > 500 or K < 10:
+        try:
+            return np.linalg.solve(A, b)
+        except np.linalg.LinAlgError:
+            # Fall through to per-matrix solve
+            pass
+
+    # Per-matrix Cholesky solve (best for small Na, large K)
+    x = np.empty_like(b)
+    for i in range(Na):
+        try:
+            from scipy.linalg import cho_factor, cho_solve
+            c, low = cho_factor(A[i])
+            x[i] = cho_solve((c, low), b[i])
+        except np.linalg.LinAlgError:
+            try:
+                x[i] = np.linalg.solve(A[i], b[i])
+            except np.linalg.LinAlgError:
+                x[i] = 0.0
+    return x
+
+
+
+def batched_levenberg_marquardt(
+    x,                  # (M,)
+    Y_data,             # (N, M)
+    evaluate_fn,        # callable(x, p) → (N, M)
+    jacobian_fn,        # callable(x, p) → (N, M, K)
+    p0,                 # (N, K) or (K,)
+    lower_bounds,       # (K,)
+    upper_bounds,       # (K,)
+    weights=None,       # (N, M) or (M,)
+    max_iter=200,
+    xtol=1e-4,
+    ftol=1e-4,
+    progress_callback=None,
+    cancel_check=None,
+):
+    """Fit N spectra simultaneously using batched Levenberg-Marquardt.
+
+    Returns
+    -------
+    p_opt : (N, K) optimised parameters
+    success : (N,) bool array
+    cost : (N,) final sum-of-squared-residuals
+    """
+    N, M = Y_data.shape
+    K = len(lower_bounds)
+    lo = np.asarray(lower_bounds, dtype=np.float64)
+    hi = np.asarray(upper_bounds, dtype=np.float64)
+
+    if weights is None:
+        weights = np.ones((N, M), dtype=np.float64)
+    else:
+        weights = np.asarray(weights, dtype=np.float64)
+        if weights.ndim == 1:
+            weights = np.tile(weights, (N, 1))
+        if weights.shape != (N, M):
+            raise ValueError(f"weights must have shape ({N}, {M}), got {weights.shape}")
+
+    # Broadcast p0 if 1-D
+    if p0.ndim == 1:
+        p = np.tile(p0, (N, 1)).astype(np.float64)
+    else:
+        p = p0.astype(np.float64).copy()
+
+    # Clip initial guess to bounds
+    p = np.clip(p, lo, hi)
+
+    # Initial residuals and cost
+    Y_pred = evaluate_fn(x, p)
+    residuals = weights * (Y_pred - Y_data)        # (N, M)
+    cost = np.sum(residuals * residuals, axis=1)  # (N,)
+
+    # Per-spectrum damping factor
+    lam = np.full(N, 1e-2)
+    converged = np.zeros(N, dtype=bool)
+    if weights is not None:
+        converged |= (weights.sum(axis=1) == 0)
+
+    # Track consecutive rejections to detect stuck spectra
+    consecutive_rejects = np.zeros(N, dtype=int)
+    MAX_REJECTS = 15  # mark as converged (stuck) after this many
+
+    eye_K = np.eye(K, dtype=np.float64)
+
+    for iteration in range(max_iter):
+        if cancel_check and cancel_check():
+            break
+
+        active = ~converged
+        n_active = int(active.sum())
+        if n_active == 0:
+            break
+
+        # ── Compute Jacobian ONLY for active spectra ──
+        # Extract active subset
+        p_active = p[active]                # (Na, K)
+        r_active = residuals[active]        # (Na, M)
+
+        x_active = x[active] if x.ndim == 2 else x
+        J_active = jacobian_fn(x_active, p_active)  # (Na, M, K)
+
+        # Replace any NaN/Inf in Jacobian with zero
+        np.nan_to_num(J_active, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+
+        # ── Normal equations: (JᵀJ + λ·diag(JᵀJ)) δp = -Jᵀr ──
+        J_active *= weights[active, :, None]
+        JTJ = np.einsum('nmk,nml->nkl', J_active, J_active)  # (Na, K, K)
+        JTr = np.einsum('nmk,nm->nk', J_active, r_active)    # (Na, K)
+
+        # Damping
+        diag = np.diagonal(JTJ, axis1=1, axis2=2).copy()
+        diag = np.maximum(diag, 1e-12)
+        lam_a = lam[active]
+        damping = lam_a[:, None] * diag   # (Na, K)
+
+        A = JTJ + eye_K[None, :, :] * damping[:, :, None]
+
+        # Solve using Cholesky decomposition (8x faster than np.linalg.solve
+        # for symmetric positive-definite normal equations)
+        dp = _batched_solve(A, -JTr)
+
+        # Replace NaN steps with zero
+        np.nan_to_num(dp, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+
+        # ── Trial step with projection ──
+        p_trial_active = np.clip(p_active + dp, lo, hi)
+
+        # Evaluate only the active spectra
+        Y_trial_active = evaluate_fn(x_active, p_trial_active)
+        r_trial_active = weights[active] * (Y_trial_active - Y_data[active])
+        cost_trial_active = np.sum(r_trial_active * r_trial_active, axis=1)
+
+        improved_active = cost_trial_active <= cost[active]
+        worsened_active = ~improved_active
+
+        active_idx = np.where(active)[0]
+        improved_idx = active_idx[improved_active]
+        worsened_idx = active_idx[worsened_active]
+
+        # Accept improved steps
+        if improved_active.any():
+            p[improved_idx] = p_trial_active[improved_active]
+            residuals[improved_idx] = r_trial_active[improved_active]  # already weighted
+            old_cost_improved = cost[improved_idx].copy()
+            cost[improved_idx] = cost_trial_active[improved_active]
+        else:
+            old_cost_improved = np.array([])
+
+        # Lambda update
+        lam[improved_idx] = np.maximum(lam[improved_idx] / 3.0, 1e-10)
+        lam[worsened_idx] = np.minimum(lam[worsened_idx] * 2.5, 1e10)
+
+        # ── Convergence (only for improved spectra) ──
+        if improved_active.any():
+            rel_cost_change = np.abs(old_cost_improved - cost[improved_idx]) / (cost[improved_idx] + 1e-30)
+
+            # Use mean of relative parameter changes instead of max.
+            # With max, a single slowly-converging parameter out of K blocks
+            # the entire spectrum from converging, which scales very poorly
+            # as K increases (e.g. K=18 for 6-peak models).
+            dp_abs_rel = np.abs(dp[improved_active]) / np.maximum(np.abs(p_active[improved_active]), 1.0)
+            dp_rel = np.mean(dp_abs_rel, axis=1)
+
+            effective_xtol = max(xtol, 1e-3)
+            newly_conv = (rel_cost_change < ftol) & (dp_rel < effective_xtol)
+            converged[improved_idx[newly_conv]] = True
+
+        # Track consecutive rejections
+        consecutive_rejects[improved_idx] = 0
+        consecutive_rejects[worsened_idx] += 1
+
+        # Mark stuck spectra as converged
+        converged |= (consecutive_rejects >= MAX_REJECTS)
+
+        # ── Progress ──
+        if progress_callback:
+            progress_callback(int(converged.sum()), N)
+
+    success = converged.copy()
+
+    return p, success, cost

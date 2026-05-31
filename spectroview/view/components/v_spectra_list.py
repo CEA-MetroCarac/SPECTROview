@@ -1,6 +1,7 @@
 # spectroview/view/components/v_spectra_list.py
 from PySide6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QFont
 
 from spectroview.viewmodel.utils import set_spectrum_item_color
 
@@ -45,7 +46,7 @@ class VSpectraList(QListWidget):
             placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
             
             # Set larger font size
-            from PySide6.QtGui import QFont
+            
             font = QFont()
             font.setPointSize(12)  # Increase font size
             placeholder.setFont(font)
@@ -80,11 +81,14 @@ class VSpectraList(QListWidget):
         self._has_placeholder = False  # Reset placeholder flag
         
         for i, spectrum in enumerate(spectra):
-            item = QListWidgetItem(spectrum.fname)
+            fname = spectrum["fname"]
+            is_active = spectrum["is_active"]
+            
+            item = QListWidgetItem(fname)
             item.setData(Qt.UserRole, i)  # model index -> used when dragging/reordering
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             # Set checkbox state from spectrum.is_active
-            item.setCheckState(Qt.Checked if spectrum.is_active else Qt.Unchecked)
+            item.setCheckState(Qt.Checked if is_active else Qt.Unchecked)
             
             # Set background color based on spectrum status
             set_spectrum_item_color(item, spectrum)
@@ -92,8 +96,8 @@ class VSpectraList(QListWidget):
             self.addItem(item)
             
             # Connect checkbox state change to update spectrum.is_active
-            # Store reference to spectrum object
-            item.setData(Qt.UserRole + 1, id(spectrum))  # Store spectrum ID for lookup
+            # Store reference to fname instead of ID
+            item.setData(Qt.UserRole + 1, fname)
         
         # Restore selection by matching fnames
         selection_restored = False

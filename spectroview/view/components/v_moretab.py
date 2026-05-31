@@ -7,6 +7,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Signal
 
+from spectroview.viewmodel.utils import baseline_to_dict
+
 class VMoreTab(QWidget):
     """View for Metadata tab - displays acquisition metadata, custom properties, and normalization."""
     
@@ -180,7 +182,6 @@ class VMoreTab(QWidget):
             points_str = ""
             subtracted_str = ""
             try:
-                from spectroview.viewmodel.utils import baseline_to_dict
                 bl_dict = baseline_to_dict(spectrum)
                 mode_str = str(bl_dict.get('mode', ''))
                 coef_str = str(bl_dict.get('coef', ''))

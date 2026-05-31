@@ -1,8 +1,8 @@
 # spectroview/viewmodel/utils.py
-from PySide6.QtGui import QPalette, QColor, QIcon, QPixmap, QImage, QTextCursor
-from PySide6.QtCore import Qt, Signal, QThread, QSize
+from PySide6.QtGui import QPalette, QColor, QPixmap, QImage, QTextCursor
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QComboBox, QMessageBox, QApplication, QListWidgetItem,
+    QMessageBox, QApplication, QListWidgetItem,
     QDialog, QTextBrowser, QVBoxLayout
 )    
 
@@ -10,278 +10,36 @@ import os
 import datetime
 import struct
 import re
-import base64
-import json
-import zlib
-import time
-import dill
 import numpy as np
-import pandas as pd
-import warnings
+import numpy as np
 from io import BytesIO
 
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from multiprocessing import Manager
-from openpyxl.styles import PatternFill
 from copy import deepcopy
 
-import matplotlib.colors as mcolors
-import matplotlib.cm as cm
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
-
-from fitspy.core.baseline import BaseLine
-from fitspy.core.utils_mp import fit_mp, fit, initializer
-
-from spectroview import PALETTE, DEFAULT_COLORS
-
-try:
-    from pyqttoast import Toast, ToastPreset
-    TOAST_AVAILABLE = True
-except ImportError:
-    TOAST_AVAILABLE = False
-
-class DummyQueue:
-    """A dummy queue to satisfy fitspy's fit() function without IPC overhead."""
-    def put(self, item, block=True, timeout=None):
-        pass
-
-def worker_initializer(queue_incr):
-    """Initialize worker thread with warnings suppressed."""
-    warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
-    initializer(queue_incr)
+from spectroview import DEFAULT_COLORS
 
 
-# Per-spectrum attributes that are unique to each spectrum and must never be
-# overwritten when a fit model is copied from another spectrum.
-_SPECTRUM_OWN_ATTRS = (
-    "xcorrection_value",
-    "intensity_norm_factor",
-    "label",
-    "color",
-    "metadata",
-)
 
-
-def apply_custom_fit_model(spectrum, fit_model: dict, fname: str) -> None:
-    """Apply a custom fit model dict to a spectrum while preserving its own attributes"""  
-    custom_model = deepcopy(fit_model)
-
-    # Prevent divide by zero in fitspy by enforcing fwhm/sigma > 0
-    if "peak_models" in custom_model:
-        for p_idx, p_model in custom_model["peak_models"].items():
-            for shape, params in p_model.items():
-                for param_name in ["fwhm", "sigma"]:
-                    if param_name in params:
-                        # Ensure value > 0
-                        if params[param_name].get("value", 1) <= 0:
-                            params[param_name]["value"] = 1e-6
-                        # Ensure min bound > 0
-                        if params[param_name].get("min", 0) <= 0:
-                            params[param_name]["min"] = 1e-6
-
-    for attr in _SPECTRUM_OWN_ATTRS:
-        if hasattr(spectrum, attr):
-            custom_model[attr] = getattr(spectrum, attr)
-    spectrum.set_attributes(custom_model)
-    spectrum.fname = fname  # reassign correct fname after set_attributes
-
-
-class ApplyFitModelThread(QThread):
-    """Class to perform fitting in a separate Thread."""
-    progress_changed = Signal(int, int, int, float)  # (current, total, percentage, elapsed_time)
+def generate_fit_report(fit_result):
+    """Generate a lightweight text report of the fit result mimicking legacy output."""
+    if not fit_result or not hasattr(fit_result, 'params'):
+        return "No fit result available."
     
-    def __init__(self, spectrums, fit_model, fnames, ncpus=1):
-        super().__init__()
-        self.spectrums = spectrums
-        self.fit_model = fit_model
-        self.fnames = fnames
-        self.ncpus = ncpus
-        self._is_cancelled = False
-        
-    def stop(self):
-        """Request the thread to stop gracefully."""
-        self._is_cancelled = True
-
-    def run(self):
-        """Execute fitting with progress tracking and stoppable futures. Pipelined with O(1) lookup.""" 
-
-        # Suppress lmfit warning in the main thread (for single-CPU execution)
-        warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
-        
-        fit_model = deepcopy(self.fit_model)
-        total = len(self.fnames)
-        
-        start_time = time.time()
-        self.progress_changed.emit(0, total, 0, 0.0)
-
-        # Build an O(1) lookup dictionary to avoid O(N^2) search overhead from get_objects()
-        # get_objects() internally normalizes paths and does a linear list.index() search.
-        
-        spectra_dict = {os.path.normpath(s.fname): s for s in self.spectrums.all}
-
-        if self.ncpus == 1:
-            # Single-threaded mode - directly fit as we go to eliminate initial delay
-            count = 0
-            for fname in self.fnames:
-                if self._is_cancelled:
-                    break
-                    
-                norm_fname = os.path.normpath(fname)
-                spectrum = spectra_dict.get(norm_fname)
-                if not spectrum:
-                    continue
-
-                #apply only CUSTOM MODEL keep some information: label, color, metadata...   
-                apply_custom_fit_model(spectrum, fit_model, fname)
-                
-                spectrum.preprocess()
-                spectrum.fit()
-                count += 1
-                percentage = int((count / total) * 100)
-                elapsed_time = time.time() - start_time
-                self.progress_changed.emit(count, total, percentage, elapsed_time)
-                
+    report = ["[[Fit Statistics]]"]
+    report.append(f"    success    = {fit_result.success}")
+    if hasattr(fit_result, 'rsquared'):
+        report.append(f"    R-squared  = {fit_result.rsquared:.6f}")
+    
+    report.append("\n[[Variables]]")
+    for name, param in fit_result.params.items():
+        if hasattr(param, 'value'):
+            report.append(f"    {name:15s}: {param.value:.6g}")
         else:
-            # Multiprocessing mode using a pipelined execution model
-            # This completely eliminates both serialization delay and O(N^2) lookup lag
-            queue_incr = DummyQueue()
-            with ProcessPoolExecutor(
-                initializer=worker_initializer,
-                initargs=(queue_incr,),
-                max_workers=self.ncpus
-            ) as executor:
-                from concurrent.futures import wait, FIRST_COMPLETED
-                
-                self.futures = set()
-                future_to_spectrum = {}
-                count = 0
-                max_queued = self.ncpus * 2
-                fname_iterator = iter(self.fnames)
-                
-                def submit_next():
-                    fname = next(fname_iterator, None)
-                    if fname is not None:
-                        norm_fname = os.path.normpath(fname)
-                        spectrum = spectra_dict.get(norm_fname)
-                        if not spectrum:
-                            return submit_next()
-
-                        #apply only CUSTOM MODEL keep some information    
-                        apply_custom_fit_model(spectrum, fit_model, fname)
-                        
-                        arg = dill.dumps(spectrum)
-                        future = executor.submit(fit, arg)
-                        self.futures.add(future)
-                        future_to_spectrum[future] = spectrum
-                        return True
-                    return False
-                
-                # Pre-fill executor to keep all workers busy
-                for _ in range(max_queued):
-                    if not submit_next():
-                        break
-                        
-                while self.futures:
-                    if self._is_cancelled:
-                        for f in self.futures:
-                            f.cancel()
-                        break
-                        
-                    done, self.futures = wait(self.futures, return_when=FIRST_COMPLETED)
-                    
-                    for future in done:
-                        try:
-                            # Retrieve the result
-                            res = future.result()
-                            spectrum = future_to_spectrum.pop(future)
-                            spectrum.x = res[0]
-                            spectrum.y = res[1]
-                            spectrum.weights = res[2]
-                            spectrum.baseline.y_eval = res[3]
-                            spectrum.baseline.is_subtracted = res[4]
-                            spectrum.result_fit = dill.loads(res[5])
-                            spectrum.reassign_params()
-                        except Exception:
-                            # In case of exception, remove from dict if present
-                            future_to_spectrum.pop(future, None)
-                            
-                        count += 1
-                        percentage = int((count / total) * 100)
-                        elapsed_time = time.time() - start_time
-                        self.progress_changed.emit(count, total, percentage, elapsed_time)
-                        
-                        # Queue next item to pipeline execution
-                        if not self._is_cancelled:
-                            submit_next()
-
-        if not self._is_cancelled:
-            elapsed_time = time.time() - start_time
-            self.progress_changed.emit(total, total, 100, elapsed_time)
-
-class FitThread(QThread):
-    """Thread for fitting spectra with their own existing peak models (no model copying)."""
-    progress_changed = Signal(int, int, int, float)  # (current, total, percentage, elapsed_time)
-    
-    def __init__(self, spectra):
-        super().__init__()
-        self.spectra = spectra
-        self._is_cancelled = False
-        
-    def stop(self):
-        """Request the thread to stop gracefully."""
-        self._is_cancelled = True
-
-    def run(self):
-        """Fit each spectrum with its own peak models, tracking progress."""
-        
-        # Suppress lmfit warning in the main thread
-        warnings.filterwarnings("ignore", message=".*Using UFloat objects with std_dev==0.*", category=UserWarning)
-        
-        total = len(self.spectra)
-        start_time = time.time()
-        
-        # Emit initial progress
-        self.progress_changed.emit(0, total, 0, 0.0)
-        
-        # Fit each spectrum sequentially
-        for i, spectrum in enumerate(self.spectra, 1):
-            if self._is_cancelled:
-                break
-                
-            if spectrum.peak_models:
-                try:
-                    # Check if any peak model is a decay model
-                    # Decay models have built-in B (baseline) parameter
-                    has_decay_model = any(
-                        pm.name2 in ["DecaySingleExp", "DecayBiExp"] 
-                        for pm in spectrum.peak_models
-                    )
-                    
-                    # For decay models: Mark baseline as already subtracted
-                    # This prevents preprocess() from subtracting it (which would 
-                    # conflict with the decay model's B parameter)
-                    if has_decay_model and not spectrum.baseline.is_subtracted:
-                        spectrum.baseline.is_subtracted = True
-                    
-                    spectrum.preprocess()
-                    
-                    # For decay models: Skip reinit logic and noisy area detection
-                    # Both expect ampli/x0 parameters which decay models don't have
-                    if has_decay_model:
-                        spectrum.fit(reinit_guess=False, coef_noise=0)
-                    else:
-                        spectrum.fit()
-                except Exception:
-                    # Continue fitting other spectra even if one fails
-                    pass
+            report.append(f"    {name:15s}: {param}")
             
-            # Update progress
-            percentage = int((i / total) * 100)
-            elapsed_time = time.time() - start_time
-            self.progress_changed.emit(i, total, percentage, elapsed_time)
+    return "\n".join(report)
 
-            
+
 def parse_wdf_metadata(reader):
     """Extract comprehensive metadata from WDF file's WXIS and WXCS blocks.
     
@@ -540,6 +298,7 @@ def rgba_to_default_color(rgba, default_colors=DEFAULT_COLORS):
     Convert an RGBA tuple to the closest color in DEFAULT_COLORS.
     If no DEFAULT_COLORS are given, falls back to hex.
     """
+    import matplotlib.colors as mcolors
     # Convert input to RGB array
     rgb = np.array(mcolors.to_rgb(rgba)) # drops alpha
 
@@ -556,20 +315,37 @@ def rgba_to_default_color(rgba, default_colors=DEFAULT_COLORS):
     return best_color if best_color else mcolors.to_hex(rgba)
 
 
-def set_spectrum_item_color(item: QListWidgetItem, spectrum):
-    """Set list item background color based on spectrum status."""
-    if spectrum.baseline.is_subtracted:
-        if not hasattr(spectrum.result_fit, 'success'):
-            # Baseline subtracted but no fit result
-            item.setBackground(QColor("gray"))
-        elif spectrum.result_fit.success:
-            # Fit succeeded
-            item.setBackground(QColor("green"))
+def set_spectrum_item_color(item: QListWidgetItem, spectrum_info: dict):
+    """Set list item background color based on spectrum status.
+    
+    Status hierarchy:
+    1. Fitted (has_fit):
+       - Converged: Color 4 (Soft Success Green)
+       - Not Converged: Color 3 (Soft Warning Orange)
+    2. Baselined (has_baseline): Color 2 (Soft Purple)
+    3. Cropped (is_cropped): Color 1 (Soft Blue)
+    4. Original/Reinit: Transparent (no color)
+    """
+    is_cropped = spectrum_info.get("is_cropped", False)
+    has_baseline = spectrum_info.get("has_baseline", False)
+    has_fit = spectrum_info.get("has_fit", False)
+    fit_success = spectrum_info.get("fit_success", False)
+
+    if has_fit:
+        if fit_success:
+            # Color 4: Converged Fit (Distinct Green)
+            item.setBackground(QColor(76, 175, 80, 120))
         else:
-            # Fit failed
-            item.setBackground(QColor("orange"))
+            # Color 3: Unconverged Fit (Distinct Red)
+            item.setBackground(QColor(244, 67, 54, 120))
+    elif has_baseline:
+        # Color 2: Baselined (Distinct Purple)
+        item.setBackground(QColor(156, 39, 176, 120))
+    elif is_cropped:
+        # Color 1: Cropped (Distinct Blue)
+        item.setBackground(QColor(33, 150, 243, 120))
     else:
-        # Baseline not subtracted - transparent background
+        # Original/Reinit: Transparent
         item.setBackground(QColor(0, 0, 0, 0))
 
 def show_alert(message):
@@ -583,7 +359,9 @@ def show_alert(message):
 
 def show_toast_notification(parent, message, title=None, duration=3000, preset=None):
     """Show an auto-dismissing toast notification"""
-    if not TOAST_AVAILABLE:
+    try:
+        from pyqttoast import Toast, ToastPreset
+    except ImportError:
         # Fallback to console print if pyqttoast not available
         prefix = f"[{title}] " if title else ""
         print(f"{prefix}{message}")
@@ -626,6 +404,8 @@ def save_df_to_excel(save_path, df):
         return False, "No save path provided."
 
     try:
+        import pandas as pd
+        from openpyxl.styles import PatternFill
         if df.empty:
             return False, "DataFrame is empty. Nothing to save."
         with pd.ExcelWriter(save_path, engine='openpyxl') as writer:
@@ -734,35 +514,6 @@ def calc_area(model_name, params):
             area_r = (np.pi * ampli * fwhm_r / 2)/2
             return area_l + area_r
     return None  # default if parameters missing
-
-
-def quadrant(row):
-        """Define 4 quadrant of a wafer"""
-        if row['X'] < 0 and row['Y'] < 0:
-            return 'Q1'
-        elif row['X'] < 0 and row['Y'] > 0:
-            return 'Q2'
-        elif row['X'] > 0 and row['Y'] > 0:
-            return 'Q3'
-        elif row['X'] > 0 and row['Y'] < 0:
-            return 'Q4'
-        else:
-            return np.nan
-
-def zone(row, radius):
-    """Define 3 zones (Center, Mid-Radius, Edge)"""
-    r = radius
-    x = row['X']
-    y = row['Y']
-    distance_to_center = np.sqrt(x ** 2 + y ** 2)
-    if distance_to_center <= r * 0.35:
-        return 'Center'
-    elif distance_to_center > r * 0.35 and distance_to_center < r * 0.8:
-        return 'Mid-Radius'
-    elif distance_to_center >= 0.8 * r:
-        return 'Edge'
-    else:
-        return np.nan
     
 def dark_palette():
     """Dark palette tuned for SPECTROview UI"""
@@ -846,4 +597,36 @@ def light_palette():
 
     return p
 
+def build_clean_fit_model(fit_model):
+    """Build a clean, consistently ordered fit model dict for serialization.
 
+    Key order: fit_params, range_min, range_max, baseline, peak_labels, peak_models.
+    Also rounds float values in fit_params to avoid QSettings float32 precision artifacts
+    (e.g. 9.999999747378752e-06 -> 1e-05).
+    """
+    # Round fit_params floats to 6 significant digits to avoid float32 artifacts
+    fit_params = fit_model.get("fit_params", {})
+    if fit_params:
+        cleaned_params = {}
+        for k, v in fit_params.items():
+            cleaned_params[k] = float(f"{v:.6g}") if isinstance(v, float) else v
+        fit_params = cleaned_params
+
+    # Clean baseline: strip fields not needed for the current mode
+    baseline = fit_model.get("baseline")
+    if baseline and isinstance(baseline, dict):
+        baseline = deepcopy(baseline)
+        baseline.pop("y_eval", None)
+        if baseline.get("mode") == "Linear":
+            baseline.pop("coef", None)
+            baseline.pop("order_max", None)
+
+    # Build ordered dict
+    return {
+        "fit_params": fit_params,
+        "range_min": fit_model.get("range_min"),
+        "range_max": fit_model.get("range_max"),
+        "baseline": baseline,
+        "peak_labels": fit_model.get("peak_labels", []),
+        "peak_models": fit_model.get("peak_models", {}),
+    }

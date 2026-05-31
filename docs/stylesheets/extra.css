@@ -1,0 +1,129 @@
+/* docs/stylesheets/extra.css */
+:root {
+  /* Tech Blue matching the banner's deep navy/blue theme */
+  --md-primary-fg-color: #0056b3;
+  --md-primary-fg-color--light: #3385ff;
+  --md-primary-fg-color--dark: #003d82;
+
+  --md-accent-fg-color: #0056b3;
+}
+
+/* Override Top Menu Bar color */
+.md-header {
+  background-color: #000819 !important;
+}
+.md-tabs {
+  background-color: #000819 !important;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #3385ff;
+  --md-primary-fg-color--light: #66a3ff;
+  --md-primary-fg-color--dark: #0056b3;
+
+  --md-accent-fg-color: #3385ff;
+}
+
+/* Rounded corners for images and code blocks */
+.md-typeset img {
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.md-typeset pre>code {
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Clean up admonitions to look softer and more modern */
+.md-typeset .admonition,
+.md-typeset details {
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  border-left-width: 4px;
+}
+
+/* Enhance grid cards if they use them */
+.md-typeset .grid.cards> :is(ul, ol)>li,
+.md-typeset .grid> :is(ul, ol)>li {
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.md-typeset .grid.cards> :is(ul, ol)>li:hover,
+.md-typeset .grid> :is(ul, ol)>li:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 8, 25, 0.15), 0 0 0 2px #0056b3;
+}
+
+/* Hero Section Custom Styles */
+.tx-hero {
+  margin: 0;
+  background-color: #000819;
+  color: #ffffff;
+}
+
+.tx-hero h1 {
+  color: currentColor;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.tx-hero p {
+  color: currentColor;
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.tx-hero__content {
+  padding-bottom: 3rem;
+  padding-top: 0.5rem;
+  text-align: center;
+}
+
+.tx-hero .md-button {
+  margin-top: 1.5rem;
+  margin-right: 0.5rem;
+  margin-left: 0.5rem;
+  color: #ffffff;
+  background-color: transparent;
+  border: 2px solid #ffffff;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.tx-hero .md-button:hover,
+.tx-hero .md-button:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.tx-hero .md-button--primary {
+  background-color: #ffffff;
+  color: #021f64;
+  border-color: #ffffff;
+}
+
+.tx-hero .md-button--primary:hover,
+.tx-hero .md-button--primary:focus {
+  background-color: transparent;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+/* Force exactly 2 columns for specific card grids */
+.md-typeset .grid.cards.cards-2col > :is(ul, ol) {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* Increase text size inside these cards */
+.md-typeset .grid.cards.cards-2col > :is(ul, ol) > li {
+  font-size: 1.05em;
+  padding: 1.5rem;
+}
+
+/* On mobile, stack them into a single column */
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .grid.cards.cards-2col > :is(ul, ol) {
+    grid-template-columns: 1fr !important;
+  }
+}

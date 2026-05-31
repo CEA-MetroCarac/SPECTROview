@@ -9,7 +9,6 @@ import matplotlib.patches as patches
 from matplotlib.collections import PatchCollection
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-from scipy.interpolate import griddata
 from superqt import QLabeledDoubleRangeSlider
 
 from PySide6.QtWidgets import (
@@ -825,15 +824,30 @@ class VMapViewer(QWidget):
                 if not filtered_results.empty and 'X' in filtered_results.columns and 'Y' in filtered_results.columns:
                     # Create DataFrame with map coordinates
                     map_coords = pd.DataFrame({'X': x_col, 'Y': y_col})
-                    # Merge with fit results on X, Y coordinates (left join to keep all map points)
-                    merged = map_coords.merge(filtered_results[['X', 'Y', parameter]], 
-                                             on=['X', 'Y'], how='left')
-                    # Fill missing values (unchecked spectra) with 0
-                    z_col = merged[parameter].fillna(0)
+                    # To be robust against float precision, we round coordinates temporarily to 6 decimals for the merge comparison.
+                    # This ensures rounded/unrounded floats match perfectly even if there are minor precision discrepancies.
+                    map_coords_temp = map_coords.copy()
+                    filtered_results_temp = filtered_results[['X', 'Y', parameter]].copy()
+                    map_coords_temp['X_round'] = map_coords_temp['X'].round(6)
+                    map_coords_temp['Y_round'] = map_coords_temp['Y'].round(6)
+                    filtered_results_temp['X_round'] = filtered_results_temp['X'].round(6)
+                    filtered_results_temp['Y_round'] = filtered_results_temp['Y'].round(6)
+                    
+                    merged = map_coords_temp.merge(
+                        filtered_results_temp[['X_round', 'Y_round', parameter]], 
+                        on=['X_round', 'Y_round'], how='left'
+                    )
+                    # Fill missing values (unchecked spectra) with 0 ONLY for amplitude, area, height, or intensity related parameters.
+                    # For center (x0), width (fwhm), alpha, asymmetry, etc. we let them be NaN so they render transparently
+                    # and do not distort the colorbar range.
+                    if any(x in parameter.lower() for x in ['ampli', 'area', 'intensity', 'height', 'fraction', 'A', 'B']):
+                        z_col = merged[parameter].fillna(0)
+                    else:
+                        z_col = merged[parameter]
                 else:
-                    z_col = pd.Series([0] * len(x_col))
+                    z_col = pd.Series([np.nan] * len(x_col))
             else:
-                z_col = pd.Series([0] * len(x_col))
+                z_col = pd.Series([np.nan] * len(x_col))
         
         if z_col is None or len(z_col) == 0:
             return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
@@ -878,6 +892,7 @@ class VMapViewer(QWidget):
                     z_valid = final_z_col[valid_mask]
                     
                     # Linear interpolation for smooth result (only on valid points)
+                    from scipy.interpolate import griddata
                     grid_z = griddata((x_valid, y_valid), z_valid, 
                                      (grid_x, grid_y), method='linear')
                 else:

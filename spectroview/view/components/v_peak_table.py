@@ -66,15 +66,32 @@ class VPeakTable(QWidget):
     def _rebuild(self):
         self._clear_layout(self.main_layout)
 
-        if (
-            self._spectrum is None
-            or not getattr(self._spectrum, "peak_models", None)
-            or not self._spectrum.peak_models
-        ):
+        fit_model = None
+        if hasattr(self._spectrum, "fit_model"):
+            fit_model = self._spectrum.fit_model
+        elif isinstance(self._spectrum, dict):
+            fit_model = self._spectrum.get("fit_model")
+            if not fit_model and self._spectrum.get("fit_models"):
+                fit_models = self._spectrum.get("fit_models")
+                if fit_models and len(fit_models) > 0:
+                    fit_model = fit_models[0]
+            
+        if not fit_model or not fit_model.get("peak_models"):
             return
 
-        peaks = self._spectrum.peak_models
-        labels = self._spectrum.peak_labels
+        class DummyPeak:
+            def __init__(self, key, shape, params, prefix):
+                self.key = key
+                self.name2 = shape
+                self.param_hints = params
+                self.prefix = prefix
+
+        peaks = []
+        for k, pdict in fit_model["peak_models"].items():
+            shape = list(pdict.keys())[0]
+            peaks.append(DummyPeak(k, shape, pdict[shape], f"P{int(k)+1}_"))
+
+        labels = fit_model.get("peak_labels", [])
 
         param_order = ["x0", "fwhm", "fwhm_l", "fwhm_r", "ampli", "alpha", "q", "tau", "tau1", "tau2", "A", "A1", "A2", "B"]
         
@@ -132,14 +149,16 @@ class VPeakTable(QWidget):
             btn = QPushButton(pm.prefix)
             btn.setIcon(QIcon(f"{ICON_DIR}/close.png"))
             btn.setFixedWidth(50)
-            btn.clicked.connect(self._make_delete_callback(i))
+            btn.clicked.connect(self._make_delete_callback(int(pm.key)))
             cols["del"].addWidget(btn)
 
             # label
-            le = QLineEdit(labels[i])
+            k_int = int(pm.key)
+            le_text = labels[k_int] if k_int < len(labels) and labels[k_int] is not None else f"Peak{k_int+1}"
+            le = QLineEdit(le_text)
             le.setFixedSize(60, ROW_HEIGHT)
             le.editingFinished.connect(
-                lambda idx=i, w=le: self.peak_label_changed.emit(idx, w.text())
+                lambda key=pm.key, w=le: self.peak_label_changed.emit(int(key), w.text())
             )
             cols["label"].addWidget(le)
 
@@ -149,7 +168,7 @@ class VPeakTable(QWidget):
             cmb.setCurrentText(pm.name2)
             cmb.setFixedWidth(100)
             cmb.currentTextChanged.connect(
-                lambda txt, idx=i: self.peak_model_changed.emit(idx, txt)
+                lambda txt, key=pm.key: self.peak_model_changed.emit(int(key), txt)
             )
             cols["model"].addWidget(cmb)
 
@@ -169,9 +188,9 @@ class VPeakTable(QWidget):
                     q = pm.param_hints.get("q", {}).get("value", 50.0)
                     display_val = display_val * (q**2 + 1)
                 
-                val = QLineEdit(f"{display_val:.6g}")
+                val = QLineEdit(f"{display_val:.3f}")
                 val.setAlignment(Qt.AlignRight)
-                val.setFixedSize(60, ROW_HEIGHT)
+                val.setFixedSize(72, ROW_HEIGHT)
                 
                 def make_editing_finished_cb(i_idx, p_key, w_val, model_name, peak_model):
                     def cb():
@@ -187,22 +206,22 @@ class VPeakTable(QWidget):
                             pass
                     return cb
 
-                val.editingFinished.connect(make_editing_finished_cb(i, p, val, pm.name2, pm))
+                val.editingFinished.connect(make_editing_finished_cb(int(pm.key), p, val, pm.name2, pm))
                 d["value"].addWidget(val)
 
                 # vary
                 chk = QCheckBox()
                 chk.setChecked(not hint.get("vary", True))
                 chk.toggled.connect(
-                    lambda st, idx=i, k=p:
-                    self.peak_param_changed.emit(idx, k, "vary", not st)
+                    lambda st, key=pm.key, k=p:
+                    self.peak_param_changed.emit(int(key), k, "vary", not st)
                 )
                 d["vary"].addWidget(self._center_checkbox(chk))
 
                 # limits
                 if "min" in d:
-                    self._add_limit(d["min"], i, p, "min", hint, pm.name2, pm)
-                    self._add_limit(d["max"], i, p, "max", hint, pm.name2, pm)
+                    self._add_limit(d["min"], int(pm.key), p, "min", hint, pm.name2, pm)
+                    self._add_limit(d["max"], int(pm.key), p, "max", hint, pm.name2, pm)
 
                 # expr
                 if "expr" in d:
@@ -210,8 +229,8 @@ class VPeakTable(QWidget):
                     # expr.setFixedWidth(150)
                     expr.setFixedSize(150, ROW_HEIGHT)
                     expr.editingFinished.connect(
-                        lambda idx=i, k=p, w=expr:
-                        self.peak_param_changed.emit(idx, k, "expr", w.text())
+                        lambda key=pm.key, k=p, w=expr:
+                        self.peak_param_changed.emit(int(key), k, "expr", w.text())
                     )
                     d["expr"].addWidget(expr)
 
@@ -255,9 +274,9 @@ class VPeakTable(QWidget):
             q = peak_model.param_hints.get("q", {}).get("value", 50.0)
             display_val = display_val * (q**2 + 1)
             
-        le = QLineEdit(f"{display_val:.6g}")
+        le = QLineEdit(f"{display_val:.3f}")
         # le.setFixedWidth(60)
-        le.setFixedSize(60, ROW_HEIGHT)
+        le.setFixedSize(72, ROW_HEIGHT)
         le.setAlignment(Qt.AlignRight)
 
         pal = le.palette()

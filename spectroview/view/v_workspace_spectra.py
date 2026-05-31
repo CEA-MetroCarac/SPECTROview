@@ -8,7 +8,7 @@ from PySide6.QtGui import QIcon, QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication,
     QPushButton, QCheckBox, QProgressBar, QSplitter, QTabWidget,
-    QMessageBox, QFrame
+    QFrame
 )
 
 from spectroview import ICON_DIR
@@ -74,7 +74,7 @@ class VWorkspaceSpectra(QWidget):
         self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(self.v_fit_results, "Fit Results")
         self.bottom_tabs.addTab(self.v_more_tab, "More")
-        self.bottom_tabs.addTab(self.v_mva, "MVA")
+        self.bottom_tabs.addTab(self.v_mva, "MVA (beta)")
         
         left_splitter.addWidget(self.v_spectra_viewer)
         left_splitter.addWidget(self.bottom_tabs)
@@ -128,14 +128,14 @@ class VWorkspaceSpectra(QWidget):
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(4)
         
-        self.lbl_count = QLabel("0 spectra loaded")
+        self.lbl_count = QLabel("0 spectra")
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(100)
-        self.progress_bar.setFixedHeight(15)
+        self.progress_bar.setFixedHeight(17)
         
         self.btn_stop_fit = QPushButton("Stop")
         self.btn_stop_fit.setIcon(QIcon(os.path.join(ICON_DIR, "stop.png")))
-        self.btn_stop_fit.setFixedHeight(15)
+        self.btn_stop_fit.setFixedHeight(17)
         self.btn_stop_fit.setFixedWidth(50)
         self.btn_stop_fit.setVisible(False)  # Hidden by default
 
@@ -153,17 +153,18 @@ class VWorkspaceSpectra(QWidget):
         apply_all = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
         fn(apply_all)
 
-    def _update_progress_bar(self, current: int, total: int, percentage: int, elapsed_time: float):
+    def _update_progress_bar(self, current: int, total: int, percentage: int, elapsed_time: float, converged: int = 0):
         """Update progress bar with fitting progress and elapsed time."""
         if total > 0:
             self.progress_bar.setValue(percentage)
             # Format elapsed time in seconds with 2 decimal places
             time_str = f"{elapsed_time:.2f}s"
-            self.progress_bar.setFormat(f"Fitting: {current}/{total} ({percentage}%) - {time_str}")
+            self.progress_bar.setFormat(f"({percentage}%) converged {converged}/{total} - {time_str}")
         else:
             # Reset to default state
             self.progress_bar.setValue(100)
             self.progress_bar.setFormat("")
+            self.progress_bar.setToolTip("")
     
     def _on_spectra_list_changed(self, spectra: list):
         """Handle spectra list update from ViewModel."""
@@ -174,10 +175,12 @@ class VWorkspaceSpectra(QWidget):
         if item is None:
             return
         
-        idx = self.v_spectra_list.row(item)
-        if 0 <= idx < len(self.vm.spectra):
+        fname = item.data(Qt.UserRole + 1)
+        if fname:
             is_checked = item.checkState() == Qt.Checked
-            self.vm.spectra[idx].is_active = is_checked
+            md = self.vm.store.get_map_data(fname)
+            if md:
+                md.is_active[0] = is_checked
     
     def _on_check_all_toggled(self, checked: bool):
         """Handle check all checkbox toggle."""
@@ -188,11 +191,15 @@ class VWorkspaceSpectra(QWidget):
         for i in range(self.v_spectra_list.count()):
             item = self.v_spectra_list.item(i)
             item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
-        
-        # Update all spectra is_active state
-        for spectrum in self.vm.spectra:
-            spectrum.is_active = checked
-        
+            
+            # Update store
+            fname = item.data(Qt.UserRole + 1)
+            if fname:
+                md = self.vm.store.get_map_data(fname)
+                if md:
+                    md.is_active[0] = checked
+                    
+        # Restore signals
         self.v_spectra_list.blockSignals(False)
 
     def setup_connections(self):
@@ -202,6 +209,7 @@ class VWorkspaceSpectra(QWidget):
         self.btn_select_all.clicked.connect(self.v_spectra_list.select_all)
         self.btn_remove.clicked.connect(vm.remove_selected_spectra)
         self.btn_reinit.clicked.connect(lambda: self._apply_with_ctrl(vm.reinit_spectra))
+        self.btn_reinit.clicked.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after reinit
         self.btn_stats.clicked.connect(lambda: vm.view_stats(parent_widget=self))
         self.btn_save_spectra_data.clicked.connect(lambda: vm.save_spectra_data(parent_widget=self))
 
@@ -214,6 +222,8 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_viewer.baseline_add_requested.connect(vm.add_baseline_point)
         self.v_spectra_viewer.baseline_remove_requested.connect(vm.remove_baseline_point)
         self.v_spectra_viewer.copy_data_requested.connect(vm.copy_spectrum_data_to_clipboard)
+        self.v_spectra_viewer.spectrumCustomized.connect(vm._emit_selected_spectra)
+        self.v_spectra_viewer.spectrumCustomized.connect(vm._emit_list_update)
         
         # Peak dragging
         self.v_spectra_viewer.peak_dragged.connect(vm.update_dragged_peak)
@@ -229,6 +239,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.baseline_copy_requested.connect(vm.copy_baseline)
         self.v_fit_model_builder.baseline_paste_requested.connect(vm.paste_baseline)
         self.v_fit_model_builder.baseline_subtract_requested.connect(vm.subtract_baseline)
+        self.v_fit_model_builder.baseline_subtract_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after subtract
         self.v_fit_model_builder.baseline_delete_requested.connect(vm.delete_baseline)
 
         self.v_fit_model_builder.peaks_copy_requested.connect(vm.copy_peaks)
@@ -240,6 +251,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.fit_requested.connect(vm.fit)
         self.v_fit_model_builder.fitmodel_copy_requested.connect(vm.copy_fit_model)
         self.v_fit_model_builder.fitmodel_paste_requested.connect(vm.paste_fit_model)
+        self.v_fit_model_builder.fitmodel_paste_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after paste
         self.v_fit_model_builder.fitmodel_save_requested.connect(vm.save_fit_model)
 
         # Check all checkbox
@@ -251,7 +263,8 @@ class VWorkspaceSpectra(QWidget):
         vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
         vm.spectra_selection_changed.connect(self._update_metadata_display)
         vm.spectra_selection_changed.connect(self.v_fit_model_builder.update_baseline_ui)
-        vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra loaded"))
+        vm.spectra_selection_changed.connect(self._update_peak_table)
+        vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra"))
         vm.notify.connect(self._show_toast_notification)
 
         # MetaData connections
@@ -266,7 +279,7 @@ class VWorkspaceSpectra(QWidget):
         # ═════════════════════════════════════════════════════════════════
         # MVA connections
         # ═════════════════════════════════════════════════════════════════
-        self.vm_mva.set_spectra(lambda: self.vm.spectra)  # inject spectra getter
+        self.vm_mva.set_store(self.vm.store)  # inject SpectraStore reference
         self.v_mva.run_pca_requested.connect(self.vm_mva.run_pca)
         self.v_mva.run_nmf_requested.connect(self.vm_mva.run_nmf)
         self.v_mva.send_to_graphs_requested.connect(self.vm_mva.send_to_graphs)
@@ -274,12 +287,14 @@ class VWorkspaceSpectra(QWidget):
         self.vm_mva.nmf_results_ready.connect(self.v_mva.display_nmf_results)
         self.vm_mva.send_df_to_graphs.connect(self._send_df_to_graphs)
         self.vm_mva.notify.connect(self._show_toast_notification)
+        self.vm_mva.notify.connect(self.v_mva.set_status)
 
         vm.show_xcorrection_value.connect(self.v_fit_model_builder.set_xcorrection_value)        
         vm.spectral_range_changed.connect(self.v_fit_model_builder.set_spectral_range)
         vm.fit_in_progress.connect(lambda in_progress: self.v_fit_model_builder.set_fit_buttons_enabled(not in_progress))
         vm.fit_in_progress.connect(self.btn_stop_fit.setVisible)  # Show/hide Stop button
         vm.fit_progress_updated.connect(self._update_progress_bar)
+        vm.fit_timings_ready.connect(self.progress_bar.setToolTip)
         
         # Send DataFrame to Graphs workspace
         vm.send_df_to_graphs.connect(self._send_df_to_graphs)
@@ -291,7 +306,8 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.refresh_fit_models_requested.connect(self.vm_fit_model_builder.refresh_models)
         self.v_fit_model_builder.load_fit_models_requested.connect(self.vm_fit_model_builder.pick_and_load_model)
         self.v_fit_model_builder.cbb_model.currentTextChanged.connect(self.vm_fit_model_builder.set_current_model)
-        self.v_fit_model_builder.apply_loaded_fit_model_requested.connect(vm.apply_loaded_fit_model)
+        self.v_fit_model_builder.apply_loaded_fit_model_requested.connect(vm.apply_fit_model)
+        self.v_fit_model_builder.apply_loaded_fit_model_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after apply
 
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.clear)
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.addItems)
@@ -307,10 +323,7 @@ class VWorkspaceSpectra(QWidget):
         pt.peak_deleted.connect(vm.delete_peak)
 
         # Selection → PeakTable
-        vm.spectra_selection_changed.connect(
-            lambda specs:
-            pt.set_spectrum(specs[0] if specs else None)
-        )
+        vm.spectra_selection_changed.connect(self._update_peak_table)
         
         # ═════════════════════════════════════════════════════════════════
         # Fit Results connections
@@ -333,10 +346,11 @@ class VWorkspaceSpectra(QWidget):
         else:
             self.v_fit_results.clear_results()
     
-    def _update_metadata_display(self, selected_spectra: list):
+    def _update_metadata_display(self, selected_spectra):
         """Update metadata display with first selected spectrum's metadata."""
-        if selected_spectra and len(selected_spectra) > 0:
-            spectrum = selected_spectra[0]
+        specs = selected_spectra.get("proxies", []) if isinstance(selected_spectra, dict) else selected_spectra
+        if specs and len(specs) > 0:
+            spectrum = specs[0]
             self.v_more_tab.show_metadata(spectrum)
         else:
             self.v_more_tab.clear_metadata()
@@ -372,4 +386,19 @@ class VWorkspaceSpectra(QWidget):
             message=message,
             duration=3000
         )
+
+    def _update_peak_table(self, spectra):
+        """Update the peak table with the first selected spectrum."""
+        if not spectra:
+            self.v_fit_model_builder.peak_table.clear()
+            return
+        
+        if isinstance(spectra, dict):
+            # Tensor dictionary payload
+            self.v_fit_model_builder.peak_table.set_spectrum(spectra)
+        elif isinstance(spectra, list) and len(spectra) > 0:
+            # Legacy list of objects
+            self.v_fit_model_builder.peak_table.set_spectrum(spectra[0])
+        else:
+            self.v_fit_model_builder.peak_table.clear()
 

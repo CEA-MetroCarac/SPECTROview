@@ -73,6 +73,8 @@ class MGraph:
         self.show_trendline_eq: bool = True
         self.show_bar_plot_error_bar: bool = True
         self.join_for_point_plot: bool = False
+        self.scatter_size: int = 70  # Marker size for scatter plots
+        self.scatter_edgecolor: str = 'black'  # Edge color for scatter plot markers
         
         # Annotations (lines and text)
         self.annotations: List[Dict[str, Any]] = []
@@ -124,6 +126,8 @@ class MGraph:
             'show_trendline_eq': self.show_trendline_eq,
             'show_bar_plot_error_bar': self.show_bar_plot_error_bar,
             'join_for_point_plot': self.join_for_point_plot,
+            'scatter_size': self.scatter_size,
+            'scatter_edgecolor': self.scatter_edgecolor,
             'annotations': self.annotations,
         }
     

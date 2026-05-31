@@ -36,20 +36,18 @@ classifiers = [
 ]
 
 dependencies = [
-    "fitspy < 2026.4",
     "numpy < 2.0.0",
     "openpyxl >=3.1.5",
     "pandas",
+    "pyarrow >= 15.0.0",
     "matplotlib <3.10.9",
     "seaborn <0.13.3",
     "pyside6",
     "scipy",
-    "lmfit",
     "pywin32; platform_system == 'Windows'",
     "superqt",
     "renishawwire",
-    "qtbot",
-    "pytest-qt"
+    "markdown"
 ]
 
 [tool.setuptools.package-data]
@@ -58,7 +56,9 @@ spectroview = [
     "resources/*.png", 
     "resources/icons/*.png",
     "resources/icons/*.ico",
-    "resources/*.pdf"
+    "resources/*.pdf",
+    "resources/user_manual/*",
+    "resources/user_manual_images/*/*"
 ]
 
 [project.scripts]
@@ -85,5 +85,6 @@ testpaths = ["tests"]
 python_files = ["test*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-
-
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]

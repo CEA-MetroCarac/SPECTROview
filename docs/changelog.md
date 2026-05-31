@@ -2,7 +2,6 @@
 
 *(Dynamically synchronized from [GitHub Releases](https://github.com/CEA-MetroCarac/SPECTROview/releases))*
 
-
 ---
 
 ## [v26.18.3](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.18.3) - 2026-04-26
@@ -30,7 +29,6 @@
 - Moved the **Graph Axis Limits** section from from the right Panel into the `Customize Graph Dialog`.
 
 ![image](https://github.com/user-attachments/assets/ad72fe93-82cc-42af-849f-97799779bb56)
-
 
 
 
@@ -68,7 +66,6 @@
 - Fixed a crash when applying an invalid filter expression to a DataFrame (Graphs workspace).
 - Fixed an issue where **Stop Fitting** did not work on macOS.
 - Fixed a `RuntimeWarning: divide by zero` when fitting spectra with the **Pseudo-Voigt** function.
-
 
 ---
 
@@ -125,7 +122,6 @@
 * **Testing:** Updated the `pytest` test suite to improve application stability and code coverage.
 
 
-
 ---
 
 ## [v26.6.1](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.6.1) - 2026-02-05
@@ -142,6 +138,7 @@ Starting with this release, we are adopting a new versioning format: **`YY.W.Z`*
 ##### 🎉 What's New
 
 ##### Built-in User Manual
+
 - Added a detailed [User Manual ](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/resources/SPECTROview_UserManual.pdf) (PDF format) built into the application, accessible via the Manual button in the top toolbar.
 
 ---
@@ -255,14 +252,16 @@ Starting with this release, we are adopting a new versioning format: **`YY.W.Z`*
 
 ![image](https://github.com/user-attachments/assets/6b6a9a9c-4f08-43eb-8915-d4ec9e9edbbb)
 
+
 - **CSV export support** for best fit parameters (previously Excel-only)
+
+
 
 ---
 
 ##### Performance Improvements
 
 - Optimized GUI performance and responsiveness across all workspaces
-
 
 
 
@@ -282,7 +281,6 @@ Dataframe Filter Improvements:
 - Added ability to copy `filter expressions `directly from the` filter list.`
 - The selected filter’s text is now automatically reflected in the QLineEdit for easier editing.
 
-
 ---
 
 ## [v0.9.0](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.9.0) - 2025-10-11
@@ -300,7 +298,6 @@ Code Cleanup and Refactoring:
 - Removed the `CommonUtilities` class.
 - Revised and refactored the `FitModelManager` class.
 
-
 ---
 
 ## [v0.8.7](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.8.7) - 2025-10-05
@@ -311,7 +308,6 @@ Code Cleanup and Refactoring:
 - Code cleaning and refactoring.
 
 
-
 ---
 
 ## [v0.8.5](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.8.5) - 2025-09-08
@@ -320,7 +316,6 @@ Code Cleanup and Refactoring:
 - Fixed minor bugs.
 - Code cleaning and refactoring.
 
-
 ---
 
 ## [v0.8.0](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.8.0) - 2025-08-27
@@ -328,7 +323,6 @@ Code Cleanup and Refactoring:
 - Improved "MapViewWidget" class.
 - Optimized GUI performance and responsiveness.
 - Fixed minor bugs.
-
 
 ---
 
@@ -343,7 +337,6 @@ Code Cleanup and Refactoring:
 
 
 
-
 ---
 
 ## [v0.7.0](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.7.0) - 2025-07-03
@@ -352,7 +345,6 @@ Code Cleanup and Refactoring:
 - Fixed minor bugs.
 - Optimized the GUI.
 
-
 ---
 
 ## [v0.6.2](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.6.2) - 2025-06-27
@@ -360,10 +352,9 @@ Code Cleanup and Refactoring:
 - Fixed minor bugs.
 - Improved GUI responsiveness and layout consistency.
 
-
 ---
 
-## [v0.4.5 - Stable release](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.4.5) - 2025-02-10
+## [v0.4.5](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.4.5) - 2025-02-10
 
 ##### **New Features:**
 
@@ -399,10 +390,9 @@ Code Cleanup and Refactoring:
 
 
 
-
 ---
 
-## [v0.3.2 - Peak position correction features](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.3.2) - 2025-01-23
+## [v0.3.2](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.3.2) - 2025-01-23
 
 **Version v0.3.2 (23/01/2024)
 
@@ -410,10 +400,9 @@ New features: peak position correction using Si reference peak (520.7 cm-1).
 
 
 
-
 ---
 
-## [v0.3.0 - Stable release](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.3.0) - 2024-09-27
+## [v0.3.0](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.3.0) - 2024-09-27
 
 ##### **Version v0.3.0 (27/09/2024)
 - **New Features:**
@@ -445,7 +434,6 @@ ___
 
 
 
-
 ---
 
 ## [v0.2.9](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.2.9) - 2024-09-24
@@ -470,7 +458,6 @@ ___
     - Fixed an error related to the new attributes when saving **old_saved_work** files.
 
 **Full Changelog**: https://github.com/CEA-MetroCarac/SPECTROview/commits/v0.2.9
-
 
 ---
 

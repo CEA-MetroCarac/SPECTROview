@@ -3,11 +3,14 @@
 {% block tabs %}
   {{ super() }}
   
-  {% if page.url == "" %}
+  {% if page and (page.url == "" or page.url.startswith("user_manual")) %}
     <style>
-      /* Hide the default H1 title (e.g. "Home") on the homepage */
+      /* Hide the default H1 title injected by MkDocs */
       .md-content h1 { display: none !important; }
     </style>
+  {% endif %}
+  
+  {% if page and page.url == "" %}
     <section class="tx-hero">
       <div class="tx-hero__image">
         <img src="assets/top_banner.png" alt="SPECTROview Banner" style="width: 100%; display: block; max-width: 1200px; margin: 0 auto; padding-top: 2rem;" />

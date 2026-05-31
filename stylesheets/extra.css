@@ -53,8 +53,8 @@
 
 .md-typeset .grid.cards> :is(ul, ol)>li:hover,
 .md-typeset .grid> :is(ul, ol)>li:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 8, 25, 0.15), 0 0 0 2px #0056b3;
 }
 
 /* Hero Section Custom Styles */

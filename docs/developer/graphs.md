@@ -1,10 +1,10 @@
-# Graphs Workspace
+# **Graphs Workspace**
 
-The Graphs Workspace is a standalone statistical plotting environment. It manages DataFrames (from file or cross-workspace injection), applies dynamic filters, and creates publication-quality plots using Seaborn and Matplotlib inside an MDI (Multiple Document Interface) area.
+The `Graphs` workspace is a standalone statistical plotting environment. It manages DataFrames (from file or cross-workspace injection), applies dynamic filters, and creates publication-quality plots using `Seaborn` and `Matplotlib` inside an MDI (Multiple Document Interface) area.
 
 ---
 
-## Architecture Overview
+## **Architecture Overview**
 
 ```mermaid
 graph TD
@@ -20,13 +20,13 @@ graph TD
 
 ---
 
-## Key Classes
+## **Key Classes**
 
-### `VMWorkspaceGraphs` — The ViewModel
+### **`VMWorkspaceGraphs` — The ViewModel**
 
 **File**: `spectroview/viewmodel/vm_workspace_graphs.py` (~438 lines)
 
-Manages DataFrames and graph models. Unlike the Spectra/Maps ViewModels, this ViewModel is relatively lightweight — the heavy rendering logic lives in the `VGraph` widget.
+Manages DataFrames and graph models. Unlike the `Spectra`/`Maps` ViewModels, this ViewModel is relatively lightweight — the heavy rendering logic lives in the `VGraph` widget.
 
 | Responsibility | Methods |
 |---------------|---------|
@@ -34,10 +34,10 @@ Manages DataFrames and graph models. Unlike the Spectra/Maps ViewModels, this Vi
 | **DataFrame management** | `add_dataframe()`, `remove_dataframe()`, `select_dataframe()`, `refresh_dataframe()` |
 | **Graph CRUD** | `create_graph()`, `get_graph()`, `update_graph()`, `delete_graph()` |
 | **Filtering** | `apply_filters(df_name, filters)` — `pd.DataFrame.query()` based |
-| **Multi-wafer** | `create_multi_wafer_graphs()` — Batch-create one wafer plot per slot |
+| **Multi-wafer** | `create_multi_wafer_graphs()` — Batch-creates one wafer plot per slot |
 | **Persistence** | `save_workspace()`, `load_workspace()`, `clear_workspace()` |
 
-#### Signals
+#### **Signals**
 
 ```python
 dataframes_changed = Signal(list)           # List of DataFrame names updated
@@ -46,7 +46,7 @@ graphs_changed = Signal(list)               # List of graph IDs updated
 notify = Signal(str)                        # Toast notification
 ```
 
-### `MGraph` — The Plot Configuration Model
+### **`MGraph` — The Plot Configuration Model**
 
 **File**: `spectroview/model/m_graph.py` (~157 lines)
 
@@ -56,11 +56,11 @@ A pure data class that stores everything needed to recreate a plot:
 |----------|------|---------|
 | `graph_id` | `int` | Unique identifier |
 | `df_name` | `str` | Source DataFrame name |
-| `plot_style` | `str` | One of `PLOT_STYLES` (point, scatter, box, bar, line, wafer, 2Dmap, trendline) |
+| `plot_style` | `str` | One of `PLOT_STYLES` (`point`, `scatter`, `box`, `bar`, `line`, `wafer`, `2Dmap`, `trendline`) |
 | `x`, `y`, `z` | `str` / `list[str]` / `str` | Column mappings for axes |
 | `filters` | `list[dict]` | Saved filter state |
 | `plot_title`, `xlabel`, `ylabel`, `zlabel` | `str` | Label overrides |
-| `xmin/xmax`, `ymin/ymax`, `zmin/zmax` | `float` | Axis limits |
+| `xmin`/`xmax`, `ymin`/`ymax`, `zmin`/`zmax` | `float` | Axis limits |
 | `xlogscale`, `ylogscale` | `bool` | Log scale toggles |
 | `y2`, `y3` | `str` | Secondary/tertiary Y-axis columns |
 | `color_palette` | `str` | Matplotlib colormap name |
@@ -68,11 +68,11 @@ A pure data class that stores everything needed to recreate a plot:
 | `legend_properties` | `list[dict]` | Per-series label, color, marker overrides |
 | `annotations` | `list[dict]` | Vertical lines, horizontal lines, text annotations |
 | `dpi` | `int` | Figure DPI |
-| `plot_width/height` | `int` | Window dimensions |
+| `plot_width`/`height` | `int` | Window dimensions |
 
 `MGraph` provides `save()` and `load(data)` methods for complete serialization.
 
-### `VGraph` — The Rendering Widget
+### **`VGraph` — The Rendering Widget**
 
 **File**: `spectroview/view/components/v_graph.py` (~1275 lines)
 
@@ -80,7 +80,7 @@ Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure`
 
 ---
 
-## Data Flow: Creating a Plot
+## **Data Flow: Creating a Plot**
 
 ```mermaid
 sequenceDiagram
@@ -112,7 +112,7 @@ sequenceDiagram
 
 ---
 
-## Plot Styles
+## **Plot Styles**
 
 Each plot style maps to a specific Seaborn or custom rendering function:
 
@@ -127,7 +127,7 @@ Each plot style maps to a specific Seaborn or custom rendering function:
 | `wafer` | Custom `WaferPlot` | — | Circular wafer visualization with die sites |
 | `2Dmap` | `ax.imshow()` | — | Rectangular heatmap via `pivot()` |
 
-### Multi-Axis Support
+### **Multi-Axis Support**
 
 `VGraph` supports up to **3 Y-axes**:
 
@@ -139,20 +139,20 @@ Each axis can use a different column and plot style.
 
 ---
 
-## DataFrame Management
+## **DataFrame Management**
 
-### Loading
+### **Loading**
 
 `VMWorkspaceGraphs.load_dataframes()` uses `m_io.load_dataframe_file()`:
 
 - **Excel** (`.xlsx`/`.xls`): Single sheet → `{filename: df}`. Multiple sheets → `{filename_sheetname: df}` per sheet.
-- **CSV**: Auto-detects semicolon vs comma delimiter.
+- **CSV**: Auto-detects semicolon vs. comma delimiter.
 
-### Source Tracking and Refresh
+### **Source Tracking and Refresh**
 
 Every loaded DataFrame's source file path is stored in `self.dataframe_sources`. The "Refresh" button re-reads the file from disk, enabling iterative workflows where external tools modify the data.
 
-### Programmatic Injection
+### **Programmatic Injection**
 
 Other workspaces can inject DataFrames directly:
 
@@ -166,7 +166,7 @@ self.graphs_workspace.vm.add_dataframe("fit_results", df_fit_results)
 
 ---
 
-## Filter System
+## **Filter System**
 
 The `VDataFilter` widget provides a dynamic query builder:
 
@@ -191,20 +191,20 @@ def apply_filters(self, df_name, filters):
 
 Filters are **saved per-graph** in `MGraph.filters`, so each plot can have different active filters.
 
-### Multi-Wafer Workflow
+### **Multi-Wafer Workflow**
 
 When a DataFrame contains a `Slot` column (common in semiconductor datasets):
 
-1. The View shows slot checkboxes and the "Add Multi-Wafer" button
-2. User selects slots (e.g., 1, 3, 5, 7)
-3. `create_multi_wafer_graphs()` creates one wafer plot per slot, each with a `Slot == N` filter merged into the base filters
-4. All wafer plots appear simultaneously in the MDI area
+1. The View shows slot checkboxes and the "Add Multi-Wafer" button.
+2. The user selects slots (e.g., 1, 3, 5, 7).
+3. `create_multi_wafer_graphs()` creates one wafer plot per slot, each with a `Slot == N` filter merged into the base filters.
+4. All wafer plots appear simultaneously in the MDI area.
 
 ---
 
-## Graph Customization
+## **Graph Customization**
 
-### CustomizeGraphDialog (Singleton)
+### **`CustomizeGraphDialog` (Singleton)**
 
 **File**: `spectroview/view/components/customize_graph_dialog.py` (~1000+ lines)
 
@@ -218,7 +218,7 @@ A workspace-level singleton dialog that auto-switches context when the user acti
 | **Axis breaks** | Insert break markers at specified positions |
 | **Export** | Copy to clipboard, save as image |
 
-### Legend Customization
+### **Legend Customization**
 
 Legend properties are stored in `VGraph.legend_properties`:
 
@@ -231,7 +231,7 @@ Legend properties are stored in `VGraph.legend_properties`:
 
 These are synchronized to `MGraph.legend_properties` via the `properties_changed` signal, ensuring they persist across save/load cycles.
 
-### Annotation System
+### **Annotation System**
 
 Annotations are stored as dicts in `MGraph.annotations`:
 
@@ -246,13 +246,13 @@ Annotations are stored as dicts in `MGraph.annotations`:
 {"type": "text", "id": "txt_1", "x": 300, "y": 500, "text": "Peak A", "fontsize": 12, "color": "black"}
 ```
 
-Annotations support **drag interaction** — clicking and dragging a vertical/horizontal line updates its position in real-time and emits `annotation_position_changed`.
+Annotations support **drag interaction** — clicking and dragging a vertical/horizontal line updates its position in real time and emits `annotation_position_changed`.
 
 ---
 
-## MDI Area Management
+## **MDI Area Management**
 
-The Graphs workspace uses a `QMdiArea` to display multiple plots simultaneously:
+The `Graphs` workspace uses a `QMdiArea` to display multiple plots simultaneously:
 
 ```mermaid
 graph LR
@@ -269,7 +269,7 @@ graph LR
 - "Minimize All" collapses all windows for a clean workspace.
 - Graph selection in the combobox activates the corresponding subwindow and syncs the right panel controls.
 
-### Graph Storage
+### **Graph Storage**
 
 ```python
 # VWorkspaceGraphs maintains a lookup:
@@ -279,15 +279,15 @@ self.graph_widgets = {
 ```
 
 When a graph is selected via the combobox or by clicking its subwindow:
-1. `_on_subwindow_activated()` identifies the `graph_id`
-2. The ViewModel's `MGraph` is loaded
-3. The right panel controls (X/Y/Z comboboxes, labels, style) are synced to match
+1. `_on_subwindow_activated()` identifies the `graph_id`.
+2. The ViewModel's `MGraph` is loaded.
+3. The right panel controls (X/Y/Z comboboxes, labels, style) are synced to match.
 
 ---
 
-## Persistence
+## **Persistence**
 
-### Save Format (`.graphs`)
+### **Save Format (`.graphs`)**
 
 ```json
 {
@@ -316,7 +316,7 @@ When a graph is selected via the combobox or by clicking its subwindow:
 }
 ```
 
-DataFrames are stored as gzip-compressed CSV encoded as hex strings. On load, they're decompressed and reconstructed:
+DataFrames are stored as gzip-compressed CSV encoded as hex strings. On load, they are decompressed and reconstructed:
 
 ```python
 csv_data = gzip.decompress(bytes.fromhex(hex_string)).decode('utf-8')
@@ -325,13 +325,13 @@ df = pd.read_csv(StringIO(csv_data))
 
 ---
 
-## Plot Replication
+## **Plot Replication**
 
 The "Replicate" button on each graph toolbar creates a deep copy of the plot:
 
-1. Serializes the current `MGraph` via `save()`
-2. Removes `graph_id` (ViewModel assigns a new one)
-3. Captures the current subwindow size for the replica
-4. Calls `_create_and_display_plot()` with the cloned config
+1. Serializes the current `MGraph` via `save()`.
+2. Removes `graph_id` (the ViewModel assigns a new one).
+3. Captures the current subwindow size for the replica.
+4. Calls `_create_and_display_plot()` with the cloned config.
 
 This enables rapid A/B comparison of the same data with different visual settings.

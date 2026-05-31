@@ -1,8 +1,8 @@
-## Installation
+## **Installation**
 
-SPECTROview requires Python (versions 3.8 through 3.12). It can be easily installed and managed via your system's command line interface (e.g., Command Prompt on Windows or Terminal on macOS/Linux).
+`SPECTROview` requires Python (versions 3.8 through 3.12). It can be easily installed and managed via your system's command-line interface (e.g., Command Prompt on Windows or Terminal on macOS/Linux).
 
-### From PyPI (Recommended)
+### **1. From PyPI (Recommended)**
 ```bash
 pip install spectroview
 ```
@@ -12,15 +12,15 @@ pip install spectroview
   <i>Successfully installing SPECTROview via pip.</i>
 </div>
 
-### From GitHub (Latest Development Version)
+### **2. From GitHub (Latest Development Version)**
 To install the latest development version directly from the source repository:
 ```bash
 pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
 ```
 
-### Launch & Update
+### **3. Launch and Update**
 
-To launch SPECTROview, open your terminal or command prompt and execute:
+To launch `SPECTROview`, open your terminal or command prompt and execute:
 ```bash
 spectroview
 ```
@@ -30,7 +30,7 @@ To update your installation to the latest release:
 pip install --upgrade spectroview
 ```
 
-To install or downgrade to a specific version (e.g., `26.6.1`):
+To install or downgrade to a specific version (e.g., `26.24.1`):
 ```bash
-pip install spectroview==26.6.1
+pip install spectroview==26.24.1
 ```

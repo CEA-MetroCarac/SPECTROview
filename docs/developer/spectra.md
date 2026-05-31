@@ -1,10 +1,10 @@
-# Spectra Workspace
+# **Spectra Workspace**
 
-The Spectra Workspace is the core analytical environment. It manages loading, preprocessing, fitting, and exporting spectral data. It serves as the **base class** that the Maps workspace extends.
+The `Spectra` workspace is the core analytical environment. It manages loading, preprocessing, fitting, and exporting spectral data. It serves as the **base class** that the `Maps` workspace extends.
 
 ---
 
-## Architecture Overview
+## **Architecture Overview**
 
 ```mermaid
 graph TD
@@ -24,9 +24,9 @@ graph TD
 
 ---
 
-## Key Classes
+## **Key Classes**
 
-### `VMWorkspaceSpectra` — The ViewModel
+### **`VMWorkspaceSpectra` — The ViewModel**
 
 **File**: `spectroview/viewmodel/vm_workspace_spectra.py`
 
@@ -45,7 +45,7 @@ This is the largest and most critical ViewModel. It owns the `SpectraStore` inst
 | **Model management** | `copy/paste_fit_model()`, `save_fit_model()`, `apply_fit_model()` |
 | **Workspace reset** | `reinit_spectra()`, `clear_workspace()` |
 
-#### Signals (ViewModel → View)
+#### **Signals (ViewModel → View)**
 
 ```python
 spectra_list_changed = Signal(list)         # Full list refresh
@@ -56,13 +56,13 @@ count_changed = Signal(int)                 # Total spectrum count
 notify = Signal(str)                        # Toast notification message
 ```
 
-### `SpectraStore` & `MapData` — Unified Models
+### **`SpectraStore` & `MapData` — Unified Models**
 
 **File**: `spectroview/model/spectra_store.py`
 
-SPECTROview uses a unified, tensor-centric architecture where all numerical data is stored in contiguous NumPy arrays per map. 
+`SPECTROview` uses a unified, tensor-centric architecture where all numerical data is stored in contiguous NumPy arrays per map.
 
-#### `MapData` Structure
+#### **`MapData` Structure**
 
 Each map or individual spectrum in the store is wrapped by a `MapData` dataclass:
 
@@ -74,8 +74,8 @@ Each map or individual spectrum in the store is wrapped by a `MapData` dataclass
 | `coords` | `ndarray` | Spatial positions [N, 2] |
 | `is_active` | `ndarray` | Active checkbox state per spectrum [N] |
 | `fnames` | `list[str]` | Unique filename identifiers per spectrum [N] |
-| `colors` | `list[str|None]`| Display color per spectrum [N] |
-| `labels` | `list[str|None]`| User-defined display label per spectrum [N] |
+| `colors` | `list[str\|None]`| Display color per spectrum [N] |
+| `labels` | `list[str\|None]`| User-defined display label per spectrum [N] |
 | `baseline_config` | `dict` | Baseline settings (`mode`, `attached`, `points`, `order_max`) |
 | `fit_model` | `dict` | Peak model metadata dictionary (`peak_labels`, `peak_models`) |
 | `peak_params` | `ndarray` | Optimized parameters array [N, K] |
@@ -87,9 +87,9 @@ Each map or individual spectrum in the store is wrapped by a `MapData` dataclass
 
 ---
 
-## Spectrum Lifecycle
+## **Spectrum Lifecycle**
 
-### 1. Loading
+### **1. Loading**
 
 The `m_io` module detects file formats by extension and parses raw arrays and metadata into native Python dictionaries:
 
@@ -101,15 +101,15 @@ The `m_io` module detects file formats by extension and parses raw arrays and me
 | `.spc` | `load_spc_spectrum()` | Galactic SPC binary format |
 | `.dat` | `load_TRPL_data()` | Time-Resolved Photoluminescence |
 
-Loaded spectra are dynamically added to the `SpectraStore` via `self.store.add_map()` which initializes the numerical coordinates and active flags.
+Loaded spectra are dynamically added to `SpectraStore` via `self.store.add_map()`, which initializes the numerical coordinates and active flags.
 
-### 2. Preprocessing & Bulk Actions
+### **2. Preprocessing & Bulk Actions**
 
-When a user modifies baseline, spectral range, or clicks action buttons, the spectrum goes through a fully vectorized preprocessing pipeline on `SpectraStore`.
+When a user modifies the baseline, spectral range, or clicks action buttons, the spectrum goes through a fully vectorized preprocessing pipeline on `SpectraStore`.
 
 The bulk action methods (`reinit_spectra()`, `subtract_baseline()`, `delete_baseline()`, `apply_spectral_range()`, `paste_peaks()`, `delete_peaks()`) follow a uniform execution pattern:
 - **Single click** applies the action to the currently selected spectra.
-- **Ctrl + click** applies the action to *all* spectra across all loaded map layers or spectra lists.
+- **Ctrl + Click** applies the action to *all* spectra across all loaded map layers or spectra lists.
 
 ```mermaid
 graph LR
@@ -124,30 +124,30 @@ graph LR
 !!! note "Vectorized Preprocessing"
     The original raw arrays `x0` and `Y0` are preserved unchanged. Preprocessing operations are vectorized across the entire map, and the resulting working coordinates `x` and `Y` are computed dynamically.
 
-### 3. Baseline Processing
+### **3. Baseline Processing**
 
 Manual baseline anchor points and smooth automatic baselines are evaluated in batch layouts:
 
 - **Manual Modes** (`Linear`, `Polynomial`): Anchor points `(x, y)` are registered into `baseline_config`. Linear/Polynomial fits are evaluated in batch over coordinates. The default "Corr. noise" is automatically configured.
 - **Automatic Modes** (`airPLS`, `asLS`, `arPLS`, `modpoly`): Live previews are calculated instantly using pure NumPy/SciPy or Whittaker solvers, and subtracted in a single operation.
-- **Substract / Delete Baseline**: `delete_baseline()` properly undoes the baseline subtraction while preserving spectral cropping and range bounds.
+- **Subtract / Delete Baseline**: `delete_baseline()` properly undoes the baseline subtraction while preserving spectral cropping and range bounds.
 
-### 4. Peak Model Assignment
+### **4. Peak Model Assignment**
 
 Peaks are registered into the map's `fit_model` dictionary:
 
 1. `VSpectraViewer.peak_add_requested.emit(x_position)` updates the `fit_model` in the store.
-2. Initial parameter guesses (center, fwhm, amplitude) are calculated dynamically.
-3. The View's `VPeakTable` updates showing parameters with 3-decimal precision.
-4. **Re-indexing & Expressions**: Peak table indices (prefix numbering) are automatically re-indexed when peaks are added/deleted. Mathematical expression features seamlessly link to these re-indexed peaks.
+2. Initial parameter guesses (`center`, `fwhm`, `amplitude`) are calculated dynamically.
+3. The View's `VPeakTable` updates, showing parameters with 3-decimal precision.
+4. **Re-indexing & Expressions**: Peak table indices (prefix numbering) are automatically re-indexed when peaks are added or deleted. Mathematical expression features seamlessly link to these re-indexed peaks.
 
-### 5. Fitting
+### **5. Fitting**
 
 1. **ViewModel** instantiates `VBFthread` with the store and map tasks.
-2. **VBFthread** invokes `VBFengine.fit()` which compiles Jacobians and optimizes parameter vectors in batch using vectorized Levenberg-Marquardt solvers.
+2. **`VBFthread`** invokes `VBFengine.fit()`, which compiles Jacobians and optimizes parameter vectors in batch using vectorized Levenberg-Marquardt solvers.
 3. Optimized parameters are written back to `md.peak_params`, and composite fit envelopes (`md.Y_bestfit`, `md.Y_peaks`) are evaluated.
 
-### 6. Fit Results Collection
+### **6. Fit Results Collection**
 
 `collect_fit_results()` iterates over all active spectra in `SpectraStore` and constructs a single DataFrame:
 
@@ -162,31 +162,31 @@ Peaks are registered into the map's `fit_model` dictionary:
 
 ---
 
-## Fit Model Management
+## **Fit Model Management**
 
-- **Copy/Paste**: Deep copies the `fit_model` and `baseline_config` to clipboard.
+- **Copy/Paste**: Deep-copies the `fit_model` and `baseline_config` to the clipboard.
 - **Save/Load**: Writes the fitting configuration to standard JSON structures.
 
 ---
 
-## Persistence: Save/Load Work
+## **Persistence: Save/Load Work**
 
-### Modern Save Format (ZIP-backed)
-- Light metadata (settings, GUI configurations, peak parameters) are saved to `metadata.json`.
+### **Modern Save Format (ZIP-backed)**
+- Light metadata (settings, GUI configurations, peak parameters) is saved to `metadata.json`.
 - Heavy coordinates and raw intensity arrays (`x0`, `Y0`) are stored in a compressed `arrays.npz` archive.
 - Statistics are dumped to `dataframes.pkl`.
 
-### Backward-Compatible Loading
-To support legacy workspaces saved with older SPECTROview versions (raw JSON formats < v4), `VMWorkspaceSpectra` implements a robust backward-compatible JSON loader:
-- Decodes and decompresses base64/zlib encoded `x0` and `y0` arrays.
+### **Backward-Compatible Loading**
+To support legacy workspaces saved with older `SPECTROview` versions (raw JSON formats < v4), `VMWorkspaceSpectra` implements a robust backward-compatible JSON loader:
+- Decodes and decompresses base64/zlib-encoded `x0` and `y0` arrays.
 - Reconstructs `baseline_config` and evaluates `md.Y_baseline`.
 - Iterates and parses legacy peak models, evaluating and rendering component curves (`md.Y_peaks`, `md.Y_bestfit`) automatically.
 
 ---
 
-## View Components
+## **View Components**
 
-### VSpectraViewer
+### **`VSpectraViewer`**
 
 The central Matplotlib canvas renders:
 
@@ -195,7 +195,7 @@ The central Matplotlib canvas renders:
 - **Baseline curves** with anchor point markers
 - **Individual peak curves** (smooth, using 1000-point interpolation)
 - **Best-fit envelope** (sum of peaks + baseline)
-- **Residuals** (observed - fitted)
+- **Residuals** (observed − fitted)
 - **Legend** (pickable for label/color editing)
 - **R² display** from the first selected spectrum
 
@@ -207,7 +207,7 @@ Tool modes (exclusive radio buttons):
 | **Baseline** | Left-click adds anchor point; right-click removes nearest |
 | **Peak** | Left-click adds peak at x-position; right-click removes nearest |
 
-### VFitModelBuilder
+### **`VFitModelBuilder`**
 
 A splitter panel with:
 
@@ -216,18 +216,18 @@ A splitter panel with:
 
 All actions support **Ctrl+Click** for "apply to all spectra" via the `_emit_with_ctrl()` helper.
 
-### VSpectraList
+### **`VSpectraList`**
 
 A `QListWidget` with:
 
 - Checkboxes per spectrum (checked = active for fitting).
-- **New Coloring Rules**: Spectral list items are colored consistently. When filtering/searching, the UI gracefully retains the original color indices.
-- Context menu for rename, delete, copy.
-- Multi-selection support (Ctrl/Shift+Click).
+- **Coloring Rules**: Spectral list items are colored consistently. When filtering/searching, the UI gracefully retains the original color indices.
+- Context menu for rename, delete, and copy.
+- Multi-selection support (`Ctrl`/`Shift` + Click).
 
-### Cross-Workspace Communication
+### **Cross-Workspace Communication**
 
-Selected spectra can be sent across workspaces (e.g., Maps → Spectra). The `spectra_payloads` dictionary contains:
+Selected spectra can be sent across workspaces (e.g., `Maps` → `Spectra`). The `spectra_payloads` dictionary contains:
 - Raw `x0`, `Y0` arrays
 - A deep copy of `baseline_config` and `fit_model`
 - Current `range_min` / `range_max` bounding box constraints

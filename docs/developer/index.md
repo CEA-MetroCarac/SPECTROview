@@ -1,12 +1,12 @@
-# Application Architecture
+# **Application Architecture**
 
-This guide covers the technical architecture, code organization, and development patterns of SPECTROview. It is intended for developers who want to understand, maintain, or extend the application.
+This guide covers the technical architecture, code organization, and development patterns of `SPECTROview`. It is intended for developers who want to understand, maintain, or extend the application.
 
 ---
 
-## MVVM Pattern
+## **MVVM Pattern**
 
-SPECTROview enforces a strict **Model-View-ViewModel** architecture.
+`SPECTROview` enforces a strict **Model-View-ViewModel** architecture.
 Every workspace follows the same three-layer separation of concerns:
 
 - **Model** — Pure data containers and domain logic. Models hold no references to Qt widgets and can be tested independently.
@@ -23,23 +23,23 @@ graph LR
     B -->|"update UI"| A
 ```
 
-### File Naming Convention
+### **File Naming Convention**
 
 | Layer | Prefix | Example |
-|-------|--------|---------| 
+|-------|--------|---------|
 | View | `v_` | `v_workspace_spectra.py` |
 | ViewModel | `vm_` | `vm_workspace_spectra.py` |
 | Model | `m_` | `spectra_store.py` |
 
-### Import Rules
+### **Import Rules**
 
 | Layer | Can Import | Cannot Import |
-|-------|-----------|--------------|
+|-------|-----------|--------------| 
 | **View** | ViewModel, Components | — |
-| **ViewModel** | Model, fit_engine | View |
+| **ViewModel** | Model, `fit_engine` | View |
 | **Model** | Standard libs only | View, ViewModel |
 
-### Signal/Slot Communication
+### **Signal/Slot Communication**
 
 Views and ViewModels communicate **exclusively via Qt signals and slots**. A ViewModel must never call View methods directly, and a View must never modify Model state without going through its ViewModel.
 
@@ -57,7 +57,7 @@ class VWorkspaceSpectra(QWidget):
 
 ---
 
-## Project Structure
+## **Project Structure**
 
 ```
 spectroview/
@@ -129,7 +129,7 @@ spectroview/
 
 ---
 
-## Application Entry Point
+## **Application Entry Point**
 
 `spectroview/main.py` creates the `QMainWindow` and instantiates all workspaces as tabs in a `QTabWidget`:
 
@@ -147,15 +147,15 @@ graph LR
 
 The `setup_connections()` method in `main.py` wires cross-workspace dependencies:
 
-- **Maps → Graphs**: `VMWorkspaceMaps.set_graphs_workspace(v_graphs)` injects a reference so Maps can send profiles and DataFrames directly to the Graphs workspace.
-- **Maps → Spectra**: The `send_spectra_to_workspace` signal passes deep copies of selected map spectra to the Spectra tab.
-- **Fit Results → Graphs**: Both Spectra and Maps emit `fit_results_updated` with a `pd.DataFrame` that can be forwarded to the Graphs workspace for statistical plotting.
+- **Maps → Graphs**: `VMWorkspaceMaps.set_graphs_workspace(v_graphs)` injects a reference so `Maps` can send profiles and DataFrames directly to the `Graphs` workspace.
+- **Maps → Spectra**: The `send_spectra_to_workspace` signal passes deep copies of selected map spectra to the `Spectra` tab.
+- **Fit Results → Graphs**: Both `Spectra` and `Maps` emit `fit_results_updated` with a `pd.DataFrame` that can be forwarded to the `Graphs` workspace for statistical plotting.
 
 ---
 
-## Data Lifecycle
+## **Data Lifecycle**
 
-### Spectra: Loading → Processing → Fitting → Results
+### **Spectra: Loading → Processing → Fitting → Results**
 
 ```mermaid
 sequenceDiagram
@@ -174,7 +174,7 @@ sequenceDiagram
     VM-->>View: fit_results_updated
 ```
 
-### Maps: Loading → Extraction → Heatmap → Profile
+### **Maps: Loading → Extraction → Heatmap → Profile**
 
 ```mermaid
 sequenceDiagram
@@ -195,9 +195,9 @@ sequenceDiagram
 
 ---
 
-## Workspace Inheritance
+## **Workspace Inheritance**
 
-`VMWorkspaceMaps` **extends** `VMWorkspaceSpectra`. This means every fitting, baseline, peak, and serialization feature available in the Spectra workspace is automatically available in the Maps workspace, with additional map-specific overrides:
+`VMWorkspaceMaps` **extends** `VMWorkspaceSpectra`. This means every fitting, baseline, peak, and serialization feature available in the `Spectra` workspace is automatically available in the `Maps` workspace, with additional map-specific overrides:
 
 ```mermaid
 classDiagram
@@ -224,7 +224,7 @@ classDiagram
 
 ---
 
-## Reusable Component System
+## **Reusable Component System**
 
 Workspaces are composed from **shared components** that follow the same signal-based pattern:
 
@@ -236,24 +236,24 @@ Workspaces are composed from **shared components** that follow the same signal-b
 | `VMapViewer` | `v_map_viewer.py` | Heatmap/wafer canvas with Z/X range sliders, mask, profile extraction |
 | `VMapViewerDialog` | `v_map_viewer_dialog.py` | Detachable always-on-top window wrapping `VMapViewer` |
 | `VGraph` | `v_graph.py` | Seaborn/Matplotlib graph widget supporting 10+ plot styles |
-| `VDataFilter` | `v_data_filter.py` | Dynamic pandas `.query()` filter builder |
+| `VDataFilter` | `v_data_filter.py` | Dynamic `pandas` `.query()` filter builder |
 | `VFitResults` | `v_fit_results.py` | Color-coded fit results table |
 | `VMVA` | `v_mva.py` | PCA/NMF controls and embedded plotting |
 | `CustomizeGraphDialog` | `customize_graph_dialog.py` | Singleton dialog for graph annotation, legends, and axis customization |
 
 ---
 
-## Persistence & Serialization
+## **Persistence & Serialization**
 
-SPECTROview delegates all loading and saving operations to the unified `WorkspaceIO` class (`workspace_io.py`), which isolates IO logic from the ViewModels. Each workspace uses its own save/load format via `WorkspaceIO`:
+`SPECTROview` delegates all loading and saving operations to the unified `WorkspaceIO` class (`workspace_io.py`), which isolates IO logic from the ViewModels. Each workspace uses its own save/load format via `WorkspaceIO`:
 
 | Workspace | File Extension | Key Strategy |
 |-----------|---------------|-------------|
-| Spectra | `.spectra` | ZIP archive with metadata JSON, NPZ arrays per spectrum (v5+). Handled by `WorkspaceIO.save_spectra_workspace()`. |
-| Maps | `.maps` | ZIP archive with metadata JSON, NPZ arrays, and pickled DataFrames (v5+). Handled by `WorkspaceIO.save_maps_workspace()`. |
-| Graphs | `.graphs` | JSON with `gzip+hex` compressed DataFrames and `MGraph.save()` serialized plots. |
+| `Spectra` | `.spectra` | ZIP archive with metadata JSON, NPZ arrays per spectrum (v5+). Handled by `WorkspaceIO.save_spectra_workspace()`. |
+| `Maps` | `.maps` | ZIP archive with metadata JSON, NPZ arrays, and pickled DataFrames (v5+). Handled by `WorkspaceIO.save_maps_workspace()`. |
+| `Graphs` | `.graphs` | JSON with `gzip+hex` compressed DataFrames and `MGraph.save()` serialized plots. |
 
-### Spectrum Serialization Flow
+### **Spectrum Serialization Flow**
 
 ```python
 # Save (v4+): SpectraStore → ZIP archive (metadata.json + arrays.npz)
@@ -277,27 +277,27 @@ arrays = {
 
 ---
 
-## Threading Model
+## **Threading Model**
 
 Long-running operations run on `QThread` subclasses to prevent UI freezing.
 All threads emit progress signals that the ViewModel relays to the View's progress bar:
 
 | Thread Class | Location | Purpose |
 |-------------|----------|---------|
-| `VBFthread` | `fit_engine/vbf_thread.py` | Batched batch fitting (primary engine) |
+| `VBFthread` | `fit_engine/vbf_thread.py` | Batched fitting (primary engine) |
 
 **Thread lifecycle**:
 
-1. ViewModel instantiates thread, connects `finished` / `progress` signals.
+1. ViewModel instantiates the thread and connects `finished` / `progress` signals.
 2. Thread `.start()` — runs `run()` on a separate OS thread.
-3. On completion, `finished` signal triggers `_on_fit_finished()` in the ViewModel.
+3. On completion, the `finished` signal triggers `_on_fit_finished()` in the ViewModel.
 4. ViewModel emits result signals → View updates UI.
 
 ---
 
-## Cross-Workspace Communication
+## **Cross-Workspace Communication**
 
-SPECTROview avoids a global event bus. Instead, `main.py` uses **dependency injection** and **direct signal connections**:
+`SPECTROview` avoids a global event bus. Instead, `main.py` uses **dependency injection** and **direct signal connections**:
 
 ```python
 # main.py → setup_connections()
@@ -315,7 +315,7 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 
 ---
 
-## Global Constants (`__init__.py`)
+## **Global Constants (`__init__.py`)**
 
 `spectroview/__init__.py` defines application-wide constants:
 
@@ -331,19 +331,19 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 
 ---
 
-## Deep-Dive Documentation
+## **Deep-Dive Documentation**
 
 | Topic | Page | Summary |
 |-------|------|---------|
-| **Spectra Workspace** | [spectra.md](spectra.md) | VMWorkspaceSpectra, spectrum lifecycle, baseline/peak pipeline, fit model management |
-| **Maps Workspace** | [maps.md](maps.md) | VMWorkspaceMaps, hyperspectral data loading, heatmap rendering, coordinate handling |
-| **Graphs Workspace** | [graphs.md](graphs.md) | VMWorkspaceGraphs, DataFrame management, plot creation, VGraph rendering |
-| **Vectorized Batch Fit Engine (VBF Engine)** | [vbf_engine.md](vbf_engine.md) | Batched LM optimizer, analytical Jacobians, adding new peak models |
-| **Multivariate Analysis** | [mva.md](mva.md) | PCA/NMF implementation, data pipeline, export to Graphs |
+| **Spectra Workspace** | [spectra.md](spectra.md) | `VMWorkspaceSpectra`, spectrum lifecycle, baseline/peak pipeline, fit model management |
+| **Maps Workspace** | [maps.md](maps.md) | `VMWorkspaceMaps`, hyperspectral data loading, heatmap rendering, coordinate handling |
+| **Graphs Workspace** | [graphs.md](graphs.md) | `VMWorkspaceGraphs`, DataFrame management, plot creation, `VGraph` rendering |
+| **Vectorized Batch Fit Engine (`VBF Engine`)** | [vbf_engine.md](vbf_engine.md) | Batched LM optimizer, analytical Jacobians, adding new peak models |
+| **Multivariate Analysis** | [mva.md](mva.md) | PCA/NMF implementation, data pipeline, export to `Graphs` |
 
 ---
 
-## Running & Testing
+## **Running & Testing**
 
 ```bash
 # Run from source
@@ -361,15 +361,15 @@ mkdocs serve
 
 ---
 
-## Dependencies
+## **Dependencies**
 
 | Package | Constraint | Purpose |
-|---------|-----------|---------|
+|---------|-----------|---------| 
 | `PySide6` | — | Qt 6 bindings (**not** PyQt) |
 | `matplotlib` | `< 3.10.9` | Plotting backend for spectra and maps |
 | `numpy` | `< 2.0.0` | Numerical array operations |
 | `scipy` | — | Interpolation, KDTree, SVD |
 | `pandas` | — | DataFrame management |
-| `seaborn` | — | Statistical plotting in Graphs workspace |
+| `seaborn` | — | Statistical plotting in `Graphs` workspace |
 | `renishawWiRE` | — | Renishaw `.wdf` file reader |
 | `superqt` | — | Enhanced Qt widgets (range sliders) |

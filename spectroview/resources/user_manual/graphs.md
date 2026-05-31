@@ -1,6 +1,6 @@
-## Graphs Workspace
+## **Graphs Workspace**
 
-The Graphs Workspace is exclusively dedicated to data visualization, engineered with a strong emphasis on simplicity, speed, and customization.
+The `Graphs` workspace is exclusively dedicated to data visualization, engineered with a strong emphasis on simplicity, speed, and customization.
 
 <div align="center">
   <img src="../user_manual_images/Graphs/ui_graph.gif" alt="Graphs Workspace UI" width="800"><br>
@@ -11,12 +11,12 @@ The Graphs Workspace is exclusively dedicated to data visualization, engineered 
 _______
 
 
-### Loading Data
+### **1. Loading Data**
 
-Datasets can be passed seamlessly from the Spectra and Maps workspaces, or imported directly from external Excel/CSV files. All available datasets are dynamically tracked and displayed in the dataset list widget.
+Datasets can be passed seamlessly from the `Spectra` and `Maps` workspaces, or imported directly from external Excel/CSV files. All available datasets are dynamically tracked and displayed in the dataset list widget.
 
 ![Dataset List](../user_manual_images/Graphs/df_list.png)<br>
-The four available utility buttons allow you to: 
+The four available utility buttons allow you to:
 
 - **View**: Inspect the data table natively.
 - **Delete**: Remove the dataset from the workspace.
@@ -26,11 +26,11 @@ The four available utility buttons allow you to:
 ________
 
 
-### Add or Update a Plot
+### **2. Add or Update a Plot**
 
 1. Select your target dataset from the list.
 2. Choose the appropriate columns for the X, Y, and Z axes using the provided dropdown menus.
-3. Select your desired plot style (available styles: scatter, point, bar, box, line, 2Dmap, wafer).
+3. Select your desired plot style (available styles: `scatter`, `point`, `bar`, `box`, `line`, `2Dmap`, `wafer`).
 4. Define your plot labels, axis limits, and wafer diameter dimensions (if applicable).
 5. Click **Add Plot** to generate the visualization.
 
@@ -43,9 +43,9 @@ ________
 ______
 
 
-### Modifying an Existing Plot
+### **3. Modifying an Existing Plot**
 
-You can modify the **labels** of the axes and the **title** of the plot via the Right Panel. Click the **Update Plot** button to instantly apply the changes:
+You can modify the **labels** of the axes and the **title** of the plot via the `Right Panel`. Click the **Update Plot** button to apply the changes instantly:
 
 <div align="center">
   <img src="../user_manual_images/Graphs/labels.png" alt="Label Customization" width="300"><br>
@@ -54,7 +54,7 @@ You can modify the **labels** of the axes and the **title** of the plot via the 
 
 <br>
 
-Click the **Customize** button to open the Customize Dialog, giving you deep, granular control over the Legend, Annotations, Axes, and general aesthetics.
+Click the **Customize** button to open the `Customize Dialog`, giving you deep, granular control over the Legend, Annotations, Axes, and general aesthetics.
 
 <div align="center">
   <img src="../user_manual_images/Graphs/adjust_axis_limits.gif" alt="Adjusting Axis Limits" width="600"><br>
@@ -75,7 +75,7 @@ Click the **Customize** button to open the Customize Dialog, giving you deep, gr
 
 _____
 
-### Data Filtering
+### **4. Data Filtering**
 
 You can dynamically filter the plotted data by applying boolean logic expressions in the **Filter** field using the format: `(column_name) (operator) (value)`.
 > **Note**: String values must be enclosed in double quotes (`"text"`). Column headers containing spaces must be enclosed in backticks (`` `column name` ``).
@@ -87,7 +87,7 @@ You can dynamically filter the plotted data by applying boolean logic expression
 <br>
 
 | Filter Expression | Resulting Behavior |
-|-------------------|---------|
+|-------------------|---------| 
 | `Confocal != "high"` | Excludes all data points where the "Confocal" column equals "high". |
 | `Thickness == "1ML" or Thickness == "3ML"` | Includes only the data points where the "Thickness" column equals exactly "1ML" or "3ML". |
-| `` `Laser Power` <= 5 `` | Includes data points where the "Laser Power" column is strictly less than or equal to 5. |
+| `` `Laser Power` <= 5 `` | Includes data points where the "Laser Power" column is less than or equal to 5. |

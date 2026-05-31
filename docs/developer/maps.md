@@ -1,9 +1,9 @@
-# Maps Workspace
+# **Maps Workspace**
 
-The Maps Workspace handles **hyperspectral map data** — spatially resolved spectral datasets where each pixel contains a full spectrum. It extends the Spectra Workspace, inheriting all fitting and preprocessing capabilities while adding spatial awareness, heatmap visualization, and coordinate-based operations.
+The `Maps` workspace handles **hyperspectral map data** — spatially resolved spectral datasets where each pixel contains a full spectrum. It extends the `Spectra` workspace, inheriting all fitting and preprocessing capabilities while adding spatial awareness, heatmap visualization, and coordinate-based operations.
 
 ---
-## Architecture Overview
+## **Architecture Overview**
 
 ```mermaid
 graph TD
@@ -20,19 +20,19 @@ graph TD
 
 ---
 
-## Key Design Decision: Inheritance
+## **Key Design Decision: Inheritance**
 
 `VMWorkspaceMaps` extends `VMWorkspaceSpectra` rather than composing a separate spectra handler. This means:
 
 - All spectral operations (baseline, peaks, fitting, model management, persistence helpers) are **inherited directly**.
 - Maps-specific behavior is added through **method overrides** (e.g., `collect_fit_results()` adds X/Y coordinate columns, `_on_fit_finished()` also refreshes the heatmap).
-- The View (`VWorkspaceMaps`) similarly extends `VWorkspaceSpectra`, adding the map list panel and map viewer but reusing the spectra list, spectra viewer, and fit model builder.
+- The View (`VWorkspaceMaps`) similarly extends `VWorkspaceSpectra`, adding the `MapList` panel and `MapViewer` but reusing the `SpectraList`, `SpectraViewer`, and `FitModelBuilder`.
 
 ---
 
-## Key Classes
+## **Key Classes**
 
-### `VMWorkspaceMaps` — The ViewModel
+### **`VMWorkspaceMaps` — The ViewModel**
 
 **File**: `spectroview/viewmodel/vm_workspace_maps.py`
 
@@ -41,12 +41,12 @@ graph TD
 | **Map loading** | `load_map_files(paths)` |
 | **Map selection** | `select_map(name)`, `_show_map_spectra(name)` |
 | **Map deletion** | `delete_current_map()`, `remove_map(name)` |
-| **Fit results** | `collect_fit_results()` — overrides parent to add X, Y, Zone, Quadrant columns |
+| **Fit results** | `collect_fit_results()` — overrides parent to add `X`, `Y`, `Zone`, `Quadrant` columns |
 | **Heatmap data** | `get_fit_results_dataframe()`, `get_current_map_dataframe()` |
 | **Cross-workspace** | `send_selected_spectra_to_spectra_workspace()`, `extract_and_send_profile_to_graphs()` |
-| **Persistence** | `save_work()`, `load_work()` — ZIP archive with numpy+gzip arrays and dataframes |
+| **Persistence** | `save_work()`, `load_work()` — ZIP archive with NumPy+gzip arrays and DataFrames |
 
-#### Signals
+#### **Signals**
 
 ```python
 maps_list_changed = Signal(list)         # Map names list updated
@@ -58,9 +58,9 @@ switch_to_graphs_tab = Signal()          # Request tab switch to Graphs
 
 ---
 
-## Data Flow: Loading a Map
+## **Data Flow: Loading a Map**
 
-### Supported Formats
+### **Supported Formats**
 
 | Format | Loader | Data Structure |
 |--------|--------|---------------|
@@ -70,7 +70,7 @@ switch_to_graphs_tab = Signal()          # Request tab switch to Graphs
 | `.wdf` | `load_wdf_map()` | Renishaw WiRE binary → DataFrame |
 | `.spc` | `load_spc_map()` | Galactic SPC binary → DataFrame + metadata dict |
 
-### The Map DataFrame
+### **The Map DataFrame**
 
 Every map is stored as a `pd.DataFrame` with this structure:
 
@@ -83,7 +83,7 @@ Every map is stored as a `pd.DataFrame` with this structure:
 - All remaining columns are wavenumber values (as strings), each containing intensity data.
 - Each row represents one spatial point (one spectrum).
 
-### Tensor Registration Pipeline
+### **Tensor Registration Pipeline**
 
 When maps are loaded, raw coordinates, wavenumber grids, and spectral matrices are registered directly into `SpectraStore` in a single batched operation:
 1. `self.store.add_map(name, x0, Y0, coords, fnames, is_active)` allocates contiguous NumPy arrays.
@@ -95,19 +95,19 @@ When maps are loaded, raw coordinates, wavenumber grids, and spectral matrices a
     
     - Filter spectra belonging to a specific map (`fname.startswith(prefix)`)
     - Extract (X, Y) coordinates from the filename for fit results
-    - Match spectra back to DataFrame rows during heatmap rendering and coordinate querieseatmap rendering
+    - Match spectra back to DataFrame rows during heatmap rendering and coordinate queries
 
 ---
 
-## Heatmap Visualization
+## **Heatmap Visualization**
 
-### VMapViewer
+### **`VMapViewer`**
 
 **File**: `spectroview/view/components/v_map_viewer.py` (~1273 lines)
 
 The `VMapViewer` is the most complex View component. It renders both **2D maps** (rectangular grids) and **wafer maps** (circular die-site layouts).
 
-#### Z-Parameter Selection
+#### **Z-Parameter Selection**
 
 The Z-axis (color dimension) of the heatmap can display:
 
@@ -117,7 +117,7 @@ The Z-axis (color dimension) of the heatmap can display:
 | `Area` | Integrated area under spectrum in X-range | Always |
 | Fit parameters | `df_fit_results` columns (e.g., `Si_center`, `D_fwhm`) | After fitting |
 
-#### Data Pipeline for Heatmap
+#### **Data Pipeline for Heatmap**
 
 ```mermaid
 graph LR
@@ -132,7 +132,7 @@ graph LR
     G -->|"Wafer"| I["griddata"]
 ```
 
-#### Caching Strategy
+#### **Caching Strategy**
 
 Computing `scipy.griddata` for wafer maps is expensive (~100ms+ per call). The `VMapViewer` uses a **multi-key cache**:
 
@@ -149,15 +149,15 @@ cache_key = (
 
 The cache is:
 - **Preserved** across map switches (for fast switching between maps).
-- **Invalidated** after fitting completes via `clear_map_cache_requested` signal.
+- **Invalidated** after fitting completes via the `clear_map_cache_requested` signal.
 
-#### Interactive Selection
+#### **Interactive Selection**
 
 The map viewer supports three selection modes:
 
 | Mode | Trigger | Behavior |
 |------|---------|----------|
-| **Single click** | Left-click on heatmap | Selects the nearest spectrum point, highlights with red rectangle |
+| **Single click** | Left-click on heatmap | Selects the nearest spectrum point, highlights with a red rectangle |
 | **Rectangle drag** | Click-and-drag | Selects all points within the rectangle |
 | **Profile** | Select exactly 2 points in 2D mode | Draws a line between points; enables "Extract profile" |
 
@@ -165,9 +165,9 @@ Selected points are overlaid using `PatchCollection` for O(1) rendering performa
 
 ---
 
-## Coordinate Handling
+## **Coordinate Handling**
 
-### Extracting Coordinates from Filenames
+### **Extracting Coordinates from Filenames**
 
 Since map spectra encode their position in `fname`, coordinate extraction is done via string parsing:
 
@@ -182,14 +182,14 @@ def _extract_coords_for_spectra(self, spectra):
     return np.array(coords, dtype=np.float64)
 ```
 
-### Fit Results with Spatial Columns
+### **Fit Results with Spatial Columns**
 
 `collect_fit_results()` overrides the parent to:
 
-1. Call `super().collect_fit_results()` to build the base DataFrame
-2. Parse `(x, y)` from each `Filename` entry
-3. Insert `X` and `Y` columns at positions 1 and 2
-4. For wafer maps (`map_type != '2Dmap'`), add `Zone` and `Quadrant` columns using spatial utility functions
+1. Call `super().collect_fit_results()` to build the base DataFrame.
+2. Parse `(x, y)` from each `Filename` entry.
+3. Insert `X` and `Y` columns at positions 1 and 2.
+4. For wafer maps (`map_type != '2Dmap'`), add `Zone` and `Quadrant` columns using spatial utility functions.
 
 ```python
 # After override, the DataFrame looks like:
@@ -200,7 +200,7 @@ def _extract_coords_for_spectra(self, spectra):
 
 ---
 
-## Map Types and Wafer Rendering
+## **Map Types and Wafer Rendering**
 
 | Map Type | Radius | Rendering |
 |----------|--------|-----------|
@@ -211,16 +211,16 @@ def _extract_coords_for_spectra(self, spectra):
 
 For wafer maps, the viewer:
 
-1. Draws a wafer circle outline
-2. Shows all measurement sites as gray `×` markers
-3. Interpolates Z-values onto a regular grid using `scipy.griddata`
-4. Renders with `imshow()` using bilinear interpolation for smoothness
+1. Draws a wafer circle outline.
+2. Shows all measurement sites as gray `×` markers.
+3. Interpolates Z-values onto a regular grid using `scipy.griddata`.
+4. Renders with `imshow()` using bilinear interpolation for smoothness.
 
 ---
 
-## Cross-Workspace Features
+## **Cross-Workspace Features**
 
-### Send Spectra to Spectra Workspace
+### **Send Spectra to `Spectra` Workspace**
 
 ```python
 def send_selected_spectra_to_spectra_workspace(self):
@@ -230,62 +230,62 @@ def send_selected_spectra_to_spectra_workspace(self):
     self.send_spectra_to_workspace.emit(spectra_payloads)
 ```
 
-Deep copies of `fit_model` and `baseline_config` are packed into dictionaries ensuring that modifications in the Spectra tab don't affect the Maps workspace.
+Deep copies of `fit_model` and `baseline_config` are packed into dictionaries, ensuring that modifications in the `Spectra` tab do not affect the `Maps` workspace.
 
-### Extract Profile to Graphs
+### **Extract Profile to `Graphs`**
 
 When a user selects exactly 2 points on a 2D map and clicks "Extract profile":
 
-1. The `VMapViewer` computes a height profile (Z values along the line between the two points)
-2. The profile is packaged as a `pd.DataFrame` with columns `distance` and `values`
-3. `VMWorkspaceMaps.extract_and_send_profile_to_graphs()` injects the DataFrame into `VMWorkspaceGraphs`
-4. A line plot is auto-created in the Graphs workspace
-5. The `switch_to_graphs_tab` signal triggers a tab switch
+1. The `VMapViewer` computes a height profile (Z values along the line between the two points).
+2. The profile is packaged as a `pd.DataFrame` with columns `distance` and `values`.
+3. `VMWorkspaceMaps.extract_and_send_profile_to_graphs()` injects the DataFrame into `VMWorkspaceGraphs`.
+4. A line plot is auto-created in the `Graphs` workspace.
+5. The `switch_to_graphs_tab` signal triggers a tab switch.
 
 ---
 
-## Persistence: Workspace Save/Load
+## **Persistence: Workspace Save/Load**
 
-Maps workspace delegates all saving/loading logic to `WorkspaceIO`. It uses a shared ZIP-backed serialization strategy which splits metadata and arrays to achieve maximum performance.
+The `Maps` workspace delegates all saving/loading logic to `WorkspaceIO`. It uses a shared ZIP-backed serialization strategy that splits metadata and arrays to achieve maximum performance.
 
-### Save (v5+)
+### **Save (v5+)**
 - Handled by `WorkspaceIO.save_maps_workspace()`.
 - Lightweight per-map metadata (such as `baseline_config`, `fit_model`, and `range_min`) is serialized to JSON inside `metadata.json`.
 - Heavy multi-spectrum coordinate matrices and raw intensities are serialized directly into `arrays.npz` as binary NumPy matrices under `store_{map_name}_coords`, `store_{map_name}_x0`, and `store_{map_name}_y0`.
 - Best-fit curves and statistics DataFrames are serialized to `dataframes.pkl` using highly optimized Python pickles.
 
-### Backward-Compatible Loading
-To support legacy workspaces saved with older versions of SPECTROview (which are raw JSON `.map`/`.maps` files containing alternating hex/gzip strings), a custom parser parses and upgrades them:
+### **Backward-Compatible Loading**
+To support legacy workspaces saved with older versions of `SPECTROview` (which are raw JSON `.map`/`.maps` files containing alternating hex/gzip strings), a custom parser parses and upgrades them:
 1. **Gzip CSV Decompression**: Decodes hex strings and decompresses the gzip streams to load map DataFrames directly into memory.
 2. **Fast Coordinate Mapping**: Builds an O(N) lookup dictionary of individual row properties indexed by `(map_name, round(X, 3), round(Y, 3))` to link coordinates back to active flags, baseline anchor points, and peak definitions.
 3. **Contiguous Allocation**: Packs the data into `SpectraStore` in batch layouts.
-4. **Vectorized Curve Restoration**: Batch evaluates legacy baselines and peak functions to immediately render the fits in the viewer without needing to refit the raw data.
+4. **Vectorized Curve Restoration**: Batch-evaluates legacy baselines and peak functions to immediately render the fits in the viewer without needing to refit the raw data.
 
 ---
 
-## Method Overrides
+## **Method Overrides**
 
-The Maps ViewModel overrides several parent methods to maintain map-specific state:
+The `Maps` ViewModel overrides several parent methods to maintain map-specific state:
 
 | Method | Override Purpose |
 |--------|-----------------|
 | `_get_selected_spectra()` | Filters by `is_active` (checkbox state) in addition to selection |
-| `reinit_spectra()` | Calls parent, then refreshes `_show_map_spectra()` for current map |
-| `delete_baseline()` | Calls parent, then refreshes map spectra list |
-| `delete_peaks()` | Calls parent, then refreshes map spectra list |
+| `reinit_spectra()` | Calls parent, then refreshes `_show_map_spectra()` for the current map |
+| `delete_baseline()` | Calls parent, then refreshes the map spectra list |
+| `delete_peaks()` | Calls parent, then refreshes the map spectra list |
 | `_on_fit_finished()` | Calls parent, then re-emits `map_data_updated` and clears cache |
-| `collect_fit_results()` | Calls parent, then adds X, Y, Zone, Quadrant columns |
-| `clear_workspace()` | Calls parent, then clears `maps` dict and emits empty signals |
+| `collect_fit_results()` | Calls parent, then adds `X`, `Y`, `Zone`, `Quadrant` columns |
+| `clear_workspace()` | Calls parent, then clears the `maps` dict and emits empty signals |
 
 ---
 
-## VMapViewerDialog
+## **`VMapViewerDialog`**
 
 **File**: `spectroview/view/components/v_map_viewer_dialog.py`
 
 A thin `QDialog` wrapper around `VMapViewer` that:
 
-- Uses `Qt.WindowStaysOnTopHint` to remain visible while interacting with the main window
-- Synchronizes data from the primary map viewer
-- Allows multiple simultaneous views of the same map with different Z-parameters
-- Enables side-by-side comparison of different fit parameters on the same spatial data
+- Uses `Qt.WindowStaysOnTopHint` to remain visible while interacting with the main window.
+- Synchronizes data from the primary map viewer.
+- Allows multiple simultaneous views of the same map with different Z-parameters.
+- Enables side-by-side comparison of different fit parameters on the same spatial data.

@@ -1,46 +1,46 @@
-# Developer Guide: Vectorized Batch Fit Engine (VBF)
+# **Developer Guide: Vectorized Batch Fit Engine (VBF)**
 
-This document provides a deep dive into the inner workings, architecture, and performance characteristics of the Vectorized Batch Fit Engine (VBF) located in `spectroview/fit_engine/`.
+This document provides a deep dive into the inner workings, architecture, and performance characteristics of the Vectorized Batch Fit Engine (`VBF`) located in `spectroview/fit_engine/`.
 
 ---
 
-## 1. Why the VBF Engine is Much Faster
+## **1. Why the `VBF Engine` Is Much Faster**
 
 The legacy fit engines operate on a **per-spectrum** basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
 - **Python Function Call Overhead**: Calling the objective function and Jacobian estimator thousands of times per iteration.
 - **Finite-Difference Jacobians**: Approximating the Jacobian numerically requires `2 * K` (where K is the number of parameters) additional function evaluations per iteration, per spectrum.
 - **Sequential Execution**: Even with multiprocessing, the overhead of serialization and inter-process communication creates bottlenecks.
 
-The **Vectorized Batch Fit Engine (VBF Engine)** achieves massive speedups (~10x to 15x faster) through the following core principles:
+The **Vectorized Batch Fit Engine (`VBF Engine`)** achieves massive speedups (~10× to 15× faster) through the following core principles:
 
 1.  **All-at-Once Optimization**: It optimizes all \(N\) spectra simultaneously. The parameter matrices, data arrays, and residuals are manipulated as large 2D or 3D tensors.
 2.  **Vectorized Operations (BLAS/LAPACK)**: By framing the problem as tensors, the heavy lifting is offloaded to highly optimized C/Fortran libraries.
     - Matrix multiplications and transpositions for the normal equations (\(J^T J\) and \(J^T r\)) are performed using `np.einsum`.
     - The linear systems for all spectra are solved in a single call to `np.linalg.solve`, which dispatches to LAPACK.
-3.  **Analytical Jacobians**: Instead of estimating derivatives numerically, the engine uses exact analytical formulas for common peak shapes (Lorentzian, Gaussian, PseudoVoigt). This eliminates the \(2K\) extra evaluations entirely.
-4.  **No Spatial Propagation**: Unlike older map-fitting approaches that used spiral traversal to propagate guesses from neighbor to neighbor (forcing sequential execution), the VBF engine initializes all pixels independently using amplitude scaling, allowing purely parallel tensor math.
-5.  **Variable Length Support**: Spectra with different lengths (e.g. differently cropped) are padded with zeros to fit into a uniform 2D tensor, while a boolean `weights` mask ensures padded regions are ignored during optimization.
+3.  **Analytical Jacobians**: Instead of estimating derivatives numerically, the engine uses exact analytical formulas for common peak shapes (`Lorentzian`, `Gaussian`, `PseudoVoigt`). This eliminates the \(2K\) extra evaluations entirely.
+4.  **No Spatial Propagation**: Unlike older map-fitting approaches that used spiral traversal to propagate guesses from neighbor to neighbor (forcing sequential execution), the `VBF Engine` initializes all pixels independently using amplitude scaling, allowing purely parallel tensor math.
+5.  **Variable Length Support**: Spectra with different lengths (e.g., differently cropped) are padded with zeros to fit into a uniform 2D tensor, while a boolean `weights` mask ensures padded regions are ignored during optimization.
 6.  **Expression Support**: Supports complex mathematical relationships between parameters across the batch by evaluating mathematical constraints symbolically before mapping to free parameters.
 
 ---
 
 
-## 1.5 Performance Optimizations
+## **2. Performance Optimizations**
 
-Recent optimizations have achieved a 2.2x to 5x speedup across various datasets:
+Recent optimizations have achieved a 2.2× to 5× speedup across various datasets:
 
-1. **Template Model Application (11.9x speedup)**: `_prepare_fit_model_template()` pre-computes python Models and bounds sanitization *once*. Per-spectrum application only clones the lightweight `param_hints` dictionary.
-2. **Batch Preprocessing (3.0x speedup)**: `_batch_preprocess()` computes range masks and baseline indices once for all spectra sharing the same x-axis, using vectorized subtraction instead of per-spectrum calls.
-3. **Adaptive Batched Solver (up to 5x speedup)**: The solver dynamically chooses between NumPy's batched `np.linalg.solve` (best for large N) and SciPy's `cho_solve` (Cholesky decomposition, best for small N / large K, exploiting symmetric positive-definite normal equations).
-4. **Mean-Based Convergence Criteria**: The convergence check uses `mean(|Δp| / |p|) < xtol` rather than `max()`, preventing a single slowly-converging parameter in multi-peak models from stalling the entire batch.
-5. **Vectorized Write-Back (3.5x speedup)**: `build_results_batch()` evaluates all best-fit curves and computes R² simultaneously across all spectra using a single `_to_full()` expansion.
+1. **Template Model Application (11.9× speedup)**: `_prepare_fit_model_template()` pre-computes Python Models and bounds sanitization *once*. Per-spectrum application only clones the lightweight `param_hints` dictionary.
+2. **Batch Preprocessing (3.0× speedup)**: `_batch_preprocess()` computes range masks and baseline indices once for all spectra sharing the same x-axis, using vectorized subtraction instead of per-spectrum calls.
+3. **Adaptive Batched Solver (up to 5× speedup)**: The solver dynamically chooses between NumPy's batched `np.linalg.solve` (best for large N) and SciPy's `cho_solve` (Cholesky decomposition, best for small N / large K, exploiting symmetric positive-definite normal equations).
+4. **Mean-Based Convergence Criteria**: The convergence check uses `mean(|Δp| / |p|) < xtol` rather than `max()`, preventing a single slowly converging parameter in multi-peak models from stalling the entire batch.
+5. **Vectorized Write-Back (3.5× speedup)**: `build_results_batch()` evaluates all best-fit curves and computes R² simultaneously across all spectra using a single `_to_full()` expansion.
 6. **Zero-Weight Early Exit**: Spectra identified as purely noise (all weights zero) are marked as converged instantly, saving all Levenberg-Marquardt iterations.
 
-## 2. Code Logic and Core Implementation Principles
+## **3. Code Logic and Core Implementation Principles**
 
 The engine implements a **Batched Levenberg-Marquardt** algorithm.
 
-### The Mathematics of Batched LM
+### **3.1. The Mathematics of Batched LM**
 For \(N\) spectra, each with \(M\) wavelength points and \(K\) free parameters:
 
 1.  **Evaluate Model**: \(\mathbf{Y}_{pred} = f(\mathbf{x}, \mathbf{p})\), returning an \((N, M)\) tensor.
@@ -51,12 +51,12 @@ For \(N\) spectra, each with \(M\) wavelength points and \(K\) free parameters:
 6.  **Solve**: Solve \((J^T J + \lambda \text{diag}(J^T J)) \delta \mathbf{p} = -J^T r\) for all \(N\) spectra simultaneously.
 7.  **Evaluate Step**: Update \(\mathbf{p} \leftarrow \mathbf{p} + \delta \mathbf{p}\) (with projection to bounds) and evaluate the new cost. Adjust \(\lambda\) per spectrum based on success/failure.
 
-### Independent Convergence
+### **3.2. Independent Convergence**
 Even though the math is batched, each spectrum converges independently. The optimizer uses a boolean mask (`active = ~converged`) to skip Jacobian calculations and linear solves for spectra that have already reached the tolerance limits, progressively speeding up the later iterations.
 
 ---
 
-## 3. Folder and Class Structure
+## **4. Folder and Class Structure**
 
 ```mermaid
 graph TD
@@ -69,8 +69,8 @@ graph TD
 
 | Module | Class / Function | Responsibility |
 |--------|-----------------|----------------|
-| `vbf_thread.py` | `VBFthread` | QThread wrapper. Supports batched modes. Emits `progress_changed` and `timings_ready` signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults. |
-| `vbf_engine.py` | `VBFengine` | Public API orchestrator. Manages the 8-step pipeline: apply model → preprocess → extract matrices → build p0 → build weights → optimize → write back results. Records step-level timings. |
+| `vbf_thread.py` | `VBFthread` | `QThread` wrapper. Supports batched modes. Emits `progress_changed` and `timings_ready` signals. Sets 8 MB stack on macOS to prevent LAPACK segfaults. |
+| `vbf_engine.py` | `VBFengine` | Public API orchestrator. Manages the 8-step pipeline: apply model → preprocess → extract matrices → build `p0` → build weights → optimize → write back results. Records step-level timings. |
 | `evaluator.py` | `VBFevaluator` | Bridge between the dictionary-based `fit_model` and the flat tensor API. Parses peak definitions, manages free/fixed parameter indexing, evaluates expressions, routes to correct batched model functions, builds `FitResult` objects. |
 | `optimizer.py` | `batched_levenberg_marquardt()` | Pure numerical optimizer. Solves N independent least-squares problems simultaneously using `np.einsum`. Uses an adaptive solver (`cho_solve` or `np.linalg.solve`) depending on matrix size. GUI-agnostic. |
 | `models.py` | `batched_*()` functions | Vectorized peak shape functions and their analytical Jacobians. Contains the `BATCHED_MODELS` registry. Includes `numerical_jacobian()` fallback. |
@@ -78,7 +78,7 @@ graph TD
 
 ---
 
-## 4. Processing Pipeline / Execution Flow
+## **5. Processing Pipeline / Execution Flow**
 
 When a user triggers a fit (e.g., via the "Fit" button), the following pipeline executes:
 
@@ -100,10 +100,10 @@ sequenceDiagram
     TFT-->>VM: finished + timings
 ```
 
-### Step-by-Step Details
+### **5.1. Step-by-Step Details**
 
 **Step 1 — Model Application** (`apply_model_to_spectra=True`):
-Instead of a slow per-spectrum deepcopy, `_prepare_fit_model_template()` creates a highly optimized template. It builds Model objects and sanitizes parameter bounds exactly once. Then, `_apply_template_to_spectrum()` merely copies the lightweight `param_hints` dictionary. When `False` (Spectra workspace with per-spectrum models), spectra are grouped by model signature and processed as separate batches.
+Instead of a slow per-spectrum deepcopy, `_prepare_fit_model_template()` creates a highly optimized template. It builds Model objects and sanitizes parameter bounds exactly once. Then, `_apply_template_to_spectrum()` merely copies the lightweight `param_hints` dictionary. When `False` (`Spectra` workspace with per-spectrum models), spectra are grouped by model signature and processed as separate batches.
 
 **Step 2 — Evaluator Construction**:
 `VBFevaluator.from_fit_model()` parses the model. For each peak:
@@ -113,7 +113,7 @@ Instead of a slow per-spectrum deepcopy, `_prepare_fit_model_template()` creates
 - Parses expression strings (e.g., `m01_fwhm = m02_fwhm`) and maps dependencies.
 
 **Step 3 — Preprocessing**:
-`_batch_preprocess()` uses a batched strategy. For spectra sharing the same x-axis (e.g. hyperspectral maps), it computes the range crop mask and evaluates the baseline indexing **once**. This mask and baseline are then rapidly applied via NumPy array slicing and subtraction to all spectra. For complex modes (like arpls) or variable lengths, it falls back to per-spectrum `spectrum.preprocess()`.
+`_batch_preprocess()` uses a batched strategy. For spectra sharing the same x-axis (e.g., hyperspectral maps), it computes the range crop mask and evaluates the baseline indexing **once**. This mask and baseline are then rapidly applied via NumPy array slicing and subtraction to all spectra. For complex modes (like `arPLS`) or variable lengths, it falls back to per-spectrum `spectrum.preprocess()`.
 
 **Step 4 — Data Extraction**:
 Spectra with different lengths are zero-padded to `max_M` (the longest spectrum). The weights matrix is built by `_build_fit_weights()`, which handles:
@@ -125,25 +125,25 @@ Spectra with different lengths are zero-padded to `max_M` (the longest spectrum)
 | Noise threshold | `coef_noise > 0` | `w[smoothed_y < noise_level] = 0` |
 | Zero-padding | Padded region | `w[M_s:] = 0` (automatic) |
 
-**Step 5 — Initial Parameters (p0)**:
+**Step 5 — Initial Parameters (`p0`)**:
 
-- **First fit** (`apply_model_to_spectra=True`): `build_p0_matrix()` tiles the model's initial values and scales each spectrum's amplitudes proportionally to the actual data intensity at the peak center position. Ratio is clamped to `[0.01, 100]` to prevent extreme initial guesses.
+- **First fit** (`apply_model_to_spectra=True`): `build_p0_matrix()` tiles the model's initial values and scales each spectrum's amplitudes proportionally to the actual data intensity at the peak center position. The ratio is clamped to `[0.01, 100]` to prevent extreme initial guesses.
 - **Re-fit** (`apply_model_to_spectra=False`): `extract_p0_from_spectrum()` reads the existing fitted `param_hints` values from each spectrum (warm start).
 
-After p0 construction, `apply_noise_threshold()` zeros out amplitude and FWHM for peaks located in regions below the noise floor.
+After `p0` construction, `apply_noise_threshold()` zeros out amplitude and FWHM for peaks located in regions below the noise floor.
 
-**Step 6 — Optimization**: See Section 2 for the LM algorithm details.
+**Step 6 — Optimization**: See Section 3 for the LM algorithm details.
 
 **Step 7 — Result Writeback**:
-`evaluator.build_results_batch()` uses a vectorized approach. It performs a single `_to_full()` expansion for the entire \(N 	imes K\) parameter matrix, calls `evaluate()` once to generate all best-fit curves, and calculates \(R^2\) via array operations. The data is then packaged into `FitResult` objects and assigned to `spectrum.result_fit`.
+`evaluator.build_results_batch()` uses a vectorized approach. It performs a single `_to_full()` expansion for the entire \(N \times K\) parameter matrix, calls `evaluate()` once to generate all best-fit curves, and calculates \(R^2\) via array operations. The data is then packaged into `FitResult` objects and assigned to `spectrum.result_fit`.
 
 ---
 
-## 5. The VBFevaluator in Detail
+## **6. The `VBFevaluator` in Detail**
 
 The `VBFevaluator` is the most complex class in the engine. It serves as the **bridge** between the flexible, dictionary-based world of the GUI and the rigid, flat-tensor world of the optimizer.
 
-### Parameter Space Mapping
+### **6.1. Parameter Space Mapping**
 
 ```
 fit_model dict                    VBFevaluator                  Optimizer
@@ -161,16 +161,16 @@ fit_model dict                    VBFevaluator                  Optimizer
 └─────────────────┘     └────────────────────────────┘     └──────────────┘
 ```
 
-### Expression Support
+### **6.2. Expression Support**
 
 Parameters can reference other parameters via mathematical expressions (e.g., `m01_fwhm = m02_fwhm` or `m01_x0 + 10`). The evaluator handles this in `_to_full()`:
 
-1. Parameters with expressions are marked as **fixed** (not optimized directly)
-2. During `_to_full()`, expressions are evaluated using Python's `eval()` with a restricted namespace containing all parameter names, `np`, and common math functions
-3. A **multi-pass resolution** loop handles expression chains (e.g., `a = b`, `b = c`) by retrying failed evaluations until all dependencies are resolved
-4. The Jacobian accounts for expressions via the **chain rule**: a numerical `J_expr` matrix is computed by perturbing each free parameter and observing how the full parameter vector changes, then the true Jacobian is `J_full @ J_expr`
+1. Parameters with expressions are marked as **fixed** (not optimized directly).
+2. During `_to_full()`, expressions are evaluated using Python's `eval()` with a restricted namespace containing all parameter names, `np`, and common math functions.
+3. A **multi-pass resolution** loop handles expression chains (e.g., `a = b`, `b = c`) by retrying failed evaluations until all dependencies are resolved.
+4. The Jacobian accounts for expressions via the **chain rule**: a numerical `J_expr` matrix is computed by perturbing each free parameter and observing how the full parameter vector changes, then the true Jacobian is `J_full @ J_expr`.
 
-### Model Routing
+### **6.3. Model Routing**
 
 The evaluator's `evaluate()` and `jacobian()` methods iterate over all registered peaks and sum their contributions:
 
@@ -183,13 +183,13 @@ def evaluate(self, x, p_free):
     return Y
 ```
 
-For the Jacobian, if a peak has an analytical Jacobian (`has_jac=True`), it's used directly. Otherwise, `numerical_jacobian()` is called as a fallback with central differences and relative perturbation scaling.
+For the Jacobian, if a peak has an analytical Jacobian (`has_jac=True`), it is used directly. Otherwise, `numerical_jacobian()` is called as a fallback with central differences and relative perturbation scaling.
 
 ---
 
-## 6. Batched Peak Models and Analytical Jacobians
+## **7. Batched Peak Models and Analytical Jacobians**
 
-### Tensor Conventions
+### **7.1. Tensor Conventions**
 
 All batched functions follow the same signature:
 
@@ -205,22 +205,22 @@ def batched_shape_jac(x, params):
     """Returns: (N, M, n_p) Jacobian tensor"""
 ```
 
-### Registered Models (`BATCHED_MODELS`)
+### **7.2. Registered Models (`BATCHED_MODELS`)**
 
 All peak models have vectorized batched implementations with **analytical Jacobians**, ensuring maximum performance for every model type:
 
 | Model | Parameters | Formula |
-|-------|-----------|---------|
-| `Gaussian` | `ampli, fwhm, x0` | <i>a</i> &middot; exp(-4 ln(2) &middot; (x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>) |
-| `Lorentzian` | `ampli, fwhm, x0` | <i>a</i> / [1 + 4(x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>] |
-| `PseudoVoigt` | `ampli, fwhm, x0, alpha` | &alpha; &middot; G + (1-&alpha;) &middot; L |
-| `GaussianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise Gaussian with left/right FWHM |
-| `LorentzianAsym` | `ampli, fwhm_l, fwhm_r, x0` | Piecewise Lorentzian with left/right FWHM |
-| `Fano` | `ampli, fwhm, x0, q` | <i>a</i> &middot; (q + &epsilon;)<sup>2</sup> / (1 + &epsilon;<sup>2</sup>), &epsilon; = 2(x-x<sub>0</sub>)/w |
-| `DecaySingleExp` | `A, tau, B` | <i>A</i> &middot; e<sup>-x/&tau;</sup> + B |
-| `DecayBiExp` | `A1, tau1, A2, tau2, B` | <i>A</i><sub>1</sub> &middot; e<sup>-x/&tau;<sub>1</sub></sup> + <i>A</i><sub>2</sub> &middot; e<sup>-x/&tau;<sub>2</sub></sup> + B |
+|-------|-----------|---------| 
+| `Gaussian` | `ampli`, `fwhm`, `x0` | <i>a</i> &middot; exp(-4 ln(2) &middot; (x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>) |
+| `Lorentzian` | `ampli`, `fwhm`, `x0` | <i>a</i> / [1 + 4(x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>] |
+| `PseudoVoigt` | `ampli`, `fwhm`, `x0`, `alpha` | &alpha; &middot; G + (1-&alpha;) &middot; L |
+| `GaussianAsym` | `ampli`, `fwhm_l`, `fwhm_r`, `x0` | Piecewise Gaussian with left/right FWHM |
+| `LorentzianAsym` | `ampli`, `fwhm_l`, `fwhm_r`, `x0` | Piecewise Lorentzian with left/right FWHM |
+| `Fano` | `ampli`, `fwhm`, `x0`, `q` | <i>a</i> &middot; (q + &epsilon;)<sup>2</sup> / (1 + &epsilon;<sup>2</sup>), &epsilon; = 2(x-x<sub>0</sub>)/w |
+| `DecaySingleExp` | `A`, `tau`, `B` | <i>A</i> &middot; e<sup>-x/&tau;</sup> + B |
+| `DecayBiExp` | `A1`, `tau1`, `A2`, `tau2`, `B` | <i>A</i><sub>1</sub> &middot; e<sup>-x/&tau;<sub>1</sub></sup> + <i>A</i><sub>2</sub> &middot; e<sup>-x/&tau;<sub>2</sub></sup> + B |
 
-### Numerical Jacobian Fallback
+### **7.3. Numerical Jacobian Fallback**
 
 For future custom models registered only in `PEAK_MODEL_REGISTRY` (without a batched implementation), `numerical_jacobian()` uses **central differences** with relative perturbation as a fallback:
 
@@ -233,9 +233,9 @@ This is ~`2K` times slower than analytical Jacobians per iteration but ensures c
 
 ---
 
-## 7. The VBFthread
+## **8. The `VBFthread`**
 
-### Two Operating Modes
+### **8.1. Two Operating Modes**
 
 ```mermaid
 graph TD
@@ -248,62 +248,62 @@ graph TD
     S --> All["All spectra"]
 ```
 
-**Single-model mode** (Maps workspace / Apply Fit Model):
+**Single-model mode** (`Maps` workspace / Apply Fit Model):
 All spectra share one `fit_model`. The engine processes them in one tensor batch.
 
-**Batched mode** (Spectra workspace / individual models):
+**Batched mode** (`Spectra` workspace / individual models):
 When spectra have different peak configurations, the ViewModel groups them by model signature (same number and types of peaks). Each group is processed sequentially through the engine, but spectra *within* each group are optimized in parallel.
 
-### macOS Stack Size
+### **8.2. macOS Stack Size**
 
 The thread sets an 8 MB stack size on macOS (`setStackSize(8 * 1024 * 1024)`) because:
 
-- macOS defaults QThread stack to 512 KB
-- `np.linalg.solve` dispatches to LAPACK, which allocates workspace arrays on the stack
-- For large K (many parameters), the stack allocation can exceed 512 KB, causing segfaults
+- macOS defaults `QThread` stack to 512 KB.
+- `np.linalg.solve` dispatches to LAPACK, which allocates workspace arrays on the stack.
+- For large K (many parameters), the stack allocation can exceed 512 KB, causing segfaults.
 
-### Signals
+### **8.3. Signals**
 
 | Signal | Payload | Purpose |
-|--------|---------|---------|
+|--------|---------|---------| 
 | `progress_changed` | `(current, total, percent, elapsed)` | Updates progress bar in the View |
 | `timings_ready` | `str` | Formatted timing breakdown for console/debug |
 
 ---
 
-## 8. Optimization Parameters and Adjustments
+## **9. Optimization Parameters and Adjustments**
 
 The engine behavior can be tuned via the `fit_params` dictionary passed to `fit_spectra()`.
 
-### Key Parameters
-*   **`max_ite` (default: 200)**: The maximum number of Levenberg-Marquardt iterations. Increasing this might help extremely difficult spectra converge but will increase total execution time.
-*   **`xtol` (default: 1e-4)**: The relative tolerance for the parameter step size \(\delta p\). Convergence is reached when the **mean** relative change across all parameters (\(\operatorname{mean}(|\delta p| / |p|)\)) is less than `xtol`. This mean-based criterion ensures that a single slowly oscillating parameter does not artificially delay convergence for the entire spectrum.
-*   **`ftol` (default: 1e-4)**: The relative tolerance for the cost function (sum of squared residuals). If the relative change in the cost is less than `ftol`, the spectrum is considered converged.
-*   **`fit_negative` (default: `False`)**: Whether to include negative intensity values in the fit. When `False`, negative points get zero weight.
-*   **`fit_outliers` (default: `False`)**: Whether to include statistical outlier points. When `False`, outliers detected by `spectrum.calculate_outliers()` get zero weight.
-*   **`coef_noise` (default: 1)**: Noise coefficient multiplier. When > 0, activates noise-based weight masking and peak suppression. See [Section 9](#9-noise-amplitude-estimation-and-noise-threshold) for a detailed explanation.
+### **9.1. Key Parameters**
+*   **`max_ite`** (default: 200): The maximum number of Levenberg-Marquardt iterations. Increasing this might help extremely difficult spectra converge but will increase total execution time.
+*   **`xtol`** (default: 1e-4): The relative tolerance for the parameter step size \(\delta p\). Convergence is reached when the **mean** relative change across all parameters (\(\operatorname{mean}(|\delta p| / |p|)\)) is less than `xtol`. This mean-based criterion ensures that a single slowly oscillating parameter does not artificially delay convergence for the entire spectrum.
+*   **`ftol`** (default: 1e-4): The relative tolerance for the cost function (sum of squared residuals). If the relative change in the cost is less than `ftol`, the spectrum is considered converged.
+*   **`fit_negative`** (default: `False`): Whether to include negative intensity values in the fit. When `False`, negative points receive zero weight.
+*   **`fit_outliers`** (default: `False`): Whether to include statistical outlier points. When `False`, outliers detected by `spectrum.calculate_outliers()` receive zero weight.
+*   **`coef_noise`** (default: 1): Noise coefficient multiplier. When > 0, activates noise-based weight masking and peak suppression. See [Section 10](#10-noise-level-estimation-and-noise-threshold) for a detailed explanation.
 
-### Tuning for Performance vs. Accuracy
+### **9.2. Tuning for Performance vs. Accuracy**
 - **Fast Mapping**: For rapid previews, you can increase `xtol` and `ftol` to `1e-3` or `1e-2`. The optimizer will exit much earlier, providing a rough fit in a fraction of the time.
 - **Precision Fitting**: For publication-quality results, decrease `xtol` and `ftol` to `1e-5` or `1e-6`.
 - **Handling "Stuck" Spectra**: The optimizer tracks `consecutive_rejects`. If a spectrum's cost fails to improve for 15 consecutive iterations (despite damping adjustments), it is marked as converged (stuck) to prevent it from holding back the rest of the batch. This threshold (`MAX_REJECTS` in `optimizer.py`) can be adjusted if needed.
 
-### Damping Schedule
+### **9.3. Damping Schedule**
 
 The per-spectrum damping factor \(\lambda\) is initialized at `1e-2` and adjusted after each iteration:
 
-| Outcome | λ adjustment | Effect |
+| Outcome | λ Adjustment | Effect |
 |---------|-------------|--------|
 | Cost improved | `λ /= 3.0` (floor `1e-10`) | Trust the Gauss-Newton direction more |
 | Cost worsened | `λ *= 2.5` (ceiling `1e10`) | Shift toward gradient descent |
 
 ---
 
-## 9. Noise Level Estimation and Noise Threshold
+## **10. Noise Level Estimation and Noise Threshold**
 
 The `coef_noise` parameter controls a noise-aware filtering system that can significantly improve both the **performance** and **precision** of fitting, especially on hyperspectral maps where many pixels may contain weak or absent peaks.
 
-### How Noise Level Is Estimated (`detect_noise_level`)
+### **10.1. How Noise Level Is Estimated (`detect_noise_level`)**
 
 The noise level is estimated by the native `detect_noise_level()` function. It quantifies the **high-frequency oscillation amplitude** of the spectrum — i.e., the typical point-to-point noise — while being robust to real spectral features.
 
@@ -328,7 +328,7 @@ def detect_noise_level(y):
 
 **Why this works:** Real spectral peaks are broad features that create **sustained** positive or negative runs in the difference vector. They are excluded by the sign-alternation mask (step 3). Only rapid up-down oscillations characteristic of noise pass through, so the estimate cleanly separates noise from signal even if 30–50% of the spectrum contains strong peaks.
 
-### How `coef_noise` Activates Noise Thresholding
+### **10.2. How `coef_noise` Activates Noise Thresholding**
 
 When `coef_noise > 0`, the engine computes a **noise level threshold**:
 
@@ -338,7 +338,7 @@ When `coef_noise > 0`, the engine computes a **noise level threshold**:
 
 This threshold activates **two complementary mechanisms**:
 
-#### Mechanism A — Weight Masking (`_build_fit_weights`)
+#### **10.2.1. Mechanism A — Weight Masking (`_build_fit_weights`)**
 
 During weight matrix construction in `vbf_engine.py`, a 5-point moving average smooths the spectrum, and any data point where the smoothed signal falls below the noise level is **excluded from the fit** by setting its weight to zero:
 
@@ -350,7 +350,7 @@ w[ymean < noise_level] = 0.0   # zero weight → ignored by optimizer
 
 The optimizer's residual calculation \(\mathbf{r} = \mathbf{W} \circ (\mathbf{Y}_{pred} - \mathbf{Y}_{data})\) naturally ignores these masked points, so the fit focuses only on regions with meaningful signal.
 
-#### Mechanism B — Peak Suppression (`apply_noise_threshold`)
+#### **10.2.2. Mechanism B — Peak Suppression (`apply_noise_threshold`)**
 
 In the `VBFevaluator`, any peak whose **center position** (`x0`) falls in a below-threshold region has its amplitude and shape parameters suppressed, and its positional parameters restored to the initial guess:
 
@@ -360,7 +360,7 @@ for each peak:
     if ymean[at x0] < noise_level:
         ampli = 0.0    # force amplitude to zero
         fwhm  = 0.0    # force width to zero
-        # Additionally, x0 and other shape parameters are restored 
+        # Additionally, x0 and other shape parameters are restored
         # to p0_matrix (initial guesses) to prevent random fluctuation mapping
 ```
 
@@ -369,26 +369,26 @@ This runs **twice** during the pipeline:
 1. **Before optimization** (Step 5 in the pipeline) — sets a clean initial guess, preventing the optimizer from trying to fit noise fluctuations as peaks.
 2. **After optimization** (Step 7) — cleans up any peaks that may have drifted into noise regions during the LM iterations.
 
-### Performance and Precision Benefits
+### **10.3. Performance and Precision Benefits**
 
-#### Performance
+#### **10.3.1. Performance**
 
-| Aspect | How it helps |
+| Aspect | How It Helps |
 |--------|-------------|
 | Faster convergence | Zeroed-out peaks in noise regions start and stay at zero, effectively reducing the active parameter count |
 | Fewer wasted iterations | Without noise masking, the optimizer spends many iterations fitting random noise with tiny ghost peaks |
 | Better initial guess | Pre-zeroing noise-region peaks brings \(p_0\) closer to the true solution, so LM converges in fewer iterations |
 
-#### Precision
+#### **10.3.2. Precision**
 
-| Aspect | How it helps |
+| Aspect | How It Helps |
 |--------|-------------|
 | Eliminates ghost peaks | In maps, some pixels have weak or absent peaks. Without thresholding, noise fluctuations are fitted as tiny false peaks, producing artifacts in parameter maps |
 | Stabilizes correlated parameters | Near the noise floor, amplitude, width, and position become highly correlated — small noise perturbations cause large parameter swings. Suppression avoids this instability |
 | Prevents cross-talk | A ghost peak in a noise region can "steal" intensity from a real neighboring peak, biasing its fitted amplitude. Suppression prevents this |
-| Cleaner R² values | Masked noise regions don't contribute to the R² calculation, so the reported goodness-of-fit reflects only meaningful signal regions |
+| Cleaner R² values | Masked noise regions do not contribute to the R² calculation, so the reported goodness-of-fit reflects only meaningful signal regions |
 
-### Practical Example
+### **10.4. Practical Example**
 
 Consider a Raman map with 3 defined peaks, where for some pixels peak #2 sits in a flat baseline region:
 
@@ -402,7 +402,7 @@ With coef_noise = 1:
   Peak #1 → ampli = 19.1              (accurate, no cross-talk)
 ```
 
-### Choosing the Right `coef_noise` Value
+### **10.5. Choosing the Right `coef_noise` Value**
 
 | Value | Behavior |
 |-------|----------|
@@ -412,13 +412,13 @@ With coef_noise = 1:
 | `3.0 – 5.0` | **Aggressive** — may suppress real weak peaks; use with caution |
 | `> 5.0` | **Very aggressive** — only strong, unambiguous peaks survive |
 
-The default value in `spectroview/__init__.py` is `1`. The Settings UI exposes it as a spin box with range `[0, 100]` and step `0.5`.
+The default value in `spectroview/__init__.py` is `1`. The `Settings` UI exposes it as a spin box with range `[0, 100]` and step `0.5`.
 
 ---
 
-## 10. Adding New Peak Models
+## **11. Adding New Peak Models**
 
-### Fast Path: Analytical Jacobian (Recommended)
+### **11.1. Fast Path: Analytical Jacobian (Recommended)**
 
 To add a new peak shape with maximum performance:
 
@@ -462,7 +462,7 @@ BATCHED_MODELS = {
 }
 ```
 
-### Slow Path: Scalar Fallback
+### **11.2. Slow Path: Scalar Fallback**
 
 If deriving an analytical Jacobian is impractical:
 
@@ -483,9 +483,9 @@ PEAK_MODEL_REGISTRY = {
 }
 ```
 
-The evaluator will automatically wrap it via `_make_batched_scalar()` and use `numerical_jacobian()`. This is functional but significantly slower (~10-50× per peak per iteration).
+The evaluator will automatically wrap it via `_make_batched_scalar()` and use `numerical_jacobian()`. This is functional but significantly slower (~10–50× per peak per iteration).
 
-### Registration in the Application
+### **11.3. Registration in the Application**
 
 After adding the model to the engine, register it in `spectroview/__init__.py`:
 
@@ -499,7 +499,7 @@ PEAK_MODELS = [
 
 ---
 
-## 11. Timing and Diagnostics
+## **12. Timing and Diagnostics**
 
 The `VBFengine` records wall-clock timings for each step in `self.timings`:
 
@@ -513,12 +513,12 @@ Step 5 - write_back:   0.089s
 
 These timings are emitted via `VBFthread.timings_ready` and printed to the console. They are invaluable for diagnosing performance bottlenecks:
 
-- If **Step 1** dominates → too many spectra to apply model to; consider caching
-- If **Step 4** dominates → normal; this is the actual optimization
-- If **Step 4** shows low convergence → check initial guesses, bounds, or model suitability
-- If **Step 5** dominates → many spectra with complex write-back; usually negligible
+- If **Step 1** dominates → too many spectra to apply the model to; consider caching.
+- If **Step 4** dominates → normal; this is the actual optimization.
+- If **Step 4** shows low convergence → check initial guesses, bounds, or model suitability.
+- If **Step 5** dominates → many spectra with complex write-back; usually negligible.
 
-### R² Computation
+### **12.1. R² Computation**
 
 The goodness-of-fit metric R² is computed during `build_result()`:
 
@@ -526,4 +526,4 @@ The goodness-of-fit metric R² is computed during `build_result()`:
 R^2 = 1 - \frac{\sum_i w_i (y_i - \hat{y}_i)^2}{\sum_i w_i (y_i - \bar{y}_w)^2}
 \]
 
-Where \(\bar{y}_w\) is the weighted mean. When weights are present, only non-zero-weight points contribute to both numerator and denominator, ensuring that masked regions (negative values, outliers, padding) don't artificially inflate or deflate the reported quality.
+Where \(\bar{y}_w\) is the weighted mean. When weights are present, only non-zero-weight points contribute to both the numerator and denominator, ensuring that masked regions (negative values, outliers, padding) do not artificially inflate or deflate the reported quality.

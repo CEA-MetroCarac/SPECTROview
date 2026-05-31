@@ -61,7 +61,7 @@ class VMapsList(QWidget):
         maps_list_layout.setContentsMargins(0, 0, 0, 0)
         maps_list_layout.setSpacing(2)
         
-        maps_label = QLabel("Maps:")
+        maps_label = QLabel("Maps list :")
         maps_list_layout.addWidget(maps_label)
         
         self.maps_list = QListWidget()
@@ -123,7 +123,7 @@ class VMapsList(QWidget):
         spectra_list_layout.setContentsMargins(0, 0, 0, 0)
         spectra_list_layout.setSpacing(2)
         
-        spectra_label = QLabel("Spectrum(s):")
+        spectra_label = QLabel("Spectra list :")
         spectra_list_layout.addWidget(spectra_label)
         
         # Check All checkbox above the spectra list

@@ -6,59 +6,60 @@
 <p align="center">
     <img width=100 src="docs/assets/icon.png">
 </p>
+    
+## **SPECTROview: A Tool for Spectroscopic Data Processing and Visualization**
 
-## SPECTROview: A Tool for Spectroscopic Data Processing and Visualization
+`SPECTROview` is a free, open-source software application designed for advanced spectroscopic data analysis. It supports a diverse array of data types, including discrete spectra and hyperspectral datasets such as 2D maps and wafer maps.
 
-SPECTROview is a free, open-source software application designed for advanced spectroscopic data analysis. It supports a diverse array of data types, including discrete spectra and hyperspectral datasets such as 2D maps and wafer maps.
-
-With its integrated visualization tools, SPECTROview streamlines your analytical workflow by consolidating data processing and visualization into a single, cohesive application.
+With its integrated visualization tools, `SPECTROview` streamlines your analytical workflow by consolidating data processing and visualization into a single, cohesive application.
 
 - Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**](https://CEA-MetroCarac.github.io/SPECTROview/). A comprehensive user manual is also available [online](https://cea-metrocarac.github.io/SPECTROview/user_manual/) or directly within the application.
 - **Installation**: Instructions can be found at the bottom of this page.
 - Check out the [**Releases**](https://github.com/CEA-MetroCarac/SPECTROview/releases) page for the latest updates and new features.
 - **Getting Started**: Explore the [`/examples`](https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples) folder to familiarize yourself with supported data formats and find example datasets for practice.
 
+---
 
-___
-## Key Features
+### **Key Features**
 
 - **Cross-Platform Compatibility:** Fully supported on Windows, macOS, and Linux.
 - **Versatile Data Processing:** Seamlessly process both 1D spectral data and 2D hyperspectral data.
-- **High-Performance Vectorized Batch Fit Engine (VBF Engine):** Very fast fitting speeds utilizing batched matrix operations, capable of simultaneously fitting multiple spectra or large 2D maps.
+- **High-Performance Vectorized Batch Fit Engine (`VBF Engine`):** Achieves very fast fitting speeds through batched matrix operations, capable of simultaneously fitting multiple spectra or large 2D maps.
 - **Custom Fit Models:** Construct customized fit models for specific spectroscopic profiles and reuse them to rapidly analyze new datasets.
 - **Unified Results:** Collect and compile all best-fit results with a single click.
 - **Optimized User Interface:** Designed for quick inspection, filtering, and comparison of large spectral datasets.
 - **Advanced Visualization:** Dedicated workspace for generating fast, publication-ready data visualizations.
 
-______
-### Three distinct workspaces for processing discrete spectra, hyperspectral data, and data visualization:
+---
+
+### **Three distinct workspaces for processing discrete spectra, hyperspectral data, and data visualization:**
 <p align="center">
     <img src="docs/assets/overview.gif">
 </p>
 
-### Build custom fit models, replicate them across datasets, fit multiple spectra simultaneously, and aggregate all best-fit results with a single click:
+### **Build custom fit models, replicate them across datasets, fit multiple spectra simultaneously, and aggregate all best-fit results with a single click:**
 
 <p align="center">
     <img src="docs/assets/fitting.gif">
 </p>
 
-### Rapidly and easily plot your data to generate professional visualizations:
+### **Rapidly and easily plot your data to generate professional visualizations:**
 
 <p align="center">
     <img src="docs/assets/graphs.gif">
 </p>
 
-____
+---
 
-## Installation from PyPI
+## **Installation from PyPI**
 
-SPECTROview requires Python (versions 3.8 through 3.12).
+`SPECTROview` requires Python (versions 3.8 through 3.12).
 
 ```bash
 pip install spectroview
 ```
 
-## Installation from GitHub
+## **Installation from GitHub**
 
 To install the latest development version directly from the source repository:
 
@@ -67,23 +68,23 @@ pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
 ```
 
 
-## Launch SPECTROview
+## **Launch SPECTROview**
 Open your terminal or command prompt and execute:
 ```bash
 spectroview
 ```
 
-## Acknowledgements
+## **Acknowledgements**
 
-This work was carried out at the CEA - Platform for Nanocharacterisation (PFNC) and supported by the "Recherche Technologique de Base" program of the French National Research Agency (ANR).
+This work was carried out at the CEA — Platform for Nanocharacterisation (PFNC) and supported by the "Recherche Technologique de Base" program of the French National Research Agency (ANR).
 
 ---
 
-## Citation
+## **Citation**
 
-If you use SPECTROview for data processing or visualization in your research, please cite the following publication:
+If you use `SPECTROview` for data processing or visualization in your research, please cite the following publication:
 
-- Le, V.-H., & Quéméré, P. (2025). SPECTROview : A Tool for Spectroscopic Data Processing and Visualization. Zenodo. https://doi.org/10.5281/zenodo.14147172
+- Le, V.-H., & Quéméré, P. (2025). SPECTROview: A Tool for Spectroscopic Data Processing and Visualization. Zenodo. https://doi.org/10.5281/zenodo.14147172
 
 Additionally, if you use the Multivariate Analysis (MVA) features to generate results for a publication, we kindly ask that you cite the following papers describing the core algorithms:
 

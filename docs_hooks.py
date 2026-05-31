@@ -103,6 +103,9 @@ def on_pre_build(config, **kwargs):
             if body.startswith("## "): body = "### " + body[3:]
             elif body.startswith("# "): body = "### " + body[2:]
             
+            # Prevent text immediately preceding '---' from becoming an H2
+            body = re.sub(r'\n-{3,}', '\n\n---', body)
+            
             new_markdown += f"## [{name}]({url}) - {date}\n\n{body}\n\n---\n\n"
             
         with open(changelog_path, 'w', encoding='utf-8') as f:

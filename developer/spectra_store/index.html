@@ -1823,7 +1823,7 @@
 <p><strong>Source file</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/model/spectra_store.py"><code>spectra_store.py</code></a></p>
 <hr />
 <h2 id="design-philosophy">Design Philosophy<a class="headerlink" href="#design-philosophy" title="Permanent link">&para;</a></h2>
-<p>Before <code>SpectraStore</code>, SPECTROview stored each spectrum as an independent Python object. This created performance bottlenecks when working with large hyperspectral maps (thousands of spectra). The tensor-centric redesign stores all spectra for a logical "map" as contiguous NumPy arrays, enabling:</p>
+<p>Before <code>SpectraStore</code> (version before 26.24.1), SPECTROview stored each spectrum as an independent Python object. This created performance bottlenecks when working with large hyperspectral maps (thousands of spectra). The tensor-centric redesign stores all spectra for a logical "map" as contiguous NumPy arrays, enabling:</p>
 <ul>
 <li><strong>Vectorized preprocessing</strong> — range crop and baseline subtraction applied to the entire N×M matrix in a single operation.</li>
 <li><strong>Batch fitting</strong> — the <a href="../vbf_engine/">VBF engine</a> operates directly on the tensor without Python-level iteration.</li>

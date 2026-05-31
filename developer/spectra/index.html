@@ -1851,7 +1851,7 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 <hr />
 <h2 id="architecture-overview">Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
 <p>The workspace follows a strict <strong>MVVM</strong> (Model-View-ViewModel) separation. No layer may cross its boundary in the wrong direction.</p>
-<pre class="mermaid"><code>graph TD
+<pre class="mermaid"><code>graph LR
     subgraph View ["View Layer (v_*)"]
         VWS["VWorkspaceSpectra&lt;br/&gt;(QWidget)"]
         SV["VSpectraViewer&lt;br/&gt;(Matplotlib canvas)"]

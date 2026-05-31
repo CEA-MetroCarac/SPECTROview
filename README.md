@@ -26,13 +26,12 @@ Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**
 
 ### **Key Features**
 
-- **Cross-Platform Compatibility:** Fully supported on Windows, macOS, and Linux.
-- **Versatile Data Processing:** Seamlessly process both 1D spectral data and 2D hyperspectral data.
 - **High-Performance Vectorized Batch Fit Engine (`VBF Engine`):** Achieves very fast fitting speeds through batched matrix operations, capable of simultaneously fitting multiple spectra or large 2D maps.
 - **Custom Fit Models:** Construct customized fit models for specific spectroscopic profiles and reuse them to rapidly analyze new datasets.
+- **Versatile Data Processing:** Seamlessly process both 1D spectral data and 2D hyperspectral data.
 - **Unified Results:** Collect and compile all best-fit results with a single click.
-- **Optimized User Interface:** Designed for quick inspection, filtering, and comparison of large spectral datasets.
 - **Advanced Visualization:** Dedicated workspace for generating fast, publication-ready data visualizations.
+- **Optimized User Interface:** Designed for quick inspection, filtering, and comparison of large spectral datasets.
 
 ---
 

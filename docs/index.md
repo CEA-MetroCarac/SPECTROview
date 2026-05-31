@@ -11,12 +11,6 @@ hide:
 
 <div class="grid cards cards-2col" markdown>
 
--   :material-chart-bell-curve-cumulative: __Versatile Data Processing__
-
-    ---
-
-    Seamlessly process both 1D spectral data and 2D hyperspectral data.
-
 -   :material-speedometer: __High-Performance Vectorized Batch Fit Engine (`VBF Engine`)__
 
     ---
@@ -29,23 +23,29 @@ hide:
 
     Construct customized fit models for specific spectroscopic profiles and reuse them to rapidly analyze new datasets.
 
+-   :material-chart-bell-curve-cumulative: __Versatile Data Processing__
+
+    ---
+
+    Seamlessly process both 1D spectral data and 2D hyperspectral data.
+
 -   :material-table-large-plus: __Unified Results__
 
     ---
 
     Collect and compile all best-fit results with a single click.
 
--   :material-gesture-tap-button: __Optimized User Interface__
-
-    ---
-
-    Designed for quick inspection, filtering, and comparison of large spectral datasets.
-
 -   :material-chart-scatter-plot: __Advanced Visualization__
 
     ---
 
     Dedicated workspace for generating fast, publication-ready data visualizations.
+
+-   :material-gesture-tap-button: __Optimized User Interface__
+
+    ---
+
+    Designed for quick inspection, filtering, and comparison of large spectral datasets.
 
 </div>
 

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block tabs %}
+  {{ super() }}
+  
+  {% if page.url == "" %}
+    <section class="tx-hero">
+      <div class="md-grid md-typeset">
+        <div class="tx-hero__content">
+          <h1>SPECTROview</h1>
+          <p>A Tool for Spectroscopic Data Processing and Visualization</p>
+          <a href="user_manual/" title="User Manual" class="md-button md-button--primary">
+            Get Started
+          </a>
+          <a href="{{ config.repo_url }}" title="GitHub Repository" class="md-button">
+            View on GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}

@@ -3,7 +3,7 @@
 The `Maps` and `Spectra` workspaces share a unified design and many core features. However, the `Maps` workspace includes specialized tools engineered for handling large hyperspectral datasets.
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/sepctra_maps_ws.gif" alt="Spectra and Maps Workspaces" width="800"><br>
+  <img src="../user_manual_images/Spectra_Maps/sepctra_maps_ws.gif" alt="Spectra and Maps Workspaces" width="900"><br>
   <i>Interface overview of the <code>Spectra</code> and <code>Maps</code> workspaces. Both interfaces are divided into three primary sections: Top-left (<code>SpectraViewer</code>), bottom-left (<code>FitModelBuilder</code>), and right (<code>SpectraList</code> / <code>MapList</code>).</i>
 </div>
 
@@ -27,16 +27,16 @@ You can easily navigate between loaded 2D maps using the `MapList`. The selected
 
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/mapviewer_sliders.gif" alt="MapViewer Sliders" width="500"><br>
+  <img src="../user_manual_images/Spectra_Maps/mapviewer_sliders.gif" alt="MapViewer Sliders" width="600"><br>
 </div>
 
 **Mask Feature**: Isolate specific regions of the heatmap by defining custom, parameter-based numerical filters.
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/mask.png" alt="Mask configuration" width="420">
+  <img src="../user_manual_images/Spectra_Maps/mask.png" alt="Mask configuration" width="350">
 </div>
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/masked_map.png" alt="Masked map output" width="300"><br>
+  <img src="../user_manual_images/Spectra_Maps/masked_map.png" alt="Masked map output" width="350"><br>
   <i>Example of the mask feature for 2D maps: An MoS2 flake is isolated by applying a mask (intensity of peak A1g > 40 a.u.) to filter out the surrounding substrate.</i>
 </div>
 

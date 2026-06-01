@@ -3,7 +3,7 @@
 The `Graphs` workspace is exclusively dedicated to data visualization, engineered with a strong emphasis on simplicity, speed, and customization.
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/ui_graph.gif" alt="Graphs Workspace UI" width="800"><br>
+  <img src="../user_manual_images/Graphs/ui_graph.gif" alt="Graphs Workspace UI" width="900"><br>
   <i>Overview of the Graphs Workspace interface.</i>
 </div>
 <br>

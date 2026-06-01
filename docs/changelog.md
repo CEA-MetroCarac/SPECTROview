@@ -4,6 +4,72 @@
 
 ---
 
+## [v26.24.3](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.24.3) - 2026-06-01
+
+#####  **Major Architectural Update & Performance Boosts**
+This release marks a fundamental milestone in the evolution of `SPECTROview`. At the heart of this update is the brand-new **Vectorized Batch Fit (`VBF`) engine**, delivering unprecedented fitting performance, stability, and precision for both hyperspectral map data and individual spectra.
+
+##### 🚀 **Key Highlights & Performance Boosts**
+
+- **Vectorized Preprocessing:** The new `SpectraStore` and `MapData` models store all spectroscopic and numerical data natively as contiguous NumPy arrays. This eliminates the overhead of legacy per-row instances and allows for fully vectorized preprocessing.
+- **Astounding Fit Speeds:** Combined with the tensor-centric `SpectraStore`, the `VBF Engine` processes all spectra simultaneously as 2D/3D tensors. Fitting a 2D map with several thousand pixels is now virtually instantaneous (up to 70× faster than the previous version). Massive maps with tens of thousands of pixels are handled seamlessly on a standard CPU (tested on an Intel Core i5 8th Gen, 16GB RAM; no dedicated GPU required).
+- **Reduced Workspace Size & Faster Loading:** The new architecture utilizes a highly optimized, ZIP-backed serialization format (NumPy `.npz` arrays + JSON metadata). This reduces `.maps`, `.spectra`, and `.graphs` file sizes by **>50%** and cuts workspace load times in half.
+- **Faster Application Startup:** Through optimized library imports and core refactoring, application start-up time has been reduced by **>60%** (launching in under 4 seconds on a standard PC).
+
+
+---
+
+##### **Intelligent Noise Filtering**
+
+The `VBF Engine` features native noise detection capabilities (the `coef_noise` threshold, adjustable via the `Settings Panel`):
+
+- Automatically detects pixel regions containing only baseline noise or substrate signals and filters them out of the active fit.
+- By skipping Levenberg-Marquardt (LM) iterations on pure noise, the optimizer avoids calculating "ghost peaks," prevents parameter cross-talk, stabilizes the fit, and produces much cleaner parameter maps without requiring post-processing.
+
+![image](https://github.com/user-attachments/assets/cf811099-71a6-4b92-bfcf-8a3e7eb3bfef)
+
+*Fig: **(Left)** Fitted without noise filtering (`coef_noise` = 0); the user must manually mask regions of pure noise or substrate signal. **(Right)** With noise filtering enabled (`coef_noise` > 0), pixels in the substrate (noise) region are automatically detected and ignored, resulting in a cleaner map and faster fit.*
+
+
+---
+
+##### 📖 **Official documentation**
+
+##### An official documentation is now available at [CEA-MetroCarac.github.io/SPECTROview](https://cea-metrocarac.github.io/SPECTROview/).
+
+##### Integrated Intuitive User Manual:
+
+A completely revamped, highly intuitive `user manual` is now integrated directly into the application, featuring animated guides and workflows. An online version is also available [here](https://cea-metrocarac.github.io/SPECTROview/user_manual/).
+
+![image](https://github.com/user-attachments/assets/4d23b1b1-4d55-4270-ae06-b88c81164c36)
+
+
+---
+
+##### 🧮 **Quick Calculators**
+
+Accessible from the `Menu Bar`, users can now quickly calculate several experimental parameters on the fly, including laser spot size, depth of focus (DOF), penetration depth, laser power conversion, and unit conversions. 
+
+![image](https://github.com/user-attachments/assets/f58a34f6-f85f-42be-819d-6dfc83cd8d03)
+
+
+---
+
+##### 🎨 **User Experience & Workflow Improvements**
+
+- **Graphs Workspace — Smart Customize Dialog:** The `Customize Dialog` now intelligently and automatically switches contexts when navigating between plots. Users no longer need to manually open and close the dialog for each individual plot.
+- **Ergonomic Tweaks:** Several minor UI/UX adjustments have been introduced for a smoother, more premium interaction experience.
+
+
+---
+
+##### 🛠 **For Developers**
+
+- For users or developers interested in contributing to this open-source project or understanding its architecture, a detailed `Developer Guide` is now available [here](https://cea-metrocarac.github.io/SPECTROview/developer/).
+
+
+---
+
 ## [v26.18.3](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.18.3) - 2026-04-26
 
 ##### 🐞 Bug Fixes

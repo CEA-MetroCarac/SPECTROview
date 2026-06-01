@@ -18,7 +18,7 @@ Three utility buttons located on the right side of the `MapList` allow you to: (
 You can easily navigate between loaded 2D maps using the `MapList`. The selected map is rendered in the `MapViewer`. By default, the `MapViewer` displays a heatmap of signal "Intensity" or "Area". If the map has been fitted, you can select and visualize the heatmap of any fitted parameter.
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Switching Maps" width="250"><br>
+  <img src="../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Switching Maps" width="350"><br>
 </div>
 
 
@@ -33,7 +33,7 @@ You can easily navigate between loaded 2D maps using the `MapList`. The selected
 **Mask Feature**: Isolate specific regions of the heatmap by defining custom, parameter-based numerical filters.
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/mask.png" alt="Mask configuration" width="300">
+  <img src="../user_manual_images/Spectra_Maps/mask.png" alt="Mask configuration" width="420">
 </div>
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/masked_map.png" alt="Masked map output" width="300"><br>

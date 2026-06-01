@@ -51,15 +51,15 @@ hide:
 
 ---
 
-### **Three distinct workspaces for processing discrete spectra, hyperspectral data, and data visualization**
+### **Dedicated workspaces for discrete spectra, hyperspectral data, and advanced visualization**
 
 ![General overview of SPECTROview](assets/overview.gif){ loading=lazy }
 
-### **Build custom fit models, replicate them across datasets, fit multiple spectra simultaneously, and aggregate all best-fit results with a single click**
+### **Design custom fit models and simultaneously process multiple spectra**
 
 ![Fitting workflow demo](assets/fitting.gif){ loading=lazy }
 
-### **Rapidly and easily plot your data to generate professional visualizations**
+### **Rapidly generate publication-ready data visualizations**
 
 ![Plotting and visualization demo](assets/graphs.gif){ loading=lazy }
 

@@ -35,18 +35,18 @@ Full **documentation** is available at [**CEA-MetroCarac.github.io/SPECTROview**
 
 ---
 
-### **Three distinct workspaces for processing discrete spectra, hyperspectral data, and data visualization:**
+### **Dedicated workspaces for discrete spectra, hyperspectral data, and advanced visualization**
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/SPECTROview/main/docs/assets/overview.gif">
 </p>
 
-### **Build custom fit models, replicate them across datasets, fit multiple spectra simultaneously, and aggregate all best-fit results with a single click:**
+### **Design custom fit models and simultaneously process multiple spectra**
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/SPECTROview/main/docs/assets/fitting.gif">
 </p>
 
-### **Rapidly and easily plot your data to generate professional visualizations:**
+### **Rapidly generate publication-ready data visualizations**
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/CEA-MetroCarac/SPECTROview/main/docs/assets/graphs.gif">
@@ -87,9 +87,4 @@ This work was carried out at the CEA — Platform for Nanocharacterisation (PFNC
 
 If you use `SPECTROview` for data processing or visualization in your research, please cite the following publication:
 
-- Le, V.-H., & Quéméré, P. (2025). SPECTROview: A Tool for Spectroscopic Data Processing and Visualization. Zenodo. https://doi.org/10.5281/zenodo.14147172
-
-Additionally, if you use the Multivariate Analysis (MVA) features to generate results for a publication, we kindly ask that you cite the following papers describing the core algorithms:
-
-- **PCA algorithm**: Wold, S., Esbensen, K., and Geladi, P., "Principal component analysis." *Chemometrics and intelligent laboratory systems* 2.1-3 (1987): 37-52.
-- **NMF algorithm**: Lee, Daniel D., and H. Sebastian Seung, "Learning the parts of objects by non-negative matrix factorization." *Nature* 401.6755 (1999): 788-791.
+> Le, V.-H., & Quéméré, P. (2025). SPECTROview: A Tool for Spectroscopic Data Processing and Visualization. Zenodo. [https://doi.org/10.5281/zenodo.14147172](https://doi.org/10.5281/zenodo.14147172)

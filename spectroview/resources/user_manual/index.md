@@ -1,7 +1,7 @@
 <div style="width: 100%; overflow: hidden; padding-bottom: 10px;">
   <img src="../user_manual_images/Home/logo.png" alt="SPECTROview Logo" width="80" align="left" style="float: left; margin-right: 20px;">
   <div style="text-align: right;">
-    <h1 align="right" style="margin-top: 0; margin-bottom: 0; text-align: right;">SPECTROview User Manual</h1>
+    <h2 align="right" style="margin-top: 0; margin-bottom: 0; text-align: right;">SPECTROview User Manual</h2>
     <p align="right" style="margin-top: 5px; color: gray; font-size: 0.9em; text-align: right;"><i>(Last updated: 31 May 2026)</i></p>
   </div>
 </div>

@@ -16,10 +16,11 @@ def on_page_content(html, page, config, files):
     and rewrites them to href="filename/" so they match MkDocs' 
     directory-style URL structure.
     """
-    if page.file.src_path.startswith("user_manual/"):
+    src_path = page.file.src_path.replace('\\', '/')
+    if src_path.startswith("user_manual/"):
         # Determine if we are at the user_manual/ root (index.md)
         # or in a sub-directory (e.g. user_manual/01_introduction/)
-        is_index = page.file.src_path.endswith("index.md")
+        is_index = src_path.endswith("index.md")
         prefix = "" if is_index else "../"
 
         def replace_link(match):

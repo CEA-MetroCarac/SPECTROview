@@ -29,12 +29,16 @@ theme:
         name: Switch to light mode
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.expand
     - navigation.top
     - navigation.tracking
     - navigation.indexes
     - navigation.footer
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.path
     - toc.integrate
     - search.highlight
     - search.suggest
@@ -106,12 +110,11 @@ markdown_extensions:
 
 plugins:
   - search
-  - minify:
-      minify_html: true
-      minify_css: true
-      minify_js: true
 
 extra:
+  analytics:
+    provider: google
+    property: G-N8XYNZ7WFC
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/CEA-MetroCarac/SPECTROview

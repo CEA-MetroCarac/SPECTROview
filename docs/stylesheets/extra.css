@@ -6,6 +6,10 @@
   --md-primary-fg-color--dark: #003d82;
 
   --md-accent-fg-color: #0056b3;
+
+  /* Make top navigation bar ~20% smaller */
+  --md-header-height: 2.4rem;
+  --md-tabs-height: 1.92rem;
 }
 
 /* Override Top Menu Bar color */
@@ -28,6 +32,12 @@
 .md-typeset img {
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.md-typeset img:hover {
+  transform: scale(1.01);
+  box-shadow: 0 8px 24px rgba(0, 86, 179, 0.18);
 }
 
 .md-typeset pre>code {
@@ -61,7 +71,15 @@
 .tx-hero {
   margin: 0;
   background-color: #000819;
+  background-image: radial-gradient(ellipse at 20% 50%, rgba(0, 86, 179, 0.18) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 20%, rgba(51, 133, 255, 0.12) 0%, transparent 55%);
   color: #ffffff;
+  animation: hero-glow 8s ease-in-out infinite alternate;
+}
+
+@keyframes hero-glow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
 
 .tx-hero h1 {
@@ -110,6 +128,7 @@
   color: #ffffff;
   border-color: #ffffff;
 }
+
 /* Force exactly 2 columns for specific card grids */
 .md-typeset .grid.cards.cards-2col > :is(ul, ol) {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -127,3 +146,152 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ============================================================
+   SMOOTH SCROLL
+   ============================================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================================
+   PAGE FADE-IN ANIMATION
+   ============================================================ */
+.md-content {
+  animation: fadeInPage 0.4s ease-out forwards;
+}
+
+@keyframes fadeInPage {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   GRADIENT HORIZONTAL RULE
+   ============================================================ */
+.md-typeset hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #0056b3 30%, #3385ff 50%, #0056b3 70%, transparent);
+  opacity: 0.35;
+  margin: 2rem 0;
+}
+
+/* ============================================================
+   ENHANCED FOOTER NAVIGATION BUTTONS (Prev / Next)
+   ============================================================ */
+.md-footer {
+  background: transparent !important;
+}
+
+.md-footer-meta {
+  background-color: #000819 !important;
+}
+
+.md-footer__inner {
+  padding: 0.15rem 0.4rem;
+}
+
+.md-footer__link {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #000819;
+  color: #ffffff !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.25s ease,
+              background 0.25s ease,
+              transform 0.2s ease,
+              box-shadow 0.25s ease;
+  text-decoration: none !important;
+  max-width: 44%;
+}
+
+.md-footer__link:hover {
+  border-color: #000819 !important;
+  background: #ffffff !important;
+  color: #000819 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px #000819, 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.md-footer__link:hover .md-footer__title,
+.md-footer__link:hover .md-footer__direction {
+  color: #000819 !important;
+}
+
+.md-footer__link:hover svg {
+  fill: #000819 !important;
+}
+
+.md-footer__link--prev {
+  margin-right: auto;
+}
+
+.md-footer__link--next {
+  margin-left: auto;
+}
+
+.md-footer__title {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.md-footer__direction {
+  font-size: 0.5rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 0.1rem;
+}
+
+/* Shrink the icon inside the footer link */
+.md-footer__link svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+/* ============================================================
+   BACK-TO-TOP BUTTON
+   ============================================================ */
+.md-top {
+  border-radius: 50px;
+  background: rgba(0, 8, 25, 0.82);
+  color: #ffffff !important;
+  border: 1px solid rgba(51, 133, 255, 0.5);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.md-top:hover {
+  background: rgba(51, 133, 255, 0.88);
+  border-color: #3385ff;
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(51, 133, 255, 0.4);
+}
+
+.md-top svg {
+  fill: #ffffff !important;
+}
+
+
+
+/* ============================================================
+   BREADCRUMB PATH STYLING
+   ============================================================ */
+.md-path {
+  opacity: 0.7;
+  font-size: 0.75rem;
+}
+
+/* ============================================================
+   NAVIGATION INSTANT PROGRESS BAR
+   ============================================================ */
+.md-progress {
+  background: linear-gradient(to right, #0056b3, #3385ff);
+}
+

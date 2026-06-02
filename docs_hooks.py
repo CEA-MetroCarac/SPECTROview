@@ -134,6 +134,36 @@ def on_pre_build(config, **kwargs):
     _ensure_link(src_img_dir, dest_img_dir, label="user manual images")
 
 
+def on_files(files, config):
+    """
+    Hook that runs after MkDocs has scanned the docs directory.
+    
+    Since MkDocs 1.5, files matched by .gitignore are automatically excluded.
+    Because docs/user_manual_images is in .gitignore, MkDocs ignores it.
+    This hook manually re-adds the images to the MkDocs files collection
+    so they are copied to the site/ output directory and link validation works.
+    """
+    from mkdocs.structure.files import File
+    
+    docs_dir = config['docs_dir']
+    site_dir = config['site_dir']
+    use_directory_urls = config.get('use_directory_urls', True)
+    
+    img_dir = os.path.join(docs_dir, 'user_manual_images')
+    if os.path.isdir(img_dir):
+        for root, _, filenames in os.walk(img_dir):
+            for filename in filenames:
+                filepath = os.path.join(root, filename)
+                rel_path = os.path.relpath(filepath, docs_dir).replace('\\', '/')
+                
+                # Only add if it wasn't already picked up
+                if not any(f.src_uri == rel_path for f in files):
+                    file_obj = File(rel_path, docs_dir, site_dir, use_directory_urls)
+                    files.append(file_obj)
+                    
+    return files
+
+
 def on_post_build(config, **kwargs):
     """
     Hook that runs after the MkDocs build (or gh-deploy) finishes.
@@ -173,16 +203,25 @@ def _ensure_link(src: str, dest: str, *, label: str = "") -> None:
             # Already correct – still register for cleanup
             _created_symlinks.append(dest)
             return
-        os.unlink(dest)
+        try:
+            os.unlink(dest)
+        except OSError:
+            pass
     elif os.path.isdir(dest):
-        shutil.rmtree(dest)
+        try:
+            shutil.rmtree(dest)
+        except OSError:
+            pass  # File lock from another mkdocs process, we will overwrite
 
     # Try creating a symlink; fall back to a copy on failure
     try:
-        os.symlink(src, dest, target_is_directory=True)
-        print(f"  Linked {label}: {dest} -> {src}")
+        if not os.path.isdir(dest):
+            os.symlink(src, dest, target_is_directory=True)
+            print(f"  Linked {label}: {dest} -> {src}")
+        else:
+            raise OSError("Directory exists and is locked")
     except (OSError, NotImplementedError):
-        shutil.copytree(src, dest)
+        shutil.copytree(src, dest, dirs_exist_ok=True)
         print(f"  Copied {label}: {src} -> {dest}  (symlink unavailable)")
 
     _created_symlinks.append(dest)

@@ -950,37 +950,62 @@ class VGraph(QWidget):
             if np.issubdtype(x2_data.dtype, np.number):
                 self.ax_x2.set_xscale('log')
     
+    def _format_axis_label(self, col_name) -> str:
+        """Format axis label based on specific parameter rules."""
+        if not col_name or not isinstance(col_name, str):
+            return str(col_name) if col_name is not None else ""
+            
+        parts = col_name.split('_', 1)
+        if len(parts) == 2:
+            param, peaklabel = parts
+            param = param.lower()
+            if param == "x0":
+                return f"{peaklabel} peak position (cm$^{{-1}}$)"
+            elif param == "fwhm":
+                return f"{peaklabel} peak width (cm$^{{-1}}$)"
+            elif param == "ampli":
+                return f"{peaklabel} peak intensity (a.u.)"
+            elif param == "area":
+                return f"{peaklabel} peak area (a.u.)"
+                
+        return col_name
+
+    def _get_y_label_default(self, y_col):
+        if isinstance(y_col, list) and len(y_col) > 0:
+            return self._format_axis_label(y_col[0])
+        return self._format_axis_label(y_col)
+
     def _set_labels(self):
         """Set titles and labels for axis and plot."""
         if self.plot_style == 'wafer':
             if self.plot_title:
                 self.ax.set_title(self.plot_title)
             else:
-                self.ax.set_title(self.z)
+                self.ax.set_title(self._format_axis_label(self.z) if self.z else "")
             self.ax.tick_params(axis='x', labelbottom=False)
         elif self.plot_style == '2Dmap':
             if self.plot_title:
                 self.ax.set_title(self.plot_title)
             else:
-                self.ax.set_title(self.z)
+                self.ax.set_title(self._format_axis_label(self.z) if self.z else "")
             if self.xlabel:
                 self.ax.set_xlabel(self.xlabel)
             else:
-                self.ax.set_xlabel(self.x)
+                self.ax.set_xlabel(self._format_axis_label(self.x))
             if self.ylabel:
                 self.ax.set_ylabel(self.ylabel)
             else:
-                self.ax.set_ylabel(self.y[0])
+                self.ax.set_ylabel(self._get_y_label_default(self.y))
         else:
             self.ax.set_title(self.plot_title)
             if self.xlabel:
                 self.ax.set_xlabel(self.xlabel)
             else:
-                self.ax.set_xlabel(self.x)
+                self.ax.set_xlabel(self._format_axis_label(self.x))
             if self.ylabel:
                 self.ax.set_ylabel(self.ylabel)
             else:
-                self.ax.set_ylabel(self.y[0])
+                self.ax.set_ylabel(self._get_y_label_default(self.y))
     
     def _plot_secondary_axis(self, df):
         """Plot data on secondary y-axis."""
@@ -1013,7 +1038,7 @@ class VGraph(QWidget):
                 self.ax2 = None
             
             if self.ax2:
-                self.ax2.set_ylabel(self.y2label or self.y2, color='red')
+                self.ax2.set_ylabel(self.y2label or self._format_axis_label(self.y2), color='red')
                 self.ax2.tick_params(axis='y', colors='red')
     
     def _plot_tertiary_axis(self, df):
@@ -1048,7 +1073,7 @@ class VGraph(QWidget):
                 self.ax3 = None
             
             if self.ax3:
-                self.ax3.set_ylabel(self.y3label or self.y3, color='green')
+                self.ax3.set_ylabel(self.y3label or self._format_axis_label(self.y3), color='green')
                 self.ax3.tick_params(axis='y', colors='green')
     
     def _plot_secondary_x_axis(self, df):
@@ -1086,7 +1111,7 @@ class VGraph(QWidget):
             
             if self.ax_x2:
                 self.ax_x2.set_xlabel(
-                    self.x2label or self.x2, color='purple'
+                    self.x2label or self._format_axis_label(self.x2), color='purple'
                 )
                 self.ax_x2.tick_params(axis='x', colors='purple')
     

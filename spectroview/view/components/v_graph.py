@@ -420,7 +420,7 @@ class VGraph(QWidget):
             'data': df, 'x': self.x, 'y': y, 'ax': self.ax,
             'linestyles': '-' if self.join_for_point_plot else 'none',
             'markeredgecolor': 'black', 'markeredgewidth': 1,
-            'err_kws': {'linewidth': 1, 'color': 'black'},
+            'err_kws': {'linewidth': 1, 'zorder': 1},
             'capsize': 0.02
         }
         if self.z:

@@ -255,7 +255,7 @@ class VWorkspaceGraphs(QWidget):
         more_options_tab = self._create_more_options_tab()
         
         self.plot_tabs.addTab(plot_tab, "Plot")
-        self.plot_tabs.addTab(more_options_tab, "More options")
+        self.plot_tabs.addTab(more_options_tab, "Multiple Y axis")
         
         parent_layout.addWidget(self.plot_tabs, stretch=1)
     

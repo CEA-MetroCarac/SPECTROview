@@ -1,6 +1,7 @@
 """Matplotlib graph visualization widget for MVVM pattern."""
 
 import numpy as np
+import seaborn as sns
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -381,164 +382,170 @@ class VGraph(QWidget):
             c = colors[0] if colors else 'steelblue'
             
             if self.plot_style == 'point':
-                # Only pass palette if hue is provided
-                point_kwargs = {
-                    'data': df, 'x': self.x, 'y': y, 'ax': self.ax,
-                    'linestyles': '-' if self.join_for_point_plot else 'none',
-                    'markeredgecolor': 'black', 'markeredgewidth': 1,
-                    'err_kws': {'linewidth': 1, 'color': 'black'},
-                    'capsize': 0.02
-                }
-                if self.z:
-                    point_kwargs['hue'] = self.z
-                    point_kwargs['palette'] = colors
-                    point_kwargs['marker'] = markers
-                else:
-                    point_kwargs['color'] = c
-                import seaborn as sns
-                sns.pointplot(**point_kwargs)
-
+                self._plot_point(df, y, colors, markers, c)
             elif self.plot_style == 'scatter':
-                if self.z:
-                    import seaborn as sns
-                    sns.scatterplot(
-                        data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                        s=self.scatter_size, edgecolor=self.scatter_edgecolor,
-                        palette=colors
-                    )
-                else:
-                    import seaborn as sns
-                    sns.scatterplot(
-                        data=df, x=self.x, y=y, ax=self.ax,
-                        s=self.scatter_size, edgecolor=self.scatter_edgecolor,
-                        color=c
-                    )
+                self._plot_scatter(df, y, colors, c)
             elif self.plot_style == 'box':
-                # Only pass palette if hue is provided
-                box_kwargs = {'data': df, 'x': self.x, 'y': y, 'ax': self.ax, 'width': 0.4}
-                if self.z:
-                    box_kwargs['hue'] = self.z
-                    box_kwargs['palette'] = colors
-                else:
-                    box_kwargs['color'] = c
-                import seaborn as sns
-                sns.boxplot(**box_kwargs)
+                self._plot_box(df, y, colors, c)
             elif self.plot_style == 'line':
-                # Only pass palette if hue is provided
-                line_kwargs = {'data': df, 'x': self.x, 'y': y, 'ax': self.ax}
-                if self.z:
-                    line_kwargs['hue'] = self.z
-                    line_kwargs['palette'] = colors
-                else:
-                    line_kwargs['color'] = c
-                import seaborn as sns
-                sns.lineplot(**line_kwargs)
+                self._plot_line(df, y, colors, c)
             elif self.plot_style == 'bar':
-                # Only pass palette if hue is provided
-                bar_kwargs = {
-                    'data': df, 'x': self.x, 'y': y, 'ax': self.ax,
-                    'errorbar': 'sd' if self.show_bar_plot_error_bar else None,
-                    'err_kws': {'linewidth': 1}
-                }
-                if self.z:
-                    bar_kwargs['hue'] = self.z
-                    bar_kwargs['palette'] = colors
-                else:
-                    bar_kwargs['color'] = c
-                import seaborn as sns
-                sns.barplot(**bar_kwargs)
+                self._plot_bar(df, y, colors, c)
             elif self.plot_style == 'trendline':
-                import seaborn as sns
-                self.trendline_equations = []  # reset before recomputing
-                anchor = getattr(self, 'trendline_anchor_enabled', False)
-                
-                if self.z and self.z in df.columns:
-                    # Hue support: one regplot per category
-                    categories = df[self.z].unique()
-                    while len(colors) < len(categories):
-                        colors.append(DEFAULT_COLORS[len(colors) % len(DEFAULT_COLORS)])
-                    for idx, cat in enumerate(categories):
-                        subset = df[df[self.z] == cat]
-                        color = colors[idx]
-                        x_fit, y_fit, coeffs = self._fit_trendline(subset)
-                        
-                        # Plot scatter manually to control legend and color exactly
-                        self.ax.scatter(
-                            subset[self.x], subset[y],
-                            color=color, s=self.scatter_size,
-                            edgecolors=self.scatter_edgecolor, linewidths=0.5,
-                            label=str(cat), zorder=3
-                        )
-                        
-                        if anchor:
-                            # Plot custom anchored line
-                            self.ax.plot(x_fit, y_fit, color=color, linewidth=2)
-                        else:
-                            # Let seaborn plot standard line + confidence intervals
-                            sns.regplot(
-                                data=subset, x=self.x, y=y, ax=self.ax,
-                                scatter=False, order=self.trendline_order,
-                                color=color
-                            )
-                            
-                        eq_str, r2 = self._build_equation_str(coeffs, subset)
-                        self.trendline_equations.append({
-                            'label': str(cat), 'equation': eq_str, 'r2': f"{r2:.4f}"
-                        })
-                else:
-                    # No hue — single fit
-                    x_fit, y_fit, coeffs = self._fit_trendline(df)
-                    
-                    c = colors[0] if colors else 'steelblue'
-                    
-                    # Plot scatter manually for consistency
-                    self.ax.scatter(
-                        df[self.x], df[y],
-                        color=c, s=self.scatter_size,
-                        edgecolors=self.scatter_edgecolor, linewidths=0.5,
-                        label='All data', zorder=3
-                    )
-                    
-                    if anchor:
-                        # Plot custom anchored line
-                        self.ax.plot(x_fit, y_fit, color=c, linewidth=2)
-                    else:
-                        # Let seaborn plot standard line + confidence intervals
-                        sns.regplot(
-                            data=df, x=self.x, y=y, ax=self.ax,
-                            scatter=False, order=self.trendline_order,
-                            color=c
-                        )
-                        
-                    eq_str, r2 = self._build_equation_str(coeffs, df)
-                    self.trendline_equations.append({
-                        'label': 'All data', 'equation': eq_str, 'r2': f"{r2:.4f}"
-                    })
+                self._plot_trendline(df, y, colors, c)
             elif self.plot_style == 'histogram':
-                import seaborn as sns
-                hist_kwargs = {
-                    'data': df,
-                    'x': self.x,
-                    'ax': self.ax,
-                    'bins': self.hist_bins,
-                    'kde': self.hist_kde,
-                    'element': 'step' if self.hist_step else 'bars',
-                    'fill': not self.hist_step,
-                    'stat': 'count',
-                }
-                if self.z and self.z in df.columns:
-                    hist_kwargs['hue'] = self.z
-                    hist_kwargs['palette'] = colors
-                else:
-                    hist_kwargs['color'] = colors[0] if colors else 'steelblue'
-                sns.histplot(**hist_kwargs)
+                self._plot_histogram(df, colors)
             elif self.plot_style == 'wafer':
                 self._plot_wafer(df)
             elif self.plot_style == '2Dmap':
                 self._plot_2dmap(df, y)
             else:
                 show_alert("Unsupported plot style")
-    
+
+    def _plot_point(self, df, y, colors, markers, c):
+        point_kwargs = {
+            'data': df, 'x': self.x, 'y': y, 'ax': self.ax,
+            'linestyles': '-' if self.join_for_point_plot else 'none',
+            'markeredgecolor': 'black', 'markeredgewidth': 1,
+            'err_kws': {'linewidth': 1, 'color': 'black'},
+            'capsize': 0.02
+        }
+        if self.z:
+            point_kwargs['hue'] = self.z
+            point_kwargs['palette'] = colors
+            point_kwargs['marker'] = markers
+        else:
+            point_kwargs['color'] = c
+        sns.pointplot(**point_kwargs)
+
+    def _plot_scatter(self, df, y, colors, c):
+        if self.z:
+            sns.scatterplot(
+                data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
+                s=self.scatter_size, edgecolor=self.scatter_edgecolor,
+                palette=colors
+            )
+        else:
+            sns.scatterplot(
+                data=df, x=self.x, y=y, ax=self.ax,
+                s=self.scatter_size, edgecolor=self.scatter_edgecolor,
+                color=c
+            )
+
+    def _plot_box(self, df, y, colors, c):
+        box_kwargs = {'data': df, 'x': self.x, 'y': y, 'ax': self.ax, 'width': 0.4}
+        if self.z:
+            box_kwargs['hue'] = self.z
+            box_kwargs['palette'] = colors
+        else:
+            box_kwargs['color'] = c
+        sns.boxplot(**box_kwargs)
+
+    def _plot_line(self, df, y, colors, c):
+        line_kwargs = {'data': df, 'x': self.x, 'y': y, 'ax': self.ax}
+        if self.z:
+            line_kwargs['hue'] = self.z
+            line_kwargs['palette'] = colors
+        else:
+            line_kwargs['color'] = c
+        sns.lineplot(**line_kwargs)
+
+    def _plot_bar(self, df, y, colors, c):
+        bar_kwargs = {
+            'data': df, 'x': self.x, 'y': y, 'ax': self.ax,
+            'errorbar': 'sd' if self.show_bar_plot_error_bar else None,
+            'err_kws': {'linewidth': 1}
+        }
+        if self.z:
+            bar_kwargs['hue'] = self.z
+            bar_kwargs['palette'] = colors
+        else:
+            bar_kwargs['color'] = c
+        sns.barplot(**bar_kwargs)
+
+    def _plot_trendline(self, df, y, colors, c):
+        self.trendline_equations = []  # reset before recomputing
+        anchor = getattr(self, 'trendline_anchor_enabled', False)
+        
+        if self.z and self.z in df.columns:
+            # Hue support: one regplot per category
+            categories = df[self.z].unique()
+            while len(colors) < len(categories):
+                colors.append(DEFAULT_COLORS[len(colors) % len(DEFAULT_COLORS)])
+            for idx, cat in enumerate(categories):
+                subset = df[df[self.z] == cat]
+                color = colors[idx]
+                x_fit, y_fit, coeffs = self._fit_trendline(subset)
+                
+                # Plot scatter manually to control legend and color exactly
+                self.ax.scatter(
+                    subset[self.x], subset[y],
+                    color=color, s=self.scatter_size,
+                    edgecolors=self.scatter_edgecolor, linewidths=0.5,
+                    label=str(cat), zorder=3
+                )
+                
+                if anchor:
+                    # Plot custom anchored line
+                    self.ax.plot(x_fit, y_fit, color=color, linewidth=2)
+                else:
+                    # Let seaborn plot standard line + confidence intervals
+                    sns.regplot(
+                        data=subset, x=self.x, y=y, ax=self.ax,
+                        scatter=False, order=self.trendline_order,
+                        color=color
+                    )
+                    
+                eq_str, r2 = self._build_equation_str(coeffs, subset)
+                self.trendline_equations.append({
+                    'label': str(cat), 'equation': eq_str, 'r2': f"{r2:.4f}"
+                })
+        else:
+            # No hue — single fit
+            x_fit, y_fit, coeffs = self._fit_trendline(df)
+            
+            # Plot scatter manually for consistency
+            self.ax.scatter(
+                df[self.x], df[y],
+                color=c, s=self.scatter_size,
+                edgecolors=self.scatter_edgecolor, linewidths=0.5,
+                label='All data', zorder=3
+            )
+            
+            if anchor:
+                # Plot custom anchored line
+                self.ax.plot(x_fit, y_fit, color=c, linewidth=2)
+            else:
+                # Let seaborn plot standard line + confidence intervals
+                sns.regplot(
+                    data=df, x=self.x, y=y, ax=self.ax,
+                    scatter=False, order=self.trendline_order,
+                    color=c
+                )
+                
+            eq_str, r2 = self._build_equation_str(coeffs, df)
+            self.trendline_equations.append({
+                'label': 'All data', 'equation': eq_str, 'r2': f"{r2:.4f}"
+            })
+
+    def _plot_histogram(self, df, colors):
+        hist_kwargs = {
+            'data': df,
+            'x': self.x,
+            'ax': self.ax,
+            'bins': self.hist_bins,
+            'kde': self.hist_kde,
+            'element': 'step' if self.hist_step else 'bars',
+            'fill': not self.hist_step,
+            'stat': 'count',
+        }
+        if self.z and self.z in df.columns:
+            hist_kwargs['hue'] = self.z
+            hist_kwargs['palette'] = colors
+        else:
+            hist_kwargs['color'] = colors[0] if colors else 'steelblue'
+        sns.histplot(**hist_kwargs)
+
     def _fix_box_bar_colors(self):
         """Fix box/bar patch colors to use exact DEFAULT_COLORS by mapping seaborn's RGBA."""
         patches = [p for p in self.ax.patches if hasattr(p, 'get_facecolor')]
@@ -804,28 +811,6 @@ class VGraph(QWidget):
         
         return eq_str, r2
 
-    def _annotate_trendline_eq(self, df):
-        """Add the trendline equation in the plot (legacy — kept for backward compatibility)."""
-        x_data = df[self.x]
-        y_data = df[self.y[0]]
-        coefficients = np.polyfit(x_data, y_data, self.trendline_order)
-        
-        equation = 'y = '
-        for i, coeff in enumerate(coefficients[::-1]):
-            equation += (
-                f'{coeff:.4f}x^{self.trendline_order - i} + '
-                if i < self.trendline_order
-                else f'{coeff:.4f}'
-            )
-        
-        self.ax.annotate(
-            equation,
-            xy=(0.02, 0.95),
-            xycoords='axes fraction',
-            fontsize=10,
-            color='blue'
-        )
-    
     def _plot_wafer(self, df):
         """Plot wafer plot by creating an object of WaferPlot Class."""
         vmin = self.zmin if self.zmin else None
@@ -940,14 +925,12 @@ class VGraph(QWidget):
             self.ax2.remove()
             self.ax2 = None
         
-        if hasattr(self, 'y2') and self.y2:
+        if self.y2:
             self.ax2 = self.ax.twinx()
             
             if self.plot_style == 'line':
-                import seaborn as sns
                 sns.lineplot(data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2, color='red')
             elif self.plot_style == 'point':
-                import seaborn as sns
                 sns.pointplot(
                     data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
                     linestyles='-' if self.join_for_point_plot else 'none',
@@ -957,7 +940,6 @@ class VGraph(QWidget):
                     capsize=0.02
                 )
             elif self.plot_style == 'scatter':
-                import seaborn as sns
                 sns.scatterplot(
                     data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
                     s=self.scatter_size, edgecolor=self.scatter_edgecolor,
@@ -977,15 +959,13 @@ class VGraph(QWidget):
             self.ax3.remove()
             self.ax3 = None
         
-        if hasattr(self, 'y3') and self.y3:
+        if self.y3:
             self.ax3 = self.ax.twinx()
             self.ax3.spines["right"].set_position(("outward", 100))
             
             if self.plot_style == 'line':
-                import seaborn as sns
                 sns.lineplot(data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3, color='green')
             elif self.plot_style == 'point':
-                import seaborn as sns
                 sns.pointplot(
                     data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
                     linestyles='-' if self.join_for_point_plot else 'none',
@@ -995,7 +975,6 @@ class VGraph(QWidget):
                     capsize=0.02
                 )
             elif self.plot_style == 'scatter':
-                import seaborn as sns
                 sns.scatterplot(
                     data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
                     s=self.scatter_size, edgecolor=self.scatter_edgecolor,
@@ -1015,7 +994,7 @@ class VGraph(QWidget):
     
     def _render_annotations(self):
         """Render all annotations (lines and text) on the plot."""
-        if not hasattr(self, 'annotations') or not self.annotations:
+        if not self.annotations:
             return
         
         for ann in self.annotations:
@@ -1087,13 +1066,7 @@ class VGraph(QWidget):
         va = ann.get('va', 'center')
         
         # Get bbox from annotation, use default if not specified
-        bbox = ann.get('bbox')
-        if bbox is None:
-            # Default: no background/frame
-            bbox_props = None
-        else:
-            # Use bbox from annotation
-            bbox_props = bbox
+        bbox_props = ann.get('bbox')
         
         text_obj = self.ax.text(
             x_pos,
@@ -1255,209 +1228,121 @@ class VGraph(QWidget):
         
         # Apply X-axis break  
         if self.axis_breaks.get('x'):
-            break_start = self.axis_breaks['x']['start']
-            break_end = self.axis_breaks['x']['end']
-            
-            # Get current limits
-            x_min, x_max = self.ax.get_xlim()
-            y_min, y_max = self.ax.get_ylim()
-            
-            # Calculate new compressed range (remove break range from display)
-            total_range = x_max - x_min
-            break_range = break_end - break_start
-            new_range = total_range - break_range
-            
-            # Don't apply if break is outside data range
-            if break_start < x_min or break_end > x_max:
-                return
-            
-            # Adjust x-axis to skip the break range
-            gap_pixels = 3  # 5 pixels
-            # Convert pixels to data coordinates
-            bbox = self.ax.get_window_extent().transformed(self.figure.dpi_scale_trans.inverted())
-            gap_size = gap_pixels / bbox.width * (x_max - x_min) / self.figure.get_size_inches()[0]
-            
-            for line in self.ax.get_lines():
-                xdata = line.get_xdata()
-                ydata = line.get_ydata()
-                
-                xdata = np.asarray(xdata)
-                ydata = np.asarray(ydata)
-                
-                xdata_new = xdata.copy()
-                mask = xdata >= break_end
-                xdata_new[mask] = xdata[mask] - break_range + gap_size
-                
-                keep_mask = (xdata <= break_start) | (xdata >= break_end)
-                line.set_data(xdata_new[keep_mask], ydata[keep_mask])
-                
-            for collection in self.ax.collections:
-                offsets = collection.get_offsets()
-                if offsets is not None and len(offsets) > 0:
-                    xdata = offsets[:, 0]
-                    ydata = offsets[:, 1]
-                    
-                    xdata_new = xdata.copy()
-                    mask = xdata >= break_end
-                    xdata_new[mask] = xdata[mask] - break_range + gap_size
-                    
-                    keep_mask = (xdata <= break_start) | (xdata >= break_end)
-                    collection.set_offsets(np.column_stack([xdata_new[keep_mask], ydata[keep_mask]]))
-                    
-                    try:
-                        facecolors = collection.get_facecolors()
-                        if facecolors is not None and len(facecolors) == len(xdata):
-                            collection.set_facecolors(facecolors[keep_mask])
-                    except Exception:
-                        pass
-                    try:
-                        edgecolors = collection.get_edgecolors()
-                        if edgecolors is not None and len(edgecolors) == len(xdata):
-                            collection.set_edgecolors(edgecolors[keep_mask])
-                    except Exception:
-                        pass
-                    try:
-                        sizes = collection.get_sizes()
-                        if sizes is not None and len(sizes) == len(xdata):
-                            collection.set_sizes(sizes[keep_mask])
-                    except Exception:
-                        pass
-            
-            # Adjust axis limits (compress but keep gap)
-            self.ax.set_xlim(x_min, x_max - break_range + gap_size)
-            
-            # Add parallel diagonal lines (//) at the bottom and top spines using axes coordinates
-            new_x_range = x_max - break_range + gap_size - x_min
-            x_ax_break = (break_start + gap_size / 2 - x_min) / new_x_range
-            
-            d = 0.015  # how big to make the diagonal lines in axes coordinates
-            dx = 0.01  # half distance between the two parallel lines
-            kwargs = dict(transform=self.ax.transAxes, color='gray', clip_on=False, linewidth=1)
-            
-            # Bottom spine break (//)
-            p1, = self.ax.plot([x_ax_break - dx - d, x_ax_break - dx + d], [-d, d], **kwargs)
-            p2, = self.ax.plot([x_ax_break + dx - d, x_ax_break + dx + d], [-d, d], **kwargs)
-            
-            # Top spine break (//)
-            p3, = self.ax.plot([x_ax_break - dx - d, x_ax_break - dx + d], [1 - d, 1 + d], **kwargs)
-            p4, = self.ax.plot([x_ax_break + dx - d, x_ax_break + dx + d], [1 - d, 1 + d], **kwargs)
-                        
-            self._break_markers.extend([p1, p2, p3, p4])
-            
-            # Correct tick labels
-            def break_formatter_x(x, pos):
-                if x > break_start + gap_size / 2:
-                    return f"{x + break_range - gap_size:g}"
-                return f"{x:g}"
-            self.ax.xaxis.set_major_formatter(FuncFormatter(break_formatter_x))
+            self._apply_single_axis_break('x', self.axis_breaks['x']['start'], self.axis_breaks['x']['end'])
         
         # Apply Y-axis break
         if self.axis_breaks.get('y'):
-            break_start = self.axis_breaks['y']['start']
-            break_end = self.axis_breaks['y']['end']
-            
-            # Get current limits
-            x_min, x_max = self.ax.get_xlim()
-            y_min, y_max = self.ax.get_ylim()
-            
-            # Calculate new compressed range
-            total_range = y_max - y_min
-            break_range = break_end - break_start  
-            new_range = total_range - break_range
-            
-            # Don't apply if break is outside data range
-            if break_start < y_min or break_end > y_max:
-                return
-            
-            # Adjust y-axis to skip the break range
-            # Leave a small visual gap for the break markers
-            # Use fixed pixel gap for consistent appearance
-            gap_pixels = 3  # 5 pixels
-            # Convert pixels to data coordinates
-            bbox = self.ax.get_window_extent().transformed(self.figure.dpi_scale_trans.inverted())
-            gap_size = gap_pixels / bbox.height * (y_max - y_min) / self.figure.get_size_inches()[1]
-            
-            for line in self.ax.get_lines():
-                xdata = line.get_xdata()
-                ydata = line.get_ydata()
-                
-                xdata = np.asarray(xdata)
-                ydata = np.asarray(ydata)
-                
-                ydata_new = ydata.copy()
-                mask = ydata >= break_end
-                ydata_new[mask] = ydata[mask] - break_range + gap_size
-                
-                keep_mask = (ydata <= break_start) | (ydata >= break_end)
-                line.set_data(xdata[keep_mask], ydata_new[keep_mask])
-                
-            for collection in self.ax.collections:
-                offsets = collection.get_offsets()
-                if offsets is not None and len(offsets) > 0:
-                    xdata = offsets[:, 0]
-                    ydata = offsets[:, 1]
-                    
-                    ydata_new = ydata.copy()
-                    mask = ydata >= break_end
-                    ydata_new[mask] = ydata[mask] - break_range + gap_size
-                    
-                    keep_mask = (ydata <= break_start) | (ydata >= break_end)
-                    collection.set_offsets(np.column_stack([xdata[keep_mask], ydata_new[keep_mask]]))
-                    
-                    try:
-                        facecolors = collection.get_facecolors()
-                        if facecolors is not None and len(facecolors) == len(ydata):
-                            collection.set_facecolors(facecolors[keep_mask])
-                    except Exception:
-                        pass
-                    try:
-                        edgecolors = collection.get_edgecolors()
-                        if edgecolors is not None and len(edgecolors) == len(ydata):
-                            collection.set_edgecolors(edgecolors[keep_mask])
-                    except Exception:
-                        pass
-                    try:
-                        sizes = collection.get_sizes()
-                        if sizes is not None and len(sizes) == len(ydata):
-                            collection.set_sizes(sizes[keep_mask])
-                    except Exception:
-                        pass
-            
-            # Adjust axis limits (compress but keep gap)
-            self.ax.set_ylim(y_min, y_max - break_range + gap_size)
-            
-            # Add parallel diagonal lines (//) at the left and right spines using axes coordinates
-            new_y_range = y_max - break_range + gap_size - y_min
-            y_ax_break = (break_start + gap_size / 2 - y_min) / new_y_range
-            
-            d = 0.015  # how big to make the diagonal lines in axes coordinates
-            dy = 0.01  # half distance between the two parallel lines
-            kwargs = dict(transform=self.ax.transAxes, color='gray', clip_on=False, linewidth=1)
-            
-            # Left spine break (//)
-            p1, = self.ax.plot([-d, d], [y_ax_break - dy - d, y_ax_break - dy + d], **kwargs)
-            p2, = self.ax.plot([-d, d], [y_ax_break + dy - d, y_ax_break + dy + d], **kwargs)
-            
-            # Right spine break (//)
-            p3, = self.ax.plot([1 - d, 1 + d], [y_ax_break - dy - d, y_ax_break - dy + d], **kwargs)
-            p4, = self.ax.plot([1 - d, 1 + d], [y_ax_break + dy - d, y_ax_break + dy + d], **kwargs)
-                        
-            self._break_markers.extend([p1, p2, p3, p4])
-            
-            # Correct tick labels
-            def break_formatter_y(y, pos):
-                if y > break_start + gap_size / 2:
-                    return f"{y + break_range - gap_size:g}"
-                return f"{y:g}"
-            self.ax.yaxis.set_major_formatter(FuncFormatter(break_formatter_y))
-    
-    def _show_customize_dialog(self):
-        """Show customize dialog for this graph.
+            self._apply_single_axis_break('y', self.axis_breaks['y']['start'], self.axis_breaks['y']['end'])
+
+    def _apply_single_axis_break(self, axis, break_start, break_end):
+        """Apply a single axis break (shared logic for X and Y)."""
+        is_x = (axis == 'x')
         
-        Note: This is kept for backward compatibility but now delegates to the
-        customize_requested signal so the workspace can manage a singleton dialog.
-        """
-        self.customize_requested.emit(self.graph_id)
+        # Get current limits
+        x_min, x_max = self.ax.get_xlim()
+        y_min, y_max = self.ax.get_ylim()
+        
+        min_val, max_val = (x_min, x_max) if is_x else (y_min, y_max)
+        
+        # Don't apply if break is outside data range
+        if break_start < min_val or break_end > max_val:
+            return
+            
+        break_range = break_end - break_start
+        
+        # Use fixed pixel gap for consistent appearance
+        gap_pixels = 3
+        # Convert pixels to data coordinates
+        bbox = self.ax.get_window_extent().transformed(self.figure.dpi_scale_trans.inverted())
+        size_idx = 0 if is_x else 1
+        bbox_size = bbox.width if is_x else bbox.height
+        gap_size = gap_pixels / bbox_size * (max_val - min_val) / self.figure.get_size_inches()[size_idx]
+        
+        for line in self.ax.get_lines():
+            xdata = np.asarray(line.get_xdata())
+            ydata = np.asarray(line.get_ydata())
+            
+            data = xdata if is_x else ydata
+            other_data = ydata if is_x else xdata
+            
+            data_new = data.copy()
+            mask = data >= break_end
+            data_new[mask] = data[mask] - break_range + gap_size
+            
+            keep_mask = (data <= break_start) | (data >= break_end)
+            
+            if is_x:
+                line.set_data(data_new[keep_mask], other_data[keep_mask])
+            else:
+                line.set_data(other_data[keep_mask], data_new[keep_mask])
+                
+        for collection in self.ax.collections:
+            offsets = collection.get_offsets()
+            if offsets is not None and len(offsets) > 0:
+                xdata = offsets[:, 0]
+                ydata = offsets[:, 1]
+                
+                data = xdata if is_x else ydata
+                other_data = ydata if is_x else xdata
+                
+                data_new = data.copy()
+                mask = data >= break_end
+                data_new[mask] = data[mask] - break_range + gap_size
+                
+                keep_mask = (data <= break_start) | (data >= break_end)
+                
+                if is_x:
+                    collection.set_offsets(np.column_stack([data_new[keep_mask], other_data[keep_mask]]))
+                else:
+                    collection.set_offsets(np.column_stack([other_data[keep_mask], data_new[keep_mask]]))
+                
+                for get_func, set_func in [
+                    (collection.get_facecolors, collection.set_facecolors),
+                    (collection.get_edgecolors, collection.set_edgecolors),
+                    (collection.get_sizes, collection.set_sizes)
+                ]:
+                    try:
+                        vals = get_func()
+                        if vals is not None and len(vals) == len(data):
+                            set_func(vals[keep_mask])
+                    except Exception:
+                        pass
+        
+        # Adjust axis limits and add markers
+        new_range = max_val - break_range + gap_size - min_val
+        ax_break = (break_start + gap_size / 2 - min_val) / new_range
+        
+        d = 0.015  # how big to make the diagonal lines in axes coordinates
+        dx = 0.01  # half distance between the two parallel lines
+        kwargs = dict(transform=self.ax.transAxes, color='gray', clip_on=False, linewidth=1)
+        
+        if is_x:
+            self.ax.set_xlim(min_val, max_val - break_range + gap_size)
+            p1, = self.ax.plot([ax_break - dx - d, ax_break - dx + d], [-d, d], **kwargs)
+            p2, = self.ax.plot([ax_break + dx - d, ax_break + dx + d], [-d, d], **kwargs)
+            p3, = self.ax.plot([ax_break - dx - d, ax_break - dx + d], [1 - d, 1 + d], **kwargs)
+            p4, = self.ax.plot([ax_break + dx - d, ax_break + dx + d], [1 - d, 1 + d], **kwargs)
+            
+            def break_formatter(val, pos):
+                if val > break_start + gap_size / 2:
+                    return f"{val + break_range - gap_size:g}"
+                return f"{val:g}"
+            self.ax.xaxis.set_major_formatter(FuncFormatter(break_formatter))
+        else:
+            self.ax.set_ylim(min_val, max_val - break_range + gap_size)
+            p1, = self.ax.plot([-d, d], [ax_break - dx - d, ax_break - dx + d], **kwargs)
+            p2, = self.ax.plot([-d, d], [ax_break + dx - d, ax_break + dx + d], **kwargs)
+            p3, = self.ax.plot([1 - d, 1 + d], [ax_break - dx - d, ax_break - dx + d], **kwargs)
+            p4, = self.ax.plot([1 - d, 1 + d], [ax_break + dx - d, ax_break + dx + d], **kwargs)
+            
+            def break_formatter(val, pos):
+                if val > break_start + gap_size / 2:
+                    return f"{val + break_range - gap_size:g}"
+                return f"{val:g}"
+            self.ax.yaxis.set_major_formatter(FuncFormatter(break_formatter))
+            
+        self._break_markers.extend([p1, p2, p3, p4])
+        
 
 
 class WaferPlot:

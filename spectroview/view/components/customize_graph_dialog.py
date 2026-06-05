@@ -177,7 +177,7 @@ class CustomizeLegend(QWidget):
         self.spin_scatter_size = QSpinBox()
         self.spin_scatter_size.setRange(5, 500)
         self.spin_scatter_size.setSingleStep(10)
-        self.spin_scatter_size.setValue(50)
+        self.spin_scatter_size.setValue(70)
         scatter_layout.addWidget(self.spin_scatter_size)
         
         scatter_layout.addSpacing(10)
@@ -193,9 +193,9 @@ class CustomizeLegend(QWidget):
         scatter_layout.addStretch()
         self.main_layout.addWidget(self.scatter_group)
         
-        # Only show scatter group when plot is scatter or trendline style
+        # Only show scatter group when plot is scatter, trendline, or point style
         self.scatter_group.setVisible(
-            self.graph_widget.plot_style in ['scatter', 'trendline']
+            self.graph_widget.plot_style in ['scatter', 'trendline', 'point']
         )
         
         self.main_layout.addStretch()
@@ -242,7 +242,7 @@ class CustomizeLegend(QWidget):
         
         # Load scatter settings
         self.spin_scatter_size.setValue(
-            getattr(self.graph_widget, 'scatter_size', 50)
+            getattr(self.graph_widget, 'scatter_size', 70)
         )
         edge_c = getattr(self.graph_widget, 'scatter_edgecolor', 'black')
         if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
@@ -250,7 +250,7 @@ class CustomizeLegend(QWidget):
         self._set_color_button(self.btn_scatter_edgecolor, edge_c)
         # Show/hide scatter group based on plot style
         self.scatter_group.setVisible(
-            self.graph_widget.plot_style in ['scatter', 'trendline']
+            self.graph_widget.plot_style in ['scatter', 'trendline', 'point']
         )
     
     def _build_legend_widgets(self, legend_properties):
@@ -363,7 +363,7 @@ class CustomizeLegend(QWidget):
         self.original_legend_properties = copy.deepcopy(self.graph_widget.get_legend_properties())
         
         # Apply scatter-specific properties
-        if self.graph_widget.plot_style in ['scatter', 'trendline']:
+        if self.graph_widget.plot_style in ['scatter', 'trendline', 'point']:
             self.graph_widget.scatter_size = self.spin_scatter_size.value()
             edge_c = self.btn_scatter_edgecolor.text()
             if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
@@ -376,7 +376,7 @@ class CustomizeLegend(QWidget):
         # Connect to properties_changed signal to update ViewModel when graph properties change
         if hasattr(self.graph_widget, 'properties_changed'):
             props = {'legend_properties': self.graph_widget.legend_properties}
-            if self.graph_widget.plot_style in ['scatter', 'trendline']:
+            if self.graph_widget.plot_style in ['scatter', 'trendline', 'point']:
                 props['scatter_size'] = self.graph_widget.scatter_size
                 props['scatter_edgecolor'] = self.graph_widget.scatter_edgecolor
             self.graph_widget.properties_changed.emit(
@@ -1183,6 +1183,10 @@ class CustomizeMoreOptions(QWidget):
         self._cb_join = QCheckBox("Join data points (point plot)")
         layout.addWidget(self._cb_join)
 
+        # Dodge points (point plot)
+        self._cb_dodge = QCheckBox("Dodge overlapping points (point plot)")
+        layout.addWidget(self._cb_dodge)
+
         # Error bar (bar plot)
         self._cb_error_bar = QCheckBox("Show error bar (bar plot)")
         layout.addWidget(self._cb_error_bar)
@@ -1317,11 +1321,13 @@ class CustomizeMoreOptions(QWidget):
 
         # --- General section ---
         self._cb_join.setChecked(getattr(gw, 'join_for_point_plot', False))
+        self._cb_dodge.setChecked(getattr(gw, 'dodge_point_plot', True))
         self._cb_error_bar.setChecked(getattr(gw, 'show_bar_plot_error_bar', True))
         self._cb_wafer_stats.setChecked(getattr(gw, 'wafer_stats', True))
 
         # Highlight relevant checkboxes based on style
         self._cb_join.setEnabled(style == 'point')
+        self._cb_dodge.setEnabled(style == 'point')
         self._cb_error_bar.setEnabled(style == 'bar')
         self._cb_wafer_stats.setEnabled(style == 'wafer')
 
@@ -1376,6 +1382,7 @@ class CustomizeMoreOptions(QWidget):
 
         # General
         gw.join_for_point_plot = self._cb_join.isChecked()
+        gw.dodge_point_plot = self._cb_dodge.isChecked()
         gw.show_bar_plot_error_bar = self._cb_error_bar.isChecked()
         gw.wafer_stats = self._cb_wafer_stats.isChecked()
 
@@ -1405,6 +1412,7 @@ class CustomizeMoreOptions(QWidget):
         if hasattr(gw, 'properties_changed'):
             props = {
                 'join_for_point_plot': gw.join_for_point_plot,
+                'dodge_point_plot': gw.dodge_point_plot,
                 'show_bar_plot_error_bar': gw.show_bar_plot_error_bar,
                 'wafer_stats': gw.wafer_stats,
             }

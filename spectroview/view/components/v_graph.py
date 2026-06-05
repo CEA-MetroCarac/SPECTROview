@@ -110,7 +110,8 @@ class VGraph(QWidget):
         self.trendline_equations = []  # List of dicts: {label, equation, r2} per hue group
         self.show_bar_plot_error_bar = True
         self.join_for_point_plot = False
-        self.scatter_size = 50  # Marker size for scatter plots
+        self.dodge_point_plot = True
+        self.scatter_size = 70  # Marker size for scatter plots
         self.scatter_edgecolor = 'black'  # Edge color for scatter plot markers
         # Histogram-specific
         self.hist_bins = 20
@@ -419,9 +420,12 @@ class VGraph(QWidget):
         point_kwargs = {
             'data': df, 'x': self.x, 'y': y, 'ax': self.ax,
             'linestyles': '-' if self.join_for_point_plot else 'none',
-            'markeredgecolor': 'black', 'markeredgewidth': 1,
+            'markeredgecolor': getattr(self, 'scatter_edgecolor', 'black'),
+            'markeredgewidth': 1,
             'err_kws': {'linewidth': 1, 'zorder': 1},
-            'capsize': 0.02
+            'capsize': 0.05,
+            'dodge': True if getattr(self, 'dodge_point_plot', False) else False,
+            'markersize': np.sqrt(self.scatter_size) if hasattr(self, 'scatter_size') else 7
         }
         if self.z:
             point_kwargs['hue'] = self.z
@@ -467,7 +471,8 @@ class VGraph(QWidget):
         bar_kwargs = {
             'data': df, 'x': self.x, 'y': y, 'ax': self.ax,
             'errorbar': 'sd' if self.show_bar_plot_error_bar else None,
-            'err_kws': {'linewidth': 1}
+            'err_kws': {'linewidth': 1},
+            'capsize': 0.05
         }
         if self.z:
             bar_kwargs['hue'] = self.z
@@ -674,6 +679,11 @@ class VGraph(QWidget):
                                 handles[idx].set_linewidth(0.5)
                         else:
                             handles[idx].set_color(prop['color'])
+                            if self.plot_style == 'point' and hasattr(handles[idx], 'set_markeredgecolor'):
+                                edge_c = getattr(self, 'scatter_edgecolor', 'black')
+                                if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
+                                    edge_c = 'black'
+                                handles[idx].set_markeredgecolor(edge_c)
                         
                         if self.plot_style in ['point', 'scatter', 'trendline']:
                             if hasattr(handles[idx], 'set_marker'):

@@ -1606,9 +1606,11 @@ class VMWorkspaceSpectra(QObject):
         if not fnames:
             return
 
-        md = self.store.get_map_data(fnames[0])
-        if not md: return
-
+        unique_mds = self._get_unique_map_data(fnames)
+        if not unique_mds:
+            return
+        
+        md = unique_mds[0]
         local_idx = md.fnames.index(fnames[0])
         x_values = md.x if md.x is not None else md.x0
         y_values = md.Y[local_idx] if md.Y is not None else md.Y0[local_idx]

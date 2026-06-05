@@ -961,9 +961,6 @@ class VSpectraViewer(QWidget):
 
         self.canvas.draw_idle()
 
-
-
-
     def _get_normalized_y(self, x, y):
         """Apply normalization if enabled (VIEW-ONLY)."""
         if not self.btn_norm.isChecked():

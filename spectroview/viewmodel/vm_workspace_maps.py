@@ -614,6 +614,9 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             self.notify.emit("No fit model copied.")
             return
 
+        # Update clipboard with current fit settings before pasting
+        self._fitmodel_clipboard["fit_params"] = self.settings.load_fit_settings()
+
         # Apply to MapData(s)
         maps_to_apply = self.store.map_names if apply_all else ([self.current_map_name] if self.current_map_name else [])
         for name in maps_to_apply:

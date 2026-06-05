@@ -1243,6 +1243,10 @@ class VMWorkspaceSpectra(QObject):
         if not hasattr(self, "_fitmodel_clipboard") or self._fitmodel_clipboard is None:
             self.notify.emit("No fit model copied.")
             return
+            
+        # Update clipboard with current fit settings before pasting
+        self._fitmodel_clipboard["fit_params"] = self.settings.load_fit_settings()
+        
         fnames = self._get_active_spectra() if apply_all else self._get_selected_spectra()
         if not fnames:
             self.notify.emit("No spectrum selected.")

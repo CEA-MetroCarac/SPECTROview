@@ -838,15 +838,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#5-collect-save-fit-results" class="md-nav__link">
+  <a href="#5-collect-and-save-fit-results" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Collect &amp; Save Fit Results
+        5. Collect and Save Fit Results
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="5. Collect &amp; Save Fit Results">
+    <nav class="md-nav" aria-label="5. Collect and Save Fit Results">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1671,10 +1671,20 @@
 
 <p><strong>Copy / Paste Fit Models</strong>:
 A fully configured fit model can be copied from one spectrum and pasted onto another, making it easy to replicate complex setups across isolated files.</p>
+<blockquote>
+<ul>
+<li>When you <strong>Paste</strong> a model, the engine always fetches the <em>current</em> Noise Threshold setting from your active Settings Panel. This means you can copy a model, adjust your noise threshold, and paste it to apply the model with the updated noise settings.</li>
+</ul>
+</blockquote>
 <p><strong>Saving / Loading Fit Models</strong>:
 If you intend to use a model frequently, you can save it as a template. Stored models can be easily accessed and applied to new datasets using the dropdown menu.</p>
+<blockquote>
+<ul>
+<li>When you <strong>Save</strong> a model to a <code>.json</code> file, the <em>current</em> Noise Threshold is permanently baked into that file. Later, when you <strong>Apply (Load)</strong> that model, the fit engine strictly uses the exact noise threshold saved in the file, ignoring whatever is currently set in your Settings Panel.</li>
+</ul>
+</blockquote>
 <hr />
-<h3 id="5-collect-save-fit-results"><strong>5. Collect &amp; Save Fit Results</strong><a class="headerlink" href="#5-collect-save-fit-results" title="Permanent link">&para;</a></h3>
+<h3 id="5-collect-and-save-fit-results"><strong>5. Collect and Save Fit Results</strong><a class="headerlink" href="#5-collect-and-save-fit-results" title="Permanent link">&para;</a></h3>
 <p>Once fitting is complete across your spectra or maps, you need to aggregate the best-fit results:</p>
 <ul>
 <li>Navigate to the <strong>Fit Results</strong> tab.</li>

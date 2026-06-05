@@ -767,7 +767,7 @@ class VSpectraViewer(QWidget):
 
         if fit_model and fit_model.get("peak_models") and len(x) > 1:
             # ── High-resolution smooth curves via eval_peak_initial ──
-            x_fine = np.linspace(x.min(), x.max(), 1000)
+            x_fine = np.linspace(x.min(), x.max(), 3000)
             sorted_keys = sorted(fit_model["peak_models"].keys(),
                                  key=lambda k: int(k))
 

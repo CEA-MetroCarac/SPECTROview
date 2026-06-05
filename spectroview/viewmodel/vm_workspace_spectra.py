@@ -1620,26 +1620,45 @@ class VMWorkspaceSpectra(QObject):
         y_values = md.Y[local_idx] if md.Y is not None else md.Y0[local_idx]
 
         data = {
-            "X values": x_values,
-            "Y values": y_values
+            "X values": pd.Series(x_values),
+            "Y values": pd.Series(y_values)
         }
 
         if md.fit_model and md.fit_model.get("peak_models"):
+            # Create a high-resolution X-axis for smooth curves
+            x_fine = np.linspace(x_values.min(), x_values.max(), 1000)
+            data["X_fine"] = pd.Series(x_fine)
+
             peak_models = list(md.fit_model["peak_models"].values())
             peak_labels = md.fit_model.get("peak_labels", [])
+            
+            y_bestfit_fine = np.zeros_like(x_fine)
+
             for i, p_model in enumerate(peak_models):
                 try:
                     self._update_fit_model_from_params(md, local_idx)
-                    y_peak = eval_peak_initial(x_values, p_model)
+                    y_peak_fine = eval_peak_initial(x_fine, p_model)
+                    y_bestfit_fine += y_peak_fine
 
                     if i < len(peak_labels):
                         label = peak_labels[i]
                     else:
                         label = f"Peak{i + 1}"
 
-                    data[label] = y_peak
+                    data[label] = pd.Series(y_peak_fine)
                 except Exception:
                     continue
+            
+            # Optionally add baseline if it was subtracted/exists
+            if md.baseline_config and getattr(md, "Y_baseline", None) is not None:
+                # Interpolate the low-res baseline to the fine grid
+                y_base = md.Y_baseline[local_idx]
+                if y_base is not None and not np.all(y_base == 0):
+                    y_base_fine = np.interp(x_fine, x_values, y_base)
+                    y_bestfit_fine += y_base_fine
+                    data["Baseline_fine"] = pd.Series(y_base_fine)
+
+            data["BestFit_fine"] = pd.Series(y_bestfit_fine)
 
         df = pd.DataFrame(data)
         df.to_clipboard(index=False)

@@ -1974,6 +1974,26 @@ class VMWorkspaceSpectra(QObject):
         # Concatenate all DataFrames
         df_all = pd.concat(dfs, ignore_index=True)
         
+        # Sort columns to group similar fit parameters together across different spectra
+        param_priority = {
+            'x0': 0, 'fwhm': 1, 'ampli': 2, 'area': 3,
+            'sigma': 4, 'gamma': 5, 'fraction': 6, 'height': 7,
+        }
+        
+        col_idx = {c: i for i, c in enumerate(df_all.columns)}
+
+        def sort_key(cname):
+            base_cols = ['Filename', 'X', 'Y', 'Quadrant', 'Zone']
+            if cname in base_cols:
+                return (-1, base_cols.index(cname))
+            if '_' in cname:
+                ptype = cname.split('_', 1)[0]
+                return (param_priority.get(ptype, 999), col_idx[cname])
+            return (999, col_idx[cname])
+
+        sorted_cols = sorted(df_all.columns, key=sort_key)
+        df_all = df_all[sorted_cols]
+        
         # Drop X and Y columns for Spectra Workspace only
         if type(self).__name__ == 'VMWorkspaceSpectra':
             for col in ['X', 'Y']:

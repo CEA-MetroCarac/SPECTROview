@@ -19,7 +19,9 @@ class FitImageTextBrowser(QTextBrowser):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setOpenLinks(False)
-        self.setStyleSheet("font-size: 11pt;")
+        font = self.font()
+        font.setPointSize(11)
+        self.setFont(font)
         self._orig_sizes = {}
         self._movies = {}             # name -> QMovie
         self._gif_labels = {}         # name -> QLabel overlay
@@ -277,7 +279,9 @@ class VUserManualDialog(QDialog):
         left_widget = QWidget()
         left_layout = QVBoxLayout(left_widget)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_widget.setStyleSheet("font-size: 10pt;")
+        left_font = left_widget.font()
+        left_font.setPointSize(11)
+        left_widget.setFont(left_font)
 
         lbl = QLabel("Sections")
         font = lbl.font()

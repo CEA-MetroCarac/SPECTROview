@@ -770,6 +770,95 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#5-plot-style-specific-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Plot-Style-Specific Customization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Plot-Style-Specific Customization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trendline-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trendline Plot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#histogram-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Histogram Plot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-plot-styles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other Plot Styles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-trendline-estimation-fitting-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Trendline Estimation &amp; Fitting Details
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Trendline Estimation &amp; Fitting Details">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trendline-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trendline Estimation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#confidence-intervals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence Intervals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1307,7 +1396,7 @@ The four available utility buttons allow you to:</p>
 <ol>
 <li>Select your target dataset from the list.</li>
 <li>Choose the appropriate columns for the X, Y, and Z axes using the provided dropdown menus.</li>
-<li>Select your desired plot style (available styles: <code>scatter</code>, <code>point</code>, <code>bar</code>, <code>box</code>, <code>line</code>, <code>2Dmap</code>, <code>wafer</code>).</li>
+<li>Select your desired plot style (available styles: <code>scatter</code>, <code>point</code>, <code>bar</code>, <code>box</code>, <code>line</code>, <code>trendline</code>, <code>histogram</code>, <code>2Dmap</code>, <code>wafer</code>).</li>
 <li>Define your plot labels, axis limits, and wafer diameter dimensions (if applicable).</li>
 <li>Click <strong>Add Plot</strong> to generate the visualization.</li>
 </ol>
@@ -1374,6 +1463,112 @@ The four available utility buttons allow you to:</p>
 </tr>
 </tbody>
 </table>
+<hr />
+<h3 id="5-plot-style-specific-customization"><strong>5. Plot-Style-Specific Customization</strong><a class="headerlink" href="#5-plot-style-specific-customization" title="Permanent link">&para;</a></h3>
+<p>The <strong>Customize Dialog</strong> (opened via the ⚙ button on any graph) contains a <strong>"More Options"</strong> tab that <strong>adapts dynamically</strong> to the active plot style, showing only the controls relevant to the current graph.</p>
+<h4 id="trendline-plot">Trendline Plot<a class="headerlink" href="#trendline-plot" title="Permanent link">&para;</a></h4>
+<p>The <code>trendline</code> style offers powerful fitting controls:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Polynomial order</strong></td>
+<td>Set the degree of the polynomial fit (1 = linear, 2 = quadratic, …, up to 10).</td>
+</tr>
+<tr>
+<td><strong>Anchor point</strong></td>
+<td>Constrain the fit to pass through a specific point. Choose <strong>Origin (0, 0)</strong> or enter a <strong>custom (X₀, Y₀)</strong>.</td>
+</tr>
+<tr>
+<td><strong>Hue / Z axis</strong></td>
+<td>When a Z column is selected, a separate trendline is fitted for each category group, each drawn in a distinct color.</td>
+</tr>
+<tr>
+<td><strong>Equation table</strong></td>
+<td>The fit results (equation and R² per group) are displayed in a table inside the dialog. Click <strong>Copy</strong> to export to the clipboard as tab-separated text (paste directly into Excel).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="histogram-plot">Histogram Plot<a class="headerlink" href="#histogram-plot" title="Permanent link">&para;</a></h4>
+<p>The <code>histogram</code> style provides:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bins</strong></td>
+<td>Number of histogram bins (2–500, default 20).</td>
+</tr>
+<tr>
+<td><strong>KDE overlay</strong></td>
+<td>Overlay a smooth Kernel Density Estimate curve on the histogram.</td>
+</tr>
+<tr>
+<td><strong>Fill style</strong></td>
+<td>Choose <strong>Filled</strong> bars (default) or <strong>Step</strong> (outline only).</td>
+</tr>
+<tr>
+<td><strong>Hue / Z axis</strong></td>
+<td>When a Z column is selected, overlapping histograms are drawn per category with distinct colors.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="other-plot-styles">Other Plot Styles<a class="headerlink" href="#other-plot-styles" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Plot Style</th>
+<th>Available in More Options</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>point</code></td>
+<td>Join data points toggle</td>
+</tr>
+<tr>
+<td><code>bar</code></td>
+<td>Error bar toggle</td>
+</tr>
+<tr>
+<td><code>wafer</code></td>
+<td>Statistics overlay toggle</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="6-trendline-estimation-fitting-details"><strong>6. Trendline Estimation &amp; Fitting Details</strong><a class="headerlink" href="#6-trendline-estimation-fitting-details" title="Permanent link">&para;</a></h3>
+<p>For the <code>trendline</code> plot style, the curve fitting and confidence intervals are computed as follows:</p>
+<h4 id="trendline-estimation"><strong>Trendline Estimation</strong><a class="headerlink" href="#trendline-estimation" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>Standard Fit (No Anchor):</strong> The trendline is calculated using an Ordinary Least Squares (OLS) linear regression to fit a polynomial of the specified degree:
+  <code>y = p₀·xᵈ + p₁·xᵈ⁻¹ + ... + p_d</code>
+  where <code>d</code> is the polynomial order.</p>
+</li>
+<li>
+<p><strong>Anchored Fit (Forced through a point (x₀, y₀)):</strong> The coordinate system is shifted so that the anchor point becomes the origin (<code>x' = x - x₀</code>, <code>y' = y - y₀</code>). A polynomial without a constant term (zero intercept) is then fitted to the shifted variables:</p>
+</li>
+<li><strong>For Linear order (1):</strong> The slope <code>m</code> is directly calculated as:
+    <code>m = sum(x'_i * y'_i) / sum((x'_i)²)</code></li>
+<li><strong>For Higher orders (&gt;1):</strong> The shifted data is fitted with a zero intercept using a linear least squares solver.
+  The fitted curve is then translated back to the original coordinate space.</li>
+</ul>
+<h4 id="confidence-intervals"><strong>Confidence Intervals</strong><a class="headerlink" href="#confidence-intervals" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Confidence Level:</strong> The shaded band around standard trendlines represents a <strong>95% confidence interval</strong> (estimated by Seaborn's regression plot module).</li>
+<li><strong>Estimation Method:</strong> The confidence interval is estimated using a non-parametric bootstrapping procedure (resampling data points with replacement 1000 times, fitting a regression model to each bootstrap sample, and calculating the 2.5th and 97.5th percentiles of the predictions).</li>
+<li><strong>Anchored Fits:</strong> Please note that confidence intervals are only computed and displayed for standard, unconstrained fits. If an anchor is enabled, the confidence interval band is omitted.</li>
+</ul>
 
 
 

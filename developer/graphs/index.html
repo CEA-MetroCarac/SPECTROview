@@ -1615,7 +1615,7 @@
 <tr>
 <td><code>plot_style</code></td>
 <td><code>str</code></td>
-<td>One of <code>PLOT_STYLES</code> (<code>point</code>, <code>scatter</code>, <code>box</code>, <code>bar</code>, <code>line</code>, <code>wafer</code>, <code>2Dmap</code>, <code>trendline</code>)</td>
+<td>One of <code>PLOT_STYLES</code> (<code>point</code>, <code>scatter</code>, <code>box</code>, <code>bar</code>, <code>line</code>, <code>wafer</code>, <code>2Dmap</code>, <code>trendline</code>, <code>histogram</code>)</td>
 </tr>
 <tr>
 <td><code>x</code>, <code>y</code>, <code>z</code></td>
@@ -1658,9 +1658,79 @@
 <td>Wafer diameter (300, 200, 150, 100)</td>
 </tr>
 <tr>
+<td><code>wafer_stats</code></td>
+<td><code>bool</code></td>
+<td>Toggle statistics on wafer plots</td>
+</tr>
+<tr>
+<td><code>join_for_point_plot</code></td>
+<td><code>bool</code></td>
+<td>Toggle connecting lines on point plots</td>
+</tr>
+<tr>
+<td><code>show_bar_plot_error_bar</code></td>
+<td><code>bool</code></td>
+<td>Toggle standard deviation error bars on bar plots</td>
+</tr>
+<tr>
+<td><code>scatter_size</code></td>
+<td><code>int</code></td>
+<td>Marker size (default 50)</td>
+</tr>
+<tr>
+<td><code>scatter_edgecolor</code></td>
+<td><code>str</code></td>
+<td>Marker edge color (default 'black')</td>
+</tr>
+<tr>
+<td><code>trendline_order</code></td>
+<td><code>int</code></td>
+<td>Order of polynomial regression fit</td>
+</tr>
+<tr>
+<td><code>show_trendline_eq</code></td>
+<td><code>bool</code></td>
+<td>Toggle visibility of fit equation list</td>
+</tr>
+<tr>
+<td><code>trendline_anchor_enabled</code></td>
+<td><code>bool</code></td>
+<td>Force fit to pass through a specific point</td>
+</tr>
+<tr>
+<td><code>trendline_anchor_origin</code></td>
+<td><code>bool</code></td>
+<td>Force anchor through origin (0, 0) vs. custom coordinate</td>
+</tr>
+<tr>
+<td><code>trendline_anchor_x</code>/<code>y</code></td>
+<td><code>float</code></td>
+<td>Coordinates of the custom anchor point</td>
+</tr>
+<tr>
+<td><code>hist_bins</code></td>
+<td><code>int</code></td>
+<td>Number of histogram bins (2–500, default 20)</td>
+</tr>
+<tr>
+<td><code>hist_kde</code></td>
+<td><code>bool</code></td>
+<td>Overlay Kernel Density Estimate line</td>
+</tr>
+<tr>
+<td><code>hist_step</code></td>
+<td><code>bool</code></td>
+<td>Draw outline-only step histogram vs. filled bars</td>
+</tr>
+<tr>
 <td><code>legend_properties</code></td>
 <td><code>list[dict]</code></td>
 <td>Per-series label, color, marker overrides</td>
+</tr>
+<tr>
+<td><code>legend_bbox</code></td>
+<td><code>list[float]</code></td>
+<td>Dragged coordinates of the legend box</td>
 </tr>
 <tr>
 <td><code>annotations</code></td>
@@ -1718,7 +1788,7 @@
 <td><code>scatter</code></td>
 <td><code>sns.scatterplot()</code></td>
 <td>✓ Z column</td>
-<td>Edgecolor black, 70pt markers</td>
+<td>Edgecolor black, 50pt markers</td>
 </tr>
 <tr>
 <td><code>box</code></td>
@@ -1740,9 +1810,15 @@
 </tr>
 <tr>
 <td><code>trendline</code></td>
-<td><code>sns.regplot()</code></td>
-<td>—</td>
-<td>Polynomial regression with equation annotation</td>
+<td><code>sns.regplot()</code> / <code>ax.scatter()</code> / <code>ax.plot()</code></td>
+<td>✓ Z column</td>
+<td>Polynomial regression with custom zero-intercept anchoring and equation table export</td>
+</tr>
+<tr>
+<td><code>histogram</code></td>
+<td><code>sns.histplot()</code></td>
+<td>✓ Z column</td>
+<td>Bins customization, KDE overlay, step outline vs. filled bars</td>
 </tr>
 <tr>
 <td><code>wafer</code></td>

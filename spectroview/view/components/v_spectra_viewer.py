@@ -662,6 +662,14 @@ class VSpectraViewer(QWidget):
                 x_offset = spec_idx * x_shift_step
                 y_offset = spec_idx * y_shift_step
                 
+                # Check if baseline is subtracted
+                is_sub = False
+                proxies = self._tensor_data.get("proxies", [])
+                if spec_idx < len(proxies):
+                    is_sub = getattr(proxies[spec_idx].baseline, "is_subtracted", False)
+                    if isinstance(is_sub, np.ndarray):
+                        is_sub = bool(is_sub.any())
+
                 # Baseline
                 y_baseline_list = self._tensor_data.get("y_baseline", [])
                 if is_tensor_list:
@@ -669,19 +677,13 @@ class VSpectraViewer(QWidget):
                 else:
                     y_base = y_baseline_list[spec_idx] if y_baseline_list is not None and len(y_baseline_list) > spec_idx else None
 
-                if y_base is not None:
-                    is_sub = False
-                    if spec_idx < len(proxies):
-                        is_sub = getattr(proxies[spec_idx].baseline, "is_subtracted", False)
-                        if isinstance(is_sub, np.ndarray):
-                            is_sub = bool(is_sub.any())
-                    if not is_sub:
-                        self.ax.plot(x + x_offset, y_base + y_offset, 'g--', lw=1.5, label="baseline")
+                if y_base is not None and not is_sub:
+                    self.ax.plot(x + x_offset, y_base + y_offset, 'g--', lw=1.5, label="baseline")
                     
                 # Plot baseline anchor points
                 bl_configs = self._tensor_data.get("baseline_config", [])
                 bl_config = bl_configs[spec_idx] if bl_configs and spec_idx < len(bl_configs) else None
-                if bl_config and bl_config.get("points"):
+                if bl_config and bl_config.get("points") and not is_sub:
                     mode = bl_config.get("mode", "")
                     if mode in ("Linear", "Polynomial"):
                         pts = bl_config["points"]

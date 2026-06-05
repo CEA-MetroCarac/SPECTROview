@@ -29,6 +29,7 @@ class MGraph:
         # Secondary axes
         self.y2: Optional[str] = None  # Secondary y-axis
         self.y3: Optional[str] = None  # Tertiary y-axis
+        self.x2: Optional[str] = None  # Secondary x-axis
         
         # Axis limits
         self.xmin: Optional[float] = None
@@ -41,12 +42,15 @@ class MGraph:
         self.y2max: Optional[float] = None
         self.y3min: Optional[float] = None
         self.y3max: Optional[float] = None
+        self.x2min: Optional[float] = None
+        self.x2max: Optional[float] = None
         
         # Axis scales
         self.xlogscale: bool = False
         self.ylogscale: bool = False
         self.y2logscale: bool = False
         self.y3logscale: bool = False
+        self.x2logscale: bool = False
         
         # Labels
         self.plot_title: Optional[str] = None
@@ -55,6 +59,7 @@ class MGraph:
         self.zlabel: Optional[str] = None
         self.y2label: Optional[str] = None
         self.y3label: Optional[str] = None
+        self.x2label: Optional[str] = None
         
         # Visual properties
         self.x_rot: int = 0  # X-axis label rotation
@@ -102,6 +107,7 @@ class MGraph:
             'z': self.z,
             'y2': self.y2,
             'y3': self.y3,
+            'x2': self.x2,
             'xmin': self.xmin,
             'xmax': self.xmax,
             'ymin': self.ymin,
@@ -112,16 +118,20 @@ class MGraph:
             'y2max': self.y2max,
             'y3min': self.y3min,
             'y3max': self.y3max,
+            'x2min': self.x2min,
+            'x2max': self.x2max,
             'xlogscale': self.xlogscale,
             'ylogscale': self.ylogscale,
             'y2logscale': self.y2logscale,
             'y3logscale': self.y3logscale,
+            'x2logscale': self.x2logscale,
             'plot_title': self.plot_title,
             'xlabel': self.xlabel,
             'ylabel': self.ylabel,
             'zlabel': self.zlabel,
             'y2label': self.y2label,
             'y3label': self.y3label,
+            'x2label': self.x2label,
             'x_rot': self.x_rot,
             'grid': self.grid,
             'legend_visible': self.legend_visible,
@@ -150,7 +160,8 @@ class MGraph:
         """Load graph properties from dictionary."""
         # List of float-type limit properties
         float_limit_keys = ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax', 
-                           'y2min', 'y2max', 'y3min', 'y3max']
+                           'y2min', 'y2max', 'y3min', 'y3max',
+                           'x2min', 'x2max']
         
         for key, value in data.items():
             if hasattr(self, key):

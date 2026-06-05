@@ -255,7 +255,7 @@ class VWorkspaceGraphs(QWidget):
         more_options_tab = self._create_more_options_tab()
         
         self.plot_tabs.addTab(plot_tab, "Plot")
-        self.plot_tabs.addTab(more_options_tab, "Multiple Y axis")
+        self.plot_tabs.addTab(more_options_tab, "Plot multiple Axes (beta)")
         
         parent_layout.addWidget(self.plot_tabs, stretch=1)
     
@@ -379,21 +379,111 @@ class VWorkspaceGraphs(QWidget):
 
     
     def _create_more_options_tab(self):
-        """Create more options tab."""
+        """Create the 'Plot multiple Axes' tab with Y2, Y3, and X2 controls."""
         tab_more = QWidget()
         tab_more_layout = QVBoxLayout(tab_more)
         tab_more_layout.setContentsMargins(5, 5, 5, 5)
+        tab_more_layout.setSpacing(6)
         
-        info = QLabel(
-            "Plot-style-specific options are now available in the\n"
-            "Customize Dialog \u2192 \u2018More options\u2019 tab."
-        )
-        info.setWordWrap(True)
-        info.setStyleSheet("color: gray; font-style: italic;")
-        tab_more_layout.addWidget(info)
+        # ── Secondary Y axis ──
+        y2_group = QGroupBox("Secondary Y axis (right, red):")
+        y2_layout = QVBoxLayout(y2_group)
+        y2_layout.setContentsMargins(5, 2, 5, 2)
+        y2_layout.setSpacing(2)
+        
+        y2_col_layout = QHBoxLayout()
+        y2_col_layout.addWidget(QLabel("Y2:"))
+        self.cbb_y2 = QComboBox()
+        self.cbb_y2.setFixedWidth(200)
+        y2_col_layout.addWidget(self.cbb_y2)
+        self.cb_y2log = QCheckBox("Log scale")
+        y2_col_layout.addWidget(self.cb_y2log)
+        y2_col_layout.addStretch()
+        y2_layout.addLayout(y2_col_layout)
+        
+        y2_label_layout = QHBoxLayout()
+        y2_label_layout.addWidget(QLabel("Y2 label:"))
+        self.edit_y2label = QLineEdit()
+        self.edit_y2label.setPlaceholderText("Y2 axis label")
+        completer_y2 = QCompleter(AXIS_LABELS)
+        completer_y2.setCaseSensitivity(Qt.CaseInsensitive)
+        completer_y2.setCompletionMode(QCompleter.PopupCompletion)
+        self.edit_y2label.setCompleter(completer_y2)
+        y2_label_layout.addWidget(self.edit_y2label)
+        y2_layout.addLayout(y2_label_layout)
+        
+        tab_more_layout.addWidget(y2_group)
+        
+        # ── Tertiary Y axis ──
+        y3_group = QGroupBox("Tertiary Y axis (right offset, green):")
+        y3_layout = QVBoxLayout(y3_group)
+        y3_layout.setContentsMargins(5, 2, 5, 2)
+        y3_layout.setSpacing(2)
+        
+        y3_col_layout = QHBoxLayout()
+        y3_col_layout.addWidget(QLabel("Y3:"))
+        self.cbb_y3 = QComboBox()
+        self.cbb_y3.setFixedWidth(200)
+        y3_col_layout.addWidget(self.cbb_y3)
+        self.cb_y3log = QCheckBox("Log scale")
+        y3_col_layout.addWidget(self.cb_y3log)
+        y3_col_layout.addStretch()
+        y3_layout.addLayout(y3_col_layout)
+        
+        y3_label_layout = QHBoxLayout()
+        y3_label_layout.addWidget(QLabel("Y3 label:"))
+        self.edit_y3label = QLineEdit()
+        self.edit_y3label.setPlaceholderText("Y3 axis label")
+        completer_y3 = QCompleter(AXIS_LABELS)
+        completer_y3.setCaseSensitivity(Qt.CaseInsensitive)
+        completer_y3.setCompletionMode(QCompleter.PopupCompletion)
+        self.edit_y3label.setCompleter(completer_y3)
+        y3_label_layout.addWidget(self.edit_y3label)
+        y3_layout.addLayout(y3_label_layout)
+        
+        tab_more_layout.addWidget(y3_group)
+        
+        # ── Secondary X axis ──
+        x2_group = QGroupBox("Secondary X axis (top, purple):")
+        x2_layout = QVBoxLayout(x2_group)
+        x2_layout.setContentsMargins(5, 2, 5, 2)
+        x2_layout.setSpacing(2)
+        
+        x2_col_layout = QHBoxLayout()
+        x2_col_layout.addWidget(QLabel("X2:"))
+        self.cbb_x2 = QComboBox()
+        self.cbb_x2.setFixedWidth(200)
+        x2_col_layout.addWidget(self.cbb_x2)
+        self.cb_x2log = QCheckBox("Log scale")
+        x2_col_layout.addWidget(self.cb_x2log)
+        x2_col_layout.addStretch()
+        x2_layout.addLayout(x2_col_layout)
+        
+        x2_label_layout = QHBoxLayout()
+        x2_label_layout.addWidget(QLabel("X2 label:"))
+        self.edit_x2label = QLineEdit()
+        self.edit_x2label.setPlaceholderText("X2 axis label")
+        completer_x2 = QCompleter(AXIS_LABELS)
+        completer_x2.setCaseSensitivity(Qt.CaseInsensitive)
+        completer_x2.setCompletionMode(QCompleter.PopupCompletion)
+        self.edit_x2label.setCompleter(completer_x2)
+        x2_label_layout.addWidget(self.edit_x2label)
+        x2_layout.addLayout(x2_label_layout)
+        
+        info_x2 = QLabel("Applicable plot styles: point, scatter, line")
+        info_x2.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
+        x2_layout.addWidget(info_x2)
+        
+        tab_more_layout.addWidget(x2_group)
+        
         tab_more_layout.addStretch()
         
-        return tab_more
+        # Wrap in QScrollArea
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(tab_more)
+        
+        return scroll_area
     
     def _setup_action_buttons(self, parent_layout):
         """Setup action buttons."""
@@ -927,11 +1017,22 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_x.clear()
         self.cbb_y.clear()
         self.cbb_z.clear()
+        self.cbb_y2.clear()
+        self.cbb_y3.clear()
+        self.cbb_x2.clear()
         
         self.cbb_x.addItems(columns)
         self.cbb_y.addItems(columns)
         self.cbb_z.addItem("None")
         self.cbb_z.addItems(columns)
+        
+        # Multiple axes comboboxes (with "None" default)
+        self.cbb_y2.addItem("None")
+        self.cbb_y2.addItems(columns)
+        self.cbb_y3.addItem("None")
+        self.cbb_y3.addItems(columns)
+        self.cbb_x2.addItem("None")
+        self.cbb_x2.addItems(columns)
         
         # Update filter autocomplete with DataFrame columns
         self.v_data_filter.update_column_list(columns)
@@ -1258,6 +1359,30 @@ class VWorkspaceGraphs(QWidget):
             
             # Filters
             self.v_data_filter.set_filters(model.filters)
+            
+            # Multiple axes (Y2, Y3, X2)
+            y2_val = model.y2 or "None"
+            idx = self.cbb_y2.findText(y2_val)
+            if idx >= 0:
+                self.cbb_y2.setCurrentIndex(idx)
+            
+            y3_val = model.y3 or "None"
+            idx = self.cbb_y3.findText(y3_val)
+            if idx >= 0:
+                self.cbb_y3.setCurrentIndex(idx)
+            
+            x2_val = getattr(model, 'x2', None) or "None"
+            idx = self.cbb_x2.findText(x2_val)
+            if idx >= 0:
+                self.cbb_x2.setCurrentIndex(idx)
+            
+            self.edit_y2label.setText(model.y2label or "")
+            self.edit_y3label.setText(model.y3label or "")
+            self.edit_x2label.setText(getattr(model, 'x2label', '') or "")
+            
+            self.cb_y2log.setChecked(getattr(model, 'y2logscale', False))
+            self.cb_y3log.setChecked(getattr(model, 'y3logscale', False))
+            self.cb_x2log.setChecked(getattr(model, 'x2logscale', False))
         finally:
             self.cbb_plot_style.blockSignals(False)
             self.cbb_x.blockSignals(False)
@@ -1306,7 +1431,17 @@ class VWorkspaceGraphs(QWidget):
             'x_rot': self.spin_xlabel_rotation.value(),
             'legend_visible': True,
             'grid': self.cb_grid_toolbar.isChecked(),
-            'filters': self.v_data_filter.get_filters()
+            'filters': self.v_data_filter.get_filters(),
+            # Multiple axes
+            'y2': self.cbb_y2.currentText() if self.cbb_y2.currentText() != "None" else None,
+            'y3': self.cbb_y3.currentText() if self.cbb_y3.currentText() != "None" else None,
+            'x2': self.cbb_x2.currentText() if self.cbb_x2.currentText() != "None" else None,
+            'y2label': (self.edit_y2label.text() or None) if include_labels else None,
+            'y3label': (self.edit_y3label.text() or None) if include_labels else None,
+            'x2label': (self.edit_x2label.text() or None) if include_labels else None,
+            'y2logscale': self.cb_y2log.isChecked(),
+            'y3logscale': self.cb_y3log.isChecked(),
+            'x2logscale': self.cb_x2log.isChecked(),
         }
     
     def _configure_graph_from_model(self, graph_widget: VGraph, model):
@@ -1343,6 +1478,25 @@ class VWorkspaceGraphs(QWidget):
         graph_widget.xlabel = model.xlabel
         graph_widget.ylabel = model.ylabel
         graph_widget.zlabel = model.zlabel
+        
+        # Secondary/tertiary Y axes
+        graph_widget.y2 = model.y2
+        graph_widget.y3 = model.y3
+        graph_widget.y2label = model.y2label
+        graph_widget.y3label = model.y3label
+        graph_widget.y2logscale = getattr(model, 'y2logscale', False)
+        graph_widget.y3logscale = getattr(model, 'y3logscale', False)
+        graph_widget.y2min = getattr(model, 'y2min', None)
+        graph_widget.y2max = getattr(model, 'y2max', None)
+        graph_widget.y3min = getattr(model, 'y3min', None)
+        graph_widget.y3max = getattr(model, 'y3max', None)
+        
+        # Secondary X axis
+        graph_widget.x2 = getattr(model, 'x2', None)
+        graph_widget.x2label = getattr(model, 'x2label', None)
+        graph_widget.x2logscale = getattr(model, 'x2logscale', False)
+        graph_widget.x2min = getattr(model, 'x2min', None)
+        graph_widget.x2max = getattr(model, 'x2max', None)
         
         # Visual properties
         graph_widget.x_rot = model.x_rot
@@ -1525,11 +1679,17 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_x.clear()
         self.cbb_y.clear()
         self.cbb_z.clear()
+        self.cbb_y2.clear()
+        self.cbb_y3.clear()
+        self.cbb_x2.clear()
         self.cbb_graph_list.clear()
         self.edit_plot_title.clear()
         self.edit_xlabel.clear()
         self.edit_ylabel.clear()
         self.edit_zlabel.clear()
+        self.edit_y2label.clear()
+        self.edit_y3label.clear()
+        self.edit_x2label.clear()
         self.v_data_filter.clear_filters()
         self.lbl_plot_size.setText("(480x420)")
 

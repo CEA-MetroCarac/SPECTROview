@@ -83,6 +83,13 @@ class VGraph(QWidget):
         self.y2label = None
         self.y3label = None
         
+        # Secondary X axis
+        self.x2 = None
+        self.x2label = None
+        self.x2min = None
+        self.x2max = None
+        self.x2logscale = False
+        
         # Visual properties
         self.x_rot = 0
         self.grid = False
@@ -122,6 +129,7 @@ class VGraph(QWidget):
         self.ax = None
         self.ax2 = None
         self.ax3 = None
+        self.ax_x2 = None
         self.canvas = None
         
         # Layout setup
@@ -241,11 +249,14 @@ class VGraph(QWidget):
             self.ax2.clear()
         if self.ax3:
             self.ax3.clear()
+        if self.ax_x2:
+            self.ax_x2.clear()
         
         if df is not None and self.df_name is not None and self.x is not None and self.y is not None:
             self._plot_primary_axis(df)
             self._plot_secondary_axis(df)
             self._plot_tertiary_axis(df)
+            self._plot_secondary_x_axis(df)
         else:
             self.ax.plot([], [])
         
@@ -628,6 +639,13 @@ class VGraph(QWidget):
             labels += labels3
             self.ax3.legend().remove()
         
+        if self.ax_x2:
+            handles_x2, labels_x2 = self.ax_x2.get_legend_handles_labels()
+            handles += handles_x2
+            labels += labels_x2
+            if self.ax_x2.get_legend():
+                self.ax_x2.legend().remove()
+        
         if handles:
             legend_labels = []
             if self.legend_properties:
@@ -860,6 +878,8 @@ class VGraph(QWidget):
             self.ax2.set_ylim(float(self.y2min), float(self.y2max))
         if self.ax3 and self.y3min and self.y3max:
             self.ax3.set_ylim(float(self.y3min), float(self.y3max))
+        if self.ax_x2 and self.x2min and self.x2max:
+            self.ax_x2.set_xlim(float(self.x2min), float(self.x2max))
     
     def _set_axis_scale(self, df):
         """Apply log scale only if the corresponding axis column is numeric."""
@@ -877,15 +897,20 @@ class VGraph(QWidget):
             else:
                 print(f"[INFO] Skipping y-logscale because '{self.y[0]}' is categorical.")
         
-        if self.ax2 and self.y2 and self.ylogscale:
+        if self.ax2 and self.y2 and self.y2logscale:
             y2_data = df[self.y2]
             if np.issubdtype(y2_data.dtype, np.number):
                 self.ax2.set_yscale('log')
         
-        if self.ax3 and self.y3 and self.ylogscale:
+        if self.ax3 and self.y3 and self.y3logscale:
             y3_data = df[self.y3]
             if np.issubdtype(y3_data.dtype, np.number):
                 self.ax3.set_yscale('log')
+        
+        if self.ax_x2 and self.x2 and self.x2logscale:
+            x2_data = df[self.x2]
+            if np.issubdtype(x2_data.dtype, np.number):
+                self.ax_x2.set_xscale('log')
     
     def _set_labels(self):
         """Set titles and labels for axis and plot."""
@@ -987,6 +1012,45 @@ class VGraph(QWidget):
             if self.ax3:
                 self.ax3.set_ylabel(self.y3label, color='green')
                 self.ax3.tick_params(axis='y', colors='green')
+    
+    def _plot_secondary_x_axis(self, df):
+        """Plot data on secondary x-axis (top)."""
+        if self.ax_x2:
+            self.ax_x2.remove()
+            self.ax_x2 = None
+        
+        if self.x2 and self.x2 in df.columns:
+            self.ax_x2 = self.ax.twiny()
+            
+            if self.plot_style == 'line':
+                sns.lineplot(
+                    data=df, x=self.x2, y=self.y[0], ax=self.ax_x2,
+                    color='purple'
+                )
+            elif self.plot_style == 'point':
+                sns.pointplot(
+                    data=df, x=self.x2, y=self.y[0], ax=self.ax_x2,
+                    linestyles='-' if self.join_for_point_plot else 'none',
+                    marker='D', color='purple', markeredgecolor='black',
+                    markeredgewidth=1,
+                    err_kws={'linewidth': 1, 'color': 'black'},
+                    capsize=0.02
+                )
+            elif self.plot_style == 'scatter':
+                sns.scatterplot(
+                    data=df, x=self.x2, y=self.y[0], ax=self.ax_x2,
+                    s=self.scatter_size, edgecolor=self.scatter_edgecolor,
+                    color='purple'
+                )
+            else:
+                self.ax_x2.remove()
+                self.ax_x2 = None
+            
+            if self.ax_x2:
+                self.ax_x2.set_xlabel(
+                    self.x2label or self.x2, color='purple'
+                )
+                self.ax_x2.tick_params(axis='x', colors='purple')
     
     # ═══════════════════════════════════════════════════════════════════
     # Annotation Rendering

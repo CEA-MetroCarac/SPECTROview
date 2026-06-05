@@ -384,33 +384,13 @@ class VWorkspaceGraphs(QWidget):
         tab_more_layout = QVBoxLayout(tab_more)
         tab_more_layout.setContentsMargins(5, 5, 5, 5)
         
-        # Plot-specific options
-        self.cb_error_bar = QCheckBox("error bar for 'bar_plot'")
-        tab_more_layout.addWidget(self.cb_error_bar)
-        
-        self.cb_wafer_stats = QCheckBox("stats on 'wafer_plot'")
-        self.cb_wafer_stats.setChecked(True)
-        tab_more_layout.addWidget(self.cb_wafer_stats)
-        
-        self.cb_join_point_plot = QCheckBox("join for 'point_plot'")
-        tab_more_layout.addWidget(self.cb_join_point_plot)
-        
-        # Trendline equation with order spinbox
-        trendline_layout = QHBoxLayout()
-        self.cb_trendline_eq = QCheckBox("add trendline equation (oder")
-        trendline_layout.addWidget(self.cb_trendline_eq)
-        
-        self.spin_trendline_order = QSpinBox()
-        self.spin_trendline_order.setRange(1, 10)
-        self.spin_trendline_order.setValue(1)
-        self.spin_trendline_order.setMaximumWidth(50)
-        trendline_layout.addWidget(self.spin_trendline_order)
-        
-        trendline_layout.addWidget(QLabel(")"))
-        trendline_layout.addStretch()
-        tab_more_layout.addLayout(trendline_layout)
-        
-        # ═══════════════════════════════════════════
+        info = QLabel(
+            "Plot-style-specific options are now available in the\n"
+            "Customize Dialog \u2192 \u2018More options\u2019 tab."
+        )
+        info.setWordWrap(True)
+        info.setStyleSheet("color: gray; font-style: italic;")
+        tab_more_layout.addWidget(info)
         tab_more_layout.addStretch()
         
         return tab_more
@@ -1223,10 +1203,6 @@ class VWorkspaceGraphs(QWidget):
         self.cb_xlog.blockSignals(True)
         self.cb_ylog.blockSignals(True)
         self.cb_grid_toolbar.blockSignals(True)
-        self.cb_error_bar.blockSignals(True)
-        self.cb_wafer_stats.blockSignals(True)
-        self.cb_join_point_plot.blockSignals(True)
-        self.cb_trendline_eq.blockSignals(True)
         
         try:
             # Dataframe selection
@@ -1262,12 +1238,7 @@ class VWorkspaceGraphs(QWidget):
             # Checkboxes
             self.cb_xlog.setChecked(model.xlogscale)
             self.cb_ylog.setChecked(model.ylogscale)
-
             self.cb_grid_toolbar.setChecked(model.grid)
-            self.cb_error_bar.setChecked(model.show_bar_plot_error_bar)
-            self.cb_wafer_stats.setChecked(model.wafer_stats)
-            self.cb_join_point_plot.setChecked(model.join_for_point_plot)
-            self.cb_trendline_eq.setChecked(model.show_trendline_eq)
             
             # Text inputs
             self.edit_plot_title.setText(model.plot_title or "")
@@ -1278,7 +1249,6 @@ class VWorkspaceGraphs(QWidget):
             # Toolbar controls
             self.spin_dpi_toolbar.setValue(model.dpi)
             self.spin_xlabel_rotation.setValue(model.x_rot)
-            self.spin_trendline_order.setValue(model.trendline_order)
             
             # Filters
             self.v_data_filter.set_filters(model.filters)
@@ -1294,10 +1264,6 @@ class VWorkspaceGraphs(QWidget):
             self.cb_ylog.blockSignals(False)
 
             self.cb_grid_toolbar.blockSignals(False)
-            self.cb_error_bar.blockSignals(False)
-            self.cb_wafer_stats.blockSignals(False)
-            self.cb_join_point_plot.blockSignals(False)
-            self.cb_trendline_eq.blockSignals(False)
     
     # ═════════════════════════════════════════════════════════════════════
     # Plotting Helper Methods
@@ -1330,16 +1296,10 @@ class VWorkspaceGraphs(QWidget):
             'zlabel': (self.edit_zlabel.text() or None) if include_labels else None,
             'color_palette': self.cbb_colormap.currentText() if use_palette else 'jet',
             'wafer_size': float(self.cbb_wafer_size.currentText()),
-            'wafer_stats': self.cb_wafer_stats.isChecked(),
             'dpi': self.spin_dpi_toolbar.value(),
             'x_rot': self.spin_xlabel_rotation.value(),
-            'legend_visible': True,  # From More Options tab when implemented
-
+            'legend_visible': True,
             'grid': self.cb_grid_toolbar.isChecked(),
-            'show_bar_plot_error_bar': self.cb_error_bar.isChecked(),
-            'show_trendline_eq': self.cb_trendline_eq.isChecked(),
-            'trendline_order': self.spin_trendline_order.value(),
-            'join_for_point_plot': self.cb_join_point_plot.isChecked(),
             'filters': self.v_data_filter.get_filters()
         }
     
@@ -1394,10 +1354,20 @@ class VWorkspaceGraphs(QWidget):
         graph_widget.wafer_stats = model.wafer_stats
         graph_widget.trendline_order = model.trendline_order
         graph_widget.show_trendline_eq = model.show_trendline_eq
+        graph_widget.trendline_anchor_enabled = getattr(model, 'trendline_anchor_enabled', False)
+        graph_widget.trendline_anchor_origin = getattr(model, 'trendline_anchor_origin', True)
+        graph_widget.trendline_anchor_x = getattr(model, 'trendline_anchor_x', 0.0)
+        graph_widget.trendline_anchor_y = getattr(model, 'trendline_anchor_y', 0.0)
         graph_widget.show_bar_plot_error_bar = model.show_bar_plot_error_bar
         graph_widget.join_for_point_plot = model.join_for_point_plot
         graph_widget.scatter_size = getattr(model, 'scatter_size', 70)
-        graph_widget.scatter_edgecolor = getattr(model, 'scatter_edgecolor', 'black')
+        edge_c = getattr(model, 'scatter_edgecolor', 'black')
+        if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
+            edge_c = 'black'
+        graph_widget.scatter_edgecolor = edge_c
+        graph_widget.hist_bins = getattr(model, 'hist_bins', 20)
+        graph_widget.hist_kde = getattr(model, 'hist_kde', False)
+        graph_widget.hist_step = getattr(model, 'hist_step', False)
         
         # Annotations (with backward compatibility for old .graphs files)
         if hasattr(model, 'annotations') and model.annotations is not None:

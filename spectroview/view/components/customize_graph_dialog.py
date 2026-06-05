@@ -4,12 +4,13 @@ import copy
 
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon, QColor, QPalette
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGroupBox, 
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QListWidget, QListWidgetItem, QLabel,
     QDialogButtonBox, QMessageBox, QTabWidget, QWidget,
     QColorDialog, QComboBox, QSpinBox,
     QDoubleSpinBox, QCheckBox, QLineEdit, QFormLayout, QStyledItemDelegate,
-    QGroupBox)
+    QGroupBox, QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView,
+    QRadioButton, QButtonGroup, QApplication, QScrollArea, QSizePolicy)
 
 from spectroview import DEFAULT_COLORS, MARKERS
 from spectroview import ICON_DIR
@@ -24,7 +25,6 @@ class CustomizeGraphDialog(QDialog):
         
         self.setWindowTitle(f"Customize Graph {graph_id}")
         self.setModal(False)
-        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.resize(450, 550)
         
         self._setup_ui()
@@ -32,10 +32,14 @@ class CustomizeGraphDialog(QDialog):
     
     def _setup_ui(self):
         """Setup dialog UI with tabs."""
+        # Main layout
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
         
         # Create tab widget
         self.tabs = QTabWidget()
+        layout.addWidget(self.tabs)
         
         # Create tabs
         tab_annotations = self._create_annotations_tab()
@@ -45,41 +49,47 @@ class CustomizeGraphDialog(QDialog):
         
         # Add tabs to widget
         self.tabs.addTab(tab_axis, "Axis")
-        self.tabs.addTab(tab_legend, "Legend")
+        self.tabs.addTab(tab_legend, "Legend / Color")
         self.tabs.addTab(tab_annotations, "Annotations")
         self.tabs.addTab(tab_general, "More options")
-        
-        layout.addWidget(self.tabs)
 
     def _create_legend_tab(self):
         """Create legend customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
+        layout.setContentsMargins(2, 2, 2, 2)
+        
         self.legend_widget = CustomizeLegend(self.graph_widget, parent=tab)
         layout.addWidget(self.legend_widget)
         layout.addStretch()
         return tab
     
     def _create_annotations_tab(self):
-        """Create annotations tab."""
+        """Create annotations customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
+        layout.setContentsMargins(2, 2, 2, 2)
+        
         self.annotations_widget = CustomizeAnnotations(self.graph_widget, parent=tab)
         layout.addWidget(self.annotations_widget)
         return tab
     
     def _create_general_tab(self):
-        """Create general settings tab (placeholder for future)."""
+        """Create general settings tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.addWidget(QLabel("General graph settings will be added here."))
-        layout.addStretch()
+        layout.setContentsMargins(2, 2, 2, 2)
+        
+        self.more_options_widget = CustomizeMoreOptions(self.graph_widget, parent=tab)
+        layout.addWidget(self.more_options_widget)
         return tab
     
     def _create_axis_tab(self):
-        """Create axis settings tab."""
+        """Create axis customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
+        layout.setContentsMargins(2, 2, 2, 2)
+        
         self.axis_widget = CustomizeAxis(self.graph_widget, parent=tab)
         layout.addWidget(self.axis_widget)
         return tab
@@ -102,7 +112,7 @@ class CustomizeGraphDialog(QDialog):
     def switch_graph(self, graph_widget, graph_id):
         """Switch the dialog to a different graph widget.
         
-        Re-binds all child widgets (legend, annotations, axis) to the new
+        Re-binds all child widgets (legend, annotations, axis, more_options) to the new
         graph and reloads their content.
         """
         if self.graph_id == graph_id:
@@ -116,6 +126,7 @@ class CustomizeGraphDialog(QDialog):
         self.legend_widget.switch_graph(graph_widget)
         self.annotations_widget.switch_graph(graph_widget)
         self.axis_widget.switch_graph(graph_widget)
+        self.more_options_widget.switch_graph(graph_widget)
 
 
 class CustomizeLegend(QWidget):
@@ -139,9 +150,10 @@ class CustomizeLegend(QWidget):
     
     def _setup_ui(self):
         """Setup the UI components for the legend customization widget."""
-        # Create main layout
+        # Main layout
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setContentsMargins(2, 2, 2, 2)
+        self.main_layout.setSpacing(2)
         
         # Info label
         info_label = QLabel("Customize legend labels, colors, and markers:")
@@ -154,9 +166,11 @@ class CustomizeLegend(QWidget):
         
         self.main_layout.addWidget(self.legend_container)
         
-        # ───── Scatter-specific settings ─────
-        self.scatter_group = QGroupBox("Scatter plot settings")
+        # ───── Scatter/Marker-specific settings ─────
+        self.scatter_group = QGroupBox("Scatter / Marker settings")
         scatter_layout = QHBoxLayout(self.scatter_group)
+        scatter_layout.setContentsMargins(2, 2, 2, 2)
+        scatter_layout.setSpacing(2)
         
         # Marker size
         scatter_layout.addWidget(QLabel("Marker size:"))
@@ -179,9 +193,9 @@ class CustomizeLegend(QWidget):
         scatter_layout.addStretch()
         self.main_layout.addWidget(self.scatter_group)
         
-        # Only show scatter group when plot is scatter style
+        # Only show scatter group when plot is scatter or trendline style
         self.scatter_group.setVisible(
-            self.graph_widget.plot_style == 'scatter'
+            self.graph_widget.plot_style in ['scatter', 'trendline']
         )
         
         self.main_layout.addStretch()
@@ -230,13 +244,13 @@ class CustomizeLegend(QWidget):
         self.spin_scatter_size.setValue(
             getattr(self.graph_widget, 'scatter_size', 70)
         )
-        self._set_color_button(
-            self.btn_scatter_edgecolor,
-            getattr(self.graph_widget, 'scatter_edgecolor', 'black')
-        )
+        edge_c = getattr(self.graph_widget, 'scatter_edgecolor', 'black')
+        if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
+            edge_c = 'black'
+        self._set_color_button(self.btn_scatter_edgecolor, edge_c)
         # Show/hide scatter group based on plot style
         self.scatter_group.setVisible(
-            self.graph_widget.plot_style == 'scatter'
+            self.graph_widget.plot_style in ['scatter', 'trendline']
         )
     
     def _build_legend_widgets(self, legend_properties):
@@ -349,9 +363,12 @@ class CustomizeLegend(QWidget):
         self.original_legend_properties = copy.deepcopy(self.graph_widget.get_legend_properties())
         
         # Apply scatter-specific properties
-        if self.graph_widget.plot_style == 'scatter':
+        if self.graph_widget.plot_style in ['scatter', 'trendline']:
             self.graph_widget.scatter_size = self.spin_scatter_size.value()
-            self.graph_widget.scatter_edgecolor = self.btn_scatter_edgecolor.text()
+            edge_c = self.btn_scatter_edgecolor.text()
+            if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
+                edge_c = 'black'
+            self.graph_widget.scatter_edgecolor = edge_c
             # Replot to reflect changes
             if self.graph_widget.df is not None:
                 self.graph_widget.plot(self.graph_widget.df)
@@ -359,7 +376,7 @@ class CustomizeLegend(QWidget):
         # Connect to properties_changed signal to update ViewModel when graph properties change
         if hasattr(self.graph_widget, 'properties_changed'):
             props = {'legend_properties': self.graph_widget.legend_properties}
-            if self.graph_widget.plot_style == 'scatter':
+            if self.graph_widget.plot_style in ['scatter', 'trendline']:
                 props['scatter_size'] = self.graph_widget.scatter_size
                 props['scatter_edgecolor'] = self.graph_widget.scatter_edgecolor
             self.graph_widget.properties_changed.emit(
@@ -410,7 +427,8 @@ class CustomizeAnnotations(QWidget):
     def _setup_ui(self):
         """Setup the UI components for the annotations widget."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
         
         # Add buttons
         btn_layout = QHBoxLayout()
@@ -663,7 +681,8 @@ class CustomizeAxis(QWidget):
     def _setup_ui(self):
         """Setup the UI components for the axis customization widget."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
         
         # ===== Axis Limits Section =====
         limits_group = QGroupBox("Set Axis Limits:")
@@ -1099,3 +1118,308 @@ class ColorDelegate(QStyledItemDelegate):
     
     def sizeHint(self, option, index):
         return QSize(70, 20)
+
+
+class CustomizeMoreOptions(QWidget):
+    """Adaptive 'More Options' tab — shows controls relevant to the current plot_style."""
+
+    def __init__(self, graph_widget, parent=None):
+        super().__init__(parent)
+        self.graph_widget = graph_widget
+        self._setup_ui()
+        self.load_settings()
+
+    def switch_graph(self, graph_widget):
+        """Switch to a new graph and reload settings."""
+        self.graph_widget = graph_widget
+        self.load_settings()
+
+    # ------------------------------------------------------------------ #
+    #  UI Construction
+    # ------------------------------------------------------------------ #
+
+    def _setup_ui(self):
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+
+        # Scrollable inner area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.NoFrame)
+        inner = QWidget()
+        self._inner_layout = QVBoxLayout(inner)
+        self._inner_layout.setContentsMargins(2, 2, 2, 2)
+        self._inner_layout.setSpacing(2)
+        scroll.setWidget(inner)
+        outer.addWidget(scroll)
+
+        # ---- General (always visible) ----
+        self._build_general_section()
+
+        # ---- Trendline section ----
+        self._build_trendline_section()
+
+        # ---- Histogram section ----
+        self._build_histogram_section()
+
+        self._inner_layout.addStretch()
+
+        # Apply button
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        self._btn_apply = QPushButton("Apply")
+        self._btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
+        self._btn_apply.clicked.connect(self._apply)
+        btn_row.addWidget(self._btn_apply)
+        outer.addLayout(btn_row)
+
+    # ---- General section ------------------------------------------------
+
+    def _build_general_section(self):
+        grp = QGroupBox("Plot options")
+        layout = QVBoxLayout(grp)
+
+        # Join points (point plot)
+        self._cb_join = QCheckBox("Join data points (point plot)")
+        layout.addWidget(self._cb_join)
+
+        # Error bar (bar plot)
+        self._cb_error_bar = QCheckBox("Show error bar (bar plot)")
+        layout.addWidget(self._cb_error_bar)
+
+        # Wafer stats (wafer plot)
+        self._cb_wafer_stats = QCheckBox("Show statistics (wafer plot)")
+        layout.addWidget(self._cb_wafer_stats)
+
+        self._general_group = grp
+        self._inner_layout.addWidget(grp)
+
+    # ---- Trendline section ----------------------------------------------
+
+    def _build_trendline_section(self):
+        grp = QGroupBox("Trendline settings")
+        layout = QVBoxLayout(grp)
+
+        # Polynomial order
+        order_row = QHBoxLayout()
+        order_row.addWidget(QLabel("Polynomial order:"))
+        self._spin_order = QSpinBox()
+        self._spin_order.setRange(1, 10)
+        self._spin_order.setValue(1)
+        self._spin_order.setMaximumWidth(60)
+        order_row.addWidget(self._spin_order)
+        order_row.addWidget(QLabel("<i>(Click 'Apply' to refresh equation)</i>"))
+        order_row.addStretch()
+        layout.addLayout(order_row)
+
+        # Anchor group
+        anchor_grp = QGroupBox("Anchor point")
+        anchor_grp.setCheckable(True)
+        anchor_grp.setChecked(False)
+        anchor_layout = QVBoxLayout(anchor_grp)
+        self._anchor_grp = anchor_grp
+
+        self._rb_origin = QRadioButton("Through origin (0, 0)")
+        self._rb_origin.setChecked(True)
+        self._rb_custom = QRadioButton("Custom point:")
+        anchor_layout.addWidget(self._rb_origin)
+
+        custom_row = QHBoxLayout()
+        custom_row.addWidget(self._rb_custom)
+        custom_row.addWidget(QLabel("X₀"))
+        self._spin_ax = QDoubleSpinBox()
+        self._spin_ax.setRange(-999999, 999999)
+        self._spin_ax.setValue(0.0)
+        self._spin_ax.setMaximumWidth(90)
+        custom_row.addWidget(self._spin_ax)
+        custom_row.addWidget(QLabel("Y₀"))
+        self._spin_ay = QDoubleSpinBox()
+        self._spin_ay.setRange(-999999, 999999)
+        self._spin_ay.setValue(0.0)
+        self._spin_ay.setMaximumWidth(90)
+        custom_row.addWidget(self._spin_ay)
+        custom_row.addStretch()
+        anchor_layout.addLayout(custom_row)
+
+        # Enable/disable spinboxes based on radio selection
+        self._rb_origin.toggled.connect(lambda on: self._spin_ax.setEnabled(not on))
+        self._rb_origin.toggled.connect(lambda on: self._spin_ay.setEnabled(not on))
+        self._spin_ax.setEnabled(False)
+        self._spin_ay.setEnabled(False)
+
+        layout.addWidget(anchor_grp)
+
+        # Equation table
+        eq_label_row = QHBoxLayout()
+        eq_label_row.addWidget(QLabel("Fit equation(s):"))
+        self._btn_copy_eq = QPushButton("Copy")
+        self._btn_copy_eq.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
+        self._btn_copy_eq.setMaximumWidth(80)
+        self._btn_copy_eq.clicked.connect(self._copy_equations)
+        eq_label_row.addStretch()
+        eq_label_row.addWidget(self._btn_copy_eq)
+        layout.addLayout(eq_label_row)
+
+        self._eq_table = QTableWidget(0, 3)
+        self._eq_table.setHorizontalHeaderLabels(["Group", "Equation", "R²"])
+        self._eq_table.horizontalHeader().setStretchLastSection(False)
+        self._eq_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self._eq_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self._eq_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self._eq_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._eq_table.setMinimumHeight(90)
+        layout.addWidget(self._eq_table)
+
+        self._trendline_group = grp
+        self._inner_layout.addWidget(grp)
+
+    # ---- Histogram section ----------------------------------------------
+
+    def _build_histogram_section(self):
+        grp = QGroupBox("Histogram settings")
+        layout = QVBoxLayout(grp)
+
+        bins_row = QHBoxLayout()
+        bins_row.addWidget(QLabel("Bins:"))
+        self._spin_bins = QSpinBox()
+        self._spin_bins.setRange(2, 500)
+        self._spin_bins.setSingleStep(10)
+        self._spin_bins.setValue(20)
+        self._spin_bins.setMaximumWidth(80)
+        bins_row.addWidget(self._spin_bins)
+        bins_row.addStretch()
+        layout.addLayout(bins_row)
+
+        self._cb_kde = QCheckBox("Overlay KDE curve")
+        layout.addWidget(self._cb_kde)
+
+        step_row = QHBoxLayout()
+        step_row.addWidget(QLabel("Fill style:"))
+        self._rb_filled = QRadioButton("Filled")
+        self._rb_step = QRadioButton("Step (outline)")
+        self._rb_filled.setChecked(True)
+        step_row.addWidget(self._rb_filled)
+        step_row.addWidget(self._rb_step)
+        step_row.addStretch()
+        layout.addLayout(step_row)
+
+        self._histogram_group = grp
+        self._inner_layout.addWidget(grp)
+
+    # ------------------------------------------------------------------ #
+    #  Load / Apply
+    # ------------------------------------------------------------------ #
+
+    def load_settings(self):
+        """Load all settings from the graph widget and update visibility."""
+        gw = self.graph_widget
+        style = gw.plot_style
+
+        # --- General section ---
+        self._cb_join.setChecked(getattr(gw, 'join_for_point_plot', False))
+        self._cb_error_bar.setChecked(getattr(gw, 'show_bar_plot_error_bar', True))
+        self._cb_wafer_stats.setChecked(getattr(gw, 'wafer_stats', True))
+
+        # Highlight relevant checkboxes based on style
+        self._cb_join.setEnabled(style == 'point')
+        self._cb_error_bar.setEnabled(style == 'bar')
+        self._cb_wafer_stats.setEnabled(style == 'wafer')
+
+        # --- Trendline section ---
+        is_trendline = (style == 'trendline')
+        self._trendline_group.setVisible(is_trendline)
+        if is_trendline:
+            self._spin_order.setValue(getattr(gw, 'trendline_order', 1))
+            anchor_on = getattr(gw, 'trendline_anchor_enabled', False)
+            self._anchor_grp.setChecked(anchor_on)
+            origin = getattr(gw, 'trendline_anchor_origin', True)
+            self._rb_origin.setChecked(origin)
+            self._rb_custom.setChecked(not origin)
+            self._spin_ax.setValue(getattr(gw, 'trendline_anchor_x', 0.0))
+            self._spin_ay.setValue(getattr(gw, 'trendline_anchor_y', 0.0))
+            self._refresh_equation_table()
+
+        # --- Histogram section ---
+        is_hist = (style == 'histogram')
+        self._histogram_group.setVisible(is_hist)
+        if is_hist:
+            self._spin_bins.setValue(getattr(gw, 'hist_bins', 20))
+            self._cb_kde.setChecked(getattr(gw, 'hist_kde', False))
+            step = getattr(gw, 'hist_step', False)
+            self._rb_step.setChecked(step)
+            self._rb_filled.setChecked(not step)
+
+    def _refresh_equation_table(self):
+        """Populate the equation table from trendline_equations stored on the graph widget."""
+        equations = getattr(self.graph_widget, 'trendline_equations', [])
+        self._eq_table.setRowCount(len(equations))
+        for row, entry in enumerate(equations):
+            self._eq_table.setItem(row, 0, QTableWidgetItem(str(entry.get('label', ''))))
+            self._eq_table.setItem(row, 1, QTableWidgetItem(str(entry.get('equation', ''))))
+            self._eq_table.setItem(row, 2, QTableWidgetItem(str(entry.get('r2', ''))))
+        self._eq_table.resizeColumnsToContents()
+
+    def _copy_equations(self):
+        """Copy the equation table to the clipboard as tab-separated text."""
+        equations = getattr(self.graph_widget, 'trendline_equations', [])
+        if not equations:
+            return
+        lines = ["Group\tEquation\tR\u00b2"]
+        for entry in equations:
+            lines.append(f"{entry.get('label','')}\t{entry.get('equation','')}\t{entry.get('r2','')}")
+        QApplication.clipboard().setText("\n".join(lines))
+
+    def _apply(self):
+        """Write widget values back to the graph widget and replot."""
+        gw = self.graph_widget
+        style = gw.plot_style
+
+        # General
+        gw.join_for_point_plot = self._cb_join.isChecked()
+        gw.show_bar_plot_error_bar = self._cb_error_bar.isChecked()
+        gw.wafer_stats = self._cb_wafer_stats.isChecked()
+
+        # Trendline
+        if style == 'trendline':
+            gw.trendline_order = self._spin_order.value()
+            gw.trendline_anchor_enabled = self._anchor_grp.isChecked()
+            gw.trendline_anchor_origin = self._rb_origin.isChecked()
+            gw.trendline_anchor_x = self._spin_ax.value()
+            gw.trendline_anchor_y = self._spin_ay.value()
+
+        # Histogram
+        if style == 'histogram':
+            gw.hist_bins = self._spin_bins.value()
+            gw.hist_kde = self._cb_kde.isChecked()
+            gw.hist_step = self._rb_step.isChecked()
+
+        # Replot
+        if gw.df is not None:
+            gw.plot(gw.df)
+
+        # Refresh equation table after replot (new equations computed)
+        if style == 'trendline':
+            self._refresh_equation_table()
+
+        # Emit properties_changed so ViewModel persists the new settings
+        if hasattr(gw, 'properties_changed'):
+            props = {
+                'join_for_point_plot': gw.join_for_point_plot,
+                'show_bar_plot_error_bar': gw.show_bar_plot_error_bar,
+                'wafer_stats': gw.wafer_stats,
+            }
+            if style == 'trendline':
+                props.update({
+                    'trendline_order': gw.trendline_order,
+                    'trendline_anchor_enabled': gw.trendline_anchor_enabled,
+                    'trendline_anchor_origin': gw.trendline_anchor_origin,
+                    'trendline_anchor_x': gw.trendline_anchor_x,
+                    'trendline_anchor_y': gw.trendline_anchor_y,
+                })
+            if style == 'histogram':
+                props.update({
+                    'hist_bins': gw.hist_bins,
+                    'hist_kde': gw.hist_kde,
+                    'hist_step': gw.hist_step,
+                })
+            gw.properties_changed.emit(gw.graph_id, props)

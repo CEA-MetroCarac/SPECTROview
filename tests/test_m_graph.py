@@ -68,6 +68,7 @@ class TestMGraphInitialization:
         # Plot-specific
         assert graph.color_palette == "jet"
         assert graph.wafer_size == 300.0
+        assert graph.scatter_edgecolor == "black"
 
 
 class TestMGraphSaveLoad:
@@ -178,6 +179,7 @@ class TestMGraphSaveLoad:
         assert graph2.xlogscale == graph1.xlogscale
         assert graph2.grid == graph1.grid
         assert graph2.color_palette == graph1.color_palette
+        assert graph2.scatter_edgecolor == graph1.scatter_edgecolor
     
     def test_load_handles_none_limits(self):
         """Test that loading handles None/empty limit values."""

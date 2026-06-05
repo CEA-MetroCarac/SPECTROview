@@ -95,10 +95,19 @@ class VGraph(QWidget):
         self.wafer_stats = True
         self.trendline_order = 1
         self.show_trendline_eq = True
+        self.trendline_anchor_enabled = False
+        self.trendline_anchor_origin = True   # True = through (0,0), False = custom point
+        self.trendline_anchor_x = 0.0
+        self.trendline_anchor_y = 0.0
+        self.trendline_equations = []  # List of dicts: {label, equation, r2} per hue group
         self.show_bar_plot_error_bar = True
         self.join_for_point_plot = False
         self.scatter_size = 70  # Marker size for scatter plots
         self.scatter_edgecolor = 'black'  # Edge color for scatter plot markers
+        # Histogram-specific
+        self.hist_bins = 20
+        self.hist_kde = False
+        self.hist_step = False
         
         # Annotations
         self.annotations = []
@@ -221,6 +230,11 @@ class VGraph(QWidget):
         """Renders plot based on DataFrame and current properties."""
         self.df = df
         
+        # Ensure scatter_edgecolor is always a valid string color, defaulting to 'black'
+        edge_c = getattr(self, 'scatter_edgecolor', 'black')
+        if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
+            self.scatter_edgecolor = 'black'
+        
         self.ax.clear()
         if self.ax2:
             self.ax2.clear()
@@ -259,15 +273,29 @@ class VGraph(QWidget):
                     handle = legend_handles[idx]
                     
                     # Extract RGBA color from seaborn
-                    if self.plot_style in ['point', 'scatter', 'line']:
-                        rgba_color = handle.get_markerfacecolor()
-                        marker = handle.get_marker()
-                    elif self.plot_style in ['box', 'bar']:
+                    if self.plot_style in ['point', 'scatter', 'line', 'trendline']:
+                        if hasattr(handle, 'get_markerfacecolor'):
+                            rgba_color = handle.get_markerfacecolor()
+                            marker = handle.get_marker() if hasattr(handle, 'get_marker') else 'o'
+                        elif hasattr(handle, 'get_facecolor'):
+                            facecolors = handle.get_facecolor()
+                            rgba_color = facecolors[0] if len(facecolors) > 0 else 'blue'
+                            marker = 'o'
+                        else:
+                            rgba_color = 'blue'
+                            marker = 'o'
+                    elif self.plot_style in ['box', 'bar', 'histogram']:
                         rgba_color = handle.get_facecolor()
                         marker = 'o'
                     else:
                         rgba_color = 'blue'
                         marker = 'o'
+                    
+                    # Convert numpy arrays to lists for JSON serialization
+                    if hasattr(rgba_color, 'tolist'):
+                        rgba_color = rgba_color.tolist()
+                    elif isinstance(rgba_color, tuple):
+                        rgba_color = list(rgba_color)
                     
                     # Map to closest DEFAULT_COLOR
                     color = rgba_to_default_color(rgba_color)
@@ -278,11 +306,25 @@ class VGraph(QWidget):
                         'color': color,
                         'rgba': rgba_color  # Keep original RGBA for mapping
                     })
+            elif self.plot_style not in ['2Dmap', 'wafer']:
+                # No legend on plot, but we can still customize the main color
+                color = 'steelblue'
+                rgba_color = [0.27, 0.51, 0.71, 1.0]
+                if hasattr(self, 'legend_properties') and self.legend_properties:
+                    color = self.legend_properties[0].get('color', 'steelblue')
+                    rgba_color = self.legend_properties[0].get('rgba', rgba_color)
+                
+                legend_properties.append({
+                    'label': 'All data',
+                    'marker': 'o',
+                    'color': color,
+                    'rgba': rgba_color
+                })
         
         self.legend_properties = legend_properties
         
         # Fix box/bar patch colors to match DEFAULT_COLORS
-        if self.plot_style in ['box', 'bar'] and self.legend_properties:
+        if self.plot_style in ['box', 'bar', 'histogram'] and self.legend_properties:
             self._fix_box_bar_colors()
         
         return self.legend_properties
@@ -336,6 +378,8 @@ class VGraph(QWidget):
             markers = markers[:n_categories]
         
         for y in self.y:
+            c = colors[0] if colors else 'steelblue'
+            
             if self.plot_style == 'point':
                 # Only pass palette if hue is provided
                 point_kwargs = {
@@ -349,6 +393,8 @@ class VGraph(QWidget):
                     point_kwargs['hue'] = self.z
                     point_kwargs['palette'] = colors
                     point_kwargs['marker'] = markers
+                else:
+                    point_kwargs['color'] = c
                 import seaborn as sns
                 sns.pointplot(**point_kwargs)
 
@@ -364,7 +410,8 @@ class VGraph(QWidget):
                     import seaborn as sns
                     sns.scatterplot(
                         data=df, x=self.x, y=y, ax=self.ax,
-                        s=self.scatter_size, edgecolor=self.scatter_edgecolor
+                        s=self.scatter_size, edgecolor=self.scatter_edgecolor,
+                        color=c
                     )
             elif self.plot_style == 'box':
                 # Only pass palette if hue is provided
@@ -372,6 +419,8 @@ class VGraph(QWidget):
                 if self.z:
                     box_kwargs['hue'] = self.z
                     box_kwargs['palette'] = colors
+                else:
+                    box_kwargs['color'] = c
                 import seaborn as sns
                 sns.boxplot(**box_kwargs)
             elif self.plot_style == 'line':
@@ -380,6 +429,8 @@ class VGraph(QWidget):
                 if self.z:
                     line_kwargs['hue'] = self.z
                     line_kwargs['palette'] = colors
+                else:
+                    line_kwargs['color'] = c
                 import seaborn as sns
                 sns.lineplot(**line_kwargs)
             elif self.plot_style == 'bar':
@@ -392,16 +443,95 @@ class VGraph(QWidget):
                 if self.z:
                     bar_kwargs['hue'] = self.z
                     bar_kwargs['palette'] = colors
+                else:
+                    bar_kwargs['color'] = c
                 import seaborn as sns
                 sns.barplot(**bar_kwargs)
             elif self.plot_style == 'trendline':
                 import seaborn as sns
-                sns.regplot(
-                    data=df, x=self.x, y=y, ax=self.ax,
-                    scatter=True, order=self.trendline_order
-                )
-                if self.show_trendline_eq:
-                    self._annotate_trendline_eq(df)
+                self.trendline_equations = []  # reset before recomputing
+                anchor = getattr(self, 'trendline_anchor_enabled', False)
+                
+                if self.z and self.z in df.columns:
+                    # Hue support: one regplot per category
+                    categories = df[self.z].unique()
+                    while len(colors) < len(categories):
+                        colors.append(DEFAULT_COLORS[len(colors) % len(DEFAULT_COLORS)])
+                    for idx, cat in enumerate(categories):
+                        subset = df[df[self.z] == cat]
+                        color = colors[idx]
+                        x_fit, y_fit, coeffs = self._fit_trendline(subset)
+                        
+                        # Plot scatter manually to control legend and color exactly
+                        self.ax.scatter(
+                            subset[self.x], subset[y],
+                            color=color, s=self.scatter_size,
+                            edgecolors=self.scatter_edgecolor, linewidths=0.5,
+                            label=str(cat), zorder=3
+                        )
+                        
+                        if anchor:
+                            # Plot custom anchored line
+                            self.ax.plot(x_fit, y_fit, color=color, linewidth=2)
+                        else:
+                            # Let seaborn plot standard line + confidence intervals
+                            sns.regplot(
+                                data=subset, x=self.x, y=y, ax=self.ax,
+                                scatter=False, order=self.trendline_order,
+                                color=color
+                            )
+                            
+                        eq_str, r2 = self._build_equation_str(coeffs, subset)
+                        self.trendline_equations.append({
+                            'label': str(cat), 'equation': eq_str, 'r2': f"{r2:.4f}"
+                        })
+                else:
+                    # No hue — single fit
+                    x_fit, y_fit, coeffs = self._fit_trendline(df)
+                    
+                    c = colors[0] if colors else 'steelblue'
+                    
+                    # Plot scatter manually for consistency
+                    self.ax.scatter(
+                        df[self.x], df[y],
+                        color=c, s=self.scatter_size,
+                        edgecolors=self.scatter_edgecolor, linewidths=0.5,
+                        label='All data', zorder=3
+                    )
+                    
+                    if anchor:
+                        # Plot custom anchored line
+                        self.ax.plot(x_fit, y_fit, color=c, linewidth=2)
+                    else:
+                        # Let seaborn plot standard line + confidence intervals
+                        sns.regplot(
+                            data=df, x=self.x, y=y, ax=self.ax,
+                            scatter=False, order=self.trendline_order,
+                            color=c
+                        )
+                        
+                    eq_str, r2 = self._build_equation_str(coeffs, df)
+                    self.trendline_equations.append({
+                        'label': 'All data', 'equation': eq_str, 'r2': f"{r2:.4f}"
+                    })
+            elif self.plot_style == 'histogram':
+                import seaborn as sns
+                hist_kwargs = {
+                    'data': df,
+                    'x': self.x,
+                    'ax': self.ax,
+                    'bins': self.hist_bins,
+                    'kde': self.hist_kde,
+                    'element': 'step' if self.hist_step else 'bars',
+                    'fill': not self.hist_step,
+                    'stat': 'count',
+                }
+                if self.z and self.z in df.columns:
+                    hist_kwargs['hue'] = self.z
+                    hist_kwargs['palette'] = colors
+                else:
+                    hist_kwargs['color'] = colors[0] if colors else 'steelblue'
+                sns.histplot(**hist_kwargs)
             elif self.plot_style == 'wafer':
                 self._plot_wafer(df)
             elif self.plot_style == '2Dmap':
@@ -503,10 +633,22 @@ class VGraph(QWidget):
                             handles[idx].set_facecolor(prop['color'])
                             handles[idx].set_edgecolor('black')
                             handles[idx].set_linewidth(0.8)
+                        elif self.plot_style in ['scatter', 'trendline']:
+                            edge_c = getattr(self, 'scatter_edgecolor', 'black')
+                            if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
+                                edge_c = 'black'
+                            if hasattr(handles[idx], 'set_facecolor'):
+                                handles[idx].set_facecolor(prop['color'])
+                            if hasattr(handles[idx], 'set_edgecolor'):
+                                handles[idx].set_edgecolor(edge_c)
+                            if hasattr(handles[idx], 'set_linewidth'):
+                                handles[idx].set_linewidth(0.5)
                         else:
                             handles[idx].set_color(prop['color'])
-                        if self.plot_style in ['point', 'scatter']:
-                            handles[idx].set_marker(prop['marker'])
+                        
+                        if self.plot_style in ['point', 'scatter', 'trendline']:
+                            if hasattr(handles[idx], 'set_marker'):
+                                handles[idx].set_marker(prop['marker'])
                 except Exception:
                     self.legend_properties = []
                     legend_labels = labels
@@ -565,8 +707,92 @@ class VGraph(QWidget):
                 rotation_mode=None
             )
     
+    def _fit_trendline(self, df):
+        """Fit polynomial trendline with optional anchor constraint.
+        
+        Returns (x_fit, y_fit, coefficients).
+        """
+        x_data = df[self.x].dropna().values.astype(float)
+        y_data = df[self.y[0]].dropna().values.astype(float)
+        
+        # Align lengths after dropna
+        mask = ~(np.isnan(x_data) | np.isnan(y_data))
+        x_data = x_data[mask]
+        y_data = y_data[mask]
+        
+        if self.trendline_anchor_enabled:
+            # Determine anchor coordinates
+            if self.trendline_anchor_origin:
+                ax_val, ay_val = 0.0, 0.0
+            else:
+                ax_val = float(self.trendline_anchor_x)
+                ay_val = float(self.trendline_anchor_y)
+            
+            # Shift data so anchor becomes origin, then fit without intercept
+            x_shifted = x_data - ax_val
+            y_shifted = y_data - ay_val
+            
+            if self.trendline_order == 1:
+                # Force through shifted origin: y = m*x
+                m = np.dot(x_shifted, y_shifted) / np.dot(x_shifted, x_shifted)
+                coeffs = np.array([m, 0.0])  # slope, zero intercept (shifted)
+                # Build coefficients back in original space: y = m*(x-ax)+ay
+                # Represent as standard polyfit form shifted back:
+                x_fit = np.linspace(x_data.min(), x_data.max(), 200)
+                y_fit = m * (x_fit - ax_val) + ay_val
+            else:
+                # Higher order: fit shifted data with zero constant term (no intercept)
+                # Use least squares with Vandermonde matrix excluding constant column
+                A = np.column_stack([x_shifted**i for i in range(self.trendline_order, 0, -1)])
+                result = np.linalg.lstsq(A, y_shifted, rcond=None)
+                poly_coeffs = result[0]
+                x_fit = np.linspace(x_data.min(), x_data.max(), 200)
+                x_fit_shifted = x_fit - ax_val
+                y_fit = sum(poly_coeffs[i] * x_fit_shifted**(self.trendline_order - i)
+                            for i in range(self.trendline_order)) + ay_val
+                coeffs = np.append(poly_coeffs, 0.0)  # zero constant (shifted origin)
+        else:
+            # Standard unconstrained polynomial fit
+            coeffs = np.polyfit(x_data, y_data, self.trendline_order)
+            x_fit = np.linspace(x_data.min(), x_data.max(), 200)
+            y_fit = np.polyval(coeffs, x_fit)
+        
+        return x_fit, y_fit, coeffs
+
+    def _build_equation_str(self, coeffs, df):
+        """Build human-readable equation string and compute R²."""
+        x_data = df[self.x].dropna().values.astype(float)
+        y_data = df[self.y[0]].dropna().values.astype(float)
+        mask = ~(np.isnan(x_data) | np.isnan(y_data))
+        x_data = x_data[mask]
+        y_data = y_data[mask]
+        
+        order = self.trendline_order
+        
+        # Build equation string from coefficients (highest power first)
+        _sup = {2: '\u00b2', 3: '\u00b3', 4: '\u2074', 5: '\u2075', 6: '\u2076', 7: '\u2077', 8: '\u2078', 9: '\u2079'}
+        terms = []
+        for i, c in enumerate(coeffs):
+            power = order - i
+            if power == 0:
+                terms.append(f"{c:+.4f}")
+            elif power == 1:
+                terms.append(f"{c:+.4f}x")
+            else:
+                sup = _sup.get(power, f"^{power}")
+                terms.append(f"{c:+.4f}x{sup}")
+        eq_str = "y = " + " ".join(terms).lstrip("+")
+        
+        # Compute R²
+        y_pred = np.polyval(coeffs, x_data)
+        ss_res = np.sum((y_data - y_pred) ** 2)
+        ss_tot = np.sum((y_data - np.mean(y_data)) ** 2)
+        r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float('nan')
+        
+        return eq_str, r2
+
     def _annotate_trendline_eq(self, df):
-        """Add the trendline equation in the plot."""
+        """Add the trendline equation in the plot (legacy — kept for backward compatibility)."""
         x_data = df[self.x]
         y_data = df[self.y[0]]
         coefficients = np.polyfit(x_data, y_data, self.trendline_order)

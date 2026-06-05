@@ -30,7 +30,7 @@ ________
 
 1. Select your target dataset from the list.
 2. Choose the appropriate columns for the X, Y, and Z axes using the provided dropdown menus.
-3. Select your desired plot style (available styles: `scatter`, `point`, `bar`, `box`, `line`, `2Dmap`, `wafer`).
+3. Select your desired plot style (available styles: `scatter`, `point`, `bar`, `box`, `line`, `trendline`, `histogram`, `2Dmap`, `wafer`).
 4. Define your plot labels, axis limits, and wafer diameter dimensions (if applicable).
 5. Click **Add Plot** to generate the visualization.
 
@@ -91,3 +91,41 @@ You can dynamically filter the plotted data by applying boolean logic expression
 | `Confocal != "high"` | Excludes all data points where the "Confocal" column equals "high". |
 | `Thickness == "1ML" or Thickness == "3ML"` | Includes only the data points where the "Thickness" column equals exactly "1ML" or "3ML". |
 | `` `Laser Power` <= 5 `` | Includes data points where the "Laser Power" column is less than or equal to 5. |
+
+_____
+
+### **5. Plot-Style-Specific Customization**
+
+The **Customize Dialog** (opened via the ⚙ button on any graph) contains a **"More Options"** tab that **adapts dynamically** to the active plot style, showing only the controls relevant to the current graph.
+
+#### Trendline Plot
+
+The `trendline` style offers powerful fitting controls:
+
+| Option | Description |
+|---|---|
+| **Polynomial order** | Set the degree of the polynomial fit (1 = linear, 2 = quadratic, …, up to 10). |
+| **Anchor point** | Constrain the fit to pass through a specific point. Choose **Origin (0, 0)** or enter a **custom (X₀, Y₀)**. |
+| **Hue / Z axis** | When a Z column is selected, a separate trendline is fitted for each category group, each drawn in a distinct color. |
+| **Equation table** | The fit results (equation and R² per group) are displayed in a table inside the dialog. Click **Copy** to export to the clipboard as tab-separated text (paste directly into Excel). |
+
+> **Note**: The trendline equation is no longer annotated directly on the plot — it is now always available in the Customize Dialog equation table.
+
+#### Histogram Plot
+
+The `histogram` style provides:
+
+| Option | Description |
+|---|---|
+| **Bins** | Number of histogram bins (2–500, default 20). |
+| **KDE overlay** | Overlay a smooth Kernel Density Estimate curve on the histogram. |
+| **Fill style** | Choose **Filled** bars (default) or **Step** (outline only). |
+| **Hue / Z axis** | When a Z column is selected, overlapping histograms are drawn per category with distinct colors. |
+
+#### Other Plot Styles
+
+| Plot Style | Available in More Options |
+|---|---|
+| `point` | Join data points toggle |
+| `bar` | Error bar toggle |
+| `wafer` | Statistics overlay toggle |

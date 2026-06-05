@@ -71,10 +71,18 @@ class MGraph:
         self.wafer_stats: bool = True
         self.trendline_order: int = 1
         self.show_trendline_eq: bool = True
+        self.trendline_anchor_enabled: bool = False
+        self.trendline_anchor_origin: bool = True   # True=through (0,0), False=custom
+        self.trendline_anchor_x: float = 0.0
+        self.trendline_anchor_y: float = 0.0
         self.show_bar_plot_error_bar: bool = True
         self.join_for_point_plot: bool = False
         self.scatter_size: int = 70  # Marker size for scatter plots
         self.scatter_edgecolor: str = 'black'  # Edge color for scatter plot markers
+        # Histogram-specific
+        self.hist_bins: int = 20
+        self.hist_kde: bool = False
+        self.hist_step: bool = False
         
         # Annotations (lines and text)
         self.annotations: List[Dict[str, Any]] = []
@@ -124,10 +132,17 @@ class MGraph:
             'wafer_stats': self.wafer_stats,
             'trendline_order': self.trendline_order,
             'show_trendline_eq': self.show_trendline_eq,
+            'trendline_anchor_enabled': self.trendline_anchor_enabled,
+            'trendline_anchor_origin': self.trendline_anchor_origin,
+            'trendline_anchor_x': self.trendline_anchor_x,
+            'trendline_anchor_y': self.trendline_anchor_y,
             'show_bar_plot_error_bar': self.show_bar_plot_error_bar,
             'join_for_point_plot': self.join_for_point_plot,
             'scatter_size': self.scatter_size,
             'scatter_edgecolor': self.scatter_edgecolor,
+            'hist_bins': self.hist_bins,
+            'hist_kde': self.hist_kde,
+            'hist_step': self.hist_step,
             'annotations': self.annotations,
         }
     

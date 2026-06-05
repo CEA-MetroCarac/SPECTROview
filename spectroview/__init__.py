@@ -30,7 +30,7 @@ PALETTE = [
 
 PLOT_STYLES = [
     'point', 'scatter', 'box', 'bar',
-    'line', 'trendline', 'wafer', '2Dmap'
+    'line', 'trendline', 'histogram', 'wafer', '2Dmap'
 ]
 
 DEFAULT_COLORS = [

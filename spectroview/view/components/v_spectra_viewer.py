@@ -1100,47 +1100,59 @@ class VSpectraViewer(QWidget):
         self.spectrumCustomized.emit()
         self.canvas.draw_idle()
 
+    def _choose_color(self, callback):
+        from PySide6.QtGui import QPixmap, QColor
+        menu = QMenu(self)
+        
+        for hex_color in DEFAULT_COLORS:
+            pixmap = QPixmap(16, 16)
+            pixmap.fill(QColor(hex_color))
+            icon = QIcon(pixmap)
+            action = menu.addAction(icon, hex_color)
+            action.triggered.connect(lambda checked=False, c=hex_color: callback(c))
+            
+        menu.addSeparator()
+        
+        other_action = menu.addAction("More Colors...")
+        def _open_dialog():
+            color = QColorDialog.getColor()
+            if color.isValid():
+                callback(color.name())
+                
+        other_action.triggered.connect(_open_dialog)
+        
+        # Use exec instead of exec_ for PySide6 compatibility
+        menu.exec(QCursor.pos())
+
     def _edit_legend_color(self, artist):
         """Open color picker to change the spectrum color."""
-        color = QColorDialog.getColor()
-
-        if not color.isValid():
-            return
-
-        hex_color = color.name()
-        artist.set_color(hex_color)
-
-        for line in self.ax.get_lines():
-            if line.get_label() == artist.get_label():
-                line.set_color(hex_color)
-
-                if hasattr(line, "_spectrum_ref"):
-                    line._spectrum_ref.color = hex_color
-                break
-
-        self.spectrumCustomized.emit()
-        self.canvas.draw_idle()
+        def apply_color(hex_color):
+            artist.set_color(hex_color)
+            for line in self.ax.get_lines():
+                if line.get_label() == artist.get_label():
+                    line.set_color(hex_color)
+                    if hasattr(line, "_spectrum_ref"):
+                        line._spectrum_ref.color = hex_color
+                    break
+            self.spectrumCustomized.emit()
+            self.canvas.draw_idle()
+            
+        self._choose_color(apply_color)
 
     def _edit_legend_color_with_label(self, artist, label):
         """Open color picker to change the spectrum color using text label as key."""
-        color = QColorDialog.getColor()
+        def apply_color(hex_color):
+            artist.set_color(hex_color)
+            for line in self.ax.get_lines():
+                if line.get_label() == label:
+                    line.set_color(hex_color)
+                    if hasattr(line, "_spectrum_ref"):
+                        line._spectrum_ref.color = hex_color
+                    break
+            self.spectrumCustomized.emit()
+            self.canvas.draw_idle()
 
-        if not color.isValid():
-            return
-
-        hex_color = color.name()
-        artist.set_color(hex_color)
-
-        for line in self.ax.get_lines():
-            if line.get_label() == label:
-                line.set_color(hex_color)
-
-                if hasattr(line, "_spectrum_ref"):
-                    line._spectrum_ref.color = hex_color
-                break
-
-        self.spectrumCustomized.emit()
-        self.canvas.draw_idle()
+        self._choose_color(apply_color)
 
 
     # ─────────────────────────────────────────

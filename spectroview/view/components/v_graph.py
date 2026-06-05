@@ -318,8 +318,8 @@ class VGraph(QWidget):
             self.legend_properties = []
         
         if not self.legend_properties:
-            markers = DEFAULT_MARKERS
-            colors = DEFAULT_COLORS
+            markers = DEFAULT_MARKERS.copy()
+            colors = DEFAULT_COLORS.copy()
         else:
             markers = [str(prop['marker']) for prop in self.legend_properties]
             colors = [str(prop['color']) for prop in self.legend_properties]

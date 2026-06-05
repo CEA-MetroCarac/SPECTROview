@@ -320,10 +320,12 @@ class VGraph(QWidget):
                     })
             elif self.plot_style not in ['2Dmap', 'wafer']:
                 # No legend on plot, but we can still customize the main color
-                color = 'steelblue'
-                rgba_color = [0.27, 0.51, 0.71, 1.0]
+                color = DEFAULT_COLORS[0] if DEFAULT_COLORS else 'steelblue'
+                import matplotlib.colors as mcolors
+                rgba_color = mcolors.to_rgba(color)
+                
                 if hasattr(self, 'legend_properties') and self.legend_properties:
-                    color = self.legend_properties[0].get('color', 'steelblue')
+                    color = self.legend_properties[0].get('color', color)
                     rgba_color = self.legend_properties[0].get('rgba', rgba_color)
                 
                 legend_properties.append({

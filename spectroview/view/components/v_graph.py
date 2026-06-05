@@ -718,6 +718,31 @@ class VGraph(QWidget):
     
     def _set_grid(self):
         """Add grid for the plot (supports linear & log scale automatically)."""
+        is_wafer = (self.plot_style == 'wafer')
+        
+        self.ax.tick_params(
+            which='major',
+            bottom=False if is_wafer else True,
+            left=True,
+            top=False if is_wafer else getattr(self, 'minor_ticks_top', False),
+            right=getattr(self, 'minor_ticks_right', False)
+        )
+        
+        if any([getattr(self, 'minor_ticks_bottom', True),
+                getattr(self, 'minor_ticks_left', True),
+                getattr(self, 'minor_ticks_top', False),
+                getattr(self, 'minor_ticks_right', False)]):
+            self.ax.minorticks_on()
+            self.ax.tick_params(
+                which='minor',
+                bottom=False if is_wafer else getattr(self, 'minor_ticks_bottom', True),
+                top=False if is_wafer else getattr(self, 'minor_ticks_top', False),
+                left=getattr(self, 'minor_ticks_left', True),
+                right=getattr(self, 'minor_ticks_right', False)
+            )
+        else:
+            self.ax.minorticks_off()
+
         if not self.grid:
             self.ax.grid(False)
             return
@@ -725,7 +750,6 @@ class VGraph(QWidget):
         self.ax.grid(True, which='major', linestyle='--')
         
         if self.xlogscale or self.ylogscale:
-            self.ax.minorticks_on()
             self.ax.grid(True, which='minor', alpha=0.15, linestyle='--')
     
     def _set_rotation(self):

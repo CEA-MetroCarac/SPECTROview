@@ -85,6 +85,12 @@ class MGraph:
         self.dodge_point_plot: bool = True
         self.scatter_size: int = 70  # Marker size for scatter plots
         self.scatter_edgecolor: str = 'black'  # Edge color for scatter plot markers
+        
+        self.minor_ticks_bottom: bool = True
+        self.minor_ticks_left: bool = True
+        self.minor_ticks_top: bool = False
+        self.minor_ticks_right: bool = False
+        
         # Histogram-specific
         self.hist_bins: int = 20
         self.hist_kde: bool = False
@@ -97,12 +103,17 @@ class MGraph:
         """Serialize graph to dictionary."""
         return {
             'graph_id': self.graph_id,
-            'df_name': self.df_name,
+            'grid': self.grid,
+            'minor_ticks_bottom': self.minor_ticks_bottom,
+            'minor_ticks_left': self.minor_ticks_left,
+            'minor_ticks_top': self.minor_ticks_top,
+            'minor_ticks_right': self.minor_ticks_right,
             'filters': self.filters,
             'plot_style': self.plot_style,
             'plot_width': self.plot_width,
             'plot_height': self.plot_height,
             'dpi': self.dpi,
+            'df_name': self.df_name,
             'x': self.x,
             'y': self.y,
             'z': self.z,

@@ -729,6 +729,23 @@ class CustomizeAxis(QWidget):
         limits_btn_layout.addWidget(self.btn_apply_limits)
         limits_layout.addLayout(limits_btn_layout)
         
+        # ===== Minor Ticks Section =====
+        minor_ticks_group = QGroupBox("Add minor tick:")
+        minor_ticks_layout = QHBoxLayout()
+        
+        self.cb_minor_bottom = QCheckBox("X (Bottom)")
+        self.cb_minor_top = QCheckBox("X (Top)")
+        self.cb_minor_left = QCheckBox("Y (Left)")
+        self.cb_minor_right = QCheckBox("Y (Right)")
+        
+        minor_ticks_layout.addWidget(self.cb_minor_bottom)
+        minor_ticks_layout.addWidget(self.cb_minor_top)
+        minor_ticks_layout.addWidget(self.cb_minor_left)
+        minor_ticks_layout.addWidget(self.cb_minor_right)
+        minor_ticks_layout.addStretch()
+        
+        minor_ticks_group.setLayout(minor_ticks_layout)
+        
         # ===== X-Axis Break Section =====
         x_break_group = QGroupBox("Broken X-axis (beta):")
         x_break_layout = QHBoxLayout()
@@ -789,6 +806,7 @@ class CustomizeAxis(QWidget):
         
         # Add to main layout
         layout.addWidget(limits_group)
+        layout.addWidget(minor_ticks_group)
         layout.addWidget(x_break_group)
         layout.addWidget(y_break_group)
         layout.addLayout(apply_btn_layout)
@@ -834,11 +852,17 @@ class CustomizeAxis(QWidget):
             self.x_break_end.setValue(mid_x + range_x/2)
         
         # Load Y-axis break
-        if breaks.get('y'):
+        y_breaks = breaks.get('y', {})
+        if y_breaks:
             self.y_break_enabled.setChecked(True)
-            self.y_break_start.setValue(breaks['y']['start'])
-            self.y_break_end.setValue(breaks['y']['end'])
-        else:
+            self.y_break_start.setValue(y_breaks.get('start', 0.0))
+            self.y_break_end.setValue(y_breaks.get('end', 0.0))
+        
+        self.cb_minor_bottom.setChecked(getattr(gw, 'minor_ticks_bottom', True))
+        self.cb_minor_left.setChecked(getattr(gw, 'minor_ticks_left', True))
+        self.cb_minor_top.setChecked(getattr(gw, 'minor_ticks_top', False))
+        self.cb_minor_right.setChecked(getattr(gw, 'minor_ticks_right', False))
+        if not y_breaks:
             self.y_break_enabled.setChecked(False)
             # Set to middle range as suggestion
             mid_y = (y_min + y_max) / 2
@@ -887,12 +911,22 @@ class CustomizeAxis(QWidget):
             self.graph_widget.axis_breaks['y'] = None
             
         # Connect to properties_changed signal to update ViewModel when graph properties change
-        if hasattr(self.graph_widget, 'properties_changed'):
-            self.graph_widget.properties_changed.emit(self.graph_widget.graph_id, {
+        gw.minor_ticks_bottom = self.cb_minor_bottom.isChecked()
+        gw.minor_ticks_left = self.cb_minor_left.isChecked()
+        gw.minor_ticks_top = self.cb_minor_top.isChecked()
+        gw.minor_ticks_right = self.cb_minor_right.isChecked()
+        
+        # Emit signal to ViewModel
+        if hasattr(gw, 'properties_changed'):
+            gw.properties_changed.emit(gw.graph_id, {
                 'xmin': gw.xmin, 'xmax': gw.xmax,
                 'ymin': gw.ymin, 'ymax': gw.ymax,
                 'zmin': gw.zmin, 'zmax': gw.zmax,
-                'axis_breaks': gw.axis_breaks
+                'axis_breaks': gw.axis_breaks,
+                'minor_ticks_bottom': gw.minor_ticks_bottom,
+                'minor_ticks_left': gw.minor_ticks_left,
+                'minor_ticks_top': gw.minor_ticks_top,
+                'minor_ticks_right': gw.minor_ticks_right
             })
         
         # Refresh the plot with settings applied

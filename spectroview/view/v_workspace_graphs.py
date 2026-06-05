@@ -1501,6 +1501,10 @@ class VWorkspaceGraphs(QWidget):
         # Visual properties
         graph_widget.x_rot = model.x_rot
         graph_widget.grid = model.grid
+        graph_widget.minor_ticks_bottom = getattr(model, 'minor_ticks_bottom', True)
+        graph_widget.minor_ticks_left = getattr(model, 'minor_ticks_left', True)
+        graph_widget.minor_ticks_top = getattr(model, 'minor_ticks_top', False)
+        graph_widget.minor_ticks_right = getattr(model, 'minor_ticks_right', False)
         
         # Legend
         graph_widget.legend_visible = model.legend_visible

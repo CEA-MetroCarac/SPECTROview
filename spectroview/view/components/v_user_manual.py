@@ -19,6 +19,7 @@ class FitImageTextBrowser(QTextBrowser):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setOpenLinks(False)
+        self.setStyleSheet("font-size: 11pt;")
         self._orig_sizes = {}
         self._movies = {}             # name -> QMovie
         self._gif_labels = {}         # name -> QLabel overlay
@@ -276,6 +277,7 @@ class VUserManualDialog(QDialog):
         left_widget = QWidget()
         left_layout = QVBoxLayout(left_widget)
         left_layout.setContentsMargins(0, 0, 0, 0)
+        left_widget.setStyleSheet("font-size: 10pt;")
 
         lbl = QLabel("Sections")
         font = lbl.font()
@@ -376,6 +378,7 @@ class VUserManualDialog(QDialog):
         <style>
             body { font-family: -apple-system, BlinkMacSystemFont,
                    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                   font-size: 12pt;
                    line-height: 1.6; padding: 10px; }
             h1, h2, h3, h4 { margin-top: 1.2em; margin-bottom: 0.5em; }
             p { margin-top: 0; margin-bottom: 0.8em; }

@@ -109,7 +109,6 @@ The `trendline` style offers powerful fitting controls:
 | **Hue / Z axis** | When a Z column is selected, a separate trendline is fitted for each category group, each drawn in a distinct color. |
 | **Equation table** | The fit results (equation and R² per group) are displayed in a table inside the dialog. Click **Copy** to export to the clipboard as tab-separated text (paste directly into Excel). |
 
-> **Note**: The trendline equation is no longer annotated directly on the plot — it is now always available in the Customize Dialog equation table.
 
 #### Histogram Plot
 
@@ -129,3 +128,27 @@ The `histogram` style provides:
 | `point` | Join data points toggle |
 | `bar` | Error bar toggle |
 | `wafer` | Statistics overlay toggle |
+
+_____
+
+### **6. Trendline Estimation & Fitting Details**
+
+For the `trendline` plot style, the curve fitting and confidence intervals are computed as follows:
+
+#### **Trendline Estimation**
+
+- **Standard Fit (No Anchor):** The trendline is calculated using an Ordinary Least Squares (OLS) linear regression to fit a polynomial of the specified degree:
+  `y = p₀·xᵈ + p₁·xᵈ⁻¹ + ... + p_d`
+  where `d` is the polynomial order.
+
+- **Anchored Fit (Forced through a point (x₀, y₀)):** The coordinate system is shifted so that the anchor point becomes the origin (`x' = x - x₀`, `y' = y - y₀`). A polynomial without a constant term (zero intercept) is then fitted to the shifted variables:
+  - **For Linear order (1):** The slope `m` is directly calculated as:
+    `m = sum(x'_i * y'_i) / sum((x'_i)²)`
+  - **For Higher orders (>1):** The shifted data is fitted with a zero intercept using a linear least squares solver.
+  The fitted curve is then translated back to the original coordinate space.
+
+#### **Confidence Intervals**
+
+- **Confidence Level:** The shaded band around standard trendlines represents a **95% confidence interval** (estimated by Seaborn's regression plot module).
+- **Estimation Method:** The confidence interval is estimated using a non-parametric bootstrapping procedure (resampling data points with replacement 1000 times, fitting a regression model to each bootstrap sample, and calculating the 2.5th and 97.5th percentiles of the predictions).
+- **Anchored Fits:** Please note that confidence intervals are only computed and displayed for standard, unconstrained fits. If an anchor is enabled, the confidence interval band is omitted.

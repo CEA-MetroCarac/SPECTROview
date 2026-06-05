@@ -865,8 +865,14 @@ class VWorkspaceGraphs(QWidget):
         self._configure_graph_from_model(graph_widget, graph_model)
         graph_widget.create_plot_widget(graph_model.dpi)
 
-        
-        self._render_plot(graph_widget, filtered_df, graph_model)
+        try:
+            self._render_plot(graph_widget, filtered_df, graph_model)
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Plot Update Error",
+                f"Error updating plot: {str(e)}"
+            )
+            return
         
         # Save legend properties back to model after rendering
         self.vm.update_graph(graph_model.graph_id, {

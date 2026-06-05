@@ -56,7 +56,7 @@ A pure data class that stores everything needed to recreate a plot:
 |----------|------|---------|
 | `graph_id` | `int` | Unique identifier |
 | `df_name` | `str` | Source DataFrame name |
-| `plot_style` | `str` | One of `PLOT_STYLES` (`point`, `scatter`, `box`, `bar`, `line`, `wafer`, `2Dmap`, `trendline`) |
+| `plot_style` | `str` | One of `PLOT_STYLES` (`point`, `scatter`, `box`, `bar`, `line`, `wafer`, `2Dmap`, `trendline`, `histogram`) |
 | `x`, `y`, `z` | `str` / `list[str]` / `str` | Column mappings for axes |
 | `filters` | `list[dict]` | Saved filter state |
 | `plot_title`, `xlabel`, `ylabel`, `zlabel` | `str` | Label overrides |
@@ -65,7 +65,21 @@ A pure data class that stores everything needed to recreate a plot:
 | `y2`, `y3` | `str` | Secondary/tertiary Y-axis columns |
 | `color_palette` | `str` | Matplotlib colormap name |
 | `wafer_size` | `int` | Wafer diameter (300, 200, 150, 100) |
+| `wafer_stats` | `bool` | Toggle statistics on wafer plots |
+| `join_for_point_plot` | `bool` | Toggle connecting lines on point plots |
+| `show_bar_plot_error_bar` | `bool` | Toggle standard deviation error bars on bar plots |
+| `scatter_size` | `int` | Marker size (default 50) |
+| `scatter_edgecolor` | `str` | Marker edge color (default 'black') |
+| `trendline_order` | `int` | Order of polynomial regression fit |
+| `show_trendline_eq` | `bool` | Toggle visibility of fit equation list |
+| `trendline_anchor_enabled` | `bool` | Force fit to pass through a specific point |
+| `trendline_anchor_origin` | `bool` | Force anchor through origin (0, 0) vs. custom coordinate |
+| `trendline_anchor_x`/`y` | `float` | Coordinates of the custom anchor point |
+| `hist_bins` | `int` | Number of histogram bins (2–500, default 20) |
+| `hist_kde` | `bool` | Overlay Kernel Density Estimate line |
+| `hist_step` | `bool` | Draw outline-only step histogram vs. filled bars |
 | `legend_properties` | `list[dict]` | Per-series label, color, marker overrides |
+| `legend_bbox` | `list[float]` | Dragged coordinates of the legend box |
 | `annotations` | `list[dict]` | Vertical lines, horizontal lines, text annotations |
 | `dpi` | `int` | Figure DPI |
 | `plot_width`/`height` | `int` | Window dimensions |
@@ -100,11 +114,12 @@ Each plot style maps to a specific Seaborn or custom rendering function:
 | Style | Seaborn Function | Hue Support | Notes |
 |-------|-----------------|-------------|-------|
 | `point` | `sns.pointplot()` | ✓ Z column | Supports "join" toggle for connecting points |
-| `scatter` | `sns.scatterplot()` | ✓ Z column | Edgecolor black, 70pt markers |
+| `scatter` | `sns.scatterplot()` | ✓ Z column | Edgecolor black, 50pt markers |
 | `box` | `sns.boxplot()` | ✓ Z column | Width 0.4, palette support |
 | `bar` | `sns.barplot()` | ✓ Z column | Optional error bars (sd) |
 | `line` | `sns.lineplot()` | ✓ Z column | Standard line plot |
-| `trendline` | `sns.regplot()` | — | Polynomial regression with equation annotation |
+| `trendline` | `sns.regplot()` / `ax.scatter()` / `ax.plot()` | ✓ Z column | Polynomial regression with custom zero-intercept anchoring and equation table export |
+| `histogram` | `sns.histplot()` | ✓ Z column | Bins customization, KDE overlay, step outline vs. filled bars |
 | `wafer` | Custom `WaferPlot` | — | Circular wafer visualization with die sites |
 | `2Dmap` | `ax.imshow()` | — | Rectangular heatmap via `pivot()` |
 

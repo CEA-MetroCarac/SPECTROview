@@ -712,8 +712,21 @@ class VGraph(QWidget):
         
         Returns (x_fit, y_fit, coefficients).
         """
-        x_data = df[self.x].dropna().values.astype(float)
-        y_data = df[self.y[0]].dropna().values.astype(float)
+        try:
+            x_data = df[self.x].dropna().values.astype(float)
+        except (ValueError, TypeError) as e:
+            raise ValueError(
+                f"Could not convert values in X column '{self.x}' to numeric values. "
+                "Trendline fitting requires numeric columns."
+            ) from e
+        
+        try:
+            y_data = df[self.y[0]].dropna().values.astype(float)
+        except (ValueError, TypeError) as e:
+            raise ValueError(
+                f"Could not convert values in Y column '{self.y[0]}' to numeric values. "
+                "Trendline fitting requires numeric columns."
+            ) from e
         
         # Align lengths after dropna
         mask = ~(np.isnan(x_data) | np.isnan(y_data))

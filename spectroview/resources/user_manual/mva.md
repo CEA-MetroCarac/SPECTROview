@@ -32,19 +32,19 @@ A powerful decomposition algorithm that factors the spectral data into distinct,
 
 The MVA tab features a **split-panel layout**:
 
-#### **2.1. Left Panel — Controls**
+#### **2.1. Left Panel - Controls**
 - **Method Selection**: Choose between `PCA` and `NMF` using radio buttons.
 - **Parameter Controls**: All adjustable parameters are available as interactive GUI elements (spinboxes, checkboxes). Only the parameters relevant to the selected method are displayed.
 - **Run Button**: Click "▶ Run Analysis" to execute the analysis with the current parameters.
 - **Export**: Send results (scores) to the `Graphs` workspace for further analysis.
 
-#### **2.2. Right Panel — Tabbed Plots**
+#### **2.2. Right Panel - Tabbed Plots**
 Results are displayed across multiple tabs, each with its own interactive `matplotlib` toolbar (zoom, pan, save):
 
 | Tab | PCA | NMF | Description |
 |-----|-----|-----|-------------|
 | **Summary** | ✅ | ✅ | A combined dashboard plot showing Scree, Loadings, and Scores all at once |
-| **Scree Plot** | ✅ | — | Bar chart of explained variance per component with cumulative line |
+| **Scree Plot** | ✅ | - | Bar chart of explained variance per component with cumulative line |
 | **Loadings** | ✅ | ✅ | Spectral loading profiles overlaid on the wavenumber axis |
 | **Scores** | ✅ | ✅ | 2D scatter plot with selectable X/Y component axes |
 | **Residuals** | ✅ | ✅ | Per-spectrum reconstruction error for assessing model quality |

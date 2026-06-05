@@ -631,20 +631,22 @@ class VGraph(QWidget):
             handles2, labels2 = self.ax2.get_legend_handles_labels()
             handles += handles2
             labels += labels2
-            self.ax2.legend().remove()
+            if self.ax2.get_legend():
+                self.ax2.get_legend().remove()
         
         if self.ax3:
             handles3, labels3 = self.ax3.get_legend_handles_labels()
             handles += handles3
             labels += labels3
-            self.ax3.legend().remove()
+            if self.ax3.get_legend():
+                self.ax3.get_legend().remove()
         
         if self.ax_x2:
             handles_x2, labels_x2 = self.ax_x2.get_legend_handles_labels()
             handles += handles_x2
             labels += labels_x2
             if self.ax_x2.get_legend():
-                self.ax_x2.legend().remove()
+                self.ax_x2.get_legend().remove()
         
         if handles:
             legend_labels = []
@@ -975,7 +977,7 @@ class VGraph(QWidget):
                 self.ax2 = None
             
             if self.ax2:
-                self.ax2.set_ylabel(self.y2label, color='red')
+                self.ax2.set_ylabel(self.y2label or self.y2, color='red')
                 self.ax2.tick_params(axis='y', colors='red')
     
     def _plot_tertiary_axis(self, df):
@@ -1010,7 +1012,7 @@ class VGraph(QWidget):
                 self.ax3 = None
             
             if self.ax3:
-                self.ax3.set_ylabel(self.y3label, color='green')
+                self.ax3.set_ylabel(self.y3label or self.y3, color='green')
                 self.ax3.tick_params(axis='y', colors='green')
     
     def _plot_secondary_x_axis(self, df):

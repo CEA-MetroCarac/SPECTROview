@@ -713,7 +713,7 @@ class VSpectraViewer(QWidget):
                 if y_bestfit is not None:
                     residual = y_raw - y_bestfit
                     self.ax.plot(x + x_offset, residual + y_offset,
-                                 "r-", lw=1.0, label="residual")
+                                 "k-", lw=1.0, label="residual")
 
             # ── Noise level ──
             if self.act_noise_level.isChecked():
@@ -777,9 +777,13 @@ class VSpectraViewer(QWidget):
                 y_peak_fine = eval_peak_initial(x_fine, p_model)
                 y_fit_fine += y_peak_fine
 
+                curr_kwargs = dict(color_kwargs)
+                if "color" not in curr_kwargs:
+                    curr_kwargs["color"] = f"C{(i+1)%10}"
+
                 peak_line, = self.ax.plot(
                     x_fine + x_offset, y_peak_fine + y_offset,
-                    lw=(lw * 0.6), **color_kwargs)
+                    lw=(lw * 0.6), **curr_kwargs)
 
                 peak_label = f"Peak{i+1}"
                 if ('peak_labels' in fit_model
@@ -806,9 +810,13 @@ class VSpectraViewer(QWidget):
         elif y_peaks is not None:
             # ── Fallback: discrete peak curves ──
             for i, y_peak in enumerate(y_peaks):
+                curr_kwargs = dict(color_kwargs)
+                if "color" not in curr_kwargs:
+                    curr_kwargs["color"] = f"C{(i+1)%10}"
+
                 peak_line, = self.ax.plot(
                     x + x_offset, y_peak + y_offset,
-                    lw=(lw * 0.6), **color_kwargs)
+                    lw=(lw * 0.6), **curr_kwargs)
 
                 peak_label = f"Peak{i+1}"
                 if (fit_model and 'peak_labels' in fit_model

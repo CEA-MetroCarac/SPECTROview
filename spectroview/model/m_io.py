@@ -168,7 +168,7 @@ def load_wdf_spectrum(path: Path) -> dict:
     is_series = str(reader.measurement_type) == 'Series' or 'Series' in str(reader.measurement_type)
 
     if is_series and reader.spectra.ndim > 1:
-        # Temporal series data, return a list of MSpectrum objects
+        # Temporal series data, return a list of spectra dicts
         timestamps = None
         if hasattr(reader, 'origin_list_header') and reader.origin_list_header is not None:
             for item in reader.origin_list_header:

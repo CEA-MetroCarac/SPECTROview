@@ -34,7 +34,7 @@ from spectroview.viewmodel.utils import (
 class VMWorkspaceSpectra(QObject):
     # ───── ViewModel → View signals ─────
     spectra_list_changed = Signal(list)      # list[str]
-    spectra_selection_changed = Signal(object) # list[MSpectrum] or dict (tensor batch)
+    spectra_selection_changed = Signal(object) # dict (tensor batch) or empty list
     count_changed = Signal(int)
     show_xcorrection_value = Signal(float)  # ΔX of first selected spectrum
     spectral_range_changed = Signal(float, float)

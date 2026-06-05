@@ -5,7 +5,7 @@ Handles:
   - Routing to the correct batched model + Jacobian functions
   - Mixed model types (e.g. peak 1 = Lorentzian, peak 2 = Gaussian)
   - Fixed vs free parameters
-  - Building FitResult objects and writing back to MSpectrum
+  - Building FitResult objects and writing back to SpectraStore
 """
 
 import numpy as np

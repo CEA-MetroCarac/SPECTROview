@@ -129,7 +129,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         return self.store.get_map_data(self.current_map_name)
 
     def _emit_selected_spectra(self):
-        """Override parent to emit tensor batch data for Maps instead of just MSpectrum lists."""
+        """Override parent to emit tensor batch data for Maps."""
         if not self.selected_fnames:
             self.spectra_selection_changed.emit([])
             return

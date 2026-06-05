@@ -77,7 +77,7 @@ class MGraph:
         self.trendline_anchor_y: float = 0.0
         self.show_bar_plot_error_bar: bool = True
         self.join_for_point_plot: bool = False
-        self.scatter_size: int = 70  # Marker size for scatter plots
+        self.scatter_size: int = 50  # Marker size for scatter plots
         self.scatter_edgecolor: str = 'black'  # Edge color for scatter plot markers
         # Histogram-specific
         self.hist_bins: int = 20

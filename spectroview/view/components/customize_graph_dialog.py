@@ -177,7 +177,7 @@ class CustomizeLegend(QWidget):
         self.spin_scatter_size = QSpinBox()
         self.spin_scatter_size.setRange(5, 500)
         self.spin_scatter_size.setSingleStep(10)
-        self.spin_scatter_size.setValue(70)
+        self.spin_scatter_size.setValue(50)
         scatter_layout.addWidget(self.spin_scatter_size)
         
         scatter_layout.addSpacing(10)
@@ -242,7 +242,7 @@ class CustomizeLegend(QWidget):
         
         # Load scatter settings
         self.spin_scatter_size.setValue(
-            getattr(self.graph_widget, 'scatter_size', 70)
+            getattr(self.graph_widget, 'scatter_size', 50)
         )
         edge_c = getattr(self.graph_widget, 'scatter_edgecolor', 'black')
         if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):

@@ -102,7 +102,7 @@ class VGraph(QWidget):
         self.trendline_equations = []  # List of dicts: {label, equation, r2} per hue group
         self.show_bar_plot_error_bar = True
         self.join_for_point_plot = False
-        self.scatter_size = 70  # Marker size for scatter plots
+        self.scatter_size = 50  # Marker size for scatter plots
         self.scatter_edgecolor = 'black'  # Edge color for scatter plot markers
         # Histogram-specific
         self.hist_bins = 20

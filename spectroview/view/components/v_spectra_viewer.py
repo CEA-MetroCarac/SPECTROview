@@ -440,8 +440,20 @@ class VSpectraViewer(QWidget):
             x = self._tensor_data["x"]
             Y = self._tensor_data["y"]
             Y_norm = self._get_normalized_y_tensor(x, Y)
-            y_range = float(np.max(Y_norm) - np.min(Y_norm))
-            x_range = float(np.max(x) - np.min(x))
+            
+            if isinstance(Y_norm, list):
+                y_max = max(np.max(y_arr) for y_arr in Y_norm)
+                y_min = min(np.min(y_arr) for y_arr in Y_norm)
+                y_range = float(y_max - y_min)
+            else:
+                y_range = float(np.max(Y_norm) - np.min(Y_norm))
+                
+            if isinstance(x, list):
+                x_max = max(np.max(x_arr) for x_arr in x)
+                x_min = min(np.min(x_arr) for x_arr in x)
+                x_range = float(x_max - x_min)
+            else:
+                x_range = float(np.max(x) - np.min(x))
         else:
             if not self._current_spectra:
                 return 0.0, 0.0
@@ -461,7 +473,16 @@ class VSpectraViewer(QWidget):
         return x_shift_step, y_shift_step
 
     def _get_normalized_y_tensor(self, x, Y):
-        """Normalize Y data for tensors based on current settings."""
+        """Apply normalization if enabled for a batch of spectra (VIEW-ONLY)."""
+        if not self.btn_norm.isChecked():
+            return Y
+
+        try:
+            xmin = float(self.norm_xmin.text()) if self.norm_xmin.text() else None
+            xmax = float(self.norm_xmax.text()) if self.norm_xmax.text() else None
+        except ValueError:
+            xmin = xmax = None
+
         if isinstance(Y, list):
             Y_norm = []
             for i in range(len(Y)):
@@ -469,10 +490,25 @@ class VSpectraViewer(QWidget):
                 Y_norm.append(self._get_normalized_y(xi, Y[i]))
             return Y_norm
         else:
-            Y_norm = np.zeros_like(Y, dtype=float)
-            for i in range(Y.shape[0]):
-                Y_norm[i] = self._get_normalized_y(x, Y[i])
-            return Y_norm
+            if xmin is not None and xmax is not None:
+                if xmin > xmax:
+                    xmin, xmax = xmax, xmin
+
+                imin = np.abs(x - xmin).argmin()
+                imax = np.abs(x - xmax).argmin()
+                
+                # Extract slice handling empty slices safely
+                sub_y = Y[:, min(imin, imax):max(imin, imax) + 1]
+                if sub_y.shape[1] > 0:
+                    norm_vals = np.max(sub_y, axis=1, keepdims=True)
+                else:
+                    norm_vals = np.max(Y, axis=1, keepdims=True)
+            else:
+                norm_vals = np.max(Y, axis=1, keepdims=True)
+
+            # Avoid div by zero
+            norm_vals[norm_vals == 0] = 1.0
+            return Y / norm_vals
 
     def _plot(self):
         style_name = self.cbb_theme.currentText()
@@ -1087,37 +1123,6 @@ class VSpectraViewer(QWidget):
             return y / norm_val
 
         return y
-
-    def _get_normalized_y_tensor(self, x, Y):
-        """Apply normalization if enabled for a batch of spectra (VIEW-ONLY)."""
-        if not self.btn_norm.isChecked():
-            return Y
-
-        try:
-            xmin = float(self.norm_xmin.text()) if self.norm_xmin.text() else None
-            xmax = float(self.norm_xmax.text()) if self.norm_xmax.text() else None
-        except ValueError:
-            xmin = xmax = None
-
-        if xmin is not None and xmax is not None:
-            if xmin > xmax:
-                xmin, xmax = xmax, xmin
-
-            imin = np.abs(x - xmin).argmin()
-            imax = np.abs(x - xmax).argmin()
-            
-            # Extract slice handling empty slices safely
-            sub_y = Y[:, min(imin, imax):max(imin, imax) + 1]
-            if sub_y.shape[1] > 0:
-                norm_vals = np.max(sub_y, axis=1, keepdims=True)
-            else:
-                norm_vals = np.max(Y, axis=1, keepdims=True)
-        else:
-            norm_vals = np.max(Y, axis=1, keepdims=True)
-
-        # Avoid div by zero
-        norm_vals[norm_vals == 0] = 1.0
-        return Y / norm_vals
 
     
     def _make_legend_pickable(self, legend):

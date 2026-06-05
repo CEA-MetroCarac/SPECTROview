@@ -291,18 +291,10 @@ class VBFevaluator:
 
         rsquared = np.where(ss_tot > 0, 1.0 - ss_res / np.maximum(ss_tot, 1e-30), 0.0)
 
-        # ── Apply weight masking to best_fit ──
-        if weights is not None:
-            best_fits = best_fits.copy()
-            best_fits[weights == 0] = 0.0
-            
         # ── Evaluate individual peaks ──
         Y_peaks = []
         for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
             Y_p = eval_fn(x, p_full[:, slc] if p_full.ndim == 2 else p_full[slc][None, :])
-            if weights is not None:
-                Y_p = Y_p.copy()
-                Y_p[weights == 0] = 0.0
             Y_peaks.append(Y_p)
 
         return p_full, success, rsquared, best_fits, Y_peaks

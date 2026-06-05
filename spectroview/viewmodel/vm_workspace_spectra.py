@@ -1625,8 +1625,9 @@ class VMWorkspaceSpectra(QObject):
         }
 
         if md.fit_model and md.fit_model.get("peak_models"):
-            # Create a high-resolution X-axis for smooth curves
-            x_fine = np.linspace(x_values.min(), x_values.max(), 1000)
+            # Create a high-resolution X-axis for smooth curves (at least 3x original resolution)
+            n_fine_pts = max(3000, len(x_values) * 5)
+            x_fine = np.linspace(x_values.min(), x_values.max(), n_fine_pts)
             data["X_fine"] = pd.Series(x_fine)
 
             peak_models = list(md.fit_model["peak_models"].values())

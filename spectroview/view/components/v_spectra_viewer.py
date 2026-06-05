@@ -713,7 +713,7 @@ class VSpectraViewer(QWidget):
                 if y_bestfit is not None:
                     residual = y_raw - y_bestfit
                     self.ax.plot(x + x_offset, residual + y_offset,
-                                 "k-", lw=1.0, label="residual")
+                                 "blue", lw=1.0, label="residual")
 
             # ── Noise level ──
             if self.act_noise_level.isChecked():
@@ -767,7 +767,9 @@ class VSpectraViewer(QWidget):
 
         if fit_model and fit_model.get("peak_models") and len(x) > 1:
             # ── High-resolution smooth curves via eval_peak_initial ──
-            x_fine = np.linspace(x.min(), x.max(), 3000)
+            # Ensure we don't downsample high-res spectra by using at least 3x the original points
+            n_fine_pts = max(3000, len(x) * 5)
+            x_fine = np.linspace(x.min(), x.max(), n_fine_pts)
             sorted_keys = sorted(fit_model["peak_models"].keys(),
                                  key=lambda k: int(k))
 

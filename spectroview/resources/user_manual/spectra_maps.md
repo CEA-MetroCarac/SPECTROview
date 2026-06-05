@@ -200,13 +200,15 @@ Once your model is fully defined, click the **Fit** button to execute the optimi
 
 **Copy / Paste Fit Models**:
 A fully configured fit model can be copied from one spectrum and pasted onto another, making it easy to replicate complex setups across isolated files.
+> - When you **Paste** a model, the engine always fetches the *current* Noise Threshold setting from your active Settings Panel. This means you can copy a model, adjust your noise threshold, and paste it to apply the model with the updated noise settings.
 
 **Saving / Loading Fit Models**:
 If you intend to use a model frequently, you can save it as a template. Stored models can be easily accessed and applied to new datasets using the dropdown menu.
+> - When you **Save** a model to a `.json` file, the *current* Noise Threshold is permanently baked into that file. Later, when you **Apply (Load)** that model, the fit engine strictly uses the exact noise threshold saved in the file, ignoring whatever is currently set in your Settings Panel.
 
 _______
 
-### **5. Collect & Save Fit Results**
+### **5. Collect and Save Fit Results**
 
 Once fitting is complete across your spectra or maps, you need to aggregate the best-fit results:
 

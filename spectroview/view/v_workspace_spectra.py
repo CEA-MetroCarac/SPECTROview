@@ -229,6 +229,10 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_viewer.peak_dragged.connect(vm.update_dragged_peak)
         self.v_spectra_viewer.peak_drag_finished.connect(vm.finalize_peak_drag)
 
+        # Cosmic-ray eraser
+        self.v_spectra_viewer.cosmicRayErased.connect(vm.apply_cosmic_ray_erase)
+        self.v_spectra_viewer.cosmicRayValidated.connect(vm.validate_cosmic_ray_erase)
+
         self.v_fit_model_builder.btn_xcorrect.clicked.connect(lambda: vm.apply_x_correction(self.v_fit_model_builder.spin_xcorr.value()))
         self.v_fit_model_builder.btn_undo_corr.clicked.connect(vm.undo_x_correction)
         self.v_fit_model_builder.spectral_range_apply_requested.connect(vm.apply_spectral_range)

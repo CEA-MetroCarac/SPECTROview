@@ -462,6 +462,23 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 # pass an empty baseline dict so it only crops
                 b_dict = {}
             self.store.batch_preprocess(self.current_map_name, b_dict, rmin, rmax)
+
+    def validate_cosmic_ray_erase(self):
+        """Override: commit erasures and refresh the map heatmap cache.
+
+        After parent persists corrections to Y and Y0, the heatmap griddata
+        cache (built from Y0) is stale — clear it and re-emit map_data_updated
+        so the heatmap viewer reflects the corrected intensities.
+        """
+        # Delegate Y / Y0 write-back to parent
+        super().validate_cosmic_ray_erase()
+
+        # Invalidate cache and refresh map viewer
+        if self.current_map_name:
+            self.clear_map_cache_requested.emit(self.current_map_name)
+            self.map_data_updated.emit(self.get_current_map_dataframe())
+
+
     
     def send_selected_spectra_to_spectra_workspace(self):
         """Send selected spectra to the Spectra workspace tab for comparison."""

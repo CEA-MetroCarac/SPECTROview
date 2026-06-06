@@ -491,6 +491,60 @@ class VMWorkspaceSpectra(QObject):
         # self.store.remove_cosmic_rays()
         self.notify.emit("Cosmic ray detection completed.")
 
+    def apply_cosmic_ray_erase(self, md_row: int, modified_y):
+        """Update the processed spectrum array with the interactively erased data.
+
+        Called on every completed drag-erase so the model stays in sync with
+        the viewer's live preview (but Y0 is NOT touched yet — only Y).
+
+        Args:
+            md_row:     The actual row index in md.Y to overwrite.  In the
+                        Spectra workspace this is always 0; in the Maps
+                        workspace it is the spectrum's position in the map tensor.
+            modified_y: 1-D array of corrected intensity values.
+        """
+        md = self._get_interactive_map_data()
+        if md is None:
+            return
+
+        y_arr = np.asarray(modified_y, dtype=np.float32)
+
+        # Ensure md.Y exists (initialise from Y0 if needed)
+        if md.Y is None:
+            if md.Y0 is not None:
+                md.Y = md.Y0.copy()
+            else:
+                return
+
+        if md_row < md.Y.shape[0] and y_arr.shape == md.Y[md_row].shape:
+            md.Y[md_row] = y_arr
+
+    def validate_cosmic_ray_erase(self):
+        """Permanently commit cosmic-ray erasures to both Y and Y0.
+
+        Called when the user clicks the validate (✓) button.  After this call
+        the erasure survives reinit because Y0 (the raw reference) is also
+        updated.
+        """
+        md = self._get_interactive_map_data()
+        if md is None:
+            return
+
+        # Persist processed data into raw reference so Reinit keeps the correction
+        if md.Y is not None and md.Y0 is not None:
+            if md.Y.shape == md.Y0.shape:
+                md.Y0 = md.Y.copy()
+            else:
+                # Shapes differ (e.g. spectral range was cropped) — only update
+                # the overlapping region to avoid dimension mismatches.
+                m = min(md.Y.shape[1], md.Y0.shape[1])
+                md.Y0[:, :m] = md.Y[:, :m]
+
+        self.notify.emit("Cosmic ray erasure validated and saved.")
+        self._emit_selected_spectra()
+
+
+
     def _emit_list_update(self):
         """Emit updated list of spectra dicts and count."""
         spectra_info = []

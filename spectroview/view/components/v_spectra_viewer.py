@@ -64,6 +64,10 @@ class VSpectraViewer(QWidget):
     peak_drag_finished = Signal()
     spectrumCustomized = Signal()
 
+    # ── Cosmic-ray eraser signals ──
+    cosmicRayErased = Signal(int, object)  # (spec_idx, modified_y_array) — live preview
+    cosmicRayValidated = Signal()          # User accepted all erasures → persist to model
+
     _MAX_HEAVY_OVERLAYS = 10  # Maximum number of best-fit spectra to display in Tensor Mode (all spectra are still plotted)
 
     def __init__(self, parent=None):
@@ -77,7 +81,14 @@ class VSpectraViewer(QWidget):
         self._dragging_peak = None  # Stores (line, info) when dragging
 
         self.zoom_pan_active = True
-        QApplication.instance().focusChanged.connect(self._hide_tooltip)   
+        QApplication.instance().focusChanged.connect(self._hide_tooltip)
+
+        # ── Cosmic-ray eraser state ──
+        self._erase_mode = False           # Whether eraser mode is active
+        self._erase_drag_start_x = None    # x-coordinate where drag began
+        self._erase_highlight = None       # Matplotlib axvspan for visual feedback
+        self._erase_history = []           # Stack of (spec_idx, y_snapshot) for undo
+        self._erase_cids = []              # Matplotlib event connection IDs
         
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -100,8 +111,8 @@ class VSpectraViewer(QWidget):
             if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
                 action.setVisible(False)
 
-        # ─── Shift sliders panel (right of canvas) ───
-        self.shift_panel = self._create_shift_panel()
+        # ─── Vertical right panel (eraser buttons + shift sliders) ───
+        self.shift_panel = self._create_vertical_right_panel()
 
         # ─── Canvas + Sliders row ───
         canvas_row = QHBoxLayout()
@@ -115,14 +126,46 @@ class VSpectraViewer(QWidget):
         main_layout.addLayout(canvas_row)
         main_layout.addWidget(self.control_bar)
 
-    # ─── Shift sliders ───
-    def _create_shift_panel(self):
-        """Create a vertical panel with Y-shift and X-shift sliders."""
+    # ─── Vertical right panel (eraser + shift sliders) ───
+    def _create_vertical_right_panel(self):
+        """Create a vertical panel with eraser tool buttons and Y/X-shift sliders."""
         panel = QGroupBox()
-        panel.setFixedWidth(25)
+        panel.setFixedWidth(28)
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(2, 2, 2, 2)
         layout.setSpacing(2)
+
+        # ── Eraser button ──
+        self.btn_eraser = QToolButton()
+        self.btn_eraser.setCheckable(True)
+        self.btn_eraser.setIcon(QIcon(f"{ICON_DIR}/eraser.png"))
+        self.btn_eraser.setIconSize(QSize(18, 18))
+        self.btn_eraser.setFixedSize(22, 22)
+        self.btn_eraser.setToolTip("Erase Cosmic Ray — click and drag over a spike to remove it")
+        self.btn_eraser.toggled.connect(self._toggle_erase_mode)
+        layout.addWidget(self.btn_eraser)
+
+        # ── Undo button (hidden until eraser is active) ──
+        self.btn_erase_undo = QToolButton()
+        self.btn_erase_undo.setIcon(QIcon(f"{ICON_DIR}/undo2.png"))
+        self.btn_erase_undo.setIconSize(QSize(18, 18))
+        self.btn_erase_undo.setFixedSize(22, 22)
+        self.btn_erase_undo.setToolTip("Undo last erasure")
+        self.btn_erase_undo.clicked.connect(self._erase_undo)
+        self.btn_erase_undo.setVisible(False)
+        layout.addWidget(self.btn_erase_undo)
+
+        # ── Validate button (hidden until eraser is active) ──
+        self.btn_erase_validate = QToolButton()
+        self.btn_erase_validate.setIcon(QIcon(f"{ICON_DIR}/done.png"))
+        self.btn_erase_validate.setIconSize(QSize(18, 18))
+        self.btn_erase_validate.setFixedSize(22, 22)
+        self.btn_erase_validate.setToolTip("Validate erasures and save corrections")
+        self.btn_erase_validate.clicked.connect(self._erase_validate)
+        self.btn_erase_validate.setVisible(False)
+        layout.addWidget(self.btn_erase_validate)
+
+        layout.addSpacing(4)
 
         # ── Y Shift slider ──
         lbl_y = QLabel("Y")
@@ -1593,3 +1636,242 @@ class VSpectraViewer(QWidget):
             # Clear dragging state
             self._dragging_peak = None
 
+
+    # ═════════════════════════════════════════════════════════════════════
+    # Cosmic-Ray Eraser Tool
+    # ═════════════════════════════════════════════════════════════════════
+
+    def _toggle_erase_mode(self, checked: bool):
+        """Activate or deactivate the cosmic-ray erase mode."""
+        self._erase_mode = checked
+
+        # Show/hide companion buttons
+        self.btn_erase_undo.setVisible(checked)
+        self.btn_erase_validate.setVisible(checked)
+
+        if checked:
+            # Disable zoom/pan to avoid interference
+            if self.btn_zoom.isChecked():
+                self.btn_zoom.blockSignals(True)
+                self.btn_zoom.setChecked(False)
+                self.btn_zoom.blockSignals(False)
+            self.zoom_pan_active = False
+            self.toolbar.zoom()   # Toggle off any active zoom
+
+            # Set an eraser-style cursor on the canvas
+            self.canvas.setCursor(Qt.CursorShape.SizeHorCursor)
+
+            # Connect matplotlib mouse events
+            cid_press   = self.canvas.mpl_connect("button_press_event",   self._erase_on_press)
+            cid_motion  = self.canvas.mpl_connect("motion_notify_event",  self._erase_on_motion)
+            cid_release = self.canvas.mpl_connect("button_release_event", self._erase_on_release)
+            self._erase_cids = [cid_press, cid_motion, cid_release]
+
+            # Reset session state
+            self._erase_drag_start_x = None
+            self._erase_highlight = None
+            self._erase_history.clear()
+        else:
+            # Disconnect matplotlib events
+            for cid in self._erase_cids:
+                self.canvas.mpl_disconnect(cid)
+            self._erase_cids.clear()
+
+            # Remove any leftover highlight
+            self._erase_clear_highlight()
+
+            # Restore default cursor
+            self.canvas.unsetCursor()
+
+            # Restore zoom/pan state
+            self.zoom_pan_active = True
+            self.btn_zoom.blockSignals(True)
+            self.btn_zoom.setChecked(True)
+            self.btn_zoom.blockSignals(False)
+            self.toolbar.zoom()
+
+    def _erase_on_press(self, event):
+        """Record the start position of an erase drag."""
+        if not self._erase_mode:
+            return
+        if event.inaxes != self.ax or event.button != 1:
+            return
+        if event.xdata is None:
+            return
+
+        self._erase_drag_start_x = event.xdata
+        # Clear any previous highlight; the span will be drawn on first motion
+        self._erase_clear_highlight()
+
+    def _erase_on_motion(self, event):
+        """Update the highlight span while the user drags."""
+        if not self._erase_mode:
+            return
+        if self._erase_drag_start_x is None:
+            return
+        if event.inaxes != self.ax or event.xdata is None:
+            return
+
+        xmin = min(self._erase_drag_start_x, event.xdata)
+        xmax = max(self._erase_drag_start_x, event.xdata)
+
+        # Remove old span and draw a new one — avoids mutating get_xy() which
+        # returns an immutable tuple in newer Matplotlib versions.
+        if self._erase_highlight is not None:
+            try:
+                self._erase_highlight.remove()
+            except Exception:
+                pass
+        self._erase_highlight = self.ax.axvspan(
+            xmin, xmax, color="red", alpha=0.25, zorder=5
+        )
+        self.canvas.draw_idle()
+
+    def _erase_on_release(self, event):
+        """Perform the erasure when the user releases the mouse button."""
+        if not self._erase_mode:
+            return
+        if self._erase_drag_start_x is None:
+            return
+        if event.button != 1 or event.xdata is None:
+            self._erase_drag_start_x = None
+            self._erase_clear_highlight()
+            return
+
+        x0 = min(self._erase_drag_start_x, event.xdata)
+        x1 = max(self._erase_drag_start_x, event.xdata)
+        self._erase_drag_start_x = None
+        self._erase_clear_highlight()
+
+        if not self._tensor_data:
+            return
+
+        # Slot 0 in the viewer batch corresponds to the first selected spectrum.
+        # For the Maps workspace, _tensor_data["indices"] holds the actual md.Y row
+        # indices; we pass that through the signal so the ViewModel can write to the
+        # correct row.  For the Spectra workspace there are no "indices" and spec_idx
+        # stays at 0 (each spectrum is its own MapData with a single row).
+        viewer_slot = 0  # we always edit the first displayed spectrum
+        tensor_indices = self._tensor_data.get("indices")
+        md_row = int(tensor_indices[viewer_slot]) if tensor_indices is not None else viewer_slot
+
+        x_data = self._tensor_data.get("x")
+        Y_data = self._tensor_data.get("y")
+
+        if x_data is None or Y_data is None:
+            return
+
+        # Handle tensor_list (ragged, Spectra WS) vs ndarray (uniform, Maps WS)
+        if isinstance(x_data, list):
+            if viewer_slot >= len(x_data):
+                return
+            x_arr = np.asarray(x_data[viewer_slot], dtype=float)
+            y_arr = np.asarray(Y_data[viewer_slot], dtype=float).copy()
+        else:
+            x_arr = np.asarray(x_data, dtype=float)
+            y_arr = np.asarray(Y_data[viewer_slot], dtype=float).copy()
+
+        # Find indices inside the erased region
+        mask = (x_arr >= x0) & (x_arr <= x1)
+        if not mask.any():
+            return
+
+        # Boundary indices for interpolation (first valid points outside the region)
+        erase_indices = np.where(mask)[0]
+        i_left  = max(erase_indices[0] - 1, 0)
+        i_right = min(erase_indices[-1] + 1, len(x_arr) - 1)
+
+        # Save snapshot for undo BEFORE modifying (use viewer_slot as the undo key)
+        self._erase_history.append((viewer_slot, y_arr.copy()))
+
+        # ── Estimate noise sigma from the flattest region of the spectrum ────────
+        # Slide a small window across the spectrum, detrend each window (remove
+        # linear slope), compute its std, then take the *minimum*.  This picks
+        # the quietest portion of the spectrum — immune to peaks and cosmic rays.
+        _noise_win = 20
+        _n = len(y_arr)
+        if _n >= _noise_win:
+            _stds = []
+            for _i in range(0, _n - _noise_win + 1, _noise_win // 2):
+                _seg = y_arr[_i : _i + _noise_win]
+                _t = np.arange(len(_seg), dtype=float)
+                _p = np.polyfit(_t, _seg, 1)
+                _stds.append(float(np.std(_seg - np.polyval(_p, _t))))
+            noise_sigma = float(np.median(_stds)) if _stds else 0.0
+        else:
+            noise_sigma = 0.0
+
+        # ── Linear interpolation across the erased region ──────────────────────
+        x_left,  y_left  = x_arr[i_left],  y_arr[i_left]
+        x_right, y_right = x_arr[i_right], y_arr[i_right]
+
+        if x_right != x_left:
+            slope = (y_right - y_left) / (x_right - x_left)
+            y_interp = y_left + slope * (x_arr[mask] - x_left)
+        else:
+            y_interp = np.full(mask.sum(), (y_left + y_right) / 2.0)
+
+        # Add Gaussian noise matching the local noise level
+        if noise_sigma > 0:
+            rng = np.random.default_rng()
+            y_interp = y_interp + rng.normal(0.0, noise_sigma, size=y_interp.shape)
+
+        y_arr[mask] = y_interp
+
+        # Write modified array back into the viewer's tensor cache for immediate redraw
+        if isinstance(Y_data, list):
+            self._tensor_data["y"][viewer_slot] = y_arr
+        else:
+            Y_data[viewer_slot] = y_arr
+
+        # Emit preview signal — md_row is the actual row in md.Y (important for Maps WS)
+        self.cosmicRayErased.emit(md_row, y_arr)
+
+        self._plot()
+
+
+    def _erase_clear_highlight(self):
+        """Remove the selection highlight span from the axes."""
+        if self._erase_highlight is not None:
+            try:
+                self._erase_highlight.remove()
+            except Exception:
+                pass
+            self._erase_highlight = None
+            self.canvas.draw_idle()
+
+    def _erase_undo(self):
+        """Undo the last erase operation."""
+        if not self._erase_history:
+            return
+
+        spec_idx, y_snapshot = self._erase_history.pop()
+
+        if not self._tensor_data:
+            return
+
+        Y_data = self._tensor_data.get("y")
+        if Y_data is None:
+            return
+
+        if isinstance(Y_data, list):
+            if spec_idx < len(Y_data):
+                self._tensor_data["y"][spec_idx] = y_snapshot
+        else:
+            Y_data[spec_idx] = y_snapshot
+
+        self._plot()
+
+    def _erase_validate(self):
+        """Accept all erasures and persist them to the model."""
+        # Clear undo history — changes are now final
+        self._erase_history.clear()
+
+        # Emit validation signal so the ViewModel can persist Y and Y0
+        self.cosmicRayValidated.emit()
+
+        # Exit eraser mode
+        self.btn_eraser.blockSignals(True)
+        self.btn_eraser.setChecked(False)
+        self.btn_eraser.blockSignals(False)
+        self._toggle_erase_mode(False)

@@ -61,7 +61,7 @@ class VMenuBar(QToolBar):
         self.actionManual.setToolTip("Open User Manual PDF\n(Ctrl + Click to open online web manual)")
         self.actionManual.triggered.connect(self.manual_requested.emit)
 
-        self.actionGithub= self.addAction(QIcon(os.path.join(ICON_DIR, "github_yellow.png")), "Open Github repository")
+        self.actionGithub= self.addAction(QIcon(os.path.join(ICON_DIR, "github1.png")), "Open Github repository")
         self.actionGithub.triggered.connect(self.github_requested.emit)
 
         self.actionAbout= self.addAction(QIcon(os.path.join(ICON_DIR, "about.png")), "About SPECTROview")

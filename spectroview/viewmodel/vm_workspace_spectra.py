@@ -46,7 +46,7 @@ class VMWorkspaceSpectra(QObject):
     # Fit results signals
     fit_results_updated = Signal(object)  # pd.DataFrame
     split_parts_updated = Signal(list)    # list[str] for combobox
-    send_df_to_graphs = Signal(str, object)  # (df_name, pd.DataFrame)
+    send_df_to_graphs = Signal(str, object, bool)  # (df_name, pd.DataFrame, force_replace)
 
     notify = Signal(str)  # general notifications
     
@@ -2258,7 +2258,7 @@ class VMWorkspaceSpectra(QObject):
             except Exception as e:
                 QMessageBox.critical(None, "Error", f"Error saving fit results: {e}")
     
-    def send_results_to_graphs(self, df_name: str):
+    def send_results_to_graphs(self, df_name: str, force_replace: bool = False):
         """Send fit results DataFrame to Graphs workspace."""
         if self.df_fit_results is None or self.df_fit_results.empty:
             self.notify.emit("No fit results to send.")
@@ -2268,7 +2268,7 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("Please enter a DataFrame name.")
             return
             
-        self.send_df_to_graphs.emit(df_name, self.df_fit_results)
+        self.send_df_to_graphs.emit(df_name, self.df_fit_results, force_replace)
     
     def view_stats(self, parent_widget=None):
         """Show statistical fitting results of the selected spectrum."""

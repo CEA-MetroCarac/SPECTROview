@@ -88,15 +88,18 @@ class VMWorkspaceGraphs(QObject):
         if last_valid_path:
             self.settings.set_last_directory(str(last_valid_path.parent))
     
-    def add_dataframe(self, df_name: str, df: pd.DataFrame):
+    def add_dataframe(self, df_name: str, df: pd.DataFrame, force_replace: bool = False):
         """Add a DataFrame to workspace."""
-        if df_name in self.dataframes:
+        is_replace = df_name in self.dataframes
+        if is_replace and not force_replace:
             self.notify.emit(f"DataFrame '{df_name}' already exists.")
             return
         
         self.dataframes[df_name] = df
         self._emit_dataframes_list()
-        #self.notify.emit(f"Added DataFrame: {df_name}")
+        
+        if is_replace and force_replace:
+            self.notify.emit(f"DataFrame '{df_name}' successfully replaced.")
     
     def remove_dataframe(self, df_name: str):
         """Remove a DataFrame."""

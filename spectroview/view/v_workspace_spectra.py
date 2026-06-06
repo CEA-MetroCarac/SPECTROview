@@ -372,7 +372,7 @@ class VWorkspaceSpectra(QWidget):
         self.vm.clear_workspace()
     
 
-    def _send_df_to_graphs(self, df_name: str, df: pd.DataFrame):
+    def _send_df_to_graphs(self, df_name: str, df: pd.DataFrame, force_replace: bool = False):
         """Forward DataFrame to Graphs workspace"""
         # Access the parent window's Graphs workspace
         parent_window = self.window()
@@ -381,7 +381,7 @@ class VWorkspaceSpectra(QWidget):
         
         # Add DataFrame to Graphs workspace via its ViewModel
         graphs_workspace = parent_window.v_graphs_workspace
-        graphs_workspace.vm.add_dataframe(df_name, df)
+        graphs_workspace.vm.add_dataframe(df_name, df, force_replace)
         
     def _show_toast_notification(self, message: str):
         """Show auto-dismissing toast notification."""

@@ -21,7 +21,7 @@ class VFitResults(QWidget):
     add_column_requested = Signal(str, int)  # (column_name, part_index)
     compute_column_requested = Signal(str, str)  # (column_name, expression)
     save_results_requested = Signal()
-    send_to_viz_requested = Signal(str)  # (dataframe_name)
+    send_to_viz_requested = Signal(str, bool)  # (dataframe_name, force_replace)
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -114,7 +114,7 @@ class VFitResults(QWidget):
         
         self.ent_send_df_to_viz = QLineEdit()
         self.ent_send_df_to_viz.setPlaceholderText("DataFrame name")
-        self.ent_send_df_to_viz.setText("SPECTRA_best_fit")
+        self.ent_send_df_to_viz.setText("best_fit_results")
         
         self.btn_send = QPushButton("Send to Graphs")
         self.btn_send.setFixedWidth(100)
@@ -184,9 +184,13 @@ class VFitResults(QWidget):
     
     def _on_send_to_viz(self):
         """Emit signal with dataframe name."""
+        from PySide6.QtWidgets import QApplication
+        from PySide6.QtCore import Qt
+        
         df_name = self.ent_send_df_to_viz.text().strip()
+        force_replace = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
         if df_name:
-            self.send_to_viz_requested.emit(df_name)
+            self.send_to_viz_requested.emit(df_name, force_replace)
     
     def populate_split_combobox(self, parts: list):
         """Populate the split filename combobox with parts."""

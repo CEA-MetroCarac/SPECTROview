@@ -9,9 +9,9 @@
     
 ## **SPECTROview: A Tool for Spectroscopic Data Processing and Visualization**
 
-`SPECTROview` is a free, open-source software application designed for advanced spectroscopic data analysis. It supports a diverse array of data types, including discrete spectra and hyperspectral datasets such as 2D maps and wafer maps.
+**SPECTROview** is a free, open-source software application designed for advanced spectroscopic data analysis. It supports a diverse array of data types, including discrete spectra and hyperspectral datasets such as 2D maps and wafer maps.
 
-With its integrated visualization tools, `SPECTROview` streamlines your analytical workflow by consolidating data processing and visualization into a single, cohesive application.
+With its integrated visualization tools, **SPECTROview** streamlines your analytical workflow by consolidating data processing and visualization into a single, cohesive application.
 
 ## **Documentation**
 
@@ -85,6 +85,6 @@ This work was carried out at the CEA — Platform for Nanocharacterisation (PFNC
 
 ## **Citation**
 
-If you use `SPECTROview` for data processing or visualization in your research, please cite the following publication:
+If you use **SPECTROview** for data processing or visualization in your research, please cite the following publication:
 
 > Le, V.-H., & Quéméré, P. (2025). SPECTROview: A Tool for Spectroscopic Data Processing and Visualization. Zenodo. [https://doi.org/10.5281/zenodo.14147172](https://doi.org/10.5281/zenodo.14147172)

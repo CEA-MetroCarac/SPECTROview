@@ -141,7 +141,7 @@ class VSpectraViewer(QWidget):
         self.btn_eraser.setIcon(QIcon(f"{ICON_DIR}/eraser.png"))
         self.btn_eraser.setIconSize(QSize(18, 18))
         self.btn_eraser.setFixedSize(22, 22)
-        self.btn_eraser.setToolTip("Erase Cosmic Ray — click and drag over a spike to remove it")
+        self.btn_eraser.setToolTip("Erase Cosmic Ray - click and drag over a spike to remove it")
         self.btn_eraser.toggled.connect(self._toggle_erase_mode)
         layout.addWidget(self.btn_eraser)
 

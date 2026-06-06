@@ -8,6 +8,7 @@ TEXT_EXPIRE = (
     "Github page (cf. About) to update newest version."
 )
 
+
 # Predefined axis labels for autocomplete
 AXIS_LABELS = [
     "Si peak position (cm$^{-1}$)",

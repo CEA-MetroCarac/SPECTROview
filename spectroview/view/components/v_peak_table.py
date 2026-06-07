@@ -9,7 +9,7 @@ from PySide6.QtGui import QIcon, QPalette, QColor
 
 from spectroview import PEAK_MODELS, ICON_DIR
 
-ROW_HEIGHT = 24
+ROW_HEIGHT = 28
 class VPeakTable(QWidget):
     # ───── View → ViewModel signals ─────
     peak_label_changed = Signal(int, str)
@@ -101,11 +101,18 @@ class VPeakTable(QWidget):
             if any(p in pm.param_hints for pm in peaks)
         }
 
+        def _make_col():
+            lay = QVBoxLayout()
+            lay.setSpacing(4)
+            lay.setContentsMargins(0, 0, 0, 0)
+            lay.setAlignment(Qt.AlignTop)
+            return lay
+
         # ── Column containers
         cols = {
-            "del": QVBoxLayout(),
-            "label": QVBoxLayout(),
-            "model": QVBoxLayout(),
+            "del": _make_col(),
+            "label": _make_col(),
+            "model": _make_col(),
         }
 
         param_cols = {}
@@ -116,17 +123,17 @@ class VPeakTable(QWidget):
             param_cols[p] = {}
             # Target order: [min] [value] [max] [fix]
             if self._show_limits:
-                param_cols[p]["min"] = QVBoxLayout()
+                param_cols[p]["min"] = _make_col()
 
-            param_cols[p]["value"] = QVBoxLayout()
+            param_cols[p]["value"] = _make_col()
 
             if self._show_limits:
-                param_cols[p]["max"] = QVBoxLayout()
+                param_cols[p]["max"] = _make_col()
 
-            param_cols[p]["vary"] = QVBoxLayout()
+            param_cols[p]["vary"] = _make_col()
             
             if self._show_expr:
-                param_cols[p]["expr"] = QVBoxLayout()
+                param_cols[p]["expr"] = _make_col()
 
 
         # ── Headers
@@ -148,7 +155,7 @@ class VPeakTable(QWidget):
             # delete
             btn = QPushButton(pm.prefix)
             btn.setIcon(QIcon(f"{ICON_DIR}/close.png"))
-            btn.setFixedWidth(50)
+            btn.setFixedSize(50, ROW_HEIGHT)
             btn.clicked.connect(self._make_delete_callback(int(pm.key)))
             cols["del"].addWidget(btn)
 
@@ -166,7 +173,7 @@ class VPeakTable(QWidget):
             cmb = QComboBox()
             cmb.addItems(PEAK_MODELS)
             cmb.setCurrentText(pm.name2)
-            cmb.setFixedWidth(100)
+            cmb.setFixedSize(100, ROW_HEIGHT)
             cmb.currentTextChanged.connect(
                 lambda txt, key=pm.key: self.peak_model_changed.emit(int(key), txt)
             )
@@ -302,6 +309,7 @@ class VPeakTable(QWidget):
     def _add_header(self, layout, text):
         lbl = QLabel(text)
         lbl.setAlignment(Qt.AlignCenter)
+        lbl.setFixedHeight(ROW_HEIGHT)
         layout.addWidget(lbl)
 
     def _add_empty(self, d):
@@ -318,9 +326,7 @@ class VPeakTable(QWidget):
         l.setContentsMargins(0, 0, 0, 0)
         l.setAlignment(Qt.AlignCenter)
 
-        # match QLineEdit height exactly
-        ref = QLineEdit()
-        c.setFixedHeight(ref.sizeHint().height())
+        c.setFixedHeight(ROW_HEIGHT)
 
         l.addWidget(chk)
         return c

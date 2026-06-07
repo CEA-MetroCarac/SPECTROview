@@ -504,7 +504,7 @@ def light_glass_stylesheet() -> str:
 
     QWidget {
         font-family: "Helvetica Neue", Helvetica, Arial;
-        font-size: 13pt;
+        font-size: 13px;
     }
     QMainWindow, QDialog {
         background-color: #E8EAED;

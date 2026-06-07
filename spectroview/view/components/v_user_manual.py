@@ -241,7 +241,7 @@ class VUserManualDialog(QDialog):
 
     def __init__(self, manual_dir, parent=None):
         super().__init__(parent)
-        self._text_size = 12
+        self._text_size = 11
         self._update_stylesheet()
         
         self.manual_dir = manual_dir

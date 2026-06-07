@@ -2,20 +2,21 @@
 import warnings
 from copy import deepcopy
 import numpy as np
-from PySide6.QtCore import QSettings
+from PySide6.QtCore import QObject, QEvent, QSettings
 from spectroview.fit_engine.noise import detect_noise_level
 from spectroview.fit_engine.evaluator import eval_peak_initial
 # Suppress harmless Matplotlib constrained_layout warning on 0-size UI initialization
 warnings.filterwarnings("ignore", message=".*constrained_layout not applied because axes sizes collapsed to zero.*")
 
 from PySide6.QtWidgets import (
+    QFrame,
     QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QToolButton, QLabel,
     QComboBox, QMenu, QWidgetAction,
     QLineEdit, QDoubleSpinBox, QColorDialog, QInputDialog,
     QSlider, QGroupBox
 )
-from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize
 from PySide6.QtGui import QIcon
 
 import matplotlib.pyplot as plt
@@ -25,9 +26,9 @@ from matplotlib.backends.backend_qtagg import (
     FigureCanvasQTAgg as FigureCanvas
 )
 import matplotlib as mpl
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QFrame, QApplication
 from PySide6.QtGui import QCursor
-from PySide6.QtCore import QPoint
+from PySide6.QtCore import QObject, QEvent, QPoint
 
 import matplotlib.lines as mlines
 
@@ -106,6 +107,36 @@ class VSpectraViewer(QWidget):
 
 
         self.toolbar = NoDoubleClickZoomToolbar(self.canvas, self)
+        
+        original_set_style = self.toolbar.setStyleSheet
+        def custom_set_style(css):
+            original_set_style("background: transparent; border: none;")
+        self.toolbar.setStyleSheet = custom_set_style
+        self.toolbar.setStyleSheet("")
+
+        class ToolbarEventFilter(QObject):
+            def __init__(self, toolbar):
+                super().__init__()
+                self.toolbar = toolbar
+            def eventFilter(self, obj, event):
+                if event.type() == QEvent.PaletteChange:
+                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                    for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
+                        if text in action_dict and image_file is not None:
+                            try:
+                                icon = self.toolbar._icon(image_file + '.png')
+                                action_dict[text].setIcon(icon)
+                            except Exception:
+                                pass
+                return False
+                
+        self.toolbar_filter = ToolbarEventFilter(self.toolbar)
+        self.toolbar.installEventFilter(self.toolbar_filter)
+
+
+        
+
+
         self.toolbar.zoom() # Start with zoom enabled
         for action in self.toolbar.actions():
             if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
@@ -129,11 +160,16 @@ class VSpectraViewer(QWidget):
     # ─── Vertical right panel (eraser + shift sliders) ───
     def _create_vertical_right_panel(self):
         """Create a vertical panel with eraser tool buttons and Y/X-shift sliders."""
-        panel = QGroupBox()
-        panel.setFixedWidth(28)
+        panel = QFrame()
+        panel.setFrameShape(QFrame.StyledPanel)
+        panel.setFixedWidth(32)
+        panel.setObjectName("shiftPanel")
+        panel.setStyleSheet("#shiftPanel { background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 6px; }")
+
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(2, 2, 2, 2)
         layout.setSpacing(2)
+        layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
         # ── Eraser button ──
         self.btn_eraser = QToolButton()
@@ -143,7 +179,7 @@ class VSpectraViewer(QWidget):
         self.btn_eraser.setFixedSize(22, 22)
         self.btn_eraser.setToolTip("Erase Cosmic Ray - click and drag over a spike to remove it")
         self.btn_eraser.toggled.connect(self._toggle_erase_mode)
-        layout.addWidget(self.btn_eraser)
+        layout.addWidget(self.btn_eraser, 0, Qt.AlignHCenter)
 
         # ── Undo button (hidden until eraser is active) ──
         self.btn_erase_undo = QToolButton()
@@ -153,7 +189,7 @@ class VSpectraViewer(QWidget):
         self.btn_erase_undo.setToolTip("Undo last erasure")
         self.btn_erase_undo.clicked.connect(self._erase_undo)
         self.btn_erase_undo.setVisible(False)
-        layout.addWidget(self.btn_erase_undo)
+        layout.addWidget(self.btn_erase_undo, 0, Qt.AlignHCenter)
 
         # ── Validate button (hidden until eraser is active) ──
         self.btn_erase_validate = QToolButton()
@@ -163,23 +199,26 @@ class VSpectraViewer(QWidget):
         self.btn_erase_validate.setToolTip("Validate erasures and save corrections")
         self.btn_erase_validate.clicked.connect(self._erase_validate)
         self.btn_erase_validate.setVisible(False)
-        layout.addWidget(self.btn_erase_validate)
+        layout.addWidget(self.btn_erase_validate, 0, Qt.AlignHCenter)
 
-        layout.addSpacing(4)
-
+        layout.addStretch(1)
+        
         # ── Y Shift slider ──
         lbl_y = QLabel("Y")
         lbl_y.setAlignment(Qt.AlignCenter)
         lbl_y.setToolTip("Shift spectra vertically (waterfall offset)")
 
         self.slider_y_shift = QSlider(Qt.Vertical)
+        self.slider_y_shift.setFixedHeight(120)
         self.slider_y_shift.setRange(0, 100)
         self.slider_y_shift.setValue(0)
         self.slider_y_shift.setToolTip("Y Shift: offset each spectrum vertically")
         self.slider_y_shift.valueChanged.connect(self._plot)
 
-        layout.addWidget(lbl_y)
-        layout.addWidget(self.slider_y_shift, stretch=1)
+        layout.addWidget(lbl_y, 0, Qt.AlignHCenter)
+        layout.addWidget(self.slider_y_shift, 0, Qt.AlignHCenter)
+        
+        layout.addSpacing(15)
 
         # ── X Shift slider ──
         lbl_x = QLabel("X")
@@ -187,27 +226,30 @@ class VSpectraViewer(QWidget):
         lbl_x.setToolTip("Shift spectra horizontally")
 
         self.slider_x_shift = QSlider(Qt.Vertical)
+        self.slider_x_shift.setFixedHeight(120)
         self.slider_x_shift.setRange(0, 100)
         self.slider_x_shift.setValue(0)
         self.slider_x_shift.setToolTip("X Shift: offset each spectrum horizontally")
         self.slider_x_shift.valueChanged.connect(self._plot)
 
-        layout.addWidget(lbl_x)
-        layout.addWidget(self.slider_x_shift, stretch=1)
-
+        layout.addWidget(lbl_x, 0, Qt.AlignHCenter)
+        layout.addWidget(self.slider_x_shift, 0, Qt.AlignHCenter)
+        
+        # Removed bottom stretch to stick sliders to the bottom
         return panel
 
     # Control bar
     def _create_control_bar(self):
         bar = QWidget(self)
-        bar.setFixedHeight(50)
+        bar.setFixedHeight(38)
         layout = QHBoxLayout(bar)
-        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setContentsMargins(4, 4, 4, 4)
 
         # Rescale
         self.btn_rescale = QPushButton()
         self.btn_rescale.setIcon(QIcon(f"{ICON_DIR}/rescale.png"))
         self.btn_rescale.setIconSize(QSize(22, 22))
+        self.btn_rescale.setFixedSize(30, 30)
         self.btn_rescale.setToolTip("Rescale (Ctrl+R)")
         self.btn_rescale.clicked.connect(self.rescaleRequested)
         self.btn_rescale.clicked.connect(self._rescale)
@@ -238,6 +280,7 @@ class VSpectraViewer(QWidget):
         self.btn_norm.setIcon(QIcon(f"{ICON_DIR}/norm.png"))
         self.btn_norm.setToolTip("Intensity normalization to maximum of spectrum or selected region")
         self.btn_norm.setIconSize(QSize(22, 22))
+        self.btn_norm.setFixedSize(30, 30)
         self.btn_norm.toggled.connect(self._emit_norm)
         self.btn_norm.toggled.connect(self._plot)
         self.btn_norm.clicked.connect(self._rescale)
@@ -245,13 +288,13 @@ class VSpectraViewer(QWidget):
         layout.addWidget(self.btn_norm)
 
         self.norm_xmin = QLineEdit()
-        self.norm_xmin.setFixedWidth(45)
+        self.norm_xmin.setFixedSize(45, 30)
         self.norm_xmin.setPlaceholderText("Xmin")
         self.norm_xmin.setToolTip("Intensity normalization to maximum of spectrum or selected region")
         layout.addWidget(self.norm_xmin)
 
         self.norm_xmax = QLineEdit()
-        self.norm_xmax.setFixedWidth(45)
+        self.norm_xmax.setFixedSize(45, 30)
         self.norm_xmax.setPlaceholderText("Xmax")
         self.norm_xmax.setToolTip("Intensity normalization to maximum of spectrum or selected region")
         layout.addWidget(self.norm_xmax)
@@ -268,6 +311,7 @@ class VSpectraViewer(QWidget):
         self.btn_bestfit.setIcon(QIcon(f"{ICON_DIR}/bestfit.png"))
         self.btn_bestfit.setToolTip("Show or hide best-fit lines")
         self.btn_bestfit.setIconSize(QSize(22, 22))
+        self.btn_bestfit.setFixedSize(30, 30)
         self.btn_bestfit.toggled.connect(self._emit_view_options)
         layout.addWidget(self.btn_bestfit)
 
@@ -278,6 +322,7 @@ class VSpectraViewer(QWidget):
         self.btn_legend.setIcon(QIcon(f"{ICON_DIR}/legend.png"))
         self.btn_legend.setToolTip("Show or hide legend box")
         self.btn_legend.setIconSize(QSize(22, 22))
+        self.btn_legend.setFixedSize(30, 30)
         self.btn_legend.toggled.connect(self._emit_view_options)
         layout.addWidget(self.btn_legend)
 
@@ -286,6 +331,7 @@ class VSpectraViewer(QWidget):
         self.btn_copy.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
         self.btn_copy.setToolTip("Copy figure to clipboard. Hold Ctrl + Click to copy data to clipboard")
         self.btn_copy.setIconSize(QSize(22, 22))
+        self.btn_copy.setFixedSize(30, 30)
         self.btn_copy.clicked.connect(self._emit_copy)
         layout.addWidget(self.btn_copy)
 
@@ -295,6 +341,7 @@ class VSpectraViewer(QWidget):
         self.btn_options.setIcon(QIcon(f"{ICON_DIR}/options.png"))
         self.btn_options.setToolTip("More view options")
         self.btn_options.setIconSize(QSize(22, 22))
+        self.btn_options.setFixedSize(30, 30)
         self.btn_options.setPopupMode(QToolButton.InstantPopup)
         self.btn_options.setMenu(self.options_menu)
         layout.addWidget(self.btn_options)
@@ -317,6 +364,7 @@ class VSpectraViewer(QWidget):
         btn.setAutoExclusive(True)
         btn.setIcon(QIcon(f"{ICON_DIR}/{icon}"))
         btn.setIconSize(QSize(22, 22))
+        btn.setFixedSize(30, 30)
         btn.setToolTip(tooltip)
         return btn
 
@@ -403,7 +451,7 @@ class VSpectraViewer(QWidget):
         # ─── Copied figure size (NEW) ───
         ratio_widget = QWidget()
         ratio_layout = QHBoxLayout(ratio_widget)
-        ratio_layout.setContentsMargins(5, 5, 5, 5)
+        ratio_layout.setContentsMargins(2, 2, 2, 2)
 
         ratio_layout.addWidget(QLabel("Copied figure size:"))
 

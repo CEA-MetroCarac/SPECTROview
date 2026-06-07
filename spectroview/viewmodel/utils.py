@@ -516,79 +516,78 @@ def calc_area(model_name, params):
     return None  # default if parameters missing
     
 def dark_palette():
-    """Dark palette tuned for SPECTROview UI"""
+    """Dark palette tuned for SPECTROview UI — glass-style depth layers"""
 
     p = QPalette()
 
-    # ---------- Base surfaces ----------
-    p.setColor(QPalette.Window, QColor(53, 53, 53))          # main background
-    p.setColor(QPalette.Base, QColor(42, 42, 42))            # lists, tables, editors
-    p.setColor(QPalette.AlternateBase, QColor(48, 48, 48))   # alternating rows
+    # ---------- Base surfaces (deepened for glass layering) ----------
+    p.setColor(QPalette.Window, QColor(33, 33, 33))          # main background
+    p.setColor(QPalette.Base, QColor(38, 38, 38))            # lists, tables, editors
+    p.setColor(QPalette.AlternateBase, QColor(45, 45, 45))   # alternating rows
 
     # ---------- Text ----------
-    p.setColor(QPalette.WindowText, Qt.white)
-    p.setColor(QPalette.Text, Qt.white)
-    p.setColor(QPalette.ButtonText, Qt.white)
-    p.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
+    p.setColor(QPalette.WindowText, QColor(240, 240, 240))
+    p.setColor(QPalette.Text, QColor(240, 240, 240))
+    p.setColor(QPalette.ButtonText, QColor(235, 235, 235))
+    p.setColor(QPalette.PlaceholderText, QColor(135, 135, 135))
 
     # ---------- Buttons / controls ----------
-    p.setColor(QPalette.Button, QColor(64, 64, 64))
-    p.setColor(QPalette.Light, QColor(90, 90, 90))
-    p.setColor(QPalette.Mid, QColor(72, 72, 72))
-    p.setColor(QPalette.Dark, QColor(40, 40, 40))
-    p.setColor(QPalette.Shadow, QColor(20, 20, 20))
+    p.setColor(QPalette.Button, QColor(58, 58, 58))
+    p.setColor(QPalette.Light, QColor(85, 85, 85))
+    p.setColor(QPalette.Mid, QColor(68, 68, 68))
+    p.setColor(QPalette.Dark, QColor(38, 38, 38))
+    p.setColor(QPalette.Shadow, QColor(18, 18, 18))
 
     # ---------- Tooltips ----------
-    p.setColor(QPalette.ToolTipBase, QColor(255, 255, 220))
-    p.setColor(QPalette.ToolTipText, Qt.black)
+    p.setColor(QPalette.ToolTipBase, QColor(55, 55, 55))
+    p.setColor(QPalette.ToolTipText, QColor(240, 240, 240))
 
-    # ---------- Highlights / accent ----------
-    accent = QColor(42, 130, 218)  # Qt blue (matches screenshot)
+    # ---------- Highlights / accent (blue) ----------
+    accent = QColor(42, 130, 218)
     p.setColor(QPalette.Highlight, accent)
     p.setColor(QPalette.HighlightedText, Qt.white)
-    p.setColor(QPalette.Link, accent)
+    p.setColor(QPalette.Link, QColor(64, 156, 255))
 
     # ---------- Disabled ----------
-    p.setColor(QPalette.Disabled, QPalette.Text, QColor(130, 130, 130))
-    p.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(130, 130, 130))
-    p.setColor(QPalette.Disabled, QPalette.WindowText, QColor(130, 130, 130))
+    p.setColor(QPalette.Disabled, QPalette.Text, QColor(115, 115, 115))
+    p.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(115, 115, 115))
+    p.setColor(QPalette.Disabled, QPalette.WindowText, QColor(115, 115, 115))
 
     return p
 
 def light_palette():
-    """Light palette with soft blue accent"""
+    """Light palette with soft blue accent — glass-style depth layers"""
 
     p = QPalette()
 
     # ---- Base colors ----
-    p.setColor(QPalette.Window, QColor(245, 246, 248))        # main background
+    p.setColor(QPalette.Window, QColor(245, 245, 245))        # main background
     p.setColor(QPalette.Base, QColor(255, 255, 255))          # inputs, tables
-    p.setColor(QPalette.AlternateBase, QColor(238, 240, 243)) # alternate rows
+    p.setColor(QPalette.AlternateBase, QColor(240, 240, 240)) # alternate rows
 
     # ---- Text ----
     p.setColor(QPalette.WindowText, QColor(30, 30, 30))
     p.setColor(QPalette.Text, QColor(30, 30, 30))
-    p.setColor(QPalette.ButtonText, QColor(30, 30, 30))
+    p.setColor(QPalette.ButtonText, QColor(35, 35, 35))
     p.setColor(QPalette.PlaceholderText, QColor(150, 150, 150))
 
     # ---- Buttons ----
-    p.setColor(QPalette.Button, QColor(235, 236, 239))
+    p.setColor(QPalette.Button, QColor(235, 235, 235))
     p.setColor(QPalette.Light, QColor(255, 255, 255))
     p.setColor(QPalette.Midlight, QColor(220, 220, 220))
     p.setColor(QPalette.Mid, QColor(200, 200, 200))
     p.setColor(QPalette.Dark, QColor(160, 160, 160))
 
     # ---- Blue accent ----
-    accent = QColor(64, 156, 255)  # soft modern blue
-    accent_hover = QColor(90, 170, 255)
+    accent = QColor(42, 130, 218)
 
     p.setColor(QPalette.Highlight, accent)
     p.setColor(QPalette.HighlightedText, Qt.white)
-    p.setColor(QPalette.Link, accent)
+    p.setColor(QPalette.Link, QColor(42, 130, 218))
 
     # ---- Tooltips ----
-    p.setColor(QPalette.ToolTipBase, QColor(255, 255, 240))
-    p.setColor(QPalette.ToolTipText, QColor(20, 20, 20))
+    p.setColor(QPalette.ToolTipBase, QColor(255, 255, 255))
+    p.setColor(QPalette.ToolTipText, QColor(30, 30, 30))
 
     # ---- Disabled state ----
     p.setColor(QPalette.Disabled, QPalette.Text, QColor(160, 160, 160))

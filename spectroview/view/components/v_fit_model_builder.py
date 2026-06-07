@@ -88,7 +88,7 @@ class VFitModelBuilder(QWidget):
         # ==================================================
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
-        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setContentsMargins(3, 0, 0, 0)
         right_layout.setSpacing(4)
 
         # ── Peak table in scroll area
@@ -646,6 +646,7 @@ class VFitModelBuilder(QWidget):
         # ── Row 1: Fit actions
         row1 = QHBoxLayout()
         self.btn_fit = QPushButton("Fit")
+        self.btn_fit.setFixedSize(54, 24)
         self.btn_fit.setToolTip("Fit the spectrum. Hold Ctrl to fit all spectra.")
         self.btn_fit.clicked.connect(
             lambda: self._emit_with_ctrl(self.fit_requested)

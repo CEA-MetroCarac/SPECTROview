@@ -25,6 +25,7 @@ from spectroview.view.v_workspace_maps import VWorkspaceMaps
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 
 from spectroview.viewmodel.utils import dark_palette, light_palette
+from spectroview.view.style import dark_glass_stylesheet, light_glass_stylesheet
 
 from spectroview import LOGO_APPLI, USER_MANUAL_DIR
 from spectroview.view.components.v_user_manual import VUserManualDialog
@@ -407,9 +408,11 @@ class Main(QMainWindow):
         
         if theme == "dark":
             app.setPalette(dark_palette())
+            app.setStyleSheet(dark_glass_stylesheet())
             self.settings.set_theme("dark")
         else:
             app.setPalette(light_palette())
+            app.setStyleSheet(light_glass_stylesheet())
             self.settings.set_theme("light")
             
         if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):

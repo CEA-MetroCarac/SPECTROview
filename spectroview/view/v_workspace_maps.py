@@ -103,24 +103,16 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         main_splitter.setSizes([900, 400])
     
     def _create_maps_right_panel(self):
-        """Create the right panel with map viewer and controls in a scroll area."""
+        """Create the right panel with map viewer and controls."""
         # Main panel wrapper
         panel = QFrame()
+        panel.setObjectName("workspaceRightPanel")
         panel.setMaximumWidth(450)
-        panel.setFrameShape(QFrame.StyledPanel)
-        main_layout = QVBoxLayout(panel)
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        panel.setFrameShape(QFrame.NoFrame)
         
-        # Scroll area for all controls
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll_area.setFrameShape(QFrame.NoFrame)
-        
-        # Scrollable content widget
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
-        layout.setContentsMargins(6, 6, 6, 6)
+        # Main layout (formerly scroll_content)
+        layout = QVBoxLayout(panel)
+        layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(8)
         
         # ══════════════════════════════════════════════════════════════
@@ -137,11 +129,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_maps_list = VMapsList()
         layout.addWidget(self.v_maps_list, stretch=1)
         
-        # Set scroll content and add to main panel
-        scroll_area.setWidget(scroll_content)
-        main_layout.addWidget(scroll_area)
-        
-        # ── Footer: count + progress bar + stop button (outside scroll area) ──
+        # ── Footer: count + progress bar + stop button ──
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(4)
         
@@ -155,7 +143,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         footer_layout.addWidget(self.lbl_count)
         footer_layout.addWidget(self.progress_bar)
         footer_layout.addWidget(self.btn_stop_fit)
-        main_layout.addLayout(footer_layout)
+        layout.addLayout(footer_layout)
         
         return panel
     

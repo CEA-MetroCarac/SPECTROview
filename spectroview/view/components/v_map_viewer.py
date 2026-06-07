@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QPushButton, QComboBox, QCheckBox, QDoubleSpinBox,
     QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction, QApplication, QMessageBox
 )
-from PySide6.QtCore import Qt, Signal, QSize, QTimer
+from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon, QAction
 
 from spectroview import ICON_DIR, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
@@ -102,6 +102,36 @@ class VMapViewer(QWidget):
         
         # Matplotlib toolbar
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        
+        original_set_style = self.toolbar.setStyleSheet
+        def custom_set_style(css):
+            original_set_style("background: transparent; border: none;")
+        self.toolbar.setStyleSheet = custom_set_style
+        self.toolbar.setStyleSheet("")
+
+        class ToolbarEventFilter(QObject):
+            def __init__(self, toolbar):
+                super().__init__()
+                self.toolbar = toolbar
+            def eventFilter(self, obj, event):
+                if event.type() == QEvent.PaletteChange:
+                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                    for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
+                        if text in action_dict and image_file is not None:
+                            try:
+                                icon = self.toolbar._icon(image_file + '.png')
+                                action_dict[text].setIcon(icon)
+                            except Exception:
+                                pass
+                return False
+                
+        self.toolbar_filter = ToolbarEventFilter(self.toolbar)
+        self.toolbar.installEventFilter(self.toolbar_filter)
+
+
+        
+
+
         # Hide some toolbar actions
         for action in self.toolbar.actions():
             if action.text() in ['Customize', 'Save', 'Back', 'Forward', 'Subplots']:
@@ -150,7 +180,7 @@ class VMapViewer(QWidget):
     def _create_map_type_controls(self):
         """Create map type and palette selector controls."""
         type_layout = QHBoxLayout()
-        type_layout.setContentsMargins(4, 4, 4, 4)
+        type_layout.setContentsMargins(2, 2, 2, 2)
         
         lbl = QLabel("Select Map type:")
         type_layout.addWidget(lbl)
@@ -169,7 +199,7 @@ class VMapViewer(QWidget):
     def _create_z_range_slider(self):
         """Create Z-range slider with parameter selector."""
         z_slider_layout = QHBoxLayout()
-        z_slider_layout.setContentsMargins(4, 2, 4, 2)
+        z_slider_layout.setContentsMargins(2, 2, 2, 2)
         
         self.cbb_zparameter = QComboBox()
         self.cbb_zparameter.addItems(['Intensity', 'Area'])
@@ -214,7 +244,7 @@ class VMapViewer(QWidget):
     def _create_x_range_slider(self):
         """Create X-range slider controls."""
         x_slider_layout = QHBoxLayout()
-        x_slider_layout.setContentsMargins(4, 2, 4, 2)
+        x_slider_layout.setContentsMargins(2, 2, 2, 2)
         
         lbl_x_slider = QLabel("X-range:")
         lbl_x_slider.setFixedWidth(50)
@@ -256,7 +286,7 @@ class VMapViewer(QWidget):
     def _create_mask_controls(self):
         """Create mask controls and options menu."""
         mask_layout = QHBoxLayout()
-        mask_layout.setContentsMargins(4, 2, 4, 2)
+        mask_layout.setContentsMargins(2, 2, 2, 2)
         
         self.cb_enable_mask = QCheckBox("Enable mask:")
         self.cb_enable_mask.stateChanged.connect(lambda: self.plot_heatmap())

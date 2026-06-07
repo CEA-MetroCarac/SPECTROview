@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QListWidget, QListWidgetItem, QCheckBox, QMenu, QApplication, QCompleter
 )
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, Signal, QStringListModel
+from PySide6.QtCore import Qt, Signal, QStringListModel, QSize
 
 from spectroview.view.components.customized_widgets import ExpressionLineEdit
 
@@ -31,6 +31,7 @@ class VDataFilter(QGroupBox):
         """Initialize the user interface."""
         # Main layout
         layout_main = QVBoxLayout(self)
+        layout_main.setContentsMargins(2, 2, 2, 2)
         
         # Horizontal layout for input and buttons
         layout_buttons = QHBoxLayout()
@@ -74,6 +75,7 @@ class VDataFilter(QGroupBox):
         
         # Filter list widget
         self.filter_listbox = QListWidget()
+        self.filter_listbox.setSpacing(2)
         self.filter_listbox.setContextMenuPolicy(Qt.CustomContextMenu)
         self.filter_listbox.customContextMenuRequested.connect(self._show_context_menu)
         self.filter_listbox.itemSelectionChanged.connect(self._on_filter_selected)
@@ -86,7 +88,8 @@ class VDataFilter(QGroupBox):
             # Add checkbox item to listbox
             item = QListWidgetItem()
             checkbox = QCheckBox(filter_expression)
-            item.setSizeHint(checkbox.sizeHint())
+            size = checkbox.sizeHint()
+            item.setSizeHint(QSize(size.width(), max(size.height(), 24)))
             self.filter_listbox.addItem(item)
             self.filter_listbox.setItemWidget(item, checkbox)
             
@@ -160,7 +163,8 @@ class VDataFilter(QGroupBox):
             item = QListWidgetItem()
             checkbox = QCheckBox(filter_data["expression"])
             checkbox.setChecked(filter_data.get("state", False))
-            item.setSizeHint(checkbox.sizeHint())
+            size = checkbox.sizeHint()
+            item.setSizeHint(QSize(size.width(), max(size.height(), 24)))
             self.filter_listbox.addItem(item)
             self.filter_listbox.setItemWidget(item, checkbox)
     

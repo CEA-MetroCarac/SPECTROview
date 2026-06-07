@@ -11,7 +11,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QDialog
-from PySide6.QtCore import QSize, Signal
+from PySide6.QtCore import QObject, QEvent, QSize, Signal
 from PySide6.QtGui import QIcon
 
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR, PLOT_POLICY_LIGHT
@@ -166,6 +166,36 @@ class VGraph(QWidget):
         self.canvas = FigureCanvas(self.figure)
         
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        
+        original_set_style = self.toolbar.setStyleSheet
+        def custom_set_style(css):
+            original_set_style("background: transparent; border: none;")
+        self.toolbar.setStyleSheet = custom_set_style
+        self.toolbar.setStyleSheet("")
+
+        class ToolbarEventFilter(QObject):
+            def __init__(self, toolbar):
+                super().__init__()
+                self.toolbar = toolbar
+            def eventFilter(self, obj, event):
+                if event.type() == QEvent.PaletteChange:
+                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                    for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
+                        if text in action_dict and image_file is not None:
+                            try:
+                                icon = self.toolbar._icon(image_file + '.png')
+                                action_dict[text].setIcon(icon)
+                            except Exception:
+                                pass
+                return False
+                
+        self.toolbar_filter = ToolbarEventFilter(self.toolbar)
+        self.toolbar.installEventFilter(self.toolbar_filter)
+
+
+        
+
+
         self.toolbar.setIconSize(QSize(30, 30))  # Set larger icon size
         for action in self.toolbar.actions():
             if action.text() in ['Save', 'Back', 'Forward']:

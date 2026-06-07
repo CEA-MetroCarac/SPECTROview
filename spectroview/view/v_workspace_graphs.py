@@ -78,8 +78,9 @@ class VWorkspaceGraphs(QWidget):
     def _create_bottom_toolbar(self):
         """Create bottom toolbar."""
         bottom_toolbar = QFrame()
+        bottom_toolbar.setObjectName("bottomToolbarPanel")
         bottom_toolbar.setFrameShape(QFrame.StyledPanel)
-        bottom_toolbar.setMaximumHeight(40)
+        bottom_toolbar.setMaximumHeight(44)
         toolbar_layout = QHBoxLayout(bottom_toolbar)
         toolbar_layout.setContentsMargins(4, 2, 4, 2)
         toolbar_layout.setSpacing(8)
@@ -137,7 +138,8 @@ class VWorkspaceGraphs(QWidget):
     def _setup_right_panel(self):
         """Setup right panel."""
         right_panel = QFrame()
-        right_panel.setFrameShape(QFrame.StyledPanel)
+        right_panel.setObjectName("workspaceRightPanel")
+        right_panel.setFrameShape(QFrame.NoFrame)
         right_layout = QVBoxLayout(right_panel)
         right_layout.setContentsMargins(4, 4, 4, 4)
         right_layout.setSpacing(4)
@@ -263,7 +265,7 @@ class VWorkspaceGraphs(QWidget):
         """Create plot tab."""
         tab_plot = QWidget()
         tab_plot_layout = QVBoxLayout(tab_plot)
-        tab_plot_layout.setContentsMargins(5, 5, 5, 5)
+        tab_plot_layout.setContentsMargins(4, 4, 4, 4)
         
         # Plot style and color palette
         plot_style_layout = QHBoxLayout()
@@ -297,12 +299,7 @@ class VWorkspaceGraphs(QWidget):
         
         tab_plot_layout.addStretch()
         
-        # Wrap in QScrollArea
-        scroll_area_plot = QScrollArea()
-        scroll_area_plot.setWidgetResizable(True)
-        scroll_area_plot.setWidget(tab_plot)
-        
-        return scroll_area_plot
+        return tab_plot
     
     def _create_axes_controls(self, parent_layout):
         """Create axes controls."""
@@ -382,7 +379,7 @@ class VWorkspaceGraphs(QWidget):
         """Create the 'Plot multiple Axes' tab with Y2, Y3, and X2 controls."""
         tab_more = QWidget()
         tab_more_layout = QVBoxLayout(tab_more)
-        tab_more_layout.setContentsMargins(5, 5, 5, 5)
+        tab_more_layout.setContentsMargins(4, 4, 4, 4)
         tab_more_layout.setSpacing(6)
         
         # ── Secondary Y axis ──
@@ -478,12 +475,7 @@ class VWorkspaceGraphs(QWidget):
         
         tab_more_layout.addStretch()
         
-        # Wrap in QScrollArea
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setWidget(tab_more)
-        
-        return scroll_area
+        return tab_more
     
     def _setup_action_buttons(self, parent_layout):
         """Setup action buttons."""

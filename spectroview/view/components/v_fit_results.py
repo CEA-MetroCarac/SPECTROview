@@ -29,7 +29,7 @@ class VFitResults(QWidget):
     
     def init_ui(self):
         main_layout = QHBoxLayout(self)
-        main_layout.setContentsMargins(5, 5, 5, 5)
+        main_layout.setContentsMargins(4, 4, 4, 4)
         
         # Left panel - Controls
         left_panel = QWidget()
@@ -139,7 +139,7 @@ class VFitResults(QWidget):
         # Right panel - Results table
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setContentsMargins(3, 0, 0, 0)
         
         # Create scroll area for table
         scroll_area = QScrollArea()

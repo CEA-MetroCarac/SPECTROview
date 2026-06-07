@@ -82,6 +82,7 @@ class VWorkspaceSpectra(QWidget):
 
         # RIGHT SIDE (Sidebar)
         right_widget = QFrame()
+        right_widget.setObjectName("workspaceRightPanel")
         right_widget.setMinimumWidth(200)
         right_widget.setMaximumWidth(450)
         right_layout = QVBoxLayout(right_widget)

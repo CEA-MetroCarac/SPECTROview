@@ -165,8 +165,8 @@ class VSettingsDialog(QDialog):
         ok_btn = buttons.button(QDialogButtonBox.Ok)
         cancel_btn = buttons.button(QDialogButtonBox.Cancel)
 
-        ok_btn.setStyleSheet("background-color: green; color: white; font-weight: bold;")
-        cancel_btn.setStyleSheet("background-color: red; color: white; font-weight: bold;")
+        ok_btn.setStyleSheet("background-color: rgba(76, 175, 80, 180); color: white; font-weight: bold; border-radius: 6px;")
+        cancel_btn.setStyleSheet("background-color: rgba(220, 60, 60, 180); color: white; font-weight: bold; border-radius: 6px;")
 
         buttons.accepted.connect(self._on_accept)
         buttons.rejected.connect(self.reject)

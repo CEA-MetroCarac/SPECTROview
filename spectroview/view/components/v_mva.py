@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QGroupBox, QSplitter, QLineEdit, QScrollArea, QTabWidget,
     QCheckBox,
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QObject, QEvent
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -49,6 +49,26 @@ class _PlotTab(QWidget):
             self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
+
+        class ToolbarEventFilter(QObject):
+            def __init__(self, toolbar):
+                super().__init__()
+                self.toolbar = toolbar
+            def eventFilter(self, obj, event):
+                if event.type() == QEvent.PaletteChange:
+                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                    for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
+                        if text in action_dict and image_file is not None:
+                            try:
+                                icon = self.toolbar._icon(image_file + '.png')
+                                action_dict[text].setIcon(icon)
+                            except Exception:
+                                pass
+                return False
+                
+        self.toolbar_filter = ToolbarEventFilter(self.toolbar)
+        self.toolbar.installEventFilter(self.toolbar_filter)
+
 
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
@@ -115,7 +135,7 @@ class VMVA(QWidget):
         
         left_panel = QWidget()
         left_layout = QVBoxLayout(left_panel)
-        left_layout.setContentsMargins(2, 2, 2, 2)
+        left_layout.setContentsMargins(4, 4, 4, 4)
         left_layout.setSpacing(4)
 
         # Method selection
@@ -229,7 +249,7 @@ class VMVA(QWidget):
         # ── RIGHT PANEL: Tabbed plot area ─────────────────────────────
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setContentsMargins(3, 0, 0, 0)
 
         self.plot_tabs = QTabWidget()
 

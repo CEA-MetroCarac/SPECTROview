@@ -240,7 +240,10 @@ class VSpectraViewer(QWidget):
 
     # Control bar
     def _create_control_bar(self):
-        bar = QWidget(self)
+        bar = QFrame(self)
+        bar.setFrameShape(QFrame.StyledPanel)
+        bar.setObjectName("controlBarPanel")
+        bar.setStyleSheet("#controlBarPanel { background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 6px; }")
         bar.setFixedHeight(38)
         layout = QHBoxLayout(bar)
         layout.setContentsMargins(4, 4, 4, 4)

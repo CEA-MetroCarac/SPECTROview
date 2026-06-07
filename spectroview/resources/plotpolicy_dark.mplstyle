@@ -190,7 +190,7 @@ markers.fillstyle: full ## full|left|right|bottom|top|none
 text.color : white
 
 ### AXES
-axes.facecolor      : 323232   # axes background color
+axes.facecolor      : 242424   # axes background color
 axes.edgecolor      : FFFFFF3D   # axes edge color
 axes.labelcolor     : FFFFFFD9
 
@@ -207,5 +207,5 @@ legend.edgecolor : FFFFFFD9 # legend edge color (when 'inherit' uses axes.edgeco
 
 ### FIGURE
 #TODO: notebook ignores this
-figure.facecolor : 323232    # figure facecolor
-savefig.facecolor : 323232    # figure facecolor
+figure.facecolor : 242424    # figure facecolor
+savefig.facecolor : 242424    # figure facecolor

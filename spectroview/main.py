@@ -438,6 +438,15 @@ class Main(QMainWindow):
             self._load_files_by_paths(paths)
             event.acceptProposedAction()
 
+    def closeEvent(self, event):
+        """Clean up on application exit to prevent Matplotlib C++ threading crashes."""
+        try:
+            import matplotlib.pyplot as plt
+            plt.close('all')
+        except Exception:
+            pass
+        event.accept()
+
 def launcher():
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(LOGO_APPLI))

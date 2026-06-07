@@ -124,7 +124,8 @@ def dark_glass_stylesheet() -> str:
     }
 
     QPushButton:pressed, QToolButton:pressed {
-        background: rgba(255, 255, 255, 0.16);
+        background: rgba(64, 156, 255, 0.35);
+        border: 1px solid rgba(64, 156, 255, 0.60);
     }
 
     QPushButton:disabled, QToolButton:disabled {
@@ -134,8 +135,8 @@ def dark_glass_stylesheet() -> str:
     }
 
     QPushButton:checked, QToolButton:checked {
-        background: rgba(255, 255, 255, 0.18);
-        border: 1px solid rgba(255, 255, 255, 0.30);
+        background: rgba(64, 156, 255, 0.40);
+        border: 1px solid rgba(64, 156, 255, 0.70);
         color: white;
     }
 
@@ -607,7 +608,8 @@ def light_glass_stylesheet() -> str:
     }
 
     QPushButton:pressed, QToolButton:pressed {
-        background: rgba(0, 0, 0, 0.12);
+        background: rgba(64, 156, 255, 0.25);
+        border: 1px solid rgba(64, 156, 255, 0.50);
     }
 
     QPushButton:disabled, QToolButton:disabled {
@@ -617,9 +619,9 @@ def light_glass_stylesheet() -> str:
     }
 
     QPushButton:checked, QToolButton:checked {
-        background: rgba(0, 0, 0, 0.10);
-        border: 1px solid rgba(0, 0, 0, 0.22);
-        color: rgba(0, 0, 0, 0.85);
+        background: rgba(64, 156, 255, 0.35);
+        border: 1px solid rgba(64, 156, 255, 0.60);
+        color: rgba(0, 0, 0, 0.90);
     }
 
     /* ═══════════════════════════════════════════════

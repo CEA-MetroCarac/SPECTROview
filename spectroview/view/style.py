@@ -502,6 +502,9 @@ def light_glass_stylesheet() -> str:
     QWidget {
         font-family: "Helvetica Neue", Helvetica, Arial;
     }
+    QMainWindow, QDialog {
+        background-color: #F0F2F5;
+    }
     QToolBar QToolButton {
         background: transparent;
         border: none;
@@ -520,7 +523,7 @@ def light_glass_stylesheet() -> str:
         margin-top: 2px;
         border: 1px solid rgba(0, 0, 0, 0.08);
         border-radius: 8px;
-        background: rgba(255, 255, 255, 240);
+        background: #F4F5F7;
         top: -1px;
     }
 
@@ -571,8 +574,8 @@ def light_glass_stylesheet() -> str:
        ═══════════════════════════════════════════════ */
 
     QGroupBox {
-        background: rgba(0, 0, 0, 0.015);
-        border: 1px solid rgba(0, 0, 0, 0.07);
+        background: rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(0, 0, 0, 0.08);
         border-radius: 8px;
         margin-top: 10px;
         padding: 8px 3px 3px 3px;
@@ -710,8 +713,8 @@ def light_glass_stylesheet() -> str:
     }
 
     QListWidget, QTreeWidget, QScrollArea, #workspaceRightPanel, #bottomToolbarPanel {
-        background: rgba(255, 255, 255, 200);
-        border: 1px solid rgba(0, 0, 0, 0.07);
+        background: #F4F5F7;
+        border: 1px solid rgba(0, 0, 0, 0.08);
         border-radius: 6px;
         color: rgba(0, 0, 0, 0.85);
         outline: none;

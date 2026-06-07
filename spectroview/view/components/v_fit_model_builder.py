@@ -3,7 +3,7 @@ from spectroview import ICON_DIR, PEAK_MODELS
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QGroupBox, QLabel, QPushButton, QComboBox,
-    QDoubleSpinBox, QSpinBox, QScrollArea, QCheckBox, QApplication, QSlider
+    QDoubleSpinBox, QSpinBox, QScrollArea, QCheckBox, QApplication, QSlider, QSizePolicy
 )
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
@@ -639,9 +639,9 @@ class VFitModelBuilder(QWidget):
 
 
     def _fit_control_panel(self):
-        gb = QGroupBox("")
+        gb = QWidget()
         v = QVBoxLayout(gb)
-        v.setContentsMargins(4, 4, 4, 4)
+        v.setContentsMargins(0, 0, 0, 0)
 
         # ── Row 1: Fit actions
         row1 = QHBoxLayout()
@@ -679,16 +679,18 @@ class VFitModelBuilder(QWidget):
         self.chk_limits.toggled.connect(self.peak_table.set_show_limits)
         self.chk_expr.toggled.connect(self.peak_table.set_show_expr)
 
-        for b in (self.btn_fit, self.btn_copy, self.btn_paste, self.btn_save, self.chk_limits, self.chk_expr):
+        for b in (self.btn_fit, self.btn_copy, self.btn_paste, self.btn_save):
             row1.addWidget(b)
         row1.addStretch()
+        for c in (self.chk_limits, self.chk_expr):
+            row1.addWidget(c)
 
         # ── Row 2: Model selection
         row2 = QHBoxLayout()
         row2.addWidget(QLabel("Fit model:"))
 
         self.cbb_model = QComboBox()
-        self.cbb_model.setFixedWidth(300)
+        self.cbb_model.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         self.cbb_model.setToolTip("Select fit model.")
 
@@ -713,7 +715,6 @@ class VFitModelBuilder(QWidget):
         row2.addWidget(self.btn_apply)
         row2.addWidget(self.btn_load)
         row2.addWidget(self.btn_refresh)
-        row2.addStretch()
 
         v.addLayout(row1)
         v.addLayout(row2)

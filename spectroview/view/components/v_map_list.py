@@ -124,14 +124,21 @@ class VMapsList(QWidget):
         spectra_list_layout.setContentsMargins(0, 0, 0, 0)
         spectra_list_layout.setSpacing(2)
         
+        header_layout = QHBoxLayout()
+        header_layout.setContentsMargins(0, 0, 0, 0)
+        
         spectra_label = QLabel("Spectra list :")
-        spectra_list_layout.addWidget(spectra_label)
         
         # Check All checkbox above the spectra list
         self.cb_check_all = QCheckBox("Check All")
         self.cb_check_all.setChecked(True)  # Checked by default
         self.cb_check_all.toggled.connect(self.check_all_toggled.emit)
-        spectra_list_layout.addWidget(self.cb_check_all)
+        
+        header_layout.addWidget(spectra_label)
+        header_layout.addWidget(self.cb_check_all)
+        header_layout.addStretch()
+        
+        spectra_list_layout.addLayout(header_layout)
         
         self.spectra_list = QListWidget()
         self.spectra_list.setItemDelegate(SpectrumItemDelegate(self.spectra_list))

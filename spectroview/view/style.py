@@ -237,6 +237,17 @@ def dark_glass_stylesheet() -> str:
         spacing: 6px;
         color: rgba(255, 255, 255, 0.85);
     }
+    QCheckBox:disabled {
+        color: rgba(255, 255, 255, 0.30);
+    }
+    QCheckBox::indicator:disabled, QListView::indicator:disabled, QTreeView::indicator:disabled, QGroupBox::indicator:disabled {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    QCheckBox::indicator:checked:disabled, QListView::indicator:checked:disabled, QTreeView::indicator:checked:disabled, QGroupBox::indicator:checked:disabled {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
 
     
     
@@ -673,9 +684,19 @@ def light_glass_stylesheet() -> str:
 
     QCheckBox {
         spacing: 6px;
-        color: rgba(0, 0, 0, 0.80);
+        color: rgba(0, 0, 0, 0.85);
     }
-
+    QCheckBox:disabled {
+        color: rgba(0, 0, 0, 0.30);
+    }
+    QCheckBox::indicator:disabled, QListView::indicator:disabled, QTreeView::indicator:disabled, QGroupBox::indicator:disabled {
+        background: rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    QCheckBox::indicator:checked:disabled, QListView::indicator:checked:disabled, QTreeView::indicator:checked:disabled, QGroupBox::indicator:checked:disabled {
+        background: rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(0, 0, 0, 0.15);
+    }
     
     
     

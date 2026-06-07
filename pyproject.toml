@@ -56,6 +56,7 @@ spectroview = [
     "resources/*.png", 
     "resources/icons/*.png",
     "resources/icons/*.ico",
+    "resources/icons/*.svg",
     "resources/*.pdf",
     "resources/user_manual/*",
     "resources/user_manual_images/*/*"

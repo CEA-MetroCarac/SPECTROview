@@ -55,7 +55,7 @@ axes.labelsize : 12
 figure.dpi       : 90      # figure dots per inch
 
 # Use sans-serif fonts
-font.family : sans-serif
+font.family : Arial
 mathtext.fontset : dejavusans
 
 # Use LaTeX for math formatting

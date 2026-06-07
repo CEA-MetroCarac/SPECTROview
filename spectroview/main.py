@@ -3,6 +3,7 @@ import sys
 import os
 from pathlib import Path
 import matplotlib as mpl
+mpl.use('qtagg')
 
 import pandas as pd
 

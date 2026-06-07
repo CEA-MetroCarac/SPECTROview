@@ -19,9 +19,6 @@ class FitImageTextBrowser(QTextBrowser):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setOpenLinks(False)
-        font = self.font()
-        font.setPointSize(11)
-        self.setFont(font)
         self._orig_sizes = {}
         self._movies = {}             # name -> QMovie
         self._gif_labels = {}         # name -> QLabel overlay
@@ -244,6 +241,13 @@ class VUserManualDialog(QDialog):
 
     def __init__(self, manual_dir, parent=None):
         super().__init__(parent)
+        self.setStyleSheet("""
+            QWidget {
+                font-family: Verdana, Arial;
+                font-size: 12pt;
+            }
+        """)
+        
         self.manual_dir = manual_dir
         self.setWindowTitle("SPECTROview User Manual")
         self.resize(1200, 800)
@@ -279,9 +283,6 @@ class VUserManualDialog(QDialog):
         left_widget = QWidget()
         left_layout = QVBoxLayout(left_widget)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_font = left_widget.font()
-        left_font.setPointSize(11)
-        left_widget.setFont(left_font)
 
         lbl = QLabel("Sections")
         font = lbl.font()
@@ -380,9 +381,9 @@ class VUserManualDialog(QDialog):
         # Minimal adaptive CSS (no hardcoded colours)
         css = """
         <style>
-            body { font-family: -apple-system, BlinkMacSystemFont,
-                   "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                   font-size: 12pt;
+            body { font-family: Verdana, -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", Roboto, Helvetica, Arial;
+                   font-size: 14pt;
                    line-height: 1.6; padding: 10px; }
             h1, h2, h3, h4 { margin-top: 1.2em; margin-bottom: 0.5em; }
             p { margin-top: 0; margin-bottom: 0.8em; }

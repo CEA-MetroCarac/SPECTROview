@@ -340,8 +340,8 @@ class VWorkspaceGraphs(QWidget):
         """Create title and labels controls."""
         title_labels_group = QGroupBox("Title and labels:")
         group_layout = QVBoxLayout(title_labels_group)
-        group_layout.setContentsMargins(5, 2, 5, 2)
-        group_layout.setSpacing(2)
+        group_layout.setContentsMargins(5, 6, 5, 6)
+        group_layout.setSpacing(6)
         
         # Create all label inputs
         labels = [

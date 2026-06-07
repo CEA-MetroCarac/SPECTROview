@@ -48,7 +48,7 @@ MARKERS = [
 DEFAULT_MARKERS = ['o'] * len(MARKERS)
 
 X_AXIS_UNIT = [
-    'Wavenumber (cm⁻¹)',
+    'Wavenumber (cm$^{-1}$)',
     'Wavelength (nm)',
     'Emission energy (eV)',
     'Binding energy (eV)',

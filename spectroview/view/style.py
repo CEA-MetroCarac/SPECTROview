@@ -1,4 +1,5 @@
 from spectroview import ICON_DIR
+ICON_DIR_QT = ICON_DIR.replace("\\", "/")
 # spectroview/view/style.py
 """
 Glass-style QSS stylesheets for SPECTROview.
@@ -197,15 +198,15 @@ def dark_glass_stylesheet() -> str:
     }
 
     QComboBox::down-arrow {
-        image: url({ICON_DIR}/arrow-down.svg);
+        image: url({ICON_DIR_QT}/arrow-down.svg);
         width: 10px; height: 10px;
     }
     QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
-        image: url({ICON_DIR}/arrow-up.svg);
+        image: url({ICON_DIR_QT}/arrow-up.svg);
         width: 9px; height: 9px;
     }
     QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
-        image: url({ICON_DIR}/arrow-down.svg);
+        image: url({ICON_DIR_QT}/arrow-down.svg);
         width: 9px; height: 9px;
     }
 
@@ -489,7 +490,7 @@ def dark_glass_stylesheet() -> str:
         color: rgba(255, 255, 255, 0.90);
     }
 
-    """.replace("{ICON_DIR}", ICON_DIR)
+    """.replace("{ICON_DIR_QT}", ICON_DIR)
 
 
 def light_glass_stylesheet() -> str:
@@ -666,15 +667,15 @@ def light_glass_stylesheet() -> str:
     }
 
     QComboBox::down-arrow {
-        image: url({ICON_DIR}/arrow-down-dark.svg);
+        image: url({ICON_DIR_QT}/arrow-down-dark.svg);
         width: 10px; height: 10px;
     }
     QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
-        image: url({ICON_DIR}/arrow-up-dark.svg);
+        image: url({ICON_DIR_QT}/arrow-up-dark.svg);
         width: 9px; height: 9px;
     }
     QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
-        image: url({ICON_DIR}/arrow-down-dark.svg);
+        image: url({ICON_DIR_QT}/arrow-down-dark.svg);
         width: 9px; height: 9px;
     }
 
@@ -956,4 +957,4 @@ def light_glass_stylesheet() -> str:
         color: rgba(0, 0, 0, 0.85);
     }
 
-    """.replace("{ICON_DIR}", ICON_DIR)
+    """.replace("{ICON_DIR_QT}", ICON_DIR)

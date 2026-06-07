@@ -669,6 +669,7 @@ class VWorkspaceGraphs(QWidget):
         
         # Create layout for dialog
         layout = QVBoxLayout()
+        layout.setContentsMargins(4, 4, 4, 4)
         
         # Create and show DataFrame table
         table_view = VDataframeTable(layout)

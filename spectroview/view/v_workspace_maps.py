@@ -593,6 +593,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         dialog.resize(800, 600)
         
         layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(4, 4, 4, 4)
         table = VDataframeTable(layout)
         table.show(df_limited, fill_colors=False)  # Don't color-code map data
         

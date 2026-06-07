@@ -36,6 +36,7 @@ class VDataframeTable(QWidget):
 
         # Set the internal layout
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
         # Create QTableWidget

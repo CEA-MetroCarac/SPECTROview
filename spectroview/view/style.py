@@ -22,6 +22,7 @@ def dark_glass_stylesheet() -> str:
 
     QWidget {
         font-family: "Helvetica Neue", Helvetica, Arial;
+        font-size: 13px;
     }
     QToolBar QToolButton {
         background: transparent;
@@ -503,6 +504,7 @@ def light_glass_stylesheet() -> str:
 
     QWidget {
         font-family: "Helvetica Neue", Helvetica, Arial;
+        font-size: 13pt;
     }
     QMainWindow, QDialog {
         background-color: #E8EAED;

@@ -3,7 +3,7 @@ import os
 import copy
 
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QIcon, QColor, QPalette
+from PySide6.QtGui import QIcon, QColor
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QListWidget, QListWidgetItem, QLabel,
     QDialogButtonBox, QMessageBox, QTabWidget, QWidget,
@@ -36,8 +36,8 @@ class CustomizeGraphDialog(QDialog):
         """Setup dialog UI with tabs."""
         # Main layout
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
         
         # Create tab widget
         self.tabs = QTabWidget()
@@ -59,18 +59,36 @@ class CustomizeGraphDialog(QDialog):
         """Create legend customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
         
         self.legend_widget = CustomizeLegend(self.graph_widget, parent=tab)
         layout.addWidget(self.legend_widget)
         layout.addStretch()
+        
+        # Apply / Cancel buttons at the bottom of the tab
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+        
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.setIcon(QIcon(f"{ICON_DIR}/close.png"))
+        btn_cancel.clicked.connect(self.legend_widget.cancel_changes)
+        btn_layout.addWidget(btn_cancel)
+        
+        btn_apply = QPushButton("Apply")
+        btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
+        btn_apply.clicked.connect(self.legend_widget.apply_changes)
+        btn_layout.addWidget(btn_apply)
+        
+        layout.addLayout(btn_layout)
         return tab
     
     def _create_annotations_tab(self):
         """Create annotations customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
         
         self.annotations_widget = CustomizeAnnotations(self.graph_widget, parent=tab)
         layout.addWidget(self.annotations_widget)
@@ -80,7 +98,8 @@ class CustomizeGraphDialog(QDialog):
         """Create general settings tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
         
         self.more_options_widget = CustomizeMoreOptions(self.graph_widget, parent=tab)
         layout.addWidget(self.more_options_widget)
@@ -90,7 +109,8 @@ class CustomizeGraphDialog(QDialog):
         """Create axis customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
         
         self.axis_widget = CustomizeAxis(self.graph_widget, parent=tab)
         layout.addWidget(self.axis_widget)
@@ -154,8 +174,8 @@ class CustomizeLegend(QWidget):
         """Setup the UI components for the legend customization widget."""
         # Main layout
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(2, 2, 2, 2)
-        self.main_layout.setSpacing(2)
+        self.main_layout.setContentsMargins(4, 4, 4, 4)
+        self.main_layout.setSpacing(4)
         
         # Info label
         info_label = QLabel("Customize legend labels, colors, and markers:")
@@ -171,8 +191,8 @@ class CustomizeLegend(QWidget):
         # ───── Scatter/Marker-specific settings ─────
         self.scatter_group = QGroupBox("Scatter / Marker settings")
         scatter_layout = QHBoxLayout(self.scatter_group)
-        scatter_layout.setContentsMargins(2, 2, 2, 2)
-        scatter_layout.setSpacing(2)
+        scatter_layout.setContentsMargins(4, 4, 4, 4)
+        scatter_layout.setSpacing(4)
         
         # Marker size
         scatter_layout.addWidget(QLabel("Marker size:"))
@@ -201,22 +221,6 @@ class CustomizeLegend(QWidget):
         )
         
         self.main_layout.addStretch()
-        
-        # Apply / Cancel buttons
-        btn_layout = QHBoxLayout()
-        btn_layout.addStretch()
-        
-        btn_cancel = QPushButton("Cancel")
-        btn_cancel.setIcon(QIcon(f"{ICON_DIR}/close.png"))
-        btn_cancel.clicked.connect(self.cancel_changes)
-        btn_layout.addWidget(btn_cancel)
-        
-        btn_apply = QPushButton("Apply")
-        btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
-        btn_apply.clicked.connect(self.apply_changes)
-        btn_layout.addWidget(btn_apply)
-        
-        self.main_layout.addLayout(btn_layout)
     
     def load_legend_properties(self):
         """Load current legend properties from graph and populate the GUI."""
@@ -330,15 +334,20 @@ class CustomizeLegend(QWidget):
         self.graph_widget.canvas.draw_idle()
     
     def _update_combobox_color(self, combobox):
-        """Update combobox background color to match selected color."""
+        """Update combobox background color to match selected color.
+
+        Uses inline setStyleSheet() instead of QPalette because the global QSS
+        stylesheet always overrides palette-based colours.
+        """
         selected_color = combobox.currentText()
-        color = QColor(selected_color)
-        palette = combobox.palette()
-        palette.setColor(QPalette.Button, color)
-        palette.setColor(QPalette.ButtonText, Qt.white)
-        combobox.setAutoFillBackground(True)
-        combobox.setPalette(palette)
-        combobox.update()
+        qc = QColor(selected_color)
+        if not qc.isValid():
+            return
+        # Choose contrasting text: white on dark colours, black on light ones
+        text_color = "white" if qc.lightnessF() < 0.6 else "black"
+        combobox.setStyleSheet(
+            f"QComboBox {{ background: {qc.name()}; color: {text_color}; }}"
+        )
     
     def _set_color_button(self, button, color_name):
         """Set a QPushButton background and text to a given color."""
@@ -429,8 +438,8 @@ class CustomizeAnnotations(QWidget):
     def _setup_ui(self):
         """Setup the UI components for the annotations widget."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
         
         # Add buttons
         btn_layout = QHBoxLayout()
@@ -683,8 +692,8 @@ class CustomizeAxis(QWidget):
     def _setup_ui(self):
         """Setup the UI components for the axis customization widget."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
         
         # ===== Axis Limits Section =====
         limits_group = QGroupBox("Set Axis Limits:")
@@ -1184,8 +1193,8 @@ class CustomizeMoreOptions(QWidget):
         scroll.setFrameShape(QScrollArea.NoFrame)
         inner = QWidget()
         self._inner_layout = QVBoxLayout(inner)
-        self._inner_layout.setContentsMargins(2, 2, 2, 2)
-        self._inner_layout.setSpacing(2)
+        self._inner_layout.setContentsMargins(4, 4, 4, 4)
+        self._inner_layout.setSpacing(4)
         scroll.setWidget(inner)
         outer.addWidget(scroll)
 

@@ -659,6 +659,22 @@ def light_glass_stylesheet() -> str:
         border-left: 1px solid rgba(0, 0, 0, 0.08);
         width: 15px;
     }
+    QComboBox::drop-down:pressed, QSpinBox::up-button:pressed, QSpinBox::down-button:pressed, QDoubleSpinBox::up-button:pressed, QDoubleSpinBox::down-button:pressed {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    QComboBox::down-arrow {
+        image: url({ICON_DIR}/arrow-down-dark.svg);
+        width: 10px; height: 10px;
+    }
+    QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
+        image: url({ICON_DIR}/arrow-up-dark.svg);
+        width: 9px; height: 9px;
+    }
+    QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
+        image: url({ICON_DIR}/arrow-down-dark.svg);
+        width: 9px; height: 9px;
+    }
 
 
     /* ═══════════════════════════════════════════════
@@ -938,4 +954,4 @@ def light_glass_stylesheet() -> str:
         color: rgba(0, 0, 0, 0.85);
     }
 
-    """
+    """.replace("{ICON_DIR}", ICON_DIR)

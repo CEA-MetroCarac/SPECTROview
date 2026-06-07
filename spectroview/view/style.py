@@ -491,7 +491,7 @@ def dark_glass_stylesheet() -> str:
         color: rgba(255, 255, 255, 0.90);
     }
 
-    """.replace("{ICON_DIR_QT}", ICON_DIR)
+    """.replace("{ICON_DIR_QT}", ICON_DIR_QT)
 
 
 def light_glass_stylesheet() -> str:
@@ -959,4 +959,4 @@ def light_glass_stylesheet() -> str:
         color: rgba(0, 0, 0, 0.85);
     }
 
-    """.replace("{ICON_DIR_QT}", ICON_DIR)
+    """.replace("{ICON_DIR_QT}", ICON_DIR_QT)

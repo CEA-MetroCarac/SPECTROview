@@ -20,7 +20,7 @@ from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon, QAction
 
 from spectroview import ICON_DIR, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
-from spectroview.viewmodel.utils import copy_fig_to_clb
+from spectroview.viewmodel.utils import copy_fig_to_clb, get_tinted_icon
 from spectroview.view.components.customized_widgets import CustomizedPalette
 
 
@@ -173,6 +173,10 @@ class VMapViewer(QWidget):
             
         if style_name is not None:
             self.current_style = style_name
+            
+        icon_color = "#404040" if self.current_style != "Dark Mode" else "#F0F0F0"
+        if hasattr(self, 'btn_copy'):
+            self.btn_copy.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "copy.png"), icon_color))
             
         # Manually replot heatmap to update colorbars and contents with new style
         self.plot_heatmap()

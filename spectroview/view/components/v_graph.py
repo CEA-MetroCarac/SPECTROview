@@ -18,7 +18,8 @@ from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR, PLOT_POLICY_L
 from spectroview.view.components.customize_graph_dialog import (
     EditLineDialog, EditTextDialog
 )
-from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb
+from spectroview.model.m_settings import MSettings
+from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb, get_tinted_icon
 
 
 class VGraph(QWidget):
@@ -225,6 +226,10 @@ class VGraph(QWidget):
         self.btn_copy_figure.setToolTip("Copy figure to clipboard")
         self.btn_copy_figure.clicked.connect(self.copy_to_clipboard)
         
+        # Initialize icon colors using actual app settings
+        theme = MSettings().get_theme()
+        self.update_icon_colors(theme)
+        
         # Create toolbar layout with customize and copy buttons
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
@@ -261,7 +266,17 @@ class VGraph(QWidget):
         """Copy the current figure to clipboard."""
         copy_fig_to_clb(self.canvas)
     
-    def plot(self, df):
+    def update_icon_colors(self, theme: str):
+        """Update toolbar icons color based on current application theme."""
+        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
+        if hasattr(self, 'btn_replicate'):
+            self.btn_replicate.setIcon(get_tinted_icon(f"{ICON_DIR}/replicate.png", icon_color))
+        if hasattr(self, 'btn_customize'):
+            self.btn_customize.setIcon(get_tinted_icon(f"{ICON_DIR}/customize.png", icon_color))
+        if hasattr(self, 'btn_copy_figure'):
+            self.btn_copy_figure.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
+
+    def plot(self, df=None):
         """Wrapper to render plot using local style context."""
         with plt.style.context(PLOT_POLICY_LIGHT):
             self._plot_internal(df)

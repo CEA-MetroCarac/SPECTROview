@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 from spectroview import ICON_DIR
 from spectroview.model.m_settings import MSettings
 
-from spectroview.viewmodel.utils import show_toast_notification
+from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
 from spectroview.view.components.v_fit_results import VFitResults
 from spectroview.view.components.v_moretab  import VMoreTab
@@ -343,6 +343,20 @@ class VWorkspaceSpectra(QWidget):
         # ViewModel → View for fit results
         vm.fit_results_updated.connect(self._update_fit_results)
         vm.split_parts_updated.connect(self.v_fit_results.populate_split_combobox)
+
+        # Sync sidebar icons with theme changes
+        self.v_spectra_viewer.cbb_theme.currentIndexChanged.connect(self._update_sidebar_icons)
+        self._update_sidebar_icons()  # Initial call
+
+    def _update_sidebar_icons(self):
+        style_name = self.v_spectra_viewer.cbb_theme.currentText()
+        icon_color = "#404040" if style_name != "Dark Mode" else "#F0F0F0"
+        
+        self.btn_select_all.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "select-all.png"), icon_color))
+        self.btn_remove.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash.png"), icon_color))
+        self.btn_reinit.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "undo2.png"), icon_color))
+        self.btn_stats.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "stats.png"), icon_color))
+        self.btn_save_spectra_data.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save11.png"), icon_color))
 
     def _update_fit_results(self, df):
         """Update fit results table display."""

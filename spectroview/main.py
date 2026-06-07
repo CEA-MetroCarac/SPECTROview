@@ -417,8 +417,13 @@ class Main(QMainWindow):
             
         if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
             self.v_spectra_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
-        if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
-            self.v_maps_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
+        if hasattr(self, 'v_maps_workspace'):
+            if hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
+                self.v_maps_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
+            if hasattr(self.v_maps_workspace, 'apply_theme'):
+                self.v_maps_workspace.apply_theme(theme)
+        if hasattr(self, 'v_graphs_workspace'):
+            self.v_graphs_workspace.apply_theme(theme)
 
     def dragEnterEvent(self, event):
         """Accept dragging files into the application."""

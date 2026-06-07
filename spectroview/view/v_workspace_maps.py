@@ -12,7 +12,9 @@ from spectroview.view.components.v_map_viewer import VMapViewer
 from spectroview.view.components.v_map_viewer_dialog import VMapViewerDialog
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
-from spectroview.viewmodel.utils import show_toast_notification
+from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon
+import os
+from spectroview import ICON_DIR
 
 
 class VWorkspaceMaps(VWorkspaceSpectra):
@@ -146,6 +148,19 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         layout.addLayout(footer_layout)
         
         return panel
+        
+    def apply_theme(self, theme: str):
+        """Update Maps-specific sidebar icons dynamically."""
+        if not hasattr(self, 'v_maps_list'):
+            return
+            
+        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
+        
+        # Spectra list buttons
+        self.v_maps_list.btn_select_all.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "select-all.png"), icon_color))
+        self.v_maps_list.btn_reinit.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "undo2.png"), icon_color))
+        self.v_maps_list.btn_stats.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "stats.png"), icon_color))
+        self.v_maps_list.btn_send_to_spectra.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "send.png"), icon_color))
     
     def _on_spectra_list_changed(self, spectra: list):
         """Handle spectra list update from ViewModel."""

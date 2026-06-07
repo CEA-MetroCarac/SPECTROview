@@ -33,7 +33,7 @@ from PySide6.QtCore import QObject, QEvent, QPoint
 import matplotlib.lines as mlines
 
 from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, DEFAULT_COLORS
-from spectroview.viewmodel.utils import copy_fig_to_clb
+from spectroview.viewmodel.utils import copy_fig_to_clb, get_tinted_icon
 from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
 
 
@@ -1316,6 +1316,19 @@ class VSpectraViewer(QWidget):
         style_name = self.cbb_theme.currentText()
         style_path = PLOT_POLICY_LIGHT if style_name != "Dark Mode" else PLOT_POLICY_DARK
         
+        # Update toolbar icons dynamically
+        icon_color = "#404040" if style_name != "Dark Mode" else "#F0F0F0"
+        if hasattr(self, 'btn_rescale'):
+            self.btn_rescale.setIcon(get_tinted_icon(f"{ICON_DIR}/rescale.png", icon_color))
+            self.btn_zoom.setIcon(get_tinted_icon(f"{ICON_DIR}/zoom.png", icon_color))
+            self.btn_baseline.setIcon(get_tinted_icon(f"{ICON_DIR}/baseline.png", icon_color))
+            self.btn_peak.setIcon(get_tinted_icon(f"{ICON_DIR}/peak.png", icon_color))
+            self.btn_norm.setIcon(get_tinted_icon(f"{ICON_DIR}/norm.png", icon_color))
+            self.btn_bestfit.setIcon(get_tinted_icon(f"{ICON_DIR}/bestfit.png", icon_color))
+            self.btn_legend.setIcon(get_tinted_icon(f"{ICON_DIR}/legend.png", icon_color))
+            self.btn_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
+            self.btn_options.setIcon(get_tinted_icon(f"{ICON_DIR}/options.png", icon_color))
+            
         # Parse the style file without modifying global rcParams
         style_dict = mpl.rc_params_from_file(style_path)
             

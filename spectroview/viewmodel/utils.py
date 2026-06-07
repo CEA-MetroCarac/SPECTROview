@@ -1,5 +1,15 @@
 # spectroview/viewmodel/utils.py
-from PySide6.QtGui import QPalette, QColor, QPixmap, QImage, QTextCursor
+from PySide6.QtGui import QPalette, QColor, QPixmap, QImage, QTextCursor, QIcon, QPainter
+
+def get_tinted_icon(path: str, color_str: str) -> QIcon:
+    """Return a QIcon created from the image at `path` tinted to `color_str`."""
+    pixmap = QPixmap(path)
+    painter = QPainter(pixmap)
+    painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+    painter.fillRect(pixmap.rect(), QColor(color_str))
+    painter.end()
+    return QIcon(pixmap)
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QMessageBox, QApplication, QListWidgetItem,

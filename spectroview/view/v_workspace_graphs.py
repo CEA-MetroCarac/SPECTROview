@@ -507,6 +507,11 @@ class VWorkspaceGraphs(QWidget):
         
         parent_layout.addLayout(action_buttons_layout)
     
+    def apply_theme(self, theme: str):
+        """Propagate theme changes to all child graphs."""
+        for graph_widget, _, _ in self.graph_widgets.values():
+            graph_widget.update_icon_colors(theme)
+
     def setup_connections(self):
         """Connect signals and slots."""
         vm = self.vm

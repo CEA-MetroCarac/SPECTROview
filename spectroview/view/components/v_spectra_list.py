@@ -1,10 +1,25 @@
 # spectroview/view/components/v_spectra_list.py
-from PySide6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
+from PySide6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QStyledItemDelegate
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
 from spectroview.viewmodel.utils import set_spectrum_item_color
 
+
+class SpectrumItemDelegate(QStyledItemDelegate):
+    """Custom delegate to draw background colors that Qt Stylesheets hide."""
+    def paint(self, painter, option, index):
+        bg_brush = index.data(Qt.BackgroundRole)
+        if bg_brush:
+            color = bg_brush.color() if hasattr(bg_brush, 'color') else bg_brush
+            if hasattr(color, 'alpha') and color.alpha() > 0:
+                painter.save()
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(bg_brush)
+                # Match the margin: 1px 2px and border-radius: 4px from stylesheet
+                painter.drawRoundedRect(option.rect.adjusted(2, 1, -2, -1), 4, 4)
+                painter.restore()
+        super().paint(painter, option, index)
 
 class VSpectraList(QListWidget):
     # ───── View → ViewModel signals ─────
@@ -14,6 +29,7 @@ class VSpectraList(QListWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setItemDelegate(SpectrumItemDelegate(self))
 
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setDragDropMode(QAbstractItemView.InternalMove)

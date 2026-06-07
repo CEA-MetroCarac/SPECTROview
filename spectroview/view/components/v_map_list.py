@@ -10,6 +10,7 @@ from PySide6.QtGui import QIcon, QFont
 
 from spectroview import ICON_DIR
 from spectroview.viewmodel.utils import set_spectrum_item_color
+from spectroview.view.components.v_spectra_list import SpectrumItemDelegate
 
 
 class VMapsList(QWidget):
@@ -133,6 +134,7 @@ class VMapsList(QWidget):
         spectra_list_layout.addWidget(self.cb_check_all)
         
         self.spectra_list = QListWidget()
+        self.spectra_list.setItemDelegate(SpectrumItemDelegate(self.spectra_list))
         self.spectra_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         
         # Connect selection change

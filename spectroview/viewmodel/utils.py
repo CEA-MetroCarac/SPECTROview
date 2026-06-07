@@ -344,16 +344,16 @@ def set_spectrum_item_color(item: QListWidgetItem, spectrum_info: dict):
     if has_fit:
         if fit_success:
             # Color 4: Converged Fit (Distinct Green)
-            item.setBackground(QColor(76, 175, 80, 120))
+            item.setBackground(QColor(76, 175, 80, 50))
         else:
             # Color 3: Unconverged Fit (Distinct Red)
-            item.setBackground(QColor(244, 67, 54, 120))
+            item.setBackground(QColor(244, 67, 54, 50))
     elif has_baseline:
         # Color 2: Baselined (Distinct Purple)
-        item.setBackground(QColor(156, 39, 176, 120))
+        item.setBackground(QColor(156, 39, 176, 50))
     elif is_cropped:
         # Color 1: Cropped (Distinct Blue)
-        item.setBackground(QColor(33, 150, 243, 120))
+        item.setBackground(QColor(33, 150, 243, 50))
     else:
         # Original/Reinit: Transparent
         item.setBackground(QColor(0, 0, 0, 0))
@@ -396,18 +396,7 @@ def show_toast_notification(parent, message, title=None, duration=3000, preset=N
 def closest_index(array, value):
     return int(np.abs(array - value).argmin())
 
-def baseline_to_dict(spectrum):
-    dict_baseline = dict(vars(spectrum.baseline).items())
-    return dict_baseline
 
-def dict_to_baseline(dict_baseline, spectrums):
-    for spectrum in spectrums:
-        # Create a fresh BaselineModel instance
-        new_baseline =  BaseLine()
-        for key, value in dict_baseline.items():
-            setattr(new_baseline, key, deepcopy(value))
-        spectrum.baseline = new_baseline
-        
 def save_df_to_excel(save_path, df):
     """Saves a DataFrame to an Excel file with colored columns based on prefixes."""
     if not save_path:

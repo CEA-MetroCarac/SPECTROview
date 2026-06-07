@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Signal
 
-from spectroview.viewmodel.utils import baseline_to_dict
+
 
 class VMoreTab(QWidget):
     """View for Metadata tab - displays acquisition metadata, custom properties, and normalization."""
@@ -182,11 +182,11 @@ class VMoreTab(QWidget):
             points_str = ""
             subtracted_str = ""
             try:
-                bl_dict = baseline_to_dict(spectrum)
-                mode_str = str(bl_dict.get('mode', ''))
-                coef_str = str(bl_dict.get('coef', ''))
-                points_str = str(bl_dict.get('points', ''))
-                subtracted_str = str(bl_dict.get('is_subtracted', getattr(spectrum.baseline, 'is_subtracted', '')))
+                if hasattr(spectrum, 'baseline') and spectrum.baseline is not None:
+                    mode_str = str(getattr(spectrum.baseline, 'mode', ''))
+                    coef_str = str(getattr(spectrum.baseline, 'coef', ''))
+                    points_str = str(getattr(spectrum.baseline, 'points', ''))
+                    subtracted_str = str(getattr(spectrum.baseline, 'is_subtracted', ''))
             except Exception:
                 pass
                 

@@ -5,6 +5,9 @@ from pathlib import Path
 import matplotlib as mpl
 mpl.use('qtagg')
 
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, message=".*Glyph.*")
+
 import pandas as pd
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog, QMessageBox

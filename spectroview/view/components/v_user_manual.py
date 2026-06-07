@@ -622,7 +622,7 @@ class VUserManualDialog(QDialog):
         self.setStyleSheet(f"""
             QWidget {{
                 font-family: Verdana, Arial;
-                font-size: 12pt;
+                font-size: 11pt;
             }}
             QTextBrowser {{
                 font-size: {self._text_size}pt;

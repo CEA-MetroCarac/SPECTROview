@@ -161,6 +161,13 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_maps_list.btn_reinit.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "undo2.png"), icon_color))
         self.v_maps_list.btn_stats.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "stats.png"), icon_color))
         self.v_maps_list.btn_send_to_spectra.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "send.png"), icon_color))
+        
+        # Map viewer toolbar icons
+        if hasattr(self, 'v_map_viewer') and hasattr(self.v_map_viewer, 'apply_global_theme'):
+            self.v_map_viewer.apply_global_theme(theme)
+        for dialog in getattr(self, 'viewer_dialogs', []):
+            if hasattr(dialog, 'map_viewer') and hasattr(dialog.map_viewer, 'apply_global_theme'):
+                dialog.map_viewer.apply_global_theme(theme)
     
     def _on_spectra_list_changed(self, spectra: list):
         """Handle spectra list update from ViewModel."""

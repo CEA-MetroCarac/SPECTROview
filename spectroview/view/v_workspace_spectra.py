@@ -345,12 +345,12 @@ class VWorkspaceSpectra(QWidget):
         vm.split_parts_updated.connect(self.v_fit_results.populate_split_combobox)
 
         # Sync sidebar icons with theme changes
-        self.v_spectra_viewer.cbb_theme.currentIndexChanged.connect(self._update_sidebar_icons)
-        self._update_sidebar_icons()  # Initial call
+        # Called externally by main.py via apply_theme()
+        self.apply_theme("dark")  # Default initial call, updated by main.py soon after
 
-    def _update_sidebar_icons(self):
-        style_name = self.v_spectra_viewer.cbb_theme.currentText()
-        icon_color = "#404040" if style_name != "Dark Mode" else "#F0F0F0"
+    def apply_theme(self, theme: str):
+        """Called by main.py to update icons based on the global theme."""
+        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
         
         self.btn_select_all.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "select-all.png"), icon_color))
         self.btn_remove.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash.png"), icon_color))

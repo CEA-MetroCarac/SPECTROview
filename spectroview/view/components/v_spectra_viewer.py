@@ -1318,19 +1318,6 @@ class VSpectraViewer(QWidget):
     def _apply_plot_style(self):
         style_name = self.cbb_theme.currentText()
         style_path = PLOT_POLICY_LIGHT if style_name != "Dark Mode" else PLOT_POLICY_DARK
-        
-        # Update toolbar icons dynamically
-        icon_color = "#404040" if style_name != "Dark Mode" else "#F0F0F0"
-        if hasattr(self, 'btn_rescale'):
-            self.btn_rescale.setIcon(get_tinted_icon(f"{ICON_DIR}/rescale.png", icon_color))
-            self.btn_zoom.setIcon(get_tinted_icon(f"{ICON_DIR}/zoom.png", icon_color))
-            self.btn_baseline.setIcon(get_tinted_icon(f"{ICON_DIR}/baseline.png", icon_color))
-            self.btn_peak.setIcon(get_tinted_icon(f"{ICON_DIR}/peak.png", icon_color))
-            self.btn_norm.setIcon(get_tinted_icon(f"{ICON_DIR}/norm.png", icon_color))
-            self.btn_bestfit.setIcon(get_tinted_icon(f"{ICON_DIR}/bestfit.png", icon_color))
-            self.btn_legend.setIcon(get_tinted_icon(f"{ICON_DIR}/legend.png", icon_color))
-            self.btn_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
-            self.btn_options.setIcon(get_tinted_icon(f"{ICON_DIR}/options.png", icon_color))
             
         # Parse the style file without modifying global rcParams
         style_dict = mpl.rc_params_from_file(style_path)
@@ -1939,3 +1926,17 @@ class VSpectraViewer(QWidget):
         self.btn_eraser.setChecked(False)
         self.btn_eraser.blockSignals(False)
         self._toggle_erase_mode(False)
+
+    def apply_global_theme(self, global_theme: str):
+        """Update toolbar icons based on the global application theme, independently of the plot theme."""
+        icon_color = "#404040" if global_theme != "dark" else "#F0F0F0"
+        if hasattr(self, 'btn_rescale'):
+            self.btn_rescale.setIcon(get_tinted_icon(f"{ICON_DIR}/rescale.png", icon_color))
+            self.btn_zoom.setIcon(get_tinted_icon(f"{ICON_DIR}/zoom.png", icon_color))
+            self.btn_baseline.setIcon(get_tinted_icon(f"{ICON_DIR}/baseline.png", icon_color))
+            self.btn_peak.setIcon(get_tinted_icon(f"{ICON_DIR}/peak.png", icon_color))
+            self.btn_norm.setIcon(get_tinted_icon(f"{ICON_DIR}/norm.png", icon_color))
+            self.btn_bestfit.setIcon(get_tinted_icon(f"{ICON_DIR}/bestfit.png", icon_color))
+            self.btn_legend.setIcon(get_tinted_icon(f"{ICON_DIR}/legend.png", icon_color))
+            self.btn_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
+            self.btn_options.setIcon(get_tinted_icon(f"{ICON_DIR}/options.png", icon_color))

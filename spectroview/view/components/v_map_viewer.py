@@ -174,12 +174,16 @@ class VMapViewer(QWidget):
         if style_name is not None:
             self.current_style = style_name
             
-        icon_color = "#404040" if self.current_style != "Dark Mode" else "#F0F0F0"
-        if hasattr(self, 'btn_copy'):
-            self.btn_copy.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "copy.png"), icon_color))
-            
         # Manually replot heatmap to update colorbars and contents with new style
         self.plot_heatmap()
+
+    def apply_global_theme(self, global_theme: str):
+        """Update toolbar icons based on the global application theme."""
+        icon_color = "#404040" if global_theme != "dark" else "#F0F0F0"
+        if hasattr(self, 'btn_copy'):
+            self.btn_copy.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "copy.png"), icon_color))
+        if hasattr(self, 'btn_options'):
+            self.btn_options.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "options.png"), icon_color))
 
     def _create_map_type_controls(self):
         """Create map type and palette selector controls."""

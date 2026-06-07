@@ -419,13 +419,22 @@ class Main(QMainWindow):
             app.setStyleSheet(light_glass_stylesheet())
             self.settings.set_theme("light")
             
-        if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
-            self.v_spectra_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
+        if hasattr(self, 'v_spectra_workspace'):
+            if hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
+                self.v_spectra_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
+                if hasattr(self.v_spectra_workspace.v_spectra_viewer, 'apply_global_theme'):
+                    self.v_spectra_workspace.v_spectra_viewer.apply_global_theme(theme)
+            if hasattr(self.v_spectra_workspace, 'apply_theme'):
+                self.v_spectra_workspace.apply_theme(theme)
+                
         if hasattr(self, 'v_maps_workspace'):
             if hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
                 self.v_maps_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
+                if hasattr(self.v_maps_workspace.v_spectra_viewer, 'apply_global_theme'):
+                    self.v_maps_workspace.v_spectra_viewer.apply_global_theme(theme)
             if hasattr(self.v_maps_workspace, 'apply_theme'):
                 self.v_maps_workspace.apply_theme(theme)
+                
         if hasattr(self, 'v_graphs_workspace'):
             self.v_graphs_workspace.apply_theme(theme)
 

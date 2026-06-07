@@ -241,12 +241,8 @@ class VUserManualDialog(QDialog):
 
     def __init__(self, manual_dir, parent=None):
         super().__init__(parent)
-        self.setStyleSheet("""
-            QWidget {
-                font-family: Verdana, Arial;
-                font-size: 12pt;
-            }
-        """)
+        self._text_size = 12
+        self._update_stylesheet()
         
         self.manual_dir = manual_dir
         self.setWindowTitle("SPECTROview User Manual")
@@ -270,12 +266,34 @@ class VUserManualDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
 
-        # ---- Search bar at the top (full width) ----
+        # ---- Top Bar: Search and Zoom ----
+        top_bar = QHBoxLayout()
         self.search_bar = QLineEdit()
         self.search_bar.setPlaceholderText("🔍 Search all sections (Enter to find next)…")
         self.search_bar.textChanged.connect(self._on_search_text_changed)
         self.search_bar.returnPressed.connect(self._on_search_return_pressed)
-        layout.addWidget(self.search_bar)
+        top_bar.addWidget(self.search_bar)
+        
+        top_bar.addSpacing(20)
+        lbl_zoom = QLabel("Adjust Text Size:")
+        top_bar.addWidget(lbl_zoom)
+        
+        self.btn_zoom_out = QPushButton("-")
+        self.btn_zoom_out.setFixedWidth(30)
+        self.btn_zoom_out.setToolTip("Decrease Text Size")
+        self.btn_zoom_out.setFocusPolicy(Qt.NoFocus)
+        self.btn_zoom_out.clicked.connect(self._zoom_out)
+        
+        self.btn_zoom_in = QPushButton("+")
+        self.btn_zoom_in.setFixedWidth(30)
+        self.btn_zoom_in.setToolTip("Increase Text Size")
+        self.btn_zoom_in.setFocusPolicy(Qt.NoFocus)
+        self.btn_zoom_in.clicked.connect(self._zoom_in)
+        
+        top_bar.addWidget(self.btn_zoom_out)
+        top_bar.addWidget(self.btn_zoom_in)
+        
+        layout.addLayout(top_bar)
 
         self.splitter = QSplitter(Qt.Horizontal)
 
@@ -383,7 +401,6 @@ class VUserManualDialog(QDialog):
         <style>
             body { font-family: Verdana, -apple-system, BlinkMacSystemFont,
                    "Segoe UI", Roboto, Helvetica, Arial;
-                   font-size: 14pt;
                    line-height: 1.6; padding: 10px; }
             h1, h2, h3, h4 { margin-top: 1.2em; margin-bottom: 0.5em; }
             p { margin-top: 0; margin-bottom: 0.8em; }
@@ -592,3 +609,22 @@ class VUserManualDialog(QDialog):
                 "QLineEdit { background-color: #ffcccc; color: black; }")
         else:
             self.search_bar.setStyleSheet("")
+
+    def _zoom_in(self):
+        self._text_size += 1
+        self._update_stylesheet()
+
+    def _zoom_out(self):
+        self._text_size = max(6, self._text_size - 1)
+        self._update_stylesheet()
+
+    def _update_stylesheet(self):
+        self.setStyleSheet(f"""
+            QWidget {{
+                font-family: Verdana, Arial;
+                font-size: 12pt;
+            }}
+            QTextBrowser {{
+                font-size: {self._text_size}pt;
+            }}
+        """)

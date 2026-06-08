@@ -1217,6 +1217,8 @@ class CustomizeMoreOptions(QWidget):
     def _build_general_section(self):
         grp = QGroupBox("Plot options")
         layout = QVBoxLayout(grp)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
 
         # Join points (point plot)
         self._cb_join = QCheckBox("Join data points (point plot)")
@@ -1242,6 +1244,8 @@ class CustomizeMoreOptions(QWidget):
     def _build_trendline_section(self):
         grp = QGroupBox("Trendline settings")
         layout = QVBoxLayout(grp)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
 
         # Polynomial order
         order_row = QHBoxLayout()
@@ -1260,6 +1264,8 @@ class CustomizeMoreOptions(QWidget):
         anchor_grp.setCheckable(True)
         anchor_grp.setChecked(False)
         anchor_layout = QVBoxLayout(anchor_grp)
+        anchor_layout.setContentsMargins(2, 2, 2, 2)
+        anchor_layout.setSpacing(2)
         self._anchor_grp = anchor_grp
 
         self._rb_origin = QRadioButton("Through origin (0, 0)")
@@ -1321,6 +1327,8 @@ class CustomizeMoreOptions(QWidget):
     def _build_histogram_section(self):
         grp = QGroupBox("Histogram settings")
         layout = QVBoxLayout(grp)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
 
         bins_row = QHBoxLayout()
         bins_row.addWidget(QLabel("Bins:"))

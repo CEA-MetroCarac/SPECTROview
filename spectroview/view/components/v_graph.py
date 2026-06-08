@@ -201,10 +201,6 @@ class VGraph(QWidget):
         self.toolbar_filter = ToolbarEventFilter(self.toolbar)
         self.toolbar.installEventFilter(self.toolbar_filter)
 
-
-        
-
-
         self.toolbar.setIconSize(QSize(30, 30))  # Set larger icon size
         for action in self.toolbar.actions():
             if action.text() in ['Save', 'Back', 'Forward']:
@@ -1058,7 +1054,10 @@ class VGraph(QWidget):
             if self.ylabel:
                 self.ax.set_ylabel(self.ylabel)
             else:
-                self.ax.set_ylabel(self._get_y_label_default(self.y))
+                if self.plot_style == 'histogram':
+                    self.ax.set_ylabel("Frequency")
+                else:
+                    self.ax.set_ylabel(self._get_y_label_default(self.y))
     
     def _plot_secondary_axis(self, df):
         """Plot data on secondary y-axis."""

@@ -89,7 +89,7 @@ class VMenuBar(QToolBar):
         """Update internal state so the checkmark appears on the right item."""
         self._current_theme = theme_key
 
-    def _show_theme_menu(self):
+    def _show_theme_menu(self, checked=False):
         """Build and display a popup menu below the theme toolbar button."""
         menu = QMenu(self)
         for key, label in THEME_OPTIONS:
@@ -97,7 +97,7 @@ class VMenuBar(QToolBar):
             action.setCheckable(True)
             action.setChecked(key == self._current_theme)
             # Capture `key` in the lambda default argument
-            action.triggered.connect(lambda checked, k=key: self._on_theme_chosen(k))
+            action.triggered.connect(lambda checked=False, k=key: self._on_theme_chosen(k))
         
         # Position the menu just below the toolbar button
         btn = self.widgetForAction(self.actionTheme)

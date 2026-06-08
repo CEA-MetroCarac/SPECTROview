@@ -25,6 +25,12 @@ class CustomizeGraphDialog(QDialog):
         
         self.setWindowTitle(f"Customize Graph {graph_id}")
         self.setModal(False)
+        # Qt.Tool keeps the dialog above its parent on both macOS and Windows,
+        # hides when switching to another app, and preserves the close button.
+        self.setWindowFlags(
+            Qt.Window | Qt.Tool | Qt.CustomizeWindowHint
+            | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
+        )
         self.resize(450, 550)
         
         self._setup_ui()

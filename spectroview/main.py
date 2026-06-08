@@ -28,7 +28,7 @@ from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.v_workspace_maps import VWorkspaceMaps
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 
-from spectroview.viewmodel.utils import dark_palette, soft_dark_palette, light_palette
+from spectroview.view.style import dark_palette, soft_dark_palette, light_palette
 from spectroview.view.style import dark_glass_stylesheet, soft_dark_glass_stylesheet, light_glass_stylesheet
 
 from spectroview import LOGO_APPLI, USER_MANUAL_DIR

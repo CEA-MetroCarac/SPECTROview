@@ -40,7 +40,7 @@ def dark_glass_stylesheet() -> str:
 
     QTabWidget::pane {
         margin-top: 2px;
-        border: 1px solid rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 8px;
         background: rgba(38, 38, 38, 230);
         top: -1px;
@@ -49,7 +49,7 @@ def dark_glass_stylesheet() -> str:
     QTabBar::tab {
         margin-top: 4px;
         background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-bottom: none;
         border-top-left-radius: 7px;
         border-top-right-radius: 7px;
@@ -61,7 +61,7 @@ def dark_glass_stylesheet() -> str:
 
     QTabBar::tab:selected {
         background: rgba(255, 255, 255, 0.10);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.25);
         border-bottom: 1px solid rgba(38, 38, 38, 230);
         color: white;
     }
@@ -77,14 +77,14 @@ def dark_glass_stylesheet() -> str:
 
     QToolBar {
         background: rgba(40, 40, 40, 240);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
         spacing: 3px;
         padding: 3px;
     }
 
     QToolBar::separator {
         width: 1px;
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.20);
         margin: 4px 6px;
     }
 
@@ -94,7 +94,7 @@ def dark_glass_stylesheet() -> str:
 
     QGroupBox {
         background: rgba(255, 255, 255, 0.025);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 8px;
         margin-top: 10px;
         padding: 8px 3px 3px 3px;
@@ -114,7 +114,7 @@ def dark_glass_stylesheet() -> str:
 
     QPushButton, QToolButton {
         background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.10);
+        border: 1px solid rgba(255, 255, 255, 0.20);
         border-radius: 6px;
         padding: 3px;
         color: rgba(255, 255, 255, 0.90);
@@ -122,7 +122,7 @@ def dark_glass_stylesheet() -> str:
 
     QPushButton:hover, QToolButton:hover {
         background: rgba(255, 255, 255, 0.10);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.30);
     }
 
     QPushButton:pressed, QToolButton:pressed {
@@ -148,7 +148,7 @@ def dark_glass_stylesheet() -> str:
 
     QLineEdit {
         background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.20);
         border-radius: 5px;
         padding: 3px;
         color: white;
@@ -165,7 +165,7 @@ def dark_glass_stylesheet() -> str:
        ═══════════════════════════════════════════════ */
     QComboBox, QSpinBox, QDoubleSpinBox {
         background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.20);
         border-radius: 5px;
         padding: 3px 5px;
         color: white;
@@ -177,21 +177,21 @@ def dark_glass_stylesheet() -> str:
         subcontrol-origin: padding;
         subcontrol-position: top right;
         background: transparent;
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        border-left: 1px solid rgba(255, 255, 255, 0.20);
         width: 16px;
     }
     QSpinBox::up-button, QDoubleSpinBox::up-button {
         subcontrol-origin: border;
         subcontrol-position: top right;
         background: transparent;
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        border-left: 1px solid rgba(255, 255, 255, 0.20);
         width: 16px;
     }
     QSpinBox::down-button, QDoubleSpinBox::down-button {
         subcontrol-origin: border;
         subcontrol-position: bottom right;
         background: transparent;
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        border-left: 1px solid rgba(255, 255, 255, 0.20);
         width: 16px;
     }
     QComboBox::drop-down:pressed, QSpinBox::up-button:pressed, QSpinBox::down-button:pressed, QDoubleSpinBox::up-button:pressed, QDoubleSpinBox::down-button:pressed {
@@ -220,7 +220,7 @@ def dark_glass_stylesheet() -> str:
         height: 14px;
         border-radius: 3px;
         background: rgba(0, 0, 0, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
     }
     QCheckBox::indicator:checked, QListView::indicator:checked, QTreeView::indicator:checked, QGroupBox::indicator:checked {
         background: rgba(64, 156, 255, 0.90);
@@ -266,7 +266,7 @@ def dark_glass_stylesheet() -> str:
 
     QListWidget, QTreeWidget, QScrollArea, #workspaceRightPanel, #bottomToolbarPanel {
         background: rgba(0, 0, 0, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 6px;
         color: white;
         outline: none;
@@ -303,17 +303,17 @@ def dark_glass_stylesheet() -> str:
 
     QTableWidget, QTableView {
         background: rgba(0, 0, 0, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 6px;
-        gridline-color: rgba(255, 255, 255, 0.06);
+        gridline-color: rgba(255, 255, 255, 0.15);
         color: white;
     }
 
     QHeaderView::section {
         background: rgba(255, 255, 255, 0.05);
         border: none;
-        border-right: 1px solid rgba(255, 255, 255, 0.06);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: 1px solid rgba(255, 255, 255, 0.15);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.20);
         padding: 3px;
         color: rgba(255, 255, 255, 0.80);
         font-weight: bold;
@@ -325,7 +325,7 @@ def dark_glass_stylesheet() -> str:
 
     QToolTip {
         background: rgba(50, 50, 50, 245);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.25);
         border-radius: 6px;
         color: white;
         padding: 3px;
@@ -411,7 +411,7 @@ def dark_glass_stylesheet() -> str:
 
     QProgressBar {
         background: rgba(0, 0, 0, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 4px;
         text-align: center;
         color: rgba(255, 255, 255, 0.80);
@@ -440,7 +440,7 @@ def dark_glass_stylesheet() -> str:
 
     QFrame[frameShape="4"],    /* HLine */
     QFrame[frameShape="5"] {   /* VLine */
-        color: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.20);
     }
 
     /* ═══════════════════════════════════════════════
@@ -449,7 +449,7 @@ def dark_glass_stylesheet() -> str:
 
     QMenu {
         background: rgba(44, 44, 44, 250);
-        border: 1px solid rgba(255, 255, 255, 0.10);
+        border: 1px solid rgba(255, 255, 255, 0.20);
         border-radius: 8px;
         padding: 3px;
         color: white;
@@ -467,7 +467,7 @@ def dark_glass_stylesheet() -> str:
 
     QMenu::separator {
         height: 1px;
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.20);
         margin: 4px 8px;
     }
 
@@ -477,7 +477,7 @@ def dark_glass_stylesheet() -> str:
 
     QTextBrowser {
         background: rgba(0, 0, 0, 0.10);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 6px;
         color: white;
     }

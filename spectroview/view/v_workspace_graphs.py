@@ -165,6 +165,7 @@ class VWorkspaceGraphs(QWidget):
         
         # DataFrame listbox
         self.df_listbox = QListWidget()
+        self.df_listbox.setMaximumHeight(110)
         # self.df_listbox.setAcceptDrops(True)  # Disabled to allow global drop
         
         # Connect selection change
@@ -179,27 +180,31 @@ class VWorkspaceGraphs(QWidget):
         
         self.btn_view_df = QPushButton()
         self.btn_view_df.setIcon(QIcon(os.path.join(ICON_DIR, "view.png")))
-        self.btn_view_df.setIconSize(QSize(20, 20))
+        self.btn_view_df.setIconSize(QSize(18, 18))
         self.btn_view_df.setToolTip("View DataFrame\nCtrl+Click: Open source file")
         self.btn_view_df.setMaximumWidth(35)
+        self.btn_view_df.setMaximumHeight(22)
         
         self.btn_remove_df = QPushButton()
         self.btn_remove_df.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))
-        self.btn_remove_df.setIconSize(QSize(20, 20))
+        self.btn_remove_df.setIconSize(QSize(18, 18))
         self.btn_remove_df.setToolTip("Remove DataFrame")
         self.btn_remove_df.setMaximumWidth(35)
+        self.btn_remove_df.setMaximumHeight(22)
         
         self.btn_save_df = QPushButton()
         self.btn_save_df.setIcon(QIcon(os.path.join(ICON_DIR, "save.png")))
-        self.btn_save_df.setIconSize(QSize(20, 20))
+        self.btn_save_df.setIconSize(QSize(18, 18))
         self.btn_save_df.setToolTip("Save DataFrame to Excel")
         self.btn_save_df.setMaximumWidth(35)
+        self.btn_save_df.setMaximumHeight(22)
         
         self.btn_refresh_df = QPushButton()
         self.btn_refresh_df.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
-        self.btn_refresh_df.setIconSize(QSize(20, 20))
+        self.btn_refresh_df.setIconSize(QSize(18, 18))
         self.btn_refresh_df.setToolTip("Refresh DataFrame from source file")
         self.btn_refresh_df.setMaximumWidth(35)
+        self.btn_refresh_df.setMaximumHeight(22)
         
         df_buttons_layout.addWidget(self.btn_view_df)
         df_buttons_layout.addWidget(self.btn_remove_df)
@@ -214,8 +219,7 @@ class VWorkspaceGraphs(QWidget):
     def _setup_filter_section(self, parent_layout):  
         """Setup filter section."""
         self.v_data_filter = VDataFilter()
-        self.v_data_filter.setMaximumHeight(200)
-        parent_layout.addWidget(self.v_data_filter)
+        parent_layout.addWidget(self.v_data_filter, stretch=1.5)
     
     def _setup_slot_selector_section(self, parent_layout):
         """Setup slot selector section."""
@@ -262,7 +266,7 @@ class VWorkspaceGraphs(QWidget):
         self.plot_tabs.addTab(plot_tab, "Plot")
         self.plot_tabs.addTab(more_options_tab, "Plot multiple axes (beta)")
         
-        parent_layout.addWidget(self.plot_tabs, stretch=1)
+        parent_layout.addWidget(self.plot_tabs, stretch=2)
     
     def _create_plot_tab(self):
         """Create plot tab."""

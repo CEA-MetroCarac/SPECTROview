@@ -34,8 +34,8 @@ class CustomizeGraphDialog(QDialog):
         """Setup dialog UI with tabs."""
         # Main layout
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
         
         # Create tab widget
         self.tabs = QTabWidget()
@@ -57,8 +57,8 @@ class CustomizeGraphDialog(QDialog):
         """Create legend customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
         
         self.legend_widget = CustomizeLegend(self.graph_widget, parent=tab)
         layout.addWidget(self.legend_widget)
@@ -85,8 +85,8 @@ class CustomizeGraphDialog(QDialog):
         """Create annotations customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
         
         self.annotations_widget = CustomizeAnnotations(self.graph_widget, parent=tab)
         layout.addWidget(self.annotations_widget)
@@ -96,8 +96,8 @@ class CustomizeGraphDialog(QDialog):
         """Create general settings tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
         
         self.more_options_widget = CustomizeMoreOptions(self.graph_widget, parent=tab)
         layout.addWidget(self.more_options_widget)
@@ -107,8 +107,8 @@ class CustomizeGraphDialog(QDialog):
         """Create axis customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
         
         self.axis_widget = CustomizeAxis(self.graph_widget, parent=tab)
         layout.addWidget(self.axis_widget)
@@ -172,25 +172,21 @@ class CustomizeLegend(QWidget):
         """Setup the UI components for the legend customization widget."""
         # Main layout
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(4, 4, 4, 4)
-        self.main_layout.setSpacing(4)
-        
-        # Info label
-        info_label = QLabel("Customize legend labels, colors, and markers:")
-        self.main_layout.addWidget(info_label)
+        self.main_layout.setContentsMargins(2, 2, 2, 2)
+        self.main_layout.setSpacing(2)
         
         # Container for legend widgets (labels, markers, colors)
-        self.legend_container = QWidget()
+        self.legend_container = QGroupBox("Legends box:")
         self.legend_layout = QHBoxLayout(self.legend_container)
-        self.legend_layout.setContentsMargins(0, 0, 0, 0)
+        self.legend_layout.setContentsMargins(2, 2, 2, 2)
         
         self.main_layout.addWidget(self.legend_container)
         
         # ───── Scatter/Marker-specific settings ─────
-        self.scatter_group = QGroupBox("Scatter / Marker settings")
+        self.scatter_group = QGroupBox("Scatter / Marker settings:")
         scatter_layout = QHBoxLayout(self.scatter_group)
-        scatter_layout.setContentsMargins(4, 4, 4, 4)
-        scatter_layout.setSpacing(4)
+        scatter_layout.setContentsMargins(2, 2, 2, 2)
+        scatter_layout.setSpacing(2)
         
         # Marker size
         scatter_layout.addWidget(QLabel("Marker size:"))
@@ -436,8 +432,8 @@ class CustomizeAnnotations(QWidget):
     def _setup_ui(self):
         """Setup the UI components for the annotations widget."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
         
         # Add buttons
         btn_layout = QHBoxLayout()
@@ -690,8 +686,8 @@ class CustomizeAxis(QWidget):
     def _setup_ui(self):
         """Setup the UI components for the axis customization widget."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
         
         # ===== Axis Limits Section =====
         limits_group = QGroupBox("Set Axis Limits:")
@@ -1191,8 +1187,8 @@ class CustomizeMoreOptions(QWidget):
         scroll.setFrameShape(QScrollArea.NoFrame)
         inner = QWidget()
         self._inner_layout = QVBoxLayout(inner)
-        self._inner_layout.setContentsMargins(4, 4, 4, 4)
-        self._inner_layout.setSpacing(4)
+        self._inner_layout.setContentsMargins(2, 2, 2, 2)
+        self._inner_layout.setSpacing(2)
         scroll.setWidget(inner)
         outer.addWidget(scroll)
 

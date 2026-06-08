@@ -60,10 +60,12 @@ def dark_glass_stylesheet() -> str:
     }
 
     QTabBar::tab:selected {
-        background: rgba(255, 255, 255, 0.10);
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.35);
+
         border-bottom: 1px solid rgba(38, 38, 38, 230);
         color: white;
+        font-weight: bold;
     }
 
     QTabBar::tab:hover:!selected {
@@ -542,10 +544,12 @@ def soft_dark_glass_stylesheet() -> str:
     }
 
     QTabBar::tab:selected {
-        background: rgba(255, 255, 255, 0.10);
-        border: 1px solid rgba(255, 255, 255, 0.13);
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+
         border-bottom: 1px solid rgba(60, 60, 60, 230);
         color: white;
+        font-weight: bold;
     }
 
     QTabBar::tab:hover:!selected {
@@ -1027,10 +1031,12 @@ def light_glass_stylesheet() -> str:
     }
 
     QTabBar::tab:selected {
-        background: rgba(255, 255, 255, 240);
-        border: 1px solid rgba(0, 0, 0, 0.10);
-        border-bottom: 1px solid rgba(255, 255, 255, 240);
-        color: rgba(0, 0, 0, 0.90);
+        background: rgba(255, 255, 255, 0.90);
+        border: 1px solid rgba(0, 0, 0, 0.25);
+
+        border-bottom: 1px solid rgba(240, 240, 240, 230);
+        color: #000000;
+        font-weight: bold;
     }
 
     QTabBar::tab:hover:!selected {

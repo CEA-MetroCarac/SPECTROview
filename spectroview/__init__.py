@@ -84,6 +84,7 @@ ICON_DIR = resource_path("spectroview/resources/icons")
 PLOT_POLICY = resource_path("spectroview/resources/plotpolicy.mplstyle")
 PLOT_POLICY_LIGHT = resource_path("spectroview/resources/plotpolicy_light.mplstyle")
 PLOT_POLICY_DARK = resource_path("spectroview/resources/plotpolicy_dark.mplstyle")
+PLOT_POLICY_SOFT_DARK = resource_path("spectroview/resources/plotpolicy_soft_dark.mplstyle")
 
 UI_FILE = resource_path("spectroview/config/gui/gui.ui")
 LOGO_APPLI = resource_path("spectroview/resources/icons/logo_spectroview.png")

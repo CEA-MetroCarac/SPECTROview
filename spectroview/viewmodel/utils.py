@@ -554,6 +554,46 @@ def dark_palette():
 
     return p
 
+def soft_dark_palette():
+    """Soft-dark palette — neutral gray depth layers, lighter than deep dark"""
+
+    p = QPalette()
+
+    # ---------- Base surfaces (neutral gray tones) ----------
+    p.setColor(QPalette.Window, QColor(54, 54, 54))            # main background
+    p.setColor(QPalette.Base, QColor(58, 58, 58))              # lists, tables, editors
+    p.setColor(QPalette.AlternateBase, QColor(65, 65, 65))     # alternating rows
+
+    # ---------- Text ----------
+    p.setColor(QPalette.WindowText, QColor(235, 235, 235))
+    p.setColor(QPalette.Text, QColor(235, 235, 235))
+    p.setColor(QPalette.ButtonText, QColor(230, 230, 230))
+    p.setColor(QPalette.PlaceholderText, QColor(140, 140, 140))
+
+    # ---------- Buttons / controls ----------
+    p.setColor(QPalette.Button, QColor(72, 72, 72))
+    p.setColor(QPalette.Light, QColor(98, 98, 98))
+    p.setColor(QPalette.Mid, QColor(82, 82, 82))
+    p.setColor(QPalette.Dark, QColor(48, 48, 48))
+    p.setColor(QPalette.Shadow, QColor(30, 30, 30))
+
+    # ---------- Tooltips ----------
+    p.setColor(QPalette.ToolTipBase, QColor(68, 68, 68))
+    p.setColor(QPalette.ToolTipText, QColor(235, 235, 235))
+
+    # ---------- Highlights / accent (blue) ----------
+    accent = QColor(42, 130, 218)
+    p.setColor(QPalette.Highlight, accent)
+    p.setColor(QPalette.HighlightedText, Qt.white)
+    p.setColor(QPalette.Link, QColor(64, 156, 255))
+
+    # ---------- Disabled ----------
+    p.setColor(QPalette.Disabled, QPalette.Text, QColor(120, 120, 120))
+    p.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(120, 120, 120))
+    p.setColor(QPalette.Disabled, QPalette.WindowText, QColor(120, 120, 120))
+
+    return p
+
 def light_palette():
     """Light palette with soft blue accent — glass-style depth layers"""
 

@@ -28,8 +28,8 @@ from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.v_workspace_maps import VWorkspaceMaps
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 
-from spectroview.viewmodel.utils import dark_palette, light_palette
-from spectroview.view.style import dark_glass_stylesheet, light_glass_stylesheet
+from spectroview.viewmodel.utils import dark_palette, soft_dark_palette, light_palette
+from spectroview.view.style import dark_glass_stylesheet, soft_dark_glass_stylesheet, light_glass_stylesheet
 
 from spectroview import LOGO_APPLI, USER_MANUAL_DIR
 from spectroview.view.components.v_user_manual import VUserManualDialog
@@ -95,7 +95,7 @@ class Main(QMainWindow):
         self.menu_bar.manual_requested.connect(self.manual) 
         self.menu_bar.github_requested.connect(self.open_github_repo)
         self.menu_bar.version_requested.connect(self.open_releases)
-        self.menu_bar.theme_requested.connect(self.toggle_theme)
+        self.menu_bar.theme_selected.connect(self.toggle_theme)
         
         # Inject Graphs workspace into Maps ViewModel for cross-workspace communication
         self.v_maps_workspace.vm.set_graphs_workspace(self.v_graphs_workspace)
@@ -407,36 +407,51 @@ class Main(QMainWindow):
         if theme is None:
             theme = "light" if self.settings.get_theme() == "dark" else "dark"
 
-        # Set theme for spectra viewer    
-        target_view_theme = "Dark Mode" if theme == "dark" else "Light Mode"
+        # Set theme for spectra viewer
+        if theme == "soft_dark":
+            target_view_theme = "Soft Dark Mode"
+        elif theme == "dark":
+            target_view_theme = "Dark Mode"
+        else:
+            target_view_theme = "Light Mode"
         
+        # For workspace apply_theme: soft_dark also uses dark-style plot backgrounds
+        workspace_theme = "light" if theme == "light" else "dark"
+
         if theme == "dark":
             app.setPalette(dark_palette())
             app.setStyleSheet(dark_glass_stylesheet())
-            self.settings.set_theme("dark")
+        elif theme == "soft_dark":
+            app.setPalette(soft_dark_palette())
+            app.setStyleSheet(soft_dark_glass_stylesheet())
         else:
             app.setPalette(light_palette())
             app.setStyleSheet(light_glass_stylesheet())
-            self.settings.set_theme("light")
-            
+
+        self.settings.set_theme(theme)
+
+        # Keep menubar checkmark in sync (needed for startup / programmatic calls)
+        if hasattr(self, 'menu_bar'):
+            self.menu_bar.set_current_theme(theme)
+
         if hasattr(self, 'v_spectra_workspace'):
             if hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
                 self.v_spectra_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
                 if hasattr(self.v_spectra_workspace.v_spectra_viewer, 'apply_global_theme'):
-                    self.v_spectra_workspace.v_spectra_viewer.apply_global_theme(theme)
+                    self.v_spectra_workspace.v_spectra_viewer.apply_global_theme(workspace_theme)
             if hasattr(self.v_spectra_workspace, 'apply_theme'):
-                self.v_spectra_workspace.apply_theme(theme)
+                self.v_spectra_workspace.apply_theme(workspace_theme)
                 
         if hasattr(self, 'v_maps_workspace'):
             if hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
                 self.v_maps_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
                 if hasattr(self.v_maps_workspace.v_spectra_viewer, 'apply_global_theme'):
-                    self.v_maps_workspace.v_spectra_viewer.apply_global_theme(theme)
+                    self.v_maps_workspace.v_spectra_viewer.apply_global_theme(workspace_theme)
             if hasattr(self.v_maps_workspace, 'apply_theme'):
-                self.v_maps_workspace.apply_theme(theme)
+                self.v_maps_workspace.apply_theme(workspace_theme)
                 
         if hasattr(self, 'v_graphs_workspace'):
-            self.v_graphs_workspace.apply_theme(theme)
+            self.v_graphs_workspace.apply_theme(workspace_theme)
 
     def dragEnterEvent(self, event):
         """Accept dragging files into the application."""

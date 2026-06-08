@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QDoubleSpinBox, QColorDialog, QInputDialog,
     QSlider, QGroupBox
 )
-from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize
+from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon
 
 import matplotlib.pyplot as plt
@@ -32,7 +32,7 @@ from PySide6.QtCore import QObject, QEvent, QPoint
 
 import matplotlib.lines as mlines
 
-from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, DEFAULT_COLORS
+from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, PLOT_POLICY_SOFT_DARK, DEFAULT_COLORS
 from spectroview.viewmodel.utils import copy_fig_to_clb, get_tinted_icon
 from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
 
@@ -118,17 +118,25 @@ class VSpectraViewer(QWidget):
             def __init__(self, toolbar):
                 super().__init__()
                 self.toolbar = toolbar
+                self._timer = QTimer(self)
+                self._timer.setSingleShot(True)
+                self._timer.setInterval(100)
+                self._timer.timeout.connect(self._update_icons)
+
             def eventFilter(self, obj, event):
                 if event.type() == QEvent.PaletteChange:
-                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
-                    for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
-                        if text in action_dict and image_file is not None:
-                            try:
-                                icon = self.toolbar._icon(image_file + '.png')
-                                action_dict[text].setIcon(icon)
-                            except Exception:
-                                pass
+                    self._timer.start()
                 return False
+
+            def _update_icons(self):
+                action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
+                    if text in action_dict and image_file is not None:
+                        try:
+                            icon = self.toolbar._icon(image_file + '.png')
+                            action_dict[text].setIcon(icon)
+                        except Exception:
+                            pass
                 
         self.toolbar_filter = ToolbarEventFilter(self.toolbar)
         self.toolbar.installEventFilter(self.toolbar_filter)
@@ -377,7 +385,7 @@ class VSpectraViewer(QWidget):
 
         # Plot Theme
         self.cbb_theme = QComboBox()
-        self.cbb_theme.addItems(["Light Mode", "Dark Mode"])
+        self.cbb_theme.addItems(["Light Mode", "Dark Mode", "Soft Dark Mode"])
         self.cbb_theme.currentIndexChanged.connect(self._apply_plot_style)
         menu.addAction(self._wrap("Plot Theme:", self.cbb_theme))
 
@@ -588,7 +596,12 @@ class VSpectraViewer(QWidget):
 
     def _plot(self):
         style_name = self.cbb_theme.currentText()
-        style_path = PLOT_POLICY_LIGHT if style_name != "Dark Mode" else PLOT_POLICY_DARK
+        if style_name == "Soft Dark Mode":
+            style_path = PLOT_POLICY_SOFT_DARK
+        elif style_name == "Dark Mode":
+            style_path = PLOT_POLICY_DARK
+        else:
+            style_path = PLOT_POLICY_LIGHT
         with plt.style.context(style_path):
             self._plot_internal()
 
@@ -1317,7 +1330,12 @@ class VSpectraViewer(QWidget):
         
     def _apply_plot_style(self):
         style_name = self.cbb_theme.currentText()
-        style_path = PLOT_POLICY_LIGHT if style_name != "Dark Mode" else PLOT_POLICY_DARK
+        if style_name == "Soft Dark Mode":
+            style_path = PLOT_POLICY_SOFT_DARK
+        elif style_name == "Dark Mode":
+            style_path = PLOT_POLICY_DARK
+        else:
+            style_path = PLOT_POLICY_LIGHT
             
         # Parse the style file without modifying global rcParams
         style_dict = mpl.rc_params_from_file(style_path)

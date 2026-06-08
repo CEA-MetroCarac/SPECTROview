@@ -11,7 +11,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QDialog
-from PySide6.QtCore import QObject, QEvent, QSize, Signal
+from PySide6.QtCore import QObject, QEvent, QSize, Signal, QTimer
 from PySide6.QtGui import QIcon
 
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR, PLOT_POLICY_LIGHT
@@ -178,17 +178,25 @@ class VGraph(QWidget):
             def __init__(self, toolbar):
                 super().__init__()
                 self.toolbar = toolbar
+                self._timer = QTimer(self)
+                self._timer.setSingleShot(True)
+                self._timer.setInterval(100)
+                self._timer.timeout.connect(self._update_icons)
+
             def eventFilter(self, obj, event):
                 if event.type() == QEvent.PaletteChange:
-                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
-                    for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
-                        if text in action_dict and image_file is not None:
-                            try:
-                                icon = self.toolbar._icon(image_file + '.png')
-                                action_dict[text].setIcon(icon)
-                            except Exception:
-                                pass
+                    self._timer.start()
                 return False
+
+            def _update_icons(self):
+                action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
+                    if text in action_dict and image_file is not None:
+                        try:
+                            icon = self.toolbar._icon(image_file + '.png')
+                            action_dict[text].setIcon(icon)
+                        except Exception:
+                            pass
                 
         self.toolbar_filter = ToolbarEventFilter(self.toolbar)
         self.toolbar.installEventFilter(self.toolbar_filter)

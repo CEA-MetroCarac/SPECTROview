@@ -241,7 +241,7 @@ class VUserManualDialog(QDialog):
 
     def __init__(self, manual_dir, parent=None):
         super().__init__(parent)
-        self._text_size = 11
+        self._text_size = 10
         self._update_stylesheet()
         
         self.manual_dir = manual_dir
@@ -622,7 +622,7 @@ class VUserManualDialog(QDialog):
         self.setStyleSheet(f"""
             QWidget {{
                 font-family: Verdana, Arial;
-                font-size: 11pt;
+                font-size: 10pt;
             }}
             QTextBrowser {{
                 font-size: {self._text_size}pt;

@@ -278,10 +278,12 @@ def dark_glass_stylesheet() -> str:
         padding: 3px;
         border-radius: 4px;
         margin: 1px 2px;
+        border: 1px solid transparent;
     }
 
     QListWidget::item:selected {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(64, 156, 255, 0.40);
+        border: 1px solid rgba(64, 156, 255, 0.70);
         color: white;
     }
 
@@ -292,10 +294,12 @@ def dark_glass_stylesheet() -> str:
     QTreeWidget::item {
         padding: 3px;
         border-radius: 3px;
+        border: 1px solid transparent;
     }
 
     QTreeWidget::item:selected {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(64, 156, 255, 0.40);
+        border: 1px solid rgba(64, 156, 255, 0.70);
         color: white;
     }
 
@@ -762,10 +766,12 @@ def soft_dark_glass_stylesheet() -> str:
         padding: 3px;
         border-radius: 4px;
         margin: 1px 2px;
+        border: 1px solid transparent;
     }
 
     QListWidget::item:selected {
-        background: rgba(255, 255, 255, 0.13);
+        background: rgba(64, 156, 255, 0.40);
+        border: 1px solid rgba(64, 156, 255, 0.70);
         color: white;
     }
 
@@ -776,10 +782,12 @@ def soft_dark_glass_stylesheet() -> str:
     QTreeWidget::item {
         padding: 3px;
         border-radius: 3px;
+        border: 1px solid transparent;
     }
 
     QTreeWidget::item:selected {
-        background: rgba(255, 255, 255, 0.13);
+        background: rgba(64, 156, 255, 0.40);
+        border: 1px solid rgba(64, 156, 255, 0.70);
         color: white;
     }
 

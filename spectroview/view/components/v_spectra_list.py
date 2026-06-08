@@ -9,8 +9,13 @@ from spectroview.viewmodel.utils import set_spectrum_item_color
 class SpectrumItemDelegate(QStyledItemDelegate):
     """Custom delegate to draw background colors that Qt Stylesheets hide."""
     def paint(self, painter, option, index):
+        from PySide6.QtWidgets import QStyle
+        is_selected = option.state & QStyle.State_Selected
+        
         bg_brush = index.data(Qt.BackgroundRole)
-        if bg_brush:
+        # Only draw the custom state background if the item is NOT selected.
+        # This allows the bright blue selection highlight to be fully visible.
+        if bg_brush and not is_selected:
             color = bg_brush.color() if hasattr(bg_brush, 'color') else bg_brush
             if hasattr(color, 'alpha') and color.alpha() > 0:
                 painter.save()

@@ -24,7 +24,7 @@ class VDataFilter(QGroupBox):
     def __init__(self, parent=None):
         """Initialize the data filter widget."""
         super().__init__(parent)
-        self.setTitle("Data filtering:")
+        self.setTitle("Dataframe filters:")
         self._init_ui()
     
     def _init_ui(self):

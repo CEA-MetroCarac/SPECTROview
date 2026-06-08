@@ -25,8 +25,6 @@ class CustomizeGraphDialog(QDialog):
         
         self.setWindowTitle(f"Customize Graph {graph_id}")
         self.setModal(False)
-        # Use Qt.Tool so it stays on top of the parent but hides when switching apps
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint | Qt.Tool)
         self.resize(450, 550)
         
         self._setup_ui()

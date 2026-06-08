@@ -198,7 +198,7 @@ class VMapViewer(QWidget):
         type_layout = QHBoxLayout()
         type_layout.setContentsMargins(2, 2, 2, 2)
         
-        lbl = QLabel("Select Map type:")
+        lbl = QLabel("Select map type:")
         type_layout.addWidget(lbl)
         self.cbb_map_type = QComboBox()
         self.cbb_map_type.addItems(['2Dmap', 'Wafer_300mm', 'Wafer_200mm', 'Wafer_100mm'])

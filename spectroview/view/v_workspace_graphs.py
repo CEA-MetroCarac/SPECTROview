@@ -67,6 +67,7 @@ class VWorkspaceGraphs(QWidget):
         self.mdi_area = QMdiArea()
         self.mdi_area.setMinimumWidth(600)
         self.mdi_area.setBackground(QBrush(Qt.transparent))
+        self.mdi_area.setStyleSheet("QMdiArea { border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 6px; }")
         left_layout.addWidget(self.mdi_area)
         
         # Bottom Toolbar
@@ -154,15 +155,16 @@ class VWorkspaceGraphs(QWidget):
     
     def _setup_dataframe_section(self, parent_layout):
         """Setup DataFrame section."""
-        lbl_dfs = QLabel("Loaded dataframe(s):")
-        parent_layout.addWidget(lbl_dfs)
+        group_box = QGroupBox("Loaded dataframes:")
+        group_layout = QVBoxLayout(group_box)
+        group_layout.setContentsMargins(2, 0, 2, 0)
         
         # DataFrame listbox and buttons side by side
         df_section_layout = QHBoxLayout()
+        df_section_layout.setContentsMargins(0, 0, 0, 0)
         
         # DataFrame listbox
         self.df_listbox = QListWidget()
-        self.df_listbox.setMaximumHeight(120)
         # self.df_listbox.setAcceptDrops(True)  # Disabled to allow global drop
         
         # Connect selection change
@@ -206,7 +208,8 @@ class VWorkspaceGraphs(QWidget):
         df_buttons_layout.addStretch()
         
         df_section_layout.addLayout(df_buttons_layout)
-        parent_layout.addLayout(df_section_layout)
+        group_layout.addLayout(df_section_layout)
+        parent_layout.addWidget(group_box)
     
     def _setup_filter_section(self, parent_layout):  
         """Setup filter section."""
@@ -257,7 +260,7 @@ class VWorkspaceGraphs(QWidget):
         more_options_tab = self._create_more_options_tab()
         
         self.plot_tabs.addTab(plot_tab, "Plot")
-        self.plot_tabs.addTab(more_options_tab, "Plot multiple Axes (beta)")
+        self.plot_tabs.addTab(more_options_tab, "Plot multiple axes (beta)")
         
         parent_layout.addWidget(self.plot_tabs, stretch=1)
     

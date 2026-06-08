@@ -103,7 +103,7 @@ def dark_glass_stylesheet() -> str:
 
     QGroupBox::title {
         subcontrol-origin: margin;
-        subcontrol-position: top left;
+        subcontrol-position: top center;
         padding: 2px 3px;
         color: rgba(255, 255, 255, 0.80);
     }
@@ -585,7 +585,7 @@ def soft_dark_glass_stylesheet() -> str:
 
     QGroupBox::title {
         subcontrol-origin: margin;
-        subcontrol-position: top left;
+        subcontrol-position: top center;
         padding: 2px 3px;
         color: rgba(255, 255, 255, 0.78);
     }
@@ -1070,7 +1070,7 @@ def light_glass_stylesheet() -> str:
 
     QGroupBox::title {
         subcontrol-origin: margin;
-        subcontrol-position: top left;
+        subcontrol-position: top center;
         padding: 2px 3px;
         color: rgba(0, 0, 0, 0.70);
     }

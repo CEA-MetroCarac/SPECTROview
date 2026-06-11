@@ -20,8 +20,8 @@ def dark_palette():
 
     # ---------- Base surfaces (deepened for glass layering) ----------
     p.setColor(QPalette.Window, QColor(33, 33, 33))          # main background
-    p.setColor(QPalette.Base, QColor(38, 38, 38))            # lists, tables, editors
-    p.setColor(QPalette.AlternateBase, QColor(45, 45, 45))   # alternating rows
+    p.setColor(QPalette.Base, QColor(60, 60, 60))            # lists, tables, editors
+    p.setColor(QPalette.AlternateBase, QColor(68, 68, 68))   # alternating rows
 
     # ---------- Text ----------
     p.setColor(QPalette.WindowText, QColor(240, 240, 240))
@@ -60,8 +60,8 @@ def soft_dark_palette():
 
     # ---------- Base surfaces (neutral gray tones) ----------
     p.setColor(QPalette.Window, QColor(54, 54, 54))            # main background
-    p.setColor(QPalette.Base, QColor(58, 58, 58))              # lists, tables, editors
-    p.setColor(QPalette.AlternateBase, QColor(65, 65, 65))     # alternating rows
+    p.setColor(QPalette.Base, QColor(78, 78, 78))              # lists, tables, editors
+    p.setColor(QPalette.AlternateBase, QColor(85, 85, 85))     # alternating rows
 
     # ---------- Text ----------
     p.setColor(QPalette.WindowText, QColor(235, 235, 235))
@@ -431,6 +431,7 @@ def dark_glass_stylesheet() -> str:
 
     QTableWidget, QTableView {
         background: rgba(0, 0, 0, 0.95);
+        alternate-background-color: rgba(255, 255, 255, 0.18);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 6px;
         gridline-color: rgba(255, 255, 255, 0.08);
@@ -919,6 +920,7 @@ def soft_dark_glass_stylesheet() -> str:
 
     QTableWidget, QTableView {
         background: rgba(0, 0, 0, 0.10);
+        alternate-background-color: rgba(255, 255, 255, 0.04);
         border: 1px solid rgba(255, 255, 255, 0.07);
         border-radius: 6px;
         gridline-color: rgba(255, 255, 255, 0.07);
@@ -1390,6 +1392,7 @@ def light_glass_stylesheet() -> str:
 
     QTableWidget, QTableView {
         background: rgba(255, 255, 255, 200);
+        alternate-background-color: rgba(0, 0, 0, 0.03);
         border: 1px solid rgba(0, 0, 0, 0.07);
         border-radius: 6px;
         gridline-color: rgba(0, 0, 0, 0.06);

@@ -26,14 +26,17 @@ class VMoreTab(QWidget):
         main_layout.setContentsMargins(2, 2, 2, 2)
         
         # --- LEFT: Metadata Table ---
-        self.group_metadata = QGroupBox("")
+        self.group_metadata = QGroupBox("Metadata")
         layout_metadata = QVBoxLayout(self.group_metadata)
+        layout_metadata.setContentsMargins(0, 0, 0, 0)
         self.table = QTableWidget()
         self.table.setColumnCount(2)
         self.table.setHorizontalHeaderLabels(["Parameter", "Value"])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(22)
+        self.table.setStyleSheet("QTableWidget::item { padding: 2px 4px; }")
         self.table.setAlternatingRowColors(True)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
@@ -48,7 +51,7 @@ class VMoreTab(QWidget):
         main_layout.addWidget(self.group_metadata, stretch=2)
         
         # --- MIDDLE: Custom Attributes ---
-        self.group_custom = QGroupBox("Other informations:")
+        self.group_custom = QGroupBox("Other informations")
         layout_custom = QFormLayout(self.group_custom)
         
         self.lbl_label = QLineEdit()

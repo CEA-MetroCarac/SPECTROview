@@ -52,21 +52,18 @@ class VDataFilter(QGroupBox):
         
         # Add filter button
         self.btn_add = QPushButton()
-        self.btn_add.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
         self.btn_add.setToolTip("Add filter")
         self.btn_add.clicked.connect(self._on_add_filter)
         layout_buttons.addWidget(self.btn_add)
         
         # Remove filter button
         self.btn_remove = QPushButton()
-        self.btn_remove.setIcon(QIcon(os.path.join(ICON_DIR, "close.png")))
         self.btn_remove.setToolTip("Remove selected filter")
         self.btn_remove.clicked.connect(self._on_remove_filter)
         layout_buttons.addWidget(self.btn_remove)
         
         # Apply filters button
         self.btn_apply = QPushButton("Apply")
-        self.btn_apply.setIcon(QIcon(os.path.join(ICON_DIR, "done.png")))
         self.btn_apply.setToolTip("Click to apply checked filters to the selected dataframe")
         self.btn_apply.clicked.connect(self._on_apply)
         layout_buttons.addWidget(self.btn_apply)

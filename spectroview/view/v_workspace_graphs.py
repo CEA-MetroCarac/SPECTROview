@@ -520,6 +520,11 @@ class VWorkspaceGraphs(QWidget):
         self.btn_add_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
         self.btn_update_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "update.png"), icon_color))
         self.btn_add_multi_wafer.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
+        
+        # v_data_filter buttons
+        self.v_data_filter.btn_add.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
+        self.v_data_filter.btn_remove.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "close.png"), icon_color))
+        self.v_data_filter.btn_apply.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "done.png"), icon_color))
 
     def setup_connections(self):
         """Connect signals and slots."""

@@ -356,7 +356,7 @@ class VWorkspaceSpectra(QWidget):
         self.btn_remove.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash.png"), icon_color))
         self.btn_reinit.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "undo2.png"), icon_color))
         self.btn_stats.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "stats.png"), icon_color))
-        self.btn_save_spectra_data.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save11.png"), icon_color))
+        self.btn_save_spectra_data.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save.png"), icon_color))
 
         # Propagate to Fit Model Builder
         if hasattr(self, 'v_fit_model_builder'):

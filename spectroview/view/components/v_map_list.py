@@ -84,19 +84,16 @@ class VMapsList(QWidget):
         map_buttons_layout.setSpacing(4)
         
         self.btn_view = QPushButton()
-        self.btn_view.setIconSize(QSize(24,24))
         self.btn_view.setToolTip("View selected map")
         self.btn_view.setFixedSize(32, 32)
         self.btn_view.clicked.connect(self.view_map_requested.emit)
         
         self.btn_delete = QPushButton()
-        self.btn_delete.setIconSize(QSize(24,24))
         self.btn_delete.setToolTip("Delete selected map")
         self.btn_delete.setFixedSize(32, 32)
         self.btn_delete.clicked.connect(self.delete_map_requested.emit)
         
         self.btn_save = QPushButton()
-        self.btn_save.setIconSize(QSize(24,24))
         self.btn_save.setToolTip("Save the selected map")
         self.btn_save.setFixedSize(32, 32)
         self.btn_save.clicked.connect(self.save_requested.emit)
@@ -153,22 +150,22 @@ class VMapsList(QWidget):
         
         self.btn_select_all = QPushButton()
         self.btn_select_all.setToolTip("Select all spectra")
-        self.btn_select_all.setFixedSize(32,32)
+        self.btn_select_all.setFixedSize(32, 32)
         self.btn_select_all.clicked.connect(self.select_all_requested.emit)
         
         self.btn_reinit = QPushButton()
         self.btn_reinit.setToolTip("Reinitialize selected spectra")
-        self.btn_reinit.setFixedSize(32,32)
+        self.btn_reinit.setFixedSize(32, 32)
         self.btn_reinit.clicked.connect(self.reinitialize_requested.emit)
         
         self.btn_stats = QPushButton()
         self.btn_stats.setToolTip("Show fitting statistics")
-        self.btn_stats.setFixedSize(32,32)
+        self.btn_stats.setFixedSize(32, 32)
         self.btn_stats.clicked.connect(self.stats_requested.emit)
         
         self.btn_send_to_spectra = QPushButton()
         self.btn_send_to_spectra.setToolTip("Send selected spectra to 'Spectra' Workspace")
-        self.btn_send_to_spectra.setFixedSize(32,32)
+        self.btn_send_to_spectra.setFixedSize(32, 32)
         self.btn_send_to_spectra.clicked.connect(self.send_to_spectra_requested.emit)
         
         spectra_buttons_layout.addWidget(self.btn_select_all)

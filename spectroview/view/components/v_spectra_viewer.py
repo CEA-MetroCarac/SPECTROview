@@ -156,8 +156,8 @@ class VSpectraViewer(QWidget):
         # ─── Canvas + Sliders row ───
         canvas_row = QHBoxLayout()
         canvas_row.setContentsMargins(0, 0, 0, 0)
-        canvas_row.addWidget(self.shift_panel)
         canvas_row.addWidget(self.canvas, stretch=1)
+        canvas_row.addWidget(self.shift_panel)
 
         # ─── Control bar ───
         self.control_bar = self._create_control_bar()

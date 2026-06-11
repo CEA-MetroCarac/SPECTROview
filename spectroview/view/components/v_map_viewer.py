@@ -82,8 +82,9 @@ class VMapViewer(QWidget):
     def _create_canvas(self):
         """Create matplotlib canvas and toolbar."""
         canvas_frame = QFrame()
+        canvas_frame.setStyleSheet("border: none; background: transparent;")
         canvas_layout = QVBoxLayout(canvas_frame)
-        canvas_layout.setContentsMargins(2, 2, 2, 2)
+        canvas_layout.setContentsMargins(0, 0, 0, 0)
         
         # Create matplotlib figure and canvas
         with plt.style.context(PLOT_POLICY_LIGHT):
@@ -92,7 +93,9 @@ class VMapViewer(QWidget):
             self.ax.tick_params(axis='both', which='both')
         
         self.canvas = FigureCanvas(self.figure)
-        # self.canvas.setMinimumHeight(200)
+        from PySide6.QtWidgets import QSizePolicy
+        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.canvas.setStyleSheet("border: none; background: transparent;")
         # self.canvas.setMaximumHeight(350)
         
         # Connect mouse events for interactive selection

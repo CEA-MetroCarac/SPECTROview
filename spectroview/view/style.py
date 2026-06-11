@@ -621,6 +621,62 @@ def dark_glass_stylesheet() -> str:
         color: rgba(255, 255, 255, 0.90);
     }
 
+    /* ═══════════════════════════════════════════════
+       SLIDER
+       ═══════════════════════════════════════════════ */
+
+    QSlider::groove:horizontal {
+        height: 4px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 2px;
+    }
+    QSlider::sub-page:horizontal {
+        background: rgba(64, 156, 255, 0.80);
+        border-radius: 2px;
+    }
+    QSlider::handle:horizontal {
+        background: rgba(255, 255, 255, 0.90);
+        border: 1px solid rgba(0, 0, 0, 0.30);
+        width: 14px;
+        margin: -5px 0;
+        border-radius: 7px;
+    }
+    QSlider::handle:horizontal:hover {
+        background: white;
+    }
+    QSlider::handle:horizontal:pressed {
+        background: rgba(64, 156, 255, 0.90);
+        border: 1px solid rgba(64, 156, 255, 0.90);
+    }
+
+    QSlider::groove:vertical {
+        width: 4px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 2px;
+    }
+    QSlider::add-page:vertical {
+        background: rgba(64, 156, 255, 0.80);
+        border-radius: 2px;
+    }
+    QSlider::handle:vertical {
+        background: rgba(255, 255, 255, 0.90);
+        border: 1px solid rgba(0, 0, 0, 0.30);
+        height: 14px;
+        margin: 0 -5px;
+        border-radius: 7px;
+    }
+    QSlider::handle:vertical:hover {
+        background: white;
+    }
+    QSlider::handle:vertical:pressed {
+        background: rgba(64, 156, 255, 0.90);
+        border: 1px solid rgba(64, 156, 255, 0.90);
+    }
+
+    QRangeSlider, QLabeledDoubleRangeSlider {
+        qproperty-barColor: rgba(64, 156, 255, 0.80);
+    }
+
     """.replace("{ICON_DIR_QT}", ICON_DIR_QT)
 
 
@@ -1110,6 +1166,62 @@ def soft_dark_glass_stylesheet() -> str:
         color: rgba(255, 255, 255, 0.88);
     }
 
+    /* ═══════════════════════════════════════════════
+       SLIDER
+       ═══════════════════════════════════════════════ */
+
+    QSlider::groove:horizontal {
+        height: 4px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 2px;
+    }
+    QSlider::sub-page:horizontal {
+        background: rgba(64, 156, 255, 0.80);
+        border-radius: 2px;
+    }
+    QSlider::handle:horizontal {
+        background: rgba(255, 255, 255, 0.90);
+        border: 1px solid rgba(0, 0, 0, 0.30);
+        width: 14px;
+        margin: -5px 0;
+        border-radius: 7px;
+    }
+    QSlider::handle:horizontal:hover {
+        background: white;
+    }
+    QSlider::handle:horizontal:pressed {
+        background: rgba(64, 156, 255, 0.90);
+        border: 1px solid rgba(64, 156, 255, 0.90);
+    }
+
+    QSlider::groove:vertical {
+        width: 4px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 2px;
+    }
+    QSlider::add-page:vertical {
+        background: rgba(64, 156, 255, 0.80);
+        border-radius: 2px;
+    }
+    QSlider::handle:vertical {
+        background: rgba(255, 255, 255, 0.90);
+        border: 1px solid rgba(0, 0, 0, 0.30);
+        height: 14px;
+        margin: 0 -5px;
+        border-radius: 7px;
+    }
+    QSlider::handle:vertical:hover {
+        background: white;
+    }
+    QSlider::handle:vertical:pressed {
+        background: rgba(64, 156, 255, 0.90);
+        border: 1px solid rgba(64, 156, 255, 0.90);
+    }
+
+    QRangeSlider, QLabeledDoubleRangeSlider {
+        qproperty-barColor: rgba(64, 156, 255, 0.80);
+    }
+
     """.replace("{ICON_DIR_QT}", ICON_DIR_QT)
 
 
@@ -1579,6 +1691,64 @@ def light_glass_stylesheet() -> str:
     QLabel {
         background: transparent;
         color: rgba(0, 0, 0, 0.85);
+    }
+
+    /* ═══════════════════════════════════════════════
+       SLIDER
+       ═══════════════════════════════════════════════ */
+
+    QSlider::groove:horizontal {
+        height: 4px;
+        background: rgba(0, 0, 0, 0.10);
+        border-radius: 2px;
+    }
+    QSlider::sub-page:horizontal {
+        background: rgba(42, 130, 218, 0.80);
+        border-radius: 2px;
+    }
+    QSlider::handle:horizontal {
+        background: white;
+        border: 1px solid rgba(0, 0, 0, 0.20);
+        width: 14px;
+        margin: -5px 0;
+        border-radius: 7px;
+    }
+    QSlider::handle:horizontal:hover {
+        background: #F8F9FA;
+        border: 1px solid rgba(0, 0, 0, 0.30);
+    }
+    QSlider::handle:horizontal:pressed {
+        background: rgba(42, 130, 218, 0.90);
+        border: 1px solid rgba(42, 130, 218, 0.90);
+    }
+
+    QSlider::groove:vertical {
+        width: 4px;
+        background: rgba(0, 0, 0, 0.10);
+        border-radius: 2px;
+    }
+    QSlider::add-page:vertical {
+        background: rgba(42, 130, 218, 0.80);
+        border-radius: 2px;
+    }
+    QSlider::handle:vertical {
+        background: white;
+        border: 1px solid rgba(0, 0, 0, 0.20);
+        height: 14px;
+        margin: 0 -5px;
+        border-radius: 7px;
+    }
+    QSlider::handle:vertical:hover {
+        background: #F8F9FA;
+        border: 1px solid rgba(0, 0, 0, 0.30);
+    }
+    QSlider::handle:vertical:pressed {
+        background: rgba(42, 130, 218, 0.90);
+        border: 1px solid rgba(42, 130, 218, 0.90);
+    }
+
+    QRangeSlider, QLabeledDoubleRangeSlider {
+        qproperty-barColor: rgba(42, 130, 218, 0.80);
     }
 
     """.replace("{ICON_DIR_QT}", ICON_DIR_QT)

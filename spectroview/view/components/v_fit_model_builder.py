@@ -140,12 +140,10 @@ class VFitModelBuilder(QWidget):
         
         # Buttons
         self.btn_xcorrect = QPushButton("Correct")
-        self.btn_xcorrect.setIcon(QIcon(f"{ICON_DIR}/done.png"))
         self.btn_xcorrect.setToolTip("Apply X correction to current selected spectrum(s)") 
         
 
         self.btn_undo_corr = QPushButton()
-        self.btn_undo_corr.setIcon(QIcon(f"{ICON_DIR}/undo.png"))
         self.btn_undo_corr.setFixedSize(30, 24)
         self.btn_undo_corr.setToolTip("Undo X correction")
 
@@ -192,7 +190,6 @@ class VFitModelBuilder(QWidget):
         self.spin_xmax.setRange(-1e9, 1e9)
 
         self.btn_extract = QPushButton("Crop")
-        self.btn_extract.setIcon(QIcon(f"{ICON_DIR}/cut.png"))
         self.btn_extract.setToolTip("Extract selected spectra range. Hold Ctrl + click to apply cropping to all spectra.")
 
         self.btn_extract.clicked.connect(self._on_extract_clicked)
@@ -313,7 +310,6 @@ class VFitModelBuilder(QWidget):
         row3 = QHBoxLayout()
 
         self.btn_base_delete = QPushButton()
-        self.btn_base_delete.setIcon(QIcon(f"{ICON_DIR}/trash3.png"))
         self.btn_base_delete.setFixedSize(30, 24)
         self.btn_base_delete.setToolTip(
             "Undo baseline subtraction (reinitialise + re-crop spectrum).\n"
@@ -324,13 +320,11 @@ class VFitModelBuilder(QWidget):
         )
 
         self.btn_base_copy = QPushButton()
-        self.btn_base_copy.setIcon(QIcon(f"{ICON_DIR}/copy3.png"))
         self.btn_base_copy.setFixedSize(30, 24)
         self.btn_base_copy.setToolTip("Copy baseline")
         self.btn_base_copy.clicked.connect(lambda: self.baseline_copy_requested.emit())
 
         self.btn_base_paste = QPushButton()
-        self.btn_base_paste.setIcon(QIcon(f"{ICON_DIR}/paste.png"))
         self.btn_base_paste.setFixedSize(30, 24)
         self.btn_base_paste.setToolTip("Paste baseline. Hold Ctrl to paste to all spectra.")
         self.btn_base_paste.clicked.connect(
@@ -338,7 +332,6 @@ class VFitModelBuilder(QWidget):
         )
 
         self.btn_base_subtract = QPushButton("Subtract")
-        self.btn_base_subtract.setIcon(QIcon(f"{ICON_DIR}/done.png"))
         self.btn_base_subtract.setFixedSize(80, 24)
         self.btn_base_subtract.setToolTip(
             "Subtract baseline. Hold Ctrl to subtract from all spectra."
@@ -603,7 +596,6 @@ class VFitModelBuilder(QWidget):
 
         row2 = QHBoxLayout()
         self.btn_peak_delete = QPushButton()
-        self.btn_peak_delete.setIcon(QIcon(f"{ICON_DIR}/trash3.png"))
         self.btn_peak_delete.setFixedSize(30, 24)
         self.btn_peak_delete.setToolTip("Delete peaks. Hold Ctrl to delete from all spectra.")
         self.btn_peak_delete.clicked.connect(
@@ -611,13 +603,11 @@ class VFitModelBuilder(QWidget):
         )
 
         self.btn_peak_copy = QPushButton()
-        self.btn_peak_copy.setIcon(QIcon(f"{ICON_DIR}/copy3.png"))
         self.btn_peak_copy.setFixedSize(30, 24)
         self.btn_peak_copy.setToolTip("Copy peaks.")
         self.btn_peak_copy.clicked.connect(self.peaks_copy_requested.emit)
 
         self.btn_peak_paste = QPushButton()
-        self.btn_peak_paste.setIcon(QIcon(f"{ICON_DIR}/paste.png"))
         self.btn_peak_paste.setFixedSize(30, 24)
         self.btn_peak_paste.setToolTip("Paste peaks. Hold Ctrl to paste to all spectra.")
         self.btn_peak_paste.clicked.connect(
@@ -653,14 +643,12 @@ class VFitModelBuilder(QWidget):
         )
 
         self.btn_copy = QPushButton("Copy")
-        self.btn_copy.setIcon(QIcon(f"{ICON_DIR}/copy3.png"))
         #self.btn_copy.setFixedSize(80, 24)
         self.btn_copy.setToolTip("Copy fit model of selected spectrum.")
         self.btn_copy.clicked.connect(self.fitmodel_copy_requested.emit)
 
 
         self.btn_paste = QPushButton("Paste")
-        self.btn_paste.setIcon(QIcon(f"{ICON_DIR}/paste.png"))
         #self.btn_paste.setFixedSize(80, 24)
         self.btn_paste.setToolTip("Paste fit model of selected spectrum. Hold Ctrl to paste to all spectra.")
         self.btn_paste.clicked.connect(
@@ -668,7 +656,6 @@ class VFitModelBuilder(QWidget):
         )
 
         self.btn_save = QPushButton("Save")
-        self.btn_save.setIcon(QIcon(f"{ICON_DIR}/save.png"))
         #self.btn_save.setFixedSize(80, 24)
         self.btn_save.setToolTip("Save the current fit model.")
         self.btn_save.clicked.connect(self.fitmodel_save_requested.emit)
@@ -695,19 +682,16 @@ class VFitModelBuilder(QWidget):
         self.cbb_model.setToolTip("Select fit model.")
 
         self.btn_apply = QPushButton("Apply")
-        self.btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
         self.btn_apply.setToolTip("Apply selected fit model to current selected spectrum(s).")
         self.btn_apply.clicked.connect(
             lambda: self._emit_with_ctrl(self.apply_loaded_fit_model_requested)
         )
 
         self.btn_load = QPushButton("Load")
-        self.btn_load.setIcon(QIcon(f"{ICON_DIR}/load.png"))
         self.btn_load.setToolTip("Load fit model from a JSON file.")
         self.btn_load.clicked.connect(self.load_fit_models_requested.emit)  
 
         self.btn_refresh = QPushButton()
-        self.btn_refresh.setIcon(QIcon(f"{ICON_DIR}/refresh.png"))
         self.btn_refresh.setToolTip("Refresh fit model list.")
         self.btn_refresh.clicked.connect(self.refresh_fit_models_requested.emit)    
 
@@ -744,19 +728,19 @@ class VFitModelBuilder(QWidget):
         # Spectral range
         self.btn_extract.setIcon(get_tinted_icon(f"{ICON_DIR}/cut.png", icon_color))
         # Baseline buttons
-        self.btn_base_delete.setIcon(get_tinted_icon(f"{ICON_DIR}/trash3.png", icon_color))
-        self.btn_base_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy3.png", icon_color))
+        self.btn_base_delete.setIcon(get_tinted_icon(f"{ICON_DIR}/trash.png", icon_color))
+        self.btn_base_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
         self.btn_base_paste.setIcon(get_tinted_icon(f"{ICON_DIR}/paste.png", icon_color))
         self.btn_base_subtract.setIcon(get_tinted_icon(f"{ICON_DIR}/done.png", icon_color))
         # Peak buttons
-        self.btn_peak_delete.setIcon(get_tinted_icon(f"{ICON_DIR}/trash3.png", icon_color))
-        self.btn_peak_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy3.png", icon_color))
+        self.btn_peak_delete.setIcon(get_tinted_icon(f"{ICON_DIR}/trash.png", icon_color))
+        self.btn_peak_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
         self.btn_peak_paste.setIcon(get_tinted_icon(f"{ICON_DIR}/paste.png", icon_color))
         # Fit control buttons
-        self.btn_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy3.png", icon_color))
+        self.btn_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
         self.btn_paste.setIcon(get_tinted_icon(f"{ICON_DIR}/paste.png", icon_color))
         self.btn_save.setIcon(get_tinted_icon(f"{ICON_DIR}/save.png", icon_color))
         self.btn_apply.setIcon(get_tinted_icon(f"{ICON_DIR}/done.png", icon_color))
         self.btn_load.setIcon(get_tinted_icon(f"{ICON_DIR}/load.png", icon_color))
-        self.btn_refresh.setIcon(get_tinted_icon(f"{ICON_DIR}/refresh.png", icon_color))
+        self.btn_refresh.setIcon(get_tinted_icon(f"{ICON_DIR}/update.png", icon_color))
 

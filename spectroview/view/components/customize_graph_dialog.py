@@ -446,15 +446,15 @@ class CustomizeAnnotations(QWidget):
         btn_layout = QHBoxLayout()
         
         self.btn_add_vline = QPushButton("V-Line")
-        self.btn_add_vline.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
+        self.btn_add_vline.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
         self.btn_add_vline.setIconSize(QSize(16, 16))
         
         self.btn_add_hline = QPushButton("H-Line")
-        self.btn_add_hline.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
+        self.btn_add_hline.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
         self.btn_add_hline.setIconSize(QSize(16, 16))
         
         self.btn_add_text = QPushButton("Text")
-        self.btn_add_text.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
+        self.btn_add_text.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
         self.btn_add_text.setIconSize(QSize(16, 16))
         
         btn_layout.addWidget(self.btn_add_vline)
@@ -471,7 +471,7 @@ class CustomizeAnnotations(QWidget):
         self.btn_edit.setIconSize(QSize(16, 16))
         
         self.btn_delete = QPushButton("Delete")
-        self.btn_delete.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))
+        self.btn_delete.setIcon(QIcon(os.path.join(ICON_DIR, "trash.png")))
         self.btn_delete.setIconSize(QSize(16, 16))
         
         mgmt_layout.addWidget(self.btn_edit)

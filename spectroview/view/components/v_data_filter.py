@@ -52,7 +52,7 @@ class VDataFilter(QGroupBox):
         
         # Add filter button
         self.btn_add = QPushButton()
-        self.btn_add.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
+        self.btn_add.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
         self.btn_add.setToolTip("Add filter")
         self.btn_add.clicked.connect(self._on_add_filter)
         layout_buttons.addWidget(self.btn_add)

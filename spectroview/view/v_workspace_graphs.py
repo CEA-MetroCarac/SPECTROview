@@ -179,28 +179,24 @@ class VWorkspaceGraphs(QWidget):
         df_buttons_layout = QVBoxLayout()
         
         self.btn_view_df = QPushButton()
-        self.btn_view_df.setIcon(QIcon(os.path.join(ICON_DIR, "view.png")))
         self.btn_view_df.setIconSize(QSize(18, 18))
         self.btn_view_df.setToolTip("View DataFrame\nCtrl+Click: Open source file")
         self.btn_view_df.setMaximumWidth(35)
         self.btn_view_df.setMaximumHeight(22)
         
         self.btn_remove_df = QPushButton()
-        self.btn_remove_df.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))
         self.btn_remove_df.setIconSize(QSize(18, 18))
         self.btn_remove_df.setToolTip("Remove DataFrame")
         self.btn_remove_df.setMaximumWidth(35)
         self.btn_remove_df.setMaximumHeight(22)
         
         self.btn_save_df = QPushButton()
-        self.btn_save_df.setIcon(QIcon(os.path.join(ICON_DIR, "save.png")))
         self.btn_save_df.setIconSize(QSize(18, 18))
         self.btn_save_df.setToolTip("Save DataFrame to Excel")
         self.btn_save_df.setMaximumWidth(35)
         self.btn_save_df.setMaximumHeight(22)
         
         self.btn_refresh_df = QPushButton()
-        self.btn_refresh_df.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
         self.btn_refresh_df.setIconSize(QSize(18, 18))
         self.btn_refresh_df.setToolTip("Refresh DataFrame from source file")
         self.btn_refresh_df.setMaximumWidth(35)
@@ -489,20 +485,17 @@ class VWorkspaceGraphs(QWidget):
         action_buttons_layout = QHBoxLayout()
         
         self.btn_add_plot = QPushButton("Add plot")
-        self.btn_add_plot.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
         self.btn_add_plot.setIconSize(QSize(20, 20))
         self.btn_add_plot.setToolTip("Add new plot with current configuration")
         self.btn_add_plot.setMinimumHeight(25)
         
         self.btn_update_plot = QPushButton("Update plot")
-        self.btn_update_plot.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
         self.btn_update_plot.setIconSize(QSize(20, 20))
         self.btn_update_plot.setToolTip("Update selected plot with current configuration")
         self.btn_update_plot.setMinimumHeight(25)
         
         # Multi-wafer plot button (shown when Slot column exists)
         self.btn_add_multi_wafer = QPushButton("Add Multi-Wafer")
-        self.btn_add_multi_wafer.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
         self.btn_add_multi_wafer.setIconSize(QSize(20, 20))
         self.btn_add_multi_wafer.setToolTip("Create wafer plots for selected slots")
         self.btn_add_multi_wafer.setMinimumHeight(25)
@@ -521,11 +514,11 @@ class VWorkspaceGraphs(QWidget):
         
         icon_color = "#404040" if theme != "dark" else "#F0F0F0"
         self.btn_view_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "view.png"), icon_color))
-        self.btn_remove_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash3.png"), icon_color))
+        self.btn_remove_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash.png"), icon_color))
         self.btn_save_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save.png"), icon_color))
-        self.btn_refresh_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "refresh.png"), icon_color))
+        self.btn_refresh_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "update.png"), icon_color))
         self.btn_add_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
-        self.btn_update_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "refresh.png"), icon_color))
+        self.btn_update_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "update.png"), icon_color))
         self.btn_add_multi_wafer.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
 
     def setup_connections(self):

@@ -84,21 +84,18 @@ class VMapsList(QWidget):
         map_buttons_layout.setSpacing(4)
         
         self.btn_view = QPushButton()
-        self.btn_view.setIcon(QIcon(os.path.join(ICON_DIR, "view.png")))
         self.btn_view.setIconSize(QSize(24,24))
         self.btn_view.setToolTip("View selected map")
         self.btn_view.setFixedSize(32, 32)
         self.btn_view.clicked.connect(self.view_map_requested.emit)
         
         self.btn_delete = QPushButton()
-        self.btn_delete.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))
         self.btn_delete.setIconSize(QSize(24,24))
         self.btn_delete.setToolTip("Delete selected map")
         self.btn_delete.setFixedSize(32, 32)
         self.btn_delete.clicked.connect(self.delete_map_requested.emit)
         
         self.btn_save = QPushButton()
-        self.btn_save.setIcon(QIcon(os.path.join(ICON_DIR, "save.png")))
         self.btn_save.setIconSize(QSize(24,24))
         self.btn_save.setToolTip("Save the selected map")
         self.btn_save.setFixedSize(32, 32)
@@ -155,25 +152,21 @@ class VMapsList(QWidget):
         spectra_buttons_layout.setSpacing(4)
         
         self.btn_select_all = QPushButton()
-        self.btn_select_all.setIcon(QIcon(os.path.join(ICON_DIR, "select-all.png")))
         self.btn_select_all.setToolTip("Select all spectra")
         self.btn_select_all.setFixedSize(32,32)
         self.btn_select_all.clicked.connect(self.select_all_requested.emit)
         
         self.btn_reinit = QPushButton()
-        self.btn_reinit.setIcon(QIcon(os.path.join(ICON_DIR, "undo2.png")))
         self.btn_reinit.setToolTip("Reinitialize selected spectra")
         self.btn_reinit.setFixedSize(32,32)
         self.btn_reinit.clicked.connect(self.reinitialize_requested.emit)
         
         self.btn_stats = QPushButton()
-        self.btn_stats.setIcon(QIcon(os.path.join(ICON_DIR, "stats.png")))
         self.btn_stats.setToolTip("Show fitting statistics")
         self.btn_stats.setFixedSize(32,32)
         self.btn_stats.clicked.connect(self.stats_requested.emit)
         
         self.btn_send_to_spectra = QPushButton()
-        self.btn_send_to_spectra.setIcon(QIcon(os.path.join(ICON_DIR, "send.png")))
         self.btn_send_to_spectra.setToolTip("Send selected spectra to 'Spectra' Workspace")
         self.btn_send_to_spectra.setFixedSize(32,32)
         self.btn_send_to_spectra.clicked.connect(self.send_to_spectra_requested.emit)
@@ -388,7 +381,7 @@ class VMapsList(QWidget):
 
         # Map action buttons
         self.btn_view.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "view.png"), icon_color))
-        self.btn_delete.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash3.png"), icon_color))
+        self.btn_delete.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash.png"), icon_color))
         self.btn_save.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save.png"), icon_color))
 
         # Spectra action buttons

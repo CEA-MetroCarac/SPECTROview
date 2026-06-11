@@ -43,7 +43,7 @@ class VMenuBar(QToolBar):
         self.actionOpen = self.addAction(QIcon(os.path.join(ICON_DIR, "open.png")), "Open")
         self.actionOpen.triggered.connect(self.open_requested.emit)
 
-        self.actionSave = self.addAction(QIcon(os.path.join(ICON_DIR, "save.png")), "Save")
+        self.actionSave = self.addAction(QIcon(os.path.join(ICON_DIR, "save_color.png")), "Save")
         self.actionSave.triggered.connect(self.save_requested.emit)
 
         self.actionClearWS= self.addAction(QIcon(os.path.join(ICON_DIR, "clear.png")), "Clear current workspace")

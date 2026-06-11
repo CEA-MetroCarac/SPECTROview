@@ -40,7 +40,7 @@ dependencies = [
     "openpyxl >=3.1.5",
     "pandas",
     "pyarrow >= 15.0.0",
-    "matplotlib <3.10.9",
+    "matplotlib >=3.6.2, <3.10.9",
     "seaborn <0.13.3",
     "pyside6",
     "scipy",

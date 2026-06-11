@@ -1,4 +1,4 @@
-matplotlib<3.10.9
+matplotlib>=3.6.2,<3.10.9
 openpyxl>=3.1.2
 pandas>=3.0.1
 pyarrow>=15.0.0

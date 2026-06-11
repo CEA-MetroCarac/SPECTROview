@@ -40,8 +40,8 @@ class CustomizeGraphDialog(QDialog):
         """Setup dialog UI with tabs."""
         # Main layout
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
         
         # Create tab widget
         self.tabs = QTabWidget()
@@ -63,8 +63,8 @@ class CustomizeGraphDialog(QDialog):
         """Create legend customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
         
         self.legend_widget = CustomizeLegend(self.graph_widget, parent=tab)
         layout.addWidget(self.legend_widget)
@@ -91,8 +91,8 @@ class CustomizeGraphDialog(QDialog):
         """Create annotations customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
         
         self.annotations_widget = CustomizeAnnotations(self.graph_widget, parent=tab)
         layout.addWidget(self.annotations_widget)
@@ -102,8 +102,8 @@ class CustomizeGraphDialog(QDialog):
         """Create general settings tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
         
         self.more_options_widget = CustomizeMoreOptions(self.graph_widget, parent=tab)
         layout.addWidget(self.more_options_widget)
@@ -113,8 +113,8 @@ class CustomizeGraphDialog(QDialog):
         """Create axis customization tab."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
         
         self.axis_widget = CustomizeAxis(self.graph_widget, parent=tab)
         layout.addWidget(self.axis_widget)
@@ -178,21 +178,22 @@ class CustomizeLegend(QWidget):
         """Setup the UI components for the legend customization widget."""
         # Main layout
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(2, 2, 2, 2)
-        self.main_layout.setSpacing(2)
+        self.main_layout.setContentsMargins(4, 4, 4, 4)
+        self.main_layout.setSpacing(8)
         
         # Container for legend widgets (labels, markers, colors)
         self.legend_container = QGroupBox("Legends box:")
         self.legend_layout = QHBoxLayout(self.legend_container)
-        self.legend_layout.setContentsMargins(2, 2, 2, 2)
+        self.legend_layout.setContentsMargins(4, 4, 4, 4)
+        self.legend_layout.setSpacing(8)
         
         self.main_layout.addWidget(self.legend_container)
         
         # ───── Scatter/Marker-specific settings ─────
         self.scatter_group = QGroupBox("Scatter / Marker settings:")
         scatter_layout = QHBoxLayout(self.scatter_group)
-        scatter_layout.setContentsMargins(2, 2, 2, 2)
-        scatter_layout.setSpacing(2)
+        scatter_layout.setContentsMargins(4, 4, 4, 4)
+        scatter_layout.setSpacing(8)
         
         # Marker size
         scatter_layout.addWidget(QLabel("Marker size:"))
@@ -438,8 +439,8 @@ class CustomizeAnnotations(QWidget):
     def _setup_ui(self):
         """Setup the UI components for the annotations widget."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
         
         # Add buttons
         btn_layout = QHBoxLayout()
@@ -692,12 +693,14 @@ class CustomizeAxis(QWidget):
     def _setup_ui(self):
         """Setup the UI components for the axis customization widget."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
         
         # ===== Axis Limits Section =====
         limits_group = QGroupBox("Set Axis Limits:")
         limits_layout = QVBoxLayout(limits_group)
+        limits_layout.setContentsMargins(4, 4, 4, 4)
+        limits_layout.setSpacing(8)
         
         # X, Y limits
         for axis in ['X', 'Y']:
@@ -743,6 +746,8 @@ class CustomizeAxis(QWidget):
         # ===== Minor Ticks Section =====
         minor_ticks_group = QGroupBox("Add minor tick:")
         minor_ticks_layout = QHBoxLayout()
+        minor_ticks_layout.setContentsMargins(4, 4, 4, 4)
+        minor_ticks_layout.setSpacing(8)
         
         self.cb_minor_bottom = QCheckBox("X (Bottom)")
         self.cb_minor_top = QCheckBox("X (Top)")
@@ -757,12 +762,18 @@ class CustomizeAxis(QWidget):
         
         minor_ticks_group.setLayout(minor_ticks_layout)
         
-        # ===== X-Axis Break Section =====
-        x_break_group = QGroupBox("Broken X-axis (beta):")
+        # ===== Axis Break Section =====
+        break_group = QGroupBox("Broken axis (beta):")
+        break_layout = QVBoxLayout()
+        break_layout.setContentsMargins(4, 4, 4, 4)
+        break_layout.setSpacing(8)
+        
         x_break_layout = QHBoxLayout()
+        x_break_layout.setContentsMargins(0, 0, 0, 0)
+        x_break_layout.setSpacing(8)
         
         # Enable checkbox
-        self.x_break_enabled = QCheckBox("Enable break")
+        self.x_break_enabled = QCheckBox("Enable X-axis break")
         
         # Input fields
         self.x_break_start = QDoubleSpinBox()
@@ -780,14 +791,12 @@ class CustomizeAxis(QWidget):
         x_break_layout.addWidget(self.x_break_end)
         x_break_layout.addStretch()
         
-        x_break_group.setLayout(x_break_layout)
-        
-        # ===== Y-Axis Break Section =====
-        y_break_group = QGroupBox("Broken Y-axis (beta):")
         y_break_layout = QHBoxLayout()
+        y_break_layout.setContentsMargins(0, 0, 0, 0)
+        y_break_layout.setSpacing(8)
         
         # Enable checkbox
-        self.y_break_enabled = QCheckBox("Enable break")
+        self.y_break_enabled = QCheckBox("Enable Y-axis break")
         
         # Input fields
         self.y_break_start = QDoubleSpinBox()
@@ -805,7 +814,9 @@ class CustomizeAxis(QWidget):
         y_break_layout.addWidget(self.y_break_end)
         y_break_layout.addStretch()
         
-        y_break_group.setLayout(y_break_layout)
+        break_layout.addLayout(x_break_layout)
+        break_layout.addLayout(y_break_layout)
+        break_group.setLayout(break_layout)
         
         # ===== Apply Button =====
         self.btn_apply = QPushButton("Apply")
@@ -818,8 +829,7 @@ class CustomizeAxis(QWidget):
         # Add to main layout
         layout.addWidget(limits_group)
         layout.addWidget(minor_ticks_group)
-        layout.addWidget(x_break_group)
-        layout.addWidget(y_break_group)
+        layout.addWidget(break_group)
         layout.addLayout(apply_btn_layout)
         layout.addStretch()
     
@@ -1193,8 +1203,8 @@ class CustomizeMoreOptions(QWidget):
         scroll.setFrameShape(QScrollArea.NoFrame)
         inner = QWidget()
         self._inner_layout = QVBoxLayout(inner)
-        self._inner_layout.setContentsMargins(2, 2, 2, 2)
-        self._inner_layout.setSpacing(2)
+        self._inner_layout.setContentsMargins(4, 4, 4, 4)
+        self._inner_layout.setSpacing(8)
         scroll.setWidget(inner)
         outer.addWidget(scroll)
 
@@ -1223,8 +1233,8 @@ class CustomizeMoreOptions(QWidget):
     def _build_general_section(self):
         grp = QGroupBox("Plot options")
         layout = QVBoxLayout(grp)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
 
         # Join points (point plot)
         self._cb_join = QCheckBox("Join data points (point plot)")
@@ -1250,8 +1260,8 @@ class CustomizeMoreOptions(QWidget):
     def _build_trendline_section(self):
         grp = QGroupBox("Trendline settings")
         layout = QVBoxLayout(grp)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
 
         # Polynomial order
         order_row = QHBoxLayout()
@@ -1270,8 +1280,8 @@ class CustomizeMoreOptions(QWidget):
         anchor_grp.setCheckable(True)
         anchor_grp.setChecked(False)
         anchor_layout = QVBoxLayout(anchor_grp)
-        anchor_layout.setContentsMargins(2, 2, 2, 2)
-        anchor_layout.setSpacing(2)
+        anchor_layout.setContentsMargins(4, 4, 4, 4)
+        anchor_layout.setSpacing(8)
         self._anchor_grp = anchor_grp
 
         self._rb_origin = QRadioButton("Through origin (0, 0)")
@@ -1333,8 +1343,8 @@ class CustomizeMoreOptions(QWidget):
     def _build_histogram_section(self):
         grp = QGroupBox("Histogram settings")
         layout = QVBoxLayout(grp)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
 
         bins_row = QHBoxLayout()
         bins_row.addWidget(QLabel("Bins:"))

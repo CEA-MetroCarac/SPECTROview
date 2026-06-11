@@ -733,3 +733,30 @@ class VFitModelBuilder(QWidget):
             self.btn_fit.setText("Fit")
             self.btn_apply.setText("Apply")
 
+    def apply_theme(self, theme: str):
+        """Update icons based on the global application theme."""
+        from spectroview.viewmodel.utils import get_tinted_icon
+        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
+
+        # X-correction buttons
+        self.btn_xcorrect.setIcon(get_tinted_icon(f"{ICON_DIR}/done.png", icon_color))
+        self.btn_undo_corr.setIcon(get_tinted_icon(f"{ICON_DIR}/undo.png", icon_color))
+        # Spectral range
+        self.btn_extract.setIcon(get_tinted_icon(f"{ICON_DIR}/cut.png", icon_color))
+        # Baseline buttons
+        self.btn_base_delete.setIcon(get_tinted_icon(f"{ICON_DIR}/trash3.png", icon_color))
+        self.btn_base_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy3.png", icon_color))
+        self.btn_base_paste.setIcon(get_tinted_icon(f"{ICON_DIR}/paste.png", icon_color))
+        self.btn_base_subtract.setIcon(get_tinted_icon(f"{ICON_DIR}/done.png", icon_color))
+        # Peak buttons
+        self.btn_peak_delete.setIcon(get_tinted_icon(f"{ICON_DIR}/trash3.png", icon_color))
+        self.btn_peak_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy3.png", icon_color))
+        self.btn_peak_paste.setIcon(get_tinted_icon(f"{ICON_DIR}/paste.png", icon_color))
+        # Fit control buttons
+        self.btn_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy3.png", icon_color))
+        self.btn_paste.setIcon(get_tinted_icon(f"{ICON_DIR}/paste.png", icon_color))
+        self.btn_save.setIcon(get_tinted_icon(f"{ICON_DIR}/save.png", icon_color))
+        self.btn_apply.setIcon(get_tinted_icon(f"{ICON_DIR}/done.png", icon_color))
+        self.btn_load.setIcon(get_tinted_icon(f"{ICON_DIR}/load.png", icon_color))
+        self.btn_refresh.setIcon(get_tinted_icon(f"{ICON_DIR}/refresh.png", icon_color))
+

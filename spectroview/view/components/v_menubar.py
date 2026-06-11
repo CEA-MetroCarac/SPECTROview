@@ -12,6 +12,9 @@ THEME_OPTIONS = [
     ("dark", "Dark"),
     ("soft_dark", "Soft Dark"),
     ("light", "Light"),
+    ("---", ""),  # separator
+    ("classic_dark", "Classic Dark"),
+    ("classic_light", "Classic Light"),
 ]
 
 
@@ -93,6 +96,9 @@ class VMenuBar(QToolBar):
         """Build and display a popup menu below the theme toolbar button."""
         menu = QMenu(self)
         for key, label in THEME_OPTIONS:
+            if key == "---":
+                menu.addSeparator()
+                continue
             action = menu.addAction(label)
             action.setCheckable(True)
             action.setChecked(key == self._current_theme)

@@ -380,3 +380,19 @@ class VMapsList(QWidget):
         self.spectra_selection_changed.emit(indices)
     
     # ───── Internal signal handlers ──────────────────────────────
+
+    def apply_theme(self, theme: str):
+        """Update icons based on the global application theme."""
+        from spectroview.viewmodel.utils import get_tinted_icon
+        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
+
+        # Map action buttons
+        self.btn_view.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "view.png"), icon_color))
+        self.btn_delete.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash3.png"), icon_color))
+        self.btn_save.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save.png"), icon_color))
+
+        # Spectra action buttons
+        self.btn_select_all.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "select-all.png"), icon_color))
+        self.btn_reinit.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "undo2.png"), icon_color))
+        self.btn_stats.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "stats.png"), icon_color))
+        self.btn_send_to_spectra.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "send.png"), icon_color))

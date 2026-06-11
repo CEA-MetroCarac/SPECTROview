@@ -410,13 +410,13 @@ class Main(QMainWindow):
         # Set theme for spectra viewer
         if theme == "soft_dark":
             target_view_theme = "Soft Dark Mode"
-        elif theme == "dark":
+        elif theme in ("dark", "classic_dark"):
             target_view_theme = "Dark Mode"
         else:
             target_view_theme = "Light Mode"
         
-        # For workspace apply_theme: soft_dark also uses dark-style plot backgrounds
-        workspace_theme = "light" if theme == "light" else "dark"
+        # For workspace apply_theme: controls icon colors and plot backgrounds
+        workspace_theme = "dark" if theme in ("dark", "soft_dark", "classic_dark") else "light"
 
         if theme == "dark":
             app.setPalette(dark_palette())
@@ -424,9 +424,25 @@ class Main(QMainWindow):
         elif theme == "soft_dark":
             app.setPalette(soft_dark_palette())
             app.setStyleSheet(soft_dark_glass_stylesheet())
+        elif theme == "classic_dark":
+            app.setPalette(dark_palette())
+            app.setStyleSheet("")  # palette-only, no QSS
+        elif theme == "classic_light":
+            app.setPalette(light_palette())
+            app.setStyleSheet("")  # palette-only, no QSS
         else:
             app.setPalette(light_palette())
             app.setStyleSheet(light_glass_stylesheet())
+            
+        # Force style refresh to clear cached QSS from existing widgets
+        # If it's already Fusion, setStyle("Fusion") might short-circuit, so we cycle it.
+        app.setStyle("Windows")
+        app.setStyle("Fusion") 
+
+        # Deep unpolish/polish of all widgets to completely eradicate stuck QSS
+        for widget in app.allWidgets():
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
 
         self.settings.set_theme(theme)
 

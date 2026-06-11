@@ -15,7 +15,7 @@ from spectroview.view.components.v_data_filter import VDataFilter
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
-from spectroview.viewmodel.utils import show_toast_notification
+from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon
 from spectroview.view.components.customized_widgets import CustomizedPalette
 from spectroview.view.components.customize_graph_dialog import CustomizeGraphDialog
 
@@ -515,9 +515,18 @@ class VWorkspaceGraphs(QWidget):
         parent_layout.addLayout(action_buttons_layout)
     
     def apply_theme(self, theme: str):
-        """Propagate theme changes to all child graphs."""
+        """Propagate theme changes to all child graphs and update sidebar icons."""
         for graph_widget, _, _ in self.graph_widgets.values():
             graph_widget.update_icon_colors(theme)
+        
+        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
+        self.btn_view_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "view.png"), icon_color))
+        self.btn_remove_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash3.png"), icon_color))
+        self.btn_save_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save.png"), icon_color))
+        self.btn_refresh_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "refresh.png"), icon_color))
+        self.btn_add_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
+        self.btn_update_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "refresh.png"), icon_color))
+        self.btn_add_multi_wafer.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
 
     def setup_connections(self):
         """Connect signals and slots."""

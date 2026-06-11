@@ -358,6 +358,10 @@ class VWorkspaceSpectra(QWidget):
         self.btn_stats.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "stats.png"), icon_color))
         self.btn_save_spectra_data.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save11.png"), icon_color))
 
+        # Propagate to Fit Model Builder
+        if hasattr(self, 'v_fit_model_builder'):
+            self.v_fit_model_builder.apply_theme(theme)
+
     def _update_fit_results(self, df):
         """Update fit results table display."""
         if df is not None and not df.empty:

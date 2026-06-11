@@ -190,6 +190,8 @@ class VMapViewer(QWidget):
         icon_color = "#404040" if global_theme != "dark" else "#F0F0F0"
         if hasattr(self, 'btn_copy'):
             self.btn_copy.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "copy.png"), icon_color))
+        if hasattr(self, 'btn_add_viewer'):
+            self.btn_add_viewer.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
         if hasattr(self, 'btn_options'):
             self.btn_options.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "options.png"), icon_color))
 

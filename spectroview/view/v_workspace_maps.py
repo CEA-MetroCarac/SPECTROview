@@ -156,11 +156,18 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             
         icon_color = "#404040" if theme != "dark" else "#F0F0F0"
         
-        # Spectra list buttons
+        # Spectra list buttons (legacy, kept for backward compatibility)
         self.v_maps_list.btn_select_all.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "select-all.png"), icon_color))
         self.v_maps_list.btn_reinit.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "undo2.png"), icon_color))
         self.v_maps_list.btn_stats.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "stats.png"), icon_color))
         self.v_maps_list.btn_send_to_spectra.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "send.png"), icon_color))
+        
+        # Propagate to VMapsList (map action buttons: view, delete, save)
+        self.v_maps_list.apply_theme(theme)
+        
+        # Propagate to Fit Model Builder
+        if hasattr(self, 'v_fit_model_builder'):
+            self.v_fit_model_builder.apply_theme(theme)
         
         # Map viewer toolbar icons
         if hasattr(self, 'v_map_viewer') and hasattr(self.v_map_viewer, 'apply_global_theme'):

@@ -136,10 +136,6 @@ class VMapViewer(QWidget):
         self.toolbar_filter = ToolbarEventFilter(self.toolbar)
         self.toolbar.installEventFilter(self.toolbar_filter)
 
-
-        
-
-
         # Hide some toolbar actions
         for action in self.toolbar.actions():
             if action.text() in ['Customize', 'Save', 'Back', 'Forward', 'Subplots']:

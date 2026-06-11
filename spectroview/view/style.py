@@ -212,12 +212,13 @@ def dark_glass_stylesheet() -> str:
         margin: 4px 6px;
     }
 
+
     /* ═══════════════════════════════════════════════
        GROUP BOXES — glass cards
        ═══════════════════════════════════════════════ */
 
     QGroupBox {
-        background: rgba(255, 255, 255, 0.025);
+        background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 8px;
         margin-top: 10px;

@@ -156,8 +156,8 @@ class VSpectraViewer(QWidget):
         # ─── Canvas + Sliders row ───
         canvas_row = QHBoxLayout()
         canvas_row.setContentsMargins(0, 0, 0, 0)
-        canvas_row.addWidget(self.canvas, stretch=1)
         canvas_row.addWidget(self.shift_panel)
+        canvas_row.addWidget(self.canvas, stretch=1)
 
         # ─── Control bar ───
         self.control_bar = self._create_control_bar()
@@ -172,7 +172,7 @@ class VSpectraViewer(QWidget):
         panel.setFrameShape(QFrame.StyledPanel)
         panel.setFixedWidth(32)
         panel.setObjectName("shiftPanel")
-        panel.setStyleSheet("#shiftPanel { background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 6px; }")
+        panel.setStyleSheet("#shiftPanel { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; }")
 
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(2, 2, 2, 2)
@@ -251,7 +251,7 @@ class VSpectraViewer(QWidget):
         bar = QFrame(self)
         bar.setFrameShape(QFrame.StyledPanel)
         bar.setObjectName("controlBarPanel")
-        bar.setStyleSheet("#controlBarPanel { background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 6px; }")
+        bar.setStyleSheet("#controlBarPanel { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; }")
         bar.setFixedHeight(38)
         layout = QHBoxLayout(bar)
         layout.setContentsMargins(4, 4, 4, 4)

@@ -123,10 +123,10 @@ _QSS_TEMPLATE = r"""
         color: {text_secondary};
     }}
 
-    #controlBarPanel, #shiftPanel {{
+    #controlBarPanel, #shiftPanel, #bottomToolbarPanel {{
         background: {surface_card};
         border: 1px solid {surface_card_border};
-        border-radius: 8px;
+        border-radius: 6px;
         margin: 0px;
         padding: 0px;
     }}
@@ -293,7 +293,7 @@ _QSS_TEMPLATE = r"""
     }}
 
     QListWidget, QTreeWidget, QScrollArea,
-    #workspaceRightPanel, #bottomToolbarPanel {{
+    #workspaceRightPanel {{
         background: {surface_list};
         border: 1px solid {border_subtle};
         border-radius: 6px;

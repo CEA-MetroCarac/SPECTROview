@@ -28,8 +28,7 @@ from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.v_workspace_maps import VWorkspaceMaps
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 
-from spectroview.view.style import dark_palette, soft_dark_palette, light_palette
-from spectroview.view.style import dark_glass_stylesheet, soft_dark_glass_stylesheet, light_glass_stylesheet
+from spectroview.view.theme import ThemeManager
 
 from spectroview import LOGO_APPLI, USER_MANUAL_DIR
 from spectroview.view.components.v_user_manual import VUserManualDialog
@@ -44,6 +43,7 @@ class Main(QMainWindow):
     def __init__(self):
         super().__init__()
         self.settings = MSettings()
+        self.theme_mgr = ThemeManager(self.settings)
 
         self.init_ui()
         self.toggle_theme(self.settings.get_theme())
@@ -403,71 +403,34 @@ class Main(QMainWindow):
         QDesktopServices.openUrl(url)
 
     def toggle_theme(self, theme=None):
-        app = QApplication.instance()
         if theme is None:
             theme = "light" if self.settings.get_theme() == "dark" else "dark"
 
-        # Set theme for spectra viewer
-        if theme == "soft_dark":
-            target_view_theme = "Soft Dark Mode"
-        elif theme in ("dark", "classic_dark"):
-            target_view_theme = "Dark Mode"
-        else:
-            target_view_theme = "Light Mode"
-        
-        # For workspace apply_theme: controls icon colors and plot backgrounds
-        workspace_theme = "dark" if theme in ("dark", "soft_dark", "classic_dark") else "light"
+        # Apply palette + QSS + Fusion refresh via the manager
+        self.theme_mgr.apply(theme)
 
-        if theme == "dark":
-            app.setPalette(dark_palette())
-            app.setStyleSheet(dark_glass_stylesheet())
-        elif theme == "soft_dark":
-            app.setPalette(soft_dark_palette())
-            app.setStyleSheet(soft_dark_glass_stylesheet())
-        elif theme == "classic_dark":
-            app.setPalette(dark_palette())
-            app.setStyleSheet("")  # palette-only, no QSS
-        elif theme == "classic_light":
-            app.setPalette(light_palette())
-            app.setStyleSheet("")  # palette-only, no QSS
-        else:
-            app.setPalette(light_palette())
-            app.setStyleSheet(light_glass_stylesheet())
-            
-        # Force style refresh to clear cached QSS from existing widgets
-        # If it's already Fusion, setStyle("Fusion") might short-circuit, so we cycle it.
-        app.setStyle("Windows")
-        app.setStyle("Fusion") 
+        # Derived helpers
+        viewer_theme = self.theme_mgr.viewer_theme_name
+        ws_theme     = self.theme_mgr.workspace_theme
 
-        # Deep unpolish/polish of all widgets to completely eradicate stuck QSS
-        for widget in app.allWidgets():
-            widget.style().unpolish(widget)
-            widget.style().polish(widget)
-
-        self.settings.set_theme(theme)
-
-        # Keep menubar checkmark in sync (needed for startup / programmatic calls)
+        # Keep menubar checkmark in sync
         if hasattr(self, 'menu_bar'):
             self.menu_bar.set_current_theme(theme)
 
-        if hasattr(self, 'v_spectra_workspace'):
-            if hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
-                self.v_spectra_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
-                if hasattr(self.v_spectra_workspace.v_spectra_viewer, 'apply_global_theme'):
-                    self.v_spectra_workspace.v_spectra_viewer.apply_global_theme(workspace_theme)
-            if hasattr(self.v_spectra_workspace, 'apply_theme'):
-                self.v_spectra_workspace.apply_theme(workspace_theme)
-                
-        if hasattr(self, 'v_maps_workspace'):
-            if hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
-                self.v_maps_workspace.v_spectra_viewer.cbb_theme.setCurrentText(target_view_theme)
-                if hasattr(self.v_maps_workspace.v_spectra_viewer, 'apply_global_theme'):
-                    self.v_maps_workspace.v_spectra_viewer.apply_global_theme(workspace_theme)
-            if hasattr(self.v_maps_workspace, 'apply_theme'):
-                self.v_maps_workspace.apply_theme(workspace_theme)
-                
+        # Propagate to workspaces (icons, plot backgrounds)
+        for ws in (getattr(self, 'v_spectra_workspace', None),
+                   getattr(self, 'v_maps_workspace', None)):
+            if ws is None:
+                continue
+            if hasattr(ws, 'v_spectra_viewer'):
+                ws.v_spectra_viewer.cbb_theme.setCurrentText(viewer_theme)
+                if hasattr(ws.v_spectra_viewer, 'apply_global_theme'):
+                    ws.v_spectra_viewer.apply_global_theme(ws_theme)
+            if hasattr(ws, 'apply_theme'):
+                ws.apply_theme(ws_theme)
+
         if hasattr(self, 'v_graphs_workspace'):
-            self.v_graphs_workspace.apply_theme(workspace_theme)
+            self.v_graphs_workspace.apply_theme(ws_theme)
 
     def dragEnterEvent(self, event):
         """Accept dragging files into the application."""

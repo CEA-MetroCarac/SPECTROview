@@ -37,10 +37,6 @@ _QSS_TEMPLATE = r"""
         background-color: {surface_bg};
     }}
 
-    #SpectraTab {{
-        background-color: {surface_card};
-    }}
-
     QToolBar QToolButton {{
         background: transparent;
         border: none;
@@ -113,7 +109,7 @@ _QSS_TEMPLATE = r"""
 
     QGroupBox {{
         background: {surface_card};
-        border: 1px solid transparent;
+        border: 1px solid {surface_card_border};
         border-radius: 8px;
         margin-top: 10px;
         padding: 8px 3px 3px 3px;
@@ -125,6 +121,14 @@ _QSS_TEMPLATE = r"""
         subcontrol-position: top center;
         padding: 2px 3px;
         color: {text_secondary};
+    }}
+
+    #controlBarPanel, #shiftPanel, {{
+        background: {surface_card};
+        border: 1px solid {surface_card_border};
+        border-radius: 8px;
+        margin: 0px;
+        padding: 0px;
     }}
 
     /* ═══════════════════════════════════════════════

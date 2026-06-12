@@ -141,10 +141,6 @@ class VSpectraViewer(QWidget):
         self.toolbar_filter = ToolbarEventFilter(self.toolbar)
         self.toolbar.installEventFilter(self.toolbar_filter)
 
-
-        
-
-
         self.toolbar.zoom() # Start with zoom enabled
         for action in self.toolbar.actions():
             if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
@@ -172,8 +168,7 @@ class VSpectraViewer(QWidget):
         panel.setFrameShape(QFrame.StyledPanel)
         panel.setFixedWidth(32)
         panel.setObjectName("shiftPanel")
-        panel.setStyleSheet("#shiftPanel { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; }")
-
+       
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(2, 2, 2, 2)
         layout.setSpacing(2)
@@ -251,10 +246,9 @@ class VSpectraViewer(QWidget):
         bar = QFrame(self)
         bar.setFrameShape(QFrame.StyledPanel)
         bar.setObjectName("controlBarPanel")
-        bar.setStyleSheet("#controlBarPanel { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; }")
         bar.setFixedHeight(38)
         layout = QHBoxLayout(bar)
-        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setContentsMargins(2, 2, 2, 2)
 
         # Rescale
         self.btn_rescale = QPushButton()

@@ -123,7 +123,7 @@ _QSS_TEMPLATE = r"""
         color: {text_secondary};
     }}
 
-    #controlBarPanel, #shiftPanel, {{
+    #controlBarPanel, #shiftPanel {{
         background: {surface_card};
         border: 1px solid {surface_card_border};
         border-radius: 8px;

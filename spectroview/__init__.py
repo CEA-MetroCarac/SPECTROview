@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 VERSION = "26.25.4"
 
+
 TEXT_EXPIRE = (
     "The current SPECTROview version has expired. Checkout the SPECTROview's "
     "Github page (cf. About) to update newest version."

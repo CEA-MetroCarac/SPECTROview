@@ -21,32 +21,32 @@ def dark_palette() -> QPalette:
     p = QPalette()
 
     # Base surfaces
-    p.setColor(QPalette.Window,        QColor(30, 30, 32))
-    p.setColor(QPalette.Base,          QColor(55, 55, 58))
-    p.setColor(QPalette.AlternateBase, QColor(62, 62, 65))
+    p.setColor(QPalette.Window,        QColor(33, 33, 33))
+    p.setColor(QPalette.Base,          QColor(60, 60, 60))
+    p.setColor(QPalette.AlternateBase, QColor(68, 68, 68))
 
     # Text
     p.setColor(QPalette.WindowText,      QColor(240, 240, 240))
     p.setColor(QPalette.Text,            QColor(240, 240, 240))
     p.setColor(QPalette.ButtonText,      QColor(235, 235, 235))
-    p.setColor(QPalette.PlaceholderText, QColor(130, 130, 130))
+    p.setColor(QPalette.PlaceholderText, QColor(135, 135, 135))
 
     # Buttons / controls
-    p.setColor(QPalette.Button, QColor(52, 52, 55))
-    p.setColor(QPalette.Light,  QColor(80, 80, 84))
-    p.setColor(QPalette.Mid,    QColor(62, 62, 66))
-    p.setColor(QPalette.Dark,   QColor(35, 35, 38))
-    p.setColor(QPalette.Shadow, QColor(16, 16, 18))
+    p.setColor(QPalette.Button, QColor(58, 58, 58))
+    p.setColor(QPalette.Light,  QColor(85, 85, 85))
+    p.setColor(QPalette.Mid,    QColor(68, 68, 68))
+    p.setColor(QPalette.Dark,   QColor(38, 38, 38))
+    p.setColor(QPalette.Shadow, QColor(18, 18, 18))
 
     # Tooltips
-    p.setColor(QPalette.ToolTipBase, QColor(48, 48, 50))
+    p.setColor(QPalette.ToolTipBase, QColor(55, 55, 55))
     p.setColor(QPalette.ToolTipText, QColor(240, 240, 240))
 
     # Accent
-    accent = QColor(64, 156, 255)
+    accent = QColor(212, 160, 74)
     p.setColor(QPalette.Highlight,      accent)
     p.setColor(QPalette.HighlightedText, Qt.white)
-    p.setColor(QPalette.Link,           QColor(100, 180, 255))
+    p.setColor(QPalette.Link,           QColor(230, 185, 108))
 
     # Disabled
     p.setColor(QPalette.Disabled, QPalette.Text,       QColor(110, 110, 110))

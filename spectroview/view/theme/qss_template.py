@@ -29,12 +29,16 @@ _QSS_TEMPLATE = r"""
        ═══════════════════════════════════════════════ */
 
     QWidget {{
-        font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-family: "Helvetica Neue", Helvetica, Arial;
         font-size: 13px;
     }}
 
     QMainWindow, QDialog {{
         background-color: {surface_bg};
+    }}
+
+    #SpectraTab {{
+        background-color: {surface_card};
     }}
 
     QToolBar QToolButton {{
@@ -66,7 +70,7 @@ _QSS_TEMPLATE = r"""
         border-bottom: none;
         border-top-left-radius: 7px;
         border-top-right-radius: 7px;
-        padding: 4px 8px;
+        padding: 3px;
         margin-right: 2px;
         color: {tab_text};
         min-width: 70px;
@@ -109,7 +113,7 @@ _QSS_TEMPLATE = r"""
 
     QGroupBox {{
         background: {surface_card};
-        border: 1px solid {surface_card_border};
+        border: 1px solid transparent;
         border-radius: 8px;
         margin-top: 10px;
         padding: 8px 3px 3px 3px;
@@ -119,7 +123,7 @@ _QSS_TEMPLATE = r"""
     QGroupBox::title {{
         subcontrol-origin: margin;
         subcontrol-position: top center;
-        padding: 2px 6px;
+        padding: 2px 3px;
         color: {text_secondary};
     }}
 
@@ -131,7 +135,7 @@ _QSS_TEMPLATE = r"""
         background: {surface_card};
         border: 1px solid {border_subtle};
         border-radius: 6px;
-        padding: 4px 6px;
+        padding: 3px;
         color: {text_primary};
     }}
 
@@ -340,7 +344,7 @@ _QSS_TEMPLATE = r"""
         border: none;
         border-right: 1px solid {header_border_right};
         border-bottom: 1px solid {header_border_bottom};
-        padding: 4px;
+        padding: 3px;
         color: {header_text};
         font-weight: bold;
     }}

@@ -36,6 +36,8 @@ class VWorkspaceSpectra(QWidget):
         self.setup_connections()
 
     def init_ui(self):
+        self.setAttribute(Qt.WA_StyledBackground, True)
+        self.setObjectName("SpectraTab")
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(4, 4, 4, 4)
 

@@ -93,11 +93,12 @@ class VMWorkspaceSpectra(QObject):
     def _get_target_mds(self, apply_all: bool) -> list:
         """Get the target MapData objects for bulk operations.
         
-        - apply_all=True: returns all MapData objects in the store.
+        - apply_all=True: returns MapData objects for all *checked* (is_active) spectra only.
         - apply_all=False: returns unique MapData objects corresponding to selected spectra.
         """
         if apply_all:
-            return [self.store.get_map_data(name) for name in self.store.map_names]
+            active_fnames = self._get_active_spectra()
+            return [self.store.get_map_data(name) for name in active_fnames]
         else:
             if not self.selected_fnames:
                 return []

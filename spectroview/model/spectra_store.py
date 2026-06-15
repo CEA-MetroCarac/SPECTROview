@@ -535,7 +535,7 @@ class SpectraStore:
             col_names = self._apply_peak_labels(col_names, peak_labels)
 
         # Add _area columns
-        area_cols = self._compute_area_columns(params, md.param_names, col_names)
+        area_cols = self._compute_area_columns(params, md.param_names, col_names, md.fit_model)
 
         # Sort columns by parameter type
         param_priority = {
@@ -774,40 +774,105 @@ class SpectraStore:
         params: np.ndarray,
         param_names: list,
         col_names: list,
+        fit_model: dict = None,
     ) -> dict:
-        """Compute peak area columns (ampli * fwhm * factor) for each peak.
+        """Compute peak area columns for each peak based on its model shape.
 
-        Returns a dict of {area_col_name: array}. Fully vectorized.
+        Uses the fit_model dict to identify each peak's shape and applies the
+        correct analytical area formula. Fully vectorized.
+
+        Returns a dict of {area_col_name: array}.
         """
         area_cols = {}
-        SQRT_PI_LN2 = np.sqrt(np.pi / np.log(2))
+        SQRT_PI_4LN2 = np.sqrt(np.pi / (4 * np.log(2)))
 
-        # Group parameter indices by original prefix (e.g. 'm01')
+        # Build a map from peak prefix (e.g. 'P1') to its model shape name.
+        # The evaluator (evaluator.py) names params as P{peak_num}_{param}
+        # e.g. P1_ampli, P1_fwhm_l, P2_x0 — so keys here must use the same format.
+        prefix_to_shape = {}
+        if fit_model and 'peak_models' in fit_model:
+            for key, pdict in fit_model['peak_models'].items():
+                # key is '0', '1', ... ; pdict is e.g. {'GaussianAsym': {...}}
+                peak_idx = int(key) + 1
+                prefix = f'P{peak_idx}'          # matches evaluator: f"P{peak_num}_"
+                shape_name = list(pdict.keys())[0]
+                prefix_to_shape[prefix] = shape_name
+
+
+        # Group parameter indices by original prefix (e.g. 'P1', 'P2')
         orig_prefixes: dict[str, dict[str, int]] = {}
         for i, name in enumerate(param_names):
             if '_' in name:
                 prefix, short = name.split('_', 1)
                 orig_prefixes.setdefault(prefix, {})[short] = i
 
+
         for prefix, orig_idx in orig_prefixes.items():
-            if 'fwhm' not in orig_idx or 'ampli' not in orig_idx:
+            shape = prefix_to_shape.get(prefix, '')
+            area = None
+
+            if shape == 'Gaussian' and 'ampli' in orig_idx and 'fwhm' in orig_idx:
+                ampli = params[:, orig_idx['ampli']]
+                fwhm = params[:, orig_idx['fwhm']]
+                area = ampli * fwhm * SQRT_PI_4LN2
+
+            elif shape == 'Lorentzian' and 'ampli' in orig_idx and 'fwhm' in orig_idx:
+                ampli = params[:, orig_idx['ampli']]
+                fwhm = params[:, orig_idx['fwhm']]
+                area = np.pi * ampli * fwhm / 2
+
+            elif shape == 'PseudoVoigt' and 'ampli' in orig_idx and 'fwhm' in orig_idx:
+                ampli = params[:, orig_idx['ampli']]
+                fwhm = params[:, orig_idx['fwhm']]
+                alpha = params[:, orig_idx['alpha']] if 'alpha' in orig_idx else 0.5
+                gauss_area = ampli * fwhm * SQRT_PI_4LN2
+                lorentz_area = np.pi * ampli * fwhm / 2
+                area = alpha * gauss_area + (1 - alpha) * lorentz_area
+
+            elif shape == 'GaussianAsym' and 'ampli' in orig_idx and 'fwhm_l' in orig_idx and 'fwhm_r' in orig_idx:
+                ampli = params[:, orig_idx['ampli']]
+                fwhm_l = params[:, orig_idx['fwhm_l']]
+                fwhm_r = params[:, orig_idx['fwhm_r']]
+                area = (ampli * fwhm_l * SQRT_PI_4LN2) / 2 + (ampli * fwhm_r * SQRT_PI_4LN2) / 2
+
+            elif shape == 'LorentzianAsym' and 'ampli' in orig_idx and 'fwhm_l' in orig_idx and 'fwhm_r' in orig_idx:
+                ampli = params[:, orig_idx['ampli']]
+                fwhm_l = params[:, orig_idx['fwhm_l']]
+                fwhm_r = params[:, orig_idx['fwhm_r']]
+                area = (np.pi * ampli * fwhm_l / 2) / 2 + (np.pi * ampli * fwhm_r / 2) / 2
+
+            elif shape == 'Fano' and 'ampli' in orig_idx and 'fwhm' in orig_idx:
+                ampli = params[:, orig_idx['ampli']]
+                fwhm = params[:, orig_idx['fwhm']]
+                q = params[:, orig_idx['q']] if 'q' in orig_idx else 1.0
+                area = ampli * np.pi * (fwhm / 2) * (1 + q ** 2)
+
+            elif shape == 'DecaySingleExp' and 'A' in orig_idx and 'tau' in orig_idx:
+                A = params[:, orig_idx['A']]
+                tau = params[:, orig_idx['tau']]
+                area = A * tau
+
+            elif shape == 'DecayBiExp' and 'A1' in orig_idx and 'tau1' in orig_idx and 'A2' in orig_idx and 'tau2' in orig_idx:
+                A1 = params[:, orig_idx['A1']]
+                tau1 = params[:, orig_idx['tau1']]
+                A2 = params[:, orig_idx['A2']]
+                tau2 = params[:, orig_idx['tau2']]
+                area = A1 * tau1 + A2 * tau2
+
+            elif 'ampli' in orig_idx and 'fwhm' in orig_idx:
+                # Fallback for unknown shapes with ampli + fwhm
+                ampli = params[:, orig_idx['ampli']]
+                fwhm = params[:, orig_idx['fwhm']]
+                area = ampli * fwhm * np.pi / 2
+
+            if area is None:
                 continue
 
-            fwhm = params[:, orig_idx['fwhm']]
-            ampli = params[:, orig_idx['ampli']]
-
-            if 'alpha' in orig_idx:
-                alpha = params[:, orig_idx['alpha']]
-                area = ampli * fwhm * (alpha * np.pi / 2 + (1 - alpha) * SQRT_PI_LN2 / 2)
-            else:
-                area = ampli * fwhm * np.pi / 2  # Lorentzian default
-
-            # Derive the column name using the mapped column name for 'ampli'
-            # If original name was 'm01_ampli', display name is col_names[orig_idx['ampli']] (e.g. 'ampli_1')
-            # We want to extract '1' to name the column 'area_1'.
-            disp_ampli = col_names[orig_idx['ampli']]
-            if '_' in disp_ampli:
-                _, label = disp_ampli.split('_', 1)
+            # Derive the column name from the display name of 'ampli' (or 'A' for decay)
+            ref_key = 'ampli' if 'ampli' in orig_idx else 'A' if 'A' in orig_idx else 'A1'
+            disp_ref = col_names[orig_idx[ref_key]]
+            if '_' in disp_ref:
+                _, label = disp_ref.split('_', 1)
                 area_name = f'area_{label}'
             else:
                 area_name = f'area_{prefix}'

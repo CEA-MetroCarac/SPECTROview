@@ -136,39 +136,39 @@ DARK_TOKENS = ThemeTokens(
     border_strong="rgba(255, 255, 255, 0.25)",
     border_separator="rgba(255, 255, 255, 0.12)",
 
-    # Accent  (amber-gold)
-    accent="rgba(212, 160, 74, 1.0)",
-    accent_light="rgba(230, 185, 108, 1.0)",
-    accent_bg="rgba(212, 160, 74, 0.18)",
-    accent_bg_strong="rgba(212, 160, 74, 0.38)",
-    accent_border="rgba(212, 160, 74, 0.65)",
+    # Accent
+    accent="rgba(64, 156, 255, 1.0)",
+    accent_light="rgba(100, 180, 255, 1.0)",
+    accent_bg="rgba(64, 156, 255, 0.16)",
+    accent_bg_strong="rgba(64, 156, 255, 0.35)",
+    accent_border="rgba(64, 156, 255, 0.60)",
 
     # Interactive
     hover_bg="rgba(255, 255, 255, 0.10)",
     hover_bg_strong="rgba(255, 255, 255, 0.15)",
-    pressed_bg="rgba(212, 160, 74, 0.35)",
-    selected_bg="rgba(212, 160, 74, 0.40)",
-    selected_border="rgba(212, 160, 74, 0.70)",
+    pressed_bg="rgba(64, 156, 255, 0.30)",
+    selected_bg="rgba(64, 156, 255, 0.35)",
+    selected_border="rgba(64, 156, 255, 0.60)",
 
     # Scrollbar / slider
     scrollbar_thumb="rgba(255, 255, 255, 0.15)",
     scrollbar_thumb_hover="rgba(255, 255, 255, 0.25)",
     slider_groove="rgba(255, 255, 255, 0.15)",
-    slider_filled="rgba(212, 160, 74, 0.80)",
+    slider_filled="rgba(64, 156, 255, 0.78)",
     slider_handle="rgba(255, 255, 255, 0.90)",
     slider_handle_border="rgba(0, 0, 0, 0.30)",
 
     # Progress bar
     progress_bg="rgba(0, 0, 0, 0.25)",
-    progress_chunk_start="rgba(180, 130, 50, 0.75)",
-    progress_chunk_mid="rgba(200, 145, 60, 0.80)",
-    progress_chunk_end="rgba(212, 160, 74, 0.75)",
+    progress_chunk_start="rgba(30, 100, 200, 0.70)",
+    progress_chunk_mid="rgba(50, 135, 230, 0.75)",
+    progress_chunk_end="rgba(64, 156, 255, 0.70)",
 
     # Checkbox
     checkbox_bg="rgba(0, 0, 0, 0.25)",
     checkbox_border="rgba(255, 255, 255, 0.15)",
-    checkbox_checked_bg="rgba(212, 160, 74, 0.90)",
-    checkbox_checked_border="rgba(190, 140, 60, 0.90)",
+    checkbox_checked_bg="rgba(64, 156, 255, 0.90)",
+    checkbox_checked_border="rgba(42, 130, 218, 0.90)",
     checkbox_disabled_bg="rgba(255, 255, 255, 0.05)",
     checkbox_disabled_border="rgba(255, 255, 255, 0.05)",
     checkbox_checked_disabled_bg="rgba(255, 255, 255, 0.15)",

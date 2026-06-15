@@ -43,10 +43,10 @@ def dark_palette() -> QPalette:
     p.setColor(QPalette.ToolTipText, QColor(240, 240, 240))
 
     # Accent
-    accent = QColor(212, 160, 74)
+    accent = QColor(64, 156, 255)
     p.setColor(QPalette.Highlight,      accent)
     p.setColor(QPalette.HighlightedText, Qt.white)
-    p.setColor(QPalette.Link,           QColor(230, 185, 108))
+    p.setColor(QPalette.Link,           QColor(100, 180, 255))
 
     # Disabled
     p.setColor(QPalette.Disabled, QPalette.Text,       QColor(110, 110, 110))

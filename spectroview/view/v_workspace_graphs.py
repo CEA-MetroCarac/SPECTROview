@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QDialog, QGridLayout, QApplication, QListWidgetItem, QCompleter
 )
 from PySide6.QtCore import Qt, Signal, QSize, QUrl
-from PySide6.QtGui import QIcon, QDesktopServices, QBrush, QFont, QShortcut, QKeySequence
+from PySide6.QtGui import QIcon, QDesktopServices, QBrush, QFont, QShortcut, QKeySequence, QPalette
 
 from spectroview import ICON_DIR, PLOT_STYLES, AXIS_LABELS
 from spectroview.model.m_settings import MSettings
@@ -1722,6 +1722,56 @@ class MdiSubWindow(QMdiSubWindow):
         self.graph_id = graph_id
         self.figsize_label = figsize_label
         self.mdi_area = mdi_area  # Reference to the parent QMdiArea
+        self._fixing_palette = False
+        self._fix_title_shadow()
+
+    def _fix_title_shadow(self):
+        """Neutralise the Fusion title-bar text shadow.
+
+        Fusion computes the shadow colour as ``palette.text().color().lighter(120)``.
+        By setting ``Active/Text = highlight.darker(120)``, the shadow becomes
+        identical to the title-bar background (which is the Highlight colour)
+        and is therefore invisible. The inner widget's palette is reset to prevent inheritance.
+        """
+        if self._fixing_palette:
+            return
+        self._fixing_palette = True
+        try:
+            pal = self.palette()
+            highlight = pal.color(
+                QPalette.ColorGroup.Active, QPalette.ColorRole.Highlight
+            )
+            target_text = highlight.darker(120)
+            
+            if pal.color(QPalette.ColorGroup.Active, QPalette.ColorRole.Text) != target_text:
+                pal.setColor(
+                    QPalette.ColorGroup.Active,
+                    QPalette.ColorRole.Text,
+                    target_text,
+                )
+                self.setPalette(pal)
+                
+                # Prevent inheritance into the graph/content
+                child = self.widget()
+                if child:
+                    from PySide6.QtWidgets import QApplication
+                    child.setPalette(QApplication.palette())
+        finally:
+            self._fixing_palette = False
+
+    def changeEvent(self, event):
+        """Re-apply the shadow fix whenever the palette changes (theme switch)."""
+        super().changeEvent(event)
+        from PySide6.QtCore import QEvent
+        if event.type() == QEvent.Type.PaletteChange:
+            self._fix_title_shadow()
+
+    def setWidget(self, widget):
+        """Override to prevent the title shadow palette fix from inheriting."""
+        super().setWidget(widget)
+        if widget:
+            from PySide6.QtWidgets import QApplication
+            widget.setPalette(QApplication.palette())
 
     def closeEvent(self, event):
         """Override close event."""

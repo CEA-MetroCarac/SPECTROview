@@ -1244,6 +1244,10 @@ class CustomizeMoreOptions(QWidget):
         self._cb_dodge = QCheckBox("Dodge overlapping points (point plot)")
         layout.addWidget(self._cb_dodge)
 
+        # Dodge points (scatter plot)
+        self._cb_dodge_scatter = QCheckBox("Dodge overlapping points (scatter plot)")
+        layout.addWidget(self._cb_dodge_scatter)
+
         # Error bar (bar plot)
         self._cb_error_bar = QCheckBox("Show error bar (bar plot)")
         layout.addWidget(self._cb_error_bar)
@@ -1385,12 +1389,14 @@ class CustomizeMoreOptions(QWidget):
         # --- General section ---
         self._cb_join.setChecked(getattr(gw, 'join_for_point_plot', False))
         self._cb_dodge.setChecked(getattr(gw, 'dodge_point_plot', True))
+        self._cb_dodge_scatter.setChecked(getattr(gw, 'dodge_scatter_plot', False))
         self._cb_error_bar.setChecked(getattr(gw, 'show_bar_plot_error_bar', True))
         self._cb_wafer_stats.setChecked(getattr(gw, 'wafer_stats', True))
 
         # Highlight relevant checkboxes based on style
         self._cb_join.setEnabled(style == 'point')
         self._cb_dodge.setEnabled(style == 'point')
+        self._cb_dodge_scatter.setEnabled(style == 'scatter')
         self._cb_error_bar.setEnabled(style == 'bar')
         self._cb_wafer_stats.setEnabled(style == 'wafer')
 
@@ -1446,6 +1452,7 @@ class CustomizeMoreOptions(QWidget):
         # General
         gw.join_for_point_plot = self._cb_join.isChecked()
         gw.dodge_point_plot = self._cb_dodge.isChecked()
+        gw.dodge_scatter_plot = self._cb_dodge_scatter.isChecked()
         gw.show_bar_plot_error_bar = self._cb_error_bar.isChecked()
         gw.wafer_stats = self._cb_wafer_stats.isChecked()
 
@@ -1476,6 +1483,7 @@ class CustomizeMoreOptions(QWidget):
             props = {
                 'join_for_point_plot': gw.join_for_point_plot,
                 'dodge_point_plot': gw.dodge_point_plot,
+                'dodge_scatter_plot': gw.dodge_scatter_plot,
                 'show_bar_plot_error_bar': gw.show_bar_plot_error_bar,
                 'wafer_stats': gw.wafer_stats,
             }

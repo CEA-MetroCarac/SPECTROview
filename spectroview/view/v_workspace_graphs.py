@@ -1537,6 +1537,7 @@ class VWorkspaceGraphs(QWidget):
         graph_widget.show_bar_plot_error_bar = model.show_bar_plot_error_bar
         graph_widget.join_for_point_plot = model.join_for_point_plot
         graph_widget.dodge_point_plot = getattr(model, 'dodge_point_plot', True)
+        graph_widget.dodge_scatter_plot = getattr(model, 'dodge_scatter_plot', False)
         graph_widget.scatter_size = getattr(model, 'scatter_size', 70)
         edge_c = getattr(model, 'scatter_edgecolor', 'black')
         if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):

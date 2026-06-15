@@ -112,6 +112,7 @@ class VGraph(QWidget):
         self.show_bar_plot_error_bar = True
         self.join_for_point_plot = False
         self.dodge_point_plot = True
+        self.dodge_scatter_plot = False
         self.scatter_size = 70  # Marker size for scatter plots
         self.scatter_edgecolor = 'black'  # Edge color for scatter plot markers
         # Histogram-specific
@@ -485,12 +486,21 @@ class VGraph(QWidget):
         sns.pointplot(**point_kwargs)
 
     def _plot_scatter(self, df, y, colors, c):
+        dodge = getattr(self, 'dodge_scatter_plot', False)
         if self.z:
-            sns.scatterplot(
-                data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                s=self.scatter_size, edgecolor=self.scatter_edgecolor,
-                palette=colors
-            )
+            if dodge:
+                sns.stripplot(
+                    data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
+                    size=np.sqrt(self.scatter_size) if hasattr(self, 'scatter_size') else 7,
+                    edgecolor=self.scatter_edgecolor, linewidth=0.5,
+                    palette=colors, dodge=True, jitter=False
+                )
+            else:
+                sns.scatterplot(
+                    data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
+                    s=self.scatter_size, edgecolor=self.scatter_edgecolor,
+                    palette=colors
+                )
         else:
             sns.scatterplot(
                 data=df, x=self.x, y=y, ax=self.ax,

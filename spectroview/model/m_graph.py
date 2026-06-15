@@ -83,6 +83,7 @@ class MGraph:
         self.show_bar_plot_error_bar: bool = True
         self.join_for_point_plot: bool = False
         self.dodge_point_plot: bool = True
+        self.dodge_scatter_plot: bool = False
         self.scatter_size: int = 70  # Marker size for scatter plots
         self.scatter_edgecolor: str = 'black'  # Edge color for scatter plot markers
         
@@ -161,6 +162,7 @@ class MGraph:
             'show_bar_plot_error_bar': self.show_bar_plot_error_bar,
             'join_for_point_plot': self.join_for_point_plot,
             'dodge_point_plot': self.dodge_point_plot,
+            'dodge_scatter_plot': getattr(self, 'dodge_scatter_plot', False),
             'scatter_size': self.scatter_size,
             'scatter_edgecolor': self.scatter_edgecolor,
             'hist_bins': self.hist_bins,

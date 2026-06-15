@@ -45,8 +45,12 @@ class Main(QMainWindow):
         self.settings = MSettings()
         self.theme_mgr = ThemeManager(self.settings)
 
+        # Apply global application style BEFORE creating widgets to avoid expensive unpolish/polish
+        self.theme_mgr.apply(self.settings.get_theme())
+        
         self.init_ui()
-        self.toggle_theme(self.settings.get_theme())
+        self._propagate_theme(self.settings.get_theme())
+        
         self.setup_connections()
         self.tabWidget.setCurrentWidget(self.v_maps_workspace)
 
@@ -408,7 +412,9 @@ class Main(QMainWindow):
 
         # Apply palette + QSS + Fusion refresh via the manager
         self.theme_mgr.apply(theme)
+        self._propagate_theme(theme)
 
+    def _propagate_theme(self, theme):
         # Derived helpers
         viewer_theme = self.theme_mgr.viewer_theme_name
         ws_theme     = self.theme_mgr.workspace_theme

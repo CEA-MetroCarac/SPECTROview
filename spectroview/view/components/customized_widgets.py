@@ -65,19 +65,18 @@ class CustomizedPalette(QComboBox):
     def _create_colormap_preview(self, cmap_name):
         """Generate a horizontal gradient preview image for the colormap."""
         width, height = self.icon_width, self.icon_height
-        gradient = np.linspace(0, 1, 20).reshape(1, -1)
-
-        fig = Figure(figsize=(width / 100, height / 100), dpi=100)
-        canvas = FigureCanvas(fig)
-        ax = fig.add_axes([0, 0, 1, 1], frameon=False)
-        ax.imshow(gradient, aspect='auto', cmap=cm.get_cmap(cmap_name))
-        ax.set_axis_off()
-        canvas.draw()
-
-        image = np.array(canvas.buffer_rgba())
-        qimage = QImage(image.data, image.shape[1], image.shape[0],
-                        QImage.Format_RGBA8888)
-        return QPixmap.fromImage(qimage)
+        
+        try:
+            cmap = cm.colormaps[cmap_name]
+        except AttributeError:
+            cmap = cm.get_cmap(cmap_name)
+            
+        gradient = np.linspace(0, 1, width)
+        colors = (cmap(gradient) * 255).astype(np.uint8)
+        colors_2d = np.tile(colors, (height, 1, 1))
+        
+        qimage = QImage(colors_2d.data, width, height, width * 4, QImage.Format_RGBA8888)
+        return QPixmap.fromImage(qimage.copy())
 
 
 class ExpressionLineEdit(QLineEdit):

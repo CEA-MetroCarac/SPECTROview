@@ -46,11 +46,6 @@ class VAboutDialog(QDialog):
         <p style="text-align:left;">
             Check out the <a href="https://github.com/CEA-MetroCarac/spectroview">SPECTROview GitHub repository</a> for the latest version &amp; more details.
         </p>
-        <hr>
-        <h3>Citation:</h3>
-        <p style="text-align: justify;">
-            Le, V.-H., & Quéméré, P. (2025). SPECTROview : A Tool for Spectroscopic Data Processing and Visualization. Zenodo. https://doi.org/10.5281/zenodo.14147172
-        </p>
         """
 
         info_browser = QTextBrowser()

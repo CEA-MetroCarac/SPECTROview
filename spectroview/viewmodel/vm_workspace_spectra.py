@@ -2036,16 +2036,26 @@ class VMWorkspaceSpectra(QObject):
             'sigma': 4, 'gamma': 5, 'fraction': 6, 'height': 7,
         }
         
-        col_idx = {c: i for i, c in enumerate(df_all.columns)}
+        # Build label → order mapping from peak_labels (index = prefix order P1, P2, ...)
+        label_order = {}
+        for name in map_names:
+            md = self.store.get_map_data(name)
+            if md and md.fit_model:
+                peak_labels = md.fit_model.get('peak_labels', [])
+                for i, lbl in enumerate(peak_labels):
+                    if lbl not in label_order:
+                        label_order[lbl] = i
+                if peak_labels:
+                    break  # Use first available set of labels
 
         def sort_key(cname):
             base_cols = ['Filename', 'X', 'Y', 'Quadrant', 'Zone']
             if cname in base_cols:
                 return (-1, base_cols.index(cname))
             if '_' in cname:
-                ptype = cname.split('_', 1)[0]
-                return (param_priority.get(ptype, 999), col_idx[cname])
-            return (999, col_idx[cname])
+                ptype, label = cname.split('_', 1)
+                return (param_priority.get(ptype, 999), label_order.get(label, 999))
+            return (999, 0)
 
         sorted_cols = sorted(df_all.columns, key=sort_key)
         df_all = df_all[sorted_cols]

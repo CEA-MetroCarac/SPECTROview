@@ -537,17 +537,23 @@ class SpectraStore:
         # Add _area columns
         area_cols = self._compute_area_columns(params, md.param_names, col_names, md.fit_model)
 
-        # Sort columns by parameter type
+        # Sort columns by parameter type, then by peak prefix order (P1, P2, ...)
         param_priority = {
             'x0': 0, 'fwhm': 1, 'ampli': 2, 'area': 3,
             'sigma': 4, 'gamma': 5, 'fraction': 6, 'height': 7,
         }
 
+        # Build label → order mapping from peak_labels (index = prefix order)
+        label_order = {}
+        if peak_labels:
+            for i, lbl in enumerate(peak_labels):
+                label_order[lbl] = i
+
         def sort_key(cname):
             if '_' in cname:
-                ptype = cname.split('_', 1)[0]
-                return (param_priority.get(ptype, 999), cname)
-            return (999, cname)
+                ptype, label = cname.split('_', 1)
+                return (param_priority.get(ptype, 999), label_order.get(label, 999))
+            return (999, 0)
 
         all_param_data = {c: params[:, i].round(4) for i, c in enumerate(col_names)}
         all_param_data.update(area_cols)

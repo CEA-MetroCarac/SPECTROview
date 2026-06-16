@@ -14,7 +14,7 @@ class VAboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("About SPECTROview")
-        self.setMinimumSize(600, 600)
+        self.setMinimumSize(600, 450)
         self.init_ui()
 
     def init_ui(self):
@@ -44,7 +44,7 @@ class VAboutDialog(QDialog):
             <li>Dedicated module for effortless, fast, and easy data visualization.</li>
         </ul>
         <p style="text-align:left;">
-            Check out the <a href="https://github.com/CEA-MetroCarac/spectroview">SPECTROview GitHub repository</a> for the latest version &amp; more details.
+            Full documentation is available at <a href="https://CEA-MetroCarac.github.io/SPECTROview">https://CEA-MetroCarac.github.io/SPECTROview</a>
         </p>
         """
 

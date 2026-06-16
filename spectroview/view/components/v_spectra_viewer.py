@@ -69,8 +69,6 @@ class VSpectraViewer(QWidget):
     cosmicRayErased = Signal(int, object)  # (spec_idx, modified_y_array) — live preview
     cosmicRayValidated = Signal()          # User accepted all erasures → persist to model
 
-    _MAX_HEAVY_OVERLAYS = 10  # Maximum number of best-fit spectra to display in Tensor Mode (all spectra are still plotted)
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self._init_ui()
@@ -451,7 +449,15 @@ class VSpectraViewer(QWidget):
 
         menu.addSeparator()
 
-        
+        # Max legend items / heavy overlays
+        self.spin_max_overlays = QDoubleSpinBox()
+        self.spin_max_overlays.setRange(1, 1000)
+        self.spin_max_overlays.setValue(10)
+        self.spin_max_overlays.valueChanged.connect(self._emit_view_options)
+        self.spin_max_overlays.valueChanged.connect(self._plot)
+        menu.addAction(self._wrap("Max legend items:", self.spin_max_overlays))
+
+        menu.addSeparator()
         
         # ─── Copied figure size (NEW) ───
         ratio_widget = QWidget()
@@ -722,11 +728,11 @@ class VSpectraViewer(QWidget):
                 raw_colors = [fg_color] * N  # Raw data drawn in a neutral foreground color
 
         # ── Proxy legend lines ──
-        # Capped by _MAX_HEAVY_OVERLAYS to avoid an unmanageable legend for large maps.
+        # Capped by spin_max_overlays to avoid an unmanageable legend for large maps.
         t_labels = self._tensor_data.get("labels", [])
         t_fnames = self._tensor_data.get("fnames", [])
         proxies = self._tensor_data.get("proxies", [])  # Spectrum objects for interactive tooltip
-        for spec_idx in range(min(N, self._MAX_HEAVY_OVERLAYS)):
+        for spec_idx in range(min(N, self.spin_max_overlays.value())):
             spec_color = main_colors[spec_idx]
             # Priority: custom label > filename > generic fallback
             label_str = (
@@ -768,7 +774,7 @@ class VSpectraViewer(QWidget):
         is_tensor_list = self._tensor_data.get("type") == "tensor_list"
         proxies = self._tensor_data.get("proxies", [])
 
-        for spec_idx in range(min(n_specs, self._MAX_HEAVY_OVERLAYS)):
+        for spec_idx in range(min(n_specs, self.spin_max_overlays.value())):
             x_val = self._tensor_data.get("x")
             x = x_val[spec_idx] if isinstance(x_val, list) else x_val
 

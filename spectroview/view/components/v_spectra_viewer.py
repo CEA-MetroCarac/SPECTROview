@@ -732,7 +732,7 @@ class VSpectraViewer(QWidget):
         t_labels = self._tensor_data.get("labels", [])
         t_fnames = self._tensor_data.get("fnames", [])
         proxies = self._tensor_data.get("proxies", [])  # Spectrum objects for interactive tooltip
-        for spec_idx in range(min(N, self.spin_max_overlays.value())):
+        for spec_idx in range(min(N, int(self.spin_max_overlays.value()))):
             spec_color = main_colors[spec_idx]
             # Priority: custom label > filename > generic fallback
             label_str = (
@@ -774,7 +774,7 @@ class VSpectraViewer(QWidget):
         is_tensor_list = self._tensor_data.get("type") == "tensor_list"
         proxies = self._tensor_data.get("proxies", [])
 
-        for spec_idx in range(min(n_specs, self.spin_max_overlays.value())):
+        for spec_idx in range(min(n_specs, int(self.spin_max_overlays.value()))):
             x_val = self._tensor_data.get("x")
             x = x_val[spec_idx] if isinstance(x_val, list) else x_val
 

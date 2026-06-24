@@ -46,6 +46,13 @@ class VAboutDialog(QDialog):
         <p style="text-align:left;">
             Full documentation is available at <a href="https://CEA-MetroCarac.github.io/SPECTROview">https://CEA-MetroCarac.github.io/SPECTROview</a>
         </p>
+        <hr>
+        <h3>Citation:</h3>
+        <p style="text-align:left;">
+            Le, Van-Hoan, <i>SPECTROview: An open-source application for spectroscopic data processing, fitting, and visualization</i>.
+            Available at SSRN: <a href="https://ssrn.com/abstract=6987751">https://ssrn.com/abstract=6987751</a>
+            or <a href="http://dx.doi.org/10.2139/ssrn.6987751">http://dx.doi.org/10.2139/ssrn.6987751</a>
+        </p>
         """
 
         info_browser = QTextBrowser()

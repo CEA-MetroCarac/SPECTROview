@@ -90,5 +90,3 @@ If you use **SPECTROview** in your work, please cite:
 > Le, Van-Hoan, *SPECTROview: An open-source application for spectroscopic data processing, fitting, and visualization*. Available at SSRN: [https://ssrn.com/abstract=6987751](https://ssrn.com/abstract=6987751) or [http://dx.doi.org/10.2139/ssrn.6987751](http://dx.doi.org/10.2139/ssrn.6987751)
 
 ---
-
----

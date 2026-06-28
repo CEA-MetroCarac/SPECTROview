@@ -2,7 +2,7 @@
   <img src="../user_manual_images/Home/logo.png" alt="SPECTROview Logo" width="80" align="left" style="float: left; margin-right: 20px;">
   <div style="text-align: right;">
     <h2 align="right" style="margin-top: 0; margin-bottom: 0; text-align: right;">SPECTROview User Manual</h2>
-    <p align="right" style="margin-top: 5px; color: gray; font-size: 0.9em; text-align: right;"><i>(Last updated: 31 May 2026)</i></p>
+    <p align="right" style="margin-top: 5px; color: gray; font-size: 0.9em; text-align: right;"><i>(Last updated: 28 June 2026)</i></p>
   </div>
 </div>
 <div style="clear: both;"></div>

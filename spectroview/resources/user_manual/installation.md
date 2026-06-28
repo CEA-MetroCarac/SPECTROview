@@ -17,7 +17,6 @@ To install the latest development version directly from the source repository:
 ```bash
 pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
 ```
-> [!NOTE]
 > In systems where both Python 2 and Python 3 are installed, `pip3 install spectroview` should be used instead.
 
 ### **3. Launch and Update**

@@ -12,18 +12,9 @@ class PlotRenderer:
     def __init__(self, vg):
         self.vg = vg # VGraph instance
 
-    def _get_sorted_categories(self, series):
-        """Return sorted unique values from a Series (Z/hue column).
-        
-        Numeric values are sorted numerically; non-numeric values are sorted
-        alphabetically so that legend order is always deterministic.
-        """
-        unique_vals = series.unique()
-        try:
-            numeric_vals = pd.to_numeric(unique_vals, errors='raise')
-            return sorted(unique_vals, key=lambda v: float(v))
-        except (ValueError, TypeError):
-            return sorted(unique_vals, key=lambda v: str(v))
+    def _get_sorted_categories(self, series, df=None, sort_col=None):
+        """Return unique values in their current order (dataframe is already sorted)."""
+        return [c for c in series.unique() if pd.notna(c)]
 
     def _prepare_plot_data(self, df, y):
         """Prepare dataframe and X positions for plotting."""
@@ -34,6 +25,28 @@ class PlotRenderer:
             cols.append(self.vg.z)
             
         plot_df = df[cols].copy()
+        
+        # --- Sort dataframe based on settings ---
+        sort_enabled = getattr(self.vg, 'sort_data_enabled', True)
+        sort_by = getattr(self.vg, 'sort_data_by', 'Z')
+        
+        if sort_enabled:
+            col_to_sort = None
+            if sort_by == 'X' and self.vg.x in plot_df.columns:
+                col_to_sort = self.vg.x
+            elif sort_by == 'Y' and y in plot_df.columns:
+                col_to_sort = y
+            elif sort_by == 'Z' and self.vg.z in plot_df.columns:
+                col_to_sort = self.vg.z
+                
+            if col_to_sort:
+                try:
+                    plot_df = plot_df.sort_values(by=col_to_sort)
+                except TypeError:
+                    # Fallback to string sort if mixed types exist
+                    plot_df['_sort_key'] = plot_df[col_to_sort].astype(str)
+                    plot_df = plot_df.sort_values(by='_sort_key').drop(columns=['_sort_key'])
+        
         treat_as_numeric = getattr(self.vg, 'x_as_numeric', None)
         # If 'Auto' (None), auto-detect numeric if plot style expects it by default
         if treat_as_numeric is None:
@@ -46,18 +59,25 @@ class PlotRenderer:
             else:
                 treat_as_numeric = False
         
+        dropna_cols = [self.vg.x, y]
+        if self.vg.z and self.vg.z in plot_df.columns:
+            dropna_cols.append(self.vg.z)
+            
         if treat_as_numeric:
             plot_df[self.vg.x] = pd.to_numeric(plot_df[self.vg.x], errors='coerce')
-            plot_df = plot_df.dropna(subset=[self.vg.x, y])
-            x_unique = sorted(plot_df[self.vg.x].unique())
+            plot_df = plot_df.dropna(subset=dropna_cols)
+            # For numeric X, we MUST sort X so the line draws left-to-right
+            plot_df = plot_df.sort_values(by=self.vg.x)
+            x_unique = list(plot_df[self.vg.x].unique())
             x_positions = {v: v for v in x_unique}
         else:
-            plot_df = plot_df.dropna(subset=[self.vg.x, y])
-            # Preserve original order for categorical
-            x_unique = list(plot_df[self.vg.x].unique())
+            plot_df = plot_df.dropna(subset=dropna_cols)
+            # Raw unique values in current (sorted) DataFrame order
+            x_unique = list(dict.fromkeys(plot_df[self.vg.x]))
             x_positions = {v: i for i, v in enumerate(x_unique)}
             
         return plot_df, x_unique, x_positions, treat_as_numeric
+
 
     def _plot_point(self, df, y, colors, markers, c):
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
@@ -66,7 +86,7 @@ class PlotRenderer:
         join = getattr(self.vg, 'join_for_point_plot', False)
         
         if self.vg.z and self.vg.z in plot_df.columns:
-            categories = self._get_sorted_categories(plot_df[self.vg.z])
+            categories = self._get_sorted_categories(plot_df[self.vg.z], df=plot_df)
             n_hue = len(categories)
             dodge = getattr(self.vg, 'dodge_point_plot', True) and not is_numeric
             if dodge and n_hue > 1:
@@ -125,7 +145,7 @@ class PlotRenderer:
         dodge = getattr(self.vg, 'dodge_scatter_plot', False) and not is_numeric
         
         if self.vg.z and self.vg.z in plot_df.columns:
-            categories = self._get_sorted_categories(plot_df[self.vg.z])
+            categories = self._get_sorted_categories(plot_df[self.vg.z], df=plot_df)
             n_hue = len(categories)
             if dodge and n_hue > 1:
                 offsets = np.linspace(-0.3, 0.3, n_hue)
@@ -169,7 +189,7 @@ class PlotRenderer:
             box_width = min_gap * 0.6
 
         if self.vg.z and self.vg.z in plot_df.columns:
-            hue_cats = self._get_sorted_categories(plot_df[self.vg.z])
+            hue_cats = self._get_sorted_categories(plot_df[self.vg.z], df=plot_df)
             n_hue = len(hue_cats)
             sub_width = box_width / n_hue
             offsets = np.linspace(-(box_width - sub_width) / 2,
@@ -235,7 +255,7 @@ class PlotRenderer:
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
         
         if self.vg.z and self.vg.z in plot_df.columns:
-            categories = self._get_sorted_categories(plot_df[self.vg.z])
+            categories = self._get_sorted_categories(plot_df[self.vg.z], df=plot_df)
             for idx, cat in enumerate(categories):
                 subset = plot_df[plot_df[self.vg.z] == cat]
                 if subset.empty: continue
@@ -280,7 +300,7 @@ class PlotRenderer:
             bar_width = min_gap * 0.6
 
         if self.vg.z and self.vg.z in plot_df.columns:
-            hue_cats = self._get_sorted_categories(plot_df[self.vg.z])
+            hue_cats = self._get_sorted_categories(plot_df[self.vg.z], df=plot_df)
             n_hue = len(hue_cats)
             if n_hue == 0:
                 return
@@ -331,7 +351,7 @@ class PlotRenderer:
         anchor = getattr(self.vg, 'trendline_anchor_enabled', False)
         
         if self.vg.z and self.vg.z in df.columns:
-            categories = self._get_sorted_categories(df[self.vg.z])
+            categories = self._get_sorted_categories(df[self.vg.z], df=df)
             for idx, cat in enumerate(categories):
                 subset = df[df[self.vg.z] == cat]
                 color = colors[idx % len(colors)]
@@ -410,7 +430,7 @@ class PlotRenderer:
             hist_kwargs['linewidth'] = 0.8
             
         if self.vg.z and self.vg.z in plot_df.columns:
-            categories = self._get_sorted_categories(plot_df[self.vg.z])
+            categories = self._get_sorted_categories(plot_df[self.vg.z], df=plot_df)
             data_list = []
             labels = []
             c_list = []

@@ -99,6 +99,10 @@ class MGraph:
         self.hist_kde: bool = False
         self.hist_step: bool = False
         
+        # Data sorting
+        self.sort_data_enabled: bool = True   # Enable intelligent sorting
+        self.sort_data_by: str = "Z"          # Sort by: "Z" (hue), "X", or "Y"
+        
         # Annotations (lines and text)
         self.annotations: List[Dict[str, Any]] = []
     
@@ -172,6 +176,8 @@ class MGraph:
             'hist_bins': self.hist_bins,
             'hist_kde': self.hist_kde,
             'hist_step': self.hist_step,
+            'sort_data_enabled': self.sort_data_enabled,
+            'sort_data_by': self.sort_data_by,
             'annotations': self.annotations,
         }
     

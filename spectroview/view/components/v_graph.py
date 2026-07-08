@@ -125,6 +125,10 @@ class VGraph(QWidget):
         self.hist_kde = False
         self.hist_step = False
         
+        # Data sorting
+        self.sort_data_enabled = True   # Enable intelligent sorting
+        self.sort_data_by = "Z"          # Sort by: "Z" (hue), "X", or "Y"
+        
         # Annotations
         self.annotations = []
         
@@ -332,36 +336,59 @@ class VGraph(QWidget):
         """Retrieves properties of each legend within legend box."""
         if hasattr(self, 'legend_properties') and self.legend_properties:
             return self.legend_properties
-            
+        
+        import matplotlib.colors as mcolors
         legend_properties = []
         if self.ax:
             legend = self.ax.get_legend()
             if legend:
                 legend_texts = legend.get_texts()
+                # legend_handles holds the actual drawn artists — read their true colors
+                legend_handles = getattr(legend, 'legend_handles', [])
                 for idx, text in enumerate(legend_texts):
                     label = text.get_text()
                     color = DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
-                    marker = DEFAULT_MARKERS[idx % len(DEFAULT_MARKERS)]
-                    
-                    import matplotlib.colors as mcolors
-                    rgba_color = mcolors.to_rgba(color)
-                    
+                    marker = DEFAULT_MARKERS[idx % len(DEFAULT_MARKERS)] if DEFAULT_MARKERS else 'o'
+
+                    # Read true color from the matplotlib handle
+                    if idx < len(legend_handles):
+                        handle = legend_handles[idx]
+                        try:
+                            if hasattr(handle, 'get_color'):
+                                c = handle.get_color()
+                                if isinstance(c, str) and c not in ('none', '', 'None'):
+                                    color = c
+                                elif not isinstance(c, str):
+                                    color = mcolors.to_hex(c)
+                            elif hasattr(handle, 'get_facecolor'):
+                                fc = handle.get_facecolor()
+                                if hasattr(fc, '__len__') and len(fc) > 0:
+                                    color = mcolors.to_hex(fc[0])
+                        except Exception:
+                            pass
+                        try:
+                            if hasattr(handle, 'get_marker'):
+                                m = handle.get_marker()
+                                if m and str(m) not in ('None', 'none', ''):
+                                    marker = str(m)
+                        except Exception:
+                            pass
+
+                    rgba_color = list(mcolors.to_rgba(color))
                     legend_properties.append({
                         'label': label,
                         'marker': marker,
                         'color': color,
-                        'rgba': list(rgba_color)
+                        'rgba': rgba_color
                     })
             elif self.plot_style not in ['2Dmap', 'wafer']:
                 color = DEFAULT_COLORS[0] if DEFAULT_COLORS else 'steelblue'
-                import matplotlib.colors as mcolors
-                rgba_color = mcolors.to_rgba(color)
-                
+                rgba_color = list(mcolors.to_rgba(color))
                 legend_properties.append({
                     'label': 'All data',
                     'marker': 'o',
                     'color': color,
-                    'rgba': list(rgba_color)
+                    'rgba': rgba_color
                 })
         
         self.legend_properties = legend_properties

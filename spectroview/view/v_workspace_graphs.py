@@ -1538,6 +1538,10 @@ class VWorkspaceGraphs(QWidget):
         graph_widget.hist_kde = getattr(model, 'hist_kde', False)
         graph_widget.hist_step = getattr(model, 'hist_step', False)
         
+        # Data sorting
+        graph_widget.sort_data_enabled = getattr(model, 'sort_data_enabled', True)
+        graph_widget.sort_data_by = getattr(model, 'sort_data_by', 'Z')
+        
         # Annotations (with backward compatibility for old .graphs files)
         if hasattr(model, 'annotations') and model.annotations is not None:
             graph_widget.annotations = model.annotations

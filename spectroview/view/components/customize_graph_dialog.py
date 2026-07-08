@@ -80,7 +80,10 @@ class CustomizeGraphDialog(QDialog):
         self.legend_widget.apply_changes()
         self.axis_widget._apply_axis_settings()
         self.more_options_widget._apply()
-       
+        
+        # After more options are applied (which may replot and recreate legend properties),
+        # reload the legend tab to ensure it reflects the newly generated colors and order.
+        self.legend_widget.load_legend_properties()
         
     def cancel_all(self):
         """Cancel changes and close dialog."""
@@ -1341,6 +1344,9 @@ class CustomizeMoreOptions(QWidget):
         # ---- General (always visible) ----
         self._build_general_section()
 
+        # ---- Data sorting section ----
+        self._build_sorting_section()
+
         # ---- Trendline section ----
         self._build_trendline_section()
 
@@ -1378,6 +1384,40 @@ class CustomizeMoreOptions(QWidget):
         layout.addWidget(self._cb_wafer_stats)
 
         self._general_group = grp
+        self._inner_layout.addWidget(grp)
+
+    # ---- Data sorting section -------------------------------------------
+
+    def _build_sorting_section(self):
+        grp = QGroupBox("Data sorting")
+        layout = QVBoxLayout(grp)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
+
+        # Checkbox to enable/disable intelligent sorting
+        self._cb_sort_enabled = QCheckBox("Enable intelligent data sorting")
+        self._cb_sort_enabled.setChecked(True)
+        self._cb_sort_enabled.toggled.connect(self._on_sort_enabled_toggled)
+        layout.addWidget(self._cb_sort_enabled)
+
+        # Sort-by selector row
+        sort_row = QHBoxLayout()
+        sort_row.addWidget(QLabel("Sort by:"))
+        self._cbb_sort_by = QComboBox()
+        self._cbb_sort_by.addItems(["Z (hue values)", "X values", "Y values"])
+        self._cbb_sort_by.setCurrentIndex(0)  # Default: Z
+        self._cbb_sort_by.setMaximumWidth(160)
+        sort_row.addWidget(self._cbb_sort_by)
+        sort_row.addStretch()
+        layout.addLayout(sort_row)
+
+        # Info label
+        info = QLabel("Sorts legend and data order for consistent, deterministic plots.")
+        info.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
+        info.setWordWrap(True)
+        layout.addWidget(info)
+
+        self._sorting_group = grp
         self._inner_layout.addWidget(grp)
 
     # ---- Trendline section ----------------------------------------------
@@ -1521,6 +1561,15 @@ class CustomizeMoreOptions(QWidget):
         self._cb_error_bar.setEnabled(style == 'bar')
         self._cb_wafer_stats.setEnabled(style == 'wafer')
 
+        # --- Data sorting section ---
+        sort_enabled = getattr(gw, 'sort_data_enabled', True)
+        self._cb_sort_enabled.setChecked(sort_enabled)
+        self._cbb_sort_by.setEnabled(sort_enabled)
+
+        sort_by = getattr(gw, 'sort_data_by', 'Z')
+        sort_map = {'Z': 0, 'X': 1, 'Y': 2}
+        self._cbb_sort_by.setCurrentIndex(sort_map.get(sort_by, 0))
+
         # --- Trendline section ---
         is_trendline = (style == 'trendline')
         self._trendline_group.setVisible(is_trendline)
@@ -1577,6 +1626,23 @@ class CustomizeMoreOptions(QWidget):
         gw.show_bar_plot_error_bar = self._cb_error_bar.isChecked()
         gw.wafer_stats = self._cb_wafer_stats.isChecked()
 
+        # Data sorting — capture old values first to detect changes
+        old_sort_enabled = getattr(gw, 'sort_data_enabled', True)
+        old_sort_by = getattr(gw, 'sort_data_by', 'Z')
+
+        gw.sort_data_enabled = self._cb_sort_enabled.isChecked()
+        sort_index = self._cbb_sort_by.currentIndex()
+        gw.sort_data_by = ['Z', 'X', 'Y'][sort_index]
+
+        # If sort settings changed, reset legend_properties so the legend is
+        # rebuilt from scratch in the new sorted order (labels + colors in sync).
+        sort_settings_changed = (
+            gw.sort_data_enabled != old_sort_enabled or
+            gw.sort_data_by != old_sort_by
+        )
+        if sort_settings_changed:
+            gw.legend_properties = []
+
         # Trendline
         if style == 'trendline':
             gw.trendline_order = self._spin_order.value()
@@ -1590,6 +1656,7 @@ class CustomizeMoreOptions(QWidget):
             gw.hist_bins = self._spin_bins.value()
             gw.hist_kde = self._cb_kde.isChecked()
             gw.hist_step = self._rb_step.isChecked()
+
 
         # Replot
         if gw.df is not None:
@@ -1607,6 +1674,8 @@ class CustomizeMoreOptions(QWidget):
                 'dodge_scatter_plot': gw.dodge_scatter_plot,
                 'show_bar_plot_error_bar': gw.show_bar_plot_error_bar,
                 'wafer_stats': gw.wafer_stats,
+                'sort_data_enabled': gw.sort_data_enabled,
+                'sort_data_by': gw.sort_data_by,
             }
             if style == 'trendline':
                 props.update({
@@ -1623,3 +1692,7 @@ class CustomizeMoreOptions(QWidget):
                     'hist_step': gw.hist_step,
                 })
             gw.properties_changed.emit(gw.graph_id, props)
+
+    def _on_sort_enabled_toggled(self, checked):
+        """Enable/disable the sort-by combobox based on the sort checkbox."""
+        self._cbb_sort_by.setEnabled(checked)

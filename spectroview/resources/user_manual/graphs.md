@@ -214,6 +214,17 @@ These checkboxes are always visible, but only enabled when the corresponding plo
 | **Show error bar** | `bar` | Displays standard deviation error bars on top of each bar. |
 | **Show statistics** | `wafer` | Overlays statistical summary (mean, std, etc.) on the wafer map. |
 
+##### Data Sorting
+
+Controls how categories and legend items are ordered:
+
+| Option | Description |
+|---|---|
+| **Enable intelligent data sorting** | If checked, sorts the underlying dataset deterministically before plotting (recommended). If unchecked, the plot strictly preserves the original row order of the dataset. |
+| **Sort by** | When sorting is enabled, choose the target axis for sorting: <br>- **Z (hue values)**: Sorts categories primarily by legend group (default).<br>- **X values**: Sorts X-axis categories.<br>- **Y values**: Sorts data ascending based on the Y metric. |
+
+> **Note**: Disabling intelligent data sorting is useful if your dataset is already pre-sorted and you wish to explicitly maintain that sequence. When you change sorting settings, the legend colors are automatically reset to the default palette sequence to ensure a clean positional color scheme.
+
 ##### Trendline Settings
 
 Visible only when the plot style is `trendline`:

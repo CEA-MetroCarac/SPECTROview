@@ -833,10 +833,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#point-and-bar-plots" class="md-nav__link">
+  <a href="#51-point-and-bar-plots" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Point and Bar Plots
+        5.1 Point and Bar Plots
       
     </span>
   </a>
@@ -844,10 +844,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#box-plot" class="md-nav__link">
+  <a href="#52-box-plot" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Box Plot
+        5.2 Box Plot
       
     </span>
   </a>
@@ -855,10 +855,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#trendline-estimation" class="md-nav__link">
+  <a href="#53-trendline-estimation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Trendline Estimation
+        5.3 Trendline Estimation
       
     </span>
   </a>
@@ -866,10 +866,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#trendline-confidence-intervals" class="md-nav__link">
+  <a href="#54-trendline-confidence-intervals" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Trendline Confidence Intervals
+        5.4 Trendline Confidence Intervals
       
     </span>
   </a>
@@ -1792,20 +1792,20 @@ The four available utility buttons allow you to:</p>
 <hr />
 <h3 id="5-statistical-calculations-fitting-details"><strong>5. Statistical Calculations &amp; Fitting Details</strong><a class="headerlink" href="#5-statistical-calculations-fitting-details" title="Permanent link">&para;</a></h3>
 <p>For statistical plot styles (<code>point</code>, <code>bar</code>, <code>box</code>, and <code>trendline</code>), SPECTROview automatically calculates essential metrics and visualizes the distribution of your data.</p>
-<h4 id="point-and-bar-plots"><strong>Point and Bar Plots</strong><a class="headerlink" href="#point-and-bar-plots" title="Permanent link">&para;</a></h4>
+<h4 id="51-point-and-bar-plots">5.1 <strong>Point and Bar Plots</strong><a class="headerlink" href="#51-point-and-bar-plots" title="Permanent link">&para;</a></h4>
 <ul>
 <li><strong>Central Value (Mean):</strong> The primary data point (the circle marker in a <code>point</code> plot or the top of the bar in a <code>bar</code> plot) represents the <strong>arithmetic mean</strong> of all Y-values for a given X-category.</li>
 <li><strong>Error Bars (95% CI):</strong> The error bars extending from the mean represent the <strong>95% Confidence Interval</strong> of the mean. This is calculated using the Standard Error of the Mean (SEM):
   <code>Error Bar = ± (1.96 × SEM)</code>
   where <code>SEM = Standard Deviation / sqrt(N)</code>.</li>
 </ul>
-<h4 id="box-plot"><strong>Box Plot</strong><a class="headerlink" href="#box-plot" title="Permanent link">&para;</a></h4>
+<h4 id="52-box-plot">5.2 <strong>Box Plot</strong><a class="headerlink" href="#52-box-plot" title="Permanent link">&para;</a></h4>
 <p>The <code>box</code> plot natively displays the statistical distribution of the dataset based on standard five-number summaries:
 - <strong>Box Bounds (Q1 to Q3):</strong> The main body of the box spans from the first quartile (25th percentile) to the third quartile (75th percentile), known as the Interquartile Range (IQR).
 - <strong>Median Line:</strong> The horizontal line inside the box marks the <strong>Median</strong> (50th percentile).
 - <strong>Whiskers:</strong> The whiskers extend to the furthest data points that are still within <code>1.5 × IQR</code> of the box edges.
 - <strong>Fliers (Outliers):</strong> Any data points falling beyond the whiskers are explicitly drawn as individual outlier points.</p>
-<h4 id="trendline-estimation"><strong>Trendline Estimation</strong><a class="headerlink" href="#trendline-estimation" title="Permanent link">&para;</a></h4>
+<h4 id="53-trendline-estimation">5.3 <strong>Trendline Estimation</strong><a class="headerlink" href="#53-trendline-estimation" title="Permanent link">&para;</a></h4>
 <ul>
 <li>
 <p><strong>Standard Fit (No Anchor):</strong> The trendline is calculated using an Ordinary Least Squares (OLS) linear regression to fit a polynomial of the specified degree:
@@ -1820,7 +1820,7 @@ The four available utility buttons allow you to:</p>
 <li><strong>For Higher orders (&gt;1):</strong> The shifted data is fitted with a zero intercept using a linear least squares solver.
   The fitted curve is then translated back to the original coordinate space.</li>
 </ul>
-<h4 id="trendline-confidence-intervals"><strong>Trendline Confidence Intervals</strong><a class="headerlink" href="#trendline-confidence-intervals" title="Permanent link">&para;</a></h4>
+<h4 id="54-trendline-confidence-intervals">5.4 <strong>Trendline Confidence Intervals</strong><a class="headerlink" href="#54-trendline-confidence-intervals" title="Permanent link">&para;</a></h4>
 <ul>
 <li><strong>Confidence Level:</strong> The shaded band around standard trendlines represents a <strong>95% confidence interval</strong> (estimated by Seaborn's regression plot module).</li>
 <li><strong>Estimation Method:</strong> The confidence interval is estimated using a non-parametric bootstrapping procedure (resampling data points with replacement 1000 times, fitting a regression model to each bootstrap sample, and calculating the 2.5th and 97.5th percentiles of the predictions).</li>

@@ -49,9 +49,8 @@ class VAboutDialog(QDialog):
         <hr>
         <h3>Citation:</h3>
         <p style="text-align:left;">
-            Le, Van-Hoan, <i>SPECTROview: An open-source application for spectroscopic data processing, fitting, and visualization</i>.
-            Available at SSRN: <a href="https://ssrn.com/abstract=6987751">https://ssrn.com/abstract=6987751</a>
-            or <a href="http://dx.doi.org/10.2139/ssrn.6987751">http://dx.doi.org/10.2139/ssrn.6987751</a>
+            Le, Van Hoan. "SPECTROview: An Open-Source Application for Interactive Spectroscopic Data Processing, Fitting, and Visualization." <i>SoftwareX</i> 35 (September 2026): 102862.
+            <br><a href="https://doi.org/10.1016/j.softx.2026.102862">https://doi.org/10.1016/j.softx.2026.102862</a>
         </p>
         """
 

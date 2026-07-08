@@ -131,9 +131,24 @@ The `histogram` style provides:
 
 _____
 
-### **6. Trendline Estimation & Fitting Details**
+### **6. Statistical Calculations & Fitting Details**
 
-For the `trendline` plot style, the curve fitting and confidence intervals are computed as follows:
+For statistical plot styles (`point`, `bar`, `box`, and `trendline`), SPECTROview automatically calculates essential metrics and visualizes the distribution of your data.
+
+#### **Point and Bar Plots**
+
+- **Central Value (Mean):** The primary data point (the circle marker in a `point` plot or the top of the bar in a `bar` plot) represents the **arithmetic mean** of all Y-values for a given X-category.
+- **Error Bars (95% CI):** The error bars extending from the mean represent the **95% Confidence Interval** of the mean. This is calculated using the Standard Error of the Mean (SEM):
+  `Error Bar = ± (1.96 × SEM)`
+  where `SEM = Standard Deviation / sqrt(N)`.
+
+#### **Box Plot**
+
+The `box` plot natively displays the statistical distribution of the dataset based on standard five-number summaries:
+- **Box Bounds (Q1 to Q3):** The main body of the box spans from the first quartile (25th percentile) to the third quartile (75th percentile), known as the Interquartile Range (IQR).
+- **Median Line:** The horizontal line inside the box marks the **Median** (50th percentile).
+- **Whiskers:** The whiskers extend to the furthest data points that are still within `1.5 × IQR` of the box edges.
+- **Fliers (Outliers):** Any data points falling beyond the whiskers are explicitly drawn as individual outlier points.
 
 #### **Trendline Estimation**
 
@@ -147,7 +162,7 @@ For the `trendline` plot style, the curve fitting and confidence intervals are c
   - **For Higher orders (>1):** The shifted data is fitted with a zero intercept using a linear least squares solver.
   The fitted curve is then translated back to the original coordinate space.
 
-#### **Confidence Intervals**
+#### **Trendline Confidence Intervals**
 
 - **Confidence Level:** The shaded band around standard trendlines represents a **95% confidence interval** (estimated by Seaborn's regression plot module).
 - **Estimation Method:** The confidence interval is estimated using a non-parametric bootstrapping procedure (resampling data points with replacement 1000 times, fitting a regression model to each bootstrap sample, and calculating the 2.5th and 97.5th percentiles of the predictions).

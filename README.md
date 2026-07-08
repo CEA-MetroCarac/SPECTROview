@@ -87,6 +87,6 @@ This work was carried out at the CEA — Platform for Nanocharacterisation (PFNC
 
 If you use **SPECTROview** in your work, please cite:
 
-> Le, Van-Hoan, *SPECTROview: An open-source application for spectroscopic data processing, fitting, and visualization*. Available at SSRN: [https://ssrn.com/abstract=6987751](https://ssrn.com/abstract=6987751) or [http://dx.doi.org/10.2139/ssrn.6987751](http://dx.doi.org/10.2139/ssrn.6987751)
+> Le, Van Hoan. “SPECTROview: An Open-Source Application for Interactive Spectroscopic Data Processing, Fitting, and Visualization.” *SoftwareX* 35 (September 2026): 102862. [https://doi.org/10.1016/j.softx.2026.102862](https://doi.org/10.1016/j.softx.2026.102862).
 
 ---

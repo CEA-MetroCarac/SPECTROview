@@ -2,7 +2,7 @@
   <img src="../user_manual_images/Home/logo.png" alt="SPECTROview Logo" width="80" align="left" style="float: left; margin-right: 20px;">
   <div style="text-align: right;">
     <h2 align="right" style="margin-top: 0; margin-bottom: 0; text-align: right;">SPECTROview User Manual</h2>
-    <p align="right" style="margin-top: 5px; color: gray; font-size: 0.9em; text-align: right;"><i>(Last updated: 28 June 2026)</i></p>
+    <p align="right" style="margin-top: 5px; color: gray; font-size: 0.9em; text-align: right;"><i>(Last updated: 08 July 2026)</i></p>
   </div>
 </div>
 <div style="clear: both;"></div>
@@ -35,6 +35,6 @@ This work was carried out at the CEA — Platform for Nanocharacterisation (PFNC
 
 If you use **SPECTROview** in your work, please cite:
 
-> Le, Van-Hoan, *SPECTROview: An open-source application for spectroscopic data processing, fitting, and visualization*. Available at SSRN: [https://ssrn.com/abstract=6987751](https://ssrn.com/abstract=6987751) or [http://dx.doi.org/10.2139/ssrn.6987751](http://dx.doi.org/10.2139/ssrn.6987751)
+> Le, Van Hoan. “SPECTROview: An Open-Source Application for Interactive Spectroscopic Data Processing, Fitting, and Visualization.” *SoftwareX* 35 (September 2026): 102862. [https://doi.org/10.1016/j.softx.2026.102862](https://doi.org/10.1016/j.softx.2026.102862).
 
 ____

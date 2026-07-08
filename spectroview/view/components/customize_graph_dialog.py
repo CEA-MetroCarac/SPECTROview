@@ -58,6 +58,34 @@ class CustomizeGraphDialog(QDialog):
         self.tabs.addTab(tab_legend, "Legend / Color")
         self.tabs.addTab(tab_annotations, "Annotations")
         self.tabs.addTab(tab_general, "More options")
+        
+        # Universal Apply / Cancel buttons
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+        
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.setIcon(QIcon(f"{ICON_DIR}/close.png"))
+        btn_cancel.clicked.connect(self.cancel_all)
+        btn_layout.addWidget(btn_cancel)
+        
+        btn_apply = QPushButton("Apply")
+        btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
+        btn_apply.clicked.connect(self.apply_all)
+        btn_layout.addWidget(btn_apply)
+        
+        layout.addLayout(btn_layout)
+
+    def apply_all(self):
+        """Apply changes from all tabs and close dialog."""
+        self.legend_widget.apply_changes()
+        self.axis_widget._apply_axis_settings()
+        self.more_options_widget._apply()
+       
+        
+    def cancel_all(self):
+        """Cancel changes and close dialog."""
+        self.legend_widget.cancel_changes()
+  
 
     def _create_legend_tab(self):
         """Create legend customization tab."""
@@ -70,21 +98,6 @@ class CustomizeGraphDialog(QDialog):
         layout.addWidget(self.legend_widget)
         layout.addStretch()
         
-        # Apply / Cancel buttons at the bottom of the tab
-        btn_layout = QHBoxLayout()
-        btn_layout.addStretch()
-        
-        btn_cancel = QPushButton("Cancel")
-        btn_cancel.setIcon(QIcon(f"{ICON_DIR}/close.png"))
-        btn_cancel.clicked.connect(self.legend_widget.cancel_changes)
-        btn_layout.addWidget(btn_cancel)
-        
-        btn_apply = QPushButton("Apply")
-        btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
-        btn_apply.clicked.connect(self.legend_widget.apply_changes)
-        btn_layout.addWidget(btn_apply)
-        
-        layout.addLayout(btn_layout)
         return tab
     
     def _create_annotations_tab(self):
@@ -808,13 +821,8 @@ class CustomizeAxis(QWidget):
         self.btn_clear_limits.setIcon(QIcon(f"{ICON_DIR}/clear.png"))
         self.btn_clear_limits.clicked.connect(self._on_clear_limits)
 
-        self.btn_apply_limits = QPushButton("Apply")
-        self.btn_apply_limits.setIcon(QIcon(f"{ICON_DIR}/done.png"))
-        self.btn_apply_limits.clicked.connect(self._apply_axis_settings)
-        
         limits_btn_layout.addWidget(self.btn_set_limits)
         limits_btn_layout.addWidget(self.btn_clear_limits)
-        limits_btn_layout.addWidget(self.btn_apply_limits)
         limits_layout.addLayout(limits_btn_layout)
         
         # ===== Minor Ticks Section =====
@@ -892,19 +900,9 @@ class CustomizeAxis(QWidget):
         break_layout.addLayout(y_break_layout)
         break_group.setLayout(break_layout)
         
-        # ===== Apply Button =====
-        self.btn_apply = QPushButton("Apply")
-        self.btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
-        self.btn_apply.clicked.connect(self._apply_axis_settings)
-        apply_btn_layout = QHBoxLayout()
-        apply_btn_layout.addStretch()
-        apply_btn_layout.addWidget(self.btn_apply)
-        
-        # Add to main layout
         layout.addWidget(limits_group)
         layout.addWidget(minor_ticks_group)
         layout.addWidget(break_group)
-        layout.addLayout(apply_btn_layout)
         layout.addStretch()
     
     def load_axis_settings(self):
@@ -1308,15 +1306,6 @@ class CustomizeMoreOptions(QWidget):
         self._build_histogram_section()
 
         self._inner_layout.addStretch()
-
-        # Apply button
-        btn_row = QHBoxLayout()
-        btn_row.addStretch()
-        self._btn_apply = QPushButton("Apply")
-        self._btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
-        self._btn_apply.clicked.connect(self._apply)
-        btn_row.addWidget(self._btn_apply)
-        outer.addLayout(btn_row)
 
     # ---- General section ------------------------------------------------
 

@@ -80,12 +80,13 @@ class MGraph:
         self.trendline_anchor_origin: bool = True   # True=through (0,0), False=custom
         self.trendline_anchor_x: float = 0.0
         self.trendline_anchor_y: float = 0.0
-        self.show_bar_plot_error_bar: bool = True
+        self.show_bar_plot_error_bar: bool = False
         self.join_for_point_plot: bool = False
         self.dodge_point_plot: bool = True
         self.dodge_scatter_plot: bool = False
         self.scatter_size: int = 70  # Marker size for scatter plots
         self.scatter_edgecolor: str = 'black'  # Edge color for scatter plot markers
+        self.x_as_numeric: bool = False  # Treat X-axis as numerical instead of categorical
         
         self.minor_ticks_bottom: bool = True
         self.minor_ticks_left: bool = True
@@ -165,6 +166,7 @@ class MGraph:
             'dodge_scatter_plot': getattr(self, 'dodge_scatter_plot', False),
             'scatter_size': self.scatter_size,
             'scatter_edgecolor': self.scatter_edgecolor,
+            'x_as_numeric': self.x_as_numeric,
             'hist_bins': self.hist_bins,
             'hist_kde': self.hist_kde,
             'hist_step': self.hist_step,

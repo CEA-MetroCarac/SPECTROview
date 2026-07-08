@@ -1,7 +1,8 @@
 """Matplotlib graph visualization widget for MVVM pattern."""
 
 import numpy as np
-import seaborn as sns
+import pandas as pd
+from scipy import stats
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -109,12 +110,13 @@ class VGraph(QWidget):
         self.trendline_anchor_x = 0.0
         self.trendline_anchor_y = 0.0
         self.trendline_equations = []  # List of dicts: {label, equation, r2} per hue group
-        self.show_bar_plot_error_bar = True
+        self.show_bar_plot_error_bar = False
         self.join_for_point_plot = False
         self.dodge_point_plot = True
         self.dodge_scatter_plot = False
         self.scatter_size = 70  # Marker size for scatter plots
         self.scatter_edgecolor = 'black'  # Edge color for scatter plot markers
+        self.x_as_numeric = False  # Treat X-axis as numerical (for point/box/bar)
         # Histogram-specific
         self.hist_bins = 20
         self.hist_kde = False
@@ -325,73 +327,41 @@ class VGraph(QWidget):
     
     def get_legend_properties(self):
         """Retrieves properties of each legend within legend box."""
+        if hasattr(self, 'legend_properties') and self.legend_properties:
+            return self.legend_properties
+            
         legend_properties = []
         if self.ax:
             legend = self.ax.get_legend()
             if legend:
                 legend_texts = legend.get_texts()
-                legend_handles = legend.legend_handles
                 for idx, text in enumerate(legend_texts):
                     label = text.get_text()
-                    handle = legend_handles[idx]
+                    color = DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
+                    marker = DEFAULT_MARKERS[idx % len(DEFAULT_MARKERS)]
                     
-                    # Extract RGBA color from seaborn
-                    if self.plot_style in ['point', 'scatter', 'line', 'trendline']:
-                        if hasattr(handle, 'get_markerfacecolor'):
-                            rgba_color = handle.get_markerfacecolor()
-                            marker = handle.get_marker() if hasattr(handle, 'get_marker') else 'o'
-                        elif hasattr(handle, 'get_facecolor'):
-                            facecolors = handle.get_facecolor()
-                            rgba_color = facecolors[0] if len(facecolors) > 0 else 'blue'
-                            marker = 'o'
-                        else:
-                            rgba_color = 'blue'
-                            marker = 'o'
-                    elif self.plot_style in ['box', 'bar', 'histogram']:
-                        rgba_color = handle.get_facecolor()
-                        marker = 'o'
-                    else:
-                        rgba_color = 'blue'
-                        marker = 'o'
-                    
-                    # Convert numpy arrays to lists for JSON serialization
-                    if hasattr(rgba_color, 'tolist'):
-                        rgba_color = rgba_color.tolist()
-                    elif isinstance(rgba_color, tuple):
-                        rgba_color = list(rgba_color)
-                    
-                    # Map to closest DEFAULT_COLOR
-                    color = rgba_to_default_color(rgba_color)
+                    import matplotlib.colors as mcolors
+                    rgba_color = mcolors.to_rgba(color)
                     
                     legend_properties.append({
                         'label': label,
                         'marker': marker,
                         'color': color,
-                        'rgba': rgba_color  # Keep original RGBA for mapping
+                        'rgba': list(rgba_color)
                     })
             elif self.plot_style not in ['2Dmap', 'wafer']:
-                # No legend on plot, but we can still customize the main color
                 color = DEFAULT_COLORS[0] if DEFAULT_COLORS else 'steelblue'
                 import matplotlib.colors as mcolors
                 rgba_color = mcolors.to_rgba(color)
-                
-                if hasattr(self, 'legend_properties') and self.legend_properties:
-                    color = self.legend_properties[0].get('color', color)
-                    rgba_color = self.legend_properties[0].get('rgba', rgba_color)
                 
                 legend_properties.append({
                     'label': 'All data',
                     'marker': 'o',
                     'color': color,
-                    'rgba': rgba_color
+                    'rgba': list(rgba_color)
                 })
         
         self.legend_properties = legend_properties
-        
-        # Fix box/bar patch colors to match DEFAULT_COLORS
-        if self.plot_style in ['box', 'bar', 'histogram'] and self.legend_properties:
-            self._fix_box_bar_colors()
-        
         return self.legend_properties
     
     
@@ -466,95 +436,316 @@ class VGraph(QWidget):
             else:
                 show_alert("Unsupported plot style")
 
-    def _plot_point(self, df, y, colors, markers, c):
-        point_kwargs = {
-            'data': df, 'x': self.x, 'y': y, 'ax': self.ax,
-            'linestyles': '-' if self.join_for_point_plot else 'none',
-            'markeredgecolor': getattr(self, 'scatter_edgecolor', 'black'),
-            'markeredgewidth': 1,
-            'err_kws': {'linewidth': 1, 'zorder': 1},
-            'capsize': 0.05,
-            'dodge': True if getattr(self, 'dodge_point_plot', False) else False,
-            'markersize': np.sqrt(self.scatter_size) if hasattr(self, 'scatter_size') else 7
-        }
-        if self.z:
-            point_kwargs['hue'] = self.z
-            point_kwargs['palette'] = colors
-            point_kwargs['marker'] = markers
+    def _prepare_plot_data(self, df, y):
+        """Prepare dataframe and X positions for plotting."""
+        cols = []
+        if self.x not in cols: cols.append(self.x)
+        if y not in cols: cols.append(y)
+        if self.z and self.z in df.columns and self.z not in cols:
+            cols.append(self.z)
+            
+        plot_df = df[cols].copy()
+        
+        treat_as_numeric = getattr(self, 'x_as_numeric', False)
+        # Auto-detect numeric if plot style expects it by default
+        if not treat_as_numeric and self.plot_style in ['scatter', 'line', 'trendline', 'histogram']:
+            num_vals = pd.to_numeric(plot_df[self.x], errors='coerce')
+            if num_vals.notna().sum() > 0.5 * len(num_vals):
+                treat_as_numeric = True
+        
+        if treat_as_numeric:
+            plot_df[self.x] = pd.to_numeric(plot_df[self.x], errors='coerce')
+            plot_df = plot_df.dropna(subset=[self.x, y])
+            x_unique = sorted(plot_df[self.x].unique())
+            x_positions = {v: v for v in x_unique}
         else:
-            point_kwargs['color'] = c
-        sns.pointplot(**point_kwargs)
+            plot_df = plot_df.dropna(subset=[self.x, y])
+            # Preserve original order for categorical
+            x_unique = list(plot_df[self.x].unique())
+            x_positions = {v: i for i, v in enumerate(x_unique)}
+            
+        return plot_df, x_unique, x_positions, treat_as_numeric
+
+    def _plot_point(self, df, y, colors, markers, c):
+        plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
+        edge_c = getattr(self, 'scatter_edgecolor', 'black')
+        ms = np.sqrt(self.scatter_size) if hasattr(self, 'scatter_size') else 7
+        join = getattr(self, 'join_for_point_plot', False)
+        
+        if self.z and self.z in plot_df.columns:
+            categories = plot_df[self.z].unique()
+            n_hue = len(categories)
+            dodge = getattr(self, 'dodge_point_plot', True) and not is_numeric
+            if dodge and n_hue > 1:
+                offsets = np.linspace(-0.2, 0.2, n_hue)
+            else:
+                offsets = np.zeros(n_hue)
+
+            for idx, cat in enumerate(categories):
+                subset = plot_df[plot_df[self.z] == cat]
+                if subset.empty: continue
+                grouped = subset.groupby(self.x)[y]
+                
+                x_cat_vals = list(grouped.groups.keys())
+                x_vals = np.array([x_positions[val] + offsets[idx] for val in x_cat_vals], dtype=float)
+                
+                means = grouped.mean().values
+                cis = grouped.sem().values * 1.96  # 95% CI
+                cis = np.nan_to_num(cis)
+                
+                color = colors[idx % len(colors)]
+                marker = markers[idx % len(markers)] if markers else 'o'
+                
+                self.ax.errorbar(
+                    x_vals, means, yerr=cis,
+                    fmt=marker, color=color, markersize=ms,
+                    markeredgecolor=edge_c, markeredgewidth=1,
+                    capsize=3, elinewidth=1,
+                    linestyle='-' if join else 'none'
+                )
+                self.ax.plot([], [], marker=marker, color=color, markersize=ms,
+                             markeredgecolor=edge_c, markeredgewidth=1,
+                             linestyle='-' if join else 'none', label=str(cat))
+        else:
+            grouped = plot_df.groupby(self.x)[y]
+            x_cat_vals = list(grouped.groups.keys())
+            x_vals = np.array([x_positions[val] for val in x_cat_vals], dtype=float)
+            means = grouped.mean().values
+            cis = grouped.sem().values * 1.96
+            cis = np.nan_to_num(cis)
+            
+            self.ax.errorbar(
+                x_vals, means, yerr=cis,
+                fmt='o', color=c, markersize=ms,
+                markeredgecolor=edge_c, markeredgewidth=1,
+                capsize=3, elinewidth=1,
+                linestyle='-' if join else 'none'
+            )
+            
+        if not is_numeric:
+            self.ax.set_xticks(list(x_positions.values()))
+            self.ax.set_xticklabels([str(v) for v in x_unique])
 
     def _plot_scatter(self, df, y, colors, c):
-        dodge = getattr(self, 'dodge_scatter_plot', False)
-        if self.z:
-            if dodge:
-                sns.stripplot(
-                    data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                    size=np.sqrt(self.scatter_size) if hasattr(self, 'scatter_size') else 7,
-                    edgecolor=self.scatter_edgecolor, linewidth=0.5,
-                    palette=colors, dodge=True, jitter=False
-                )
+        plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
+        edge_c = getattr(self, 'scatter_edgecolor', 'black')
+        dodge = getattr(self, 'dodge_scatter_plot', False) and not is_numeric
+        
+        if self.z and self.z in plot_df.columns:
+            categories = plot_df[self.z].unique()
+            n_hue = len(categories)
+            if dodge and n_hue > 1:
+                offsets = np.linspace(-0.3, 0.3, n_hue)
             else:
-                sns.scatterplot(
-                    data=df, x=self.x, y=y, hue=self.z, ax=self.ax,
-                    s=self.scatter_size, edgecolor=self.scatter_edgecolor,
-                    palette=colors
+                offsets = np.zeros(n_hue)
+
+            for idx, cat in enumerate(categories):
+                subset = plot_df[plot_df[self.z] == cat]
+                if subset.empty: continue
+                color = colors[idx % len(colors)]
+                
+                x_vals = np.array([x_positions[val] + offsets[idx] for val in subset[self.x]], dtype=float)
+                
+                self.ax.scatter(
+                    x_vals, subset[y].values,
+                    color=color, s=self.scatter_size,
+                    edgecolors=edge_c, linewidths=0.5, label=str(cat)
                 )
         else:
-            sns.scatterplot(
-                data=df, x=self.x, y=y, ax=self.ax,
-                s=self.scatter_size, edgecolor=self.scatter_edgecolor,
-                color=c
+            x_vals = np.array([x_positions[val] for val in plot_df[self.x]], dtype=float)
+            self.ax.scatter(
+                x_vals, plot_df[y].values,
+                color=c, s=self.scatter_size,
+                edgecolors=edge_c, linewidths=0.5
             )
+            
+        if not is_numeric:
+            self.ax.set_xticks(list(x_positions.values()))
+            self.ax.set_xticklabels([str(v) for v in x_unique])
 
     def _plot_box(self, df, y, colors, c):
-        box_kwargs = {'data': df, 'x': self.x, 'y': y, 'ax': self.ax, 'width': 0.4}
-        if self.z:
-            box_kwargs['hue'] = self.z
-            box_kwargs['palette'] = colors
+        plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
+        
+        if len(x_unique) < 2:
+            box_width = 0.4
         else:
-            box_kwargs['color'] = c
-        sns.boxplot(**box_kwargs)
+            if is_numeric:
+                min_gap = min(x_positions[x_unique[i+1]] - x_positions[x_unique[i]] for i in range(len(x_unique) - 1))
+            else:
+                min_gap = 1.0
+            box_width = min_gap * 0.6
+
+        if self.z and self.z in plot_df.columns:
+            hue_cats = plot_df[self.z].unique()
+            n_hue = len(hue_cats)
+            sub_width = box_width / n_hue
+            offsets = np.linspace(-(box_width - sub_width) / 2,
+                                  (box_width - sub_width) / 2, n_hue)
+            legend_handles = []
+            for h_idx, cat in enumerate(hue_cats):
+                subset = plot_df[plot_df[self.z] == cat]
+                color = colors[h_idx % len(colors)]
+                
+                data_groups = []
+                positions = []
+                for xv in x_unique:
+                    vals = subset[subset[self.x] == xv][y].values
+                    if len(vals) > 0:
+                        data_groups.append(vals)
+                        positions.append(x_positions[xv] + offsets[h_idx])
+                
+                if data_groups:
+                    bp = self.ax.boxplot(
+                        data_groups, positions=positions, widths=sub_width * 0.9,
+                        patch_artist=True, manage_ticks=False
+                    )
+                    for patch in bp['boxes']:
+                        patch.set_facecolor(color)
+                        patch.set_edgecolor('black')
+                        patch.set_linewidth(0.8)
+                    for element in ['whiskers', 'caps', 'medians', 'fliers']:
+                        for line in bp.get(element, []):
+                            line.set_color('black')
+                
+                p = patches.Rectangle((0,0), 0, 0, facecolor=color, edgecolor='black', label=str(cat))
+                self.ax.add_patch(p)
+        else:
+            data_groups = []
+            positions = []
+            for xv in x_unique:
+                vals = plot_df[plot_df[self.x] == xv][y].values
+                if len(vals) > 0:
+                    data_groups.append(vals)
+                    positions.append(x_positions[xv])
+            
+            if data_groups:
+                bp = self.ax.boxplot(
+                    data_groups, positions=positions, widths=box_width,
+                    patch_artist=True, manage_ticks=False
+                )
+                for patch in bp['boxes']:
+                    patch.set_facecolor(c)
+                    patch.set_edgecolor('black')
+                    patch.set_linewidth(0.8)
+                for element in ['whiskers', 'caps', 'medians', 'fliers']:
+                    for line in bp.get(element, []):
+                        line.set_color('black')
+
+        if is_numeric:
+            self.ax.set_xticks([x_positions[xv] for xv in x_unique])
+            self.ax.set_xticklabels([str(xv) for xv in x_unique])
+        else:
+            self.ax.set_xticks(list(x_positions.values()))
+            self.ax.set_xticklabels([str(v) for v in x_unique])
 
     def _plot_line(self, df, y, colors, c):
-        line_kwargs = {'data': df, 'x': self.x, 'y': y, 'ax': self.ax}
-        if self.z:
-            line_kwargs['hue'] = self.z
-            line_kwargs['palette'] = colors
+        plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
+        
+        if self.z and self.z in plot_df.columns:
+            categories = plot_df[self.z].unique()
+            for idx, cat in enumerate(categories):
+                subset = plot_df[plot_df[self.z] == cat]
+                if subset.empty: continue
+                grouped = subset.groupby(self.x)[y]
+                
+                x_cat_vals = list(grouped.groups.keys())
+                x_vals = np.array([x_positions[val] for val in x_cat_vals], dtype=float)
+                
+                means = grouped.mean().values
+                cis = grouped.sem().values * 1.96  # 95% CI
+                cis = np.nan_to_num(cis)
+                
+                color = colors[idx % len(colors)]
+                
+                self.ax.plot(x_vals, means, color=color, label=str(cat))
+                self.ax.fill_between(x_vals, means - cis, means + cis, color=color, alpha=0.2)
         else:
-            line_kwargs['color'] = c
-        sns.lineplot(**line_kwargs)
+            grouped = plot_df.groupby(self.x)[y]
+            x_cat_vals = list(grouped.groups.keys())
+            x_vals = np.array([x_positions[val] for val in x_cat_vals], dtype=float)
+            means = grouped.mean().values
+            cis = grouped.sem().values * 1.96
+            cis = np.nan_to_num(cis)
+            
+            self.ax.plot(x_vals, means, color=c)
+            self.ax.fill_between(x_vals, means - cis, means + cis, color=c, alpha=0.2)
+            
+        if not is_numeric:
+            self.ax.set_xticks(list(x_positions.values()))
+            self.ax.set_xticklabels([str(v) for v in x_unique])
 
     def _plot_bar(self, df, y, colors, c):
-        bar_kwargs = {
-            'data': df, 'x': self.x, 'y': y, 'ax': self.ax,
-            'errorbar': 'sd' if self.show_bar_plot_error_bar else None,
-            'err_kws': {'linewidth': 1},
-            'capsize': 0.05
-        }
-        if self.z:
-            bar_kwargs['hue'] = self.z
-            bar_kwargs['palette'] = colors
+        plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
+        
+        if len(x_unique) < 2:
+            bar_width = 0.4
         else:
-            bar_kwargs['color'] = c
-        sns.barplot(**bar_kwargs)
+            if is_numeric:
+                min_gap = min(x_positions[x_unique[i+1]] - x_positions[x_unique[i]] for i in range(len(x_unique) - 1))
+            else:
+                min_gap = 1.0
+            bar_width = min_gap * 0.6
+
+        if self.z and self.z in plot_df.columns:
+            hue_cats = plot_df[self.z].unique()
+            n_hue = len(hue_cats)
+            sub_width = bar_width / n_hue
+            offsets = np.linspace(-(bar_width - sub_width) / 2,
+                                  (bar_width - sub_width) / 2, n_hue)
+            for h_idx, cat in enumerate(hue_cats):
+                subset = plot_df[plot_df[self.z] == cat]
+                grouped = subset.groupby(self.x)[y]
+                means = grouped.mean()
+                stds = grouped.std() if self.show_bar_plot_error_bar else None
+                color = colors[h_idx % len(colors)]
+                
+                positions = [x_positions[xv] + offsets[h_idx] for xv in x_unique]
+                heights = [means.get(xv, 0) for xv in x_unique]
+                yerr = [stds.get(xv, 0) for xv in x_unique] if stds is not None else None
+                
+                self.ax.bar(
+                    positions, heights, width=sub_width * 0.9,
+                    color=color, edgecolor='black', linewidth=0.8,
+                    yerr=yerr, capsize=3, ecolor='black',
+                    label=str(cat)
+                )
+        else:
+            grouped = plot_df.groupby(self.x)[y]
+            means = grouped.mean()
+            stds = grouped.std() if self.show_bar_plot_error_bar else None
+            
+            positions = [x_positions[xv] for xv in x_unique]
+            heights = [means.get(xv, 0) for xv in x_unique]
+            yerr = [stds.get(xv, 0) for xv in x_unique] if stds is not None else None
+            
+            self.ax.bar(
+                positions, heights, width=bar_width,
+                color=c, edgecolor='black', linewidth=0.8,
+                yerr=yerr, capsize=3, ecolor='black'
+            )
+            
+        if is_numeric:
+            self.ax.set_xticks([x_positions[xv] for xv in x_unique])
+            self.ax.set_xticklabels([str(xv) for xv in x_unique])
+        else:
+            self.ax.set_xticks(list(x_positions.values()))
+            self.ax.set_xticklabels([str(v) for v in x_unique])
 
     def _plot_trendline(self, df, y, colors, c):
         self.trendline_equations = []  # reset before recomputing
         anchor = getattr(self, 'trendline_anchor_enabled', False)
         
         if self.z and self.z in df.columns:
-            # Hue support: one regplot per category
             categories = df[self.z].unique()
-            while len(colors) < len(categories):
-                colors.append(DEFAULT_COLORS[len(colors) % len(DEFAULT_COLORS)])
             for idx, cat in enumerate(categories):
                 subset = df[df[self.z] == cat]
-                color = colors[idx]
-                x_fit, y_fit, coeffs = self._fit_trendline(subset)
+                color = colors[idx % len(colors)]
                 
-                # Plot scatter manually to control legend and color exactly
+                try:
+                    x_fit, y_fit, coeffs = self._fit_trendline(subset)
+                except Exception:
+                    continue
+                
                 self.ax.scatter(
                     subset[self.x], subset[y],
                     color=color, s=self.scatter_size,
@@ -563,25 +754,26 @@ class VGraph(QWidget):
                 )
                 
                 if anchor:
-                    # Plot custom anchored line
                     self.ax.plot(x_fit, y_fit, color=color, linewidth=2)
                 else:
-                    # Let seaborn plot standard line + confidence intervals
-                    sns.regplot(
-                        data=subset, x=self.x, y=y, ax=self.ax,
-                        scatter=False, order=self.trendline_order,
-                        color=color
-                    )
+                    self.ax.plot(x_fit, y_fit, color=color, linewidth=2)
+                    x_data = subset[self.x].dropna().values.astype(float)
+                    y_data = subset[y].dropna().values.astype(float)
+                    if len(x_data) > 2:
+                        p = np.poly1d(coeffs)
+                        y_model = p(x_data)
+                        t_targ = 1.96
+                        se = np.sqrt(np.sum((y_data - y_model)**2) / (len(y_data) - 2))
+                        ci = t_targ * se * np.sqrt(1/len(x_data) + (x_fit - x_data.mean())**2 / np.sum((x_data - x_data.mean())**2))
+                        self.ax.fill_between(x_fit, y_fit - ci, y_fit + ci, color=color, alpha=0.2)
                     
                 eq_str, r2 = self._build_equation_str(coeffs, subset)
                 self.trendline_equations.append({
                     'label': str(cat), 'equation': eq_str, 'r2': f"{r2:.4f}"
                 })
         else:
-            # No hue — single fit
             x_fit, y_fit, coeffs = self._fit_trendline(df)
             
-            # Plot scatter manually for consistency
             self.ax.scatter(
                 df[self.x], df[y],
                 color=c, s=self.scatter_size,
@@ -590,15 +782,18 @@ class VGraph(QWidget):
             )
             
             if anchor:
-                # Plot custom anchored line
                 self.ax.plot(x_fit, y_fit, color=c, linewidth=2)
             else:
-                # Let seaborn plot standard line + confidence intervals
-                sns.regplot(
-                    data=df, x=self.x, y=y, ax=self.ax,
-                    scatter=False, order=self.trendline_order,
-                    color=c
-                )
+                self.ax.plot(x_fit, y_fit, color=c, linewidth=2)
+                x_data = df[self.x].dropna().values.astype(float)
+                y_data = df[y].dropna().values.astype(float)
+                if len(x_data) > 2:
+                    p = np.poly1d(coeffs)
+                    y_model = p(x_data)
+                    t_targ = 1.96
+                    se = np.sqrt(np.sum((y_data - y_model)**2) / (len(y_data) - 2))
+                    ci = t_targ * se * np.sqrt(1/len(x_data) + (x_fit - x_data.mean())**2 / np.sum((x_data - x_data.mean())**2))
+                    self.ax.fill_between(x_fit, y_fit - ci, y_fit + ci, color=c, alpha=0.2)
                 
             eq_str, r2 = self._build_equation_str(coeffs, df)
             self.trendline_equations.append({
@@ -606,53 +801,63 @@ class VGraph(QWidget):
             })
 
     def _plot_histogram(self, df, colors):
-        hist_kwargs = {
-            'data': df,
-            'x': self.x,
-            'ax': self.ax,
-            'bins': self.hist_bins,
-            'kde': self.hist_kde,
-            'element': 'step' if self.hist_step else 'bars',
-            'fill': not self.hist_step,
-            'stat': 'count',
-        }
-        if self.z and self.z in df.columns:
-            hist_kwargs['hue'] = self.z
-            hist_kwargs['palette'] = colors
+        from scipy import stats
+        plot_df = df.dropna(subset=[self.x])
+        bins = self.hist_bins
+        hist_step = getattr(self, 'hist_step', False)
+        histtype = 'step' if hist_step else 'bar'
+        alpha = 1.0 if hist_step else 0.7
+        kde = getattr(self, 'hist_kde', False)
+        
+        hist_kwargs = {'bins': bins, 'histtype': histtype, 'alpha': alpha}
+        if histtype == 'bar':
+            hist_kwargs['edgecolor'] = 'black'
+            hist_kwargs['linewidth'] = 0.8
+            
+        if self.z and self.z in plot_df.columns:
+            categories = plot_df[self.z].unique()
+            data_list = []
+            labels = []
+            c_list = []
+            
+            for idx, cat in enumerate(categories):
+                subset = plot_df[plot_df[self.z] == cat][self.x]
+                if not subset.empty:
+                    data_list.append(subset.values)
+                    labels.append(str(cat))
+                    c_list.append(colors[idx % len(colors)])
+            
+            if data_list:
+                self.ax.hist(data_list, color=c_list, label=labels, stacked=False, **hist_kwargs)
+                
+                if kde:
+                    x_min, x_max = self.ax.get_xlim()
+                    x_grid = np.linspace(x_min, x_max, 200)
+                    for i, data in enumerate(data_list):
+                        if len(data) > 1:
+                            try:
+                                density = stats.gaussian_kde(data)
+                                bin_width = (x_max - x_min) / bins
+                                y_grid = density(x_grid) * len(data) * bin_width
+                                self.ax.plot(x_grid, y_grid, color=c_list[i], linewidth=2)
+                            except Exception:
+                                pass
         else:
-            hist_kwargs['color'] = colors[0] if colors else 'steelblue'
-        sns.histplot(**hist_kwargs)
-
-    def _fix_box_bar_colors(self):
-        """Fix box/bar patch colors to use exact DEFAULT_COLORS by mapping seaborn's RGBA."""
-        patches = [p for p in self.ax.patches if hasattr(p, 'get_facecolor')]
-        
-        if not patches or not self.legend_properties:
-            return
-        
-        # Build RGBA -> DEFAULT_COLOR mapping from legend
-        rgba_to_color_map = {}
-        for prop in self.legend_properties:
-            if 'rgba' in prop:
-                # Convert RGBA tuple to string for dictionary key
-                rgba_key = tuple(prop['rgba']) if hasattr(prop['rgba'], '__iter__') else prop['rgba']
-                rgba_to_color_map[rgba_key] = prop['color']
-        
-        # Update each patch's facecolor to exact DEFAULT_COLOR
-        for patch in patches:
-            current_rgba = patch.get_facecolor()
-            rgba_key = tuple(current_rgba)
-            
-            # Find matching DEFAULT_COLOR from legend mapping
-            if rgba_key in rgba_to_color_map:
-                default_color = rgba_to_color_map[rgba_key]
-            else:
-                # Fallback: find closest RGBA in mapping
-                default_color = rgba_to_default_color(current_rgba)
-            
-            patch.set_facecolor(default_color)
-            patch.set_edgecolor('black')
-            patch.set_linewidth(0.8)
+            data = plot_df[self.x].values
+            if len(data) > 0:
+                color = colors[0] if colors else 'steelblue'
+                self.ax.hist(data, color=color, label='All data', **hist_kwargs)
+                
+                if kde and len(data) > 1:
+                    try:
+                        x_min, x_max = self.ax.get_xlim()
+                        x_grid = np.linspace(x_min, x_max, 200)
+                        density = stats.gaussian_kde(data)
+                        bin_width = (x_max - x_min) / bins
+                        y_grid = density(x_grid) * len(data) * bin_width
+                        self.ax.plot(x_grid, y_grid, color=color, linewidth=2)
+                    except Exception:
+                        pass
     
     def _plot_2dmap(self, df, y):
         """Plot 2D heatmap."""
@@ -715,56 +920,34 @@ class VGraph(QWidget):
                 self.ax_x2.get_legend().remove()
         
         if handles:
-            legend_labels = []
-            if self.legend_properties:
-                try:
-                    for idx, prop in enumerate(self.legend_properties):
-                        legend_labels.append(prop['label'])
-                        handles[idx].set_label(prop['label'])
-                        # For box/bar plots, use set_facecolor to preserve edge color
-                        if self.plot_style in ['box', 'bar']:
-                            handles[idx].set_facecolor(prop['color'])
-                            handles[idx].set_edgecolor('black')
-                            handles[idx].set_linewidth(0.8)
-                        elif self.plot_style in ['scatter', 'trendline']:
-                            edge_c = getattr(self, 'scatter_edgecolor', 'black')
-                            if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
-                                edge_c = 'black'
-                            if hasattr(handles[idx], 'set_facecolor'):
-                                handles[idx].set_facecolor(prop['color'])
-                            if hasattr(handles[idx], 'set_edgecolor'):
-                                handles[idx].set_edgecolor(edge_c)
-                            if hasattr(handles[idx], 'set_linewidth'):
-                                handles[idx].set_linewidth(0.5)
-                        else:
-                            handles[idx].set_color(prop['color'])
-                            if self.plot_style == 'point' and hasattr(handles[idx], 'set_markeredgecolor'):
-                                edge_c = getattr(self, 'scatter_edgecolor', 'black')
-                                if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
-                                    edge_c = 'black'
-                                handles[idx].set_markeredgecolor(edge_c)
-                        
-                        if self.plot_style in ['point', 'scatter', 'trendline']:
-                            if hasattr(handles[idx], 'set_marker'):
-                                handles[idx].set_marker(prop['marker'])
-                except Exception:
-                    self.legend_properties = []
-                    legend_labels = labels
-                    self.legend_properties = self.get_legend_properties()
-            else:
-                legend_labels = labels
-                self.legend_properties = self.get_legend_properties()
-            
-            if self.legend_visible:
-                legend = self.ax.legend(handles, legend_labels, loc='best')
-                legend.set_picker(True)  # Make legend clickable
-                legend.set_draggable(True)  # Make legend draggable
                 
-                # Restore dragged position if saved
-                if self.legend_bbox is not None:
+            if self.legend_visible:
+                unique_labels = []
+                unique_handles = []
+                for h, l in zip(handles, labels):
+                    if l not in unique_labels:
+                        unique_labels.append(l)
+                        unique_handles.append(h)
+                        
+                # Apply custom labels from legend_properties
+                if getattr(self, 'legend_properties', []):
+                    custom_labels = []
+                    for i, l in enumerate(unique_labels):
+                        if i < len(self.legend_properties):
+                            custom_labels.append(self.legend_properties[i].get('label', l))
+                        else:
+                            custom_labels.append(l)
+                    unique_labels = custom_labels
+                        
+                legend = self.ax.legend(unique_handles, unique_labels, loc='best', framealpha=0.7)
+                legend.set_picker(True)
+                legend.set_draggable(True)
+                
+                if getattr(self, 'legend_bbox', None) is not None:
                     legend._loc = tuple(self.legend_bbox)
             else:
-                self.ax.legend().remove()
+                if self.ax.get_legend():
+                    self.ax.get_legend().remove()
     
     def _save_legend_position(self):
         """Save current legend position in axes coordinates."""
@@ -778,6 +961,7 @@ class VGraph(QWidget):
     def _set_grid(self):
         """Add grid for the plot (supports linear & log scale automatically)."""
         is_wafer = (self.plot_style == 'wafer')
+        self.ax.set_axisbelow(True)
         
         self.ax.tick_params(
             which='major',
@@ -1078,22 +1262,27 @@ class VGraph(QWidget):
         if self.y2:
             self.ax2 = self.ax.twinx()
             
+            # For simplicity with secondary axes, just use numeric spacing if x is numeric, 
+            # otherwise just plot directly (matplotlib will handle it if X is strings)
+            x_vals = df[self.x]
+            if getattr(self, 'x_as_numeric', False):
+                x_vals = pd.to_numeric(x_vals, errors='coerce')
+                
             if self.plot_style == 'line':
-                sns.lineplot(data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2, color='red')
+                self.ax2.plot(x_vals, df[self.y2], color='red', label=self.y2)
             elif self.plot_style == 'point':
-                sns.pointplot(
-                    data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
-                    linestyles='-' if self.join_for_point_plot else 'none',
-                    marker='s', color='red', markeredgecolor='black',
-                    markeredgewidth=1, dodge=True,
-                    err_kws={'linewidth': 1, 'color': 'black'},
-                    capsize=0.02
+                self.ax2.errorbar(
+                    x_vals, df[self.y2],
+                    fmt='s', color='red', markeredgecolor='black',
+                    markeredgewidth=1, capsize=3,
+                    linestyle='-' if self.join_for_point_plot else 'none',
+                    label=self.y2
                 )
             elif self.plot_style == 'scatter':
-                sns.scatterplot(
-                    data=df, x=self.x, y=self.y2, hue=self.z, ax=self.ax2,
-                    s=self.scatter_size, edgecolor=self.scatter_edgecolor,
-                    color='red'
+                self.ax2.scatter(
+                    x_vals, df[self.y2],
+                    s=self.scatter_size, edgecolors=self.scatter_edgecolor,
+                    color='red', label=self.y2
                 )
             else:
                 self.ax2.remove()
@@ -1102,7 +1291,7 @@ class VGraph(QWidget):
             if self.ax2:
                 self.ax2.set_ylabel(self.y2label or self._format_axis_label(self.y2), color='red')
                 self.ax2.tick_params(axis='y', colors='red')
-    
+
     def _plot_tertiary_axis(self, df):
         """Plot data on tertiary y-axis."""
         if self.ax3:
@@ -1113,22 +1302,25 @@ class VGraph(QWidget):
             self.ax3 = self.ax.twinx()
             self.ax3.spines["right"].set_position(("outward", 100))
             
+            x_vals = df[self.x]
+            if getattr(self, 'x_as_numeric', False):
+                x_vals = pd.to_numeric(x_vals, errors='coerce')
+            
             if self.plot_style == 'line':
-                sns.lineplot(data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3, color='green')
+                self.ax3.plot(x_vals, df[self.y3], color='green', label=self.y3)
             elif self.plot_style == 'point':
-                sns.pointplot(
-                    data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
-                    linestyles='-' if self.join_for_point_plot else 'none',
-                    marker='s', color='red', markeredgecolor='black',
-                    markeredgewidth=1, dodge=True,
-                    err_kws={'linewidth': 1, 'color': 'black'},
-                    capsize=0.02
+                self.ax3.errorbar(
+                    x_vals, df[self.y3],
+                    fmt='s', color='green', markeredgecolor='black',
+                    markeredgewidth=1, capsize=3,
+                    linestyle='-' if self.join_for_point_plot else 'none',
+                    label=self.y3
                 )
             elif self.plot_style == 'scatter':
-                sns.scatterplot(
-                    data=df, x=self.x, y=self.y3, hue=self.z, ax=self.ax3,
-                    s=self.scatter_size, edgecolor=self.scatter_edgecolor,
-                    color='green'
+                self.ax3.scatter(
+                    x_vals, df[self.y3],
+                    s=self.scatter_size, edgecolors=self.scatter_edgecolor,
+                    color='green', label=self.y3
                 )
             else:
                 self.ax3.remove()
@@ -1137,7 +1329,7 @@ class VGraph(QWidget):
             if self.ax3:
                 self.ax3.set_ylabel(self.y3label or self._format_axis_label(self.y3), color='green')
                 self.ax3.tick_params(axis='y', colors='green')
-    
+
     def _plot_secondary_x_axis(self, df):
         """Plot data on secondary x-axis (top)."""
         if self.ax_x2:
@@ -1147,25 +1339,25 @@ class VGraph(QWidget):
         if self.x2 and self.x2 in df.columns:
             self.ax_x2 = self.ax.twiny()
             
+            x_vals = df[self.x2]
+            if getattr(self, 'x2logscale', False):
+                x_vals = pd.to_numeric(x_vals, errors='coerce')
+                
             if self.plot_style == 'line':
-                sns.lineplot(
-                    data=df, x=self.x2, y=self.y[0], ax=self.ax_x2,
-                    color='purple'
-                )
+                self.ax_x2.plot(x_vals, df[self.y[0]], color='purple', label=self.y[0])
             elif self.plot_style == 'point':
-                sns.pointplot(
-                    data=df, x=self.x2, y=self.y[0], ax=self.ax_x2,
-                    linestyles='-' if self.join_for_point_plot else 'none',
-                    marker='D', color='purple', markeredgecolor='black',
-                    markeredgewidth=1,
-                    err_kws={'linewidth': 1, 'color': 'black'},
-                    capsize=0.02
+                self.ax_x2.errorbar(
+                    x_vals, df[self.y[0]],
+                    fmt='D', color='purple', markeredgecolor='black',
+                    markeredgewidth=1, capsize=3,
+                    linestyle='-' if self.join_for_point_plot else 'none',
+                    label=self.y[0]
                 )
             elif self.plot_style == 'scatter':
-                sns.scatterplot(
-                    data=df, x=self.x2, y=self.y[0], ax=self.ax_x2,
-                    s=self.scatter_size, edgecolor=self.scatter_edgecolor,
-                    color='purple'
+                self.ax_x2.scatter(
+                    x_vals, df[self.y[0]],
+                    s=self.scatter_size, edgecolors=self.scatter_edgecolor,
+                    color='purple', label=self.y[0]
                 )
             else:
                 self.ax_x2.remove()

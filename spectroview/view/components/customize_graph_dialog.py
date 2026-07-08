@@ -1256,6 +1256,14 @@ class CustomizeMoreOptions(QWidget):
         self._cb_wafer_stats = QCheckBox("Show statistics (wafer plot)")
         layout.addWidget(self._cb_wafer_stats)
 
+        # X axis as numerical (point/box/bar)
+        self._cb_x_numeric = QCheckBox("X axis as numerical (point/box/bar)")
+        self._cb_x_numeric.setToolTip(
+            "Treat X-axis values as numerical data with proper spacing\n"
+            "instead of equally-spaced categories."
+        )
+        layout.addWidget(self._cb_x_numeric)
+
         self._general_group = grp
         self._inner_layout.addWidget(grp)
 
@@ -1392,6 +1400,7 @@ class CustomizeMoreOptions(QWidget):
         self._cb_dodge_scatter.setChecked(getattr(gw, 'dodge_scatter_plot', False))
         self._cb_error_bar.setChecked(getattr(gw, 'show_bar_plot_error_bar', True))
         self._cb_wafer_stats.setChecked(getattr(gw, 'wafer_stats', True))
+        self._cb_x_numeric.setChecked(getattr(gw, 'x_as_numeric', False))
 
         # Highlight relevant checkboxes based on style
         self._cb_join.setEnabled(style == 'point')
@@ -1399,6 +1408,7 @@ class CustomizeMoreOptions(QWidget):
         self._cb_dodge_scatter.setEnabled(style == 'scatter')
         self._cb_error_bar.setEnabled(style == 'bar')
         self._cb_wafer_stats.setEnabled(style == 'wafer')
+        self._cb_x_numeric.setEnabled(style in ('point', 'box', 'bar'))
 
         # --- Trendline section ---
         is_trendline = (style == 'trendline')
@@ -1455,6 +1465,8 @@ class CustomizeMoreOptions(QWidget):
         gw.dodge_scatter_plot = self._cb_dodge_scatter.isChecked()
         gw.show_bar_plot_error_bar = self._cb_error_bar.isChecked()
         gw.wafer_stats = self._cb_wafer_stats.isChecked()
+        if style in ('point', 'box', 'bar'):
+            gw.x_as_numeric = self._cb_x_numeric.isChecked()
 
         # Trendline
         if style == 'trendline':
@@ -1486,6 +1498,7 @@ class CustomizeMoreOptions(QWidget):
                 'dodge_scatter_plot': gw.dodge_scatter_plot,
                 'show_bar_plot_error_bar': gw.show_bar_plot_error_bar,
                 'wafer_stats': gw.wafer_stats,
+                'x_as_numeric': gw.x_as_numeric,
             }
             if style == 'trendline':
                 props.update({

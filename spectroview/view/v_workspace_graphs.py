@@ -1543,6 +1543,7 @@ class VWorkspaceGraphs(QWidget):
         if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
             edge_c = 'black'
         graph_widget.scatter_edgecolor = edge_c
+        graph_widget.x_as_numeric = getattr(model, 'x_as_numeric', False)
         graph_widget.hist_bins = getattr(model, 'hist_bins', 20)
         graph_widget.hist_kde = getattr(model, 'hist_kde', False)
         graph_widget.hist_step = getattr(model, 'hist_step', False)

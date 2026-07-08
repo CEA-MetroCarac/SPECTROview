@@ -412,10 +412,13 @@ class PlotRenderer:
                     for i, data in enumerate(data_list):
                         if len(data) > 1:
                             try:
-                                density = stats.gaussian_kde(data)
-                                bin_width = (x_max - x_min) / bins
-                                y_grid = density(x_grid) * len(data) * bin_width
-                                self.vg.ax.plot(x_grid, y_grid, color=c_list[i], linewidth=2)
+                                num_data = pd.to_numeric(data, errors='coerce')
+                                num_data = num_data[~np.isnan(num_data)]
+                                if len(num_data) > 1 and np.var(num_data) > 0:
+                                    density = stats.gaussian_kde(num_data)
+                                    bin_width = (x_max - x_min) / bins
+                                    y_grid = density(x_grid) * len(num_data) * bin_width
+                                    self.vg.ax.plot(x_grid, y_grid, color=c_list[i], linewidth=2)
                             except Exception:
                                 pass
         else:
@@ -426,12 +429,15 @@ class PlotRenderer:
                 
                 if kde and len(data) > 1:
                     try:
-                        x_min, x_max = self.vg.ax.get_xlim()
-                        x_grid = np.linspace(x_min, x_max, 200)
-                        density = stats.gaussian_kde(data)
-                        bin_width = (x_max - x_min) / bins
-                        y_grid = density(x_grid) * len(data) * bin_width
-                        self.vg.ax.plot(x_grid, y_grid, color=color, linewidth=2)
+                        num_data = pd.to_numeric(data, errors='coerce')
+                        num_data = num_data[~np.isnan(num_data)]
+                        if len(num_data) > 1 and np.var(num_data) > 0:
+                            x_min, x_max = self.vg.ax.get_xlim()
+                            x_grid = np.linspace(x_min, x_max, 200)
+                            density = stats.gaussian_kde(num_data)
+                            bin_width = (x_max - x_min) / bins
+                            y_grid = density(x_grid) * len(num_data) * bin_width
+                            self.vg.ax.plot(x_grid, y_grid, color=color, linewidth=2)
                     except Exception:
                         pass
 

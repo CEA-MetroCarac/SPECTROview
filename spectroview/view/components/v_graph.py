@@ -176,7 +176,7 @@ class VGraph(QWidget):
         
         original_set_style = self.toolbar.setStyleSheet
         def custom_set_style(css):
-            original_set_style("background: transparent; border: none;")
+            original_set_style("QToolBar { background: transparent; border: none; }")
         self.toolbar.setStyleSheet = custom_set_style
         self.toolbar.setStyleSheet("")
 

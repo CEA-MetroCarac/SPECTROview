@@ -45,6 +45,16 @@ _QSS_TEMPLATE = r"""
         background: {hover_bg};
         border-radius: 4px;
     }}
+    QToolBar QToolButton:checked {{
+        background: {accent_bg_strong};
+        border: 1px solid {accent_border};
+        border-radius: 4px;
+    }}
+    QToolBar QToolButton:pressed {{
+        background: {pressed_bg};
+        border: 1px solid {accent_border};
+        border-radius: 4px;
+    }}
 
 
     /* ═══════════════════════════════════════════════

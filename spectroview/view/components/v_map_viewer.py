@@ -82,7 +82,7 @@ class VMapViewer(QWidget):
     def _create_canvas(self):
         """Create matplotlib canvas and toolbar."""
         canvas_frame = QFrame()
-        canvas_frame.setStyleSheet("border: none; background: transparent;")
+        canvas_frame.setStyleSheet("QFrame { border: none; background: transparent; }")
         canvas_layout = QVBoxLayout(canvas_frame)
         canvas_layout.setContentsMargins(0, 0, 0, 0)
         
@@ -95,7 +95,8 @@ class VMapViewer(QWidget):
         self.canvas = FigureCanvas(self.figure)
         from PySide6.QtWidgets import QSizePolicy
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.canvas.setStyleSheet("border: none; background: transparent;")
+        # Avoid generic inline stylesheet to prevent cascading to toolbar children
+        # self.canvas.setStyleSheet("border: none; background: transparent;")
         # self.canvas.setMaximumHeight(350)
         
         # Connect mouse events for interactive selection
@@ -108,7 +109,7 @@ class VMapViewer(QWidget):
         
         original_set_style = self.toolbar.setStyleSheet
         def custom_set_style(css):
-            original_set_style("background: transparent; border: none;")
+            original_set_style("QToolBar { background: transparent; border: none; }")
         self.toolbar.setStyleSheet = custom_set_style
         self.toolbar.setStyleSheet("")
 

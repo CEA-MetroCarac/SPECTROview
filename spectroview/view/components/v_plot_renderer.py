@@ -21,13 +21,17 @@ class PlotRenderer:
             cols.append(self.vg.z)
             
         plot_df = df[cols].copy()
-        
-        treat_as_numeric = getattr(self.vg, 'x_as_numeric', False)
-        # Auto-detect numeric if plot style expects it by default
-        if not treat_as_numeric and self.vg.plot_style in ['scatter', 'line', 'trendline', 'histogram']:
-            num_vals = pd.to_numeric(plot_df[self.vg.x], errors='coerce')
-            if num_vals.notna().sum() > 0.5 * len(num_vals):
-                treat_as_numeric = True
+        treat_as_numeric = getattr(self.vg, 'x_as_numeric', None)
+        # If 'Auto' (None), auto-detect numeric if plot style expects it by default
+        if treat_as_numeric is None:
+            if self.vg.plot_style in ['scatter', 'line', 'trendline', 'histogram']:
+                num_vals = pd.to_numeric(plot_df[self.vg.x], errors='coerce')
+                if len(num_vals) > 0 and num_vals.notna().sum() == len(num_vals):
+                    treat_as_numeric = True
+                else:
+                    treat_as_numeric = False
+            else:
+                treat_as_numeric = False
         
         if treat_as_numeric:
             plot_df[self.vg.x] = pd.to_numeric(plot_df[self.vg.x], errors='coerce')
@@ -265,6 +269,8 @@ class PlotRenderer:
         if self.vg.z and self.vg.z in plot_df.columns:
             hue_cats = plot_df[self.vg.z].unique()
             n_hue = len(hue_cats)
+            if n_hue == 0:
+                return
             sub_width = bar_width / n_hue
             offsets = np.linspace(-(bar_width - sub_width) / 2,
                                   (bar_width - sub_width) / 2, n_hue)

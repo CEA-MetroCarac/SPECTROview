@@ -86,8 +86,8 @@ class MGraph:
         self.dodge_point_plot: bool = True
         self.dodge_scatter_plot: bool = False
         self.scatter_size: int = 70  # Marker size for scatter plots
-        self.scatter_edgecolor: str = 'black'  # Edge color for scatter plot markers
-        self.x_as_numeric: bool = False  # Treat X-axis as numerical instead of categorical
+        self.x_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
+        self.y_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
         
         self.minor_ticks_bottom: bool = True
         self.minor_ticks_left: bool = True
@@ -167,8 +167,8 @@ class MGraph:
             'dodge_point_plot': self.dodge_point_plot,
             'dodge_scatter_plot': getattr(self, 'dodge_scatter_plot', False),
             'scatter_size': self.scatter_size,
-            'scatter_edgecolor': self.scatter_edgecolor,
             'x_as_numeric': self.x_as_numeric,
+            'y_as_numeric': getattr(self, 'y_as_numeric', None),
             'hist_bins': self.hist_bins,
             'hist_kde': self.hist_kde,
             'hist_step': self.hist_step,
@@ -190,6 +190,9 @@ class MGraph:
                         value = float(value) if value != '' else None
                     except (ValueError, TypeError):
                         value = None
+                # Backward compatibility for x_as_numeric: False -> None
+                if key == 'x_as_numeric' and value is False:
+                    value = None
                 
                 setattr(self, key, value)
         

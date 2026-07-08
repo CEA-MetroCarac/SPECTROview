@@ -763,7 +763,7 @@ class CustomizeAxis(QWidget):
         
         x_prop_layout.addWidget(QLabel("Data type:"))
         self.combo_x_type = QComboBox()
-        self.combo_x_type.addItems(["Category", "Numerical"])
+        self.combo_x_type.addItems(["Auto", "Category", "Numerical"])
         x_prop_layout.addWidget(self.combo_x_type)
         x_prop_layout.addStretch()
         
@@ -780,7 +780,7 @@ class CustomizeAxis(QWidget):
         
         y_prop_layout.addWidget(QLabel("Data type:"))
         self.combo_y_type = QComboBox()
-        self.combo_y_type.addItems(["Category", "Numerical"])
+        self.combo_y_type.addItems(["Auto", "Category", "Numerical"])
         y_prop_layout.addWidget(self.combo_y_type)
         y_prop_layout.addStretch()
         
@@ -936,12 +936,18 @@ class CustomizeAxis(QWidget):
             self.combo_y_scale.setCurrentText("Linear")
 
         # Load Axis Types
-        if getattr(gw, 'x_as_numeric', False):
+        x_num = getattr(gw, 'x_as_numeric', None)
+        if x_num is None:
+            self.combo_x_type.setCurrentText("Auto")
+        elif x_num:
             self.combo_x_type.setCurrentText("Numerical")
         else:
             self.combo_x_type.setCurrentText("Category")
             
-        if getattr(gw, 'y_as_numeric', True):
+        y_num = getattr(gw, 'y_as_numeric', None)
+        if y_num is None:
+            self.combo_y_type.setCurrentText("Auto")
+        elif y_num:
             self.combo_y_type.setCurrentText("Numerical")
         else:
             self.combo_y_type.setCurrentText("Category")
@@ -1040,8 +1046,22 @@ class CustomizeAxis(QWidget):
         
         gw.xlogscale = (self.combo_x_scale.currentText() == "Logarithmic")
         gw.ylogscale = (self.combo_y_scale.currentText() == "Logarithmic")
-        gw.x_as_numeric = (self.combo_x_type.currentText() == "Numerical")
-        gw.y_as_numeric = (self.combo_y_type.currentText() == "Numerical")
+        
+        x_text = self.combo_x_type.currentText()
+        if x_text == "Auto":
+            gw.x_as_numeric = None
+        elif x_text == "Numerical":
+            gw.x_as_numeric = True
+        else:
+            gw.x_as_numeric = False
+
+        y_text = self.combo_y_type.currentText()
+        if y_text == "Auto":
+            gw.y_as_numeric = None
+        elif y_text == "Numerical":
+            gw.y_as_numeric = True
+        else:
+            gw.y_as_numeric = False
         
         # Emit signal to ViewModel
         if hasattr(gw, 'properties_changed'):

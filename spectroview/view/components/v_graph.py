@@ -118,7 +118,8 @@ class VGraph(QWidget):
         self.dodge_scatter_plot = False
         self.scatter_size = 70  # Marker size for scatter plots
         self.scatter_edgecolor = 'black'  # Edge color for scatter plot markers
-        self.x_as_numeric = False  # Treat X-axis as numerical (for point/box/bar)
+        self.x_as_numeric = None  # None=Auto, True=Numerical, False=Category
+        self.y_as_numeric = None  # None=Auto, True=Numerical, False=Category
         # Histogram-specific
         self.hist_bins = 20
         self.hist_kde = False

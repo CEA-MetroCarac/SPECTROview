@@ -1126,6 +1126,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#plotrenderer-the-plotting-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PlotRenderer — The Plotting Engine
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1539,6 +1550,7 @@
 <pre class="mermaid"><code>graph TD
     VWG["VWorkspaceGraphs"] --&gt; MDI["QMdiArea"]
     MDI --&gt; VG["VGraph"]
+    VG --&gt; PR["PlotRenderer"]
     VWG --&gt; DF["DataFilter"]
     VWG --&gt; CGD["CustomizeDialog"]
 
@@ -1751,8 +1763,11 @@
 </table>
 <p><code>MGraph</code> provides <code>save()</code> and <code>load(data)</code> methods for complete serialization.</p>
 <h3 id="vgraph-the-rendering-widget"><strong><code>VGraph</code> — The Rendering Widget</strong><a class="headerlink" href="#vgraph-the-rendering-widget" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/view/components/v_graph.py</code> (~1275 lines)</p>
-<p>Each plot in the MDI area is a <code>VGraph</code> instance. It holds a Matplotlib <code>Figure</code> + <code>FigureCanvas</code> and renders using Seaborn plotting functions.</p>
+<p><strong>File</strong>: <code>spectroview/view/components/v_graph.py</code></p>
+<p>Each plot in the MDI area is a <code>VGraph</code> instance. It holds a Matplotlib <code>Figure</code> + <code>FigureCanvas</code> and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions, but delegates the actual drawing algorithms to the <code>PlotRenderer</code>.</p>
+<h3 id="plotrenderer-the-plotting-engine"><strong><code>PlotRenderer</code> — The Plotting Engine</strong><a class="headerlink" href="#plotrenderer-the-plotting-engine" title="Permanent link">&para;</a></h3>
+<p><strong>File</strong>: <code>spectroview/view/components/v_plot_renderer.py</code></p>
+<p>Separated from <code>VGraph</code> for maintainability, this class encapsulates the pure Matplotlib rendering logic for all plot styles (e.g., <code>plot_scatter</code>, <code>plot_histogram</code>, and the <code>WaferPlot</code> class). It receives a reference to the <code>VGraph</code> instance (<code>self.vg</code>) to access configuration state (<code>self.vg.x</code>, <code>self.vg.plot_style</code>, etc.) and draws directly onto the Matplotlib <code>Axes</code>.</p>
 <hr />
 <h2 id="data-flow-creating-a-plot"><strong>Data Flow: Creating a Plot</strong><a class="headerlink" href="#data-flow-creating-a-plot" title="Permanent link">&para;</a></h2>
 <ol>
@@ -1762,7 +1777,7 @@
 <li><strong>Widget Initialization</strong>: The View instantiates a <code>VGraph(graph_id)</code> widget and calls <code>create_plot_widget(dpi)</code> to set up the Matplotlib canvas.</li>
 <li><strong>Data Filtering</strong>: The View requests the <code>filtered_df</code> from the ViewModel by calling <code>vm.apply_filters(df_name, filters)</code>.</li>
 <li><strong>Rendering</strong>: The View calls <code>VGraph.plot(filtered_df)</code>. </li>
-<li><strong>Plot Execution</strong>: <code>VGraph</code> calls <code>_plot_primary_axis()</code> to draw the data using Seaborn, then applies limits, labels, and legends before returning the rendered canvas.</li>
+<li><strong>Plot Execution</strong>: <code>VGraph</code> calls <code>_plot_primary_axis()</code>, which instantiates a <code>PlotRenderer(self)</code> and delegates the drawing logic (e.g., <code>self.renderer._plot_scatter()</code>), then applies limits, labels, and legends before returning the rendered canvas.</li>
 <li><strong>UI Integration</strong>: The View wraps the new <code>VGraph</code> widget in a <code>QMdiSubWindow</code> and adds it to the MDI area.</li>
 </ol>
 <hr />
@@ -1870,7 +1885,7 @@
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
 </code></pre></div>
 <p>Filters are applied via <code>pd.DataFrame.query()</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span> <span class="nf">apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df_name</span><span class="p">,</span> <span class="n">filters</span><span class="p">):</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df_name</span><span class="p">,</span> <span class="n">filters</span><span class="p">):</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="n">df_name</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">for</span> <span class="n">filter_data</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">:</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="k">if</span> <span class="n">filter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>

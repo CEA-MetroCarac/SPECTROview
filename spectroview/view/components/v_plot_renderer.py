@@ -12,6 +12,19 @@ class PlotRenderer:
     def __init__(self, vg):
         self.vg = vg # VGraph instance
 
+    def _get_sorted_categories(self, series):
+        """Return sorted unique values from a Series (Z/hue column).
+        
+        Numeric values are sorted numerically; non-numeric values are sorted
+        alphabetically so that legend order is always deterministic.
+        """
+        unique_vals = series.unique()
+        try:
+            numeric_vals = pd.to_numeric(unique_vals, errors='raise')
+            return sorted(unique_vals, key=lambda v: float(v))
+        except (ValueError, TypeError):
+            return sorted(unique_vals, key=lambda v: str(v))
+
     def _prepare_plot_data(self, df, y):
         """Prepare dataframe and X positions for plotting."""
         cols = []
@@ -53,7 +66,7 @@ class PlotRenderer:
         join = getattr(self.vg, 'join_for_point_plot', False)
         
         if self.vg.z and self.vg.z in plot_df.columns:
-            categories = plot_df[self.vg.z].unique()
+            categories = self._get_sorted_categories(plot_df[self.vg.z])
             n_hue = len(categories)
             dodge = getattr(self.vg, 'dodge_point_plot', True) and not is_numeric
             if dodge and n_hue > 1:
@@ -112,7 +125,7 @@ class PlotRenderer:
         dodge = getattr(self.vg, 'dodge_scatter_plot', False) and not is_numeric
         
         if self.vg.z and self.vg.z in plot_df.columns:
-            categories = plot_df[self.vg.z].unique()
+            categories = self._get_sorted_categories(plot_df[self.vg.z])
             n_hue = len(categories)
             if dodge and n_hue > 1:
                 offsets = np.linspace(-0.3, 0.3, n_hue)
@@ -156,7 +169,7 @@ class PlotRenderer:
             box_width = min_gap * 0.6
 
         if self.vg.z and self.vg.z in plot_df.columns:
-            hue_cats = plot_df[self.vg.z].unique()
+            hue_cats = self._get_sorted_categories(plot_df[self.vg.z])
             n_hue = len(hue_cats)
             sub_width = box_width / n_hue
             offsets = np.linspace(-(box_width - sub_width) / 2,
@@ -222,7 +235,7 @@ class PlotRenderer:
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
         
         if self.vg.z and self.vg.z in plot_df.columns:
-            categories = plot_df[self.vg.z].unique()
+            categories = self._get_sorted_categories(plot_df[self.vg.z])
             for idx, cat in enumerate(categories):
                 subset = plot_df[plot_df[self.vg.z] == cat]
                 if subset.empty: continue
@@ -267,7 +280,7 @@ class PlotRenderer:
             bar_width = min_gap * 0.6
 
         if self.vg.z and self.vg.z in plot_df.columns:
-            hue_cats = plot_df[self.vg.z].unique()
+            hue_cats = self._get_sorted_categories(plot_df[self.vg.z])
             n_hue = len(hue_cats)
             if n_hue == 0:
                 return
@@ -318,7 +331,7 @@ class PlotRenderer:
         anchor = getattr(self.vg, 'trendline_anchor_enabled', False)
         
         if self.vg.z and self.vg.z in df.columns:
-            categories = df[self.vg.z].unique()
+            categories = self._get_sorted_categories(df[self.vg.z])
             for idx, cat in enumerate(categories):
                 subset = df[df[self.vg.z] == cat]
                 color = colors[idx % len(colors)]
@@ -397,7 +410,7 @@ class PlotRenderer:
             hist_kwargs['linewidth'] = 0.8
             
         if self.vg.z and self.vg.z in plot_df.columns:
-            categories = plot_df[self.vg.z].unique()
+            categories = self._get_sorted_categories(plot_df[self.vg.z])
             data_list = []
             labels = []
             c_list = []

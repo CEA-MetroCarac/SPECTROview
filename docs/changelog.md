@@ -4,6 +4,32 @@
 
 ---
 
+## [v26.28.1](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.28.1) - 2026-07-08
+
+✨ Improvements of Graph Workspace
+
+- Customize Graph dialog: Added universal Apply and Cancel buttons for a more consistent editing workflow.
+- Axis tab: Merged the Scale (Linear/Log) and Data Type controls into a single Axis Properties group. Axis scale management is now handled exclusively through the Customize Graph dialog.
+- Legend: Added a new option to position the legend outside the plot area with a single click (User can alway drag and drop legend box anywhere with mouse).
+- Point plots: Improved marker edge thickness for cleaner, more readable data visualization.
+- Applied several visual enhancements to improve the overall appearance and consistency of graph rendering.
+
+For more information, see the User Manual ([Graphs → Customizing a Plot](https://cea-metrocarac.github.io/SPECTROview/user_manual/graphs/#3-customizing-a-plot )).
+
+
+♻️ Refactoring
+
+- Moved all graph rendering logic from `v_graph.py` into a dedicated` v_plot_renderer.py` module, improving code organization and maintainability.
+- Removed the `seaborn `dependency. All plotting now relies on native `matplotlib `and scipy implementations.
+
+📖 Documentation
+
+- Expanded the User Manual with a comprehensive description of the Customize Graph dialog, including new screenshots.
+- Updated the Developer Guide.
+- Updated SoftwareX publication DOI: https://doi.org/10.1016/j.softx.2026.102862 
+
+---
+
 ## [v26.25.4](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.25.4) - 2026-06-15
 
 ##### ✨ New Features

@@ -749,13 +749,63 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-modifying-an-existing-plot" class="md-nav__link">
+  <a href="#3-customizing-a-plot" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Modifying an Existing Plot
+        3. Customizing a Plot
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="3. Customizing a Plot">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-axis-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Axis Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-legend-color-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Legend / Color Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-annotations-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Annotations Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-more-options-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 More Options Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -771,65 +821,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#5-plot-style-specific-customization" class="md-nav__link">
+  <a href="#5-statistical-calculations-fitting-details" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Plot-Style-Specific Customization
+        5. Statistical Calculations &amp; Fitting Details
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="5. Plot-Style-Specific Customization">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#trendline-plot" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Trendline Plot
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#histogram-plot" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Histogram Plot
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#other-plot-styles" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Other Plot Styles
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#6-statistical-calculations-fitting-details" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6. Statistical Calculations &amp; Fitting Details
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="6. Statistical Calculations &amp; Fitting Details">
+    <nav class="md-nav" aria-label="5. Statistical Calculations &amp; Fitting Details">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1428,29 +1428,333 @@ The four available utility buttons allow you to:</p>
 </div>
 
 <hr />
-<h3 id="3-modifying-an-existing-plot"><strong>3. Modifying an Existing Plot</strong><a class="headerlink" href="#3-modifying-an-existing-plot" title="Permanent link">&para;</a></h3>
-<p>You can modify the <strong>labels</strong> of the axes and the <strong>title</strong> of the plot via the <code>Right Panel</code>. Click the <strong>Update Plot</strong> button to apply the changes instantly:</p>
+<h3 id="3-customizing-a-plot"><strong>3. Customizing a Plot</strong><a class="headerlink" href="#3-customizing-a-plot" title="Permanent link">&para;</a></h3>
+<p>You can quickly modify the <strong>labels</strong> of the axes and the <strong>title</strong> of the plot via the <code>Right Panel</code>. Click the <strong>Update Plot</strong> button to apply the changes instantly:</p>
 <div align="center">
   <img src="../../user_manual_images/Graphs/labels.png" alt="Label Customization" width="300"><br>
   <i>Customize the selected plot via the Right Panel. Click the Update Plot button to apply changes.</i>
 </div>
 
 <p><br></p>
-<p>Click the <strong>Customize</strong> button to open the <code>Customize Dialog</code>, giving you deep, granular control over the Legend, Annotations, Axes, and general aesthetics.</p>
+<p>For advanced customization, click the <strong>Customize</strong> button (⚙) to open the <strong>Customize Graph Dialog</strong>. This dialog provides deep, granular control through four dedicated tabs: <strong>Axis</strong>, <strong>Legend / Color</strong>, <strong>Annotations</strong>, and <strong>More Options</strong>.</p>
+<p>All changes across tabs are applied together via the unified <strong>Apply</strong> button at the bottom of the dialog, or discarded via <strong>Cancel</strong>.</p>
+<hr />
+<h4 id="31-axis-tab">3.1 Axis Tab<a class="headerlink" href="#31-axis-tab" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../user_manual_images/Graphs/Customize_Axis.png" alt="Axis Tab" width="450"><br>
+  <i>The Axis tab of the Customize Graph Dialog.</i>
+</div>
+
+<p>The <strong>Axis</strong> tab controls axis scaling, data types, limits, minor ticks, and axis breaks.</p>
+<h5 id="axis-properties">Axis Properties<a class="headerlink" href="#axis-properties" title="Permanent link">&para;</a></h5>
+<p>Configure the <strong>scale</strong> and <strong>data type</strong> for each axis independently using dropdown menus:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Options</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>X / Y axis Scale</strong></td>
+<td><code>Linear</code>, <code>Logarithmic</code></td>
+<td>Switches the axis between linear and logarithmic scale. Logarithmic scale is only applied when the underlying data is numeric.</td>
+</tr>
+<tr>
+<td><strong>X / Y axis Data type</strong></td>
+<td><code>Auto</code>, <code>Category</code>, <code>Numerical</code></td>
+<td>Controls how axis values are interpreted. <strong>Auto</strong> (default): the application auto-detects the best type — numerical if 100% of the data is numeric, otherwise categorical. <strong>Category</strong>: forces categorical indexing. <strong>Numerical</strong>: forces a continuous numeric scale.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note</strong>: When using <code>Numerical</code> data type, the axis adopts a true mathematical scale where spacing reflects actual data values. When using <code>Category</code>, each unique value is evenly spaced regardless of its numeric magnitude.</p>
+</blockquote>
+<h5 id="set-axis-limits">Set Axis Limits<a class="headerlink" href="#set-axis-limits" title="Permanent link">&para;</a></h5>
+<p>Manually constrain the visible range of each axis (X, Y, Z) by specifying <strong>min</strong> and <strong>max</strong> values:</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>X / Y / Z axis limits</strong></td>
+<td>Enter min and max values to constrain the visible range. Set both to <code>-999999</code> to use automatic limits.</td>
+</tr>
+<tr>
+<td><strong>Get current limits from plot</strong></td>
+<td>Captures the current visible limits from the plot and fills the spinboxes. Useful as a starting point before fine-tuning.</td>
+</tr>
+<tr>
+<td><strong>Clear limits</strong></td>
+<td>Resets all axis limits back to automatic (unconstrained).</td>
+</tr>
+</tbody>
+</table>
 <div align="center">
   <img src="../../user_manual_images/Graphs/adjust_axis_limits.gif" alt="Adjusting Axis Limits" width="600"><br>
   <i>Adjusting the axis limits of the selected plot.</i>
 </div>
 
+<h5 id="add-minor-ticks">Add Minor Ticks<a class="headerlink" href="#add-minor-ticks" title="Permanent link">&para;</a></h5>
+<p>Enable or disable minor tick marks on each edge of the plot independently:</p>
+<table>
+<thead>
+<tr>
+<th>Checkbox</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>X (Bottom)</strong></td>
+<td>Show minor ticks on the bottom X axis (enabled by default).</td>
+</tr>
+<tr>
+<td><strong>X (Top)</strong></td>
+<td>Show minor ticks on the top X axis.</td>
+</tr>
+<tr>
+<td><strong>Y (Left)</strong></td>
+<td>Show minor ticks on the left Y axis (enabled by default).</td>
+</tr>
+<tr>
+<td><strong>Y (Right)</strong></td>
+<td>Show minor ticks on the right Y axis.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="broken-axis-beta">Broken Axis (Beta)<a class="headerlink" href="#broken-axis-beta" title="Permanent link">&para;</a></h5>
+<p>Create a visual break in an axis to omit an uninteresting range and focus on relevant data regions:</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>X-axis break</strong></td>
+<td>Enable and specify the <code>from</code> / <code>to</code> range to break on the X axis.</td>
+</tr>
+<tr>
+<td><strong>Y-axis break</strong></td>
+<td>Enable and specify the <code>from</code> / <code>to</code> range to break on the Y axis.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note</strong>: This feature is in beta. Axis breaks work best with linear scales.</p>
+</blockquote>
+<hr />
+<h4 id="32-legend-color-tab">3.2 Legend / Color Tab<a class="headerlink" href="#32-legend-color-tab" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../user_manual_images/Graphs/Customize_LegendBox.png" alt="Legend / Color Tab" width="450"><br>
+  <i>The Legend / Color tab of the Customize Graph Dialog.</i>
+</div>
+
+<p>The <strong>Legend / Color</strong> tab lets you customize the appearance and placement of the plot legend, as well as scatter/marker settings.</p>
+<h5 id="legend-box">Legend Box<a class="headerlink" href="#legend-box" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Put legend box outside</strong></td>
+<td>Moves the legend box to the right of the plot area, keeping it out of the way of your data. Uncheck to place it inside the plot.</td>
+</tr>
+<tr>
+<td><strong>Label</strong></td>
+<td>Edit the display name for each data series in the legend.</td>
+</tr>
+<tr>
+<td><strong>Marker</strong></td>
+<td>Choose a marker symbol for each series (available for <code>point</code> plots).</td>
+</tr>
+<tr>
+<td><strong>Color</strong></td>
+<td>Pick a color for each series from the predefined palette.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Tip</strong>: The legend box can be <strong>dragged</strong> to any position directly on the plot canvas using the mouse.</p>
+</blockquote>
 <div align="center">
   <img src="../../user_manual_images/Graphs/adjust_legends.gif" alt="Adjusting Legends" width="600"><br>
   <i>Adjusting legends and colors of the selected plot.</i>
 </div>
-<p><br></p>
+
+<h5 id="scatter-marker-settings">Scatter / Marker Settings<a class="headerlink" href="#scatter-marker-settings" title="Permanent link">&para;</a></h5>
+<p>This section appears only for <code>scatter</code>, <code>trendline</code>, and <code>point</code> plot styles:</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Marker size</strong></td>
+<td>Adjust the marker size (range: 5–500, default: 70). Affects both scatter points and point plot markers.</td>
+</tr>
+<tr>
+<td><strong>Edge color</strong></td>
+<td>Pick the border color of scatter/point markers (default: black). Click the color button to open the color picker.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4 id="33-annotations-tab">3.3 Annotations Tab<a class="headerlink" href="#33-annotations-tab" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../user_manual_images/Graphs/Customize_Annotation.png" alt="Annotations Tab" width="450"><br>
+  <i>The Annotations tab of the Customize Graph Dialog.</i>
+</div>
+
+<p>The <strong>Annotations</strong> tab allows you to overlay reference lines and text labels on top of your plot.</p>
+<h5 id="adding-annotations">Adding Annotations<a class="headerlink" href="#adding-annotations" title="Permanent link">&para;</a></h5>
+<p>Click one of the buttons at the top to add an annotation at the center of the current plot view:</p>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>V-Line</strong></td>
+<td>Adds a vertical reference line (default: red, dashed).</td>
+</tr>
+<tr>
+<td><strong>H-Line</strong></td>
+<td>Adds a horizontal reference line (default: blue, dashed).</td>
+</tr>
+<tr>
+<td><strong>Text</strong></td>
+<td>Adds a text label with a rounded background box (default: yellow background).</td>
+</tr>
+</tbody>
+</table>
+<h5 id="managing-annotations">Managing Annotations<a class="headerlink" href="#managing-annotations" title="Permanent link">&para;</a></h5>
+<p>All current annotations are listed below the buttons. Select an annotation to <strong>Edit</strong> or <strong>Delete</strong> it.</p>
+<p><strong>Editing a line annotation</strong> allows you to change:
+- Color, line style (solid, dashed, dotted, dash-dot), and line width.</p>
+<p><strong>Editing a text annotation</strong> allows you to change:
+- Text content, font size, text color, background frame toggle, background color, and transparency.</p>
+<blockquote>
+<p><strong>Tip</strong>: Annotations can be <strong>dragged</strong> directly on the plot canvas. Their positions are persisted when saving the workspace. Double-clicking an annotation on the canvas also opens its edit dialog.</p>
+</blockquote>
 <div align="center">
   <img src="../../user_manual_images/Graphs/adjust_annotation.gif" alt="Adjusting Annotations" width="600"><br>
   <i>Adjusting the position and appearance of annotations on the selected plot.</i>
 </div>
+
+<hr />
+<h4 id="34-more-options-tab">3.4 More Options Tab<a class="headerlink" href="#34-more-options-tab" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../user_manual_images/Graphs/Customize_MoreOptions.png" alt="More Options Tab" width="450"><br>
+  <i>The More Options tab of the Customize Graph Dialog.</i>
+</div>
+
+<p>The <strong>More Options</strong> tab adapts dynamically to the active plot style, showing only the controls relevant to the current graph.</p>
+<h5 id="plot-options-general">Plot Options (General)<a class="headerlink" href="#plot-options-general" title="Permanent link">&para;</a></h5>
+<p>These checkboxes are always visible, but only enabled when the corresponding plot style is active:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Applicable style</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Join data points</strong></td>
+<td><code>point</code></td>
+<td>Connects the mean values with lines between categories.</td>
+</tr>
+<tr>
+<td><strong>Dodge overlapping points</strong></td>
+<td><code>point</code></td>
+<td>Offsets overlapping hue groups horizontally to prevent overlap.</td>
+</tr>
+<tr>
+<td><strong>Dodge overlapping points</strong></td>
+<td><code>scatter</code></td>
+<td>Offsets overlapping hue groups horizontally for scatter plots.</td>
+</tr>
+<tr>
+<td><strong>Show error bar</strong></td>
+<td><code>bar</code></td>
+<td>Displays standard deviation error bars on top of each bar.</td>
+</tr>
+<tr>
+<td><strong>Show statistics</strong></td>
+<td><code>wafer</code></td>
+<td>Overlays statistical summary (mean, std, etc.) on the wafer map.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="trendline-settings">Trendline Settings<a class="headerlink" href="#trendline-settings" title="Permanent link">&para;</a></h5>
+<p>Visible only when the plot style is <code>trendline</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Polynomial order</strong></td>
+<td>Set the degree of the polynomial fit (1 = linear, 2 = quadratic, …, up to 10).</td>
+</tr>
+<tr>
+<td><strong>Anchor point</strong></td>
+<td>Constrain the fit to pass through a specific point. Choose <strong>Origin (0, 0)</strong> or enter a <strong>custom (X₀, Y₀)</strong>.</td>
+</tr>
+<tr>
+<td><strong>Fit equation(s)</strong></td>
+<td>Displays the computed equation and R² value for each hue group in a table. Click <strong>Copy</strong> to export as tab-separated text (paste directly into Excel).</td>
+</tr>
+</tbody>
+</table>
+<h5 id="histogram-settings">Histogram Settings<a class="headerlink" href="#histogram-settings" title="Permanent link">&para;</a></h5>
+<p>Visible only when the plot style is <code>histogram</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bins</strong></td>
+<td>Number of histogram bins (2–500, default: 20).</td>
+</tr>
+<tr>
+<td><strong>Overlay KDE curve</strong></td>
+<td>Superimposes a smooth Kernel Density Estimate curve on the histogram.</td>
+</tr>
+<tr>
+<td><strong>Fill style</strong></td>
+<td>Choose <strong>Filled</strong> bars (default) or <strong>Step</strong> (outline only).</td>
+</tr>
+</tbody>
+</table>
 <p><br></p>
 <hr />
 <h3 id="4-data-filtering"><strong>4. Data Filtering</strong><a class="headerlink" href="#4-data-filtering" title="Permanent link">&para;</a></h3>
@@ -1486,89 +1790,7 @@ The four available utility buttons allow you to:</p>
 </tbody>
 </table>
 <hr />
-<h3 id="5-plot-style-specific-customization"><strong>5. Plot-Style-Specific Customization</strong><a class="headerlink" href="#5-plot-style-specific-customization" title="Permanent link">&para;</a></h3>
-<p>The <strong>Customize Dialog</strong> (opened via the ⚙ button on any graph) contains a <strong>"More Options"</strong> tab that <strong>adapts dynamically</strong> to the active plot style, showing only the controls relevant to the current graph.</p>
-<h4 id="trendline-plot">Trendline Plot<a class="headerlink" href="#trendline-plot" title="Permanent link">&para;</a></h4>
-<p>The <code>trendline</code> style offers powerful fitting controls:</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Polynomial order</strong></td>
-<td>Set the degree of the polynomial fit (1 = linear, 2 = quadratic, …, up to 10).</td>
-</tr>
-<tr>
-<td><strong>Anchor point</strong></td>
-<td>Constrain the fit to pass through a specific point. Choose <strong>Origin (0, 0)</strong> or enter a <strong>custom (X₀, Y₀)</strong>.</td>
-</tr>
-<tr>
-<td><strong>Hue / Z axis</strong></td>
-<td>When a Z column is selected, a separate trendline is fitted for each category group, each drawn in a distinct color.</td>
-</tr>
-<tr>
-<td><strong>Equation table</strong></td>
-<td>The fit results (equation and R² per group) are displayed in a table inside the dialog. Click <strong>Copy</strong> to export to the clipboard as tab-separated text (paste directly into Excel).</td>
-</tr>
-</tbody>
-</table>
-<h4 id="histogram-plot">Histogram Plot<a class="headerlink" href="#histogram-plot" title="Permanent link">&para;</a></h4>
-<p>The <code>histogram</code> style provides:</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Bins</strong></td>
-<td>Number of histogram bins (2–500, default 20).</td>
-</tr>
-<tr>
-<td><strong>KDE overlay</strong></td>
-<td>Overlay a smooth Kernel Density Estimate curve on the histogram.</td>
-</tr>
-<tr>
-<td><strong>Fill style</strong></td>
-<td>Choose <strong>Filled</strong> bars (default) or <strong>Step</strong> (outline only).</td>
-</tr>
-<tr>
-<td><strong>Hue / Z axis</strong></td>
-<td>When a Z column is selected, overlapping histograms are drawn per category with distinct colors.</td>
-</tr>
-</tbody>
-</table>
-<h4 id="other-plot-styles">Other Plot Styles<a class="headerlink" href="#other-plot-styles" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Plot Style</th>
-<th>Available in More Options</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>point</code></td>
-<td>Join data points toggle</td>
-</tr>
-<tr>
-<td><code>bar</code></td>
-<td>Error bar toggle</td>
-</tr>
-<tr>
-<td><code>wafer</code></td>
-<td>Statistics overlay toggle</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h3 id="6-statistical-calculations-fitting-details"><strong>6. Statistical Calculations &amp; Fitting Details</strong><a class="headerlink" href="#6-statistical-calculations-fitting-details" title="Permanent link">&para;</a></h3>
+<h3 id="5-statistical-calculations-fitting-details"><strong>5. Statistical Calculations &amp; Fitting Details</strong><a class="headerlink" href="#5-statistical-calculations-fitting-details" title="Permanent link">&para;</a></h3>
 <p>For statistical plot styles (<code>point</code>, <code>bar</code>, <code>box</code>, and <code>trendline</code>), SPECTROview automatically calculates essential metrics and visualizes the distribution of your data.</p>
 <h4 id="point-and-bar-plots"><strong>Point and Bar Plots</strong><a class="headerlink" href="#point-and-bar-plots" title="Permanent link">&para;</a></h4>
 <ul>

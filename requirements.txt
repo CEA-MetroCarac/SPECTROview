@@ -8,7 +8,6 @@ PySide6_Addons==6.10.2
 PySide6_Essentials==6.10.2
 renishawWiRE==0.1.16
 scipy==1.17.1
-seaborn<0.13.3
 superqt==0.7.8
 
 markdown>=3.6.0

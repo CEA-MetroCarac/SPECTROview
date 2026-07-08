@@ -10,6 +10,7 @@ The `Graphs` workspace is a standalone statistical plotting environment. It mana
 graph TD
     VWG["VWorkspaceGraphs"] --> MDI["QMdiArea"]
     MDI --> VG["VGraph"]
+    VG --> PR["PlotRenderer"]
     VWG --> DF["DataFilter"]
     VWG --> CGD["CustomizeDialog"]
 
@@ -88,9 +89,15 @@ A pure data class that stores everything needed to recreate a plot:
 
 ### **`VGraph` — The Rendering Widget**
 
-**File**: `spectroview/view/components/v_graph.py` (~1275 lines)
+**File**: `spectroview/view/components/v_graph.py`
 
-Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure` + `FigureCanvas` and renders using Seaborn plotting functions.
+Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure` + `FigureCanvas` and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions, but delegates the actual drawing algorithms to the `PlotRenderer`.
+
+### **`PlotRenderer` — The Plotting Engine**
+
+**File**: `spectroview/view/components/v_plot_renderer.py`
+
+Separated from `VGraph` for maintainability, this class encapsulates the pure Matplotlib rendering logic for all plot styles (e.g., `plot_scatter`, `plot_histogram`, and the `WaferPlot` class). It receives a reference to the `VGraph` instance (`self.vg`) to access configuration state (`self.vg.x`, `self.vg.plot_style`, etc.) and draws directly onto the Matplotlib `Axes`.
 
 ---
 
@@ -102,7 +109,7 @@ Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure`
 4. **Widget Initialization**: The View instantiates a `VGraph(graph_id)` widget and calls `create_plot_widget(dpi)` to set up the Matplotlib canvas.
 5. **Data Filtering**: The View requests the `filtered_df` from the ViewModel by calling `vm.apply_filters(df_name, filters)`.
 6. **Rendering**: The View calls `VGraph.plot(filtered_df)`. 
-7. **Plot Execution**: `VGraph` calls `_plot_primary_axis()` to draw the data using Seaborn, then applies limits, labels, and legends before returning the rendered canvas.
+7. **Plot Execution**: `VGraph` calls `_plot_primary_axis()`, which instantiates a `PlotRenderer(self)` and delegates the drawing logic (e.g., `self.renderer._plot_scatter()`), then applies limits, labels, and legends before returning the rendered canvas.
 8. **UI Integration**: The View wraps the new `VGraph` widget in a `QMdiSubWindow` and adds it to the MDI area.
 
 ---

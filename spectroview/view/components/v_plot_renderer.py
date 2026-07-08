@@ -627,7 +627,7 @@ class WaferPlot:
             interpolation='nearest', zorder=2
         )
         
-        ax.scatter(x, y, facecolors='none', edgecolors='black', s=20)
+        ax.scatter(x, y, facecolors='none', edgecolors='black', s=20, zorder=3)
         
         wafer_circle = patches.Circle((0, 0), radius=r, fill=False, color='black', linewidth=1)
         ax.add_patch(wafer_circle)

@@ -1707,6 +1707,29 @@ The four available utility buttons allow you to:</p>
 </tr>
 </tbody>
 </table>
+<h5 id="data-sorting">Data Sorting<a class="headerlink" href="#data-sorting" title="Permanent link">&para;</a></h5>
+<p>Controls how categories and legend items are ordered:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Enable intelligent data sorting</strong></td>
+<td>If checked, sorts the underlying dataset deterministically before plotting (recommended). If unchecked, the plot strictly preserves the original row order of the dataset.</td>
+</tr>
+<tr>
+<td><strong>Sort by</strong></td>
+<td>When sorting is enabled, choose the target axis for sorting: <br>- <strong>Z (hue values)</strong>: Sorts categories primarily by legend group (default).<br>- <strong>X values</strong>: Sorts X-axis categories.<br>- <strong>Y values</strong>: Sorts data ascending based on the Y metric.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note</strong>: Disabling intelligent data sorting is useful if your dataset is already pre-sorted and you wish to explicitly maintain that sequence. When you change sorting settings, the legend colors are automatically reset to the default palette sequence to ensure a clean positional color scheme.</p>
+</blockquote>
 <h5 id="trendline-settings">Trendline Settings<a class="headerlink" href="#trendline-settings" title="Permanent link">&para;</a></h5>
 <p>Visible only when the plot style is <code>trendline</code>:</p>
 <table>

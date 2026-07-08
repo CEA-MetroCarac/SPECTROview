@@ -45,7 +45,7 @@ class PlotRenderer:
     def _plot_point(self, df, y, colors, markers, c):
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
         edge_c = getattr(self, 'scatter_edgecolor', 'black')
-        ms = np.sqrt(self.vg.scatter_size) if hasattr(self, 'scatter_size') else 7
+        ms = np.sqrt(self.vg.scatter_size) if hasattr(self.vg, 'scatter_size') else 7
         join = getattr(self, 'join_for_point_plot', False)
         
         if self.vg.z and self.vg.z in plot_df.columns:
@@ -75,12 +75,12 @@ class PlotRenderer:
                 self.vg.ax.errorbar(
                     x_vals, means, yerr=cis,
                     fmt=marker, color=color, markersize=ms,
-                    markeredgecolor=edge_c, markeredgewidth=1,
+                    markeredgecolor=edge_c, markeredgewidth=0.5,
                     capsize=3, elinewidth=1,
                     linestyle='-' if join else 'none'
                 )
                 self.vg.ax.plot([], [], marker=marker, color=color, markersize=ms,
-                             markeredgecolor=edge_c, markeredgewidth=1,
+                             markeredgecolor=edge_c, markeredgewidth=0.5,
                              linestyle='-' if join else 'none', label=str(cat))
         else:
             grouped = plot_df.groupby(self.vg.x)[y]
@@ -93,7 +93,7 @@ class PlotRenderer:
             self.vg.ax.errorbar(
                 x_vals, means, yerr=cis,
                 fmt='o', color=c, markersize=ms,
-                markeredgecolor=edge_c, markeredgewidth=1,
+                markeredgecolor=edge_c, markeredgewidth=0.5,
                 capsize=3, elinewidth=1,
                 linestyle='-' if join else 'none'
             )

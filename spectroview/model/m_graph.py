@@ -67,6 +67,7 @@ class MGraph:
         
         # Legend
         self.legend_visible: bool = True
+        self.legend_outside: bool = False
         self.legend_properties: List[Dict[str, Any]] = []
         self.legend_bbox = None  # (x, y) in axes coords for dragged position
         
@@ -149,6 +150,7 @@ class MGraph:
             'x_rot': self.x_rot,
             'grid': self.grid,
             'legend_visible': self.legend_visible,
+            'legend_outside': getattr(self, 'legend_outside', False),
             'legend_properties': self.legend_properties,
             'legend_bbox': self.legend_bbox,
             'color_palette': self.color_palette,

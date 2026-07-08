@@ -183,9 +183,16 @@ class CustomizeLegend(QWidget):
         
         # Container for legend widgets (labels, markers, colors)
         self.legend_container = QGroupBox("Legends box:")
-        self.legend_layout = QHBoxLayout(self.legend_container)
-        self.legend_layout.setContentsMargins(4, 4, 4, 4)
-        self.legend_layout.setSpacing(8)
+        box_layout = QVBoxLayout(self.legend_container)
+        box_layout.setContentsMargins(4, 4, 4, 4)
+        box_layout.setSpacing(8)
+
+        self.cb_legend_outside = QCheckBox("Put legend box outside")
+        self.cb_legend_outside.stateChanged.connect(self._on_legend_outside_changed)
+        box_layout.addWidget(self.cb_legend_outside)
+
+        self.legend_layout = QHBoxLayout()
+        box_layout.addLayout(self.legend_layout)
         
         self.main_layout.addWidget(self.legend_container)
         
@@ -227,6 +234,12 @@ class CustomizeLegend(QWidget):
         """Load current legend properties from graph and populate the GUI."""
         legend_properties = self.graph_widget.get_legend_properties()
         self.original_legend_properties = copy.deepcopy(legend_properties)
+        self.original_legend_outside = getattr(self.graph_widget, 'legend_outside', False)
+        self.original_legend_bbox = getattr(self.graph_widget, 'legend_bbox', None)
+        
+        self.cb_legend_outside.blockSignals(True)
+        self.cb_legend_outside.setChecked(self.original_legend_outside)
+        self.cb_legend_outside.blockSignals(False)
         
         # Clear existing widgets from legend layout
         while self.legend_layout.count():
@@ -334,6 +347,17 @@ class CustomizeLegend(QWidget):
         self.graph_widget._set_legend()
         self.graph_widget.canvas.draw_idle()
     
+    def _on_legend_outside_changed(self, state):
+        """Update whether the legend is placed outside the plot."""
+        self.graph_widget.legend_outside = self.cb_legend_outside.isChecked()
+        self.graph_widget.legend_bbox = None  # Reset drag position
+        self.graph_widget._set_legend()
+        if self.graph_widget.df is not None:
+            # Need a full replot to adjust layout for the outside legend
+            self.graph_widget.plot(self.graph_widget.df)
+        else:
+            self.graph_widget.canvas.draw_idle()
+    
     def _update_combobox_color(self, combobox):
         """Update combobox background color to match selected color.
 
@@ -373,6 +397,8 @@ class CustomizeLegend(QWidget):
         
         # Update the backup so Cancel won't revert applied changes
         self.original_legend_properties = copy.deepcopy(self.graph_widget.get_legend_properties())
+        self.original_legend_outside = getattr(self.graph_widget, 'legend_outside', False)
+        self.original_legend_bbox = getattr(self.graph_widget, 'legend_bbox', None)
         
         # Apply scatter-specific properties
         if self.graph_widget.plot_style in ['scatter', 'trendline', 'point']:
@@ -387,7 +413,11 @@ class CustomizeLegend(QWidget):
         
         # Connect to properties_changed signal to update ViewModel when graph properties change
         if hasattr(self.graph_widget, 'properties_changed'):
-            props = {'legend_properties': self.graph_widget.legend_properties}
+            props = {
+                'legend_properties': self.graph_widget.legend_properties,
+                'legend_outside': getattr(self.graph_widget, 'legend_outside', False),
+                'legend_bbox': getattr(self.graph_widget, 'legend_bbox', None)
+            }
             if self.graph_widget.plot_style in ['scatter', 'trendline', 'point']:
                 props['scatter_size'] = self.graph_widget.scatter_size
                 props['scatter_edgecolor'] = self.graph_widget.scatter_edgecolor
@@ -399,8 +429,13 @@ class CustomizeLegend(QWidget):
         """Cancel legend changes and restore original properties."""
         if self.original_legend_properties is not None:
             self.graph_widget.legend_properties = copy.deepcopy(self.original_legend_properties)
+            self.graph_widget.legend_outside = getattr(self, 'original_legend_outside', False)
+            self.graph_widget.legend_bbox = getattr(self, 'original_legend_bbox', None)
             self.graph_widget._set_legend()
-            self.graph_widget.canvas.draw() 
+            if self.graph_widget.df is not None:
+                self.graph_widget.plot(self.graph_widget.df)
+            else:
+                self.graph_widget.canvas.draw() 
             # Reload widgets to show restored properties
             self.load_legend_properties()
 

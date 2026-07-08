@@ -1520,6 +1520,7 @@ class VWorkspaceGraphs(QWidget):
         
         # Legend
         graph_widget.legend_visible = model.legend_visible
+        graph_widget.legend_outside = getattr(model, 'legend_outside', False)
 
         graph_widget.legend_properties = model.legend_properties.copy() if model.legend_properties else []
         graph_widget.legend_bbox = model.legend_bbox if hasattr(model, 'legend_bbox') else None

@@ -97,6 +97,7 @@ class VGraph(QWidget):
         self.x_rot = 0
         self.grid = False
         self.legend_visible = True
+        self.legend_outside = False
         self.legend_properties = []
         self.legend_bbox = None  # (x, y) in axes coords for dragged position
         
@@ -484,12 +485,15 @@ class VGraph(QWidget):
                             custom_labels.append(l)
                     unique_labels = custom_labels
                         
-                legend = self.ax.legend(unique_handles, unique_labels, loc='best', framealpha=0.7)
+                if getattr(self, 'legend_outside', False):
+                    legend = self.ax.legend(unique_handles, unique_labels, loc='center left', bbox_to_anchor=(1.02, 0.5), framealpha=0.7)
+                else:
+                    legend = self.ax.legend(unique_handles, unique_labels, loc='best', framealpha=0.7)
+                    if getattr(self, 'legend_bbox', None) is not None:
+                        legend._loc = tuple(self.legend_bbox)
+                        
                 legend.set_picker(True)
                 legend.set_draggable(True)
-                
-                if getattr(self, 'legend_bbox', None) is not None:
-                    legend._loc = tuple(self.legend_bbox)
             else:
                 if self.ax.get_legend():
                     self.ax.get_legend().remove()

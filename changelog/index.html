@@ -1140,6 +1140,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#v26281-2026-07-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v26.28.1 - 2026-07-08
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#v26254-2026-06-15" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1375,6 +1386,48 @@
 
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
 <p><em>(Dynamically synchronized from <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases">GitHub Releases</a>)</em></p>
+<hr />
+<h2 id="v26281-2026-07-08"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.28.1">v26.28.1</a> - 2026-07-08<a class="headerlink" href="#v26281-2026-07-08" title="Permanent link">&para;</a></h2>
+<p>✨ Improvements of Graph Workspace</p>
+<ul>
+<li>
+<p>Customize Graph dialog: Added universal Apply and Cancel buttons for a more consistent editing workflow.</p>
+</li>
+<li>
+<p>Axis tab: Merged the Scale (Linear/Log) and Data Type controls into a single Axis Properties group. Axis scale management is now handled exclusively through the Customize Graph dialog.</p>
+</li>
+<li>
+<p>Legend: Added a new option to position the legend outside the plot area with a single click (User can alway drag and drop legend box anywhere with mouse).</p>
+</li>
+<li>
+<p>Point plots: Improved marker edge thickness for cleaner, more readable data visualization.</p>
+</li>
+<li>
+<p>Applied several visual enhancements to improve the overall appearance and consistency of graph rendering.</p>
+</li>
+</ul>
+<p>For more information, see the User Manual (<a href="https://cea-metrocarac.github.io/SPECTROview/user_manual/graphs/#3-customizing-a-plot">Graphs → Customizing a Plot</a>).</p>
+<p>♻️ Refactoring</p>
+<ul>
+<li>
+<p>Moved all graph rendering logic from <code>v_graph.py</code> into a dedicated<code>v_plot_renderer.py</code> module, improving code organization and maintainability.</p>
+</li>
+<li>
+<p>Removed the <code>seaborn</code>dependency. All plotting now relies on native <code>matplotlib</code>and scipy implementations.</p>
+</li>
+</ul>
+<p>📖 Documentation</p>
+<ul>
+<li>
+<p>Expanded the User Manual with a comprehensive description of the Customize Graph dialog, including new screenshots.</p>
+</li>
+<li>
+<p>Updated the Developer Guide.</p>
+</li>
+<li>
+<p>Updated SoftwareX publication DOI: https://doi.org/10.1016/j.softx.2026.102862 </p>
+</li>
+</ul>
 <hr />
 <h2 id="v26254-2026-06-15"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.25.4">v26.25.4</a> - 2026-06-15<a class="headerlink" href="#v26254-2026-06-15" title="Permanent link">&para;</a></h2>
 <h5 id="new-features">✨ New Features<a class="headerlink" href="#new-features" title="Permanent link">&para;</a></h5>

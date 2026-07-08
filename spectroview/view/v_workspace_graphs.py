@@ -320,11 +320,7 @@ class VWorkspaceGraphs(QWidget):
             setattr(self, f'cbb_{axis_name}', cbb)
             h_layout.addWidget(cbb)
             
-            if axis_name != 'z':
-                cb_log = QCheckBox("Log scale")
-                setattr(self, f'cb_{axis_name}log', cb_log)
-                h_layout.addWidget(cb_log)
-            else:
+            if axis_name == 'z':
                 # Wafer size for Z axis
                 lbl_wafer = QLabel("Wafer size:")
                 h_layout.addWidget(lbl_wafer)
@@ -1319,8 +1315,6 @@ class VWorkspaceGraphs(QWidget):
         self.df_listbox.blockSignals(True)
         
         # Block checkbox signals to prevent expensive signal handlers during sync
-        self.cb_xlog.blockSignals(True)
-        self.cb_ylog.blockSignals(True)
         self.cb_grid_toolbar.blockSignals(True)
         
         try:
@@ -1355,8 +1349,6 @@ class VWorkspaceGraphs(QWidget):
                     self.cbb_colormap.setCurrentIndex(idx)
             
             # Checkboxes
-            self.cb_xlog.setChecked(model.xlogscale)
-            self.cb_ylog.setChecked(model.ylogscale)
             self.cb_grid_toolbar.setChecked(model.grid)
             
             # Text inputs
@@ -1403,9 +1395,6 @@ class VWorkspaceGraphs(QWidget):
             self.df_listbox.blockSignals(False)
             
             # Unblock checkbox signals
-            self.cb_xlog.blockSignals(False)
-            self.cb_ylog.blockSignals(False)
-
             self.cb_grid_toolbar.blockSignals(False)
     
     # ═════════════════════════════════════════════════════════════════════
@@ -1431,8 +1420,8 @@ class VWorkspaceGraphs(QWidget):
             'x': self.cbb_x.currentText(),
             'y': [self.cbb_y.currentText()],
             'z': z_value,
-            'xlogscale': self.cb_xlog.isChecked(),
-            'ylogscale': self.cb_ylog.isChecked(),
+            'xlogscale': False,
+            'ylogscale': False,
             'plot_title': (self.edit_plot_title.text() or None) if include_labels else None,
             'xlabel': (self.edit_xlabel.text() or None) if include_labels else None,
             'ylabel': (self.edit_ylabel.text() or None) if include_labels else None,

@@ -10,7 +10,7 @@ from spectroview.viewmodel.utils import show_alert
 class PlotRenderer:
     """Class that handles all plot rendering logic, decoupled from the VGraph widget."""
     def __init__(self, vg):
-        self.vg = vg
+        self.vg = vg # VGraph instance
 
     def _prepare_plot_data(self, df, y):
         """Prepare dataframe and X positions for plotting."""
@@ -22,7 +22,7 @@ class PlotRenderer:
             
         plot_df = df[cols].copy()
         
-        treat_as_numeric = getattr(self, 'x_as_numeric', False)
+        treat_as_numeric = getattr(self.vg, 'x_as_numeric', False)
         # Auto-detect numeric if plot style expects it by default
         if not treat_as_numeric and self.vg.plot_style in ['scatter', 'line', 'trendline', 'histogram']:
             num_vals = pd.to_numeric(plot_df[self.vg.x], errors='coerce')
@@ -44,14 +44,14 @@ class PlotRenderer:
 
     def _plot_point(self, df, y, colors, markers, c):
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
-        edge_c = getattr(self, 'scatter_edgecolor', 'black')
+        edge_c = getattr(self.vg, 'scatter_edgecolor', 'black')
         ms = np.sqrt(self.vg.scatter_size) if hasattr(self.vg, 'scatter_size') else 7
-        join = getattr(self, 'join_for_point_plot', False)
+        join = getattr(self.vg, 'join_for_point_plot', False)
         
         if self.vg.z and self.vg.z in plot_df.columns:
             categories = plot_df[self.vg.z].unique()
             n_hue = len(categories)
-            dodge = getattr(self, 'dodge_point_plot', True) and not is_numeric
+            dodge = getattr(self.vg, 'dodge_point_plot', True) and not is_numeric
             if dodge and n_hue > 1:
                 offsets = np.linspace(-0.2, 0.2, n_hue)
             else:
@@ -104,8 +104,8 @@ class PlotRenderer:
 
     def _plot_scatter(self, df, y, colors, c):
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
-        edge_c = getattr(self, 'scatter_edgecolor', 'black')
-        dodge = getattr(self, 'dodge_scatter_plot', False) and not is_numeric
+        edge_c = getattr(self.vg, 'scatter_edgecolor', 'black')
+        dodge = getattr(self.vg, 'dodge_scatter_plot', False) and not is_numeric
         
         if self.vg.z and self.vg.z in plot_df.columns:
             categories = plot_df[self.vg.z].unique()
@@ -309,7 +309,7 @@ class PlotRenderer:
 
     def _plot_trendline(self, df, y, colors, c):
         self.vg.trendline_equations = []  # reset before recomputing
-        anchor = getattr(self, 'trendline_anchor_enabled', False)
+        anchor = getattr(self.vg, 'trendline_anchor_enabled', False)
         
         if self.vg.z and self.vg.z in df.columns:
             categories = df[self.vg.z].unique()
@@ -380,10 +380,10 @@ class PlotRenderer:
         from scipy import stats
         plot_df = df.dropna(subset=[self.vg.x])
         bins = self.vg.hist_bins
-        hist_step = getattr(self, 'hist_step', False)
+        hist_step = getattr(self.vg, 'hist_step', False)
         histtype = 'step' if hist_step else 'bar'
         alpha = 1.0 if hist_step else 0.7
-        kde = getattr(self, 'hist_kde', False)
+        kde = getattr(self.vg, 'hist_kde', False)
         
         hist_kwargs = {'bins': bins, 'histtype': histtype, 'alpha': alpha}
         if histtype == 'bar':
@@ -586,7 +586,7 @@ class PlotRenderer:
         )
         
         # Annotate slot number if active filter
-        if hasattr(self, "filters") and isinstance(self.vg.filters, (list, dict)):
+        if hasattr(self.vg, "filters") and isinstance(self.vg.filters, (list, dict)):
             filters_list = self.vg.filters if isinstance(self.vg.filters, list) else self.vg.filters.get("filters", [])
             for f in filters_list:
                 expr = f.get("expression", "")

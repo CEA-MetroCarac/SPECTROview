@@ -731,6 +731,45 @@ class CustomizeAxis(QWidget):
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(8)
         
+        # ===== Axis Scale Section =====
+        scale_group = QGroupBox("Axis scale:")
+        scale_layout = QVBoxLayout(scale_group)
+        scale_layout.setContentsMargins(4, 4, 4, 4)
+        scale_layout.setSpacing(8)
+        
+        # X axis scale
+        x_scale_layout = QHBoxLayout()
+        x_scale_layout.addWidget(QLabel("X axis scale:"))
+        self.cb_x_linear = QCheckBox("Linear")
+        self.cb_x_log = QCheckBox("Log")
+        self.cb_x_linear.setChecked(True)
+        self.bg_x_scale = QButtonGroup(self)
+        self.bg_x_scale.setExclusive(True)
+        self.bg_x_scale.addButton(self.cb_x_linear)
+        self.bg_x_scale.addButton(self.cb_x_log)
+        x_scale_layout.addWidget(self.cb_x_linear)
+        x_scale_layout.addWidget(self.cb_x_log)
+        x_scale_layout.addStretch()
+        
+        # Y axis scale
+        y_scale_layout = QHBoxLayout()
+        y_scale_layout.addWidget(QLabel("Y axis scale:"))
+        self.cb_y_linear = QCheckBox("Linear")
+        self.cb_y_log = QCheckBox("Log")
+        self.cb_y_linear.setChecked(True)
+        self.bg_y_scale = QButtonGroup(self)
+        self.bg_y_scale.setExclusive(True)
+        self.bg_y_scale.addButton(self.cb_y_linear)
+        self.bg_y_scale.addButton(self.cb_y_log)
+        y_scale_layout.addWidget(self.cb_y_linear)
+        y_scale_layout.addWidget(self.cb_y_log)
+        y_scale_layout.addStretch()
+        
+        scale_layout.addLayout(x_scale_layout)
+        scale_layout.addLayout(y_scale_layout)
+        
+        layout.addWidget(scale_group)
+
         # ===== Axis Limits Section =====
         limits_group = QGroupBox("Set Axis Limits:")
         limits_layout = QVBoxLayout(limits_group)
@@ -880,6 +919,17 @@ class CustomizeAxis(QWidget):
         self.spin_zmin.setValue(gw.zmin if gw.zmin is not None else -999999)
         self.spin_zmax.setValue(gw.zmax if gw.zmax is not None else -999999)
         
+        # Load Axis Scales
+        if getattr(gw, 'xlogscale', False):
+            self.cb_x_log.setChecked(True)
+        else:
+            self.cb_x_linear.setChecked(True)
+            
+        if getattr(gw, 'ylogscale', False):
+            self.cb_y_log.setChecked(True)
+        else:
+            self.cb_y_linear.setChecked(True)
+        
         if not hasattr(self.graph_widget, 'axis_breaks'):
             self.graph_widget.axis_breaks = {'x': None, 'y': None}
         
@@ -972,6 +1022,9 @@ class CustomizeAxis(QWidget):
         gw.minor_ticks_top = self.cb_minor_top.isChecked()
         gw.minor_ticks_right = self.cb_minor_right.isChecked()
         
+        gw.xlogscale = self.cb_x_log.isChecked()
+        gw.ylogscale = self.cb_y_log.isChecked()
+        
         # Emit signal to ViewModel
         if hasattr(gw, 'properties_changed'):
             gw.properties_changed.emit(gw.graph_id, {
@@ -982,7 +1035,9 @@ class CustomizeAxis(QWidget):
                 'minor_ticks_bottom': gw.minor_ticks_bottom,
                 'minor_ticks_left': gw.minor_ticks_left,
                 'minor_ticks_top': gw.minor_ticks_top,
-                'minor_ticks_right': gw.minor_ticks_right
+                'minor_ticks_right': gw.minor_ticks_right,
+                'xlogscale': gw.xlogscale,
+                'ylogscale': gw.ylogscale
             })
         
         # Refresh the plot with settings applied

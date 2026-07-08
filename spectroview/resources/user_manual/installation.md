@@ -31,7 +31,7 @@ To update your installation to the latest release:
 pip install --upgrade spectroview
 ```
 
-To install or downgrade to a specific version (e.g., `26.24.1`):
+To install or downgrade to a specific version (e.g., `26.28.1`):
 ```bash
-pip install spectroview==26.24.1
+pip install spectroview==26.28.1
 ```

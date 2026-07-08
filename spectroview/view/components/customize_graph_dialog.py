@@ -744,44 +744,51 @@ class CustomizeAxis(QWidget):
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(8)
         
-        # ===== Axis Scale Section =====
-        scale_group = QGroupBox("Axis scale:")
-        scale_layout = QVBoxLayout(scale_group)
-        scale_layout.setContentsMargins(4, 4, 4, 4)
-        scale_layout.setSpacing(8)
+        # ===== Axis Properties Section =====
+        props_group = QGroupBox("Axis properties:")
+        props_layout = QVBoxLayout(props_group)
+        props_layout.setContentsMargins(4, 4, 4, 4)
+        props_layout.setSpacing(8)
         
-        # X axis scale
-        x_scale_layout = QHBoxLayout()
-        x_scale_layout.addWidget(QLabel("X axis scale:"))
-        self.cb_x_linear = QCheckBox("Linear")
-        self.cb_x_log = QCheckBox("Log")
-        self.cb_x_linear.setChecked(True)
-        self.bg_x_scale = QButtonGroup(self)
-        self.bg_x_scale.setExclusive(True)
-        self.bg_x_scale.addButton(self.cb_x_linear)
-        self.bg_x_scale.addButton(self.cb_x_log)
-        x_scale_layout.addWidget(self.cb_x_linear)
-        x_scale_layout.addWidget(self.cb_x_log)
-        x_scale_layout.addStretch()
+        # X axis properties
+        x_prop_layout = QHBoxLayout()
+        x_prop_layout.addWidget(QLabel("X axis:  "))
         
-        # Y axis scale
-        y_scale_layout = QHBoxLayout()
-        y_scale_layout.addWidget(QLabel("Y axis scale:"))
-        self.cb_y_linear = QCheckBox("Linear")
-        self.cb_y_log = QCheckBox("Log")
-        self.cb_y_linear.setChecked(True)
-        self.bg_y_scale = QButtonGroup(self)
-        self.bg_y_scale.setExclusive(True)
-        self.bg_y_scale.addButton(self.cb_y_linear)
-        self.bg_y_scale.addButton(self.cb_y_log)
-        y_scale_layout.addWidget(self.cb_y_linear)
-        y_scale_layout.addWidget(self.cb_y_log)
-        y_scale_layout.addStretch()
+        x_prop_layout.addWidget(QLabel("Scale:"))
+        self.combo_x_scale = QComboBox()
+        self.combo_x_scale.addItems(["Linear", "Logarithmic"])
+        x_prop_layout.addWidget(self.combo_x_scale)
         
-        scale_layout.addLayout(x_scale_layout)
-        scale_layout.addLayout(y_scale_layout)
+        x_prop_layout.addSpacing(20)
         
-        layout.addWidget(scale_group)
+        x_prop_layout.addWidget(QLabel("Data type:"))
+        self.combo_x_type = QComboBox()
+        self.combo_x_type.addItems(["Category", "Numerical"])
+        x_prop_layout.addWidget(self.combo_x_type)
+        x_prop_layout.addStretch()
+        
+        # Y axis properties
+        y_prop_layout = QHBoxLayout()
+        y_prop_layout.addWidget(QLabel("Y axis:  "))
+        
+        y_prop_layout.addWidget(QLabel("Scale:"))
+        self.combo_y_scale = QComboBox()
+        self.combo_y_scale.addItems(["Linear", "Logarithmic"])
+        y_prop_layout.addWidget(self.combo_y_scale)
+        
+        y_prop_layout.addSpacing(20)
+        
+        y_prop_layout.addWidget(QLabel("Data type:"))
+        self.combo_y_type = QComboBox()
+        self.combo_y_type.addItems(["Category", "Numerical"])
+        y_prop_layout.addWidget(self.combo_y_type)
+        y_prop_layout.addStretch()
+        
+        props_layout.addLayout(x_prop_layout)
+        props_layout.addLayout(y_prop_layout)
+        
+        layout.addWidget(props_group)
+
 
         # ===== Axis Limits Section =====
         limits_group = QGroupBox("Set Axis Limits:")
@@ -855,7 +862,7 @@ class CustomizeAxis(QWidget):
         x_break_layout.setSpacing(8)
         
         # Enable checkbox
-        self.x_break_enabled = QCheckBox("Enable X-axis break")
+        self.x_break_enabled = QCheckBox("X-axis break")
         
         # Input fields
         self.x_break_start = QDoubleSpinBox()
@@ -878,7 +885,7 @@ class CustomizeAxis(QWidget):
         y_break_layout.setSpacing(8)
         
         # Enable checkbox
-        self.y_break_enabled = QCheckBox("Enable Y-axis break")
+        self.y_break_enabled = QCheckBox("Y-axis break")
         
         # Input fields
         self.y_break_start = QDoubleSpinBox()
@@ -919,14 +926,25 @@ class CustomizeAxis(QWidget):
         
         # Load Axis Scales
         if getattr(gw, 'xlogscale', False):
-            self.cb_x_log.setChecked(True)
+            self.combo_x_scale.setCurrentText("Logarithmic")
         else:
-            self.cb_x_linear.setChecked(True)
+            self.combo_x_scale.setCurrentText("Linear")
             
         if getattr(gw, 'ylogscale', False):
-            self.cb_y_log.setChecked(True)
+            self.combo_y_scale.setCurrentText("Logarithmic")
         else:
-            self.cb_y_linear.setChecked(True)
+            self.combo_y_scale.setCurrentText("Linear")
+
+        # Load Axis Types
+        if getattr(gw, 'x_as_numeric', False):
+            self.combo_x_type.setCurrentText("Numerical")
+        else:
+            self.combo_x_type.setCurrentText("Category")
+            
+        if getattr(gw, 'y_as_numeric', True):
+            self.combo_y_type.setCurrentText("Numerical")
+        else:
+            self.combo_y_type.setCurrentText("Category")
         
         if not hasattr(self.graph_widget, 'axis_breaks'):
             self.graph_widget.axis_breaks = {'x': None, 'y': None}
@@ -1020,8 +1038,10 @@ class CustomizeAxis(QWidget):
         gw.minor_ticks_top = self.cb_minor_top.isChecked()
         gw.minor_ticks_right = self.cb_minor_right.isChecked()
         
-        gw.xlogscale = self.cb_x_log.isChecked()
-        gw.ylogscale = self.cb_y_log.isChecked()
+        gw.xlogscale = (self.combo_x_scale.currentText() == "Logarithmic")
+        gw.ylogscale = (self.combo_y_scale.currentText() == "Logarithmic")
+        gw.x_as_numeric = (self.combo_x_type.currentText() == "Numerical")
+        gw.y_as_numeric = (self.combo_y_type.currentText() == "Numerical")
         
         # Emit signal to ViewModel
         if hasattr(gw, 'properties_changed'):
@@ -1035,7 +1055,9 @@ class CustomizeAxis(QWidget):
                 'minor_ticks_top': gw.minor_ticks_top,
                 'minor_ticks_right': gw.minor_ticks_right,
                 'xlogscale': gw.xlogscale,
-                'ylogscale': gw.ylogscale
+                'ylogscale': gw.ylogscale,
+                'x_as_numeric': gw.x_as_numeric,
+                'y_as_numeric': gw.y_as_numeric
             })
         
         # Refresh the plot with settings applied
@@ -1335,14 +1357,6 @@ class CustomizeMoreOptions(QWidget):
         self._cb_wafer_stats = QCheckBox("Show statistics (wafer plot)")
         layout.addWidget(self._cb_wafer_stats)
 
-        # X axis as numerical (point/box/bar)
-        self._cb_x_numeric = QCheckBox("X axis as numerical (point/box/bar)")
-        self._cb_x_numeric.setToolTip(
-            "Treat X-axis values as numerical data with proper spacing\n"
-            "instead of equally-spaced categories."
-        )
-        layout.addWidget(self._cb_x_numeric)
-
         self._general_group = grp
         self._inner_layout.addWidget(grp)
 
@@ -1479,7 +1493,6 @@ class CustomizeMoreOptions(QWidget):
         self._cb_dodge_scatter.setChecked(getattr(gw, 'dodge_scatter_plot', False))
         self._cb_error_bar.setChecked(getattr(gw, 'show_bar_plot_error_bar', True))
         self._cb_wafer_stats.setChecked(getattr(gw, 'wafer_stats', True))
-        self._cb_x_numeric.setChecked(getattr(gw, 'x_as_numeric', False))
 
         # Highlight relevant checkboxes based on style
         self._cb_join.setEnabled(style == 'point')
@@ -1487,7 +1500,6 @@ class CustomizeMoreOptions(QWidget):
         self._cb_dodge_scatter.setEnabled(style == 'scatter')
         self._cb_error_bar.setEnabled(style == 'bar')
         self._cb_wafer_stats.setEnabled(style == 'wafer')
-        self._cb_x_numeric.setEnabled(style in ('point', 'box', 'bar'))
 
         # --- Trendline section ---
         is_trendline = (style == 'trendline')
@@ -1544,8 +1556,6 @@ class CustomizeMoreOptions(QWidget):
         gw.dodge_scatter_plot = self._cb_dodge_scatter.isChecked()
         gw.show_bar_plot_error_bar = self._cb_error_bar.isChecked()
         gw.wafer_stats = self._cb_wafer_stats.isChecked()
-        if style in ('point', 'box', 'bar'):
-            gw.x_as_numeric = self._cb_x_numeric.isChecked()
 
         # Trendline
         if style == 'trendline':
@@ -1577,7 +1587,6 @@ class CustomizeMoreOptions(QWidget):
                 'dodge_scatter_plot': gw.dodge_scatter_plot,
                 'show_bar_plot_error_bar': gw.show_bar_plot_error_bar,
                 'wafer_stats': gw.wafer_stats,
-                'x_as_numeric': gw.x_as_numeric,
             }
             if style == 'trendline':
                 props.update({

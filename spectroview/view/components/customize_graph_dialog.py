@@ -1358,7 +1358,7 @@ class CustomizeMoreOptions(QWidget):
     # ---- General section ------------------------------------------------
 
     def _build_general_section(self):
-        grp = QGroupBox("Plot options")
+        grp = QGroupBox("Plot options:")
         layout = QVBoxLayout(grp)
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(8)
@@ -1389,25 +1389,28 @@ class CustomizeMoreOptions(QWidget):
     # ---- Data sorting section -------------------------------------------
 
     def _build_sorting_section(self):
-        grp = QGroupBox("Data sorting")
+        grp = QGroupBox("Data sorting:")
         layout = QVBoxLayout(grp)
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(8)
 
+        sort_row = QHBoxLayout()
+        
         # Checkbox to enable/disable intelligent sorting
         self._cb_sort_enabled = QCheckBox("Enable intelligent data sorting")
         self._cb_sort_enabled.setChecked(True)
         self._cb_sort_enabled.toggled.connect(self._on_sort_enabled_toggled)
-        layout.addWidget(self._cb_sort_enabled)
+        sort_row.addWidget(self._cb_sort_enabled)
 
-        # Sort-by selector row
-        sort_row = QHBoxLayout()
-        sort_row.addWidget(QLabel("Sort by:"))
+        self._lbl_sort_by = QLabel("Sort by:")
+        sort_row.addWidget(self._lbl_sort_by)
+        
         self._cbb_sort_by = QComboBox()
         self._cbb_sort_by.addItems(["Z (hue values)", "X values", "Y values"])
         self._cbb_sort_by.setCurrentIndex(0)  # Default: Z
         self._cbb_sort_by.setMaximumWidth(160)
         sort_row.addWidget(self._cbb_sort_by)
+        
         sort_row.addStretch()
         layout.addLayout(sort_row)
 
@@ -1564,7 +1567,9 @@ class CustomizeMoreOptions(QWidget):
         # --- Data sorting section ---
         sort_enabled = getattr(gw, 'sort_data_enabled', True)
         self._cb_sort_enabled.setChecked(sort_enabled)
-        self._cbb_sort_by.setEnabled(sort_enabled)
+        self._cbb_sort_by.setVisible(sort_enabled)
+        if hasattr(self, '_lbl_sort_by'):
+            self._lbl_sort_by.setVisible(sort_enabled)
 
         sort_by = getattr(gw, 'sort_data_by', 'Z')
         sort_map = {'Z': 0, 'X': 1, 'Y': 2}
@@ -1694,5 +1699,7 @@ class CustomizeMoreOptions(QWidget):
             gw.properties_changed.emit(gw.graph_id, props)
 
     def _on_sort_enabled_toggled(self, checked):
-        """Enable/disable the sort-by combobox based on the sort checkbox."""
-        self._cbb_sort_by.setEnabled(checked)
+        """Show/hide the sort-by combobox based on the sort checkbox."""
+        self._cbb_sort_by.setVisible(checked)
+        if hasattr(self, '_lbl_sort_by'):
+            self._lbl_sort_by.setVisible(checked)

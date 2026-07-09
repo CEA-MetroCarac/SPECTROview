@@ -26,27 +26,7 @@ class PlotRenderer:
             
         plot_df = df[cols].copy()
         
-        # --- Sort dataframe based on settings ---
-        sort_enabled = getattr(self.vg, 'sort_data_enabled', True)
-        sort_by = getattr(self.vg, 'sort_data_by', 'Z')
-        
-        if sort_enabled:
-            col_to_sort = None
-            if sort_by == 'X' and self.vg.x in plot_df.columns:
-                col_to_sort = self.vg.x
-            elif sort_by == 'Y' and y in plot_df.columns:
-                col_to_sort = y
-            elif sort_by == 'Z' and self.vg.z in plot_df.columns:
-                col_to_sort = self.vg.z
-                
-            if col_to_sort:
-                try:
-                    plot_df = plot_df.sort_values(by=col_to_sort)
-                except TypeError:
-                    # Fallback to string sort if mixed types exist
-                    plot_df['_sort_key'] = plot_df[col_to_sort].astype(str)
-                    plot_df = plot_df.sort_values(by='_sort_key').drop(columns=['_sort_key'])
-        
+        # --- Determine numeric X ---
         treat_as_numeric = getattr(self.vg, 'x_as_numeric', None)
         # If 'Auto' (None), auto-detect numeric if plot style expects it by default
         if treat_as_numeric is None:
@@ -58,20 +38,51 @@ class PlotRenderer:
                     treat_as_numeric = False
             else:
                 treat_as_numeric = False
-        
+                
         dropna_cols = [self.vg.x, y]
         if self.vg.z and self.vg.z in plot_df.columns:
             dropna_cols.append(self.vg.z)
             
         if treat_as_numeric:
             plot_df[self.vg.x] = pd.to_numeric(plot_df[self.vg.x], errors='coerce')
-            plot_df = plot_df.dropna(subset=dropna_cols)
-            # For numeric X, we MUST sort X so the line draws left-to-right
-            plot_df = plot_df.sort_values(by=self.vg.x)
+            
+        plot_df = plot_df.dropna(subset=dropna_cols)
+
+        # --- Sort dataframe based on settings and plot requirements ---
+        sort_enabled = getattr(self.vg, 'sort_data_enabled', True)
+        sort_by = getattr(self.vg, 'sort_data_by', 'Z')
+        
+        sort_cols = []
+        if sort_enabled:
+            if sort_by == 'X' and self.vg.x in plot_df.columns:
+                sort_cols.append(self.vg.x)
+            elif sort_by == 'Y' and y in plot_df.columns:
+                sort_cols.append(y)
+            elif sort_by == 'Z' and self.vg.z in plot_df.columns:
+                sort_cols.append(self.vg.z)
+                
+        if treat_as_numeric and self.vg.x not in sort_cols:
+            # For numeric X, we MUST sort X so the line draws left-to-right.
+            # Append it as a secondary sort key to preserve user's primary sort.
+            sort_cols.append(self.vg.x)
+            
+        if sort_cols:
+            try:
+                plot_df = plot_df.sort_values(by=sort_cols)
+            except TypeError:
+                # Fallback to string sort if mixed types exist
+                # If there are multiple sort columns, convert all to string for sorting
+                sort_key_cols = []
+                for sc in sort_cols:
+                    sk = f"_sort_key_{sc}"
+                    plot_df[sk] = plot_df[sc].astype(str)
+                    sort_key_cols.append(sk)
+                plot_df = plot_df.sort_values(by=sort_key_cols).drop(columns=sort_key_cols)
+
+        if treat_as_numeric:
             x_unique = list(plot_df[self.vg.x].unique())
             x_positions = {v: v for v in x_unique}
         else:
-            plot_df = plot_df.dropna(subset=dropna_cols)
             # Raw unique values in current (sorted) DataFrame order
             x_unique = list(dict.fromkeys(plot_df[self.vg.x]))
             x_positions = {v: i for i, v in enumerate(x_unique)}

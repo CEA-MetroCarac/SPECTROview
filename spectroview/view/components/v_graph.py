@@ -354,16 +354,33 @@ class VGraph(QWidget):
                     if idx < len(legend_handles):
                         handle = legend_handles[idx]
                         try:
+                            c = None
                             if hasattr(handle, 'get_color'):
                                 c = handle.get_color()
-                                if isinstance(c, str) and c not in ('none', '', 'None'):
-                                    color = c
-                                elif not isinstance(c, str):
-                                    color = mcolors.to_hex(c)
                             elif hasattr(handle, 'get_facecolor'):
                                 fc = handle.get_facecolor()
                                 if hasattr(fc, '__len__') and len(fc) > 0:
-                                    color = mcolors.to_hex(fc[0])
+                                    c = fc[0]
+                                    
+                            if c is not None:
+                                hex_c = None
+                                if isinstance(c, str) and c not in ('none', '', 'None'):
+                                    if c.startswith('#'):
+                                        hex_c = mcolors.to_hex(c)
+                                    else:
+                                        color = c
+                                elif not isinstance(c, str):
+                                    hex_c = mcolors.to_hex(c)
+                                    
+                                if hex_c is not None:
+                                    matched = False
+                                    for dc in DEFAULT_COLORS:
+                                        if mcolors.to_hex(dc).lower() == hex_c.lower():
+                                            color = dc
+                                            matched = True
+                                            break
+                                    if not matched:
+                                        color = hex_c
                         except Exception:
                             pass
                         try:

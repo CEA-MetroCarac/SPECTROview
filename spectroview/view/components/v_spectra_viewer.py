@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QPushButton, QToolButton, QLabel,
     QComboBox, QMenu, QWidgetAction,
     QLineEdit, QDoubleSpinBox, QColorDialog, QInputDialog,
-    QSlider, QGroupBox
+    QSlider, QGroupBox, QMessageBox
 )
 from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon
@@ -280,8 +280,10 @@ class VSpectraViewer(QWidget):
         # Normalization
         self.btn_norm = QToolButton()
         self.btn_norm.setCheckable(True)
+        self.btn_norm.setObjectName("btn_norm")
+        self.btn_norm.setStyleSheet("QToolButton#btn_norm:checked { background-color: red; }")
         self.btn_norm.setIcon(QIcon(f"{ICON_DIR}/norm.png"))
-        self.btn_norm.setToolTip("Intensity normalization to maximum of spectrum or selected region")
+        self.btn_norm.setToolTip("Intensity normalization to maximum of spectrum or selected region.\nNote: This normalization is just for visual change, the actual data is not changed.")
         self.btn_norm.setIconSize(QSize(22, 22))
         self.btn_norm.setFixedSize(30, 30)
         self.btn_norm.toggled.connect(self._emit_norm)
@@ -1451,6 +1453,10 @@ class VSpectraViewer(QWidget):
         # ─── Peak tool ─────────────────────────
         if self.btn_peak.isChecked():
             if event.button == 1:      # left click
+                if self.btn_norm.isChecked():
+                    msg = "The 'Intensity normalization' tool is active.\nThis normalization is just for visualization, not affected to data.\n\nPlease deactivate the Normalization (unpush the button) before adding a peak to ensure it is placed in the real intensity scale."
+                    QMessageBox.information(self, "Normalization Active", msg)
+                    return
                 # Check if clicking on an existing peak to drag it
                 clicked_peak = self._find_peak_at_position(x, y)
                 if clicked_peak:
@@ -1469,6 +1475,10 @@ class VSpectraViewer(QWidget):
         # ─── Baseline tool ─────────────────────
         elif self.btn_baseline.isChecked():
             if event.button == 1:
+                if self.btn_norm.isChecked():
+                    msg = "The 'Intensity normalization' tool is active.\nThis normalization is just for visualization, not affected to data.\n\nPlease deactivate the Normalization (unpush the button) before adding a baseline point to ensure it is placed in the real intensity scale."
+                    QMessageBox.information(self, "Normalization Active", msg)
+                    return
                 self.baseline_add_requested.emit(x, y)
             elif event.button == 3:
                 self.baseline_remove_requested.emit(x)

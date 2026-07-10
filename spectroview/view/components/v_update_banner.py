@@ -161,7 +161,7 @@ class VUpdateBanner(QWidget):
         layout.addWidget(ver_lbl)
 
         # Pip update hint
-        hint_lbl = QLabel("— update via CMD line: pip install --upgrade spectroview")
+        hint_lbl = QLabel("→ Close the app, then update via terminal: pip install --upgrade spectroview")
         hint_lbl.setObjectName("banner_hint")
         layout.addWidget(hint_lbl)
 
@@ -203,7 +203,7 @@ class VUpdateBanner(QWidget):
     # Slots
     # ------------------------------------------------------------------
     def _open_release_page(self):
-        QDesktopServices.openUrl(QUrl(self._html_url))
+        QDesktopServices.openUrl(QUrl("https://cea-metrocarac.github.io/SPECTROview/changelog/"))
 
     def _skip(self):
         self._on_skip(self._tag)

@@ -10,7 +10,7 @@
 
 SPECTROview now automatically checks for new releases at startup, ensuring you never miss the latest features, improvements, or bug fixes.
 
-#### 🔒 Privacy first:
+##### 🔒 Privacy first:
 
 The update check sends only a standard, anonymous request to the public GitHub API to retrieve the latest release version. No personal information, usage data, or telemetry is collected or transmitted.
 

@@ -55,11 +55,12 @@ _DARK_STYLE = """
     QPushButton#btn_dismiss {
         background: transparent;
         color: #90a4ae;
-        border: none;
-        font-size: 16px;
-        padding: 0px 6px;
+        border: 1px solid #546e7a;
+        border-radius: 4px;
+        padding: 3px 8px;
+        font-size: 11px;
     }
-    QPushButton#btn_dismiss:hover { color: #ef9a9a; }
+    QPushButton#btn_dismiss:hover { color: #cfd8dc; border-color: #78909c; }
 """
 
 _LIGHT_STYLE = """
@@ -97,12 +98,13 @@ _LIGHT_STYLE = """
     QPushButton#btn_skip:hover { color: #37474f; border-color: #78909c; }
     QPushButton#btn_dismiss {
         background: transparent;
-        color: #90a4ae;
-        border: none;
-        font-size: 16px;
-        padding: 0px 6px;
+        color: #546e7a;
+        border: 1px solid #b0bec5;
+        border-radius: 4px;
+        padding: 3px 8px;
+        font-size: 11px;
     }
-    QPushButton#btn_dismiss:hover { color: #e53935; }
+    QPushButton#btn_dismiss:hover { color: #37474f; border-color: #78909c; }
 """
 
 
@@ -159,7 +161,7 @@ class VUpdateBanner(QWidget):
         layout.addWidget(ver_lbl)
 
         # Pip update hint
-        hint_lbl = QLabel("— update via: pip install --upgrade spectroview")
+        hint_lbl = QLabel("— update via CMD line: pip install --upgrade spectroview")
         hint_lbl.setObjectName("banner_hint")
         layout.addWidget(hint_lbl)
 
@@ -167,11 +169,18 @@ class VUpdateBanner(QWidget):
         layout.addStretch(1)
 
         # Download / changelog button
-        self.btn_download = QPushButton("⬇ Download / Changelog")
+        self.btn_download = QPushButton("🔍 View changelog")
         self.btn_download.setObjectName("btn_download")
         self.btn_download.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_download.clicked.connect(self._open_release_page)
         layout.addWidget(self.btn_download)
+
+        # Dismiss (Update later)
+        self.btn_dismiss = QPushButton("Update later")
+        self.btn_dismiss.setObjectName("btn_dismiss")
+        self.btn_dismiss.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_dismiss.clicked.connect(self._dismiss)
+        layout.addWidget(self.btn_dismiss)
 
         # Skip this version
         self.btn_skip = QPushButton("Skip this version")
@@ -179,14 +188,6 @@ class VUpdateBanner(QWidget):
         self.btn_skip.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_skip.clicked.connect(self._skip)
         layout.addWidget(self.btn_skip)
-
-        # Dismiss (×)
-        self.btn_dismiss = QPushButton("✕")
-        self.btn_dismiss.setObjectName("btn_dismiss")
-        self.btn_dismiss.setFixedWidth(28)
-        self.btn_dismiss.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_dismiss.clicked.connect(self._dismiss)
-        layout.addWidget(self.btn_dismiss)
 
     # ------------------------------------------------------------------
     # Public API

@@ -62,7 +62,16 @@ class UpdateCheckerWorker(QThread):
                 headers={"Accept": "application/vnd.github+json",
                          "User-Agent": "SPECTROview-update-checker"},
             )
-            with urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
+            
+            context = None
+            try:
+                import ssl
+                import certifi
+                context = ssl.create_default_context(cafile=certifi.where())
+            except Exception:
+                pass
+                
+            with urlopen(req, timeout=REQUEST_TIMEOUT, context=context) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
 
             tag = data.get("tag_name", "").strip()

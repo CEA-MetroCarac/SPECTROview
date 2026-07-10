@@ -48,23 +48,17 @@ pip install spectroview==26.28.1
 - If a newer version is available, a **blue notification banner** appears at the top of the window:
 
 ```
-🔔  A new version of SPECTROview is available:  26.29.0    [ ⬇ Download / Changelog ]  [ Skip this version ]  [ ✕ ]
+🔔  A new version of SPECTROview is available:  26.29.0    [ 🔍 View changelog ]  [ Update later ]  [ Skip this version ]
 ```
+
+> **Privacy Note**: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. **Absolutely no personal or usage data is collected or transmitted.**
 
 #### Banner actions
 
 | Button | Behaviour |
 |--------|-----------|
-| **⬇ Download / Changelog** | Opens the GitHub release page in your browser |
-| **Skip this version** | Hides the banner permanently for that specific version. If a **newer** release comes out later, the banner will reappear |
-| **✕ Dismiss** | Hides the banner for the current session only. The banner will reappear on the next launch if the update is still available |
+| **🔍 View changelog** | Opens the GitHub release page in your browser to see what's new. |
+| **Update later** | Hides the banner for the current session only. The banner will reappear on the next launch if the update is still available. |
+| **Skip this version** | Hides the banner permanently for that specific version. The banner will never show again until an even newer version is released. |
 
 > **Offline users**: If `SPECTROview` is installed on a machine without internet access, the update check fails silently — the application starts and works exactly as normal. No error is raised.
-
-#### Check frequency
-
-The check runs **at most once per day** to avoid unnecessary network requests. The date of the last check is stored in the application settings.
-
-#### Disabling update checks
-
-Automatic update checks can be disabled at any time from the **Settings panel** (under *Update Checker*). When disabled, no network request is ever made.

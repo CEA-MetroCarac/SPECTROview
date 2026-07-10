@@ -51,7 +51,7 @@ pip install spectroview==26.28.1
 🔔  A new version of SPECTROview is available:  26.29.0    [ 🔍 View changelog ]  [ Update later ]  [ Skip this version ]
 ```
 
-> **Privacy Note**: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. **Absolutely no personal or usage data is collected or transmitted.**
+> **Privacy Guarantee**: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. **Absolutely no personal or usage data is collected or transmitted.**
 
 #### Banner actions
 

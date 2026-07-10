@@ -528,6 +528,67 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#4-automatic-update-notifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Automatic Update Notifications
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Automatic Update Notifications">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#banner-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Banner actions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-frequency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check frequency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disabling-update-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disabling update checks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1257,6 +1318,46 @@
 <p>To install or downgrade to a specific version (e.g., <code>26.28.1</code>):
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">spectroview</span><span class="o">==</span><span class="m">26</span>.28.1
 </code></pre></div></p>
+<hr />
+<h3 id="4-automatic-update-notifications"><strong>4. Automatic Update Notifications</strong><a class="headerlink" href="#4-automatic-update-notifications" title="Permanent link">&para;</a></h3>
+<p><code>SPECTROview</code> automatically checks for new releases and notifies you with a non-intrusive banner at the top of the application window — no manual checking required.</p>
+<h4 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>On startup</strong>, a background thread silently queries the <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases">GitHub Releases page</a> for the latest version.</li>
+<li>If a newer version is available, a <strong>blue notification banner</strong> appears at the top of the window:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>🔔  A new version of SPECTROview is available:  26.29.0    [ ⬇ Download / Changelog ]  [ Skip this version ]  [ ✕ ]
+</code></pre></div>
+<h4 id="banner-actions">Banner actions<a class="headerlink" href="#banner-actions" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>⬇ Download / Changelog</strong></td>
+<td>Opens the GitHub release page in your browser</td>
+</tr>
+<tr>
+<td><strong>Skip this version</strong></td>
+<td>Hides the banner permanently for that specific version. If a <strong>newer</strong> release comes out later, the banner will reappear</td>
+</tr>
+<tr>
+<td><strong>✕ Dismiss</strong></td>
+<td>Hides the banner for the current session only. The banner will reappear on the next launch if the update is still available</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Offline users</strong>: If <code>SPECTROview</code> is installed on a machine without internet access, the update check fails silently — the application starts and works exactly as normal. No error is raised.</p>
+</blockquote>
+<h4 id="check-frequency">Check frequency<a class="headerlink" href="#check-frequency" title="Permanent link">&para;</a></h4>
+<p>The check runs <strong>at most once per day</strong> to avoid unnecessary network requests. The date of the last check is stored in the application settings.</p>
+<h4 id="disabling-update-checks">Disabling update checks<a class="headerlink" href="#disabling-update-checks" title="Permanent link">&para;</a></h4>
+<p>Automatic update checks can be disabled at any time from the <strong>Settings panel</strong> (under <em>Update Checker</em>). When disabled, no network request is ever made.</p>
 
 
 

@@ -31,6 +31,7 @@ class VMenuBar(QToolBar):
     manual_requested = Signal()
     about_requested = Signal()
     version_requested = Signal()
+    check_update_requested = Signal()
     
     def __init__(self):
         super().__init__()
@@ -64,6 +65,10 @@ class VMenuBar(QToolBar):
         spacer = QWidget(self)
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.addWidget(spacer)
+
+        # ----- Check for updates -----
+        self.actionCheckUpdate = self.addAction(QIcon(os.path.join(ICON_DIR, "check_update.png")), "Check for updates")
+        self.actionCheckUpdate.triggered.connect(self.check_update_requested.emit)
         
         # ----- Theme dropdown button -----
         self.actionTheme = self.addAction(QIcon(os.path.join(ICON_DIR, "dark-light.png")), "Select Theme")

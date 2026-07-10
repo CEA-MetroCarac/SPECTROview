@@ -75,6 +75,7 @@ spectroview/
 │   ├── m_fit_model_manager.py # Saved fit model file management
 │   ├── m_file_converter.py # Batch file format converter
 │   ├── m_quick_calc.py     # Scientific calculators (Spot Size, Depth, Unit conversion)
+│   ├── m_update_checker.py # Background GitHub release checker (QThread)
 │   └── m_spc.py            # Galactic SPC binary reader
 │
 ├── viewmodel/              # Business logic and data orchestration
@@ -107,6 +108,7 @@ spectroview/
 │       ├── v_settings.py              # Fit/view settings dialog
 │       ├── v_menubar.py               # Main menu bar
 │       ├── v_about.py                 # About dialog
+│       ├── v_update_banner.py         # Update notification banner widget
 │       ├── v_user_manual.py           # Built-in user manual viewer
 │       ├── customize_graph_dialog.py  # Graph customization dialog
 │       └── customized_widgets.py      # Palette combobox, custom toolbar
@@ -285,6 +287,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 | Thread Class | Location | Purpose |
 |-------------|----------|---------|
 | `VBFthread` | `fit_engine/vbf_thread.py` | Batched fitting (primary engine) |
+| `UpdateCheckerWorker` | `model/m_update_checker.py` | Background GitHub release check at startup |
 
 **Thread lifecycle**:
 
@@ -328,6 +331,64 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 | `AXIS_LABELS` | Autocomplete suggestions for graph labels |
 | `ICON_DIR` | Resolved path to `resources/icons/` |
 | `PLOT_POLICY_LIGHT`, `PLOT_POLICY_DARK` | Matplotlib stylesheet paths |
+
+---
+
+## **Update Checker**
+
+### Overview
+
+`SPECTROview` ships a lightweight, opt-out update notification system that queries the GitHub Releases API in the background and displays a dismissable banner when a newer version is found.
+
+No extra dependency is required — only Python's built-in `urllib`.
+
+### Key Files
+
+| File | Role |
+|------|------|
+| `model/m_update_checker.py` | `QThread` worker — performs the HTTP request and emits `update_available` |
+| `view/components/v_update_banner.py` | Slim 36 px banner widget inserted at position 0 of the central layout |
+| `model/m_settings.py` | Stores `enabled`, `skipped_version`, and `last_check_date` in `QSettings` |
+| `main.py` | Starts the thread via `QTimer.singleShot(2000, ...)` from `showEvent` |
+
+### Flow
+
+```mermaid
+sequenceDiagram
+    participant Main
+    participant Timer as QTimer (2 s)
+    participant Worker as UpdateCheckerWorker
+    participant GitHub as api.github.com
+    participant Banner as VUpdateBanner
+
+    Main->>Timer: showEvent → singleShot(2000)
+    Timer->>Worker: _start_update_check() → worker.start()
+    Worker->>GitHub: GET /repos/CEA-MetroCarac/SPECTROview/releases/latest
+    GitHub-->>Worker: JSON {tag_name, html_url, body}
+    Worker->>Worker: compare versions
+    alt newer version found
+        Worker-->>Main: update_available(tag, notes, url)
+        Main->>Banner: insertWidget(0, VUpdateBanner(...))
+    end
+    Worker-->>Main: check_finished → set_last_check_date(today)
+```
+
+### Design Decisions
+
+| Decision | Rationale |
+|----------|----------|
+| **`QThread` instead of `QNetworkAccessManager`** | Pure Python `urllib` avoids Qt networking module complexity; thread is simpler to test |
+| **2-second startup delay** | Ensures the UI is fully painted before the network request starts |
+| **Once-per-day throttle** | Avoids redundant requests; the date is persisted via `QSettings` |
+| **Silent failure** | `URLError`, `OSError`, `json.JSONDecodeError` are all caught — offline machines see no error |
+| **Version comparison via tuples** | `_parse_version('v26.29.0') → (26, 29, 0)` handles `v`-prefixed tags and non-numeric parts gracefully |
+| **Skip vs Dismiss** | *Skip* persists the exact tag — the banner re-appears for the next release. *Dismiss* hides only for the session |
+
+### Adding / Modifying the Checker
+
+To change the API endpoint (e.g., to query PyPI instead), edit `GITHUB_API_URL` in `m_update_checker.py` and adjust the JSON key extraction in `UpdateCheckerWorker.run()`.
+
+To add a "disable updates" toggle to the Settings dialog, bind `MSettings.set_check_for_updates()` to a `QCheckBox` in `v_settings.py` — the `_start_update_check()` method in `main.py` already reads this flag before starting the thread.
 
 ---
 

@@ -83,3 +83,28 @@ class MSettings:
         """Set theme (light or dark)."""
         self.settings.setValue("theme", theme)
         self.settings.sync()
+
+    # ---------- Update checker ----------
+    def get_check_for_updates(self) -> bool:
+        """Whether automatic update checks are enabled (default: True)."""
+        return self.settings.value("update_checker/enabled", True, bool)
+
+    def set_check_for_updates(self, enabled: bool):
+        self.settings.setValue("update_checker/enabled", enabled)
+        self.settings.sync()
+
+    def get_skipped_version(self) -> str:
+        """Return the version tag the user chose to skip, or empty string."""
+        return self.settings.value("update_checker/skipped_version", "", str)
+
+    def set_skipped_version(self, tag: str):
+        self.settings.setValue("update_checker/skipped_version", tag)
+        self.settings.sync()
+
+    def get_last_check_date(self) -> str:
+        """ISO date string (YYYY-MM-DD) of the last successful update check."""
+        return self.settings.value("update_checker/last_check_date", "", str)
+
+    def set_last_check_date(self, date_str: str):
+        self.settings.setValue("update_checker/last_check_date", date_str)
+        self.settings.sync()

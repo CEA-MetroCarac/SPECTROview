@@ -22,6 +22,8 @@ from spectroview.model.m_settings import MSettings
 from spectroview.viewmodel.vm_settings import VMSettings
 from spectroview.view.components.v_settings import VSettingsDialog
 from spectroview.view.components.v_about import VAboutDialog
+from spectroview.view.components.v_update_banner import VUpdateBanner
+from spectroview.model.m_update_checker import UpdateCheckerWorker
 
 from spectroview.view.components.v_menubar import VMenuBar
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
@@ -65,6 +67,10 @@ class Main(QMainWindow):
         central = QWidget(self)
         layout = QVBoxLayout(central)
         layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(0)
+
+        # ── Update notification banner (created lazily when an update is detected) ──
+        self._update_banner = None
 
         # Main Tab Widget
         self.tabWidget = QTabWidget(central)
@@ -99,6 +105,7 @@ class Main(QMainWindow):
         self.menu_bar.manual_requested.connect(self.manual) 
         self.menu_bar.github_requested.connect(self.open_github_repo)
         self.menu_bar.version_requested.connect(self.open_releases)
+        self.menu_bar.check_update_requested.connect(self._manual_update_check)
         self.menu_bar.theme_selected.connect(self.toggle_theme)
         
         # Inject Graphs workspace into Maps ViewModel for cross-workspace communication
@@ -438,6 +445,10 @@ class Main(QMainWindow):
         if hasattr(self, 'v_graphs_workspace'):
             self.v_graphs_workspace.apply_theme(ws_theme)
 
+        # Keep update banner in sync with the current theme
+        if self._update_banner is not None:
+            self._update_banner.apply_theme(theme)
+
     def dragEnterEvent(self, event):
         """Accept dragging files into the application."""
         if event.mimeData().hasUrls():
@@ -449,6 +460,97 @@ class Main(QMainWindow):
             paths = [url.toLocalFile() for url in event.mimeData().urls()]
             self._load_files_by_paths(paths)
             event.acceptProposedAction()
+
+    # ── Update checker ────────────────────────────────────────────────────────
+    def _start_update_check(self):
+        """Launch a background thread to query GitHub for the latest release."""
+        from datetime import date
+        if not self.settings.get_check_for_updates():
+            return
+
+        # Throttle: check at most once per day
+        today = date.today().isoformat()
+        if self.settings.get_last_check_date() == today:
+            return
+
+        from spectroview import VERSION
+        self._checker = UpdateCheckerWorker(current_version=VERSION)
+        self._checker.update_available.connect(self._on_update_available)
+        self._checker.check_finished.connect(
+            lambda: self.settings.set_last_check_date(today)
+        )
+        self._checker.start()
+
+    def _on_update_available(self, tag: str, notes: str, html_url: str):
+        """Show the update banner when a newer version is found on GitHub."""
+        # Never show if the user already skipped this exact version
+        if self.settings.get_skipped_version() == tag:
+            return
+
+        if self._update_banner is not None:
+            return   # already showing
+
+        banner = VUpdateBanner(
+            tag=tag,
+            html_url=html_url,
+            on_skip=self.settings.set_skipped_version,
+            on_dismiss=self._hide_banner,
+            parent=self.centralWidget(),
+        )
+        # Apply current theme
+        banner.apply_theme(self.settings.get_theme())
+
+        # Insert banner into the layout at position 0 (above tab widget)
+        self.centralWidget().layout().insertWidget(0, banner)
+        self._update_banner = banner
+
+    def _hide_banner(self):
+        """Reset the banner reference (the widget removes itself via deleteLater)."""
+        self._update_banner = None
+
+    def _manual_update_check(self):
+        """User clicked 'Check for updates' in the menu bar — always runs (no throttle)."""
+        from spectroview import VERSION
+        self._manual_checker = UpdateCheckerWorker(current_version=VERSION)
+        self._manual_check_found_update = False
+        self._manual_checker.update_available.connect(self._on_manual_update_found)
+        self._manual_checker.check_finished.connect(self._on_manual_check_done)
+        self._manual_checker.start()
+
+    def _on_manual_update_found(self, tag: str, notes: str, html_url: str):
+        """A newer version was found during a user-initiated check."""
+        self._manual_check_found_update = True
+        # Show banner even if user previously skipped this version
+        if self._update_banner is not None:
+            return
+
+        banner = VUpdateBanner(
+            tag=tag,
+            html_url=html_url,
+            on_skip=self.settings.set_skipped_version,
+            on_dismiss=self._hide_banner,
+            parent=self.centralWidget(),
+        )
+        banner.apply_theme(self.settings.get_theme())
+        self.centralWidget().layout().insertWidget(0, banner)
+        self._update_banner = banner
+
+    def _on_manual_check_done(self):
+        """Show 'up to date' message if the manual check found nothing new."""
+        from spectroview import VERSION
+        if not self._manual_check_found_update:
+            QMessageBox.information(
+                self,
+                "No Update Available",
+                f"You are already using the latest version of SPECTROview (v{VERSION}).",
+            )
+
+    def showEvent(self, event):
+        """Start the update check after the window has been displayed."""
+        super().showEvent(event)
+        # Use a short single-shot timer so the UI paints before the thread starts
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(2000, self._start_update_check)
 
     def closeEvent(self, event):
         """Clean up on application exit to prevent Matplotlib C++ threading crashes."""

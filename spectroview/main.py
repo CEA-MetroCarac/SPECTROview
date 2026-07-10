@@ -464,21 +464,12 @@ class Main(QMainWindow):
     # ── Update checker ────────────────────────────────────────────────────────
     def _start_update_check(self):
         """Launch a background thread to query GitHub for the latest release."""
-        from datetime import date
         if not self.settings.get_check_for_updates():
-            return
-
-        # Throttle: check at most once per day
-        today = date.today().isoformat()
-        if self.settings.get_last_check_date() == today:
             return
 
         from spectroview import VERSION
         self._checker = UpdateCheckerWorker(current_version=VERSION)
         self._checker.update_available.connect(self._on_update_available)
-        self._checker.check_finished.connect(
-            lambda: self.settings.set_last_check_date(today)
-        )
         self._checker.start()
 
     def _on_update_available(self, tag: str, notes: str, html_url: str):

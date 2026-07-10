@@ -7,7 +7,7 @@
     <img width=100 src="https://raw.githubusercontent.com/CEA-MetroCarac/SPECTROview/main/docs/assets/icon.png">
 </p>
     
-## **SPECTROview: A Tool for Spectroscopic Data Processing and Visualization**
+## **SPECTROview: An Open-Source Application for Interactive Spectroscopic Data Processing, Fitting, and Visualization**
 
 **SPECTROview** is a free, open-source software application designed for advanced spectroscopic data analysis. It supports a diverse array of data types, including discrete spectra and hyperspectral datasets such as 2D maps and wafer maps.
 

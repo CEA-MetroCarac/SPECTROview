@@ -1140,6 +1140,34 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#v26283-2026-07-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v26.28.3 - 2026-07-10
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v26.28.3 - 2026-07-10">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#privacy-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔒 Privacy first:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#v26282-2026-07-08" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1387,24 +1415,29 @@
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
 <p><em>(Dynamically synchronized from <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases">GitHub Releases</a>)</em></p>
 <hr />
-<h2 id="v26282-2026-07-08"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.28.2">v26.28.2</a> - 2026-07-08<a class="headerlink" href="#v26282-2026-07-08" title="Permanent link">&para;</a></h2>
-<p>✨ Improvements of Graph Workspace</p>
+<h2 id="v26283-2026-07-10"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.28.3">v26.28.3</a> - 2026-07-10<a class="headerlink" href="#v26283-2026-07-10" title="Permanent link">&para;</a></h2>
+<h5 id="added-a-new-automatic-update-checker">🚀 Added a new Automatic Update Checker<a class="headerlink" href="#added-a-new-automatic-update-checker" title="Permanent link">&para;</a></h5>
+<p>SPECTROview now automatically checks for new releases at startup, ensuring you never miss the latest features, improvements, or bug fixes.</p>
+<h4 id="privacy-first">🔒 Privacy first:<a class="headerlink" href="#privacy-first" title="Permanent link">&para;</a></h4>
+<p>The update check sends only a standard, anonymous request to the public GitHub API to retrieve the latest release version. No personal information, usage data, or telemetry is collected or transmitted.</p>
+<h5 id="when-a-new-version-is-available-the-notification-banner-provides-three-options">When a new version is available, the notification banner provides three options:<a class="headerlink" href="#when-a-new-version-is-available-the-notification-banner-provides-three-options" title="Permanent link">&para;</a></h5>
+<p><img alt="image" src="https://github.com/user-attachments/assets/38c9370e-d951-4953-abe6-4e6b389cd5de" /></p>
 <ul>
-<li>
-<p>Customize Graph dialog: Added universal <code>Apply</code> and <code>Cancel</code> buttons for a more consistent editing workflow.</p>
-</li>
-<li>
-<p>Axis tab: Merged the <code>Scale</code> (Linear/Log) and <code>Data Type</code>controls into a single <code>Axis Properties</code> group. Axis scale management is now handled exclusively through the Customize Graph dialog:</p>
-</li>
+<li>🔍 View changelog – Opens the GitHub release page to view the latest changes and improvements.</li>
+<li>⏰ Update later – Dismisses the notification for the current session. The reminder will appear again the next time you start SPECTROview.</li>
+<li>🚫 Skip this version – Permanently ignores the current release. You will only be notified when a newer version becomes available.</li>
+</ul>
+<hr />
+<h2 id="v26282-2026-07-08"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.28.2">v26.28.2</a> - 2026-07-08<a class="headerlink" href="#v26282-2026-07-08" title="Permanent link">&para;</a></h2>
+<h5 id="improvements-of-graph-workspace">✨ Improvements of Graph Workspace<a class="headerlink" href="#improvements-of-graph-workspace" title="Permanent link">&para;</a></h5>
+<ul>
+<li>Customize Graph dialog: Added universal <code>Apply</code> and <code>Cancel</code> buttons for a more consistent editing workflow.</li>
+<li>Axis tab: Merged the <code>Scale</code> (Linear/Log) and <code>Data Type</code>controls into a single <code>Axis Properties</code> group. Axis scale management is now handled exclusively through the Customize Graph dialog:</li>
 </ul>
 <p><img alt="image" src="https://github.com/user-attachments/assets/78ada0eb-9e25-47db-85a3-32cebac23511" /></p>
 <ul>
-<li>
-<p>Legend: Added a new option to position the legend outside the plot area with a single click (User can alway drag and drop legend box anywhere with mouse).</p>
-</li>
-<li>
-<p>Point plots: Improved marker edge thickness for cleaner, more readable data visualization.</p>
-</li>
+<li>Legend: Added a new option to position the legend outside the plot area with a single click (User can alway drag and drop legend box anywhere with mouse).</li>
+<li>Point plots: Improved marker edge thickness for cleaner, more readable data visualization.</li>
 </ul>
 <p><img alt="image" src="https://github.com/user-attachments/assets/4bcb8d9a-5b59-4918-900d-3d2bd5e10e60" /></p>
 <ul>
@@ -1415,41 +1448,25 @@
 <li>Applied several visual enhancements to improve the overall appearance and consistency of graph rendering.</li>
 </ul>
 <p>For more information, see the User Manual (<a href="https://cea-metrocarac.github.io/SPECTROview/user_manual/graphs/#3-customizing-a-plot">Graphs → Customizing a Plot</a>).</p>
-<p>♻️ Refactoring</p>
+<h5 id="refactoring">♻️ Refactoring<a class="headerlink" href="#refactoring" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p>Moved all graph rendering logic from <code>v_graph.py</code> into a dedicated<code>v_plot_renderer.py</code> module, improving code organization and maintainability.</p>
-</li>
-<li>
-<p>Removed the <code>seaborn</code>dependency. All plotting now relies on native <code>matplotlib</code>and <code>scipy</code> implementations.</p>
-</li>
+<li>Moved all graph rendering logic from <code>v_graph.py</code> into a dedicated<code>v_plot_renderer.py</code> module, improving code organization and maintainability.</li>
+<li>Removed the <code>seaborn</code>dependency. All plotting now relies on native <code>matplotlib</code>and <code>scipy</code> implementations.</li>
 </ul>
-<p>📖 Documentation</p>
+<h5 id="documentation">📖 Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p>Expanded the User Manual with a comprehensive description of the Customize Graph dialog, including new screenshots.</p>
-</li>
-<li>
-<p>Updated the Developer Guide.</p>
-</li>
-<li>
-<p>Updated SoftwareX publication DOI: https://doi.org/10.1016/j.softx.2026.102862 </p>
-</li>
+<li>Expanded the User Manual with a comprehensive description of the Customize Graph dialog, including new screenshots.</li>
+<li>Updated the Developer Guide.</li>
+<li>Updated SoftwareX publication DOI: https://doi.org/10.1016/j.softx.2026.102862 </li>
 </ul>
 <hr />
 <h2 id="v26254-2026-06-15"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.25.4">v26.25.4</a> - 2026-06-15<a class="headerlink" href="#v26254-2026-06-15" title="Permanent link">&para;</a></h2>
 <h5 id="new-features">✨ New Features<a class="headerlink" href="#new-features" title="Permanent link">&para;</a></h5>
 <h5 id="graph-workspace">📊 Graph Workspace<a class="headerlink" href="#graph-workspace" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p>Automatic axis labeling: axis labels for fitted parameters (peak position, FWHM, intensity, area, etc.) are now generated automatically, removing the need for manual input.</p>
-</li>
-<li>
-<p>Added histogram plotting support.</p>
-</li>
-<li>
-<p>Enhanced plot customization options: Minor axis ticks; Adjustable marker size and color; Improved trendline customization, etc...</p>
-</li>
+<li>Automatic axis labeling: axis labels for fitted parameters (peak position, FWHM, intensity, area, etc.) are now generated automatically, removing the need for manual input.</li>
+<li>Added histogram plotting support.</li>
+<li>Enhanced plot customization options: Minor axis ticks; Adjustable marker size and color; Improved trendline customization, etc...</li>
 </ul>
 <h5 id="spectra-maps-workspace">🔬 Spectra &amp; Maps Workspace<a class="headerlink" href="#spectra-maps-workspace" title="Permanent link">&para;</a></h5>
 <ul>
@@ -1458,21 +1475,13 @@
 <p><img alt="image" src="https://github.com/user-attachments/assets/0f486a21-7e11-4831-9312-ad62b8d01e4e" /></p>
 <h5 id="bug-fixes-improvements">🛠️ Bug Fixes &amp; Improvements<a class="headerlink" href="#bug-fixes-improvements" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p>Fixed several minor bugs.</p>
-</li>
-<li>
-<p>Improved overall usability and application stability.</p>
-</li>
+<li>Fixed several minor bugs.</li>
+<li>Improved overall usability and application stability.</li>
 </ul>
 <h5 id="user-interface">🎨 User Interface<a class="headerlink" href="#user-interface" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p>Refined the GUI with a modern flat design for a cleaner and more intuitive user experience.</p>
-</li>
-<li>
-<p>Unified icon styling across the application, with automatic color adaptation to light and dark themes.</p>
-</li>
+<li>Refined the GUI with a modern flat design for a cleaner and more intuitive user experience.</li>
+<li>Unified icon styling across the application, with automatic color adaptation to light and dark themes.</li>
 </ul>
 <p><img alt="image" src="https://github.com/user-attachments/assets/9fea893d-21b3-499d-a8fa-bc83a8c55a8a" /></p>
 <p><img alt="image" src="https://github.com/user-attachments/assets/42b7b062-e84e-448a-89e6-0b8d6db4fdac" /></p>
@@ -1482,29 +1491,17 @@
 <p>This release marks a fundamental milestone in the evolution of <code>SPECTROview</code>. At the heart of this update is the brand-new <strong>Vectorized Batch Fit (<code>VBF</code>) engine</strong>, delivering unprecedented fitting performance, stability, and precision for both hyperspectral map data and individual spectra.</p>
 <h5 id="key-highlights-performance-boosts">🚀 <strong>Key Highlights &amp; Performance Boosts</strong><a class="headerlink" href="#key-highlights-performance-boosts" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p><strong>Vectorized Preprocessing:</strong> The new <code>SpectraStore</code> and <code>MapData</code> models store all spectroscopic and numerical data natively as contiguous NumPy arrays. This eliminates the overhead of legacy per-row instances and allows for fully vectorized preprocessing.</p>
-</li>
-<li>
-<p><strong>Astounding Fit Speeds:</strong> Combined with the tensor-centric <code>SpectraStore</code>, the <code>VBF Engine</code> processes all spectra simultaneously as 2D/3D tensors. Fitting a 2D map with several thousand pixels is now virtually instantaneous (up to 70× faster than the previous version). Massive maps with tens of thousands of pixels are handled seamlessly on a standard CPU (tested on an Intel Core i5 8th Gen, 16GB RAM; no dedicated GPU required).</p>
-</li>
-<li>
-<p><strong>Reduced Workspace Size &amp; Faster Loading:</strong> The new architecture utilizes a highly optimized, ZIP-backed serialization format (NumPy <code>.npz</code> arrays + JSON metadata). This reduces <code>.maps</code>, <code>.spectra</code>, and <code>.graphs</code> file sizes by <strong>&gt;50%</strong> and cuts workspace load times in half.</p>
-</li>
-<li>
-<p><strong>Faster Application Startup:</strong> Through optimized library imports and core refactoring, application start-up time has been reduced by <strong>&gt;60%</strong> (launching in under 4 seconds on a standard PC).</p>
-</li>
+<li><strong>Vectorized Preprocessing:</strong> The new <code>SpectraStore</code> and <code>MapData</code> models store all spectroscopic and numerical data natively as contiguous NumPy arrays. This eliminates the overhead of legacy per-row instances and allows for fully vectorized preprocessing.</li>
+<li><strong>Astounding Fit Speeds:</strong> Combined with the tensor-centric <code>SpectraStore</code>, the <code>VBF Engine</code> processes all spectra simultaneously as 2D/3D tensors. Fitting a 2D map with several thousand pixels is now virtually instantaneous (up to 70× faster than the previous version). Massive maps with tens of thousands of pixels are handled seamlessly on a standard CPU (tested on an Intel Core i5 8th Gen, 16GB RAM; no dedicated GPU required).</li>
+<li><strong>Reduced Workspace Size &amp; Faster Loading:</strong> The new architecture utilizes a highly optimized, ZIP-backed serialization format (NumPy <code>.npz</code> arrays + JSON metadata). This reduces <code>.maps</code>, <code>.spectra</code>, and <code>.graphs</code> file sizes by <strong>&gt;50%</strong> and cuts workspace load times in half.</li>
+<li><strong>Faster Application Startup:</strong> Through optimized library imports and core refactoring, application start-up time has been reduced by <strong>&gt;60%</strong> (launching in under 4 seconds on a standard PC).</li>
 </ul>
 <hr />
 <h5 id="intelligent-noise-filtering"><strong>Intelligent Noise Filtering</strong><a class="headerlink" href="#intelligent-noise-filtering" title="Permanent link">&para;</a></h5>
 <p>The <code>VBF Engine</code> features native noise detection capabilities (the <code>coef_noise</code> threshold, adjustable via the <code>Settings Panel</code>):</p>
 <ul>
-<li>
-<p>Automatically detects pixel regions containing only baseline noise or substrate signals and filters them out of the active fit.</p>
-</li>
-<li>
-<p>By skipping Levenberg-Marquardt (LM) iterations on pure noise, the optimizer avoids calculating "ghost peaks," prevents parameter cross-talk, stabilizes the fit, and produces much cleaner parameter maps without requiring post-processing.</p>
-</li>
+<li>Automatically detects pixel regions containing only baseline noise or substrate signals and filters them out of the active fit.</li>
+<li>By skipping Levenberg-Marquardt (LM) iterations on pure noise, the optimizer avoids calculating "ghost peaks," prevents parameter cross-talk, stabilizes the fit, and produces much cleaner parameter maps without requiring post-processing.</li>
 </ul>
 <p><img alt="image" src="https://github.com/user-attachments/assets/cf811099-71a6-4b92-bfcf-8a3e7eb3bfef" /></p>
 <p><em>Fig: </em><em>(Left)</em><em> Fitted without noise filtering (<code>coef_noise</code> = 0); the user must manually mask regions of pure noise or substrate signal. </em><em>(Right)</em><em> With noise filtering enabled (<code>coef_noise</code> &gt; 0), pixels in the substrate (noise) region are automatically detected and ignored, resulting in a cleaner map and faster fit.</em></p>
@@ -1521,12 +1518,8 @@
 <hr />
 <h5 id="user-experience-workflow-improvements">🎨 <strong>User Experience &amp; Workflow Improvements</strong><a class="headerlink" href="#user-experience-workflow-improvements" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p><strong>Graphs Workspace — Smart Customize Dialog:</strong> The <code>Customize Dialog</code> now intelligently and automatically switches contexts when navigating between plots. Users no longer need to manually open and close the dialog for each individual plot.</p>
-</li>
-<li>
-<p><strong>Ergonomic Tweaks:</strong> Several minor UI/UX adjustments have been introduced for a smoother, more premium interaction experience.</p>
-</li>
+<li><strong>Graphs Workspace — Smart Customize Dialog:</strong> The <code>Customize Dialog</code> now intelligently and automatically switches contexts when navigating between plots. Users no longer need to manually open and close the dialog for each individual plot.</li>
+<li><strong>Ergonomic Tweaks:</strong> Several minor UI/UX adjustments have been introduced for a smoother, more premium interaction experience.</li>
 </ul>
 <hr />
 <h5 id="for-developers">🛠 <strong>For Developers</strong><a class="headerlink" href="#for-developers" title="Permanent link">&para;</a></h5>
@@ -1541,9 +1534,7 @@
 </ul>
 <h5 id="ui-usability-improvements">🎨 UI &amp; Usability Improvements<a class="headerlink" href="#ui-usability-improvements" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p>Improved GUI responsiveness when selecting thousands of spectra.</p>
-</li>
+<li>Improved GUI responsiveness when selecting thousands of spectra.</li>
 <li>
 <p>Introduce <strong>full Dark Mode</strong> : </p>
 </li>
@@ -1575,36 +1566,22 @@
 </ul>
 <p><img alt="image" src="https://github.com/user-attachments/assets/2a02bafe-f8db-458e-bd4a-b0511e7ad657" /></p>
 <ul>
-<li>Added support for <strong>time series (temporal data)</strong> in Renishaw <code>.wdf</code> files.  </li>
+<li>Added support for <strong>time series (temporal data)</strong> in Renishaw <code>.wdf</code> files.<br />
+  Time series files now open in the <code>Spectra Workspace</code>, with timestamps appended to the spectra names.</li>
 </ul>
-<p>Time series files now open in the <code>Spectra Workspace</code>, with timestamps appended to the spectra names.</p>
 <p><img alt="image" src="https://github.com/user-attachments/assets/ec85a041-ddb9-48d9-8d2f-01953263f4e6" /></p>
 <h5 id="improvements">🎨 Improvements<a class="headerlink" href="#improvements" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p>Increased the <strong>height</strong> of the DataFrame list box for better usability.</p>
-</li>
-<li>
-<p>Removed some toast notifications for certain actions.</p>
-</li>
-<li>
-<p>Improved overall GUI ergonomics with minor interface adjustments.</p>
-</li>
+<li>Increased the <strong>height</strong> of the DataFrame list box for better usability.</li>
+<li>Removed some toast notifications for certain actions.</li>
+<li>Improved overall GUI ergonomics with minor interface adjustments.</li>
 </ul>
 <h5 id="bug-fixes_1">🐞 Bug Fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p>Fixed an issue in the <strong>DataFilter display</strong> where multiple filter expressions could overlap in the ListWidget (Graphs workspace).</p>
-</li>
-<li>
-<p>Fixed a crash when applying an invalid filter expression to a DataFrame (Graphs workspace).</p>
-</li>
-<li>
-<p>Fixed an issue where <strong>Stop Fitting</strong> did not work on macOS.</p>
-</li>
-<li>
-<p>Fixed a <code>RuntimeWarning: divide by zero</code> when fitting spectra with the <strong>Pseudo-Voigt</strong> function.</p>
-</li>
+<li>Fixed an issue in the <strong>DataFilter display</strong> where multiple filter expressions could overlap in the ListWidget (Graphs workspace).</li>
+<li>Fixed a crash when applying an invalid filter expression to a DataFrame (Graphs workspace).</li>
+<li>Fixed an issue where <strong>Stop Fitting</strong> did not work on macOS.</li>
+<li>Fixed a <code>RuntimeWarning: divide by zero</code> when fitting spectra with the <strong>Pseudo-Voigt</strong> function.</li>
 </ul>
 <hr />
 <h2 id="v2696-2026-02-21"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.9.6">v26.9.6</a> - 2026-02-21<a class="headerlink" href="#v2696-2026-02-21" title="Permanent link">&para;</a></h2>
@@ -1612,46 +1589,30 @@
 <p>(This release notes includes updates from <code>26.8.1</code> versions released previously via PyPi)</p>
 <h5 id="new-features-enhancements">🚀 New Features &amp; Enhancements<a class="headerlink" href="#new-features-enhancements" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p><strong>Universal Drag &amp; Drop:</strong> Drag and drop <strong>any</strong> supported file types <strong>anywhere</strong> in the GUI to open them instantly (before user need to drag and drop files into the listbox).</p>
-</li>
-<li>
-<p><strong>Expanded File Format Support:</strong> Added full support for spectroscopic file formats <strong>.WDF</strong> (from Wire-Renishaw software) and <strong>.SPC</strong> (from Labspec6-HORIBA software), including comprehensive metadata extraction, which is displayed within the <code>More</code> Tab).</p>
-</li>
+<li><strong>Universal Drag &amp; Drop:</strong> Drag and drop <strong>any</strong> supported file types <strong>anywhere</strong> in the GUI to open them instantly (before user need to drag and drop files into the listbox).</li>
+<li><strong>Expanded File Format Support:</strong> Added full support for spectroscopic file formats <strong>.WDF</strong> (from Wire-Renishaw software) and <strong>.SPC</strong> (from Labspec6-HORIBA software), including comprehensive metadata extraction, which is displayed within the <code>More</code> Tab).</li>
 </ul>
 <p><img alt="More tab" src="https://github.com/user-attachments/assets/360b2226-81a7-4f2d-ab88-acd26b903e0e" /></p>
 <ul>
+<li><strong>Intensity Normalization:</strong> Introduced a new tool to <code>normalize intensity</code> feature (via the Tab <code>Metadata</code>).</li>
 <li>
-<p><strong>Intensity Normalization:</strong> Introduced a new tool to <code>normalize intensity</code> feature (via the Tab <code>Metadata</code>).</p>
+<p><strong>Graph Annotations:</strong> Add vertical lines, horizontal lines, and text annotations to graphs. Annotations are fully draggable, and double-clicking text opens a Customization Panel for quick editing.
+<img alt="Plot Annotation" src="https://github.com/user-attachments/assets/620e5dca-3674-45ee-804f-05ebb23f6c07" /></p>
 </li>
 <li>
-<p><strong>Graph Annotations:</strong> Add vertical lines, horizontal lines, and text annotations to graphs. Annotations are fully draggable, and double-clicking text opens a Customization Panel for quick editing.</p>
+<p><strong>Spectra Export:</strong> Save spectral data directly to a <code>.txt</code> file(s) from within the Spectra Workspace.</p>
 </li>
-</ul>
-<p><img alt="Plot Annotation" src="https://github.com/user-attachments/assets/620e5dca-3674-45ee-804f-05ebb23f6c07" /></p>
-<ul>
-<li><strong>Spectra Export:</strong> Save spectral data directly to a <code>.txt</code> file(s) from within the Spectra Workspace.</li>
 </ul>
 <h5 id="ui-usability-improvements_1">🎨 UI &amp; Usability Improvements<a class="headerlink" href="#ui-usability-improvements_1" title="Permanent link">&para;</a></h5>
 <ul>
+<li><strong>Interactive Legends:</strong> </li>
+<li>Double-click on any Legend Box (including inside the <code>Spectra Workspace</code>) to quickly open its settings or modify its label and color.</li>
+<li><strong>Auto-Rescale:</strong> The <code>SpectraViewer</code> now automatically rescales to best fit the data after cropping.</li>
+<li><strong>UI Layout Updates:</strong> </li>
 <li>
-<p><strong>Interactive Legends:</strong> </p>
+<p>Moved the <code>BestFit</code> option (to show or not the <code>peaks</code> and <code>bestfit curve</code>) outside of the toolbar for quicker access. It is now placed next to the "Show Legend" button:
+<img alt="image" src="https://github.com/user-attachments/assets/ec87004b-3cec-42d3-8cab-97ca570880d1" /></p>
 </li>
-<li>
-<p>Double-click on any Legend Box (including inside the <code>Spectra Workspace</code>) to quickly open its settings or modify its label and color.</p>
-</li>
-<li>
-<p><strong>Auto-Rescale:</strong> The <code>SpectraViewer</code> now automatically rescales to best fit the data after cropping.</p>
-</li>
-<li>
-<p><strong>UI Layout Updates:</strong> </p>
-</li>
-<li>
-<p>Moved the <code>BestFit</code> option (to show or not the <code>peaks</code> and <code>bestfit curve</code>) outside of the toolbar for quicker access. It is now placed next to the "Show Legend" button:</p>
-</li>
-</ul>
-<p><img alt="image" src="https://github.com/user-attachments/assets/ec87004b-3cec-42d3-8cab-97ca570880d1" /></p>
-<ul>
 <li>
 <p>Minor visual tweaks, including a new icon for some buttons within <code>Spectra Workspace</code>.</p>
 </li>
@@ -1665,21 +1626,11 @@
 <p><img alt="menubar quick acces" src="https://github.com/user-attachments/assets/a58ac709-4adc-4a85-ae86-34b236890832" /></p>
 <h5 id="bug-fixes_2">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p><strong>Fano Peak Shape (Bug #2):</strong> Fixed issues relating to parameter scaling and intensity representation. Corrections are now accurately reflected in the plot, the peak table, and the hover tooltip (<code>on_hover</code> method).</p>
-</li>
-<li>
-<p><strong>2D Map Alignment:</strong> improve 2Dmap visualization and interaction.</p>
-</li>
-<li>
-<p>Fixed a bug to preserve <code>metadata</code> when copy and paste <code>fit-model</code> from one spectrum to another.</p>
-</li>
-<li>
-<p><strong>Plot Update Logic:</strong> </p>
-</li>
-<li>
-<p>Fixed a bug where clicking the "Update plot" button would snap a dragged legend box back to its original position.</p>
-</li>
+<li><strong>Fano Peak Shape (Bug #2):</strong> Fixed issues relating to parameter scaling and intensity representation. Corrections are now accurately reflected in the plot, the peak table, and the hover tooltip (<code>on_hover</code> method).</li>
+<li><strong>2D Map Alignment:</strong> improve 2Dmap visualization and interaction.</li>
+<li>Fixed a bug to preserve <code>metadata</code> when copy and paste <code>fit-model</code> from one spectrum to another.</li>
+<li><strong>Plot Update Logic:</strong> </li>
+<li>Fixed a bug where clicking the "Update plot" button would snap a dragged legend box back to its original position.</li>
 <li>
 <p>Fixed an issue where changes to the Z-axis were not triggering property updates in the legend.</p>
 </li>
@@ -1689,18 +1640,10 @@
 </ul>
 <h5 id="under-the-hood">⚙️ Under the Hood<a class="headerlink" href="#under-the-hood" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p><strong>Fitspy Compatibility:</strong> Updated backend to support version 2026.2 of <code>fitspy</code> package (update p<code>yproject.toml</code>).</p>
-</li>
-<li>
-<p><strong>Matplotlib</strong> : support lastest <code>matplotlib</code> version 3.10.8.</p>
-</li>
-<li>
-<p><strong>Codebase Refactoring:</strong> Cleaned up code architecture by refactoring <code>customized_widgets.py</code> and migrating <code>customize_legend_widget</code> into the <code>Customize_graph_dialog</code> module.</p>
-</li>
-<li>
-<p><strong>Testing:</strong> Updated the <code>pytest</code> test suite to improve application stability and code coverage.</p>
-</li>
+<li><strong>Fitspy Compatibility:</strong> Updated backend to support version 2026.2 of <code>fitspy</code> package (update p<code>yproject.toml</code>).</li>
+<li><strong>Matplotlib</strong> : support lastest <code>matplotlib</code> version 3.10.8.</li>
+<li><strong>Codebase Refactoring:</strong> Cleaned up code architecture by refactoring <code>customized_widgets.py</code> and migrating <code>customize_legend_widget</code> into the <code>Customize_graph_dialog</code> module.</li>
+<li><strong>Testing:</strong> Updated the <code>pytest</code> test suite to improve application stability and code coverage.</li>
 </ul>
 <hr />
 <h2 id="v2661-2026-02-05"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.6.1">v26.6.1</a> - 2026-02-05<a class="headerlink" href="#v2661-2026-02-05" title="Permanent link">&para;</a></h2>
@@ -1708,18 +1651,10 @@
 <p><strong>Note:</strong> This Release notes includes all changes and new features from versions <strong>v0.9.4</strong> to <strong>v0.9.8</strong> and from <strong>v26.1.1</strong> to <strong>v26.5.1</strong> previously released on PyPI.</p>
 </blockquote>
 <h5 id="versioning-update">Versioning Update<a class="headerlink" href="#versioning-update" title="Permanent link">&para;</a></h5>
-<p>Starting with this release, we are adopting a new versioning format: <strong><code>YY.W.Z</code></strong></p>
-<ul>
-<li>
-<p><code>YY</code> - Year (last two digits)</p>
-</li>
-<li>
-<p><code>W</code> - Week number of the year</p>
-</li>
-<li>
-<p><code>Z</code> - Build number within that week</p>
-</li>
-</ul>
+<p>Starting with this release, we are adopting a new versioning format: <strong><code>YY.W.Z</code></strong>
+- <code>YY</code> - Year (last two digits)
+- <code>W</code> - Week number of the year
+- <code>Z</code> - Build number within that week</p>
 <h5 id="whats-new">🎉 What's New<a class="headerlink" href="#whats-new" title="Permanent link">&para;</a></h5>
 <h5 id="built-in-user-manual">Built-in User Manual<a class="headerlink" href="#built-in-user-manual" title="Permanent link">&para;</a></h5>
 <ul>
@@ -1742,19 +1677,15 @@
 <p><img alt="image" src="https://github.com/user-attachments/assets/6d46967a-8b6e-4736-b82c-3c80b95fa06f" /></p>
 <h5 id="new-features_2">New Features<a class="headerlink" href="#new-features_2" title="Permanent link">&para;</a></h5>
 <ul>
+<li><strong>Log-scale option</strong> for both X and Y axes</li>
+<li><strong>Data loading support</strong> from Excel (single or multiple sheets) and CSV files</li>
 <li>
-<p><strong>Log-scale option</strong> for both X and Y axes</p>
+<p><strong>Refresh button</strong>  <img alt="image" src="https://github.com/user-attachments/assets/1e10c10b-2234-4c9b-a611-4d60760fad23" />  for <code>DataFrame widget</code>: synchronize/reflect changes in Excel or CSV files without reloading
+<img alt="image" src="https://github.com/user-attachments/assets/47bf9288-b70e-4131-95f6-d0ecd16510e8" /></p>
 </li>
 <li>
-<p><strong>Data loading support</strong> from Excel (single or multiple sheets) and CSV files</p>
+<p><strong>Delete All button</strong> <img alt="image" src="https://github.com/user-attachments/assets/df59609d-2333-4de1-bb1d-3be3d253c2b7" /> (in the bottom toolbar) to remove all existing plots at once</p>
 </li>
-<li>
-<p><strong>Refresh button</strong>  <img alt="image" src="https://github.com/user-attachments/assets/1e10c10b-2234-4c9b-a611-4d60760fad23" />  for <code>DataFrame widget</code>: synchronize/reflect changes in Excel or CSV files without reloading</p>
-</li>
-</ul>
-<p><img alt="image" src="https://github.com/user-attachments/assets/47bf9288-b70e-4131-95f6-d0ecd16510e8" /></p>
-<ul>
-<li><strong>Delete All button</strong> <img alt="image" src="https://github.com/user-attachments/assets/df59609d-2333-4de1-bb1d-3be3d253c2b7" /> (in the bottom toolbar) to remove all existing plots at once</li>
 </ul>
 <p><img alt="image" src="https://github.com/user-attachments/assets/cd722b43-40bf-4a7e-9f22-f6dae62a0297" /></p>
 <ul>
@@ -1762,15 +1693,9 @@
 </ul>
 <p><img alt="image" src="https://github.com/user-attachments/assets/ee0e59ed-2ed6-44ca-857a-7924f16b3bcb" /></p>
 <ul>
-<li>
-<p><strong>Auto-selection for WaferPlot style</strong>: when WaferPlot style is selected, X and Y comboboxes are automatically configured, users only need to select the Z parameter</p>
-</li>
-<li>
-<p><strong>Customized legend dialog</strong>: click on the legend box to show the dialog to customize legend box properties (color, label, marker)</p>
-</li>
-<li>
-<p><strong>Autocomplete feature</strong> for DataFrame filter widget: type quickly and avoid mistyping column headers:</p>
-</li>
+<li><strong>Auto-selection for WaferPlot style</strong>: when WaferPlot style is selected, X and Y comboboxes are automatically configured, users only need to select the Z parameter</li>
+<li><strong>Customized legend dialog</strong>: click on the legend box to show the dialog to customize legend box properties (color, label, marker)</li>
+<li><strong>Autocomplete feature</strong> for DataFrame filter widget: type quickly and avoid mistyping column headers:</li>
 </ul>
 <p><img alt="image" src="https://github.com/user-attachments/assets/8faba1a5-0ba6-4ade-af7f-a9c01a67aaee" /></p>
 <h5 id="bug-fixes_3">Bug Fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">&para;</a></h5>
@@ -1781,100 +1706,58 @@
 <h5 id="spectra-and-maps-workspaces">Spectra and Maps Workspaces:<a class="headerlink" href="#spectra-and-maps-workspaces" title="Permanent link">&para;</a></h5>
 <h5 id="general-updates">General Updates<a class="headerlink" href="#general-updates" title="Permanent link">&para;</a></h5>
 <ul>
-<li>New GUI layout for Maps Workspace with improved user experience</li>
-</ul>
-<p><img alt="image" src="https://github.com/user-attachments/assets/e866ecd6-0465-4acd-905e-37455e05e2a2" /></p>
-<ul>
+<li>
+<p>New GUI layout for Maps Workspace with improved user experience
+<img alt="image" src="https://github.com/user-attachments/assets/e866ecd6-0465-4acd-905e-37455e05e2a2" /></p>
+</li>
 <li>
 <p><strong>TRPL data support</strong></p>
 </li>
-<li>
-<p>New peak shapes: <strong>Fano</strong>, <strong>Single Exponential</strong>, and <strong>Bi-Exponential Decay</strong></p>
-</li>
-<li>
-<p><strong>Stop button</strong> added to progress bar to halt ongoing fitting processes when needed</p>
-</li>
+<li>New peak shapes: <strong>Fano</strong>, <strong>Single Exponential</strong>, and <strong>Bi-Exponential Decay</strong></li>
+<li><strong>Stop button</strong> added to progress bar to halt ongoing fitting processes when needed
+<img alt="image" src="https://github.com/user-attachments/assets/f93711d7-67d2-447e-83c7-bfcb2c5871cd" /></li>
 </ul>
-<p><img alt="image" src="https://github.com/user-attachments/assets/f93711d7-67d2-447e-83c7-bfcb2c5871cd" /></p>
 <h5 id="spectraviewer-widget"><code>SpectraViewer</code> Widget<a class="headerlink" href="#spectraviewer-widget" title="Permanent link">&para;</a></h5>
-<p><strong>Customizable legend box of SpectraViewer</strong>: click on the legend box to show the dialog to customize legend box properties (color, label, marker)</p>
-<p><img alt="image" src="https://github.com/user-attachments/assets/6b66ecd1-5963-4715-a7c3-d93fe9a40787" /></p>
-<p><strong>New Option for Menu dropdown Options:</strong></p>
-<ul>
-<li>
-<p><strong>LineWidth</strong>: Adjust the width of spectral lines</p>
-</li>
-<li>
-<p><strong>Ratio</strong>: Adjust the ratio (<code>width</code> x <code>heigh</code>) of copied figure</p>
-</li>
-<li>
-<p><strong>Additional X-axis labels</strong>: </p>
-</li>
-<li>
-<p>Binding Energy (eV)</p>
-</li>
-<li>
-<p>Emission Energy (eV)</p>
-</li>
-<li>
-<p>Frequency (Hz)</p>
-</li>
-<li>
-<p>2theta (°)</p>
-</li>
-<li>
-<p>Time (ns)</p>
-</li>
-<li>
-<p><strong>Plot style option</strong>: select between <code>line</code>or <code>dot</code>style for Raw spectrum plot:</p>
-</li>
-</ul>
+<p><strong>Customizable legend box of SpectraViewer</strong>: click on the legend box to show the dialog to customize legend box properties (color, label, marker)
+<img alt="image" src="https://github.com/user-attachments/assets/6b66ecd1-5963-4715-a7c3-d93fe9a40787" /></p>
+<p><strong>New Option for Menu dropdown Options:</strong>
+- <strong>LineWidth</strong>: Adjust the width of spectral lines
+- <strong>Ratio</strong>: Adjust the ratio (<code>width</code> x <code>heigh</code>) of copied figure
+- <strong>Additional X-axis labels</strong>: 
+  - Binding Energy (eV)
+  - Emission Energy (eV)
+  - Frequency (Hz)
+  - 2theta (°)
+  - Time (ns)
+- <strong>Plot style option</strong>: select between <code>line</code>or <code>dot</code>style for Raw spectrum plot:</p>
 <p align="center">
-
   ![image](https://github.com/user-attachments/assets/b13c1901-d6d4-4ffa-9b72-4d50d77bc53f)
-
 </p>
 
 <h5 id="mapviewer-widget"><code>MapViewer</code> Widget<a class="headerlink" href="#mapviewer-widget" title="Permanent link">&para;</a></h5>
-<p><strong>Multiple MapViewers:</strong></p>
-<ul>
-<li>Additional MapViewers are now displayed as floating dialog windows. Users can open multiple MapViewers simultaneously to view and compare different parameters</li>
-</ul>
+<p><strong>Multiple MapViewers:</strong>
+- Additional MapViewers are now displayed as floating dialog windows. Users can open multiple MapViewers simultaneously to view and compare different parameters</p>
 <p><img alt="image" src="https://github.com/user-attachments/assets/d24f9b86-26ed-447b-bf44-c2dea1a7fd14" /></p>
-<p><strong>Mask Features:</strong></p>
-<ul>
-<li>Create masked 2D map plots by filtering based on desired conditions of plotted parameters or other parameters</li>
-</ul>
+<p><strong>Mask Features:</strong>
+- Create masked 2D map plots by filtering based on desired conditions of plotted parameters or other parameters</p>
 <p align="center">
-
   ![image](https://github.com/user-attachments/assets/bd536e72-c822-4c02-bbac-42d9cfb102f4)
-
 </p>
 
-<p><strong>Selection Modes:</strong></p>
-<ul>
-<li>Added <strong>rectangle selection mode</strong> for 2D map plots (in addition to single point and multiple points selection)</li>
-</ul>
+<p><strong>Selection Modes:</strong>
+- Added <strong>rectangle selection mode</strong> for 2D map plots (in addition to single point and multiple points selection)</p>
 <p><strong>MenuOptions Updates:</strong></p>
 <ul>
-<li>
-<p>Moved <strong>Extract Profile</strong> and <strong>Remove Outlier</strong> features inside MapViewer MenuOptions</p>
-</li>
-<li>
-<p>Display <strong>statistics values</strong> directly on wafer plots via <code>Show stats</code> checkbox within MenuOptions (cf. figure below)</p>
-</li>
+<li>Moved <strong>Extract Profile</strong> and <strong>Remove Outlier</strong> features inside MapViewer MenuOptions</li>
+<li>Display <strong>statistics values</strong> directly on wafer plots via <code>Show stats</code> checkbox within MenuOptions (cf. figure below)</li>
 </ul>
 <p align="center">
-
   ![image](https://github.com/user-attachments/assets/4296b3e4-061f-41b6-a09a-f6f471dda7e9)
-
 </p>
 
 <h5 id="fitresults-tab">FitResults Tab<a class="headerlink" href="#fitresults-tab" title="Permanent link">&para;</a></h5>
-<p><strong>New Capabilities:</strong></p>
-<ul>
-<li>Compute and add new columns to fit results table via mathematical operations</li>
-</ul>
+<p><strong>New Capabilities:</strong>
+- Compute and add new columns to fit results table via mathematical operations</p>
 <p><img alt="image" src="https://github.com/user-attachments/assets/6b6a9a9c-4f08-43eb-8915-d4ec9e9edbbb" /></p>
 <ul>
 <li><strong>CSV export support</strong> for best fit parameters (previously Excel-only)</li>
@@ -1886,139 +1769,67 @@
 </ul>
 <hr />
 <h2 id="v093-2025-10-27"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.9.3">v0.9.3</a> - 2025-10-27<a class="headerlink" href="#v093-2025-10-27" title="Permanent link">&para;</a></h2>
-<p>Wafer Plot Enhancements:</p>
-<ul>
-<li>
-<p>Added support to plot multiple wafer maps based on selected slot checkboxes.</p>
-</li>
-<li>
-<p>Automatically display the <code>slot number</code>on the wafer map when a <code>Slot</code> filter is active.</p>
-</li>
-<li>
-<p>Whenever the <code>wafer</code> plot style is selected, the <code>X</code> and <code>Y</code> comboxes are now automatically assigned.</p>
-</li>
-<li>
-<p>The <code>wafer</code> plot style (and corresponding <code>X</code> and <code>Y</code> columns) is automatically selected when plotting.</p>
-</li>
-</ul>
-<p>Dataframe Filter Improvements:</p>
-<ul>
-<li>
-<p>Added ability to copy <code>filter expressions</code>directly from the<code>filter list.</code></p>
-</li>
-<li>
-<p>The selected filter’s text is now automatically reflected in the QLineEdit for easier editing.</p>
-</li>
-</ul>
+<p>Wafer Plot Enhancements:
+- Added support to plot multiple wafer maps based on selected slot checkboxes.
+- Automatically display the <code>slot number</code>on the wafer map when a <code>Slot</code> filter is active.
+- Whenever the <code>wafer</code> plot style is selected, the <code>X</code> and <code>Y</code> comboxes are now automatically assigned.
+- The <code>wafer</code> plot style (and corresponding <code>X</code> and <code>Y</code> columns) is automatically selected when plotting.</p>
+<p>Dataframe Filter Improvements:
+- Added ability to copy <code>filter expressions</code>directly from the<code>filter list.</code>
+- The selected filter’s text is now automatically reflected in the QLineEdit for easier editing.</p>
 <hr />
 <h2 id="v090-2025-10-11"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.9.0">v0.9.0</a> - 2025-10-11<a class="headerlink" href="#v090-2025-10-11" title="Permanent link">&para;</a></h2>
-<p>Optimized GUI performance and responsiveness:</p>
-<ul>
-<li>
-<p>Spectrum now updates in real time when the user types new <code>peak_model</code> parameters in the <code>PeakTable</code>.</p>
-</li>
-<li>
-<p>Mouse interactions now simultaneously adjust the peak position (<code>x0</code>) and peak intensiy (<code>ampli</code>) when dragging over the plot.</p>
-</li>
-<li>
-<p>Introduced a <code>SettingsPanel</code> class (QDialog) to gather all general settings in one place.</p>
-</li>
-</ul>
-<p>Bug Fixes:</p>
-<ul>
-<li>
-<p>Customized the <code>apply_model</code> method to retain <code>xcorration_value</code>, <code>color</code>, and <code>label</code> attributes of <code>Spectrum</code> object when applying a new model.</p>
-</li>
-<li>
-<p>Fixed a bug related to the legend colors for <code>box</code> and <code>bar</code> plots of Graphs Tab.</p>
-</li>
-</ul>
-<p>Code Cleanup and Refactoring:</p>
-<ul>
-<li>
-<p>Removed the <code>CommonUtilities</code> class.</p>
-</li>
-<li>
-<p>Revised and refactored the <code>FitModelManager</code> class.</p>
-</li>
-</ul>
+<p>Optimized GUI performance and responsiveness:
+- Spectrum now updates in real time when the user types new <code>peak_model</code> parameters in the <code>PeakTable</code>.
+- Mouse interactions now simultaneously adjust the peak position (<code>x0</code>) and peak intensiy (<code>ampli</code>) when dragging over the plot.
+- Introduced a <code>SettingsPanel</code> class (QDialog) to gather all general settings in one place.</p>
+<p>Bug Fixes:
+- Customized the <code>apply_model</code> method to retain <code>xcorration_value</code>, <code>color</code>, and <code>label</code> attributes of <code>Spectrum</code> object when applying a new model.
+- Fixed a bug related to the legend colors for <code>box</code> and <code>bar</code> plots of Graphs Tab.</p>
+<p>Code Cleanup and Refactoring:
+- Removed the <code>CommonUtilities</code> class.
+- Revised and refactored the <code>FitModelManager</code> class.</p>
 <hr />
 <h2 id="v087-2025-10-05"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.8.7">v0.8.7</a> - 2025-10-05<a class="headerlink" href="#v087-2025-10-05" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p>Optimized GUI performance and responsiveness.</p>
-</li>
-<li>
-<p>Fixed minor bugs related to the "x range correction" features.</p>
-</li>
-<li>
-<p>Update new color palette.</p>
-</li>
-<li>
-<p>Code cleaning and refactoring.</p>
-</li>
+<li>Optimized GUI performance and responsiveness.</li>
+<li>Fixed minor bugs related to the "x range correction" features.</li>
+<li>Update new color palette.</li>
+<li>Code cleaning and refactoring.</li>
 </ul>
 <hr />
 <h2 id="v085-2025-09-08"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.8.5">v0.8.5</a> - 2025-09-08<a class="headerlink" href="#v085-2025-09-08" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p>Optimized GUI performance and responsiveness.</p>
-</li>
-<li>
-<p>Fixed minor bugs.</p>
-</li>
-<li>
-<p>Code cleaning and refactoring.</p>
-</li>
+<li>Optimized GUI performance and responsiveness.</li>
+<li>Fixed minor bugs.</li>
+<li>Code cleaning and refactoring.</li>
 </ul>
 <hr />
 <h2 id="v080-2025-08-27"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.8.0">v0.8.0</a> - 2025-08-27<a class="headerlink" href="#v080-2025-08-27" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p>Improved "MapViewWidget" class.</p>
-</li>
-<li>
-<p>Optimized GUI performance and responsiveness.</p>
-</li>
-<li>
-<p>Fixed minor bugs.</p>
-</li>
+<li>Improved "MapViewWidget" class.</li>
+<li>Optimized GUI performance and responsiveness.</li>
+<li>Fixed minor bugs.</li>
 </ul>
 <hr />
 <h2 id="v071-2025-07-04"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.7.1">v0.7.1</a> - 2025-07-04<a class="headerlink" href="#v071-2025-07-04" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p>Added support for converting WIRE 2D map format to a format compatible with SpectroView and LabSpec6.</p>
-</li>
-<li>
-<p>Fixed minor bugs.</p>
-</li>
-<li>
-<p>Optimized GUI performance and responsiveness.</p>
-</li>
+<li>Added support for converting WIRE 2D map format to a format compatible with SpectroView and LabSpec6.</li>
+<li>Fixed minor bugs.</li>
+<li>Optimized GUI performance and responsiveness.</li>
 </ul>
 <hr />
 <h2 id="v070-2025-07-03"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.7.0">v0.7.0</a> - 2025-07-03<a class="headerlink" href="#v070-2025-07-03" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p>Added 'peak_area' to the fitting results.</p>
-</li>
-<li>
-<p>Fixed minor bugs.</p>
-</li>
-<li>
-<p>Optimized the GUI.</p>
-</li>
+<li>Added 'peak_area' to the fitting results.</li>
+<li>Fixed minor bugs.</li>
+<li>Optimized the GUI.</li>
 </ul>
 <hr />
 <h2 id="v062-2025-06-27"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.6.2">v0.6.2</a> - 2025-06-27<a class="headerlink" href="#v062-2025-06-27" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p>Fixed minor bugs.</p>
-</li>
-<li>
-<p>Improved GUI responsiveness and layout consistency.</p>
-</li>
+<li>Fixed minor bugs.</li>
+<li>Improved GUI responsiveness and layout consistency.</li>
 </ul>
 <hr />
 <h2 id="v045-2025-02-10"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.4.5">v0.4.5</a> - 2025-02-10<a class="headerlink" href="#v045-2025-02-10" title="Permanent link">&para;</a></h2>
@@ -2034,12 +1845,8 @@
 <p align="center"> ![image](https://github.com/user-attachments/assets/d2acd0e9-5489-4439-8f03-2e33b5530268) </p>
 
 <ul>
-<li>
-<p>Complete the <strong>X axis Correction Feature</strong> by using Si-Reference peak (recording in the same experimental session with other mesures).</p>
-</li>
-<li>
-<p><code>Copy</code> only <code>baseline</code> or <code>peak_models</code>  from the selected spectrum, then <code>Paste</code> to other spectra with oneclick.</p>
-</li>
+<li>Complete the <strong>X axis Correction Feature</strong> by using Si-Reference peak (recording in the same experimental session with other mesures).</li>
+<li><code>Copy</code> only <code>baseline</code> or <code>peak_models</code>  from the selected spectrum, then <code>Paste</code> to other spectra with oneclick.</li>
 </ul>
 <p align="center"> ![image](https://github.com/user-attachments/assets/bfaefcf4-3e9f-4ca0-872b-7f8a4082d1d6) </p>
 
@@ -2050,15 +1857,9 @@
 
 <h5 id="bug-fixes-optimizations"><strong>Bug Fixes &amp; Optimizations:</strong><a class="headerlink" href="#bug-fixes-optimizations" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p>GUI adjustments for a more user-friendly experience.</p>
-</li>
-<li>
-<p>Adjust DPI of spectra canvas within Class <code>SpectraViewWidget</code>  (from 90 to 80).</p>
-</li>
-<li>
-<p>Fixed various bugs related to the spectra view plot with new customized toolbar.</p>
-</li>
+<li>GUI adjustments for a more user-friendly experience.</li>
+<li>Adjust DPI of spectra canvas within Class <code>SpectraViewWidget</code>  (from 90 to 80).</li>
+<li>Fixed various bugs related to the spectra view plot with new customized toolbar.</li>
 </ul>
 <hr />
 <h2 id="v032-2025-01-23"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.3.2">v0.3.2</a> - 2025-01-23<a class="headerlink" href="#v032-2025-01-23" title="Permanent link">&para;</a></h2>
@@ -2068,71 +1869,39 @@
 <h2 id="v030-2024-09-27"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.3.0">v0.3.0</a> - 2024-09-27<a class="headerlink" href="#v030-2024-09-27" title="Permanent link">&para;</a></h2>
 <h5 id="version-v030-27092024">**Version v0.3.0 (27/09/2024)<a class="headerlink" href="#version-v030-27092024" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p><strong>New Features:</strong></p>
-<ul>
-<li>
-<p>x-range correction is now integrated in the Maps Tab.</p>
-</li>
-<li>
-<p><strong>Features related to 2Dmap processing:</strong></p>
-<ul>
-<li>
-<p>Plot heatmap from <code>Area</code>, <code>Intensity</code> or fitted parameters directly in Maps TAB.</p>
-</li>
-<li>
-<p><code>Auto scale</code> feature to filter out the outliers values of the heatmap.</p>
-</li>
-<li>
-<p>Adjust <code>x-rang</code> and the heatmap color range via QRangSliders</p>
-</li>
-<li>
-<p>Plot a line profile (height profile) directly in the heatmap plot whenever 2 points are selected.</p>
-</li>
-<li>
-<p>Extract data of the line profile, send them (data and plot) to Visualization TAB.</p>
-</li>
-<li>
-<p>Copy the heatmap canvas in Clipboard. </p>
-</li>
+<li><strong>New Features:</strong><ul>
+<li>x-range correction is now integrated in the Maps Tab.</li>
+<li><strong>Features related to 2Dmap processing:</strong><ul>
+<li>Plot heatmap from <code>Area</code>, <code>Intensity</code> or fitted parameters directly in Maps TAB.</li>
+<li><code>Auto scale</code> feature to filter out the outliers values of the heatmap.</li>
+<li>Adjust <code>x-rang</code> and the heatmap color range via QRangSliders</li>
+<li>Plot a line profile (height profile) directly in the heatmap plot whenever 2 points are selected.</li>
+<li>Extract data of the line profile, send them (data and plot) to Visualization TAB.</li>
+<li>Copy the heatmap canvas in Clipboard. </li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 <p align="center">
-
     ![image](https://raw.githubusercontent.com/CEA-MetroCarac/spectroview/main/app/doc/figures_release_notes/heatmap_widget.png)
-
 </p>
 
 <ul>
 <li>
 <p><strong>Optimization:</strong></p>
 <ul>
-<li>
-<p>Visualization tab: User can now modify/update the openned Excel file while it is opened.</p>
-</li>
-<li>
-<p>Visualization tab: Dataframes will be compressed (gzip) before saving : update <code>save/load()</code> method</p>
-</li>
-<li>
-<p>Maps tab: Reorganize the button, checkbox, comboxes of 2Dmap plot widget into a QToolbutton.</p>
-</li>
+<li>Visualization tab: User can now modify/update the openned Excel file while it is opened.</li>
+<li>Visualization tab: Dataframes will be compressed (gzip) before saving : update <code>save/load()</code> method</li>
+<li>Maps tab: Reorganize the button, checkbox, comboxes of 2Dmap plot widget into a QToolbutton.</li>
 </ul>
 </li>
 <li>
 <p><strong>Bug Fixes:</strong></p>
 <ul>
-<li>
-<p>Bug related to malfunction of the graph do not effectively deleted when a <code>sub_window</code> is closed.</p>
-</li>
-<li>
-<p>Fix bug arised when user delete or rename the default folder contaning all <code>fit_models</code>. A pop up message showed up to tell user to redefine the default folder for locking for <code>fit_models</code>.</p>
-</li>
-<li>
-<p>Fix bug related to the noise correction not automatically applied : set <code>spectrum.baseline.noise=5</code> by default.</p>
-</li>
+<li>Bug related to malfunction of the graph do not effectively deleted when a <code>sub_window</code> is closed.</li>
+<li>Fix bug arised when user delete or rename the default folder contaning all <code>fit_models</code>. A pop up message showed up to tell user to redefine the default folder for locking for <code>fit_models</code>.</li>
+<li>Fix bug related to the noise correction not automatically applied : set <code>spectrum.baseline.noise=5</code> by default.</li>
 </ul>
 </li>
 </ul>
@@ -2142,57 +1911,29 @@
 <h2 id="v029-2024-09-24"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v0.2.9">v0.2.9</a> - 2024-09-24<a class="headerlink" href="#v029-2024-09-24" title="Permanent link">&para;</a></h2>
 <h5 id="version-v029-22092024">**Version v0.2.9 (22/09/2024)<a class="headerlink" href="#version-v029-22092024" title="Permanent link">&para;</a></h5>
 <ul>
-<li>
-<p><strong>Reduce 'Maps' saved file size:</strong></p>
-<ul>
-<li>
-<p>Implemented data compression using gzip.</p>
-</li>
-<li>
-<p>Removed redundant x0 and y0 values from saved files. These can now be retrieved directly from the saved <code>self.map_df</code>using the <code>spectrum.fnam</code> (i.e, <code>map_name</code>&amp; <code>coord</code>).</p>
-</li>
-<li>
-<p>Updated the <code>spectrum_to_dict</code> and <code>dict_to_spectrum</code> methods with an <code>is_map=False</code> argument to support this change in the Spectra tab.</p>
-</li>
+<li><strong>Reduce 'Maps' saved file size:</strong><ul>
+<li>Implemented data compression using gzip.</li>
+<li>Removed redundant x0 and y0 values from saved files. These can now be retrieved directly from the saved <code>self.map_df</code>using the <code>spectrum.fnam</code> (i.e, <code>map_name</code>&amp; <code>coord</code>).</li>
+<li>Updated the <code>spectrum_to_dict</code> and <code>dict_to_spectrum</code> methods with an <code>is_map=False</code> argument to support this change in the Spectra tab.</li>
 </ul>
 </li>
-<li>
-<p><strong>Calibration of x-range for Spectrums TAB:</strong></p>
-<ul>
+<li><strong>Calibration of x-range for Spectrums TAB:</strong><ul>
 <li>Added new attributes <code>spectrum.is_corrected</code> and <code>spectrum.correction_value</code> for to track the calibration state of the <code>spectrum</code> object.</li>
 </ul>
 </li>
-<li>
-<p><strong>Optimization:</strong></p>
-<ul>
-<li>
-<p>Disable of “translation” of the labels of fit results to improuve the visibility of <code>df_fit_resutlts</code> dataframe. → Only the defaut prefix (m01) by <code>peak_labels</code> defined by user.</p>
-</li>
-<li>
-<p>Refactored the <code>save_df_to_excel</code> method for improved performance and maintainability. Fill color for Excel tables with different colors to increase the visibility.</p>
-</li>
+<li><strong>Optimization:</strong><ul>
+<li>Disable of “translation” of the labels of fit results to improuve the visibility of <code>df_fit_resutlts</code> dataframe. → Only the defaut prefix (m01) by <code>peak_labels</code> defined by user.</li>
+<li>Refactored the <code>save_df_to_excel</code> method for improved performance and maintainability. Fill color for Excel tables with different colors to increase the visibility.</li>
 </ul>
 </li>
-<li>
-<p><strong>Additional Features:</strong></p>
-<ul>
-<li>
-<p>Fill DataFrame tables by different colors to increase the visibility.</p>
-</li>
-<li>
-<p>Simplified df before displaying in GUI (for map_df)</p>
-</li>
-<li>
-<p>Disabled color filling when viewing the “map_df” to prevent performance issues (lag).</p>
-</li>
-<li>
-<p>Implemented  keyboard shortcuts for switching between tabs (Hold Ctrl + 1, 2, or 3).</p>
-</li>
+<li><strong>Additional Features:</strong><ul>
+<li>Fill DataFrame tables by different colors to increase the visibility.</li>
+<li>Simplified df before displaying in GUI (for map_df)</li>
+<li>Disabled color filling when viewing the “map_df” to prevent performance issues (lag).</li>
+<li>Implemented  keyboard shortcuts for switching between tabs (Hold Ctrl + 1, 2, or 3).</li>
 </ul>
 </li>
-<li>
-<p><strong>Bug Fixes:</strong></p>
-<ul>
+<li><strong>Bug Fixes:</strong><ul>
 <li>Fixed an error related to the new attributes when saving <strong>old_saved_work</strong> files.</li>
 </ul>
 </li>

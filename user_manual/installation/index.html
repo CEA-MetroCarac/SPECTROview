@@ -562,28 +562,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#check-frequency" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Check frequency
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#disabling-update-checks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Disabling update checks
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -1326,8 +1304,11 @@
 <li><strong>On startup</strong>, a background thread silently queries the <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases">GitHub Releases page</a> for the latest version.</li>
 <li>If a newer version is available, a <strong>blue notification banner</strong> appears at the top of the window:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>🔔  A new version of SPECTROview is available:  26.29.0    [ ⬇ Download / Changelog ]  [ Skip this version ]  [ ✕ ]
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>🔔  A new version of SPECTROview is available:  26.29.0    [ 🔍 View changelog ]  [ Update later ]  [ Skip this version ]
 </code></pre></div>
+<blockquote>
+<p><strong>Privacy Guarantee</strong>: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. <strong>Absolutely no personal or usage data is collected or transmitted.</strong></p>
+</blockquote>
 <h4 id="banner-actions">Banner actions<a class="headerlink" href="#banner-actions" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -1338,26 +1319,22 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>⬇ Download / Changelog</strong></td>
-<td>Opens the GitHub release page in your browser</td>
+<td><strong>🔍 View changelog</strong></td>
+<td>Opens the GitHub release page in your browser to see what's new.</td>
+</tr>
+<tr>
+<td><strong>Update later</strong></td>
+<td>Hides the banner for the current session only. The banner will reappear on the next launch if the update is still available.</td>
 </tr>
 <tr>
 <td><strong>Skip this version</strong></td>
-<td>Hides the banner permanently for that specific version. If a <strong>newer</strong> release comes out later, the banner will reappear</td>
-</tr>
-<tr>
-<td><strong>✕ Dismiss</strong></td>
-<td>Hides the banner for the current session only. The banner will reappear on the next launch if the update is still available</td>
+<td>Hides the banner permanently for that specific version. The banner will never show again until an even newer version is released.</td>
 </tr>
 </tbody>
 </table>
 <blockquote>
 <p><strong>Offline users</strong>: If <code>SPECTROview</code> is installed on a machine without internet access, the update check fails silently — the application starts and works exactly as normal. No error is raised.</p>
 </blockquote>
-<h4 id="check-frequency">Check frequency<a class="headerlink" href="#check-frequency" title="Permanent link">&para;</a></h4>
-<p>The check runs <strong>at most once per day</strong> to avoid unnecessary network requests. The date of the last check is stored in the application settings.</p>
-<h4 id="disabling-update-checks">Disabling update checks<a class="headerlink" href="#disabling-update-checks" title="Permanent link">&para;</a></h4>
-<p>Automatic update checks can be disabled at any time from the <strong>Settings panel</strong> (under <em>Update Checker</em>). When disabled, no network request is ever made.</p>
 
 
 

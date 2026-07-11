@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/changelog/">
       
       
-        <link rel="prev" href="../developer/mva/">
+        <link rel="prev" href="../api/calculators/">
       
       
       
@@ -301,6 +301,28 @@
     
   
   Developer Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
 
         </a>
       </li>
@@ -1077,6 +1099,202 @@
       
   
   
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spectra Processing & Fitting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2D Map & Hyperspectral Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Visualization (Graphs)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Calculators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -1140,10 +1358,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#v26283-2026-07-10" class="md-nav__link">
+  <a href="#v26291-2026-07-11" class="md-nav__link">
     <span class="md-ellipsis">
       
-        v26.28.3 - 2026-07-10
+        v26.29.1 - 2026-07-11
       
     </span>
   </a>
@@ -1398,7 +1616,15 @@
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
 <p><em>(Dynamically synchronized from <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases">GitHub Releases</a>)</em></p>
 <hr />
-<h2 id="v26283-2026-07-10"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.28.3">v26.28.3</a> - 2026-07-10<a class="headerlink" href="#v26283-2026-07-10" title="Permanent link">&para;</a></h2>
+<h2 id="v26291-2026-07-11"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.29.1">v26.29.1</a> - 2026-07-11<a class="headerlink" href="#v26291-2026-07-11" title="Permanent link">&para;</a></h2>
+<h5 id="introducing-the-programmatic-python-api">💻 Introducing the Programmatic Python API<a class="headerlink" href="#introducing-the-programmatic-python-api" title="Permanent link">&para;</a></h5>
+<p>You can now script and automate your spectroscopic workflows without ever launching the graphical user interface. 
+- <strong>Automated Workflows</strong>: Load datasets, process spectra (baseline subtraction, cropping, normalization), and run the heavily optimized Vectorized Batch Fit (VBF) engine entirely from your own Python scripts or Jupyter Notebooks.
+- <strong>Multivariate Analysis</strong>: Programmatically run PCA and NMF analysis on hyperspectral maps.
+- <strong>Automated Plotting</strong>: Replicate SPECTROview's native publication-quality plots (statistical point plots, scatter plots, box plots, etc.) using the new <code>spectroview.api.graphs</code> module.
+- <strong>Quick Calculators</strong>: Access pure mathematical models for spot size, depth of focus, and spectroscopic unit conversions.
+- <strong>Comprehensive Documentation</strong>: A brand-new <a href="https://cea-metrocarac.github.io/SPECTROview/api/">API</a> section has been added to the official documentation with detailed code examples for every module.
+- and more API to come...</p>
 <h5 id="added-a-new-automatic-update-checker">🚀 Added a new Automatic Update Checker<a class="headerlink" href="#added-a-new-automatic-update-checker" title="Permanent link">&para;</a></h5>
 <p>SPECTROview now automatically checks for new releases at startup, ensuring you never miss the latest features, improvements, or bug fixes.</p>
 <h5 id="privacy-first">🔒 Privacy first:<a class="headerlink" href="#privacy-first" title="Permanent link">&para;</a></h5>
@@ -1409,6 +1635,10 @@
 <li>🔍 View changelog – Opens the GitHub release page to view the latest changes and improvements.</li>
 <li>⏰ Update later – Dismisses the notification for the current session. The reminder will appear again the next time you start SPECTROview.</li>
 <li>🚫 Skip this version – Permanently ignores the current release. You will only be notified when a newer version becomes available.</li>
+</ul>
+<h5 id="bug-fixes-improvements">🛠️ Bug Fixes &amp; Improvements<a class="headerlink" href="#bug-fixes-improvements" title="Permanent link">&para;</a></h5>
+<ul>
+<li>Fixed several minor bugs.</li>
 </ul>
 <hr />
 <h2 id="v26282-2026-07-08"><a href="https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.28.2">v26.28.2</a> - 2026-07-08<a class="headerlink" href="#v26282-2026-07-08" title="Permanent link">&para;</a></h2>
@@ -1456,7 +1686,7 @@
 <li>Added an <strong>Eraser Tool</strong> to manually remove cosmic ray artifacts from selected spectra.</li>
 </ul>
 <p><img alt="image" src="https://github.com/user-attachments/assets/0f486a21-7e11-4831-9312-ad62b8d01e4e" /></p>
-<h5 id="bug-fixes-improvements">🛠️ Bug Fixes &amp; Improvements<a class="headerlink" href="#bug-fixes-improvements" title="Permanent link">&para;</a></h5>
+<h5 id="bug-fixes-improvements_1">🛠️ Bug Fixes &amp; Improvements<a class="headerlink" href="#bug-fixes-improvements_1" title="Permanent link">&para;</a></h5>
 <ul>
 <li>Fixed several minor bugs.</li>
 <li>Improved overall usability and application stability.</li>
@@ -1962,7 +2192,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../developer/mva/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Multivariate Analysis (MVA)">
+          <a href="../api/calculators/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Quick Calculators">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1972,7 +2202,7 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Multivariate Analysis (MVA)
+                Quick Calculators
               </div>
             </div>
           </a>

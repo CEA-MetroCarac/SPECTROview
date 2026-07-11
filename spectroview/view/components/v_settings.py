@@ -16,7 +16,7 @@ class VSettingsDialog(QDialog):
         self.vm = vm
 
         self.setWindowTitle("Settings")
-        self.resize(400, 400)
+        self.resize(450, 500)
 
         self._init_ui()
         self._connect_vm()

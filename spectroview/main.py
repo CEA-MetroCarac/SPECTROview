@@ -15,25 +15,24 @@ from PySide6.QtCore import Qt, QFileInfo, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter
-from spectroview.view.v_quick_calculators import MQuickCalc
 from spectroview.model.m_spc import SpcReader
 from spectroview.model.m_settings import MSettings
+from spectroview.model.m_update_checker import UpdateCheckerWorker
 
 from spectroview.viewmodel.vm_settings import VMSettings
+
 from spectroview.view.components.v_settings import VSettingsDialog
 from spectroview.view.components.v_about import VAboutDialog
 from spectroview.view.components.v_update_banner import VUpdateBanner
-from spectroview.model.m_update_checker import UpdateCheckerWorker
-
+from spectroview.view.components.v_quick_calculators import MQuickCalc
 from spectroview.view.components.v_menubar import VMenuBar
+from spectroview.view.components.v_user_manual import VUserManualDialog
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.v_workspace_maps import VWorkspaceMaps
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
-
 from spectroview.view.theme import ThemeManager
 
 from spectroview import LOGO_APPLI, USER_MANUAL_DIR
-from spectroview.view.components.v_user_manual import VUserManualDialog
 
 try:
     from renishawWiRE import WDFReader

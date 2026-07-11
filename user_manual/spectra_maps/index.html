@@ -1815,7 +1815,7 @@
 <p>The <code>Fitting</code> panel guides you through the process of building a robust model in four logical steps:</p>
 <p><strong>Step 1: X-axis Correction (Optional)</strong>: Perform an empirical X-axis correction based on measurements from a known reference sample (e.g., a Silicon peak at exactly 520.7 cm⁻¹). Simply fit your reference data, input the theoretically correct position, and apply the shift to correct calibration offsets globally.</p>
 <p><strong>Step 2: Define the Fitting Range</strong>: Restrict the mathematical fitting process to a specific X-axis region of interest.</p>
-<p><strong>Step 3: Baseline Definition</strong>: <code>SPECTROview</code> offers two distinct modes for defining spectral baselines (<code>Manual</code> or <code>Auto</code>):</p>
+<p><strong>Step 3: Baseline Definition</strong>: <strong>SPECTROview</strong> offers two distinct modes for defining spectral baselines (<code>Manual</code> or <code>Auto</code>):</p>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/baseline_widget.png" alt="Baseline Widget" width="600"><br>
    <i>Baseline mode selection: Manual mode (left) vs. Auto mode (right).</i>
@@ -1836,7 +1836,7 @@
 <li>Supported peak profiles include: <code>Lorentzian</code>, <code>Gaussian</code>, <code>PseudoVoigt</code>, <code>LorentzianAsym</code>, <code>GaussianAsym</code>, <code>Fano</code>, <code>DecaySingleExp</code>, and <code>DecayBiExp</code>.</li>
 </ul>
 <h4 id="42-supported-peak-profiles"><strong>4.2. Supported Peak Profiles</strong><a class="headerlink" href="#42-supported-peak-profiles" title="Permanent link">&para;</a></h4>
-<p><code>SPECTROview</code>'s <code>VBF Engine</code> provides heavily optimized implementations for the following mathematical peak profiles:</p>
+<p><strong>SPECTROview</strong>'s <code>VBF Engine</code> provides heavily optimized implementations for the following mathematical peak profiles:</p>
 <table>
 <thead>
 <tr>
@@ -1890,7 +1890,7 @@
 </table>
 <h4 id="43-peaktable-panel"><strong>4.3. <code>PeakTable</code> Panel</strong><a class="headerlink" href="#43-peaktable-panel" title="Permanent link">&para;</a></h4>
 <p>The <code>PeakTable</code> displays all mathematical parameters for the peaks you have defined. When you drag a peak in the viewer, these properties update dynamically.</p>
-<p><strong>Dynamic Peak Indexing</strong>: Every peak is automatically indexed with a suffix (e.g., <code>_1</code>, <code>_2</code>) indicating its order of creation. When you add, delete, or reorder peaks, <code>SPECTROview</code> automatically re-indexes them to maintain consecutive numbering (e.g., if you delete peak 2, peak 3 becomes the new peak 2). This ensures your expressions and fit results remain organized.</p>
+<p><strong>Dynamic Peak Indexing</strong>: Every peak is automatically indexed with a suffix (e.g., <code>_1</code>, <code>_2</code>) indicating its order of creation. When you add, delete, or reorder peaks, <strong>SPECTROview</strong> automatically re-indexes them to maintain consecutive numbering (e.g., if you delete peak 2, peak 3 becomes the new peak 2). This ensures your expressions and fit results remain organized.</p>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/peak_table.png" alt="Peak Table Panel" width="800"><br>
    <i>The <code>PeakTable</code> panel displaying peak parameters and constraints.</i>
@@ -1904,7 +1904,7 @@
    <i>Example 1: Activate the "Limits" option under the peak table and set "min" and "max" values for each fit parameter.</i>
 </div>
 
-<p><strong>Expression</strong>: Define complex mathematical relationships between parameters. <code>SPECTROview</code>'s <code>VBF Engine</code> robustly evaluates these expressions mathematically before mapping them to the optimizer. If peaks are re-indexed due to deletions, their references in your mathematical expressions are automatically updated to prevent broken models.</p>
+<p><strong>Expression</strong>: Define complex mathematical relationships between parameters. <strong>SPECTROview</strong>'s <code>VBF Engine</code> robustly evaluates these expressions mathematically before mapping them to the optimizer. If peaks are re-indexed due to deletions, their references in your mathematical expressions are automatically updated to prevent broken models.</p>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/peak_table_expression.png" alt="Peak Table Expressions" width="800"><br>
    <i>Example 2: Using an expression to constrain that (1) the peak position of peak E (P2) is 17 smaller than peak A (P1) or (2) the amplitude of peak E (P2) is exactly half the amplitude of A (P1).</i>
@@ -1936,7 +1936,7 @@ If you intend to use a model frequently, you can save it as a template. Stored m
 <p>Once fitting is complete across your spectra or maps, you need to aggregate the best-fit results:</p>
 <ul>
 <li>Navigate to the <strong>Fit Results</strong> tab.</li>
-<li>Click the <strong>Collect</strong> button. <code>SPECTROview</code> will instantly aggregate all best-fit parameters into a unified, sortable table.</li>
+<li>Click the <strong>Collect</strong> button. <strong>SPECTROview</strong> will instantly aggregate all best-fit parameters into a unified, sortable table.</li>
 </ul>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/collect_fit_results.gif" alt="Collect Fit Results" width="800"><br>

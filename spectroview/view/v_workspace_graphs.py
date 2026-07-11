@@ -838,12 +838,10 @@ class VWorkspaceGraphs(QWidget):
         return graph_dialog
     
     def create_plot_from_config(self, df_name: str, plot_config: dict) -> bool:
-        """Create plot from configuration."""
-        if self.vm.get_dataframe(df_name) is None:
-            return False
-        
+        """API to create a plot directly from a configuration dict."""
         self.vm.select_dataframe(df_name)
-        self._create_and_display_plot(plot_config, select_in_list=False)
+        filters = plot_config.get('filters', None)
+        self._create_and_display_plot(plot_config, select_in_list=False, filters=filters)
         return True
     
     def _on_replicate_graph(self, graph_id: int):

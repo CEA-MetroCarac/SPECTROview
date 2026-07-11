@@ -205,6 +205,9 @@ class VMWorkspaceGraphs(QObject):
     # ═════════════════════════════════════════════════════════════════════
     
     def apply_filters(self, df_name: str, filters: List[Dict]) -> Optional[pd.DataFrame]:
+        print(f"\n--- APPLY FILTERS ---")
+        print(f"DataFrame: {df_name}")
+        print(f"Filters received: {filters}")
         """Apply filters to a DataFrame."""
         if df_name not in self.dataframes:
             return None
@@ -217,6 +220,7 @@ class VMWorkspaceGraphs(QObject):
                 expression = filter_data["expression"]
                 try:
                     df = df.query(expression)
+                    print(f"Filter applied: {expression}. Rows left: {len(df)}")
                 except Exception as e:
                     QMessageBox.critical(None, "Error", f"Filter error: {e}")
                     return None

@@ -40,6 +40,13 @@ try:
 except ImportError:
     WDF_AVAILABLE = False
 
+try:
+    from spectroview.llm.v_chat_panel import VChatPanel
+    LLM_AVAILABLE = True
+except ImportError:
+    VChatPanel = None   # type: ignore[assignment,misc]
+    LLM_AVAILABLE = False
+
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -54,6 +61,10 @@ class Main(QMainWindow):
         
         self.setup_connections()
         self.tabWidget.setCurrentWidget(self.v_maps_workspace)
+        
+        # Lazy chat panel (created on first use)
+        self._chat_panel = None
+
 
     def init_ui(self):
         self.setWindowTitle(
@@ -106,6 +117,7 @@ class Main(QMainWindow):
         self.menu_bar.version_requested.connect(self.open_releases)
         self.menu_bar.check_update_requested.connect(self._manual_update_check)
         self.menu_bar.theme_selected.connect(self.toggle_theme)
+        self.menu_bar.ai_chat_requested.connect(self.open_ai_chat)
         
         # Inject Graphs workspace into Maps ViewModel for cross-workspace communication
         self.v_maps_workspace.vm.set_graphs_workspace(self.v_graphs_workspace)
@@ -374,6 +386,256 @@ class Main(QMainWindow):
         self._quick_calc_dlg.show()
         self._quick_calc_dlg.raise_()
         self._quick_calc_dlg.activateWindow()
+
+    def open_ai_chat(self):
+        """Open (or raise) the AI Data Chat panel.
+
+        The panel is created lazily on first use and then kept alive so
+        the conversation history is preserved across multiple open/close
+        cycles.  The active DataFrame from the Graphs workspace is
+        injected each time the panel is shown.
+        """
+        if not LLM_AVAILABLE:
+            QMessageBox.information(
+                self,
+                "AI Chat — Not Available",
+                "The AI Chat module could not be imported.\n\n"
+                "Please install the optional dependency:\n"
+                "    pip install ollama\n\n"
+                "Then restart SPECTROview.",
+            )
+            return
+
+        # Lazy creation
+        if self._chat_panel is None:
+            self._chat_panel = VChatPanel(self)
+            # When the AI suggests a plot, configure the Graphs workspace
+            self._chat_panel.plot_requested.connect(self._on_chat_plot_requested)
+            
+            # Keep chat panel in sync with workspace dataframes
+            def sync_chat_dfs_full(*args):
+                """Called when dataframes are added/removed."""
+                vm_graphs = self.v_graphs_workspace.vm
+                self._chat_panel.set_dataframes(vm_graphs.dataframes, vm_graphs.selected_df_name or "")
+                self._chat_panel.vm.set_graphs(vm_graphs.graphs)
+
+            def sync_chat_active(*args):
+                """Called when the user selects a different dataframe — preserve history."""
+                vm_graphs = self.v_graphs_workspace.vm
+                active = vm_graphs.selected_df_name or ""
+                self._chat_panel.vm.update_active_df_name(active)
+                # Update the status label
+                if vm_graphs.dataframes:
+                    n = len(vm_graphs.dataframes)
+                    self._chat_panel.lbl_no_data.setText(
+                        f"📊 {n} DataFrame(s) loaded  (Active: {active})" if active else f"📊 {n} DataFrame(s) loaded"
+                    )
+
+            def sync_chat_graphs(*args):
+                """Called when graphs are added/removed/updated."""
+                vm_graphs = self.v_graphs_workspace.vm
+                self._chat_panel.vm.set_graphs(vm_graphs.graphs)
+
+            self.v_graphs_workspace.vm.dataframes_changed.connect(sync_chat_dfs_full)
+            self.v_graphs_workspace.vm.dataframe_columns_changed.connect(sync_chat_active)
+            self.v_graphs_workspace.vm.graphs_changed.connect(sync_chat_graphs)
+
+        # Force a sync right now when opening
+        vm_graphs = self.v_graphs_workspace.vm
+        self._chat_panel.set_dataframes(vm_graphs.dataframes, vm_graphs.selected_df_name or "")
+        self._chat_panel.vm.set_graphs(vm_graphs.graphs)
+
+        self._chat_panel.show()
+        self._chat_panel.raise_()
+        self._chat_panel.activateWindow()
+
+    def _on_chat_plot_requested(self, plot_config: dict):
+        """Apply the AI-suggested plot configuration or graph update to the Graphs workspace.
+
+        Normalizes the AI's JSON output so it matches the MGraph model's
+        expected types (e.g. y must be a list, limits must be float|None).
+        """
+        # ── Handle graph UPDATE (existing graph by ID) ───────────────
+        if "_graph_update" in plot_config:
+            self._apply_graph_update(plot_config["_graph_update"])
+            return
+
+        # ── Handle graph DELETE ──────────────────────────────────────
+        if "_graph_delete" in plot_config:
+            self._apply_graph_delete(plot_config["_graph_delete"])
+            return
+        import copy
+        ws = self.v_graphs_workspace
+        # Switch to Graphs tab
+        self.tabWidget.setCurrentWidget(ws)
+
+        df_name = plot_config.get("df_name")
+        if not df_name:
+            df_name = ws.vm.selected_df_name
+        if not df_name:
+            return
+
+        # Deep copy so we don't mutate the original
+        cfg = copy.deepcopy(plot_config)
+
+        # ── y must be a list of strings ──────────────────────────────
+        if 'y' in cfg:
+            if isinstance(cfg['y'], str):
+                cfg['y'] = [cfg['y']] if cfg['y'] else []
+            elif cfg['y'] is None:
+                cfg['y'] = []
+
+        # ── Convert numeric limits from string/int → float|None ──────
+        float_keys = ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax',
+                      'y2min', 'y2max', 'y3min', 'y3max', 'x2min', 'x2max']
+        for k in float_keys:
+            if k in cfg:
+                val = cfg[k]
+                if val is None or val == "" or val == "null":
+                    cfg[k] = None
+                else:
+                    try:
+                        cfg[k] = float(val)
+                    except (ValueError, TypeError):
+                        cfg[k] = None
+
+        # ── Convert int fields ───────────────────────────────────────
+        int_keys = ['x_rot', 'scatter_size', 'plot_width', 'plot_height',
+                    'dpi', 'trendline_order', 'hist_bins']
+        for k in int_keys:
+            if k in cfg:
+                try:
+                    cfg[k] = int(cfg[k])
+                except (ValueError, TypeError):
+                    del cfg[k]
+
+        # ── Convert filters ──────────────────────────────────────────
+        if 'filters' in cfg:
+            if isinstance(cfg['filters'], list):
+                parsed_filters = []
+                for f in cfg['filters']:
+                    if isinstance(f, str) and f.strip():
+                        parsed_filters.append({"expression": f, "state": True})
+                cfg['filters'] = parsed_filters
+            else:
+                del cfg['filters']
+
+        # ── Ensure df_name is set ────────────────────────────────────
+        cfg['df_name'] = df_name
+
+        # Create the plot directly via the workspace API
+        ws.create_plot_from_config(df_name, cfg)
+
+        # Update the sidebar combo boxes to reflect last plot config
+        def _set_combo(cbb, value):
+            if value:
+                idx = cbb.findText(str(value))
+                if idx >= 0:
+                    cbb.setCurrentIndex(idx)
+
+        if hasattr(ws, 'cbb_x'): _set_combo(ws.cbb_x, plot_config.get("x"))
+        if hasattr(ws, 'cbb_y'): _set_combo(ws.cbb_y, plot_config.get("y"))
+        if hasattr(ws, 'cbb_z'): _set_combo(ws.cbb_z, plot_config.get("z"))
+        if hasattr(ws, 'cbb_plot_style'): _set_combo(ws.cbb_plot_style, plot_config.get("plot_style"))
+
+    def _apply_graph_update(self, update_payload: dict):
+        """Update an existing graph by ID with new properties from the AI."""
+        import copy
+        ws = self.v_graphs_workspace
+        graph_id = update_payload.get("graph_id")
+        properties = update_payload.get("properties", {})
+
+        if graph_id is None or not isinstance(properties, dict):
+            return
+
+        graph_id = int(graph_id)
+        model = ws.vm.get_graph(graph_id)
+        if model is None:
+            return
+
+        # Normalize types — same rules as for new plots
+        props = copy.deepcopy(properties)
+
+        # y must be a list
+        if 'y' in props:
+            if isinstance(props['y'], str):
+                props['y'] = [props['y']] if props['y'] else []
+            elif props['y'] is None:
+                props['y'] = []
+
+        # float limits
+        for k in ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax',
+                  'y2min', 'y2max', 'y3min', 'y3max', 'x2min', 'x2max']:
+            if k in props:
+                val = props[k]
+                if val is None or val == "" or val == "null":
+                    props[k] = None
+                else:
+                    try:
+                        props[k] = float(val)
+                    except (ValueError, TypeError):
+                        props[k] = None
+
+        # int fields
+        for k in ['x_rot', 'scatter_size', 'plot_width', 'plot_height',
+                  'dpi', 'trendline_order', 'hist_bins']:
+            if k in props:
+                try:
+                    props[k] = int(props[k])
+                except (ValueError, TypeError):
+                    del props[k]
+
+        # convert filters
+        if 'filters' in props:
+            if isinstance(props['filters'], list):
+                parsed_filters = []
+                for f in props['filters']:
+                    if isinstance(f, str) and f.strip():
+                        parsed_filters.append({"expression": f, "state": True})
+                props['filters'] = parsed_filters
+            else:
+                del props['filters']
+
+        # Apply to model
+        ws.vm.update_graph(graph_id, props)
+
+        # Re-render the existing graph widget
+        if graph_id in ws.graph_widgets:
+            graph_widget, _, sub_window = ws.graph_widgets[graph_id]
+            updated_model = ws.vm.get_graph(graph_id)
+            filtered_df = ws.vm.apply_filters(updated_model.df_name, updated_model.filters)
+            ws._configure_graph_from_model(graph_widget, updated_model)
+            graph_widget.create_plot_widget(updated_model.dpi)
+            try:
+                ws._render_plot(graph_widget, filtered_df, updated_model)
+            except Exception as e:
+                QMessageBox.warning(self, "Graph Update Error", f"Could not re-render graph {graph_id}:\n{e}")
+
+        # Switch to Graphs tab to show the result
+        self.tabWidget.setCurrentWidget(ws)
+
+    def _apply_graph_delete(self, delete_payload: dict):
+        """Delete requested graphs based on the AI instructions."""
+        ws = self.v_graphs_workspace
+        delete_all = delete_payload.get("delete_all", False)
+        target_ids = delete_payload.get("graph_ids", [])
+        
+        # Collect IDs to close
+        ids_to_close = []
+        open_ids = list(ws.graph_widgets.keys())
+        
+        if delete_all:
+            ids_to_close = open_ids
+            # If they meant "delete all except [1,2,3]"
+            if target_ids:
+                ids_to_close = [gid for gid in open_ids if gid not in target_ids]
+        else:
+            ids_to_close = [gid for gid in target_ids if gid in open_ids]
+            
+        # Close the subwindows (this triggers the closed signal which cleans up the model)
+        for gid in ids_to_close:
+            _, _, sub_window = ws.graph_widgets[gid]
+            sub_window.close()
 
     def about(self):
         """Show About dialog."""

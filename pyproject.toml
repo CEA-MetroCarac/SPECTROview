@@ -70,6 +70,7 @@ Homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
 [project.optional-dependencies]
 dev = ["pytest", "pytest-qt", "black", "flake8"]
 test = ["pytest", "pytest-qt"]
+ai = ["ollama>=0.4"]
 
 
 [tool.setuptools.dynamic]

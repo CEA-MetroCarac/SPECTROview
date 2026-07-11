@@ -25,6 +25,7 @@ class VMenuBar(QToolBar):
     clear_requested = Signal()
     convert_requested = Signal()
     calc_requested = Signal()
+    ai_chat_requested = Signal()       # opens the AI Data Chat panel
     settings_requested = Signal()
     github_requested = Signal()
     theme_selected = Signal(str)       # emits theme key, e.g. "dark" / "soft_dark" / "light"
@@ -58,6 +59,13 @@ class VMenuBar(QToolBar):
         self.actionCalc.triggered.connect(self.calc_requested.emit)
 
         self.addSeparator()
+        self.actionAIChat = self.addAction(QIcon(os.path.join(ICON_DIR, "llm_ai.png")), "AI Data Chat")
+        self.actionAIChat.setToolTip(
+            "Open AI Data Chat\n"
+            "Query your fit results using natural language (requires Ollama)"
+        )
+        self.actionAIChat.triggered.connect(self.ai_chat_requested.emit)
+
         self.actionSettings= self.addAction(QIcon(os.path.join(ICON_DIR, "settings.png")), "Settings")
         self.actionSettings.triggered.connect(self.settings_requested.emit)
         

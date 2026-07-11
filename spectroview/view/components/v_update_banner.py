@@ -176,14 +176,14 @@ class VUpdateBanner(QWidget):
         layout.addWidget(self.btn_download)
 
         # Dismiss (Update later)
-        self.btn_dismiss = QPushButton("Update later")
+        self.btn_dismiss = QPushButton("🕒 Update later")
         self.btn_dismiss.setObjectName("btn_dismiss")
         self.btn_dismiss.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_dismiss.clicked.connect(self._dismiss)
         layout.addWidget(self.btn_dismiss)
 
         # Skip this version
-        self.btn_skip = QPushButton("Skip this version")
+        self.btn_skip = QPushButton("🚫 Skip this version")
         self.btn_skip.setObjectName("btn_skip")
         self.btn_skip.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_skip.clicked.connect(self._skip)

@@ -464,8 +464,13 @@ class Main(QMainWindow):
     # ── Update checker ────────────────────────────────────────────────────────
     def _start_update_check(self):
         """Launch a background thread to query GitHub for the latest release."""
+        if getattr(self, '_has_checked_for_updates', False):
+            return
+            
         if not self.settings.get_check_for_updates():
             return
+            
+        self._has_checked_for_updates = True
 
         from spectroview import VERSION
         self._checker = UpdateCheckerWorker(current_version=VERSION)

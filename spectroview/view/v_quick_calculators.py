@@ -7,6 +7,8 @@ from PySide6.QtWidgets import (
     QGroupBox, QLineEdit, QLabel, QFrame, QSizePolicy
 )
 from spectroview import ICON_DIR
+from spectroview.model.m_quick_calculators import calc_spot_size, calc_penetration_depth, convert_absolute_units, convert_relative_units
+
 
 class MQuickCalc(QDialog):
     def __init__(self, parent=None):
@@ -164,38 +166,21 @@ class SpotSizeCalculator(QGroupBox):
         if na <= 0:
             return
 
-        # Spot size
-        spot_size = 1.22 * wave / na / 1000
-        self.out_spot.setText(f"{spot_size:.4f}")
+        res = calc_spot_size(wave, na, wd, index, power)
 
-        # Depth of focus
-        depth = 4 * index * wave / (na**2) / 1000
-        self.out_depth.setText(f"{depth:.4f}")
+        self.out_spot.setText(f"{res['spot_diameter_um']:.4f}")
+        self.out_depth.setText(f"{res['dof_um']:.4f}")
 
-        # Angle of view and Lens diameter
-        try:
-            angle = 2 * math.degrees(math.asin(na))
-            self.out_angle.setText(f"{angle:.2f}")
-            
-            lens_dia = 2 * wd * math.tan(math.asin(na))
-            self.out_lens_dia.setText(f"{lens_dia:.4f}")
-        except ValueError:
+        if math.isnan(res['angle_deg']):
             self.out_angle.setText("N/A")
             self.out_lens_dia.setText("N/A")
+        else:
+            self.out_angle.setText(f"{res['angle_deg']:.2f}")
+            self.out_lens_dia.setText(f"{res['lens_diameter_mm']:.4f}")
 
-        # Power density
-        area_um2 = (math.pi / 4) * (spot_size**2)
-        if area_um2 > 0:
-            pd_mw_um2 = power / area_um2
-            self.out_pd_mw_um2.setText(f"{pd_mw_um2:.4f}")
-
-            area_cm2 = (math.pi / 4) * ((spot_size * 0.0001)**2)
-            pd_kw_cm2 = (power * 0.001) / area_cm2 / 1000
-            self.out_pd_kw_cm2.setText(f"{pd_kw_cm2:.4f}")
-
-            area_m2 = (math.pi / 4) * ((spot_size * 0.000001)**2)
-            pd_w_m2 = (power * 0.001) / area_m2
-            self.out_pd_w_m2.setText(f"{pd_w_m2:.2f}")
+        self.out_pd_mw_um2.setText(f"{res['power_density_mw_um2']:.4f}")
+        self.out_pd_kw_cm2.setText(f"{res['power_density_kw_cm2']:.4f}")
+        self.out_pd_w_m2.setText(f"{res['power_density_w_m2']:.2f}")
 
 class PenetrationDepthCalculator(QGroupBox):
     def __init__(self, parent=None):
@@ -260,11 +245,11 @@ class PenetrationDepthCalculator(QGroupBox):
         wave = self.spin_wave.value()
         k_val = self.spin_k.value()
         
+        res = calc_penetration_depth(wave, k_val)
+        
         if k_val > 0:
-            alpha = (4 * math.pi * k_val) / (wave * 1e-7)
-            d_nm = wave / (4 * math.pi * k_val)
-            self.out_alpha.setText(f"{alpha:.2f}")
-            self.out_penetration_depth.setText(f"{d_nm:.2f}")
+            self.out_alpha.setText(f"{res['absorption_coeff_cm1']:.2f}")
+            self.out_penetration_depth.setText(f"{res['penetration_depth_nm']:.2f}")
         else:
             self.out_alpha.setText("0.00")
             self.out_penetration_depth.setText("Infinite")
@@ -357,8 +342,9 @@ class UnitConverterCalculator(QGroupBox):
         if val <= 0: return
         self.spin_energy.blockSignals(True)
         self.spin_wavenumber.blockSignals(True)
-        self.spin_energy.setValue(1239.84193 / val)
-        self.spin_wavenumber.setValue(1e7 / val)
+        res = convert_absolute_units(val, 'nm')
+        self.spin_energy.setValue(res['energy_ev'])
+        self.spin_wavenumber.setValue(res['wavenumber_cm1'])
         self.spin_energy.blockSignals(False)
         self.spin_wavenumber.blockSignals(False)
         
@@ -366,9 +352,9 @@ class UnitConverterCalculator(QGroupBox):
         if val <= 0: return
         self.spin_wave.blockSignals(True)
         self.spin_wavenumber.blockSignals(True)
-        wave = 1239.84193 / val
-        self.spin_wave.setValue(wave)
-        self.spin_wavenumber.setValue(1e7 / wave)
+        res = convert_absolute_units(val, 'eV')
+        self.spin_wave.setValue(res['wavelength_nm'])
+        self.spin_wavenumber.setValue(res['wavenumber_cm1'])
         self.spin_wave.blockSignals(False)
         self.spin_wavenumber.blockSignals(False)
         
@@ -376,9 +362,9 @@ class UnitConverterCalculator(QGroupBox):
         if val <= 0: return
         self.spin_wave.blockSignals(True)
         self.spin_energy.blockSignals(True)
-        wave = 1e7 / val
-        self.spin_wave.setValue(wave)
-        self.spin_energy.setValue(1239.84193 / wave)
+        res = convert_absolute_units(val, 'cm-1')
+        self.spin_wave.setValue(res['wavelength_nm'])
+        self.spin_energy.setValue(res['energy_ev'])
         self.spin_wave.blockSignals(False)
         self.spin_energy.blockSignals(False)
         
@@ -390,11 +376,8 @@ class UnitConverterCalculator(QGroupBox):
         if laser <= 0: return
         
         self.spin_scattered_wave.blockSignals(True)
-        inv_scat = (1e7 / laser) - shift
-        if inv_scat > 0:
-            self.spin_scattered_wave.setValue(1e7 / inv_scat)
-        else:
-            self.spin_scattered_wave.setValue(0)
+        res = convert_relative_units(laser_wavelength_nm=laser, shift_cm1=shift)
+        self.spin_scattered_wave.setValue(res['scattered_wavelength_nm'])
         self.spin_scattered_wave.blockSignals(False)
         
     def _on_scattered_changed(self, scattered):
@@ -402,8 +385,8 @@ class UnitConverterCalculator(QGroupBox):
         if laser <= 0 or scattered <= 0: return
         
         self.spin_shift.blockSignals(True)
-        shift = (1e7 / laser) - (1e7 / scattered)
-        self.spin_shift.setValue(shift)
+        res = convert_relative_units(laser_wavelength_nm=laser, scattered_wavelength_nm=scattered)
+        self.spin_shift.setValue(res['shift_cm1'])
         self.spin_shift.blockSignals(False)
 
 

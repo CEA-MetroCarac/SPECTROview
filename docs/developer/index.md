@@ -74,7 +74,7 @@ spectroview/
 │   ├── m_mva.py            # PCA + NMF engine
 │   ├── m_fit_model_manager.py # Saved fit model file management
 │   ├── m_file_converter.py # Batch file format converter
-│   ├── m_quick_calc.py     # Scientific calculators (Spot Size, Depth, Unit conversion)
+│   ├── m_quick_calculators.py     # Pure math logic for scientific calculators (Spot Size, Depth, Unit conversion)
 │   ├── m_update_checker.py # Background GitHub release checker (QThread)
 │   └── m_spc.py            # Galactic SPC binary reader
 │
@@ -91,6 +91,7 @@ spectroview/
 │   ├── v_workspace_spectra.py    # Spectra workspace View
 │   ├── v_workspace_maps.py       # Maps workspace View (extends Spectra)
 │   ├── v_workspace_graphs.py     # Graphs workspace View
+│   ├── v_quick_calculators.py    # Scientific calculators GUI
 │   └── components/               # Shared / reusable widgets
 │       ├── v_spectra_viewer.py        # Matplotlib spectra canvas
 │       ├── v_fit_model_builder.py     # Baseline + Peak + Fit controls

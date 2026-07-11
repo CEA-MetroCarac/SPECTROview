@@ -15,7 +15,7 @@ from PySide6.QtCore import Qt, QFileInfo, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter
-from spectroview.model.m_quick_calc import MQuickCalc
+from spectroview.view.v_quick_calculators import MQuickCalc
 from spectroview.model.m_spc import SpcReader
 from spectroview.model.m_settings import MSettings
 

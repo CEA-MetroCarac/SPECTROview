@@ -4,7 +4,17 @@
 
 ---
 
-## [v26.28.3](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.28.3) - 2026-07-10
+## [v26.29.1](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.29.1) - 2026-07-11
+
+##### 💻 Introducing the Programmatic Python API
+
+You can now script and automate your spectroscopic workflows without ever launching the graphical user interface. 
+- **Automated Workflows**: Load datasets, process spectra (baseline subtraction, cropping, normalization), and run the heavily optimized Vectorized Batch Fit (VBF) engine entirely from your own Python scripts or Jupyter Notebooks.
+- **Multivariate Analysis**: Programmatically run PCA and NMF analysis on hyperspectral maps.
+- **Automated Plotting**: Replicate SPECTROview's native publication-quality plots (statistical point plots, scatter plots, box plots, etc.) using the new `spectroview.api.graphs` module.
+- **Quick Calculators**: Access pure mathematical models for spot size, depth of focus, and spectroscopic unit conversions.
+- **Comprehensive Documentation**: A brand-new [API](https://cea-metrocarac.github.io/SPECTROview/api/) section has been added to the official documentation with detailed code examples for every module.
+- and more API to come...
 
 ##### 🚀 Added a new Automatic Update Checker
 
@@ -22,6 +32,11 @@ The update check sends only a standard, anonymous request to the public GitHub A
 - 🔍 View changelog – Opens the GitHub release page to view the latest changes and improvements.
 - ⏰ Update later – Dismisses the notification for the current session. The reminder will appear again the next time you start SPECTROview.
 - 🚫 Skip this version – Permanently ignores the current release. You will only be notified when a newer version becomes available.
+
+
+##### 🛠️ Bug Fixes & Improvements
+
+* Fixed several minor bugs.
 
 ---
 

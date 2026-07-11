@@ -4,7 +4,7 @@
 
 ---
 
-## [v26.29.2](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.29.2) - 2026-07-11
+## [v26.29.3](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.29.3) - 2026-07-11
 
 ##### 💻 Introducing the Programmatic Python API
 

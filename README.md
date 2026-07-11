@@ -31,14 +31,14 @@
 
 ## ✨ Key Features
 
-| | Feature | Description |
-|---|---|---|
-| ⚡ | **Vectorized Batch Fit Engine** | Ultra-fast fitting via batched matrix operations — simultaneously fit multiple spectra or large 2D maps |
-| 🧩 | **Custom Fit Models** | Build and reuse custom fit models tailored to your specific spectroscopic profiles |
-| 📊 | **Versatile Data Processing** | Seamlessly handle both 1D spectral data and 2D hyperspectral data |
-| 📋 | **Unified Results** | Collect and compile all best-fit results with a single click |
-| 🎨 | **Advanced Visualization** | Dedicated workspace for fast, publication-ready visualizations |
-| 🖥️ | **Optimized UI** | Designed for quick inspection, filtering, and comparison of large spectral datasets |
+| Feature | Description |
+|---|---|
+| ⚡ **Vectorized Batch Fit Engine** | Ultra-fast fitting via batched matrix operations — simultaneously fit multiple spectra or large 2D maps |
+| 🧩 **Custom Fit Models** | Build and reuse custom fit models tailored to your specific spectroscopic profiles |
+| 📊 **Versatile Data Processing** | Seamlessly handle both 1D spectral data and 2D hyperspectral data |
+| 📋 **Unified Results** | Collect and compile all best-fit results with a single click |
+| 🎨 **Advanced Visualization** | Dedicated workspace for fast, publication-ready visualizations |
+| 🖥️ **Optimized UI** | Designed for quick inspection, filtering, and comparison of large spectral datasets |
 
 ---
 
@@ -95,12 +95,12 @@ spectroview
 
 Full documentation is available at [**CEA-MetroCarac.github.io/SPECTROview**](https://CEA-MetroCarac.github.io/SPECTROview/):
 
-| | Resource | Link |
-|---|---|---|
-| 📖 | **User Manual** | [Online manual](https://cea-metrocarac.github.io/SPECTROview/user_manual/) (also accessible within the app) |
-| 🛠️ | **Developer Guide** | [Developer docs](https://cea-metrocarac.github.io/SPECTROview/developer/) |
-| 📝 | **Changelog** | [Release notes](https://github.com/CEA-MetroCarac/SPECTROview/releases) |
-| 📂 | **Examples** | [`/examples`](https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples) — sample datasets and supported formats |
+| Resource | Link |
+|---|---|
+| 📖 **User Manual** | [Online manual](https://cea-metrocarac.github.io/SPECTROview/user_manual/) (also accessible within the app) |
+| 🛠️ **Developer Guide** | [Developer docs](https://cea-metrocarac.github.io/SPECTROview/developer/) |
+| 📝 **Changelog** | [Release notes](https://github.com/CEA-MetroCarac/SPECTROview/releases) |
+| 📂 **Examples** | [`/examples`](https://github.com/CEA-MetroCarac/SPECTROview/tree/main/examples) — sample datasets and supported formats |
 
 ---
 

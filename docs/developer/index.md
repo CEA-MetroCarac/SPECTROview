@@ -87,6 +87,12 @@ spectroview/
 │   ├── vm_settings.py            # Settings persistence
 │   └── utils.py                  # Helpers, toast notifications
 │
+├── llm/                    # AI Chat module (optional, requires ollama)
+│   ├── __init__.py              # Module docstring, keeps import optional
+│   ├── m_llm_client.py          # Ollama connection manager + QThread worker
+│   ├── vm_chat.py               # Chat ViewModel (system prompt, parsing)
+│   └── v_chat_panel.py          # Floating chat dialog (QDialog)
+│
 ├── view/                   # Qt widgets and UI layout
 │   ├── v_workspace_spectra.py    # Spectra workspace View
 │   ├── v_workspace_maps.py       # Maps workspace View (extends Spectra)
@@ -289,6 +295,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 |-------------|----------|---------|
 | `VBFthread` | `fit_engine/vbf_thread.py` | Batched fitting (primary engine) |
 | `UpdateCheckerWorker` | `model/m_update_checker.py` | Background GitHub release check at startup |
+| `LLMWorker` | `llm/m_llm_client.py` | Streaming Ollama chat requests for AI Data Chat |
 
 **Thread lifecycle**:
 
@@ -403,6 +410,7 @@ To add a "disable updates" toggle to the Settings dialog, bind `MSettings.set_ch
 | **Graphs Workspace** | [graphs.md](graphs.md) | `VMWorkspaceGraphs`, DataFrame management, plot creation, `VGraph` rendering |
 | **Vectorized Batch Fit Engine (`VBF Engine`)** | [vbf_engine.md](vbf_engine.md) | Batched LM optimizer, analytical Jacobians, adding new peak models |
 | **Multivariate Analysis** | [mva.md](mva.md) | PCA/NMF implementation, data pipeline, export to `Graphs` |
+| **AI Data Chat** | [ai.md](ai.md) | Local LLM chatbot (Ollama), system prompt, Graphs workspace integration |
 
 ---
 
@@ -436,3 +444,4 @@ mkdocs serve
 | `seaborn` | — | Statistical plotting in `Graphs` workspace |
 | `renishawWiRE` | — | Renishaw `.wdf` file reader |
 | `superqt` | — | Enhanced Qt widgets (range sliders) |
+| `ollama` | `≥ 0.4` *(optional)* | Local LLM integration for AI Data Chat (`pip install -e ".[ai]"`) |

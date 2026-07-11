@@ -66,6 +66,7 @@ nav:
     - Shortcuts & Tips: user_manual/shortcuts.md
   - Developer Guide:
     - Architecture: developer/index.md
+    - File Loading Pipeline: developer/file_loading.md
     - Data Architecture SpectraStore: developer/spectra_store.md
     - Workspace Spectra: developer/spectra.md
     - Workspace Maps: developer/maps.md

@@ -155,7 +155,7 @@ class VMWorkspaceSpectra(QObject):
                             name=fname,
                             x0=x0.copy(),
                             Y0=np.asarray(y0, dtype=np.float32).reshape(1, -1),
-                            coords=np.array([[0.0, 0.0]], dtype=np.float64),
+                            coords=np.array([[0.0, 0.0]], dtype=np.float64), # no spatial position
                             fnames=[fname],
                             is_active=np.array([True], dtype=bool)
                         )

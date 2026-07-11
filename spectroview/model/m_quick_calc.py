@@ -8,42 +8,36 @@ from PySide6.QtWidgets import (
 )
 from spectroview import ICON_DIR
 
-class ResizableImageLabel(QLabel):
-    def __init__(self, img_path):
-        super().__init__()
-        self._pixmap = QPixmap(img_path)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.setMinimumSize(100, 100)
-
-    def paintEvent(self, event):
-        if not self._pixmap.isNull():
-            painter = QPainter(self)
-            rect = self.contentsRect()
-            scaled_pix = self._pixmap.scaled(rect.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            x = rect.x() + (rect.width() - scaled_pix.width()) // 2
-            y = rect.y() + (rect.height() - scaled_pix.height()) // 2
-            painter.drawPixmap(x, y, scaled_pix)
-        else:
-            super().paintEvent(event)
-
-class SpotSizeCalculator(QFrame):
+class MQuickCalc(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFrameShape(QFrame.StyledPanel)
-        self.setFrameShadow(QFrame.Raised)
+        self.setWindowTitle("Quick Calculators")
+        self.resize(850, 650)
+        
+        dialog_layout = QVBoxLayout(self)
+        
+        # Instantiate the separated calculators
+        self.spot_size_calc = SpotSizeCalculator(self)
+        self.penetration_depth_calc = PenetrationDepthCalculator(self)
+        self.converter_calc = UnitConverterCalculator(self)
+        
+        bottom_layout = QHBoxLayout()
+        bottom_layout.addWidget(self.penetration_depth_calc)
+        bottom_layout.addWidget(self.converter_calc)
+        
+        dialog_layout.addWidget(self.spot_size_calc)
+        dialog_layout.addLayout(bottom_layout)
+
+
+class SpotSizeCalculator(QGroupBox):
+    def __init__(self, parent=None):
+        super().__init__("1. Calculation of laser spot size, DOF and power density", parent)
         self._create_ui()
         self._connect_signals()
         self._update_calculations()
 
     def _create_ui(self):
         frame_layout = QVBoxLayout(self)
-        
-        lbl_title = QLabel("1. Calculation of laser spot size, DOF and power density")
-        font = lbl_title.font()
-        font.setBold(True)
-        lbl_title.setFont(font)
-        lbl_title.setAlignment(Qt.AlignCenter)
-        frame_layout.addWidget(lbl_title)
         
         main_layout = QHBoxLayout()
         left_layout = QVBoxLayout()
@@ -203,24 +197,15 @@ class SpotSizeCalculator(QFrame):
             pd_w_m2 = (power * 0.001) / area_m2
             self.out_pd_w_m2.setText(f"{pd_w_m2:.2f}")
 
-class PenetrationDepthCalculator(QFrame):
+class PenetrationDepthCalculator(QGroupBox):
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFrameShape(QFrame.StyledPanel)
-        self.setFrameShadow(QFrame.Raised)
+        super().__init__("2. Calculation of penetration depth", parent)
         self._create_ui()
         self._connect_signals()
         self._update_calculations()
 
     def _create_ui(self):
         depth_layout = QVBoxLayout(self)
-        
-        lbl_title_depth = QLabel("2. Calculation of penetration depth")
-        font_depth = lbl_title_depth.font()
-        font_depth.setBold(True)
-        lbl_title_depth.setFont(font_depth)
-        lbl_title_depth.setAlignment(Qt.AlignCenter)
-        depth_layout.addWidget(lbl_title_depth)
         
         depth_main_layout = QHBoxLayout()
         depth_form = QFormLayout()
@@ -284,23 +269,14 @@ class PenetrationDepthCalculator(QFrame):
             self.out_alpha.setText("0.00")
             self.out_penetration_depth.setText("Infinite")
 
-class UnitConverterCalculator(QFrame):
+class UnitConverterCalculator(QGroupBox):
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFrameShape(QFrame.StyledPanel)
-        self.setFrameShadow(QFrame.Raised)
+        super().__init__("3. Unit Converter", parent)
         self._create_ui()
         self._connect_signals()
 
     def _create_ui(self):
         main_vbox = QVBoxLayout(self)
-        
-        lbl_title = QLabel("3. Unit Converter")
-        font = lbl_title.font()
-        font.setBold(True)
-        lbl_title.setFont(font)
-        lbl_title.setAlignment(Qt.AlignCenter)
-        main_vbox.addWidget(lbl_title)
         
         # Absolute Conversion
         form_abs = QFormLayout()
@@ -430,22 +406,22 @@ class UnitConverterCalculator(QFrame):
         self.spin_shift.setValue(shift)
         self.spin_shift.blockSignals(False)
 
-class MQuickCalc(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Quick Calculators")
-        self.resize(850, 650)
-        
-        dialog_layout = QVBoxLayout(self)
-        
-        # Instantiate the separated calculators
-        self.spot_size_calc = SpotSizeCalculator(self)
-        self.penetration_depth_calc = PenetrationDepthCalculator(self)
-        self.converter_calc = UnitConverterCalculator(self)
-        
-        bottom_layout = QHBoxLayout()
-        bottom_layout.addWidget(self.penetration_depth_calc)
-        bottom_layout.addWidget(self.converter_calc)
-        
-        dialog_layout.addWidget(self.spot_size_calc)
-        dialog_layout.addLayout(bottom_layout)
+
+
+class ResizableImageLabel(QLabel):
+    def __init__(self, img_path):
+        super().__init__()
+        self._pixmap = QPixmap(img_path)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setMinimumSize(100, 100)
+
+    def paintEvent(self, event):
+        if not self._pixmap.isNull():
+            painter = QPainter(self)
+            rect = self.contentsRect()
+            scaled_pix = self._pixmap.scaled(rect.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            x = rect.x() + (rect.width() - scaled_pix.width()) // 2
+            y = rect.y() + (rect.height() - scaled_pix.height()) // 2
+            painter.drawPixmap(x, y, scaled_pix)
+        else:
+            super().paintEvent(event)

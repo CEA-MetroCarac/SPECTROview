@@ -9,6 +9,7 @@
 ##### 💻 Introducing the Programmatic Python API
 
 You can now script and automate your spectroscopic workflows without ever launching the graphical user interface. 
+
 - **Automated Workflows**: Load datasets, process spectra (baseline subtraction, cropping, normalization), and run the heavily optimized Vectorized Batch Fit (VBF) engine entirely from your own Python scripts or Jupyter Notebooks.
 - **Multivariate Analysis**: Programmatically run PCA and NMF analysis on hyperspectral maps.
 - **Automated Plotting**: Replicate SPECTROview's native publication-quality plots (statistical point plots, scatter plots, box plots, etc.) using the new `spectroview.api.graphs` module.

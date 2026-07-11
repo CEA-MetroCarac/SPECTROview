@@ -295,3 +295,57 @@ html {
   background: linear-gradient(to right, #0056b3, #3385ff);
 }
 
+/* ============================================================
+   HERO BADGES ROW (landing page)
+   ============================================================ */
+.hero-badges {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.hero-badges a {
+  display: inline-block;
+  margin: 0.15rem 0.12rem;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.hero-badges a:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+}
+
+/* ============================================================
+   QUICK-START BLOCK (landing page)
+   ============================================================ */
+.quick-start-block {
+  background: linear-gradient(135deg, rgba(0, 86, 179, 0.04) 0%, rgba(51, 133, 255, 0.06) 100%);
+  border: 1px solid rgba(0, 86, 179, 0.12);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin: 0 auto;
+  max-width: 720px;
+}
+
+[data-md-color-scheme="slate"] .quick-start-block {
+  background: linear-gradient(135deg, rgba(51, 133, 255, 0.06) 0%, rgba(0, 86, 179, 0.08) 100%);
+  border-color: rgba(51, 133, 255, 0.18);
+}
+
+/* ============================================================
+   TABBED DEMO SECTION POLISH
+   ============================================================ */
+.md-typeset .tabbed-set {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.md-typeset .tabbed-labels {
+  justify-content: center;
+}
+
+.md-typeset .tabbed-labels > label {
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 0.6rem 1.2rem;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}

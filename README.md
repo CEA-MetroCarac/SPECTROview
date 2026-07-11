@@ -3,13 +3,13 @@
 </p>
 
 <p align="center">
-    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/v/spectroview.svg?logo=pypi&logoColor=white" alt="PyPI version"></a>
-    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/pyversions/spectroview.svg?logo=python&logoColor=white" alt="Python Versions"></a>
-    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/dm/spectroview.svg?color=blue&label=downloads" alt="Downloads"></a>
-    <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPL_v3-blue.svg" alt="License: GPL v3"></a>
+    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/v/spectroview.svg?color=blue&logo=pypi&logoColor=white" alt="PyPI version"></a>
+    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/pyversions/spectroview.svg?color=yellow&logo=python&logoColor=white" alt="Python Versions"></a>
+    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/dm/spectroview.svg?color=green&label=downloads" alt="Downloads"></a>
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPL_v3-lightgrey.svg" alt="License: GPL v3"></a>
     <a href="https://CEA-MetroCarac.github.io/SPECTROview/"><img src="https://img.shields.io/badge/docs-latest-green.svg" alt="Docs"></a>
-    <a href="https://github.com/CEA-MetroCarac/SPECTROview/stargazers"><img src="https://img.shields.io/github/stars/CEA-MetroCarac/SPECTROview?style=flat&logo=github" alt="GitHub Stars"></a>
-    <a href="https://github.com/CEA-MetroCarac/SPECTROview/issues"><img src="https://img.shields.io/github/issues/CEA-MetroCarac/SPECTROview?logo=github" alt="GitHub Issues"></a>
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview/stargazers"><img src="https://img.shields.io/github/stars/CEA-MetroCarac/SPECTROview?style=flat&logo=github&color=blue" alt="GitHub Stars"></a>
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview/issues"><img src="https://img.shields.io/github/issues/CEA-MetroCarac/SPECTROview?logo=github&color=blue" alt="GitHub Issues"></a>
     <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Platform"></a>
     <a href="https://doi.org/10.1016/j.softx.2026.102862"><img src="https://img.shields.io/badge/DOI-10.1016%2Fj.softx.2026.102862-blue.svg" alt="DOI"></a>
     <a href="https://doi.org/10.1016/j.softx.2026.102862"><img src="https://img.shields.io/badge/Published_in-SoftwareX-orange" alt="SoftwareX"></a>

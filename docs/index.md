@@ -6,15 +6,24 @@ hide:
 ---
 
 <p align="center" class="hero-badges">
-    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/v/spectroview.svg?logo=pypi&logoColor=white" alt="PyPI version"></a>
-    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/pyversions/spectroview.svg?logo=python&logoColor=white" alt="Python Versions"></a>
-    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/dm/spectroview.svg?color=blue&label=downloads" alt="Downloads"></a>
-    <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPL_v3-blue.svg" alt="License"></a>
+    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/v/spectroview.svg?color=blue&logo=pypi&logoColor=white" alt="PyPI version"></a>
+    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/pyversions/spectroview.svg?color=yellow&logo=python&logoColor=white" alt="Python Versions"></a>
+    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/pypi/dm/spectroview.svg?color=green&label=downloads" alt="Downloads"></a>
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPL_v3-lightgrey.svg" alt="License"></a>
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview/stargazers"><img src="https://img.shields.io/github/stars/CEA-MetroCarac/SPECTROview?style=flat&logo=github&color=blue" alt="GitHub Stars"></a>
     <a href="https://doi.org/10.1016/j.softx.2026.102862"><img src="https://img.shields.io/badge/DOI-10.1016%2Fj.softx.2026.102862-blue.svg" alt="DOI"></a>
     <a href="https://doi.org/10.1016/j.softx.2026.102862"><img src="https://img.shields.io/badge/Published_in-SoftwareX-orange" alt="SoftwareX"></a>
 </p>
 
-**SPECTROview** is a free, open-source software application designed for advanced spectroscopic data analysis. It supports a diverse array of data types, including discrete spectra and hyperspectral datasets such as 2D maps and wafer maps. With its integrated visualization tools, **SPECTROview** streamlines your analytical workflow by consolidating data processing and visualization into a single, cohesive application.
+<p align="center">
+    <strong>An Open-Source Application for Interactive Spectroscopic Data Processing, Fitting, and Visualization</strong>
+</p>
+
+<p align="center">
+    <b>SPECTROview</b> is a free, open-source software designed for advanced spectroscopic data analysis.<br>
+    It supports discrete spectra and hyperspectral datasets such as 2D maps and wafer maps,<br>
+    with integrated visualization tools that streamline your analytical workflow.
+</p>
 
 ---
 
@@ -90,65 +99,24 @@ hide:
 
 ---
 
-### :material-rocket-launch-outline: **Quick Start**
-
-<div class="quick-start-block" markdown>
-
-**SPECTROview** requires Python 3.8 – 3.12. Install and launch in seconds:
-
-```bash
-pip install spectroview
-```
-
-```bash
-spectroview
-```
-
-Or install the latest development version from GitHub:
-
-```bash
-pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
-```
-
-</div>
-
----
-
 ### :material-book-open-page-variant: **Documentation**
 
-<div class="grid cards cards-2col" markdown>
+<div class="grid cards" markdown>
 
--   :material-account-hard-hat: __User Manual__
+-   [:material-download-circle: **Installation**](user_manual/installation.md)
+    <br> Install and launch in seconds via PyPI. Easily update to the latest version with a single command.
 
-    ---
+-   [:material-account-hard-hat: **User Manual**](user_manual/index.md)
+    <br> Step-by-step guides covering all features, from data loading to advanced fitting and visualization.
 
-    Step-by-step guides covering all features, from data loading to advanced fitting and visualization.
+-   [:material-code-tags: **Developer Guide**](developer/index.md)
+    <br> Architecture overview, data pipeline internals, and contribution guidelines for developers.
 
-    [:octicons-arrow-right-24: Read the User Manual](user_manual/index.md)
+-   [:material-api: **API Reference**](api/index.md)
+    <br> Detailed reference for all modules: spectra processing, 2D maps, graphs, and calculators.
 
--   :material-code-tags: __Developer Guide__
-
-    ---
-
-    Architecture overview, data pipeline internals, and contribution guidelines for developers.
-
-    [:octicons-arrow-right-24: Read the Developer Guide](developer/index.md)
-
--   :material-api: __API Reference__
-
-    ---
-
-    Detailed reference for all modules: spectra processing, 2D maps, graphs, and calculators.
-
-    [:octicons-arrow-right-24: Browse the API](api/index.md)
-
--   :material-format-list-bulleted: __Changelog__
-
-    ---
-
-    Latest updates, release notes, bug fixes, and new feature announcements.
-
-    [:octicons-arrow-right-24: View the Changelog](changelog.md)
+-   [:material-format-list-bulleted: **Changelog**](changelog.md)
+    <br> Latest updates, release notes, bug fixes, and new feature announcements.
 
 </div>
 

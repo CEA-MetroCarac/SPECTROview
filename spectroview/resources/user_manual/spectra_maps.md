@@ -122,7 +122,7 @@ The `Fitting` panel guides you through the process of building a robust model in
 
 **Step 2: Define the Fitting Range**: Restrict the mathematical fitting process to a specific X-axis region of interest.
 
-**Step 3: Baseline Definition**: `SPECTROview` offers two distinct modes for defining spectral baselines (`Manual` or `Auto`):
+**Step 3: Baseline Definition**: **SPECTROview** offers two distinct modes for defining spectral baselines (`Manual` or `Auto`):
 
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/baseline_widget.png" alt="Baseline Widget" width="600"><br>
@@ -144,7 +144,7 @@ The `Fitting` panel guides you through the process of building a robust model in
 
 #### **4.2. Supported Peak Profiles**
 
-`SPECTROview`'s `VBF Engine` provides heavily optimized implementations for the following mathematical peak profiles:
+**SPECTROview**'s `VBF Engine` provides heavily optimized implementations for the following mathematical peak profiles:
 
 | Model | Parameters | Formula |
 |-------|-----------|---------| 
@@ -161,7 +161,7 @@ The `Fitting` panel guides you through the process of building a robust model in
 
 The `PeakTable` displays all mathematical parameters for the peaks you have defined. When you drag a peak in the viewer, these properties update dynamically.
 
-**Dynamic Peak Indexing**: Every peak is automatically indexed with a suffix (e.g., `_1`, `_2`) indicating its order of creation. When you add, delete, or reorder peaks, `SPECTROview` automatically re-indexes them to maintain consecutive numbering (e.g., if you delete peak 2, peak 3 becomes the new peak 2). This ensures your expressions and fit results remain organized.
+**Dynamic Peak Indexing**: Every peak is automatically indexed with a suffix (e.g., `_1`, `_2`) indicating its order of creation. When you add, delete, or reorder peaks, **SPECTROview** automatically re-indexes them to maintain consecutive numbering (e.g., if you delete peak 2, peak 3 becomes the new peak 2). This ensures your expressions and fit results remain organized.
 
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/peak_table.png" alt="Peak Table Panel" width="800"><br>
@@ -180,7 +180,7 @@ The `PeakTable` displays all mathematical parameters for the peaks you have defi
 </div>
 
 
-**Expression**: Define complex mathematical relationships between parameters. `SPECTROview`'s `VBF Engine` robustly evaluates these expressions mathematically before mapping them to the optimizer. If peaks are re-indexed due to deletions, their references in your mathematical expressions are automatically updated to prevent broken models.
+**Expression**: Define complex mathematical relationships between parameters. **SPECTROview**'s `VBF Engine` robustly evaluates these expressions mathematically before mapping them to the optimizer. If peaks are re-indexed due to deletions, their references in your mathematical expressions are automatically updated to prevent broken models.
 
 
 
@@ -213,7 +213,7 @@ _______
 Once fitting is complete across your spectra or maps, you need to aggregate the best-fit results:
 
 - Navigate to the **Fit Results** tab.
-- Click the **Collect** button. `SPECTROview` will instantly aggregate all best-fit parameters into a unified, sortable table.
+- Click the **Collect** button. **SPECTROview** will instantly aggregate all best-fit parameters into a unified, sortable table.
 
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/collect_fit_results.gif" alt="Collect Fit Results" width="800"><br>

@@ -1,6 +1,6 @@
 ## **Save & Load Workspace**
 
-`SPECTROview` utilizes dedicated native file formats to allow you to seamlessly pause, save, and resume your data analysis sessions without losing any configurations or fit results.
+**SPECTROview** utilizes dedicated native file formats to allow you to seamlessly pause, save, and resume your data analysis sessions without losing any configurations or fit results.
 
 ### **1. Saving Your Work**
 
@@ -20,4 +20,4 @@ The application will generate a specific file extension based on the currently a
 
 ### **2. Loading Your Work**
 
-To resume a previous session, simply click the **Open** button in the main toolbar and select any previously saved `.spectra`, `.maps`, or `.graphs` file. `SPECTROview` will automatically detect the file format, reconstruct your dataset exactly as you left it, and instantly open the appropriate workspace tab.
+To resume a previous session, simply click the **Open** button in the main toolbar and select any previously saved `.spectra`, `.maps`, or `.graphs` file. **SPECTROview** will automatically detect the file format, reconstruct your dataset exactly as you left it, and instantly open the appropriate workspace tab.

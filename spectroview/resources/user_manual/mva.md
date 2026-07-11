@@ -1,6 +1,6 @@
 ## **Multivariate Analysis (MVA)**
 
-`SPECTROview` features built-in Multivariate Analysis (MVA) tools, easily accessible from the dedicated **MVA tab** located within both the `Spectra` and `Maps` workspaces.
+**SPECTROview** features built-in Multivariate Analysis (MVA) tools, easily accessible from the dedicated **MVA tab** located within both the `Spectra` and `Maps` workspaces.
 
 > **Note**: MVA algorithms require a minimum of 2 active spectra to run.
 

@@ -1,6 +1,6 @@
 ## **Installation**
 
-`SPECTROview` requires Python (versions 3.8 through 3.12). It can be easily installed and managed via your system's command-line interface (e.g., Command Prompt on Windows or Terminal on macOS/Linux).
+**SPECTROview** requires Python (versions 3.8 through 3.12). It can be easily installed and managed via your system's command-line interface (e.g., Command Prompt on Windows or Terminal on macOS/Linux).
 
 ### **1. From PyPI (Recommended)**
 ```bash
@@ -21,7 +21,7 @@ pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
 
 ### **3. Launch and Update**
 
-To launch `SPECTROview`, open your terminal or command prompt and execute:
+To launch **SPECTROview**, open your terminal or command prompt and execute:
 ```bash
 spectroview
 ```
@@ -40,7 +40,7 @@ pip install spectroview==26.28.1
 
 ### **4. Automatic Update Notifications**
 
-`SPECTROview` automatically checks for new releases and notifies you with a non-intrusive banner at the top of the application window — no manual checking required.
+**SPECTROview** automatically checks for new releases and notifies you with a non-intrusive banner at the top of the application window — no manual checking required.
 
 #### How it works
 
@@ -61,4 +61,4 @@ pip install spectroview==26.28.1
 | **Update later** | Hides the banner for the current session only. The banner will reappear on the next launch if the update is still available. |
 | **Skip this version** | Hides the banner permanently for that specific version. The banner will never show again until an even newer version is released. |
 
-> **Offline users**: If `SPECTROview` is installed on a machine without internet access, the update check fails silently — the application starts and works exactly as normal. No error is raised.
+> **Offline users**: If **SPECTROview** is installed on a machine without internet access, the update check fails silently — the application starts and works exactly as normal. No error is raised.

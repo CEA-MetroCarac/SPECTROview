@@ -76,4 +76,4 @@ ________
 ________
 
 
-**Spatial Profile Extraction**: While inside the `Maps` workspace, if you select exactly two distinct spatial points on the `MapViewer` heatmap, `SPECTROview` will automatically extract and plot an interpolated intensity profile between those two coordinates.
+**Spatial Profile Extraction**: While inside the `Maps` workspace, if you select exactly two distinct spatial points on the `MapViewer` heatmap, **SPECTROview** will automatically extract and plot an interpolated intensity profile between those two coordinates.

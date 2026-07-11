@@ -13,7 +13,7 @@ A horizontal toolbar located at the top of the application provides quick access
 | ![Settings](../user_manual_images/menu_bar/settings.png) | **Settings**: Opens the `Settings Panel` (see below for details). |
 | ![Theme](../user_manual_images/menu_bar/theme.png) | **Theme Toggle**: Instantly switches the application interface between Dark and Light modes. |
 | ![User Manual](../user_manual_images/menu_bar/manual.png) | **User Manual**: Opens the integrated User Manual documentation viewer. |
-| ![About](../user_manual_images/menu_bar/about.png) | **About**: Displays version information, licensing, and details about the `SPECTROview` application. |
+| ![About](../user_manual_images/menu_bar/about.png) | **About**: Displays version information, licensing, and details about the **SPECTROview** application. |
 
 
 ### **2. Settings Panel**
@@ -28,7 +28,7 @@ Click the **Settings** icon to open the `Settings Panel`. See the "Settings" sec
 ### **3. Hyperspectral Data Converter Tool**
 Click the **Convert** icon to open this utility.
 
-To convert hyperspectral data (2D maps) from Renishaw WiRE into a format natively supported by `SPECTROview`, load your file(s) and click **Convert**. The converted file will be saved with a `_converted` suffix in the same directory as the original file.
+To convert hyperspectral data (2D maps) from Renishaw WiRE into a format natively supported by **SPECTROview**, load your file(s) and click **Convert**. The converted file will be saved with a `_converted` suffix in the same directory as the original file.
 
 <div align="center">
   <img src="../user_manual_images/menu_bar/ui_converter.png" alt="Converter Tool UI" width="500"><br>

@@ -187,7 +187,7 @@ def load_wdf_spectrum(path: Path) -> dict:
             if timestamps is not None and i < len(timestamps):
                 item_metadata["Time (s)"] = round(timestamps[i], 2)
                 
-            fname = f"{path.stem}{suffix}"
+            fname = f"{path.stem}_{i}"
             spectra_list.append({
                 "name": fname,
                 "x0": wavenumbers.copy(),

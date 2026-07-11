@@ -86,3 +86,40 @@ for i in range(pca_result.n_components):
 # Save the augmented DataFrame
 df_map.to_csv("map_with_pca_scores.csv")
 ```
+
+---
+
+## 3. Batch Fitting on 2D Maps
+
+Because the loaded `Y_matrix` from a hyperspectral map is simply a 2D matrix of shape `(n_spectra, n_wavenumbers)`, you can pass it directly to the Vectorized Batch Fit (VBF) engine, just as you would with discrete spectra.
+
+```python
+import json
+import pandas as pd
+from spectroview.api import fitting
+
+# 1. Load a pre-defined fit model (e.g., exported from the GUI)
+with open("my_gui_model.json", "r") as f:
+    fit_model = json.load(f)
+
+# 2. Fit all spectra in the 2D map simultaneously
+print(f"Fitting {Y_matrix.shape[0]} spectra from the map...")
+results = fitting.fit_batch(x_axis, Y_matrix, fit_model)
+
+print(f"Success rate: {results['success'].mean() * 100:.1f}%")
+
+# 3. Merge the fit results back into the map DataFrame
+# results['params'] is a 2D array of all fitted parameters for all spectra
+df_results = pd.DataFrame(results['params'], columns=results['param_names'])
+
+# Assign each parameter as a new column in our map
+for col in df_results.columns:
+    df_map[col] = df_results[col].values
+
+# You can also add the R-squared and success flags
+df_map['Fit_R_squared'] = results['r_squared']
+df_map['Fit_Success'] = results['success']
+
+# 4. Save the map with the new fit results included
+df_map.to_csv("map_with_fit_results.csv")
+```

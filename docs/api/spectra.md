@@ -34,7 +34,7 @@ The `spectroview.api.processing` module allows you to apply baseline subtraction
 ```python
 from spectroview.api import processing
 
-# 1. Crop to the region of interest (e.g., 400 to 800 cm-1)
+# Crop to the region of interest (e.g., 400 to 800 cm-1)
 x_crop, Y_crop = processing.crop_spectra(
     spectra_dict['x'], 
     spectra_dict['Y'], 
@@ -42,23 +42,29 @@ x_crop, Y_crop = processing.crop_spectra(
     range_max=800.0
 )
 
-# 2. Min-Max normalization (scale max intensity to 1.0)
-Y_norm = processing.normalize_spectra(Y_crop)
-```
-
 ### Baseline Subtraction
 
 You can programmatically apply the same advanced baseline algorithms found in the SPECTROview GUI (such as `arpls` or `airpls`).
 
 ```python
-# Configure the baseline algorithm
-baseline_config = {
+# Option A: Automatic baseline (e.g. arpls)
+baseline_config_auto = {
     "mode": "arpls",
     "smoothing_factor": 1e5  # Adjust this to make the baseline stiffer or looser
 }
 
-# Subtract baseline
-Y_corrected, Y_baseline = processing.subtract_baseline(x_crop, Y_crop, baseline_config)
+# Option B: Linear baseline using anchor points
+baseline_config_linear = {
+    "mode": "Linear",
+    "attached": False,
+    "points": [
+        [410.0, 790.0],  # X anchor points (wavenumbers)
+        [0.0, 0.0]       # Y anchor points (intensities)
+    ]
+}
+
+# Subtract baseline (using the automatic option as an example)
+Y_corrected, Y_baseline = processing.subtract_baseline(x_crop, Y_crop, baseline_config_auto)
 
 # Y_corrected now contains the pure Raman/PL signal without the background
 ```
@@ -69,9 +75,20 @@ Y_corrected, Y_baseline = processing.subtract_baseline(x_crop, Y_crop, baseline_
 
 The core power of SPECTROview is its Vectorized Batch Fit (VBF) engine, which can fit thousands of spectra in a fraction of a second. The API exposes this through `spectroview.api.fitting`.
 
-### Step 1: Define the Model
+### Step 1: Define or Load the Fit Model
 
-The fit model is passed as a Python dictionary describing the baseline configuration and the individual peaks.
+The fit model is a dictionary describing the baseline configuration and the individual peaks. 
+
+**Option A: Load from a pre-defined JSON file (e.g., exported from the SPECTROview GUI)**
+
+```python
+import json
+
+with open("my_gui_model.json", "r") as f:
+    fit_model = json.load(f)
+```
+
+**Option B: Define the model manually**
 
 ```python
 import numpy as np
@@ -109,8 +126,20 @@ fit_model = {
 ```python
 from spectroview.api import fitting
 
+# Optional: Set optimizer constraints and tolerance
+fit_params = {
+    "xtol": 1e-4,     # Parameter step tolerance
+    "ftol": 1e-4,     # Cost function tolerance
+    "max_ite": 500    # Maximum number of iterations per spectrum
+}
+
 # Fit the batch (x is 1D array of wavenumbers, Y is 2D matrix of intensities)
-results = fitting.fit_batch(x_crop, Y_corrected, fit_model)
+results = fitting.fit_batch(
+    x_crop, 
+    Y_corrected, 
+    fit_model, 
+    fit_params=fit_params
+)
 
 print(f"Success rate: {np.mean(results['success']) * 100:.1f}%")
 print(f"Average R-squared: {np.mean(results['r_squared']):.4f}")

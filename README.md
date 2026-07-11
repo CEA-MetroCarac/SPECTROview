@@ -1,7 +1,13 @@
-[![PyPI version](https://badge.fury.io/py/spectroview.svg)](https://badge.fury.io/py/spectroview)
-[![Doc](https://img.shields.io/badge/%F0%9F%95%AE-docs-green.svg)](https://CEA-MetroCarac.github.io/SPECTROview/)
-[![Github](https://img.shields.io/badge/GitHub-GPL--3.0-informational)](https://github.com/CEA-MetroCarac/spectroview)
-[![Downloads](https://img.shields.io/pypi/dm/spectroview.svg)](https://pypi.org/project/spectroview/)
+[![PyPI version](https://img.shields.io/pypi/v/spectroview.svg?logo=pypi&logoColor=white)](https://pypi.org/project/spectroview/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/spectroview.svg?logo=python&logoColor=white)](https://pypi.org/project/spectroview/)
+[![Downloads](https://img.shields.io/pypi/dm/spectroview.svg?color=blue&label=downloads)](https://pypi.org/project/spectroview/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL_v3-blue.svg)](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/LICENSE)
+[![Docs](https://img.shields.io/badge/docs-latest-green.svg)](https://CEA-MetroCarac.github.io/SPECTROview/)
+[![GitHub Stars](https://img.shields.io/github/stars/CEA-MetroCarac/SPECTROview?style=flat&logo=github)](https://github.com/CEA-MetroCarac/SPECTROview/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/CEA-MetroCarac/SPECTROview?logo=github)](https://github.com/CEA-MetroCarac/SPECTROview/issues)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)](https://pypi.org/project/spectroview/)
+[![DOI](https://img.shields.io/badge/DOI-10.1016%2Fj.softx.2026.102862-blue.svg)](https://doi.org/10.1016/j.softx.2026.102862)
+[![SoftwareX](https://img.shields.io/badge/Published_in-SoftwareX-orange)](https://doi.org/10.1016/j.softx.2026.102862)
 
 <p align="center">
     <img width=100 src="https://raw.githubusercontent.com/CEA-MetroCarac/SPECTROview/main/docs/assets/icon.png">

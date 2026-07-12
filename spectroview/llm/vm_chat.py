@@ -7,7 +7,7 @@ Responsibilities
 ----------------
 * Build a rich system prompt from the active DataFrame schema.
 * Manage the multi-turn conversation history.
-* Delegate the actual Ollama call to ``LLMClient``.
+* Delegate the actual LLM call to ``LLMClient`` (Ollama or cloud API).
 * Parse the LLM response and emit strongly-typed result signals so the
   View never has to inspect raw JSON.
 * Execute *only* safe pandas operations (``df.query()`` and
@@ -29,7 +29,7 @@ from typing import Optional, List, Dict, Any
 import pandas as pd
 from PySide6.QtCore import QObject, Signal
 
-from spectroview.llm.m_llm_client import LLMClient
+from spectroview.llm.m_llm_client import LLMClient, API_PROVIDERS
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -104,6 +104,9 @@ class VMChat(QObject):
         self._history: List[Dict[str, str]] = []
         self._pending_response: str = ""
 
+        # Active provider label ("Ollama", "Gemini", etc.)
+        self._provider: str = LLMClient.DEFAULT_PROVIDER
+
     # ------------------------------------------------------------------
     # Public API — called by VChatPanel
     # ------------------------------------------------------------------
@@ -145,8 +148,29 @@ class VMChat(QObject):
     def set_model(self, model: str) -> None:
         self._model = model
 
+    def set_provider(
+        self,
+        provider: str,
+        api_key:  str = "",
+        base_url: str = "",
+        model:    str = "",
+    ) -> None:
+        """Switch the active LLM backend and clear conversation history."""
+        self._provider = provider
+        self._client.set_provider(provider, api_key=api_key,
+                                  base_url=base_url, model=model)
+        # Update model to provider default when switching
+        if provider != "Ollama" and not model:
+            from spectroview.llm.m_llm_client import API_PROVIDERS
+            self._model = API_PROVIDERS.get(provider, {}).get("default_model", self._model)
+        self._history.clear()
+
+    def get_provider(self) -> str:
+        """Return the currently active provider name."""
+        return self._provider
+
     def process_query(self, user_text: str) -> None:
-        """Send *user_text* to the local LLM and emit results when done.
+        """Send *user_text* to the active LLM backend and emit results when done.
 
         Safe to call from the main thread; all blocking I/O runs in a
         ``QThread`` via ``LLMClient``.
@@ -160,13 +184,19 @@ class VMChat(QObject):
             )
             return
 
-        if not LLMClient.is_available():
-            self.error_occurred.emit(
-                "Ollama is not reachable.\n\n"
-                "Make sure Ollama is running:\n"
-                "  • macOS / Linux: ollama serve\n"
-                "  • Then pull a model: ollama pull gemma3:4b"
-            )
+        if not self._client.is_available():
+            if self._provider == "Ollama":
+                self.error_occurred.emit(
+                    "Ollama is not reachable.\n\n"
+                    "Make sure Ollama is running:\n"
+                    "  • macOS / Linux: ollama serve\n"
+                    "  • Then pull a model: ollama pull gemma3:4b"
+                )
+            else:
+                self.error_occurred.emit(
+                    f"{self._provider} API is not configured.\n\n"
+                    "Please enter your API key in the provider settings above."
+                )
             return
 
         # Build the full message list for this request
@@ -199,10 +229,10 @@ class VMChat(QObject):
         return self._client.is_busy()
 
     def is_available(self) -> bool:
-        return LLMClient.is_available()
+        return self._client.is_available()
 
     def get_models(self) -> List[str]:
-        return LLMClient.get_models()
+        return self._client.get_models()
 
     # ------------------------------------------------------------------
     # Internal helpers

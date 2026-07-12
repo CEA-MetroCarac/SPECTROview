@@ -69,6 +69,8 @@ graph TD
     Main -->|"lazy creation"| VCP["VChatPanel (View)"]
     VCP -->|"method call"| VMC["VMChat (ViewModel)"]
     VMC -->|"delegates"| LLC["LLMClient (Model)"]
+    VMC -->|"builds prompt"| PM["PromptManager"]
+    PM -->|"loads .md"| FS["File System (prompts/, rules/, ...)"]
     LLC -->|"spawns"| LLW["LLMWorker (QThread)"]
     LLW -->|"HTTP stream"| OLL["Ollama (local)"]
     OLL -->|"token chunks"| LLW
@@ -86,6 +88,12 @@ graph TD
 ```
 spectroview/ai_agent/
 ├── __init__.py              # Docstring only — keeps the module optional
+├── config/                  # YAML configuration files (model.yaml, settings.yaml)
+├── examples/                # Few-shot conversation examples (Markdown)
+├── knowledge/               # Static domain facts (Markdown)
+├── prompts/                 # Core identity, JSON schema, per-intent instructions (Markdown)
+├── rules/                   # Behavioural constraints (Markdown)
+├── templates/               # Reusable Markdown output formats (Markdown)
 ├── m_llm_client.py          # Model layer: LLM connections + QThread workers
 │                            #   - LLMWorker (Ollama)
 │                            #   - APIWorker (OpenAI-compatible)
@@ -93,7 +101,8 @@ spectroview/ai_agent/
 │                            #   - LLMClient (unified facade)
 ├── m_conversation.py        # Data model: single conversation (messages, save/load JSON)
 ├── m_conversation_store.py  # Conversation store: scan/list/load saved conversations
-├── vm_chat.py               # ViewModel: system prompt, history, response parsing
+├── m_prompt_manager.py      # Prompt caching and assembly: loads and merges Markdown files based on intent
+├── vm_chat.py               # ViewModel: delegates to PromptManager, history, response parsing
 ├── v_chat_panel.py          # View: floating chat dialog (QDialog)
 └── v_history_dialog.py      # View: history browser dialog (QDialog)
 ```
@@ -102,10 +111,11 @@ spectroview/ai_agent/
 
 | File | Layer | Responsibility |
 |------|-------|---------------|
+| `m_prompt_manager.py` | **Model** | Loads, caches, and assembles Markdown files (`prompts/`, `rules/`, etc.) into a cohesive system prompt. Handles intent detection. |
 | `m_llm_client.py` | **Model** | Wraps Ollama, OpenAI SDK, and Anthropic SDK. Checks availability, lists models, spawns one of three background `QThread` workers depending on the selected provider. |
 | `m_conversation.py` | **Model** | Represents a single conversation: add messages, auto-title, save/load as JSON. Skips saving empty conversations. |
 | `m_conversation_store.py` | **Model** | Scans the history folder, lists saved conversations as lightweight summaries, loads conversations by ID. |
-| `vm_chat.py` | **ViewModel** | Builds the system prompt from DataFrame schemas. Manages conversation history. Parses the LLM's structured JSON response into a `ChatResult` object. Executes safe pandas operations. |
+| `vm_chat.py` | **ViewModel** | Builds the system prompt using `PromptManager`. Manages conversation history. Parses the LLM's structured JSON response into a `ChatResult` object. Executes safe pandas operations. |
 | `v_chat_panel.py` | **View** | Floating `QDialog` with chat bubbles, provider/model selector, timestamp display, status bar, and input field. Emits `plot_requested(dict)` when the AI suggests a plot or graph modification. |
 | `v_history_dialog.py` | **View** | Browsable list of saved conversations sorted by most-recent-first. Supports open, rename, duplicate, and delete. |
 
@@ -156,11 +166,24 @@ A lightweight, non-Qt class that manages Ollama connectivity and worker lifecycl
 
 **Default model**: `qwen2.5-coder:7b` (configurable via the UI combobox)
 
+### **`PromptManager` — Prompt Assembly**
+
+**File**: `spectroview/ai_agent/m_prompt_manager.py`
+
+A caching manager that reads isolated Markdown sections from disk (`prompts/`, `rules/`, `knowledge/`, `examples/`) and concatenates them into the final system prompt based on user intent.
+
+| Method | Purpose |
+|--------|---------|
+| `_detect_intent(msg)` | Infers intent (`"plotting"`, `"fitting"`, `"coding"`, `"chat"`) from keywords in the user's message. |
+| `load_prompt(name)` | Loads a specific Markdown file (e.g., `load_prompt("system")`). Cached in memory. |
+| `build_prompt(...)` | Assembles a complete system prompt from various markdown segments depending on the detected intent. |
+| `clear_cache()` | Clears the prompt cache (useful if files change, though auto-reload is supported). |
+
 ### **`VMChat` — ViewModel**
 
 **File**: `spectroview/ai_agent/vm_chat.py`
 
-Manages one chat session linked to the loaded DataFrames. Follows the MVVM contract: the View calls public methods; the ViewModel responds exclusively through signals.
+Manages one chat session linked to the loaded DataFrames. Follows the MVVM contract: the View calls public methods; the ViewModel responds exclusively through signals. Uses `PromptManager` to construct system prompts dynamically.
 
 | Signal | Payload | Purpose |
 |--------|---------|---------|
@@ -246,11 +269,14 @@ Helper widgets:
 
 ## **System Prompt & LLM Contract**
 
-The ViewModel constructs a rich system prompt that injects:
+The system prompt is highly modular and managed by the `PromptManager`. Instead of a massive hardcoded string, the prompt is assembled from granular Markdown files based on the detected intent (`chat`, `plotting`, `fitting`, `coding`). 
 
-1. **All loaded DataFrame schemas** — column names, dtypes, sample values, and a 3-row preview
-2. **Currently active DataFrame** name
-3. **Open graphs summary** — graph IDs with their style, x/y/z columns, and source DataFrame
+The `PromptManager` dynamically aggregates these markdown segments:
+1. **Core Prompt (`prompts/system.md`, `chat.md`):** Identity and global instruction set.
+2. **Context (injected by `VMChat`):** Loaded DataFrame schemas, sample values, active DataFrame name, and open graph summary.
+3. **Rules (`rules/general.md`, `plotting.md`):** Behavioural constraints specific to the intent.
+4. **Knowledge (`knowledge/features.md`):** Static facts about the software features.
+5. **Examples (`examples/plotting_examples.md`):** Few-shot JSON examples for the specific intent.
 
 The LLM is instructed to respond with **only a valid JSON object** (no markdown fences, no explanatory text) conforming to this schema:
 

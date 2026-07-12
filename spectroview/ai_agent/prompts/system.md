@@ -58,7 +58,7 @@ The JSON must have this exact structure:
       "z": "<column name for hue/color grouping, or null>",
       "filters": ["<valid pandas .query() string, e.g. \"Quadrant != 'Q4'\", or null>"],
       "plot_style": "<one of: point scatter box bar line trendline histogram wafer 2Dmap, or multiple separated by comma like 'box, bar'>",
-      "plot_title": "<title text or null>",
+      "plot_title": "<null unless explicitly requested by user>",
       "xlabel": "<X axis label or null>",
       "ylabel": "<Y axis label or null>",
       "zlabel": "<Z/color axis label or null>",

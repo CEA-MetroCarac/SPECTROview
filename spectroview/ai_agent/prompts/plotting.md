@@ -72,6 +72,7 @@ When the user wants to close or delete graphs, use `action: "delete"` with `grap
 # Constraints
 
 - Use EXACTLY these plot style strings: `point`, `scatter`, `box`, `bar`, `line`, `trendline`, `histogram`, `wafer`, `2Dmap`
+- NEVER add a `plot_title` unless the user explicitly requests one. Always leave it `null` by default.
 - Do NOT add grid lines unless explicitly requested.
 - Do NOT generate configuration for plots already created in previous turns — only output newly requested plots.
 - For spatial plots with multiple distinct items, always generate separate entries.

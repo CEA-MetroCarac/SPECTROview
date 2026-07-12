@@ -552,22 +552,11 @@ class VChatPanel(QDialog):
         self.edit_input.setPlaceholderText("Ask a question about your data…")
         layout.addWidget(self.edit_input, stretch=1)
 
-        # Send button
+        # Send / Stop button (toggles appearance based on AI state)
         self.btn_send = QPushButton("Send ▶")
         self.btn_send.setFixedHeight(50)
         self.btn_send.setFixedWidth(70)
-        self.btn_send.setStyleSheet("""
-            QPushButton {
-                background: #1565C0;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                font-weight: bold;
-            }
-            QPushButton:hover   { background: #1976D2; }
-            QPushButton:pressed { background: #0D47A1; }
-            QPushButton:disabled { background: #555; color: #888; }
-        """)
+        self._apply_send_button_style()
         layout.addWidget(self.btn_send)
 
         return bar
@@ -577,9 +566,9 @@ class VChatPanel(QDialog):
     # ------------------------------------------------------------------
 
     def _connect_signals(self) -> None:
-        # Input
-        self.btn_send.clicked.connect(self._on_send)
-        self.edit_input.send_requested.connect(self._on_send)
+        # Input — use a dispatcher so the button can send OR stop
+        self.btn_send.clicked.connect(self._on_send_or_stop)
+        self.edit_input.send_requested.connect(self._on_send_or_stop)
         self.btn_clear.clicked.connect(self._on_clear)
         self.btn_history.clicked.connect(self._on_history_clicked)
         self.btn_new_chat.clicked.connect(self._on_new_chat_clicked)
@@ -596,6 +585,57 @@ class VChatPanel(QDialog):
         self.vm.error_occurred.connect(self._on_error)
         self.vm.conversation_changed.connect(self._on_conversation_changed)
         self.vm.tool_execution_received.connect(self._on_tool_execution)
+
+    # ------------------------------------------------------------------
+    # Send / Stop button — toggles between blue "Send ▶" and red "Stop ■"
+    # ------------------------------------------------------------------
+
+    _SEND_STYLE = """
+        QPushButton {
+            background: #1565C0;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        QPushButton:hover   { background: #1976D2; }
+        QPushButton:pressed { background: #0D47A1; }
+        QPushButton:disabled { background: #555; color: #888; }
+    """
+
+    _STOP_STYLE = """
+        QPushButton {
+            background: #C62828;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        QPushButton:hover   { background: #D32F2F; }
+        QPushButton:pressed { background: #B71C1C; }
+        QPushButton:disabled { background: #555; color: #888; }
+    """
+
+    def _apply_send_button_style(self) -> None:
+        """Switch the action button to 'Send' mode (blue)."""
+        self.btn_send.setText("Send ▶")
+        self.btn_send.setStyleSheet(self._SEND_STYLE)
+        self.btn_send.setEnabled(True)
+
+    def _apply_stop_button_style(self) -> None:
+        """Switch the action button to 'Stop' mode (red)."""
+        self.btn_send.setText("Stop ■")
+        self.btn_send.setStyleSheet(self._STOP_STYLE)
+        self.btn_send.setEnabled(True)
+
+    def _on_send_or_stop(self) -> None:
+        """Dispatch to send or stop depending on whether the AI is busy."""
+        if self.vm.is_busy():
+            self.vm.cancel()
+            # _on_thinking_changed(False) will be emitted by the VM
+            # and will restore the send button appearance.
+        else:
+            self._on_send()
 
     # ------------------------------------------------------------------
     # Public API — called from main.py / VWorkspaceGraphs
@@ -693,6 +733,7 @@ class VChatPanel(QDialog):
             self.lbl_status.setText("🔴  ollama package missing — run: pip install ollama")
             self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
             self.edit_input.setEnabled(False)
+            self._apply_send_button_style()
             self.btn_send.setEnabled(False)
             return
 
@@ -700,6 +741,7 @@ class VChatPanel(QDialog):
             self.lbl_status.setText("🔴  openai package missing — run: pip install openai")
             self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
             self.edit_input.setEnabled(False)
+            self._apply_send_button_style()
             self.btn_send.setEnabled(False)
             return
 
@@ -712,6 +754,7 @@ class VChatPanel(QDialog):
             self.lbl_status.setText(f"⚪  {provider_key} — configure API key in Settings (AI Tab)")
             self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
             self.edit_input.setEnabled(False)
+            self._apply_send_button_style()
             self.btn_send.setEnabled(False)
             return
 
@@ -755,7 +798,7 @@ class VChatPanel(QDialog):
                 self.lbl_status.setText(f"🟢  {provider_key} API connected")
             self.lbl_status.setStyleSheet("color: #66BB6A; font-size: 11px;")
             self.edit_input.setEnabled(True)
-            self.btn_send.setEnabled(True)
+            self._apply_send_button_style()
 
         else:
             if is_ollama:
@@ -764,6 +807,7 @@ class VChatPanel(QDialog):
                 self.lbl_status.setText(f"🔴  {provider_key} API — invalid or expired API key")
             self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
             self.edit_input.setEnabled(False)
+            self._apply_send_button_style()
             self.btn_send.setEnabled(False)
 
     # ------------------------------------------------------------------
@@ -896,10 +940,10 @@ class VChatPanel(QDialog):
     def _on_thinking_changed(self, is_thinking: bool, status_text: str = "Thinking") -> None:
         if is_thinking:
             self.thinking_dots.start(status_text)
-            self.btn_send.setEnabled(False)
+            self._apply_stop_button_style()
         else:
             self.thinking_dots.stop()
-            self.btn_send.setEnabled(True)
+            self._apply_send_button_style()
 
     def _on_chunk(self, fragment: str) -> None:
         """Append a streaming fragment to the active AI bubble."""

@@ -1,5 +1,5 @@
 """
-spectroview/llm/v_chat_panel.py
+spectroview/ai_agent/v_chat_panel.py
 --------------------------------
 View layer: AI Chat floating dialog.
 
@@ -32,9 +32,9 @@ from PySide6.QtCore import Qt, Signal, QTimer, QSize, QSettings
 from PySide6.QtGui import QFont, QIcon, QKeyEvent, QColor, QPalette, QTextCursor
 
 from spectroview import ICON_DIR
-from spectroview.llm.vm_chat import VMChat, ChatResult
-from spectroview.llm.m_llm_client import LLMClient, API_PROVIDERS, OPENAI_AVAILABLE, OLLAMA_AVAILABLE
-from spectroview.llm.v_history_dialog import VHistoryDialog
+from spectroview.ai_agent.vm_chat import VMChat, ChatResult
+from spectroview.ai_agent.m_llm_client import LLMClient, API_PROVIDERS, OPENAI_AVAILABLE, OLLAMA_AVAILABLE
+from spectroview.ai_agent.v_history_dialog import VHistoryDialog
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -973,4 +973,4 @@ class _ChatLineEdit(QTextEdit):
 # ─────────────────────────────────────────────────────────────────────────
 # Re-export LLMClient so main.py can reference it easily
 # ─────────────────────────────────────────────────────────────────────────
-from spectroview.llm.m_llm_client import LLMClient  # noqa: E402
+from spectroview.ai_agent.m_llm_client import LLMClient  # noqa: E402

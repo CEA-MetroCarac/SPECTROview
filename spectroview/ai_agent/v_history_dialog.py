@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont, QIcon
 
-from spectroview.llm.m_conversation_store import MConversationStore
+from spectroview.ai_agent.m_conversation_store import MConversationStore
 
 class _ConversationItemWidget(QWidget):
     """Custom widget for a row in the history list."""

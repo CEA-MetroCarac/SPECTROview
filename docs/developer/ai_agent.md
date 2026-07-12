@@ -1,8 +1,8 @@
 # **AI Data Chat**
 
-The `AI Data Chat` is an optional, locally-hosted LLM chatbot that lets users query, filter, plot, and modify their data using natural language. It runs entirely on the user's machine via **Ollama** and communicates with the `Graphs` workspace to create, update, and delete plots.
+The `AI Data Chat` is an optional, multi-provider AI chatbot that lets users query, filter, plot, and modify their data using natural language. It supports local inference via **Ollama**, cloud providers via the **OpenAI** SDK (OpenAI, DeepSeek, Gemini, and any OpenAI-compatible endpoint), and **Anthropic** Claude models. The agent communicates with the `Graphs` workspace to create, update, and delete plots in real time.
 
-> The AI module is **fully optional**. If the `ollama` Python package is not installed or the Ollama daemon is not running, the rest of SPECTROview is completely unaffected.
+> The AI module is **fully optional**. If no AI package is installed or no provider is configured, the rest of SPECTROview is completely unaffected.
 
 ---
 
@@ -61,7 +61,7 @@ The `AI Data Chat` is an optional, locally-hosted LLM chatbot that lets users qu
 
 ## **Architecture Overview**
 
-The AI feature follows the same strict **MVVM** pattern as the rest of the application. All AI-related code lives in the `spectroview/llm/` package, isolated from the core workspaces.
+The AI feature follows the same strict **MVVM** pattern as the rest of the application. All AI-related code lives in the `spectroview/ai_agent/` package, isolated from the core workspaces.
 
 ```mermaid
 graph TD
@@ -84,40 +84,65 @@ graph TD
 ## **Module Structure**
 
 ```
-spectroview/llm/
-├── __init__.py          # Docstring only — keeps the module optional
-├── m_llm_client.py      # Model layer: Ollama connection + QThread worker
-├── vm_chat.py           # ViewModel: system prompt, history, response parsing
-└── v_chat_panel.py      # View: floating chat dialog (QDialog)
+spectroview/ai_agent/
+├── __init__.py              # Docstring only — keeps the module optional
+├── m_llm_client.py          # Model layer: LLM connections + QThread workers
+│                            #   - LLMWorker (Ollama)
+│                            #   - APIWorker (OpenAI-compatible)
+│                            #   - AnthropicWorker (Anthropic SDK)
+│                            #   - LLMClient (unified facade)
+├── m_conversation.py        # Data model: single conversation (messages, save/load JSON)
+├── m_conversation_store.py  # Conversation store: scan/list/load saved conversations
+├── vm_chat.py               # ViewModel: system prompt, history, response parsing
+├── v_chat_panel.py          # View: floating chat dialog (QDialog)
+└── v_history_dialog.py      # View: history browser dialog (QDialog)
 ```
 
 ### **File Roles**
 
 | File | Layer | Responsibility |
 |------|-------|---------------|
-| `m_llm_client.py` | **Model** | Wraps the `ollama` Python package. Checks availability, lists downloaded models, spawns a `QThread` worker to stream chat responses. |
-| `vm_chat.py` | **ViewModel** | Builds the system prompt from DataFrame schemas. Manages conversation history. Parses the LLM's structured JSON response into a `ChatResult` object. Executes safe pandas operations (`df.query()`, `df.describe()`). |
-| `v_chat_panel.py` | **View** | Floating `QDialog` with a chat bubble UI, model selector, status bar, and input field. Emits `plot_requested(dict)` when the AI suggests a plot or graph modification. |
+| `m_llm_client.py` | **Model** | Wraps Ollama, OpenAI SDK, and Anthropic SDK. Checks availability, lists models, spawns one of three background `QThread` workers depending on the selected provider. |
+| `m_conversation.py` | **Model** | Represents a single conversation: add messages, auto-title, save/load as JSON. Skips saving empty conversations. |
+| `m_conversation_store.py` | **Model** | Scans the history folder, lists saved conversations as lightweight summaries, loads conversations by ID. |
+| `vm_chat.py` | **ViewModel** | Builds the system prompt from DataFrame schemas. Manages conversation history. Parses the LLM's structured JSON response into a `ChatResult` object. Executes safe pandas operations. |
+| `v_chat_panel.py` | **View** | Floating `QDialog` with chat bubbles, provider/model selector, timestamp display, status bar, and input field. Emits `plot_requested(dict)` when the AI suggests a plot or graph modification. |
+| `v_history_dialog.py` | **View** | Browsable list of saved conversations sorted by most-recent-first. Supports open, rename, duplicate, and delete. |
 
 ---
 
 ## **Key Classes**
 
-### **`LLMWorker` — Background Thread**
+### **`LLMWorker` / `APIWorker` / `AnthropicWorker` — Background Threads**
 
-**File**: `spectroview/llm/m_llm_client.py`
+**File**: `spectroview/ai_agent/m_llm_client.py`
 
-A `QThread` subclass that executes a single streaming chat request against the local Ollama API. Emitting token-by-token so the UI can display a live typing effect.
+Three `QThread` subclasses, one per backend. Each executes a single streaming chat request and emits token-by-token for live typing animation.
+
+| Class | Backend | Package required |
+|-------|---------|------------------|
+| `LLMWorker` | Ollama (local) | `ollama` |
+| `APIWorker` | OpenAI, DeepSeek, Gemini, Custom | `openai` |
+| `AnthropicWorker` | Anthropic Claude | `anthropic` |
 
 | Signal | Payload | Purpose |
 |--------|---------|---------|
 | `chunk_received` | `str` | Each streamed token fragment |
 | `response_ready` | `str` | Full assembled response text |
-| `error_occurred` | `str` | Error message if Ollama is unreachable |
+| `error_occurred` | `str` | Error message if the backend is unreachable |
 
 ### **`LLMClient` — Connection Facade**
 
-**File**: `spectroview/llm/m_llm_client.py`
+**File**: `spectroview/ai_agent/m_llm_client.py`
+
+A lightweight facade that manages provider selection, API key storage, and worker lifecycle. Selects the appropriate worker class based on `self._provider`.
+
+**Known providers** (defined in `API_PROVIDERS` dict):
+- `Ollama` → `LLMWorker`
+- `OpenAI`, `DeepSeek`, `Gemini`, `Custom` → `APIWorker`
+- `Anthropic` → `AnthropicWorker`
+
+**File**: `spectroview/ai_agent/m_llm_client.py`
 
 A lightweight, non-Qt class that manages Ollama connectivity and worker lifecycle.
 
@@ -133,7 +158,7 @@ A lightweight, non-Qt class that manages Ollama connectivity and worker lifecycl
 
 ### **`VMChat` — ViewModel**
 
-**File**: `spectroview/llm/vm_chat.py`
+**File**: `spectroview/ai_agent/vm_chat.py`
 
 Manages one chat session linked to the loaded DataFrames. Follows the MVVM contract: the View calls public methods; the ViewModel responds exclusively through signals.
 
@@ -156,13 +181,20 @@ Manages one chat session linked to the loaded DataFrames. Follows the MVVM contr
 | `cancel()` | Abort in-progress request |
 | `clear_history()` | Reset conversation history |
 
-#### **Conversation History**
+#### **Conversation History & Persistence**
 
-The ViewModel maintains a rolling history of the last **6 pairs** (12 messages: 6 user + 6 assistant) to prevent context overflow while enabling multi-turn follow-up questions. History is only cleared when the set of loaded DataFrames changes, not when the active selection switches.
+Conversations are saved automatically as JSON files in the user-configured history folder (set via **Settings → AI tab**). The `VMChat` maintains an internal `MConversation` object that:
+
+- Accumulates messages with ISO timestamps.
+- Auto-titles itself from the first user message (up to 60 chars).
+- Persists to disk after each AI response.
+- Is **not cleared** when the user loads a new workspace file or switches DataFrames. History only resets when the user explicitly clicks **+ New Chat**.
+
+The rolling context sent to the LLM is capped at the last **6 pairs** (12 messages) to prevent context overflow.
 
 ### **`ChatResult` — Parsed Response**
 
-**File**: `spectroview/llm/vm_chat.py`
+**File**: `spectroview/ai_agent/vm_chat.py`
 
 A plain data object carrying the parsed LLM response back to the View:
 
@@ -177,7 +209,7 @@ A plain data object carrying the parsed LLM response back to the View:
 
 ### **`VChatPanel` — View Dialog**
 
-**File**: `spectroview/llm/v_chat_panel.py`
+**File**: `spectroview/ai_agent/v_chat_panel.py`
 
 A floating `QDialog` with the following layout:
 
@@ -459,7 +491,7 @@ The AI feature is gated behind an optional dependency:
 ```toml
 # pyproject.toml
 [project.optional-dependencies]
-ai = ["ollama>=0.4"]
+ai = ["ollama>=0.4", "openai>=1.0", "anthropic>=0.30"]
 ```
 
 Install with:
@@ -472,25 +504,24 @@ pip install -e ".[ai]"
 ```python
 # m_llm_client.py
 try:
-    import ollama as _ollama
-    OLLAMA_AVAILABLE = True
-except ImportError:
-    _ollama = None
-    OLLAMA_AVAILABLE = False
-```
-
-```python
-# main.py
-try:
-    from spectroview.llm.v_chat_panel import VChatPanel, LLMClient
+    import ollama, openai, anthropic
     LLM_AVAILABLE = True
 except ImportError:
     LLM_AVAILABLE = False
 ```
 
-If `ollama` is not installed:
-- `LLMClient.is_available()` returns `False`
-- The toolbar button shows an informational dialog instead of opening the panel
+```python
+# main.py
+try:
+    from spectroview.ai_agent.v_chat_panel import VChatPanel, LLMClient
+    LLM_AVAILABLE = True
+except ImportError:
+    LLM_AVAILABLE = False
+```
+
+If dependencies are not installed:
+- `LLMClient` is disabled
+- The toolbar button shows an informational dialog
 - No error is raised at startup
 
 ---
@@ -511,13 +542,15 @@ If `ollama` is not installed:
 | Feature | Description |
 |---------|-------------|
 | **Natural language plot creation** | Ask for any of the 9 supported plot styles (point, scatter, box, bar, line, trendline, histogram, wafer, 2Dmap) with column, filter, and style options |
-| **Multi-plot generation** | A single query can create multiple plots simultaneously (e.g., "create a box and scatter plot of X vs Y") |
+| **Multi-plot generation** | A single query can create multiple plots simultaneously |
 | **Data filtering** | Filter DataFrames using natural language (translated to `pandas.query()` expressions) |
 | **Descriptive statistics** | Request `describe()` statistics on specific columns |
 | **Graph modification** | Update existing graph properties (axis limits, title, style, filters) by graph ID |
 | **Graph deletion** | Delete specific graphs or all graphs by natural language instruction |
 | **Multi-DataFrame support** | Switch between multiple loaded DataFrames; the AI knows which is active |
 | **Conversation memory** | Multi-turn conversations with rolling 6-pair history; follow-up queries reuse context |
+| **Conversation persistence** | Conversations survive file loads and tab switches. Only **+ New Chat** resets the history |
+| **Conversation history browser** | Browse, search, open, rename, duplicate, and delete past conversations via the History dialog |
 | **Streaming responses** | Token-by-token display with live typing animation |
 | **Model selection** | Switch between locally downloaded Ollama models via the header combobox |
 | **Inline data preview** | Filtered DataFrames displayed as interactive tables with copy-to-clipboard |

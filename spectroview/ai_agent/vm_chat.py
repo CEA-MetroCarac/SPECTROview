@@ -1,5 +1,5 @@
 """
-spectroview/llm/vm_chat.py
+spectroview/ai_agent/vm_chat.py
 ---------------------------
 ViewModel layer for the AI Chat feature.
 
@@ -31,9 +31,9 @@ from typing import Optional, List, Dict, Any
 import pandas as pd
 from PySide6.QtCore import QObject, Signal, QSettings
 
-from spectroview.llm.m_llm_client import LLMClient, API_PROVIDERS
-from spectroview.llm.m_conversation import MConversation
-from spectroview.llm.m_conversation_store import MConversationStore
+from spectroview.ai_agent.m_llm_client import LLMClient, API_PROVIDERS
+from spectroview.ai_agent.m_conversation import MConversation
+from spectroview.ai_agent.m_conversation_store import MConversationStore
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -161,7 +161,7 @@ class VMChat(QObject):
                                   base_url=base_url, model=model)
         # Update model to provider default when switching
         if provider != "Ollama" and not model:
-            from spectroview.llm.m_llm_client import API_PROVIDERS
+            from spectroview.ai_agent.m_llm_client import API_PROVIDERS
             self._model = API_PROVIDERS.get(provider, {}).get("default_model", self._model)
         self.new_conversation()
 

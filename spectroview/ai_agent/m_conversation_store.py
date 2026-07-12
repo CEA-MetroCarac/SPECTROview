@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 
-from spectroview.llm.m_conversation import MConversation
+from spectroview.ai_agent.m_conversation import MConversation
 
 class ConversationSummary:
     """Lightweight representation of a conversation for lists."""

@@ -1,5 +1,5 @@
 """
-spectroview/llm/m_llm_client.py
+spectroview/ai_agent/m_llm_client.py
 --------------------------------
 Model layer: LLM connection manager and background QThread workers.
 
@@ -13,7 +13,7 @@ absent, the rest of the application runs unaffected.
 
 Typical usage
 -------------
->>> from spectroview.llm.m_llm_client import LLMClient
+>>> from spectroview.ai_agent.m_llm_client import LLMClient
 >>> client = LLMClient()
 >>> client.set_provider("Gemini", api_key="...", model="gemini-2.5-flash")
 >>> if client.is_available():

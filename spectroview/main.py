@@ -41,7 +41,7 @@ except ImportError:
     WDF_AVAILABLE = False
 
 try:
-    from spectroview.llm.v_chat_panel import VChatPanel
+    from spectroview.ai_agent.v_chat_panel import VChatPanel
     LLM_AVAILABLE = True
 except ImportError:
     VChatPanel = None   # type: ignore[assignment,misc]

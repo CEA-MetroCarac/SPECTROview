@@ -108,3 +108,27 @@ class MSettings:
     def set_last_check_date(self, date_str: str):
         self.settings.setValue("update_checker/last_check_date", date_str)
         self.settings.sync()
+
+    # ---------- AI Settings ----------
+    def load_ai_settings(self) -> dict:
+        s = QSettings("SPECTROview", "AIChat")
+        s.beginGroup("ai_chat")
+        data = {
+            "api_key_OpenAI": s.value("api_key_OpenAI", "", str),
+            "api_key_Anthropic": s.value("api_key_Anthropic", "", str),
+            "api_key_Gemini": s.value("api_key_Gemini", "", str),
+            "api_key_DeepSeek": s.value("api_key_DeepSeek", "", str),
+            "api_key_Custom": s.value("api_key_Custom", "", str),
+            "custom_base_url": s.value("custom_base_url", "", str),
+            "history_folder": s.value("history_folder", "", str),
+        }
+        s.endGroup()
+        return data
+
+    def save_ai_settings(self, data: dict):
+        s = QSettings("SPECTROview", "AIChat")
+        s.beginGroup("ai_chat")
+        for key, value in data.items():
+            if key in ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini", "api_key_DeepSeek", "api_key_Custom", "custom_base_url", "history_folder"]:
+                s.setValue(key, value)
+        s.endGroup()

@@ -1,6 +1,7 @@
 .venv/
 .venv_clean/
 .spectroview/
+SPECTROview_AICHAT/
 build/
 dist/
 scripts/

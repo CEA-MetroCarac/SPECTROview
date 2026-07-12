@@ -265,10 +265,6 @@ class VChatPanel(QDialog):
         header = self._make_header()
         root.addWidget(header)
 
-        # ── API settings panel (hidden for Ollama) ───────────────────
-        self.api_settings_frame = self._make_api_settings()
-        root.addWidget(self.api_settings_frame)
-
         # ── Status bar ──────────────────────────────────────────────
         self.status_bar = self._make_status_bar()
         root.addWidget(self.status_bar)
@@ -372,78 +368,7 @@ class VChatPanel(QDialog):
 
         return header
 
-    def _make_api_settings(self) -> QFrame:
-        """Collapsible panel shown when a cloud API provider is selected."""
-        frame = QFrame()
-        frame.setObjectName("apiSettingsFrame")
-        frame.setStyleSheet("""
-            QFrame#apiSettingsFrame {
-                background: rgba(26, 35, 126, 0.08);
-                border-bottom: 1px solid rgba(128, 128, 128, 0.25);
-            }
-        """)
 
-        layout = QVBoxLayout(frame)
-        layout.setContentsMargins(10, 6, 10, 6)
-        layout.setSpacing(4)
-
-        # ── API Key row ──────────────────────────────────────────────
-        row1 = QHBoxLayout()
-        row1.setSpacing(6)
-
-        lbl_key = QLabel("API Key:")
-        lbl_key.setFixedWidth(60)
-        lbl_key.setStyleSheet("font-size: 11px; font-weight: bold;")
-        row1.addWidget(lbl_key)
-
-        self.edit_api_key = QLineEdit()
-        self.edit_api_key.setEchoMode(QLineEdit.Password)
-        self.edit_api_key.setPlaceholderText("Enter your API key…")
-        self.edit_api_key.setFixedHeight(26)
-        self.edit_api_key.setStyleSheet("font-size: 11px;")
-        row1.addWidget(self.edit_api_key, stretch=1)
-
-        self.btn_connect = QPushButton("Connect")
-        self.btn_connect.setFixedHeight(26)
-        self.btn_connect.setFixedWidth(72)
-        self.btn_connect.setStyleSheet("""
-            QPushButton {
-                background: #1565C0;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                font-size: 11px;
-                font-weight: bold;
-            }
-            QPushButton:hover   { background: #1976D2; }
-            QPushButton:pressed { background: #0D47A1; }
-        """)
-        row1.addWidget(self.btn_connect)
-
-        layout.addLayout(row1)
-
-        # ── Custom base URL row (Custom provider only) ───────────────
-        self.row_custom_url = QWidget()
-        row2 = QHBoxLayout(self.row_custom_url)
-        row2.setContentsMargins(0, 0, 0, 0)
-        row2.setSpacing(6)
-
-        lbl_url = QLabel("Base URL:")
-        lbl_url.setFixedWidth(60)
-        lbl_url.setStyleSheet("font-size: 11px; font-weight: bold;")
-        row2.addWidget(lbl_url)
-
-        self.edit_base_url = QLineEdit()
-        self.edit_base_url.setPlaceholderText("https://your-openai-compatible-endpoint/v1")
-        self.edit_base_url.setFixedHeight(26)
-        self.edit_base_url.setStyleSheet("font-size: 11px;")
-        row2.addWidget(self.edit_base_url, stretch=1)
-
-        layout.addWidget(self.row_custom_url)
-        self.row_custom_url.hide()   # only shown for "Custom" provider
-
-        frame.hide()   # hidden by default (Ollama selected)
-        return frame
 
     def _make_status_bar(self) -> QFrame:
         bar = QFrame()
@@ -524,7 +449,8 @@ class VChatPanel(QDialog):
         self.btn_refresh_models.clicked.connect(self._refresh_status)
         self.cbb_model.currentTextChanged.connect(self.vm.set_model)
         self.cbb_provider.currentTextChanged.connect(self._on_provider_changed)
-        self.btn_connect.clicked.connect(self._on_connect_clicked)
+
+        self.cbb_model.currentTextChanged.connect(lambda _: self._save_settings())
 
         # ViewModel → View
         self.vm.thinking_changed.connect(self._on_thinking_changed)
@@ -564,16 +490,6 @@ class VChatPanel(QDialog):
             self.cbb_provider.setCurrentIndex(idx)
             self.cbb_provider.blockSignals(False)
 
-        # Load API keys for all cloud providers
-        for display_name, provider_key in _DISPLAY_TO_PROVIDER.items():
-            if provider_key != "Ollama":
-                key = s.value(f"api_key_{provider_key}", "")
-                if key and provider_key == _DISPLAY_TO_PROVIDER.get(saved_provider, "Ollama"):
-                    self.edit_api_key.setText(key)
-
-        # Load custom base URL
-        self.edit_base_url.setText(s.value("custom_base_url", ""))
-
         s.endGroup()
 
         # Apply the loaded provider
@@ -588,10 +504,10 @@ class VChatPanel(QDialog):
         provider_key = _DISPLAY_TO_PROVIDER.get(provider_display, "Ollama")
 
         s.setValue("provider", provider_display)
-        if provider_key != "Ollama":
-            s.setValue(f"api_key_{provider_key}", self.edit_api_key.text())
-        if provider_key == "Custom":
-            s.setValue("custom_base_url", self.edit_base_url.text())
+
+        current_model = self.cbb_model.currentText()
+        if current_model:
+            s.setValue(f"model_{provider_key}", current_model)
 
         s.endGroup()
 
@@ -600,52 +516,28 @@ class VChatPanel(QDialog):
     # ------------------------------------------------------------------
 
     def _on_provider_changed(self, display_name: str, restore: bool = False) -> None:
-        """Show/hide the API settings panel and update the ViewModel provider."""
+        """Update the ViewModel provider."""
         provider_key = _DISPLAY_TO_PROVIDER.get(display_name, "Ollama")
         is_ollama = (provider_key == "Ollama")
-        is_custom = (provider_key == "Custom")
-
-        # Show/hide the API settings panel
-        self.api_settings_frame.setVisible(not is_ollama)
-        self.row_custom_url.setVisible(is_custom)
 
         if is_ollama:
-            # Restore the model combo to local Ollama models
             self.vm.set_provider("Ollama")
             self._refresh_status()
         else:
-            # Load saved API key for this provider
-            if not restore:
-                s = QSettings("SPECTROview", "AIChat")
-                s.beginGroup(self._SETTINGS_GROUP)
-                saved_key = s.value(f"api_key_{provider_key}", "")
-                s.endGroup()
-                self.edit_api_key.setText(saved_key)
-
-            # Pre-fill default base URL for Custom
-            if is_custom and not self.edit_base_url.text():
-                self.edit_base_url.setPlaceholderText(
-                    "https://your-openai-compatible-endpoint/v1"
-                )
-
-            # Apply provider (even without key yet)
             self._apply_cloud_provider(provider_key)
 
     def _apply_cloud_provider(self, provider_key: str) -> None:
         """Push provider config to ViewModel and refresh the model list."""
-        api_key  = self.edit_api_key.text().strip()
-        base_url = self.edit_base_url.text().strip() if provider_key == "Custom" else ""
-        model    = self.cbb_model.currentText()
+        s = QSettings("SPECTROview", "AIChat")
+        s.beginGroup(self._SETTINGS_GROUP)
+        api_key = s.value(f"api_key_{provider_key}", "")
+        base_url = s.value("custom_base_url", "") if provider_key == "Custom" else ""
+        s.endGroup()
+        
+        model = self.cbb_model.currentText()
 
         self.vm.set_provider(provider_key, api_key=api_key, base_url=base_url, model=model)
         self._refresh_status()
-
-    def _on_connect_clicked(self) -> None:
-        """User clicked 'Connect' — apply the current API key and refresh."""
-        provider_display = self.cbb_provider.currentText()
-        provider_key = _DISPLAY_TO_PROVIDER.get(provider_display, "Ollama")
-        self._apply_cloud_provider(provider_key)
-        self._save_settings()
 
     # ------------------------------------------------------------------
     # Refresh helpers
@@ -672,9 +564,13 @@ class VChatPanel(QDialog):
             self.btn_send.setEnabled(False)
             return
 
-        # ── API key not yet entered ─────────────────────────────────────
-        if not is_ollama and not self.edit_api_key.text().strip():
-            self.lbl_status.setText(f"⚪  {provider_key} — enter API key and click Connect")
+        # ── API key missing ─────────────────────────────────────
+        s = QSettings("SPECTROview", "AIChat")
+        s.beginGroup(self._SETTINGS_GROUP)
+        has_key = bool(s.value(f"api_key_{provider_key}", ""))
+        s.endGroup()
+        if not is_ollama and not has_key:
+            self.lbl_status.setText(f"⚪  {provider_key} — configure API key in Settings (AI Tab)")
             self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
             self.edit_input.setEnabled(False)
             self.btn_send.setEnabled(False)
@@ -699,9 +595,17 @@ class VChatPanel(QDialog):
                     self.cbb_model.addItem(fallback)
 
             # Restore previous selection if still present
-            idx = self.cbb_model.findText(current)
+            s = QSettings("SPECTROview", "AIChat")
+            s.beginGroup(self._SETTINGS_GROUP)
+            saved_model = str(s.value(f"model_{provider_key}", ""))
+            s.endGroup()
+            
+            target_model = saved_model if saved_model else current
+            idx = self.cbb_model.findText(target_model)
             if idx >= 0:
                 self.cbb_model.setCurrentIndex(idx)
+            elif self.cbb_model.findText(current) >= 0:
+                self.cbb_model.setCurrentIndex(self.cbb_model.findText(current))
             if self.cbb_model.currentText():
                 self.vm.set_model(self.cbb_model.currentText())
             self.cbb_model.blockSignals(False)

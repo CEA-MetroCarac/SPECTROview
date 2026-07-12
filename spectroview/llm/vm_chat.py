@@ -24,10 +24,12 @@ from __future__ import annotations
 import json
 import re
 import traceback
+import os
+from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 import pandas as pd
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, QSettings
 
 from spectroview.llm.m_llm_client import LLMClient, API_PROVIDERS
 
@@ -106,6 +108,12 @@ class VMChat(QObject):
 
         # Active provider label ("Ollama", "Gemini", etc.)
         self._provider: str = LLMClient.DEFAULT_PROVIDER
+        
+        # Load history folder
+        s = QSettings("SPECTROview", "AIChat")
+        s.beginGroup("ai_chat")
+        self._history_folder = str(s.value("history_folder", ""))
+        s.endGroup()
 
     # ------------------------------------------------------------------
     # Public API — called by VChatPanel
@@ -126,6 +134,7 @@ class VMChat(QObject):
 
         # Only wipe history when the dataframe *set* actually changed
         if new_keys != old_keys:
+            self._save_history_to_file()
             self._history.clear()
 
     def update_active_df_name(self, name: str) -> None:
@@ -163,6 +172,7 @@ class VMChat(QObject):
         if provider != "Ollama" and not model:
             from spectroview.llm.m_llm_client import API_PROVIDERS
             self._model = API_PROVIDERS.get(provider, {}).get("default_model", self._model)
+        self._save_history_to_file()
         self._history.clear()
 
     def get_provider(self) -> str:
@@ -221,8 +231,10 @@ class VMChat(QObject):
         """Abort any in-progress LLM request."""
         self._client.cancel()
         self.thinking_changed.emit(False)
+        self._save_history_to_file()
 
     def clear_history(self) -> None:
+        self._save_history_to_file()
         self._history.clear()
 
     def is_busy(self) -> bool:
@@ -237,6 +249,32 @@ class VMChat(QObject):
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+    
+    def _save_history_to_file(self) -> None:
+        """Save the current conversation history to the configured folder."""
+        # Only save if there's actual conversation history (more than just one error msg, etc.)
+        if not self._history or not self._history_folder:
+            return
+            
+        if not os.path.exists(self._history_folder):
+            try:
+                os.makedirs(self._history_folder)
+            except Exception:
+                return
+                
+        timestamp = datetime.now().strftime("%y-%m-%d_%H-%M-%S")
+        filename = f"{timestamp}.md"
+        filepath = os.path.join(self._history_folder, filename)
+        
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(f"# AI Chat Session - {timestamp}\\n\\n")
+                for msg in self._history:
+                    role = "User" if msg["role"] == "user" else "AI"
+                    content = msg["content"]
+                    f.write(f"### {role}\\n{content}\\n\\n")
+        except Exception:
+            pass
 
     def _build_messages(self, user_text: str) -> List[Dict[str, str]]:
         """Assemble the full message list = system prompt + capped history + new user turn."""
@@ -306,16 +344,18 @@ The JSON must have this exact structure:
   "target_dataframe": "<name of the dataframe to operate on, or null>",
   "query": "<valid pandas .query() expression using column names, or null>",
   "stat_columns": ["<col1>", "<col2>"],
-  "graph_update": {{
-    "graph_id": <integer graph ID to modify>,
-    "properties": {{
-      "ymin": 3.6,
-      "ymax": 4.2,
-      "plot_title": "New title",
-      "plot_style": "scatter",
-      "filters": ["Quadrant != 'Q4'"]
+  "graph_update": [
+    {{
+      "graph_id": <integer graph ID to modify, or "all" to apply to all open graphs>,
+      "properties": {{
+        "ymin": 3.6,
+        "ymax": 4.2,
+        "plot_title": "New title",
+        "plot_style": "scatter",
+        "filters": ["Quadrant != 'Q4'"]
+      }}
     }}
-  }} or null,
+  ] or null,
   "graph_delete": {{
     "delete_all": false,
     "graph_ids": [1, 2, 3]
@@ -367,7 +407,7 @@ RULES:
 - For "plot": fill "plot_config". If plotting multiple styles with identical parameters, output a SINGLE entry in the list and set plot_style to a comma-separated string (e.g., "box, bar, point") for faster generation.
   Only include optional fields (like xmin, ymin, plot_title, grid, etc.) when the user explicitly asks for them.
 - For "answer": set "answer_text" to a plain-text explanation.
-- For updating an existing graph: use action="update" and set "graph_update" with the graph_id and the properties to change.
+- For updating an existing graph: use action="update" and set "graph_update" as a list of update objects. Set "graph_id" to the specific ID or "all" to update all open graphs.
 - For deleting an existing graph: use action="delete" and set "graph_delete". Set delete_all to true to delete all graphs, or pass specific IDs in graph_ids. For "delete all except 70", pass all open graph IDs EXCEPT 70.
 - Set "target_dataframe" to the exact name of the dataframe you are querying. If not specified by user, use the active one.
 - NEVER use eval(), exec(), or any Python code other than pandas .query() expressions.
@@ -466,9 +506,29 @@ from the previous request.
         elif action == "update":
             # Graph update — pass graph_update payload through to the View
             graph_update = data.get("graph_update")
-            if graph_update and isinstance(graph_update, dict):
-                result.plot_config = [{"_graph_update": graph_update}]
-                result.text_summary = explanation or f"Updating graph {graph_update.get('graph_id')}."
+            if isinstance(graph_update, dict):
+                graph_update = [graph_update]
+                
+            if graph_update and isinstance(graph_update, list):
+                configs = []
+                for gu in graph_update:
+                    if not isinstance(gu, dict):
+                        continue
+                    gid = gu.get("graph_id")
+                    if str(gid).lower() == "all":
+                        for open_gid in self._graphs.keys():
+                            gu_copy = dict(gu)
+                            gu_copy["graph_id"] = open_gid
+                            configs.append({"_graph_update": gu_copy})
+                    else:
+                        configs.append({"_graph_update": gu})
+                        
+                if configs:
+                    result.plot_config = configs
+                    result.text_summary = explanation or f"Updating {len(configs)} graph(s)."
+                else:
+                    result.action = "answer"
+                    result.text_summary = "No valid graph update information provided."
             else:
                 result.action = "answer"
                 result.text_summary = "No graph update information provided."

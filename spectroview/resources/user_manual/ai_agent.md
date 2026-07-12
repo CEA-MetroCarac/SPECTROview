@@ -54,6 +54,14 @@ Each bubble shows the **timestamp** (`YY-MM-DD HH:MM`) and action buttons:
 - **📋 Copy** — Copy the message text to clipboard
 - **↩ Reply** (AI messages only) — Reply specifically to that AI message
 
+#### 🎤 Voice Dictation (Optional)
+
+You can use the microphone button in the input bar to dictate your queries instead of typing them. This feature requires optional dependencies:
+```bash
+pip install SpeechRecognition pyaudio
+```
+If these are not installed, the microphone button will still appear but will show an error message when clicked instructing you to install them.
+
 ---
 
 ### **5. What the AI Agent Can Do**

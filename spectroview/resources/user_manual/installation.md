@@ -34,7 +34,19 @@ pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
 
 ---
 
-### **3. Launch **SPECTROview****
+### **3. Optional Dependencies (AI Agent & Voice Dictation)**
+
+SPECTROview includes an optional **AI Chat Agent** that allows you to query and visualize data using natural language. To use these features, you may need to install additional dependencies:
+
+- **For local AI (Ollama):** `pip install ollama` (plus installing Ollama on your system)
+- **For Cloud AI (OpenAI, DeepSeek, Gemini, etc.):** `pip install openai`
+- **For Voice Dictation (Microphone button):** `pip install SpeechRecognition pyaudio`
+
+*(Note: These are not installed by default to keep the base installation lightweight.)*
+
+---
+
+### **4. Launch **SPECTROview****
 
 Once installed, open your terminal or command prompt and run:
 
@@ -46,7 +58,7 @@ The application window will open automatically.
 
 ---
 
-### **4. Update & Version Management**
+### **5. Update & Version Management**
 
 To update **SPECTROview** to the latest release:
 
@@ -68,7 +80,7 @@ pip show spectroview
 
 ---
 
-### **5. Automatic Update Notifications**
+### **6. Automatic Update Notifications**
 
 **SPECTROview** automatically checks for new releases on startup and notifies you with a non-intrusive banner at the top of the application window — no manual checking required.
 
@@ -95,7 +107,7 @@ pip show spectroview
 
 ---
 
-### **6. Troubleshooting**
+### **7. Troubleshooting**
 
 ??? question "**pip: command not found**"
 

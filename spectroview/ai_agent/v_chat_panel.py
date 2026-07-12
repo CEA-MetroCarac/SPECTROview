@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
     QSplitter, QTextBrowser
 )
 import markdown
-from PySide6.QtCore import Qt, Signal, QTimer, QSize, QSettings
+from PySide6.QtCore import Qt, Signal, QTimer, QSize, QSettings, QThread
 from PySide6.QtGui import QFont, QIcon, QKeyEvent, QColor, QPalette, QTextCursor
 
 from spectroview import ICON_DIR
@@ -281,6 +281,75 @@ class _DataFramePreview(QWidget):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Voice dictation — optional, graceful degradation if deps not installed
+# ═══════════════════════════════════════════════════════════════════════════
+
+try:
+    import speech_recognition as _sr  # type: ignore[import-untyped]
+    import pyaudio as _pa  # type: ignore[import-untyped]  # noqa: F401 — verify backend
+    VOICE_AVAILABLE = True
+except ImportError:
+    _sr = None  # type: ignore[assignment]
+    VOICE_AVAILABLE = False
+
+
+class VoiceWorker(QThread):
+    """Records from the default microphone and transcribes via Google Speech.
+
+    Runs entirely in a background thread so the UI stays responsive.
+    Emits the transcribed text when done, or an error message on failure.
+    """
+
+    text_ready = Signal(str)
+    error_occurred = Signal(str)
+
+    def __init__(self, parent: Optional[QObject] = None) -> None:
+        super().__init__(parent)
+        self._is_cancelled = False
+
+    def cancel(self) -> None:
+        self._is_cancelled = True
+
+    def run(self) -> None:
+        if not VOICE_AVAILABLE:
+            self.error_occurred.emit(
+                "Voice dictation unavailable.\n"
+                "Install:  pip install SpeechRecognition pyaudio"
+            )
+            return
+
+        recognizer = _sr.Recognizer()
+        try:
+            with _sr.Microphone() as source:
+                if self._is_cancelled:
+                    return
+                # Brief ambient noise calibration
+                recognizer.adjust_for_ambient_noise(source, duration=0.5)
+                if self._is_cancelled:
+                    return
+                audio = recognizer.listen(source, timeout=5, phrase_time_limit=15)
+        except OSError as exc:
+            self.error_occurred.emit(f"No microphone found: {exc}")
+            return
+        except Exception as exc:
+            self.error_occurred.emit(f"Recording failed: {exc}")
+            return
+
+        if self._is_cancelled:
+            return
+
+        try:
+            text = recognizer.recognize_google(audio)
+            self.text_ready.emit(text)
+        except _sr.UnknownValueError:
+            self.error_occurred.emit("Could not understand audio. Please try again.")
+        except _sr.RequestError as exc:
+            self.error_occurred.emit(f"Speech recognition service error: {exc}")
+        except Exception as exc:
+            self.error_occurred.emit(f"Transcription failed: {exc}")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Main floating dialog
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -320,6 +389,7 @@ class VChatPanel(QDialog):
         self.vm = VMChat(self)
         self._active_card: Optional[_MessageCard] = None  # streaming target
         self._reply_to_index: Optional[int] = None
+        self._voice_worker: Optional[VoiceWorker] = None
 
         self._build_ui()
         self._connect_signals()
@@ -551,6 +621,34 @@ class VChatPanel(QDialog):
         self.edit_input = _ChatLineEdit()
         self.edit_input.setPlaceholderText("Ask a question about your data…")
         layout.addWidget(self.edit_input, stretch=1)
+
+        # Microphone button (voice dictation)
+        self.btn_mic = QPushButton("🎤")
+        self.btn_mic.setFixedHeight(50)
+        self.btn_mic.setFixedWidth(44)
+        self.btn_mic.setCheckable(True)
+        self.btn_mic.setCursor(Qt.PointingHandCursor)
+        self.btn_mic.clicked.connect(self._on_mic_toggle)
+
+        self.btn_mic.setEnabled(True)
+        if not VOICE_AVAILABLE:
+            self.btn_mic.setToolTip("Voice dictation unavailable — pip install SpeechRecognition pyaudio")
+        else:
+            self.btn_mic.setToolTip("Click to start voice recording")
+
+        self.btn_mic.setStyleSheet("""
+            QPushButton {
+                background: rgba(255,255,255,0.12);
+                color: #ddd;
+                border: 1px solid rgba(255,255,255,0.25);
+                border-radius: 4px;
+                font-size: 18px;
+            }
+            QPushButton:hover   { background: rgba(255,255,255,0.25); color: #fff; border-color: rgba(255,255,255,0.4); }
+            QPushButton:checked { background: #C62828; color: white; border-color: #E53935; }
+            QPushButton:disabled { background: rgba(255,255,255,0.03); color: #444; border-color: rgba(255,255,255,0.05); }
+        """)
+        layout.addWidget(self.btn_mic)
 
         # Send / Stop button (toggles appearance based on AI state)
         self.btn_send = QPushButton("Send ▶")
@@ -833,6 +931,61 @@ class VChatPanel(QDialog):
         
         self.vm.process_query(text, reply_to_index=reply_idx)
 
+    # ------------------------------------------------------------------
+    # Voice dictation handlers
+    # ------------------------------------------------------------------
+
+    def _on_mic_toggle(self, checked: bool) -> None:
+        """Start or stop voice recording."""
+        if checked:
+            self._start_voice_recording()
+        else:
+            self._stop_voice_recording()
+
+    def _start_voice_recording(self) -> None:
+        """Launch the VoiceWorker background thread."""
+        if not VOICE_AVAILABLE:
+            self.btn_mic.setChecked(False)
+            self._on_voice_error("Voice dictation unavailable.\nInstall:  pip install SpeechRecognition pyaudio")
+            return
+
+        # Cancel any previous worker
+        self._stop_voice_recording()
+
+        self._voice_worker = VoiceWorker(self)
+        self._voice_worker.text_ready.connect(self._on_voice_text)
+        self._voice_worker.error_occurred.connect(self._on_voice_error)
+        self._voice_worker.finished.connect(lambda: self.btn_mic.setChecked(False))
+        self._voice_worker.start()
+
+    def _stop_voice_recording(self) -> None:
+        """Cancel the in-progress voice worker if any."""
+        if self._voice_worker and self._voice_worker.isRunning():
+            self._voice_worker.cancel()
+            self._voice_worker.wait(1000)  # give it a second to clean up
+        self._voice_worker = None
+
+    def _on_voice_text(self, text: str) -> None:
+        """Append transcribed text to the input field."""
+        current = self.edit_input.toPlainText().strip()
+        if current:
+            self.edit_input.setPlainText(current + " " + text)
+        else:
+            self.edit_input.setPlainText(text)
+        # Move cursor to end
+        cursor = self.edit_input.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        self.edit_input.setTextCursor(cursor)
+        self.edit_input.setFocus()
+
+    def _on_voice_error(self, message: str) -> None:
+        """Show voice error as a temporary inline card."""
+        card = _MessageCard(message, "error")
+        self._insert_before_stretch(card)
+        self._scroll_to_bottom()
+        # Auto-remove after 5 seconds
+        QTimer.singleShot(5000, card.deleteLater)
+
     def _on_clear(self) -> None:
         self.vm.cancel()
         self.vm.clear_history()
@@ -1080,6 +1233,7 @@ class VChatPanel(QDialog):
 
     def closeEvent(self, event) -> None:
         self._save_settings()
+        self._stop_voice_recording()
         self.vm.cancel()
         event.accept()
 

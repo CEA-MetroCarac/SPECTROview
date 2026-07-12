@@ -261,14 +261,12 @@ class APIWorker(QThread):
             import json
             tool_calls = []
             for tc in tool_calls_dict.values():
-                try:
-                    args = json.loads(tc["function"]["arguments"])
-                except Exception:
-                    args = {}
                 tool_calls.append({
+                    "id": tc["id"],
+                    "type": "function",
                     "function": {
                         "name": tc["function"]["name"],
-                        "arguments": args
+                        "arguments": tc["function"]["arguments"]
                     }
                 })
 

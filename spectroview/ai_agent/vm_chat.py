@@ -423,8 +423,12 @@ class VMChat(QObject):
         self.thinking_changed.emit(False, "Thinking")
 
         # Record assistant turn in history
-        if full_text:
-            self._conversation.add_message("assistant", full_text)
+        if full_text or tool_calls:
+            self._conversation.add_message(
+                "assistant", 
+                full_text or "", 
+                tool_calls=tool_calls if tool_calls else None
+            )
             self._save_history_to_file()
 
         if tool_calls:
@@ -452,7 +456,7 @@ class VMChat(QObject):
                             res_text = res.content[0].text if res.content and hasattr(res.content[0], 'text') else str(res)
                         except Exception as e:
                             res_text = f"Error executing tool {func_name}: {e}"
-                        results.append((func_name, res_text))
+                        results.append((tc.get("id"), func_name, res_text))
                 return results
 
             self.thinking_changed.emit(True, "Executing tools...")
@@ -460,9 +464,13 @@ class VMChat(QObject):
                 results = asyncio.run(run_tools())
                 
                 # Append tool results to conversation
-                for name, res_text in results:
-                    tool_msg = f"Tool '{name}' Execution Result:\n```\n{res_text}\n```"
-                    self._conversation.add_message("user", tool_msg, is_hidden=True)
+                for tc_id, name, res_text in results:
+                    self._conversation.add_message(
+                        "tool", 
+                        res_text, 
+                        is_hidden=True, 
+                        tool_call_id=tc_id
+                    )
                     self.tool_execution_received.emit(name, res_text)
                 self._save_history_to_file()
                 

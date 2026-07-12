@@ -22,15 +22,21 @@ class MConversation:
     def message_count(self) -> int:
         return len(self.messages)
 
-    def add_message(self, role: str, content: str, reply_to_index: Optional[int] = None, is_hidden: bool = False) -> None:
+    def add_message(self, role: str, content: str, reply_to_index: Optional[int] = None, is_hidden: bool = False, tool_calls: Optional[List[Dict[str, Any]]] = None, tool_call_id: Optional[str] = None) -> None:
         """Add a new message to the conversation."""
-        self.messages.append({
+        msg = {
             "role": role,
             "content": content,
             "timestamp": datetime.now().isoformat(),
             "reply_to_index": reply_to_index,
             "is_hidden": is_hidden
-        })
+        }
+        if tool_calls is not None:
+            msg["tool_calls"] = tool_calls
+        if tool_call_id is not None:
+            msg["tool_call_id"] = tool_call_id
+            
+        self.messages.append(msg)
         self.modified_at = datetime.now().isoformat()
         
         # Auto-title on first user message
@@ -154,6 +160,12 @@ class MConversation:
                 context_prefix = f"[Replying to AI message: \"{replied_content}\"]\n\n"
                 content = context_prefix + content
                 
-            llm_messages.append({"role": role, "content": content})
+            msg_dict = {"role": role, "content": content}
+            if "tool_calls" in msg:
+                msg_dict["tool_calls"] = msg["tool_calls"]
+            if "tool_call_id" in msg:
+                msg_dict["tool_call_id"] = msg["tool_call_id"]
+                
+            llm_messages.append(msg_dict)
             
         return llm_messages

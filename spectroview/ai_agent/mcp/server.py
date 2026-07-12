@@ -106,32 +106,30 @@ def create_mcp_server(vm_chat) -> FastMCP:
             return f"Error evaluating query: {e}"
 
     @mcp.tool()
-    def plot_graph(x: str, y: Any, plot_style: str, z: str = "", filters: List[str] = None, df_name: str = "") -> str:
-        """Create a new plot/graph on the UI.
+    def plot_graph(x: str, y: Any, plot_style: str, z: Optional[str] = None, filters: Optional[List[str]] = None, other_properties: Optional[dict] = None, df_name: str = "") -> str:
+        """Plot a graph using loaded dataframes.
         
         Args:
-            x: Name of the column for X-axis.
-            y: Name of the column(s) for Y-axis (string or list of strings).
-            plot_style: The style of the plot (scatter, line, bar, histogram, point, box, trendline, wafer, 2Dmap).
-            z: Optional name of the column for Z-axis or color encoding.
-            filters: Optional list of pandas query strings to filter data before plotting.
+            x: Column name for X-axis.
+            y: Column name(s) for Y-axis (can be a string or a list of strings).
+            plot_style: The visual style (e.g., 'point', 'line', 'bar', 'wafer', '2Dmap', 'trendline', 'histogram', 'scatter', 'box').
+            z: Optional column name for Z-axis or color encoding (hue). Used in 'wafer' and '2Dmap' or as hue in 'point'/'scatter'.
+            filters: Optional list of pandas query strings to filter data (e.g. ['Zone == 1', 'Yield > 90']).
+            other_properties: A dictionary of other properties to set (e.g. {'grid': True, 'x_rot': 45, 'ylabel': 'AAA', 'xlabel': 'BBB', 'plot_title': 'CCC'}).
             df_name: Optional target DataFrame name. If empty, uses the active one.
         """
-        # We send a ChatResult-like structure to vm_chat via a callback
         from spectroview.ai_agent.vm_chat import ChatResult
         
-        # Ensure filters is a list
-        if filters is None:
-            filters = []
-            
         config = {
             "x": x,
             "y": y if isinstance(y, list) else [y],
             "plot_style": plot_style,
             "z": z,
-            "filters": filters,
+            "filters": filters or [],
             "df_name": df_name or vm_chat._active_df_name
         }
+        if other_properties:
+            config.update(other_properties)
         
         if not hasattr(vm_chat, '_pending_plots'):
             vm_chat._pending_plots = []
@@ -163,7 +161,7 @@ def create_mcp_server(vm_chat) -> FastMCP:
             return f"Error computing statistics: {e}"
 
     @mcp.tool()
-    def update_graph(graph_id: str, x: str = None, y: Any = None, plot_style: str = None, z: str = None, filters: List[str] = None) -> str:
+    def update_graph(graph_id: str, x: Optional[str] = None, y: Optional[Any] = None, plot_style: Optional[str] = None, z: Optional[str] = None, filters: Optional[List[str]] = None, other_properties: Optional[dict] = None) -> str:
         """Update an existing graph by ID.
         
         Args:
@@ -173,6 +171,7 @@ def create_mcp_server(vm_chat) -> FastMCP:
             plot_style: Optional new style of the plot.
             z: Optional new column name for Z-axis or color encoding (hue).
             filters: Optional new list of pandas query strings to filter data. To keep existing filters while adding new ones, you MUST include the existing filters in this list.
+            other_properties: A dictionary of other properties to update (e.g. {'grid': True, 'x_rot': 45, 'ylabel': 'AAA', 'xlabel': 'BBB', 'plot_title': 'CCC'}).
         """
         update_props = {}
         if x is not None: update_props["x"] = x
@@ -180,6 +179,8 @@ def create_mcp_server(vm_chat) -> FastMCP:
         if plot_style is not None: update_props["plot_style"] = plot_style
         if z is not None: update_props["z"] = z
         if filters is not None: update_props["filters"] = filters
+        if other_properties is not None:
+            update_props.update(other_properties)
         
         config = {
             "_graph_update": {

@@ -24,22 +24,29 @@ class _ConversationItemWidget(QWidget):
         self.conv_id = conv_id
         self.title = title
         
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 8, 8, 8)
-        layout.setSpacing(4)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(6, 6, 6, 6) # Reduced padding
+        layout.setSpacing(8)
         
-        # Top row: Title and dates
-        top_layout = QHBoxLayout()
-        title_disp = title if len(title) <= 50 else title[:47] + "..."
-        self.lbl_title = QLabel(f"● {title_disp}")
+        # Left side: Title (word wrap to allow ~2 rows)
+        self.lbl_title = QLabel(f"● {title}")
         self.lbl_title.setToolTip(title)
         font = QFont()
         font.setBold(True)
         self.lbl_title.setFont(font)
         self.lbl_title.setStyleSheet("color: white;")
-        top_layout.addWidget(self.lbl_title)
+        self.lbl_title.setWordWrap(True)
+        self.lbl_title.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.lbl_title.setMinimumHeight(34) # Ensure it visually reserves space for ~2 rows
+        self.lbl_title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+        layout.addWidget(self.lbl_title, stretch=1)
         
-        top_layout.addStretch()
+        # Right side: Grid for timestamp and buttons
+        right_widget = QWidget()
+        from PySide6.QtWidgets import QGridLayout
+        right_layout = QGridLayout(right_widget)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(6)
         
         # Format dates
         try:
@@ -50,26 +57,31 @@ class _ConversationItemWidget(QWidget):
             
         lbl_meta = QLabel(f"Created: {date_str}  ·  {message_count} msgs")
         lbl_meta.setStyleSheet("color: gray; font-size: 11px;")
-        top_layout.addWidget(lbl_meta)
         
-        layout.addLayout(top_layout)
-        
-        # Bottom row: Actions
-        btn_layout = QHBoxLayout()
-        btn_layout.setContentsMargins(10, 0, 0, 0)
-        
+        # Buttons
         self.btn_open = QPushButton("Open")
         self.btn_rename = QPushButton("Rename")
         self.btn_duplicate = QPushButton("Duplicate")
-        self.btn_delete = QPushButton("🗑 Delete")
+        self.btn_delete = QPushButton("Delete")
         
-        for btn in (self.btn_open, self.btn_rename, self.btn_duplicate, self.btn_delete):
+        # Styling
+        self.btn_open.setCursor(Qt.PointingHandCursor)
+        self.btn_open.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.btn_open.setStyleSheet("""
+            QPushButton {
+                background-color: #3b429f; color: white; border: none; border-radius: 4px; padding: 4px 12px; font-weight: bold; font-size: 13px;
+            }
+            QPushButton:hover { background-color: #4b52c0; }
+        """)
+        
+        for btn in (self.btn_rename, self.btn_duplicate):
             btn.setCursor(Qt.PointingHandCursor)
             btn.setStyleSheet("""
                 QPushButton { background: transparent; color: #64B5F6; text-decoration: underline; border: none; font-size: 11px; }
                 QPushButton:hover { color: #90CAF9; }
             """)
             
+        self.btn_delete.setCursor(Qt.PointingHandCursor)
         self.btn_delete.setStyleSheet("""
             QPushButton { background: transparent; color: #E57373; border: none; font-size: 11px; }
             QPushButton:hover { color: #EF9A9A; }
@@ -80,13 +92,24 @@ class _ConversationItemWidget(QWidget):
         self.btn_duplicate.clicked.connect(lambda: self.on_duplicate.emit(self.conv_id))
         self.btn_delete.clicked.connect(lambda: self.on_delete.emit(self.conv_id))
         
-        btn_layout.addWidget(self.btn_open)
-        btn_layout.addWidget(self.btn_rename)
-        btn_layout.addWidget(self.btn_duplicate)
-        btn_layout.addWidget(self.btn_delete)
-        btn_layout.addStretch()
+        # Layout buttons
+        # Open button spans 2 rows, 2 columns
+        right_layout.addWidget(self.btn_open, 0, 0, 2, 2)
+        # Timestamp spans cols 2-4 on row 0
+        right_layout.addWidget(lbl_meta, 0, 2, 1, 3, Qt.AlignRight | Qt.AlignBottom)
+        # Actions on row 1
+        right_layout.addWidget(self.btn_rename, 1, 2, 1, 1, Qt.AlignRight)
+        right_layout.addWidget(self.btn_duplicate, 1, 3, 1, 1, Qt.AlignRight)
+        right_layout.addWidget(self.btn_delete, 1, 4, 1, 1, Qt.AlignRight)
         
-        layout.addLayout(btn_layout)
+        # Ensure row 1 has enough height so the text isn't cut off
+        right_layout.setRowMinimumHeight(1, 20)
+        
+        right_layout.setColumnStretch(0, 1)
+        right_layout.setColumnStretch(1, 1)
+        
+        layout.addWidget(right_widget, stretch=0)
+
 
 
 class VHistoryDialog(QDialog):
@@ -102,6 +125,8 @@ class VHistoryDialog(QDialog):
         self.resize(700, 500)
         
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(6, 6, 6, 6) # Reduced dialog padding
+        layout.setSpacing(6)
         
         # Search box
         self.search_input = QLineEdit()
@@ -113,8 +138,8 @@ class VHistoryDialog(QDialog):
         self.list_widget = QListWidget()
         self.list_widget.setStyleSheet("""
             QListWidget { background: #1e1e1e; border: 1px solid #333; outline: 0; }
-            QListWidget::item { border-bottom: 1px solid #333; }
-            QListWidget::item:selected { background: #2d2d2d; }
+            QListWidget::item { border-bottom: 1px solid #333; margin: 2px; border-radius: 4px; }
+            QListWidget::item:selected { background: #2d2d2d; border: 1px solid #64B5F6; }
         """)
         layout.addWidget(self.list_widget)
         
@@ -155,8 +180,11 @@ class VHistoryDialog(QDialog):
             widget.on_duplicate.connect(self._on_duplicate)
             widget.on_delete.connect(self._on_delete)
             
-            # Size hint
-            item.setSizeHint(widget.sizeHint())
+            # Size hint with extra padding to prevent selection frame cut off
+            size = widget.sizeHint()
+            size.setHeight(size.height() + 6)
+            item.setSizeHint(size)
+            
             self.list_widget.addItem(item)
             self.list_widget.setItemWidget(item, widget)
 

@@ -436,6 +436,7 @@ class VMChat(QObject):
         
         # Determine target dataframe
         target_name = data.get("target_dataframe")
+        df = None
         if target_name and target_name in self._dfs:
             df = self._dfs[target_name]
         elif self._active_df_name and self._active_df_name in self._dfs:
@@ -444,16 +445,22 @@ class VMChat(QObject):
         elif self._dfs:
             target_name = list(self._dfs.keys())[0]
             df = self._dfs[target_name]
-        else:
-            return ChatResult(action="answer", explanation="No dataframe available to process this request.", raw_response=raw)
 
         result      = ChatResult(action=action, explanation=explanation, raw_response=raw)
 
         if action == "filter":
-            result = self._execute_filter(data, result, df, target_name)
+            if df is None:
+                result.action = "answer"
+                result.text_summary = explanation or "No dataframe loaded to apply the filter."
+            else:
+                result = self._execute_filter(data, result, df, target_name)
 
         elif action == "statistics":
-            result = self._execute_statistics(data, result, df, target_name)
+            if df is None:
+                result.action = "answer"
+                result.text_summary = explanation or "No dataframe loaded to calculate statistics."
+            else:
+                result = self._execute_statistics(data, result, df, target_name)
 
         elif action in ("plot", "update", "delete"):
             configs = []

@@ -789,8 +789,51 @@ class VChatPanel(QDialog):
             if msg["role"] == "user":
                 self._add_user_card(msg["content"], msg.get("reply_to_index"), timestamp=msg.get("timestamp"))
             elif msg["role"] == "assistant":
-                card = self._add_ai_card(msg["content"], timestamp=msg.get("timestamp"))
+                # Parse the raw JSON into a structured result
+                result = self.vm._parse_response(msg["content"])
+                
+                # Use explanation (or text_summary) as the main text
+                friendly_text = result.explanation or result.text_summary or msg["content"]
+                if result.text_summary and result.action in ("statistics", "answer"):
+                    friendly_text = (result.explanation or "") + "\n\n" + result.text_summary
+                    
+                card = self._add_ai_card(friendly_text, timestamp=msg.get("timestamp"))
                 card.reply_clicked.connect(lambda text, idx=i: self._on_reply_clicked(idx, text))
+                
+                # If it's a plot/update/delete intent, add the re-apply button
+                if result.plot_config and result.action in ("plot", "update", "delete"):
+                    cfgs = result.plot_config if isinstance(result.plot_config, list) else [result.plot_config]
+                    btn = QPushButton(" Re-apply plot suggestions")
+                    btn.setIcon(QIcon(os.path.join(ICON_DIR, "plot-chart.png")))
+                    btn.setIconSize(QSize(16, 16))
+                    btn.setStyleSheet("""
+                        QPushButton {
+                            background-color: #3b429f;
+                            color: white;
+                            border: none;
+                            border-radius: 4px;
+                            padding: 6px 12px;
+                            margin-left: 20px;
+                            margin-top: 4px;
+                            margin-bottom: 8px;
+                            font-weight: bold;
+                        }
+                        QPushButton:hover {
+                            background-color: #4b52c0;
+                        }
+                    """)
+                    btn.setCursor(Qt.PointingHandCursor)
+                    # We use a default arg config_list=cfgs to avoid late binding in the loop
+                    btn.clicked.connect(lambda checked=False, config_list=cfgs: [self.plot_requested.emit(c) for c in config_list])
+                    
+                    container = QWidget()
+                    lay = QHBoxLayout(container)
+                    lay.setContentsMargins(50, 0, 0, 0)
+                    lay.addWidget(btn)
+                    lay.addStretch()
+                    
+                    self._insert_before_stretch(container)
+                    
             elif msg["role"] == "error":
                 card = _MessageCard(msg["content"], "error", timestamp=msg.get("timestamp"))
                 self._insert_before_stretch(card)

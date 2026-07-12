@@ -100,7 +100,7 @@ class _MessageCard(QFrame):
             self.content_view = QTextBrowser()
             self.content_view.setOpenExternalLinks(False)
             self.content_view.setFrameShape(QFrame.NoFrame)
-            self.content_view.setStyleSheet("background: transparent;")
+            self.content_view.setStyleSheet("background: transparent; border: none;")
             # Disable scrollbars to let the card expand
             self.content_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             self.content_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)

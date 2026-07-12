@@ -140,7 +140,7 @@ def normalize_plot_config(cfg: dict[str, Any]) -> dict[str, Any]:
                     parsed.append(f)
             cfg["filters"] = parsed
         else:
-            del cfg["filters"]
+            cfg["filters"] = []
 
     # ── Validate plot_style ───────────────────────────────────────────────
     if "plot_style" in cfg:

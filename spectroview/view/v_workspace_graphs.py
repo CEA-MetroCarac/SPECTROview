@@ -840,7 +840,9 @@ class VWorkspaceGraphs(QWidget):
     def create_plot_from_config(self, df_name: str, plot_config: dict) -> bool:
         """API to create a plot directly from a configuration dict."""
         self.vm.select_dataframe(df_name)
-        filters = plot_config.get('filters', None)
+        filters = plot_config.get('filters', [])
+        if filters is None:
+            filters = []
         self._create_and_display_plot(plot_config, select_in_list=False, filters=filters)
         return True
     

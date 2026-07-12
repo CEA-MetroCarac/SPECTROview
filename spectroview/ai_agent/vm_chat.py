@@ -61,7 +61,7 @@ from spectroview.ai_agent.tools.plot_tool import expand_all_plot_configs
 class ChatResult:
     """Carries the parsed LLM response back to the View."""
     __slots__ = ("action", "explanation", "dataframe", "text_summary",
-                 "plot_config", "raw_response")
+                 "plot_config", "raw_response", "query", "target_dataframe")
 
     def __init__(
         self,
@@ -71,13 +71,17 @@ class ChatResult:
         text_summary: str                   = "",
         plot_config: Optional[dict]         = None,
         raw_response: str                   = "",
+        query: str                          = "",
+        target_dataframe: str               = "",
     ) -> None:
-        self.action       = action          # "filter" | "statistics" | "plot" | "answer"
+        self.action       = action          # "filter" | "statistics" | "plot" | "answer" | "query"
         self.explanation  = explanation     # human-readable explanation shown in the UI
         self.dataframe    = dataframe       # filtered DataFrame (Tier 1)
         self.text_summary = text_summary    # statistics / answer text (Tier 2)
         self.plot_config  = plot_config     # {x, y, z, plot_style} suggestion (Tier 3)
         self.raw_response = raw_response    # full LLM text (for debugging)
+        self.query        = query           # query string
+        self.target_dataframe = target_dataframe # target dataframe name
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -99,7 +103,7 @@ class VMChat(QObject):
         Human-readable error message.
     """
 
-    thinking_changed = Signal(bool)
+    thinking_changed = Signal(bool, str)
     chunk_received   = Signal(str)
     result_ready     = Signal(object)       # ChatResult
     error_occurred   = Signal(str)
@@ -226,11 +230,12 @@ class VMChat(QObject):
         # Track the user turn now; assistant turn added after response
         self._conversation.add_message("user", user_text, reply_to_index=reply_to_index)
         self._pending_response = ""
+        self._loop_count = 0
         
         # Build the full message list for this request
         messages = self._build_messages(user_text)
 
-        self.thinking_changed.emit(True)
+        self.thinking_changed.emit(True, "Thinking")
 
         self._client.chat(
             model    = self._model,
@@ -244,7 +249,7 @@ class VMChat(QObject):
     def cancel(self) -> None:
         """Abort any in-progress LLM request."""
         self._client.cancel()
-        self.thinking_changed.emit(False)
+        self.thinking_changed.emit(False, "Thinking")
         self._save_history_to_file()
 
     def clear_history(self) -> None:
@@ -382,17 +387,68 @@ class VMChat(QObject):
         self.chunk_received.emit(fragment)
 
     def _on_done(self, full_text: str) -> None:
-        self.thinking_changed.emit(False)
+        self.thinking_changed.emit(False, "Thinking")
 
         # Record assistant turn in history
         self._conversation.add_message("assistant", full_text)
         self._save_history_to_file()
 
         result = self._parse_response(full_text)
-        self.result_ready.emit(result)
+        
+        # ── Multi-Turn ReAct Loop ──
+        if result.action == "query" and result.query:
+            self._execute_agent_tool(result)
+        else:
+            self.result_ready.emit(result)
+
+    def _execute_agent_tool(self, result: ChatResult) -> None:
+        """Executes a pandas query on behalf of the AI and feeds the result back into the chat loop."""
+        self._loop_count += 1
+        if self._loop_count > 3:
+            result.action = "answer"
+            result.explanation = "Agent loop exceeded maximum turns (3)."
+            self.result_ready.emit(result)
+            return
+
+        if not self._dfs or (result.target_dataframe and result.target_dataframe not in self._dfs):
+            res_str = f"Error: Target dataframe '{result.target_dataframe}' not found."
+        else:
+            df_name = result.target_dataframe if result.target_dataframe else self._active_df_name
+            if not df_name:
+                df_name = list(self._dfs.keys())[0]
+            df = self._dfs[df_name]
+
+            try:
+                import pandas as pd
+                import numpy as np
+                local_vars = {"df": df, "pd": pd, "np": np}
+                # Safely evaluate pandas expression
+                res_obj = eval(result.query, {"__builtins__": {}}, local_vars)
+                res_str = str(res_obj)
+            except Exception as e:
+                res_str = f"Error evaluating query: {e}"
+
+        # Inject result as a tool/system message
+        tool_msg = f"Tool Execution Result:\n```\n{res_str}\n```"
+        self._conversation.add_message("user", tool_msg)
+        self._save_history_to_file()
+
+        # Trigger the next turn
+        self.thinking_changed.emit(True, "Executing query...")
+        
+        self._pending_response = ""
+        messages = self._build_messages("")
+        self._client.chat(
+            model=self._model,
+            messages=messages,
+            on_chunk=self._on_chunk,
+            on_done=self._on_done,
+            on_error=self._on_error,
+            parent=self,
+        )
 
     def _on_error(self, message: str) -> None:
-        self.thinking_changed.emit(False)
+        self.thinking_changed.emit(False, "Thinking")
         self.error_occurred.emit(message)
 
     # ------------------------------------------------------------------
@@ -446,7 +502,13 @@ class VMChat(QObject):
             target_name = list(self._dfs.keys())[0]
             df = self._dfs[target_name]
 
-        result      = ChatResult(action=action, explanation=explanation, raw_response=raw)
+        result      = ChatResult(
+            action=action, 
+            explanation=explanation, 
+            raw_response=raw, 
+            query=data.get("query", ""), 
+            target_dataframe=target_name
+        )
 
         if action == "filter":
             if df is None:

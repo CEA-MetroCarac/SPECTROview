@@ -138,6 +138,28 @@ class _MessageCard(QFrame):
             self.content_view.setFixedHeight(int(self.content_view.document().size().height()) + 5)
             self.content_view.setUpdatesEnabled(True)
 
+    def set_raw_response(self, raw_text: str):
+        if not raw_text or self._role == "user":
+            return
+            
+        self.btn_reasoning = QPushButton("💡 View AI Reasoning")
+        self.btn_reasoning.setCursor(Qt.PointingHandCursor)
+        self.btn_reasoning.setStyleSheet("color: #FFA726; border: none; font-size: 11px; text-align: left; background: transparent; text-decoration: underline; margin-top: 6px;")
+        self.btn_reasoning.setCheckable(True)
+        
+        self.reasoning_view = QTextBrowser()
+        self.reasoning_view.setFrameShape(QFrame.NoFrame)
+        self.reasoning_view.setStyleSheet("background: rgba(0,0,0,0.2); border-left: 2px solid #FFA726; color: #ccc; font-size: 10px; padding: 4px;")
+        self.reasoning_view.setPlainText(raw_text)
+        self.reasoning_view.hide()
+        self.reasoning_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.reasoning_view.setMaximumHeight(200)
+        
+        self.layout().addWidget(self.btn_reasoning)
+        self.layout().addWidget(self.reasoning_view)
+        
+        self.btn_reasoning.toggled.connect(self.reasoning_view.setVisible)
+
     def set_text(self, text: str) -> None:
         if self._role == "user":
             self._raw_text = text
@@ -186,12 +208,14 @@ class _ThinkingDots(QLabel):
     def __init__(self, parent=None) -> None:
         super().__init__("🤖  Thinking .", parent)
         self._dots = 1
+        self._text_prefix = "Thinking"
         self._timer = QTimer(self)
         self._timer.setInterval(400)
         self._timer.timeout.connect(self._tick)
         self.setStyleSheet("color: gray; font-style: italic; padding: 4px 12px;")
 
-    def start(self):
+    def start(self, text_prefix: str = "Thinking"):
+        self._text_prefix = text_prefix
         self._dots = 1
         self._timer.start()
         self.show()
@@ -202,7 +226,7 @@ class _ThinkingDots(QLabel):
 
     def _tick(self):
         self._dots = (self._dots % 3) + 1
-        self.setText(f"🤖  Thinking {'.' * self._dots}")
+        self.setText(f"🤖  {self._text_prefix} {'.' * self._dots}")
 
 
 class _DataFramePreview(QWidget):
@@ -324,7 +348,6 @@ class VChatPanel(QDialog):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setFrameShape(QFrame.NoFrame)
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
         self.messages_container = QWidget()
         self.messages_layout = QVBoxLayout(self.messages_container)
         self.messages_layout.setContentsMargins(8, 8, 8, 8)
@@ -354,65 +377,56 @@ class VChatPanel(QDialog):
         
         root.addWidget(self.input_container)
 
-    def _make_header(self) -> QWidget:
+    def _make_header(self) -> QFrame:
         header = QFrame()
         header.setObjectName("chatHeader")
+        header.setFixedHeight(75)
         header.setStyleSheet("""
             QFrame#chatHeader {
-                background: qlineargradient(
-                    x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #1a237e, stop:1 #283593
-                );
-                border-bottom: 1px solid rgba(255,255,255,0.1);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #222, stop:1 #1e1e1e);
+                border-bottom: 1px solid rgba(128,128,128,0.3);
             }
         """)
-        header.setFixedHeight(48)
 
-        layout = QHBoxLayout(header)
-        layout.setContentsMargins(12, 4, 12, 4)
-        layout.setSpacing(6)
+        # Main layout is VBox to hold two rows
+        main_layout = QVBoxLayout(header)
+        main_layout.setContentsMargins(10, 6, 10, 6)
+        main_layout.setSpacing(6)
 
+        # ── Row 1: Controls ───────────────────────────────────────────
+        row1_layout = QHBoxLayout()
+        row1_layout.setContentsMargins(0, 0, 0, 0)
+        row1_layout.setSpacing(6)
 
-        # ── Provider selector ────────────────────────────────────────
-        lbl_provider = QLabel("Provider:")
-        lbl_provider.setStyleSheet("color: rgba(255,255,255,0.7); font-size: 11px;")
-        layout.addWidget(lbl_provider)
+        self.lbl_provider = QLabel("Provider:")
+        self.lbl_provider.setStyleSheet("color: gray; font-weight: bold; font-size: 11px;")
+        row1_layout.addWidget(self.lbl_provider)
 
         self.cbb_provider = QComboBox()
-        self.cbb_provider.addItems(_PROVIDER_ENTRIES)
-        self.cbb_provider.setMinimumWidth(120)
-        self.cbb_provider.setToolTip("Select the LLM provider to use")
+        for display in _DISPLAY_TO_PROVIDER.keys():
+            self.cbb_provider.addItem(display)
+        self.cbb_provider.setMinimumWidth(100)
         self.cbb_provider.setStyleSheet("""
             QComboBox {
-                background: rgba(255,255,255,0.15);
-                color: white;
-                border: 1px solid rgba(255,255,255,0.3);
-                border-radius: 4px;
-                padding: 2px 6px;
+                background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px;
             }
             QComboBox::drop-down { border: none; }
             QComboBox QAbstractItemView { color: black; }
         """)
-        layout.addWidget(self.cbb_provider)
+        row1_layout.addWidget(self.cbb_provider)
 
-        # ── Model selector ───────────────────────────────────────────
         self.cbb_model = QComboBox()
         self.cbb_model.setMinimumWidth(150)
         self.cbb_model.setToolTip("Select the model to use")
         self.cbb_model.setStyleSheet("""
             QComboBox {
-                background: rgba(255,255,255,0.15);
-                color: white;
-                border: 1px solid rgba(255,255,255,0.3);
-                border-radius: 4px;
-                padding: 2px 6px;
+                background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 2px 6px;
             }
             QComboBox::drop-down { border: none; }
             QComboBox QAbstractItemView { color: black; }
         """)
-        layout.addWidget(self.cbb_model)
+        row1_layout.addWidget(self.cbb_model)
 
-        # ── Refresh button ───────────────────────────────────────────
         self.btn_refresh_models = QPushButton("")
         self.btn_refresh_models.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
         self.btn_refresh_models.setIconSize(QSize(20, 20))
@@ -422,9 +436,9 @@ class VChatPanel(QDialog):
             "QPushButton { background: transparent; border: none; border-radius: 4px; }"
             "QPushButton:hover { background: rgba(255,255,255,0.2); }"
         )
-        layout.addWidget(self.btn_refresh_models)
+        row1_layout.addWidget(self.btn_refresh_models)
         
-        layout.addStretch()
+        row1_layout.addStretch()
 
         self.btn_history = QPushButton("")
         self.btn_history.setIcon(QIcon(os.path.join(ICON_DIR, "view-details.png")))
@@ -444,7 +458,22 @@ class VChatPanel(QDialog):
                 QPushButton:hover { background: rgba(255,255,255,0.2); }
             """)
             btn.setCursor(Qt.PointingHandCursor)
-            layout.addWidget(btn)
+            row1_layout.addWidget(btn)
+            
+        main_layout.addLayout(row1_layout)
+
+        # ── Row 2: Title ──────────────────────────────────────────────
+        self.edit_title = QLineEdit()
+        self.edit_title.setPlaceholderText("New Conversation")
+        self.edit_title.setStyleSheet("""
+            QLineEdit {
+                background: transparent; color: white; border: none; font-size: 14px; font-weight: bold; padding: 2px 0px;
+            }
+            QLineEdit:hover { background: rgba(255,255,255,0.1); border-radius: 4px; padding-left: 4px;}
+            QLineEdit:focus { background: rgba(0,0,0,0.5); border: 1px solid #1976D2; border-radius: 4px; padding-left: 4px;}
+        """)
+        self.edit_title.editingFinished.connect(self._on_title_edited)
+        main_layout.addWidget(self.edit_title)
 
         return header
 
@@ -506,7 +535,6 @@ class VChatPanel(QDialog):
                 padding: 2px;
             }
         """)
-        bar.setFixedHeight(68)
 
         layout = QHBoxLayout(bar)
         layout.setContentsMargins(8, 6, 8, 6)
@@ -517,12 +545,11 @@ class VChatPanel(QDialog):
         self.btn_clear.setFixedWidth(55)
         self.btn_clear.setFixedHeight(34)
         self.btn_clear.setToolTip("Clear conversation history")
-        layout.addWidget(self.btn_clear)
+        layout.addWidget(self.btn_clear, alignment=Qt.AlignBottom)
 
         # Text input
         self.edit_input = _ChatLineEdit()
         self.edit_input.setPlaceholderText("Ask a question about your data…")
-        self.edit_input.setFixedHeight(50)
         layout.addWidget(self.edit_input, stretch=1)
 
         # Send button
@@ -777,7 +804,14 @@ class VChatPanel(QDialog):
         if conv:
             self.vm.load_conversation(conv)
             
+    def _on_title_edited(self):
+        new_title = self.edit_title.text().strip()
+        if new_title and new_title != self.vm._conversation.title:
+            self.vm._conversation.rename(new_title)
+            self.vm._conversation.save()
+            
     def _on_conversation_changed(self, title: str) -> None:
+        self.edit_title.setText(title)
         # Clear UI
         while self.messages_layout.count() > 1: # preserve the stretch
             item = self.messages_layout.takeAt(0)
@@ -851,9 +885,9 @@ class VChatPanel(QDialog):
         self._reply_to_index = None
         self.reply_preview.hide()
 
-    def _on_thinking_changed(self, is_thinking: bool) -> None:
+    def _on_thinking_changed(self, is_thinking: bool, status_text: str = "Thinking") -> None:
         if is_thinking:
-            self.thinking_dots.start()
+            self.thinking_dots.start(status_text)
             self.btn_send.setEnabled(False)
         else:
             self.thinking_dots.stop()
@@ -871,6 +905,8 @@ class VChatPanel(QDialog):
         if self._active_card:
             # Set the explanation as the main text
             self._active_card.set_text(result.explanation or result.text_summary)
+            if result.raw_response:
+                self._active_card.set_raw_response(result.raw_response)
 
         # If a DataFrame was returned, attach a preview table below the bubble
         if result.dataframe is not None and not result.dataframe.empty:
@@ -994,13 +1030,27 @@ class VChatPanel(QDialog):
 # ─────────────────────────────────────────────────────────────────────────
 
 class _ChatLineEdit(QTextEdit):
-    """A QTextEdit that emits ``send_requested`` on Enter / Return (but Shift+Enter adds newline)."""
+    """A QTextEdit that emits ``send_requested`` on Enter / Return (but Shift+Enter adds newline)
+    and dynamically resizes its height based on its content."""
 
     send_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAcceptRichText(False)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self._min_height = 50
+        self._max_height = 150
+        self.setFixedHeight(self._min_height)
+        self.textChanged.connect(self._adjust_height)
+
+    def _adjust_height(self) -> None:
+        doc_height = int(self.document().size().height())
+        margins = self.contentsMargins()
+        total_height = doc_height + margins.top() + margins.bottom() + 10
+        new_height = max(self._min_height, min(total_height, self._max_height))
+        if self.height() != new_height:
+            self.setFixedHeight(new_height)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() in (Qt.Key_Return, Qt.Key_Enter):

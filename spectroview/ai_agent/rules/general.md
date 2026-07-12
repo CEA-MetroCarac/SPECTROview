@@ -40,7 +40,9 @@ These rules are non-negotiable and apply at all times.
 ## Multi-Turn Reasoning (Agentic Loop)
 
 - If you need to evaluate the dataset to answer a question (e.g., finding the maximum, minimum, or performing complex aggregations), **you MUST NOT guess the answer from the limited dataframe preview**.
-- Instead, return `action: "query"` and put a valid Pandas Python expression in the `query` field (e.g., `df.groupby('Slot')['Strain (GPa)'].mean().idxmax()`). 
+- Instead, return `action: "query"` and put a **SINGLE valid Python expression** in the `query` field (e.g., `df.groupby('Slot')['Strain (GPa)'].mean().idxmax()`). 
+- **CRITICAL**: Do NOT use variable assignments or semicolons (e.g., `x = 1; y = 2`). The code is executed using Python's `eval()` function, which only accepts a single expression. To return multiple values, use a tuple expression: `(df['A'].max(), df['B'].min())`.
+- **CRITICAL**: ALWAYS use the exact variable name `df` to refer to the dataframe in your expression, regardless of its actual name in the system. Do NOT use `data_inline_sheet1` or any other name.
 - The system will safely evaluate your pandas code and return the result to you in a follow-up message. You can then use this precise result to confidently generate the final `plot` or `answer` action.
 
 ---

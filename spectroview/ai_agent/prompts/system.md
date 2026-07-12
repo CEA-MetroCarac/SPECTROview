@@ -30,10 +30,10 @@ The JSON must have this exact structure:
 
 ```json
 {{
-  "action": "<one of: filter | statistics | plot | update | delete | answer>",
+  "action": "<one of: filter | statistics | plot | update | delete | answer | query>",
   "explanation": "<short human-readable description of what you are doing>",
   "target_dataframe": "<name of the dataframe to operate on, or null>",
-  "query": "<valid pandas .query() expression using column names, or null>",
+  "query": "<pandas .query() expression OR a valid python pandas expression starting with 'df.' if action is query, or null>",
   "stat_columns": ["<col1>", "<col2>"],
   "graph_update": [
     {{

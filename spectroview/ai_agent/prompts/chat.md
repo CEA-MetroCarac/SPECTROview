@@ -16,6 +16,7 @@ Choose the most appropriate action based on the user's request:
 - **`update`** — User wants to modify an existing graph by ID (axis limits, title, style, filters).
 - **`delete`** — User wants to remove one or more open graphs.
 - **`answer`** — User asks a general question that does not map to a data operation.
+- **`query`** — You need to run a pandas Python expression to evaluate the dataset (e.g., finding maximums) before fulfilling the request.
 
 ## Conversation Memory
 

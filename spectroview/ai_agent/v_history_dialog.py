@@ -29,7 +29,7 @@ class _ConversationItemWidget(QWidget):
         layout.setSpacing(8)
         
         # Left side: Title (word wrap to allow ~2 rows)
-        self.lbl_title = QLabel(f"● {title}")
+        self.lbl_title = QLabel(title)
         self.lbl_title.setToolTip(title)
         font = QFont()
         font.setBold(True)
@@ -145,6 +145,16 @@ class VHistoryDialog(QDialog):
         
         # Bottom controls
         btn_layout = QHBoxLayout()
+        
+        self.btn_delete_all = QPushButton("Delete All")
+        self.btn_delete_all.setCursor(Qt.PointingHandCursor)
+        self.btn_delete_all.setStyleSheet("""
+            QPushButton { background: transparent; color: #E57373; border: 1px solid #E57373; padding: 4px 12px; border-radius: 4px; }
+            QPushButton:hover { background: #E57373; color: white; }
+        """)
+        self.btn_delete_all.clicked.connect(self._on_delete_all)
+        btn_layout.addWidget(self.btn_delete_all)
+        
         btn_layout.addStretch()
         btn_close = QPushButton("Close")
         btn_close.clicked.connect(self.accept)
@@ -222,12 +232,10 @@ class VHistoryDialog(QDialog):
             self._populate_list(self.search_input.text())
             
     def _on_delete(self, conv_id: str):
-        import PySide6.QtWidgets as QtWidgets
-        reply = QtWidgets.QMessageBox.question(
-            self, "Delete Conversation",
-            "Are you sure you want to delete this conversation?\nThis action cannot be undone.",
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
-        )
-        if reply == QtWidgets.QMessageBox.Yes:
-            self.store.delete_conversation(conv_id)
-            self._populate_list(self.search_input.text())
+        self.store.delete_conversation(conv_id)
+        self._populate_list(self.search_input.text())
+
+    def _on_delete_all(self):
+        for summary in list(self.store.list_conversations()):
+            self.store.delete_conversation(summary.id)
+        self._populate_list(self.search_input.text())

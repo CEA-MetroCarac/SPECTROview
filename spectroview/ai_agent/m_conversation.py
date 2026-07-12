@@ -60,12 +60,31 @@ class MConversation:
         """Write the conversation to a JSON file."""
         if not self.messages:
             return # Don't save empty conversations
+            
+        import re
+        safe_title = re.sub(r'[^a-zA-Z0-9_\-]', '_', self.title)
+        safe_title = safe_title[:40].strip('_')
+        if not safe_title:
+            safe_title = "Untitled"
+        new_filename = f"{safe_title}_{self.id}.json"
+            
         # If folder is provided, update filepath
         if folder:
-            self._filepath = os.path.join(folder, f"{self.id}.json")
-            
-        if not self._filepath:
+            new_filepath = os.path.join(folder, new_filename)
+        elif self._filepath:
+            folder_path = os.path.dirname(self._filepath)
+            new_filepath = os.path.join(folder_path, new_filename)
+        else:
             return # Can't save without a path
+
+        # Remove old file if filepath changed
+        if self._filepath and self._filepath != new_filepath and os.path.exists(self._filepath):
+            try:
+                os.remove(self._filepath)
+            except Exception:
+                pass
+                
+        self._filepath = new_filepath
 
         # Create dir if not exists
         folder_path = os.path.dirname(self._filepath)

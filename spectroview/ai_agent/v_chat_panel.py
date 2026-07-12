@@ -142,7 +142,7 @@ class _MessageCard(QFrame):
         if not raw_text or self._role == "user":
             return
             
-        self.btn_reasoning = QPushButton("💡 View AI Reasoning")
+        self.btn_reasoning = QPushButton("🛠️ View Raw JSON / Plot Config")
         self.btn_reasoning.setCursor(Qt.PointingHandCursor)
         self.btn_reasoning.setStyleSheet("color: #FFA726; border: none; font-size: 11px; text-align: left; background: transparent; text-decoration: underline; margin-top: 6px;")
         self.btn_reasoning.setCheckable(True)
@@ -789,7 +789,13 @@ class VChatPanel(QDialog):
         self.vm.process_query(text, reply_to_index=reply_idx)
 
     def _on_clear(self) -> None:
+        self.vm.cancel()
         self.vm.clear_history()
+        while self.messages_layout.count() > 1: # preserve the stretch
+            item = self.messages_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        self._active_card = None
 
     def _on_history_clicked(self) -> None:
         dialog = VHistoryDialog(self.vm.conversation_store, self)
@@ -817,6 +823,7 @@ class VChatPanel(QDialog):
             item = self.messages_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+        self._active_card = None
                 
         # Rebuild from vm conversation
         for i, msg in enumerate(self.vm._conversation.messages):

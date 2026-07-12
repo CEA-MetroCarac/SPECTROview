@@ -8,12 +8,13 @@ from spectroview.ai_agent.m_conversation import MConversation
 
 class ConversationSummary:
     """Lightweight representation of a conversation for lists."""
-    def __init__(self, id: str, title: str, created_at: str, modified_at: str, message_count: int):
+    def __init__(self, id: str, title: str, created_at: str, modified_at: str, message_count: int, filepath: str = ""):
         self.id = id
         self.title = title
         self.created_at = created_at
         self.modified_at = modified_at
         self.message_count = message_count
+        self.filepath = filepath
 
 class MConversationStore:
     """Manages all conversations in the history folder."""
@@ -56,7 +57,8 @@ class MConversationStore:
                     title=data.get("title", "Unknown Conversation"),
                     created_at=data.get("created_at", ""),
                     modified_at=data.get("modified_at", ""),
-                    message_count=len(data.get("messages", []))
+                    message_count=len(data.get("messages", [])),
+                    filepath=filepath
                 )
                 self._index[conv_id] = summary
             except Exception as e:
@@ -71,16 +73,33 @@ class MConversationStore:
 
     def load_conversation(self, conv_id: str) -> Optional[MConversation]:
         """Load full conversation from disk."""
+        summary = self._index.get(conv_id)
+        if summary and summary.filepath and os.path.exists(summary.filepath):
+            return MConversation(summary.filepath)
+            
         filepath = os.path.join(self.folder_path, f"{conv_id}.json")
         if not os.path.exists(filepath):
-            return None
+            matches = glob.glob(os.path.join(self.folder_path, f"*_{conv_id}.json"))
+            if matches:
+                filepath = matches[0]
+            else:
+                return None
             
         conv = MConversation(filepath)
         return conv
 
     def delete_conversation(self, conv_id: str) -> bool:
         """Delete conversation JSON file and remove from index."""
-        filepath = os.path.join(self.folder_path, f"{conv_id}.json")
+        summary = self._index.get(conv_id)
+        if summary and summary.filepath and os.path.exists(summary.filepath):
+            filepath = summary.filepath
+        else:
+            filepath = os.path.join(self.folder_path, f"{conv_id}.json")
+            if not os.path.exists(filepath):
+                matches = glob.glob(os.path.join(self.folder_path, f"*_{conv_id}.json"))
+                if matches:
+                    filepath = matches[0]
+                    
         try:
             if os.path.exists(filepath):
                 os.remove(filepath)
@@ -103,7 +122,8 @@ class MConversationStore:
             title=conv.title,
             created_at=conv.created_at,
             modified_at=conv.modified_at,
-            message_count=0
+            message_count=0,
+            filepath=conv._filepath or ""
         )
         return conv
 
@@ -167,7 +187,8 @@ class MConversationStore:
                     title=conv.title,
                     created_at=conv.created_at,
                     modified_at=conv.modified_at,
-                    message_count=conv.message_count
+                    message_count=conv.message_count,
+                    filepath=conv._filepath or ""
                 )
                 return conv
                 

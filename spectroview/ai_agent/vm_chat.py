@@ -461,24 +461,65 @@ class VMChat(QObject):
         If the JSON cannot be parsed we fall back to returning the raw
         text as an "answer" so the user always sees something useful.
         """
-        # Strip markdown code fences the model sometimes adds despite instructions
+        data = None
+        
+        # 1. Try stripping markdown fences
         clean = re.sub(r"```(?:json)?|```", "", raw).strip()
-
         try:
             data = json.loads(clean)
         except json.JSONDecodeError:
-            # Try to extract the first {...} block
+            pass
+
+        # 2. Try extracting multiple markdown code blocks if direct parsing fails
+        if not data:
+            blocks = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
+            if blocks:
+                data_list = []
+                for b in blocks:
+                    try:
+                        data_list.append(json.loads(b))
+                    except json.JSONDecodeError:
+                        pass
+                
+                if data_list:
+                    data = data_list[0]
+                    # Merge multiple JSON blocks if they are plot configs
+                    if len(data_list) > 1:
+                        if "plot_config" not in data and "graph_configurations" in data:
+                            data["plot_config"] = data["graph_configurations"]
+                        if "plot_config" not in data:
+                            data["plot_config"] = []
+                        elif not isinstance(data["plot_config"], list):
+                            data["plot_config"] = [data["plot_config"]]
+                        for d in data_list[1:]:
+                            pc = d.get("plot_config") or d.get("graph_configurations")
+                            if pc:
+                                if isinstance(pc, list):
+                                    data["plot_config"].extend(pc)
+                                else:
+                                    data["plot_config"].append(pc)
+
+        # 3. Fallback to greedy regex for a single block
+        if not data:
             match = re.search(r"\{.*\}", clean, re.DOTALL)
             if match:
                 try:
                     data = json.loads(match.group())
                 except json.JSONDecodeError:
-                    return ChatResult(
-                        action="answer",
-                        explanation="(Could not parse structured response)",
-                        text_summary=raw,
-                        raw_response=raw,
-                    )
+                    pass
+        
+        # 4. Give up and return raw text
+        if not data:
+            return ChatResult(
+                action="answer",
+                explanation="(Could not parse structured response)",
+                text_summary=raw,
+                raw_response=raw,
+            )
+
+        if isinstance(data, list):
+            if len(data) > 0 and isinstance(data[0], dict):
+                data = data[0]
             else:
                 return ChatResult(
                     action="answer",
@@ -486,8 +527,21 @@ class VMChat(QObject):
                     text_summary=raw,
                     raw_response=raw,
                 )
+                
+        # Handle variations from different models
+        if "plot_config" not in data and "graph_configurations" in data:
+            data["plot_config"] = data["graph_configurations"]
+            
+        action      = data.get("action")
+        # Infer action if missing but plot_config is present
+        if not action:
+            if "plot_config" in data:
+                action = "plot"
+            elif "query" in data:
+                action = "query"
+            else:
+                action = "answer"
 
-        action      = data.get("action", "answer")
         explanation = data.get("explanation", "")
         
         # Determine target dataframe

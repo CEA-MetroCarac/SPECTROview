@@ -136,11 +136,12 @@ class VMChat(QObject):
         """Update the known open graphs (for inclusion in system prompt)."""
         self._graphs = {
             gid: {
-                "style": getattr(g, 'plot_style', ''),
-                "x":     getattr(g, 'x', ''),
-                "y":     getattr(g, 'y', []),
-                "z":     getattr(g, 'z', ''),
-                "df":    getattr(g, 'df_name', ''),
+                "style":   getattr(g, 'plot_style', ''),
+                "x":       getattr(g, 'x', ''),
+                "y":       getattr(g, 'y', []),
+                "z":       getattr(g, 'z', ''),
+                "df":      getattr(g, 'df_name', ''),
+                "filters": getattr(g, 'filters', []),
             }
             for gid, g in graphs.items()
         }
@@ -296,8 +297,9 @@ class VMChat(QObject):
             for gid, info in sorted(self._graphs.items()):
                 y_str = info['y'][0] if isinstance(info['y'], list) and info['y'] else info['y']
                 z_str = f", z={info['z']!r}" if info['z'] else ""
+                filt_str = f", filters={info['filters']!r}" if info.get('filters') else ""
                 graph_lines.append(
-                    f"  Graph ID {gid}: style={info['style']!r}, x={info['x']!r}, y={y_str!r}{z_str}, df={info['df']!r}"
+                    f"  Graph ID {gid}: style={info['style']!r}, x={info['x']!r}, y={y_str!r}{z_str}{filt_str}, df={info['df']!r}"
                 )
             graphs_info = "CURRENTLY OPEN GRAPHS:\n" + "\n".join(graph_lines) + "\n"
         else:
@@ -359,7 +361,7 @@ The JSON must have this exact structure:
       "x_rot": 0,
       "legend_visible": true,
       "legend_outside": false,
-      "color_palette": "<jet | viridis | plasma | inferno | magma | coolwarm | RdBu | Spectral | tab10 | Set2 | Set3 or null>",
+      "color_palette": "<jet (DEFAULT) | viridis | plasma | inferno | magma | coolwarm | RdBu | Spectral | tab10 | Set2 | Set3 or null>",
       "scatter_size": 70,
       "join_for_point_plot": false,
       "dodge_point_plot": true,
@@ -381,17 +383,15 @@ RULES:
 - For "filter": set "query" to a valid pandas .query() string (e.g. "fwhm_Si > 5.0").
 - For "statistics": set "stat_columns" to the list of columns to describe.
 - For "plot": fill "plot_config". If plotting multiple styles with identical parameters, output a SINGLE entry in the list and set plot_style to a comma-separated string (e.g., "box, bar, point") for faster generation.
-  Only include optional fields (like xmin, ymin, plot_title, grid, etc.) when the user explicitly asks for them.
+  CRITICAL: You MUST leave optional fields (like xlabel, ylabel, zlabel, plot_title, xmin, ymin, grid, etc.) as null or omitted UNLESS the user explicitly asks to set them. The system will automatically generate optimal axis labels and titles. Do not invent your own.
+  CRITICAL SPATIAL PLOT RULE: For spatial plots ("wafer" or "2Dmap"), if the user requests plotting multiple specific distinct items (e.g., "plot for slots 5, 6, and 8" or "plot for wafers A and B"), you MUST generate multiple separate entries in the "plot_config" list (one for each item with a specific filter like "Slot == 5") rather than combining them into a single plot with a list filter (e.g. "Slot in [5, 6, 8]"). Spatial plots cannot properly overlay distinct groupings on the same axes.
 - For "answer": set "answer_text" to a plain-text explanation.
-- For updating an existing graph: use action="update" and set "graph_update" as a list of update objects. Set "graph_id" to the specific ID or "all" to update all open graphs.
+- For updating an existing graph: use action="update" and set "graph_update" as a list of update objects. Set "graph_id" to the specific ID or "all" to update all open graphs. IMPORTANT: If the user asks to "add" a filter, you MUST preserve the existing filters shown in the prompt by including them in the new filters list along with the new filter (e.g., ["old_filter == 1", "new_filter == 2"]).
 - For deleting an existing graph: use action="delete" and set "graph_delete". Set delete_all to true to delete all graphs, or pass specific IDs in graph_ids. For "delete all except 70", pass all open graph IDs EXCEPT 70.
 - Set "target_dataframe" to the exact name of the dataframe you are querying. If not specified by user, use the active one.
 - NEVER use eval(), exec(), or any Python code other than pandas .query() expressions.
 - If the user asks something impossible with this data, use action="answer" to explain why.
-- CONVERSATION MEMORY: You have access to the full conversation history. When the user \
-makes a follow-up request like "add also a scatter plot" or "do the same but with line plot", \
-you MUST reuse the same x, y, z columns, target_dataframe, axis limits, and other settings \
-from the previous request. 
+- CONVERSATION MEMORY: You have access to the full conversation history. When the user makes a follow-up request like "add also a scatter plot" or "do the same but with line plot" or "add another plot grouped by Zone", you MUST reuse the same x, y, z columns, target_dataframe, filters, axis limits, and ALL other settings from the previous request or existing graph, unless explicitly overridden.
   CRITICAL: Do NOT output configuration for plots you have already created in previous turns. ONLY output the newly requested plots.
 - Return ONLY the JSON object, no surrounding text."""
 
@@ -477,47 +477,69 @@ from the previous request.
         elif action == "statistics":
             result = self._execute_statistics(data, result, df, target_name)
 
-        elif action == "plot":
-            result = self._execute_plot(data, result, df, target_name)
-
-        elif action == "update":
-            # Graph update — pass graph_update payload through to the View
+        elif action in ("plot", "update", "delete"):
+            configs = []
+            summary_parts = []
+            
+            # 1. Process deletes
+            graph_delete = data.get("graph_delete")
+            if graph_delete and isinstance(graph_delete, dict):
+                configs.append({"_graph_delete": graph_delete})
+                summary_parts.append("Deleting requested graphs.")
+                
+            # 2. Process updates
             graph_update = data.get("graph_update")
             if isinstance(graph_update, dict):
                 graph_update = [graph_update]
-                
             if graph_update and isinstance(graph_update, list):
-                configs = []
+                gu_count = 0
                 for gu in graph_update:
-                    if not isinstance(gu, dict):
-                        continue
+                    if not isinstance(gu, dict): continue
                     gid = gu.get("graph_id")
                     if str(gid).lower() == "all":
                         for open_gid in self._graphs.keys():
                             gu_copy = dict(gu)
                             gu_copy["graph_id"] = open_gid
                             configs.append({"_graph_update": gu_copy})
+                            gu_count += 1
                     else:
                         configs.append({"_graph_update": gu})
-                        
-                if configs:
-                    result.plot_config = configs
-                    result.text_summary = explanation or f"Updating {len(configs)} graph(s)."
-                else:
-                    result.action = "answer"
-                    result.text_summary = "No valid graph update information provided."
-            else:
-                result.action = "answer"
-                result.text_summary = "No graph update information provided."
+                        gu_count += 1
+                if gu_count > 0:
+                    summary_parts.append(f"Updating {gu_count} graph(s).")
+                    
+            # 3. Process new plots
+            plot_cfg = data.get("plot_config")
+            if plot_cfg:
+                if isinstance(plot_cfg, dict):
+                    plot_cfg = [plot_cfg]
+                if isinstance(plot_cfg, list):
+                    expanded = []
+                    for cfg in plot_cfg:
+                        if not isinstance(cfg, dict): continue
+                        style_val = cfg.get("plot_style", "")
+                        if isinstance(style_val, str) and "," in style_val:
+                            for s in [s.strip() for s in style_val.split(",")]:
+                                if s in self.VALID_PLOT_STYLES:
+                                    new_cfg = dict(cfg)
+                                    new_cfg["plot_style"] = s
+                                    new_cfg["df_name"] = target_name
+                                    expanded.append(new_cfg)
+                        else:
+                            cfg["df_name"] = target_name
+                            expanded.append(cfg)
+                    if expanded:
+                        configs.extend(expanded)
+                        summary_parts.append(f"Generated {len(expanded)} plot configuration(s).")
 
-        elif action == "delete":
-            graph_delete = data.get("graph_delete")
-            if graph_delete and isinstance(graph_delete, dict):
-                result.plot_config = [{"_graph_delete": graph_delete}]
-                result.text_summary = explanation or "Deleting requested graphs."
+            if configs:
+                result.plot_config = configs
+                result.text_summary = explanation + "\n\n" + "\n".join(summary_parts) if explanation else "\n".join(summary_parts)
+                # Ensure action is 'plot' so the View iterates over configs
+                result.action = "plot"
             else:
                 result.action = "answer"
-                result.text_summary = "No graph delete information provided."
+                result.text_summary = "No valid graph operations found in the response."
 
         else:   # "answer" or unknown
             result.text_summary = data.get("answer_text") or explanation or raw
@@ -528,46 +550,6 @@ from the previous request.
     VALID_PLOT_STYLES = {'point', 'scatter', 'box', 'bar', 'line',
                          'trendline', 'histogram', 'wafer', '2Dmap'}
 
-    def _execute_plot(self, data: dict, result: ChatResult, df: pd.DataFrame, name: str) -> ChatResult:
-        """Parse plot suggestions — expand comma-separated styles into separate configs."""
-        plot_cfg = data.get("plot_config")
-        if not plot_cfg:
-            result.action = "answer"
-            result.text_summary = "No plot configuration provided."
-            return result
-
-        # Normalise to list
-        if isinstance(plot_cfg, dict):
-            plot_cfg = [plot_cfg]
-
-        # Expand entries where plot_style is a comma-separated string
-        # (e.g. LLM returns "box, bar, point" in one entry instead of 3)
-        expanded: list = []
-        for cfg in plot_cfg:
-            if not isinstance(cfg, dict):
-                continue
-            style_val = cfg.get("plot_style", "")
-            # Check if it's a comma-separated multi-style string
-            if isinstance(style_val, str) and "," in style_val:
-                styles = [s.strip() for s in style_val.split(",")]
-                for s in styles:
-                    if s in self.VALID_PLOT_STYLES:
-                        new_cfg = dict(cfg)   # copy all shared params
-                        new_cfg["plot_style"] = s
-                        new_cfg["df_name"] = name
-                        expanded.append(new_cfg)
-            else:
-                cfg["df_name"] = name
-                expanded.append(cfg)
-
-        if not expanded:
-            result.action = "answer"
-            result.text_summary = "No valid plot configurations could be determined."
-            return result
-
-        result.plot_config = expanded
-        result.text_summary = f"Generated {len(expanded)} plot configuration(s)."
-        return result
 
     # ------------------------------------------------------------------
 

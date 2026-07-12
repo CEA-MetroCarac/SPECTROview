@@ -111,6 +111,10 @@ class LLMWorker(QThread):
         self._model    = model
         self._messages = messages
         self._full_response = ""
+        self._is_cancelled = False
+
+    def cancel(self) -> None:
+        self._is_cancelled = True
 
     # ------------------------------------------------------------------
     def run(self) -> None:                      # executed in worker thread
@@ -128,6 +132,8 @@ class LLMWorker(QThread):
                 stream=True,
             )
             for chunk in stream:
+                if self._is_cancelled:
+                    break
                 fragment = chunk["message"]["content"]
                 self._full_response += fragment
                 self.chunk_received.emit(fragment)
@@ -176,6 +182,10 @@ class APIWorker(QThread):
         self._model    = model
         self._messages = messages
         self._full_response = ""
+        self._is_cancelled = False
+
+    def cancel(self) -> None:
+        self._is_cancelled = True
 
     # ------------------------------------------------------------------
     def run(self) -> None:                      # executed in worker thread
@@ -203,6 +213,8 @@ class APIWorker(QThread):
                 stream=True,
             )
             for chunk in stream:
+                if self._is_cancelled:
+                    break
                 delta = chunk.choices[0].delta
                 fragment = getattr(delta, "content", None) or ""
                 if fragment:
@@ -250,6 +262,10 @@ class AnthropicWorker(QThread):
         self._model    = model
         self._messages = messages
         self._full_response = ""
+        self._is_cancelled = False
+
+    def cancel(self) -> None:
+        self._is_cancelled = True
 
     # ------------------------------------------------------------------
     def run(self) -> None:
@@ -289,6 +305,8 @@ class AnthropicWorker(QThread):
                 model=self._model,
             ) as stream:
                 for text in stream.text_stream:
+                    if self._is_cancelled:
+                        break
                     self._full_response += text
                     self.chunk_received.emit(text)
 
@@ -507,10 +525,19 @@ class LLMClient:
 
     def cancel(self) -> None:
         """Abort the current worker thread if one is running."""
-        if self._worker and self._worker.isRunning():
-            self._worker.terminate()
-            self._worker.wait(2000)
-        self._worker = None
+        if getattr(self, "_worker", None):
+            if hasattr(self._worker, "cancel"):
+                self._worker.cancel()
+            
+            # Safely orphan the thread by disconnecting callbacks so they don't affect UI
+            for signal_name in ("chunk_received", "response_ready", "error_occurred"):
+                signal = getattr(self._worker, signal_name, None)
+                if signal:
+                    try:
+                        signal.disconnect()
+                    except RuntimeError:
+                        pass
+            self._worker = None
 
     def is_busy(self) -> bool:
         """Return ``True`` while a worker thread is running."""

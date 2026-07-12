@@ -662,13 +662,13 @@ class VGraph(QWidget):
             param, peaklabel = parts
             param = param.lower()
             if param == "x0":
-                return f"{peaklabel} peak position (cm$^{{-1}}$)"
+                return f"{col_name} (cm$^{{-1}}$)"
             elif param == "fwhm":
-                return f"{peaklabel} peak width (cm$^{{-1}}$)"
+                return f"{col_name} (cm$^{{-1}}$)"
             elif param == "ampli":
-                return f"{peaklabel} peak intensity (a.u.)"
+                return f"{col_name} (a.u.)"
             elif param == "area":
-                return f"{peaklabel} peak area (a.u.)"
+                return f"{col_name} (a.u.)"
                 
         return col_name
 

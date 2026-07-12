@@ -143,6 +143,43 @@ class VMChat(QObject):
         # To change AI behaviour, edit the .md files — not this file.
         self._prompt_mgr = PromptManager()
 
+        # ── Small model mode ─────────────────────────────────────────────
+        # Auto-enabled for known small Ollama models. Can be toggled via
+        # set_small_model_mode(). When enabled, PromptManager uses simplified
+        # prompt variants that help small models produce valid JSON.
+        self._auto_detect_small_model()
+
+    # ------------------------------------------------------------------
+    # Small model mode
+    # ------------------------------------------------------------------
+
+    # Model name patterns that trigger auto small-model mode
+    _SMALL_MODEL_PATTERNS = [
+        "qwen2.5-coder:7b", "qwen2.5:7b", "qwen3:8b",
+        "llama3.2:3b", "gemma3:4b", "phi3:3.8b", "phi3:mini",
+        "deepseek-r1:7b", "deepseek-r1:8b",
+        "mistral:7b", "codellama:7b",
+    ]
+
+    def _auto_detect_small_model(self) -> None:
+        """Enable small-model mode if the current model matches known small models."""
+        model_lower = self._model.lower().replace(" ", "")
+        is_small = False
+        for pattern in self._SMALL_MODEL_PATTERNS:
+            if pattern.replace(" ", "") in model_lower:
+                is_small = True
+                break
+        self._prompt_mgr.set_small_model_mode(is_small)
+        # Cap context to 3 pairs for small models to reduce prompt size
+        if is_small:
+            self.max_context_messages = 6  # 3 pairs
+        else:
+            self.max_context_messages = None
+
+    def set_small_model_mode(self, enabled: bool) -> None:
+        """Manually enable/disable simplified prompts for small models."""
+        self._prompt_mgr.set_small_model_mode(enabled)
+
     # ------------------------------------------------------------------
     # Public API — called by VChatPanel
     # ------------------------------------------------------------------
@@ -176,6 +213,7 @@ class VMChat(QObject):
 
     def set_model(self, model: str) -> None:
         self._model = model
+        self._auto_detect_small_model()
 
     def set_provider(
         self,
@@ -464,52 +502,44 @@ class VMChat(QObject):
         text as an "answer" so the user always sees something useful.
         """
         data = None
-        
-        # 1. Try stripping markdown fences
-        clean = re.sub(r"```(?:json)?|```", "", raw).strip()
-        try:
-            data = json.loads(clean)
-        except json.JSONDecodeError:
-            pass
 
-        # 2. Try extracting multiple markdown code blocks if direct parsing fails
-        if not data:
-            blocks = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
-            if blocks:
-                data_list = []
-                for b in blocks:
-                    try:
-                        data_list.append(json.loads(b))
-                    except json.JSONDecodeError:
-                        pass
-                
-                if data_list:
-                    data = data_list[0]
-                    # Merge multiple JSON blocks if they are plot configs
-                    if len(data_list) > 1:
-                        if "plot_config" not in data and "graph_configurations" in data:
-                            data["plot_config"] = data["graph_configurations"]
-                        if "plot_config" not in data:
-                            data["plot_config"] = []
-                        elif not isinstance(data["plot_config"], list):
-                            data["plot_config"] = [data["plot_config"]]
-                        for d in data_list[1:]:
-                            pc = d.get("plot_config") or d.get("graph_configurations")
-                            if pc:
-                                if isinstance(pc, list):
-                                    data["plot_config"].extend(pc)
-                                else:
-                                    data["plot_config"].append(pc)
+        # 0. Strip leading/trailing whitespace
+        raw = raw.strip()
 
-        # 3. Fallback to greedy regex for a single block
+        # 1. Extract JSON from markdown code fences (handles small models
+        #    that wrap output in ```json ... ``` despite instructions)
+        #    Try the structured extraction first (preserves inner backticks)
+        fence_match = re.search(
+            r"```(?:json)?\s*\n?(.*?)\n?```", raw, re.DOTALL
+        )
+        if fence_match:
+            # Use the content inside fences for initial parse attempt
+            fenced_content = fence_match.group(1).strip()
+            try:
+                data = json.loads(fenced_content)
+            except json.JSONDecodeError:
+                pass
+
+        # 2. Try parsing the raw text directly (or fenced content if
+        #    step 1 failed to produce valid JSON)
         if not data:
+            # Strip all markdown fences and try again
+            clean = re.sub(r"```(?:json)?\s*|```", "", raw).strip()
+            try:
+                data = json.loads(clean)
+            except json.JSONDecodeError:
+                pass
+
+        # 3. Fallback to greedy regex for a JSON object
+        if not data:
+            clean = re.sub(r"```(?:json)?\s*|```", "", raw).strip()
             match = re.search(r"\{.*\}", clean, re.DOTALL)
             if match:
                 try:
                     data = json.loads(match.group())
                 except json.JSONDecodeError:
                     pass
-        
+
         # 4. Give up and return raw text
         if not data:
             return ChatResult(
@@ -533,7 +563,11 @@ class VMChat(QObject):
         # Handle variations from different models
         if "plot_config" not in data and "graph_configurations" in data:
             data["plot_config"] = data["graph_configurations"]
-            
+
+        # ── Normalize small-model output patterns ─────────────────────────
+        # Small models often use wrong key names. Fix them here.
+        data = self._normalize_small_model_output(data)
+
         action      = data.get("action")
         # Infer action if missing but plot_config is present
         if not action:
@@ -646,6 +680,118 @@ class VMChat(QObject):
     VALID_PLOT_STYLES = {'point', 'scatter', 'box', 'bar', 'line',
                          'trendline', 'histogram', 'wafer', '2Dmap'}
 
+
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _normalize_small_model_output(data: dict) -> dict:
+        """Normalize common small-model JSON output mistakes.
+
+        Small local models (qwen2.5-coder:7b, qwen3:8b, etc.) often produce
+        JSON with wrong key names or structures.  This method repairs the
+        most common patterns so the downstream parser can handle them.
+
+        Fixes applied (in order):
+        1. ``"plots"`` or ``"graphs"`` → ``"plot_config"``
+        2. ``"type"`` or ``"chart_type"`` → ``"plot_style"`` (per config entry)
+        3. ``"filter"`` (string) → ``"filters"`` (list)
+        4. Missing ``"action"`` inferred from content
+        5. Duplicate top-level keys (take last value)
+        6. ``"axis_limits"`` → inline ``xmin/xmax/ymin/ymax``
+        """
+        if not isinstance(data, dict):
+            return data
+
+        # 1. Rename "plots"/"graphs" → "plot_config"
+        for alt_key in ("plots", "graphs", "graph_configurations"):
+            if alt_key in data and "plot_config" not in data:
+                data["plot_config"] = data.pop(alt_key)
+
+        # 2. Normalize each plot_config entry
+        plot_cfg = data.get("plot_config")
+        if isinstance(plot_cfg, list):
+            for cfg in plot_cfg:
+                if not isinstance(cfg, dict):
+                    continue
+                # "type"/"chart_type" → "plot_style"
+                for type_key in ("type", "chart_type", "style"):
+                    if type_key in cfg and "plot_style" not in cfg:
+                        cfg["plot_style"] = cfg.pop(type_key)
+
+                # "filter" (string) → "filters" (list)
+                if "filter" in cfg and "filters" not in cfg:
+                    f_val = cfg.pop("filter")
+                    if isinstance(f_val, str) and f_val.strip():
+                        cfg["filters"] = [f_val]
+                    elif isinstance(f_val, list):
+                        cfg["filters"] = f_val
+
+                # "filters" as a string → wrap in list
+                if "filters" in cfg and isinstance(cfg["filters"], str):
+                    s = cfg["filters"].strip()
+                    cfg["filters"] = [s] if s else []
+
+                # "axis_limits" → inline limits
+                if "axis_limits" in cfg:
+                    limits = cfg.pop("axis_limits")
+                    if isinstance(limits, dict):
+                        # Handle both {"xmin": 0, "xmax": 10} and {"x": [0, 10], "y": [0, 1]}
+                        for lim_key in ("xmin", "xmax", "ymin", "ymax", "zmin", "zmax"):
+                            if lim_key in limits and lim_key not in cfg:
+                                cfg[lim_key] = limits[lim_key]
+                        # Handle axis_limits.x = [min, max] format
+                        for axis in ("x", "y", "z"):
+                            if axis in limits and isinstance(limits[axis], (list, tuple)) and len(limits[axis]) >= 2:
+                                min_key = f"{axis}min"
+                                max_key = f"{axis}max"
+                                if min_key not in cfg:
+                                    cfg[min_key] = limits[axis][0]
+                                if max_key not in cfg:
+                                    cfg[max_key] = limits[axis][1]
+
+                # "color" → "color_palette"
+                if "color" in cfg and "color_palette" not in cfg:
+                    cfg["color_palette"] = cfg.pop("color")
+                if "palette" in cfg and "color_palette" not in cfg:
+                    cfg["color_palette"] = cfg.pop("palette")
+
+                # "columns" or "axes" with x/y → promote
+                if "columns" in cfg and isinstance(cfg["columns"], dict):
+                    cols = cfg.pop("columns")
+                    for k in ("x", "y", "z"):
+                        if k in cols and k not in cfg:
+                            cfg[k] = cols[k]
+
+        # 3. Also normalize graph_update entries
+        graph_update = data.get("graph_update")
+        if isinstance(graph_update, list):
+            for gu in graph_update:
+                if not isinstance(gu, dict):
+                    continue
+                for type_key in ("type", "chart_type", "style"):
+                    if type_key in gu and "plot_style" not in gu:
+                        gu["plot_style"] = gu.pop(type_key)
+                if "filter" in gu and "filters" not in gu:
+                    f_val = gu.pop("filter")
+                    if isinstance(f_val, str) and f_val.strip():
+                        gu["filters"] = [f_val]
+
+        # 4. Infer missing action
+        if "action" not in data:
+            if "plot_config" in data:
+                data["action"] = "plot"
+            elif "query" in data:
+                data["action"] = "query"
+            elif "graph_update" in data:
+                data["action"] = "update"
+            elif "graph_delete" in data:
+                data["action"] = "delete"
+            elif "answer_text" in data:
+                data["action"] = "answer"
+            else:
+                data["action"] = "answer"
+
+        return data
 
     # ------------------------------------------------------------------
 

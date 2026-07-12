@@ -396,12 +396,15 @@ class VMChat(QObject):
             graphs_info = "No graphs are currently open.\n"
 
         # ── 2. Assemble static prompt from Markdown files ─────────────────
+        # Pass the user message so PromptManager can auto-detect intent
+        # (plotting/fitting/coding) when enable_intent_detection is True.
         static_prompt = self._prompt_mgr.build_prompt(
             intent="chat",
             user_message=user_message,
             prompts=["system", "chat", "plotting"],
             rules=["general", "plotting", "spectroview"],
             knowledge=["features"],
+            examples=["plotting_examples"] if not self._prompt_mgr.small_model_mode else ["query_plot_examples"],
         )
 
         # ── 3. Inject dynamic context into the static prompt ──────────────

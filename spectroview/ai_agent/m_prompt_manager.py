@@ -158,6 +158,8 @@ _INTENT_DEFAULTS: dict[str, dict[str, list[str]]] = {
 
 #: Simplified defaults for small local models (< ~10B params).
 #: Uses shorter prompts, fewer rules, and query_plot workflow examples.
+#: All intents include query_plot_examples because small models need
+#: explicit two-step workflow guidance for computed-value plot requests.
 _INTENT_DEFAULTS_SMALL: dict[str, dict[str, list[str]]] = {
     "chat": {
         "prompts": ["system_small", "chat_small"],

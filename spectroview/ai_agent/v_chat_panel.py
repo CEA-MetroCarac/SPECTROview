@@ -980,7 +980,6 @@ class VChatPanel(QDialog):
         formatted_ts = ""
         if timestamp:
             try:
-                from datetime import datetime
                 dt = datetime.fromisoformat(timestamp)
                 formatted_ts = dt.strftime("%y-%m-%d %H:%M")
             except Exception:
@@ -999,7 +998,6 @@ class VChatPanel(QDialog):
         formatted_ts = ""
         if timestamp:
             try:
-                from datetime import datetime
                 dt = datetime.fromisoformat(timestamp)
                 formatted_ts = dt.strftime("%y-%m-%d %H:%M")
             except Exception:

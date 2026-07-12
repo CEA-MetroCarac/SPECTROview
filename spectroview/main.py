@@ -481,7 +481,7 @@ class Main(QMainWindow):
         # ── Normalise types and structures ───────────────────────────
         # Use the single source of truth from plot_tool to ensure
         # filters (list of dicts), lists, and numeric types are correct.
-        from spectroview.ai_agent.tools.plot_tool import normalize_plot_config
+        from spectroview.ai_agent.utils.plot_utils import normalize_plot_config
         normalize_plot_config(cfg)
 
         # ── Ensure df_name is set ────────────────────────────────────
@@ -519,7 +519,7 @@ class Main(QMainWindow):
 
         # Normalize types using single source of truth
         props = copy.deepcopy(properties)
-        from spectroview.ai_agent.tools.plot_tool import normalize_plot_config
+        from spectroview.ai_agent.utils.plot_utils import normalize_plot_config
         normalize_plot_config(props)
 
         # Apply to model

@@ -156,36 +156,7 @@ _INTENT_DEFAULTS: dict[str, dict[str, list[str]]] = {
     },
 }
 
-#: Simplified defaults for small local models (< ~10B params).
-#: Uses shorter prompts, fewer rules, and query_plot workflow examples.
-#: All intents include query_plot_examples because small models need
-#: explicit two-step workflow guidance for computed-value plot requests.
-_INTENT_DEFAULTS_SMALL: dict[str, dict[str, list[str]]] = {
-    "chat": {
-        "prompts": ["system_small", "chat_small"],
-        "rules": ["general"],
-        "knowledge": [],
-        "examples": ["query_plot_examples"],
-    },
-    "plotting": {
-        "prompts": ["system_small", "chat_small", "plotting_small"],
-        "rules": ["general", "plotting"],
-        "knowledge": [],
-        "examples": ["query_plot_examples"],
-    },
-    "fitting": {
-        "prompts": ["system_small", "fitting"],
-        "rules": ["general", "fitting"],
-        "knowledge": [],
-        "examples": ["query_plot_examples"],
-    },
-    "coding": {
-        "prompts": ["system_small", "coding"],
-        "rules": ["general", "python"],
-        "knowledge": [],
-        "examples": [],
-    },
-}
+
 
 
 # ---------------------------------------------------------------------------
@@ -225,17 +196,11 @@ class PromptManager:
         if settings_override:
             self._settings.update(settings_override)
 
-        # Small model mode — uses simplified prompts for models < ~10B params
-        self._small_model_mode: bool = self._settings.get(
-            "small_model_mode", False
-        )
-
         logger.debug(
-            "PromptManager initialised at %s | cache=%s auto_reload=%s small_model=%s",
+            "PromptManager initialised at %s | cache=%s auto_reload=%s",
             self._base,
             self._settings.get("enable_cache", True),
             self._settings.get("auto_reload", True),
-            self._small_model_mode,
         )
 
     # ------------------------------------------------------------------
@@ -252,22 +217,7 @@ class PromptManager:
         """Return the parsed ``config/settings.yaml`` settings."""
         return dict(self._settings)
 
-    @property
-    def small_model_mode(self) -> bool:
-        """Return whether simplified small-model prompts are active."""
-        return self._small_model_mode
 
-    def set_small_model_mode(self, enabled: bool) -> None:
-        """Enable or disable small-model simplified prompts.
-
-        When enabled, shorter prompt variants are used (``system_small.md``,
-        ``chat_small.md``, ``plotting_small.md``) with fewer rules and
-        workflow-oriented examples.  This helps small local models
-        (< ~10B params) stay on-track and produce valid JSON.
-        """
-        self._small_model_mode = enabled
-        self.clear_cache()
-        logger.info("Small model mode %s", "enabled" if enabled else "disabled")
 
     # ------------------------------------------------------------------
     # Public loading API
@@ -354,11 +304,7 @@ class PromptManager:
                 intent = detected
                 logger.debug("Intent detected: %s", intent)
 
-        defaults = (
-            _INTENT_DEFAULTS_SMALL.get(intent, _INTENT_DEFAULTS_SMALL["chat"])
-            if self._small_model_mode
-            else _INTENT_DEFAULTS.get(intent, _INTENT_DEFAULTS["chat"])
-        )
+        defaults = _INTENT_DEFAULTS.get(intent, _INTENT_DEFAULTS["chat"])
 
         resolved_prompts = prompts if prompts is not None else defaults["prompts"]
         resolved_rules = rules if rules is not None else defaults["rules"]

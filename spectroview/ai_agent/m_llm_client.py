@@ -22,7 +22,7 @@ Typical usage
 
 from __future__ import annotations
 
-from typing import Callable, List, Dict, Optional
+from typing import Callable, List, Dict, Optional, Any
 
 from PySide6.QtCore import QThread, Signal, QObject
 
@@ -98,18 +98,20 @@ class LLMWorker(QThread):
     """
 
     chunk_received  = Signal(str)
-    response_ready  = Signal(str)
+    response_ready  = Signal(str, list)
     error_occurred  = Signal(str)
 
     def __init__(
         self,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: List[Dict[str, Any]],
+        tools: Optional[List[Dict[str, Any]]] = None,
         parent: Optional[QObject] = None,
     ) -> None:
         super().__init__(parent)
         self._model    = model
         self._messages = messages
+        self._tools    = tools
         self._full_response = ""
         self._is_cancelled = False
 
@@ -126,19 +128,36 @@ class LLMWorker(QThread):
             return
 
         try:
+            kwargs = {}
+            if self._tools:
+                kwargs["tools"] = self._tools
+                
             stream = _ollama.chat(
                 model=self._model,
                 messages=self._messages,
                 stream=True,
+                **kwargs
             )
+            
+            tool_calls = []
             for chunk in stream:
                 if self._is_cancelled:
                     break
-                fragment = chunk["message"]["content"]
-                self._full_response += fragment
-                self.chunk_received.emit(fragment)
+                    
+                message = chunk.get("message", {})
+                
+                # Handle tool calls
+                if "tool_calls" in message:
+                    for tc in message["tool_calls"]:
+                        # Append or accumulate tool calls
+                        tool_calls.append(tc)
+                        
+                fragment = message.get("content") or ""
+                if fragment:
+                    self._full_response += fragment
+                    self.chunk_received.emit(fragment)
 
-            self.response_ready.emit(self._full_response)
+            self.response_ready.emit(self._full_response, tool_calls)
 
         except Exception as exc:               # noqa: BLE001
             self.error_occurred.emit(str(exc))
@@ -165,7 +184,7 @@ class APIWorker(QThread):
     """
 
     chunk_received  = Signal(str)
-    response_ready  = Signal(str)
+    response_ready  = Signal(str, list)
     error_occurred  = Signal(str)
 
     def __init__(
@@ -173,7 +192,8 @@ class APIWorker(QThread):
         api_key:  str,
         base_url: str,
         model:    str,
-        messages: List[Dict[str, str]],
+        messages: List[Dict[str, Any]],
+        tools:    Optional[List[Dict[str, Any]]] = None,
         parent:   Optional[QObject] = None,
     ) -> None:
         super().__init__(parent)
@@ -181,6 +201,7 @@ class APIWorker(QThread):
         self._base_url = base_url
         self._model    = model
         self._messages = messages
+        self._tools    = tools
         self._full_response = ""
         self._is_cancelled = False
 
@@ -207,21 +228,51 @@ class APIWorker(QThread):
                 api_key=self._api_key,
                 base_url=self._base_url or None,
             )
+            kwargs = {}
+            if self._tools:
+                kwargs["tools"] = self._tools
+                
             stream = client.chat.completions.create(
                 model=self._model,
                 messages=self._messages,  # type: ignore[arg-type]
                 stream=True,
+                **kwargs
             )
+            
+            tool_calls_dict = {}
             for chunk in stream:
                 if self._is_cancelled:
                     break
                 delta = chunk.choices[0].delta
+                
+                if hasattr(delta, "tool_calls") and delta.tool_calls:
+                    for tc in delta.tool_calls:
+                        idx = tc.index
+                        if idx not in tool_calls_dict:
+                            tool_calls_dict[idx] = {"id": tc.id, "type": "function", "function": {"name": tc.function.name, "arguments": ""}}
+                        if tc.function.arguments:
+                            tool_calls_dict[idx]["function"]["arguments"] += tc.function.arguments
+                            
                 fragment = getattr(delta, "content", None) or ""
                 if fragment:
                     self._full_response += fragment
                     self.chunk_received.emit(fragment)
 
-            self.response_ready.emit(self._full_response)
+            import json
+            tool_calls = []
+            for tc in tool_calls_dict.values():
+                try:
+                    args = json.loads(tc["function"]["arguments"])
+                except Exception:
+                    args = {}
+                tool_calls.append({
+                    "function": {
+                        "name": tc["function"]["name"],
+                        "arguments": args
+                    }
+                })
+
+            self.response_ready.emit(self._full_response, tool_calls)
 
         except Exception as exc:               # noqa: BLE001
             self.error_occurred.emit(str(exc))
@@ -245,7 +296,7 @@ class AnthropicWorker(QThread):
     """
 
     chunk_received  = Signal(str)
-    response_ready  = Signal(str)
+    response_ready  = Signal(str, list)
     error_occurred  = Signal(str)
 
     def __init__(
@@ -253,7 +304,8 @@ class AnthropicWorker(QThread):
         api_key:  str,
         base_url: str,
         model:    str,
-        messages: List[Dict[str, str]],
+        messages: List[Dict[str, Any]],
+        tools:    Optional[List[Dict[str, Any]]] = None,
         parent:   Optional[QObject] = None,
     ) -> None:
         super().__init__(parent)
@@ -261,6 +313,7 @@ class AnthropicWorker(QThread):
         self._base_url = base_url
         self._model    = model
         self._messages = messages
+        self._tools    = tools
         self._full_response = ""
         self._is_cancelled = False
 
@@ -298,19 +351,46 @@ class AnthropicWorker(QThread):
 
             client = _anthropic.Anthropic(**client_args)
             
-            with client.messages.stream(
-                max_tokens=4096,
-                system=system_prompt,
-                messages=filtered_messages, # type: ignore
-                model=self._model,
-            ) as stream:
-                for text in stream.text_stream:
-                    if self._is_cancelled:
-                        break
-                    self._full_response += text
-                    self.chunk_received.emit(text)
-
-            self.response_ready.emit(self._full_response)
+            kwargs = {}
+            if self._tools:
+                kwargs["tools"] = self._tools
+                
+            # Note: with Anthropic API, streaming with tools can be complex.
+            # For simplicity, if tools are provided, we just use messages.create.
+            if self._tools:
+                resp = client.messages.create(
+                    max_tokens=4096,
+                    system=system_prompt,
+                    messages=filtered_messages, # type: ignore
+                    model=self._model,
+                    tools=self._tools
+                )
+                tool_calls = []
+                for content_block in resp.content:
+                    if content_block.type == 'text':
+                        self._full_response += content_block.text
+                        self.chunk_received.emit(content_block.text)
+                    elif content_block.type == 'tool_use':
+                        tool_calls.append({
+                            "function": {
+                                "name": content_block.name,
+                                "arguments": content_block.input
+                            }
+                        })
+                self.response_ready.emit(self._full_response, tool_calls)
+            else:
+                with client.messages.stream(
+                    max_tokens=4096,
+                    system=system_prompt,
+                    messages=filtered_messages, # type: ignore
+                    model=self._model,
+                ) as stream:
+                    for text in stream.text_stream:
+                        if self._is_cancelled:
+                            break
+                        self._full_response += text
+                        self.chunk_received.emit(text)
+                self.response_ready.emit(self._full_response, [])
 
         except Exception as exc:               # noqa: BLE001
             self.error_occurred.emit(str(exc))
@@ -474,10 +554,11 @@ class LLMClient:
     def chat(
         self,
         model:    str,
-        messages: List[Dict[str, str]],
+        messages: List[Dict[str, Any]],
         on_chunk: Callable[[str], None],
-        on_done:  Callable[[str], None],
+        on_done:  Callable[[str, list], None],
         on_error: Callable[[str], None],
+        tools:    Optional[List[Dict[str, Any]]] = None,
         parent:   Optional[QObject] = None,
     ) -> None:
         """Spawn a background worker to call the active LLM backend.
@@ -498,13 +579,14 @@ class LLMClient:
         self.cancel()
 
         if self._provider == "Ollama":
-            self._worker = LLMWorker(model, messages, parent)
+            self._worker = LLMWorker(model, messages, tools, parent)
         elif self._provider == "Anthropic":
             self._worker = AnthropicWorker(
                 api_key=self._api_key,
                 base_url=self._base_url,
                 model=model,
                 messages=messages,
+                tools=tools,
                 parent=parent,
             )
         else:
@@ -515,6 +597,7 @@ class LLMClient:
                 base_url=self._base_url,
                 model=model,
                 messages=messages,
+                tools=tools,
                 parent=parent,
             )
 

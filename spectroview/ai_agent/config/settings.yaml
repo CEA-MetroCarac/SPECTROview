@@ -63,18 +63,3 @@ debug_prompt: false
 #   (all others) → chat intent
 enable_intent_detection: false
 
-# ---------------------------------------------------------------------------
-# Small model mode
-# ---------------------------------------------------------------------------
-# When true, uses simplified prompt variants (system_small.md, chat_small.md,
-# plotting_small.md) with significantly shorter instructions, fewer rules,
-# and workflow-oriented examples. This helps small local models
-# (< ~10B params, e.g., qwen2.5-coder:7b, qwen3:8b) produce valid JSON
-# responses instead of hallucinated keys and column names.
-#
-# Enable this if your local Ollama model consistently fails to produce
-# valid JSON or invents column names.
-#
-# When false, uses the full prompts — suitable for large models
-# (DeepSeek, Gemini, GPT-4, Claude).
-small_model_mode: false

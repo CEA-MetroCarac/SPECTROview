@@ -45,13 +45,11 @@ from spectroview.ai_agent.m_llm_client import LLMClient, API_PROVIDERS
 from spectroview.ai_agent.m_conversation import MConversation
 from spectroview.ai_agent.m_conversation_store import MConversationStore
 from spectroview.ai_agent.m_prompt_manager import PromptManager
-from spectroview.ai_agent.tools.dataframe_tool import (
-    build_schema_info,
-    build_graphs_info,
-    safe_query,
-    safe_describe,
-)
-from spectroview.ai_agent.tools.plot_tool import expand_all_plot_configs
+from spectroview.ai_agent.utils.plot_utils import expand_all_plot_configs
+import asyncio
+from spectroview.ai_agent.mcp.server import create_mcp_server
+from mcp.shared.memory import create_connected_server_and_client_session
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -108,7 +106,7 @@ class VMChat(QObject):
     result_ready     = Signal(object)       # ChatResult
     error_occurred   = Signal(str)
     conversation_changed = Signal(str)
-    tool_execution_received = Signal(str)
+    tool_execution_received = Signal(str, str) # name, result text
 
     # Maximum number of message pairs kept in context (user + assistant each)
     MAX_HISTORY_PAIRS = 6
@@ -143,42 +141,35 @@ class VMChat(QObject):
         # To change AI behaviour, edit the .md files — not this file.
         self._prompt_mgr = PromptManager()
 
-        # ── Small model mode ─────────────────────────────────────────────
-        # Auto-enabled for known small Ollama models. Can be toggled via
-        # set_small_model_mode(). When enabled, PromptManager uses simplified
-        # prompt variants that help small models produce valid JSON.
-        self._auto_detect_small_model()
 
-    # ------------------------------------------------------------------
-    # Small model mode
-    # ------------------------------------------------------------------
 
-    # Model name patterns that trigger auto small-model mode
-    _SMALL_MODEL_PATTERNS = [
-        "qwen2.5-coder:7b", "qwen2.5:7b", "qwen3:8b",
-        "llama3.2:3b", "gemma3:4b", "phi3:3.8b", "phi3:mini",
-        "deepseek-r1:7b", "deepseek-r1:8b",
-        "mistral:7b", "codellama:7b",
-    ]
+        # ── MCP Server ───────────────────────────────────────────────────
+        self._mcp_server = create_mcp_server(self)
+        self._mcp_tools_cache = []
+        self._fetch_mcp_tools()
+        
+    def _fetch_mcp_tools(self) -> None:
+        async def fetch():
+            async with create_connected_server_and_client_session(self._mcp_server._mcp_server) as session:
+                await session.initialize()
+                res = await session.list_tools()
+                return res.tools
+        
+        try:
+            tools = asyncio.run(fetch())
+            for t in tools:
+                self._mcp_tools_cache.append({
+                    "type": "function",
+                    "function": {
+                        "name": t.name,
+                        "description": t.description,
+                        "parameters": t.inputSchema
+                    }
+                })
+        except Exception as e:
+            print("Failed to initialize MCP tools:", e)
 
-    def _auto_detect_small_model(self) -> None:
-        """Enable small-model mode if the current model matches known small models."""
-        model_lower = self._model.lower().replace(" ", "")
-        is_small = False
-        for pattern in self._SMALL_MODEL_PATTERNS:
-            if pattern.replace(" ", "") in model_lower:
-                is_small = True
-                break
-        self._prompt_mgr.set_small_model_mode(is_small)
-        # Cap context to 3 pairs for small models to reduce prompt size
-        if is_small:
-            self.max_context_messages = 6  # 3 pairs
-        else:
-            self.max_context_messages = None
 
-    def set_small_model_mode(self, enabled: bool) -> None:
-        """Manually enable/disable simplified prompts for small models."""
-        self._prompt_mgr.set_small_model_mode(enabled)
 
     # ------------------------------------------------------------------
     # Public API — called by VChatPanel
@@ -213,7 +204,6 @@ class VMChat(QObject):
 
     def set_model(self, model: str) -> None:
         self._model = model
-        self._auto_detect_small_model()
 
     def set_provider(
         self,
@@ -282,6 +272,7 @@ class VMChat(QObject):
             on_chunk = self._on_chunk,
             on_done  = self._on_done,
             on_error = self._on_error,
+            tools    = self._mcp_tools_cache,
             parent   = self,
         )
 
@@ -404,7 +395,7 @@ class VMChat(QObject):
             prompts=["system", "chat", "plotting"],
             rules=["general", "plotting", "spectroview"],
             knowledge=["features"],
-            examples=["plotting_examples"] if not self._prompt_mgr.small_model_mode else ["query_plot_examples"],
+            examples=["plotting_examples"],
         )
 
         # ── 3. Inject dynamic context into the static prompt ──────────────
@@ -428,426 +419,99 @@ class VMChat(QObject):
         self._pending_response += fragment
         self.chunk_received.emit(fragment)
 
-    def _on_done(self, full_text: str) -> None:
+    def _on_done(self, full_text: str, tool_calls: list) -> None:
         self.thinking_changed.emit(False, "Thinking")
 
         # Record assistant turn in history
-        self._conversation.add_message("assistant", full_text)
-        self._save_history_to_file()
+        if full_text:
+            self._conversation.add_message("assistant", full_text)
+            self._save_history_to_file()
 
-        result = self._parse_response(full_text)
-        
-        # ── Multi-Turn ReAct Loop ──
-        if result.action == "query" and result.query:
-            self.result_ready.emit(result)
-            self._execute_agent_tool(result)
-        else:
-            self.result_ready.emit(result)
+        if tool_calls:
+            self._loop_count += 1
+            if self._loop_count > 5:
+                self.error_occurred.emit("Agent loop exceeded maximum turns (5).")
+                return
+                
+            async def run_tools():
+                results = []
+                async with create_connected_server_and_client_session(self._mcp_server._mcp_server) as session:
+                    await session.initialize()
+                    for tc in tool_calls:
+                        func_name = tc.get("function", {}).get("name")
+                        func_args = tc.get("function", {}).get("arguments", {})
+                        if isinstance(func_args, str):
+                            try:
+                                import json
+                                func_args = json.loads(func_args)
+                            except Exception:
+                                func_args = {}
+                        try:
+                            res = await session.call_tool(func_name, func_args)
+                            # Convert result to string
+                            res_text = res.content[0].text if res.content and hasattr(res.content[0], 'text') else str(res)
+                        except Exception as e:
+                            res_text = f"Error executing tool {func_name}: {e}"
+                        results.append((func_name, res_text))
+                return results
 
-    def _execute_agent_tool(self, result: ChatResult) -> None:
-        """Executes a pandas query on behalf of the AI and feeds the result back into the chat loop."""
-        self._loop_count += 1
-        if self._loop_count > 3:
-            self.error_occurred.emit("Agent loop exceeded maximum turns (3).")
-            return
-
-        if not self._dfs or (result.target_dataframe and result.target_dataframe not in self._dfs):
-            res_str = f"Error: Target dataframe '{result.target_dataframe}' not found."
-        else:
-            df_name = result.target_dataframe if result.target_dataframe else self._active_df_name
-            if not df_name:
-                df_name = list(self._dfs.keys())[0]
-            df = self._dfs[df_name]
-
+            self.thinking_changed.emit(True, "Executing tools...")
             try:
-                import pandas as pd
-                import numpy as np
-                local_vars = {"df": df, "pd": pd, "np": np}
-                # Safely evaluate pandas expression
-                res_obj = eval(result.query, {"__builtins__": {}}, local_vars)
-                res_str = str(res_obj)
+                results = asyncio.run(run_tools())
+                
+                # Append tool results to conversation
+                for name, res_text in results:
+                    tool_msg = f"Tool '{name}' Execution Result:\n```\n{res_text}\n```"
+                    self._conversation.add_message("user", tool_msg, is_hidden=True)
+                    self.tool_execution_received.emit(name, res_text)
+                self._save_history_to_file()
+                
+                # Trigger the next turn
+                self._pending_response = ""
+                messages = self._build_messages("")
+                self._client.chat(
+                    model=self._model,
+                    messages=messages,
+                    on_chunk=self._on_chunk,
+                    on_done=self._on_done,
+                    on_error=self._on_error,
+                    tools=self._mcp_tools_cache,
+                    parent=self,
+                )
             except Exception as e:
-                res_str = f"Error evaluating query: {e}"
-
-        # Inject result as a tool/system message
-        tool_msg = f"Tool Execution Result:\n```\n{res_str}\n```"
-        self._conversation.add_message("user", tool_msg)
-        self._save_history_to_file()
+                self.error_occurred.emit(f"Error calling MCP tools: {e}")
+            return
+            
+        # If no tool calls, output text answer.
+        # Check if there are any pending plot configs from tool executions
+        plot_configs = getattr(self, '_pending_plots', [])
+        self._pending_plots = []
         
-        self.tool_execution_received.emit(tool_msg)
+        if plot_configs:
+            # We need to expand any multi-style plot configs (e.g. "plot_style": "box, scatter")
+            expanded_configs = []
+            for cfg in plot_configs:
+                if "_graph_update" in cfg or "_graph_delete" in cfg:
+                    expanded_configs.append(cfg)
+                else:
+                    expanded_configs.extend(expand_all_plot_configs([cfg]))
 
-        # Trigger the next turn
-        self.thinking_changed.emit(True, "Executing query...")
-        
-        self._pending_response = ""
-        messages = self._build_messages("")
-        self._client.chat(
-            model=self._model,
-            messages=messages,
-            on_chunk=self._on_chunk,
-            on_done=self._on_done,
-            on_error=self._on_error,
-            parent=self,
-        )
+            result = ChatResult(
+                action="plot",
+                explanation=full_text or "Executing graph commands...",
+                plot_config=expanded_configs,
+                text_summary=full_text,
+            )
+        else:
+            result = ChatResult(
+                action="answer",
+                text_summary=full_text,
+                raw_response=full_text,
+            )
+        self.result_ready.emit(result)
 
     def _on_error(self, message: str) -> None:
         self.thinking_changed.emit(False, "Thinking")
         self.error_occurred.emit(message)
 
-    # ------------------------------------------------------------------
-    # Response parser
-    # ------------------------------------------------------------------
 
-    def _parse_response(self, raw: str) -> ChatResult:
-        """Convert the raw LLM JSON string into a ``ChatResult``.
-
-        If the JSON cannot be parsed we fall back to returning the raw
-        text as an "answer" so the user always sees something useful.
-        """
-        data = None
-
-        # 0. Strip leading/trailing whitespace
-        raw = raw.strip()
-
-        # 1. Extract JSON from markdown code fences (handles small models
-        #    that wrap output in ```json ... ``` despite instructions)
-        #    Try the structured extraction first (preserves inner backticks)
-        fence_match = re.search(
-            r"```(?:json)?\s*\n?(.*?)\n?```", raw, re.DOTALL
-        )
-        if fence_match:
-            # Use the content inside fences for initial parse attempt
-            fenced_content = fence_match.group(1).strip()
-            try:
-                data = json.loads(fenced_content)
-            except json.JSONDecodeError:
-                pass
-
-        # 2. Try parsing the raw text directly (or fenced content if
-        #    step 1 failed to produce valid JSON)
-        if not data:
-            # Strip all markdown fences and try again
-            clean = re.sub(r"```(?:json)?\s*|```", "", raw).strip()
-            try:
-                data = json.loads(clean)
-            except json.JSONDecodeError:
-                pass
-
-        # 3. Fallback to greedy regex for a JSON object
-        if not data:
-            clean = re.sub(r"```(?:json)?\s*|```", "", raw).strip()
-            match = re.search(r"\{.*\}", clean, re.DOTALL)
-            if match:
-                try:
-                    data = json.loads(match.group())
-                except json.JSONDecodeError:
-                    pass
-
-        # 4. Give up and return raw text
-        if not data:
-            return ChatResult(
-                action="answer",
-                explanation="(Could not parse structured response)",
-                text_summary=raw,
-                raw_response=raw,
-            )
-
-        if isinstance(data, list):
-            if len(data) > 0 and isinstance(data[0], dict):
-                data = data[0]
-            else:
-                return ChatResult(
-                    action="answer",
-                    explanation="",
-                    text_summary=raw,
-                    raw_response=raw,
-                )
-                
-        # Handle variations from different models
-        if "plot_config" not in data and "graph_configurations" in data:
-            data["plot_config"] = data["graph_configurations"]
-
-        # ── Normalize small-model output patterns ─────────────────────────
-        # Small models often use wrong key names. Fix them here.
-        data = self._normalize_small_model_output(data)
-
-        action      = data.get("action")
-        # Infer action if missing but plot_config is present
-        if not action:
-            if "plot_config" in data:
-                action = "plot"
-            elif "query" in data:
-                action = "query"
-            else:
-                action = "answer"
-
-        explanation = data.get("explanation", "")
-        
-        # Determine target dataframe
-        target_name = data.get("target_dataframe")
-        df = None
-        if target_name and target_name in self._dfs:
-            df = self._dfs[target_name]
-        elif self._active_df_name and self._active_df_name in self._dfs:
-            df = self._dfs[self._active_df_name]
-            target_name = self._active_df_name
-        elif self._dfs:
-            target_name = list(self._dfs.keys())[0]
-            df = self._dfs[target_name]
-
-        result      = ChatResult(
-            action=action, 
-            explanation=explanation, 
-            raw_response=raw, 
-            query=data.get("query", ""), 
-            target_dataframe=target_name
-        )
-
-        if action == "filter":
-            if df is None:
-                result.action = "answer"
-                result.text_summary = explanation or "No dataframe loaded to apply the filter."
-            else:
-                result = self._execute_filter(data, result, df, target_name)
-
-        elif action == "statistics":
-            if df is None:
-                result.action = "answer"
-                result.text_summary = explanation or "No dataframe loaded to calculate statistics."
-            else:
-                result = self._execute_statistics(data, result, df, target_name)
-
-        elif action in ("plot", "update", "delete"):
-            configs = []
-            summary_parts = []
-            
-            # 1. Process deletes
-            graph_delete = data.get("graph_delete")
-            if graph_delete and isinstance(graph_delete, dict):
-                configs.append({"_graph_delete": graph_delete})
-                summary_parts.append("Deleting requested graphs.")
-                
-            # 2. Process updates
-            graph_update = data.get("graph_update")
-            if isinstance(graph_update, dict):
-                graph_update = [graph_update]
-            if graph_update and isinstance(graph_update, list):
-                gu_count = 0
-                for gu in graph_update:
-                    if not isinstance(gu, dict): continue
-                    gid = gu.get("graph_id")
-                    if str(gid).lower() == "all":
-                        for open_gid in self._graphs.keys():
-                            gu_copy = dict(gu)
-                            gu_copy["graph_id"] = open_gid
-                            configs.append({"_graph_update": gu_copy})
-                            gu_count += 1
-                    else:
-                        configs.append({"_graph_update": gu})
-                        gu_count += 1
-                if gu_count > 0:
-                    summary_parts.append(f"Updating {gu_count} graph(s).")
-                    
-            # 3. Process new plots
-            plot_cfg = data.get("plot_config")
-            if plot_cfg:
-                if isinstance(plot_cfg, dict):
-                    plot_cfg = [plot_cfg]
-                if isinstance(plot_cfg, list):
-                    # Inject df_name before expansion
-                    for cfg in plot_cfg:
-                        if isinstance(cfg, dict):
-                            cfg["df_name"] = target_name
-                    expanded = expand_all_plot_configs(
-                        [c for c in plot_cfg if isinstance(c, dict)]
-                    )
-                    if expanded:
-                        configs.extend(expanded)
-                        summary_parts.append(f"Generated {len(expanded)} plot configuration(s).")
-
-            if configs:
-                result.plot_config = configs
-                result.text_summary = explanation + "\n\n" + "\n".join(summary_parts) if explanation else "\n".join(summary_parts)
-                # Ensure action is 'plot' so the View iterates over configs
-                result.action = "plot"
-            else:
-                result.action = "answer"
-                result.text_summary = "No valid graph operations found in the response."
-
-        else:   # "answer" or unknown
-            result.text_summary = data.get("answer_text") or explanation or raw
-
-        return result
-
-    # Valid plot styles accepted by the workspace
-    VALID_PLOT_STYLES = {'point', 'scatter', 'box', 'bar', 'line',
-                         'trendline', 'histogram', 'wafer', '2Dmap'}
-
-
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _normalize_small_model_output(data: dict) -> dict:
-        """Normalize common small-model JSON output mistakes.
-
-        Small local models (qwen2.5-coder:7b, qwen3:8b, etc.) often produce
-        JSON with wrong key names or structures.  This method repairs the
-        most common patterns so the downstream parser can handle them.
-
-        Fixes applied (in order):
-        1. ``"plots"`` or ``"graphs"`` → ``"plot_config"``
-        2. ``"type"`` or ``"chart_type"`` → ``"plot_style"`` (per config entry)
-        3. ``"filter"`` (string) → ``"filters"`` (list)
-        4. Missing ``"action"`` inferred from content
-        5. Duplicate top-level keys (take last value)
-        6. ``"axis_limits"`` → inline ``xmin/xmax/ymin/ymax``
-        """
-        if not isinstance(data, dict):
-            return data
-
-        # 1. Rename "plots"/"graphs" → "plot_config"
-        for alt_key in ("plots", "graphs", "graph_configurations"):
-            if alt_key in data and "plot_config" not in data:
-                data["plot_config"] = data.pop(alt_key)
-
-        # 2. Normalize each plot_config entry
-        plot_cfg = data.get("plot_config")
-        if isinstance(plot_cfg, list):
-            for cfg in plot_cfg:
-                if not isinstance(cfg, dict):
-                    continue
-                # "type"/"chart_type" → "plot_style"
-                for type_key in ("type", "chart_type", "style"):
-                    if type_key in cfg and "plot_style" not in cfg:
-                        cfg["plot_style"] = cfg.pop(type_key)
-
-                # "filter" (string) → "filters" (list)
-                if "filter" in cfg and "filters" not in cfg:
-                    f_val = cfg.pop("filter")
-                    if isinstance(f_val, str) and f_val.strip():
-                        cfg["filters"] = [f_val]
-                    elif isinstance(f_val, list):
-                        cfg["filters"] = f_val
-
-                # "filters" as a string → wrap in list
-                if "filters" in cfg and isinstance(cfg["filters"], str):
-                    s = cfg["filters"].strip()
-                    cfg["filters"] = [s] if s else []
-
-                # "axis_limits" → inline limits
-                if "axis_limits" in cfg:
-                    limits = cfg.pop("axis_limits")
-                    if isinstance(limits, dict):
-                        # Handle both {"xmin": 0, "xmax": 10} and {"x": [0, 10], "y": [0, 1]}
-                        for lim_key in ("xmin", "xmax", "ymin", "ymax", "zmin", "zmax"):
-                            if lim_key in limits and lim_key not in cfg:
-                                cfg[lim_key] = limits[lim_key]
-                        # Handle axis_limits.x = [min, max] format
-                        for axis in ("x", "y", "z"):
-                            if axis in limits and isinstance(limits[axis], (list, tuple)) and len(limits[axis]) >= 2:
-                                min_key = f"{axis}min"
-                                max_key = f"{axis}max"
-                                if min_key not in cfg:
-                                    cfg[min_key] = limits[axis][0]
-                                if max_key not in cfg:
-                                    cfg[max_key] = limits[axis][1]
-
-                # "color" → "color_palette"
-                if "color" in cfg and "color_palette" not in cfg:
-                    cfg["color_palette"] = cfg.pop("color")
-                if "palette" in cfg and "color_palette" not in cfg:
-                    cfg["color_palette"] = cfg.pop("palette")
-
-                # "columns" or "axes" with x/y → promote
-                if "columns" in cfg and isinstance(cfg["columns"], dict):
-                    cols = cfg.pop("columns")
-                    for k in ("x", "y", "z"):
-                        if k in cols and k not in cfg:
-                            cfg[k] = cols[k]
-
-        # 3. Also normalize graph_update entries
-        graph_update = data.get("graph_update")
-        if isinstance(graph_update, list):
-            for gu in graph_update:
-                if not isinstance(gu, dict):
-                    continue
-                for type_key in ("type", "chart_type", "style"):
-                    if type_key in gu and "plot_style" not in gu:
-                        gu["plot_style"] = gu.pop(type_key)
-                if "filter" in gu and "filters" not in gu:
-                    f_val = gu.pop("filter")
-                    if isinstance(f_val, str) and f_val.strip():
-                        gu["filters"] = [f_val]
-
-        # 4. Infer missing action
-        if "action" not in data:
-            if "plot_config" in data:
-                data["action"] = "plot"
-            elif "query" in data:
-                data["action"] = "query"
-            elif "graph_update" in data:
-                data["action"] = "update"
-            elif "graph_delete" in data:
-                data["action"] = "delete"
-            elif "answer_text" in data:
-                data["action"] = "answer"
-            else:
-                data["action"] = "answer"
-
-        return data
-
-    # ------------------------------------------------------------------
-
-    def _execute_filter(self, data: dict, result: ChatResult, df: pd.DataFrame, name: str) -> ChatResult:
-        """Run df.query() with the expression provided by the LLM.
-
-        Delegates to :func:`~spectroview.ai_agent.tools.dataframe_tool.safe_query`.
-        """
-        query_expr = data.get("query", "")
-        if not query_expr:
-            result.action = "answer"
-            result.text_summary = result.explanation or "No filter expression provided."
-            return result
-
-        filtered, error = safe_query(df, query_expr)
-        if error:
-            result.action       = "answer"
-            result.text_summary = (
-                f"Could not apply filter `{query_expr}` on {name}:\n{error}\n\n"
-                "Please rephrase your question."
-            )
-        else:
-            result.dataframe    = filtered
-            result.text_summary = (
-                f"{len(filtered)} row(s) match `{query_expr}` in {name}"
-                f" (out of {len(df)})"
-            )
-        return result
-
-    def _execute_statistics(self, data: dict, result: ChatResult, df: pd.DataFrame, name: str) -> ChatResult:
-        """Run df.describe() on the requested columns.
-
-        Delegates to :func:`~spectroview.ai_agent.tools.dataframe_tool.safe_describe`.
-        Falls back to all numeric columns when the LLM provides no column list.
-        """
-        columns: list[str] = data.get("stat_columns") or []
-
-        # Fall back to all numeric columns when none are specified
-        if not columns:
-            columns = list(df.select_dtypes("number").columns)
-
-        stats_df, error = safe_describe(df, columns)
-        if error or stats_df.empty:
-            # Second fallback: all numeric columns
-            num_cols = list(df.select_dtypes("number").columns)
-            if num_cols and num_cols != columns:
-                stats_df, error = safe_describe(df, num_cols)
-
-        if error or stats_df.empty:
-            result.action       = "answer"
-            result.text_summary = error or "No numeric columns found for statistics."
-        else:
-            result.text_summary = stats_df.to_string()
-            result.dataframe    = stats_df
-
-        return result

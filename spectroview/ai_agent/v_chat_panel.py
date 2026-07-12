@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
     QSplitter, QTextBrowser
 )
 import markdown
-from PySide6.QtCore import Qt, Signal, QTimer, QSize, QSettings, QThread
+from PySide6.QtCore import Qt, Signal, QTimer, QSize, QSettings, QThread, QObject
 from PySide6.QtGui import QFont, QIcon, QKeyEvent, QColor, QPalette, QTextCursor
 
 from spectroview import ICON_DIR
@@ -1024,25 +1024,38 @@ class VChatPanel(QDialog):
         self._active_card = None
                 
         # Rebuild from vm conversation
+        current_ai_card = None
         for i, msg in enumerate(self.vm._conversation.messages):
+            if msg.get("is_hidden"):
+                continue
+
             if msg["role"] == "user":
                 self._add_user_card(msg["content"], msg.get("reply_to_index"), timestamp=msg.get("timestamp"))
+                current_ai_card = None
             elif msg["role"] == "assistant":
-                # Parse the raw JSON into a structured result
-                result = self.vm._parse_response(msg["content"])
+                content = msg["content"]
+                result = None
+                friendly_text = content
                 
-                # Use explanation (or text_summary) as the main text
-                friendly_text = result.explanation or result.text_summary or msg["content"]
-                if result.text_summary and result.action in ("statistics", "answer"):
-                    friendly_text = (result.explanation or "") + "\n\n" + result.text_summary
+                if "{" in content and "}" in content and '"action"' in content:
+                    result = self.vm._parse_response(content)
+                    friendly_text = result.explanation or result.text_summary or content
+                    if result.text_summary and result.action in ("statistics", "answer"):
+                        friendly_text = (result.explanation or "") + "\n\n" + result.text_summary
                     
-                card = self._add_ai_card(friendly_text, timestamp=msg.get("timestamp"))
-                card.reply_clicked.connect(lambda text, idx=i: self._on_reply_clicked(idx, text))
+                if not current_ai_card:
+                    current_ai_card = self._add_ai_card(friendly_text, timestamp=msg.get("timestamp"))
+                    current_ai_card.reply_clicked.connect(lambda text, idx=i: self._on_reply_clicked(idx, text))
+                else:
+                    # Append text to existing card
+                    current = current_ai_card.content_view.toPlainText() if hasattr(current_ai_card.content_view, 'toPlainText') else current_ai_card.content_view.text()
+                    if friendly_text:
+                        current_ai_card.set_text(current + "\n\n" + friendly_text)
                 
                 # If it's a plot/update/delete intent, add the re-apply button
-                if result.plot_config and result.action in ("plot", "update", "delete"):
+                if result and result.plot_config and result.action in ("plot", "update", "delete"):
                     cfgs = result.plot_config if isinstance(result.plot_config, list) else [result.plot_config]
-                    btn = QPushButton(" Re-apply plot suggestions")
+                    btn = QPushButton(f"📊 Re-apply {len(cfgs)} plot suggestion{'s' if len(cfgs) > 1 else ''}")
                     btn.setIcon(QIcon(os.path.join(ICON_DIR, "plot-chart.png")))
                     btn.setIconSize(QSize(16, 16))
                     btn.setStyleSheet("""
@@ -1110,8 +1123,6 @@ class VChatPanel(QDialog):
         if self._active_card:
             # Set the explanation as the main text
             self._active_card.set_text(result.explanation or result.text_summary)
-            if result.raw_response:
-                self._active_card.set_raw_response(result.raw_response)
 
         # If a DataFrame was returned, attach a preview table below the bubble
         if result.dataframe is not None and not result.dataframe.empty:
@@ -1133,7 +1144,7 @@ class VChatPanel(QDialog):
                 self.plot_requested.emit(cfg)
 
             if result.action == "plot":
-                btn = QPushButton(f"📊 Re-apply plot suggestion{'s' if len(cfgs) > 1 else ''}")
+                btn = QPushButton(f"📊 Re-apply {len(cfgs)} plot suggestion{'s' if len(cfgs) > 1 else ''}")
                 btn.setMaximumWidth(220)
                 btn.setStyleSheet(
                     "QPushButton { background: #283593; color: white; border-radius: 4px; padding: 4px 8px; }"
@@ -1154,14 +1165,10 @@ class VChatPanel(QDialog):
         self._insert_before_stretch(card)
         self._scroll_to_bottom()
 
-    def _on_tool_execution(self, text: str) -> None:
-        # Add the tool execution result as a user-side card
-        self._add_user_card(text, timestamp=datetime.now().isoformat())
-        
-        # Prepare the next AI placeholder bubble for the subsequent reasoning stream
-        ai_msg_idx = self.vm._conversation.message_count + 1 
-        self._active_card = self._add_ai_card("", timestamp=datetime.now().isoformat())
-        self._active_card.reply_clicked.connect(lambda text, idx=ai_msg_idx: self._on_reply_clicked(idx, text))
+    def _on_tool_execution(self, name: str, result_text: str) -> None:
+        # Update the thinking status
+        self._on_thinking_changed(True, f"Executed tool '{name}'...")
+        self._scroll_to_bottom()
 
     # ------------------------------------------------------------------
     # Internal helpers

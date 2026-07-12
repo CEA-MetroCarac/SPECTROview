@@ -22,13 +22,14 @@ class MConversation:
     def message_count(self) -> int:
         return len(self.messages)
 
-    def add_message(self, role: str, content: str, reply_to_index: Optional[int] = None) -> None:
+    def add_message(self, role: str, content: str, reply_to_index: Optional[int] = None, is_hidden: bool = False) -> None:
         """Add a new message to the conversation."""
         self.messages.append({
             "role": role,
             "content": content,
             "timestamp": datetime.now().isoformat(),
-            "reply_to_index": reply_to_index
+            "reply_to_index": reply_to_index,
+            "is_hidden": is_hidden
         })
         self.modified_at = datetime.now().isoformat()
         

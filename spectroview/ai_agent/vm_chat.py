@@ -108,6 +108,7 @@ class VMChat(QObject):
     result_ready     = Signal(object)       # ChatResult
     error_occurred   = Signal(str)
     conversation_changed = Signal(str)
+    tool_execution_received = Signal(str)
 
     # Maximum number of message pairs kept in context (user + assistant each)
     MAX_HISTORY_PAIRS = 6
@@ -397,6 +398,7 @@ class VMChat(QObject):
         
         # ── Multi-Turn ReAct Loop ──
         if result.action == "query" and result.query:
+            self.result_ready.emit(result)
             self._execute_agent_tool(result)
         else:
             self.result_ready.emit(result)
@@ -405,9 +407,7 @@ class VMChat(QObject):
         """Executes a pandas query on behalf of the AI and feeds the result back into the chat loop."""
         self._loop_count += 1
         if self._loop_count > 3:
-            result.action = "answer"
-            result.explanation = "Agent loop exceeded maximum turns (3)."
-            self.result_ready.emit(result)
+            self.error_occurred.emit("Agent loop exceeded maximum turns (3).")
             return
 
         if not self._dfs or (result.target_dataframe and result.target_dataframe not in self._dfs):
@@ -432,6 +432,8 @@ class VMChat(QObject):
         tool_msg = f"Tool Execution Result:\n```\n{res_str}\n```"
         self._conversation.add_message("user", tool_msg)
         self._save_history_to_file()
+        
+        self.tool_execution_received.emit(tool_msg)
 
         # Trigger the next turn
         self.thinking_changed.emit(True, "Executing query...")

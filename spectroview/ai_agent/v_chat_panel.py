@@ -595,6 +595,7 @@ class VChatPanel(QDialog):
         self.vm.result_ready.connect(self._on_result_ready)
         self.vm.error_occurred.connect(self._on_error)
         self.vm.conversation_changed.connect(self._on_conversation_changed)
+        self.vm.tool_execution_received.connect(self._on_tool_execution)
 
     # ------------------------------------------------------------------
     # Public API — called from main.py / VWorkspaceGraphs
@@ -955,6 +956,15 @@ class VChatPanel(QDialog):
         card = _MessageCard(message, "error")
         self._insert_before_stretch(card)
         self._scroll_to_bottom()
+
+    def _on_tool_execution(self, text: str) -> None:
+        # Add the tool execution result as a user-side card
+        self._add_user_card(text, timestamp=datetime.now().isoformat())
+        
+        # Prepare the next AI placeholder bubble for the subsequent reasoning stream
+        ai_msg_idx = self.vm._conversation.message_count + 1 
+        self._active_card = self._add_ai_card("", timestamp=datetime.now().isoformat())
+        self._active_card.reply_clicked.connect(lambda text, idx=ai_msg_idx: self._on_reply_clicked(idx, text))
 
     # ------------------------------------------------------------------
     # Internal helpers

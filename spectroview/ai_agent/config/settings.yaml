@@ -1,0 +1,64 @@
+# SPECTROview AI Agent — Prompt Assembly Settings
+#
+# This file controls how the PromptManager assembles the system prompt.
+# All settings here are developer-facing and version-controllable.
+# They can be changed without modifying any Python source code.
+
+# ---------------------------------------------------------------------------
+# Caching
+# ---------------------------------------------------------------------------
+# Enable in-memory caching of loaded Markdown files.
+# When true, each .md file is read from disk once and cached.
+# Auto-reload (below) can still invalidate stale cache entries.
+enable_cache: true
+
+# ---------------------------------------------------------------------------
+# Auto-reload (development mode)
+# ---------------------------------------------------------------------------
+# When true, the PromptManager checks the file modification timestamp
+# before serving a cached file. If the file has been modified since last
+# read, the cache is invalidated and the file is reloaded from disk.
+#
+# Set to true during development so prompt edits take effect immediately
+# without restarting the application.
+# Set to false in production to eliminate the OS stat() call overhead.
+auto_reload: true
+
+# ---------------------------------------------------------------------------
+# Example inclusion
+# ---------------------------------------------------------------------------
+# When true, the PromptManager includes relevant few-shot example files
+# when building the prompt (e.g., plotting_examples.md for plot intents).
+# Disable to reduce prompt token count with capable models.
+enable_examples: true
+
+# ---------------------------------------------------------------------------
+# Knowledge inclusion
+# ---------------------------------------------------------------------------
+# When true, the PromptManager includes relevant knowledge files
+# (e.g., features.md) when building the prompt.
+enable_knowledge: true
+
+# ---------------------------------------------------------------------------
+# Prompt debug logging
+# ---------------------------------------------------------------------------
+# When true, the fully assembled system prompt is printed to stdout
+# (or the application log) every time it is built.
+# Useful for verifying prompt content during development.
+# Always set to false in production.
+debug_prompt: false
+
+# ---------------------------------------------------------------------------
+# Intent detection
+# ---------------------------------------------------------------------------
+# When true, the PromptManager attempts to detect the user's intent from
+# the last user message and selects prompt components accordingly.
+# When false, uses the default "chat" intent for all requests
+# (equivalent to the pre-refactoring behavior).
+#
+# Currently supported intent keywords:
+#   "plot" | "chart" | "graph" | "wafer" | "map" → plotting intent
+#   "fit" | "peak" | "fwhm" | "lorentzian" | "gaussian" → fitting intent
+#   "code" | "script" | "python" | "pandas" → coding intent
+#   (all others) → chat intent
+enable_intent_detection: false

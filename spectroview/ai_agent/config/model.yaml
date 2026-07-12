@@ -1,0 +1,48 @@
+# SPECTROview AI Agent — Model Configuration Defaults
+#
+# This file defines default LLM model settings for the AI Agent.
+# These are developer-facing defaults only. They do NOT override
+# runtime settings (API keys, selected provider/model) stored in
+# QSettings. Runtime settings set via the application Settings dialog
+# always take precedence.
+#
+# Purpose: provide version-controllable, reviewable defaults that are
+# read once at PromptManager initialisation and applied when no
+# runtime value has been set by the user.
+
+# ---------------------------------------------------------------------------
+# Provider selection
+# ---------------------------------------------------------------------------
+# Default LLM provider when none is configured at runtime.
+# Valid values: Ollama | OpenAI | Gemini | DeepSeek | Anthropic | Custom
+default_provider: Ollama
+
+# Default model name sent to the provider.
+# For Ollama: model name as listed by `ollama list` (e.g., qwen2.5-coder:7b)
+# For OpenAI: model ID (e.g., gpt-4o-mini)
+# For Gemini: model ID (e.g., gemini-1.5-flash)
+# For Anthropic: model ID (e.g., claude-3-haiku-20240307)
+default_model: qwen2.5-coder:7b
+
+# ---------------------------------------------------------------------------
+# Sampling parameters
+# ---------------------------------------------------------------------------
+# Lower values (0.1–0.3) produce more deterministic, consistent JSON output.
+# Higher values (0.7–1.0) increase creativity (not recommended for structured output).
+temperature: 0.2
+
+# Maximum number of tokens the model may generate in a single response.
+# Increase if you experience truncated JSON responses.
+max_tokens: 81920
+
+# ---------------------------------------------------------------------------
+# Context management
+# ---------------------------------------------------------------------------
+# Maximum number of past conversation messages to include in each API call.
+# null = no cap (all messages are sent, limited only by the provider's context window).
+# Set an integer (e.g., 20) to limit context for faster inference on small models.
+max_context_messages: null
+
+# Timeout in seconds for a single LLM API call.
+# Set to null for no timeout (not recommended for production use).
+request_timeout_seconds: 120

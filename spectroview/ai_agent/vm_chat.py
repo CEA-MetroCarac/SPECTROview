@@ -5,7 +5,10 @@ ViewModel layer for the AI Chat feature.
 
 Responsibilities
 ----------------
-* Build a rich system prompt from the active DataFrame schema.
+* Build a rich system prompt by delegating to ``PromptManager`` which
+  loads modular Markdown files from ``ai_agent/prompts/``, ``rules/``,
+  ``knowledge/``, and ``examples/`` — no large prompt strings are
+  hard-coded here.
 * Manage the multi-turn conversation history.
 * Delegate the actual LLM call to ``LLMClient`` (Ollama or cloud API).
 * Parse the LLM response and emit strongly-typed result signals so the
@@ -17,6 +20,13 @@ MVVM contract
 -------------
 The View calls public methods; the ViewModel responds exclusively through
 signals.  No Qt widgets are imported here.
+
+Prompt engineering
+------------------
+All prompts, rules, knowledge, and examples are defined in Markdown files
+under ``ai_agent/prompts/``, ``ai_agent/rules/``, ``ai_agent/knowledge/``,
+and ``ai_agent/examples/``.  Modify those files to change AI behaviour
+without touching this Python file.
 """
 
 from __future__ import annotations
@@ -34,6 +44,14 @@ from PySide6.QtCore import QObject, Signal, QSettings
 from spectroview.ai_agent.m_llm_client import LLMClient, API_PROVIDERS
 from spectroview.ai_agent.m_conversation import MConversation
 from spectroview.ai_agent.m_conversation_store import MConversationStore
+from spectroview.ai_agent.m_prompt_manager import PromptManager
+from spectroview.ai_agent.tools.dataframe_tool import (
+    build_schema_info,
+    build_graphs_info,
+    safe_query,
+    safe_describe,
+)
+from spectroview.ai_agent.tools.plot_tool import expand_all_plot_configs
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -114,6 +132,11 @@ class VMChat(QObject):
         self.conversation_store = MConversationStore(self._history_folder)
         self._conversation = self.conversation_store.create_conversation()
         self.max_context_messages: Optional[int] = None # None means no cap
+
+        # ── Prompt engineering ───────────────────────────────────────────
+        # PromptManager loads Markdown files from the ai_agent/ subdirectories.
+        # To change AI behaviour, edit the .md files — not this file.
+        self._prompt_mgr = PromptManager()
 
     # ------------------------------------------------------------------
     # Public API — called by VChatPanel
@@ -258,142 +281,97 @@ class VMChat(QObject):
 
     def _build_messages(self, user_text: str) -> List[Dict[str, str]]:
         """Assemble the full message list = system prompt + conversation history."""
-        system_prompt = self._build_system_prompt()
+        system_prompt = self._build_system_prompt(user_message=user_text)
         messages = [{"role": "system", "content": system_prompt}]
 
         messages += self._conversation.to_llm_messages(self.max_context_messages)
 
         return messages
 
-    def _build_system_prompt(self) -> str:
-        """Inject DataFrame schemas, a sample, and instructions into the system message."""
-        dfs_info = []
-        
+    def _build_system_prompt(self, user_message: str = "") -> str:
+        """Assemble the system prompt from modular Markdown files + dynamic DataFrame/graph context.
+
+        The static portions (identity, JSON schema, rules, knowledge) are loaded
+        from the ``ai_agent/`` subdirectories by :class:`PromptManager`.  Only the
+        dynamic sections — DataFrame schemas and open-graph summaries — are
+        computed here at request time and injected via ``str.format()``.
+
+        To change AI behaviour, edit the Markdown files in::
+
+            spectroview/ai_agent/prompts/
+            spectroview/ai_agent/rules/
+            spectroview/ai_agent/knowledge/
+            spectroview/ai_agent/examples/
+
+        Parameters
+        ----------
+        user_message:
+            The latest user message (used for optional intent detection).
+        """
+        # ── 1. Build dynamic context from live DataFrames and open graphs ─
+        dfs_info_parts: list[str] = []
         for name, df in self._dfs.items():
-            col_info_lines = []
+            col_info_lines: list[str] = []
             for col in df.columns:
                 dtype = str(df[col].dtype)
                 sample_vals = df[col].dropna().unique()[:3].tolist()
-                col_info_lines.append(f"    - {col!r} ({dtype}): sample values {sample_vals}")
+                col_info_lines.append(
+                    f"    - {col!r} ({dtype}): sample values {sample_vals}"
+                )
             col_info = "\n".join(col_info_lines)
-            
             try:
                 preview = df.head(3).to_string(max_cols=8)
             except Exception:
                 preview = "(preview unavailable)"
-                
-            dfs_info.append(
+            dfs_info_parts.append(
                 f"DATAFRAME: {name!r} ({len(df)} rows, {len(df.columns)} columns)\n"
                 f"  Columns:\n{col_info}\n"
                 f"  Preview:\n{preview}"
             )
 
-        dfs_section = "\n\n".join(dfs_info)
-        active_info = f"\nThe currently active DataFrame in the UI is: {self._active_df_name!r}.\n" if self._active_df_name else ""
+        dataframes_section = "\n\n".join(dfs_info_parts) if dfs_info_parts else "No DataFrames are currently loaded."
+        active_df_info = (
+            f"\nThe currently active DataFrame in the UI is: {self._active_df_name!r}.\n"
+            if self._active_df_name else ""
+        )
 
-        # Build open-graphs summary for the AI
+        # Open-graphs summary
         if self._graphs:
-            graph_lines = []
+            graph_lines: list[str] = []
             for gid, info in sorted(self._graphs.items()):
                 y_str = info['y'][0] if isinstance(info['y'], list) and info['y'] else info['y']
                 z_str = f", z={info['z']!r}" if info['z'] else ""
                 filt_str = f", filters={info['filters']!r}" if info.get('filters') else ""
                 graph_lines.append(
-                    f"  Graph ID {gid}: style={info['style']!r}, x={info['x']!r}, y={y_str!r}{z_str}{filt_str}, df={info['df']!r}"
+                    f"  Graph ID {gid}: style={info['style']!r}, "
+                    f"x={info['x']!r}, y={y_str!r}{z_str}{filt_str}, "
+                    f"df={info['df']!r}"
                 )
             graphs_info = "CURRENTLY OPEN GRAPHS:\n" + "\n".join(graph_lines) + "\n"
         else:
             graphs_info = "No graphs are currently open.\n"
 
-        return f"""You are an expert data analyst assistant embedded in SPECTROview, \
-a scientific spectroscopy application.
-The user has the following pandas DataFrames loaded:
+        # ── 2. Assemble static prompt from Markdown files ─────────────────
+        static_prompt = self._prompt_mgr.build_prompt(
+            intent="chat",
+            user_message=user_message,
+            prompts=["system", "chat", "plotting"],
+            rules=["general", "plotting", "spectroview"],
+            knowledge=["features"],
+        )
 
-{dfs_section}
-{active_info}
-{graphs_info}
-YOUR JOB: Analyse the user's natural-language question and respond with ONLY a valid \
-JSON object — no markdown fences, no explanatory text outside the JSON.
-
-The JSON must have this exact structure:
-{{
-  "action": "<one of: filter | statistics | plot | update | delete | answer>",
-  "explanation": "<short human-readable description of what you are doing>",
-  "target_dataframe": "<name of the dataframe to operate on, or null>",
-  "query": "<valid pandas .query() expression using column names, or null>",
-  "stat_columns": ["<col1>", "<col2>"],
-  "graph_update": [
-    {{
-      "graph_id": <integer graph ID to modify, or "all" to apply to all open graphs>,
-      "properties": {{
-        "ymin": 3.6,
-        "ymax": 4.2,
-        "plot_title": "New title",
-        "plot_style": "scatter",
-        "filters": ["Quadrant != 'Q4'"]
-      }}
-    }}
-  ] or null,
-  "graph_delete": {{
-    "delete_all": false,
-    "graph_ids": [1, 2, 3]
-  }} or null,
-  "plot_config": [
-    {{
-      "x": "<column name for X axis>",
-      "y": "<column name for primary Y axis>",
-      "z": "<column name for hue/color grouping, or null>",
-      "filters": ["<valid pandas .query() string, e.g. \"Quadrant != 'Q4'\", or null>"],
-      "plot_style": "<one of: point scatter box bar line trendline histogram wafer 2Dmap, or multiple separated by comma like 'box, bar'>",
-      "plot_title": "<title text or null>",
-      "xlabel": "<X axis label or null>",
-      "ylabel": "<Y axis label or null>",
-      "zlabel": "<Z/color axis label or null>",
-      "xmin": "<min X value (number) or null>",
-      "xmax": "<max X value (number) or null>",
-      "ymin": "<min Y value (number) or null>",
-      "ymax": "<max Y value (number) or null>",
-      "zmin": "<min Z value (number) or null>",
-      "zmax": "<max Z value (number) or null>",
-      "xlogscale": false,
-      "ylogscale": false,
-      "grid": false,
-      "x_rot": 0,
-      "legend_visible": true,
-      "legend_outside": false,
-      "color_palette": "<jet (DEFAULT) | viridis | plasma | inferno | magma | coolwarm | RdBu | Spectral | tab10 | Set2 | Set3 or null>",
-      "scatter_size": 70,
-      "join_for_point_plot": false,
-      "dodge_point_plot": true,
-      "show_bar_plot_error_bar": false,
-      "trendline_order": 1,
-      "hist_bins": 20,
-      "hist_kde": false,
-      "plot_width": 480,
-      "plot_height": 420,
-      "dpi": 100
-    }}
-  ] or null,
-  "answer_text": "<plain text answer for general questions, or null>"
-}}
-
-AVAILABLE PLOT STYLES (use EXACTLY these strings): point, scatter, box, bar, line, trendline, histogram, wafer, 2Dmap
-
-RULES:
-- For "filter": set "query" to a valid pandas .query() string (e.g. "fwhm_Si > 5.0").
-- For "statistics": set "stat_columns" to the list of columns to describe.
-- For "plot": fill "plot_config". If plotting multiple styles with identical parameters, output a SINGLE entry in the list and set plot_style to a comma-separated string (e.g., "box, bar, point") for faster generation.
-  CRITICAL: You MUST leave optional fields (like xlabel, ylabel, zlabel, plot_title, xmin, ymin, grid, etc.) as null or omitted UNLESS the user explicitly asks to set them. The system will automatically generate optimal axis labels and titles. Do not invent your own.
-  CRITICAL SPATIAL PLOT RULE: For spatial plots ("wafer" or "2Dmap"), if the user requests plotting multiple specific distinct items (e.g., "plot for slots 5, 6, and 8" or "plot for wafers A and B"), you MUST generate multiple separate entries in the "plot_config" list (one for each item with a specific filter like "Slot == 5") rather than combining them into a single plot with a list filter (e.g. "Slot in [5, 6, 8]"). Spatial plots cannot properly overlay distinct groupings on the same axes.
-- For "answer": set "answer_text" to a plain-text explanation.
-- For updating an existing graph: use action="update" and set "graph_update" as a list of update objects. Set "graph_id" to the specific ID or "all" to update all open graphs. IMPORTANT: If the user asks to "add" a filter, you MUST preserve the existing filters shown in the prompt by including them in the new filters list along with the new filter (e.g., ["old_filter == 1", "new_filter == 2"]).
-- For deleting an existing graph: use action="delete" and set "graph_delete". Set delete_all to true to delete all graphs, or pass specific IDs in graph_ids. For "delete all except 70", pass all open graph IDs EXCEPT 70.
-- Set "target_dataframe" to the exact name of the dataframe you are querying. If not specified by user, use the active one.
-- NEVER use eval(), exec(), or any Python code other than pandas .query() expressions.
-- If the user asks something impossible with this data, use action="answer" to explain why.
-- CONVERSATION MEMORY: You have access to the full conversation history. When the user makes a follow-up request like "add also a scatter plot" or "do the same but with line plot" or "add another plot grouped by Zone", you MUST reuse the same x, y, z columns, target_dataframe, filters, axis limits, and ALL other settings from the previous request or existing graph, unless explicitly overridden.
-  CRITICAL: Do NOT output configuration for plots you have already created in previous turns. ONLY output the newly requested plots.
-- Return ONLY the JSON object, no surrounding text."""
+        # ── 3. Inject dynamic context into the static prompt ──────────────
+        # The static prompt contains {dataframes_section}, {active_df_info},
+        # and {graphs_info} placeholders defined in prompts/system.md.
+        # We use plain str.replace() rather than str.format() so that JSON
+        # examples in other .md files (which contain literal { } braces)
+        # do not cause KeyError exceptions.
+        return (
+            static_prompt
+            .replace("{dataframes_section}", dataframes_section)
+            .replace("{active_df_info}", active_df_info)
+            .replace("{graphs_info}", graphs_info)
+        )
 
     # ------------------------------------------------------------------
     # Worker callbacks (called from the worker QThread via Qt signals)
@@ -514,20 +492,13 @@ RULES:
                 if isinstance(plot_cfg, dict):
                     plot_cfg = [plot_cfg]
                 if isinstance(plot_cfg, list):
-                    expanded = []
+                    # Inject df_name before expansion
                     for cfg in plot_cfg:
-                        if not isinstance(cfg, dict): continue
-                        style_val = cfg.get("plot_style", "")
-                        if isinstance(style_val, str) and "," in style_val:
-                            for s in [s.strip() for s in style_val.split(",")]:
-                                if s in self.VALID_PLOT_STYLES:
-                                    new_cfg = dict(cfg)
-                                    new_cfg["plot_style"] = s
-                                    new_cfg["df_name"] = target_name
-                                    expanded.append(new_cfg)
-                        else:
+                        if isinstance(cfg, dict):
                             cfg["df_name"] = target_name
-                            expanded.append(cfg)
+                    expanded = expand_all_plot_configs(
+                        [c for c in plot_cfg if isinstance(c, dict)]
+                    )
                     if expanded:
                         configs.extend(expanded)
                         summary_parts.append(f"Generated {len(expanded)} plot configuration(s).")
@@ -554,49 +525,55 @@ RULES:
     # ------------------------------------------------------------------
 
     def _execute_filter(self, data: dict, result: ChatResult, df: pd.DataFrame, name: str) -> ChatResult:
-        """Run df.query() with the expression provided by the LLM."""
+        """Run df.query() with the expression provided by the LLM.
+
+        Delegates to :func:`~spectroview.ai_agent.tools.dataframe_tool.safe_query`.
+        """
         query_expr = data.get("query", "")
         if not query_expr:
             result.action = "answer"
             result.text_summary = result.explanation or "No filter expression provided."
             return result
 
-        try:
-            filtered = df.query(query_expr)
+        filtered, error = safe_query(df, query_expr)
+        if error:
+            result.action       = "answer"
+            result.text_summary = (
+                f"Could not apply filter `{query_expr}` on {name}:\n{error}\n\n"
+                "Please rephrase your question."
+            )
+        else:
             result.dataframe    = filtered
             result.text_summary = (
                 f"{len(filtered)} row(s) match `{query_expr}` in {name}"
                 f" (out of {len(df)})"
             )
-        except Exception as exc:
-            result.action       = "answer"
-            result.text_summary = (
-                f"Could not apply filter `{query_expr}` on {name}:\n{exc}\n\n"
-                "Please rephrase your question."
-            )
         return result
 
     def _execute_statistics(self, data: dict, result: ChatResult, df: pd.DataFrame, name: str) -> ChatResult:
-        """Run df.describe() on the requested columns."""
-        columns = data.get("stat_columns") or []
+        """Run df.describe() on the requested columns.
 
-        # Validate columns exist
-        valid_cols = [c for c in columns if c in df.columns]
-        if not valid_cols:
-            # Fall back to numeric columns
-            valid_cols = list(df.select_dtypes("number").columns)
+        Delegates to :func:`~spectroview.ai_agent.tools.dataframe_tool.safe_describe`.
+        Falls back to all numeric columns when the LLM provides no column list.
+        """
+        columns: list[str] = data.get("stat_columns") or []
 
-        if not valid_cols:
-            result.action = "answer"
-            result.text_summary = "No numeric columns found for statistics."
-            return result
+        # Fall back to all numeric columns when none are specified
+        if not columns:
+            columns = list(df.select_dtypes("number").columns)
 
-        try:
-            stats_df = df[valid_cols].describe()
+        stats_df, error = safe_describe(df, columns)
+        if error or stats_df.empty:
+            # Second fallback: all numeric columns
+            num_cols = list(df.select_dtypes("number").columns)
+            if num_cols and num_cols != columns:
+                stats_df, error = safe_describe(df, num_cols)
+
+        if error or stats_df.empty:
+            result.action       = "answer"
+            result.text_summary = error or "No numeric columns found for statistics."
+        else:
             result.text_summary = stats_df.to_string()
             result.dataframe    = stats_df
-        except Exception as exc:
-            result.action       = "answer"
-            result.text_summary = f"Statistics failed: {exc}"
 
         return result

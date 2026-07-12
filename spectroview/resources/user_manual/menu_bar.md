@@ -42,3 +42,10 @@ Click the **Calculator** icon to open a suite of utility calculators. See the "Q
   <img src="../user_manual_images/menu_bar/ui_quick_calculation.png" alt="Quick Calculators UI" width="800"><br>
    <i>The Quick Calculators interface.</i>
 </div>
+
+### **5. Keyboard Shortcuts**
+You can quickly access tools from anywhere in the application using the following keyboard shortcuts:
+- `Ctrl + Shift + A`: Open AI Chat Agent
+- `Ctrl + Shift + S`: Open Settings Panel
+- `Ctrl + Shift + M`: Open User Manual
+- `Ctrl + Shift + C`: Open Quick Calculators

@@ -25,7 +25,7 @@ class VMenuBar(QToolBar):
     clear_requested = Signal()
     convert_requested = Signal()
     calc_requested = Signal()
-    ai_chat_requested = Signal()       # opens the AI Data Chat panel
+    ai_chat_requested = Signal()       # opens the SPECTROview AI Agent panel
     settings_requested = Signal()
     github_requested = Signal()
     theme_selected = Signal(str)       # emits theme key, e.g. "dark" / "soft_dark" / "light"
@@ -56,17 +56,20 @@ class VMenuBar(QToolBar):
         self.actionConvert.triggered.connect(self.convert_requested.emit)
 
         self.actionCalc = self.addAction(QIcon(os.path.join(ICON_DIR, "calc.png")), "Quick Calculators")
+        self.actionCalc.setShortcut("Ctrl+Shift+C")
         self.actionCalc.triggered.connect(self.calc_requested.emit)
 
         self.addSeparator()
-        self.actionAIChat = self.addAction(QIcon(os.path.join(ICON_DIR, "llm_ai.png")), "AI Data Chat")
+        self.actionAIChat = self.addAction(QIcon(os.path.join(ICON_DIR, "llm_ai.png")), "SPECTROview AI Agent")
+        self.actionAIChat.setShortcut("Ctrl+Shift+A")
         self.actionAIChat.setToolTip(
-            "Open AI Data Chat\n"
+            "Open SPECTROview AI Agent\n"
             "Query your fit results using natural language (requires Ollama)"
         )
         self.actionAIChat.triggered.connect(self.ai_chat_requested.emit)
 
         self.actionSettings= self.addAction(QIcon(os.path.join(ICON_DIR, "settings.png")), "Settings")
+        self.actionSettings.setShortcut("Ctrl+Shift+S")
         self.actionSettings.triggered.connect(self.settings_requested.emit)
         
         # ----- Expanding spacer -----
@@ -83,6 +86,7 @@ class VMenuBar(QToolBar):
         self.actionTheme.triggered.connect(self._show_theme_menu)
 
         self.actionManual= self.addAction(QIcon(os.path.join(ICON_DIR, "manual.png")), "Open User Manual")
+        self.actionManual.setShortcut("Ctrl+Shift+M")
         self.actionManual.setToolTip("Open User Manual PDF\n(Ctrl + Click to open online web manual)")
         self.actionManual.triggered.connect(self.manual_requested.emit)
 

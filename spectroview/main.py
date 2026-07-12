@@ -388,7 +388,7 @@ class Main(QMainWindow):
         self._quick_calc_dlg.activateWindow()
 
     def open_ai_chat(self):
-        """Open (or raise) the AI Data Chat panel.
+        """Open (or raise) the SPECTROview AI Agent panel.
 
         The panel is created lazily on first use and then kept alive so
         the conversation history is preserved across multiple open/close
@@ -398,7 +398,7 @@ class Main(QMainWindow):
         if not LLM_AVAILABLE:
             QMessageBox.information(
                 self,
-                "AI Chat — Not Available",
+                "SPECTROview AI Agent — Not Available",
                 "The AI Chat module could not be imported.\n\n"
                 "Please install the optional dependency:\n"
                 "    pip install ollama\n\n"

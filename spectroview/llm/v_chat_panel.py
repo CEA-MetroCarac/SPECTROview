@@ -7,26 +7,6 @@ Opens as a non-modal, always-on-top-optional window from the toolbar
 button so users can query their data from any workspace tab.
 
 UI layout
----------
-┌─────────────────────────────────────────────────────────────────┐
-│  🤖  AI Data Chat        [Provider ▾]  [model combo]  [⟳]      │
-│─────────────────────────────────────────────────────────────────│
-│  ╔═ API Settings (shown when cloud provider selected) ══════╗   │
-│  ║  API Key: [••••••••••••••••••••]  [Connect]              ║   │
-│  ║  Base URL (Custom only): [https://...]                   ║   │
-│  ╚═══════════════════════════════════════════════════════════╝   │
-│─────────────────────────────────────────────────────────────────│
-│  🟢 Gemini API connected · gemini-2.5-flash                     │
-│─────────────────────────────────────────────────────────────────│
-│   ┌─[You]──────────────────────────────────────────────────┐    │
-│   │ Show rows where fwhm_Si > 5                            │    │
-│   └────────────────────────────────────────────────────────┘    │
-│   ┌─[🤖 AI]────────────────────────────────────────────────┐    │
-│   │ Found 42 rows matching …                               │    │
-│   └────────────────────────────────────────────────────────┘    │
-│─────────────────────────────────────────────────────────────────│
-│  [Clear]   [Ask a question about your data…]   [Send ▶]        │
-└─────────────────────────────────────────────────────────────────┘
 
 MVVM contract
 -------------
@@ -37,6 +17,7 @@ All data comes in through signals; all actions go out through method calls.
 from __future__ import annotations
 
 import os
+from datetime import datetime
 from typing import Optional, Dict
 
 import pandas as pd
@@ -44,91 +25,159 @@ from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QScrollArea, QFrame, QComboBox, QSizePolicy,
     QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QApplication,
-    QSplitter,
+    QSplitter, QTextBrowser
 )
+import markdown
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QSettings
 from PySide6.QtGui import QFont, QIcon, QKeyEvent, QColor, QPalette, QTextCursor
 
 from spectroview import ICON_DIR
 from spectroview.llm.vm_chat import VMChat, ChatResult
 from spectroview.llm.m_llm_client import LLMClient, API_PROVIDERS, OPENAI_AVAILABLE, OLLAMA_AVAILABLE
+from spectroview.llm.v_history_dialog import VHistoryDialog
 
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Helper widgets
 # ═══════════════════════════════════════════════════════════════════════════
 
-class _MessageBubble(QFrame):
-    """A single chat message with role styling."""
+class _MessageCard(QFrame):
+    """A single chat message card with Markdown rendering and actions."""
 
-    def __init__(self, text: str, role: str, parent=None) -> None:
-        """
-        Parameters
-        ----------
-        text : str
-            The message content.
-        role : str
-            "user" | "assistant" | "error"
-        """
+    reply_clicked = Signal(str) # emits the raw text when reply is clicked
+
+    def __init__(self, text: str, role: str, timestamp: str = "", parent=None) -> None:
         super().__init__(parent)
         self._role = role
-        self.setObjectName(f"bubble_{role}")
+        self._raw_text = text
+        self.setObjectName(f"card_{role}")
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 6, 10, 6)
-        layout.setSpacing(2)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(6)
 
-        # Role label
-        role_label = QLabel("You" if role == "user" else ("⚠ Error" if role == "error" else "🤖 AI"))
+        # Header: Role, Timestamp, Actions
+        header_layout = QHBoxLayout()
+        header_layout.setContentsMargins(0, 0, 0, 0)
+
+        role_label = QLabel("You" if role == "user" else ("⚠ Error" if role == "error" else "🤖 SPECTROview AI Agent"))
         role_font = QFont()
         role_font.setBold(True)
-        role_font.setPointSize(9)
+        role_font.setPointSize(10)
         role_label.setFont(role_font)
+        header_layout.addWidget(role_label)
 
-        self.content_label = QLabel(text)
-        self.content_label.setWordWrap(True)
-        self.content_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.content_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        if timestamp:
+            ts_label = QLabel(timestamp)
+            ts_label.setStyleSheet("color: gray; font-size: 10px;")
+            header_layout.addWidget(ts_label)
+            
+        header_layout.addStretch()
 
-        layout.addWidget(role_label)
-        layout.addWidget(self.content_label)
+        if role == "assistant":
+            btn_reply = QPushButton("↩ Reply")
+            btn_reply.setToolTip("Reply to this message")
+            btn_reply.setStyleSheet("color: #1976D2; border: none; font-size: 10px; font-weight: bold; background: transparent;")
+            btn_reply.setCursor(Qt.PointingHandCursor)
+            btn_reply.clicked.connect(lambda: self.reply_clicked.emit(self._raw_text))
+            header_layout.addWidget(btn_reply)
+
+        btn_copy = QPushButton("📋 Copy")
+        btn_copy.setToolTip("Copy message text")
+        btn_copy.setStyleSheet("color: gray; border: none; font-size: 10px; background: transparent;")
+        btn_copy.setCursor(Qt.PointingHandCursor)
+        btn_copy.clicked.connect(lambda: QApplication.clipboard().setText(self._raw_text))
+        header_layout.addWidget(btn_copy)
+
+        layout.addLayout(header_layout)
+
+        # Content
+        if role == "user":
+            self.content_view = QLabel(text)
+            self.content_view.setWordWrap(True)
+            self.content_view.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        else:
+            self.content_view = QTextBrowser()
+            self.content_view.setOpenExternalLinks(False)
+            self.content_view.setFrameShape(QFrame.NoFrame)
+            self.content_view.setStyleSheet("background: transparent;")
+            # Disable scrollbars to let the card expand
+            self.content_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self.content_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self.content_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+            self._update_markdown(text)
+
+        self.content_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.content_view.setMinimumWidth(10)
+        self.setMinimumWidth(10)
+        layout.addWidget(self.content_view)
 
         self._apply_style()
+
+    def _update_markdown(self, text: str):
+        self._raw_text = text
+        if self._role == "user":
+            self.content_view.setText(text)
+        else:
+            # Convert Markdown to HTML
+            html = markdown.markdown(text, extensions=['tables', 'fenced_code', 'codehilite'])
+            # Add some basic CSS for tables and code blocks
+            styled_html = f"""
+            <style>
+                table {{ border-collapse: collapse; width: 100%; margin-bottom: 10px; }}
+                th, td {{ border: 1px solid #ddd; padding: 6px; text-align: left; }}
+                th {{ background-color: rgba(128, 128, 128, 0.2); }}
+                code {{ background-color: rgba(128, 128, 128, 0.15); padding: 2px 4px; border-radius: 3px; font-family: monospace; }}
+                pre {{ background-color: rgba(0, 0, 0, 0.05); padding: 10px; border-radius: 5px; overflow-x: auto; }}
+            </style>
+            {html}
+            """
+            self.content_view.setUpdatesEnabled(False)
+            self.content_view.setHtml(styled_html)
+            self.content_view.document().setTextWidth(self.content_view.viewport().width())
+            self.content_view.setFixedHeight(int(self.content_view.document().size().height()) + 5)
+            self.content_view.setUpdatesEnabled(True)
+
+    def set_text(self, text: str) -> None:
+        if self._role == "user":
+            self._raw_text = text
+            self.content_view.setText(text)
+        else:
+            self._update_markdown(text)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        if isinstance(self.content_view, QTextBrowser):
+            self.content_view.setUpdatesEnabled(False)
+            self.content_view.document().setTextWidth(self.content_view.viewport().width())
+            self.content_view.setFixedHeight(int(self.content_view.document().size().height()) + 5)
+            self.content_view.setUpdatesEnabled(True)
 
     def _apply_style(self):
         if self._role == "user":
             self.setStyleSheet("""
-                QFrame {
+                QFrame#card_user {
                     background: rgba(30, 100, 200, 0.15);
                     border: 1px solid rgba(30, 100, 200, 0.3);
                     border-radius: 8px;
-                    margin-left: 40px;
-                    margin-right: 4px;
                 }
             """)
         elif self._role == "error":
             self.setStyleSheet("""
-                QFrame {
+                QFrame#card_error {
                     background: rgba(200, 50, 50, 0.15);
                     border: 1px solid rgba(200, 50, 50, 0.4);
                     border-radius: 8px;
-                    margin-left: 4px;
-                    margin-right: 40px;
                 }
             """)
         else:
             self.setStyleSheet("""
-                QFrame {
+                QFrame#card_assistant {
                     background: rgba(60, 180, 100, 0.10);
                     border: 1px solid rgba(60, 180, 100, 0.25);
                     border-radius: 8px;
-                    margin-left: 4px;
-                    margin-right: 40px;
                 }
             """)
-
-    def set_text(self, text: str) -> None:
-        self.content_label.setText(text)
 
 
 class _ThinkingDots(QLabel):
@@ -237,15 +286,16 @@ class VChatPanel(QDialog):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("🤖  AI Data Chat")
+        self.setWindowTitle("🤖  SPECTROview AI Agent")
         self.setWindowFlags(
             Qt.Dialog | Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint
         )
-        self.setMinimumSize(540, 660)
-        self.resize(580, 740)
+        self.setMinimumSize(400, 500)
+        self.resize(450, 740)
 
         self.vm = VMChat(self)
-        self._active_bubble: Optional[_MessageBubble] = None  # streaming target
+        self._active_card: Optional[_MessageCard] = None  # streaming target
+        self._reply_to_index: Optional[int] = None
 
         self._build_ui()
         self._connect_signals()
@@ -289,9 +339,20 @@ class VChatPanel(QDialog):
         root.addWidget(self.thinking_dots)
         self.thinking_dots.hide()
 
-        # ── Input bar ───────────────────────────────────────────────
+        # ── Input Area ──────────────────────────────────────────────
+        self.input_container = QWidget()
+        input_vbox = QVBoxLayout(self.input_container)
+        input_vbox.setContentsMargins(0, 0, 0, 0)
+        input_vbox.setSpacing(0)
+        
+        self.reply_preview = self._make_reply_preview()
+        self.reply_preview.hide()
+        input_vbox.addWidget(self.reply_preview)
+        
         input_bar = self._make_input_bar()
-        root.addWidget(input_bar)
+        input_vbox.addWidget(input_bar)
+        
+        root.addWidget(self.input_container)
 
     def _make_header(self) -> QWidget:
         header = QFrame()
@@ -311,10 +372,6 @@ class VChatPanel(QDialog):
         layout.setContentsMargins(12, 4, 12, 4)
         layout.setSpacing(6)
 
-        title = QLabel("🤖  AI Data Chat")
-        title.setStyleSheet("color: white; font-size: 14px; font-weight: bold;")
-        layout.addWidget(title)
-        layout.addStretch()
 
         # ── Provider selector ────────────────────────────────────────
         lbl_provider = QLabel("Provider:")
@@ -356,15 +413,38 @@ class VChatPanel(QDialog):
         layout.addWidget(self.cbb_model)
 
         # ── Refresh button ───────────────────────────────────────────
-        self.btn_refresh_models = QPushButton("⟳")
-        self.btn_refresh_models.setFixedSize(26, 26)
+        self.btn_refresh_models = QPushButton("")
+        self.btn_refresh_models.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
+        self.btn_refresh_models.setIconSize(QSize(20, 20))
+        self.btn_refresh_models.setFixedSize(28, 28)
         self.btn_refresh_models.setToolTip("Refresh model list / re-check connection")
         self.btn_refresh_models.setStyleSheet(
-            "QPushButton { background: transparent; color: white; "
-            "border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; }"
+            "QPushButton { background: transparent; border: none; border-radius: 4px; }"
             "QPushButton:hover { background: rgba(255,255,255,0.2); }"
         )
         layout.addWidget(self.btn_refresh_models)
+        
+        layout.addStretch()
+
+        self.btn_history = QPushButton("")
+        self.btn_history.setIcon(QIcon(os.path.join(ICON_DIR, "view-details.png")))
+        self.btn_history.setIconSize(QSize(20, 20))
+        self.btn_history.setFixedSize(28, 28)
+        self.btn_history.setToolTip("Conversation History")
+
+        self.btn_new_chat = QPushButton("")
+        self.btn_new_chat.setIcon(QIcon(os.path.join(ICON_DIR, "ai_chat.png")))
+        self.btn_new_chat.setIconSize(QSize(20, 20))
+        self.btn_new_chat.setFixedSize(28, 28)
+        self.btn_new_chat.setToolTip("New Chat")
+        
+        for btn in (self.btn_history, self.btn_new_chat):
+            btn.setStyleSheet("""
+                QPushButton { background: transparent; border: none; border-radius: 4px; }
+                QPushButton:hover { background: rgba(255,255,255,0.2); }
+            """)
+            btn.setCursor(Qt.PointingHandCursor)
+            layout.addWidget(btn)
 
         return header
 
@@ -389,6 +469,34 @@ class VChatPanel(QDialog):
 
         return bar
 
+    def _make_reply_preview(self) -> QFrame:
+        frame = QFrame()
+        frame.setObjectName("replyPreview")
+        frame.setStyleSheet("""
+            QFrame#replyPreview {
+                background: #2a2a2a;
+                border-top: 1px solid rgba(128,128,128,0.3);
+                border-left: 3px solid #1976D2;
+                margin: 0px;
+            }
+        """)
+        layout = QHBoxLayout(frame)
+        layout.setContentsMargins(10, 6, 10, 6)
+        
+        self.lbl_reply_text = QLabel()
+        self.lbl_reply_text.setStyleSheet("color: #aaa; font-size: 11px;")
+        self.lbl_reply_text.setWordWrap(True)
+        layout.addWidget(self.lbl_reply_text, stretch=1)
+        
+        btn_close = QPushButton("✕")
+        btn_close.setFixedSize(20, 20)
+        btn_close.setCursor(Qt.PointingHandCursor)
+        btn_close.setStyleSheet("QPushButton { border: none; color: gray; font-weight: bold; } QPushButton:hover { color: white; }")
+        btn_close.clicked.connect(self._clear_reply_state)
+        layout.addWidget(btn_close)
+        
+        return frame
+
     def _make_input_bar(self) -> QFrame:
         bar = QFrame()
         bar.setObjectName("chatInputBar")
@@ -398,7 +506,7 @@ class VChatPanel(QDialog):
                 padding: 2px;
             }
         """)
-        bar.setFixedHeight(52)
+        bar.setFixedHeight(68)
 
         layout = QHBoxLayout(bar)
         layout.setContentsMargins(8, 6, 8, 6)
@@ -414,12 +522,12 @@ class VChatPanel(QDialog):
         # Text input
         self.edit_input = _ChatLineEdit()
         self.edit_input.setPlaceholderText("Ask a question about your data…")
-        self.edit_input.setFixedHeight(34)
+        self.edit_input.setFixedHeight(50)
         layout.addWidget(self.edit_input, stretch=1)
 
         # Send button
         self.btn_send = QPushButton("Send ▶")
-        self.btn_send.setFixedHeight(34)
+        self.btn_send.setFixedHeight(50)
         self.btn_send.setFixedWidth(70)
         self.btn_send.setStyleSheet("""
             QPushButton {
@@ -446,6 +554,8 @@ class VChatPanel(QDialog):
         self.btn_send.clicked.connect(self._on_send)
         self.edit_input.send_requested.connect(self._on_send)
         self.btn_clear.clicked.connect(self._on_clear)
+        self.btn_history.clicked.connect(self._on_history_clicked)
+        self.btn_new_chat.clicked.connect(self._on_new_chat_clicked)
         self.btn_refresh_models.clicked.connect(self._refresh_status)
         self.cbb_model.currentTextChanged.connect(self.vm.set_model)
         self.cbb_provider.currentTextChanged.connect(self._on_provider_changed)
@@ -457,6 +567,7 @@ class VChatPanel(QDialog):
         self.vm.chunk_received.connect(self._on_chunk)
         self.vm.result_ready.connect(self._on_result_ready)
         self.vm.error_occurred.connect(self._on_error)
+        self.vm.conversation_changed.connect(self._on_conversation_changed)
 
     # ------------------------------------------------------------------
     # Public API — called from main.py / VWorkspaceGraphs
@@ -632,26 +743,73 @@ class VChatPanel(QDialog):
     # ------------------------------------------------------------------
 
     def _on_send(self) -> None:
-        text = self.edit_input.text().strip()
+        text = self.edit_input.toPlainText().strip()
         if not text or self.vm.is_busy():
             return
 
         self.edit_input.clear()
-        self._add_user_bubble(text)
-        self._active_bubble = self._add_ai_bubble("")  # placeholder for streaming
-        self.vm.process_query(text)
+        
+        reply_idx = self._reply_to_index
+        self._clear_reply_state()
+        
+        self._add_user_card(text, reply_idx, timestamp=datetime.now().isoformat())
+        self._active_card = self._add_ai_card("", timestamp=datetime.now().isoformat())  # placeholder for streaming
+        
+        # The AI message will be added to the conversation at this index once done
+        ai_msg_idx = self.vm._conversation.message_count + 1 
+        self._active_card.reply_clicked.connect(lambda text, idx=ai_msg_idx: self._on_reply_clicked(idx, text))
+        
+        self.vm.process_query(text, reply_to_index=reply_idx)
 
     def _on_clear(self) -> None:
         self.vm.clear_history()
-        # Remove all message widgets (keep the stretch at the end)
-        while self.messages_layout.count() > 1:
-            item = self.messages_layout.takeAt(0)
-            if item and item.widget():
-                item.widget().deleteLater()
-        self._active_bubble = None
 
-    def _on_thinking_changed(self, thinking: bool) -> None:
-        if thinking:
+    def _on_history_clicked(self) -> None:
+        dialog = VHistoryDialog(self.vm.conversation_store, self)
+        dialog.conversation_opened.connect(self._on_conversation_opened)
+        dialog.exec()
+
+    def _on_new_chat_clicked(self) -> None:
+        self.vm.new_conversation()
+
+    def _on_conversation_opened(self, conv_id: str) -> None:
+        conv = self.vm.conversation_store.load_conversation(conv_id)
+        if conv:
+            self.vm.load_conversation(conv)
+            
+    def _on_conversation_changed(self, title: str) -> None:
+        # Clear UI
+        while self.messages_layout.count() > 1: # preserve the stretch
+            item = self.messages_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+                
+        # Rebuild from vm conversation
+        for i, msg in enumerate(self.vm._conversation.messages):
+            if msg["role"] == "user":
+                self._add_user_card(msg["content"], msg.get("reply_to_index"), timestamp=msg.get("timestamp"))
+            elif msg["role"] == "assistant":
+                card = self._add_ai_card(msg["content"], timestamp=msg.get("timestamp"))
+                card.reply_clicked.connect(lambda text, idx=i: self._on_reply_clicked(idx, text))
+            elif msg["role"] == "error":
+                card = _MessageCard(msg["content"], "error", timestamp=msg.get("timestamp"))
+                self._insert_before_stretch(card)
+                
+        self._scroll_to_bottom()
+
+    def _on_reply_clicked(self, idx: int, raw_text: str) -> None:
+        self._reply_to_index = idx
+        preview = raw_text[:80].replace("\n", " ") + "..." if len(raw_text) > 80 else raw_text.replace("\n", " ")
+        self.lbl_reply_text.setText(f"Replying to: \"{preview}\"")
+        self.reply_preview.show()
+        self.edit_input.setFocus()
+        
+    def _clear_reply_state(self) -> None:
+        self._reply_to_index = None
+        self.reply_preview.hide()
+
+    def _on_thinking_changed(self, is_thinking: bool) -> None:
+        if is_thinking:
             self.thinking_dots.start()
             self.btn_send.setEnabled(False)
         else:
@@ -660,26 +818,26 @@ class VChatPanel(QDialog):
 
     def _on_chunk(self, fragment: str) -> None:
         """Append a streaming fragment to the active AI bubble."""
-        if self._active_bubble:
-            current = self._active_bubble.content_label.text()
-            self._active_bubble.set_text(current + fragment)
+        if self._active_card:
+            current = self._active_card.content_view.toPlainText() if hasattr(self._active_card.content_view, 'toPlainText') else self._active_card.content_view.text()
+            self._active_card.set_text(current + fragment)
             self._scroll_to_bottom()
 
     def _on_result_ready(self, result: ChatResult) -> None:
         """Replace the streaming bubble with the full structured result."""
-        if self._active_bubble:
+        if self._active_card:
             # Set the explanation as the main text
-            self._active_bubble.set_text(result.explanation or result.text_summary)
+            self._active_card.set_text(result.explanation or result.text_summary)
 
         # If a DataFrame was returned, attach a preview table below the bubble
         if result.dataframe is not None and not result.dataframe.empty:
             preview = _DataFramePreview(result.dataframe)
-            self._insert_widget_after_bubble(preview)
+            self._insert_widget_after_card(preview)
 
         # If statistics / answer text, show in a text box
         elif result.text_summary and result.action in ("statistics", "answer"):
-            if self._active_bubble:
-                self._active_bubble.set_text(
+            if self._active_card:
+                self._active_card.set_text(
                     (result.explanation or "") + "\n\n" + result.text_summary
                 )
 
@@ -698,43 +856,75 @@ class VChatPanel(QDialog):
                     "QPushButton:hover { background: #3949AB; }"
                 )
                 btn.clicked.connect(lambda: [self.plot_requested.emit(c) for c in cfgs])
-                self._insert_widget_after_bubble(btn)
+                self._insert_widget_after_card(btn)
 
-        self._active_bubble = None
+        self._active_card = None
         self._scroll_to_bottom()
 
     def _on_error(self, message: str) -> None:
         # Replace placeholder bubble with an error bubble
-        if self._active_bubble:
-            self._active_bubble.deleteLater()
-            self._active_bubble = None
-        bubble = _MessageBubble(message, "error")
-        self._insert_before_stretch(bubble)
+        if self._active_card:
+            self._active_card.deleteLater()
+            self._active_card = None
+        card = _MessageCard(message, "error")
+        self._insert_before_stretch(card)
         self._scroll_to_bottom()
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _add_user_bubble(self, text: str) -> _MessageBubble:
-        bubble = _MessageBubble(text, "user")
-        self._insert_before_stretch(bubble)
+    def _add_user_card(self, text: str, reply_to_index: Optional[int] = None, timestamp: Optional[str] = None) -> _MessageCard:
+        if reply_to_index is not None and 0 <= reply_to_index < len(self.vm._conversation.messages):
+            replied_msg = self.vm._conversation.messages[reply_to_index]
+            replied_content = replied_msg.get("content", "")
+            preview = replied_content[:80].replace("\n", " ") + "..." if len(replied_content) > 80 else replied_content.replace("\n", " ")
+            text = f"Replying to:\n\"{preview}\"\n\n{text}"
+            
+        formatted_ts = ""
+        if timestamp:
+            try:
+                from datetime import datetime
+                dt = datetime.fromisoformat(timestamp)
+                formatted_ts = dt.strftime("%y-%m-%d %H:%M")
+            except Exception:
+                formatted_ts = timestamp
+                
+        card = _MessageCard(text, "user", timestamp=formatted_ts)
+        wrapper = QWidget()
+        l = QHBoxLayout(wrapper)
+        l.setContentsMargins(40, 0, 4, 0)
+        l.addWidget(card)
+        self._insert_before_stretch(wrapper)
         self._scroll_to_bottom()
-        return bubble
+        return card
 
-    def _add_ai_bubble(self, text: str) -> _MessageBubble:
-        bubble = _MessageBubble(text, "assistant")
-        self._insert_before_stretch(bubble)
+    def _add_ai_card(self, text: str, timestamp: Optional[str] = None) -> _MessageCard:
+        formatted_ts = ""
+        if timestamp:
+            try:
+                from datetime import datetime
+                dt = datetime.fromisoformat(timestamp)
+                formatted_ts = dt.strftime("%y-%m-%d %H:%M")
+            except Exception:
+                formatted_ts = timestamp
+                
+        card = _MessageCard(text, "assistant", timestamp=formatted_ts)
+        wrapper = QWidget()
+        l = QHBoxLayout(wrapper)
+        l.setContentsMargins(4, 0, 40, 0)
+        l.addWidget(card)
+        self._insert_before_stretch(wrapper)
         self._scroll_to_bottom()
-        return bubble
+        return card
 
     def _insert_before_stretch(self, widget: QWidget) -> None:
         """Insert a widget just before the trailing stretch."""
         count = self.messages_layout.count()
         self.messages_layout.insertWidget(count - 1, widget)
 
-    def _insert_widget_after_bubble(self, widget: QWidget) -> None:
-        """Insert a widget just after the last _MessageBubble."""
+    def _insert_widget_after_card(self, widget: QWidget) -> None:
+        """Insert a widget just after the last _MessageCard."""
         count = self.messages_layout.count()
         self.messages_layout.insertWidget(count - 1, widget)
 
@@ -760,16 +950,24 @@ class VChatPanel(QDialog):
 # Subclassed QLineEdit to emit Enter-key as a signal
 # ─────────────────────────────────────────────────────────────────────────
 
-class _ChatLineEdit(QLineEdit):
-    """A QLineEdit that emits ``send_requested`` on Enter / Return."""
+class _ChatLineEdit(QTextEdit):
+    """A QTextEdit that emits ``send_requested`` on Enter / Return (but Shift+Enter adds newline)."""
 
     send_requested = Signal()
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAcceptRichText(False)
+
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() in (Qt.Key_Return, Qt.Key_Enter):
-            self.send_requested.emit()
+            if event.modifiers() & Qt.ShiftModifier:
+                super().keyPressEvent(event)
+            else:
+                self.send_requested.emit()
         else:
             super().keyPressEvent(event)
+
 
 
 # ─────────────────────────────────────────────────────────────────────────

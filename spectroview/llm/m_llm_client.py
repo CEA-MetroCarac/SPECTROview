@@ -43,6 +43,13 @@ except ImportError:
     _openai = None          # type: ignore[assignment]
     OPENAI_AVAILABLE = False
 
+try:
+    import anthropic as _anthropic # type: ignore
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    _anthropic = None       # type: ignore[assignment]
+    ANTHROPIC_AVAILABLE = False
+
 
 # ---------------------------------------------------------------------------
 # Known cloud API providers — all use OpenAI-compatible endpoints
@@ -60,6 +67,10 @@ API_PROVIDERS: Dict[str, Dict[str, str]] = {
     "OpenAI": {
         "base_url":      "https://api.openai.com/v1",
         "default_model": "gpt-4o-mini",
+    },
+    "Anthropic": {
+        "base_url":      "https://api.anthropic.com",
+        "default_model": "claude-3-5-sonnet-20241022",
     },
     "Custom": {
         "base_url":      "",
@@ -205,6 +216,89 @@ class APIWorker(QThread):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Worker 3 — Anthropic backend
+# ═══════════════════════════════════════════════════════════════════════════
+
+class AnthropicWorker(QThread):
+    """Sends a chat request to Anthropic API and streams the response back.
+
+    Signals
+    -------
+    chunk_received(str)
+        Emitted for every streamed token fragment.
+    response_ready(str)
+        Emitted once with the full assembled response.
+    error_occurred(str)
+        Emitted on network or auth errors.
+    """
+
+    chunk_received  = Signal(str)
+    response_ready  = Signal(str)
+    error_occurred  = Signal(str)
+
+    def __init__(
+        self,
+        api_key:  str,
+        base_url: str,
+        model:    str,
+        messages: List[Dict[str, str]],
+        parent:   Optional[QObject] = None,
+    ) -> None:
+        super().__init__(parent)
+        self._api_key  = api_key
+        self._base_url = base_url
+        self._model    = model
+        self._messages = messages
+        self._full_response = ""
+
+    # ------------------------------------------------------------------
+    def run(self) -> None:
+        if not ANTHROPIC_AVAILABLE:
+            self.error_occurred.emit(
+                "The `anthropic` Python package is not installed.\n"
+                "Run:  pip install anthropic"
+            )
+            return
+
+        if not self._api_key:
+            self.error_occurred.emit(
+                "No API key set. Please enter your API key in the chat panel."
+            )
+            return
+
+        # Separate system messages from user/assistant messages
+        system_prompt = ""
+        filtered_messages = []
+        for msg in self._messages:
+            if msg["role"] == "system":
+                system_prompt += msg["content"] + "\n"
+            else:
+                filtered_messages.append(msg)
+
+        try:
+            client_args = {"api_key": self._api_key}
+            if self._base_url:
+                client_args["base_url"] = self._base_url
+
+            client = _anthropic.Anthropic(**client_args)
+            
+            with client.messages.stream(
+                max_tokens=4096,
+                system=system_prompt,
+                messages=filtered_messages, # type: ignore
+                model=self._model,
+            ) as stream:
+                for text in stream.text_stream:
+                    self._full_response += text
+                    self.chunk_received.emit(text)
+
+            self.response_ready.emit(self._full_response)
+
+        except Exception as exc:               # noqa: BLE001
+            self.error_occurred.emit(str(exc))
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Client — unified facade used by VMChat
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -291,6 +385,8 @@ class LLMClient:
         """Return ``True`` if the active provider is reachable / configured."""
         if self._provider == "Ollama":
             return self._is_ollama_available()
+        elif self._provider == "Anthropic":
+            return ANTHROPIC_AVAILABLE and bool(self._api_key)
         else:
             # Cloud API: available if openai package present and key provided
             return OPENAI_AVAILABLE and bool(self._api_key)
@@ -330,10 +426,12 @@ class LLMClient:
 
     def _get_api_models(self) -> List[str]:
         """Fetch model list from the cloud API (best-effort)."""
+        if self._provider == "Anthropic":
+            # Anthropic doesn't have a standard model listing endpoint in its SDK yet
+            return self._fallback_models()
+            
         if not OPENAI_AVAILABLE or not self._api_key:
-            preset = API_PROVIDERS.get(self._provider, {})
-            default = preset.get("default_model", "")
-            return [default] if default else []
+            return self._fallback_models()
         try:
             client = _openai.OpenAI(
                 api_key=self._api_key,
@@ -383,6 +481,14 @@ class LLMClient:
 
         if self._provider == "Ollama":
             self._worker = LLMWorker(model, messages, parent)
+        elif self._provider == "Anthropic":
+            self._worker = AnthropicWorker(
+                api_key=self._api_key,
+                base_url=self._base_url,
+                model=model,
+                messages=messages,
+                parent=parent,
+            )
         else:
             # Use stored base_url & api_key; model argument takes precedence
             # over the stored api_model to allow per-request overrides.

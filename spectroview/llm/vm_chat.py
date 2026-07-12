@@ -32,6 +32,8 @@ import pandas as pd
 from PySide6.QtCore import QObject, Signal, QSettings
 
 from spectroview.llm.m_llm_client import LLMClient, API_PROVIDERS
+from spectroview.llm.m_conversation import MConversation
+from spectroview.llm.m_conversation_store import MConversationStore
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -83,6 +85,7 @@ class VMChat(QObject):
     chunk_received   = Signal(str)
     result_ready     = Signal(object)       # ChatResult
     error_occurred   = Signal(str)
+    conversation_changed = Signal(str)
 
     # Maximum number of message pairs kept in context (user + assistant each)
     MAX_HISTORY_PAIRS = 6
@@ -102,18 +105,15 @@ class VMChat(QObject):
         # Track open graphs so the AI knows their IDs
         self._graphs: Dict[int, Dict[str, Any]] = {}   # {graph_id: {"style": ..., "x": ..., "y": ...}}
 
-        # Chat state
-        self._history: List[Dict[str, str]] = []
-        self._pending_response: str = ""
-
-        # Active provider label ("Ollama", "Gemini", etc.)
-        self._provider: str = LLMClient.DEFAULT_PROVIDER
-        
         # Load history folder
         s = QSettings("SPECTROview", "AIChat")
         s.beginGroup("ai_chat")
         self._history_folder = str(s.value("history_folder", ""))
         s.endGroup()
+        
+        self.conversation_store = MConversationStore(self._history_folder)
+        self._conversation = self.conversation_store.create_conversation()
+        self.max_context_messages: Optional[int] = None # None means no cap
 
     # ------------------------------------------------------------------
     # Public API — called by VChatPanel
@@ -122,20 +122,11 @@ class VMChat(QObject):
     def set_dataframes(self, dfs: Dict[str, pd.DataFrame], active_name: str = "") -> None:
         """Update the available DataFrames.
         
-        History is only cleared when the actual set of dataframes changes
-        (e.g. new files loaded/removed).  Simply switching the active
-        selection preserves the conversation.
+        The chat history is explicitly preserved across workspace file loads
+        and active dataframe changes. The user must explicitly request a new chat.
         """
-        new_keys = set(dfs.keys()) if dfs else set()
-        old_keys = set(self._dfs.keys())
-
         self._dfs = dfs.copy() if dfs else {}
         self._active_df_name = active_name
-
-        # Only wipe history when the dataframe *set* actually changed
-        if new_keys != old_keys:
-            self._save_history_to_file()
-            self._history.clear()
 
     def update_active_df_name(self, name: str) -> None:
         """Update only the active dataframe name — preserves chat history."""
@@ -172,14 +163,13 @@ class VMChat(QObject):
         if provider != "Ollama" and not model:
             from spectroview.llm.m_llm_client import API_PROVIDERS
             self._model = API_PROVIDERS.get(provider, {}).get("default_model", self._model)
-        self._save_history_to_file()
-        self._history.clear()
+        self.new_conversation()
 
     def get_provider(self) -> str:
         """Return the currently active provider name."""
         return self._provider
 
-    def process_query(self, user_text: str) -> None:
+    def process_query(self, user_text: str, reply_to_index: Optional[int] = None) -> None:
         """Send *user_text* to the active LLM backend and emit results when done.
 
         Safe to call from the main thread; all blocking I/O runs in a
@@ -209,12 +199,12 @@ class VMChat(QObject):
                 )
             return
 
+        # Track the user turn now; assistant turn added after response
+        self._conversation.add_message("user", user_text, reply_to_index=reply_to_index)
+        self._pending_response = ""
+        
         # Build the full message list for this request
         messages = self._build_messages(user_text)
-
-        # Track the user turn now; assistant turn added after response
-        self._history.append({"role": "user", "content": user_text})
-        self._pending_response = ""
 
         self.thinking_changed.emit(True)
 
@@ -234,8 +224,17 @@ class VMChat(QObject):
         self._save_history_to_file()
 
     def clear_history(self) -> None:
+        self.new_conversation()
+
+    def load_conversation(self, conv: MConversation) -> None:
         self._save_history_to_file()
-        self._history.clear()
+        self._conversation = conv
+        self.conversation_changed.emit(conv.title)
+        
+    def new_conversation(self) -> None:
+        self._save_history_to_file()
+        self._conversation = self.conversation_store.create_conversation()
+        self.conversation_changed.emit(self._conversation.title)
 
     def is_busy(self) -> bool:
         return self._client.is_busy()
@@ -252,40 +251,17 @@ class VMChat(QObject):
     
     def _save_history_to_file(self) -> None:
         """Save the current conversation history to the configured folder."""
-        # Only save if there's actual conversation history (more than just one error msg, etc.)
-        if not self._history or not self._history_folder:
-            return
-            
-        if not os.path.exists(self._history_folder):
-            try:
-                os.makedirs(self._history_folder)
-            except Exception:
-                return
-                
-        timestamp = datetime.now().strftime("%y-%m-%d_%H-%M-%S")
-        filename = f"{timestamp}.md"
-        filepath = os.path.join(self._history_folder, filename)
-        
-        try:
-            with open(filepath, "w", encoding="utf-8") as f:
-                f.write(f"# AI Chat Session - {timestamp}\\n\\n")
-                for msg in self._history:
-                    role = "User" if msg["role"] == "user" else "AI"
-                    content = msg["content"]
-                    f.write(f"### {role}\\n{content}\\n\\n")
-        except Exception:
-            pass
+        # Only save if there's actual conversation history
+        if self._conversation.message_count > 0:
+            self._conversation.save(self._history_folder)
 
     def _build_messages(self, user_text: str) -> List[Dict[str, str]]:
-        """Assemble the full message list = system prompt + capped history + new user turn."""
+        """Assemble the full message list = system prompt + conversation history."""
         system_prompt = self._build_system_prompt()
         messages = [{"role": "system", "content": system_prompt}]
 
-        # Keep only the last MAX_HISTORY_PAIRS pairs to avoid context overflow
-        max_msgs = self.MAX_HISTORY_PAIRS * 2
-        messages += self._history[-max_msgs:]
+        messages += self._conversation.to_llm_messages(self.max_context_messages)
 
-        messages.append({"role": "user", "content": user_text})
         return messages
 
     def _build_system_prompt(self) -> str:
@@ -431,7 +407,8 @@ from the previous request.
         self.thinking_changed.emit(False)
 
         # Record assistant turn in history
-        self._history.append({"role": "assistant", "content": full_text})
+        self._conversation.add_message("assistant", full_text)
+        self._save_history_to_file()
 
         result = self._parse_response(full_text)
         self.result_ready.emit(result)

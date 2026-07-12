@@ -478,47 +478,11 @@ class Main(QMainWindow):
         # Deep copy so we don't mutate the original
         cfg = copy.deepcopy(plot_config)
 
-        # ── y must be a list of strings ──────────────────────────────
-        if 'y' in cfg:
-            if isinstance(cfg['y'], str):
-                cfg['y'] = [cfg['y']] if cfg['y'] else []
-            elif cfg['y'] is None:
-                cfg['y'] = []
-
-        # ── Convert numeric limits from string/int → float|None ──────
-        float_keys = ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax',
-                      'y2min', 'y2max', 'y3min', 'y3max', 'x2min', 'x2max']
-        for k in float_keys:
-            if k in cfg:
-                val = cfg[k]
-                if val is None or val == "" or val == "null":
-                    cfg[k] = None
-                else:
-                    try:
-                        cfg[k] = float(val)
-                    except (ValueError, TypeError):
-                        cfg[k] = None
-
-        # ── Convert int fields ───────────────────────────────────────
-        int_keys = ['x_rot', 'scatter_size', 'plot_width', 'plot_height',
-                    'dpi', 'trendline_order', 'hist_bins']
-        for k in int_keys:
-            if k in cfg:
-                try:
-                    cfg[k] = int(cfg[k])
-                except (ValueError, TypeError):
-                    del cfg[k]
-
-        # ── Convert filters ──────────────────────────────────────────
-        if 'filters' in cfg:
-            if isinstance(cfg['filters'], list):
-                parsed_filters = []
-                for f in cfg['filters']:
-                    if isinstance(f, str) and f.strip():
-                        parsed_filters.append({"expression": f, "state": True})
-                cfg['filters'] = parsed_filters
-            else:
-                del cfg['filters']
+        # ── Normalise types and structures ───────────────────────────
+        # Use the single source of truth from plot_tool to ensure
+        # filters (list of dicts), lists, and numeric types are correct.
+        from spectroview.ai_agent.tools.plot_tool import normalize_plot_config
+        normalize_plot_config(cfg)
 
         # ── Ensure df_name is set ────────────────────────────────────
         cfg['df_name'] = df_name
@@ -553,48 +517,10 @@ class Main(QMainWindow):
         if model is None:
             return
 
-        # Normalize types — same rules as for new plots
+        # Normalize types using single source of truth
         props = copy.deepcopy(properties)
-
-        # y must be a list
-        if 'y' in props:
-            if isinstance(props['y'], str):
-                props['y'] = [props['y']] if props['y'] else []
-            elif props['y'] is None:
-                props['y'] = []
-
-        # float limits
-        for k in ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax',
-                  'y2min', 'y2max', 'y3min', 'y3max', 'x2min', 'x2max']:
-            if k in props:
-                val = props[k]
-                if val is None or val == "" or val == "null":
-                    props[k] = None
-                else:
-                    try:
-                        props[k] = float(val)
-                    except (ValueError, TypeError):
-                        props[k] = None
-
-        # int fields
-        for k in ['x_rot', 'scatter_size', 'plot_width', 'plot_height',
-                  'dpi', 'trendline_order', 'hist_bins']:
-            if k in props:
-                try:
-                    props[k] = int(props[k])
-                except (ValueError, TypeError):
-                    del props[k]
-
-        # convert filters
-        if 'filters' in props:
-            if isinstance(props['filters'], list):
-                parsed_filters = []
-                for f in props['filters']:
-                    if isinstance(f, str) and f.strip():
-                        parsed_filters.append({"expression": f, "state": True})
-                props['filters'] = parsed_filters
-            else:
-                del props['filters']
+        from spectroview.ai_agent.tools.plot_tool import normalize_plot_config
+        normalize_plot_config(props)
 
         # Apply to model
         ws.vm.update_graph(graph_id, props)

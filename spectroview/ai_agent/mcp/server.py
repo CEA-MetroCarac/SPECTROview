@@ -6,7 +6,6 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
-
 from mcp.server.fastmcp import FastMCP
 
 logger = logging.getLogger(__name__)
@@ -110,10 +109,10 @@ def create_mcp_server(vm_chat) -> FastMCP:
         """Plot a graph using loaded dataframes.
         
         Args:
-            x: Column name for X-axis.
-            y: Column name(s) for Y-axis (can be a string or a list of strings).
+            x: Column name for X-axis. For 'wafer' and '2Dmap', this MUST be the X-coordinate column.
+            y: Column name(s) for Y-axis (can be a string or a list of strings). For 'wafer' and '2Dmap', this MUST be the Y-coordinate column, NOT the metric value.
             plot_style: The visual style (e.g., 'point', 'line', 'bar', 'wafer', '2Dmap', 'trendline', 'histogram', 'scatter', 'box').
-            z: Optional column name for Z-axis or color encoding (hue). Used in 'wafer' and '2Dmap' or as hue in 'point'/'scatter'.
+            z: Optional column name for Z-axis or color encoding (hue). For 'wafer' and '2Dmap', this MUST be the metric value to visualize. For 'point'/'scatter', used as hue.
             filters: Optional list of pandas query strings to filter data (e.g. ['Zone == 1', 'Yield > 90']).
             other_properties: A dictionary of other properties to set (e.g. {'grid': True, 'x_rot': 45, 'ylabel': 'AAA', 'xlabel': 'BBB', 'plot_title': 'CCC'}).
             df_name: Optional target DataFrame name. If empty, uses the active one.

@@ -37,9 +37,14 @@ If the user requests multiple plot styles with **identical** axis columns and pa
 
 This is the preferred compact form. The application will expand it into separate graphs automatically.
 
-## Spatial Plots — Separate Entries Required
+## Spatial Plots
 
-For `"wafer"` and `"2Dmap"` plots, if the user requests multiple **distinct items** (e.g., "plot wafer maps for slots 5, 6, and 8"), you MUST generate **separate entries** in the `plot_config` list — one per item with a specific filter:
+For `"wafer"` and `"2Dmap"` plots, you MUST correctly map spatial coordinates and values:
+- `x` MUST be the X-coordinate column (e.g., `"X"`, `"x_coord"`).
+- `y` MUST be the Y-coordinate column (e.g., `"Y"`, `"y_coord"`). Do NOT assign the metric value to `y`.
+- `z` MUST be the metric value you want to visualize (e.g., `"Strain (GPa)"`, `"FWHM_Si"`).
+
+If the user requests multiple **distinct items** for spatial plots (e.g., "plot wafer maps for slots 5, 6, and 8"), you MUST generate **separate entries** in the `plot_config` list — one per item with a specific filter:
 
 ```json
 [

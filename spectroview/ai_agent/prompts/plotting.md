@@ -6,9 +6,9 @@ This file provides plotting-specific instructions for the SPECTROview AI Agent. 
 
 # Instructions
 
-## Building plot_config
+## Plotting with `plot_graph`
 
-When `action` is `"plot"`, populate the `plot_config` list. Each entry corresponds to one graph window in the SPECTROview Graphs workspace.
+When creating a plot, call the `plot_graph` tool. Each tool call corresponds to one graph window in the SPECTROview Graphs workspace.
 
 ### Required Fields
 
@@ -29,11 +29,9 @@ The following fields are **optional**. Leave them as `null` or omit them entirel
 
 ## Multi-Style Plots
 
-If the user requests multiple plot styles with **identical** axis columns and parameters (e.g., "create a box and scatter plot of X vs Y"), output a **single** entry with `plot_style` as a comma-separated string:
+If the user requests multiple plot styles with **identical** axis columns and parameters (e.g., "create a box and scatter plot of X vs Y"), you can pass a comma-separated string to the `plot_style` argument in a **single** `plot_graph` tool call:
 
-```json
-{"x": "Slot", "y": "FWHM_Si", "plot_style": "box, scatter"}
-```
+`plot_style: "box, scatter"`
 
 This is the preferred compact form. The application will expand it into separate graphs automatically.
 
@@ -44,29 +42,25 @@ For `"wafer"` and `"2Dmap"` plots, you MUST correctly map spatial coordinates an
 - `y` MUST be the Y-coordinate column (e.g., `"Y"`, `"y_coord"`). Do NOT assign the metric value to `y`.
 - `z` MUST be the metric value you want to visualize (e.g., `"Strain (GPa)"`, `"FWHM_Si"`).
 
-If the user requests multiple **distinct items** for spatial plots (e.g., "plot wafer maps for slots 5, 6, and 8"), you MUST generate **separate entries** in the `plot_config` list — one per item with a specific filter:
+If the user requests multiple **distinct items** for spatial plots (e.g., "plot wafer maps for slots 5, 6, and 8"), you MUST execute **multiple separate tool calls** to `plot_graph` — one per item with a specific filter:
 
-```json
-[
-  {"x": "X", "y": "Y", "z": "value", "filters": ["Slot == 5"], "plot_style": "wafer"},
-  {"x": "X", "y": "Y", "z": "value", "filters": ["Slot == 6"], "plot_style": "wafer"},
-  {"x": "X", "y": "Y", "z": "value", "filters": ["Slot == 8"], "plot_style": "wafer"}
-]
-```
+- Tool Call 1: `filters: ["Slot == 5"]`, `plot_style: "wafer"`
+- Tool Call 2: `filters: ["Slot == 6"]`, `plot_style: "wafer"`
+- Tool Call 3: `filters: ["Slot == 8"]`, `plot_style: "wafer"`
 
 Spatial plots cannot overlay distinct groupings on the same axes.
 
 ## Updating Existing Graphs
 
-When the user wants to **modify** an existing graph (change axis limits, title, style, filters, color palette), use `action: "update"` with `graph_update`, NOT `action: "plot"`.
+When the user wants to **modify** an existing graph (change axis limits, title, style, filters, color palette), call the `update_graph` tool. Do NOT use `plot_graph`.
 
-- Set `graph_id` to the specific integer ID, or `"all"` to apply to all open graphs.
+- Set `graph_id` to the specific integer ID (as a string), or `"all"` to apply to all open graphs.
 - Only include the properties the user explicitly wants to change.
 - When **adding** a filter to an existing graph, preserve the existing filters by including them in the new filters list.
 
 ## Deleting Graphs
 
-When the user wants to close or delete graphs, use `action: "delete"` with `graph_delete`.
+When the user wants to close or delete graphs, call the `delete_graph` tool.
 
 - Set `delete_all: true` to close all graphs.
 - Use `graph_ids: [1, 2, 3]` to delete specific graphs.

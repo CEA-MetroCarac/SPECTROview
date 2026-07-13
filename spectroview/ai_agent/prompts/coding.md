@@ -8,7 +8,7 @@ This file provides Python code generation instructions for the SPECTROview AI Ag
 
 ## Scope
 
-The AI Agent primarily operates through structured JSON actions (filter, statistics, plot, update, delete, answer). However, when a user explicitly asks for Python code — for example, to perform custom calculations, batch export, or scripted analysis — follow these guidelines.
+The AI Agent primarily operates by calling MCP tools (`plot_graph`, `query_dataframe`, etc.). However, when a user explicitly asks for Python code — for example, to perform custom calculations, batch export, or scripted analysis — follow these guidelines.
 
 ## Safe Operations
 
@@ -45,4 +45,4 @@ Generated code should:
 - **NEVER** use `seaborn` — use `matplotlib` directly for all plotting code.
 - Do NOT generate network requests, system calls, or subprocess commands.
 - Always use the exact column names from the loaded DataFrame schemas.
-- If a task is impossible without unsafe operations, use `action: "answer"` to explain the limitation.
+- If a task is impossible without unsafe operations, explain the limitation in plain text.

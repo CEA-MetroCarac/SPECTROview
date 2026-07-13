@@ -43,9 +43,11 @@ except ImportError:
 try:
     from spectroview.ai_agent.v_chat_panel import VChatPanel
     LLM_AVAILABLE = True
-except ImportError:
+    LLM_ERROR_MSG = ""
+except ImportError as e:
     VChatPanel = None   # type: ignore[assignment,misc]
     LLM_AVAILABLE = False
+    LLM_ERROR_MSG = str(e)
 
 class Main(QMainWindow):
     def __init__(self):
@@ -399,9 +401,9 @@ class Main(QMainWindow):
             QMessageBox.information(
                 self,
                 "SPECTROview AI Agent — Not Available",
-                "The AI Chat module could not be imported.\n\n"
-                "Please install the optional dependency:\n"
-                "    pip install ollama\n\n"
+                f"The AI Chat module could not be imported.\nError: {LLM_ERROR_MSG}\n\n"
+                "Please install the optional dependencies:\n"
+                "    pip install ollama mcp\n\n"
                 "Then restart SPECTROview.",
             )
             return

@@ -45,7 +45,6 @@ Usage
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -224,18 +223,7 @@ class PromptManager:
     # ------------------------------------------------------------------
 
     def load_prompt(self, name: str) -> str:
-        """Load ``prompts/<name>.md``.
-
-        Parameters
-        ----------
-        name:
-            File stem without extension (e.g. ``"system"``).
-
-        Returns
-        -------
-        str
-            File contents, or empty string on failure.
-        """
+        """Load ``prompts/<name>.md``."""
         return self._load_md(f"prompts/{name}.md")
 
     def load_rule(self, name: str) -> str:

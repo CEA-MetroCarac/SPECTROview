@@ -3,12 +3,9 @@
 Model Context Protocol (MCP) Server for SPECTROview.
 """
 import json
-import logging
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
-from mcp.server.fastmcp import FastMCP
+from typing import Any, List, Optional
 
-logger = logging.getLogger(__name__)
+from mcp.server.fastmcp import FastMCP
 
 # To communicate plot configurations back to the UI, we can use a callback or just return JSON string.
 # We will define a factory function to create the server, injecting a reference to vm_chat.
@@ -117,8 +114,6 @@ def create_mcp_server(vm_chat) -> FastMCP:
             other_properties: A dictionary of other properties to set (e.g. {'grid': True, 'x_rot': 45, 'ylabel': 'AAA', 'xlabel': 'BBB', 'plot_title': 'CCC'}).
             df_name: Optional target DataFrame name. If empty, uses the active one.
         """
-        from spectroview.ai_agent.vm_chat import ChatResult
-        
         config = {
             "x": x,
             "y": y if isinstance(y, list) else [y],

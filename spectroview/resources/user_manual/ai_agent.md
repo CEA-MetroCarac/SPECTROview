@@ -21,12 +21,12 @@ The AI Agent supports multiple LLM backends:
 
 | Provider | Description | Requires |
 |----------|-------------|----------|
-| **Ollama (local)** | Fully local, no internet, no API key | `pip install ollama` + Ollama installed |
-| **OpenAI** | GPT-4o, GPT-4o-mini, etc. | `pip install openai` + API key |
-| **DeepSeek** | Cost-effective, high-quality reasoning | `pip install openai` + DeepSeek API key |
-| **Gemini** | Google Gemini models | `pip install openai` + Gemini API key |
-| **Anthropic** | Claude models | `pip install anthropic` + Anthropic API key |
-| **Custom** | Any OpenAI-compatible endpoint | `pip install openai` + custom URL + API key |
+| **Ollama (local)** | Fully local, no internet, no API key | `pip install ollama mcp` + Ollama installed |
+| **OpenAI** | GPT-4o, GPT-4o-mini, etc. | `pip install openai mcp` + API key |
+| **DeepSeek** | Cost-effective, high-quality reasoning | `pip install openai mcp` + DeepSeek API key |
+| **Gemini** | Google Gemini models | `pip install openai mcp` + Gemini API key |
+| **Anthropic** | Claude models | `pip install anthropic mcp` + Anthropic API key |
+| **Custom** | Any OpenAI-compatible endpoint | `pip install openai mcp` + custom URL + API key |
 
 > **Note:** DeepSeek, Gemini, and other OpenAI-compatible providers all use the `openai` Python package as a generic networking client. You are **not** sending data to OpenAI — only the package is reused as a universal API tool.
 
@@ -127,6 +127,10 @@ Generate a point plot and a bar plot of peak_intensity vs Slot
 ```
 Create a 2D map of center_Si with Slot on X and Zone on Y
 ```
+```
+Plot a wafer map of fwhm_Si for Slot 11
+```
+*(Note: Wafer and 2Dmap plots require your dataset to have spatial X and Y coordinate columns).*
 ```
 Plot a histogram of FWHM values with 30 bins
 ```

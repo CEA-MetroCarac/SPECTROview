@@ -70,13 +70,14 @@ graph TD
     VCP -->|"method call"| VMC["VMChat (ViewModel)"]
     VMC -->|"delegates"| LLC["LLMClient (Model)"]
     VMC -->|"builds prompt"| PM["PromptManager"]
+    VMC -->|"starts"| MCP["FastMCP Server (mcp/server.py)"]
     PM -->|"loads .md"| FS["File System (prompts/, rules/, ...)"]
-    LLC -->|"spawns"| LLW["LLMWorker (QThread)"]
-    LLW -->|"HTTP stream"| OLL["Ollama (local)"]
-    OLL -->|"token chunks"| LLW
+    LLC -->|"spawns (with MCP tools)"| LLW["LLMWorker (QThread)"]
+    LLW -->|"HTTP stream"| OLL["Ollama/OpenAI (local/cloud)"]
+    OLL -->|"tool calls / text chunks"| LLW
     LLW -->|"signals"| LLC
     LLC -->|"signals"| VMC
-    VMC -->|"result_ready"| VCP
+    VMC -->|"result_ready (ChatResult)"| VCP
     VCP -->|"plot_requested"| Main
     Main -->|"create / update / delete"| VWG["VWorkspaceGraphs"]
 ```
@@ -101,6 +102,8 @@ spectroview/ai_agent/
 │                            #   - LLMClient (unified facade)
 ├── m_conversation.py        # Data model: single conversation (messages, save/load JSON)
 ├── m_conversation_store.py  # Conversation store: scan/list/load saved conversations
+├── mcp/
+│   └── server.py            # FastMCP Server defining the AI tools (plot_graph, query_dataframe, etc.)
 ├── m_prompt_manager.py      # Prompt caching and assembly: loads and merges Markdown files based on intent
 ├── vm_chat.py               # ViewModel: delegates to PromptManager, history, response parsing
 ├── v_chat_panel.py          # View: floating chat dialog (QDialog)
@@ -115,7 +118,8 @@ spectroview/ai_agent/
 | `m_llm_client.py` | **Model** | Wraps Ollama, OpenAI SDK, and Anthropic SDK. Checks availability, lists models, spawns one of three background `QThread` workers depending on the selected provider. |
 | `m_conversation.py` | **Model** | Represents a single conversation: add messages, auto-title, save/load as JSON. Skips saving empty conversations. |
 | `m_conversation_store.py` | **Model** | Scans the history folder, lists saved conversations as lightweight summaries, loads conversations by ID. |
-| `vm_chat.py` | **ViewModel** | Builds the system prompt using `PromptManager`. Manages conversation history. Parses the LLM's structured JSON response into a `ChatResult` object. Executes safe pandas operations. |
+| `mcp/server.py` | **Model** | FastMCP server that exposes internal SPECTROview resources (DataFrames, graphs) and tools (plotting, querying, statistics) to the LLM. |
+| `vm_chat.py` | **ViewModel** | Builds the system prompt using `PromptManager`. Manages conversation history. Parses the LLM's tool calls into `ChatResult` objects. |
 | `v_chat_panel.py` | **View** | Floating `QDialog` with chat bubbles, provider/model selector, timestamp display, status bar, and input field. Emits `plot_requested(dict)` when the AI suggests a plot or graph modification. |
 | `v_history_dialog.py` | **View** | Browsable list of saved conversations sorted by most-recent-first. Supports open, rename, duplicate, and delete. |
 
@@ -213,7 +217,7 @@ Conversations are saved automatically as JSON files in the user-configured histo
 - Persists to disk after each AI response.
 - Is **not cleared** when the user loads a new workspace file or switches DataFrames. History only resets when the user explicitly clicks **+ New Chat**.
 
-The rolling context sent to the LLM is capped at the last **6 pairs** (12 messages) to prevent context overflow.
+The rolling context sent to the LLM is configurable via `max_context_messages` (defaulting to no cap, meaning all messages in the conversation are sent).
 
 ### **`ChatResult` — Parsed Response**
 
@@ -278,38 +282,17 @@ The `PromptManager` dynamically aggregates these markdown segments:
 4. **Knowledge (`knowledge/features.md`):** Static facts about the software features.
 5. **Examples (`examples/plotting_examples.md`):** Few-shot JSON examples for the specific intent.
 
-The LLM is instructed to respond with **only a valid JSON object** (no markdown fences, no explanatory text) conforming to this schema:
+The AI agent uses **Tool Calling (Function Calling)** via the **Model Context Protocol (MCP)**.
+Instead of relying on fragile JSON parsing, the LLM is provided with a strict schema of tools defined in `mcp/server.py` using `FastMCP`.
 
-```json
-{
-  "action": "filter | statistics | plot | update | delete | answer",
-  "explanation": "short human-readable description",
-  "target_dataframe": "name or null",
-  "query": "pandas .query() expression or null",
-  "stat_columns": ["col1", "col2"],
-  "graph_update": {
-    "graph_id": 1,
-    "properties": { "ymin": 3.6, "plot_title": "New title", ... }
-  },
-  "graph_delete": {
-    "delete_all": false,
-    "graph_ids": [1, 2, 3]
-  },
-  "plot_config": [
-    {
-      "x": "column", "y": "column", "z": "column or null",
-      "filters": ["pandas query string"],
-      "plot_style": "point | scatter | box | bar | line | trendline | histogram | wafer | 2Dmap",
-      "plot_title": "...", "xlabel": "...", "ylabel": "...",
-      "xmin": null, "xmax": null, "ymin": null, "ymax": null,
-      "color_palette": "jet | viridis | plasma | ...",
-      "scatter_size": 70, "hist_bins": 20, "hist_kde": false,
-      "plot_width": 480, "plot_height": 420, "dpi": 100
-    }
-  ],
-  "answer_text": "plain text answer or null"
-}
-```
+These tools include:
+- `query_dataframe(query, df_name)`
+- `get_statistics(columns, df_name)`
+- `plot_graph(x, y, plot_style, z, filters, other_properties)`
+- `update_graph(graph_id, properties)`
+- `delete_graph(delete_all, graph_ids)`
+
+The LLM decides which tool to call and passes the strongly-typed arguments. The `LLMClient` intercepts these tool calls and translates them into `ChatResult` objects.
 
 ### **Safety Rules**
 
@@ -554,12 +537,12 @@ If dependencies are not installed:
 
 ## **Response Parsing & Error Handling**
 
-`VMChat._parse_response()` handles several edge cases in the LLM output:
+With the migration to **MCP Tool Calling**, response parsing is significantly more robust:
 
-1. **Markdown fences**: Strips `` ```json `` / `` ``` `` that the model sometimes adds.
-2. **JSON extraction**: If the top-level text isn't valid JSON, a regex searches for the first `{...}` block.
-3. **Fallback**: If no valid JSON can be found, the raw text is returned as an `action: "answer"` so the user always sees something useful.
-4. **Invalid DataFrame target**: Falls back to the active DataFrame, then to the first loaded DataFrame.
+1. **Tool Execution**: When the LLM decides to perform an action, it emits a structured tool call (e.g., `plot_graph`).
+2. **Mapping to ChatResult**: `vm_chat.py` extracts these tool calls from the message and wraps them in a `ChatResult` object.
+3. **Fallback**: If the LLM just replies with text instead of a tool call, the text is returned as an `action: "answer"` so the user always sees something useful.
+4. **Invalid DataFrame target**: The MCP tools handle fallback logic, resolving empty `df_name` arguments to the currently active DataFrame.
 
 ---
 

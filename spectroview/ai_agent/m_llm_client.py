@@ -258,7 +258,6 @@ class APIWorker(QThread):
                     self._full_response += fragment
                     self.chunk_received.emit(fragment)
 
-            import json
             tool_calls = []
             for tc in tool_calls_dict.values():
                 tool_calls.append({

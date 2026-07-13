@@ -61,10 +61,12 @@ nav:
     - Workspace Graphs: user_manual/graphs.md
     - Multivariate Analysis (MVA): user_manual/mva.md
     - Quick Calculators: user_manual/calculators.md
-    - AI Chat Agent: user_manual/ai_agent.md
     - Settings: user_manual/settings.md
     - Save & Load: user_manual/save_load.md
     - Shortcuts & Tips: user_manual/shortcuts.md
+  - Agentic AI:
+    - User Guide: user_manual/ai_agent.md
+    - Architecture & Development: developer/ai_agent.md
   - Developer Guide:
     - Architecture: developer/index.md
     - File Loading Pipeline: developer/file_loading.md
@@ -74,7 +76,6 @@ nav:
     - Workspace Graphs: developer/graphs.md
     - Vectorized Batch Fit Engine (VBF): developer/vbf_engine.md
     - Multivariate Analysis (MVA): developer/mva.md
-    - AI Chat Agent: developer/ai_agent.md
   - API:
     - Home: api/index.md
     - Spectra Processing & Fitting: api/spectra.md

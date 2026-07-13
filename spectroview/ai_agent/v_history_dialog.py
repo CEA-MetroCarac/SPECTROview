@@ -1,13 +1,11 @@
-import os
-from typing import Optional, Callable
 from datetime import datetime
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QLineEdit, QListWidget, QListWidgetItem, QWidget, QMessageBox,
-    QSizePolicy, QApplication
+    QLineEdit, QListWidget, QListWidgetItem, QWidget,
+    QSizePolicy
 )
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont, QIcon
+from PySide6.QtGui import QFont
 
 from spectroview.ai_agent.m_conversation_store import MConversationStore
 

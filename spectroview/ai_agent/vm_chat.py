@@ -31,17 +31,12 @@ without touching this Python file.
 
 from __future__ import annotations
 
-import json
-import re
-import traceback
-import os
-from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 import pandas as pd
 from PySide6.QtCore import QObject, Signal, QSettings
 
-from spectroview.ai_agent.m_llm_client import LLMClient, API_PROVIDERS
+from spectroview.ai_agent.m_llm_client import LLMClient
 from spectroview.ai_agent.m_conversation import MConversation
 from spectroview.ai_agent.m_conversation_store import MConversationStore
 from spectroview.ai_agent.m_prompt_manager import PromptManager

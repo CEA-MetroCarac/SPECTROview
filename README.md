@@ -18,11 +18,7 @@
 <h1 align="center">SPECTROview</h1>
 
 <p align="center">
-    <strong>An Open-Source Application for Interactive Spectroscopic Data Processing, Fitting, and Visualization</strong>
-</p>
-
-<p align="center">
-    <b>SPECTROview</b> is a free, open-source software designed for advanced spectroscopic data analysis.<br>
+   A free, open-source software designed for advanced spectroscopic data analysis.<br>
     It supports discrete spectra and hyperspectral datasets such as 2D maps and wafer maps,<br>
     with integrated visualization tools that streamline your analytical workflow.
 </p>

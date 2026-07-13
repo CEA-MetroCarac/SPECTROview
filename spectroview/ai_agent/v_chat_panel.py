@@ -25,15 +25,15 @@ from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QScrollArea, QFrame, QComboBox, QSizePolicy,
     QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QApplication,
-    QSplitter, QTextBrowser
+    QTextBrowser
 )
 import markdown
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QSettings, QThread, QObject
-from PySide6.QtGui import QFont, QIcon, QKeyEvent, QColor, QPalette, QTextCursor
+from PySide6.QtGui import QFont, QIcon, QKeyEvent, QTextCursor
 
 from spectroview import ICON_DIR
 from spectroview.ai_agent.vm_chat import VMChat, ChatResult
-from spectroview.ai_agent.m_llm_client import LLMClient, API_PROVIDERS, OPENAI_AVAILABLE, OLLAMA_AVAILABLE
+from spectroview.ai_agent.m_llm_client import API_PROVIDERS, OPENAI_AVAILABLE, OLLAMA_AVAILABLE
 from spectroview.ai_agent.v_history_dialog import VHistoryDialog
 
 
@@ -286,7 +286,6 @@ class _DataFramePreview(QWidget):
 
 try:
     import speech_recognition as _sr  # type: ignore[import-untyped]
-    import pyaudio as _pa  # type: ignore[import-untyped]  # noqa: F401 — verify backend
     VOICE_AVAILABLE = True
 except ImportError:
     _sr = None  # type: ignore[assignment]

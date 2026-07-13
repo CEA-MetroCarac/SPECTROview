@@ -2,7 +2,7 @@ import os
 import glob
 import json
 from datetime import datetime
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 
 from spectroview.ai_agent.m_conversation import MConversation
 

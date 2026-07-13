@@ -58,6 +58,11 @@ When the user wants to **modify** an existing graph (change axis limits, title, 
 - Only include the properties the user explicitly wants to change.
 - When **adding** a filter to an existing graph, preserve the existing filters by including them in the new filters list.
 
+## Filters
+
+When providing filters, you must supply a list of valid pandas query strings. 
+**CRITICAL**: You MUST use quotes around string values inside your query strings. Failure to do so will cause the query to fail. For example, use `["Zone != 'Edge'"]` instead of `["Zone != Edge"]` and `["Type == 'Control'"]` instead of `["Type == Control"]`. Smaller models in particular must pay close attention to this.
+
 ## Deleting Graphs
 
 When the user wants to close or delete graphs, call the `delete_graph` tool.

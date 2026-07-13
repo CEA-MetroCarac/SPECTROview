@@ -20,6 +20,7 @@ These rules govern how the AI agent creates, modifies, and deletes graphs.
 - **Do not set axis limits** (`xmin`, `xmax`, `ymin`, `ymax`, `zmin`, `zmax`) unless the user explicitly provides numeric values.
 - **Use descriptive column names** as-is from the DataFrame for axis mapping. Do not rename or abbreviate.
 - **Default color palette** is `"jet"`. Only change it if the user requests a specific palette.
+- **Filters**: When providing pandas query strings in `filters`, **always enclose string values in quotes** (e.g., `["Zone != 'Edge'"]`). Smaller models often omit quotes which causes evaluation errors.
 
 ## Plot Styles
 

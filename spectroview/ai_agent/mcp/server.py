@@ -110,7 +110,7 @@ def create_mcp_server(vm_chat) -> FastMCP:
             y: Column name(s) for Y-axis (can be a string or a list of strings). For 'wafer' and '2Dmap', this MUST be the Y-coordinate column, NOT the metric value.
             plot_style: The visual style (e.g., 'point', 'line', 'bar', 'wafer', '2Dmap', 'trendline', 'histogram', 'scatter', 'box').
             z: Optional column name for Z-axis or color encoding (hue). For 'wafer' and '2Dmap', this MUST be the metric value to visualize. For 'point'/'scatter', used as hue.
-            filters: Optional list of pandas query strings to filter data (e.g. ['Zone == 1', 'Yield > 90']).
+            filters: Optional list of pandas query strings to filter data. IMPORTANT: For string values, you MUST use quotes around the value (e.g., ["Zone == 'Edge'", 'Yield > 90']).
             other_properties: A dictionary of other properties to set (e.g. {'grid': True, 'x_rot': 45, 'ylabel': 'AAA', 'xlabel': 'BBB', 'plot_title': 'CCC'}).
             df_name: Optional target DataFrame name. If empty, uses the active one.
         """
@@ -164,7 +164,7 @@ def create_mcp_server(vm_chat) -> FastMCP:
             y: Optional new column name(s) for Y-axis (string or list of strings).
             plot_style: Optional new style of the plot.
             z: Optional new column name for Z-axis or color encoding (hue).
-            filters: Optional new list of pandas query strings to filter data. To keep existing filters while adding new ones, you MUST include the existing filters in this list.
+            filters: Optional new list of pandas query strings to filter data. To keep existing filters while adding new ones, you MUST include the existing filters in this list. IMPORTANT: Use quotes around string values (e.g., ["Zone == 'Edge'"]).
             other_properties: A dictionary of other properties to update (e.g. {'grid': True, 'x_rot': 45, 'ylabel': 'AAA', 'xlabel': 'BBB', 'plot_title': 'CCC'}).
         """
         update_props = {}

@@ -42,7 +42,25 @@ The AI Agent supports multiple LLM backends:
 
 ---
 
-### **4. Chat Interface Overview**
+### **4. Prompt Tier for Local Models (Auto / Full / Simplified)**
+
+Next to the model dropdown is a small **prompt tier** selector: **Auto**, **Full prompt**, or **Simplified prompt**. It only affects local **Ollama** models.
+
+Small local models (roughly under ~10 billion parameters — things like `qwen3:8b`, `gemma3:4b`, `phi3:mini`) are noticeably less reliable with a long, information-dense prompt than a large cloud model is. To compensate, SPECTROview can automatically give small models a shorter, more focused prompt, a smaller conversation-history window, and tuned generation settings — while leaving larger models completely untouched.
+
+| Option | What it does |
+|--------|--------------|
+| **Auto** (default) | SPECTROview checks the size of the selected Ollama model and automatically picks the right prompt for it. No action needed — this is the recommended setting for almost everyone. |
+| **Full prompt** | Always use the full, detailed prompt, even for a small model. Useful for comparing behavior, or if a "small" model is actually working fine as-is. |
+| **Simplified prompt** | Always use the shorter, small-model-optimized prompt, even for a large model. Useful if a specific model is struggling despite being large, or if you want faster responses. |
+
+When Simplified mode is active, the status bar shows **`· Simplified prompts`** next to the connection indicator, so you can always tell which mode you're in.
+
+**If a local model isn't calling tools correctly** (e.g. it describes what it *would* plot instead of actually creating the plot, or drops a setting like grid lines), try switching this selector to **Simplified prompt** — even if Auto didn't pick it automatically for that model — before assuming the model can't do the task at all.
+
+---
+
+### **5. Chat Interface Overview**
 
 The chat panel shows messages in chronological order with clear color-coded bubbles:
 
@@ -64,7 +82,7 @@ If these are not installed, the microphone button will still appear but will sho
 
 ---
 
-### **5. What the AI Agent Can Do**
+### **6. What the AI Agent Can Do**
 
 The AI Agent has full awareness of your loaded DataFrames and open graphs. It can:
 
@@ -77,7 +95,7 @@ The AI Agent has full awareness of your loaded DataFrames and open graphs. It ca
 
 ---
 
-### **6. Prompt Examples**
+### **7. Prompt Examples**
 
 #### 🔍 Data Filtering
 
@@ -188,7 +206,7 @@ What is the data type of the Zone column?
 
 ---
 
-### **7. Conversation History**
+### **8. Conversation History**
 
 The AI Agent **remembers your conversation** across multiple turns:
 
@@ -206,17 +224,18 @@ AI:   (creates scatter plot with FWHM > 5 filter applied)
 
 ---
 
-### **8. Tips & Best Practices**
+### **9. Tips & Best Practices**
 
 - **Be specific about column names** — the AI knows your column names, but using the exact name avoids confusion.
 - **Reference graph IDs** — when modifying or deleting graphs, check the graph ID shown in its title bar.
 - **Start simple** — ask for a basic plot first, then refine it in follow-up messages.
 - **Multiple plots at once** — request several styles in one prompt: *"Create a box and scatter plot of X vs Y"*.
 - **Check the status bar** — a 🔴 red indicator means the connection is not working. Check your API key in Settings or verify Ollama is running.
+- **Struggling local model?** — try forcing **Simplified prompt** (see [section 4](#4-prompt-tier-for-local-models-auto--full--simplified)), keep requests to one or two plots per message, and prefer models that are explicitly documented as supporting tool/function calling.
 
 ---
 
-### **9. Keyboard Shortcuts**
+### **10. Keyboard Shortcuts**
 
 | Shortcut | Action |
 |----------|--------|

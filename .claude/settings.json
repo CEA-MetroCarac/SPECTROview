@@ -4,7 +4,15 @@
       "Bash(python3 -m pytest tests/ --collect-only -q)",
       "Read(//tmp/**)",
       "Bash(echo \"=== Files represented in collection ===\"; sed 's/::.*//' /tmp/collect_output.txt | grep \"^tests/\" | sort -u *)",
-      "Bash(python3 -m pytest tests/test_update_banner_preview.py --collect-only -q)"
+      "Bash(python3 -m pytest tests/test_update_banner_preview.py --collect-only -q)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -m py_compile spectroview/ai_agent/v_chat_panel.py spectroview/ai_agent/v_history_dialog.py spectroview/view/theme/qss_template.py)",
+      "Bash(python3 -m py_compile spectroview/ai_agent/v_history_dialog.py spectroview/ai_agent/m_conversation_store.py)",
+      "Bash(python3 -m py_compile spectroview/ai_agent/m_llm_client.py spectroview/ai_agent/vm_chat.py)",
+      "Bash(python3 -m py_compile spectroview/ai_agent/v_chat_panel.py)",
+      "Bash(python3 -m pytest tests/test_ai_agent_reasoning_toggle.py -q)",
+      "Bash(python3 -m py_compile spectroview/model/m_plot_template.py spectroview/model/m_plot_template_store.py)",
+      "Bash(python3 -m py_compile spectroview/view/components/v_plot_template_dialog.py)"
     ],
     "additionalDirectories": [
       "/private/tmp"

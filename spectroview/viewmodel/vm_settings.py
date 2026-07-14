@@ -13,6 +13,7 @@ class VMSettings(QObject):
     settings_saved = Signal()
     model_folder_changed = Signal(str)
     history_folder_changed = Signal(str)
+    template_folder_changed = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -30,8 +31,8 @@ class VMSettings(QObject):
     def save(self, data: dict):
         model_folder = data.pop("model_folder", "")
         
-        ai_keys = ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini", 
-                   "api_key_DeepSeek", "api_key_Custom", "custom_base_url", "history_folder"]
+        ai_keys = ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini",
+                   "api_key_DeepSeek", "api_key_Custom", "custom_base_url", "history_folder", "template_folder"]
         ai_data = {k: data.pop(k, "") for k in ai_keys if k in data}
         
         self.settings.save_fit_settings(data)
@@ -57,3 +58,10 @@ class VMSettings(QObject):
         )
         if folder:
             self.history_folder_changed.emit(folder)
+
+    def pick_template_folder(self):
+        folder = QFileDialog.getExistingDirectory(
+            None, "Select Plot Template Folder", ""
+        )
+        if folder:
+            self.template_folder_changed.emit(folder)

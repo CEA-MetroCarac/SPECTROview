@@ -71,6 +71,10 @@ class MConversationStore:
         summaries.sort(key=lambda s: (s.modified_at, s.created_at), reverse=True)
         return summaries
 
+    def get_summary(self, conv_id: str) -> Optional[ConversationSummary]:
+        """Return the cached summary for *conv_id*, or None if unknown."""
+        return self._index.get(conv_id)
+
     def load_conversation(self, conv_id: str) -> Optional[MConversation]:
         """Load full conversation from disk."""
         summary = self._index.get(conv_id)

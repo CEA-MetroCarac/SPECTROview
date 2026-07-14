@@ -11,7 +11,9 @@ from PySide6.QtGui import QIcon, QDesktopServices, QBrush, QFont, QShortcut, QKe
 
 from spectroview import ICON_DIR, PLOT_STYLES, AXIS_LABELS
 from spectroview.model.m_settings import MSettings
+from spectroview.model.m_plot_template_store import MPlotTemplateStore
 from spectroview.view.components.v_data_filter import VDataFilter
+from spectroview.view.components.v_plot_template_picker import VPlotTemplatePicker
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
@@ -26,7 +28,12 @@ class VWorkspaceGraphs(QWidget):
         super().__init__(parent)
         self.m_settings = MSettings()
         self.vm = VMWorkspaceGraphs(self.m_settings)
-        
+
+        # Independent of the (lazily-created) AI chat panel, so a saved
+        # template can be applied here even if AI Chat was never opened.
+        template_folder = self.m_settings.load_ai_settings().get("template_folder", "")
+        self.template_store = MPlotTemplateStore(template_folder)
+
         # Graph storage: {graph_id: (Graph widget, QDialog, QMdiSubWindow)}
         self.graph_widgets = {}
         
@@ -104,7 +111,13 @@ class VWorkspaceGraphs(QWidget):
         self.btn_minimize_all = QPushButton("Minimize All")
         self.btn_minimize_all.setMaximumWidth(100)
         toolbar_layout.addWidget(self.btn_minimize_all)
-        
+
+        # Apply a saved plot template — independent of the AI chat panel
+        self.btn_apply_template = QPushButton("📊 Template")
+        self.btn_apply_template.setToolTip("Apply a saved plot template")
+        self.btn_apply_template.setMaximumWidth(100)
+        toolbar_layout.addWidget(self.btn_apply_template)
+
         # Plot size label
         self.lbl_plot_size = QLabel("(480x400)")
         self.lbl_plot_size.setMinimumWidth(70)
@@ -551,6 +564,7 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_graph_list.currentIndexChanged.connect(self._on_graph_selected_toolbar)
         self.btn_minimize_all.clicked.connect(self._on_minimize_all)
         self.btn_delete_all.clicked.connect(self._on_delete_all)
+        self.btn_apply_template.clicked.connect(self._on_apply_template_clicked)
         
         # MDI area connections
         self.mdi_area.subWindowActivated.connect(self._on_subwindow_activated)
@@ -845,7 +859,31 @@ class VWorkspaceGraphs(QWidget):
             filters = []
         self._create_and_display_plot(plot_config, select_in_list=False, filters=filters)
         return True
-    
+
+    def _on_apply_template_clicked(self) -> None:
+        dialog = VPlotTemplatePicker(self.template_store, self)
+        dialog.template_applied.connect(self._on_template_applied)
+        dialog.exec()
+
+    def _on_template_applied(self, configs: list) -> None:
+        """Apply every plot config in a saved template — mirrors how
+        main.py's _on_chat_plot_requested applies an AI-suggested plot,
+        with the same df_name fallback to the currently active DataFrame
+        when a template's original DataFrame isn't currently loaded."""
+        import copy
+        from spectroview.ai_agent.utils.plot_utils import normalize_plot_config
+
+        for raw_cfg in configs:
+            cfg = copy.deepcopy(raw_cfg)
+            df_name = cfg.get('df_name')
+            if not df_name or df_name not in self.vm.dataframes:
+                df_name = self.vm.selected_df_name
+            if not df_name:
+                continue
+            normalize_plot_config(cfg)
+            cfg['df_name'] = df_name
+            self.create_plot_from_config(df_name, cfg)
+
     def _on_replicate_graph(self, graph_id: int):
         """Replicate a graph."""
         graph_model = self.vm.get_graph(graph_id)

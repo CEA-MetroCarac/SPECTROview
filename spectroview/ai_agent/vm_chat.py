@@ -40,6 +40,7 @@ from PySide6.QtCore import QObject, Signal, QSettings
 from spectroview.ai_agent.m_llm_client import LLMClient, get_ollama_model_info
 from spectroview.ai_agent.m_conversation import MConversation
 from spectroview.ai_agent.m_conversation_store import MConversationStore
+from spectroview.model.m_plot_template_store import MPlotTemplateStore
 from spectroview.ai_agent.m_prompt_manager import PromptManager
 from spectroview.ai_agent.utils.plot_utils import expand_all_plot_configs
 from spectroview.ai_agent.utils.df_summary import summarize_dataframe_columns
@@ -109,6 +110,7 @@ class VMChat(QObject):
 
     thinking_changed = Signal(bool, str)
     chunk_received   = Signal(str)
+    thinking_content_received = Signal(str)  # streamed reasoning fragment, opt-in only
     result_ready     = Signal(object)       # ChatResult
     error_occurred   = Signal(str)
     conversation_changed = Signal(str)
@@ -147,10 +149,12 @@ class VMChat(QObject):
         s = QSettings("SPECTROview", "AIChat")
         s.beginGroup("ai_chat")
         self._history_folder = str(s.value("history_folder", ""))
+        self._template_folder = str(s.value("template_folder", ""))
         s.endGroup()
 
         self.conversation_store = MConversationStore(self._history_folder)
         self._conversation = self.conversation_store.create_conversation()
+        self.template_store = MPlotTemplateStore(self._template_folder)
         self.max_context_messages: Optional[int] = None # None means no cap
 
         # ── Prompt engineering ───────────────────────────────────────────
@@ -166,6 +170,10 @@ class VMChat(QObject):
         # Not refreshed here — refresh happens on set_model()/set_provider(),
         # once a real model/provider is known, to avoid a network call
         # (ollama show) racing construction against a placeholder model.
+
+        # ── Reasoning visibility (opt-in, off by default) ──────────────────
+        self._show_reasoning: bool = False
+        self._pending_thinking: str = ""
 
         # ── MCP Server ───────────────────────────────────────────────────
         self._mcp_server = create_mcp_server(self)
@@ -319,6 +327,20 @@ class VMChat(QObject):
         self._param_count_cache[model] = result
         return result
 
+    def set_show_reasoning(self, enabled: bool) -> None:
+        """Opt in/out of surfacing the model's reasoning ("thinking") content.
+
+        Off by default. Enabling this for a detected-small model overrides
+        that tier's ``think=False`` reliability default for the *next*
+        request — the caller (View) is expected to warn the user that this
+        may reduce tool-calling reliability on small models, since the
+        toggle itself doesn't second-guess an explicit opt-in.
+        """
+        self._show_reasoning = enabled
+
+    def is_show_reasoning(self) -> bool:
+        return self._show_reasoning
+
     def _build_request_options(self) -> Dict[str, Any]:
         """Assemble the generic request-tuning dict passed to ``LLMClient.chat()``.
 
@@ -340,6 +362,9 @@ class VMChat(QObject):
         else:
             opts["num_ctx"] = cfg.get("ollama_num_ctx_full", 16384)
             opts["max_tokens"] = cfg.get("max_tokens", 81920)
+
+        if self._show_reasoning:
+            opts["think"] = True
 
         return opts
 
@@ -376,8 +401,9 @@ class VMChat(QObject):
         # Track the user turn now; assistant turn added after response
         self._conversation.add_message("user", user_text, reply_to_index=reply_to_index)
         self._pending_response = ""
+        self._pending_thinking = ""
         self._loop_count = 0
-        
+
         # Build the full message list for this request
         messages = self._build_messages(user_text)
 
@@ -392,6 +418,7 @@ class VMChat(QObject):
             tools    = self._mcp_tools_cache,
             parent   = self,
             request_options = self._build_request_options(),
+            on_thinking_chunk = self._on_thinking_chunk,
         )
 
     def cancel(self) -> None:
@@ -545,6 +572,10 @@ class VMChat(QObject):
         self._pending_response += fragment
         self.chunk_received.emit(fragment)
 
+    def _on_thinking_chunk(self, fragment: str) -> None:
+        self._pending_thinking += fragment
+        self.thinking_content_received.emit(fragment)
+
     def _on_done(self, full_text: str, tool_calls: list) -> None:
         self.thinking_changed.emit(False, "Thinking")
 
@@ -616,6 +647,7 @@ class VMChat(QObject):
                 
                 # Trigger the next turn
                 self._pending_response = ""
+                self._pending_thinking = ""
                 messages = self._build_messages("")
                 self._client.chat(
                     model=self._model,
@@ -626,6 +658,7 @@ class VMChat(QObject):
                     tools=self._mcp_tools_cache,
                     parent=self,
                     request_options=self._build_request_options(),
+                    on_thinking_chunk=self._on_thinking_chunk,
                 )
             except Exception as e:
                 self.error_occurred.emit(f"Error calling MCP tools: {e}")

@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QScrollArea, QFrame, QComboBox, QSizePolicy,
     QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QApplication,
-    QTextBrowser
+    QTextBrowser, QInputDialog, QMessageBox
 )
 import markdown
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QSettings, QThread, QObject
@@ -35,11 +35,26 @@ from spectroview import ICON_DIR
 from spectroview.ai_agent.vm_chat import VMChat, ChatResult
 from spectroview.ai_agent.m_llm_client import API_PROVIDERS, OPENAI_AVAILABLE, OLLAMA_AVAILABLE
 from spectroview.ai_agent.v_history_dialog import VHistoryDialog
+from spectroview.view.components.v_plot_template_dialog import VPlotTemplateDialog
 
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Helper widgets
 # ═══════════════════════════════════════════════════════════════════════════
+
+# Rendered once per message update rather than rebuilt as a literal string
+# each time — colors are translucent grays so they read correctly against
+# both the card's dark-theme and light-theme background.
+_MARKDOWN_CSS = """
+<style>
+    table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+    th, td { border: 1px solid rgba(128, 128, 128, 0.3); padding: 6px; text-align: left; }
+    th { background-color: rgba(128, 128, 128, 0.2); }
+    code { background-color: rgba(128, 128, 128, 0.15); padding: 2px 4px; border-radius: 3px; font-family: monospace; }
+    pre { background-color: rgba(128, 128, 128, 0.10); padding: 10px; border-radius: 5px; overflow-x: auto; }
+</style>
+"""
+
 
 class _MessageCard(QFrame):
     """A single chat message card with Markdown rendering and actions."""
@@ -112,8 +127,6 @@ class _MessageCard(QFrame):
         self.setMinimumWidth(10)
         layout.addWidget(self.content_view)
 
-        self._apply_style()
-
     def _update_markdown(self, text: str):
         self._raw_text = text
         if self._role == "user":
@@ -121,44 +134,50 @@ class _MessageCard(QFrame):
         else:
             # Convert Markdown to HTML
             html = markdown.markdown(text, extensions=['tables', 'fenced_code', 'codehilite'])
-            # Add some basic CSS for tables and code blocks
-            styled_html = f"""
-            <style>
-                table {{ border-collapse: collapse; width: 100%; margin-bottom: 10px; }}
-                th, td {{ border: 1px solid #ddd; padding: 6px; text-align: left; }}
-                th {{ background-color: rgba(128, 128, 128, 0.2); }}
-                code {{ background-color: rgba(128, 128, 128, 0.15); padding: 2px 4px; border-radius: 3px; font-family: monospace; }}
-                pre {{ background-color: rgba(0, 0, 0, 0.05); padding: 10px; border-radius: 5px; overflow-x: auto; }}
-            </style>
-            {html}
-            """
             self.content_view.setUpdatesEnabled(False)
-            self.content_view.setHtml(styled_html)
+            self.content_view.setHtml(_MARKDOWN_CSS + html)
             self.content_view.document().setTextWidth(self.content_view.viewport().width())
             self.content_view.setFixedHeight(int(self.content_view.document().size().height()) + 5)
             self.content_view.setUpdatesEnabled(True)
 
-    def set_raw_response(self, raw_text: str):
-        if not raw_text or self._role == "user":
+    def append_reasoning(self, fragment: str) -> None:
+        """Append a streamed reasoning ("thinking") fragment, lazily
+        creating the collapsible section on first use. Only ever called
+        when the user has opted in to showing reasoning — see
+        VChatPanel._on_thinking_content."""
+        if self._role == "user" or not fragment:
             return
-            
-        self.btn_reasoning = QPushButton("🛠️ View Raw JSON / Plot Config")
-        self.btn_reasoning.setCursor(Qt.PointingHandCursor)
-        self.btn_reasoning.setStyleSheet("color: #FFA726; border: none; font-size: 11px; text-align: left; background: transparent; text-decoration: underline; margin-top: 6px;")
-        self.btn_reasoning.setCheckable(True)
-        
-        self.reasoning_view = QTextBrowser()
-        self.reasoning_view.setFrameShape(QFrame.NoFrame)
-        self.reasoning_view.setStyleSheet("background: rgba(0,0,0,0.2); border-left: 2px solid #FFA726; color: #ccc; font-size: 10px; padding: 4px;")
-        self.reasoning_view.setPlainText(raw_text)
-        self.reasoning_view.hide()
-        self.reasoning_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.reasoning_view.setMaximumHeight(200)
-        
-        self.layout().addWidget(self.btn_reasoning)
-        self.layout().addWidget(self.reasoning_view)
-        
-        self.btn_reasoning.toggled.connect(self.reasoning_view.setVisible)
+
+        if not hasattr(self, "reasoning_view"):
+            self._reasoning_text = ""
+
+            self.btn_reasoning = QPushButton("🧠 Reasoning (click to expand)")
+            self.btn_reasoning.setObjectName("btnRowLink")
+            self.btn_reasoning.setCursor(Qt.PointingHandCursor)
+            self.btn_reasoning.setCheckable(True)
+            self.btn_reasoning.setStyleSheet("font-size: 11px; text-align: left; margin-top: 6px;")
+
+            self.reasoning_view = QTextBrowser()
+            self.reasoning_view.setObjectName("reasoningView")
+            self.reasoning_view.setFrameShape(QFrame.NoFrame)
+            self.reasoning_view.setStyleSheet("font-size: 10px; padding: 4px;")
+            self.reasoning_view.hide()
+            self.reasoning_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            self.reasoning_view.setMaximumHeight(200)
+
+            self.layout().addWidget(self.btn_reasoning)
+            self.layout().addWidget(self.reasoning_view)
+
+            self.btn_reasoning.toggled.connect(self._on_reasoning_toggled)
+
+        self._reasoning_text += fragment
+        self.reasoning_view.setPlainText(self._reasoning_text)
+
+    def _on_reasoning_toggled(self, checked: bool) -> None:
+        self.reasoning_view.setVisible(checked)
+        self.btn_reasoning.setText(
+            "🧠 Reasoning (click to collapse)" if checked else "🧠 Reasoning (click to expand)"
+        )
 
     def set_text(self, text: str) -> None:
         if self._role == "user":
@@ -175,44 +194,19 @@ class _MessageCard(QFrame):
             self.content_view.setFixedHeight(int(self.content_view.document().size().height()) + 5)
             self.content_view.setUpdatesEnabled(True)
 
-    def _apply_style(self):
-        if self._role == "user":
-            self.setStyleSheet("""
-                QFrame#card_user {
-                    background: rgba(30, 100, 200, 0.15);
-                    border: 1px solid rgba(30, 100, 200, 0.3);
-                    border-radius: 8px;
-                }
-            """)
-        elif self._role == "error":
-            self.setStyleSheet("""
-                QFrame#card_error {
-                    background: rgba(200, 50, 50, 0.15);
-                    border: 1px solid rgba(200, 50, 50, 0.4);
-                    border-radius: 8px;
-                }
-            """)
-        else:
-            self.setStyleSheet("""
-                QFrame#card_assistant {
-                    background: rgba(60, 180, 100, 0.10);
-                    border: 1px solid rgba(60, 180, 100, 0.25);
-                    border-radius: 8px;
-                }
-            """)
-
 
 class _ThinkingDots(QLabel):
     """Animated '...' label shown while the LLM is thinking."""
 
     def __init__(self, parent=None) -> None:
         super().__init__("🤖  Thinking .", parent)
+        self.setObjectName("chatThinkingDots")
         self._dots = 1
         self._text_prefix = "Thinking"
         self._timer = QTimer(self)
         self._timer.setInterval(400)
         self._timer.timeout.connect(self._tick)
-        self.setStyleSheet("color: gray; font-style: italic; padding: 4px 12px;")
+        self.setStyleSheet("font-style: italic; padding: 4px 12px;")
 
     def start(self, text_prefix: str = "Thinking"):
         self._text_prefix = text_prefix
@@ -370,9 +364,16 @@ class VChatPanel(QDialog):
     plot_requested(dict)
         Emitted when the AI suggests a plot.  The dict contains keys
         compatible with ``VWorkspaceGraphs`` plot configuration.
+    save_all_graphs_requested()
+        Emitted when the user clicks "Save all open plots as Template".
+        main.py is responsible for gathering the full MGraph.save() dicts
+        for every currently-open graph (VMChat only tracks a lightweight
+        summary of open graphs for prompt context, not the full models)
+        and calling back into ``prompt_and_save_template()``.
     """
 
     plot_requested = Signal(dict)
+    save_all_graphs_requested = Signal()
 
     _SETTINGS_GROUP = "ai_chat"
 
@@ -389,6 +390,14 @@ class VChatPanel(QDialog):
         self._active_card: Optional[_MessageCard] = None  # streaming target
         self._reply_to_index: Optional[int] = None
         self._voice_worker: Optional[VoiceWorker] = None
+
+        # Streaming re-render throttle: markdown parsing + HTML re-layout
+        # is too expensive to redo on every single streamed token, so
+        # fragments are buffered and flushed at a capped rate instead.
+        self._stream_buffer: str = ""
+        self._chunk_flush_timer = QTimer(self)
+        self._chunk_flush_timer.setSingleShot(True)
+        self._chunk_flush_timer.timeout.connect(self._flush_chunk_buffer)
 
         self._build_ui()
         self._connect_signals()
@@ -426,6 +435,23 @@ class VChatPanel(QDialog):
         self.scroll_area.setWidget(self.messages_container)
         root.addWidget(self.scroll_area, stretch=1)
 
+        # ── Scroll-to-bottom floating button ──────────────────────────
+        # Shown only once the user has scrolled away from the bottom
+        # while a response streams in below the visible area.
+        self.btn_scroll_to_bottom = QPushButton("↓", self.scroll_area)
+        self.btn_scroll_to_bottom.setObjectName("scrollToBottomBtn")
+        self.btn_scroll_to_bottom.setFixedSize(32, 32)
+        self.btn_scroll_to_bottom.setCursor(Qt.PointingHandCursor)
+        self.btn_scroll_to_bottom.setToolTip("Scroll to bottom")
+        self.btn_scroll_to_bottom.clicked.connect(self._scroll_to_bottom)
+        self.btn_scroll_to_bottom.hide()
+        self.scroll_area.verticalScrollBar().valueChanged.connect(
+            self._update_scroll_to_bottom_visibility
+        )
+        self.scroll_area.verticalScrollBar().rangeChanged.connect(
+            self._update_scroll_to_bottom_visibility
+        )
+
         # ── Thinking dots ───────────────────────────────────────────
         self.thinking_dots = _ThinkingDots(self)
         root.addWidget(self.thinking_dots)
@@ -449,20 +475,17 @@ class VChatPanel(QDialog):
     def _make_header(self) -> QFrame:
         header = QFrame()
         header.setObjectName("chatHeader")
-        header.setFixedHeight(75)
-        header.setStyleSheet("""
-            QFrame#chatHeader {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #222, stop:1 #1e1e1e);
-                border-bottom: 1px solid rgba(128,128,128,0.3);
-            }
-        """)
+        header.setFixedHeight(112)
 
-        # Main layout is VBox to hold two rows
+        # Main layout holds three rows: connection controls, action
+        # buttons, and the conversation title — split across rows rather
+        # than crammed into one so nothing gets clipped at the panel's
+        # default width.
         main_layout = QVBoxLayout(header)
         main_layout.setContentsMargins(10, 6, 10, 6)
-        main_layout.setSpacing(6)
+        main_layout.setSpacing(4)
 
-        # ── Row 1: Controls ───────────────────────────────────────────
+        # ── Row 1: Connection (provider / model / prompt tier) ─────────
         row1_layout = QHBoxLayout()
         row1_layout.setContentsMargins(0, 0, 0, 0)
         row1_layout.setSpacing(6)
@@ -474,90 +497,86 @@ class VChatPanel(QDialog):
         self.cbb_provider = QComboBox()
         for display in _DISPLAY_TO_PROVIDER.keys():
             self.cbb_provider.addItem(display)
-        self.cbb_provider.setMinimumWidth(100)
-        self.cbb_provider.setStyleSheet("""
-            QComboBox {
-                background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px;
-            }
-            QComboBox::drop-down { border: none; }
-            QComboBox QAbstractItemView { color: black; }
-        """)
-        row1_layout.addWidget(self.cbb_provider)
+        self.cbb_provider.setMinimumWidth(90)
+        row1_layout.addWidget(self.cbb_provider, stretch=1)
 
         self.cbb_model = QComboBox()
-        self.cbb_model.setMinimumWidth(150)
+        self.cbb_model.setMinimumWidth(110)
         self.cbb_model.setToolTip("Select the model to use")
-        self.cbb_model.setStyleSheet("""
-            QComboBox {
-                background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 2px 6px;
-            }
-            QComboBox::drop-down { border: none; }
-            QComboBox QAbstractItemView { color: black; }
-        """)
-        row1_layout.addWidget(self.cbb_model)
+        row1_layout.addWidget(self.cbb_model, stretch=1)
 
         self.cbb_prompt_tier = QComboBox()
         self.cbb_prompt_tier.addItems(["Auto", "Full prompt", "Simplified prompt"])
-        self.cbb_prompt_tier.setMinimumWidth(90)
+        self.cbb_prompt_tier.setMinimumWidth(80)
         self.cbb_prompt_tier.setToolTip(
             "Prompt tier for local Ollama models.\n"
             "Auto: detected automatically from the model's size.\n"
             "Full / Simplified: force a tier regardless of detection."
         )
-        self.cbb_prompt_tier.setStyleSheet("""
-            QComboBox {
-                background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px;
-            }
-            QComboBox::drop-down { border: none; }
-            QComboBox QAbstractItemView { color: black; }
-        """)
-        row1_layout.addWidget(self.cbb_prompt_tier)
+        row1_layout.addWidget(self.cbb_prompt_tier, stretch=1)
 
         self.btn_refresh_models = QPushButton("")
+        self.btn_refresh_models.setObjectName("btn_refresh_models")
         self.btn_refresh_models.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
         self.btn_refresh_models.setIconSize(QSize(20, 20))
         self.btn_refresh_models.setFixedSize(28, 28)
         self.btn_refresh_models.setToolTip("Refresh model list / re-check connection")
-        self.btn_refresh_models.setStyleSheet(
-            "QPushButton { background: transparent; border: none; border-radius: 4px; }"
-            "QPushButton:hover { background: rgba(255,255,255,0.2); }"
-        )
         row1_layout.addWidget(self.btn_refresh_models)
-        
-        row1_layout.addStretch()
+
+        main_layout.addLayout(row1_layout)
+
+        # ── Row 2: Actions (reasoning, history, new chat, templates) ───
+        row2_layout = QHBoxLayout()
+        row2_layout.setContentsMargins(0, 0, 0, 0)
+        row2_layout.setSpacing(6)
+
+        self.btn_reasoning_toggle = QPushButton("🧠")
+        self.btn_reasoning_toggle.setObjectName("btn_reasoning_toggle")
+        self.btn_reasoning_toggle.setFixedSize(28, 28)
+        self.btn_reasoning_toggle.setCheckable(True)
+        self.btn_reasoning_toggle.setCursor(Qt.PointingHandCursor)
+        self._update_reasoning_toggle_tooltip()
+        row2_layout.addWidget(self.btn_reasoning_toggle)
+
+        row2_layout.addStretch()
 
         self.btn_history = QPushButton("")
+        self.btn_history.setObjectName("btn_history")
         self.btn_history.setIcon(QIcon(os.path.join(ICON_DIR, "view-details.png")))
         self.btn_history.setIconSize(QSize(20, 20))
         self.btn_history.setFixedSize(28, 28)
         self.btn_history.setToolTip("Conversation History")
 
         self.btn_new_chat = QPushButton("")
+        self.btn_new_chat.setObjectName("btn_new_chat")
         self.btn_new_chat.setIcon(QIcon(os.path.join(ICON_DIR, "ai_chat.png")))
         self.btn_new_chat.setIconSize(QSize(20, 20))
         self.btn_new_chat.setFixedSize(28, 28)
         self.btn_new_chat.setToolTip("New Chat")
-        
-        for btn in (self.btn_history, self.btn_new_chat):
-            btn.setStyleSheet("""
-                QPushButton { background: transparent; border: none; border-radius: 4px; }
-                QPushButton:hover { background: rgba(255,255,255,0.2); }
-            """)
-            btn.setCursor(Qt.PointingHandCursor)
-            row1_layout.addWidget(btn)
-            
-        main_layout.addLayout(row1_layout)
 
-        # ── Row 2: Title ──────────────────────────────────────────────
+        self.btn_templates = QPushButton("📊")
+        self.btn_templates.setObjectName("btn_templates")
+        self.btn_templates.setFixedSize(28, 28)
+        self.btn_templates.setToolTip("Browse & apply saved plot templates")
+
+        self.btn_save_all_templates = QPushButton("")
+        self.btn_save_all_templates.setObjectName("btn_templates")
+        self.btn_save_all_templates.setIcon(QIcon(os.path.join(ICON_DIR, "save-all.png")))
+        self.btn_save_all_templates.setIconSize(QSize(18, 18))
+        self.btn_save_all_templates.setFixedSize(28, 28)
+        self.btn_save_all_templates.setToolTip("Save all currently open plots as a Template")
+
+        for btn in (self.btn_history, self.btn_new_chat, self.btn_templates, self.btn_save_all_templates):
+            btn.setCursor(Qt.PointingHandCursor)
+            row2_layout.addWidget(btn)
+
+        main_layout.addLayout(row2_layout)
+
+        # ── Row 3: Title ─────────────────────────────────────────────
         self.edit_title = QLineEdit()
+        self.edit_title.setObjectName("chatTitleEdit")
         self.edit_title.setPlaceholderText("New Conversation")
-        self.edit_title.setStyleSheet("""
-            QLineEdit {
-                background: transparent; color: white; border: none; font-size: 14px; font-weight: bold; padding: 2px 0px;
-            }
-            QLineEdit:hover { background: rgba(255,255,255,0.1); border-radius: 4px; padding-left: 4px;}
-            QLineEdit:focus { background: rgba(0,0,0,0.5); border: 1px solid #1976D2; border-radius: 4px; padding-left: 4px;}
-        """)
+        self.edit_title.setStyleSheet("font-size: 14px; padding: 2px 4px;")
         self.edit_title.editingFinished.connect(self._on_title_edited)
         main_layout.addWidget(self.edit_title)
 
@@ -587,26 +606,18 @@ class VChatPanel(QDialog):
     def _make_reply_preview(self) -> QFrame:
         frame = QFrame()
         frame.setObjectName("replyPreview")
-        frame.setStyleSheet("""
-            QFrame#replyPreview {
-                background: #2a2a2a;
-                border-top: 1px solid rgba(128,128,128,0.3);
-                border-left: 3px solid #1976D2;
-                margin: 0px;
-            }
-        """)
         layout = QHBoxLayout(frame)
         layout.setContentsMargins(10, 6, 10, 6)
-        
+
         self.lbl_reply_text = QLabel()
-        self.lbl_reply_text.setStyleSheet("color: #aaa; font-size: 11px;")
+        self.lbl_reply_text.setStyleSheet("font-size: 11px;")
         self.lbl_reply_text.setWordWrap(True)
         layout.addWidget(self.lbl_reply_text, stretch=1)
         
         btn_close = QPushButton("✕")
         btn_close.setFixedSize(20, 20)
         btn_close.setCursor(Qt.PointingHandCursor)
-        btn_close.setStyleSheet("QPushButton { border: none; color: gray; font-weight: bold; } QPushButton:hover { color: white; }")
+        btn_close.setStyleSheet("QPushButton { background: transparent; border: none; font-weight: bold; }")
         btn_close.clicked.connect(self._clear_reply_state)
         layout.addWidget(btn_close)
         
@@ -615,12 +626,6 @@ class VChatPanel(QDialog):
     def _make_input_bar(self) -> QFrame:
         bar = QFrame()
         bar.setObjectName("chatInputBar")
-        bar.setStyleSheet("""
-            QFrame#chatInputBar {
-                border-top: 1px solid rgba(128,128,128,0.3);
-                padding: 2px;
-            }
-        """)
 
         layout = QHBoxLayout(bar)
         layout.setContentsMargins(8, 6, 8, 6)
@@ -640,6 +645,7 @@ class VChatPanel(QDialog):
 
         # Microphone button (voice dictation)
         self.btn_mic = QPushButton("🎤")
+        self.btn_mic.setObjectName("btn_mic")
         self.btn_mic.setFixedHeight(50)
         self.btn_mic.setFixedWidth(44)
         self.btn_mic.setCheckable(True)
@@ -652,17 +658,11 @@ class VChatPanel(QDialog):
         else:
             self.btn_mic.setToolTip("Click to start voice recording")
 
+        # Base look inherits the themed QPushButton rule; only the
+        # "recording" (checked) state needs a distinct, semantic color.
         self.btn_mic.setStyleSheet("""
-            QPushButton {
-                background: rgba(255,255,255,0.12);
-                color: #ddd;
-                border: 1px solid rgba(255,255,255,0.25);
-                border-radius: 4px;
-                font-size: 18px;
-            }
-            QPushButton:hover   { background: rgba(255,255,255,0.25); color: #fff; border-color: rgba(255,255,255,0.4); }
-            QPushButton:checked { background: #C62828; color: white; border-color: #E53935; }
-            QPushButton:disabled { background: rgba(255,255,255,0.03); color: #444; border-color: rgba(255,255,255,0.05); }
+            QPushButton#btn_mic { font-size: 18px; }
+            QPushButton#btn_mic:checked { background: #C62828; color: white; border-color: #E53935; }
         """)
         layout.addWidget(self.btn_mic)
 
@@ -686,16 +686,20 @@ class VChatPanel(QDialog):
         self.btn_clear.clicked.connect(self._on_clear)
         self.btn_history.clicked.connect(self._on_history_clicked)
         self.btn_new_chat.clicked.connect(self._on_new_chat_clicked)
+        self.btn_templates.clicked.connect(self._on_templates_clicked)
+        self.btn_save_all_templates.clicked.connect(self.save_all_graphs_requested.emit)
         self.btn_refresh_models.clicked.connect(self._refresh_status)
         self.cbb_model.currentTextChanged.connect(self.vm.set_model)
         self.cbb_provider.currentTextChanged.connect(self._on_provider_changed)
         self.cbb_prompt_tier.currentIndexChanged.connect(self._on_prompt_tier_changed)
+        self.btn_reasoning_toggle.toggled.connect(self._on_reasoning_toggle_changed)
 
         self.cbb_model.currentTextChanged.connect(lambda _: self._save_settings())
 
         # ViewModel → View
         self.vm.thinking_changed.connect(self._on_thinking_changed)
         self.vm.chunk_received.connect(self._on_chunk)
+        self.vm.thinking_content_received.connect(self._on_thinking_content)
         self.vm.result_ready.connect(self._on_result_ready)
         self.vm.error_occurred.connect(self._on_error)
         self.vm.conversation_changed.connect(self._on_conversation_changed)
@@ -818,6 +822,28 @@ class VChatPanel(QDialog):
         self.vm.set_small_model_mode({0: None, 1: False, 2: True}.get(index))
         self._save_settings()
         self._refresh_status()
+        self._update_reasoning_toggle_tooltip()
+
+    def _on_reasoning_toggle_changed(self, checked: bool) -> None:
+        """Opt in/out of showing the model's reasoning. Off by default —
+        this is a deliberate, explicit choice, so it's honored even for
+        small models even though it overrides their think=False default."""
+        self.vm.set_show_reasoning(checked)
+
+    def _update_reasoning_toggle_tooltip(self) -> None:
+        if self.vm.is_small_model_mode():
+            self.btn_reasoning_toggle.setToolTip(
+                "Show model reasoning (off by default).\n"
+                "⚠ The active model is running in simplified/small-model mode — "
+                "enabling this may reduce tool-calling reliability."
+            )
+        else:
+            self.btn_reasoning_toggle.setToolTip("Show model reasoning (off by default).")
+
+    def _on_thinking_content(self, fragment: str) -> None:
+        if self._active_card:
+            self._active_card.append_reasoning(fragment)
+            self._scroll_to_bottom()
 
     # ------------------------------------------------------------------
     # Provider change handler
@@ -920,6 +946,7 @@ class VChatPanel(QDialog):
             if self.cbb_model.currentText():
                 self.vm.set_model(self.cbb_model.currentText())
             self.cbb_model.blockSignals(False)
+            self._update_reasoning_toggle_tooltip()
 
             if is_ollama:
                 status_text = "🟢  Ollama connected"
@@ -1037,6 +1064,15 @@ class VChatPanel(QDialog):
     def _on_new_chat_clicked(self) -> None:
         self.vm.new_conversation()
 
+    def _on_templates_clicked(self) -> None:
+        dialog = VPlotTemplateDialog(self.vm.template_store, self)
+        dialog.template_applied.connect(self._on_template_applied)
+        dialog.exec()
+
+    def _on_template_applied(self, configs: list) -> None:
+        for cfg in configs:
+            self.plot_requested.emit(cfg)
+
     def _on_conversation_opened(self, conv_id: str) -> None:
         conv = self.vm.conversation_store.load_conversation(conv_id)
         if conv:
@@ -1104,14 +1140,33 @@ class VChatPanel(QDialog):
             self._apply_send_button_style()
 
     def _on_chunk(self, fragment: str) -> None:
-        """Append a streaming fragment to the active AI bubble."""
-        if self._active_card:
-            current = self._active_card.content_view.toPlainText() if hasattr(self._active_card.content_view, 'toPlainText') else self._active_card.content_view.text()
-            self._active_card.set_text(current + fragment)
+        """Buffer a streaming fragment; the actual (expensive) markdown
+        re-render is throttled by ``_flush_chunk_buffer`` rather than run
+        on every single token."""
+        if not self._active_card:
+            return
+        self._stream_buffer += fragment
+        if not self._chunk_flush_timer.isActive():
+            self._chunk_flush_timer.start(70)  # ~14 re-renders/sec, capped
+
+    def _flush_chunk_buffer(self) -> None:
+        if self._active_card and self._stream_buffer:
+            # `_raw_text` is the true markdown source; unlike
+            # content_view.toPlainText() (the rendered/stripped output),
+            # it doesn't lose formatting syntax on repeated appends.
+            current = getattr(self._active_card, "_raw_text", "")
+            self._active_card.set_text(current + self._stream_buffer)
+            self._stream_buffer = ""
             self._scroll_to_bottom()
 
     def _on_result_ready(self, result: ChatResult) -> None:
         """Replace the streaming bubble with the full structured result."""
+        # Discard any not-yet-flushed streaming fragments — the final
+        # text below is authoritative and a stale flush firing afterward
+        # would otherwise briefly stomp on it.
+        self._chunk_flush_timer.stop()
+        self._stream_buffer = ""
+
         if self._active_card:
             # Set the explanation as the main text
             self._active_card.set_text(result.explanation or result.text_summary)
@@ -1135,20 +1190,40 @@ class VChatPanel(QDialog):
             for cfg in cfgs:
                 self.plot_requested.emit(cfg)
 
-            if result.action == "plot":
-                btn = QPushButton(f"📊 Re-apply {len(cfgs)} plot suggestion{'s' if len(cfgs) > 1 else ''}")
-                btn.setMaximumWidth(220)
-                btn.setStyleSheet(
-                    "QPushButton { background: #283593; color: white; border-radius: 4px; padding: 4px 8px; }"
-                    "QPushButton:hover { background: #3949AB; }"
+            # Only genuine new-plot configs are meaningful to save as a
+            # reusable template — not graph update/delete instructions.
+            plot_only_cfgs = [c for c in cfgs if "_graph_update" not in c and "_graph_delete" not in c]
+            if plot_only_cfgs:
+                btn = QPushButton(
+                    f"💾 Save {len(plot_only_cfgs)} plot{'s' if len(plot_only_cfgs) > 1 else ''} as Template"
                 )
-                btn.clicked.connect(lambda: [self.plot_requested.emit(c) for c in cfgs])
+                btn.setObjectName("btnRowPrimary")
+                btn.setMaximumWidth(220)
+                btn.clicked.connect(lambda: self.prompt_and_save_template(plot_only_cfgs))
                 self._insert_widget_after_card(btn)
 
         self._active_card = None
         self._scroll_to_bottom()
 
+    def prompt_and_save_template(self, configs: list) -> None:
+        """Prompt for a name and persist *configs* as a new plot template.
+
+        Public so main.py can reuse it for the "save all open graphs"
+        conversation-level action, keeping the naming-prompt UI in one place.
+        """
+        if not configs:
+            return
+        name, ok = QInputDialog.getText(self, "Save as Template", "Template name:")
+        if ok and name:
+            self.vm.template_store.save_template(name, configs)
+            QMessageBox.information(
+                self, "Template Saved",
+                f"Saved '{name}' with {len(configs)} plot{'s' if len(configs) > 1 else ''}."
+            )
+
     def _on_error(self, message: str) -> None:
+        self._chunk_flush_timer.stop()
+        self._stream_buffer = ""
         # Replace placeholder bubble with an error bubble
         if self._active_card:
             self._active_card.deleteLater()
@@ -1160,6 +1235,15 @@ class VChatPanel(QDialog):
     def _on_tool_execution(self, name: str, result_text: str) -> None:
         # Update the thinking status
         self._on_thinking_changed(True, f"Executed tool '{name}'...")
+
+        is_error = result_text.strip().lower().startswith("error")
+        chip = QLabel(f"{'⚠' if is_error else '🔧'} {name}")
+        chip.setObjectName("toolCallChip")
+        chip.setProperty("error", "true" if is_error else "false")
+        chip.setToolTip(result_text[:300])
+        chip.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self._insert_before_stretch(chip)
+
         self._scroll_to_bottom()
 
     # ------------------------------------------------------------------
@@ -1225,6 +1309,23 @@ class VChatPanel(QDialog):
                 self.scroll_area.verticalScrollBar().maximum()
             ),
         )
+
+    def _update_scroll_to_bottom_visibility(self) -> None:
+        bar = self.scroll_area.verticalScrollBar()
+        near_bottom = bar.maximum() - bar.value() < 40
+        self.btn_scroll_to_bottom.setVisible(not near_bottom and bar.maximum() > 0)
+        self._reposition_scroll_to_bottom_button()
+
+    def _reposition_scroll_to_bottom_button(self) -> None:
+        margin = 12
+        x = self.scroll_area.width() - self.btn_scroll_to_bottom.width() - margin
+        y = self.scroll_area.height() - self.btn_scroll_to_bottom.height() - margin
+        self.btn_scroll_to_bottom.move(max(0, x), max(0, y))
+        self.btn_scroll_to_bottom.raise_()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._reposition_scroll_to_bottom_button()
 
     # ------------------------------------------------------------------
     # Close event — hide instead of destroy so state is preserved

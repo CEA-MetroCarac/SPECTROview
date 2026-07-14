@@ -237,6 +237,25 @@ class VSettingsDialog(QDialog):
         history_layout.addLayout(history_row)
 
         ai_tab_layout.addWidget(grp_history)
+
+        # Plot Template Folder
+        grp_templates = QGroupBox("Plot Templates")
+        templates_layout = QVBoxLayout(grp_templates)
+        templates_layout.setContentsMargins(4, 4, 4, 4)
+        templates_layout.setSpacing(8)
+
+        lbl_templates = QLabel("Template Folder:")
+        templates_layout.addWidget(lbl_templates)
+
+        templates_row = QHBoxLayout()
+        self.btn_template_folder = QPushButton("Browse")
+        self.btn_template_folder.setMaximumWidth(60)
+        self.le_template_folder = QLineEdit()
+        templates_row.addWidget(self.btn_template_folder)
+        templates_row.addWidget(self.le_template_folder)
+        templates_layout.addLayout(templates_row)
+
+        ai_tab_layout.addWidget(grp_templates)
         ai_tab_layout.addSpacerItem(QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Expanding))
 
         self.tabs.addTab(tab_ai, "AI")
@@ -257,6 +276,7 @@ class VSettingsDialog(QDialog):
         # Folder picker
         self.btn_model_folder.clicked.connect(self.vm.pick_model_folder)
         self.btn_history_folder.clicked.connect(self.vm.pick_history_folder)
+        self.btn_template_folder.clicked.connect(self.vm.pick_template_folder)
 
     # ──────────────────────────────────────────────
     # VM Connections
@@ -265,6 +285,7 @@ class VSettingsDialog(QDialog):
         self.vm.settings_loaded.connect(self._apply_settings)
         self.vm.model_folder_changed.connect(self.le_model_folder.setText)
         self.vm.history_folder_changed.connect(self.le_history_folder.setText)
+        self.vm.template_folder_changed.connect(self.le_template_folder.setText)
         self.vm.settings_saved.connect(self.accept)
 
     # ──────────────────────────────────────────────
@@ -293,6 +314,7 @@ class VSettingsDialog(QDialog):
         self.edit_custom.setText(data.get("api_key_Custom", ""))
         self.edit_custom_url.setText(data.get("custom_base_url", ""))
         self.le_history_folder.setText(data.get("history_folder", ""))
+        self.le_template_folder.setText(data.get("template_folder", ""))
 
     def _on_accept(self):
         self.vm.save({
@@ -314,5 +336,6 @@ class VSettingsDialog(QDialog):
             "api_key_Custom": self.edit_custom.text(),
             "custom_base_url": self.edit_custom_url.text(),
             "history_folder": self.le_history_folder.text(),
+            "template_folder": self.le_template_folder.text(),
         })
 

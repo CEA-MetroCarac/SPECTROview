@@ -591,6 +591,158 @@ _QSS_TEMPLATE = r"""
         qproperty-barColor: {slider_filled};
     }}
 
+    /* ═══════════════════════════════════════════════
+       AI CHAT PANEL — header, status bar, message cards
+       ═══════════════════════════════════════════════ */
+
+    #chatHeader {{
+        background: {surface_toolbar};
+        border-bottom: 1px solid {border_subtle};
+    }}
+
+    #chatStatusBar {{
+        background: {surface_card};
+        border-bottom: 1px solid {border_subtle};
+    }}
+
+    #chatTitleEdit {{
+        background: transparent;
+        border: none;
+        color: {text_primary};
+        font-weight: bold;
+    }}
+    #chatTitleEdit:hover, #chatTitleEdit:focus {{
+        background: {surface_input};
+        border-radius: 4px;
+    }}
+
+    #replyPreview {{
+        background: {accent_bg};
+        border-top: 1px solid {border_subtle};
+        border-left: 3px solid {accent};
+    }}
+
+    #chatInputBar {{
+        border-top: 1px solid {border_subtle};
+        padding: 2px;
+    }}
+
+    #card_user {{
+        background: {accent_bg};
+        border: 1px solid {accent_border};
+        border-radius: 8px;
+    }}
+    #card_assistant {{
+        background: {surface_card};
+        border: 1px solid {surface_card_border};
+        border-radius: 8px;
+    }}
+    #card_error {{
+        background: rgba(220, 53, 69, 0.12);
+        border: 1px solid rgba(220, 53, 69, 0.45);
+        border-radius: 8px;
+    }}
+
+    #btn_refresh_models, #btn_history, #btn_new_chat, #btn_templates, #btn_reasoning_toggle {{
+        background: transparent;
+        border: none;
+        border-radius: 4px;
+    }}
+    #btn_refresh_models:hover, #btn_history:hover, #btn_new_chat:hover,
+    #btn_templates:hover, #btn_reasoning_toggle:hover {{
+        background: {hover_bg};
+    }}
+    #btn_reasoning_toggle:checked {{
+        background: {accent_bg_strong};
+        border: 1px solid {accent_border};
+    }}
+
+    #chatThinkingDots {{
+        color: {text_secondary};
+    }}
+
+    #reasoningView {{
+        background: {surface_list};
+        border: none;
+        border-left: 2px solid {border_medium};
+        border-radius: 0px;
+        color: {text_secondary};
+        font-style: italic;
+    }}
+
+    /* History / Templates dialog row-action buttons (semantic roles,
+       not generic card buttons — primary "Open/Apply", link-style
+       secondary actions, and a destructive action). */
+    #btnRowPrimary {{
+        background: {accent};
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+    }}
+    #btnRowPrimary:hover {{
+        background: {accent_light};
+    }}
+    #btnRowLink {{
+        background: transparent;
+        color: {accent_light};
+        text-decoration: underline;
+        border: none;
+    }}
+    #btnRowLink:hover {{
+        color: {accent};
+    }}
+    #btnRowDanger {{
+        background: transparent;
+        color: rgba(220, 53, 69, 0.85);
+        border: none;
+    }}
+    #btnRowDanger:hover {{
+        color: rgba(220, 53, 69, 1.0);
+    }}
+    #btnDeleteAllOutline {{
+        background: transparent;
+        color: rgba(220, 53, 69, 0.85);
+        border: 1px solid rgba(220, 53, 69, 0.6);
+        border-radius: 4px;
+        padding: 4px 12px;
+    }}
+    #btnDeleteAllOutline:hover {{
+        background: rgba(220, 53, 69, 0.85);
+        color: white;
+    }}
+
+    #historyDateHeader {{
+        color: {text_secondary};
+        font-weight: bold;
+        font-size: 11px;
+        padding: 4px 2px;
+    }}
+
+    #toolCallChip {{
+        background: {surface_card};
+        border: 1px solid {surface_card_border};
+        border-radius: 9px;
+        color: {text_secondary};
+        font-size: 10px;
+        padding: 2px 8px;
+    }}
+    #toolCallChip[error="true"] {{
+        background: rgba(220, 53, 69, 0.10);
+        border: 1px solid rgba(220, 53, 69, 0.35);
+        color: rgba(220, 53, 69, 0.95);
+    }}
+
+    #scrollToBottomBtn {{
+        background: {accent};
+        color: white;
+        border: none;
+        border-radius: 16px;
+    }}
+    #scrollToBottomBtn:hover {{
+        background: {accent_light};
+    }}
+
 """
 
 

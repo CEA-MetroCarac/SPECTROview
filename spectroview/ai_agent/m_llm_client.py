@@ -102,6 +102,10 @@ class LLMWorker(QThread):
     chunk_received(str)
         Emitted for every streamed token fragment so the UI can show
         a live typing effect.
+    thinking_chunk_received(str)
+        Emitted for every streamed *reasoning* token fragment, only when
+        ``think`` was requested. Deliberately a separate signal from
+        ``chunk_received`` — see the note in ``run()``.
     response_ready(str)
         Emitted once with the full assembled response when streaming ends.
     error_occurred(str)
@@ -109,6 +113,7 @@ class LLMWorker(QThread):
     """
 
     chunk_received  = Signal(str)
+    thinking_chunk_received = Signal(str)
     response_ready  = Signal(str, list)
     error_occurred  = Signal(str)
 
@@ -179,12 +184,15 @@ class LLMWorker(QThread):
                         # shape APIWorker already produces for other providers.
                         tool_calls.append(tc.model_dump() if hasattr(tc, "model_dump") else tc)
 
-                # NOTE: qwen3-style "thinking" content (message["thinking"])
-                # is intentionally NOT appended to _full_response/chunk_received
-                # here. Merging a hidden-reasoning channel into the visible
-                # answer is exactly how unmanaged deliberation can substitute
-                # for actually calling a tool — surface it via a separate
-                # signal in the future if ever needed, never merged in.
+                # qwen3-style "thinking" content (message["thinking"]) is
+                # intentionally kept on its own signal, never appended to
+                # _full_response/chunk_received. Merging a hidden-reasoning
+                # channel into the visible answer is exactly how unmanaged
+                # deliberation can substitute for actually calling a tool.
+                thinking_fragment = message.get("thinking") or ""
+                if thinking_fragment:
+                    self.thinking_chunk_received.emit(thinking_fragment)
+
                 fragment = message.get("content") or ""
                 if fragment:
                     self._full_response += fragment
@@ -604,6 +612,7 @@ class LLMClient:
         tools:    Optional[List[Dict[str, Any]]] = None,
         parent:   Optional[QObject] = None,
         request_options: Optional[Dict[str, Any]] = None,
+        on_thinking_chunk: Optional[Callable[[str], None]] = None,
     ) -> None:
         """Spawn a background worker to call the active LLM backend.
 
@@ -626,6 +635,10 @@ class LLMClient:
             Ollama-``options``-only and are never forwarded to the
             OpenAI-compatible or Anthropic workers — structurally
             impossible to affect a cloud provider's behavior.
+        on_thinking_chunk:
+            Optional callback for streamed reasoning content. Only ever
+            fires for the Ollama worker when ``think`` was requested;
+            silently unused otherwise (no other worker has this signal).
         """
         self.cancel()
         opts = request_options or {}
@@ -670,6 +683,8 @@ class LLMClient:
         self._worker.chunk_received.connect(on_chunk)
         self._worker.response_ready.connect(on_done)
         self._worker.error_occurred.connect(on_error)
+        if on_thinking_chunk is not None and hasattr(self._worker, "thinking_chunk_received"):
+            self._worker.thinking_chunk_received.connect(on_thinking_chunk)
         self._worker.start()
 
     def cancel(self) -> None:
@@ -679,7 +694,7 @@ class LLMClient:
                 self._worker.cancel()
             
             # Safely orphan the thread by disconnecting callbacks so they don't affect UI
-            for signal_name in ("chunk_received", "response_ready", "error_occurred"):
+            for signal_name in ("chunk_received", "thinking_chunk_received", "response_ready", "error_occurred"):
                 signal = getattr(self._worker, signal_name, None)
                 if signal:
                     try:

@@ -496,6 +496,23 @@ class VChatPanel(QDialog):
         """)
         row1_layout.addWidget(self.cbb_model)
 
+        self.cbb_prompt_tier = QComboBox()
+        self.cbb_prompt_tier.addItems(["Auto", "Full prompt", "Simplified prompt"])
+        self.cbb_prompt_tier.setMinimumWidth(90)
+        self.cbb_prompt_tier.setToolTip(
+            "Prompt tier for local Ollama models.\n"
+            "Auto: detected automatically from the model's size.\n"
+            "Full / Simplified: force a tier regardless of detection."
+        )
+        self.cbb_prompt_tier.setStyleSheet("""
+            QComboBox {
+                background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px;
+            }
+            QComboBox::drop-down { border: none; }
+            QComboBox QAbstractItemView { color: black; }
+        """)
+        row1_layout.addWidget(self.cbb_prompt_tier)
+
         self.btn_refresh_models = QPushButton("")
         self.btn_refresh_models.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
         self.btn_refresh_models.setIconSize(QSize(20, 20))
@@ -672,6 +689,7 @@ class VChatPanel(QDialog):
         self.btn_refresh_models.clicked.connect(self._refresh_status)
         self.cbb_model.currentTextChanged.connect(self.vm.set_model)
         self.cbb_provider.currentTextChanged.connect(self._on_provider_changed)
+        self.cbb_prompt_tier.currentIndexChanged.connect(self._on_prompt_tier_changed)
 
         self.cbb_model.currentTextChanged.connect(lambda _: self._save_settings())
 
@@ -766,6 +784,13 @@ class VChatPanel(QDialog):
             self.cbb_provider.setCurrentIndex(idx)
             self.cbb_provider.blockSignals(False)
 
+        saved_tier_idx = int(s.value("prompt_tier_index", 0))
+        if 0 <= saved_tier_idx < self.cbb_prompt_tier.count():
+            self.cbb_prompt_tier.blockSignals(True)
+            self.cbb_prompt_tier.setCurrentIndex(saved_tier_idx)
+            self.cbb_prompt_tier.blockSignals(False)
+        self.vm.set_small_model_mode({0: None, 1: False, 2: True}.get(saved_tier_idx))
+
         s.endGroup()
 
         # Apply the loaded provider
@@ -780,12 +805,19 @@ class VChatPanel(QDialog):
         provider_key = _DISPLAY_TO_PROVIDER.get(provider_display, "Ollama")
 
         s.setValue("provider", provider_display)
+        s.setValue("prompt_tier_index", self.cbb_prompt_tier.currentIndex())
 
         current_model = self.cbb_model.currentText()
         if current_model:
             s.setValue(f"model_{provider_key}", current_model)
 
         s.endGroup()
+
+    def _on_prompt_tier_changed(self, index: int) -> None:
+        """Apply the manual prompt-tier override (or resume auto-detection)."""
+        self.vm.set_small_model_mode({0: None, 1: False, 2: True}.get(index))
+        self._save_settings()
+        self._refresh_status()
 
     # ------------------------------------------------------------------
     # Provider change handler
@@ -890,9 +922,12 @@ class VChatPanel(QDialog):
             self.cbb_model.blockSignals(False)
 
             if is_ollama:
-                self.lbl_status.setText("🟢  Ollama connected")
+                status_text = "🟢  Ollama connected"
             else:
-                self.lbl_status.setText(f"🟢  {provider_key} API connected")
+                status_text = f"🟢  {provider_key} API connected"
+            if self.vm.is_small_model_mode():
+                status_text += "  ·  Simplified prompts"
+            self.lbl_status.setText(status_text)
             self.lbl_status.setStyleSheet("color: #66BB6A; font-size: 11px;")
             self.edit_input.setEnabled(True)
             self._apply_send_button_style()
@@ -1032,16 +1067,8 @@ class VChatPanel(QDialog):
                 self._add_user_card(msg["content"], msg.get("reply_to_index"), timestamp=msg.get("timestamp"))
                 current_ai_card = None
             elif msg["role"] == "assistant":
-                content = msg["content"]
-                result = None
-                friendly_text = content
-                
-                if "{" in content and "}" in content and '"action"' in content:
-                    result = self.vm._parse_response(content)
-                    friendly_text = result.explanation or result.text_summary or content
-                    if result.text_summary and result.action in ("statistics", "answer"):
-                        friendly_text = (result.explanation or "") + "\n\n" + result.text_summary
-                    
+                friendly_text = msg["content"]
+
                 if not current_ai_card:
                     current_ai_card = self._add_ai_card(friendly_text, timestamp=msg.get("timestamp"))
                     current_ai_card.reply_clicked.connect(lambda text, idx=i: self._on_reply_clicked(idx, text))
@@ -1050,41 +1077,7 @@ class VChatPanel(QDialog):
                     current = current_ai_card.content_view.toPlainText() if hasattr(current_ai_card.content_view, 'toPlainText') else current_ai_card.content_view.text()
                     if friendly_text:
                         current_ai_card.set_text(current + "\n\n" + friendly_text)
-                
-                # If it's a plot/update/delete intent, add the re-apply button
-                if result and result.plot_config and result.action in ("plot", "update", "delete"):
-                    cfgs = result.plot_config if isinstance(result.plot_config, list) else [result.plot_config]
-                    btn = QPushButton(f"📊 Re-apply {len(cfgs)} plot suggestion{'s' if len(cfgs) > 1 else ''}")
-                    btn.setIcon(QIcon(os.path.join(ICON_DIR, "plot-chart.png")))
-                    btn.setIconSize(QSize(16, 16))
-                    btn.setStyleSheet("""
-                        QPushButton {
-                            background-color: #3b429f;
-                            color: white;
-                            border: none;
-                            border-radius: 4px;
-                            padding: 6px 12px;
-                            margin-left: 20px;
-                            margin-top: 4px;
-                            margin-bottom: 8px;
-                            font-weight: bold;
-                        }
-                        QPushButton:hover {
-                            background-color: #4b52c0;
-                        }
-                    """)
-                    btn.setCursor(Qt.PointingHandCursor)
-                    # We use a default arg config_list=cfgs to avoid late binding in the loop
-                    btn.clicked.connect(lambda checked=False, config_list=cfgs: [self.plot_requested.emit(c) for c in config_list])
-                    
-                    container = QWidget()
-                    lay = QHBoxLayout(container)
-                    lay.setContentsMargins(50, 0, 0, 0)
-                    lay.addWidget(btn)
-                    lay.addStretch()
-                    
-                    self._insert_before_stretch(container)
-                    
+
             elif msg["role"] == "error":
                 card = _MessageCard(msg["content"], "error", timestamp=msg.get("timestamp"))
                 self._insert_before_stretch(card)

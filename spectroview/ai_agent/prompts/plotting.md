@@ -1,6 +1,6 @@
 # Purpose
 
-This file provides plotting-specific instructions for the SPECTROview AI Agent. It governs how the agent constructs `plot_config` objects, handles multiple plot styles, and generates spatial visualisations.
+This file provides plotting-specific instructions for the SPECTROview AI Agent. It governs how the agent calls `plot_graph`, handles multiple plot styles, and generates spatial visualisations.
 
 ---
 

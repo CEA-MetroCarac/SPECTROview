@@ -31,20 +31,31 @@ without touching this Python file.
 
 from __future__ import annotations
 
+import re
 from typing import Optional, List, Dict, Any
 
 import pandas as pd
 from PySide6.QtCore import QObject, Signal, QSettings
 
-from spectroview.ai_agent.m_llm_client import LLMClient
+from spectroview.ai_agent.m_llm_client import LLMClient, get_ollama_model_info
 from spectroview.ai_agent.m_conversation import MConversation
 from spectroview.ai_agent.m_conversation_store import MConversationStore
 from spectroview.ai_agent.m_prompt_manager import PromptManager
 from spectroview.ai_agent.utils.plot_utils import expand_all_plot_configs
+from spectroview.ai_agent.utils.df_summary import summarize_dataframe_columns
 import asyncio
 from spectroview.ai_agent.mcp.server import create_mcp_server
 from mcp.shared.memory import create_connected_server_and_client_session
 
+
+def _parse_param_size_to_billions(size_str: str) -> Optional[float]:
+    """Parse an Ollama ``parameter_size`` string (e.g. ``"8.2B"``, ``"600M"``)
+    into a billions-of-parameters float. Returns ``None`` if unparseable."""
+    match = re.match(r"^\s*([\d.]+)\s*([BMK])\s*$", str(size_str), re.IGNORECASE)
+    if not match:
+        return None
+    value, unit = float(match.group(1)), match.group(2).upper()
+    return value * {"B": 1.0, "M": 1e-3, "K": 1e-6}[unit]
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -103,8 +114,18 @@ class VMChat(QObject):
     conversation_changed = Signal(str)
     tool_execution_received = Signal(str, str) # name, result text
 
-    # Maximum number of message pairs kept in context (user + assistant each)
-    MAX_HISTORY_PAIRS = 6
+    # Ollama model-name substrings that trigger small-model mode when the
+    # parameter-count check (via `ollama show`) is unavailable/inconclusive.
+    _SMALL_MODEL_PATTERNS: List[str] = [
+        "qwen2.5-coder:7b", "qwen2.5-coder:3b", "qwen2.5-coder:1.5b",
+        "qwen2.5:7b", "qwen2.5:3b", "qwen2.5:1.5b",
+        "qwen3:8b", "qwen3:4b", "qwen3:1.7b", "qwen3:0.6b",
+        "llama3.2:3b", "llama3.2:1b", "llama3.1:8b",
+        "gemma3:4b", "gemma3:1b", "gemma2:9b",
+        "phi3:3.8b", "phi3:mini", "phi3.5",
+        "deepseek-r1:7b", "deepseek-r1:8b", "deepseek-r1:1.5b",
+        "mistral:7b", "codellama:7b", "codellama:13b",
+    ]
 
     # -----------------------------------------------------------------------
 
@@ -113,6 +134,7 @@ class VMChat(QObject):
 
         self._client   = LLMClient()
         self._model    = LLMClient.DEFAULT_MODEL
+        self._provider: str = LLMClient.DEFAULT_PROVIDER
 
         # Manage multiple dataframes
         self._dfs: Dict[str, pd.DataFrame] = {}
@@ -126,7 +148,7 @@ class VMChat(QObject):
         s.beginGroup("ai_chat")
         self._history_folder = str(s.value("history_folder", ""))
         s.endGroup()
-        
+
         self.conversation_store = MConversationStore(self._history_folder)
         self._conversation = self.conversation_store.create_conversation()
         self.max_context_messages: Optional[int] = None # None means no cap
@@ -136,7 +158,14 @@ class VMChat(QObject):
         # To change AI behaviour, edit the .md files — not this file.
         self._prompt_mgr = PromptManager()
 
-
+        # ── Small-model mode ──────────────────────────────────────────────
+        # None = auto-detect; True/False = manual override (set_small_model_mode).
+        self._small_model_override: Optional[bool] = None
+        self._is_small_model: bool = False
+        self._param_count_cache: Dict[str, Optional[bool]] = {}
+        # Not refreshed here — refresh happens on set_model()/set_provider(),
+        # once a real model/provider is known, to avoid a network call
+        # (ollama show) racing construction against a placeholder model.
 
         # ── MCP Server ───────────────────────────────────────────────────
         self._mcp_server = create_mcp_server(self)
@@ -199,6 +228,7 @@ class VMChat(QObject):
 
     def set_model(self, model: str) -> None:
         self._model = model
+        self._refresh_small_model_mode()
 
     def set_provider(
         self,
@@ -215,11 +245,103 @@ class VMChat(QObject):
         if provider != "Ollama" and not model:
             from spectroview.ai_agent.m_llm_client import API_PROVIDERS
             self._model = API_PROVIDERS.get(provider, {}).get("default_model", self._model)
+        self._refresh_small_model_mode()
         self.new_conversation()
 
     def get_provider(self) -> str:
         """Return the currently active provider name."""
         return self._provider
+
+    # ------------------------------------------------------------------
+    # Small-model mode — auto-detection with manual override
+    # ------------------------------------------------------------------
+
+    def set_small_model_mode(self, enabled: Optional[bool]) -> None:
+        """Force simplified-prompt mode on/off, or resume auto-detection.
+
+        Parameters
+        ----------
+        enabled:
+            ``True`` to force the simplified small-model prompt tier,
+            ``False`` to force the full prompt tier, or ``None`` to resume
+            auto-detection based on the active model.
+        """
+        self._small_model_override = enabled
+        self._refresh_small_model_mode()
+
+    def is_small_model_mode(self) -> bool:
+        """Return ``True`` if the simplified small-model prompt tier is active."""
+        return self._is_small_model
+
+    def _refresh_small_model_mode(self) -> None:
+        is_small = (
+            self._small_model_override
+            if self._small_model_override is not None
+            else self._auto_detect_small_model()
+        )
+        self._is_small_model = is_small
+        cfg = self._prompt_mgr.model_config
+        self.max_context_messages = (
+            cfg.get("max_context_messages_small", 6) if is_small
+            else cfg.get("max_context_messages")
+        )
+
+    def _auto_detect_small_model(self) -> bool:
+        """Best-effort small-model detection. Ollama-only; defaults to
+        ``False`` (full tier) whenever detection is inconclusive, since
+        misclassifying an unknown *large* model as small is more harmful
+        than the reverse."""
+        if self._provider != "Ollama":
+            return False
+
+        by_params = self._detect_small_by_param_count(self._model)
+        if by_params is not None:
+            return by_params
+
+        key = self._model.lower().replace(" ", "")
+        return any(p.replace(" ", "") in key for p in self._SMALL_MODEL_PATTERNS)
+
+    def _detect_small_by_param_count(self, model: str) -> Optional[bool]:
+        """Return True/False from the model's reported parameter count via
+        ``ollama show``, or None if undeterminable. Cached per model name."""
+        if model in self._param_count_cache:
+            return self._param_count_cache[model]
+
+        result: Optional[bool] = None
+        info = get_ollama_model_info(model)
+        if info is not None:
+            size_str = getattr(getattr(info, "details", None), "parameter_size", None) or ""
+            billions = _parse_param_size_to_billions(size_str)
+            if billions is not None:
+                threshold = self._prompt_mgr.model_config.get("small_model_param_threshold_b", 10.0)
+                result = billions < threshold
+
+        self._param_count_cache[model] = result
+        return result
+
+    def _build_request_options(self) -> Dict[str, Any]:
+        """Assemble the generic request-tuning dict passed to ``LLMClient.chat()``.
+
+        ``num_ctx``/``think`` only ever affect the Ollama worker (see
+        ``LLMClient.chat()``); ``timeout``/``max_tokens`` apply to whichever
+        backend is active. Small-model mode swaps in the smaller-budget
+        values so local models get a correctly-sized context window instead
+        of Ollama's silent default.
+        """
+        cfg = self._prompt_mgr.model_config
+        opts: Dict[str, Any] = {}
+        if cfg.get("request_timeout_seconds") is not None:
+            opts["timeout"] = float(cfg["request_timeout_seconds"])
+
+        if self._is_small_model:
+            opts["num_ctx"] = cfg.get("ollama_num_ctx_small", 8192)
+            opts["max_tokens"] = cfg.get("max_tokens_small", 4096)
+            opts["think"] = cfg.get("ollama_think", False)
+        else:
+            opts["num_ctx"] = cfg.get("ollama_num_ctx_full", 16384)
+            opts["max_tokens"] = cfg.get("max_tokens", 81920)
+
+        return opts
 
     def process_query(self, user_text: str, reply_to_index: Optional[int] = None) -> None:
         """Send *user_text* to the active LLM backend and emit results when done.
@@ -269,6 +391,7 @@ class VMChat(QObject):
             on_error = self._on_error,
             tools    = self._mcp_tools_cache,
             parent   = self,
+            request_options = self._build_request_options(),
         )
 
     def cancel(self) -> None:
@@ -339,16 +462,10 @@ class VMChat(QObject):
             The latest user message (used for optional intent detection).
         """
         # ── 1. Build dynamic context from live DataFrames and open graphs ─
+        column_detail_threshold = self._prompt_mgr.model_config.get("column_detail_threshold", 30)
         dfs_info_parts: list[str] = []
         for name, df in self._dfs.items():
-            col_info_lines: list[str] = []
-            for col in df.columns:
-                dtype = str(df[col].dtype)
-                sample_vals = df[col].dropna().unique()[:3].tolist()
-                col_info_lines.append(
-                    f"    - {col!r} ({dtype}): sample values {sample_vals}"
-                )
-            col_info = "\n".join(col_info_lines)
+            col_info = summarize_dataframe_columns(df, max_ungrouped_columns=column_detail_threshold)
             try:
                 preview = df.head(3).to_string(max_cols=8)
             except Exception:
@@ -382,16 +499,30 @@ class VMChat(QObject):
             graphs_info = "No graphs are currently open.\n"
 
         # ── 2. Assemble static prompt from Markdown files ─────────────────
-        # Pass the user message so PromptManager can auto-detect intent
-        # (plotting/fitting/coding) when enable_intent_detection is True.
-        static_prompt = self._prompt_mgr.build_prompt(
-            intent="chat",
-            user_message=user_message,
-            prompts=["system", "chat", "plotting"],
-            rules=["general", "plotting", "spectroview"],
-            knowledge=["features"],
-            examples=["plotting_examples"],
-        )
+        # Small-model mode swaps in a single, much shorter prompt file (see
+        # prompts/system_small.md) instead of the full 3-prompt/3-rules/
+        # knowledge/examples bundle — cuts fixed per-request overhead from
+        # ~6,600 tokens to roughly a third of that for detected small local
+        # models, while leaving the full tier (used by everything else,
+        # including all cloud providers) completely unchanged.
+        if self._is_small_model:
+            static_prompt = self._prompt_mgr.build_prompt(
+                intent="chat",
+                user_message=user_message,
+                prompts=["system_small"],
+                rules=["general"],
+                knowledge=[],
+                examples=["examples_small"],
+            )
+        else:
+            static_prompt = self._prompt_mgr.build_prompt(
+                intent="chat",
+                user_message=user_message,
+                prompts=["system", "chat", "plotting"],
+                rules=["general", "plotting", "spectroview"],
+                knowledge=["features"],
+                examples=["plotting_examples"],
+            )
 
         # ── 3. Inject dynamic context into the static prompt ──────────────
         # The static prompt contains {dataframes_section}, {active_df_info},
@@ -438,19 +569,33 @@ class VMChat(QObject):
                     await session.initialize()
                     for tc in tool_calls:
                         func_name = tc.get("function", {}).get("name")
-                        func_args = tc.get("function", {}).get("arguments", {})
-                        if isinstance(func_args, str):
+                        raw_args = tc.get("function", {}).get("arguments", {})
+                        func_args, parse_error = raw_args, None
+                        if isinstance(raw_args, str):
                             try:
                                 import json
-                                func_args = json.loads(func_args)
-                            except Exception:
-                                func_args = {}
-                        try:
-                            res = await session.call_tool(func_name, func_args)
-                            # Convert result to string
-                            res_text = res.content[0].text if res.content and hasattr(res.content[0], 'text') else str(res)
-                        except Exception as e:
-                            res_text = f"Error executing tool {func_name}: {e}"
+                                func_args = json.loads(raw_args) if raw_args.strip() else {}
+                            except Exception as exc:
+                                parse_error = str(exc)
+                        if parse_error is None and not isinstance(func_args, dict):
+                            parse_error = f"arguments parsed to a {type(func_args).__name__}, not a JSON object"
+
+                        if parse_error is not None:
+                            # Surface a retry-inducing message instead of silently
+                            # dropping the arguments — gives the agentic loop below
+                            # a real chance to self-correct on the next turn.
+                            res_text = (
+                                f"Error: the arguments for '{func_name}' were not valid JSON "
+                                f"({parse_error}). Raw arguments received: {raw_args!r}. "
+                                f"Please retry this tool call with a single, well-formed JSON object."
+                            )
+                        else:
+                            try:
+                                res = await session.call_tool(func_name, func_args)
+                                # Convert result to string
+                                res_text = res.content[0].text if res.content and hasattr(res.content[0], 'text') else str(res)
+                            except Exception as e:
+                                res_text = f"Error executing tool {func_name}: {e}"
                         results.append((tc.get("id"), func_name, res_text))
                 return results
 
@@ -480,6 +625,7 @@ class VMChat(QObject):
                     on_error=self._on_error,
                     tools=self._mcp_tools_cache,
                     parent=self,
+                    request_options=self._build_request_options(),
                 )
             except Exception as e:
                 self.error_occurred.emit(f"Error calling MCP tools: {e}")

@@ -55,6 +55,17 @@ except ImportError:
 # Known cloud API providers — all use OpenAI-compatible endpoints
 # ---------------------------------------------------------------------------
 
+def get_ollama_model_info(model: str) -> Optional[Any]:
+    """Best-effort ``ollama.show(model)``. Returns ``None`` on any failure
+    or if the ``ollama`` package is unavailable. Never raises."""
+    if not OLLAMA_AVAILABLE:
+        return None
+    try:
+        return _ollama.show(model)
+    except Exception:           # noqa: BLE001
+        return None
+
+
 API_PROVIDERS: Dict[str, Dict[str, str]] = {
     "Gemini": {
         "base_url":      "https://generativelanguage.googleapis.com/v1beta/openai/",
@@ -107,11 +118,17 @@ class LLMWorker(QThread):
         messages: List[Dict[str, Any]],
         tools: Optional[List[Dict[str, Any]]] = None,
         parent: Optional[QObject] = None,
+        options: Optional[Dict[str, Any]] = None,
+        think: Optional[Any] = None,
+        timeout: Optional[float] = None,
     ) -> None:
         super().__init__(parent)
         self._model    = model
         self._messages = messages
         self._tools    = tools
+        self._options  = options
+        self._think    = think
+        self._timeout  = timeout
         self._full_response = ""
         self._is_cancelled = False
 
@@ -131,27 +148,43 @@ class LLMWorker(QThread):
             kwargs = {}
             if self._tools:
                 kwargs["tools"] = self._tools
-                
-            stream = _ollama.chat(
+            if self._options:
+                kwargs["options"] = self._options
+            if self._think is not None:
+                kwargs["think"] = self._think
+
+            client = _ollama.Client(timeout=self._timeout) if self._timeout else _ollama
+            stream = client.chat(
                 model=self._model,
                 messages=self._messages,
                 stream=True,
                 **kwargs
             )
-            
+
             tool_calls = []
             for chunk in stream:
                 if self._is_cancelled:
                     break
-                    
+
                 message = chunk.get("message", {})
-                
+
                 # Handle tool calls
                 if "tool_calls" in message:
                     for tc in message["tool_calls"]:
-                        # Append or accumulate tool calls
-                        tool_calls.append(tc)
-                        
+                        # Ollama returns tool_calls as pydantic models (e.g.
+                        # ollama._types.Message.ToolCall), not plain dicts —
+                        # normalize to a plain dict so downstream JSON
+                        # persistence (MConversation.save()) doesn't choke on
+                        # a non-serializable object, matching the plain-dict
+                        # shape APIWorker already produces for other providers.
+                        tool_calls.append(tc.model_dump() if hasattr(tc, "model_dump") else tc)
+
+                # NOTE: qwen3-style "thinking" content (message["thinking"])
+                # is intentionally NOT appended to _full_response/chunk_received
+                # here. Merging a hidden-reasoning channel into the visible
+                # answer is exactly how unmanaged deliberation can substitute
+                # for actually calling a tool — surface it via a separate
+                # signal in the future if ever needed, never merged in.
                 fragment = message.get("content") or ""
                 if fragment:
                     self._full_response += fragment
@@ -195,6 +228,8 @@ class APIWorker(QThread):
         messages: List[Dict[str, Any]],
         tools:    Optional[List[Dict[str, Any]]] = None,
         parent:   Optional[QObject] = None,
+        timeout:  Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ) -> None:
         super().__init__(parent)
         self._api_key  = api_key
@@ -202,6 +237,8 @@ class APIWorker(QThread):
         self._model    = model
         self._messages = messages
         self._tools    = tools
+        self._timeout  = timeout
+        self._max_tokens = max_tokens
         self._full_response = ""
         self._is_cancelled = False
 
@@ -227,11 +264,14 @@ class APIWorker(QThread):
             client = _openai.OpenAI(
                 api_key=self._api_key,
                 base_url=self._base_url or None,
+                timeout=self._timeout,
             )
             kwargs = {}
             if self._tools:
                 kwargs["tools"] = self._tools
-                
+            if self._max_tokens:
+                kwargs["max_tokens"] = self._max_tokens
+
             stream = client.chat.completions.create(
                 model=self._model,
                 messages=self._messages,  # type: ignore[arg-type]
@@ -304,6 +344,8 @@ class AnthropicWorker(QThread):
         messages: List[Dict[str, Any]],
         tools:    Optional[List[Dict[str, Any]]] = None,
         parent:   Optional[QObject] = None,
+        timeout:  Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ) -> None:
         super().__init__(parent)
         self._api_key  = api_key
@@ -311,6 +353,8 @@ class AnthropicWorker(QThread):
         self._model    = model
         self._messages = messages
         self._tools    = tools
+        self._timeout  = timeout
+        self._max_tokens = max_tokens
         self._full_response = ""
         self._is_cancelled = False
 
@@ -341,22 +385,24 @@ class AnthropicWorker(QThread):
             else:
                 filtered_messages.append(msg)
 
+        max_tokens = self._max_tokens or 4096
+
         try:
-            client_args = {"api_key": self._api_key}
+            client_args = {"api_key": self._api_key, "timeout": self._timeout}
             if self._base_url:
                 client_args["base_url"] = self._base_url
 
             client = _anthropic.Anthropic(**client_args)
-            
+
             kwargs = {}
             if self._tools:
                 kwargs["tools"] = self._tools
-                
+
             # Note: with Anthropic API, streaming with tools can be complex.
             # For simplicity, if tools are provided, we just use messages.create.
             if self._tools:
                 resp = client.messages.create(
-                    max_tokens=4096,
+                    max_tokens=max_tokens,
                     system=system_prompt,
                     messages=filtered_messages, # type: ignore
                     model=self._model,
@@ -377,7 +423,7 @@ class AnthropicWorker(QThread):
                 self.response_ready.emit(self._full_response, tool_calls)
             else:
                 with client.messages.stream(
-                    max_tokens=4096,
+                    max_tokens=max_tokens,
                     system=system_prompt,
                     messages=filtered_messages, # type: ignore
                     model=self._model,
@@ -557,6 +603,7 @@ class LLMClient:
         on_error: Callable[[str], None],
         tools:    Optional[List[Dict[str, Any]]] = None,
         parent:   Optional[QObject] = None,
+        request_options: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Spawn a background worker to call the active LLM backend.
 
@@ -572,11 +619,29 @@ class LLMClient:
             Callbacks connected to the worker's signals.
         parent:
             Optional Qt parent object for the worker thread.
+        request_options:
+            Optional dict of generic request tuning values (``num_ctx``,
+            ``think``, ``timeout``, ``max_tokens``), translated to the
+            right shape per provider below. ``num_ctx``/``think`` are
+            Ollama-``options``-only and are never forwarded to the
+            OpenAI-compatible or Anthropic workers — structurally
+            impossible to affect a cloud provider's behavior.
         """
         self.cancel()
+        opts = request_options or {}
 
         if self._provider == "Ollama":
-            self._worker = LLMWorker(model, messages, tools, parent)
+            ollama_options: Dict[str, Any] = {}
+            if "num_ctx" in opts:
+                ollama_options["num_ctx"] = opts["num_ctx"]
+            if "max_tokens" in opts:
+                ollama_options["num_predict"] = opts["max_tokens"]
+            self._worker = LLMWorker(
+                model, messages, tools, parent,
+                options=ollama_options or None,
+                think=opts.get("think"),
+                timeout=opts.get("timeout"),
+            )
         elif self._provider == "Anthropic":
             self._worker = AnthropicWorker(
                 api_key=self._api_key,
@@ -585,6 +650,8 @@ class LLMClient:
                 messages=messages,
                 tools=tools,
                 parent=parent,
+                timeout=opts.get("timeout"),
+                max_tokens=opts.get("max_tokens"),
             )
         else:
             # Use stored base_url & api_key; model argument takes precedence
@@ -596,6 +663,8 @@ class LLMClient:
                 messages=messages,
                 tools=tools,
                 parent=parent,
+                timeout=opts.get("timeout"),
+                max_tokens=opts.get("max_tokens"),
             )
 
         self._worker.chunk_received.connect(on_chunk)

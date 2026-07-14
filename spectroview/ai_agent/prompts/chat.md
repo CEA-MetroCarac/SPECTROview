@@ -21,18 +21,18 @@ Choose the most appropriate tool based on the user's request:
 
 You have access to the full conversation history. When the user makes a follow-up request:
 
-- **"add also a scatter plot"** → reuse the same `x`, `y`, `z`, `target_dataframe`, `filters`, axis limits from the previous turn.
-- **"do the same but with bar chart"** → clone the last plot config, changing only `plot_style`.
+- **"add also a scatter plot"** → reuse the same `x`, `y`, `z`, `df_name`, `filters`, axis limits from the previous turn.
+- **"do the same but with bar chart"** → clone the last tool call's arguments, changing only `plot_style`.
 - **"add a filter for Zone == 'center'"** → preserve existing filters and append the new one.
 - **"update graph 3 to viridis"** → use the `update_graph` tool, not `plot_graph`.
 
 ## Critical: Do Not Re-create Existing Plots
 
-ONLY output configurations for **newly requested** plots. Do NOT repeat plot configurations you have already returned in previous turns.
+ONLY call `plot_graph` for **newly requested** plots. Do NOT repeat tool calls for plots you have already created in previous turns.
 
 ## Target DataFrame
 
-- Set `target_dataframe` to the exact dataframe name the user is querying.
+- Pass `df_name` (an argument on every tool) set to the exact DataFrame name the user is querying.
 - If the user does not specify, use the currently active DataFrame shown in the context.
 - If no active DataFrame is set, use the first available DataFrame.
 

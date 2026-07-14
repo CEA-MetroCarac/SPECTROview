@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m pytest tests/ --collect-only -q)",
+      "Read(//tmp/**)",
+      "Bash(echo \"=== Files represented in collection ===\"; sed 's/::.*//' /tmp/collect_output.txt | grep \"^tests/\" | sort -u *)",
+      "Bash(python3 -m pytest tests/test_update_banner_preview.py --collect-only -q)"
+    ],
+    "additionalDirectories": [
+      "/private/tmp"
+    ]
+  }
+}

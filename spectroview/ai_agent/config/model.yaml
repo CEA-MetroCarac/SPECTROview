@@ -25,24 +25,51 @@ default_provider: Ollama
 default_model: qwen2.5-coder:7b
 
 # ---------------------------------------------------------------------------
-# Sampling parameters
+# Generation limits
 # ---------------------------------------------------------------------------
-# Lower values (0.1–0.3) produce more deterministic, consistent JSON output.
-# Higher values (0.7–1.0) increase creativity (not recommended for structured output).
-temperature: 0.2
-
 # Maximum number of tokens the model may generate in a single response.
-# Increase if you experience truncated JSON responses.
+# Increase if you experience truncated responses.
 max_tokens: 81920
+
+# Same, but applied when small-model mode is active (see below) — bounds
+# worst-case runaway generation on weaker local models.
+max_tokens_small: 4096
 
 # ---------------------------------------------------------------------------
 # Context management
 # ---------------------------------------------------------------------------
 # Maximum number of past conversation messages to include in each API call.
 # null = no cap (all messages are sent, limited only by the provider's context window).
-# Set an integer (e.g., 20) to limit context for faster inference on small models.
 max_context_messages: null
+
+# Same, but applied when small-model mode is active — keeps the prompt small
+# enough for a local model's context window and generation speed.
+max_context_messages_small: 6
 
 # Timeout in seconds for a single LLM API call.
 # Set to null for no timeout (not recommended for production use).
 request_timeout_seconds: 120
+
+# ---------------------------------------------------------------------------
+# Small-model mode (local Ollama models only)
+# ---------------------------------------------------------------------------
+# Ollama context window (num_ctx) used for regular/full-prompt requests.
+ollama_num_ctx_full: 16384
+
+# Ollama context window (num_ctx) used when small-model mode is active.
+ollama_num_ctx_small: 8192
+
+# Controls Ollama's "thinking" mode for hybrid-reasoning models (e.g. qwen3).
+# false = disabled (recommended — keeps the model committing to tool calls
+# instead of spending its budget on unmanaged deliberation).
+# true, or "low"/"medium"/"high", enables it.
+ollama_think: false
+
+# A local Ollama model is auto-classified as "small" when its reported
+# parameter count (from `ollama show`) is below this many billions.
+small_model_param_threshold_b: 10.0
+
+# Above this many columns, a DataFrame's column list in the system prompt
+# is compacted (grouped by shared name prefix) to save tokens. No column
+# NAME is ever hidden — only per-column sample-value detail is compacted.
+column_detail_threshold: 30

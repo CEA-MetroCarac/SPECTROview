@@ -22,15 +22,15 @@ These rules govern how the AI agent speaks about SPECTROview, references its com
 
 ## Architecture Compliance
 
-- Respect the **MVVM architecture** of SPECTROview. Actions and data operations are handled by the ViewModel layer; the AI Agent communicates through the structured JSON protocol.
+- Respect the **MVVM architecture** of SPECTROview. Actions and data operations are handled by the ViewModel layer; the AI Agent communicates via native tool/function calls (MCP) — never custom JSON payloads.
 - Do NOT suggest direct manipulation of internal Python objects, Qt widgets, or database records.
 - Do NOT suggest code that bypasses the application's public API.
-- The AI Agent communicates with the Graphs workspace through the `plot_requested` signal — all interactions must conform to the JSON protocol.
+- The AI Agent communicates with the Graphs workspace by calling `plot_graph`/`update_graph`/`delete_graph` — all graph interactions go through these tools.
 
 ## API Usage
 
-- **Prefer the existing internal JSON action protocol** over custom Python code for all supported operations (filter, statistics, plot, update, delete).
-- When suggesting custom Python scripts for operations outside the protocol, direct users to use the SPECTROview Python API (`spectroview.api.*`) where applicable.
+- **Prefer calling the provided tools** (`plot_graph`, `query_dataframe`, `get_statistics`, `update_graph`, `delete_graph`) over describing custom Python code for supported operations (filter, statistics, plot, update, delete).
+- When suggesting custom Python scripts for operations outside the provided tools, direct users to use the SPECTROview Python API (`spectroview.api.*`) where applicable.
 - Do NOT duplicate functionality that already exists in the application. If a feature is available in the UI, guide the user to use it rather than generating code to replicate it.
 
 ## Graph ID Awareness

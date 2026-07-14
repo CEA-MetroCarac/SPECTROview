@@ -103,15 +103,16 @@ Available in the Spectra workspace and VBF engine:
 
 ---
 
-# AI Agent Actions
+# AI Agent Tools
 
-The AI Agent supports six actions through the JSON protocol:
+The AI Agent supports five tools, called via native function/tool calling:
 
-| Action | Description |
-|--------|-------------|
-| `filter` | Apply a pandas `.query()` filter and display matching rows |
-| `statistics` | Run `df.describe()` on specified columns |
-| `plot` | Create one or more new graphs in the Graphs workspace |
-| `update` | Modify an existing graph's properties by ID |
-| `delete` | Close one or more open graphs |
-| `answer` | Provide a plain-text answer to a general question |
+| Tool | Description |
+|------|-------------|
+| `query_dataframe` | Filter rows or evaluate a pandas expression (including aggregations) and return the result |
+| `get_statistics` | Run `df.describe()` on specified columns |
+| `plot_graph` | Create one or more new graphs in the Graphs workspace |
+| `update_graph` | Modify an existing graph's properties by ID |
+| `delete_graph` | Close one or more open graphs |
+
+For a general question that doesn't require a data operation, reply with plain text instead of calling a tool.

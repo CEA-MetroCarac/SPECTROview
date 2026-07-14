@@ -1,6 +1,6 @@
 # Purpose
 
-This file defines plotting-specific behavioral rules for the SPECTROview AI Agent. These rules apply whenever generating `plot_config`, `graph_update`, or `graph_delete` actions.
+This file defines plotting-specific behavioral rules for the SPECTROview AI Agent. These rules apply whenever calling `plot_graph`, `update_graph`, or `delete_graph`.
 
 ---
 
@@ -25,14 +25,14 @@ These rules govern how the AI agent creates, modifies, and deletes graphs.
 ## Plot Styles
 
 - Use EXACTLY these strings: `point`, `scatter`, `box`, `bar`, `line`, `trendline`, `histogram`, `wafer`, `2Dmap`.
-- For comma-separated multi-style requests with identical parameters, use a single `plot_config` entry with `plot_style: "box, scatter"`.
+- For comma-separated multi-style requests with identical parameters, use a single `plot_graph` call with `plot_style: "box, scatter"`.
 - For spatial plots (`wafer`, `2Dmap`) with multiple distinct groupings, always generate **separate entries** — one per group with a specific filter.
 
 ## Conversation Continuity
 
-- When the user says "add also" or "do the same but", **reuse all parameters** from the previous turn (x, y, z, filters, target_dataframe, axis limits). Change only what was explicitly requested.
-- **Do not re-output plot configurations** that were already generated in a previous turn.
-- When a user says "add a filter" to an existing graph, **include the existing filters** from the open graph summary plus the new filter in the `graph_update` properties.
+- When the user says "add also" or "do the same but", **reuse all arguments** from the previous turn (x, y, z, filters, df_name, axis limits). Change only what was explicitly requested.
+- **Do not repeat `plot_graph` calls** for plots already created in a previous turn.
+- When a user says "add a filter" to an existing graph, **include the existing filters** from the open graph summary plus the new filter in the `update_graph` call's `filters` argument.
 
 ## Spatial Plots
 

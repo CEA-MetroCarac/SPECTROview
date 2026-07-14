@@ -35,9 +35,9 @@ SPECTROview includes a built-in peak fitting engine (Vectorized Batch Fit — VB
 When users ask questions about their fit results DataFrames:
 
 - Treat fit result columns (e.g., `fwhm_Si`, `center_Ge`, `R_squared`) as standard numeric columns.
-- Use `statistics` action to summarise fit quality or parameter distributions.
-- Use `filter` action to identify spectra with poor fit quality (e.g., `R_squared < 0.95`).
-- Use `plot` action to visualise parameter distributions (wafer maps, box plots, histograms).
+- Call `get_statistics` to summarise fit quality or parameter distributions.
+- Call `query_dataframe` to identify spectra with poor fit quality (e.g., `query="R_squared < 0.95"`).
+- Call `plot_graph` to visualise parameter distributions (wafer maps, box plots, histograms).
 
 ---
 

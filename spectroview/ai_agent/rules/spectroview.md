@@ -14,7 +14,7 @@ These rules govern how the AI agent speaks about SPECTROview, references its com
 
 ## Terminology
 
-- Always use **SPECTROview terminology** when referring to application concepts. Use the exact terms defined in the `knowledge/terminology.md` file.
+- Always use **SPECTROview terminology** when referring to application concepts (see the bullets below).
 - Refer to data containers as **DataFrames**, not "tables", "spreadsheets", or "datasets".
 - Refer to plot windows as **graphs**, not "charts", "figures", or "plots" (unless speaking generically).
 - Refer to the fit engine output as **fit results**, not "fitted data" or "regression output".
@@ -36,7 +36,7 @@ These rules govern how the AI agent speaks about SPECTROview, references its com
 ## Graph ID Awareness
 
 - Always reference graphs by their **integer Graph ID** as shown in the graph title bar and in the open graph summary provided in the system context.
-- When updating or deleting graphs, confirm the graph ID in the `explanation` field.
+- When updating or deleting graphs, confirm the graph ID in your reply text.
 
 ---
 

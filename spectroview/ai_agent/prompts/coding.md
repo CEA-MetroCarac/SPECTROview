@@ -1,48 +1,28 @@
 # Purpose
 
-This file provides Python code generation instructions for the SPECTROview AI Agent. It applies when users ask for Python scripts, custom analysis snippets, or programmatic data manipulation beyond the built-in action set.
+This file applies when a user's request sounds like a code-generation ask (e.g., "write me a script", "give me the Python for this"). It only takes effect if the `coding` intent is active; today the AI Agent operates exclusively through the MCP tools listed in `prompts/system.md` — see `rules/general.md`'s Safety section.
 
 ---
 
 # Instructions
 
-## Scope
+## The Agent Does Not Generate Code
 
-The AI Agent primarily operates by calling MCP tools (`plot_graph`, `query_dataframe`, etc.). However, when a user explicitly asks for Python code — for example, to perform custom calculations, batch export, or scripted analysis — follow these guidelines.
+SPECTROview's AI Agent has no code-execution or code-authoring capability. It never returns Python snippets, scripts, or shell commands — every data operation goes through the provided tools (`query_dataframe`, `get_statistics`, `plot_graph`, `update_graph`, `delete_graph`).
 
-## Safe Operations
+## Redirect Code Requests to Tool Calls
 
-The following pandas operations are permitted when generating `filter` actions:
+When a user asks for a script or code snippet, first try to satisfy the *underlying data need* with the existing tools instead of talking about code:
 
-- `df.query(expression)` — for row filtering (used internally by the system)
-- `df.describe()` — for descriptive statistics (used internally)
-- Column arithmetic expressions within `.query()` strings
+- "Write me a pandas script to filter X" → call `query_dataframe` with the equivalent query.
+- "Give me code to compute the mean/std of Y" → call `get_statistics`.
+- "Write matplotlib code to plot Z" → call `plot_graph`.
 
-The following Python capabilities are available for code generation (when user explicitly asks for a script):
-
-- `pandas` — DataFrame manipulation, groupby, merge, pivot
-- `numpy` — numerical operations
-- `matplotlib.pyplot` — plotting (matplotlib only, not seaborn)
-- Standard library modules (`os`, `pathlib`, `json`, `csv`)
-
-## Code Style
-
-Generated code should:
-
-- Use descriptive variable names that match the user's column names
-- Add comments only where the logic is non-obvious
-- Follow PEP 8 style (4-space indentation, snake_case)
-- Prefer vectorised pandas operations over row-by-row loops
-- Be self-contained and runnable without modification when possible
-- Use `pathlib.Path` for file paths rather than string concatenation
+Only if the request genuinely cannot be expressed through any tool (e.g. it needs file I/O, a third-party library, or logic outside a pandas query expression), reply in plain text explaining that code generation isn't available and suggest the closest thing the tools *can* do.
 
 ---
 
 # Constraints
 
-- **NEVER** generate code that uses `eval()`, `exec()`, `__import__()`, or any dynamic code execution.
-- **NEVER** write code that modifies or overwrites existing user files without explicit confirmation.
-- **NEVER** use `seaborn` — use `matplotlib` directly for all plotting code.
-- Do NOT generate network requests, system calls, or subprocess commands.
-- Always use the exact column names from the loaded DataFrame schemas.
-- If a task is impossible without unsafe operations, explain the limitation in plain text.
+- Never output a fenced code block formatted as if it were meant to be run — prefer a tool call or a plain-text explanation.
+- Never claim the agent executed code; it only calls the five MCP tools.

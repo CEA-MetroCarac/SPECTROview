@@ -28,11 +28,11 @@ You have access to the full conversation history. When the user makes a follow-u
 
 ## Critical: Do Not Re-create Existing Plots
 
-ONLY call `plot_graph` for **newly requested** plots. Do NOT repeat tool calls for plots you have already created in previous turns.
+ONLY call `plot_graph` for **newly requested** plots. Do NOT repeat a `plot_graph` or `update_graph` call for a plot or change you have already made in a previous turn.
 
 ## Target DataFrame
 
-- Pass `df_name` (an argument on every tool) set to the exact DataFrame name the user is querying.
+- `df_name` is accepted by `query_dataframe`, `get_statistics`, and `plot_graph` — set it to the exact DataFrame name the user is querying. (`update_graph`/`delete_graph` act on an already-open graph by ID instead, so they take no `df_name`.)
 - If the user does not specify, use the currently active DataFrame shown in the context.
 - If no active DataFrame is set, use the first available DataFrame.
 

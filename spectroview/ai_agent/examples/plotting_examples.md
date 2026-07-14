@@ -2,7 +2,7 @@
 
 This file contains representative plotting examples that demonstrate how the AI Agent responds to common plot requests. These examples serve as reference for prompt engineering and LLM few-shot context.
 
-**IMPORTANT:** You must call the provided tools (e.g., `plot_graph`, `update_graph`, `delete_graph`) to perform actions. Do NOT output JSON text — use the tool-calling mechanism of your API. Each example below shows which tool to call and which arguments to pass.
+**IMPORTANT:** You must call the provided tools (e.g., `plot_graph`, `update_graph`, `delete_graph`) to perform actions. Do NOT output JSON text — use the tool-calling mechanism of your API. Each example below shows which tool to call and which arguments to pass. Options like `grid`, `hist_bins`, `color_palette`, etc. are top-level arguments — use `other_properties` only for options without a dedicated parameter (see Example 14).
 
 ---
 
@@ -53,7 +53,7 @@ This file contains representative plotting examples that demonstrate how the AI 
 **Call tool:** `plot_graph` with:
 - `x` = `"FWHM_Si"`
 - `plot_style` = `"histogram"`
-- `other_properties` = `{"hist_bins": 30}`
+- `hist_bins` = `30`
 - `df_name` = `"fit_results"`
 
 ---
@@ -66,7 +66,7 @@ This file contains representative plotting examples that demonstrate how the AI 
 - `x` = `"temperature"`
 - `y` = `"center_Si"`
 - `plot_style` = `"trendline"`
-- `other_properties` = `{"trendline_order": 2}`
+- `trendline_order` = `2`
 - `df_name` = `"measurements"`
 
 ---
@@ -90,7 +90,8 @@ This file contains representative plotting examples that demonstrate how the AI 
 
 **Call tool:** `update_graph` with:
 - `graph_id` = `"3"`
-- `other_properties` = `{"ymin": 3.5, "ymax": 4.2}`
+- `ymin` = `3.5`
+- `ymax` = `4.2`
 
 ---
 
@@ -136,7 +137,7 @@ For this request, make **three separate calls** to `plot_graph` — one per slot
 - `z` = `"Zone"`
 - `filters` = `["Slot not in [5, 6, 7, 10]"]`
 - `plot_style` = `"point"`
-- `other_properties` = `{"grid": true}`
+- `grid` = `true`
 - `df_name` = `"fit_results"`
 
 ---
@@ -161,7 +162,7 @@ For this request, make **three separate calls** to `plot_graph` — one per slot
 
 **Call tool:** `update_graph` with:
 - `graph_id` = `"2"`
-- `other_properties` = `{"color_palette": "viridis"}`
+- `color_palette` = `"viridis"`
 
 ---
 
@@ -180,3 +181,17 @@ For this request, make **three separate calls** to `plot_graph` — one per slot
 
 **Call tool:** `delete_graph` with:
 - `delete_all` = `true`
+
+---
+
+## Example 14: Property Without a Dedicated Argument
+
+**User:** Plot a histogram of FWHM_Si and set the figure DPI to 300.
+
+**Call tool:** `plot_graph` with:
+- `x` = `"FWHM_Si"`
+- `plot_style` = `"histogram"`
+- `other_properties` = `{"dpi": 300}`
+- `df_name` = `"fit_results"`
+
+(`dpi` has no dedicated parameter, so it goes inside `other_properties`. Compare to Example 4, where `hist_bins` *does* have a dedicated parameter and is passed directly.)

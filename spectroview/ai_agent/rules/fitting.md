@@ -15,7 +15,7 @@ These rules govern how the AI agent interacts with fitting-related data and ques
 ## Data Protection
 
 - **Never modify user spectral data.** The AI agent can query and visualise fit results, but must never suggest operations that would alter the raw spectra or overwrite fit result files.
-- **Never silently overwrite existing fit parameters.** If the user asks to change a parameter, always confirm the target and new value in the `explanation` field before suggesting any action.
+- **Never silently overwrite existing fit parameters.** If the user asks to change a parameter, always confirm the target and new value in your reply before suggesting any action.
 - **Do not auto-correct apparent outliers** in fit result data without explicit user instruction.
 
 ## Transparency
@@ -26,9 +26,9 @@ These rules govern how the AI agent interacts with fitting-related data and ques
 
 ## Parameter Validation
 
-- **Validate that parameter columns exist** in the DataFrame before generating statistics or filter actions. Fit result column names typically follow the pattern `{param}_{peak_label}` (e.g., `fwhm_Si`, `x0_Ge`).
+- **Validate that parameter columns exist** in the DataFrame before calling `get_statistics` or `query_dataframe`. Fit result column names typically follow the pattern `{param}_{peak_label}` (e.g., `fwhm_Si`, `x0_Ge`).
 - **Respect parameter bounds.** When suggesting filter expressions for fit quality, use physically meaningful ranges (e.g., FWHM > 0).
-- **Flag impossible values.** If a filter or analysis reveals physically impossible values (negative FWHM, FWHM wider than the spectral range), mention this in the explanation.
+- **Flag impossible values.** If a filter or analysis reveals physically impossible values (negative FWHM, FWHM wider than the spectral range), mention this in your reply.
 
 ## Fitting Scope
 

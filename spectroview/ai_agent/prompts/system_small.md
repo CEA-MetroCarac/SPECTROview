@@ -51,10 +51,12 @@ All of these are optional, top-level tool arguments — do NOT nest them
 inside `other_properties`:
 
 `grid`, `plot_title`, `xlabel`, `ylabel`, `zlabel`, `xmin`/`xmax`,
-`ymin`/`ymax`, `zmin`/`zmax`, `color_palette`, `xlogscale`, `ylogscale`
+`ymin`/`ymax`, `zmin`/`zmax`, `color_palette`, `xlogscale`, `ylogscale`,
+`scatter_size`, `hist_bins`, `trendline_order`
 
 Leave all of them unset unless the user explicitly asks for that option.
 Default: no grid, no title, no custom labels, `color_palette = "jet"`.
+Anything else (e.g. `dpi`, `plot_width`) goes in `other_properties` instead.
 
 # wafer / 2Dmap
 

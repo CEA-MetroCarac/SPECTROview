@@ -1,64 +1,26 @@
 """
-Tests for the opt-in "show reasoning" feature (spectroview/ai_agent/vm_chat.py,
-m_llm_client.py).
+Tests for the reasoning ("thinking") channel-separation infrastructure in
+spectroview/ai_agent/m_llm_client.py.
 
-Covers the confirmed design: off by default (preserving the small-model
-think=False reliability fix), explicit opt-in overrides it when the user
-asks, and the underlying Ollama `thinking` stream is kept on a separate
-signal from the visible answer channel — never merged in, since merging
-is exactly how the original qwen3 "narrates instead of acting" failure
-happened.
+The opt-in "Show model reasoning" UI toggle (VMChat.set_show_reasoning /
+is_show_reasoning, and VChatPanel's header button) has been removed
+entirely — the app now never explicitly requests `think=True`, restoring
+the pre-toggle default (full-tier: no `think` key set at all; small-tier:
+`think=False`, preserving the small-model reliability fix).
+
+What remains, and is still tested here, is a correctness guarantee at the
+`m_llm_client.py` worker level: even if a model spontaneously emits
+`message["thinking"]` content despite not being asked to, it must stay on
+its own signal (`thinking_chunk_received`) and never merge into the
+visible-answer channel (`chunk_received`) — merging is exactly how the
+original qwen3 "narrates instead of acting" failure happened.
+`VMChat._on_thinking_chunk` stays wired as the `on_thinking_chunk`
+callback for exactly this reason, even though it now just discards the
+fragment instead of surfacing it in the UI.
 """
 from unittest.mock import patch
 
-import pandas as pd
-import pytest
-
 import spectroview.ai_agent.m_llm_client as m
-from spectroview.ai_agent.vm_chat import VMChat
-
-
-@pytest.fixture
-def vm(qapp, monkeypatch):
-    monkeypatch.setattr("spectroview.ai_agent.vm_chat.get_ollama_model_info", lambda model: None)
-    v = VMChat()
-    v.set_dataframes({"df": pd.DataFrame({"A": [1, 2]})}, "df")
-    v.set_provider("Ollama")
-    return v
-
-
-class TestShowReasoningDefaultsAndOverride:
-    def test_off_by_default(self, vm):
-        assert vm.is_show_reasoning() is False
-
-    def test_small_model_default_think_false_preserved_when_reasoning_off(self, vm):
-        vm.set_small_model_mode(True)
-        opts = vm._build_request_options()
-        assert opts["think"] is False
-
-    def test_explicit_opt_in_overrides_small_model_default(self, vm):
-        vm.set_small_model_mode(True)
-        vm.set_show_reasoning(True)
-        opts = vm._build_request_options()
-        assert opts["think"] is True
-
-    def test_full_tier_has_no_think_key_when_reasoning_off(self, vm):
-        vm.set_small_model_mode(False)
-        opts = vm._build_request_options()
-        assert "think" not in opts
-
-    def test_full_tier_think_true_when_reasoning_on(self, vm):
-        vm.set_small_model_mode(False)
-        vm.set_show_reasoning(True)
-        opts = vm._build_request_options()
-        assert opts["think"] is True
-
-    def test_toggling_off_again_restores_default(self, vm):
-        vm.set_small_model_mode(True)
-        vm.set_show_reasoning(True)
-        vm.set_show_reasoning(False)
-        opts = vm._build_request_options()
-        assert opts["think"] is False
 
 
 class TestThinkingChannelNeverMergedIntoAnswer:

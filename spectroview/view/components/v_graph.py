@@ -606,23 +606,33 @@ class VGraph(QWidget):
             )
     
     
-    def _set_limits(self):
-        """Set the limits of axis.
-
-        Uses explicit `is not None` checks (not truthy checks) so a limit of
-        exactly 0.0 -- a common, legitimate axis bound -- is not silently
-        ignored.
+    @staticmethod
+    def _apply_limit_pair(setter, vmin, vmax, axis_name: str) -> None:
+        """Apply a (min, max) limit pair via *setter* (e.g. ax.set_xlim),
+        skipping degenerate equal bounds instead of handing matplotlib a
+        zero-width range (which triggers a "singular transformation"
+        UserWarning and silently auto-expands anyway). Uses explicit
+        `is not None` checks (not truthy checks) so a limit of exactly 0.0
+        -- a common, legitimate axis bound -- is not silently ignored.
         """
-        if self.xmin is not None and self.xmax is not None:
-            self.ax.set_xlim(float(self.xmin), float(self.xmax))
-        if self.ymin is not None and self.ymax is not None:
-            self.ax.set_ylim(float(self.ymin), float(self.ymax))
-        if self.ax2 and self.y2min is not None and self.y2max is not None:
-            self.ax2.set_ylim(float(self.y2min), float(self.y2max))
-        if self.ax3 and self.y3min is not None and self.y3max is not None:
-            self.ax3.set_ylim(float(self.y3min), float(self.y3max))
-        if self.ax_x2 and self.x2min is not None and self.x2max is not None:
-            self.ax_x2.set_xlim(float(self.x2min), float(self.x2max))
+        if vmin is None or vmax is None:
+            return
+        vmin, vmax = float(vmin), float(vmax)
+        if vmin == vmax:
+            print(f"[INFO] Skipping {axis_name} limits: min == max ({vmin}).")
+            return
+        setter(vmin, vmax)
+
+    def _set_limits(self):
+        """Set the limits of axis."""
+        self._apply_limit_pair(self.ax.set_xlim, self.xmin, self.xmax, "x-axis")
+        self._apply_limit_pair(self.ax.set_ylim, self.ymin, self.ymax, "y-axis")
+        if self.ax2:
+            self._apply_limit_pair(self.ax2.set_ylim, self.y2min, self.y2max, "y2-axis")
+        if self.ax3:
+            self._apply_limit_pair(self.ax3.set_ylim, self.y3min, self.y3max, "y3-axis")
+        if self.ax_x2:
+            self._apply_limit_pair(self.ax_x2.set_xlim, self.x2min, self.x2max, "x2-axis")
     
     def _set_axis_scale(self, df):
         """Apply log scale only if the corresponding axis column is numeric."""
@@ -656,23 +666,28 @@ class VGraph(QWidget):
                 self.ax_x2.set_xscale('log')
     
     def _format_axis_label(self, col_name) -> str:
-        """Format axis label based on specific parameter rules."""
+        """Format axis label based on specific parameter rules.
+
+        E.g. "x0_Si" -> "Si peak position (cm$^{-1}$)". Column names of the
+        form "<param>_<peaklabel>" (fit-result columns) are turned into a
+        friendly, unit-annotated label instead of shown raw.
+        """
         if not col_name or not isinstance(col_name, str):
             return str(col_name) if col_name is not None else ""
-            
+
         parts = col_name.split('_', 1)
         if len(parts) == 2:
             param, peaklabel = parts
             param = param.lower()
             if param == "x0":
-                return f"{col_name} (cm$^{{-1}}$)"
+                return f"{peaklabel} peak position (cm$^{{-1}}$)"
             elif param == "fwhm":
-                return f"{col_name} (cm$^{{-1}}$)"
+                return f"{peaklabel} peak width (cm$^{{-1}}$)"
             elif param == "ampli":
-                return f"{col_name} (a.u.)"
+                return f"{peaklabel} peak intensity (a.u.)"
             elif param == "area":
-                return f"{col_name} (a.u.)"
-                
+                return f"{peaklabel} peak area (a.u.)"
+
         return col_name
 
     def _get_y_label_default(self, y_col):

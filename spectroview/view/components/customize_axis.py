@@ -87,7 +87,13 @@ class CustomizeAxis(QWidget):
         limits_layout.setContentsMargins(4, 4, 4, 4)
         limits_layout.setSpacing(8)
 
-        # X, Y limits
+        # X, Y limits -- hidden for wafer/2Dmap (see load_axis_settings()),
+        # where X/Y are spatial axes governed by wafer_size, not a
+        # user-set min/max; Z is the relevant limit control there.
+        self.xy_limits_widget = QWidget()
+        xy_limits_layout = QVBoxLayout(self.xy_limits_widget)
+        xy_limits_layout.setContentsMargins(0, 0, 0, 0)
+        xy_limits_layout.setSpacing(8)
         for axis in ['X', 'Y']:
             h_layout = QHBoxLayout()
             h_layout.addWidget(QLabel(f"{axis} axis limits:"))
@@ -97,7 +103,8 @@ class CustomizeAxis(QWidget):
                 setattr(self, f'spin_{axis.lower()}{limit_type}', spin)
                 h_layout.addWidget(QLabel(limit_type))
                 h_layout.addWidget(spin)
-            limits_layout.addLayout(h_layout)
+            xy_limits_layout.addLayout(h_layout)
+        limits_layout.addWidget(self.xy_limits_widget)
 
         # Z limits
         z_limits_layout = QHBoxLayout()
@@ -206,6 +213,11 @@ class CustomizeAxis(QWidget):
     def load_axis_settings(self):
         """Load current axis settings (limits and breaks) from graph widget."""
         gw = self.graph_widget
+
+        # X/Y limits don't apply to wafer/2Dmap plots (spatial axes governed
+        # by wafer_size, not a user-set min/max) -- hide them there; Z stays
+        # visible since it's the color-scale control for those styles.
+        self.xy_limits_widget.setVisible(gw.plot_style not in ('wafer', '2Dmap'))
 
         # Load limits
         self.spin_xmin.setValue(gw.xmin if gw.xmin is not None else -999999)

@@ -413,8 +413,7 @@ class Main(QMainWindow):
             self._chat_panel = VChatPanel(self)
             # When the AI suggests a plot, configure the Graphs workspace
             self._chat_panel.plot_requested.connect(self._on_chat_plot_requested)
-            self._chat_panel.save_all_graphs_requested.connect(self._on_save_all_graphs_requested)
-            
+
             # Keep chat panel in sync with workspace dataframes
             def sync_chat_dfs_full(*args):
                 """Called when dataframes are added/removed."""
@@ -427,12 +426,6 @@ class Main(QMainWindow):
                 vm_graphs = self.v_graphs_workspace.vm
                 active = vm_graphs.selected_df_name or ""
                 self._chat_panel.vm.update_active_df_name(active)
-                # Update the status label
-                if vm_graphs.dataframes:
-                    n = len(vm_graphs.dataframes)
-                    self._chat_panel.lbl_no_data.setText(
-                        f"📊 {n} DataFrame(s) loaded  (Active: {active})" if active else f"📊 {n} DataFrame(s) loaded"
-                    )
 
             def sync_chat_graphs(*args):
                 """Called when graphs are added/removed/updated."""
@@ -457,26 +450,6 @@ class Main(QMainWindow):
         self._chat_panel.show()
         self._chat_panel.raise_()
         self._chat_panel.activateWindow()
-
-    def _on_save_all_graphs_requested(self):
-        """Snapshot every currently-open graph's live configuration (not
-        just what the AI proposed) and hand it to the chat panel to name
-        and persist as a template — mirrors the existing "replicate graph"
-        pattern (MGraph.save() minus the instance-specific graph_id)."""
-        vm_graphs = self.v_graphs_workspace.vm
-        configs = []
-        for graph_model in vm_graphs.graphs.values():
-            cfg = graph_model.save()
-            cfg.pop("graph_id", None)
-            configs.append(cfg)
-
-        if not configs:
-            QMessageBox.information(
-                self, "No Graphs", "There are no open graphs to save as a template."
-            )
-            return
-
-        self._chat_panel.prompt_and_save_template(configs)
 
     def _on_chat_plot_requested(self, plot_config: dict):
         """Apply the AI-suggested plot configuration or graph update to the Graphs workspace.

@@ -221,6 +221,26 @@ class TestCustomizeAxis:
         assert len(received) == 1
         assert received[0]["axis_breaks"]["x"] == {"start": 1.0, "end": 2.0}
 
+    def test_xy_limits_hidden_for_wafer_and_2dmap(self, qapp, excel_df):
+        """X/Y limits don't apply to wafer/2Dmap (spatial axes governed by
+        wafer_size, not a user-set min/max) -- hiding them prevents setting
+        a degenerate min==max pair that used to trigger a matplotlib
+        'singular transformation' warning on reload."""
+        # 2Dmap pivots on (x, y), so needs unique coordinate pairs; the raw
+        # sheet has repeated (X, Y) positions (see test_v_graph_plotting.py).
+        unique_xy_df = excel_df.drop_duplicates(subset=["X", "Y"])
+        for style, df in (("wafer", excel_df), ("2Dmap", unique_xy_df)):
+            vg = _plotted_graph(qapp, df, plot_style=style, x="X", y=["Y"], z="ampli_Si")
+            widget = CustomizeAxis(vg)
+            widget.load_axis_settings()
+            assert widget.xy_limits_widget.isVisibleTo(widget) is False
+
+    def test_xy_limits_visible_for_other_styles(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget = CustomizeAxis(vg)
+        widget.load_axis_settings()
+        assert widget.xy_limits_widget.isVisibleTo(widget) is True
+
 
 class TestCustomizeMoreOptions:
     def test_trendline_group_visible_only_for_trendline(self, qapp, excel_df):

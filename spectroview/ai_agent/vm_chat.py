@@ -110,7 +110,6 @@ class VMChat(QObject):
 
     thinking_changed = Signal(bool, str)
     chunk_received   = Signal(str)
-    thinking_content_received = Signal(str)  # streamed reasoning fragment, opt-in only
     result_ready     = Signal(object)       # ChatResult
     error_occurred   = Signal(str)
     conversation_changed = Signal(str)
@@ -170,10 +169,6 @@ class VMChat(QObject):
         # Not refreshed here — refresh happens on set_model()/set_provider(),
         # once a real model/provider is known, to avoid a network call
         # (ollama show) racing construction against a placeholder model.
-
-        # ── Reasoning visibility (opt-in, off by default) ──────────────────
-        self._show_reasoning: bool = False
-        self._pending_thinking: str = ""
 
         # ── MCP Server ───────────────────────────────────────────────────
         self._mcp_server = create_mcp_server(self)
@@ -327,20 +322,6 @@ class VMChat(QObject):
         self._param_count_cache[model] = result
         return result
 
-    def set_show_reasoning(self, enabled: bool) -> None:
-        """Opt in/out of surfacing the model's reasoning ("thinking") content.
-
-        Off by default. Enabling this for a detected-small model overrides
-        that tier's ``think=False`` reliability default for the *next*
-        request — the caller (View) is expected to warn the user that this
-        may reduce tool-calling reliability on small models, since the
-        toggle itself doesn't second-guess an explicit opt-in.
-        """
-        self._show_reasoning = enabled
-
-    def is_show_reasoning(self) -> bool:
-        return self._show_reasoning
-
     def _build_request_options(self) -> Dict[str, Any]:
         """Assemble the generic request-tuning dict passed to ``LLMClient.chat()``.
 
@@ -362,9 +343,6 @@ class VMChat(QObject):
         else:
             opts["num_ctx"] = cfg.get("ollama_num_ctx_full", 16384)
             opts["max_tokens"] = cfg.get("max_tokens", 81920)
-
-        if self._show_reasoning:
-            opts["think"] = True
 
         return opts
 
@@ -401,7 +379,6 @@ class VMChat(QObject):
         # Track the user turn now; assistant turn added after response
         self._conversation.add_message("user", user_text, reply_to_index=reply_to_index)
         self._pending_response = ""
-        self._pending_thinking = ""
         self._loop_count = 0
 
         # Build the full message list for this request
@@ -573,8 +550,12 @@ class VMChat(QObject):
         self.chunk_received.emit(fragment)
 
     def _on_thinking_chunk(self, fragment: str) -> None:
-        self._pending_thinking += fragment
-        self.thinking_content_received.emit(fragment)
+        """Discard a model's reasoning ("thinking") fragment — the app
+        never surfaces it in the UI. Still passed to LLMClient.chat() as
+        on_thinking_chunk so the worker's channel separation keeps any
+        model's `message["thinking"]` content from leaking into the
+        visible-answer stream, even for a model that emits it unrequested."""
+        pass
 
     def _on_done(self, full_text: str, tool_calls: list) -> None:
         self.thinking_changed.emit(False, "Thinking")
@@ -647,7 +628,6 @@ class VMChat(QObject):
                 
                 # Trigger the next turn
                 self._pending_response = ""
-                self._pending_thinking = ""
                 messages = self._build_messages("")
                 self._client.chat(
                     model=self._model,

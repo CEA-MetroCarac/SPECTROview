@@ -13,6 +13,7 @@ success/failure contract.
 """
 import pandas as pd
 import pytest
+from PySide6.QtWidgets import QMessageBox
 
 from spectroview.view.components.v_graph import VGraph
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
@@ -230,3 +231,77 @@ class TestConfigureGraphFromModel:
         ws._configure_graph_from_model(widget, model)
 
         assert widget.scatter_edgecolor == 'black'
+
+
+class TestTemplateApply:
+    """_on_template_applied was revised (moved here from the AI Chat panel
+    and the bottom-toolbar's lightweight VPlotTemplatePicker, now driven by
+    the full VPlotTemplateDialog next to Add/Update plot): it always
+    renders against the currently-selected DataFrame -- not each plot's
+    originally-saved df_name -- and skips + reports (rather than aborting
+    the whole batch) any plot whose required axis columns aren't present
+    in that DataFrame."""
+
+    def test_applies_plot_against_selected_df_ignoring_saved_df_name(self, ws, excel_df):
+        ws.vm.add_dataframe('sheet1', excel_df)
+        ws.vm.select_dataframe('sheet1')
+
+        configs = [
+            {'df_name': 'some_other_sheet', 'plot_style': 'scatter', 'x': 'x0_Si', 'y': ['ampli_Si']},
+        ]
+        ws._on_template_applied(configs)
+
+        assert len(ws.graph_widgets) == 1
+        gid = next(iter(ws.graph_widgets))
+        assert ws.vm.get_graph(gid).df_name == 'sheet1'
+
+    def test_skips_plot_with_missing_columns_and_reports_plot_number_and_columns(self, ws, excel_df, monkeypatch):
+        ws.vm.add_dataframe('sheet1', excel_df)
+        ws.vm.select_dataframe('sheet1')
+
+        warnings = []
+        monkeypatch.setattr(QMessageBox, 'warning', lambda *a, **k: warnings.append(a))
+
+        configs = [
+            {'plot_style': 'scatter', 'x': 'x0_Si', 'y': ['ampli_Si']},            # ok
+            {'plot_style': 'scatter', 'x': 'nonexistent_col', 'y': ['ampli_Si']},  # missing x
+        ]
+        ws._on_template_applied(configs)
+
+        assert len(ws.graph_widgets) == 1  # only the first (valid) plot was created
+        assert len(warnings) == 1
+        message_text = warnings[0][2]
+        assert "Plot 2" in message_text
+        assert "nonexistent_col" in message_text
+
+    def test_no_dataframe_selected_warns_and_creates_nothing(self, ws, monkeypatch):
+        warnings = []
+        monkeypatch.setattr(QMessageBox, 'warning', lambda *a, **k: warnings.append(a))
+
+        ws._on_template_applied([{'plot_style': 'scatter', 'x': 'a', 'y': ['b']}])
+
+        assert len(warnings) == 1
+        assert len(ws.graph_widgets) == 0
+
+    def test_all_applied_emits_toast_not_a_blocking_dialog(self, ws, excel_df, monkeypatch):
+        ws.vm.add_dataframe('sheet1', excel_df)
+        ws.vm.select_dataframe('sheet1')
+
+        warnings = []
+        monkeypatch.setattr(QMessageBox, 'warning', lambda *a, **k: warnings.append(a))
+        notifications = []
+        ws.vm.notify.connect(notifications.append)
+
+        ws._on_template_applied([{'plot_style': 'scatter', 'x': 'x0_Si', 'y': ['ampli_Si']}])
+
+        assert not warnings
+        assert any("Applied" in n for n in notifications)
+
+    def test_required_plot_columns_covers_all_axes(self, ws):
+        cfg = {
+            'x': 'colX', 'y': ['colY1', 'colY2'], 'z': 'colZ',
+            'y2': 'colY2secondary', 'y3': None, 'x2': '',
+        }
+        assert ws._required_plot_columns(cfg) == {
+            'colX', 'colY1', 'colY2', 'colZ', 'colY2secondary'
+        }

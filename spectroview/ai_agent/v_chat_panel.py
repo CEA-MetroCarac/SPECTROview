@@ -35,7 +35,6 @@ from spectroview import ICON_DIR
 from spectroview.ai_agent.vm_chat import VMChat, ChatResult
 from spectroview.ai_agent.m_llm_client import API_PROVIDERS, OPENAI_AVAILABLE, OLLAMA_AVAILABLE
 from spectroview.ai_agent.v_history_dialog import VHistoryDialog
-from spectroview.view.components.v_plot_template_dialog import VPlotTemplateDialog
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -139,45 +138,6 @@ class _MessageCard(QFrame):
             self.content_view.document().setTextWidth(self.content_view.viewport().width())
             self.content_view.setFixedHeight(int(self.content_view.document().size().height()) + 5)
             self.content_view.setUpdatesEnabled(True)
-
-    def append_reasoning(self, fragment: str) -> None:
-        """Append a streamed reasoning ("thinking") fragment, lazily
-        creating the collapsible section on first use. Only ever called
-        when the user has opted in to showing reasoning — see
-        VChatPanel._on_thinking_content."""
-        if self._role == "user" or not fragment:
-            return
-
-        if not hasattr(self, "reasoning_view"):
-            self._reasoning_text = ""
-
-            self.btn_reasoning = QPushButton("🧠 Reasoning (click to expand)")
-            self.btn_reasoning.setObjectName("btnRowLink")
-            self.btn_reasoning.setCursor(Qt.PointingHandCursor)
-            self.btn_reasoning.setCheckable(True)
-            self.btn_reasoning.setStyleSheet("font-size: 11px; text-align: left; margin-top: 6px;")
-
-            self.reasoning_view = QTextBrowser()
-            self.reasoning_view.setObjectName("reasoningView")
-            self.reasoning_view.setFrameShape(QFrame.NoFrame)
-            self.reasoning_view.setStyleSheet("font-size: 10px; padding: 4px;")
-            self.reasoning_view.hide()
-            self.reasoning_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-            self.reasoning_view.setMaximumHeight(200)
-
-            self.layout().addWidget(self.btn_reasoning)
-            self.layout().addWidget(self.reasoning_view)
-
-            self.btn_reasoning.toggled.connect(self._on_reasoning_toggled)
-
-        self._reasoning_text += fragment
-        self.reasoning_view.setPlainText(self._reasoning_text)
-
-    def _on_reasoning_toggled(self, checked: bool) -> None:
-        self.reasoning_view.setVisible(checked)
-        self.btn_reasoning.setText(
-            "🧠 Reasoning (click to collapse)" if checked else "🧠 Reasoning (click to expand)"
-        )
 
     def set_text(self, text: str) -> None:
         if self._role == "user":
@@ -364,22 +324,15 @@ class VChatPanel(QDialog):
     plot_requested(dict)
         Emitted when the AI suggests a plot.  The dict contains keys
         compatible with ``VWorkspaceGraphs`` plot configuration.
-    save_all_graphs_requested()
-        Emitted when the user clicks "Save all open plots as Template".
-        main.py is responsible for gathering the full MGraph.save() dicts
-        for every currently-open graph (VMChat only tracks a lightweight
-        summary of open graphs for prompt context, not the full models)
-        and calling back into ``prompt_and_save_template()``.
     """
 
     plot_requested = Signal(dict)
-    save_all_graphs_requested = Signal()
 
     _SETTINGS_GROUP = "ai_chat"
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("🤖  SPECTROview AI Agent")
+        self.setWindowTitle("SPECTROview AI Agent")
         self.setWindowFlags(
             Qt.Dialog | Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint
         )
@@ -416,10 +369,6 @@ class VChatPanel(QDialog):
         # ── Header bar ──────────────────────────────────────────────
         header = self._make_header()
         root.addWidget(header)
-
-        # ── Status bar ──────────────────────────────────────────────
-        self.status_bar = self._make_status_bar()
-        root.addWidget(self.status_bar)
 
         # ── Chat scroll area ────────────────────────────────────────
         self.scroll_area = QScrollArea()
@@ -525,48 +474,37 @@ class VChatPanel(QDialog):
 
         main_layout.addLayout(row1_layout)
 
-        # ── Row 2: Actions (reasoning, history, new chat, templates) ───
+        # ── Row 2: Status (left) + Actions (history, new chat; right) ───
         row2_layout = QHBoxLayout()
         row2_layout.setContentsMargins(0, 0, 0, 0)
         row2_layout.setSpacing(6)
 
-        self.btn_reasoning_toggle = QPushButton("🧠")
-        self.btn_reasoning_toggle.setObjectName("btn_reasoning_toggle")
-        self.btn_reasoning_toggle.setFixedSize(28, 28)
-        self.btn_reasoning_toggle.setCheckable(True)
-        self.btn_reasoning_toggle.setCursor(Qt.PointingHandCursor)
-        self._update_reasoning_toggle_tooltip()
-        row2_layout.addWidget(self.btn_reasoning_toggle)
+        self.lbl_status = QLabel("Checking…")
+        self.lbl_status.setStyleSheet("font-size: 11px;")
+        row2_layout.addWidget(self.lbl_status)
+
+        # No-data notice (shown when no df is loaded)
+        self.lbl_no_data = QLabel("ⓘ No DataFrame selected")
+        self.lbl_no_data.setStyleSheet("color: #FFA726; font-size: 11px;")
+        row2_layout.addWidget(self.lbl_no_data)
 
         row2_layout.addStretch()
 
         self.btn_history = QPushButton("")
         self.btn_history.setObjectName("btn_history")
         self.btn_history.setIcon(QIcon(os.path.join(ICON_DIR, "view-details.png")))
-        self.btn_history.setIconSize(QSize(20, 20))
-        self.btn_history.setFixedSize(28, 28)
+        self.btn_history.setIconSize(QSize(26, 26))
+        self.btn_history.setFixedSize(36, 36)
         self.btn_history.setToolTip("Conversation History")
 
         self.btn_new_chat = QPushButton("")
         self.btn_new_chat.setObjectName("btn_new_chat")
         self.btn_new_chat.setIcon(QIcon(os.path.join(ICON_DIR, "ai_chat.png")))
-        self.btn_new_chat.setIconSize(QSize(20, 20))
-        self.btn_new_chat.setFixedSize(28, 28)
+        self.btn_new_chat.setIconSize(QSize(26, 26))
+        self.btn_new_chat.setFixedSize(36, 36)
         self.btn_new_chat.setToolTip("New Chat")
 
-        self.btn_templates = QPushButton("📊")
-        self.btn_templates.setObjectName("btn_templates")
-        self.btn_templates.setFixedSize(28, 28)
-        self.btn_templates.setToolTip("Browse & apply saved plot templates")
-
-        self.btn_save_all_templates = QPushButton("")
-        self.btn_save_all_templates.setObjectName("btn_templates")
-        self.btn_save_all_templates.setIcon(QIcon(os.path.join(ICON_DIR, "save-all.png")))
-        self.btn_save_all_templates.setIconSize(QSize(18, 18))
-        self.btn_save_all_templates.setFixedSize(28, 28)
-        self.btn_save_all_templates.setToolTip("Save all currently open plots as a Template")
-
-        for btn in (self.btn_history, self.btn_new_chat, self.btn_templates, self.btn_save_all_templates):
+        for btn in (self.btn_history, self.btn_new_chat):
             btn.setCursor(Qt.PointingHandCursor)
             row2_layout.addWidget(btn)
 
@@ -581,27 +519,6 @@ class VChatPanel(QDialog):
         main_layout.addWidget(self.edit_title)
 
         return header
-
-
-
-    def _make_status_bar(self) -> QFrame:
-        bar = QFrame()
-        bar.setFixedHeight(28)
-        bar.setObjectName("chatStatusBar")
-        layout = QHBoxLayout(bar)
-        layout.setContentsMargins(10, 0, 10, 0)
-
-        self.lbl_status = QLabel("Checking…")
-        self.lbl_status.setStyleSheet("font-size: 11px;")
-        layout.addWidget(self.lbl_status)
-        layout.addStretch()
-
-        # No-data notice (shown when no df is loaded)
-        self.lbl_no_data = QLabel("ⓘ No DataFrame selected")
-        self.lbl_no_data.setStyleSheet("color: #FFA726; font-size: 11px;")
-        layout.addWidget(self.lbl_no_data)
-
-        return bar
 
     def _make_reply_preview(self) -> QFrame:
         frame = QFrame()
@@ -686,20 +603,16 @@ class VChatPanel(QDialog):
         self.btn_clear.clicked.connect(self._on_clear)
         self.btn_history.clicked.connect(self._on_history_clicked)
         self.btn_new_chat.clicked.connect(self._on_new_chat_clicked)
-        self.btn_templates.clicked.connect(self._on_templates_clicked)
-        self.btn_save_all_templates.clicked.connect(self.save_all_graphs_requested.emit)
         self.btn_refresh_models.clicked.connect(self._refresh_status)
         self.cbb_model.currentTextChanged.connect(self.vm.set_model)
         self.cbb_provider.currentTextChanged.connect(self._on_provider_changed)
         self.cbb_prompt_tier.currentIndexChanged.connect(self._on_prompt_tier_changed)
-        self.btn_reasoning_toggle.toggled.connect(self._on_reasoning_toggle_changed)
 
         self.cbb_model.currentTextChanged.connect(lambda _: self._save_settings())
 
         # ViewModel → View
         self.vm.thinking_changed.connect(self._on_thinking_changed)
         self.vm.chunk_received.connect(self._on_chunk)
-        self.vm.thinking_content_received.connect(self._on_thinking_content)
         self.vm.result_ready.connect(self._on_result_ready)
         self.vm.error_occurred.connect(self._on_error)
         self.vm.conversation_changed.connect(self._on_conversation_changed)
@@ -764,10 +677,7 @@ class VChatPanel(QDialog):
         """Update the available DataFrames the chat can query."""
         self.vm.set_dataframes(dfs, active_name)
         if dfs:
-            self.lbl_no_data.setText(
-                f"📊 {len(dfs)} DataFrame(s) loaded  (Active: {active_name})" if active_name else f"📊 {len(dfs)} DataFrame(s) loaded"
-            )
-            self.lbl_no_data.setStyleSheet("color: #66BB6A; font-size: 11px;")
+            self.lbl_no_data.clear()
         else:
             self.lbl_no_data.setText("ⓘ No DataFrames available")
             self.lbl_no_data.setStyleSheet("color: #FFA726; font-size: 11px;")
@@ -822,28 +732,6 @@ class VChatPanel(QDialog):
         self.vm.set_small_model_mode({0: None, 1: False, 2: True}.get(index))
         self._save_settings()
         self._refresh_status()
-        self._update_reasoning_toggle_tooltip()
-
-    def _on_reasoning_toggle_changed(self, checked: bool) -> None:
-        """Opt in/out of showing the model's reasoning. Off by default —
-        this is a deliberate, explicit choice, so it's honored even for
-        small models even though it overrides their think=False default."""
-        self.vm.set_show_reasoning(checked)
-
-    def _update_reasoning_toggle_tooltip(self) -> None:
-        if self.vm.is_small_model_mode():
-            self.btn_reasoning_toggle.setToolTip(
-                "Show model reasoning (off by default).\n"
-                "⚠ The active model is running in simplified/small-model mode — "
-                "enabling this may reduce tool-calling reliability."
-            )
-        else:
-            self.btn_reasoning_toggle.setToolTip("Show model reasoning (off by default).")
-
-    def _on_thinking_content(self, fragment: str) -> None:
-        if self._active_card:
-            self._active_card.append_reasoning(fragment)
-            self._scroll_to_bottom()
 
     # ------------------------------------------------------------------
     # Provider change handler
@@ -946,7 +834,6 @@ class VChatPanel(QDialog):
             if self.cbb_model.currentText():
                 self.vm.set_model(self.cbb_model.currentText())
             self.cbb_model.blockSignals(False)
-            self._update_reasoning_toggle_tooltip()
 
             if is_ollama:
                 status_text = "🟢  Ollama connected"
@@ -1063,15 +950,6 @@ class VChatPanel(QDialog):
 
     def _on_new_chat_clicked(self) -> None:
         self.vm.new_conversation()
-
-    def _on_templates_clicked(self) -> None:
-        dialog = VPlotTemplateDialog(self.vm.template_store, self)
-        dialog.template_applied.connect(self._on_template_applied)
-        dialog.exec()
-
-    def _on_template_applied(self, configs: list) -> None:
-        for cfg in configs:
-            self.plot_requested.emit(cfg)
 
     def _on_conversation_opened(self, conv_id: str) -> None:
         conv = self.vm.conversation_store.load_conversation(conv_id)
@@ -1208,8 +1086,10 @@ class VChatPanel(QDialog):
     def prompt_and_save_template(self, configs: list) -> None:
         """Prompt for a name and persist *configs* as a new plot template.
 
-        Public so main.py can reuse it for the "save all open graphs"
-        conversation-level action, keeping the naming-prompt UI in one place.
+        Used by the inline "Save N plot(s) as Template" button offered
+        after the AI creates plots (see _on_result_ready) — general
+        template browse/apply/save-all management now lives in the Graphs
+        workspace itself (VWorkspaceGraphs), not here.
         """
         if not configs:
             return

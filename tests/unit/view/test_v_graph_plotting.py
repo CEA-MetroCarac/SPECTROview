@@ -123,6 +123,42 @@ class TestPlotStyleCoverage:
         vg.plot(excel_df)  # must return, not hang
 
 
+class TestFormatAxisLabel:
+    """VGraph._format_axis_label() -- turns fit-result columns of the form
+    "<param>_<peaklabel>" into a friendly, unit-annotated label instead of
+    showing the raw column name. Regression test for a previously-lost
+    feature: a later, unrelated commit ("improve the intelligent of AI
+    agent") collateral-changed this to just append units to the raw column
+    name (e.g. "x0_Si (cm$^{-1}$)") instead of building the friendly name
+    ("Si peak position (cm$^{-1}$)") it was originally written to produce."""
+
+    def test_x0_prefix_becomes_peak_position(self, vg):
+        assert vg._format_axis_label("x0_Si") == "Si peak position (cm$^{-1}$)"
+
+    def test_fwhm_prefix_becomes_peak_width(self, vg):
+        assert vg._format_axis_label("fwhm_Si") == "Si peak width (cm$^{-1}$)"
+
+    def test_ampli_prefix_becomes_peak_intensity(self, vg):
+        assert vg._format_axis_label("ampli_Si") == "Si peak intensity (a.u.)"
+
+    def test_area_prefix_becomes_peak_area(self, vg):
+        assert vg._format_axis_label("area_Si") == "Si peak area (a.u.)"
+
+    def test_unrecognized_prefix_passes_through_unchanged(self, vg):
+        assert vg._format_axis_label("Zone") == "Zone"
+        assert vg._format_axis_label("Strain (GPa)") == "Strain (GPa)"
+
+    def test_multi_word_peaklabel_after_first_underscore_is_preserved(self, vg):
+        # split('_', 1): only the first underscore separates param/peaklabel.
+        assert vg._format_axis_label("x0_Si_substrate") == "Si_substrate peak position (cm$^{-1}$)"
+
+    def test_auto_label_used_in_real_plot(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        assert vg.ax.get_xlabel() == "Si peak position (cm$^{-1}$)"
+        assert vg.ax.get_ylabel() == "Si peak intensity (a.u.)"
+
+
 class TestHueGroupingAndLegend:
     def test_categorical_hue_creates_multi_entry_legend(self, vg, excel_df):
         _configure(vg, x="Zone", y=["fwhm_Si"], z="Quadrant", plot_style="point")
@@ -196,6 +232,23 @@ class TestAxisCustomization:
         mid = float(x_vals.median())
         vg.axis_breaks = {"x": {"start": mid - 1, "end": mid + 1}, "y": None}
         vg.plot(excel_df)  # must not raise
+
+    def test_degenerate_equal_limits_are_skipped_not_warned(self, vg, excel_df, recwarn):
+        """Regression test: a saved graph with xmin==xmax (e.g. an old wafer
+        plot with 0.0/0.0 accidentally saved) used to be handed straight to
+        matplotlib's set_xlim/set_ylim, which raises a 'singular
+        transformation' UserWarning and auto-expands anyway. Degenerate
+        pairs should be skipped instead, leaving matplotlib's own
+        auto-scaled range in place with no warning."""
+        _configure(vg, x="X", y=["Y"], z="ampli_Si", plot_style="wafer")
+        vg.xmin, vg.xmax = 0.0, 0.0
+        vg.ymin, vg.ymax = 0.0, 0.0
+        vg.plot(excel_df)
+        assert not any("singular" in str(w.message).lower() for w in recwarn.list)
+        xlo, xhi = vg.ax.get_xlim()
+        ylo, yhi = vg.ax.get_ylim()
+        assert xlo != xhi
+        assert ylo != yhi
 
 
 class TestSecondaryAxes:

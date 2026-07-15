@@ -592,16 +592,11 @@ _QSS_TEMPLATE = r"""
     }}
 
     /* ═══════════════════════════════════════════════
-       AI CHAT PANEL — header, status bar, message cards
+       AI CHAT PANEL — header, message cards
        ═══════════════════════════════════════════════ */
 
     #chatHeader {{
         background: {surface_toolbar};
-        border-bottom: 1px solid {border_subtle};
-    }}
-
-    #chatStatusBar {{
-        background: {surface_card};
         border-bottom: 1px solid {border_subtle};
     }}
 

@@ -213,7 +213,7 @@ Three `QThread` subclasses, one per backend. Each executes a single streaming (o
 | `response_ready` | `(str, list)` | Full assembled response text + accumulated tool calls |
 | `error_occurred` | `str` | Error message if the backend is unreachable |
 
-> Ollama's `message["thinking"]` field (hybrid-reasoning models' hidden scratchpad, when `think` is enabled) is intentionally **never** appended to `chunk_received`/the response text. Merging a hidden-reasoning channel into the visible answer is exactly how the qwen3 "Attempt A" failure above happens — if a future UI wants to surface reasoning, it needs its own separate signal, never merged into the answer channel.
+> Ollama's `message["thinking"]` field (hybrid-reasoning models' hidden scratchpad, when `think` is enabled) is intentionally **never** appended to `chunk_received`/the response text — merging a hidden-reasoning channel into the visible answer is exactly how the qwen3 "Attempt A" failure above happens. A "Show model reasoning" UI toggle (an opt-in `think=True` override plus a collapsible reasoning section under each message bubble) existed for a time and has since been **removed entirely** — the app never explicitly requests `think=True` anymore, so `think` simply stays at each tier's default (unset for full tier, `false` for small tier; see the [Small-Model Support](#small-model-support) table). The channel separation itself is kept regardless of that removal: even if a model spontaneously emits `thinking` content unrequested, `LLMWorker`'s `thinking_chunk_received` signal (and `VMChat._on_thinking_chunk`, which now just discards the fragment instead of surfacing it) keeps it off the answer channel.
 
 ### **`LLMClient` — Connection Facade**
 
@@ -332,7 +332,11 @@ class ChatResult:
 
 **File**: `spectroview/ai_agent/v_chat_panel.py`
 
-A floating `QDialog`. Header row: provider selector, model selector, **prompt-tier selector** (`cbb_prompt_tier`: Auto / Full prompt / Simplified prompt — see [Small-Model Support](#small-model-support)), refresh button, history/new-chat buttons. Status bar shows connection state and, when active, `· Simplified prompts`.
+A floating `QDialog`. Header row 1: provider selector, model selector, **prompt-tier selector** (`cbb_prompt_tier`: Auto / Full prompt / Simplified prompt — see [Small-Model Support](#small-model-support)), refresh button. Header row 2 (left to right): connection status label `lbl_status` (appends `· Simplified prompts` when active), `lbl_no_data` (a "no DataFrame selected/available" notice, blank once DataFrames are loaded), a stretch, then the Conversation History / New Chat buttons (36×36 icon buttons). There is no longer a separate status-bar strip below the header — both status labels live in the header itself now.
+
+Two things previously on this panel have since moved or been removed:
+- The **"Show model reasoning" toggle** is gone entirely (see the note under `LLMWorker`/`APIWorker`/`AnthropicWorker` above) — reasoning is never surfaced in the chat UI now.
+- **General plot-template management** (browse/apply/rename/duplicate/delete, save-all-open-graphs) now lives entirely in the Graphs workspace (`VWorkspaceGraphs`, next to Add/Update plot), not here. `VChatPanel.prompt_and_save_template()` survives only as the inline "Save N plot(s) as Template" shortcut offered after the AI creates plots (see `_on_result_ready`).
 
 Helper widgets:
 - **`_MessageCard`** / AI/user card variants: styled message bubbles with role-dependent colors

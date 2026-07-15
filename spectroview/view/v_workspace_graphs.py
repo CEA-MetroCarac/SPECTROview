@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
     QComboBox, QSpinBox, QCheckBox, QLineEdit, QSplitter,
     QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame, QScrollArea,
-    QDialog, QGridLayout, QApplication, QListWidgetItem, QCompleter
+    QDialog, QGridLayout, QApplication, QListWidgetItem, QCompleter, QInputDialog
 )
 from PySide6.QtCore import Qt, Signal, QSize, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices, QBrush, QFont, QShortcut, QKeySequence, QPalette
@@ -15,7 +15,7 @@ from spectroview import ICON_DIR, PLOT_STYLES, AXIS_LABELS
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_plot_template_store import MPlotTemplateStore
 from spectroview.view.components.v_data_filter import VDataFilter
-from spectroview.view.components.v_plot_template_picker import VPlotTemplatePicker
+from spectroview.view.components.v_plot_template_dialog import VPlotTemplateDialog
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
@@ -31,8 +31,10 @@ class VWorkspaceGraphs(QWidget):
         self.m_settings = MSettings()
         self.vm = VMWorkspaceGraphs(self.m_settings)
 
-        # Independent of the (lazily-created) AI chat panel, so a saved
-        # template can be applied here even if AI Chat was never opened.
+        # Plot templates are managed entirely here (browse/apply/save-all);
+        # the template folder setting is shared with the AI Chat panel,
+        # which still offers a per-response "save these plots as Template"
+        # shortcut via the same store.
         template_folder = self.m_settings.load_ai_settings().get("template_folder", "")
         self.template_store = MPlotTemplateStore(template_folder)
 
@@ -113,12 +115,6 @@ class VWorkspaceGraphs(QWidget):
         self.btn_minimize_all = QPushButton("Minimize All")
         self.btn_minimize_all.setMaximumWidth(100)
         toolbar_layout.addWidget(self.btn_minimize_all)
-
-        # Apply a saved plot template — independent of the AI chat panel
-        self.btn_apply_template = QPushButton("📊 Template")
-        self.btn_apply_template.setToolTip("Apply a saved plot template")
-        self.btn_apply_template.setMaximumWidth(100)
-        toolbar_layout.addWidget(self.btn_apply_template)
 
         # Plot size label
         self.lbl_plot_size = QLabel("(480x400)")
@@ -511,12 +507,28 @@ class VWorkspaceGraphs(QWidget):
         self.btn_add_multi_wafer.setToolTip("Create wafer plots for selected slots")
         self.btn_add_multi_wafer.setMinimumHeight(25)
         self.btn_add_multi_wafer.setVisible(False)  # Initially hidden
-        
+
         action_buttons_layout.addWidget(self.btn_add_plot)
         action_buttons_layout.addWidget(self.btn_update_plot)
         action_buttons_layout.addWidget(self.btn_add_multi_wafer)
-        
+
         parent_layout.addLayout(action_buttons_layout)
+
+        # Plot template buttons — browse/apply and save-all, second row
+        template_buttons_layout = QHBoxLayout()
+
+        self.btn_apply_template = QPushButton("📊 Templates")
+        self.btn_apply_template.setToolTip("Browse & apply saved plot templates")
+        self.btn_apply_template.setMinimumHeight(25)
+
+        self.btn_save_as_template = QPushButton("💾 Save as Template")
+        self.btn_save_as_template.setToolTip("Save all currently open plots as a Template")
+        self.btn_save_as_template.setMinimumHeight(25)
+
+        template_buttons_layout.addWidget(self.btn_apply_template)
+        template_buttons_layout.addWidget(self.btn_save_as_template)
+
+        parent_layout.addLayout(template_buttons_layout)
     
     def apply_theme(self, theme: str):
         """Propagate theme changes to all child graphs and update sidebar icons."""
@@ -558,7 +570,11 @@ class VWorkspaceGraphs(QWidget):
         # Plot buttons
         self.btn_add_plot.clicked.connect(self._on_add_plot)
         self.btn_update_plot.clicked.connect(self._on_update_plot)
-        
+
+        # Plot template buttons
+        self.btn_apply_template.clicked.connect(self._on_apply_template_clicked)
+        self.btn_save_as_template.clicked.connect(self._on_save_as_template_clicked)
+
         # Plot style connection
         self.cbb_plot_style.currentTextChanged.connect(self._on_plot_style_changed)
         
@@ -566,8 +582,7 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_graph_list.currentIndexChanged.connect(self._on_graph_selected_toolbar)
         self.btn_minimize_all.clicked.connect(self._on_minimize_all)
         self.btn_delete_all.clicked.connect(self._on_delete_all)
-        self.btn_apply_template.clicked.connect(self._on_apply_template_clicked)
-        
+
         # MDI area connections
         self.mdi_area.subWindowActivated.connect(self._on_subwindow_activated)
         
@@ -876,28 +891,95 @@ class VWorkspaceGraphs(QWidget):
         return True
 
     def _on_apply_template_clicked(self) -> None:
-        dialog = VPlotTemplatePicker(self.template_store, self)
+        dialog = VPlotTemplateDialog(self.template_store, self)
         dialog.template_applied.connect(self._on_template_applied)
         dialog.exec()
 
+    def _on_save_as_template_clicked(self) -> None:
+        """Save every currently open graph's live configuration as a new
+        Template. Self-contained — no AI Chat panel dependency."""
+        configs = []
+        for graph_model in self.vm.graphs.values():
+            cfg = graph_model.save()
+            cfg.pop('graph_id', None)
+            configs.append(cfg)
+
+        if not configs:
+            QMessageBox.information(
+                self, "No Graphs", "There are no open graphs to save as a template."
+            )
+            return
+
+        name, ok = QInputDialog.getText(self, "Save as Template", "Template name:")
+        if ok and name:
+            self.template_store.save_template(name, configs)
+            QMessageBox.information(
+                self, "Template Saved",
+                f"Saved '{name}' with {len(configs)} plot{'s' if len(configs) > 1 else ''}."
+            )
+
     def _on_template_applied(self, configs: list) -> None:
-        """Apply every plot config in a saved template — mirrors how
-        main.py's _on_chat_plot_requested applies an AI-suggested plot,
-        with the same df_name fallback to the currently active DataFrame
-        when a template's original DataFrame isn't currently loaded."""
-        import copy
+        """Apply every plot config in a saved template against the
+        currently selected DataFrame (not each plot's originally-saved
+        df_name). A plot whose required axis columns (x, y, z, y2, y3, x2)
+        aren't all present in that DataFrame is skipped — rather than
+        aborting the whole batch or raising — and reported in one summary
+        once every config has been processed."""
         from spectroview.ai_agent.utils.plot_utils import normalize_plot_config
 
-        for raw_cfg in configs:
+        df_name = self.vm.selected_df_name
+        if not df_name:
+            QMessageBox.warning(
+                self, "No DataFrame Selected",
+                "Please select a DataFrame before applying a template."
+            )
+            return
+
+        df = self.vm.get_dataframe(df_name)
+        available_columns = set(df.columns) if df is not None else set()
+
+        applied = 0
+        skipped = []
+        for i, raw_cfg in enumerate(configs, start=1):
             cfg = copy.deepcopy(raw_cfg)
-            df_name = cfg.get('df_name')
-            if not df_name or df_name not in self.vm.dataframes:
-                df_name = self.vm.selected_df_name
-            if not df_name:
-                continue
             normalize_plot_config(cfg)
+
+            missing = sorted(self._required_plot_columns(cfg) - available_columns)
+            if missing:
+                skipped.append((i, missing))
+                continue
+
             cfg['df_name'] = df_name
             self.create_plot_from_config(df_name, cfg)
+            applied += 1
+
+        if skipped:
+            lines = [
+                f"Plot {i} can not be plotted since the selected dataframe "
+                f"does not have columns: {', '.join(cols)}."
+                for i, cols in skipped
+            ]
+            QMessageBox.warning(
+                self, "Some Plots Skipped",
+                f"{applied} of {len(configs)} plot(s) applied.\n\n" + "\n".join(lines)
+            )
+        elif applied:
+            self.vm.notify.emit(f"Applied {applied} plot(s) from template.")
+
+    @staticmethod
+    def _required_plot_columns(cfg: dict) -> set:
+        """Column names a plot config's axes reference (x/y/z/y2/y3/x2)."""
+        cols = set()
+        for key in ('x', 'z', 'y2', 'y3', 'x2'):
+            val = cfg.get(key)
+            if val:
+                cols.add(val)
+        y = cfg.get('y')
+        if isinstance(y, list):
+            cols.update(v for v in y if v)
+        elif y:
+            cols.add(y)
+        return cols
 
     def _on_replicate_graph(self, graph_id: int):
         """Replicate a graph."""

@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview import ICON_DIR
-from spectroview.view.components.customize_annotation_dialogs import EditLineDialog, EditTextDialog
+from spectroview.view.components.customize_graph.customize_annotation_dialogs import EditLineDialog, EditTextDialog
 
 
 class CustomizeAnnotations(QWidget):

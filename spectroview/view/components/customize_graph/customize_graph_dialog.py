@@ -2,9 +2,10 @@
 Annotations / More-options tabs and coordinates their shared Apply/Cancel.
 
 The tab widgets themselves used to live in this file too (~1700 lines across
-8 largely independent classes); they've been split into their own modules
-for maintainability. Everything is re-imported and re-exported here so
-existing imports of `spectroview.view.components.customize_graph_dialog`
+8 largely independent classes); they've been split into their own modules,
+all living together under the `customize_graph/` package for maintainability.
+Everything is re-imported and re-exported here so existing imports of
+`spectroview.view.components.customize_graph.customize_graph_dialog`
 (e.g. `EditLineDialog`/`EditTextDialog` from view/components/v_graph.py, or
 the individual tab widgets from tests) keep working unchanged.
 """
@@ -13,11 +14,11 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTabWidget, QWidget
 
 from spectroview import ICON_DIR
-from spectroview.view.components.customize_legend import CustomizeLegend
-from spectroview.view.components.customize_annotations import CustomizeAnnotations
-from spectroview.view.components.customize_axis import CustomizeAxis
-from spectroview.view.components.customize_more_options import CustomizeMoreOptions
-from spectroview.view.components.customize_annotation_dialogs import (
+from spectroview.view.components.customize_graph.customize_legend import CustomizeLegend
+from spectroview.view.components.customize_graph.customize_annotations import CustomizeAnnotations
+from spectroview.view.components.customize_graph.customize_axis import CustomizeAxis
+from spectroview.view.components.customize_graph.customize_more_options import CustomizeMoreOptions
+from spectroview.view.components.customize_graph.customize_annotation_dialogs import (
     EditLineDialog, EditTextDialog, ColorDelegate,
 )
 

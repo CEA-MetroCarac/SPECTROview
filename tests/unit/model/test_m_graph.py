@@ -1,7 +1,7 @@
 """Unit tests for model/m_graph.py - MGraph, the Graphs workspace's plot-config model.
 
 Every field here mirrors a control somewhere in
-spectroview/view/components/customize_graph_dialog.py (Axis / Legend-Color /
+spectroview/view/components/customize_graph/ (Axis / Legend-Color /
 Annotations / More-options tabs). The guiding invariant under test is:
 save() -> load() must round-trip every single customization property
 unchanged, since that's exactly what happens on workspace save/reload and

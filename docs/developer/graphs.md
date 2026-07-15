@@ -209,7 +209,7 @@ When a DataFrame contains a `Slot` column (common in semiconductor datasets):
 
 ### **`CustomizeGraphDialog` (Singleton)**
 
-**File**: `spectroview/view/components/customize_graph_dialog.py` (~1000+ lines)
+**Package**: `spectroview/view/components/customize_graph/` — `CustomizeGraphDialog` (in `customize_graph_dialog.py`) hosts four tab widgets, each in its own module: `customize_legend.py`, `customize_axis.py`, `customize_annotations.py`, `customize_more_options.py`, plus the small shared `customize_annotation_dialogs.py` (line/text edit dialogs, color delegate).
 
 A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow. Features:
 

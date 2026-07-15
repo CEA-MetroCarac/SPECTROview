@@ -117,8 +117,14 @@ spectroview/
 │       ├── v_about.py                 # About dialog
 │       ├── v_update_banner.py         # Update notification banner widget
 │       ├── v_user_manual.py           # Built-in user manual viewer
-│       ├── customize_graph_dialog.py  # Graph customization dialog
-│       └── customized_widgets.py      # Palette combobox, custom toolbar
+│       ├── customized_widgets.py      # Palette combobox, custom toolbar
+│       └── customize_graph/           # Graph customization dialog (package)
+│           ├── customize_graph_dialog.py     # CustomizeGraphDialog (singleton, tab host)
+│           ├── customize_legend.py           # Legend/Color tab
+│           ├── customize_axis.py             # Axis (scale/limits/breaks) tab
+│           ├── customize_annotations.py      # Annotations tab
+│           ├── customize_more_options.py     # Trendline/histogram/sorting tab
+│           └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
 │
 ├── fit_engine/             # High-performance batch fitting
 │   ├── vbf_engine.py            # Orchestrator (VBFengine)
@@ -248,7 +254,7 @@ Workspaces are composed from **shared components** that follow the same signal-b
 | `VDataFilter` | `v_data_filter.py` | Dynamic `pandas` `.query()` filter builder |
 | `VFitResults` | `v_fit_results.py` | Color-coded fit results table |
 | `VMVA` | `v_mva.py` | PCA/NMF controls and embedded plotting |
-| `CustomizeGraphDialog` | `customize_graph_dialog.py` | Singleton dialog for graph annotation, legends, and axis customization |
+| `CustomizeGraphDialog` | `customize_graph/customize_graph_dialog.py` | Singleton dialog for graph annotation, legends, and axis customization |
 
 ---
 

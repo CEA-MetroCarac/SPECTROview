@@ -1,4 +1,4 @@
-"""Tests for view/components/customize_graph_dialog.py - the "Customize Graph"
+"""Tests for view/components/customize_graph/ - the "Customize Graph"
 dialog's sub-widgets (Legend, Axis, More Options, Annotations).
 
 These are the actual controls behind every customization the user asked to
@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 
 from spectroview.view.components.v_graph import VGraph
-from spectroview.view.components.customize_graph_dialog import (
+from spectroview.view.components.customize_graph.customize_graph_dialog import (
     CustomizeGraphDialog, CustomizeLegend, CustomizeAxis,
     CustomizeMoreOptions, CustomizeAnnotations,
 )

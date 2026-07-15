@@ -18,10 +18,10 @@ it, and records the three real bugs the approach found.
   renders a plot with matplotlib.
 - `spectroview/view/components/v_plot_renderer.py` — `PlotRenderer`/`WaferPlot`,
   the per-style rendering logic `VGraph` delegates to.
-- `spectroview/view/components/customize_graph_dialog.py` — the "Customize
-  Graph" dialog (`CustomizeLegend`, `CustomizeAxis`, `CustomizeMoreOptions`,
-  `CustomizeAnnotations`), i.e. every control the user has for tweaking a plot
-  after it's created.
+- `spectroview/view/components/customize_graph/` — the "Customize Graph"
+  dialog (`CustomizeGraphDialog`, `CustomizeLegend`, `CustomizeAxis`,
+  `CustomizeMoreOptions`, `CustomizeAnnotations`), i.e. every control the
+  user has for tweaking a plot after it's created.
 - `spectroview/model/m_plot_template.py` / `m_plot_template_store.py` — reusable
   saved plot configs, adjacent to Graphs; its existing test file was migrated
   into the new directory layout unchanged (it was already solid).

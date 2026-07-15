@@ -21,7 +21,7 @@ from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
 from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon
 from spectroview.view.components.customized_widgets import CustomizedPalette
-from spectroview.view.components.customize_graph_dialog import CustomizeGraphDialog
+from spectroview.view.components.customize_graph.customize_graph_dialog import CustomizeGraphDialog
 
 class VWorkspaceGraphs(QWidget):
     """View for Graphs Workspace."""

@@ -14,7 +14,7 @@ from PySide6.QtCore import QObject, QEvent, QSize, Signal, QTimer
 from PySide6.QtGui import QIcon
 
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR, PLOT_POLICY_LIGHT
-from spectroview.view.components.customize_graph_dialog import (
+from spectroview.view.components.customize_graph.customize_graph_dialog import (
     EditLineDialog, EditTextDialog
 )
 from spectroview.model.m_settings import MSettings

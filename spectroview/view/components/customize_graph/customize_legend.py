@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview import DEFAULT_COLORS, MARKERS
-from spectroview.view.components.customize_annotation_dialogs import ColorDelegate
+from spectroview.view.components.customize_graph.customize_annotation_dialogs import ColorDelegate
 
 
 class CustomizeLegend(QWidget):

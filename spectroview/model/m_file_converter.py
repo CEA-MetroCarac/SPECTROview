@@ -9,6 +9,50 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QFileInfo
 
+
+def convert_action(input_path, output_path):
+    """
+    Converts a Renishaw InVia long-format TXT export (#X, #Y, #Wave,
+    #Intensity columns) into a wide-matrix TXT file compatible with
+    SPECTROview/LabSpec6, by reshaping intensity values into a matrix.
+
+    Module-level (Qt-free) so it can be called directly from
+    spectroview.api.io.convert_renishaw_map without instantiating the
+    QDialog below.
+    """
+    try:
+        dfr = pd.read_csv(input_path, delimiter="\t")
+        assert {'#X', '#Y', '#Wave', '#Intensity'}.issubset(dfr.columns)
+    except Exception as e:
+        raise ValueError(f"Invalid file format: {str(e)}")
+
+    # Count number of points per spectrum
+    dfr_spectrum = dfr.groupby(['#Y', '#X']).size().reset_index(name='size')
+    wavenumber_range = dfr_spectrum['size'][1]
+    total_spectra_number = len(dfr_spectrum)
+
+    dfr_wavenumbers = dfr['#Wave'][:wavenumber_range]
+    dfr_intensity = dfr['#Intensity']
+
+    # Build intensity matrix
+    intensity_data = {
+        str(dfr_wavenumbers.iloc[i]): [
+            dfr_intensity[i + j * wavenumber_range] for j in range(total_spectra_number)
+        ]
+        for i in range(wavenumber_range)
+    }
+
+    # Create intensity DataFrame and concat with coordinates
+    dfr_intensity_matrix = pd.DataFrame(intensity_data)
+    dfr_spectrum = pd.concat([dfr_spectrum[['#Y', '#X']].reset_index(drop=True), dfr_intensity_matrix], axis=1)
+
+    # Cleanup
+    dfr_spectrum.rename(columns={'#X': '', '#Y': ''}, inplace=True)
+
+    # Export
+    dfr_spectrum.to_csv(output_path, sep='\t', encoding='utf-8', index=False)
+
+
 class MFileConverter(QDialog):
     def __init__(self, settings, parent=None):
         super().__init__(parent)
@@ -114,41 +158,8 @@ class MFileConverter(QDialog):
                     QMessageBox.critical(self, "Conversion Error", f"Failed to convert {selected_file_name}\n{str(e)}")
 
     def convert_action(self, input_path, output_path):
-        """
-        Converts the file by reshaping intensity values into a matrix
-        and saving the output as a reformatted text file.
-        """
-        try:
-            dfr = pd.read_csv(input_path, delimiter="\t")
-            assert {'#X', '#Y', '#Wave', '#Intensity'}.issubset(dfr.columns)
-        except Exception as e:
-            raise ValueError(f"Invalid file format: {str(e)}")
-
-        # Count number of points per spectrum
-        dfr_spectrum = dfr.groupby(['#Y', '#X']).size().reset_index(name='size')
-        wavenumber_range = dfr_spectrum['size'][1]
-        total_spectra_number = len(dfr_spectrum)
-
-        dfr_wavenumbers = dfr['#Wave'][:wavenumber_range]
-        dfr_intensity = dfr['#Intensity']
-
-        # Build intensity matrix
-        intensity_data = {
-            str(dfr_wavenumbers.iloc[i]): [
-                dfr_intensity[i + j * wavenumber_range] for j in range(total_spectra_number)
-            ]
-            for i in range(wavenumber_range)
-        }
-
-        # Create intensity DataFrame and concat with coordinates
-        dfr_intensity_matrix = pd.DataFrame(intensity_data)
-        dfr_spectrum = pd.concat([dfr_spectrum[['#Y', '#X']].reset_index(drop=True), dfr_intensity_matrix], axis=1)
-
-        # Cleanup
-        dfr_spectrum.rename(columns={'#X': '', '#Y': ''}, inplace=True)
-
-        # Export
-        dfr_spectrum.to_csv(output_path, sep='\t', encoding='utf-8', index=False)
+        """Delegates to the module-level convert_action (Qt-free)."""
+        convert_action(input_path, output_path)
 
     def launch(self):
         """Show the converter window."""

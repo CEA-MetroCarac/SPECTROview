@@ -78,10 +78,11 @@ nav:
     - Multivariate Analysis (MVA): developer/mva.md
   - API:
     - Home: api/index.md
-    - Spectra Processing & Fitting: api/spectra.md
-    - 2D Map & Hyperspectral Analysis: api/2dmap.md
+    - Spectra Workspace (load, preprocess, fit): api/spectra.md
+    - Maps Workspace (hyperspectral, heatmaps): api/2dmap.md
     - Data Visualization (Graphs): api/graphs.md
     - Quick Calculators: api/calculators.md
+    - Extending SPECTROview: api/extending.md
   - Changelog: changelog.md
 
 hooks:

@@ -4,6 +4,7 @@ import numpy as np
 import sys
 from PySide6.QtCore import QThread, Signal
 from spectroview.fit_engine.vbf_engine import VBFengine
+from spectroview.fit_engine.weights import compute_fit_weights
 
 class VBFthread(QThread):
     progress_changed = Signal(int, int, int, float, int)
@@ -180,23 +181,7 @@ class VBFthread(QThread):
         self.timings_ready.emit(timings_str)
 
     def _prepare_weights(self, Y_sub, fit_params):
-        N_fit, M_fit = Y_sub.shape
-        weights = np.ones((N_fit, M_fit), dtype=np.float64)
-        
-        fit_negative = bool(fit_params.get("fit_negative", False))
-        if not fit_negative: 
-            weights[Y_sub < 0] = 0.0 # <--- Excludes negative points by setting weight to 0
-            
-        coef_noise = float(fit_params.get("coef_noise", 0))
-        if coef_noise > 0:
-            dy = np.diff(Y_sub, axis=1)
-            ampli_noise = np.median(np.abs(dy), axis=1) / 0.6745 * np.sqrt(2)
-            Y_padded = np.pad(Y_sub, ((0, 0), (2, 2)), mode='edge')
-            ymean = (Y_padded[:, 0:-4] + Y_padded[:, 1:-3] + Y_padded[:, 2:-2] + Y_padded[:, 3:-1] + Y_padded[:, 4:]) / 5.0
-            noise_level = coef_noise * ampli_noise
-            weights[ymean < noise_level[:, None]] = 0.0
-            
-        return weights
+        return compute_fit_weights(Y_sub, fit_params)
 
     def _execute_fit(self, x, Y_sub, fit_model, weights, total_spectra, current_processed, t_start):
         def on_progress(current, total):

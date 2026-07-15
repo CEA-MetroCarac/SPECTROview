@@ -140,6 +140,9 @@ class TestAxParameterIsHonored:
         (graphs.plot_point, dict(x="Zone", y="ampli_Si")),
         (graphs.plot_box, dict(x="Zone", y="ampli_Si")),
         (graphs.plot_trendline, dict(x="x0_Si", y="area_Si")),
+        (graphs.plot_line, dict(x="Zone", y="ampli_Si")),
+        (graphs.plot_bar, dict(x="Zone", y="ampli_Si")),
+        (graphs.plot_histogram, dict(x="ampli_Si")),
     ]
 
     @pytest.mark.parametrize("fn,kwargs", _CASES)
@@ -156,3 +159,93 @@ class TestAxParameterIsHonored:
         ax = fn(excel_df, **kwargs)
         assert len(plt.get_fignums()) == n_figures_before + 1
         assert ax.figure is not None
+
+
+class TestPlotLineBarHistogram:
+    def test_plot_line_draws_a_line(self, excel_df):
+        ax = graphs.plot_line(excel_df, x="Zone", y="ampli_Si", title="Line")
+        assert len(ax.get_lines()) > 0
+        assert ax.get_title() == "Line"
+
+    def test_plot_line_with_hue_draws_a_legend(self, excel_df):
+        ax = graphs.plot_line(excel_df, x="Zone", y="ampli_Si", hue="Quadrant")
+        assert ax.get_legend() is not None
+
+    def test_plot_bar_draws_bars(self, excel_df):
+        ax = graphs.plot_bar(excel_df, x="Zone", y="ampli_Si")
+        assert len(ax.patches) > 0
+
+    def test_plot_bar_with_hue_groups_and_draws_a_legend(self, excel_df):
+        ax = graphs.plot_bar(excel_df, x="Zone", y="ampli_Si", hue="Quadrant")
+        assert len(ax.patches) > 0
+        assert ax.get_legend() is not None
+
+    def test_plot_histogram_draws_bins(self, excel_df):
+        ax = graphs.plot_histogram(excel_df, x="ampli_Si", bins=10)
+        assert len(ax.patches) > 0
+
+    def test_plot_histogram_with_hue_splits_and_draws_a_legend(self, excel_df):
+        ax = graphs.plot_histogram(excel_df, x="ampli_Si", hue="Quadrant")
+        assert ax.get_legend() is not None
+
+
+class TestPlot2DMapAndWafer:
+    @pytest.fixture
+    def tidy_grid_df(self):
+        xs, ys, zs = [], [], []
+        for xi in range(5):
+            for yi in range(5):
+                xs.append(xi)
+                ys.append(yi)
+                zs.append(float(xi + yi))
+        return pd.DataFrame({"X": xs, "Y": ys, "Z": zs})
+
+    def test_plot_2dmap_draws_a_heatmap_image(self, tidy_grid_df):
+        ax = graphs.plot_2dmap(tidy_grid_df, x="X", y="Y", z="Z", title="Map")
+        assert len(ax.images) == 1
+        assert ax.get_title() == "Map"
+
+    def test_plot_2dmap_honors_given_ax(self, tidy_grid_df):
+        fig, ax = plt.subplots()
+        returned_ax = graphs.plot_2dmap(tidy_grid_df, x="X", y="Y", z="Z", ax=ax)
+        assert returned_ax is ax
+
+    def test_plot_wafer_draws_a_heatmap_image(self, tidy_grid_df):
+        df = tidy_grid_df.copy()
+        df["X"] = (df["X"] - 2) * 50.0  # spread points out like real wafer coords (mm)
+        df["Y"] = (df["Y"] - 2) * 50.0
+        ax = graphs.plot_wafer(df, x="X", y="Y", z="Z", wafer_size=300.0, show_stats=False)
+        assert len(ax.images) == 1
+
+    def test_plot_wafer_honors_given_ax(self, tidy_grid_df):
+        df = tidy_grid_df.copy()
+        df["X"] = (df["X"] - 2) * 50.0
+        df["Y"] = (df["Y"] - 2) * 50.0
+        fig, ax = plt.subplots()
+        returned_ax = graphs.plot_wafer(df, x="X", y="Y", z="Z", ax=ax, show_stats=False)
+        assert returned_ax is ax
+
+
+class TestPlotTemplateCRUD:
+    def test_save_list_load_delete_round_trip(self, tmp_path):
+        configs = [{"plot_style": "scatter", "x": "x0_Si", "y": ["ampli_Si"]}]
+        template_id = graphs.save_plot_template(tmp_path, "My Template", configs)
+
+        summaries = graphs.list_plot_templates(tmp_path)
+        assert any(s["id"] == template_id and s["name"] == "My Template" for s in summaries)
+
+        loaded = graphs.load_plot_template(tmp_path, template_id)
+        assert loaded == configs
+
+        assert graphs.delete_plot_template(tmp_path, template_id) is True
+        assert graphs.list_plot_templates(tmp_path) == []
+
+    def test_save_empty_configs_raises_template_error(self, tmp_path):
+        from spectroview.api.exceptions import TemplateError
+        with pytest.raises(TemplateError):
+            graphs.save_plot_template(tmp_path, "Empty", [])
+
+    def test_load_missing_template_raises_template_error(self, tmp_path):
+        from spectroview.api.exceptions import TemplateError
+        with pytest.raises(TemplateError):
+            graphs.load_plot_template(tmp_path, "not-a-real-id")

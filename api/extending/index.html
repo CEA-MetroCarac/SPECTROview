@@ -12,13 +12,13 @@
         <meta name="author" content="Van Hoan Le">
       
       
-        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/installation/">
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/api/extending/">
       
       
-        <link rel="prev" href="../..">
+        <link rel="prev" href="../calculators/">
       
       
-        <link rel="next" href="../">
+        <link rel="next" href="../../changelog/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Installation - SPECTROview Documentation</title>
+        <title>Extending SPECTROview - SPECTROview Documentation</title>
       
     
     
@@ -92,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#installation" class="md-skip">
+        <a href="#extending-spectroview" class="md-skip">
           Skip to content
         </a>
       
@@ -127,7 +127,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Installation
+              Extending SPECTROview
             
           </span>
         </div>
@@ -251,11 +251,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
         
   
   
@@ -276,7 +274,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../" class="md-tabs__link">
+        <a href="../../user_manual/" class="md-tabs__link">
           
   
   
@@ -316,11 +314,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../api/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -367,11 +367,6 @@
         
       
   
-  
-    <style>
-      /* Hide the default H1 title injected by MkDocs */
-      .md-content h1 { display: none !important; }
-    </style>
   
   
   
@@ -447,35 +442,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Installation
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
         
   
   
@@ -491,146 +461,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Installation
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Installation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-install-from-pypi-recommended" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Install from PyPI (Recommended)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-install-from-github-latest-development-version" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Install from GitHub (Latest Development Version)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-optional-dependencies-ai-agent-voice-dictation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Optional Dependencies (AI Agent &amp; Voice Dictation)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-launch-spectroview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Launch SPECTROview****
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-update-version-management" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Update &amp; Version Management
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#6-automatic-update-notifications" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6. Automatic Update Notifications
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="6. Automatic Update Notifications">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#how-it-works" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How it works
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#banner-actions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Banner actions
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#7-troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7. Troubleshooting
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -687,7 +517,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../user_manual/" class="md-nav__link ">
               
   
   
@@ -731,7 +561,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../supported_data/" class="md-nav__link">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
         
   
   
@@ -759,7 +589,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ui_overview/" class="md-nav__link">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
         
   
   
@@ -787,7 +617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../menu_bar/" class="md-nav__link">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
         
   
   
@@ -815,7 +645,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../spectra_maps/" class="md-nav__link">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
         
   
   
@@ -843,7 +673,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../graphs/" class="md-nav__link">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
         
   
   
@@ -871,7 +701,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../mva/" class="md-nav__link">
+      <a href="../../user_manual/mva/" class="md-nav__link">
         
   
   
@@ -899,7 +729,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../calculators/" class="md-nav__link">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
         
   
   
@@ -927,7 +757,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../settings/" class="md-nav__link">
+      <a href="../../user_manual/settings/" class="md-nav__link">
         
   
   
@@ -955,7 +785,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../save_load/" class="md-nav__link">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
         
   
   
@@ -983,7 +813,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../shortcuts/" class="md-nav__link">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
         
   
   
@@ -1301,6 +1131,8 @@
       
   
   
+    
+  
   
   
     
@@ -1324,22 +1156,23 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../api/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -1357,13 +1190,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1383,7 +1216,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/spectra/" class="md-nav__link">
+      <a href="../spectra/" class="md-nav__link">
         
   
   
@@ -1411,7 +1244,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/2dmap/" class="md-nav__link">
+      <a href="../2dmap/" class="md-nav__link">
         
   
   
@@ -1439,7 +1272,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/graphs/" class="md-nav__link">
+      <a href="../graphs/" class="md-nav__link">
         
   
   
@@ -1467,7 +1300,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/calculators/" class="md-nav__link">
+      <a href="../calculators/" class="md-nav__link">
         
   
   
@@ -1492,10 +1325,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../api/extending/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extending SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1511,6 +1371,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#custom-baseline-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Baseline Methods
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fit-model-plot-templates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fit-Model &amp; Plot Templates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-peak-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Peak Shapes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1568,6 +1481,46 @@
   
 
 
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    API
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
               
               <article class="md-content__inner md-typeset">
                 
@@ -1578,168 +1531,35 @@
   
 
 
-  <h1>Installation</h1>
-
-<h2 id="installation"><strong>Installation</strong><a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<p><strong>SPECTROview</strong> requires <strong>Python 3.8 – 3.12</strong> and runs on <strong>Windows</strong>, <strong>macOS</strong>, and <strong>Linux</strong>. It can be installed and managed entirely from your system's command-line interface (e.g., Command Prompt or PowerShell on Windows, or Terminal on macOS/Linux).</p>
+<h1 id="extending-spectroview">Extending SPECTROview<a class="headerlink" href="#extending-spectroview" title="Permanent link">&para;</a></h1>
+<p>SPECTROview does not have a plugin/entry-point framework — there is no registry to hook custom code into the application. Instead, extensibility works through two file-based mechanisms that the API exposes directly. If you're looking for "how do I add a custom X to SPECTROview," one of these is almost always the answer.</p>
 <hr />
-<h3 id="1-install-from-pypi-recommended"><strong>1. Install from PyPI (Recommended)</strong><a class="headerlink" href="#1-install-from-pypi-recommended" title="Permanent link">&para;</a></h3>
-<p>The simplest way to install <strong>SPECTROview</strong> is from the <a href="https://pypi.org/project/spectroview/">Python Package Index (PyPI)</a>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
+<h2 id="custom-baseline-methods">Custom Baseline Methods<a class="headerlink" href="#custom-baseline-methods" title="Permanent link">&para;</a></h2>
+<p>Baseline evaluation (<code>spectroview.api.preprocessing.subtract_baseline</code>, and every workspace's <code>set_baseline</code>) dispatches on <code>config["mode"]</code> by string name. Beyond the built-in <code>None</code>, <code>"Linear"</code>, <code>"Polynomial"</code>, and <code>"arpls"</code> modes, <strong>any <a href="https://pybaselines.readthedocs.io/">pybaselines</a> <code>Baseline</code> method name works out of the box</strong> — no registration step:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">preprocessing</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># &quot;asls&quot;, &quot;airpls&quot;, &quot;modpoly&quot;, &quot;snip&quot;, ... any pybaselines.Baseline method name</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">Y_corrected</span><span class="p">,</span> <span class="n">Y_baseline</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">subtract_baseline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;asls&quot;</span><span class="p">,</span> <span class="s2">&quot;lam&quot;</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">})</span>
 </code></pre></div>
-<div align="center">
-  <img src="../../user_manual_images/Installation/installation.gif" alt="Installation process" width="500"><br>
-  <i>Successfully installing SPECTROview via pip.</i>
-</div>
-
-<blockquote>
-<p><strong>Note:</strong> On systems where both Python 2 and Python 3 are installed, use <code>pip3</code> instead of <code>pip</code>:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip3<span class="w"> </span>install<span class="w"> </span>spectroview
-</code></pre></div></p>
-</blockquote>
-<h3 id="2-install-from-github-latest-development-version"><strong>2. Install from GitHub (Latest Development Version)</strong><a class="headerlink" href="#2-install-from-github-latest-development-version" title="Permanent link">&para;</a></h3>
-<p>To install the latest development version directly from the source repository:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/CEA-MetroCarac/SPECTROview.git
-</code></pre></div>
-<blockquote>
-<p>This installs the most recent code from the <code>main</code> branch, which may include features and fixes not yet published on PyPI.</p>
-</blockquote>
+<p>If pybaselines adds a new method in a future release, it becomes available to SPECTROview immediately with no code change on either side.</p>
 <hr />
-<h3 id="3-optional-dependencies-ai-agent-voice-dictation"><strong>3. Optional Dependencies (AI Agent &amp; Voice Dictation)</strong><a class="headerlink" href="#3-optional-dependencies-ai-agent-voice-dictation" title="Permanent link">&para;</a></h3>
-<p>SPECTROview includes an optional <strong>AI Chat Agent</strong> that allows you to query and visualize data using natural language. To use these features, you may need to install additional dependencies:</p>
-<ul>
-<li><strong>For local AI (Ollama):</strong> <code>pip install ollama</code> (plus installing Ollama on your system)</li>
-<li><strong>For Cloud AI (OpenAI, DeepSeek, Gemini, etc.):</strong> <code>pip install openai</code></li>
-<li><strong>For Voice Dictation (Microphone button):</strong> <code>pip install SpeechRecognition pyaudio</code></li>
-</ul>
-<p><em>(Note: These are not installed by default to keep the base installation lightweight.)</em></p>
+<h2 id="fit-model-plot-templates">Fit-Model &amp; Plot Templates<a class="headerlink" href="#fit-model-plot-templates" title="Permanent link">&para;</a></h2>
+<p>Both fit models and plot configurations are plain JSON files in a folder you control — SPECTROview (GUI or API) just scans that folder. This means any external tool, script, or version-controlled repository of templates can populate them:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">fitting</span><span class="p">,</span> <span class="n">graphs</span><span class="p">,</span> <span class="n">settings</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Fit-model templates: point SPECTROview at a shared folder...</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">settings</span><span class="o">.</span><span class="n">set_model_folder</span><span class="p">(</span><span class="s2">&quot;./shared_fit_models&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># ...then any *.json file dropped there (by this API, the GUI, or hand-written)</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># is immediately visible:</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">names</span> <span class="o">=</span> <span class="n">fitting</span><span class="o">.</span><span class="n">list_fit_model_templates</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">get_model_folder</span><span class="p">())</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1"># Plot templates work the same way, via a folder-backed store:</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">graphs</span><span class="o">.</span><span class="n">save_plot_template</span><span class="p">(</span><span class="s2">&quot;./shared_plot_templates&quot;</span><span class="p">,</span> <span class="s2">&quot;QC Dashboard&quot;</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
+</code></pre></div>
+<p>A fit-model template's JSON shape is <code>{"0": {"peak_labels": [...], "peak_models": {...}, "baseline": {...}, "range_min": ..., "range_max": ..., "fit_params": {...}}}</code> — write one directly if you're generating templates from an external system, or build one with <code>fitting.build_fit_model()</code> / <code>fitting.save_fit_model_template()</code> and inspect the output.</p>
 <hr />
-<h3 id="4-launch-spectroview"><strong>4. Launch </strong>SPECTROview****<a class="headerlink" href="#4-launch-spectroview" title="Permanent link">&para;</a></h3>
-<p>Once installed, open your terminal or command prompt and run:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>spectroview
-</code></pre></div>
-<p>The application window will open automatically.</p>
-<hr />
-<h3 id="5-update-version-management"><strong>5. Update &amp; Version Management</strong><a class="headerlink" href="#5-update-version-management" title="Permanent link">&para;</a></h3>
-<p>To update <strong>SPECTROview</strong> to the latest release:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>spectroview
-</code></pre></div>
-<p>To install a specific version (e.g., <code>26.29.3</code>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">spectroview</span><span class="o">==</span><span class="m">26</span>.29.3
-</code></pre></div>
-<p>To check which version is currently installed:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>pip<span class="w"> </span>show<span class="w"> </span>spectroview
-</code></pre></div>
-<hr />
-<h3 id="6-automatic-update-notifications"><strong>6. Automatic Update Notifications</strong><a class="headerlink" href="#6-automatic-update-notifications" title="Permanent link">&para;</a></h3>
-<p><strong>SPECTROview</strong> automatically checks for new releases on startup and notifies you with a non-intrusive banner at the top of the application window — no manual checking required.</p>
-<h4 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h4>
-<ul>
-<li><strong>On startup</strong>, a background thread silently queries the <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases">GitHub Releases page</a> for the latest version.</li>
-<li>If a newer version is available, a <strong>blue notification banner</strong> appears at the top of the window:</li>
-</ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>🔔  A new version of SPECTROview is available:  26.29.0    [ 🔍 View changelog ]  [ Update later ]  [ Skip this version ]
-</code></pre></div>
-<blockquote>
-<p><strong>Privacy Guarantee</strong>: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. <strong>Absolutely no personal or usage data is collected or transmitted.</strong></p>
-</blockquote>
-<h4 id="banner-actions">Banner actions<a class="headerlink" href="#banner-actions" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Button</th>
-<th>Behaviour</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>🔍 View changelog</strong></td>
-<td>Opens the GitHub release page in your browser to see what's new.</td>
-</tr>
-<tr>
-<td><strong>Update later</strong></td>
-<td>Hides the banner for the current session only. It will reappear on the next launch if the update is still available.</td>
-</tr>
-<tr>
-<td><strong>Skip this version</strong></td>
-<td>Hides the banner permanently for that specific version. It will not show again until an even newer version is released.</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p><strong>Offline users</strong>: If <strong>SPECTROview</strong> is installed on a machine without internet access, the update check fails silently — the application starts and works exactly as normal. No error is raised.</p>
-</blockquote>
-<hr />
-<h3 id="7-troubleshooting"><strong>7. Troubleshooting</strong><a class="headerlink" href="#7-troubleshooting" title="Permanent link">&para;</a></h3>
-<details class="question">
-<summary><strong>pip: command not found</strong></summary>
-<p>This means <code>pip</code> is not on your system's PATH. Try one of the following:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>spectroview
-</code></pre></div>
-<p>Or, if you have multiple Python versions installed:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>spectroview
-</code></pre></div>
-</details>
-<details class="question">
-<summary><strong>Permission denied / Access is denied</strong></summary>
-<p>You may not have write permission to the global Python site-packages directory. Use the <code>--user</code> flag to install for your user only:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>spectroview
-</code></pre></div>
-<p>Alternatively, use a <strong>virtual environment</strong> (recommended):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>spectroview_env
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nb">source</span><span class="w"> </span>spectroview_env/bin/activate<span class="w">    </span><span class="c1"># macOS/Linux</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>spectroview_env<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">       </span><span class="c1"># Windows</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
-</code></pre></div>
-</details>
-<details class="question">
-<summary><strong>PySide6 fails to install or <code>qt.qpa.plugin: Could not load the Qt platform plugin</code></strong></summary>
-<p>PySide6 is the GUI framework used by <strong>SPECTROview</strong>. If you encounter issues:</p>
-<ul>
-<li><strong>Ensure you are using Python 3.8 – 3.12</strong>. PySide6 does not support Python 3.7 or older.</li>
-<li><strong>On Linux</strong>, you may need to install system-level Qt dependencies:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libxcb-xinerama0<span class="w"> </span>libxkbcommon-x11-0<span class="w">  </span><span class="c1"># Ubuntu/Debian</span>
-</code></pre></div></li>
-<li><strong>Try reinstalling PySide6</strong> separately:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--force-reinstall<span class="w"> </span>PySide6
-</code></pre></div></li>
-</ul>
-</details>
-<details class="question">
-<summary><strong><code>spectroview</code> command not found after installation</strong></summary>
-<p>The <code>spectroview</code> command-line entry point may not be on your PATH. Try launching it as a Python module instead:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>python<span class="w"> </span>-m<span class="w"> </span>spectroview.main
-</code></pre></div>
-<p>If you installed with <code>--user</code>, ensure your user's local <code>bin</code> directory is on your PATH:</p>
-<ul>
-<li><strong>macOS/Linux</strong>: Add <code>export PATH="$HOME/.local/bin:$PATH"</code> to your <code>~/.bashrc</code> or <code>~/.zshrc</code>.</li>
-<li><strong>Windows</strong>: The user scripts directory is typically <code>%APPDATA%\Python\PythonXX\Scripts</code>.</li>
-</ul>
-</details>
-<details class="question">
-<summary><strong><code>numpy</code> or <code>matplotlib</code> version conflict errors</strong></summary>
-<p><strong>SPECTROview</strong> requires <code>numpy &lt; 2.0.0</code> and <code>matplotlib &gt;= 3.6.2, &lt; 3.10.9</code>. If you see version conflict errors, try installing in a clean virtual environment:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>spectroview_env
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nb">source</span><span class="w"> </span>spectroview_env/bin/activate<span class="w">    </span><span class="c1"># macOS/Linux</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>spectroview_env<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">       </span><span class="c1"># Windows</span>
-<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
-</code></pre></div>
-<p>This avoids conflicts with other packages in your global Python installation.</p>
-</details>
-<details class="question">
-<summary><strong>The application opens but the window is blank or crashes immediately</strong></summary>
-<p>This is typically a GPU/driver issue with Qt's rendering backend. Try disabling hardware acceleration:</p>
-<ul>
-<li><strong>Windows</strong>: Set the environment variable before launching:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">set</span><span class="w"> </span><span class="nv">QT_QUICK_BACKEND</span><span class="o">=</span>software
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>spectroview
-</code></pre></div></li>
-<li><strong>macOS/Linux</strong>:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">QT_QUICK_BACKEND</span><span class="o">=</span>software
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>spectroview
-</code></pre></div></li>
-</ul>
-</details>
+<h2 id="custom-peak-shapes">Custom Peak Shapes<a class="headerlink" href="#custom-peak-shapes" title="Permanent link">&para;</a></h2>
+<p>The batched peak-shape registry (<code>spectroview.fit_engine.models.BATCHED_MODELS</code>) is a plain Python dict mapping shape name to <code>(eval_fn, jacobian_fn, param_names)</code>. It is not part of the public API surface (no stability guarantee across releases), but if you need a shape SPECTROview doesn't ship, that registry — plus <code>spectroview.fit_engine.scalar_models.PEAK_MODEL_REGISTRY</code> for the non-batched fallback path — is where it would need to be added. This requires a source change, not a runtime extension; there is currently no way to register a new peak shape from a script without modifying the installed package.</p>
 
 
 
@@ -1779,7 +1599,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../.." class="md-footer__link md-footer__link--prev" aria-label="Previous: Home">
+          <a href="../calculators/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Quick Calculators">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1789,20 +1609,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Home
+                Quick Calculators
               </div>
             </div>
           </a>
         
         
           
-          <a href="../" class="md-footer__link md-footer__link--next" aria-label="Next: Home">
+          <a href="../../changelog/" class="md-footer__link md-footer__link--next" aria-label="Next: Changelog">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Home
+                Changelog
               </div>
             </div>
             <div class="md-footer__button md-icon">

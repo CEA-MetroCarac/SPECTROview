@@ -1150,6 +1150,8 @@
       
         
       
+        
+      
     
     
     
@@ -1221,7 +1223,7 @@
   <span class="md-ellipsis">
     
   
-    Spectra Processing & Fitting
+    Spectra Workspace (load, preprocess, fit)
   
 
     
@@ -1249,7 +1251,7 @@
   <span class="md-ellipsis">
     
   
-    2D Map & Hyperspectral Analysis
+    Maps Workspace (hyperspectral, heatmaps)
   
 
     
@@ -1306,6 +1308,34 @@
     
   
     Quick Calculators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extending SPECTROview
   
 
     
@@ -1422,26 +1452,38 @@
 
 
 <h1 id="api">API<a class="headerlink" href="#api" title="Permanent link">&para;</a></h1>
-<p>The SPECTROview Python API allows you to automate workflows and interact programmatically with the core spectroscopic processing engines of SPECTROview. This API is completely decoupled from the Qt GUI, making it perfect for Jupyter notebooks or custom scripts.</p>
+<p>The SPECTROview Python API lets you automate workflows and interact programmatically with the core spectroscopic processing engines of SPECTROview. It is completely decoupled from the Qt GUI (no <code>QApplication</code> required), making it well suited to Jupyter notebooks, batch scripts, and CI pipelines.</p>
 <p>All modules are exposed through the <code>spectroview.api</code> package.</p>
 <h2 id="api-modules">API Modules<a class="headerlink" href="#api-modules" title="Permanent link">&para;</a></h2>
-<p>The API is organized into several functional modules:</p>
 <ul>
-<li><strong><a href="spectra/#loading-data"><code>spectroview.api.io</code></a></strong>: File readers and writers (WDF, SPC, CSV, TXT, DAT).</li>
-<li><strong><a href="spectra/#preprocessing"><code>spectroview.api.processing</code></a></strong>: Functions for baseline subtraction, cropping, and intensity normalization.</li>
-<li><strong><a href="spectra/#batch-fitting"><code>spectroview.api.fitting</code></a></strong>: The interface to the Vectorized Batch Fit (VBF) engine.</li>
-<li><strong><a href="2dmap/#multivariate-analysis-mva"><code>spectroview.api.analysis</code></a></strong>: Multivariate analysis tools like Principal Component Analysis (PCA) and Non-negative Matrix Factorization (NMF).</li>
-<li><strong><a href="graphs/"><code>spectroview.api.graphs</code></a></strong>: Functions for generating publication-quality plots replicating SPECTROview's native styles.</li>
-<li><strong><a href="calculators/"><code>spectroview.api.calculators</code></a></strong>: Physical calculators for optics and unit conversions.</li>
+<li><strong><a href="spectra/#stateful-workspaces"><code>spectroview.api.workspace</code></a></strong> — <code>SpectraWorkspace</code> / <code>MapsWorkspace</code>: stateful sessions that load, preprocess, fit, collect results, and save/load in one place. Files they write/read use the <em>exact same format</em> as the GUI's own "Save work" — a workspace built entirely from a script opens directly in the GUI, and vice versa.</li>
+<li><strong><a href="spectra/#loading-data"><code>spectroview.api.io</code></a></strong> — File readers (WDF, SPC, CSV, TXT, DAT), dataset import, result export, and a headless Renishaw map converter.</li>
+<li><strong><a href="spectra/#preprocessing"><code>spectroview.api.preprocessing</code></a></strong> — Stateless array-level baseline subtraction, cropping, and normalization.</li>
+<li><strong><a href="spectra/#batch-fitting"><code>spectroview.api.fitting</code></a></strong> — The interface to the Vectorized Batch Fit (VBF) engine: model construction, batch fitting, and fit-model template CRUD.</li>
+<li><strong><a href="2dmap/#multivariate-analysis-mva"><code>spectroview.api.analysis</code></a></strong> — Multivariate analysis: PCA and NMF.</li>
+<li><strong><a href="graphs/"><code>spectroview.api.graphs</code></a></strong> — Publication-quality plots that pixel-for-pixel match the GUI's own rendering, for all 9 supported plot styles, plus plot-template CRUD.</li>
+<li><strong><a href="calculators/"><code>spectroview.api.calculators</code></a></strong> — Physical calculators for optics and unit conversions.</li>
+<li><strong><code>spectroview.api.settings</code></strong> — Headless read/write access to persistent configuration (fit defaults, model folder, last directory).</li>
+<li><strong><code>spectroview.api.exceptions</code></strong> — The <code>SpectroviewError</code> hierarchy raised across this package (<code>LoadError</code>, <code>FitModelError</code>, <code>FitError</code>, <code>WorkspaceError</code>, <code>TemplateError</code>).</li>
 </ul>
 <h2 id="exploring-the-api">Exploring the API<a class="headerlink" href="#exploring-the-api" title="Permanent link">&para;</a></h2>
-<p>Choose a topic below to see comprehensive code examples:</p>
 <ul>
-<li><a href="spectra/">Spectra Processing &amp; Fitting</a>: How to load discrete spectra, subtract baselines, and run the batch fitting engine.</li>
-<li><a href="2dmap/">2D Map &amp; Hyperspectral Analysis</a>: Loading wafer maps, dealing with spatial coordinates, and running PCA/NMF.</li>
-<li><a href="graphs/">Data Visualization (Graphs)</a>: Replicating SPECTROview plots natively in scripts using Seaborn/Matplotlib.</li>
-<li><a href="calculators/">Quick Calculators</a>: Using the programmatic optical and unit converters.</li>
+<li><a href="spectra/">Spectra Workspace</a>: Load discrete spectra, preprocess them, and run the batch fitting engine — both the stateful <code>SpectraWorkspace</code> way and the low-level array-based way.</li>
+<li><a href="2dmap/">Maps Workspace &amp; 2D Analysis</a>: Load hyperspectral/wafer maps, fit every pixel, build heatmaps and line profiles, and run PCA/NMF.</li>
+<li><a href="graphs/">Data Visualization (Graphs)</a>: Replicate SPECTROview's native plots in scripts, for all plot styles, plus reusable plot templates.</li>
+<li><a href="calculators/">Quick Calculators</a>: Programmatic optical and spectroscopic-unit converters.</li>
+<li><a href="extending/">Extending SPECTROview</a>: The real, file-based extension points (custom baseline methods, fit-model/plot-template folders) — there is no plugin framework, and this page explains what's available instead.</li>
 </ul>
+<h2 id="error-handling">Error handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
+<p>Every function in <code>spectroview.api</code> raises a subclass of <code>spectroview.api.exceptions.SpectroviewError</code> on failure — never a raw <code>KeyError</code>/<code>ValueError</code> from the underlying model layer, and never a Qt dialog (which would hang in a headless script). Catch <code>SpectroviewError</code> broadly, or a specific subtype (<code>LoadError</code>, <code>FitModelError</code>, <code>FitError</code>, <code>WorkspaceError</code>, <code>TemplateError</code>) narrowly:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">io</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">spectroview.api.exceptions</span> <span class="kn">import</span> <span class="n">LoadError</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">load_spectra</span><span class="p">(</span><span class="s2">&quot;missing_file.wdf&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">except</span> <span class="n">LoadError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not load spectra: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
 
 
 
@@ -1498,13 +1540,13 @@
         
         
           
-          <a href="spectra/" class="md-footer__link md-footer__link--next" aria-label="Next: Spectra Processing &amp; Fitting">
+          <a href="spectra/" class="md-footer__link md-footer__link--next" aria-label="Next: Spectra Workspace (load, preprocess, fit)">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Spectra Processing & Fitting
+                Spectra Workspace (load, preprocess, fit)
               </div>
             </div>
             <div class="md-footer__button md-icon">

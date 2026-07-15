@@ -1521,6 +1521,8 @@
       
         
       
+        
+      
     
     
     
@@ -1591,7 +1593,7 @@
   <span class="md-ellipsis">
     
   
-    Spectra Processing & Fitting
+    Spectra Workspace (load, preprocess, fit)
   
 
     
@@ -1619,7 +1621,7 @@
   <span class="md-ellipsis">
     
   
-    2D Map & Hyperspectral Analysis
+    Maps Workspace (hyperspectral, heatmaps)
   
 
     
@@ -1676,6 +1678,34 @@
     
   
     Quick Calculators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extending SPECTROview
   
 
     
@@ -2152,7 +2182,7 @@
 <hr />
 <h2 id="graph-customization"><strong>Graph Customization</strong><a class="headerlink" href="#graph-customization" title="Permanent link">&para;</a></h2>
 <h3 id="customizegraphdialog-singleton"><strong><code>CustomizeGraphDialog</code> (Singleton)</strong><a class="headerlink" href="#customizegraphdialog-singleton" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/view/components/customize_graph_dialog.py</code> (~1000+ lines)</p>
+<p><strong>Package</strong>: <code>spectroview/view/components/customize_graph/</code> — <code>CustomizeGraphDialog</code> (in <code>customize_graph_dialog.py</code>) hosts four tab widgets, each in its own module: <code>customize_legend.py</code>, <code>customize_axis.py</code>, <code>customize_annotations.py</code>, <code>customize_more_options.py</code>, plus the small shared <code>customize_annotation_dialogs.py</code> (line/text edit dialogs, color delegate).</p>
 <p>A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow. Features:</p>
 <table>
 <thead>

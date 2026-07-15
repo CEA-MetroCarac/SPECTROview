@@ -1150,6 +1150,8 @@
       
         
       
+        
+      
     
     
     
@@ -1221,7 +1223,7 @@
   <span class="md-ellipsis">
     
   
-    Spectra Processing & Fitting
+    Spectra Workspace (load, preprocess, fit)
   
 
     
@@ -1249,7 +1251,7 @@
   <span class="md-ellipsis">
     
   
-    2D Map & Hyperspectral Analysis
+    Maps Workspace (hyperspectral, heatmaps)
   
 
     
@@ -1330,10 +1332,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-preparing-data" class="md-nav__link">
+  <a href="#preparing-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Preparing Data
+        Preparing Data
       
     </span>
   </a>
@@ -1341,32 +1343,132 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-statistical-point-plots" class="md-nav__link">
+  <a href="#categorical-xy-plots" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Statistical Point Plots
+        Categorical / XY Plots
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Categorical / XY Plots">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#statistical-point-plots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Statistical Point Plots
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#3-box-plots" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#line-plots" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Box Plots
+        Line Plots
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#4-scatter-plots-trendlines" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#bar-plots" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Scatter Plots &amp; Trendlines
+        Bar Plots
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#box-plots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Box Plots
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#histograms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Histograms
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scatter-plots-trendlines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scatter Plots &amp; Trendlines
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spatial-plots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spatial Plots
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spatial Plots">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#2d-maps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2D Maps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wafer-maps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wafer Maps
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plot-templates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plot Templates
       
     </span>
   </a>
@@ -1397,6 +1499,34 @@
     
   
     Quick Calculators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extending SPECTROview
   
 
     
@@ -1513,87 +1643,78 @@
 
 
 <h1 id="data-visualization-graphs">Data Visualization (Graphs)<a class="headerlink" href="#data-visualization-graphs" title="Permanent link">&para;</a></h1>
-<p>The <code>spectroview.api.graphs</code> module allows you to programmatically generate publication-quality plots that perfectly replicate the native aesthetic of the SPECTROview Graphs workspace. It provides tailored wrappers around <code>seaborn</code> and <code>matplotlib</code>.</p>
+<p>The <code>spectroview.api.graphs</code> module lets you programmatically generate publication-quality plots that pixel-for-pixel replicate the native aesthetic of the SPECTROview Graphs workspace, for all 9 supported plot styles. It delegates to the exact same rendering code the GUI's own Graphs widget uses (no separate re-implementation, no approximation), so scripted plots genuinely match what the GUI draws — same color/marker cycling, same 95% CI computation, same box/point/trendline/wafer/2D-map styling.</p>
 <hr />
-<h2 id="1-preparing-data">1. Preparing Data<a class="headerlink" href="#1-preparing-data" title="Permanent link">&para;</a></h2>
-<p>Graphing functions expect a standard Pandas DataFrame. This DataFrame can be the output of your fit results (exported via <code>io.export_results</code> or saved directly).</p>
+<h2 id="preparing-data">Preparing Data<a class="headerlink" href="#preparing-data" title="Permanent link">&para;</a></h2>
+<p>Graphing functions expect a standard Pandas DataFrame — typically the output of <code>SpectraWorkspace.collect_results()</code> / <code>MapsWorkspace.collect_results()</code>, or loaded via <code>io.load_dataset()</code>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">io</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Load fitted data results</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">df</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;fit_results.csv&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Example output: [&#39;Sample&#39;, &#39;Condition&#39;, &#39;peak_1_x0&#39;, &#39;peak_1_ampli&#39;]</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">df</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;fit_results.csv&quot;</span><span class="p">)[</span><span class="s2">&quot;fit_results&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
 </code></pre></div>
+<p>Every <code>plot_*</code> function accepts an optional <code>ax=</code> (draws onto it instead of creating a new figure) and returns the <code>Axes</code> it drew on, so you can compose subplots yourself.</p>
 <hr />
-<h2 id="2-statistical-point-plots">2. Statistical Point Plots<a class="headerlink" href="#2-statistical-point-plots" title="Permanent link">&para;</a></h2>
-<p>The <code>plot_point</code> function creates statistical summaries (mean + 95% confidence interval error bars) grouped by categorical variables. This is excellent for comparing peak parameters across different experimental conditions.</p>
+<h2 id="categorical-xy-plots">Categorical / XY Plots<a class="headerlink" href="#categorical-xy-plots" title="Permanent link">&para;</a></h2>
+<h3 id="statistical-point-plots">Statistical Point Plots<a class="headerlink" href="#statistical-point-plots" title="Permanent link">&para;</a></h3>
+<p>Mean + 95% confidence interval error bars grouped by a categorical variable — good for comparing peak parameters across experimental conditions.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">graphs</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Create the figure</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># Plot Peak Position (x0) grouped by Sample, colored by Condition</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_point</span><span class="p">(</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> 
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;Sample&quot;</span><span class="p">,</span> 
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;peak_1_x0&quot;</span><span class="p">,</span> 
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    <span class="n">join</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>      <span class="c1"># Set True to connect the means with lines</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="n">dodge</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>      <span class="c1"># Offsets the error bars to prevent overlapping</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Peak Shift by Process Condition&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="p">)</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;point_plot.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_point</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;Sample&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;peak_1_x0&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>                   <span class="n">join</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dodge</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Peak Shift by Process Condition&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;point_plot.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="line-plots">Line Plots<a class="headerlink" href="#line-plots" title="Permanent link">&para;</a></h3>
+<p>Like <code>plot_point</code>, but connects the per-x means with a line and a shaded 95% CI band — useful for a variable that has a natural order (e.g. depth, time, dose).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_line</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;Depth_nm&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;peak_1_ampli&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Amplitude vs Depth&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="bar-plots">Bar Plots<a class="headerlink" href="#bar-plots" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_bar</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;Sample&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;peak_1_ampli&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span> <span class="n">show_error_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="box-plots">Box Plots<a class="headerlink" href="#box-plots" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_box</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;Sample&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;peak_1_fwhm&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;FWHM Distribution Analysis&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="histograms">Histograms<a class="headerlink" href="#histograms" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_histogram</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;peak_1_fwhm&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">kde</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="scatter-plots-trendlines">Scatter Plots &amp; Trendlines<a class="headerlink" href="#scatter-plots-trendlines" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_scatter</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;peak_1_ampli&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;peak_2_ampli&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>                     <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Peak 1 vs Peak 2 Amplitude Correlation&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_trendline</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;peak_1_x0&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;peak_1_fwhm&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>                       <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Correlation: FWHM vs Peak Position&quot;</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<h2 id="3-box-plots">3. Box Plots<a class="headerlink" href="#3-box-plots" title="Permanent link">&para;</a></h2>
-<p>Box plots provide a detailed view of the statistical distribution (median, quartiles, and outliers).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_box</span><span class="p">(</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> 
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;Sample&quot;</span><span class="p">,</span> 
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;peak_1_fwhm&quot;</span><span class="p">,</span> 
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;FWHM Distribution Analysis&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">)</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<h2 id="spatial-plots">Spatial Plots<a class="headerlink" href="#spatial-plots" title="Permanent link">&para;</a></h2>
+<p>These take a tidy DataFrame with one row per (x, y) sample and a numeric value column <code>z</code> — exactly the shape <code>MapsWorkspace.collect_results()</code> produces.</p>
+<h3 id="2d-maps">2D Maps<a class="headerlink" href="#2d-maps" title="Permanent link">&para;</a></h3>
+<p>Fast, exact heatmap on the acquisition's own regular grid (raster/2D-map acquisitions).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_2dmap</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s2">&quot;ampli_Si&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Amplitude Map&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="wafer-maps">Wafer Maps<a class="headerlink" href="#wafer-maps" title="Permanent link">&para;</a></h3>
+<p>Interpolated heatmap over a circular wafer outline, with optional summary statistics annotated on the plot.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_wafer</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s2">&quot;ampli_Si&quot;</span><span class="p">,</span> <span class="n">wafer_size</span><span class="o">=</span><span class="mf">300.0</span><span class="p">,</span> <span class="n">show_stats</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<h2 id="4-scatter-plots-trendlines">4. Scatter Plots &amp; Trendlines<a class="headerlink" href="#4-scatter-plots-trendlines" title="Permanent link">&para;</a></h2>
-<p>Scatter plots visualize the correlation between two continuous parameters. You can overlay regression trendlines using <code>plot_trendline</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Scatter Plot</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_scatter</span><span class="p">(</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;peak_1_ampli&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;peak_2_ampli&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Peak 1 vs Peak 2 Amplitude Correlation&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">)</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="c1"># Trendline (Linear Regression)</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_trendline</span><span class="p">(</span>
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;peak_1_x0&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;peak_1_fwhm&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>           <span class="c1"># 1 for Linear, 2 for Quadratic, etc.</span>
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Correlation: FWHM vs Peak Position&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span>
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="p">)</span>
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<h2 id="plot-templates">Plot Templates<a class="headerlink" href="#plot-templates" title="Permanent link">&para;</a></h2>
+<p>A plot template is a named, reusable set of plot configurations (each shaped like the dict <code>MGraph.save()</code> produces in the GUI) saved as a JSON file in a folder — the same mechanism the GUI's "Save as Template" feature uses.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">graphs</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">configs</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="p">{</span><span class="s2">&quot;plot_style&quot;</span><span class="p">:</span> <span class="s2">&quot;scatter&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;peak_1_ampli&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;peak_2_ampli&quot;</span><span class="p">],</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;Condition&quot;</span><span class="p">},</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="p">{</span><span class="s2">&quot;plot_style&quot;</span><span class="p">:</span> <span class="s2">&quot;box&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Sample&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;peak_1_fwhm&quot;</span><span class="p">],</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;Condition&quot;</span><span class="p">},</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">]</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">template_id</span> <span class="o">=</span> <span class="n">graphs</span><span class="o">.</span><span class="n">save_plot_template</span><span class="p">(</span><span class="s2">&quot;./templates&quot;</span><span class="p">,</span> <span class="s2">&quot;Standard QC Plots&quot;</span><span class="p">,</span> <span class="n">configs</span><span class="p">)</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="c1"># List and reload later</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="k">for</span> <span class="n">summary</span> <span class="ow">in</span> <span class="n">graphs</span><span class="o">.</span><span class="n">list_plot_templates</span><span class="p">(</span><span class="s2">&quot;./templates&quot;</span><span class="p">):</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">summary</span><span class="p">[</span><span class="s2">&quot;graph_count&quot;</span><span class="p">])</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">configs</span> <span class="o">=</span> <span class="n">graphs</span><span class="o">.</span><span class="n">load_plot_template</span><span class="p">(</span><span class="s2">&quot;./templates&quot;</span><span class="p">,</span> <span class="n">template_id</span><span class="p">)</span>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="n">graphs</span><span class="o">.</span><span class="n">delete_plot_template</span><span class="p">(</span><span class="s2">&quot;./templates&quot;</span><span class="p">,</span> <span class="n">template_id</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1634,7 +1755,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../2dmap/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 2D Map &amp; Hyperspectral Analysis">
+          <a href="../2dmap/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Maps Workspace (hyperspectral, heatmaps)">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1644,7 +1765,7 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                2D Map & Hyperspectral Analysis
+                Maps Workspace (hyperspectral, heatmaps)
               </div>
             </div>
           </a>

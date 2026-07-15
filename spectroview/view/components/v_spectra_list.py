@@ -30,7 +30,6 @@ class VSpectraList(QListWidget):
     # ───── View → ViewModel signals ─────
     selection_changed = Signal(list)     # list of selected row indices
     order_changed = Signal(list)          # new order of row indices
-    item_activated = Signal(int)          # double-clicked row
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -49,7 +48,6 @@ class VSpectraList(QListWidget):
 
         # Qt signals → our semantic signals
         self.itemSelectionChanged.connect(self._emit_selection_changed)
-        self.itemDoubleClicked.connect(self._on_item_activated)
     
     def _update_placeholder(self):
         """Update placeholder text based on list state."""
@@ -100,36 +98,37 @@ class VSpectraList(QListWidget):
         
         self.clear()
         self._has_placeholder = False  # Reset placeholder flag
-        
+
+        items_by_fname = {}
         for i, spectrum in enumerate(spectra):
             fname = spectrum["fname"]
             is_active = spectrum["is_active"]
-            
+
             item = QListWidgetItem(fname)
             item.setData(Qt.UserRole, i)  # model index -> used when dragging/reordering
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             # Set checkbox state from spectrum.is_active
             item.setCheckState(Qt.Checked if is_active else Qt.Unchecked)
-            
+
             # Set background color based on spectrum status
             set_spectrum_item_color(item, spectrum)
-            
+
             self.addItem(item)
-            
+
             # Connect checkbox state change to update spectrum.is_active
             # Store reference to fname instead of ID
             item.setData(Qt.UserRole + 1, fname)
-        
-        # Restore selection by matching fnames
+            items_by_fname[fname] = item
+
+        # Restore selection by matching fnames (O(1) lookup per fname instead
+        # of an O(count) scan, which made this loop quadratic overall)
         selection_restored = False
         for fname in selected_fnames:
-            for i in range(self.count()):
-                item = self.item(i)
-                if item.text() == fname:
-                    item.setSelected(True)
-                    selection_restored = True
-                    break
-        
+            item = items_by_fname.get(fname)
+            if item is not None:
+                item.setSelected(True)
+                selection_restored = True
+
         # If no selection was restored and list is not empty, select first item
         if not selection_restored and self.count() > 0:
             self.item(0).setSelected(True)
@@ -142,33 +141,10 @@ class VSpectraList(QListWidget):
         if len(spectra) == 0:
             self._update_placeholder()
     
-    def itemChanged(self, item):
-        """Handle checkbox state change to update spectrum.is_active."""
-        # This will be connected from the workspace view
-        pass
-
-    def selected_rows(self) -> list[int]:
-        return [self.row(i) for i in self.selectedItems()]
-    
     def select_all(self):
         """Select all items in the list."""
         self.selectAll()
-    
-    def get_checked_spectra_indices(self) -> list[int]:
-        """Return list of checked spectrum indices."""
-        checked = []
-        for i in range(self.count()):
-            item = self.item(i)
-            if item.checkState() == Qt.Checked:
-                checked.append(i)
-        return checked
-    
-    def check_all_spectra(self, checked: bool):
-        """Check or uncheck all spectra."""
-        state = Qt.Checked if checked else Qt.Unchecked
-        for i in range(self.count()):
-            self.item(i).setCheckState(state)
-    
+
     # ───── Drag & Drop handling ──────────────────────────────────
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -219,7 +195,3 @@ class VSpectraList(QListWidget):
     def _emit_selection_changed(self):
         """Emit selection_changed signal with model indices of selected items."""
         self.selection_changed.emit(self.selected_model_indices())
-
-    def _on_item_activated(self, item: QListWidgetItem):
-        """Emit item_activated signal with row index."""
-        self.item_activated.emit(self.row(item))

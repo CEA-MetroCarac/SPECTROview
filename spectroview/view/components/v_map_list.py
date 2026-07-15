@@ -5,8 +5,8 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
     QListWidgetItem, QAbstractItemView, QPushButton, QCheckBox
 )
-from PySide6.QtCore import Qt, Signal, QSize, QTimer, QItemSelection, QItemSelectionModel
-from PySide6.QtGui import QIcon, QFont
+from PySide6.QtCore import Qt, Signal, QTimer, QItemSelection, QItemSelectionModel
+from PySide6.QtGui import QFont
 
 from spectroview import ICON_DIR
 from spectroview.viewmodel.utils import set_spectrum_item_color
@@ -199,20 +199,9 @@ class VMapsList(QWidget):
             placeholder.setFont(font)
             
             self.maps_list.addItem(placeholder)
-            
+
             self._has_maps_placeholder = True
-        else:
-            # Remove all placeholder items if they exist
-            if self._has_maps_placeholder:
-                # Clear all items with NoItemFlags (placeholders and spacers)
-                i = 0
-                while i < self.maps_list.count():
-                    if self.maps_list.item(i).flags() == Qt.NoItemFlags:
-                        self.maps_list.takeItem(i)
-                    else:
-                        i += 1
-                self._has_maps_placeholder = False
-    
+
     # ───── Public API (ViewModel → View) ─────────────────────────
     def set_maps_names(self, names: list[str]):
         """Replace entire maps list (ViewModel-driven)."""
@@ -251,43 +240,30 @@ class VMapsList(QWidget):
         can_update_in_place = False
         if self.spectra_list.count() == len(spectra):
             if len(spectra) > 0:
-                first_fname = spectra[0]["fname"] if isinstance(spectra[0], dict) else spectra[0].fname
-                last_fname = spectra[-1]["fname"] if isinstance(spectra[-1], dict) else spectra[-1].fname
+                first_fname = spectra[0]["fname"]
+                last_fname = spectra[-1]["fname"]
                 if self.spectra_list.item(0).text() == first_fname and self.spectra_list.item(self.spectra_list.count()-1).text() == last_fname:
                     can_update_in_place = True
             else:
                 can_update_in_place = True
-                
+
         if can_update_in_place:
             for i, spectrum in enumerate(spectra):
-                is_active = spectrum["is_active"] if isinstance(spectrum, dict) else spectrum.is_active
                 item = self.spectra_list.item(i)
-                item.setCheckState(Qt.Checked if is_active else Qt.Unchecked)
-                
-                info = spectrum if isinstance(spectrum, dict) else {
-                    "has_baseline": False,
-                    "fit_success": getattr(spectrum, "result_fit", None) is not None,
-                }
-                set_spectrum_item_color(item, info)
+                item.setCheckState(Qt.Checked if spectrum["is_active"] else Qt.Unchecked)
+                set_spectrum_item_color(item, spectrum)
         else:
             self.spectra_list.clear()
             for i, spectrum in enumerate(spectra):
-                fname = spectrum["fname"] if isinstance(spectrum, dict) else spectrum.fname
-                is_active = spectrum["is_active"] if isinstance(spectrum, dict) else spectrum.is_active
-
-                item = QListWidgetItem(fname)
+                item = QListWidgetItem(spectrum["fname"])
                 item.setData(Qt.UserRole, i)  # Store index
                 item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 # Set checkbox state from is_active
-                item.setCheckState(Qt.Checked if is_active else Qt.Unchecked)
-                
-                # Set background color based on spectrum status (expects dict)
-                info = spectrum if isinstance(spectrum, dict) else {
-                    "has_baseline": False,
-                    "fit_success": getattr(spectrum, "result_fit", None) is not None,
-                }
-                set_spectrum_item_color(item, info)
-                
+                item.setCheckState(Qt.Checked if spectrum["is_active"] else Qt.Unchecked)
+
+                # Set background color based on spectrum status
+                set_spectrum_item_color(item, spectrum)
+
                 self.spectra_list.addItem(item)
             
             # Restore selection at same positions (if they still exist)
@@ -334,25 +310,10 @@ class VMapsList(QWidget):
             for item in self.spectra_list.selectedItems()
         ]
     
-    def get_checked_spectra_indices(self) -> list[int]:
-        """Return list of checked spectrum indices."""
-        checked = []
-        for i in range(self.spectra_list.count()):
-            item = self.spectra_list.item(i)
-            if item.checkState() == Qt.Checked:
-                checked.append(i)
-        return checked
-    
     def select_all_spectra(self):
         """Select all spectra in the list."""
         self.spectra_list.selectAll()
-    
-    def check_all_spectra(self, checked: bool):
-        """Check or uncheck all spectra."""
-        state = Qt.Checked if checked else Qt.Unchecked
-        for i in range(self.spectra_list.count()):
-            self.spectra_list.item(i).setCheckState(state)
-    
+
     # ───── Internal signal handlers ──────────────────────────────
     def _on_map_selected(self):
         """Emit signal when map selection changes."""

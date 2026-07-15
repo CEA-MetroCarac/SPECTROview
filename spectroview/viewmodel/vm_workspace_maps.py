@@ -375,11 +375,42 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         """Select all spectra from the currently displayed map."""
         if not self.current_map_name:
             return
-        
+
         md = self.store.get_map_data(self.current_map_name)
         if md:
             self.selected_fnames = list(md.fnames)
         self._emit_selected_spectra()
+
+    def set_spectrum_active(self, fname: str, is_active: bool):
+        """Toggle one spectrum's checked/active state and refresh the map view.
+
+        Also invalidates the heatmap's griddata cache: since active/checked
+        spectra determine which rows `get_current_map_dataframe()` returns,
+        a stale cache (keyed only on map name, not row content) would
+        otherwise keep showing the pre-toggle heatmap.
+        """
+        if not self.current_map_name:
+            return
+        md = self.store.get_map_data(self.current_map_name)
+        if md is None or fname not in md.fnames:
+            return
+        idx = md.fnames.index(fname)
+        if bool(md.is_active[idx]) == is_active:
+            return
+        md.is_active[idx] = is_active
+        self.clear_map_cache_requested.emit(self.current_map_name)
+        self.map_data_updated.emit(self.get_current_map_dataframe())
+
+    def set_all_current_map_spectra_active(self, is_active: bool):
+        """Check/uncheck every spectrum in the current map and refresh the map view."""
+        if not self.current_map_name:
+            return
+        md = self.store.get_map_data(self.current_map_name)
+        if md is None:
+            return
+        md.is_active[:] = is_active
+        self.clear_map_cache_requested.emit(self.current_map_name)
+        self.map_data_updated.emit(self.get_current_map_dataframe())
 
     def apply_y_normalization(self, norm_factor: float, apply_all: bool = False):
         """Override to update map visualizer after applying normalization."""
@@ -400,7 +431,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         super().reinit_spectra(apply_all)
         if self.current_map_name:
             self.clear_map_cache_requested.emit(self.current_map_name)
-        self._fit_results_cache_dirty = True
         self.map_data_updated.emit(self.get_current_map_dataframe())
         
     # ═════════════════════════════════════════════════════════════════════
@@ -522,9 +552,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             return
         
         del self.maps[map_name]
-        if hasattr(self, '_maps_arrays_cache') and map_name in self._maps_arrays_cache:
-            del self._maps_arrays_cache[map_name]
-            
         self.store.remove_map(map_name)
         
         # If removed map was selected, clear view
@@ -583,25 +610,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         fname_set = set(self.selected_fnames)
         return [f for i, f in enumerate(md.fnames) if md.is_active[i] and f in fname_set]
 
-    def apply_fit_model(self, apply_all: bool = False):
-        """Override parent to apply loaded fit model and sync preprocessing/fit thread."""
-        if not hasattr(self, "_vm_fit_model_builder"):
-            self.notify.emit("Fit model manager not connected.")
-            return
+    def _apply_fit_model_and_run(self, fit_model: dict, apply_all: bool):
+        """Apply `fit_model` to the target map(s), refresh the UI, and launch fitting.
 
-        model_path = self._vm_fit_model_builder.get_current_model_path()
-        if model_path is None or not model_path.exists():
-            self.notify.emit("No fit model selected.")
-            return
-            
-        try:
-            with open(model_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            fit_model = data.get("0", {})
-        except Exception as e:
-            QMessageBox.critical(None, "Error", f"Failed to load fit model:\n{e}")
-            return
-
+        Shared tail of apply_fit_model()/paste_fit_model() — the only
+        difference between the two is how they obtain `fit_model` (load
+        from a JSON file vs. read from the clipboard).
+        """
         # Apply to MapData(s)
         maps_to_apply = self.store.map_names if apply_all else ([self.current_map_name] if self.current_map_name else [])
         for name in maps_to_apply:
@@ -625,6 +640,27 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
         self._run_fit_thread(fit_model, fnames, apply_all=apply_all)
 
+    def apply_fit_model(self, apply_all: bool = False):
+        """Override parent to apply loaded fit model and sync preprocessing/fit thread."""
+        if not hasattr(self, "_vm_fit_model_builder"):
+            self.notify.emit("Fit model manager not connected.")
+            return
+
+        model_path = self._vm_fit_model_builder.get_current_model_path()
+        if model_path is None or not model_path.exists():
+            self.notify.emit("No fit model selected.")
+            return
+
+        try:
+            with open(model_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            fit_model = data.get("0", {})
+        except Exception as e:
+            QMessageBox.critical(None, "Error", f"Failed to load fit model:\n{e}")
+            return
+
+        self._apply_fit_model_and_run(fit_model, apply_all)
+
     def paste_fit_model(self, apply_all: bool = False):
         """Override parent to apply clipboard fit model and sync preprocessing/fit thread."""
         if not hasattr(self, "_fitmodel_clipboard") or self._fitmodel_clipboard is None:
@@ -634,29 +670,8 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Update clipboard with current fit settings before pasting
         self._fitmodel_clipboard["fit_params"] = self.settings.load_fit_settings()
 
-        # Apply to MapData(s)
-        maps_to_apply = self.store.map_names if apply_all else ([self.current_map_name] if self.current_map_name else [])
-        for name in maps_to_apply:
-            md = self.store.get_map_data(name)
-            if md:
-                self._apply_fit_model_to_mapdata(md, self._fitmodel_clipboard)
-                self.clear_map_cache_requested.emit(name)
-
-        if self.current_map_name:
-            # Skip _update_store_preprocessing() — see apply_fit_model comment.
-            self._emit_selected_spectra()
-            self._emit_list_update()
-
-        if apply_all:
-            fnames = []
-            for name in self.store.map_names:
-                md = self.store.get_map_data(name)
-                if md:
-                    fnames.extend([f for i, f in enumerate(md.fnames) if md.is_active[i]])
-        else:
-            fnames = self._get_active_spectra()
-
-        self._run_fit_thread(deepcopy(self._fitmodel_clipboard), fnames, apply_all=apply_all)
+        # Skip _update_store_preprocessing() — see apply_fit_model comment.
+        self._apply_fit_model_and_run(deepcopy(self._fitmodel_clipboard), apply_all)
 
     def fit(self, apply_all: bool = False):
         """Override: Fitting action for the Maps workspace."""
@@ -734,14 +749,12 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                     groups[x_len].append((map_name, md))
 
             for x_len, group in groups.items():
-                # Stack all Y matrices from all maps in this group into one batch
-                Y_parts = []
-                index_parts = []
+                # Determine row boundaries for each map; VBFthread stacks the
+                # actual Y matrices together when it executes the task.
                 map_boundaries = []  # (map_name, start_row, end_row) for result scatter
                 offset = 0
                 for map_name, md in group:
                     n = md.n_spectra
-                    Y_parts.append(np.arange(n))
                     map_boundaries.append((map_name, offset, offset + n))
                     offset += n
 

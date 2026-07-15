@@ -5,14 +5,12 @@ from PySide6.QtWidgets import (
     QGroupBox, QLabel, QPushButton, QComboBox,
     QDoubleSpinBox, QSpinBox, QScrollArea, QCheckBox, QApplication, QSlider, QSizePolicy
 )
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, Signal, QTimer
 
 from spectroview.fit_engine.baseline import (
     get_baseline_method_meta
 )
 
-from spectroview import ICON_DIR, PEAK_MODELS
 from spectroview.view.components.v_peak_table import VPeakTable
 
 
@@ -53,6 +51,14 @@ class VFitModelBuilder(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._init_ui()
+
+        # Debounce the expensive baseline-recompute-and-replot triggered by
+        # dragging sld_coef — without this, every pixel of slider movement
+        # re-evaluates the baseline algorithm and redraws the full plot.
+        self._coef_preview_timer = QTimer(self)
+        self._coef_preview_timer.setSingleShot(True)
+        self._coef_preview_timer.setInterval(80)
+        self._coef_preview_timer.timeout.connect(self._emit_baseline_preview)
 
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -448,26 +454,28 @@ class VFitModelBuilder(QWidget):
 
         # Refresh coef label for auto modes (label only, no preview emission)
         if mode not in ("Linear", "Polynomial", None, "__sep__"):
-            coef = self.sld_coef.value() / 10.0
-            lam  = 10 ** coef
-            if lam >= 1e6:
-                self.lbl_coef.setText(f"λ=1e{coef:.0f}")
-            else:
-                self.lbl_coef.setText(f"λ={lam:.0f}")
+            self._set_coef_label(self.sld_coef.value() / 10.0)
 
         # Emit so ViewModel stays in sync
         self._emit_baseline_settings()
 
-
-    def _on_coef_slider_changed(self, int_val):
-        """Slider integer (10‒100) → coef float (1.0‒10.0) → update label & preview."""
-        coef = int_val / 10.0
-        lam  = 10 ** coef
+    def _set_coef_label(self, coef: float):
+        """Update lbl_coef to show λ=10**coef, switching to scientific notation past 1e6."""
+        lam = 10 ** coef
         if lam >= 1e6:
             self.lbl_coef.setText(f"λ=1e{coef:.0f}")
         else:
             self.lbl_coef.setText(f"λ={lam:.0f}")
-        self._emit_baseline_preview()
+
+    def _on_coef_slider_changed(self, int_val):
+        """Slider integer (10‒100) → coef float (1.0‒10.0) → update label & preview.
+
+        The label updates immediately (cheap); the actual baseline
+        recompute + replot is debounced so a slider drag doesn't trigger it
+        on every intermediate value.
+        """
+        self._set_coef_label(int_val / 10.0)
+        self._coef_preview_timer.start()
 
     def _on_coef2_changed(self, _val):
         self._emit_baseline_preview()
@@ -508,36 +516,19 @@ class VFitModelBuilder(QWidget):
         the parameters currently stored on the selected spectrum's baseline object.
         Signals are blocked during the update to avoid feedback loops.
         """
-        mode = None
-        attached = True
-        sigma = 0
-        order_max = 2
-        coef = 5.0
+        if not isinstance(spectra, dict):
+            # No spectrum selected — ViewModel emits [] in this case.
+            return
 
-        if isinstance(spectra, dict):
-            # Tensor / new architecture mode
-            bl_configs = spectra.get("baseline_config", [])
-            bl_config = bl_configs[0] if bl_configs else {}
-            if bl_config is None:
-                bl_config = {}
-            mode = bl_config.get("mode")
-            attached = bool(bl_config.get("attached", True))
-            sigma = int(bl_config.get("sigma", 4))
-            order_max = int(bl_config.get("order_max", 2))
-            coef = float(bl_config.get("coef", 5.0))
-        else:
-            # Legacy list of Spectrum objects
-            specs = spectra or []
-            if not specs:
-                return
-            bl = specs[0].baseline
-            if bl is None:
-                return
-            mode = bl.mode
-            attached = bool(bl.attached)
-            sigma = int(bl.sigma) if bl.sigma else 0
-            order_max = int(bl.order_max) if bl.order_max else 2
-            coef = float(bl.coef) if bl.coef else 5.0
+        bl_configs = spectra.get("baseline_config", [])
+        bl_config = bl_configs[0] if bl_configs else {}
+        if bl_config is None:
+            bl_config = {}
+        mode = bl_config.get("mode")
+        attached = bool(bl_config.get("attached", True))
+        sigma = int(bl_config.get("sigma", 4))
+        order_max = int(bl_config.get("order_max", 2))
+        coef = float(bl_config.get("coef", 5.0))
 
         keys = VFitModelBuilder._BASELINE_MODE_KEYS
 
@@ -564,11 +555,7 @@ class VFitModelBuilder(QWidget):
             # Update coef slider for auto modes
             coef_int = max(10, min(100, round(coef * 10)))
             self.sld_coef.setValue(coef_int)
-            lam = 10 ** coef
-            if lam >= 1e6:
-                self.lbl_coef.setText(f"λ=1e{coef:.0f}")
-            else:
-                self.lbl_coef.setText(f"λ={lam:.0f}")
+            self._set_coef_label(coef)
         finally:
             self.cbb_baseline_mode.blockSignals(False)
             self.sld_coef.blockSignals(False)
@@ -643,20 +630,16 @@ class VFitModelBuilder(QWidget):
         )
 
         self.btn_copy = QPushButton("Copy")
-        #self.btn_copy.setFixedSize(80, 24)
         self.btn_copy.setToolTip("Copy fit model of selected spectrum.")
         self.btn_copy.clicked.connect(self.fitmodel_copy_requested.emit)
 
-
         self.btn_paste = QPushButton("Paste")
-        #self.btn_paste.setFixedSize(80, 24)
         self.btn_paste.setToolTip("Paste fit model of selected spectrum. Hold Ctrl to paste to all spectra.")
         self.btn_paste.clicked.connect(
             lambda: self._emit_with_ctrl(self.fitmodel_paste_requested)
         )
 
         self.btn_save = QPushButton("Save")
-        #self.btn_save.setFixedSize(80, 24)
         self.btn_save.setToolTip("Save the current fit model.")
         self.btn_save.clicked.connect(self.fitmodel_save_requested.emit)
 

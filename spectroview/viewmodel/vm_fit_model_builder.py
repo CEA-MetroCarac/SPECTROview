@@ -13,7 +13,6 @@ class VMFitModelBuilder(QObject):
     models_changed = Signal(list)          # list[str]
     model_selected = Signal(str)
     notify = Signal(str)
-    model_applied = Signal(str)            # full path
 
     def __init__(self, settings: MSettings):
         super().__init__()
@@ -23,7 +22,11 @@ class VMFitModelBuilder(QObject):
         self._current_model_name: str | None = None
         self._extra_models: dict[str, Path] = {}  # loaded via "Load"
 
-        self.refresh_models()
+        # Note: refresh_models() is deliberately not called here. At
+        # construction time the View hasn't connected models_changed/
+        # model_selected yet, so an early call would scan the folder for no
+        # observable effect. The View calls refresh_models() once its
+        # connections are wired (see VWorkspaceSpectra.setup_connections()).
 
     # View → VM
     def refresh_models(self):
@@ -80,9 +83,6 @@ class VMFitModelBuilder(QObject):
         self._current_model_name = model_name
         self.model_selected.emit(model_name)
 
-    def current_model(self) -> str | None:
-        return self._current_model_name
-    
     def set_current_model(self, model_name: str):
         """Called when user changes combobox selection."""
         if not model_name:

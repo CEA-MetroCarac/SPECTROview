@@ -51,7 +51,6 @@ class VMapViewer(QWidget):
         self.cbar = None
         self._last_final_z_col = None
         self._last_stats_text_artist = None
-        self._selection_scatter = None  # Cache for selection overlay
         self._profile_line = None  # Profile line connecting 2 points
         self._profile_height_line = None  # Profile height visualization
         
@@ -571,15 +570,6 @@ class VMapViewer(QWidget):
                 pass
             self._selection_collection = None
         
-        # Remove old individual patches (legacy cleanup)
-        if hasattr(self, '_selection_patches') and self._selection_patches:
-            for patch in self._selection_patches:
-                try:
-                    patch.remove()
-                except:
-                    pass
-            self._selection_patches = []
-        
         # Remove old profile lines
         if self._profile_line is not None:
             try:
@@ -659,8 +649,7 @@ class VMapViewer(QWidget):
         self.figure.patch.set_facecolor(plt.rcParams.get('figure.facecolor', 'white'))
         self.ax = self.figure.add_subplot(111)
         self.cbar = None
-        self._selection_scatter = None
-        
+
         # Plot wafer circle for wafer maps
         if map_type != '2Dmap':
             r = self._get_wafer_radius(map_type)

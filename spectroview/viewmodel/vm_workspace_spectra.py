@@ -23,7 +23,6 @@ from spectroview.fit_engine.vbf_thread import VBFthread
 from spectroview.fit_engine.baseline import eval_baseline_batch
 from spectroview.fit_engine.evaluator import eval_peak_initial
 from spectroview.viewmodel.utils import (
-    generate_fit_report,
     closest_index,
     save_df_to_excel,
     view_text,
@@ -486,12 +485,6 @@ class VMWorkspaceSpectra(QObject):
         self.selected_fnames = [self.store.map_names[new_index]]
         self._emit_selected_spectra()
 
-    def cosmic_ray_detection(self):
-        """Detect cosmic rays for all loaded spectra."""
-        # TODO: Implement tensor-based cosmic ray detection for SpectraStore
-        # self.store.remove_cosmic_rays()
-        self.notify.emit("Cosmic ray detection completed.")
-
     def apply_cosmic_ray_erase(self, md_row: int, modified_y):
         """Update the processed spectrum array with the interactively erased data.
 
@@ -586,16 +579,47 @@ class VMWorkspaceSpectra(QObject):
         fname = self._get_selected_spectra()[0]
         return self.store.get_map_data(fname)
 
-    def add_peak_at(self, x: float):
-        md = self._get_interactive_map_data()
-        if not md: return
+    @staticmethod
+    def _reset_mapdata_arrays(md):
+        """Reset x/Y to their raw x0/Y0, and clear baseline + peak-curve state.
 
-        # Clear fit state to prevent _update_fit_model_from_params overwriting with stale parameters
+        Shared by reinit_spectra(), apply_spectral_range(), and
+        _apply_fit_model_to_mapdata()'s "clean reset" branch. Each caller
+        still owns the fields it deliberately doesn't clear here (fit_model,
+        range_min/max, colors/labels) since they either want to preserve
+        them or are about to repopulate them right afterward.
+        """
+        if md.x0 is not None:
+            md.x = md.x0.copy()
+        if md.Y0 is not None:
+            md.Y = md.Y0.copy()
+        md.baseline_config = None
+        md.Y_baseline = None
+        md.peak_params = None
+        md.Y_peaks = None
+        md.Y_bestfit = None
+        md.is_baseline_subtracted = False
+
+    @staticmethod
+    def _clear_fit_state(md):
+        """Discard stale fit results on a MapData block.
+
+        Called whenever peaks are added/removed/edited so
+        `_update_fit_model_from_params` doesn't later overwrite the edited
+        peak with values from a fit that no longer matches the current model.
+        """
         md.peak_params = None
         md.param_names = None
         md.fit_success = None
         md.fit_r2 = None
         md.Y_bestfit = None
+
+    def add_peak_at(self, x: float):
+        md = self._get_interactive_map_data()
+        if not md: return
+
+        # Clear fit state to prevent _update_fit_model_from_params overwriting with stale parameters
+        self._clear_fit_state(md)
 
         if md.fit_model is None:
             md.fit_model = {"peak_labels": [], "peak_models": {}}
@@ -650,27 +674,6 @@ class VMWorkspaceSpectra(QObject):
 
         self._emit_selected_spectra()
 
-    def _initialize_decay_params(self, peak_model, peak_shape, y_arr):
-        """Initialize decay model parameters for TRPL fitting inside dict model."""
-        y_max = float(np.max(y_arr))
-        y_min = float(np.min(y_arr))
-        
-        # Remove standard shape params
-        for p in ["ampli", "x0", "fwhm"]:
-            if p in peak_model:
-                del peak_model[p]
-
-        if peak_shape == "DecaySingleExp":
-            peak_model["A"] = {"value": y_max, "min": 0, "max": y_max * 100, "vary": True}
-            peak_model["tau"] = {"value": 5.0, "min": 0.1, "max": 100, "vary": True}
-            peak_model["B"] = {"value": y_min, "min": 0, "max": y_min * 10, "vary": True}
-        elif peak_shape == "DecayBiExp":
-            peak_model["A1"] = {"value": y_max * 0.7, "min": 0, "max": y_max * 100, "vary": True}
-            peak_model["tau1"] = {"value": 2.0, "min": 0.1, "max": 50, "vary": True}
-            peak_model["A2"] = {"value": y_max * 0.3, "min": 0, "max": y_max * 100, "vary": True}
-            peak_model["tau2"] = {"value": 10.0, "min": 0.1, "max": 100, "vary": True}
-            peak_model["B"] = {"value": y_min, "min": 0, "max": y_min * 10, "vary": True}
-
     def _initialize_peak_params(self, peak_model, peak_shape, x0, ampli, minfwhm, maxfwhm, maxshift, y_arr=None):
         """Build canonical parameters dictionary based on peak shape."""
         initialize_peak_params(peak_model, peak_shape, x0, ampli, minfwhm, maxfwhm, maxshift, y_arr)
@@ -695,12 +698,8 @@ class VMWorkspaceSpectra(QObject):
         if closest_k is not None:
             # Simply remove the peak from the dictionary without reindexing!
             md.fit_model["peak_models"].pop(closest_k, None)
-            
-            md.peak_params = None
-            md.param_names = None
-            md.fit_success = None
-            md.fit_r2 = None
-            md.Y_bestfit = None
+
+            self._clear_fit_state(md)
             self._reconstruct_y_peaks(md)
 
         self._emit_selected_spectra() 
@@ -870,23 +869,13 @@ class VMWorkspaceSpectra(QObject):
             return
 
         for md in mds:
-            if md.x0 is not None:
-                md.x = md.x0.copy()
-            if md.Y0 is not None:
-                md.Y = md.Y0.copy()
-                
-            md.baseline_config = None
-            md.Y_baseline = None
-            md.peak_params = None
+            self._reset_mapdata_arrays(md)
             md.fit_model = None
-            md.Y_peaks = None
-            md.Y_bestfit = None
-            md.is_baseline_subtracted = False
             md.range_min = None
             md.range_max = None
             md.colors = [None] * len(md.fnames)
             md.labels = [None] * len(md.fnames)
-            
+
             self._on_map_data_changed(md, "reinit_spectra")
             
         self._post_bulk_action(apply_all, "reinit_spectra")
@@ -914,17 +903,8 @@ class VMWorkspaceSpectra(QObject):
 
         for md in mds:
             # 1) Reinit completely to avoid dimension mismatches if previously cropped with baseline/peaks
-            if md.x0 is not None:
-                md.x = md.x0.copy()
-            if md.Y0 is not None:
-                md.Y = md.Y0.copy()
-            md.baseline_config = None
-            md.Y_baseline = None
-            md.peak_params = None
+            self._reset_mapdata_arrays(md)
             md.fit_model = None
-            md.Y_peaks = None
-            md.Y_bestfit = None
-            md.is_baseline_subtracted = False
 
             # 2) Perform crop
             if md.x is None:
@@ -1164,17 +1144,7 @@ class VMWorkspaceSpectra(QObject):
 
         # 1. Clean reset
         if indices is None:
-            if md.x0 is not None:
-                md.x = md.x0.copy()
-            if md.Y0 is not None:
-                md.Y = md.Y0.copy()
-            
-            md.baseline_config = None
-            md.Y_baseline = None
-            md.peak_params = None
-            md.Y_peaks = None
-            md.Y_bestfit = None
-            md.is_baseline_subtracted = False
+            self._reset_mapdata_arrays(md)
             md.range_min = None
             md.range_max = None
         else:
@@ -1445,7 +1415,7 @@ class VMWorkspaceSpectra(QObject):
         self._fit_thread.start()
 
 
-    def _run_fit_thread(self, fit_model: dict, fnames, apply_model_to_spectra=True):
+    def _run_fit_thread(self, fit_model: dict, fnames):
         # Prevent concurrent fit operations
         if self._is_fitting:
             self.notify.emit("Fit already in progress. Please wait...")
@@ -1536,11 +1506,7 @@ class VMWorkspaceSpectra(QObject):
             return
 
         # Clear fit state
-        md.peak_params = None
-        md.param_names = None
-        md.fit_success = None
-        md.fit_r2 = None
-        md.Y_bestfit = None
+        self._clear_fit_state(md)
 
         pdict = md.fit_model["peak_models"][str(index)]
         old_shape = list(pdict.keys())[0]
@@ -1573,11 +1539,7 @@ class VMWorkspaceSpectra(QObject):
         if not md or not md.fit_model: return
 
         # Clear fit state
-        md.peak_params = None
-        md.param_names = None
-        md.fit_success = None
-        md.fit_r2 = None
-        md.Y_bestfit = None
+        self._clear_fit_state(md)
 
         pdict = md.fit_model.get("peak_models", {}).get(str(index))
         if pdict:
@@ -1595,11 +1557,7 @@ class VMWorkspaceSpectra(QObject):
         if str(index) in old_models:
             del old_models[str(index)]
 
-        md.peak_params = None
-        md.param_names = None
-        md.fit_success = None
-        md.fit_r2 = None
-        md.Y_bestfit = None
+        self._clear_fit_state(md)
         self._reconstruct_y_peaks(md)
         self._emit_selected_spectra()
 
@@ -1641,11 +1599,7 @@ class VMWorkspaceSpectra(QObject):
 
         md = self._get_interactive_map_data()
         if md:
-            md.peak_params = None
-            md.param_names = None
-            md.fit_success = None
-            md.fit_r2 = None
-            md.Y_bestfit = None
+            self._clear_fit_state(md)
             self._reconstruct_y_peaks(md)
 
         # Re-emit to ensure everything is synchronized

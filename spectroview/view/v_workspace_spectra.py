@@ -281,7 +281,6 @@ class VWorkspaceSpectra(QWidget):
         self.v_more_tab.undo_normalization_requested.connect(
             lambda: self._apply_with_ctrl(vm.undo_y_normalization)
         )
-        self.v_more_tab.cosmic_ray_requested.connect(vm.cosmic_ray_detection)
 
         # ═════════════════════════════════════════════════════════════════
         # MVA connections

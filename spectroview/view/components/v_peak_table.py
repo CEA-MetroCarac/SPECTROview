@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon, QPalette, QColor
 
 from spectroview import PEAK_MODELS, ICON_DIR
+from spectroview.viewmodel.utils import fano_display_amplitude, fano_internal_amplitude
 
 ROW_HEIGHT = 28
 class VPeakTable(QWidget):
@@ -193,12 +194,12 @@ class VPeakTable(QWidget):
                 # Fano model correction: show actual peak height for 'ampli'
                 if pm.name2 == "Fano" and p == "ampli":
                     q = pm.param_hints.get("q", {}).get("value", 50.0)
-                    display_val = display_val * (q**2 + 1)
-                
+                    display_val = fano_display_amplitude(display_val, q)
+
                 val = QLineEdit(f"{display_val:.3f}")
                 val.setAlignment(Qt.AlignRight)
                 val.setFixedSize(72, ROW_HEIGHT)
-                
+
                 def make_editing_finished_cb(i_idx, p_key, w_val, model_name, peak_model):
                     def cb():
                         text = w_val.text()
@@ -207,7 +208,7 @@ class VPeakTable(QWidget):
                             # If they edit Fano's ampli, we must scale it back to internal representation
                             if model_name == "Fano" and p_key == "ampli":
                                 current_q = peak_model.param_hints.get("q", {}).get("value", 50.0)
-                                num_val = num_val / (current_q**2 + 1)
+                                num_val = fano_internal_amplitude(num_val, current_q)
                             self.peak_param_changed.emit(i_idx, p_key, "value", num_val)
                         except ValueError:
                             pass
@@ -266,21 +267,15 @@ class VPeakTable(QWidget):
         """Create a callback that properly captures the peak index."""
         return lambda: self.peak_deleted.emit(idx)
 
-    def _emit_value(self, idx, key, field, text):
-        try:
-            val = float(text)
-        except ValueError:
-            return
-        self.peak_param_changed.emit(idx, key, field, val)
-
     def _add_limit(self, layout, idx, key, field, hint, pm_name=None, peak_model=None):
         display_val = hint.get(field, 0)
         
         # Fano model correction: show actual peak height for 'ampli' limits
         if pm_name == "Fano" and key == "ampli" and peak_model:
             q = peak_model.param_hints.get("q", {}).get("value", 50.0)
-            display_val = display_val * (q**2 + 1)
-            
+            display_val = fano_display_amplitude(display_val, q)
+
+
         le = QLineEdit(f"{display_val:.3f}")
         # le.setFixedWidth(60)
         le.setFixedSize(72, ROW_HEIGHT)
@@ -297,7 +292,7 @@ class VPeakTable(QWidget):
                     num_val = float(text)
                     if model_name == "Fano" and p_key == "ampli":
                         current_q = p_model.param_hints.get("q", {}).get("value", 50.0)
-                        num_val = num_val / (current_q**2 + 1)
+                        num_val = fano_internal_amplitude(num_val, current_q)
                     self.peak_param_changed.emit(i_idx, p_key, p_field, num_val)
                 except ValueError:
                     pass

@@ -135,16 +135,6 @@ class VSettingsDialog(QDialog):
         row.addWidget(self.spin_maxfwhm)
         bounds_layout.addLayout(row)
 
-        # Max intensity
-        row = QHBoxLayout()
-        row.addWidget(QLabel("Max peak Intensity:"))
-        self.spin_maxintensity = QDoubleSpinBox()
-        self.spin_maxintensity.setRange(1, 1e9)
-        self.spin_maxintensity.setSingleStep(1000)
-        self.spin_maxintensity.setDecimals(0)
-        row.addWidget(self.spin_maxintensity)
-        bounds_layout.addLayout(row)
-
         fitting_tab_layout.addWidget(grp_bounds)
 
         # Spacer
@@ -302,8 +292,7 @@ class VSettingsDialog(QDialog):
         self.spin_maxshift.setValue(data.get("maxshift", 20.0))
         self.spin_minfwhm.setValue(data.get("minfwhm", 0.1))
         self.spin_maxfwhm.setValue(data.get("maxfwhm", 200.0))
-        self.spin_maxintensity.setValue(data.get("maxintensity", 100000.0))
-        
+
         self.le_model_folder.setText(data.get("model_folder", ""))
         
         # AI settings
@@ -326,7 +315,6 @@ class VSettingsDialog(QDialog):
             "maxshift": self.spin_maxshift.value(),
             "minfwhm": self.spin_minfwhm.value(),
             "maxfwhm": self.spin_maxfwhm.value(),
-            "maxintensity": self.spin_maxintensity.value(),
             "model_folder": self.le_model_folder.text(),
             
             "api_key_OpenAI": self.edit_openai.text(),

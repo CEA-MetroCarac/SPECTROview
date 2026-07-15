@@ -1,5 +1,5 @@
 # spectroview/viewmodel/utils.py
-from PySide6.QtGui import QPalette, QColor, QPixmap, QImage, QTextCursor, QIcon, QPainter
+from PySide6.QtGui import QColor, QPixmap, QImage, QTextCursor, QIcon, QPainter
 
 def get_tinted_icon(path: str, color_str: str) -> QIcon:
     """Return a QIcon created from the image at `path` tinted to `color_str`."""
@@ -21,33 +21,12 @@ import datetime
 import struct
 import re
 import numpy as np
-import numpy as np
 from io import BytesIO
 
 from copy import deepcopy
 
 from spectroview import DEFAULT_COLORS
 
-
-
-def generate_fit_report(fit_result):
-    """Generate a lightweight text report of the fit result mimicking legacy output."""
-    if not fit_result or not hasattr(fit_result, 'params'):
-        return "No fit result available."
-    
-    report = ["[[Fit Statistics]]"]
-    report.append(f"    success    = {fit_result.success}")
-    if hasattr(fit_result, 'rsquared'):
-        report.append(f"    R-squared  = {fit_result.rsquared:.6f}")
-    
-    report.append("\n[[Variables]]")
-    for name, param in fit_result.params.items():
-        if hasattr(param, 'value'):
-            report.append(f"    {name:15s}: {param.value:.6g}")
-        else:
-            report.append(f"    {name:15s}: {param}")
-            
-    return "\n".join(report)
 
 
 def parse_wdf_metadata(reader):
@@ -395,6 +374,23 @@ def show_toast_notification(parent, message, title=None, duration=3000, preset=N
 
 def closest_index(array, value):
     return int(np.abs(array - value).argmin())
+
+
+def fano_display_amplitude(internal_ampli, q):
+    """Convert a Fano peak's internal fit amplitude to its displayed peak height.
+
+    The Fano lineshape's 'ampli' fit parameter scales the whole curve rather
+    than the peak height directly (see fit_engine/models.py's batched_fano);
+    the actual maximum intensity is ampli * (q**2 + 1). Used wherever the UI
+    shows or edits a Fano peak's amplitude as an intuitive peak height
+    instead of the raw fit parameter.
+    """
+    return internal_ampli * (q ** 2 + 1)
+
+
+def fano_internal_amplitude(display_ampli, q):
+    """Inverse of fano_display_amplitude(): displayed peak height -> internal fit amplitude."""
+    return display_ampli / (q ** 2 + 1)
 
 
 def save_df_to_excel(save_path, df):

@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QFrame, QScrollArea, QDialog, QApplication, QFileDialog
+    QVBoxLayout, QHBoxLayout, QFrame, QDialog, QApplication, QFileDialog
 )
 
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
@@ -189,25 +190,14 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                 self._spectra_coords_cache[i] = coords
     
     def _on_checkbox_changed(self, item):
-        """Update is_active in SpectraStore when checkbox state changes."""
+        """Notify the ViewModel when a spectrum's checkbox state changes."""
         if item is None or not self.vm.current_map_name:
             return
 
         fname = item.text()
         is_checked = item.checkState() == Qt.Checked
+        self.vm.set_spectrum_active(fname, is_checked)
 
-        # Update SpectraStore directly
-        md = self.vm.store.get_map_data(self.vm.current_map_name)
-        if md is not None and fname in md.fnames:
-            idx = md.fnames.index(fname)
-            if bool(md.is_active[idx]) != is_checked:
-                md.is_active[idx] = is_checked
-
-                # Invalidate fit results cache and trigger map data update
-                self.vm._fit_results_cache_dirty = True
-                updated_df = self.vm.get_current_map_dataframe()
-                self.vm.map_data_updated.emit(updated_df)
-    
     def _on_check_all_toggled(self, checked: bool):
         """Handle check all checkbox toggle for current map."""
         if not self.vm.current_map_name:
@@ -221,18 +211,10 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             item = self.v_maps_list.spectra_list.item(i)
             item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
 
-        # Update SpectraStore is_active flags directly
-        md = self.vm.store.get_map_data(self.vm.current_map_name)
-        if md is not None:
-            md.is_active[:] = checked
-
         self.v_maps_list.spectra_list.blockSignals(False)
 
-        # Invalidate cache and trigger map data update
-        self.vm._fit_results_cache_dirty = True
-        updated_df = self.vm.get_current_map_dataframe()
-        self.vm.map_data_updated.emit(updated_df)
-    
+        self.vm.set_all_current_map_spectra_active(checked)
+
     def _connect_signals(self):
         """Connect Maps-specific signals between View and ViewModel."""
         # ── VMapsList → ViewModel connections ──
@@ -384,7 +366,11 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Connect map type change to centralized handler
         dialog.map_viewer.cbb_map_type.currentTextChanged.connect(self._on_map_type_changed)
-        
+
+        # Keep this dialog's griddata cache in sync with the same invalidation
+        # signal the main viewer listens to (baseline/fit/normalization changes, etc.)
+        self.vm.clear_map_cache_requested.connect(dialog.clear_cache_for_map)
+
         # Set current map data in dialog (shared references - no duplication)
         if self._current_map_df is not None and not self._current_map_df.empty and self.vm.current_map_name:
             dialog.set_map_data(self._current_map_df, self.vm.current_map_name, self._current_fit_results)
@@ -416,6 +402,14 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         """Clean up when a dialog viewer is closed."""
         if dialog in self.viewer_dialogs:
             self.viewer_dialogs.remove(dialog)
+        try:
+            self.vm.clear_map_cache_requested.disconnect(dialog.clear_cache_for_map)
+        except (RuntimeError, TypeError):
+            pass
+        # The viewer's Figure was registered with matplotlib's global Gcf
+        # figure manager (plt.figure(...) in VMapViewer._create_canvas) and
+        # is never released otherwise, leaking the whole widget tree.
+        plt.close(dialog.map_viewer.figure)
     
     def _on_map_type_changed(self, map_type: str):
         """Handle map type change - update centralized value and sync all comboboxes."""

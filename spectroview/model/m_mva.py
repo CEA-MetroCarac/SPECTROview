@@ -20,7 +20,6 @@ References
 from dataclasses import dataclass
 
 import numpy as np
-from scipy.interpolate import interp1d
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -69,52 +68,6 @@ class MMVA:
     .. [1] E. Pavlou and N. Kourkoumelis, *Analyst*, 2025,
            DOI: 10.1039/D5AN00452G
     """
-
-    # ── Data matrix construction ──────────────────────────────────────
-
-    @staticmethod
-    def build_data_matrix(spectra) -> tuple:
-        """Stack active spectra into an (n_spectra × n_wavenumbers) matrix.
-
-        If spectra have different x-axis lengths they are interpolated onto
-        the x-axis of the first spectrum.
-
-        Args:
-            spectra: iterable of MSpectrum objects (must have .x and .y).
-
-        Returns:
-            (X, x_axis, fnames):
-                X       — (n, p) float64 data matrix
-                x_axis  — (p,) common wavenumber axis
-                fnames  — list[str] of spectrum identifiers
-
-        Raises:
-            ValueError: if fewer than 2 spectra are provided.
-        """
-        active = [s for s in spectra if getattr(s, "is_active", True)]
-        if len(active) < 2:
-            raise ValueError("At least 2 active spectra are required for MVA.")
-
-        # Reference x-axis (first active spectrum)
-        x_ref = np.asarray(active[0].x, dtype=np.float64)
-        rows = []
-        fnames = []
-
-        for s in active:
-            x_s = np.asarray(s.x, dtype=np.float64)
-            y_s = np.asarray(s.y, dtype=np.float64)
-
-            if x_s.shape == x_ref.shape and np.allclose(x_s, x_ref, atol=0.01):
-                rows.append(y_s.copy())
-            else:
-                # Interpolate onto reference grid
-                f = interp1d(x_s, y_s, kind="linear", fill_value="extrapolate")
-                rows.append(f(x_ref))
-
-            fnames.append(getattr(s, "fname", f"spectrum_{len(fnames)}"))
-
-        X = np.vstack(rows).astype(np.float64)
-        return X, x_ref, fnames
 
     # ── PCA ───────────────────────────────────────────────────────────
 
@@ -248,14 +201,6 @@ class MMVA:
         )
 
     # ── Reconstruction helpers ────────────────────────────────────────
-
-    @staticmethod
-    def reconstruct(scores: np.ndarray, loadings: np.ndarray) -> np.ndarray:
-        """Reconstruct data matrix from scores × loadings.
-
-        Works for both PCA (after adding back mean) and NMF (W @ H).
-        """
-        return scores @ loadings
 
     @staticmethod
     def reconstruction_error_per_spectrum(

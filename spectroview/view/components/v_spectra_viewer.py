@@ -1,8 +1,7 @@
 # view/components/spectra_viewer.py
 import warnings
-from copy import deepcopy
 import numpy as np
-from PySide6.QtCore import QObject, QEvent, QSettings
+from PySide6.QtCore import QSettings
 from spectroview.fit_engine.noise import detect_noise_level
 from spectroview.fit_engine.evaluator import eval_peak_initial
 # Suppress harmless Matplotlib constrained_layout warning on 0-size UI initialization
@@ -14,10 +13,10 @@ from PySide6.QtWidgets import (
     QPushButton, QToolButton, QLabel,
     QComboBox, QMenu, QWidgetAction,
     QLineEdit, QDoubleSpinBox, QColorDialog, QInputDialog,
-    QSlider, QGroupBox, QMessageBox
+    QSlider, QMessageBox, QApplication
 )
-from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer, QPoint
+from PySide6.QtGui import QIcon, QCursor
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -26,14 +25,11 @@ from matplotlib.backends.backend_qtagg import (
     FigureCanvasQTAgg as FigureCanvas
 )
 import matplotlib as mpl
-from PySide6.QtWidgets import QFrame, QApplication
-from PySide6.QtGui import QCursor
-from PySide6.QtCore import QObject, QEvent, QPoint
 
 import matplotlib.lines as mlines
 
 from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, PLOT_POLICY_SOFT_DARK, DEFAULT_COLORS
-from spectroview.viewmodel.utils import copy_fig_to_clb, get_tinted_icon
+from spectroview.viewmodel.utils import copy_fig_to_clb, get_tinted_icon, fano_display_amplitude
 from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
 
 
@@ -46,13 +42,7 @@ class _MockPeakModelObj:
 
 class VSpectraViewer(QWidget):
     # ───── View → ViewModel signals ─────
-    mouseClicked = Signal(float, float, int)
-    zoomToggled = Signal(bool)
-    rescaleRequested = Signal()
-    viewOptionsChanged = Signal(dict)
     copy_data_requested = Signal()  # Request ViewModel to copy spectrum data
-    toolModeChanged = Signal(str)  # zoom / baseline / peak
-    normalizationChanged = Signal(bool, float, float)
     plotStyleChanged = Signal()
     allOptionsSyncChanged = Signal(dict)
 
@@ -60,7 +50,6 @@ class VSpectraViewer(QWidget):
     peak_remove_requested = Signal(float)
     baseline_add_requested = Signal(float, float)
     baseline_remove_requested = Signal(float)
-    peak_drag_started = Signal(object)   # optional (advanced)
     peak_dragged = Signal(float, float)
     peak_drag_finished = Signal()
     spectrumCustomized = Signal()
@@ -254,7 +243,6 @@ class VSpectraViewer(QWidget):
         self.btn_rescale.setIconSize(QSize(22, 22))
         self.btn_rescale.setFixedSize(30, 30)
         self.btn_rescale.setToolTip("Rescale (Ctrl+R)")
-        self.btn_rescale.clicked.connect(self.rescaleRequested)
         self.btn_rescale.clicked.connect(self._rescale)
         
         layout.addWidget(self.btn_rescale)
@@ -267,12 +255,7 @@ class VSpectraViewer(QWidget):
         self.btn_baseline = self._tool_btn("baseline.png", "Baseline")
         self.btn_peak = self._tool_btn("peak.png", "Peak")
 
-        for btn, mode in [
-            (self.btn_zoom, "zoom"),
-            (self.btn_baseline, "baseline"),
-            (self.btn_peak, "peak"),
-        ]:
-            btn.toggled.connect(lambda c, m=mode: c and self.toolModeChanged.emit(m))
+        for btn in (self.btn_zoom, self.btn_baseline, self.btn_peak):
             layout.addWidget(btn)
 
         layout.addSpacing(15)
@@ -286,7 +269,6 @@ class VSpectraViewer(QWidget):
         self.btn_norm.setToolTip("Intensity normalization to maximum of spectrum or selected region.\nNote: This normalization is just for visual change, the actual data is not changed.")
         self.btn_norm.setIconSize(QSize(22, 22))
         self.btn_norm.setFixedSize(30, 30)
-        self.btn_norm.toggled.connect(self._emit_norm)
         self.btn_norm.toggled.connect(self._plot)
         self.btn_norm.clicked.connect(self._rescale)
 
@@ -1125,9 +1107,6 @@ class VSpectraViewer(QWidget):
             self._legend_dblclick_connected = True
 
 
-    def set_r2(self, value):
-        self.lbl_r2.setText(f"R²={value:.4f}")
-    
     def _update_r2_display(self):
         """Display R² value and noise level from the first selected spectrum."""
         if not self._tensor_data:
@@ -1144,7 +1123,7 @@ class VSpectraViewer(QWidget):
             self.lbl_r2.setText("R²=0")
 
         if y_vals is not None and len(y_vals) > 0:
-            y0 = y_vals[0] if not isinstance(y_vals, list) else y_vals[0]
+            y0 = y_vals[0]
             try:
                 coef_noise = QSettings("CEA-Leti", "SPECTROview").value(
                     "fit_settings/coef_noise", 1.0, float
@@ -1363,29 +1342,6 @@ class VSpectraViewer(QWidget):
             self._emit_view_options()
 
     def _emit_view_options(self):
-        def _to_float(text, default):
-            try:
-                return float(text)
-            except Exception:
-                return default
-
-        self.viewOptionsChanged.emit({
-            "legend": self.btn_legend.isChecked(),
-            "grid": self.act_grid.isChecked(),
-            #"colors": self.act_colors.isChecked(),
-            "raw": self.act_raw.isChecked(),
-            "bestfit": self.btn_bestfit.isChecked(),  # Now using toolbar button
-            "plot_theme": self.cbb_theme.currentText() if hasattr(self, "cbb_theme") else "Light Mode",
-            "bestfit_colorful": self.act_bestfit_colorful.isChecked(),
-            "show_peak_label": self.act_show_peak_label.isChecked(),
-            "residual": self.act_residual.isChecked(),
-            "noise_level": self.act_noise_level.isChecked(),
-            "x_unit": self.cbb_xaxis.currentText(),
-            "y_scale": self.cbb_yscale.currentText(),
-            "linewidth": self.spin_lw.value(),
-            "copy_width": _to_float(self.width_entry.text(), 5.5),
-            "copy_height": _to_float(self.height_entry.text(), 4.0),
-        })
         # Sync options with other viewers
         self.allOptionsSyncChanged.emit(self.get_options_state())
         
@@ -1427,19 +1383,18 @@ class VSpectraViewer(QWidget):
             else:
                 copy_fig_to_clb(self.canvas, size_ratio=(width, height))
 
-    def _emit_norm(self):
-        try:
-            xmin = float(self.norm_xmin.text()) if self.norm_xmin.text() else None
-            xmax = float(self.norm_xmax.text()) if self.norm_xmax.text() else None
-        except ValueError:
-            xmin = xmax = None
-        self.normalizationChanged.emit(self.btn_norm.isChecked(), xmin, xmax)
-
     def _on_mouse_click(self, event):
         if event.inaxes != self.ax:
             return
 
         if self.zoom_pan_active:
+            return
+
+        # The cosmic-ray eraser has its own press/motion/release handlers
+        # (see _erase_on_press etc.) — without this guard, peak/baseline
+        # picking could also fire for the same click if btn_peak/btn_baseline
+        # happened to still be checked from before erase mode was entered.
+        if self._erase_mode:
             return
 
         # Skip legend clicks
@@ -1462,7 +1417,6 @@ class VSpectraViewer(QWidget):
                 if clicked_peak:
                     # Start dragging
                     self._dragging_peak = clicked_peak
-                    self.peak_drag_started.emit(clicked_peak)
                     # Connect drag events
                     self._drag_cid = self.canvas.mpl_connect('motion_notify_event', self._on_drag_peak)
                     self._release_cid = self.canvas.mpl_connect('button_release_event', self._on_release_drag)
@@ -1490,14 +1444,29 @@ class VSpectraViewer(QWidget):
         self.ax.autoscale()
         self.canvas.draw_idle()
         
+    def _mpl_zoom_active(self) -> bool:
+        """Whether matplotlib's own internal zoom-rectangle mode is currently on."""
+        return bool(getattr(self.toolbar.mode, "value", self.toolbar.mode))
+
+    def _set_zoom_tool_active(self, active: bool):
+        """Synchronize zoom_pan_active with matplotlib's internal zoom mode.
+
+        `toolbar.zoom()` is a raw toggle, not a setter — calling it
+        unconditionally (as every call site used to) silently flips
+        matplotlib's zoom-rectangle tool out of sync with our own
+        zoom_pan_active flag whenever it's called from more than one place
+        (e.g. the eraser tool disabling/restoring zoom around its own
+        activation). Routing every on/off request through here makes it
+        idempotent: the toolbar is only actually toggled when its current
+        state disagrees with what we're asking for.
+        """
+        if self._mpl_zoom_active() != active:
+            self.toolbar.zoom()
+        self.zoom_pan_active = active
+
     def _toggle_zoom_pan(self):
         """Zoom feature for button Zoom"""
-        if self.btn_zoom.isChecked():
-            self.zoom_pan_active = True
-            self.toolbar.zoom() 
-        else:
-            self.zoom_pan_active = False
-            self.toolbar.zoom() 
+        self._set_zoom_tool_active(self.btn_zoom.isChecked())
 
     def _on_scroll(self, event):
         if event.inaxes != self.ax:
@@ -1544,7 +1513,7 @@ class VSpectraViewer(QWidget):
             # Fano model correction: show actual peak height for 'ampli'
             if model_name == "Fano" and display_intensity is not None:
                 q = info.get("q", 50.0)
-                display_intensity = display_intensity * (q**2 + 1)
+                display_intensity = fano_display_amplitude(display_intensity, q)
 
             # Define fields exactly like legacy
             fields = [
@@ -1729,13 +1698,19 @@ class VSpectraViewer(QWidget):
         self.btn_erase_validate.setVisible(checked)
 
         if checked:
-            # Disable zoom/pan to avoid interference
+            # Remember whichever of zoom/baseline/peak was active so it can
+            # be restored exactly (not just defaulted back to zoom) once
+            # erase mode ends, and disable zoom so it doesn't fight with
+            # the erase drag gesture.
+            self._pre_erase_tool_btn = next(
+                (b for b in (self.btn_zoom, self.btn_baseline, self.btn_peak) if b.isChecked()),
+                None,
+            )
             if self.btn_zoom.isChecked():
                 self.btn_zoom.blockSignals(True)
                 self.btn_zoom.setChecked(False)
                 self.btn_zoom.blockSignals(False)
-            self.zoom_pan_active = False
-            self.toolbar.zoom()   # Toggle off any active zoom
+            self._set_zoom_tool_active(False)
 
             # Set an eraser-style cursor on the canvas
             self.canvas.setCursor(Qt.CursorShape.SizeHorCursor)
@@ -1762,12 +1737,15 @@ class VSpectraViewer(QWidget):
             # Restore default cursor
             self.canvas.unsetCursor()
 
-            # Restore zoom/pan state
-            self.zoom_pan_active = True
-            self.btn_zoom.blockSignals(True)
-            self.btn_zoom.setChecked(True)
-            self.btn_zoom.blockSignals(False)
-            self.toolbar.zoom()
+            # Restore whichever zoom/baseline/peak tool was active before
+            # erase mode started (falls back to zoom if none was, e.g. at
+            # startup — matches the previous hardcoded behaviour in that case).
+            restore_btn = getattr(self, "_pre_erase_tool_btn", None) or self.btn_zoom
+            self._pre_erase_tool_btn = None
+            restore_btn.blockSignals(True)
+            restore_btn.setChecked(True)
+            restore_btn.blockSignals(False)
+            self._set_zoom_tool_active(restore_btn is self.btn_zoom)
 
     def _erase_on_press(self, event):
         """Record the start position of an erase drag."""

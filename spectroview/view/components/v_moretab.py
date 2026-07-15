@@ -14,7 +14,6 @@ class VMoreTab(QWidget):
     
     normalize_requested = Signal(float)
     undo_normalization_requested = Signal()
-    cosmic_ray_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -113,23 +112,16 @@ class VMoreTab(QWidget):
         norm_btns_layout.addWidget(self.btn_undo_norm)
         norm_btns_layout.addWidget(self.btn_normalize)
         
-        self.lbl_cosmic_ray = QLabel("Cosmic Ray:")
-        self.btn_cosmic_ray = QPushButton("Detect Cosmic Rays")
-        self.btn_cosmic_ray.setToolTip("Detect cosmic rays base on all loaded spectra")
-        
         layout_norm.addWidget(self.spin_norm_factor)
         layout_norm.addLayout(norm_btns_layout)
-        layout_norm.addWidget(self.lbl_cosmic_ray)
-        layout_norm.addWidget(self.btn_cosmic_ray)
         layout_norm.addStretch()
-        
+
         main_layout.addWidget(self.group_norm, stretch=1)
 
         # Connect signals
         self.btn_normalize.clicked.connect(self._on_normalize)
         self.btn_undo_norm.clicked.connect(self.undo_normalization_requested.emit)
-        self.btn_cosmic_ray.clicked.connect(self.cosmic_ray_requested.emit)
-        
+
         # Initially clear all blocks
         self.clear_metadata()
 

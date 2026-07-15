@@ -198,6 +198,99 @@ class TestAxisCustomization:
         vg.plot(excel_df)  # must not raise
 
 
+class TestSecondaryAxes:
+    """y2 (twinx, red), y3 (twinx offset, green), x2 (twiny, purple) -- the
+    'Plot multiple axes (beta)' tab. No prior coverage existed for these
+    before VGraph._plot_secondary_axis/_plot_tertiary_axis/_plot_secondary_x_axis
+    were consolidated into one parameterized helper, so this class doubles as
+    the regression check for that refactor."""
+
+    def test_no_secondary_axes_by_default(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        assert vg.ax2 is None
+        assert vg.ax3 is None
+        assert vg.ax_x2 is None
+
+    def test_y2_scatter(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.y2 = "area_Si"
+        vg.plot(excel_df)
+        assert vg.ax2 is not None
+        assert len(vg.ax2.collections) > 0
+        assert vg.ax2.get_ylabel()
+
+    def test_y2_point(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["ampli_Si"], plot_style="point")
+        vg.y2 = "area_Si"
+        vg.plot(excel_df)
+        assert vg.ax2 is not None
+        assert len(vg.ax2.get_lines()) > 0 or len(vg.ax2.collections) > 0
+
+    def test_y2_line(self, vg, excel_df):
+        _configure(vg, x="X", y=["ampli_Si"], plot_style="line")
+        vg.y2 = "area_Si"
+        vg.plot(excel_df)
+        assert vg.ax2 is not None
+        assert len(vg.ax2.get_lines()) > 0
+
+    def test_y2_removed_for_unsupported_style(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["ampli_Si"], plot_style="bar")
+        vg.y2 = "area_Si"
+        vg.plot(excel_df)
+        assert vg.ax2 is None
+
+    def test_y2_custom_label_and_color(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.y2 = "area_Si"
+        vg.y2label = "Custom Y2"
+        vg.plot(excel_df)
+        assert vg.ax2.get_ylabel() == "Custom Y2"
+        assert vg.ax2.yaxis.label.get_color() == "red"
+
+    def test_y3_creates_offset_spine_axis(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.y3 = "fwhm_Si"
+        vg.plot(excel_df)
+        assert vg.ax3 is not None
+        assert len(vg.ax3.collections) > 0
+        assert vg.ax3.spines["right"].get_position() == ("outward", 100)
+
+    def test_y2_and_y3_together(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.y2 = "area_Si"
+        vg.y3 = "fwhm_Si"
+        vg.plot(excel_df)
+        assert vg.ax2 is not None
+        assert vg.ax3 is not None
+        assert vg.ax2 is not vg.ax3
+
+    def test_x2_creates_secondary_x_axis(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.x2 = "Y"
+        vg.plot(excel_df)
+        assert vg.ax_x2 is not None
+        assert len(vg.ax_x2.collections) > 0
+        assert vg.ax_x2.xaxis.label.get_color() == "purple"
+
+    def test_x2_absent_when_column_missing_from_df(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.x2 = "NonexistentColumn"
+        vg.plot(excel_df)
+        assert vg.ax_x2 is None
+
+    def test_replot_does_not_accumulate_secondary_axes(self, vg, excel_df):
+        """Re-plotting must remove() the old twin axis before creating a new
+        one, not leak a second overlapping axes object onto the figure."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.y2 = "area_Si"
+        vg.plot(excel_df)
+        first_ax2 = vg.ax2
+        vg.plot(excel_df)
+        assert vg.ax2 is not first_ax2
+        assert first_ax2 not in vg.figure.axes
+
+
 class TestScatterCustomization:
     def test_scatter_size_reflected_in_marker_area(self, vg, excel_df):
         _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")

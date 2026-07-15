@@ -205,22 +205,31 @@ class VMWorkspaceGraphs(QObject):
     # ═════════════════════════════════════════════════════════════════════
     
     def apply_filters(self, df_name: str, filters: List[Dict]) -> Optional[pd.DataFrame]:
-        """Apply filters to a DataFrame."""
+        """Apply filters to a DataFrame.
+
+        Always returns a frame independent of internal storage (never a live
+        reference callers could use to mutate the stored DataFrame). When at
+        least one filter is checked, `.query()` already produces a fresh
+        frame, so no extra defensive `.copy()` is taken beforehand — avoids
+        copying the full (potentially large) DataFrame twice.
+        """
         if df_name not in self.dataframes:
             return None
-        
-        df = self.dataframes[df_name].copy()
-        
-        # Apply checked filters
-        for filter_data in filters:
-            if filter_data.get("state", False):
-                expression = filter_data["expression"]
-                try:
-                    df = df.query(expression)
-                except Exception as e:
-                    QMessageBox.critical(None, "Error", f"Filter error: {e}")
-                    return None
-        
+
+        df = self.dataframes[df_name]
+        active_filters = [f for f in filters if f.get("state", False)]
+
+        if not active_filters:
+            return df.copy()
+
+        for filter_data in active_filters:
+            expression = filter_data["expression"]
+            try:
+                df = df.query(expression)
+            except Exception as e:
+                QMessageBox.critical(None, "Error", f"Filter error: {e}")
+                return None
+
         return df
     
     def has_slot_column(self, df_name: str) -> bool:
@@ -405,8 +414,6 @@ class VMWorkspaceGraphs(QObject):
             # Emit updates
             self._emit_dataframes_list()
             self._emit_graphs_list()
-            
-            #self.notify.emit(f"Loaded {len(self.graphs)} graphs, {len(self.dataframes)} DataFrames")
         except Exception as e:
             QMessageBox.critical(None, "Error", f"Error loading workspace: {e}")
             

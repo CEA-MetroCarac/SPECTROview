@@ -1,5 +1,7 @@
 """View for Graphs Workspace - main UI coordinator for graph plotting and visualization."""
 import os
+import copy
+from typing import Optional
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
     QComboBox, QSpinBox, QCheckBox, QLineEdit, QSplitter,
@@ -791,51 +793,64 @@ class VWorkspaceGraphs(QWidget):
             return False
         return True
     
+    def _build_graph_widget(self, graph_model, filtered_df, on_render_error) -> Optional[VGraph]:
+        """Instantiate a VGraph for `graph_model`, wire its signals, render
+        it, and register it into `graph_widgets` + the MDI area.
+
+        On a render failure, the graph is removed from the ViewModel,
+        `on_render_error(exc)` is called so the caller can report it however
+        it likes (blocking dialog vs. a toast vs. warn-and-continue in a
+        batch), and None is returned — nothing is added to the MDI area.
+
+        Shared by _create_and_display_plot, _on_plot_multi_wafer, and
+        load_workspace, which previously duplicated this exact sequence.
+        """
+        graph_widget = VGraph(graph_id=graph_model.graph_id)
+        graph_widget.replicate_requested.connect(self._on_replicate_graph)
+        graph_widget.customize_requested.connect(self._show_or_switch_customize_dialog)
+        graph_widget.properties_changed.connect(self._on_graph_properties_changed)
+
+        self._configure_graph_from_model(graph_widget, graph_model)
+        graph_widget.create_plot_widget(graph_model.dpi)
+
+        try:
+            self._render_plot(graph_widget, filtered_df, graph_model)
+        except Exception as e:
+            self.vm.delete_graph(graph_model.graph_id)
+            on_render_error(e)
+            return None
+
+        self.vm.update_graph(graph_model.graph_id, {'legend_properties': graph_widget.legend_properties})
+
+        sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
+        graph_dialog = self._wrap_graph_in_dialog(graph_widget)
+        sub_window.setWidget(graph_dialog)
+
+        self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
+        self.mdi_area.addSubWindow(sub_window)
+        sub_window.show()
+
+        return graph_widget
+
     def _create_and_display_plot(self, plot_config: dict, select_in_list: bool = True, filters: list = None):
         """Create and display a plot from configuration."""
         # Use provided filters or get current ones
         if filters is None:
             filters = self.v_data_filter.get_filters()
-        
+
         graph_model = self.vm.create_graph(plot_config)
         # CRITICAL: Use df_name from plot_config, not vm.selected_df_name
         # because vm.selected_df_name can be changed by window activation events
         filtered_df = self.vm.apply_filters(plot_config['df_name'], filters)
-        
-        graph_widget = VGraph(graph_id=graph_model.graph_id)
-        graph_widget.replicate_requested.connect(self._on_replicate_graph)
-        graph_widget.customize_requested.connect(self._show_or_switch_customize_dialog)
-        
-        # Connect to properties_changed signal to update ViewModel when graph properties change
-        if hasattr(graph_widget, 'properties_changed'):
-            graph_widget.properties_changed.connect(self._on_graph_properties_changed)
-            
-        self._configure_graph_from_model(graph_widget, graph_model)
-        graph_widget.create_plot_widget(graph_model.dpi)
-        
-        # Try to render the plot - if it fails, clean up and return
-        try:
-            self._render_plot(graph_widget, filtered_df, graph_model)
-        except Exception as e:
-            # Clean up the graph from ViewModel
-            self.vm.delete_graph(graph_model.graph_id)
-            # Re-raise to show error dialog
-            QMessageBox.critical(self, "Plot Error", 
-                               f"Error rendering plot: {str(e)}")
+
+        def _on_render_error(e):
+            QMessageBox.critical(self, "Plot Error", f"Error rendering plot: {str(e)}")
+
+        if self._build_graph_widget(graph_model, filtered_df, _on_render_error) is None:
             return
-        
-        self.vm.update_graph(graph_model.graph_id, {'legend_properties': graph_widget.legend_properties})
-        
-        sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
-        graph_dialog = self._wrap_graph_in_dialog(graph_widget)
-        sub_window.setWidget(graph_dialog)
-        
-        self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
-        self.mdi_area.addSubWindow(sub_window)
-        sub_window.show()
-        
+
         self._update_graph_list(self.vm.get_graph_ids())
-        
+
         if select_in_list:
             for i in range(self.cbb_graph_list.count()):
                 if self.cbb_graph_list.itemData(i) == graph_model.graph_id:
@@ -1188,42 +1203,18 @@ class VWorkspaceGraphs(QWidget):
         successfully_created = 0
         for graph_model in created_graphs:
             filtered_df = self.vm.apply_filters(self.vm.selected_df_name, graph_model.filters)
-            
-            # Create Graph widget
-            graph_widget = VGraph(graph_id=graph_model.graph_id)
-            graph_widget.replicate_requested.connect(self._on_replicate_graph)
-            graph_widget.customize_requested.connect(self._show_or_switch_customize_dialog)
 
-            # Connect to properties_changed signal to update ViewModel when graph properties change
-            if hasattr(graph_widget, 'properties_changed'):
-                graph_widget.properties_changed.connect(self._on_graph_properties_changed)
-            self._configure_graph_from_model(graph_widget, graph_model)
-            
-            # Create plot
-            graph_widget.create_plot_widget(graph_model.dpi)
+            def _on_render_error(e, graph_model=graph_model):
+                slot_expr = graph_model.filters[-1].get('expression', 'unknown') if graph_model.filters else 'unknown'
+                QMessageBox.warning(
+                    self, "Plot Error",
+                    f"Error rendering plot for {slot_expr}: {str(e)}"
+                )
 
-            # Try to render the plot - if it fails, clean up and continue with next graph
-            try:
-                self._render_plot(graph_widget, filtered_df, graph_model)
-            except Exception as e:
-                # Clean up the graph from ViewModel
-                self.vm.delete_graph(graph_model.graph_id)
-                # Show error but continue with other plots
-                QMessageBox.warning(self, "Plot Error", 
-                                   f"Error rendering plot for slot {graph_model.filters[-1].get('value', 'unknown')}: {str(e)}")
+            if self._build_graph_widget(graph_model, filtered_df, _on_render_error) is None:
                 continue
-            
-            self.vm.update_graph(graph_model.graph_id, {'legend_properties': graph_widget.legend_properties})
-            
-            sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
-            graph_dialog = self._wrap_graph_in_dialog(graph_widget)
-            sub_window.setWidget(graph_dialog)
-            
-            self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
-            self.mdi_area.addSubWindow(sub_window)
-            sub_window.show()
             successfully_created += 1
-        
+
         # Update graph list
         self._update_graph_list(self.vm.get_graph_ids())
         
@@ -1484,107 +1475,41 @@ class VWorkspaceGraphs(QWidget):
         }
     
     def _configure_graph_from_model(self, graph_widget: VGraph, model):
-        """Configure graph widget."""
-        # Data source
-        graph_widget.df_name = model.df_name
-        graph_widget.filters = model.filters
-        
-        # Plot style and dimensions
-        graph_widget.plot_style = model.plot_style
-        graph_widget.plot_width = model.plot_width
-        graph_widget.plot_height = model.plot_height
-        graph_widget.dpi = model.dpi
-        
-        # Axes
-        graph_widget.x = model.x
-        graph_widget.y = model.y.copy() if model.y else []
-        graph_widget.z = model.z
-        
-        # Axis limits
-        graph_widget.xmin = model.xmin
-        graph_widget.xmax = model.xmax
-        graph_widget.ymin = model.ymin
-        graph_widget.ymax = model.ymax
-        graph_widget.zmin = model.zmin
-        graph_widget.zmax = model.zmax
-        
-        # Axis scales
-        graph_widget.xlogscale = model.xlogscale
-        graph_widget.ylogscale = model.ylogscale
-        
-        # Labels
-        graph_widget.plot_title = model.plot_title
-        graph_widget.xlabel = model.xlabel
-        graph_widget.ylabel = model.ylabel
-        graph_widget.zlabel = model.zlabel
-        
-        # Secondary/tertiary Y axes
-        graph_widget.y2 = model.y2
-        graph_widget.y3 = model.y3
-        graph_widget.y2label = model.y2label
-        graph_widget.y3label = model.y3label
-        graph_widget.y2logscale = getattr(model, 'y2logscale', False)
-        graph_widget.y3logscale = getattr(model, 'y3logscale', False)
-        graph_widget.y2min = getattr(model, 'y2min', None)
-        graph_widget.y2max = getattr(model, 'y2max', None)
-        graph_widget.y3min = getattr(model, 'y3min', None)
-        graph_widget.y3max = getattr(model, 'y3max', None)
-        
-        # Secondary X axis
-        graph_widget.x2 = getattr(model, 'x2', None)
-        graph_widget.x2label = getattr(model, 'x2label', None)
-        graph_widget.x2logscale = getattr(model, 'x2logscale', False)
-        graph_widget.x2min = getattr(model, 'x2min', None)
-        graph_widget.x2max = getattr(model, 'x2max', None)
-        
-        # Visual properties
-        graph_widget.x_rot = model.x_rot
-        graph_widget.grid = model.grid
-        graph_widget.minor_ticks_bottom = getattr(model, 'minor_ticks_bottom', True)
-        graph_widget.minor_ticks_left = getattr(model, 'minor_ticks_left', True)
-        graph_widget.minor_ticks_top = getattr(model, 'minor_ticks_top', False)
-        graph_widget.minor_ticks_right = getattr(model, 'minor_ticks_right', False)
-        
-        # Legend
-        graph_widget.legend_visible = model.legend_visible
-        graph_widget.legend_outside = getattr(model, 'legend_outside', False)
+        """Configure a graph widget from its model's fields.
 
+        Copies every MGraph field onto the widget generically: `model` is
+        always a real MGraph instance (from vm.create_graph()/
+        vm.get_graph()), so every field declared in MGraph.__init__ always
+        exists on it -- the getattr(..., default)/hasattr(...) guards this
+        used to have per-field were vestigial. A short list of fields need
+        real transformation instead of a plain copy (independent-copy
+        safety for mutable containers, stale-value sanitization); those are
+        applied as overrides below.
+
+        Fixes a real bug found while collapsing this method: `axis_breaks`
+        was never copied model -> widget at all (only ever the other way,
+        widget -> model, in _on_update_plot/save_workspace) -- so a graph
+        with a configured axis break silently lost it whenever a *new*
+        widget was built from its model, i.e. on workspace reload or
+        "Replicate graph".
+        """
+        for key, value in vars(model).items():
+            if key == 'graph_id':
+                continue
+            setattr(graph_widget, key, value)
+
+        # Independent copies for mutable containers the widget can mutate
+        # in place (dragging a legend entry, editing an axis break) --
+        # aliasing the model's own object would leak unsaved edits into it.
+        graph_widget.y = model.y.copy() if model.y else []
         graph_widget.legend_properties = model.legend_properties.copy() if model.legend_properties else []
-        graph_widget.legend_bbox = model.legend_bbox if hasattr(model, 'legend_bbox') else None
-        
-        # Plot-specific
-        graph_widget.color_palette = model.color_palette
-        graph_widget.wafer_size = model.wafer_size
-        graph_widget.wafer_stats = model.wafer_stats
-        graph_widget.trendline_order = model.trendline_order
-        graph_widget.show_trendline_eq = model.show_trendline_eq
-        graph_widget.trendline_anchor_enabled = getattr(model, 'trendline_anchor_enabled', False)
-        graph_widget.trendline_anchor_origin = getattr(model, 'trendline_anchor_origin', True)
-        graph_widget.trendline_anchor_x = getattr(model, 'trendline_anchor_x', 0.0)
-        graph_widget.trendline_anchor_y = getattr(model, 'trendline_anchor_y', 0.0)
-        graph_widget.show_bar_plot_error_bar = model.show_bar_plot_error_bar
-        graph_widget.join_for_point_plot = model.join_for_point_plot
-        graph_widget.dodge_point_plot = getattr(model, 'dodge_point_plot', True)
-        graph_widget.dodge_scatter_plot = getattr(model, 'dodge_scatter_plot', False)
-        graph_widget.scatter_size = getattr(model, 'scatter_size', 70)
-        edge_c = getattr(model, 'scatter_edgecolor', 'black')
+        graph_widget.axis_breaks = copy.deepcopy(model.axis_breaks) if model.axis_breaks else {'x': None, 'y': None}
+
+        # scatter_edgecolor must always be a valid, non-empty color string.
+        edge_c = model.scatter_edgecolor
         if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
             edge_c = 'black'
         graph_widget.scatter_edgecolor = edge_c
-        graph_widget.x_as_numeric = getattr(model, 'x_as_numeric', False)
-        graph_widget.hist_bins = getattr(model, 'hist_bins', 20)
-        graph_widget.hist_kde = getattr(model, 'hist_kde', False)
-        graph_widget.hist_step = getattr(model, 'hist_step', False)
-        
-        # Data sorting
-        graph_widget.sort_data_enabled = getattr(model, 'sort_data_enabled', True)
-        graph_widget.sort_data_by = getattr(model, 'sort_data_by', 'Z')
-        
-        # Annotations (with backward compatibility for old .graphs files)
-        if hasattr(model, 'annotations') and model.annotations is not None:
-            graph_widget.annotations = model.annotations
-        else:
-            graph_widget.annotations = []
     
     def _render_plot(self, graph_widget: VGraph, filtered_df, model):
         """Render plot."""
@@ -1686,32 +1611,22 @@ class VWorkspaceGraphs(QWidget):
         if self.df_listbox.count() > 0:
             self.df_listbox.setCurrentRow(0)
         
-        # Recreate graph widgets and MDI subwindows for each loaded graph
+        # Recreate graph widgets and MDI subwindows for each loaded graph.
+        # A graph that fails to render (e.g. a stale column reference) is
+        # skipped with a toast rather than aborting the rest of the load.
         for graph_id in self.vm.get_graph_ids():
             graph_model = self.vm.get_graph(graph_id)
             if not graph_model:
                 continue
-            
+
             filtered_df = self.vm.apply_filters(graph_model.df_name, graph_model.filters)
-            graph_widget = VGraph(graph_id=graph_model.graph_id)
-            graph_widget.replicate_requested.connect(self._on_replicate_graph)
-            graph_widget.customize_requested.connect(self._show_or_switch_customize_dialog)
 
-            # Connect to properties_changed signal to update ViewModel when graph properties change
-            if hasattr(graph_widget, 'properties_changed'):
-                graph_widget.properties_changed.connect(self._on_graph_properties_changed)
+            def _on_render_error(e, graph_model=graph_model):
+                self.vm.notify.emit(
+                    f"Skipped graph {graph_model.graph_id} ({graph_model.plot_style}): could not render ({e})"
+                )
 
-            self._configure_graph_from_model(graph_widget, graph_model)
-            graph_widget.create_plot_widget(graph_model.dpi)
-            self._render_plot(graph_widget, filtered_df, graph_model)
-            
-            sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
-            graph_dialog = self._wrap_graph_in_dialog(graph_widget)
-            sub_window.setWidget(graph_dialog)
-            
-            self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
-            self.mdi_area.addSubWindow(sub_window)
-            sub_window.show()
+            self._build_graph_widget(graph_model, filtered_df, _on_render_error)
     
     def clear_workspace(self):
         """Clear workspace."""

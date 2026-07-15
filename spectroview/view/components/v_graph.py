@@ -2,10 +2,8 @@
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
 from matplotlib.ticker import FuncFormatter
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -717,121 +715,104 @@ class VGraph(QWidget):
                 else:
                     self.ax.set_ylabel(self._get_y_label_default(self.y))
     
+    def _draw_twin_series(self, twin_ax, x_vals, y_vals, *, color, marker, series_label):
+        """Draw one series onto a twin axis, dispatching by the primary
+        plot_style (point/line/scatter share this look across y2/y3/x2).
+
+        Returns True if drawn, False if plot_style isn't supported on a twin
+        axis — the caller is responsible for removing the (now-empty) axis
+        in that case, matching each twin axis's prior standalone behavior.
+        """
+        if self.plot_style == 'line':
+            twin_ax.plot(x_vals, y_vals, color=color, label=series_label)
+        elif self.plot_style == 'point':
+            twin_ax.errorbar(
+                x_vals, y_vals,
+                fmt=marker, color=color, markeredgecolor='black',
+                markeredgewidth=1, capsize=3,
+                linestyle='-' if self.join_for_point_plot else 'none',
+                label=series_label
+            )
+        elif self.plot_style == 'scatter':
+            twin_ax.scatter(
+                x_vals, y_vals,
+                s=self.scatter_size, edgecolors=self.scatter_edgecolor,
+                color=color, label=series_label
+            )
+        else:
+            return False
+        return True
+
     def _plot_secondary_axis(self, df):
-        """Plot data on secondary y-axis."""
+        """Plot data on secondary y-axis (y2, twinx, red)."""
         if self.ax2:
             self.ax2.remove()
             self.ax2 = None
-        
-        if self.y2:
-            self.ax2 = self.ax.twinx()
-            
-            # For simplicity with secondary axes, just use numeric spacing if x is numeric, 
-            # otherwise just plot directly (matplotlib will handle it if X is strings)
-            x_vals = df[self.x]
-            if getattr(self, 'x_as_numeric', False):
-                x_vals = pd.to_numeric(x_vals, errors='coerce')
-                
-            if self.plot_style == 'line':
-                self.ax2.plot(x_vals, df[self.y2], color='red', label=self.y2)
-            elif self.plot_style == 'point':
-                self.ax2.errorbar(
-                    x_vals, df[self.y2],
-                    fmt='s', color='red', markeredgecolor='black',
-                    markeredgewidth=1, capsize=3,
-                    linestyle='-' if self.join_for_point_plot else 'none',
-                    label=self.y2
-                )
-            elif self.plot_style == 'scatter':
-                self.ax2.scatter(
-                    x_vals, df[self.y2],
-                    s=self.scatter_size, edgecolors=self.scatter_edgecolor,
-                    color='red', label=self.y2
-                )
-            else:
-                self.ax2.remove()
-                self.ax2 = None
-            
-            if self.ax2:
-                self.ax2.set_ylabel(self.y2label or self._format_axis_label(self.y2), color='red')
-                self.ax2.tick_params(axis='y', colors='red')
+
+        if not self.y2:
+            return
+
+        self.ax2 = self.ax.twinx()
+
+        # For simplicity with secondary axes, just use numeric spacing if x is numeric,
+        # otherwise just plot directly (matplotlib will handle it if X is strings)
+        x_vals = df[self.x]
+        if getattr(self, 'x_as_numeric', False):
+            x_vals = pd.to_numeric(x_vals, errors='coerce')
+
+        if self._draw_twin_series(self.ax2, x_vals, df[self.y2], color='red', marker='s', series_label=self.y2):
+            self.ax2.set_ylabel(self.y2label or self._format_axis_label(self.y2), color='red')
+            self.ax2.tick_params(axis='y', colors='red')
+        else:
+            self.ax2.remove()
+            self.ax2 = None
 
     def _plot_tertiary_axis(self, df):
-        """Plot data on tertiary y-axis."""
+        """Plot data on tertiary y-axis (y3, twinx offset outward, green)."""
         if self.ax3:
             self.ax3.remove()
             self.ax3 = None
-        
-        if self.y3:
-            self.ax3 = self.ax.twinx()
-            self.ax3.spines["right"].set_position(("outward", 100))
-            
-            x_vals = df[self.x]
-            if getattr(self, 'x_as_numeric', False):
-                x_vals = pd.to_numeric(x_vals, errors='coerce')
-            
-            if self.plot_style == 'line':
-                self.ax3.plot(x_vals, df[self.y3], color='green', label=self.y3)
-            elif self.plot_style == 'point':
-                self.ax3.errorbar(
-                    x_vals, df[self.y3],
-                    fmt='s', color='green', markeredgecolor='black',
-                    markeredgewidth=1, capsize=3,
-                    linestyle='-' if self.join_for_point_plot else 'none',
-                    label=self.y3
-                )
-            elif self.plot_style == 'scatter':
-                self.ax3.scatter(
-                    x_vals, df[self.y3],
-                    s=self.scatter_size, edgecolors=self.scatter_edgecolor,
-                    color='green', label=self.y3
-                )
-            else:
-                self.ax3.remove()
-                self.ax3 = None
-            
-            if self.ax3:
-                self.ax3.set_ylabel(self.y3label or self._format_axis_label(self.y3), color='green')
-                self.ax3.tick_params(axis='y', colors='green')
+
+        if not self.y3:
+            return
+
+        self.ax3 = self.ax.twinx()
+        self.ax3.spines["right"].set_position(("outward", 100))
+
+        x_vals = df[self.x]
+        if getattr(self, 'x_as_numeric', False):
+            x_vals = pd.to_numeric(x_vals, errors='coerce')
+
+        if self._draw_twin_series(self.ax3, x_vals, df[self.y3], color='green', marker='s', series_label=self.y3):
+            self.ax3.set_ylabel(self.y3label or self._format_axis_label(self.y3), color='green')
+            self.ax3.tick_params(axis='y', colors='green')
+        else:
+            self.ax3.remove()
+            self.ax3 = None
 
     def _plot_secondary_x_axis(self, df):
-        """Plot data on secondary x-axis (top)."""
+        """Plot data on secondary x-axis (x2, twiny, purple)."""
         if self.ax_x2:
             self.ax_x2.remove()
             self.ax_x2 = None
-        
-        if self.x2 and self.x2 in df.columns:
-            self.ax_x2 = self.ax.twiny()
-            
-            x_vals = df[self.x2]
-            if getattr(self, 'x2logscale', False):
-                x_vals = pd.to_numeric(x_vals, errors='coerce')
-                
-            if self.plot_style == 'line':
-                self.ax_x2.plot(x_vals, df[self.y[0]], color='purple', label=self.y[0])
-            elif self.plot_style == 'point':
-                self.ax_x2.errorbar(
-                    x_vals, df[self.y[0]],
-                    fmt='D', color='purple', markeredgecolor='black',
-                    markeredgewidth=1, capsize=3,
-                    linestyle='-' if self.join_for_point_plot else 'none',
-                    label=self.y[0]
-                )
-            elif self.plot_style == 'scatter':
-                self.ax_x2.scatter(
-                    x_vals, df[self.y[0]],
-                    s=self.scatter_size, edgecolors=self.scatter_edgecolor,
-                    color='purple', label=self.y[0]
-                )
-            else:
-                self.ax_x2.remove()
-                self.ax_x2 = None
-            
-            if self.ax_x2:
-                self.ax_x2.set_xlabel(
-                    self.x2label or self._format_axis_label(self.x2), color='purple'
-                )
-                self.ax_x2.tick_params(axis='x', colors='purple')
+
+        if not (self.x2 and self.x2 in df.columns):
+            return
+
+        self.ax_x2 = self.ax.twiny()
+
+        x_vals = df[self.x2]
+        if getattr(self, 'x2logscale', False):
+            x_vals = pd.to_numeric(x_vals, errors='coerce')
+
+        if self._draw_twin_series(self.ax_x2, x_vals, df[self.y[0]], color='purple', marker='D', series_label=self.y[0]):
+            self.ax_x2.set_xlabel(
+                self.x2label or self._format_axis_label(self.x2), color='purple'
+            )
+            self.ax_x2.tick_params(axis='x', colors='purple')
+        else:
+            self.ax_x2.remove()
+            self.ax_x2 = None
     
     # ═══════════════════════════════════════════════════════════════════
     # Annotation Rendering

@@ -3,6 +3,8 @@
 .spectroview/
 SPECTROview_AICHAT/
 TEMPLATE/
+spectroview/ai_agent/CHATLOG/
+spectroview/ai_agent/TEMPLATE/
 build/
 dist/
 scripts/

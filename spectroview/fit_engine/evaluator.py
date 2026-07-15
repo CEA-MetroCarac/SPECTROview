@@ -100,7 +100,7 @@ class VBFevaluator:
 
         # Finalise indexing
         ev._n_total = len(ev._param_names)
-        vary_arr = np.array(ev._param_vary)
+        vary_arr = np.array(ev._param_vary, dtype=bool)
         ev._free_idx = np.where(vary_arr)[0]
         ev._fixed_idx = np.where(~vary_arr)[0]
         ev._fixed_values = np.array(ev._param_values)[ev._fixed_idx]

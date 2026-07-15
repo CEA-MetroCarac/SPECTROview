@@ -609,16 +609,21 @@ class VGraph(QWidget):
     
     
     def _set_limits(self):
-        """Set the limits of axis."""
-        if self.xmin and self.xmax:
+        """Set the limits of axis.
+
+        Uses explicit `is not None` checks (not truthy checks) so a limit of
+        exactly 0.0 -- a common, legitimate axis bound -- is not silently
+        ignored.
+        """
+        if self.xmin is not None and self.xmax is not None:
             self.ax.set_xlim(float(self.xmin), float(self.xmax))
-        if self.ymin and self.ymax:
+        if self.ymin is not None and self.ymax is not None:
             self.ax.set_ylim(float(self.ymin), float(self.ymax))
-        if self.ax2 and self.y2min and self.y2max:
+        if self.ax2 and self.y2min is not None and self.y2max is not None:
             self.ax2.set_ylim(float(self.y2min), float(self.y2max))
-        if self.ax3 and self.y3min and self.y3max:
+        if self.ax3 and self.y3min is not None and self.y3max is not None:
             self.ax3.set_ylim(float(self.y3min), float(self.y3max))
-        if self.ax_x2 and self.x2min and self.x2max:
+        if self.ax_x2 and self.x2min is not None and self.x2max is not None:
             self.ax_x2.set_xlim(float(self.x2min), float(self.x2max))
     
     def _set_axis_scale(self, df):

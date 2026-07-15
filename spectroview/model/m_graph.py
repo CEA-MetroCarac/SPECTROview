@@ -86,6 +86,7 @@ class MGraph:
         self.dodge_point_plot: bool = True
         self.dodge_scatter_plot: bool = False
         self.scatter_size: int = 70  # Marker size for scatter plots
+        self.scatter_edgecolor: str = "black"  # Edge color for scatter plot markers
         self.x_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
         self.y_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
         
@@ -105,6 +106,9 @@ class MGraph:
         
         # Annotations (lines and text)
         self.annotations: List[Dict[str, Any]] = []
+
+        # Axis breaks: {'x': {'start','end'} | None, 'y': {'start','end'} | None}
+        self.axis_breaks: Dict[str, Optional[Dict[str, float]]] = {'x': None, 'y': None}
     
     def save(self) -> Dict[str, Any]:
         """Serialize graph to dictionary."""
@@ -171,6 +175,7 @@ class MGraph:
             'dodge_point_plot': self.dodge_point_plot,
             'dodge_scatter_plot': getattr(self, 'dodge_scatter_plot', False),
             'scatter_size': self.scatter_size,
+            'scatter_edgecolor': getattr(self, 'scatter_edgecolor', 'black'),
             'x_as_numeric': self.x_as_numeric,
             'y_as_numeric': getattr(self, 'y_as_numeric', None),
             'hist_bins': self.hist_bins,
@@ -179,6 +184,7 @@ class MGraph:
             'sort_data_enabled': self.sort_data_enabled,
             'sort_data_by': self.sort_data_by,
             'annotations': self.annotations,
+            'axis_breaks': self.axis_breaks,
         }
     
     def load(self, data: Dict[str, Any]):

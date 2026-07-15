@@ -13,6 +13,19 @@ Bound handling uses simple projection (clipping) after each step.
 import numpy as np
 
 
+def _finite_or_clean(arr):
+    """Zero out any NaN/Inf in-place, but only pay for it when needed.
+
+    `np.isfinite(...).all()` is a single fused pass, whereas
+    `np.nan_to_num` internally runs separate isnan/isposinf/isneginf
+    passes plus fancy-index assignments. Since analytical Jacobians are
+    finite in the overwhelming majority of iterations, checking first
+    avoids that extra cost on the common path.
+    """
+    if not np.isfinite(arr).all():
+        np.nan_to_num(arr, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+
+
 def _batched_solve(A, b):
     """Solve A @ x = b for each spectrum.
 
@@ -111,14 +124,24 @@ def batched_levenberg_marquardt(
     # Per-spectrum damping factor
     lam = np.full(N, 1e-2)
     converged = np.zeros(N, dtype=bool)
-    if weights is not None:
-        converged |= (weights.sum(axis=1) == 0)
+    converged |= (weights.sum(axis=1) == 0)
 
     # Track consecutive rejections to detect stuck spectra
     consecutive_rejects = np.zeros(N, dtype=int)
     MAX_REJECTS = 15  # mark as converged (stuck) after this many
 
     eye_K = np.eye(K, dtype=np.float64)
+
+    # Cache of the normal-equation terms (JᵀJ, Jᵀr) per spectrum. A rejected
+    # trial step leaves that spectrum's parameters unchanged, so its
+    # Jacobian — and therefore JᵀJ/Jᵀr — is still exactly valid; only the
+    # damping term needs to change before retrying. Recomputing them anyway
+    # (as a naive implementation would) wastes the two most expensive
+    # operations in the loop on spectra that didn't move. `dirty` tracks
+    # which spectra need fresh normal equations (initially: all of them).
+    JTJ_cache = np.empty((N, K, K), dtype=np.float64)
+    JTr_cache = np.empty((N, K), dtype=np.float64)
+    dirty = np.ones(N, dtype=bool)
 
     for iteration in range(max_iter):
         if cancel_check and cancel_check():
@@ -129,26 +152,35 @@ def batched_levenberg_marquardt(
         if n_active == 0:
             break
 
-        # ── Compute Jacobian ONLY for active spectra ──
-        # Extract active subset
-        p_active = p[active]                # (Na, K)
-        r_active = residuals[active]        # (Na, M)
+        active_idx = np.where(active)[0]
+        p_active = p[active_idx]
+        x_active = x[active_idx] if x.ndim == 2 else x
 
-        x_active = x[active] if x.ndim == 2 else x
-        J_active = jacobian_fn(x_active, p_active)  # (Na, M, K)
+        # ── Recompute the Jacobian/normal-equations only where stale ──
+        recompute_idx = active_idx[dirty[active_idx]]
+        if recompute_idx.size:
+            p_r = p[recompute_idx]
+            x_r = x[recompute_idx] if x.ndim == 2 else x
+            J_r = jacobian_fn(x_r, p_r)          # (Nr, M, K)
+            _finite_or_clean(J_r)
 
-        # Replace any NaN/Inf in Jacobian with zero
-        np.nan_to_num(J_active, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+            # ── Normal equations: (JᵀJ + λ·diag(JᵀJ)) δp = -Jᵀr ──
+            J_r *= weights[recompute_idx, :, None]
+            JT_r = J_r.transpose(0, 2, 1)
+            # np.matmul dispatches to batched BLAS gemm; np.einsum with this
+            # contraction pattern falls back to a much slower generic
+            # reduction (10-20x slower at these array sizes).
+            JTJ_cache[recompute_idx] = JT_r @ J_r
+            JTr_cache[recompute_idx] = (JT_r @ residuals[recompute_idx][:, :, None])[:, :, 0]
+            dirty[recompute_idx] = False
 
-        # ── Normal equations: (JᵀJ + λ·diag(JᵀJ)) δp = -Jᵀr ──
-        J_active *= weights[active, :, None]
-        JTJ = np.einsum('nmk,nml->nkl', J_active, J_active)  # (Na, K, K)
-        JTr = np.einsum('nmk,nm->nk', J_active, r_active)    # (Na, K)
+        JTJ = JTJ_cache[active_idx]
+        JTr = JTr_cache[active_idx]
 
         # Damping
         diag = np.diagonal(JTJ, axis1=1, axis2=2).copy()
         diag = np.maximum(diag, 1e-12)
-        lam_a = lam[active]
+        lam_a = lam[active_idx]
         damping = lam_a[:, None] * diag   # (Na, K)
 
         A = JTJ + eye_K[None, :, :] * damping[:, :, None]
@@ -158,20 +190,19 @@ def batched_levenberg_marquardt(
         dp = _batched_solve(A, -JTr)
 
         # Replace NaN steps with zero
-        np.nan_to_num(dp, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+        _finite_or_clean(dp)
 
         # ── Trial step with projection ──
         p_trial_active = np.clip(p_active + dp, lo, hi)
 
         # Evaluate only the active spectra
         Y_trial_active = evaluate_fn(x_active, p_trial_active)
-        r_trial_active = weights[active] * (Y_trial_active - Y_data[active])
+        r_trial_active = weights[active_idx] * (Y_trial_active - Y_data[active_idx])
         cost_trial_active = np.sum(r_trial_active * r_trial_active, axis=1)
 
-        improved_active = cost_trial_active <= cost[active]
+        improved_active = cost_trial_active <= cost[active_idx]
         worsened_active = ~improved_active
 
-        active_idx = np.where(active)[0]
         improved_idx = active_idx[improved_active]
         worsened_idx = active_idx[worsened_active]
 
@@ -181,6 +212,7 @@ def batched_levenberg_marquardt(
             residuals[improved_idx] = r_trial_active[improved_active]  # already weighted
             old_cost_improved = cost[improved_idx].copy()
             cost[improved_idx] = cost_trial_active[improved_active]
+            dirty[improved_idx] = True  # parameters moved: normal equations are stale
         else:
             old_cost_improved = np.array([])
 

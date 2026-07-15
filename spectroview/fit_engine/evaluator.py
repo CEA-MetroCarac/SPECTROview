@@ -5,7 +5,7 @@ Handles:
   - Routing to the correct batched model + Jacobian functions
   - Mixed model types (e.g. peak 1 = Lorentzian, peak 2 = Gaussian)
   - Fixed vs free parameters
-  - Building FitResult objects and writing back to SpectraStore
+  - Building batched fit results (parameters, R², best fits, per-peak curves)
 """
 
 import numpy as np
@@ -302,7 +302,6 @@ class VBFevaluator:
     def build_p0_matrix(self, x: np.ndarray, Y: np.ndarray):
         """Build (N, K_free) initial guess matrix with per-spectrum amplitude scaling."""
         N = Y.shape[0]
-        K = self.n_params_free
         p0_base = self.initial_params.copy()
         p0_matrix = np.tile(p0_base, (N, 1))  # (N, K)
 
@@ -366,17 +365,17 @@ class VBFevaluator:
 
         return p0_matrix
 
-    def apply_noise_threshold(self, x: np.ndarray, Y: np.ndarray, p_matrix: np.ndarray, fit_params: dict, p0_matrix=None):
-        """Force ampli=0 and fwhm=0 for peaks located in noisy areas (highly vectorized)."""
-        if fit_params is None:
-            return
-        coef_noise = float(fit_params.get("coef_noise", 0))
-        if coef_noise <= 0:
-            return
+    @staticmethod
+    def compute_noise_stats(Y: np.ndarray, coef_noise: float):
+        """Return (ymean, noise_level) used to flag noisy x-positions.
 
-        N = Y.shape[0]
-        
-        # Vectorized noise level estimation and smoothing
+        This depends only on the raw data and coef_noise (not on the current
+        parameter matrix), so callers that need to invoke
+        apply_noise_threshold() more than once on the same Y (e.g. once
+        before fitting, once after) can compute it a single time and pass
+        it in via the `noise_stats` argument instead of paying for the
+        median/smoothing pass twice.
+        """
         if Y.ndim == 2:
             dy = np.diff(Y, axis=1)
             ampli_noise = np.median(np.abs(dy), axis=1) / 0.6745 * np.sqrt(2) # (N,)
@@ -386,8 +385,23 @@ class VBFevaluator:
             dy = np.diff(Y)
             ampli_noise = np.median(np.abs(dy)) / 0.6745 * np.sqrt(2)
             ymean = np.convolve(Y, np.ones(5, dtype=np.float64) / 5.0, mode='same')
-            
-        noise_level = coef_noise * ampli_noise # (N,) or float
+
+        return ymean, coef_noise * ampli_noise # noise_level: (N,) or float
+
+    def apply_noise_threshold(self, x: np.ndarray, Y: np.ndarray, p_matrix: np.ndarray, fit_params: dict, p0_matrix=None, noise_stats=None):
+        """Force ampli=0 and fwhm=0 for peaks located in noisy areas (highly vectorized)."""
+        if fit_params is None:
+            return
+        coef_noise = float(fit_params.get("coef_noise", 0))
+        if coef_noise <= 0:
+            return
+
+        N = Y.shape[0]
+
+        if noise_stats is not None:
+            ymean, noise_level = noise_stats
+        else:
+            ymean, noise_level = self.compute_noise_stats(Y, coef_noise)
 
         for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
             peak_pnames = self._param_names[slc]

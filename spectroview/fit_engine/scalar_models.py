@@ -65,22 +65,6 @@ def decay_bi_exp(x, A1, tau1, A2, tau2, B):
     return A1 * np.exp(-x / (tau1 + 1e-30)) + A2 * np.exp(-x / (tau2 + 1e-30)) + B
 
 
-# Background model functions
-def bkg_constant(x, c):
-    """Constant background"""
-    return np.full_like(x, c, dtype=np.float64)
-
-
-def bkg_linear(x, intercept, slope):
-    """Linear background: intercept + slope * x"""
-    return intercept + slope * x
-
-
-def bkg_parabolic(x, a, b, c):
-    """Parabolic background: a*x^2 + b*x + c"""
-    return a * x ** 2 + b * x + c
-
-
 # ═══════════════════════════════════════════════════════════════════════════
 # Model registry — maps model names to (function, ordered_param_names)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -95,47 +79,4 @@ PEAK_MODEL_REGISTRY = {
     "DecaySingleExp": (decay_single_exp, ["A", "tau", "B"]),
     "DecayBiExp":     (decay_bi_exp,    ["A1", "tau1", "A2", "tau2", "B"]),
 }
-
-BKG_MODEL_REGISTRY = {
-    "Constant":  (bkg_constant,  ["c"]),
-    "Linear":    (bkg_linear,    ["intercept", "slope"]),
-    "Parabolic": (bkg_parabolic, ["a", "b", "c"]),
-}
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# Lightweight fit result (compatible with existing code expectations)
-# ═══════════════════════════════════════════════════════════════════════════
-
-class ParamValue:
-    """Mimics a Parameter with a .value attribute."""
-    __slots__ = ("value",)
-
-    def __init__(self, value):
-        self.value = value
-
-
-class FitResult:
-    """Lightweight fit result compatible with the existing codebase.
-
-    Supports:
-        result.success          -> bool
-        result.params[key]      -> ParamValue with .value
-        result.best_fit         -> np.ndarray
-        result.best_values      -> dict of {param_name: float} (lmfit compat)
-        key in result.params    -> bool
-    """
-
-    def __init__(self, success, params_dict, best_fit, rsquared=0.0):
-        self.success = success
-        self.params = {k: ParamValue(v) for k, v in params_dict.items()}
-        self.best_fit = best_fit
-        # lmfit ModelResult compatibility: best_values is a plain dict
-        self.best_values = dict(params_dict)
-        self.rsquared = rsquared
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# PeakModelEvaluator — builds and evaluates composite models
-# ═══════════════════════════════════════════════════════════════════════════
 

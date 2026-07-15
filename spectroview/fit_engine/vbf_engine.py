@@ -74,19 +74,26 @@ class VBFengine:
         # Detect shared x-axis
         shared_x = x.ndim == 1
 
+        if fit_params is None:
+            fit_params = {}
+
         # ─── 2. Build initial parameter matrix ───
         t0 = time.perf_counter()
         p0 = evaluator.build_p0_matrix(x, Y)
-            
-        evaluator.apply_noise_threshold(x, Y, p0, fit_params)
+
+        # Noise-floor stats only depend on the raw data, not on the current
+        # parameter matrix, but apply_noise_threshold() runs once before the
+        # fit and once after. Compute them a single time and share both calls.
+        coef_noise = float(fit_params.get("coef_noise", 0))
+        noise_stats = evaluator.compute_noise_stats(Y, coef_noise) if coef_noise > 0 else None
+
+        evaluator.apply_noise_threshold(x, Y, p0, fit_params, noise_stats=noise_stats)
         t_step3 = time.perf_counter() - t0
         self.timings["Step 3 - build p0"] = f"{t_step3:.3f}s"
         if print_benchmark:
             print(f"[VBFengine] Step 3 - build p0: {t_step3:.3f}s")
 
         # ─── 3. Parse fit parameters ───
-        if fit_params is None:
-            fit_params = {}
         xtol = float(fit_params.get("xtol", 1e-4))
         ftol = float(fit_params.get("ftol", 1e-4))
         max_ite = int(fit_params.get("max_ite", 200))
@@ -113,7 +120,7 @@ class VBFengine:
         if print_benchmark:
             print(f"[VBFengine] Step 4 - batch fit: {fit_time:.3f}s ({fit_time/N*1000:.1f} ms/spectrum, {success.sum()}/{N} converged)")
 
-        evaluator.apply_noise_threshold(x, Y, p_opt, fit_params, p0_matrix=p0)
+        evaluator.apply_noise_threshold(x, Y, p_opt, fit_params, p0_matrix=p0, noise_stats=noise_stats)
         
         # ─── 5. Write back results (batch-optimized) ───
         t0 = time.perf_counter()

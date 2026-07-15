@@ -67,6 +67,7 @@ class VMenuBar(QToolBar):
             "Query your fit results using natural language (requires Ollama)"
         )
         self.actionAIChat.triggered.connect(self.ai_chat_requested.emit)
+        self.actionAIChat.setVisible(False)  # hidden until unlocked via Settings > AI (feature not yet publicly released)
 
         self.actionSettings= self.addAction(QIcon(os.path.join(ICON_DIR, "settings.png")), "Settings")
         self.actionSettings.setShortcut("Ctrl+Shift+S")
@@ -103,6 +104,10 @@ class VMenuBar(QToolBar):
         version_label.setCursor(Qt.CursorShape.PointingHandCursor)
         version_label.mousePressEvent = lambda event: self.version_requested.emit()
         self.addWidget(version_label)
+
+    def set_ai_action_visible(self, visible: bool):
+        """Show/hide the AI Agent button (unlocked via a secret code in Settings > AI)."""
+        self.actionAIChat.setVisible(visible)
 
     # ── Theme dropdown ────────────────────────────────────────
     def set_current_theme(self, theme_key: str):

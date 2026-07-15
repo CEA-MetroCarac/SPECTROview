@@ -416,7 +416,10 @@ To add a "disable updates" toggle to the Settings dialog, bind `MSettings.set_ch
 | **Graphs Workspace** | [graphs.md](graphs.md) | `VMWorkspaceGraphs`, DataFrame management, plot creation, `VGraph` rendering |
 | **Vectorized Batch Fit Engine (`VBF Engine`)** | [vbf_engine.md](vbf_engine.md) | Batched LM optimizer, analytical Jacobians, adding new peak models |
 | **Multivariate Analysis** | [mva.md](mva.md) | PCA/NMF implementation, data pipeline, export to `Graphs` |
+<!-- AI Data Chat row hidden until the AI Agent feature is publicly released; see mkdocs.yml exclude_docs.
 | **AI Data Chat** | [ai_agent.md](ai_agent.md) | Local LLM chatbot (Ollama), system prompt, Graphs workspace integration |
+-->
+
 
 ---
 

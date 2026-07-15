@@ -246,6 +246,22 @@ class VSettingsDialog(QDialog):
         templates_layout.addLayout(templates_row)
 
         ai_tab_layout.addWidget(grp_templates)
+
+        # Access code (unlocks the not-yet-publicly-released AI Agent feature)
+        grp_unlock = QGroupBox("Advanced")
+        unlock_layout = QHBoxLayout(grp_unlock)
+        unlock_layout.setContentsMargins(4, 4, 4, 4)
+        unlock_layout.setSpacing(8)
+        unlock_layout.addWidget(QLabel("Access code:"))
+        self.edit_ai_agent_code = QLineEdit()
+        self.edit_ai_agent_code.setPlaceholderText("Enter code")
+        self.edit_ai_agent_code.editingFinished.connect(self._on_ai_agent_code_entered)
+        unlock_layout.addWidget(self.edit_ai_agent_code)
+        self.lbl_ai_agent_status = QLabel("")
+        self.lbl_ai_agent_status.setStyleSheet("color: gray; font-size: 11px;")
+        unlock_layout.addWidget(self.lbl_ai_agent_status)
+        ai_tab_layout.addWidget(grp_unlock)
+
         ai_tab_layout.addSpacerItem(QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Expanding))
 
         self.tabs.addTab(tab_ai, "AI")
@@ -304,6 +320,16 @@ class VSettingsDialog(QDialog):
         self.edit_custom_url.setText(data.get("custom_base_url", ""))
         self.le_history_folder.setText(data.get("history_folder", ""))
         self.le_template_folder.setText(data.get("template_folder", ""))
+
+    def _on_ai_agent_code_entered(self):
+        result = self.vm.try_ai_agent_code(self.edit_ai_agent_code.text())
+        self.edit_ai_agent_code.clear()
+        if result is True:
+            self.lbl_ai_agent_status.setStyleSheet("color: green; font-size: 11px;")
+            self.lbl_ai_agent_status.setText("AI Agent unlocked")
+        elif result is False:
+            self.lbl_ai_agent_status.setStyleSheet("color: gray; font-size: 11px;")
+            self.lbl_ai_agent_status.setText("AI Agent hidden")
 
     def _on_accept(self):
         self.vm.save({

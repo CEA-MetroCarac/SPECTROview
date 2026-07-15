@@ -103,6 +103,7 @@ class Main(QMainWindow):
 
         # Toolbar
         self.menu_bar = VMenuBar()
+        self.menu_bar.set_ai_action_visible(self.settings.get_ai_agent_enabled())
         self.addToolBar(Qt.TopToolBarArea, self.menu_bar)
         
     def setup_connections(self):
@@ -367,6 +368,7 @@ class Main(QMainWindow):
     def _open_settings(self):
         """   Open settings dialog. """
         vm = VMSettings()
+        vm.ai_agent_visibility_changed.connect(self.menu_bar.set_ai_action_visible)
         dlg = VSettingsDialog(vm, self)
         if dlg.exec():
             # Refresh viewers to reflect settings changes (e.g. coef_noise)

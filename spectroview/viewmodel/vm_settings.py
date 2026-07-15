@@ -14,6 +14,11 @@ class VMSettings(QObject):
     model_folder_changed = Signal(str)
     history_folder_changed = Signal(str)
     template_folder_changed = Signal(str)
+    ai_agent_visibility_changed = Signal(bool)  # emitted when the unlock code is entered
+
+    # Secret codes gating the (unreleased) AI Agent feature. Not case-sensitive.
+    _AI_AGENT_UNLOCK_CODE = "AIAGENT"
+    _AI_AGENT_LOCK_CODE = "AIAGENTOFF"
 
     def __init__(self):
         super().__init__()
@@ -65,3 +70,20 @@ class VMSettings(QObject):
         )
         if folder:
             self.template_folder_changed.emit(folder)
+
+    # ---------- AI Agent unlock ----------
+    def try_ai_agent_code(self, code: str):
+        """Check a secret code typed by the user against the AI Agent unlock/lock
+        codes. Persists the new state and emits `ai_agent_visibility_changed`
+        when the code matches. Returns True/False on match, None otherwise.
+        """
+        code = code.strip().upper()
+        if code == self._AI_AGENT_UNLOCK_CODE:
+            self.settings.set_ai_agent_enabled(True)
+            self.ai_agent_visibility_changed.emit(True)
+            return True
+        if code == self._AI_AGENT_LOCK_CODE:
+            self.settings.set_ai_agent_enabled(False)
+            self.ai_agent_visibility_changed.emit(False)
+            return False
+        return None

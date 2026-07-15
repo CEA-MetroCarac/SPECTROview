@@ -132,3 +132,12 @@ class MSettings:
             if key in ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini", "api_key_DeepSeek", "api_key_Custom", "custom_base_url", "history_folder", "template_folder"]:
                 s.setValue(key, value)
         s.endGroup()
+
+    # ---------- AI Agent unlock (feature not yet publicly released) ----------
+    def get_ai_agent_enabled(self) -> bool:
+        """Whether the AI Agent button/feature is unlocked (default: hidden)."""
+        return self.settings.value("ai_agent/enabled", False, bool)
+
+    def set_ai_agent_enabled(self, enabled: bool):
+        self.settings.setValue("ai_agent/enabled", enabled)
+        self.settings.sync()

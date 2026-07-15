@@ -125,7 +125,7 @@ spectroview/
 │   ├── evaluator.py             # Parameter mapping (VBFevaluator)
 │   ├── optimizer.py             # Batched Levenberg-Marquardt
 │   ├── models.py                # Batched peak functions + Jacobians
-│   ├── scalar_models.py         # Fallback scalar functions + FitResult
+│   ├── scalar_models.py         # Fallback scalar functions + PEAK_MODEL_REGISTRY
 │   ├── vbf_thread.py            # QThread wrapper
 │   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
 │   └── noise.py                 # Noise estimation functions
@@ -410,7 +410,7 @@ To add a "disable updates" toggle to the Settings dialog, bind `MSettings.set_ch
 | **Graphs Workspace** | [graphs.md](graphs.md) | `VMWorkspaceGraphs`, DataFrame management, plot creation, `VGraph` rendering |
 | **Vectorized Batch Fit Engine (`VBF Engine`)** | [vbf_engine.md](vbf_engine.md) | Batched LM optimizer, analytical Jacobians, adding new peak models |
 | **Multivariate Analysis** | [mva.md](mva.md) | PCA/NMF implementation, data pipeline, export to `Graphs` |
-| **AI Data Chat** | [ai.md](ai.md) | Local LLM chatbot (Ollama), system prompt, Graphs workspace integration |
+| **AI Data Chat** | [ai_agent.md](ai_agent.md) | Local LLM chatbot (Ollama), system prompt, Graphs workspace integration |
 
 ---
 

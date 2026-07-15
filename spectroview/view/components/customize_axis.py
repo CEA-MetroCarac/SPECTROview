@@ -29,6 +29,23 @@ class CustomizeAxis(QWidget):
         self.graph_widget = graph_widget
         self.load_axis_settings()
 
+    # Sentinel used throughout this class for "no limit set": the spinbox's
+    # own range minimum doubles as the unset marker, so no separate flag is
+    # needed. setSpecialValueText() makes that sentinel state render as a
+    # blank box instead of the confusing literal "-999999" -- note the text
+    # must be a single space, not "": Qt treats an *empty* special-value
+    # string as "no special text configured" and falls back to showing the
+    # raw number, so "" alone doesn't produce a blank display.
+    _UNSET_LIMIT = -999999
+    _BLANK_TEXT = " "
+
+    def _make_limit_spinbox(self) -> QDoubleSpinBox:
+        """Create one axis-limit spinbox that displays blank when unset."""
+        spin = QDoubleSpinBox()
+        spin.setRange(self._UNSET_LIMIT, 999999)
+        spin.setSpecialValueText(self._BLANK_TEXT)
+        return spin
+
     def _setup_ui(self):
         """Setup the UI components for the axis customization widget."""
         layout = QVBoxLayout(self)
@@ -98,8 +115,7 @@ class CustomizeAxis(QWidget):
             h_layout = QHBoxLayout()
             h_layout.addWidget(QLabel(f"{axis} axis limits:"))
             for limit_type in ['min', 'max']:
-                spin = QDoubleSpinBox()
-                spin.setRange(-999999, 999999)
+                spin = self._make_limit_spinbox()
                 setattr(self, f'spin_{axis.lower()}{limit_type}', spin)
                 h_layout.addWidget(QLabel(limit_type))
                 h_layout.addWidget(spin)
@@ -110,8 +126,7 @@ class CustomizeAxis(QWidget):
         z_limits_layout = QHBoxLayout()
         z_limits_layout.addWidget(QLabel("Z axis limits:"))
         for limit_type in ['min', 'max']:
-            spin = QDoubleSpinBox()
-            spin.setRange(-999999, 999999)
+            spin = self._make_limit_spinbox()
             setattr(self, f'spin_z{limit_type}', spin)
             z_limits_layout.addWidget(QLabel(limit_type))
             z_limits_layout.addWidget(spin)
@@ -220,12 +235,13 @@ class CustomizeAxis(QWidget):
         self.xy_limits_widget.setVisible(gw.plot_style not in ('wafer', '2Dmap'))
 
         # Load limits
-        self.spin_xmin.setValue(gw.xmin if gw.xmin is not None else -999999)
-        self.spin_xmax.setValue(gw.xmax if gw.xmax is not None else -999999)
-        self.spin_ymin.setValue(gw.ymin if gw.ymin is not None else -999999)
-        self.spin_ymax.setValue(gw.ymax if gw.ymax is not None else -999999)
-        self.spin_zmin.setValue(gw.zmin if gw.zmin is not None else -999999)
-        self.spin_zmax.setValue(gw.zmax if gw.zmax is not None else -999999)
+        u = self._UNSET_LIMIT
+        self.spin_xmin.setValue(gw.xmin if gw.xmin is not None else u)
+        self.spin_xmax.setValue(gw.xmax if gw.xmax is not None else u)
+        self.spin_ymin.setValue(gw.ymin if gw.ymin is not None else u)
+        self.spin_ymax.setValue(gw.ymax if gw.ymax is not None else u)
+        self.spin_zmin.setValue(gw.zmin if gw.zmin is not None else u)
+        self.spin_zmax.setValue(gw.zmax if gw.zmax is not None else u)
 
         # Load Axis Scales
         if getattr(gw, 'xlogscale', False):
@@ -306,12 +322,13 @@ class CustomizeAxis(QWidget):
         gw = self.graph_widget
 
         # Save limits
-        gw.xmin = self.spin_xmin.value() if self.spin_xmin.value() != -999999 else None
-        gw.xmax = self.spin_xmax.value() if self.spin_xmax.value() != -999999 else None
-        gw.ymin = self.spin_ymin.value() if self.spin_ymin.value() != -999999 else None
-        gw.ymax = self.spin_ymax.value() if self.spin_ymax.value() != -999999 else None
-        gw.zmin = self.spin_zmin.value() if self.spin_zmin.value() != -999999 else None
-        gw.zmax = self.spin_zmax.value() if self.spin_zmax.value() != -999999 else None
+        u = self._UNSET_LIMIT
+        gw.xmin = self.spin_xmin.value() if self.spin_xmin.value() != u else None
+        gw.xmax = self.spin_xmax.value() if self.spin_xmax.value() != u else None
+        gw.ymin = self.spin_ymin.value() if self.spin_ymin.value() != u else None
+        gw.ymax = self.spin_ymax.value() if self.spin_ymax.value() != u else None
+        gw.zmin = self.spin_zmin.value() if self.spin_zmin.value() != u else None
+        gw.zmax = self.spin_zmax.value() if self.spin_zmax.value() != u else None
 
         # Validate and save X-axis break
         if self.x_break_enabled.isChecked():
@@ -399,13 +416,14 @@ class CustomizeAxis(QWidget):
             QMessageBox.critical(self, "Error", f"Error getting limits: {str(e)}")
 
     def _on_clear_limits(self):
-        """Clear axis limits."""
-        self.spin_xmin.setValue(-999999)
-        self.spin_xmax.setValue(-999999)
-        self.spin_ymin.setValue(-999999)
-        self.spin_ymax.setValue(-999999)
-        self.spin_zmin.setValue(-999999)
-        self.spin_zmax.setValue(-999999)
+        """Clear axis limits (spinboxes display blank at this sentinel)."""
+        u = self._UNSET_LIMIT
+        self.spin_xmin.setValue(u)
+        self.spin_xmax.setValue(u)
+        self.spin_ymin.setValue(u)
+        self.spin_ymax.setValue(u)
+        self.spin_zmin.setValue(u)
+        self.spin_zmax.setValue(u)
 
     def _refresh_plot(self):
         """Refresh the plot with updated axis settings."""

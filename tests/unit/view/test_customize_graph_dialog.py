@@ -130,6 +130,40 @@ class TestCustomizeAxis:
         assert widget.spin_xmin.value() == 510.0
         assert widget.spin_xmax.value() == 520.0
 
+    def test_unset_limits_display_blank_not_the_sentinel_number(self, qapp, excel_df):
+        """Regression test: spinboxes used to show the literal '-999999'
+        for an unset limit, which read as a confusing real value rather
+        than 'no limit set'. setSpecialValueText() makes the sentinel
+        (spinbox range minimum) render as a blank box instead -- the
+        rendered text is a single space (Qt treats an empty special-value
+        string as "unconfigured"), so assert on the stripped text."""
+        vg = _plotted_graph(qapp, excel_df)
+        assert vg.xmin is None and vg.ymin is None and vg.zmin is None
+        widget = CustomizeAxis(vg)
+        widget.load_axis_settings()
+
+        for spin in (widget.spin_xmin, widget.spin_xmax, widget.spin_ymin,
+                     widget.spin_ymax, widget.spin_zmin, widget.spin_zmax):
+            assert spin.value() == widget._UNSET_LIMIT
+            assert spin.text().strip() == ""
+
+    def test_set_limit_displays_its_real_value_not_blank(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        vg.xmin, vg.xmax = 510.0, 520.0
+        widget = CustomizeAxis(vg)
+        widget.load_axis_settings()
+        assert widget.spin_xmin.text().strip() != ""
+        assert widget.spin_xmax.text().strip() != ""
+
+    def test_clear_limits_button_makes_boxes_blank_again(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        vg.xmin, vg.xmax = 510.0, 520.0
+        widget = CustomizeAxis(vg)
+        widget.load_axis_settings()
+        widget._on_clear_limits()
+        assert widget.spin_xmin.text().strip() == ""
+        assert widget.spin_xmax.text().strip() == ""
+
     def test_apply_writes_limits_back_including_zero(self, qapp, excel_df):
         vg = _plotted_graph(qapp, excel_df)
         widget = CustomizeAxis(vg)

@@ -47,10 +47,10 @@ dependencies = [
     "superqt",
     "renishawwire",
     "markdown",
-    "ollama>=0.4.0",
-    "openai>=1.0.0",
-    "anthropic>=0.30.0",
-    "mcp>=1.28.1",
+    # "ollama>=0.4.0",
+    # "openai>=1.0.0",
+    # "anthropic>=0.30.0",
+    # "mcp>=1.28.1",
     "pyyaml"
 ]
 

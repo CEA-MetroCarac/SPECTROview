@@ -35,7 +35,7 @@ class VWorkspaceGraphs(QWidget):
         # the template folder setting is shared with the AI Chat panel,
         # which still offers a per-response "save these plots as Template"
         # shortcut via the same store.
-        template_folder = self.m_settings.load_ai_settings().get("template_folder", "")
+        template_folder = self.m_settings.get_template_folder()
         self.template_store = MPlotTemplateStore(template_folder)
 
         # Graph storage: {graph_id: (Graph widget, QDialog, QMdiSubWindow)}

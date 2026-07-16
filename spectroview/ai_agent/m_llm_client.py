@@ -75,6 +75,10 @@ API_PROVIDERS: Dict[str, Dict[str, str]] = {
         "base_url":      "https://api.deepseek.com",
         "default_model": "deepseek-chat",
     },
+    "Mistral": {
+        "base_url":      "https://api.mistral.ai/v1",
+        "default_model": "mistral-large-latest",
+    },
     "OpenAI": {
         "base_url":      "https://api.openai.com/v1",
         "default_model": "gpt-4o-mini",
@@ -212,7 +216,7 @@ class APIWorker(QThread):
     """Sends a chat request to an OpenAI-compatible cloud API and streams
     the response back.
 
-    Works with Google Gemini, DeepSeek, OpenAI, and any compatible endpoint.
+    Works with Google Gemini, DeepSeek, Mistral, OpenAI, and any compatible endpoint.
 
     Signals
     -------
@@ -462,6 +466,7 @@ class LLMClient:
     * ``"Ollama"``  — local Ollama daemon (default, backward-compatible)
     * ``"Gemini"``  — Google Gemini via OpenAI-compatible API
     * ``"DeepSeek"``— DeepSeek via OpenAI-compatible API
+    * ``"Mistral"`` — Mistral AI via OpenAI-compatible API
     * ``"OpenAI"``  — OpenAI API
     * ``"Custom"``  — user-specified base URL
     """
@@ -494,7 +499,7 @@ class LLMClient:
         Parameters
         ----------
         provider:
-            One of ``"Ollama"``, ``"Gemini"``, ``"DeepSeek"``, ``"OpenAI"``,
+            One of ``"Ollama"``, ``"Gemini"``, ``"DeepSeek"``, ``"Mistral"``, ``"OpenAI"``,
             or ``"Custom"``.
         api_key:
             API key for cloud providers (ignored for Ollama).

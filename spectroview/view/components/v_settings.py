@@ -149,21 +149,39 @@ class VSettingsDialog(QDialog):
         fitting_tab_layout.addWidget(line)
         fitting_tab_layout.addSpacing(10)
 
-        # ───── Fit model management ─────
-        lbl_model = QLabel("Fit Model Path:")
-        lbl_model.setFont(bold)
-        fitting_tab_layout.addWidget(lbl_model)
+        # ───── Fit model folder ─────
+        grp_model = QGroupBox("Fit model folder:")
+        model_layout = QVBoxLayout(grp_model)
+        model_layout.setContentsMargins(4, 4, 4, 4)
+        model_layout.setSpacing(8)
 
         folder_row = QHBoxLayout()
         self.btn_model_folder = QPushButton("Browse")
         self.btn_model_folder.setMaximumWidth(60)
         self.le_model_folder = QLineEdit()
-
         folder_row.addWidget(self.btn_model_folder)
         folder_row.addWidget(self.le_model_folder)
-        fitting_tab_layout.addLayout(folder_row)
+        model_layout.addLayout(folder_row)
 
-        self.tabs.addTab(tab_fitting, "Fitting")
+        fitting_tab_layout.addWidget(grp_model)
+
+        # ───── Plot template folder ─────
+        grp_templates = QGroupBox("Plot template folder:")
+        templates_layout = QVBoxLayout(grp_templates)
+        templates_layout.setContentsMargins(4, 4, 4, 4)
+        templates_layout.setSpacing(8)
+
+        templates_row = QHBoxLayout()
+        self.btn_template_folder = QPushButton("Browse")
+        self.btn_template_folder.setMaximumWidth(60)
+        self.le_template_folder = QLineEdit()
+        templates_row.addWidget(self.btn_template_folder)
+        templates_row.addWidget(self.le_template_folder)
+        templates_layout.addLayout(templates_row)
+
+        fitting_tab_layout.addWidget(grp_templates)
+
+        self.tabs.addTab(tab_fitting, "General")
 
 
         # ==========================================
@@ -188,6 +206,8 @@ class VSettingsDialog(QDialog):
         self.edit_gemini.setEchoMode(QLineEdit.Password)
         self.edit_deepseek = QLineEdit()
         self.edit_deepseek.setEchoMode(QLineEdit.Password)
+        self.edit_mistral = QLineEdit()
+        self.edit_mistral.setEchoMode(QLineEdit.Password)
         self.edit_custom = QLineEdit()
         self.edit_custom.setEchoMode(QLineEdit.Password)
         self.edit_custom_url = QLineEdit()
@@ -204,6 +224,7 @@ class VSettingsDialog(QDialog):
         add_api_row("Anthropic API Key:", self.edit_anthropic)
         add_api_row("Gemini API Key:", self.edit_gemini)
         add_api_row("DeepSeek API Key:", self.edit_deepseek)
+        add_api_row("Mistral API Key:", self.edit_mistral)
         add_api_row("Custom API Key:", self.edit_custom)
         add_api_row("Custom Base URL:", self.edit_custom_url)
 
@@ -228,24 +249,6 @@ class VSettingsDialog(QDialog):
 
         ai_tab_layout.addWidget(grp_history)
 
-        # Plot Template Folder
-        grp_templates = QGroupBox("Plot Templates")
-        templates_layout = QVBoxLayout(grp_templates)
-        templates_layout.setContentsMargins(4, 4, 4, 4)
-        templates_layout.setSpacing(8)
-
-        lbl_templates = QLabel("Template Folder:")
-        templates_layout.addWidget(lbl_templates)
-
-        templates_row = QHBoxLayout()
-        self.btn_template_folder = QPushButton("Browse")
-        self.btn_template_folder.setMaximumWidth(60)
-        self.le_template_folder = QLineEdit()
-        templates_row.addWidget(self.btn_template_folder)
-        templates_row.addWidget(self.le_template_folder)
-        templates_layout.addLayout(templates_row)
-
-        ai_tab_layout.addWidget(grp_templates)
 
         # Access code (unlocks the not-yet-publicly-released AI Agent feature)
         grp_unlock = QGroupBox("Advanced")
@@ -316,6 +319,7 @@ class VSettingsDialog(QDialog):
         self.edit_anthropic.setText(data.get("api_key_Anthropic", ""))
         self.edit_gemini.setText(data.get("api_key_Gemini", ""))
         self.edit_deepseek.setText(data.get("api_key_DeepSeek", ""))
+        self.edit_mistral.setText(data.get("api_key_Mistral", ""))
         self.edit_custom.setText(data.get("api_key_Custom", ""))
         self.edit_custom_url.setText(data.get("custom_base_url", ""))
         self.le_history_folder.setText(data.get("history_folder", ""))
@@ -347,6 +351,7 @@ class VSettingsDialog(QDialog):
             "api_key_Anthropic": self.edit_anthropic.text(),
             "api_key_Gemini": self.edit_gemini.text(),
             "api_key_DeepSeek": self.edit_deepseek.text(),
+            "api_key_Mistral": self.edit_mistral.text(),
             "api_key_Custom": self.edit_custom.text(),
             "custom_base_url": self.edit_custom_url.text(),
             "history_folder": self.le_history_folder.text(),

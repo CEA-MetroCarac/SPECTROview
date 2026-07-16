@@ -14,7 +14,7 @@
 # Provider selection
 # ---------------------------------------------------------------------------
 # Default LLM provider when none is configured at runtime.
-# Valid values: Ollama | OpenAI | Gemini | DeepSeek | Anthropic | Custom
+# Valid values: Ollama | OpenAI | Gemini | DeepSeek | Mistral | Anthropic | Custom
 default_provider: Ollama
 
 # Default model name sent to the provider.

@@ -62,6 +62,14 @@ class MSettings:
     def set_model_folder(self, path: str):
         self.settings.setValue("model_folder", path)
         self.settings.sync()
+
+    # ---------- Template folder ----------
+    def get_template_folder(self) -> str:
+        return self.settings.value("template_folder", "", str)
+
+    def set_template_folder(self, path: str):
+        self.settings.setValue("template_folder", path)
+        self.settings.sync()
     
     # ---------- Last directory ----------
     def get_last_directory(self) -> str:
@@ -117,10 +125,10 @@ class MSettings:
             "api_key_Anthropic": s.value("api_key_Anthropic", "", str),
             "api_key_Gemini": s.value("api_key_Gemini", "", str),
             "api_key_DeepSeek": s.value("api_key_DeepSeek", "", str),
+            "api_key_Mistral": s.value("api_key_Mistral", "", str),
             "api_key_Custom": s.value("api_key_Custom", "", str),
             "custom_base_url": s.value("custom_base_url", "", str),
             "history_folder": s.value("history_folder", "", str),
-            "template_folder": s.value("template_folder", "", str),
         }
         s.endGroup()
         return data
@@ -129,7 +137,7 @@ class MSettings:
         s = QSettings("SPECTROview", "AIChat")
         s.beginGroup("ai_chat")
         for key, value in data.items():
-            if key in ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini", "api_key_DeepSeek", "api_key_Custom", "custom_base_url", "history_folder", "template_folder"]:
+            if key in ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini", "api_key_DeepSeek", "api_key_Mistral", "api_key_Custom", "custom_base_url", "history_folder"]:
                 s.setValue(key, value)
         s.endGroup()
 

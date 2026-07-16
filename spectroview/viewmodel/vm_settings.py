@@ -28,6 +28,7 @@ class VMSettings(QObject):
     def load(self):
         data = self.settings.load_fit_settings()
         data["model_folder"] = self.settings.get_model_folder()
+        data["template_folder"] = self.settings.get_template_folder()
         ai_data = self.settings.load_ai_settings()
         data.update(ai_data)
         self.settings_loaded.emit(data)
@@ -35,9 +36,10 @@ class VMSettings(QObject):
     # ---------- Save ----------
     def save(self, data: dict):
         model_folder = data.pop("model_folder", "")
+        template_folder = data.pop("template_folder", "")
         
         ai_keys = ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini",
-                   "api_key_DeepSeek", "api_key_Custom", "custom_base_url", "history_folder", "template_folder"]
+                   "api_key_DeepSeek", "api_key_Mistral", "api_key_Custom", "custom_base_url", "history_folder"]
         ai_data = {k: data.pop(k, "") for k in ai_keys if k in data}
         
         self.settings.save_fit_settings(data)
@@ -45,6 +47,7 @@ class VMSettings(QObject):
 
         if model_folder:
             self.settings.set_model_folder(model_folder)
+        self.settings.set_template_folder(template_folder)
 
         self.settings_saved.emit()
 

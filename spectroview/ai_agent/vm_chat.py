@@ -148,8 +148,10 @@ class VMChat(QObject):
         s = QSettings("SPECTROview", "AIChat")
         s.beginGroup("ai_chat")
         self._history_folder = str(s.value("history_folder", ""))
-        self._template_folder = str(s.value("template_folder", ""))
         s.endGroup()
+
+        s_fit = QSettings("CEA-Leti", "SPECTROview")
+        self._template_folder = str(s_fit.value("template_folder", "", str))
 
         self.conversation_store = MConversationStore(self._history_folder)
         self._conversation = self.conversation_store.create_conversation()

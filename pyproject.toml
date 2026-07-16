@@ -63,7 +63,13 @@ spectroview = [
     "resources/icons/*.svg",
     "resources/*.pdf",
     "resources/user_manual/*",
-    "resources/user_manual_images/*/*"
+    "resources/user_manual_images/*/*",
+    "ai_agent/config/*.yaml",
+    "ai_agent/prompts/*.md",
+    "ai_agent/rules/*.md",
+    "ai_agent/knowledge/*.md",
+    "ai_agent/examples/*.md",
+    "ai_agent/TEMPLATE/*.json"
 ]
 
 [project.scripts]
